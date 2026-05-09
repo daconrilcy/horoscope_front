@@ -82,8 +82,8 @@ export function AdminSamplePayloadDeleteDialog({
   onConfirm,
 }: AdminSamplePayloadDeleteDialogProps) {
   return (
-    <div className="modal-overlay" role="presentation">
-      <div className="modal-content admin-prompts-modal" role="dialog" aria-modal="true" aria-labelledby="sample-payload-delete-title">
+    <div className="app-overlay" role="presentation">
+      <div className="app-modal admin-prompts-modal" role="dialog" aria-modal="true" aria-labelledby="sample-payload-delete-title">
         <h3 id="sample-payload-delete-title">Supprimer le sample payload</h3>
         <p className="admin-prompts-modal__copy">
           Confirmer la suppression de <strong>{name}</strong> ? Cette action est irréversible.
@@ -93,7 +93,7 @@ export function AdminSamplePayloadDeleteDialog({
             {error}
           </p>
         ) : null}
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" type="button" onClick={onCancel}>
             Annuler
           </button>

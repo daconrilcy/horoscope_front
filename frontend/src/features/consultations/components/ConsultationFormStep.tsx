@@ -73,8 +73,8 @@ export function ConsultationFormStep({
   }
 
   return (
-    <div className="consultation-form-step">
-      <h2 className="wizard-step-title">
+    <div className="activity-form-step">
+      <h2 className="flow-step-title">
         {!showTypeSelector && draft.type
           ? typeItems.find((i) => i.key === draft.type)?.label ?? t("form_step_title", lang)
           : t("form_step_title", lang)}
@@ -84,7 +84,7 @@ export function ConsultationFormStep({
       {showTypeSelector && (
         <div className="form-group">
           <label className="form-label">{t("select_type", lang)}</label>
-          <div className="consultation-type-pills">
+          <div className="activity-type-pills">
             {typeItems.map((item) => (
               <button
                 key={item.key}

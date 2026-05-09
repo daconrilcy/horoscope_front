@@ -32,8 +32,8 @@ export function DataCollectionStep({
   const isInteractionPath = draft.type === "relationship" || draft.isInteraction
 
   return (
-    <div className="wizard-step">
-      <h2 className="wizard-step-title">{t("collection_step_title", lang)}</h2>
+    <div className="flow-step">
+      <h2 className="flow-step-title">{t("collection_step_title", lang)}</h2>
 
       {precheck && (
         <div className="precheck-summary">

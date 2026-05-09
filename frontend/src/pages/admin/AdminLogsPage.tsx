@@ -35,9 +35,9 @@ function ReplayModal({
   onConfirm,
 }: ReplayModalProps) {
   return (
-    <div className="modal-overlay" role="presentation">
+    <div className="app-overlay" role="presentation">
       <div
-        className="modal-content admin-logs-modal"
+        className="app-modal admin-logs-modal"
         aria-modal="true"
         role="dialog"
         aria-labelledby="admin-logs-replay-title"
@@ -61,7 +61,7 @@ function ReplayModal({
           Cette action relance le replay sur la version de prompt d&apos;origine et génère un audit.
         </p>
         {replayResult && <p className="modal-result">{replayResult}</p>}
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" onClick={onClose}>
             Annuler
           </button>
@@ -133,9 +133,9 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
   }
 
   return (
-    <div className="modal-overlay" role="presentation">
+    <div className="app-overlay" role="presentation">
       <div
-        className="modal-content admin-logs-modal admin-logs-modal--wide"
+        className="app-modal admin-logs-modal admin-logs-modal--wide"
         aria-modal="true"
         role="dialog"
         aria-labelledby="admin-audit-detail-title"
@@ -166,7 +166,7 @@ function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
         <pre className="audit-details-json">
           {JSON.stringify(sanitizeDetails(log.details), null, 2)}
         </pre>
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="action-button action-button--primary" onClick={onClose}>
             Fermer
           </button>

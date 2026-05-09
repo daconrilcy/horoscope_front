@@ -51,7 +51,7 @@ export default function HelpPage() {
     { icon: MessageSquare, key: "chat", to: "/chat" },
     { icon: Sparkles, key: "natal", to: "/natal" },
     { icon: ScrollText, key: "consultations", to: "/consultations" },
-  ]
+  ] as const
 
   return (
     <PageLayout className="is-settings-page">
@@ -114,10 +114,10 @@ export default function HelpPage() {
                     <span className="help-shortcut-card__icon">
                       <Icon size={20} />
                     </span>
-                    <h3>{(help.shortcuts as any)[key].title}</h3>
-                    <p>{(help.shortcuts as any)[key].benefit}</p>
+                    <h3>{help.shortcuts[key].title}</h3>
+                    <p>{help.shortcuts[key].benefit}</p>
                     <span className="help-shortcut-card__link">
-                      {(help.shortcuts as any)[key].action}
+                      {help.shortcuts[key].action}
                     </span>
                   </Link>
                 ))}

@@ -173,7 +173,7 @@ export function UsageSettings() {
         )}
 
         {!isLoading && !isError && !chatFeature.data && (
-          <p className="state-line state-empty">{t.noData}</p>
+          <p className="app-state app-state--empty">{t.noData}</p>
         )}
       </section>
     </div>

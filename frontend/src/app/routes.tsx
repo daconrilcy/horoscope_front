@@ -206,9 +206,9 @@ const ReconciliationAdmin = lazy(() =>
 /** Affiche un retour accessible pendant le chargement d'un chunk de route. */
 export function RouteLoadingFallback() {
   return (
-    <div className="panel">
+    <div className="app-panel">
       <div
-        className="state-line state-loading"
+        className="app-state app-state--loading"
         role="status"
         aria-busy="true"
         aria-live="polite"

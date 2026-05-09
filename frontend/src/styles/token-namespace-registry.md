@@ -36,7 +36,7 @@ sourcee dans ce registre.
 | `--settings-*` | semantic-extension | `frontend/src/pages/settings/Settings.css` | settings page visual roles | permanent page-scoped semantic layer |
 | `--profile-*` | semantic-extension | `frontend/src/pages/AstrologerProfilePage.css` | astrologer profile page visual roles | permanent page-scoped semantic layer |
 | `--astro-*` | semantic-extension | `frontend/src/App.css` | astrologer card local visual roles | permanent component-scoped semantic layer |
-| `--app-*` | semantic-extension | `frontend/src/App.css` | app shell, catalogue, dashboard summary, App-owned visual and typography roles with stable semantic names | permanent app-scoped semantic layer; mechanical repeated selector names are blocked by CS-087 guard |
+| `--app-*` | semantic-extension | `frontend/src/App.css` | generic App primitives for page, section, stack, grid, card, panel, actions, states, badges, avatars and modals; residual App-owned specific names require exact CS-124 expiry entries | permanent app-scoped semantic layer; mechanical repeated selector names are blocked by CS-087 guard and page-specific names by CS-124 |
 | `--usage-*` | dynamic | `frontend/src/pages/settings/Settings.css` | runtime progress value | permanent custom property bridge |
 | `--period-accent` | dynamic | prediction timeline components | runtime accent value | permanent custom property bridge |
 | `--landing-*` | semantic-extension | `frontend/src/layouts/LandingLayout.css` | landing visual and typography semantic owners consumed by landing sections | permanent landing-scoped semantic layer |

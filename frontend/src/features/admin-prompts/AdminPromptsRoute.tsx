@@ -661,7 +661,7 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
       ) : null}
 
       {activeTab === "catalog" ? (
-        <section className="panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
+        <section className="app-panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
           <div className="admin-prompts-catalog__flow-shell">
             <header className="admin-prompts-catalog__flow-header">
               <p className="admin-prompts-catalog__flow-kicker">Catalogue actif</p>
@@ -780,7 +780,7 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
             !catalogContextQuery.isPending &&
             !catalogContextQuery.isError &&
             catalogEntries.length === 0 ? (
-              <div className="state-line">
+              <div className="app-state">
                 Aucun prompt catalogue actif ne correspond à cette combinaison feature / abonnement / locale.
               </div>
             ) : null}
@@ -934,7 +934,7 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
       ) : null}
 
       {activeTab === "catalog" ? (
-        <section className="panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
+        <section className="app-panel admin-prompts-catalog" aria-label={tCat.catalogRegionAria}>
           <div className="admin-prompts-catalog-master-detail">
             <div className="admin-prompts-catalog__master">
               <div className="admin-prompts-catalog__filters">
@@ -1367,7 +1367,7 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
                       </p>
                     )}
                   </section>
-                <section className="panel admin-prompts-resolved" aria-label={tCat.resolvedPanelAria}>
+                <section className="app-panel admin-prompts-resolved" aria-label={tCat.resolvedPanelAria}>
                   <div
                     className={`admin-prompts-resolved__surface-banner admin-prompts-resolved__surface-banner--${resolvedInspectionMode}`}
                     role="status"
@@ -1799,7 +1799,7 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
       ) : null}
 
       {activeTab === "consumption" ? (
-        <section className="panel admin-prompts-consumption" aria-label={tConsumption.regionAriaLabel}>
+        <section className="app-panel admin-prompts-consumption" aria-label={tConsumption.regionAriaLabel}>
           <div className="admin-prompts-consumption__surface">
             <header className="admin-prompts-consumption__surface-header">
               <p className="admin-prompts-consumption__kicker">{tConsumption.kicker}</p>
@@ -2141,9 +2141,9 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
       ) : null}
 
       {activeTab === "archive" ? (
-        <section className="panel admin-prompts-archive" aria-label={tArchive.regionAriaLabel}>
+        <section className="app-panel admin-prompts-archive" aria-label={tArchive.regionAriaLabel}>
           {successMessage ? (
-            <p className="state-line state-success" role="status" aria-live="polite">
+            <p className="app-state app-state--success" role="status" aria-live="polite">
               {successMessage}
             </p>
           ) : null}
@@ -2263,7 +2263,7 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
 
                   {canShowArchiveDiff && compareArchiveVersion && archiveDiffRightVersion ? (
                     <section
-                      className="admin-prompts-archive__diff panel"
+                      className="admin-prompts-archive__diff app-panel"
                       aria-labelledby="archive-diff-heading"
                     >
                       <div className="admin-prompts-archive__diff-head">
@@ -2357,11 +2357,11 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
       ) : null}
 
       {activeTab === "release" ? (
-        <section className="panel admin-prompts-release" aria-label={tCat.releaseRegionAria}>
+        <section className="app-panel admin-prompts-release" aria-label={tCat.releaseRegionAria}>
           {releaseTimelineQuery.isPending ? <div className="loading-placeholder">{tCat.releaseLoadingTimeline}</div> : null}
           {releaseTimelineQuery.isError ? <p className="chat-error">{tCat.releaseErrorTimeline}</p> : null}
           {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length === 0 ? (
-            <div className="state-line">{tCat.releaseEmptySnapshots}</div>
+            <div className="app-state">{tCat.releaseEmptySnapshots}</div>
           ) : null}
           {!releaseTimelineQuery.isPending && !releaseTimelineQuery.isError && releaseTimeline.length > 0 ? (
             <div className="admin-prompts-release__surface">
@@ -2466,7 +2466,7 @@ export function AdminPromptsRoute({ activeTab }: { activeTab: PromptPageTab }) {
               {releaseDiffQuery.isPending ? <div className="loading-placeholder">{tCat.releaseDiffLoading}</div> : null}
               {releaseDiffQuery.isError ? <p className="chat-error">{tCat.releaseDiffError}</p> : null}
               {releaseDiffQuery.data ? (
-                <div className="admin-prompts-release__diff panel">
+                <div className="admin-prompts-release__diff app-panel">
                   <h3 className="admin-prompts-release__diff-title">{tCat.releaseDiffTitle}</h3>
                   <div className="admin-prompts-release__compare-banner" aria-label={tCat.releaseCompareBannerAria}>
                     <div className="admin-prompts-release__compare-card">

@@ -1,4 +1,4 @@
-// Isole la grille des plans d'abonnement pour alleger la route settings.
+// Isole la grille des plans d'abonnement pour alleger la route preferences.
 import { Check } from "lucide-react"
 
 export type SubscriptionPlanOption = {
@@ -87,7 +87,7 @@ export function SubscriptionOverviewSection({
         <div className="subscription-overview__aside">
           <span className="subscription-overview__aside-label">{labels.actionLabel}</span>
           <p className="subscription-overview__aside-value">{overviewActionMessage}</p>
-          <button type="button" className="settings-tab subscription-overview__jump" onClick={onJumpToPlans}>
+          <button type="button" className="control-tab subscription-overview__jump" onClick={onJumpToPlans}>
             {labels.jumpToPlans}
           </button>
         </div>

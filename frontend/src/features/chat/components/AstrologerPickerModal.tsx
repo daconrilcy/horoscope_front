@@ -6,7 +6,7 @@ import { detectLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
 
 type AstrologerPickerModalProps = {
-  astrologers: Astrologer[]
+  experts: Astrologer[]
   isLoading: boolean
   isCreating: boolean
   onSelect: (astrologerId: string) => void
@@ -14,7 +14,7 @@ type AstrologerPickerModalProps = {
 }
 
 export function AstrologerPickerModal({
-  astrologers,
+  experts,
   isLoading,
   isCreating,
   onSelect,
@@ -33,7 +33,7 @@ export function AstrologerPickerModal({
 
   return (
     <div
-      className="astrologer-picker-overlay"
+      className="person-picker-overlay"
       ref={overlayRef}
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose()
@@ -42,12 +42,12 @@ export function AstrologerPickerModal({
       aria-modal="true"
       aria-label={t("new_conversation", lang)}
     >
-      <div className="astrologer-picker-modal">
-        <div className="astrologer-picker-header">
-          <h3 className="astrologer-picker-title">{t("new_conversation", lang)}</h3>
+      <div className="person-picker-modal">
+        <div className="person-picker-header">
+          <h3 className="person-picker-title">{t("new_conversation", lang)}</h3>
           <button
             type="button"
-            className="astrologer-picker-close"
+            className="person-picker-close"
             onClick={onClose}
             aria-label={t("close", lang)}
           >
@@ -55,34 +55,34 @@ export function AstrologerPickerModal({
           </button>
         </div>
 
-        <div className="astrologer-picker-body">
+        <div className="person-picker-body">
           {isLoading && (
-            <p className="astrologer-picker-loading">{t("loading", lang)}</p>
+            <p className="person-picker-loading">{t("loading", lang)}</p>
           )}
 
-          {!isLoading && astrologers.length === 0 && (
-            <p className="astrologer-picker-empty">{t("empty_state", lang)}</p>
+          {!isLoading && experts.length === 0 && (
+            <p className="person-picker-empty">{t("empty_state", lang)}</p>
           )}
 
-          {!isLoading && astrologers.map((astrologer) => {
+          {!isLoading && experts.map((expert) => {
             const fullName =
-              [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") ||
-              astrologer.name
+              [expert.first_name, expert.last_name].filter(Boolean).join(" ") ||
+              expert.name
 
             return (
             <button
-              key={astrologer.id}
+              key={expert.id}
               type="button"
-              className="astrologer-picker-item"
-              onClick={() => onSelect(astrologer.id)}
+              className="person-picker-item"
+              onClick={() => onSelect(expert.id)}
               disabled={isCreating}
             >
-              <div className="astrologer-picker-item-avatar">
-                {astrologer.avatar_url ? (
+              <div className="person-picker-item-avatar">
+                {expert.avatar_url ? (
                   <img
-                    src={astrologer.avatar_url}
+                    src={expert.avatar_url}
                     alt={`${t("avatar_alt", lang)} ${fullName}`}
-                    className="astrologer-picker-item-avatar-img"
+                    className="person-picker-item-avatar-img"
                     onError={(e) => {
                       const target = e.currentTarget
                       target.hidden = true
@@ -92,16 +92,16 @@ export function AstrologerPickerModal({
                   />
                 ) : null}
                 <span
-                  className="astrologer-picker-item-avatar-fallback"
-                  hidden={Boolean(astrologer.avatar_url)}
+                  className="person-picker-item-avatar-fallback"
+                  hidden={Boolean(expert.avatar_url)}
                 >
                   {fullName.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="astrologer-picker-item-info">
-                <span className="astrologer-picker-item-name">{fullName}</span>
-                {astrologer.bio_short && (
-                  <span className="astrologer-picker-item-bio">{astrologer.bio_short}</span>
+              <div className="person-picker-item-info">
+                <span className="person-picker-item-name">{fullName}</span>
+                {expert.bio_short && (
+                  <span className="person-picker-item-bio">{expert.bio_short}</span>
                 )}
               </div>
             </button>

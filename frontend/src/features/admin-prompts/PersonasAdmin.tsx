@@ -29,8 +29,8 @@ function TogglePersonaModal({
   const nextStatusLabel = persona.enabled ? "inactive" : "active"
 
   return (
-    <div className="modal-overlay" role="presentation">
-      <div className="modal-content personas-admin-modal" role="dialog" aria-modal="true" aria-labelledby="persona-toggle-title">
+    <div className="app-overlay" role="presentation">
+      <div className="app-modal personas-admin-modal" role="dialog" aria-modal="true" aria-labelledby="persona-toggle-title">
         <h3 id="persona-toggle-title">
           {persona.enabled ? "Désactiver la persona" : "Réactiver la persona"}
         </h3>
@@ -38,11 +38,11 @@ function TogglePersonaModal({
           La persona <strong>{persona.name}</strong> passera au statut <strong>{nextStatusLabel}</strong>.
         </p>
         {affectedUsersCount > 0 ? (
-          <p className="state-line state-warning">
+          <p className="app-state app-state--warning">
             Cette persona est utilisée par {affectedUsersCount} utilisateurs actifs. La désactiver peut affecter leur expérience.
           </p>
         ) : null}
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" type="button" onClick={onCancel}>
             Annuler
           </button>
@@ -129,7 +129,7 @@ export function PersonasAdmin() {
         </div>
       </header>
 
-      {successMessage ? <p className="state-line state-success">{successMessage}</p> : null}
+      {successMessage ? <p className="app-state app-state--success">{successMessage}</p> : null}
       {errorMessage ? <p className="chat-error">{errorMessage}</p> : null}
       {personasQuery.isPending ? <div className="loading-placeholder">Chargement des personas...</div> : null}
       {hasError ? (
@@ -164,7 +164,7 @@ export function PersonasAdmin() {
             ))}
           </aside>
 
-          <section className="personas-admin__detail panel" aria-label="Détail persona">
+          <section className="personas-admin__detail app-panel" aria-label="Détail persona">
             {detail ? (
               <>
                 <div className="personas-admin__detail-header">

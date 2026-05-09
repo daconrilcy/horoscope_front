@@ -211,7 +211,7 @@ export function AdminPromptEditorPanel({
 
   if (!baseVersion) {
     return (
-      <section className="admin-prompts-editor panel" aria-labelledby="prompt-editor-heading">
+      <section className="admin-prompts-editor app-panel" aria-labelledby="prompt-editor-heading">
         <div className="admin-prompts-editor__header">
           <div>
             <h4 id="prompt-editor-heading" className="admin-prompts-editor__title">
@@ -228,7 +228,7 @@ export function AdminPromptEditorPanel({
   }
 
   return (
-    <section className="admin-prompts-editor panel" aria-labelledby="prompt-editor-heading">
+    <section className="admin-prompts-editor app-panel" aria-labelledby="prompt-editor-heading">
       <div className="admin-prompts-editor__header">
         <div>
           <h4 id="prompt-editor-heading" className="admin-prompts-editor__title">
@@ -253,7 +253,7 @@ export function AdminPromptEditorPanel({
       <p className="admin-prompts-editor__reference text-muted">{strings.basedOnHint}</p>
 
       {saveSuccess ? (
-        <p className="state-line state-success" role="status" aria-live="polite">
+        <p className="app-state app-state--success" role="status" aria-live="polite">
           {saveSuccess}
         </p>
       ) : null}

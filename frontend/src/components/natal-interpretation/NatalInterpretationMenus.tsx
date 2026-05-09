@@ -198,8 +198,8 @@ export function ConfirmDeleteModal({
   isDeleting: boolean
 }) {
   return (
-    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
-      <div className="modal-content natal-interpretation__modal" onClick={(event) => event.stopPropagation()}>
+    <div className="app-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
+      <div className="app-modal natal-interpretation__modal" onClick={(event) => event.stopPropagation()}>
         <div className="ni-modal-header">
           <div className="ni-modal-icon">
             <AlertCircle size={24} />

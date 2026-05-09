@@ -4,14 +4,14 @@ import { detectLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
 
 type AstrologerCardProps = {
-  astrologer: Astrologer
+  expert: Astrologer
   featured?: boolean
   isDefault?: boolean
   onClick: () => void
 }
 
-function getAstrologerTheme(astrologer: Astrologer): string {
-  const firstName = astrologer.first_name.toLowerCase()
+function getAstrologerTheme(expert: Astrologer): string {
+  const firstName = expert.first_name.toLowerCase()
   if (firstName === "étienne" || firstName === "etienne") return "etienne"
   if (firstName === "luna") return "luna"
   if (firstName === "nox") return "nox"
@@ -40,83 +40,83 @@ function getAstrologerIcon(theme: string): string {
   }
 }
 
-function getFeaturedBadge(astrologer: Astrologer): string {
-  const firstName = astrologer.first_name.toLowerCase()
+function getFeaturedBadge(expert: Astrologer): string {
+  const firstName = expert.first_name.toLowerCase()
   if (firstName === "orion") return "Analyse precise"
   if (firstName === "étienne" || firstName === "etienne") return "Debutants"
   if (firstName === "atlas") return "Decisions"
   if (firstName === "luna") return "Relationnel"
   if (firstName === "nox") return "Profondeur"
   if (firstName === "sélène" || firstName === "selene") return "Cycles"
-  return astrologer.style
+  return expert.style
 }
 
 function getProviderBadgeLabel(providerType: Astrologer["provider_type"], lang: ReturnType<typeof detectLang>) {
   return providerType === "real" ? t("provider_type_real", lang) : t("provider_type_ai", lang)
 }
 
-export function AstrologerCard({ astrologer, featured = false, isDefault, onClick }: AstrologerCardProps) {
+export function AstrologerCard({ expert, featured = false, isDefault, onClick }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
-  const showImage = astrologer.avatar_url && !imgError
-  const fullName = [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") || astrologer.name
-  const theme = getAstrologerTheme(astrologer)
+  const showImage = expert.avatar_url && !imgError
+  const fullName = [expert.first_name, expert.last_name].filter(Boolean).join(" ") || expert.name
+  const theme = getAstrologerTheme(expert)
   const icon = getAstrologerIcon(theme)
-  const featuredBadge = getFeaturedBadge(astrologer)
-  const providerBadgeLabel = getProviderBadgeLabel(astrologer.provider_type, lang)
+  const featuredBadge = getFeaturedBadge(expert)
+  const providerBadgeLabel = getProviderBadgeLabel(expert.provider_type, lang)
   const providerBadgeClassName =
-    astrologer.provider_type === "real"
-      ? "astrologer-card-provider-badge astrologer-card-provider-badge--real"
-      : "astrologer-card-provider-badge astrologer-card-provider-badge--ia"
+    expert.provider_type === "real"
+      ? "person-card-provider-badge person-card-provider-badge--real"
+      : "person-card-provider-badge person-card-provider-badge--ia"
 
   return (
     <button
-      className={`astrologer-card ${featured ? "astrologer-card--featured" : ""}`}
+      className={`person-card ${featured ? "person-card--featured" : ""}`}
       onClick={onClick}
       type="button"
       aria-label={`${t("view_profile_aria", lang)} ${fullName}`}
       data-theme={theme}
     >
-      <div className="astrologer-card-orbit astrologer-card-orbit--one" aria-hidden="true" />
-      <div className="astrologer-card-orbit astrologer-card-orbit--two" aria-hidden="true" />
-      <div className="astrologer-card-topline">
-        <span className="astrologer-card-icon" aria-hidden="true">{icon}</span>
-        <div className="astrologer-card-badge-stack">
+      <div className="person-card-orbit person-card-orbit--one" aria-hidden="true" />
+      <div className="person-card-orbit person-card-orbit--two" aria-hidden="true" />
+      <div className="person-card-topline">
+        <span className="person-card-icon" aria-hidden="true">{icon}</span>
+        <div className="person-card-badge-stack">
           {isDefault && (
-            <span className="astrologer-default-badge">
+            <span className="person-default-badge">
               {t("your_default", lang)}
             </span>
           )}
           <span className={providerBadgeClassName}>{providerBadgeLabel}</span>
-          {featured && <span className="astrologer-card-featured-badge">{featuredBadge}</span>}
+          {featured && <span className="person-card-featured-badge">{featuredBadge}</span>}
         </div>
       </div>
-      <div className="astrologer-card-avatar">
+      <div className="person-card-avatar">
         {showImage ? (
           <img
-            src={astrologer.avatar_url || ""}
+            src={expert.avatar_url || ""}
             alt={`${t("avatar_alt", lang)} ${fullName}`}
-            className="astrologer-card-avatar-img"
+            className="person-card-avatar-img"
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="astrologer-card-avatar-icon" aria-hidden="true">
+          <span className="person-card-avatar-icon" aria-hidden="true">
             ✨
           </span>
         )}
       </div>
-      <span className="astrologer-card-name">{fullName}</span>
-      <span className="astrologer-card-display-name">{astrologer.name}</span>
-      <p className="astrologer-card-style">{astrologer.style}</p>
-      <div className="astrologer-card-divider" aria-hidden="true" />
-      <div className="astrologer-card-specialties">
-        {astrologer.specialties.slice(0, 3).map((specialty) => (
-          <span key={specialty} className="astrologer-card-tag">
+      <span className="person-card-name">{fullName}</span>
+      <span className="person-card-display-name">{expert.name}</span>
+      <p className="person-card-style">{expert.style}</p>
+      <div className="person-card-divider" aria-hidden="true" />
+      <div className="person-card-specialties">
+        {expert.specialties.slice(0, 3).map((specialty) => (
+          <span key={specialty} className="person-card-tag">
             {specialty}
           </span>
         ))}
       </div>
-      <p className="astrologer-card-bio">{astrologer.bio_short}</p>
+      <p className="person-card-bio">{expert.bio_short}</p>
     </button>
   )
 }

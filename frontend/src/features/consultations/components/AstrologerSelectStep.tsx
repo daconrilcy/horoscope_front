@@ -14,35 +14,35 @@ export function AstrologerSelectStep({
   onSelect,
 }: AstrologerSelectStepProps) {
   const lang = detectLang()
-  const { data: astrologers, isPending, error, refetch, isFetching } = useAstrologers()
-  const hasSelectableAstrologers = Boolean(astrologers && astrologers.length > 0)
+  const { data: experts, isPending, error, refetch, isFetching } = useAstrologers()
+  const hasSelectableAstrologers = Boolean(experts && experts.length > 0)
 
   return (
-    <div className="wizard-step">
-      <h2 className="wizard-step-title">{t("select_astrologer", lang)}</h2>
+    <div className="flow-step">
+      <h2 className="flow-step-title">{t("select_astrologer_step_title", lang)}</h2>
 
       <button
         type="button"
         className={classNames(
-          "astrologer-option",
-          "astrologer-option--auto",
-          selectedId === AUTO_ASTROLOGER_ID && "astrologer-option--selected"
+          "person-option",
+          "person-option--auto",
+          selectedId === AUTO_ASTROLOGER_ID && "person-option--selected"
         )}
         onClick={() => onSelect(AUTO_ASTROLOGER_ID)}
         aria-pressed={selectedId === AUTO_ASTROLOGER_ID}
       >
-        <span className="astrologer-option-icon" aria-hidden="true">
+        <span className="person-option-icon" aria-hidden="true">
           ✨
         </span>
-        <span className="astrologer-option-label">{t("auto_astrologer", lang)}</span>
+        <span className="person-option-label">{t("auto_astrologer", lang)}</span>
       </button>
 
       {isPending && (
-        <div className="wizard-loading" aria-live="polite">{t("loading", lang)}</div>
+        <div className="flow-loading" aria-live="polite">{t("loading", lang)}</div>
       )}
 
       {error && !hasSelectableAstrologers && (
-        <div className="wizard-error" role="alert" aria-live="assertive">
+        <div className="flow-error" role="alert" aria-live="assertive">
           <p>{t("error_loading_astrologers", lang)}</p>
           <button
             type="button"
@@ -55,43 +55,42 @@ export function AstrologerSelectStep({
         </div>
       )}
 
-      {!isPending && hasSelectableAstrologers && astrologers && (
-        <div className="astrologer-select-grid">
-          {astrologers.map((astrologer: Astrologer) => {
-            const isSelected = selectedId === astrologer.id
+      {!isPending && hasSelectableAstrologers && experts && (
+        <div className="person-select-grid">
+          {experts.map((expert: Astrologer) => {
+            const isSelected = selectedId === expert.id
             const fullName =
-              [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") ||
-              astrologer.name
+              [expert.first_name, expert.last_name].filter(Boolean).join(" ") ||
+              expert.name
 
             return (
               <button
-                key={astrologer.id}
+                key={expert.id}
                 type="button"
                 className={classNames(
-                  "astrologer-option",
-                  isSelected && "astrologer-option--selected"
+                  "person-option",
+                  isSelected && "person-option--selected"
                 )}
-                onClick={() => onSelect(astrologer.id)}
+                onClick={() => onSelect(expert.id)}
                 aria-pressed={isSelected}
               >
-                <div className="astrologer-option-avatar">
-                  {astrologer.avatar_url ? (
+                <div className="person-option-avatar">
+                  {expert.avatar_url ? (
                     <img
-                      src={astrologer.avatar_url}
+                      src={expert.avatar_url}
                       alt=""
-                      className="astrologer-option-avatar-img"
+                      className="person-option-avatar-img"
                       onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = "none"
+                        e.currentTarget.hidden = true
                       }}
                     />
                   ) : (
-                    <span className="astrologer-option-avatar-fallback">✨</span>
+                    <span className="person-option-avatar-fallback">✨</span>
                   )}
                 </div>
-                <div className="astrologer-option-info">
-                  <span className="astrologer-option-name">{fullName}</span>
-                  <span className="astrologer-option-style">{astrologer.style}</span>
+                <div className="person-option-info">
+                  <span className="person-option-name">{fullName}</span>
+                  <span className="person-option-style">{expert.style}</span>
                 </div>
               </button>
             )
@@ -100,7 +99,7 @@ export function AstrologerSelectStep({
       )}
 
       {!isPending && !error && !hasSelectableAstrologers && (
-        <div className="wizard-error" role="status" aria-live="polite">
+        <div className="flow-error" role="status" aria-live="polite">
           <p>{t("no_astrologers_available", lang)}</p>
           <button
             type="button"

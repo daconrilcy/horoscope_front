@@ -30,23 +30,23 @@ function ConsultationCatalogueCard({
 }) {
   const cardContent = (
     <>
-      <div className="consultation-card-premium-icon" aria-hidden="true">
+      <div className="activity-card-premium-icon" aria-hidden="true">
         {icon}
       </div>
-      <div className="consultation-card-premium-main">
-        <h3 className="consultation-card-premium-title">{title}</h3>
-        <p className="consultation-card-premium-subtitle">{subtitle}</p>
+      <div className="activity-card-premium-main">
+        <h3 className="activity-card-premium-title">{title}</h3>
+        <p className="activity-card-premium-subtitle">{subtitle}</p>
         {tags && tags.length > 0 ? (
-          <div className="consultation-card-premium-tags">
+          <div className="activity-card-premium-tags">
             {tags.map((tag) => (
-              <span key={tag} className="consultation-premium-tag">
+              <span key={tag} className="activity-premium-tag">
                 {tag}
               </span>
             ))}
           </div>
         ) : null}
       </div>
-      <div className="consultation-card-premium-action">
+      <div className="activity-card-premium-action">
         {isLocked ? (
           <UpgradeCTA
             featureCode="thematic_consultation"
@@ -63,14 +63,14 @@ function ConsultationCatalogueCard({
 
   if (isLocked) {
     return (
-      <div className="consultation-card-premium consultation-card-premium--locked">
+      <div className="activity-card-premium activity-card-premium--locked">
         {cardContent}
       </div>
     )
   }
 
   return (
-    <Link to={to} className="consultation-card-premium">
+    <Link to={to} className="activity-card-premium">
       {cardContent}
     </Link>
   )
@@ -88,24 +88,24 @@ export function ConsultationsPage() {
       : "Upgrade to Basic for thematic consultations"
 
   return (
-    <PageLayout className="consultations-page premium-page-layout">
+    <PageLayout className="activities-page premium-page-layout">
       <div className="premium-hero-section">
         <Link to="/dashboard" className="premium-back-link">
           <span className="premium-back-icon">←</span>
-          {t("back_to_dashboard", lang)}
+          {t("back_to_overview", lang)}
         </Link>
         <h1 className="premium-hero-title">{t("page_title", lang)}</h1>
         <p className="premium-hero-subtitle">{t("page_subtitle", lang)}</p>
       </div>
 
-      <section className="consultations-catalogue-section">
+      <section className="activities-catalogue-section">
         {isCatalogueLoading ? (
           <div className="premium-loading-state">
             <div className="premium-spinner"></div>
             <span>{t("loading_catalogue", lang)}</span>
           </div>
         ) : (
-          <div className="consultation-cards-container">
+          <div className="activity-cards-container">
             {catalogue?.items.map((item) => (
               <ConsultationCatalogueCard
                 key={item.key}
@@ -133,39 +133,39 @@ export function ConsultationsPage() {
         )}
       </section>
 
-      <section className="consultations-history-section-premium" aria-live="polite">
+      <section className="activities-history-section-premium" aria-live="polite">
         <h2 className="premium-section-title">{t("history_title", lang)}</h2>
         {isHistoryLoading ? (
           <div className="premium-loading-state-inline">{t("loading", lang)}</div>
         ) : history.length === 0 ? (
           <div className="premium-empty-state-inline">{t("no_history", lang)}</div>
         ) : (
-          <div className="consultations-history-list-premium">
-            {history.map((consultation) => {
-              const typeConfig = getConsultationTypeConfig(consultation.type)
+          <div className="activities-history-list-premium">
+            {history.map((session) => {
+              const typeConfig = getConsultationTypeConfig(session.type)
               return (
                 <Link
-                  key={consultation.id}
-                  to={`/consultations/result?id=${consultation.id}`}
-                  className="consultation-history-card-premium"
+                  key={session.id}
+                  to={`/consultations/result?id=${session.id}`}
+                  className="activity-history-card-premium"
                 >
-                  <div className="consultation-history-card-header">
-                    <span className="consultation-history-card-icon" aria-hidden="true">
+                  <div className="activity-history-card-header">
+                    <span className="activity-history-card-icon" aria-hidden="true">
                       {typeConfig?.icon}
                     </span>
-                    <div className="consultation-history-card-meta">
-                      <span className="consultation-history-card-type">
+                    <div className="activity-history-card-meta">
+                      <span className="activity-history-card-type">
                         {t(typeConfig?.labelKey ?? "", lang)}
                       </span>
-                      <span className="consultation-history-card-date">
-                        {formatDate(consultation.createdAt, lang)}
+                      <span className="activity-history-card-date">
+                        {formatDate(session.createdAt, lang)}
                       </span>
                     </div>
                   </div>
-                  <p className="consultation-history-card-context">
-                    {consultation.context.length > CONTEXT_TRUNCATE_LENGTH
-                      ? `${consultation.context.slice(0, CONTEXT_TRUNCATE_LENGTH)}...`
-                      : consultation.context}
+                  <p className="activity-history-card-context">
+                    {session.context.length > CONTEXT_TRUNCATE_LENGTH
+                      ? `${session.context.slice(0, CONTEXT_TRUNCATE_LENGTH)}...`
+                      : session.context}
                   </p>
                 </Link>
               )

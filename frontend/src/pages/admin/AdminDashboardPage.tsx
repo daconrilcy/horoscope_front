@@ -130,10 +130,10 @@ export function AdminDashboardPage() {
   }
 
   return (
-    <div className="admin-dashboard-page">
+    <div className="admin-summary-page">
       <header className="admin-page-header">
         <h2>Tableau de bord</h2>
-        <div className="dashboard-filters">
+        <div className="summary-filters">
           <div className="filter-group">
             <label htmlFor="period-select">Période :</label>
             <select id="period-select" value={period} onChange={(e) => setPeriod(e.target.value)}>
@@ -154,7 +154,7 @@ export function AdminDashboardPage() {
         </div>
       </header>
 
-      <section className="dashboard-section">
+      <section className="summary-section">
         <h3 className="section-title">État Instantané</h3>
         <div className="kpi-grid">
           <KpiCard title="Inscrits totaux" value={snapshot?.total_users} loading={snapshotQuery.isLoading} />
@@ -164,7 +164,7 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboard-section">
+      <section className="summary-section">
         <h3 className="section-title">Métriques de Flux ({period === "12m" ? "12 mois" : period})</h3>
         <div className="kpi-grid">
           <KpiCard title="Nouveaux inscrits" value={flux?.new_users} loading={fluxQuery.isLoading} />
@@ -181,7 +181,7 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboard-section dashboard-visuals">
+      <section className="summary-section summary-visuals">
         <div className="visual-card">
           <h3 className="visual-card-title">Tendance des inscriptions</h3>
           {fluxQuery.isLoading ? (
@@ -208,7 +208,7 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="dashboard-section">
+      <section className="summary-section">
         <div className="visual-card visual-card--full">
           <div className="visual-card-header">
             <h3 className="visual-card-title">Répartition du revenu estimé</h3>

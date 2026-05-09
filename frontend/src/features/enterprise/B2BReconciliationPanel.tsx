@@ -81,7 +81,7 @@ function B2BReconciliationPanelContent() {
   }
 
   return (
-    <section className="panel">
+    <section className="app-panel">
       <h2>{t.title}</h2>
       <p>{t.description}</p>
 
@@ -105,7 +105,7 @@ function B2BReconciliationPanelContent() {
         <option value="none">{t.severities.none}</option>
       </select>
 
-      <div className="action-row">
+      <div className="app-actions">
         <button
           type="button"
           onClick={() => {
@@ -119,7 +119,7 @@ function B2BReconciliationPanelContent() {
       </div>
 
       {isLoading ? (
-        <p aria-busy="true" className="state-line state-loading">
+        <p aria-busy="true" className="app-state app-state--loading">
           {t.loading}
         </p>
       ) : null}
@@ -135,12 +135,12 @@ function B2BReconciliationPanelContent() {
           {detailError.requestId ? ` [request_id=${detailError.requestId}]` : ""}
         </p>
       ) : null}
-      {isEmpty ? <p className="state-line state-empty">{t.empty}</p> : null}
+      {isEmpty ? <p className="app-state app-state--empty">{t.empty}</p> : null}
 
       {issuesQuery.data && issuesQuery.data.items.length > 0 ? (
         <>
           <h3>{t.resultsTitle(issuesQuery.data.total)}</h3>
-          <ul className="chat-list compact-list">
+          <ul className="chat-list app-list app-list--compact">
             {issuesQuery.data.items.map((issue) => (
               <li key={issue.issue_id} className="chat-item">
                 <button
@@ -160,7 +160,7 @@ function B2BReconciliationPanelContent() {
       {activeIssue ? (
         <>
           <h3>{t.detailTitle}</h3>
-          <ul className="chat-list compact-list">
+          <ul className="chat-list app-list app-list--compact">
             <li className="chat-item">Issue: {activeIssue.issue_id}</li>
             <li className="chat-item">Type: {activeIssue.mismatch_type}</li>
             <li className="chat-item">Delta unités: {activeIssue.delta_units}</li>
@@ -176,7 +176,7 @@ function B2BReconciliationPanelContent() {
             placeholder="commentaire ops"
           />
 
-          <div className="action-row">
+          <div className="app-actions">
             {activeIssue.recommended_actions.map((hint) => (
               <button
                 key={hint.code}
@@ -190,7 +190,7 @@ function B2BReconciliationPanelContent() {
           </div>
 
           {actionMutation.isSuccess ? (
-            <p className="state-line state-success">
+            <p className="app-state app-state--success">
               {t.actionExecuted(actionMutation.data.action, actionMutation.data.correction_state)}
             </p>
           ) : null}

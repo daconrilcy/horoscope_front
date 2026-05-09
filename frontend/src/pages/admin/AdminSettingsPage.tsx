@@ -55,8 +55,8 @@ function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content export-modal">
+    <div className="app-overlay">
+      <div className="app-modal export-modal">
         <h3>Exporter : {labels[type]}</h3>
         
         <div className="alert-box alert-box--warning">
@@ -95,7 +95,7 @@ function ExportModal({ type, onClose, onExportCompleted }: ExportModalProps) {
           </label>
         </div>
 
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" onClick={onClose}>Annuler</button>
           <button 
             className="action-button action-button--primary" 
@@ -120,12 +120,12 @@ export function AdminSettingsPage() {
   }
 
   return (
-    <div className="admin-settings-page">
+    <div className="admin-control-page">
       <header className="admin-page-header">
         <h2>Paramètres & Exports</h2>
       </header>
 
-      <section className="settings-section">
+      <section className="control-section">
         <h3>Exports de données</h3>
         <p className="section-description">Téléchargez les données brutes pour reporting ou backup.</p>
 

@@ -95,7 +95,7 @@ export function SignUpForm({ onSignIn }: SignUpFormProps) {
   }
 
   return (
-    <section className="panel premium-glass-card auth-form-card">
+    <section className="app-panel premium-glass-card auth-form-card">
       <h2 className="auth-form-title">{tAuth.signUp.title}</h2>
 
       {selectedPlan && (

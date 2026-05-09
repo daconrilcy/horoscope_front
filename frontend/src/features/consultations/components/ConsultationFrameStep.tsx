@@ -22,15 +22,15 @@ export function ConsultationFrameStep({
   const isRelationshipType = draft.type === "relationship"
 
   return (
-    <div className="wizard-step">
-      <h2 className="wizard-step-title">{t("frame_step_title", lang)}</h2>
+    <div className="flow-step">
+      <h2 className="flow-step-title">{t("frame_step_title", lang)}</h2>
 
       <div className="validation-context">
-        <label htmlFor="consultation-objective" className="validation-context-label">
+        <label htmlFor="activity-objective" className="validation-context-label">
           {t("objective_label", lang)}
         </label>
         <input
-          id="consultation-objective"
+          id="activity-objective"
           className="validation-context-input"
           type="text"
           value={draft.objective ?? ""}
@@ -38,28 +38,28 @@ export function ConsultationFrameStep({
           placeholder={t("objective_placeholder", lang)}
         />
 
-        <label htmlFor="consultation-context" className="validation-context-label">
+        <label htmlFor="activity-context" className="validation-context-label">
           {t("enter_context", lang)}
         </label>
         <textarea
-          id="consultation-context"
+          id="activity-context"
           className="validation-context-input"
           value={draft.context}
           onChange={(e) => onContextChange(e.target.value)}
           placeholder={t("context_placeholder", lang)}
           rows={4}
           maxLength={CONTEXT_MAX_LENGTH}
-          aria-describedby="consultation-context-counter"
+          aria-describedby="activity-context-counter"
         />
-        <div id="consultation-context-counter" className="validation-context-counter">
+        <div id="activity-context-counter" className="validation-context-counter">
           {CONTEXT_MAX_LENGTH - draft.context.length} {t("context_max_length_hint", lang)}
         </div>
 
-        <label htmlFor="consultation-time-horizon" className="validation-context-label">
+        <label htmlFor="activity-time-horizon" className="validation-context-label">
           {t("time_horizon_label", lang)}
         </label>
         <input
-          id="consultation-time-horizon"
+          id="activity-time-horizon"
           className="validation-context-input"
           type="text"
           value={draft.timeHorizon ?? ""}
@@ -72,12 +72,12 @@ export function ConsultationFrameStep({
           <div className="interaction-toggle-section">
             <div className="checkbox-label">
               <input
-                id="consultation-is-interaction"
+                id="activity-is-interaction"
                 type="checkbox"
                 checked={!!draft.isInteraction}
                 onChange={(e) => onInteractionToggle(e.target.checked)}
               />
-              <label htmlFor="consultation-is-interaction">
+              <label htmlFor="activity-is-interaction">
                 {t("is_interaction_label", lang)}
               </label>
             </div>

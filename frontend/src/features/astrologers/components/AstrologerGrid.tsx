@@ -4,18 +4,18 @@ import { tAstrologers as t } from "@i18n/astrologers"
 import { AstrologerCard } from "./AstrologerCard"
 
 type AstrologerGridProps = {
-  astrologers: Astrologer[]
-  onSelectAstrologer: (astrologer: Astrologer) => void
+  experts: Astrologer[]
+  onSelectAstrologer: (expert: Astrologer) => void
   defaultAstrologerId?: string | null
 }
 
-export function AstrologerGrid({ astrologers, onSelectAstrologer, defaultAstrologerId }: AstrologerGridProps) {
+export function AstrologerGrid({ experts, onSelectAstrologer, defaultAstrologerId }: AstrologerGridProps) {
   const lang = detectLang()
 
-  if (astrologers.length === 0) {
+  if (experts.length === 0) {
     return (
-      <div className="astrologer-grid-empty">
-        <span className="astrologer-grid-empty-icon" role="img" aria-label={t("aria_star", lang)}>
+      <div className="person-grid-empty">
+        <span className="person-grid-empty-icon" role="img" aria-label={t("aria_star", lang)}>
           ⭐
         </span>
         <p>{t("empty_state", lang)}</p>
@@ -24,14 +24,14 @@ export function AstrologerGrid({ astrologers, onSelectAstrologer, defaultAstrolo
   }
 
   return (
-    <div className="astrologer-grid">
-      {astrologers.map((astrologer, index) => (
+    <div className="person-grid">
+      {experts.map((expert, index) => (
         <AstrologerCard
-          key={astrologer.id}
-          astrologer={astrologer}
+          key={expert.id}
+          expert={expert}
           featured={index === 0}
-          isDefault={astrologer.id === defaultAstrologerId}
-          onClick={() => onSelectAstrologer(astrologer)}
+          isDefault={expert.id === defaultAstrologerId}
+          onClick={() => onSelectAstrologer(expert)}
         />
       ))}
     </div>

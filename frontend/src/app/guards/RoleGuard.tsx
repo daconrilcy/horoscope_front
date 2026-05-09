@@ -16,8 +16,8 @@ export function RoleGuard({ children, roles }: RoleGuardProps) {
 
   if (authMe.isLoading) {
     return (
-      <div className="panel">
-        <div className="state-line state-loading" role="status" aria-live="polite">
+      <div className="app-panel">
+        <div className="app-state app-state--loading" role="status" aria-live="polite">
           Vérification des permissions...
         </div>
       </div>

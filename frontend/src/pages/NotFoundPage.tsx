@@ -7,7 +7,7 @@ export function NotFoundPage() {
 
   return (
     <AuthLayout>
-      <section className="panel not-found-panel">
+      <section className="app-panel not-found-panel">
         <h1>Page non trouvée</h1>
         <p>La page que vous recherchez n'existe pas ou a été déplacée.</p>
         <button type="button" onClick={() => navigate("/dashboard")} className="btn btn--primary not-found-panel__action">

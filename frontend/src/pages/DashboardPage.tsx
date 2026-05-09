@@ -7,7 +7,7 @@ import { SectionErrorBoundary } from "../components/ErrorBoundary"
 import "./DashboardPage.css"
 
 /**
- * Primary dashboard landing page (Story 45.2).
+ * Primary overview landing page (Story 45.2).
  * Provides high-level daily insights and quick access to main features.
  */
 export function DashboardPage() {
@@ -16,18 +16,18 @@ export function DashboardPage() {
 
   return (
     <PageLayout
-      className="dashboard-container"
+      className="summary-container"
     >
-      <div className="dashboard-container__bg-halo-3" />
+      <div className="summary-container__bg-halo-3" />
       
-      <header className="dashboard-header">
-        <p className="dashboard-header__kicker">{header.kicker}</p>
-        <h2 className="dashboard-title">{title}</h2>
-        <p className="dashboard-welcome">{welcome}</p>
+      <header className="summary-header">
+        <p className="summary-header__kicker">{header.kicker}</p>
+        <h2 className="summary-title">{title}</h2>
+        <p className="summary-welcome">{welcome}</p>
       </header>
 
-      <div className="dashboard-section-header">
-        <h3 className="dashboard-section-title">{header.title}</h3>
+      <div className="summary-section-header">
+        <h3 className="summary-section-title">{header.title}</h3>
       </div>
 
       <SectionErrorBoundary>

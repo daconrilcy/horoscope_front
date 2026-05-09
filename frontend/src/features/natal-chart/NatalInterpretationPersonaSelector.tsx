@@ -19,18 +19,18 @@ export function PersonaSelector({
   isSubmitting?: boolean
   excludedPersonaIds?: Set<string>
 }) {
-  const { data: astrologers, isLoading, isError, refetch } = useAstrologers()
-  const availableAstrologers = (astrologers ?? []).filter(
-    (astrologer) => !excludedPersonaIds?.has(astrologer.id),
+  const { data: experts, isLoading, isError, refetch } = useAstrologers()
+  const availableAstrologers = (experts ?? []).filter(
+    (expert) => !excludedPersonaIds?.has(expert.id),
   )
 
   return (
-    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="persona-selector-title">
+    <div className="app-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="persona-selector-title">
       <div
-        className="modal-content natal-interpretation__fullscreen-modal"
+        className="app-modal natal-interpretation__fullscreen-modal"
         onClick={(event) => event.stopPropagation()}
       >
-        <h4 className="modal-title" id="persona-selector-title">{t.personaSelectorTitle}</h4>
+        <h4 className="app-modal__title" id="persona-selector-title">{t.personaSelectorTitle}</h4>
 
         <div className="ni-persona-selector__body">
           {isLoading ? (
@@ -47,10 +47,10 @@ export function PersonaSelector({
             </div>
           ) : availableAstrologers.length > 0 ? (
             <AstrologerGrid
-              astrologers={availableAstrologers}
-              onSelectAstrologer={(astrologer: Astrologer) => {
+              experts={availableAstrologers}
+              onSelectAstrologer={(expert: Astrologer) => {
                 if (isSubmitting) return
-                onConfirm(astrologer.id)
+                onConfirm(expert.id)
               }}
             />
           ) : (
@@ -58,7 +58,7 @@ export function PersonaSelector({
           )}
         </div>
 
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button type="button" onClick={onCancel} disabled={isSubmitting} className="ni-modal-cancel-btn">
             {t.cancel}
           </button>

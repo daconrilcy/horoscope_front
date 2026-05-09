@@ -50,7 +50,7 @@ type AstrologerProfileFinalCtaProps = {
   profile: AstrologerProfile
   trustItems: AstrologerProfileTrustItem[]
   labels: {
-    consultation: string
+    session: string
     chat: string
     natal: string
   }
@@ -227,7 +227,7 @@ export function AstrologerProfileFinalCta({
     <section className="profile-final-cta">
       <div className="profile-final-cta__sparkles" aria-hidden="true">✦</div>
       <h2 className="profile-full-name profile-full-name--cta">{`Commencer avec ${profile.first_name}`}</h2>
-      <p className="profile-final-cta__subtitle">Réservez votre première consultation découverte</p>
+      <p className="profile-final-cta__subtitle">Réservez votre première session découverte</p>
       <Button
         size="lg"
         variant="primary"
@@ -235,7 +235,7 @@ export function AstrologerProfileFinalCta({
         onClick={onConsultation}
         rightIcon={<ArrowRight size={20} />}
       >
-        {labels.consultation}
+        {labels.session}
       </Button>
       <div className="profile-final-cta__trust">
         {trustItems.map((item) => {

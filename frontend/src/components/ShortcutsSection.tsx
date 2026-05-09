@@ -24,7 +24,7 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
       isOnline: true,
     },
     {
-      key: 'consultation',
+      key: 'session',
       title: shortcuts.consultationTitle,
       subtitle: shortcuts.consultationSubtitle,
       icon: Layers,
@@ -42,7 +42,7 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
       isOnline: false,
     },
   ] satisfies Array<{
-    key: 'chat' | 'consultation' | 'history'
+    key: 'chat' | 'session' | 'history'
     title: string
     subtitle: string
     icon: typeof MessageCircle
@@ -53,14 +53,14 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
 
   return (
     <section className="shortcuts-section">
-      <div className="dashboard-section-header shortcuts-section__header">
-        <h3 className="dashboard-section-title shortcuts-section__title">{activities}</h3>
+      <div className="summary-section-header shortcuts-section__header">
+        <h3 className="summary-section-title shortcuts-section__title">{activities}</h3>
       </div>
       <div className="shortcuts-grid">
         {shortcutItems.map((shortcut) => {
           let handleClick = undefined;
           if (shortcut.key === 'chat') handleClick = onChatClick;
-          else if (shortcut.key === 'consultation') handleClick = onConsultationClick;
+          else if (shortcut.key === 'session') handleClick = onConsultationClick;
           else if (shortcut.key === 'history') handleClick = onHistoryClick;
 
           return (

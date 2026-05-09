@@ -11,7 +11,7 @@ export function ConsultationFallbackBanner({ precheck }: ConsultationFallbackBan
 
   if (precheck.status === "nominal") {
     return (
-      <div className="consultation-banner consultation-banner--nominal">
+      <div className="activity-banner activity-banner--nominal">
         <span className="banner-icon">✨</span>
         <div className="banner-content">
           <p className="banner-title">{t("precision_high", lang)}</p>
@@ -23,7 +23,7 @@ export function ConsultationFallbackBanner({ precheck }: ConsultationFallbackBan
 
   if (precheck.status === "degraded") {
     return (
-      <div className="consultation-banner consultation-banner--degraded">
+      <div className="activity-banner activity-banner--degraded">
         <span className="banner-icon">⚠️</span>
         <div className="banner-content">
           <p className="banner-title">{t(`precision_${precheck.precision_level}`, lang)}</p>
@@ -37,7 +37,7 @@ export function ConsultationFallbackBanner({ precheck }: ConsultationFallbackBan
 
   if (precheck.status === "blocked") {
     return (
-      <div className="consultation-banner consultation-banner--blocked">
+      <div className="activity-banner activity-banner--blocked">
         <span className="banner-icon">🚫</span>
         <div className="banner-content">
           <p className="banner-title">{t("precision_blocked", lang)}</p>

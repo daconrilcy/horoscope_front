@@ -46,13 +46,13 @@ function FeatureFlagModal({
   }
 
   return (
-    <div className="modal-overlay" role="presentation">
-      <div className="modal-content admin-content-modal" role="dialog" aria-modal="true" aria-labelledby="feature-flag-modal-title">
+    <div className="app-overlay" role="presentation">
+      <div className="app-modal admin-content-modal" role="dialog" aria-modal="true" aria-labelledby="feature-flag-modal-title">
         <h3 id="feature-flag-modal-title">Confirmer le changement du feature flag</h3>
         <p className="admin-content-modal__copy">
           Le flag <strong>{state.flag.key}</strong> sera {state.enabled ? "activé" : "désactivé"}.
         </p>
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" type="button" onClick={onCancel}>
             Annuler
           </button>
@@ -81,13 +81,13 @@ function CalibrationModal({
   }
 
   return (
-    <div className="modal-overlay" role="presentation">
-      <div className="modal-content admin-content-modal" role="dialog" aria-modal="true" aria-labelledby="calibration-modal-title">
+    <div className="app-overlay" role="presentation">
+      <div className="app-modal admin-content-modal" role="dialog" aria-modal="true" aria-labelledby="calibration-modal-title">
         <h3 id="calibration-modal-title">Confirmer la mise à jour de la règle</h3>
         <p className="admin-content-modal__copy">
           La règle <strong>{state.rule.rule_code}</strong> sera mise à jour avec la valeur <strong>{state.nextValue}</strong>.
         </p>
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" type="button" onClick={onCancel}>
             Annuler
           </button>
@@ -261,7 +261,7 @@ export function AdminContentPage() {
   }
 
   const renderTextSection = (title: string, entries: Array<{ key: string; value: string; updated_at: string }>) => (
-    <section className="admin-content-section panel" aria-label={title}>
+    <section className="admin-content-section app-panel" aria-label={title}>
       <div className="admin-content-section__header">
         <h3>{title}</h3>
       </div>
@@ -349,7 +349,7 @@ export function AdminContentPage() {
         </div>
       </header>
 
-      {successMessage ? <p className="state-line state-success">{successMessage}</p> : null}
+      {successMessage ? <p className="app-state app-state--success">{successMessage}</p> : null}
       {hasError ? <p className="chat-error">Impossible de charger la configuration de contenu admin.</p> : null}
 
       {activeTab === "paywall" ? renderTextSection("Textes paywalls", paywallTextsQuery.data ?? []) : null}
@@ -361,7 +361,7 @@ export function AdminContentPage() {
       ) : null}
 
       {activeTab === "flags" ? (
-        <section className="panel" aria-label="Feature flags">
+        <section className="app-panel" aria-label="Feature flags">
           <div className="admin-content-section__header">
             <h3>Feature flags</h3>
           </div>
@@ -408,7 +408,7 @@ export function AdminContentPage() {
 
       {activeTab === "rules" ? (
         <div className="admin-content-stack">
-          <section className="panel" aria-label="Templates éditoriaux">
+          <section className="app-panel" aria-label="Templates éditoriaux">
             <div className="admin-content-section__header">
               <h3>Templates éditoriaux</h3>
             </div>
@@ -542,7 +542,7 @@ export function AdminContentPage() {
             </div>
           </section>
 
-          <section className="panel" aria-label="Règles de calibration">
+          <section className="app-panel" aria-label="Règles de calibration">
             <div className="admin-content-section__header">
               <h3>Règles de calibration</h3>
             </div>

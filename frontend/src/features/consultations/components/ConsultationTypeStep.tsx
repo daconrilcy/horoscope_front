@@ -24,9 +24,9 @@ export function ConsultationTypeStep({
 
   if (isLoading) {
     return (
-      <div className="consultation-type-step">
-        <h2 className="wizard-step-title">{t("select_type", lang)}</h2>
-        <div className="state-line state-loading">{t("loading", lang)}</div>
+      <div className="activity-type-step">
+        <h2 className="flow-step-title">{t("select_type", lang)}</h2>
+        <div className="app-state app-state--loading">{t("loading", lang)}</div>
       </div>
     )
   }
@@ -44,12 +44,12 @@ export function ConsultationTypeStep({
       }))
 
   return (
-    <div className="consultation-type-step">
-      <h2 className="wizard-step-title">{t("select_type", lang)}</h2>
+    <div className="activity-type-step">
+      <h2 className="flow-step-title">{t("select_type", lang)}</h2>
       {isError && !catalogue && (
-        <p className="state-line state-error">{t("catalogue_error", lang)}</p>
+        <p className="app-state app-state--error">{t("catalogue_error", lang)}</p>
       )}
-      <div className="consultation-type-grid">
+      <div className="activity-type-grid">
         {items.map((item) => {
           const isSelected = selectedType === item.key
 
@@ -58,16 +58,16 @@ export function ConsultationTypeStep({
               key={item.key}
               type="button"
               className={classNames(
-                "consultation-type-card",
-                isSelected && "consultation-type-card--selected"
+                "activity-type-card",
+                isSelected && "activity-type-card--selected"
               )}
               onClick={() => onSelect(item.key as ConsultationType)}
               aria-pressed={isSelected}
             >
-              <span className="consultation-type-icon" aria-hidden="true">
+              <span className="activity-type-icon" aria-hidden="true">
                 {item.icon_ref}
               </span>
-              <span className="consultation-type-label">
+              <span className="activity-type-label">
                 {item.title}
               </span>
             </button>

@@ -13,7 +13,11 @@ import {
   readFrontendFile,
   toStableJson,
 } from "./design-system-policy"
-import { CSS_FALLBACK_EXCEPTIONS, INLINE_STYLE_EXCEPTIONS } from "./design-system-allowlist"
+import {
+  APP_CSS_SPECIFICITY_EXCEPTIONS,
+  CSS_FALLBACK_EXCEPTIONS,
+  INLINE_STYLE_EXCEPTIONS,
+} from "./design-system-allowlist"
 import { INLINE_STYLE_DYNAMIC_ALLOWLIST } from "./inline-style-allowlist"
 
 function normalizeCssValue(value: string): string {
@@ -86,14 +90,14 @@ function extractSelectedAppValues(ownerBody: string): string[] {
     "--app-button-bg",
     "--app-astro-catalog-page-bg",
     "--app-astro-catalog-atmosphere",
-    "--app-dashboard-summary-bg",
-    "--app-dashboard-summary-shadow",
-    "--app-dashboard-summary-pill-bg",
-    "--app-dashboard-summary-pill-shadow",
-    "--app-dashboard-summary-glow",
-    "--app-dashboard-summary-line",
-    "--app-dashboard-summary-action-bg",
-    "--app-dashboard-summary-action-shadow",
+    "--app-summary-panel-bg",
+    "--app-summary-panel-shadow",
+    "--app-summary-panel-pill-bg",
+    "--app-summary-panel-pill-shadow",
+    "--app-summary-panel-glow",
+    "--app-summary-panel-line",
+    "--app-summary-panel-action-bg",
+    "--app-summary-panel-action-shadow",
   ])
   const declarations = [...ownerBody.matchAll(/(--app-[a-zA-Z0-9_-]+)\s*:\s*([\s\S]*?);/g)]
     .filter((match) => guardedVariables.has(match[1]))
@@ -347,6 +351,30 @@ function hasRepeatedNameSegment(name: string): boolean {
 
 function isMechanicalAppCustomPropertyName(name: string): boolean {
   return name.includes("__") || hasRepeatedNameSegment(name)
+}
+
+function isAppSpecificName(name: string): boolean {
+  return /(?:astrolog|consult|dashboard|settings|wizard|expert|session|preferences|overview)/i.test(name)
+}
+
+function collectAppClassSelectors(css: string): string[] {
+  return [
+    ...new Set(
+      [...css.matchAll(/\.([_a-zA-Z][a-zA-Z0-9_-]*)/g)]
+        .map((match) => match[1])
+        .filter((name) => isAppSpecificName(name) && !name.startsWith("app-")),
+    ),
+  ].sort()
+}
+
+function collectAppSpecificCustomProperties(ownerBody: string): string[] {
+  return [
+    ...new Set(
+      [...ownerBody.matchAll(/(--app-[a-zA-Z0-9_-]+)\s*:/g)]
+        .map((match) => match[1])
+        .filter(isAppSpecificName),
+    ),
+  ].sort()
 }
 
 function extractMigratedSettingsValues(ownerBody: string): string[] {
@@ -646,11 +674,11 @@ describe("design-system guards", () => {
     const bottomNavBlock = findFlatCssBlock(appCss, ".bottom-nav")
     const buttonBlock = findFlatCssBlock(appCss, "button")
     const buttonHoverBlock = findFlatCssBlock(appCss, "button:hover:not(:disabled)")
-    const stateLoadingBlock = findFlatCssBlock(appCss, ".state-loading")
-    const stateEmptyBlock = findFlatCssBlock(appCss, ".state-empty")
-    const stateSuccessBlock = findFlatCssBlock(appCss, ".state-success")
-    const catalogueBlock = findFlatCssBlock(appCss, ".astrologers-page")
-    const summaryBlock = findFlatCssBlock(appCss, ".dashboard-summary-card-wrapper")
+    const stateLoadingBlock = findFlatCssBlock(appCss, ".app-state--loading")
+    const stateEmptyBlock = findFlatCssBlock(appCss, ".app-state--empty")
+    const stateSuccessBlock = findFlatCssBlock(appCss, ".app-state--success")
+    const catalogueBlock = findFlatCssBlock(appCss, ".people-page")
+    const summaryBlock = findFlatCssBlock(appCss, ".summary-panel-card-wrapper")
 
     expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--app-*` | semantic-extension |")
     expect(migratedValues.length).toBeGreaterThan(0)
@@ -668,8 +696,38 @@ describe("design-system guards", () => {
     expect(stateEmptyBlock.body).toContain("var(--app-state-empty-")
     expect(stateSuccessBlock.body).toContain("var(--app-state-success-")
     expect(catalogueBlock.body).toContain("background: var(--app-astro-catalog-page-bg)")
-    expect(summaryBlock.body).toContain("background: var(--app-dashboard-summary-bg)")
-    expect(summaryBlock.body).toContain("box-shadow: var(--app-dashboard-summary-shadow)")
+    expect(summaryBlock.body).toContain("background: var(--app-summary-panel-bg)")
+    expect(summaryBlock.body).toContain("box-shadow: var(--app-summary-panel-shadow)")
+  })
+
+  it("bloque les noms App specifiques non classes par CS-124", () => {
+    const appCss = readFrontendFile("App.css")
+    const ownerBlock = findFlatCssBlock(appCss, "#root")
+    const allowed = new Set(
+      APP_CSS_SPECIFICITY_EXCEPTIONS.map((entry) => `${entry.kind}:${entry.name}`),
+    )
+    const activeEntries = [
+      ...collectAppSpecificCustomProperties(ownerBlock.body).map((name) => ({
+        kind: "custom-property" as const,
+        name,
+      })),
+      ...collectAppClassSelectors(appCss).map((name) => ({
+        kind: "selector" as const,
+        name,
+      })),
+    ]
+    const activeKeys = new Set(activeEntries.map((entry) => `${entry.kind}:${entry.name}`))
+    const violations = activeEntries.filter((entry) => !allowed.has(`${entry.kind}:${entry.name}`))
+    const staleExceptions = APP_CSS_SPECIFICITY_EXCEPTIONS.filter(
+      (entry) => !activeKeys.has(`${entry.kind}:${entry.name}`),
+    )
+    const expiredExceptions = APP_CSS_SPECIFICITY_EXCEPTIONS.filter(
+      (entry) => entry.expiresAfter <= "2026-05-09",
+    )
+
+    expect(violations).toEqual([])
+    expect(staleExceptions).toEqual([])
+    expect(expiredExceptions).toEqual([])
   })
 
   it("bloque les declarations visuelles et typographiques App non routees par CS-087", () => {

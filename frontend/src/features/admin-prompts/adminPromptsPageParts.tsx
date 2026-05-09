@@ -99,9 +99,9 @@ export function ManualLlmExecuteConfirmModal({
   onConfirm,
 }: ManualLlmExecuteConfirmModalProps) {
   return (
-    <div className="modal-overlay" role="presentation">
+    <div className="app-overlay" role="presentation">
       <div
-        className="modal-content admin-prompts-modal admin-prompts-modal--manual-llm"
+        className="app-modal admin-prompts-modal admin-prompts-modal--manual-llm"
         aria-labelledby="manual-llm-exec-title"
         role="dialog"
         aria-modal="true"
@@ -119,7 +119,7 @@ export function ManualLlmExecuteConfirmModal({
           <strong>{inspectionModeLabel}</strong>
           {c.manualLlmModalModeTraced}
         </p>
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" type="button" onClick={onCancel}>
             {c.manualLlmModalCancel}
           </button>
@@ -221,9 +221,9 @@ export function ArchiveRollbackModal({
   const statusTarget = archivePromptStatusLabel(targetVersion.status, archive)
   const statusActive = activeVersion ? archivePromptStatusLabel(activeVersion.status, archive) : ""
   return (
-    <div className="modal-overlay" role="presentation">
+    <div className="app-overlay" role="presentation">
       <div
-        className="modal-content admin-prompts-modal admin-prompts-modal--rollback"
+        className="app-modal admin-prompts-modal admin-prompts-modal--rollback"
         aria-labelledby="archive-rollback-title"
         role="dialog"
         aria-modal="true"
@@ -248,7 +248,7 @@ export function ArchiveRollbackModal({
           <p className="admin-prompts-modal__copy text-muted">{archive.modalNoActiveResolved}</p>
         )}
         <p className="admin-prompts-modal__copy admin-prompts-modal__copy--emphasis">{archive.modalEmphasis}</p>
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" type="button" onClick={onCancel}>
             {archive.modalCancel}
           </button>

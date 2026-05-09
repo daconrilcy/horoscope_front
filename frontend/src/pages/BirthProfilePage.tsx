@@ -515,7 +515,7 @@ export function BirthProfilePage() {
   }
 
   return (
-    <PageLayout className="panel">
+    <PageLayout className="app-panel">
       <h2 id="birth-profile-title">{t.title}</h2>
 
       <BirthProfileLoadState
@@ -655,7 +655,7 @@ export function BirthProfilePage() {
           )}
 
           {saveSuccess && (
-            <p className="state-line state-success" role="status">
+            <p className="app-state app-state--success" role="status">
               {t.status.saveSuccess}
             </p>
           )}

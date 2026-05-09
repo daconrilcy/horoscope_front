@@ -252,7 +252,7 @@ describe("AstrologersPage", () => {
     })
 
     it("uses encodeURIComponent for profile navigation with valid ID formats", () => {
-      const validId = "astro_expert-42"
+      const validId = "astro_person-42"
       const astrologerValid = {
         id: validId,
         name: "Astro Expert",

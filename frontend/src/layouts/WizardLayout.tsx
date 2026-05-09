@@ -20,29 +20,29 @@ export function WizardLayout({
   className 
 }: WizardLayoutProps) {
   return (
-    <div className={`wizard-layout ${className ?? ''}`}>
-      <div className="wizard-layout__progress-wrapper">
+    <div className={`flow-layout ${className ?? ''}`}>
+      <div className="flow-layout__progress-wrapper">
         {customProgress ? (
           customProgress
         ) : steps ? (
           <div 
-            className="wizard-layout__progress" 
+            className="flow-layout__progress"
             role="progressbar" 
             aria-valuemin={0} 
             aria-valuemax={steps.length - 1} 
             aria-valuenow={currentStep}
           >
-            <div className="wizard-progress-steps">
+            <div className="flow-progress-steps">
               {steps.map((label, i) => (
                 <div
                   key={i}
-                  className={`wizard-progress-step ${i < currentStep ? 'wizard-progress-step--done' : ''} ${i === currentStep ? 'wizard-progress-step--active' : ''}`}
+                  className={`flow-progress-step ${i < currentStep ? 'flow-progress-step--done' : ''} ${i === currentStep ? 'flow-progress-step--active' : ''}`}
                 >
-                  <div className="wizard-progress-step__indicator">
+                  <div className="flow-progress-step__indicator">
                     {i < currentStep ? '✓' : i + 1}
                   </div>
-                  <span className="wizard-progress-step__label">{label}</span>
-                  {i < steps.length - 1 && <div className="wizard-progress-step__connector" />}
+                  <span className="flow-progress-step__label">{label}</span>
+                  {i < steps.length - 1 && <div className="flow-progress-step__connector" />}
                 </div>
               ))}
             </div>
@@ -50,11 +50,11 @@ export function WizardLayout({
         ) : null}
       </div>
 
-      <div className="wizard-layout__container">
+      <div className="flow-layout__container">
         {onBack && (
           <button 
             type="button" 
-            className="wizard-layout__back" 
+            className="flow-layout__back"
             onClick={onBack}
             aria-label="Retour"
           >
@@ -63,7 +63,7 @@ export function WizardLayout({
           </button>
         )}
         
-        <div className="wizard-layout__content">
+        <div className="flow-layout__content">
           {children}
         </div>
       </div>

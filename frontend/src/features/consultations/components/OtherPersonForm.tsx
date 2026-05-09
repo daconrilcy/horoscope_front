@@ -268,15 +268,15 @@ export function OtherPersonForm({
           <p
             className={
               geocodingState === "success"
-                ? "state-line state-success"
+                ? "app-state app-state--success"
                 : geocodingState === "loading"
-                  ? "state-line"
+                  ? "app-state"
                   : "chat-error degraded-warning"
             }
             role={geocodingState.startsWith("error") ? "alert" : "status"}
             aria-busy={geocodingState === "loading"}
           >
-            {geocodingState === "loading" && <span className="state-loading" aria-hidden="true" />}
+            {geocodingState === "loading" && <span className="app-spinner" aria-hidden="true" />}
             {geocodingState === "success"
               ? `✓ ${GEOCODING_MESSAGES.success[lang]} : ${resolvedGeoLabel}`
               : GEOCODING_MESSAGES[geocodingState as GeocodingMessageKey][lang]}

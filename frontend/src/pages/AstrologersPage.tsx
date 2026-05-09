@@ -9,25 +9,25 @@ import { tAstrologers as t } from "@i18n/astrologers"
 import type { Astrologer } from "@api"
 import { PageLayout } from "../layouts"
 
-const ASTROLOGERS_ROTATION_STORAGE_KEY = "astrologers_rotation_index_v1"
+const ASTROLOGERS_ROTATION_STORAGE_KEY = "experts_rotation_index_v1"
 
-function rotateAstrologers(astrologers: Astrologer[], rotationIndex: number): Astrologer[] {
-  if (astrologers.length <= 1) {
-    return astrologers
+function rotateAstrologers(experts: Astrologer[], rotationIndex: number): Astrologer[] {
+  if (experts.length <= 1) {
+    return experts
   }
 
-  const safeIndex = ((rotationIndex % astrologers.length) + astrologers.length) % astrologers.length
+  const safeIndex = ((rotationIndex % experts.length) + experts.length) % experts.length
   if (safeIndex === 0) {
-    return astrologers
+    return experts
   }
 
-  return [...astrologers.slice(safeIndex), ...astrologers.slice(0, safeIndex)]
+  return [...experts.slice(safeIndex), ...experts.slice(0, safeIndex)]
 }
 
 export function AstrologersPage() {
   const navigate = useNavigate()
   const { astrologers, isLoading, error } = useAstrologers()
-  const { data: settings } = useUserSettings()
+  const { data: preferences } = useUserSettings()
   const lang = detectLang()
   const [rotationIndex] = useState(() => {
     if (typeof window === "undefined") {
@@ -53,33 +53,33 @@ export function AstrologersPage() {
     [astrologers, rotationIndex]
   )
 
-  const handleSelectAstrologer = (astrologer: Astrologer) => {
-    navigate(`/astrologers/${encodeURIComponent(astrologer.id)}`)
+  const handleSelectAstrologer = (expert: Astrologer) => {
+    navigate(`/astrologers/${encodeURIComponent(expert.id)}`)
   }
 
   return (
-    <PageLayout className="panel astrologers-page">
-      <div className="astrologers-page-shell">
-        <header className="astrologers-page-header">
+    <PageLayout className="app-panel people-page">
+      <div className="people-page-shell">
+        <header className="people-page-header">
           <h1>{t("page_title", lang)}</h1>
           <p>{t("page_subtitle", lang)}</p>
         </header>
 
         {isLoading && (
-          <div className="astrologers-page-loading">{t("loading", lang)}</div>
+          <div className="people-page-loading">{t("loading", lang)}</div>
         )}
 
         {error && (
-          <div className="astrologers-page-error">
+          <div className="people-page-error">
             {t("error_loading", lang)}
           </div>
         )}
 
         {!isLoading && !error && (
           <AstrologerGrid
-            astrologers={displayedAstrologers}
+            experts={displayedAstrologers}
             onSelectAstrologer={handleSelectAstrologer}
-            defaultAstrologerId={settings?.default_astrologer_id}
+            defaultAstrologerId={preferences?.default_astrologer_id}
           />
         )}
       </div>

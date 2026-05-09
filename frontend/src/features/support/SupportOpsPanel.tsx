@@ -26,12 +26,12 @@ export function SupportOpsPanel() {
   const auditEvents = supportData?.audit_events ?? supportData?.audit_log ?? []
 
   return (
-    <section className="panel">
+    <section className="app-panel">
       <h2>{t.title}</h2>
       <p>{t.description}</p>
 
       <label htmlFor="support-target-user">{t.targetUserLabel}</label>
-      <div className="action-row">
+      <div className="app-actions">
         <input
           id="support-target-user"
           value={targetEmail}
@@ -49,8 +49,8 @@ export function SupportOpsPanel() {
 
       {supportData && (
         <div className="support-results mt-6">
-          <p className="state-line">{t.privacyRequests(supportData.privacy_requests.length)}</p>
-          <ul className="chat-list compact-list">
+          <p className="app-state">{t.privacyRequests(supportData.privacy_requests.length)}</p>
+          <ul className="chat-list app-list app-list--compact">
             {supportData.privacy_requests.map((req: PrivacyRequestView) => (
               <li key={req.request_id} className="chat-item">
                 {req.type ?? req.request_kind} - {req.status} ({new Date(req.created_at ?? req.requested_at).toLocaleDateString()})
@@ -58,11 +58,11 @@ export function SupportOpsPanel() {
             ))}
           </ul>
           {supportData.privacy_requests.length === 0 && (
-            <p className="state-line state-empty">{t.noPrivacyRequests}</p>
+            <p className="app-state app-state--empty">{t.noPrivacyRequests}</p>
           )}
 
           <h3>{t.recentAuditTitle}</h3>
-          <ul className="chat-list compact-list">
+          <ul className="chat-list app-list app-list--compact">
             {auditEvents.map((entry: AuditEventView) => (
               <li key={entry.event_id} className="chat-item">
                 {entry.action} - {new Date(entry.timestamp ?? entry.created_at).toLocaleString()}
@@ -72,7 +72,7 @@ export function SupportOpsPanel() {
         </div>
       )}
 
-      <div className="action-row mt-8 border-t pt-6">
+      <div className="app-actions mt-8 border-t pt-6">
         <button
           type="button"
           className="button-danger"

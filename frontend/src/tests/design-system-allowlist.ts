@@ -3,6 +3,17 @@
 export type InlineStyleException = { file: string; style: string }
 export type CssFallbackException = { file: string; token: string; literal: string }
 
+
+export type AppCssSpecificityException = {
+  kind: "custom-property" | "selector"
+  name: string
+  owner: "frontend/src/App.css"
+  source: "CS-124"
+  expiresAfter: "2026-06-30"
+}
+
+export const APP_CSS_SPECIFICITY_EXCEPTIONS: readonly AppCssSpecificityException[] = []
+
 export const INLINE_STYLE_EXCEPTIONS: InlineStyleException[] = [
   {
     "file": "components/DomainRankingCard.tsx",

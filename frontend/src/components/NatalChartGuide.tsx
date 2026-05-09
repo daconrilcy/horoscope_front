@@ -10,7 +10,7 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
   const g = getGuideTranslations(lang)
 
   return (
-    <details className="card natal-chart-guide">
+    <details className="app-card natal-chart-guide">
       <summary className="natal-chart-guide__summary">{g.title}</summary>
       <div className="natal-chart-guide__content">
         <p className="natal-chart-guide__intro">{g.intro}</p>

@@ -19,8 +19,8 @@ export function ConsultationSummaryStep({
   const typeConfig = draft.type ? getConsultationTypeConfig(draft.type) : null
 
   return (
-    <div className="wizard-step">
-      <h2 className="wizard-step-title">{t("summary_step_title", lang)}</h2>
+    <div className="flow-step">
+      <h2 className="flow-step-title">{t("summary_step_title", lang)}</h2>
 
       <div className="summary-details">
         <div className="summary-item">
@@ -63,7 +63,7 @@ export function ConsultationSummaryStep({
         )}
       </div>
 
-      <div className="summary-astrologer">
+      <div className="summary-person">
         <h3 className="summary-subtitle">{t("choose_astrologer_optional", lang)}</h3>
         <AstrologerSelectStep
           selectedId={draft.astrologerId}

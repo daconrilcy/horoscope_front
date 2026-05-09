@@ -405,7 +405,7 @@ export function AdminSamplePayloadsAdmin({
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
 
   return (
-    <section className="panel sample-payloads-admin" aria-label="Gestion des sample payloads">
+    <section className="app-panel sample-payloads-admin" aria-label="Gestion des sample payloads">
       <header>
         <h3>Échantillons runtime (sample payloads)</h3>
         <p className="sample-payloads-admin__intro">
@@ -419,7 +419,7 @@ export function AdminSamplePayloadsAdmin({
       ) : null}
 
       {banner ? (
-        <p className="state-line state-success" role="status">
+        <p className="app-state app-state--success" role="status">
           {banner}
         </p>
       ) : null}
@@ -513,9 +513,9 @@ export function AdminSamplePayloadsAdmin({
       ) : null}
 
       {editorOpen && editor ? (
-        <div className="modal-overlay" role="presentation">
+        <div className="app-overlay" role="presentation">
           <div
-            className="modal-content admin-prompts-modal sample-payloads-admin__modal"
+            className="app-modal admin-prompts-modal sample-payloads-admin__modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="sample-payload-editor-title"
@@ -646,7 +646,7 @@ export function AdminSamplePayloadsAdmin({
               </div>
             )}
 
-            <div className="modal-actions">
+            <div className="app-actions app-actions--end">
               <button
                 className="text-button"
                 type="button"

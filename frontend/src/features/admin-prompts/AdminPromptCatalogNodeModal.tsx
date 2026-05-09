@@ -39,9 +39,9 @@ export function AdminPromptCatalogNodeModal({
   const isEditable = Boolean(node.editableUseCaseKey)
 
   return (
-    <div className="modal-overlay" role="presentation">
+    <div className="app-overlay" role="presentation">
       <div
-        className="modal-content admin-prompts-modal admin-prompts-modal--catalog-node"
+        className="app-modal admin-prompts-modal admin-prompts-modal--catalog-node"
         aria-labelledby="admin-prompt-catalog-node-title"
         role="dialog"
         aria-modal="true"

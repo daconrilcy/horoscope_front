@@ -28,27 +28,27 @@ function SelectedAstrologerCard({
   lang: ReturnType<typeof detectLang>
 }) {
   const isAuto = astrologerId === AUTO_ASTROLOGER_ID
-  const { data: astrologer } = useAstrologer(isAuto ? undefined : astrologerId)
+  const { data: expert } = useAstrologer(isAuto ? undefined : astrologerId)
 
   const name = isAuto
     ? t("auto_astrologer", lang)
-    : astrologer
-      ? [astrologer.first_name, astrologer.last_name].filter(Boolean).join(" ") || astrologer.name
+    : expert
+      ? [expert.first_name, expert.last_name].filter(Boolean).join(" ") || expert.name
       : t("loading_name", lang)
 
   return (
-    <div className="wizard-astrologer-card">
-      <div className="wizard-astrologer-card__avatar">
-        {!isAuto && astrologer?.avatar_url ? (
-          <img src={astrologer.avatar_url} alt="" className="wizard-astrologer-card__avatar-img" />
+    <div className="flow-person-card">
+      <div className="flow-person-card__avatar">
+        {!isAuto && expert?.avatar_url ? (
+          <img src={expert.avatar_url} alt="" className="flow-person-card__avatar-img" />
         ) : (
-          <span className="wizard-astrologer-card__avatar-icon" aria-hidden="true">✨</span>
+          <span className="flow-person-card__avatar-icon" aria-hidden="true">✨</span>
         )}
       </div>
-      <div className="wizard-astrologer-card__info">
-        <span className="wizard-astrologer-card__name">{name}</span>
-        {!isAuto && astrologer?.style && (
-          <span className="wizard-astrologer-card__style">{astrologer.style}</span>
+      <div className="flow-person-card__info">
+        <span className="flow-person-card__name">{name}</span>
+        {!isAuto && expert?.style && (
+          <span className="flow-person-card__style">{expert.style}</span>
         )}
       </div>
     </div>
@@ -62,7 +62,7 @@ export function ConsultationWizardPage() {
   const { data: catalogue } = useConsultationCatalogue()
   const initializedRef = useRef(false)
   const typePreselectedRef = useRef(false)
-  const astrologerChosenRef = useRef(false)
+  const expertChosenRef = useRef(false)
 
   const {
     state,
@@ -104,7 +104,7 @@ export function ConsultationWizardPage() {
 
     if (astrologerIdFromQuery) {
       setAstrologer(astrologerIdFromQuery)
-      astrologerChosenRef.current = true
+      expertChosenRef.current = true
       // Venant d'une page astrologue : l'astrologue est déjà choisi, on saute à la page 2
       goToStep(1)
     }
@@ -119,7 +119,7 @@ export function ConsultationWizardPage() {
   const handleAstrologerSelect = useCallback(
     (id: string) => {
       setAstrologer(id)
-      astrologerChosenRef.current = true
+      expertChosenRef.current = true
       goToStep(1)
     },
     [setAstrologer, goToStep]
@@ -148,7 +148,7 @@ export function ConsultationWizardPage() {
     [setType, setObjective]
   )
 
-  const showAstrologerCard = astrologerChosenRef.current
+  const showAstrologerCard = expertChosenRef.current
 
   const renderStep = () => {
     switch (currentStepName) {
@@ -183,7 +183,7 @@ export function ConsultationWizardPage() {
   }
 
   return (
-    <div className="panel consultation-wizard-page">
+    <div className="app-panel activity-flow-page">
       <WizardLayout
         customProgress={<WizardProgress currentStepName={currentStepName} />}
         onBack={handleBackToConsultations}
@@ -192,16 +192,16 @@ export function ConsultationWizardPage() {
           <SelectedAstrologerCard astrologerId={state.draft.astrologerId} lang={lang} />
         )}
 
-        <div className="wizard-content">
+        <div className="flow-content">
           {renderStep()}
         </div>
 
-        <div className="wizard-actions">
+        <div className="flow-actions">
           <button type="button" className="btn btn-secondary" onClick={handleCancel}>
             {t("cancel", lang)}
           </button>
 
-          <div className="wizard-actions-nav">
+          <div className="flow-actions-nav">
             {currentStepName === "form" && (
               <button type="button" className="btn btn-secondary" onClick={handlePrevFromForm}>
                 {t("previous", lang)}

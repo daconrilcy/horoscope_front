@@ -12,8 +12,8 @@ export function WizardProgress({ currentStepName }: WizardProgressProps) {
   const currentStepIndex = WIZARD_STEPS.indexOf(currentStepName)
 
   return (
-    <nav className="wizard-progress" aria-label={t("wizard_progress_aria", lang)}>
-      <ol className="wizard-progress-list">
+    <nav className="flow-progress" aria-label={t("flow_progress_aria", lang)}>
+      <ol className="flow-progress-list">
         {WIZARD_STEPS.map((step, index) => {
           const isCompleted = index < currentStepIndex
           const isCurrent = step === currentStepName
@@ -22,16 +22,16 @@ export function WizardProgress({ currentStepName }: WizardProgressProps) {
             <li
               key={step}
               className={classNames(
-                "wizard-progress-step",
-                isCompleted && "wizard-progress-step--completed",
-                isCurrent && "wizard-progress-step--current"
+                "flow-progress-step",
+                isCompleted && "flow-progress-step--completed",
+                isCurrent && "flow-progress-step--current"
               )}
               aria-current={isCurrent ? "step" : undefined}
             >
-              <span className="wizard-progress-number" aria-hidden="true">
+              <span className="flow-progress-number" aria-hidden="true">
                 {isCompleted ? "✓" : index + 1}
               </span>
-              <span className="wizard-progress-label">{t(WIZARD_STEP_LABELS[step], lang)}</span>
+              <span className="flow-progress-label">{t(WIZARD_STEP_LABELS[step], lang)}</span>
             </li>
           )
         })}

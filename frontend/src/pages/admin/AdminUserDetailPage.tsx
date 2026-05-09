@@ -51,9 +51,9 @@ function ActionDialog({
   const isAssignPlan = dialog.type === "assign-plan"
 
   return (
-    <div className="modal-overlay" role="presentation">
+    <div className="app-overlay" role="presentation">
       <div
-        className="modal-content admin-user-detail-modal"
+        className="app-modal admin-user-detail-modal"
         aria-modal="true"
         role="dialog"
         aria-labelledby="admin-user-detail-modal-title"
@@ -139,7 +139,7 @@ function ActionDialog({
           </>
         )}
 
-        <div className="modal-actions">
+        <div className="app-actions app-actions--end">
           <button className="text-button" onClick={onClose}>
             Annuler
           </button>

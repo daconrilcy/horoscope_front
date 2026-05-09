@@ -145,7 +145,7 @@ export default function DailyHoroscopePage() {
     <PageLayout>
       {isLoading ? (
         <div className="daily-page-state">
-          <div className="state-line state-loading">{getPredictionMessage('loading', pLang)}</div>
+          <div className="app-state app-state--loading">{getPredictionMessage('loading', pLang)}</div>
         </div>
       ) : isError ? (
         <div className="daily-page-state">
@@ -329,7 +329,7 @@ export default function DailyHoroscopePage() {
           <div className="daily-layout__bottom-spacer" />
         </div>
       ) : (
-        <div className="panel state-empty daily-page-state">
+        <div className="app-panel app-state app-state--empty daily-page-state">
           <p>{getPredictionMessage('empty', pLang)}</p>
           <button type="button" onClick={() => navigate('/natal')}>{getPredictionMessage('setup_profile', pLang)}</button>
         </div>

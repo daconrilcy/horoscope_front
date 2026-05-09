@@ -53,7 +53,7 @@ export function SettingsTabs() {
 
       if (nextIndex !== activeIndex) {
         navigate(tabs[nextIndex].path)
-        const nextTab = document.getElementById(`settings-tab-${tabs[nextIndex].path}`)
+        const nextTab = document.getElementById(`control-tab-${tabs[nextIndex].path}`)
         nextTab?.focus()
       }
     },
@@ -62,7 +62,7 @@ export function SettingsTabs() {
 
   return (
     <nav
-      className="settings-tabs"
+      className="control-tabs"
       aria-label={labels.navLabel}
       onKeyDown={handleKeyDown}
     >
@@ -73,8 +73,8 @@ export function SettingsTabs() {
             key={tab.path}
             to={tab.path}
             aria-current={active ? "page" : undefined}
-            id={`settings-tab-${tab.path}`}
-            className={`settings-tab ${active ? "settings-tab--active" : ""}`}
+            id={`control-tab-${tab.path}`}
+            className={`control-tab ${active ? "control-tab--active" : ""}`}
           >
             {labels[tab.labelKey]}
           </Link>

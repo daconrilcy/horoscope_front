@@ -12,15 +12,15 @@ export function DashboardCard({ label, path, icon, description }: DashboardCardP
   return (
     <Link
       to={path}
-      className="dashboard-card"
+      className="summary-card"
       aria-label={`Aller à ${label}`}
     >
-      <span className="dashboard-card-icon" aria-hidden="true">
+      <span className="summary-card-icon" aria-hidden="true">
         {icon}
       </span>
-      <span className="dashboard-card-label">{label}</span>
+      <span className="summary-card-label">{label}</span>
       {description && (
-        <span className="dashboard-card-description">{description}</span>
+        <span className="summary-card-description">{description}</span>
       )}
     </Link>
   )

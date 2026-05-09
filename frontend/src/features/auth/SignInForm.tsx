@@ -57,7 +57,7 @@ export function SignInForm({ onRegister }: SignInFormProps = {}) {
   }
 
   return (
-    <section className="panel">
+    <section className="app-panel">
       <h2>{t.signIn.title}</h2>
       <form className="chat-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <Field

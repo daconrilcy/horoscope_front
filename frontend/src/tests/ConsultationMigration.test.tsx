@@ -63,6 +63,12 @@ describe("Consultation contract guards", () => {
         summary: "Une interprétation structurée",
         sections: [
           {
+            id: "consultation_basis",
+            title: "Base technique",
+            content: "",
+            blocks: [{ kind: "paragraph", text: "Base technique masquée." }],
+          },
+          {
             id: "overview",
             title: "Vue d'ensemble",
             content: "",
@@ -74,7 +80,7 @@ describe("Consultation contract guards", () => {
     ]
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history))
 
-    render(
+    const { container } = render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={["/consultations/result?id=canonical-1"]} future={routerFutureFlags}>
           <ConsultationProvider>
@@ -88,7 +94,23 @@ describe("Consultation contract guards", () => {
       expect(screen.getByText("Une interprétation structurée")).toBeInTheDocument()
       expect(screen.getByText("Bloc canonique rendu.")).toBeInTheDocument()
       expect(screen.getByText("relation/amour")).toBeInTheDocument()
+      expect(screen.queryByText("Base technique masquée.")).not.toBeInTheDocument()
+      expect(container.querySelector(".is-consultation-result-page")).not.toBeNull()
+      expect(container.querySelector(".result-astrologer-pill")).not.toBeNull()
     })
+  })
+
+  it("conserve les contrats runtime CSS et query key de la page résultat", () => {
+    const source = readFileSync(resolve(process.cwd(), "src/pages/ConsultationResultPage.tsx"), "utf8")
+
+    expect(source).toContain('queryKey: ["consultation-third-parties"]')
+    expect(source).toContain('s.id !== "consultation_basis"')
+    expect(source).toContain('className="is-consultation-result-page"')
+    expect(source).toContain('className="result-astrologer-pill"')
+    expect(source).not.toContain("session-third-parties")
+    expect(source).not.toContain("activity-third-parties")
+    expect(source).not.toContain("session_basis")
+    expect(source).not.toContain("result-person-pill")
   })
 
   it("saves new 47.x items with sections and metadata", async () => {

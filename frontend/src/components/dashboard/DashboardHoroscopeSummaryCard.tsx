@@ -55,18 +55,18 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   if (isLoading) {
     return (
       <div
-        className="dashboard-summary-card-wrapper dashboard-summary-card-wrapper--loading"
+        className="summary-panel-card-wrapper summary-panel-card-wrapper--loading"
         aria-busy="true"
         aria-label={summaryLoading}
         role="status"
         aria-live="polite"
       >
-        <div className="dashboard-summary-card dashboard-summary-card--loading">
-          <div className="dashboard-summary-card__loading-state">
-            <span className="dashboard-summary-card__loading-spinner" aria-hidden="true">
+        <div className="summary-panel-card summary-panel-card--loading">
+          <div className="summary-panel-card__loading-state">
+            <span className="summary-panel-card__loading-spinner" aria-hidden="true">
               <LoaderCircle size={22} strokeWidth={2} />
             </span>
-            <p className="dashboard-summary-card__loading-message">{summaryLoading}</p>
+            <p className="summary-panel-card__loading-message">{summaryLoading}</p>
           </div>
         </div>
       </div>
@@ -75,9 +75,9 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
 
   if (isError) {
     return (
-      <div className="panel dashboard-summary-card dashboard-summary-card--empty" role="status">
+      <div className="app-panel summary-panel-card summary-panel-card--empty" role="status">
         <p>{errorPrediction}</p>
-        <div className="dashboard-summary-card__actions">
+        <div className="summary-panel-card__actions">
           <button type="button" onClick={onRetry}>
             {retry}
           </button>
@@ -89,7 +89,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
   if (!prediction) {
     return (
       <div
-        className="panel dashboard-summary-card dashboard-summary-card--empty"
+        className="app-panel summary-panel-card summary-panel-card--empty"
         onClick={handleNavigate}
         role="button"
         tabIndex={0}
@@ -97,7 +97,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         aria-label={viewHoroscope}
       >
         <p>{noPrediction}</p>
-        <div className="dashboard-summary-card__link">
+        <div className="summary-panel-card__link">
           <span>{viewHoroscope}</span>
           <ChevronRight size={16} />
         </div>
@@ -109,7 +109,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
 
   return (
     <div
-      className="dashboard-summary-card-wrapper"
+      className="summary-panel-card-wrapper"
       onClick={handleNavigate}
       role="button"
       tabIndex={0}
@@ -121,23 +121,23 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
         userId={userId}
         dateKey={dateKey}
         dayScore={dayScore}
-        className="dashboard-summary-card-bg"
+        className="summary-panel-card-bg"
       >
-        <div className="dashboard-summary-card__shell">
-          <div className="dashboard-summary-card__content">
+        <div className="summary-panel-card__shell">
+          <div className="summary-panel-card__content">
             {ZodiacIcon && (
               <div className="default_card_pill">
                 <ZodiacIcon className="default_card_pill-icon" />
                 <span>{translateSign(sign, locale)} • {formattedDate}</span>
               </div>
             )}
-            <p className="dashboard-summary-card__text">
+            <p className="summary-panel-card__text">
               {summary}
             </p>
           </div>
 
-          <div className="dashboard-summary-card__footer">
-            <div className="dashboard-summary-card__cta">
+          <div className="summary-panel-card__footer">
+            <div className="summary-panel-card__cta">
               <span>{viewHoroscope}</span>
               <ChevronRight size={16} />
             </div>

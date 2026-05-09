@@ -55,35 +55,35 @@ export function AstrologerDetailPanel({
   const showImage = avatarUrl && !imgError
 
   return (
-    <aside className="astrologer-panel">
-      <div className="astrologer-panel-header">
-        <div className="astrologer-panel-avatar">
+    <aside className="person-panel">
+      <div className="person-panel-header">
+        <div className="person-panel-avatar">
           {showImage ? (
             <img
               src={avatarUrl}
               alt={`${t("avatar_alt", lang)} ${name}`}
-              className="astrologer-panel-avatar-img"
+              className="person-panel-avatar-img"
               onError={() => setImgError(true)}
             />
           ) : (
             <span
-              className="astrologer-panel-avatar-icon"
+              className="person-panel-avatar-icon"
               aria-hidden="true"
             >
               ✨
             </span>
           )}
         </div>
-        <h3 className="astrologer-panel-name">{name}</h3>
-        <p className="astrologer-panel-status">{t("online", lang)}</p>
+        <h3 className="person-panel-name">{name}</h3>
+        <p className="person-panel-status">{t("online", lang)}</p>
       </div>
 
-      <div className="astrologer-panel-info">
+      <div className="person-panel-info">
         <h4>{t("about", lang)}</h4>
         <p>{bio}</p>
       </div>
 
-      <div className="astrologer-panel-specialties">
+      <div className="person-panel-specialties">
         <h4>{t("specialties", lang)}</h4>
         <ul>
           {specialties.map((specialty) => (
@@ -93,9 +93,9 @@ export function AstrologerDetailPanel({
       </div>
 
       {conversationId && (
-        <div className="astrologer-panel-conversation">
+        <div className="person-panel-conversation">
           <h4>{t("this_conversation", lang)}</h4>
-          <p className="astrologer-panel-conversation-id">
+          <p className="person-panel-conversation-id">
             #{conversationId}
           </p>
         </div>

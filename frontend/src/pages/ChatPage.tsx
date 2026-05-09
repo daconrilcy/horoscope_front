@@ -445,7 +445,7 @@ export function ChatPage() {
       </SectionErrorBoundary>
       {showAstrologerPicker && (
         <AstrologerPickerModal
-          astrologers={astrologers.data ?? []}
+          experts={astrologers.data ?? []}
           isLoading={astrologers.isPending}
           isCreating={createConversation.isPending}
           onSelect={handlePickAstrologer}

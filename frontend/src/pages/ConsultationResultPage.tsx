@@ -98,7 +98,7 @@ export function ConsultationResultPage() {
   const lang = detectLang()
 
   const { state, setResult, saveToHistory, reset } = useConsultation()
-  const consultationGenerate = useConsultationGenerate()
+  const sessionGenerate = useConsultationGenerate()
 
   const [error, setError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -113,11 +113,11 @@ export function ConsultationResultPage() {
 
   const astrologerId =
     currentResult?.astrologerId === AUTO_ASTROLOGER_ID ? undefined : currentResult?.astrologerId
-  const { data: astrologer } = useAstrologer(astrologerId)
-  const astrologerName =
+  const { data: expert } = useAstrologer(astrologerId)
+  const expertName =
     currentResult?.astrologerId === AUTO_ASTROLOGER_ID
       ? t("auto_astrologer", lang)
-      : astrologer?.name ?? t("loading_name", lang)
+      : expert?.name ?? t("loading_name", lang)
 
   const draftType = state.draft.type
   const draftAstrologerId = state.draft.astrologerId ?? AUTO_ASTROLOGER_ID
@@ -185,7 +185,7 @@ export function ConsultationResultPage() {
           ...(draftOtherPerson.birthLon != null ? { birth_lon: draftOtherPerson.birthLon } : {}),
         } : undefined,
       }
-      const response = await consultationGenerate.mutateAsync(payload)
+      const response = await sessionGenerate.mutateAsync(payload)
       const data = response.data
       trackEvent(EVENTS.CONSULTATION_GENERATED, { type: data.consultation_type, status: data.status, route: data.route_key })
       const resultType = isConsultationType(data.consultation_type) ? data.consultation_type : draftType
@@ -226,7 +226,7 @@ export function ConsultationResultPage() {
   }, [
     draftType, draftAstrologerId, draftContext, draftObjective, draftTimeHorizon, draftOtherPerson,
     state.draft.saveThirdParty, state.draft.thirdPartyNickname, state.draft.selectedThirdPartyExternalId,
-    consultationGenerate, setResult, saveToHistory, queryClient, navigate, lang,
+    sessionGenerate, setResult, saveToHistory, queryClient, navigate, lang,
   ])
 
   useEffect(() => {
@@ -251,9 +251,9 @@ export function ConsultationResultPage() {
       `${currentResult.context}\n\n${t("interpretation_label", lang)}:\n${interpretation}`
     sessionStorage.setItem(CHAT_PREFILL_KEY, message)
     reset()
-    const astrologerParam = currentResult.astrologerId !== AUTO_ASTROLOGER_ID
+    const expertParam = currentResult.astrologerId !== AUTO_ASTROLOGER_ID
       ? `?astrologerId=${currentResult.astrologerId}` : ""
-    navigate(`/chat${astrologerParam}`)
+    navigate(`/chat${expertParam}`)
   }, [currentResult, typeConfig, reset, navigate, lang])
 
   // — Loading state —
@@ -308,7 +308,7 @@ export function ConsultationResultPage() {
     )
   }
 
-  // Sections à afficher : on exclut consultation_basis
+  // Sections à afficher : on exclut la base technique déjà synthétisée dans le résumé.
   const visibleSections = currentResult.sections?.filter((s) => s.id !== "consultation_basis") ?? []
 
   return (
@@ -340,7 +340,7 @@ export function ConsultationResultPage() {
             <h1 className="result-hero__title">{currentObjective}</h1>
             <div className="result-astrologer-pill">
               <span aria-hidden="true">✨</span>
-              <span>{astrologerName}</span>
+              <span>{expertName}</span>
             </div>
           </div>
         </section>
@@ -364,7 +364,7 @@ export function ConsultationResultPage() {
           )}
         </div>
 
-        {/* Contenu de la consultation */}
+        {/* Contenu de la session */}
         <section className="result-guidance">
           {currentResult.summary && (
             <div className="result-section-card">

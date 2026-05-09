@@ -23,7 +23,7 @@ export function EnterpriseCredentialsPanel() {
   const rotateError = rotateCredential.error as EnterpriseCredentialsApiError | null
 
   return (
-    <section className="panel">
+    <section className="app-panel">
       <h2>{t.title}</h2>
       <p>{t.description}</p>
 

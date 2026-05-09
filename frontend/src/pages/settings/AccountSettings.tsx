@@ -17,8 +17,8 @@ export function AccountSettings() {
   const t = settingsTranslations.account[lang]
   const token = useAccessTokenSnapshot()
   const authMe = useAuthMe(token)
-  const { data: astrologers, isLoading: isLoadingAstrologers } = useAstrologers()
-  const { data: settings, isLoading: isLoadingSettings } = useUserSettings()
+  const { data: experts, isLoading: isLoadingAstrologers } = useAstrologers()
+  const { data: preferences, isLoading: isLoadingSettings } = useUserSettings()
   const updateSettings = useUpdateUserSettings()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
@@ -92,7 +92,7 @@ export function AccountSettings() {
             <div className="default-astrologer-grid">
               {/* Option Automatique */}
               <div 
-                className={`default-astrologer-option ${settings?.default_astrologer_id === null ? 'default-astrologer-option--selected' : ''}`}
+                className={`default-astrologer-option ${preferences?.default_astrologer_id === null ? 'default-astrologer-option--selected' : ''}`}
                 onClick={() => handleDefaultAstrologerChange(null)}
               >
                 <div className="default-astrologer-option__avatar--placeholder">
@@ -100,7 +100,7 @@ export function AccountSettings() {
                 </div>
                 <div className="default-astrologer-option__name">{t.automatic}</div>
                 <div className="default-astrologer-option__style">{t.automaticDesc}</div>
-                {settings?.default_astrologer_id === null && (
+                {preferences?.default_astrologer_id === null && (
                   <div className="default-astrologer-option__check">
                     <Check size={12} /> {t.selected}
                   </div>
@@ -108,17 +108,17 @@ export function AccountSettings() {
               </div>
 
               {/* Astrologues réels */}
-              {astrologers?.map((astro) => (
+              {experts?.map((astro) => (
                 <div 
                   key={astro.id}
-                  className={`default-astrologer-option ${settings?.default_astrologer_id === astro.id ? 'default-astrologer-option--selected' : ''}`}
+                  className={`default-astrologer-option ${preferences?.default_astrologer_id === astro.id ? 'default-astrologer-option--selected' : ''}`}
                   onClick={() => handleDefaultAstrologerChange(astro.id)}
                 >
                   {astro.avatar_url ? (
                     <img 
                       src={astro.avatar_url} 
                       alt={astro.name} 
-                      className="default-astrologer-option__avatar" 
+                      className="default-astrologer-option__avatar"
                     />
                   ) : (
                     <div className="default-astrologer-option__avatar--placeholder">
@@ -127,7 +127,7 @@ export function AccountSettings() {
                   )}
                   <div className="default-astrologer-option__name">{astro.name}</div>
                   <div className="default-astrologer-option__style">{astro.style}</div>
-                  {settings?.default_astrologer_id === astro.id && (
+                  {preferences?.default_astrologer_id === astro.id && (
                     <div className="default-astrologer-option__check">
                       <Check size={12} /> {t.selected}
                     </div>

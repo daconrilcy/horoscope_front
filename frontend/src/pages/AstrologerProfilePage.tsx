@@ -197,7 +197,7 @@ export function AstrologerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: profile, isPending, error, refetch } = useAstrologer(id)
-  const { data: settings } = useUserSettings()
+  const { data: preferences } = useUserSettings()
   const updateSettings = useUpdateUserSettings()
   const lang = detectLang()
   
@@ -208,7 +208,7 @@ export function AstrologerProfilePage() {
   const [reviewDraft, setReviewDraft] = useState("")
   const [reviewError, setReviewError] = useState<string | null>(null)
 
-  const isDefault = profile?.id === settings?.default_astrologer_id
+  const isDefault = profile?.id === preferences?.default_astrologer_id
 
   const handleBack = () => {
     navigate("/astrologers")
@@ -617,7 +617,7 @@ export function AstrologerProfilePage() {
           profile={profile}
           trustItems={trustItems}
           labels={{
-            consultation: t("cta_consultation", lang),
+            session: t("cta_consultation", lang),
             chat: profile.action_state.has_chat ? t("cta_chat_resume", lang) : t("cta_chat_new", lang),
             natal: profile.action_state.has_natal_interpretation ? t("cta_natal_view", lang) : t("cta_natal_new", lang),
           }}
@@ -635,14 +635,14 @@ export function AstrologerProfilePage() {
 
         {isReviewComposerOpen ? (
           <div
-            className="modal-overlay review-composer-overlay"
+            className="app-overlay review-composer-overlay"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="astrologer-review-title"
+            aria-labelledby="person-review-title"
             onClick={closeReviewComposer}
           >
             <div
-              className="modal-content review-composer-modal"
+              className="app-modal review-composer-modal"
               onClick={(event) => event.stopPropagation()}
             >
               <button
@@ -656,11 +656,11 @@ export function AstrologerProfilePage() {
                   ×
                 </span>
               </button>
-              <h3 className="modal-title review-composer-modal__title" id="astrologer-review-title">
+              <h3 className="app-modal__title review-composer-modal__title" id="person-review-title">
                 {t("review_form_title", lang)}
               </h3>
               <textarea
-                id="astrologer-review-textarea"
+                id="person-review-textarea"
                 className="review-composer-card__textarea"
                 value={reviewDraft}
                 onChange={(event) => {

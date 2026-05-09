@@ -60,8 +60,8 @@ export function BirthProfileLoadState({
 }: BirthProfileLoadStateProps) {
   if (isLoading) {
     return (
-      <p className="state-line" aria-busy="true" role="status">
-        <span className="state-loading" aria-hidden="true" />
+      <p className="app-state" aria-busy="true" role="status">
+        <span className="app-spinner" aria-hidden="true" />
         {loadingLabel}
       </p>
     )
@@ -93,13 +93,13 @@ export function BirthProfileGeocodingStatus({
   return (
     <div aria-live="polite" aria-atomic="true">
       {state === "loading" && (
-        <p className="state-line" aria-busy="true" role="status">
-          <span className="state-loading" aria-hidden="true" />
+        <p className="app-state" aria-busy="true" role="status">
+          <span className="app-spinner" aria-hidden="true" />
           {loadingLabel}
         </p>
       )}
       {state === "success" && resolvedGeoLabel !== null && (
-        <p className="state-line state-success" role="status">
+        <p className="app-state app-state--success" role="status">
           ✓ {successLabel} : {resolvedGeoLabel}
         </p>
       )}
@@ -140,7 +140,7 @@ export function BirthProfileCurrentLocationSection({
   const isDetecting = currentLocationState === "detecting" || currentLocationState === "resolving"
 
   return (
-    <div className="section-divider">
+    <div className="app-section-divider">
       <h3 id="current-location-title">{title}</h3>
       <p className="help-text">{help}</p>
 
@@ -154,17 +154,17 @@ export function BirthProfileCurrentLocationSection({
       {geolocationConsent && (
         <div className="current-location-controls">
           {currentLocationLabel ? (
-            <p className="state-line state-success">
+            <p className="app-state app-state--success">
               ✓ {locationDetectedLabel} : {currentLocationLabel}
             </p>
           ) : (
-            <p className="state-line">{noLocationLabel}</p>
+            <p className="app-state">{noLocationLabel}</p>
           )}
 
           <button type="button" onClick={onDetectLocation} disabled={isDetecting} className="secondary-button">
             {isDetecting ? (
-              <span className="state-line">
-                <span className="state-loading" aria-hidden="true" />
+              <span className="app-state">
+                <span className="app-spinner" aria-hidden="true" />
                 {detectingLabel}
               </span>
             ) : (
@@ -200,7 +200,7 @@ export function BirthProfileNatalGenerationSection({
   onGenerate,
 }: BirthProfileNatalGenerationSectionProps) {
   return (
-    <div className="section-divider" aria-labelledby="natal-generation-title">
+    <div className="app-section-divider" aria-labelledby="natal-generation-title">
       <h3 id="natal-generation-title">{title}</h3>
       {error && (
         <div className="chat-error" role="alert">

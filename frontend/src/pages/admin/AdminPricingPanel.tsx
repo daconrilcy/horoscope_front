@@ -18,7 +18,7 @@ export function AdminPricingPanel() {
       <p>{t.description}</p>
 
       {plansQuery.isPending && (
-        <p className="state-line state-loading" aria-busy="true">
+        <p className="app-state app-state--loading" aria-busy="true">
           {t.loading}
         </p>
       )}
@@ -35,7 +35,7 @@ export function AdminPricingPanel() {
       )}
 
       {plansQuery.data && plansQuery.data.length === 0 && (
-        <p className="state-line state-empty">{t.emptyState}</p>
+        <p className="app-state app-state--empty">{t.emptyState}</p>
       )}
 
       {plansQuery.data && plansQuery.data.length > 0 && (
