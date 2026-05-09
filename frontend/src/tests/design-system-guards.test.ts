@@ -556,9 +556,9 @@ describe("design-system guards", () => {
 
     expect(headerBlock.body).toContain("position: sticky")
     expect(headerBlock.body).toContain("z-index: 220")
-    expect(headerBlock.body).toContain("background: color-mix(in srgb, var(--color-bg-top) 72%, var(--color-nav-glass) 28%)")
-    expect(headerBlock.body).toContain("backdrop-filter: blur(calc(var(--surface-glass-blur) + 10px)) saturate(170%)")
-    expect(headerBlock.body).toContain("-webkit-backdrop-filter: blur(calc(var(--surface-glass-blur) + 10px)) saturate(170%)")
+    expect(headerBlock.body).toContain("background: color-mix(in srgb, var(--color-bg-top) 10%, var(--color-nav-glass) 15%)")
+    expect(headerBlock.body).toContain("backdrop-filter: blur(calc(var(--surface-glass-blur))) saturate(170%)")
+    expect(headerBlock.body).toContain("-webkit-backdrop-filter: blur(calc(var(--surface-glass-blur))) saturate(170%)")
     expect(headerBlock.body).toContain("isolation: isolate")
     expect(veilBlock.body).toContain("background: linear-gradient(")
     expect(veilBlock.body).toContain("pointer-events: none")

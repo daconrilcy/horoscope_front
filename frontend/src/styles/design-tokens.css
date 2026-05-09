@@ -28,7 +28,7 @@
   --color-glass-mini: rgba(255,255,255,0.40);
   --color-glass-mini-border: rgba(255,255,255,0.58);
   --glass-heavy: #1a1a1a;
-  --surface-glass-blur: 14px;
+  --surface-glass-blur: 8px;
 
   /* === BRAND/CTA === */
   --color-cta-left: #866CD0;
