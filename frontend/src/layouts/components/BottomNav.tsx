@@ -1,3 +1,4 @@
+// Navigation mobile du layout applicatif avec items adaptes au role courant.
 import { Link, useLocation } from 'react-router-dom'
 import { getMobileNavItems } from '../../ui/nav'
 import { useAccessTokenSnapshot } from "../../utils/authToken"

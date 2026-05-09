@@ -1,3 +1,4 @@
+// Garde applicatif qui limite une branche de route aux roles autorises.
 import type { ReactNode } from "react"
 import { Navigate } from "react-router-dom"
 

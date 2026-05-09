@@ -73,6 +73,34 @@ function isForbiddenNatalInterpretationSpecifier(specifier: string): boolean {
   )
 }
 
+function componentOwnerModule(parts: string[]): string {
+  return ["components", ...parts].join("/")
+}
+
+const FORBIDDEN_COMPONENT_OWNER_MODULES = [
+  componentOwnerModule(["AdminGuard"]),
+  componentOwnerModule(["B2BReconciliationPanel"]),
+  componentOwnerModule(["EnterpriseCredentialsPanel"]),
+  componentOwnerModule(["SupportOpsPanel"]),
+  componentOwnerModule(["dashboard", "useDashboardAstroSummary"]),
+  componentOwnerModule(["dashboard", "DashboardHoroscopeSummaryCardContainer"]),
+  componentOwnerModule(["settings", "DeleteAccountModal"]),
+  componentOwnerModule(["layout", "BottomNav"]),
+  componentOwnerModule(["layout", "Header"]),
+  componentOwnerModule(["layout", "Sidebar"]),
+]
+
+function isForbiddenComponentOwnerSpecifier(specifier: string): boolean {
+  return FORBIDDEN_COMPONENT_OWNER_MODULES.some(
+    (modulePath) =>
+      specifier === `@/${modulePath}` ||
+      specifier === `@${modulePath}` ||
+      specifier.endsWith(`/${modulePath}`) ||
+      specifier.endsWith(`/${modulePath}.ts`) ||
+      specifier.endsWith(`/${modulePath}.tsx`),
+  )
+}
+
 describe("component-architecture guards", () => {
   it("bloque les imports API/feature et appels HTTP non classes dans components", () => {
     const allowed = exactFiles(COMPONENT_API_IMPORT_EXCEPTIONS)
@@ -98,6 +126,31 @@ describe("component-architecture guards", () => {
 
     expect(violations).toEqual([])
     expect(staleEntries).toEqual([])
+  })
+
+  it("bloque le retour des anciens owners API composants CS-120", () => {
+    const existingLegacyFiles = componentSourceFiles().filter((file) =>
+      FORBIDDEN_COMPONENT_OWNER_MODULES.some(
+        (modulePath) => file === `${modulePath}.ts` || file === `${modulePath}.tsx`,
+      ),
+    )
+    const legacyImports = frontendSourceFiles()
+      .map((file) => ({
+        file,
+        forbiddenSpecifiers: extractModuleSpecifiers(readFrontendFile(file)).filter(
+          isForbiddenComponentOwnerSpecifier,
+        ),
+      }))
+      .filter(({ forbiddenSpecifiers }) => forbiddenSpecifiers.length > 0)
+    const staleAllowlistEntries = COMPONENT_API_IMPORT_EXCEPTIONS.filter((entry) =>
+      FORBIDDEN_COMPONENT_OWNER_MODULES.some(
+        (modulePath) => entry.file === `${modulePath}.ts` || entry.file === `${modulePath}.tsx`,
+      ),
+    )
+
+    expect(existingLegacyFiles).toEqual([])
+    expect(legacyImports).toEqual([])
+    expect(staleAllowlistEntries).toEqual([])
   })
 
   it("bloque le retour des anciens containers auth sous components", () => {

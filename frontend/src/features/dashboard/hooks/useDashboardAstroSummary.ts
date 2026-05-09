@@ -1,11 +1,12 @@
+// Hook dashboard qui consolide le resume astrologique depuis les donnees utilisateur.
 import { useMemo } from 'react';
-import { useDailyPrediction } from '../../api/useDailyPrediction';
-import { useBirthData } from '../../api/useBirthData';
-import { getSubjectFromAccessToken } from '../../utils/authToken';
-import { normalizeSignCode } from '../../i18n/astrology';
-import type { ZodiacSign } from '../astro/zodiacPatterns';
-import { clamp } from '../astro/astroMoodBackgroundUtils';
-import type { DailyPredictionResponse } from '../../types/dailyPrediction';
+import { useDailyPrediction } from '../../../api/useDailyPrediction';
+import { useBirthData } from '../../../api/useBirthData';
+import { getSubjectFromAccessToken } from '../../../utils/authToken';
+import { normalizeSignCode } from '../../../i18n/astrology';
+import type { ZodiacSign } from '../../../components/astro/zodiacPatterns';
+import { clamp } from '../../../components/astro/astroMoodBackgroundUtils';
+import type { DailyPredictionResponse } from '../../../types/dailyPrediction';
 
 export interface DashboardAstroSummary {
   sign: ZodiacSign;

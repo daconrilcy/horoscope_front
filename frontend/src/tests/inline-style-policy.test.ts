@@ -44,7 +44,7 @@ describe("inline-style policy", () => {
     const auditedFiles = [
       "layouts/SettingsLayout.tsx",
       "features/astrologers/components/AstrologerCard.tsx",
-      "components/settings/DeleteAccountModal.tsx",
+      "pages/settings/components/DeleteAccountModal.tsx",
     ]
 
     for (const file of auditedFiles) {

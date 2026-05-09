@@ -2,7 +2,7 @@
 import { useState } from "react"
 
 import { type SupportUserContext, useOpsSearchUser, useOpsRollbackPersona } from "@api"
-import { useTranslation } from "../i18n"
+import { useTranslation } from "../../i18n"
 
 type PrivacyRequestView = SupportUserContext["privacy_requests"][number] & {
   type?: string

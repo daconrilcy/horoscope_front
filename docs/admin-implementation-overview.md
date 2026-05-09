@@ -16,7 +16,7 @@ Il couvre :
 - Définie dans `frontend/src/app/routes.tsx` avec des sous-routes (`/admin/dashboard`, `/admin/users`, etc.).
 
 ### Garde d'accès
-- Le composant `AdminGuard` (`frontend/src/components/AdminGuard.tsx`) protège toutes les routes `/admin`.
+- Le guard `AdminGuard` (`frontend/src/app/guards/AdminGuard.tsx`) protège toutes les routes `/admin`.
 - Comportement actuel :
   - vérifie le token et charge `/v1/auth/me` ;
   - redirige vers `/login?returnTo=...` si non authentifié ;

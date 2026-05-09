@@ -1,8 +1,9 @@
+// Garde applicatif qui protege les routes reservees aux administrateurs.
 import type { ReactNode } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 
-import { useAccessTokenSnapshot } from "../utils/authToken"
-import { useAuthMe } from "../api/authMe"
+import { useAccessTokenSnapshot } from "../../utils/authToken"
+import { useAuthMe } from "../../api/authMe"
 import "./AdminGuard.css"
 
 type AdminGuardProps = {

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import { EnterpriseCredentialsPanel } from "../components/EnterpriseCredentialsPanel"
+import { EnterpriseCredentialsPanel } from "../features/enterprise/EnterpriseCredentialsPanel"
 
 const mockUseB2BCredentials = vi.fn()
 const mockUseGenerateB2BCredential = vi.fn()

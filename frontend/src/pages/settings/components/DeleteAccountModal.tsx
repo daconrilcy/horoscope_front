@@ -1,10 +1,11 @@
+// Modale page settings qui orchestre la demande de suppression du compte.
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { clearAccessToken } from "../../utils/authToken"
-import { useRequestDelete } from "../../api/privacy"
-import { detectLang } from "../../i18n/astrology"
-import { settingsTranslations } from "../../i18n/settings"
-import { Modal, Button, Field } from "../ui"
+import { clearAccessToken } from "../../../utils/authToken"
+import { useRequestDelete } from "../../../api/privacy"
+import { detectLang } from "../../../i18n/astrology"
+import { settingsTranslations } from "../../../i18n/settings"
+import { Modal, Button, Field } from "../../../components/ui"
 import "./DeleteAccountModal.css"
 
 interface DeleteAccountModalProps {

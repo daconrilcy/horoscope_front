@@ -389,7 +389,7 @@ function collectAdminCssCluster(): Array<{ file: string; source: string }> {
 
 function collectResidualCssTokenCluster(): Array<{ file: string; source: string }> {
   return [
-    "components/AdminGuard.css",
+    "app/guards/AdminGuard.css",
     "components/astro/AstroMoodBackground.css",
     "components/AstroDailyEvents.css",
     "components/AstroFoundationSection.css",
@@ -397,12 +397,12 @@ function collectResidualCssTokenCluster(): Array<{ file: string; source: string 
     "components/DayClimateHero.css",
     "components/DomainRankingCard.css",
     "components/ErrorBoundary/ErrorBoundary.css",
-    "components/layout/Header.css",
-    "components/layout/Sidebar.css",
+    "layouts/components/Header.css",
+    "layouts/components/Sidebar.css",
     "features/natal-chart/NatalInterpretation.css",
     "components/prediction/DayTimelineSectionV4.css",
     "components/prediction/KeyPointCard.css",
-    "components/settings/DeleteAccountModal.css",
+    "pages/settings/components/DeleteAccountModal.css",
     "components/ShortcutCard.css",
     "features/auth/SignUpForm.css",
     "components/TurningPointCard.css",

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { fireEvent, render, cleanup, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
-import { Header } from "../../components/layout/Header"
+import { Header } from "../../layouts/components/Header"
 import { SidebarProvider } from "../../state/SidebarContext"
 
 const toggleThemeMock = vi.fn()

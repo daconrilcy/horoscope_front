@@ -1,3 +1,4 @@
+// Navigation laterale du layout applicatif avec prechargement des ecrans frequents.
 import "./Sidebar.css"
 
 import { NavLink } from "react-router-dom"

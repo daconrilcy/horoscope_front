@@ -1,8 +1,8 @@
 import { Outlet, useLocation } from "react-router-dom"
 
-import { Header } from "../components/layout/Header"
-import { Sidebar } from "../components/layout/Sidebar"
-import { BottomNav } from "../components/layout/BottomNav"
+import { Header } from "./components/Header"
+import { Sidebar } from "./components/Sidebar"
+import { BottomNav } from "./components/BottomNav"
 import { PageErrorBoundary } from "../components/ErrorBoundary"
 import { SidebarProvider, useSidebarContext } from "../state/SidebarContext"
 

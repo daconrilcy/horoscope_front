@@ -1,12 +1,12 @@
 // Panneau admin pour gerer les credentials API entreprise.
-import { useTranslation } from "../i18n"
+import { useTranslation } from "../../i18n"
 import {
   type EnterpriseCredentialsApiError,
   type EnterpriseCredentialMetadata,
   useB2BCredentials,
   useGenerateB2BCredential,
   useRotateB2BCredential,
-} from "../api/enterpriseCredentials"
+} from "../../api/enterpriseCredentials"
 
 type EnterpriseCredentialView = EnterpriseCredentialMetadata & {
   scope?: string

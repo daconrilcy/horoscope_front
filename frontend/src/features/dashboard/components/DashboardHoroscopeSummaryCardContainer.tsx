@@ -1,10 +1,11 @@
+// Container dashboard qui connecte la carte resume horoscope aux donnees applicatives.
 import React from "react"
-import { useAccessTokenSnapshot } from "../../utils/authToken"
-import { useAstrologyLabels } from "../../i18n/astrology"
-import { useDashboardAstroSummary } from "./useDashboardAstroSummary"
-import { DashboardHoroscopeSummaryCard } from "./DashboardHoroscopeSummaryCard"
+import { useAccessTokenSnapshot } from "../../../utils/authToken"
+import { useAstrologyLabels } from "../../../i18n/astrology"
+import { useDashboardAstroSummary } from "../hooks/useDashboardAstroSummary"
+import { DashboardHoroscopeSummaryCard } from "../../../components/dashboard/DashboardHoroscopeSummaryCard"
 import { useQueryClient } from "@tanstack/react-query"
-import { prefetchDailyHoroscope } from "../../utils/prefetchHelpers"
+import { prefetchDailyHoroscope } from "../../../utils/prefetchHelpers"
 
 /**
  * Container component for DashboardHoroscopeSummaryCard (Story 55.1).

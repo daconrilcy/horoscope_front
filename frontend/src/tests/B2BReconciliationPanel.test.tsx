@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { B2BReconciliationPanel } from "../components/B2BReconciliationPanel"
+import { B2BReconciliationPanel } from "../features/enterprise/B2BReconciliationPanel"
 
 const mockUseIssues = vi.fn()
 const mockUseDetail = vi.fn()

@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { UpgradeCTA } from './UpgradeCTA'
 import { createWrapper } from '../../../tests/test-utils'
-import type { UpgradeHint } from '../../../api/billing'
 
 // Mock the entitlement snapshot hook
 vi.mock('../../../hooks/useEntitlementSnapshot', () => ({
@@ -19,7 +18,7 @@ import { useUpgradeHint } from '../../../hooks/useEntitlementSnapshot'
 
 const mockUseUpgradeHint = vi.mocked(useUpgradeHint)
 
-const fakeHint: UpgradeHint = {
+const fakeHint: NonNullable<ReturnType<typeof useUpgradeHint>> = {
   feature_code: 'horoscope_daily',
   current_plan_code: 'free',
   target_plan_code: 'basic',

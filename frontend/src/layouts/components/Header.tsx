@@ -1,3 +1,4 @@
+// En-tete du layout applicatif avec controle du menu et actions utilisateur.
 import "./Header.css"
 
 import { Menu, Moon, Sun, X } from "lucide-react"

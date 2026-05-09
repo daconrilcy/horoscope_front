@@ -1,3 +1,4 @@
+// Redirection racine qui oriente l'utilisateur selon son etat de session.
 import { Navigate } from "react-router-dom"
 
 import { clearAccessToken, isAccessTokenExpired, useAccessTokenSnapshot } from "../../utils/authToken"

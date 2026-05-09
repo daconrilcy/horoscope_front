@@ -1,3 +1,4 @@
+// Panneau enterprise pour rapprocher les ecarts de consommation B2B.
 import { useMemo, useState } from "react"
 
 import {
@@ -7,8 +8,8 @@ import {
   useB2BReconciliationAction,
   useB2BReconciliationIssueDetail,
   useB2BReconciliationIssues,
-} from "../api/b2bReconciliation"
-import { useTranslation } from "../i18n"
+} from "../../api/b2bReconciliation"
+import { useTranslation } from "../../i18n"
 
 function describeIssue(issue: ReconciliationIssue): string {
   return `A${issue.account_id} ${issue.period_start} -> ${issue.period_end} (${issue.severity})`

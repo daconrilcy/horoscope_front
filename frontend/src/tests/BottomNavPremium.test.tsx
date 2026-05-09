@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach, beforeAll } from "vitest"
 import { render, cleanup, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BottomNav } from "../components/layout/BottomNav"
+import { BottomNav } from "../layouts/components/BottomNav"
 import { readFileSync } from "fs"
 import { resolve } from "path"
 

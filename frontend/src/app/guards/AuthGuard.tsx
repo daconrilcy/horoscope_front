@@ -1,3 +1,4 @@
+// Garde applicatif qui reserve les routes protegees aux sessions authentifiees.
 import type { ReactNode } from "react"
 import { Navigate, useLocation } from "react-router-dom"
 
