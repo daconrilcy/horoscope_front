@@ -178,8 +178,9 @@ def get_astrologer(
             .order_by(ChatConversationModel.updated_at.desc())
             .limit(1)
         )
-        action_state.last_chat_id = db.execute(chat_stmt).scalar_one_or_none()
-        action_state.has_chat = action_state.last_chat_id is not None
+        last_chat_id = db.execute(chat_stmt).scalar_one_or_none()
+        action_state.last_chat_id = str(last_chat_id) if last_chat_id is not None else None
+        action_state.has_chat = last_chat_id is not None
 
         # Natal state
         natal_stmt = (
@@ -191,9 +192,12 @@ def get_astrologer(
             .order_by(UserNatalInterpretationModel.created_at.desc())
             .limit(1)
         )
-        action_state.last_natal_interpretation_id = db.execute(natal_stmt).scalar_one_or_none()
+        last_natal_interpretation_id = db.execute(natal_stmt).scalar_one_or_none()
+        action_state.last_natal_interpretation_id = (
+            str(last_natal_interpretation_id) if last_natal_interpretation_id is not None else None
+        )
         action_state.has_natal_interpretation = (
-            action_state.last_natal_interpretation_id is not None
+            last_natal_interpretation_id is not None
         )
 
     return {

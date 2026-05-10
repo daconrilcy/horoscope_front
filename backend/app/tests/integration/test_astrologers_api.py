@@ -8,9 +8,12 @@ from app.infra.db.base import Base
 from app.infra.db.models import (
     AstrologerProfileModel,
     AstrologerReviewModel,
+    ChatConversationModel,
     UserModel,
+    UserNatalInterpretationModel,
 )
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.user_natal_interpretation import InterpretationLevel
 from app.main import app
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
@@ -157,6 +160,73 @@ def test_get_astrologer_returns_structured_profile_fields() -> None:
     assert payload["professional_background"] == ["Études en symbolisme et traditions anciennes"]
     assert payload["key_skills"] == ["Lecture symbolique du thème", "Archétypes"]
     assert payload["behavioral_style"] == ["Imagé", "Poétique mais lisible"]
+
+
+def test_get_astrologer_serializes_action_state_ids_as_strings() -> None:
+    _reset_tables()
+    persona_id = uuid.uuid4()
+
+    with open_app_test_db_session() as db:
+        db.add(LlmPersonaModel(id=persona_id, name="Luna", enabled=True))
+        db.add(
+            AstrologerProfileModel(
+                persona_id=persona_id,
+                first_name="Luna",
+                last_name="Guide",
+                display_name="Luna Guide",
+                gender="female",
+                age=36,
+                public_style_label="Pédagogique",
+                bio_short="Bio courte",
+                bio_long="Bio longue",
+                admin_category="standard",
+                specialties=[],
+                professional_background=[],
+                key_skills=[],
+                behavioral_style=[],
+                is_public=True,
+            )
+        )
+        user = UserModel(
+            email="chat.owner@example.com",
+            password_hash=hash_password("secret"),
+            role="user",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        conversation = ChatConversationModel(user_id=user.id, persona_id=persona_id)
+        interpretation = UserNatalInterpretationModel(
+            user_id=user.id,
+            chart_id=str(uuid.uuid4()),
+            level=InterpretationLevel.SHORT,
+            use_case="natal",
+            variant_code="default",
+            persona_id=persona_id,
+            persona_name="Luna",
+            interpretation_payload={"summary": "Lecture courte"},
+        )
+        db.add_all([conversation, interpretation])
+        db.commit()
+        db.refresh(conversation)
+        db.refresh(interpretation)
+
+        access_token = create_access_token(str(user.id), user.role)
+        expected_chat_id = str(conversation.id)
+        expected_interpretation_id = str(interpretation.id)
+
+    response = client.get(
+        f"/v1/astrologers/{persona_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    assert response.status_code == 200
+    action_state = response.json()["data"]["action_state"]
+    assert action_state["has_chat"] is True
+    assert action_state["last_chat_id"] == expected_chat_id
+    assert action_state["has_natal_interpretation"] is True
+    assert action_state["last_natal_interpretation_id"] == expected_interpretation_id
 
 
 def test_review_rating_and_comment_are_persisted_with_user_alias() -> None:
