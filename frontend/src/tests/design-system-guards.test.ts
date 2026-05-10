@@ -92,8 +92,6 @@ function extractSelectedAppValues(ownerBody: string): string[] {
     "--app-button-shadow",
     "--app-button-hover-shadow",
     "--app-button-bg",
-    "--app-astro-catalog-page-bg",
-    "--app-astro-catalog-atmosphere",
     "--app-summary-panel-bg",
     "--app-summary-panel-shadow",
     "--app-summary-panel-pill-bg",
@@ -130,6 +128,59 @@ type LayoutWidthViolation = {
   property: string
   value: string
 }
+
+type PageBackgroundViolation = {
+  file: string
+  selector: string
+  property: string
+  value: string
+}
+
+const PAGE_BACKGROUND_SELECTORS = [
+  ".landing-layout",
+  ".people-page",
+  ".premium-page-layout",
+  ".daily-layout::before",
+  ".daily-layout::after",
+  ".daily-layout__bg-halo-3",
+  ".daily-layout__noise",
+  ".profile-bg-halo",
+  ".profile-noise",
+  ".result-bg-halo",
+  ".result-noise",
+  ".chat-page-container__bg-halo",
+  ".chat-page-container__noise",
+  ".natal-page-container__bg-halo",
+  ".natal-page-container__noise",
+  ".settings-bg-halo",
+  ".settings-noise",
+  ".help-bg-halo",
+  ".help-noise",
+] as const
+
+const PAGE_BACKGROUND_CUSTOM_PROPERTIES = new Set([
+  "--landing-page-atmosphere",
+  "--app-premium-page-layout-background",
+  "--app-astro-catalog-page-bg",
+  "--app-astro-catalog-atmosphere",
+  "--premium-daily-page-bg",
+  "--premium-daily-bg-atmosphere",
+  "--premium-daily-bg-depth",
+  "--settings-page-bg",
+  "--help-bg-halo",
+  "--chat-bg-halo",
+])
+
+const CANONICAL_PAGE_BACKGROUND_VALUES = new Set([
+  "var(--premium-app-bg)",
+  "var(--premium-app-bg-atmosphere)",
+  "var(--premium-noise-image)",
+  "var(--app-premium-page-layout-background)",
+  "var(--app-astro-catalog-page-bg)",
+  "var(--app-astro-catalog-atmosphere)",
+  "transparent",
+  "none",
+])
 
 function findSelectorBeforeBrace(css: string, braceIndex: number): string {
   let cursor = braceIndex - 1
@@ -225,6 +276,14 @@ function collectCssDeclarations(css: string): CssDeclaration[] {
   }
 
   return declarations
+}
+
+function selectorMatchesExactPageBackground(selector: string, pageBackgroundSelector: string): boolean {
+  return selector.split(",").some((part) => {
+    const normalizedSelector = normalizeCssValue(part)
+
+    return normalizedSelector === pageBackgroundSelector || normalizedSelector.endsWith(` ${pageBackgroundSelector}`)
+  })
 }
 
 function validateCssValueDelimiters(value: string): string | null {
@@ -330,6 +389,37 @@ function collectNonAdminPageLevelWidthViolations(): LayoutWidthViolation[] {
       return redefinesLayoutToken || bypassesCanonicalContainer || hidesHorizontalOverflow || usesLocalPageCap
         ? [{ file, selector, property, value }]
         : []
+    }),
+  )
+}
+
+function collectPageBackgroundViolations(): PageBackgroundViolation[] {
+  const scannedFiles = Array.from(new Set([
+    "styles/premium-theme.css",
+    "styles/backgrounds.css",
+    "styles/app/tokens.css",
+    "styles/app/cards.css",
+    "layouts/LandingLayout.css",
+    ...listFiles("pages", ".css"),
+  ]))
+
+  return scannedFiles.flatMap((file) =>
+    collectCssDeclarations(readFrontendFile(file)).flatMap((declaration) => {
+      const selectorOwnsPageBackground = PAGE_BACKGROUND_SELECTORS.some((selector) =>
+        selectorMatchesExactPageBackground(declaration.selector, selector),
+      )
+      const isPageBackgroundProperty =
+        selectorOwnsPageBackground &&
+        (declaration.property === "background" || declaration.property === "background-image")
+      const isPageBackgroundToken = PAGE_BACKGROUND_CUSTOM_PROPERTIES.has(declaration.property)
+
+      if (!isPageBackgroundProperty && !isPageBackgroundToken) {
+        return []
+      }
+
+      return CANONICAL_PAGE_BACKGROUND_VALUES.has(declaration.value)
+        ? []
+        : [{ file, selector: declaration.selector, property: declaration.property, value: declaration.value }]
     }),
   )
 }
@@ -960,6 +1050,23 @@ describe("design-system guards", () => {
     expect(collectNonAdminPageLevelWidthViolations()).toEqual([])
   })
 
+  it("garde un fond de page canonique unique par theme", () => {
+    const premiumThemeCss = readFrontendFile("styles/premium-theme.css")
+    const backgroundsCss = readFrontendFile("styles/backgrounds.css")
+    const rootThemeBlock = findFlatCssBlock(premiumThemeCss, ":root")
+    const darkThemeBlock = findFlatCssBlock(premiumThemeCss, ".dark")
+
+    expect(rootThemeBlock.body).toContain("--premium-app-bg:")
+    expect(rootThemeBlock.body).toContain("var(--color-token-rgb-171-211-255)")
+    expect(rootThemeBlock.body).toContain("var(--color-token-fcfdff)")
+    expect(rootThemeBlock.body).toContain("--premium-app-bg-atmosphere: transparent")
+    expect(darkThemeBlock.body).toContain("--premium-app-bg:")
+    expect(darkThemeBlock.body).toContain("rgba(160, 120, 255, 0.22)")
+    expect(backgroundsCss).toMatch(/\.app-bg\s*\{[^}]*background:\s*var\(--premium-app-bg\)/)
+    expect(backgroundsCss).toMatch(/\.app-bg::before\s*\{[^}]*background:\s*var\(--premium-app-bg-atmosphere\)/)
+    expect(collectPageBackgroundViolations()).toEqual([])
+  })
+
   it("blocks non-type App CSS module filenames", () => {
     const approved = APP_CSS_MODULE_FILES.map((file) => file.replace("styles/app/", "")).sort()
     const actual = listFiles("styles/app", ".css").map((file) => file.replace("styles/app/", "")).sort()
@@ -1014,11 +1121,12 @@ describe("design-system guards", () => {
     expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--settings-*` | semantic-extension |")
     expect(migratedValues.length).toBeGreaterThan(0)
     expect(ownerBlock.body).toContain("--settings-page-bg:")
+    expect(ownerBlock.body).toContain("--settings-page-bg: var(--premium-app-bg)")
     expect(ownerBlock.body).toContain("--settings-page-padding:")
     expect(ownerBlock.body).toContain("--settings-save-feedback-offset:")
     expect(guardedCss).toContain("var(--settings-")
     expect(guardedCss).toContain("var(--usage-progress, 0)")
-    expect(findFlatCssBlock(settingsCss, ".settings-bg-halo").body).toContain("background: var(--settings-page-bg)")
+    expect(findFlatCssBlock(settingsCss, ".settings-bg-halo").body).toContain("background: none")
     expect(guardedCss).not.toMatch(forbiddenPropertyLiterals)
     for (const value of migratedValues) {
       expect(normalizedGuardedCss).not.toContain(value)
@@ -1134,8 +1242,9 @@ describe("design-system guards", () => {
     expect(ownerSurface).toContain(".dark :where(.help-page, .help-bg-halo)")
     expect(ownerSurface).toContain(".dark .is-settings-page")
     expect(ownerSurface).toContain(".dark .astrologer-profile-container")
-    expect(ownerSurface).toContain(".dark .profile-bg-halo")
-    expect(ownerSurface).toContain(".dark .natal-page-container__bg-halo")
+    expect(ownerSurface).toContain("--premium-app-bg-atmosphere")
+    expect(ownerSurface).toContain("--settings-page-bg: var(--premium-app-bg)")
+    expect(ownerSurface).toContain("--help-bg-halo: var(--premium-app-bg)")
     expect(ownerSurface).toContain(".dark .chat-page-container")
     expect(ownerSurface).toContain(".dark .user-avatar")
     expect(ownerSurface).toContain("background: var(--color-glass-shortcut)")

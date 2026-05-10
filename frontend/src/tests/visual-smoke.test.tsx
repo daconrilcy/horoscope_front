@@ -273,15 +273,15 @@ describe("CS-084 — rendu smoke Settings", () => {
     expect(halo).toBeInTheDocument()
     expect(page).toContainElement(halo)
     expect(container.querySelector(".settings-container")).toHaveTextContent("Contenu Settings")
-    expect(settingsCss).toContain("--settings-page-bg:")
-    expect(settingsCss).toMatch(/\.settings-bg-halo\s*\{[^}]*background:\s*var\(--settings-page-bg\)/)
+    expect(settingsCss).toContain("--settings-page-bg: var(--premium-app-bg)")
+    expect(settingsCss).toMatch(/\.settings-bg-halo\s*\{[^}]*background:\s*none/)
   })
 })
 
 describe("CS-085 — rendu smoke Landing", () => {
   it("expose le scope owner landing et des styles representatifs token-backed", () => {
-    expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*--landing-page-atmosphere:/)
-    expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*background:\s*var\(--landing-page-atmosphere\)/)
+    expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*--landing-page-atmosphere:\s*var\(--premium-app-bg\)/)
+    expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*background:\s*transparent/)
     expect(landingPageCss).toMatch(/\.hero-content h1\s*\{[^}]*font-size:\s*var\(--landing-type-hero-title-size\)/)
   })
 })

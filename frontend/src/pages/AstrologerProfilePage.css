@@ -63,29 +63,15 @@
 
 .profile-bg-halo,
 .profile-noise {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
+  display: none;
 }
 
 .profile-bg-halo {
-  background:
-    radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--color-token-rgb-171-211-255) 46%, transparent) 0%, transparent 26%),
-    radial-gradient(circle at 31% 34%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 85%, transparent) 0%, transparent 28%),
-    radial-gradient(circle at 69% 18%, color-mix(in srgb, var(--color-token-rgb-241-218-168) 34%, transparent) 0%, transparent 30%),
-    radial-gradient(circle at 82% 72%, color-mix(in srgb, var(--color-token-rgb-167-203-255) 28%, transparent) 0%, transparent 24%),
-    linear-gradient(180deg, var(--color-token-fcfdff) 0%, var(--color-token-f5f8fe) 48%, var(--color-token-eef5ff) 100%);
-}
-
-.dark .profile-bg-halo {
-  background: var(--premium-app-bg);
+  background: none;
 }
 
 .profile-noise {
-  opacity: 0.028;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.58' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-image: none;
 }
 
 .astrologer-profile-container::before {

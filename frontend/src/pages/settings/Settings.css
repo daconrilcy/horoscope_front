@@ -74,7 +74,7 @@
   --settings-text-success: #347650;
   --settings-success-border: rgba(58, 143, 94, 0.24);
 
-  --settings-page-bg: radial-gradient(circle at 10% 16%, rgba(171, 148, 255, 0.34) 0%, transparent 28%), radial-gradient(circle at 80% 12%, rgba(190, 170, 255, 0.22) 0%, transparent 26%), radial-gradient(circle at 55% 80%, rgba(241, 218, 168, 0.2) 0%, transparent 30%), linear-gradient(180deg, #fdfcff 0%, #f7f4ff 48%, #f0f5ff 100%);
+  --settings-page-bg: var(--premium-app-bg);
   --settings-accent-card-bg: linear-gradient(180deg, rgba(229, 224, 255, 0.86) 0%, rgba(218, 210, 255, 0.72) 100%);
   --settings-overview-bg: radial-gradient(circle at top right, rgba(213, 154, 57, 0.18) 0%, rgba(213, 154, 57, 0) 32%), radial-gradient(circle at 18% 18%, var(--settings-purple-halo) 0%, rgba(134, 108, 208, 0) 28%), linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(246, 241, 255, 0.72) 100%);
   --settings-aside-bg: radial-gradient(circle at top right, var(--settings-gold-soft) 0%, rgba(213, 154, 57, 0) 42%), linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 250, 243, 0.8) 100%);
@@ -313,21 +313,15 @@
 
 .settings-bg-halo,
 .settings-noise {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
+  display: none;
 }
 
 .settings-bg-halo {
-  background: var(--settings-page-bg);
+  background: none;
 }
 
 .settings-noise {
-  opacity: 0.028;
-  /* = même opacité que profile-noise */
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.58' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-image: none;
 }
 
 .settings-card {

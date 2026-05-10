@@ -179,10 +179,7 @@
   --app-person-profile-page-back-font-size: 0.9rem;
   --app-person-profile-page-back-background: rgba(102, 230, 255, 0.05);
   --app-person-profile-page-not-found-icon-font-size: 3rem;
-  --app-premium-page-layout-background: radial-gradient(circle at 50% 16%, rgba(118, 179, 255, 0.1), transparent 26%),
-    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.12), transparent 30%),
-    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.1), transparent 32%),
-    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
+  --app-premium-page-layout-background: var(--premium-app-bg);
   --app-premium-hero-title-font-size: clamp(2.4rem, 4vw, 4rem);
   --app-premium-hero-title-mobile-size: 2.5rem;
   --app-premium-hero-title-line-height: 1;
@@ -431,15 +428,8 @@
   --app-danger-surface: rgba(255, 107, 129, 0.1);
   --app-danger-border: rgba(255, 107, 129, 0.5);
   --app-danger-radius: 10px;
-  --app-astro-catalog-page-bg: radial-gradient(circle at 50% 16%, rgba(118, 179, 255, 0.2), transparent 26%),
-    radial-gradient(circle at 18% 22%, rgba(160, 132, 255, 0.22), transparent 30%),
-    radial-gradient(circle at 82% 72%, rgba(255, 191, 215, 0.18), transparent 32%),
-    radial-gradient(circle at 50% 20%, rgba(120, 180, 255, 0.15), transparent 50%),
-    radial-gradient(circle at 56% 18%, rgba(255, 255, 255, 0.7), transparent 28%),
-    linear-gradient(180deg, #fffafc 0%, #f6efff 48%, #efe6ff 100%);
-  --app-astro-catalog-atmosphere: radial-gradient(circle at 50% 18%, rgba(117, 174, 255, 0.18), transparent 20%),
-    radial-gradient(circle at 30% 34%, rgba(181, 143, 255, 0.16), transparent 22%),
-    radial-gradient(circle at 72% 64%, rgba(255, 181, 205, 0.14), transparent 20%);
+  --app-astro-catalog-page-bg: var(--premium-app-bg);
+  --app-astro-catalog-atmosphere: transparent;
   --app-astro-catalog-title-color: #2b1f44;
   --app-astro-catalog-copy-color: rgba(69, 50, 103, 0.72);
   --app-summary-panel-bg: radial-gradient(circle at 73% 56%, rgba(174, 147, 255, 0.32) 0%, transparent 30%),

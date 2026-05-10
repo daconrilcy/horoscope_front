@@ -30,32 +30,24 @@
 .daily-layout::after,
 .daily-layout__bg-halo-3 {
   content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
+  display: none;
 }
 
 .daily-layout::before {
-  background: var(--premium-daily-page-bg);
+  background: none;
 }
 
 .daily-layout::after {
-  background: var(--premium-daily-bg-atmosphere);
+  background: none;
 }
 
 .daily-layout__bg-halo-3 {
-  background: var(--premium-daily-bg-depth);
+  background: none;
 }
 
 .daily-layout__noise {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.028;
-  mix-blend-mode: soft-light;
-  background-image: var(--premium-noise-image);
+  display: none;
+  background-image: none;
 }
 
 .daily-layout__section {
@@ -135,11 +127,11 @@
 }
 
 .dark .daily-layout::after {
-  background: var(--premium-daily-bg-atmosphere);
+  background: none;
 }
 
 .dark .daily-layout__bg-halo-3 {
-  background: var(--premium-daily-bg-depth);
+  background: none;
 }
 
 @media (max-width: 768px) {

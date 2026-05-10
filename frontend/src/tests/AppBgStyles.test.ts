@@ -93,13 +93,13 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
 
     it("defines light gradient with radial-gradient", () => {
       expect(cssContent).toMatch(/\.app-bg\s*\{[^}]*background:\s*var\(--premium-app-bg\)/)
-      expect(cssContent).toMatch(/--premium-app-bg:\s*radial-gradient\(720px 520px/)
-      expect(cssContent).toMatch(/radial-gradient\(1200px 800px at 20% 10%/)
+      expect(cssContent).toMatch(/--premium-app-bg:\s*radial-gradient\(circle at 8% 18%/)
+      expect(cssContent).toMatch(/radial-gradient\(circle at 69% 18%/)
     })
 
     it("defines light gradient with linear-gradient using tokens", () => {
       expect(cssContent).toMatch(
-        /--premium-app-bg:[\s\S]*linear-gradient\(180deg, var\(--color-bg-top\) 0%, var\(--color-bg-mid\) \d+%, var\(--color-bg-bot\) 100%\)/
+        /--premium-app-bg:[\s\S]*linear-gradient\(180deg, var\(--color-token-fcfdff\) 0%, var\(--color-token-f5f8fe\) 48%, var\(--color-token-eef5ff\) 100%\)/
       )
     })
   })

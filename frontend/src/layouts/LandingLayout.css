@@ -17,9 +17,7 @@
   --landing-radius-dropdown: 22px;
   --landing-radius-dropdown-mobile: 20px;
   --landing-radius-avatar: 50%;
-  --landing-page-atmosphere: radial-gradient(circle at top left, rgba(255, 255, 255, 0.58), transparent 28%),
-    radial-gradient(circle at top right, rgba(203, 189, 255, 0.26), transparent 24%),
-    linear-gradient(180deg, var(--premium-bg-start) 0%, var(--premium-bg-mid) 42%, var(--premium-bg-end) 100%);
+  --landing-page-atmosphere: var(--premium-app-bg);
   --landing-text-on-dark: rgba(245, 245, 255, 0.82);
   --landing-text-on-dark-muted: rgba(245, 245, 255, 0.68);
   --landing-text-on-dark-strong: rgba(245, 245, 255, 0.9);
@@ -202,7 +200,7 @@
   --landing-type-label-size: var(--font-size-xs);
   --landing-type-label-weight: var(--font-weight-bold);
   min-height: 100vh;
-  background: var(--landing-page-atmosphere);
+  background: transparent;
   color: var(--premium-text-main);
 }
 
