@@ -555,6 +555,10 @@ describe("design-system guards", () => {
     const veilBlock = findFlatCssBlock(headerCss, ".app-header::before")
 
     expect(headerBlock.body).toContain("position: sticky")
+    expect(headerBlock.body).toContain("width: 100%")
+    expect(headerBlock.body).toContain("max-width: 100%")
+    expect(headerBlock.body).not.toContain("width: 100vw")
+    expect(headerBlock.body).not.toContain("50vw")
     expect(headerBlock.body).toContain("z-index: 220")
     expect(headerBlock.body).toContain("background: color-mix(in srgb, var(--color-bg-top) 10%, var(--color-nav-glass) 15%)")
     expect(headerBlock.body).toContain("backdrop-filter: blur(calc(var(--surface-glass-blur))) saturate(170%)")
