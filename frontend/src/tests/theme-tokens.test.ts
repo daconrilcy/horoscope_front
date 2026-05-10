@@ -131,6 +131,12 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(themeContent).toContain("BlinkMacSystemFont")
     expect(themeContent).toContain("SF Pro Display")
   })
+
+  it("garde les familles décoratives alignées sur la police applicative", () => {
+    expect(getTokenValue(themeContent, ":root", "--font-family-heading")).toBe("var(--font-family-base)")
+    expect(getTokenValue(themeContent, ":root", "--font-family-editorial")).toBe("var(--font-family-base)")
+    expect(getTokenValue(themeContent, ":root", "--font-family-script")).toBe("var(--font-family-base)")
+  })
 })
 
 describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {

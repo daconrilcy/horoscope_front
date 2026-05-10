@@ -296,7 +296,7 @@
 .settings-section-title {
   margin: var(--settings-section-title-margin);
   color: var(--settings-text-heading);
-  font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  font-family: var(--font-family-heading);
   font-size: var(--settings-type-section-title-size);
   /* légèrement plus petit que profil */
   line-height: var(--settings-type-section-title-line-height);

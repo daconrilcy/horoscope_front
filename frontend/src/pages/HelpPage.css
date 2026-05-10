@@ -324,7 +324,7 @@
 .hero-panel__aside h2,
 .section-card h2 {
   margin: 0;
-  font-family: "Cormorant Garamond", Georgia, serif;
+  font-family: var(--font-family-heading);
   font-weight: var(--font-weight-semibold);
   line-height: 1.02;
   color: var(--help-ink-heading);
@@ -817,7 +817,7 @@
   color: var(--help-ink-heading);
   font-weight: var(--font-weight-bold);
   margin-bottom: 8px;
-  font-family: "Cormorant Garamond", Georgia, serif;
+  font-family: var(--font-family-heading);
   font-size: 1.45rem;
   overflow-wrap: anywhere;
 }
