@@ -1,22 +1,7 @@
+// Compose la route detaillee du profil astrologue et ses interactions locales.
 import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
-import { 
-  ChevronLeft, 
-  MapPin, 
-  Calendar, 
-  Award, 
-  Star, 
-  Quote, 
-  Users, 
-  Clock,
-  Sparkles,
-  Zap,
-  BookOpen,
-  GraduationCap,
-  Orbit,
-  Heart,
-  Check
-} from "lucide-react"
+import { Award, BookOpen, Calendar, Check, ChevronLeft, Clock, GraduationCap, Heart, MapPin, Orbit, Quote, Sparkles, Star, Users, Zap } from "lucide-react"
 
 import { useAstrologer, rateAstrologer } from "../api/astrologers"
 import { useUserSettings, useUpdateUserSettings } from "@api/userSettings"
@@ -200,7 +185,6 @@ export function AstrologerProfilePage() {
   const { data: preferences } = useUserSettings()
   const updateSettings = useUpdateUserSettings()
   const lang = detectLang()
-  
   const [isRating, setIsRating] = useState(false)
   const [imgError, setImgError] = useState(false)
   const [isReviewComposerOpen, setIsReviewComposerOpen] = useState(false)
@@ -216,9 +200,7 @@ export function AstrologerProfilePage() {
 
   const handleToggleDefault = () => {
     if (!profile || updateSettings.isPending) return
-    updateSettings.mutate({ 
-      default_astrologer_id: isDefault ? null : profile.id 
-    })
+    updateSettings.mutate({ default_astrologer_id: isDefault ? null : profile.id })
   }
 
   const handleReviewComposerOpen = (rating: number) => {
@@ -368,6 +350,8 @@ export function AstrologerProfilePage() {
   )
   const averageRating = profile.review_summary.average_rating || metrics.average_rating || 0
   const reviewCount = profile.review_summary.review_count || 0
+  const publicReviewCount = Math.max(reviewCount, profile.reviews.length)
+  const hasPublicReviews = publicReviewCount > 0
   const satisfactionRate = formatReviewPercentage(averageRating)
   const recommendationRate = Math.max(0, satisfactionRate - 2)
   const subtitle = getProfileSubtitle(profile.style, profile.bio_short)
@@ -408,8 +392,8 @@ export function AstrologerProfilePage() {
     },
     {
       key: "rating",
-      value: `${averageRating.toFixed(1)}/5`,
-      label: "Note moyenne",
+      value: hasPublicReviews ? `${averageRating.toFixed(1)}/5` : "Nouveau",
+      label: hasPublicReviews ? "Note moyenne" : "Avis publics",
       icon: Star,
     },
   ]
@@ -424,7 +408,6 @@ export function AstrologerProfilePage() {
       <div className="profile-noise" />
       
       <div className="astrologer-profile-container">
-        {/* Header Nav */}
         <nav className="profile-nav">
           <button className="profile-back-btn" onClick={handleBack} aria-label={t("back_to_catalogue", lang)}>
             <ChevronLeft size={24} />
@@ -432,7 +415,6 @@ export function AstrologerProfilePage() {
           </button>
         </nav>
 
-        {/* Hero Section */}
         <section className="profile-hero">
           <div className="profile-hero-avatar-container">
             <div className="profile-hero-avatar-glow" />
@@ -451,13 +433,7 @@ export function AstrologerProfilePage() {
             )}
           </div>
           <div className="profile-hero-content">
-            <div className="profile-badge-row">
-              {isDefault && (
-                <div className="profile-default-badge profile-default-badge--selected">
-                  <Check size={14} />
-                  {t("your_default", lang)}
-                </div>
-              )}
+            <div className="profile-badge-row profile-badge-row--identity">
               <div className={`profile-provider-badge profile-provider-badge--${providerType}`}>
                 <Sparkles size={14} />
                 {getProviderTypeLabel(providerType)}
@@ -471,7 +447,23 @@ export function AstrologerProfilePage() {
             </div>
             <h1 className="profile-full-name">{fullName}</h1>
             <p className="profile-style-title">{subtitle}</p>
-            
+            <div className="profile-hero-actions">
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                className="premium-cta premium-cta--primary profile-hero-cta"
+                onClick={handleConsultationCta}
+              >
+                {t("cta_consultation", lang)}
+              </Button>
+              {isDefault ? (
+                <span className="profile-default-badge profile-default-badge--selected">
+                  <Check size={14} />
+                  {t("your_default", lang)}
+                </span>
+              ) : null}
+            </div>
             <div className="profile-metadata-row">
               {profile.age && (
                 <div className="profile-meta-pill">
@@ -491,13 +483,12 @@ export function AstrologerProfilePage() {
                   <span>{profile.location}</span>
                 </div>
               )}
-              
               <button 
                 className={`profile-meta-pill profile-meta-pill--default-action ${isDefault ? 'profile-meta-pill--default-active' : ''}`}
                 onClick={handleToggleDefault}
                 disabled={updateSettings.isPending}
               >
-                <Star size={16} fill={isDefault ? "currentColor" : "none"} />
+                {isDefault ? <Check size={16} /> : <Star size={16} />}
                 <span>{isDefault ? "Astrologue par défaut" : "Définir par défaut"}</span>
               </button>
             </div>
@@ -514,16 +505,13 @@ export function AstrologerProfilePage() {
 
         <AstrologerProfileMetricsBar items={metricItems} />
 
-        {/* Main Grid */}
         <div className="profile-main-grid">
           <div className="profile-col-left">
-            {/* About */}
             <section className="profile-about">
               <h2 className="profile-section-title profile-section-title--underlined">{`À propos de ${profile.first_name}`}</h2>
               <p className="profile-bio-text">{profile.bio_full}</p>
             </section>
 
-            {/* Mission */}
             {profile.mission_statement && (
               <section className="profile-mission-card">
                 <div className="profile-mission-card__icon">
@@ -588,12 +576,18 @@ export function AstrologerProfilePage() {
             t("method_step_3", lang),
             t("method_step_4", lang),
           ]}
+          helpers={[
+            t("method_step_1_helper", lang),
+            t("method_step_2_helper", lang),
+            t("method_step_3_helper", lang),
+            t("method_step_4_helper", lang),
+          ]}
         />
 
         <AstrologerProfileReviewsSection
           profile={profile}
           averageRating={averageRating}
-          reviewCount={reviewCount}
+          reviewCount={publicReviewCount}
           satisfactionRate={satisfactionRate}
           recommendationRate={recommendationRate}
           displayedUserRating={displayedUserRating}
@@ -603,6 +597,13 @@ export function AstrologerProfilePage() {
             reviewsTitle: t("reviews_title", lang),
             yourRatingTitle: t("your_rating_title", lang),
             reviewAddButton: t("review_add_button", lang),
+            emptyReviewsBadge: t("reviews_empty_badge", lang),
+            emptyReviewsPrompt: t("reviews_empty_prompt", lang),
+            emptyReviewsDescription: t("reviews_empty_description", lang),
+            reviewsWithoutExcerptsPrompt: t("reviews_without_excerpts_prompt", lang),
+            reviewsWithoutExcerptsDescription: t("reviews_without_excerpts_description", lang),
+            publicReviewsLabel: t("reviews_public_label", lang),
+            discoveryLabel: t("reviews_discovery_label", lang),
           }}
           onReviewComposerOpen={handleReviewComposerOpen}
           onReviewTextComposerOpen={() => {
@@ -612,10 +613,10 @@ export function AstrologerProfilePage() {
             setIsReviewComposerOpen(true)
           }}
         />
-
         <AstrologerProfileFinalCta
           profile={profile}
           trustItems={trustItems}
+          isPrimary={hasPublicReviews}
           labels={{
             session: t("cta_consultation", lang),
             chat: profile.action_state.has_chat ? t("cta_chat_resume", lang) : t("cta_chat_new", lang),

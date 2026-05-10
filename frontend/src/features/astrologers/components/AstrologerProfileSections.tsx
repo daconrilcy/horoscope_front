@@ -26,6 +26,7 @@ type AstrologerProfileMetricsBarProps = {
 type AstrologerProfileMethodSectionProps = {
   title: string
   steps: string[]
+  helpers?: string[]
 }
 
 type AstrologerProfileReviewsSectionProps = {
@@ -41,6 +42,13 @@ type AstrologerProfileReviewsSectionProps = {
     reviewsTitle: string
     yourRatingTitle: string
     reviewAddButton: string
+    emptyReviewsBadge: string
+    emptyReviewsPrompt: string
+    emptyReviewsDescription: string
+    reviewsWithoutExcerptsPrompt: string
+    reviewsWithoutExcerptsDescription: string
+    publicReviewsLabel: string
+    discoveryLabel: string
   }
   onReviewComposerOpen: (rating: number) => void
   onReviewTextComposerOpen: () => void
@@ -49,6 +57,7 @@ type AstrologerProfileReviewsSectionProps = {
 type AstrologerProfileFinalCtaProps = {
   profile: AstrologerProfile
   trustItems: AstrologerProfileTrustItem[]
+  isPrimary?: boolean
   labels: {
     session: string
     chat: string
@@ -83,7 +92,7 @@ export function AstrologerProfileMetricsBar({ items }: AstrologerProfileMetricsB
 }
 
 /** Rend le deroule de methode du profil astrologue. */
-export function AstrologerProfileMethodSection({ title, steps }: AstrologerProfileMethodSectionProps) {
+export function AstrologerProfileMethodSection({ title, steps, helpers = [] }: AstrologerProfileMethodSectionProps) {
   return (
     <section className="profile-method">
       <h2 className="profile-section-title profile-section-title--method">
@@ -97,6 +106,7 @@ export function AstrologerProfileMethodSection({ title, steps }: AstrologerProfi
               <div className="step-number">{index + 1}</div>
               <div className="step-content">
                 <p className="step-title">{step}</p>
+                {helpers[index] ? <p className="step-helper">{helpers[index]}</p> : null}
               </div>
             </div>
           </FragmentWithArrow>
@@ -120,23 +130,35 @@ export function AstrologerProfileReviewsSection({
   onReviewComposerOpen,
   onReviewTextComposerOpen,
 }: AstrologerProfileReviewsSectionProps) {
+  const hasPublicReviews = reviewCount > 0
+  const hasReviewExcerpts = profile.reviews.length > 0
+  const roundedAverage = Math.round(averageRating)
+
   return (
     <section className="profile-reviews-section">
       <div className="profile-reviews-section__header">
         <h2 className="profile-section-title profile-section-title--reviews">{labels.reviewsTitle}</h2>
-        <div className="profile-reviews-summary">
-          <div className="profile-reviews-stars" aria-hidden="true">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star key={star} size={18} fill={star <= Math.round(averageRating) ? "currentColor" : "none"} />
-            ))}
+        {hasPublicReviews ? (
+          <div className="profile-reviews-summary">
+            <div className="profile-reviews-stars" aria-hidden="true">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} size={18} fill={star <= roundedAverage ? "currentColor" : "none"} />
+              ))}
+            </div>
+            <span className="profile-reviews-summary__score">{`${averageRating.toFixed(1)}/5`}</span>
+            <span className="profile-reviews-summary__count">{`(${reviewCount} avis)`}</span>
           </div>
-          <span className="profile-reviews-summary__score">{`${averageRating.toFixed(1)}/5`}</span>
-          <span className="profile-reviews-summary__count">{`(${reviewCount} avis)`}</span>
-        </div>
+        ) : (
+          <div className="profile-reviews-summary profile-reviews-summary--empty">
+            <Sparkles size={18} />
+            <span className="profile-reviews-summary__score">{labels.emptyReviewsBadge}</span>
+            <span className="profile-reviews-summary__count">{labels.emptyReviewsPrompt}</span>
+          </div>
+        )}
       </div>
       <div className="reviews-container">
         <div className="reviews-list">
-          {profile.reviews.length > 0 ? (
+          {hasReviewExcerpts ? (
             profile.reviews.map((review) => (
               <div key={review.id} className="review-item">
                 <div className="review-quote-mark">“</div>
@@ -165,20 +187,27 @@ export function AstrologerProfileReviewsSection({
           ) : (
             <div className="review-item review-item--empty">
               <p className="review-comment">
-                Cet astrologue n&apos;a pas encore reçu d&apos;avis publics. Vous pouvez être le premier à partager votre retour.
+                {hasPublicReviews ? labels.reviewsWithoutExcerptsPrompt : labels.emptyReviewsPrompt}
+              </p>
+              <p className="review-empty-description">
+                {hasPublicReviews ? labels.reviewsWithoutExcerptsDescription : labels.emptyReviewsDescription}
               </p>
             </div>
           )}
         </div>
         <div className="review-stats-card">
           <div className="review-stats-card__grid">
-            <ReviewMetric value={reviewCount}>{`Avis`}</ReviewMetric>
-            <ReviewMetric value={`${satisfactionRate}%`}>{`Satisfaits`}</ReviewMetric>
+            <ReviewMetric value={reviewCount}>{labels.publicReviewsLabel}</ReviewMetric>
+            <ReviewMetric value={hasPublicReviews ? `${satisfactionRate}%` : "—"}>
+              {hasPublicReviews ? "Satisfaits" : labels.discoveryLabel}
+            </ReviewMetric>
           </div>
-          <div className="review-stats-card__recommendation">
-            <Heart size={18} />
-            <span>{`Recommandé par ${recommendationRate}%`}</span>
-          </div>
+          {hasPublicReviews ? (
+            <div className="review-stats-card__recommendation">
+              <Heart size={18} />
+              <span>{`Recommandé par ${recommendationRate}%`}</span>
+            </div>
+          ) : null}
 
           <div className="review-stats-card__rating">
             <p className="step-title review-stats-card__rating-title">{labels.yourRatingTitle}</p>
@@ -218,6 +247,7 @@ export function AstrologerProfileReviewsSection({
 export function AstrologerProfileFinalCta({
   profile,
   trustItems,
+  isPrimary = true,
   labels,
   onConsultation,
   onChat,
@@ -230,8 +260,8 @@ export function AstrologerProfileFinalCta({
       <p className="profile-final-cta__subtitle">Réservez votre première session découverte</p>
       <Button
         size="lg"
-        variant="primary"
-        className="premium-cta premium-cta--primary"
+        variant={isPrimary ? "primary" : "secondary"}
+        className={`premium-cta ${isPrimary ? "premium-cta--primary" : "premium-cta--soft"}`}
         onClick={onConsultation}
         rightIcon={<ArrowRight size={20} />}
       >

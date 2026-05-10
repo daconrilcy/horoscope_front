@@ -17,6 +17,8 @@
   --profile-text-heading: var(--color-token-24334d);
   --profile-text-body: var(--color-token-4f5f78);
   --profile-text-muted: var(--color-token-7f8da4);
+  --profile-hero-avatar-size: 360px;
+  --profile-grid-gap: var(--space-8);
 
   position: relative;
   max-width: var(--layout-max-width);
@@ -165,16 +167,17 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 390px 1fr;
-  gap: 44px;
+  grid-template-columns: minmax(0, var(--profile-hero-avatar-size)) minmax(0, 1fr);
+  gap: var(--profile-grid-gap);
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .profile-hero-avatar-container {
   position: relative;
-  width: 390px;
-  height: 390px;
+  width: min(100%, var(--profile-hero-avatar-size));
+  aspect-ratio: 1;
+  max-width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -242,7 +245,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .profile-hero-content::before {
@@ -255,14 +259,20 @@
   letter-spacing: var(--letter-spacing-orbital);
 }
 
-.profile-badge-row {
+.profile-badge-row,
+.profile-hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-3);
+}
+
+.profile-badge-row--identity {
+  align-items: center;
 }
 
 .profile-provider-badge,
-.profile-positioning-badge {
+.profile-positioning-badge,
+.profile-default-badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -288,6 +298,13 @@
 .profile-provider-badge--real {
   border-color: color-mix(in srgb, var(--color-token-rgb-211-184-129) 84%, transparent);
   color: var(--color-token-b17a2e);
+}
+
+.profile-default-badge {
+  background: color-mix(in srgb, var(--color-token-rgb-255-250-243) 88%, transparent);
+  border: 1px solid var(--profile-gold-border);
+  color: var(--color-token-b17a2e);
+  box-shadow: var(--profile-card-shadow-soft);
 }
 
 .profile-full-name {
@@ -334,6 +351,28 @@
   color: var(--profile-blue);
 }
 
+.profile-meta-pill--default-action {
+  cursor: pointer;
+  color: var(--profile-text-body);
+}
+
+.profile-meta-pill--default-active {
+  border-color: var(--profile-gold-border);
+  color: var(--color-token-b17a2e);
+  background: color-mix(in srgb, var(--color-token-rgb-255-250-243) 84%, transparent);
+}
+
+.profile-hero-actions {
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.profile-hero-cta {
+  min-width: 238px;
+  border-radius: var(--radius-card-lg);
+  box-shadow: var(--shadow-card);
+}
+
 .profile-quote {
   position: relative;
   max-width: 620px;
@@ -373,7 +412,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
-  margin-bottom: 42px;
+  margin-bottom: 36px;
   overflow: hidden;
   background: var(--profile-card-surface-strong);
   border: 1px solid var(--profile-card-border);
@@ -388,7 +427,7 @@
   align-items: center;
   gap: var(--space-4);
   min-height: 112px;
-  padding: 24px 28px;
+  padding: 22px 24px;
 }
 
 .metric-card + .metric-card::before {
@@ -416,6 +455,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-1);
+  min-width: 0;
 }
 
 .metric-value {
@@ -423,6 +463,7 @@
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-numeric-line-height);
+  overflow-wrap: anywhere;
 }
 
 .metric-title {
@@ -430,6 +471,7 @@
   font-size: var(--font-size-15);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
 }
 
 .metric-helper {
@@ -441,8 +483,8 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 440px;
-  gap: var(--space-10);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  gap: var(--profile-grid-gap);
   margin-bottom: 28px;
 }
 
@@ -491,7 +533,7 @@
 }
 
 .profile-bio-text {
-  max-width: 580px;
+  max-width: 640px;
   margin: 0;
   color: var(--profile-text-body);
   font-size: var(--font-size-17);
@@ -503,8 +545,8 @@
   align-items: flex-start;
   gap: 18px;
   margin-top: 4px;
-  padding: 24px 22px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-229-242-255) 86%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-218-236-255) 72%, transparent) 100%);
+  padding: 22px;
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-token-rgb-156-201-249) 70%, transparent);
   border-radius: var(--radius-panel);
   box-shadow:var(--shadow-card);
@@ -589,10 +631,19 @@
 }
 
 .step-title {
+  margin: 0;
   color: var(--profile-text-heading);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-eyebrow-line-height);
+}
+
+.step-helper {
+  max-width: 180px;
+  margin: 0;
+  color: var(--profile-text-body);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-copy-tight);
 }
 
 .method-arrow {
@@ -716,6 +767,15 @@
   font-size: var(--font-size-md);
 }
 
+.profile-reviews-summary--empty {
+  padding: 0 var(--space-3);
+  min-height: 38px;
+  border: 1px solid var(--profile-gold-border);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-token-rgb-255-250-243) 84%, transparent);
+  color: var(--color-token-b17a2e);
+}
+
 .reviews-container {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 238px;
@@ -808,6 +868,13 @@
   font-size: var(--font-size-xl);
   font-style: normal;
   line-height: var(--line-height-relaxed);
+}
+
+.review-empty-description {
+  margin: var(--space-3) 0 0;
+  color: var(--profile-text-body);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-copy-loose);
 }
 
 .review-stats-card {
@@ -1073,6 +1140,15 @@
   box-shadow: var(--shadow-card);
 }
 
+.profile-final-cta .btn.premium-cta--soft {
+  min-width: 320px;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-card-lg);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, transparent);
+  color: var(--profile-text-heading);
+  box-shadow: var(--profile-card-shadow-soft);
+}
+
 .profile-final-cta .btn.premium-cta--primary:not(:disabled):hover {
   filter: brightness(1.06);
   transform: translateY(-2px);
@@ -1133,6 +1209,10 @@
 }
 
 @media (max-width: 1180px) {
+  .astrologer-profile-container {
+    --profile-hero-avatar-size: 320px;
+  }
+
   .astrologer-profile-container::before {
     right: 20px;
     width: 260px;
@@ -1140,21 +1220,19 @@
   }
 
   .profile-hero {
-    grid-template-columns: 320px 1fr;
-    gap: 34px;
-  }
-
-  .profile-hero-avatar-container {
-    width: 320px;
-    height: 320px;
+    grid-template-columns: minmax(0, var(--profile-hero-avatar-size)) minmax(0, 1fr);
   }
 
   .profile-main-grid {
-    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   }
 }
 
 @media (max-width: 980px) {
+  .astrologer-profile-container {
+    --profile-hero-avatar-size: 286px;
+  }
+
   .astrologer-profile-container::before,
   .astrologer-profile-container::after {
     display: none;
@@ -1209,16 +1287,12 @@
 
 @media (max-width: 768px) {
   .astrologer-profile-container {
+    --profile-hero-avatar-size: 224px;
     padding: 18px 18px 72px;
   }
 
   .profile-nav {
     margin-bottom: 12px;
-  }
-
-  .profile-hero-avatar-container {
-    width: 286px;
-    height: 286px;
   }
 
   .profile-full-name {
@@ -1258,7 +1332,12 @@
   .method-step {
     flex-direction: row;
     justify-content: flex-start;
+    align-items: flex-start;
     text-align: left;
+  }
+
+  .step-helper {
+    max-width: none;
   }
 
   .premium-cta--primary {
@@ -1268,12 +1347,19 @@
 }
 
 @media (max-width: 520px) {
-  .profile-metrics-bar {
-    grid-template-columns: 1fr;
+  .astrologer-profile-container {
+    --profile-hero-avatar-size: min(210px, calc(100vw - 72px));
+    padding-inline: var(--space-4);
   }
 
   .metric-card + .metric-card::before {
     display: none;
+  }
+
+  .metric-card {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 118px;
   }
 
   .profile-reviews-section {
@@ -1306,5 +1392,12 @@
 
   .cta-group--secondary > * {
     width: 100%;
+  }
+
+  .profile-hero-actions,
+  .profile-hero-cta,
+  .profile-final-cta .btn.premium-cta--soft {
+    width: 100%;
+    min-width: 0;
   }
 }

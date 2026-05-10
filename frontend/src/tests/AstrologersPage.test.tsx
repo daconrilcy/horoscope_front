@@ -373,6 +373,7 @@ describe("AstrologerProfilePage", () => {
       expect(screen.getByText("Thème natal")).toBeInTheDocument()
       expect(screen.getByText(/Luna propose une astrologie centrée sur les émotions/)).toBeInTheDocument()
       expect(screen.getByText("Je vous aide à relire votre thème avec douceur.")).toBeInTheDocument()
+      expect(screen.getAllByRole("button", { name: /Lancer une consultation|Start a consultation/i })[0]).toBeInTheDocument()
       expect(screen.getByText("Personnes accompagnées")).toBeInTheDocument()
       expect(screen.getByText(/Marie/)).toBeInTheDocument()
       expect(screen.getByRole("heading", { name: "Avis" })).toBeInTheDocument()
@@ -484,7 +485,7 @@ describe("AstrologerProfilePage", () => {
       fireEvent.click(screen.getByRole("button", { name: /Voir mon interprétation|View my interpretation/i }))
       expect(mockNavigate).toHaveBeenCalledWith("/natal?interpretationId=321")
 
-      fireEvent.click(screen.getByRole("button", { name: /Lancer une consultation|Start a consultation/i }))
+      fireEvent.click(screen.getAllByRole("button", { name: /Lancer une consultation|Start a consultation/i })[0])
       expect(mockNavigate).toHaveBeenCalledWith(
         `/consultations/new?astrologerId=${encodeURIComponent("astro_expert_42")}`
       )
@@ -572,6 +573,103 @@ describe("AstrologerProfilePage", () => {
       renderProfilePage("1")
 
       expect(screen.getByRole("button", { name: "Rédiger un avis" })).toBeInTheDocument()
+    })
+
+    it("renders method helper text for each profile step", () => {
+      mockUseAstrologer.mockReturnValue({
+        data: mockProfile,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      })
+
+      renderProfilePage("1")
+
+      expect(screen.getByText("Votre carte sert de point d'ancrage.")).toBeInTheDocument()
+      expect(screen.getByText("Les périodes sensibles sont clarifiées.")).toBeInTheDocument()
+      expect(screen.getByText("Les messages deviennent des repères utiles.")).toBeInTheDocument()
+      expect(screen.getByText("Vous repartez avec une prochaine étape.")).toBeInTheDocument()
+    })
+
+    it("shows a non-contradictory public reviews empty state", () => {
+      const newProfile = {
+        ...mockProfile,
+        reviews: [],
+        review_summary: {
+          average_rating: 4.8,
+          review_count: 0,
+        },
+        user_rating: undefined,
+        user_review: undefined,
+      }
+      mockUseAstrologer.mockReturnValue({
+        data: newProfile,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      })
+
+      renderProfilePage("1")
+
+      expect(screen.getByText("Nouvel astrologue")).toBeInTheDocument()
+      expect(screen.getAllByText("Soyez le premier à partager votre retour").length).toBeGreaterThan(0)
+      expect(screen.getAllByText("Avis publics").length).toBeGreaterThan(0)
+      expect(screen.getByText("À découvrir")).toBeInTheDocument()
+      expect(screen.queryByText("4.8/5")).not.toBeInTheDocument()
+      expect(screen.queryByText("(0 avis)")).not.toBeInTheDocument()
+    })
+
+    it("keeps a positive public review summary when excerpts are absent", () => {
+      const profileWithoutReviewExcerpts = {
+        ...mockProfile,
+        reviews: [],
+        review_summary: {
+          average_rating: 4.8,
+          review_count: 127,
+        },
+        user_rating: undefined,
+        user_review: undefined,
+      }
+      mockUseAstrologer.mockReturnValue({
+        data: profileWithoutReviewExcerpts,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      })
+
+      renderProfilePage("1")
+
+      expect(screen.getAllByText("4.8/5").length).toBeGreaterThan(0)
+      expect(screen.getByText("(127 avis)")).toBeInTheDocument()
+      expect(screen.getByText("Avis publics déjà collectés")).toBeInTheDocument()
+      expect(screen.getByText("Les extraits détaillés apparaîtront ici dès qu'ils seront disponibles.")).toBeInTheDocument()
+      expect(screen.queryByText("Nouvel astrologue")).not.toBeInTheDocument()
+      expect(screen.queryByText("Soyez le premier à partager votre retour")).not.toBeInTheDocument()
+    })
+
+    it("keeps public review excerpts consistent when the summary count is zero", () => {
+      const profileWithReviewExcerptOnly = {
+        ...mockProfile,
+        review_summary: {
+          average_rating: 4.8,
+          review_count: 0,
+        },
+        user_rating: undefined,
+        user_review: undefined,
+      }
+      mockUseAstrologer.mockReturnValue({
+        data: profileWithReviewExcerptOnly,
+        isPending: false,
+        error: null,
+        refetch: vi.fn(),
+      })
+
+      renderProfilePage("1")
+
+      expect(screen.getByText("(1 avis)")).toBeInTheDocument()
+      expect(screen.getByText("Très éclairante.")).toBeInTheDocument()
+      expect(screen.queryByText("Nouvel astrologue")).not.toBeInTheDocument()
+      expect(screen.queryByText("Soyez le premier à partager votre retour")).not.toBeInTheDocument()
     })
   })
 })

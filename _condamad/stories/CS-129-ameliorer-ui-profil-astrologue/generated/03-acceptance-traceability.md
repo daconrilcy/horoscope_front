@@ -1,0 +1,16 @@
+# Acceptance Traceability
+
+| AC | Requirement | Expected code impact | Required validation evidence | Status |
+|---|---|---|---|---|
+| AC1 | Horizontal scroll is resolved at the local overflowing element. | `AstrologerProfilePage.css` uses bounded hero/avatar sizing and local grid constraints; e2e asserts `scrollWidth <= clientWidth`. | `npm run test:e2e -- astrologer-profile-ui.spec.ts` PASS; `rg -n "overflow-x:\s*hidden" src/pages/AstrologerProfilePage.css` zero-hit. | PASS |
+| AC2 | A primary consultation CTA appears in the first-screen hero area. | `AstrologerProfilePage.tsx` adds `.profile-hero-cta` using `handleConsultationCta`. | `npm run test -- AstrologersPage design-system visual-smoke` PASS; e2e checks hero CTA visibility and viewport reachability. | PASS |
+| AC3 | Hero hierarchy is tightened without data changes. | Hero badge/action grouping and CSS spacing changed only locally; route/API data unchanged. | `AstrologersPage`, `visual-smoke`, `lint`, `build` PASS; `profile-ui-after.md` records allowed visual deltas. | PASS |
+| AC4 | Default action is secondary to identity badges. | Provider/positioning badges are grouped separately; default status/action is secondary in hero actions/metadata. | `AstrologersPage` and `design-system` PASS; diff review confirms no data or route changes. | PASS |
+| AC5 | Metrics keep balanced value-label hierarchy. | Metrics use bounded text wrapping and no contradictory rating value when zero public reviews. | `design-system` and `visual-smoke` PASS; review-count edge case test added. | PASS |
+| AC6 | Content spacing uses one local grid rhythm. | `profile-main-grid`, `specialties-card`, `profile-mission-card` remain local owners with `--profile-grid-gap`. | Required selector scan PASS; `profile-ui-after.md` records grid rhythm. | PASS |
+| AC7 | Method steps include short helper copy for each step. | `AstrologerProfileMethodSection` accepts `helpers`; i18n adds helper labels. | `AstrologersPage` helper assertions PASS. | PASS |
+| AC8 | Empty public reviews no longer pair a non-zero score with `0 avis`. | Empty public review branch uses `reviewCount === 0`; does not show `4.8/5` or `(0 avis)`. | `AstrologersPage` zero-review test PASS. | PASS |
+| AC9 | Review stats simplify when public reviews are empty. | Zero state shows `Nouvel astrologue` / `A découvrir`; positive count without excerpts shows a non-empty collected-reviews state; returned excerpts normalize a zero summary count. | `AstrologersPage` tests cover zero, positive-with-excerpts, positive-without-excerpts and excerpt-only/zero-summary states. | PASS |
+| AC10 | Mobile CTA stays quickly reachable. | `.profile-hero-cta` is in hero; mobile CSS keeps it full-width and e2e asserts it is in viewport at 390px. | `npm run test:e2e -- astrologer-profile-ui.spec.ts` PASS; mobile selector scan PASS. | PASS |
+| AC11 | Design-system guardrails remain intact. | Added static guard for no App.css profile styles, no inline style, no overflow masking. | `npm run test -- inline-style css-fallback page-architecture` PASS; scans PASS. | PASS |
+| AC12 | Existing profile behaviors still pass. | Existing chat/natal/consultation/default/review flows preserved. | `npm run test -- AstrologersPage design-system visual-smoke`, `npm run lint`, `npm run build` PASS. | PASS |

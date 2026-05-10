@@ -880,6 +880,21 @@ describe("design-system guards", () => {
     expect(mechanicalTokens).toEqual([])
   })
 
+  it("garde le profil astrologue sans overflow masque ni styles hors owner", () => {
+    const appCss = readFrontendFile("App.css")
+    const profileCss = readFrontendFile("pages/AstrologerProfilePage.css")
+    const profileRoute = readFrontendFile("pages/AstrologerProfilePage.tsx")
+    const profileSections = readFrontendFile("features/astrologers/components/AstrologerProfileSections.tsx")
+
+    expect(appCss).not.toMatch(/AstrologerProfile|profile-/)
+    expect(`${profileRoute}\n${profileSections}`).not.toMatch(/\sstyle=/)
+    expect(profileCss).not.toMatch(/overflow-x:\s*hidden/)
+    expect(profileCss).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))")
+    expect(profileCss).toContain("--profile-hero-avatar-size: min(210px, calc(100vw - 72px))")
+    expect(profileCss).toContain(".profile-hero-actions")
+    expect(profileCss).toContain(".profile-reviews-summary--empty")
+  })
+
   it("blocks non-type App CSS module filenames", () => {
     const approved = APP_CSS_MODULE_FILES.map((file) => file.replace("styles/app/", "")).sort()
     const actual = listFiles("styles/app", ".css").map((file) => file.replace("styles/app/", "")).sort()

@@ -11,16 +11,19 @@ import { readFileSync } from "fs"
 import { resolve } from "path"
 import { render, cleanup, screen } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
+import { Route, Routes } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MessageCircle } from "lucide-react"
 import { ShortcutCard } from "../components/ShortcutCard"
 import { SettingsLayout } from "../layouts/SettingsLayout"
 import { readAppCssSurface } from "./design-system-policy"
 import { AstrologersPage } from "../pages/AstrologersPage"
+import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
 
-const { mockUseAstrologers, mockUseUserSettings } = vi.hoisted(() => ({
+const { mockUseAstrologers, mockUseUserSettings, mockUseAstrologer } = vi.hoisted(() => ({
   mockUseAstrologers: vi.fn(),
   mockUseUserSettings: vi.fn(),
+  mockUseAstrologer: vi.fn(),
 }))
 
 vi.mock("@hooks/useAstrologers", () => ({
@@ -29,12 +32,23 @@ vi.mock("@hooks/useAstrologers", () => ({
 
 vi.mock("@api/userSettings", () => ({
   useUserSettings: () => mockUseUserSettings(),
+  useUpdateUserSettings: () => ({ mutate: vi.fn(), isPending: false }),
 }))
+
+vi.mock("../api/astrologers", async () => {
+  const actual = await vi.importActual<typeof import("../api/astrologers")>("../api/astrologers")
+  return {
+    ...actual,
+    useAstrologer: (id: string | undefined) => mockUseAstrologer(id),
+    rateAstrologer: vi.fn(),
+  }
+})
 
 afterEach(() => {
   cleanup()
   mockUseAstrologers.mockReset()
   mockUseUserSettings.mockReset()
+  mockUseAstrologer.mockReset()
 })
 
 // ─── CSS source files ────────────────────────────────────────────────────────
@@ -217,6 +231,26 @@ function renderAstrologersPageSmoke() {
   )
 }
 
+function renderAstrologerProfileSmoke() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/astrologers/luna"]} future={routerFutureFlags}>
+        <Routes>
+          <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
+  )
+}
+
 describe("CS-084 — rendu smoke Settings", () => {
   it("rend le layout Settings avec le halo heritant du proprietaire semantique", () => {
     const { container } = render(
@@ -343,5 +377,67 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     expect(firstCard.querySelector(".person-card-featured-badge")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-default-badge")).toBeInTheDocument()
     expect(screen.getByAltText("Avatar de Luna Caron")).toBeInTheDocument()
+  })
+})
+
+describe("CS-129 — rendu smoke Profil astrologue", () => {
+  it("rend le hero CTA, la methode aidee et l'etat avis vide sans contradiction", () => {
+    mockUseAstrologer.mockReturnValue({
+      data: {
+        id: "luna",
+        name: "Luna Celeste",
+        first_name: "Luna",
+        last_name: "Caron",
+        avatar_url: "/avatars/luna.jpg",
+        provider_type: "ia",
+        specialties: ["Theme natal", "Transits"],
+        style: "Pedagogique",
+        bio_short: "Astrologue generaliste.",
+        bio_full: "Lecture claire et progressive du theme.",
+        gender: "female",
+        age: 36,
+        location: "Paris",
+        quote: "Je vous aide a relire votre theme avec douceur.",
+        mission_statement: "Comprendre avant d'agir.",
+        ideal_for: "Ideal pour debutants",
+        metrics: {
+          total_experience_years: 5,
+          experience_years: 7,
+          consultations_count: 2400,
+          average_rating: 4.8,
+        },
+        specialties_details: [],
+        professional_background: ["5 ans accompagnement", "7 ans astrologue"],
+        key_skills: [],
+        behavioral_style: [],
+        reviews: [],
+        review_summary: {
+          average_rating: 4.8,
+          review_count: 0,
+        },
+        action_state: {
+          has_chat: false,
+          has_natal_interpretation: false,
+        },
+      },
+      isPending: false,
+      error: null,
+      refetch: vi.fn(),
+    })
+    mockUseUserSettings.mockReturnValue({
+      data: { default_astrologer_id: null },
+      isLoading: false,
+    })
+
+    const { container } = renderAstrologerProfileSmoke()
+
+    expect(container.querySelector(".profile-hero-actions")).toBeInTheDocument()
+    expect(container.querySelector(".profile-hero-cta")).toBeInTheDocument()
+    expect(container.querySelector(".profile-metrics-bar")).toBeInTheDocument()
+    expect(container.querySelector(".profile-reviews-summary--empty")).toBeInTheDocument()
+    expect(screen.getByText("Votre carte sert de point d'ancrage.")).toBeInTheDocument()
+    expect(screen.getByText("Nouvel astrologue")).toBeInTheDocument()
+    expect(screen.queryByText("4.8/5")).not.toBeInTheDocument()
+    expect(screen.queryByText("(0 avis)")).not.toBeInTheDocument()
   })
 })

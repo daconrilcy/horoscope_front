@@ -1,3 +1,4 @@
+// Centralise les libelles localises des surfaces astrologues.
 import type { AstrologyLang } from "./astrology"
 import type { AppLocale } from "./types"
 
@@ -399,6 +400,41 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Write a review",
     es: "Escribir una reseña",
   },
+  reviews_empty_badge: {
+    fr: "Nouvel astrologue",
+    en: "New astrologer",
+    es: "Nuevo astrólogo",
+  },
+  reviews_empty_prompt: {
+    fr: "Soyez le premier à partager votre retour",
+    en: "Be the first to share your feedback",
+    es: "Sea el primero en compartir su experiencia",
+  },
+  reviews_empty_description: {
+    fr: "Les avis publics apparaîtront ici dès les premiers retours vérifiés.",
+    en: "Public reviews will appear here once the first verified feedback is available.",
+    es: "Las opiniones públicas aparecerán aquí cuando lleguen los primeros comentarios verificados.",
+  },
+  reviews_without_excerpts_prompt: {
+    fr: "Avis publics déjà collectés",
+    en: "Public reviews already collected",
+    es: "Opiniones públicas ya recopiladas",
+  },
+  reviews_without_excerpts_description: {
+    fr: "Les extraits détaillés apparaîtront ici dès qu'ils seront disponibles.",
+    en: "Detailed excerpts will appear here as soon as they are available.",
+    es: "Los extractos detallados aparecerán aquí en cuanto estén disponibles.",
+  },
+  reviews_public_label: {
+    fr: "Avis publics",
+    en: "Public reviews",
+    es: "Opiniones públicas",
+  },
+  reviews_discovery_label: {
+    fr: "À découvrir",
+    en: "To discover",
+    es: "Por descubrir",
+  },
   rate_action: {
     fr: "Noter cet astrologue",
     en: "Rate this astrologer",
@@ -448,6 +484,26 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     fr: "Plan d'action",
     en: "Action Plan",
     es: "Plan de acción",
+  },
+  method_step_1_helper: {
+    fr: "Votre carte sert de point d'ancrage.",
+    en: "Your chart anchors the reading.",
+    es: "Su carta sirve como punto de anclaje.",
+  },
+  method_step_2_helper: {
+    fr: "Les périodes sensibles sont clarifiées.",
+    en: "Key periods are clarified.",
+    es: "Los periodos clave se aclaran.",
+  },
+  method_step_3_helper: {
+    fr: "Les messages deviennent des repères utiles.",
+    en: "Messages become useful reference points.",
+    es: "Los mensajes se convierten en referencias útiles.",
+  },
+  method_step_4_helper: {
+    fr: "Vous repartez avec une prochaine étape.",
+    en: "You leave with a next step.",
+    es: "Se va con un próximo paso.",
   },
 }
 
