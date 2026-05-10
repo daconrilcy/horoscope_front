@@ -144,9 +144,9 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
   })
 
-  describe("AC6: Container centré max-width 1100px desktop", () => {
-    it("defines .app-bg-container class with max-width 1100px on desktop", () => {
-      expect(cssContent).toMatch(/@media\s*\(min-width:\s*769px\)[^{]*\{[^}]*\.app-bg-container\s*\{[^}]*max-width:\s*1100px/)
+  describe("AC6: Container centre sur la largeur layout canonique", () => {
+    it("defines .app-bg-container class with canonical layout width on desktop", () => {
+      expect(cssContent).toMatch(/@media\s*\(min-width:\s*769px\)[^{]*\{[^}]*\.app-bg-container\s*\{[^}]*max-width:\s*var\(--layout-page-max-width\)/)
     })
 
     it("centers container with auto margins", () => {
@@ -166,8 +166,8 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
       expect(cssContent).toMatch(/\.app-bg-container\s*\{[^}]*position:\s*relative/)
     })
 
-    it("increases max-width to 1100px on desktop", () => {
-      expect(cssContent).toMatch(/@media\s*\(min-width:\s*769px\)\s*\{[^}]*\.app-bg-container\s*\{[^}]*max-width:\s*1100px/)
+    it("defines the canonical non-admin layout width token", () => {
+      expect(cssContent).toContain("--layout-page-max-width: min(1440px, calc(100vw - 2 * var(--space-6)))")
     })
   })
 

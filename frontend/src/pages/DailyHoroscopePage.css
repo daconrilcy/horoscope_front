@@ -1,7 +1,6 @@
 /* ── DailyHoroscopePage — Unified Premium Glassmorphism (Story 60.17) ── */
 
 .daily-layout {
-  --layout-max-width: var(--premium-layout-max-width);
   --layout-padding-inline: var(--premium-layout-padding-inline);
   --prediction-timeline-card-shift: var(--space-9);
   --prediction-timeline-rail-center: var(--space-4);
@@ -25,8 +24,6 @@
   flex-direction: column;
   gap: var(--space-7);
   padding: 0 var(--layout-padding-inline) var(--space-12);
-  max-width: var(--layout-max-width);
-  margin: 0 auto;
 }
 
 .daily-layout::before,
@@ -148,7 +145,6 @@
 @media (max-width: 768px) {
   .daily-layout {
     --layout-padding-inline: 22px;
-    --layout-max-width: 100%;
     --prediction-timeline-card-shift: var(--space-7);
     --prediction-timeline-rail-center: var(--space-4);
     gap: var(--space-6);

@@ -1,7 +1,6 @@
 /* ── Astrologer Profile Page ─────────────────────────────────────────────── */
 
 .astrologer-profile-container {
-  --layout-max-width: 1140px;
   --layout-padding-inline: 24px;
   --profile-blue: var(--color-token-3e89dc);
   --profile-blue-soft: color-mix(in srgb, var(--color-token-rgb-86-152-226) 14%, transparent);
@@ -26,7 +25,6 @@
   --profile-section-gap: var(--space-10);
 
   position: relative;
-  max-width: var(--layout-max-width);
   min-height: 100vh;
   margin: 0 auto;
   padding: 20px var(--layout-padding-inline) 88px;
@@ -35,7 +33,6 @@
 
 .is-astrologer-profile-page {
   width: 100% !important;
-  max-width: none !important;
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;

@@ -8,12 +8,11 @@
   min-height: 60vh;
   padding: var(--space-8);
   text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
 }
 
 .billing-return-card {
   width: 100%;
+  max-width: 600px;
   padding: var(--space-10);
   display: flex;
   flex-direction: column;

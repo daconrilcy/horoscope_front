@@ -5,6 +5,7 @@
   margin: 0 auto;
   padding: var(--layout-page-padding);
   width: 100%;
+  box-sizing: border-box;
 }
 
 .page-layout__header {

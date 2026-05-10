@@ -1,7 +1,6 @@
 /* Styles alignes sur les tokens du design system. */
 
 .natal-page-container {
-  --layout-page-max-width: 1200px;
   --layout-page-padding: 0;
   --layout-padding-inline: 40px;
 }

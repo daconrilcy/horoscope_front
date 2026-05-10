@@ -124,6 +124,13 @@ type CssSyntaxIssue = {
   issue: string
 }
 
+type LayoutWidthViolation = {
+  file: string
+  selector: string
+  property: string
+  value: string
+}
+
 function findSelectorBeforeBrace(css: string, braceIndex: number): string {
   let cursor = braceIndex - 1
   while (cursor >= 0 && /\s/.test(css[cursor])) {
@@ -279,6 +286,50 @@ function collectCssSyntaxIssues(files: string[]): CssSyntaxIssue[] {
             value: declaration.value,
             issue,
           }]
+    }),
+  )
+}
+
+function collectNonAdminPageLevelWidthViolations(): LayoutWidthViolation[] {
+  const excludedPrefixes = ["pages/admin/", "pages/landing/"]
+  const scannedFiles = Array.from(new Set([
+    "styles/design-tokens.css",
+    "styles/backgrounds.css",
+    ...APP_CSS_MODULE_FILES,
+    "layouts/PageLayout.css",
+    ...listFiles("pages", ".css").filter((file) =>
+      !excludedPrefixes.some((prefix) => file.startsWith(prefix)),
+    ),
+  ]))
+
+  return scannedFiles.flatMap((file) =>
+    collectCssDeclarations(readFrontendFile(file)).flatMap((declaration) => {
+      const property = declaration.property
+      const value = declaration.value
+      const selector = declaration.selector
+      const isCanonicalOwner = [
+        "styles/design-tokens.css",
+        "styles/backgrounds.css",
+        "styles/app/layout.css",
+        "layouts/PageLayout.css",
+      ].includes(file)
+      const redefinesLayoutToken =
+        property === "--layout-max-width" ||
+        (property === "--layout-page-max-width" && file !== "styles/design-tokens.css")
+      const bypassesCanonicalContainer =
+        selector.includes(".app-bg-container:has") ||
+        /max-width:\s*none\s*!important/.test(`${property}: ${value}`)
+      const hidesHorizontalOverflow = property === "overflow-x" && value === "hidden"
+      const usesLocalPageCap =
+        property === "max-width" &&
+        (/^(?:900px|1100px|1200px)$/.test(value) ||
+          (selector.includes(".page-layout") && file !== "layouts/PageLayout.css") ||
+          value.includes("--layout-max-width") ||
+          (value.includes("--layout-page-max-width") && !isCanonicalOwner))
+
+      return redefinesLayoutToken || bypassesCanonicalContainer || hidesHorizontalOverflow || usesLocalPageCap
+        ? [{ file, selector, property, value }]
+        : []
     }),
   )
 }
@@ -471,7 +522,6 @@ function collectResidualCssTokenCluster(): Array<{ file: string; source: string 
     "pages/billing/billing-return.css",
     "pages/BirthProfilePage.css",
     "pages/ConsultationResultPage.css",
-    "pages/DashboardPage.css",
     "pages/NatalChartPage.css",
     "pages/PrivacyPolicyPage.css",
   ].map((file) => ({
@@ -897,6 +947,17 @@ describe("design-system guards", () => {
     expect(profileCss).toContain("--profile-hero-avatar-size: min(210px, calc(100vw - 72px))")
     expect(profileCss).toContain(".profile-hero-actions")
     expect(profileCss).toContain(".profile-reviews-summary--empty")
+  })
+
+  it("garde la largeur centrale non-admin sous ownership layout CS-130", () => {
+    const tokensCss = readFrontendFile("styles/design-tokens.css")
+    const backgroundsCss = readFrontendFile("styles/backgrounds.css")
+    const pageLayoutCss = readFrontendFile("layouts/PageLayout.css")
+
+    expect(tokensCss).toContain("--layout-page-max-width: min(1440px, calc(100vw - 2 * var(--space-6)))")
+    expect(backgroundsCss).toContain("max-width: var(--layout-page-max-width)")
+    expect(pageLayoutCss).toContain("max-width: var(--layout-page-max-width)")
+    expect(collectNonAdminPageLevelWidthViolations()).toEqual([])
   })
 
   it("blocks non-type App CSS module filenames", () => {

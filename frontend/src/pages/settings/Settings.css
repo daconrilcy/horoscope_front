@@ -126,7 +126,6 @@
   --settings-type-inline-status-size: var(--font-size-sm);
   --settings-type-inline-status-line-height: var(--type-metadata-line-height);
 
-  --settings-page-max-width: 860px;
   --settings-page-padding: var(--space-6) var(--space-6) var(--space-12);
   --settings-page-padding-mobile: var(--space-4) var(--space-4) 80px;
   --settings-card-padding: var(--space-7) var(--space-8);
@@ -206,16 +205,12 @@
   --settings-sr-only-size: 1px;
 
   position: relative;
-  width: 100% !important;
-  max-width: none !important;
   padding: 0 !important;
-  margin: 0 !important;
   background: transparent !important;
 }
 
 .settings-container {
   position: relative;
-  max-width: var(--settings-page-max-width);
   margin: 0 auto;
   padding: var(--settings-page-padding);
   box-sizing: border-box;

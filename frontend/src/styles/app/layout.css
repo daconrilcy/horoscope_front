@@ -23,6 +23,7 @@
   width: 100%;
   padding: var(--app-shell-main-padding);
   transition: margin-left 0.2s ease-out;
+  min-width: 0;
 }
 
 
@@ -151,7 +152,7 @@
 
 
 .activities-catalogue-section {
-  max-width: 1000px;
+  max-width: var(--layout-page-max-width);
   margin: 0 auto 4rem;
 }
 
@@ -159,7 +160,6 @@
 
 /* Consultations Page */
 .activities-page {
-  max-width: 900px;
   margin: 0 auto;
 }
 

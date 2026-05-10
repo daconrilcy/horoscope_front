@@ -4,7 +4,6 @@ import { translateDashboardPage } from "../i18n/dashboard"
 import { ShortcutsSection } from "../components/ShortcutsSection"
 import { DashboardHoroscopeSummaryCardContainer } from "../features/dashboard/components/DashboardHoroscopeSummaryCardContainer"
 import { SectionErrorBoundary } from "../components/ErrorBoundary"
-import "./DashboardPage.css"
 
 /**
  * Primary overview landing page (Story 45.2).

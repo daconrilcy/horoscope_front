@@ -1,18 +1,7 @@
 /* Styles de la page de chat et de son layout responsive. */
-/* Prevent body-level horizontal scroll on chat page */
-body:has(.is-chat-page) {
-  overflow-x: hidden;
-}
-
-/* Allow chat layout to exceed the 1100px app-bg-container cap */
-.app-bg-container:has(.is-chat-page) {
-  max-width: none;
-}
-
 /* Remove app-shell-main padding so chat fills the full available width */
 .app-shell-main:has(.is-chat-page) {
   padding: 0;
-  overflow-x: hidden;
   min-width: 0;
   max-width: 100%;
 }
@@ -21,7 +10,6 @@ body:has(.is-chat-page) {
 .is-chat-page {
   padding: 0 !important;
   margin: 0 !important;
-  max-width: none !important;
   width: 100% !important;
   height: calc(100dvh - 64px) !important;
   display: flex !important;
@@ -47,7 +35,6 @@ body:has(.is-chat-page) {
 }
 
 .chat-page-container {
-  --chat-layout-max-width: 1740px;
   --chat-glass-layout-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 243, 255, 0.42) 100%);
   --chat-glass-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(248, 243, 255, 0.28) 100%);
   --chat-glass-panel-soft-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.12) 100%);
@@ -148,8 +135,6 @@ body:has(.is-chat-page) {
   display: flex;
   flex-direction: column;
   padding: 24px 28px 28px !important;
-  max-width: var(--chat-layout-max-width) !important;
-  margin: 0 auto !important;
   width: 100% !important;
   box-sizing: border-box;
   overflow: hidden;
@@ -219,11 +204,6 @@ body:has(.is-chat-page) {
   overflow: hidden;
   min-width: 0;
   background: var(--chat-main-bg);
-}
-
-/* Sidebar: keep fixed 320px, clip any horizontal overflow */
-.chat-page-container .two-col-layout__sidebar {
-  overflow-x: hidden;
 }
 
 /* Mobile chat panels must fill the full available height and never overflow horizontally */
