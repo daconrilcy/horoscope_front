@@ -48,7 +48,8 @@ type AstrologerProfileReviewsSectionProps = {
     reviewsWithoutExcerptsPrompt: string
     reviewsWithoutExcerptsDescription: string
     publicReviewsLabel: string
-    discoveryLabel: string
+    averageRatingPendingLabel: string
+    averageRatingReadyLabel: string
   }
   onReviewComposerOpen: (rating: number) => void
   onReviewTextComposerOpen: () => void
@@ -186,6 +187,9 @@ export function AstrologerProfileReviewsSection({
             ))
           ) : (
             <div className="review-item review-item--empty">
+              <div className="review-empty-icon" aria-hidden="true">
+                <Sparkles size={20} />
+              </div>
               <p className="review-comment">
                 {hasPublicReviews ? labels.reviewsWithoutExcerptsPrompt : labels.emptyReviewsPrompt}
               </p>
@@ -198,8 +202,8 @@ export function AstrologerProfileReviewsSection({
         <div className="review-stats-card">
           <div className="review-stats-card__grid">
             <ReviewMetric value={reviewCount}>{labels.publicReviewsLabel}</ReviewMetric>
-            <ReviewMetric value={hasPublicReviews ? `${satisfactionRate}%` : "—"}>
-              {hasPublicReviews ? "Satisfaits" : labels.discoveryLabel}
+            <ReviewMetric value={hasPublicReviews ? `${satisfactionRate}%` : "À venir"}>
+              {hasPublicReviews ? labels.averageRatingReadyLabel : labels.averageRatingPendingLabel}
             </ReviewMetric>
           </div>
           {hasPublicReviews ? (
@@ -301,9 +305,11 @@ function FragmentWithArrow({ children, isLast }: { children: ReactNode; isLast: 
 }
 
 function ReviewMetric({ value, children }: { value: number | string; children: ReactNode }) {
+  const isTextValue = typeof value === "string" && Number.isNaN(Number(value.replace("%", "").replace(",", ".")))
+
   return (
     <div className="review-stats-card__metric">
-      <div className="big-rating">{value}</div>
+      <div className={`big-rating${isTextValue ? " big-rating--text" : ""}`}>{value}</div>
       <p className="metric-title">{children}</p>
     </div>
   )

@@ -411,9 +411,9 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "Sea el primero en compartir su experiencia",
   },
   reviews_empty_description: {
-    fr: "Les avis publics apparaîtront ici dès les premiers retours vérifiés.",
-    en: "Public reviews will appear here once the first verified feedback is available.",
-    es: "Las opiniones públicas aparecerán aquí cuando lleguen los primeros comentarios verificados.",
+    fr: "Les premiers avis apparaîtront ici après les consultations vérifiées.",
+    en: "The first reviews will appear here after verified consultations.",
+    es: "Las primeras opiniones aparecerán aquí después de las consultas verificadas.",
   },
   reviews_without_excerpts_prompt: {
     fr: "Avis publics déjà collectés",
@@ -430,10 +430,15 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Public reviews",
     es: "Opiniones públicas",
   },
-  reviews_discovery_label: {
-    fr: "À découvrir",
-    en: "To discover",
-    es: "Por descubrir",
+  reviews_average_pending_label: {
+    fr: "Note moyenne",
+    en: "Average rating",
+    es: "Nota media",
+  },
+  reviews_average_ready_label: {
+    fr: "Satisfaits",
+    en: "Satisfied",
+    es: "Satisfechos",
   },
   rate_action: {
     fr: "Noter cet astrologue",

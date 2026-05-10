@@ -614,7 +614,13 @@ describe("AstrologerProfilePage", () => {
       expect(screen.getByText("Nouvel astrologue")).toBeInTheDocument()
       expect(screen.getAllByText("Soyez le premier à partager votre retour").length).toBeGreaterThan(0)
       expect(screen.getAllByText("Avis publics").length).toBeGreaterThan(0)
-      expect(screen.getByText("À découvrir")).toBeInTheDocument()
+      expect(screen.getByText("0 avis")).toBeInTheDocument()
+      expect(screen.getByText("Pour le moment")).toBeInTheDocument()
+      expect(screen.getByText("À venir")).toBeInTheDocument()
+      expect(screen.getByText("Note moyenne")).toBeInTheDocument()
+      expect(
+        screen.getByText("Les premiers avis apparaîtront ici après les consultations vérifiées."),
+      ).toBeInTheDocument()
       expect(screen.queryByText("4.8/5")).not.toBeInTheDocument()
       expect(screen.queryByText("(0 avis)")).not.toBeInTheDocument()
     })

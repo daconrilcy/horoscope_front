@@ -392,8 +392,8 @@ export function AstrologerProfilePage() {
     },
     {
       key: "rating",
-      value: hasPublicReviews ? `${averageRating.toFixed(1)}/5` : "Nouveau",
-      label: hasPublicReviews ? "Note moyenne" : "Avis publics",
+      value: hasPublicReviews ? `${averageRating.toFixed(1)}/5` : "0 avis",
+      label: hasPublicReviews ? "Note moyenne" : "Pour le moment",
       icon: Star,
     },
   ]
@@ -603,7 +603,8 @@ export function AstrologerProfilePage() {
             reviewsWithoutExcerptsPrompt: t("reviews_without_excerpts_prompt", lang),
             reviewsWithoutExcerptsDescription: t("reviews_without_excerpts_description", lang),
             publicReviewsLabel: t("reviews_public_label", lang),
-            discoveryLabel: t("reviews_discovery_label", lang),
+            averageRatingPendingLabel: t("reviews_average_pending_label", lang),
+            averageRatingReadyLabel: t("reviews_average_ready_label", lang),
           }}
           onReviewComposerOpen={handleReviewComposerOpen}
           onReviewTextComposerOpen={() => {
@@ -616,7 +617,6 @@ export function AstrologerProfilePage() {
         <AstrologerProfileFinalCta
           profile={profile}
           trustItems={trustItems}
-          isPrimary={hasPublicReviews}
           labels={{
             session: t("cta_consultation", lang),
             chat: profile.action_state.has_chat ? t("cta_chat_resume", lang) : t("cta_chat_new", lang),
