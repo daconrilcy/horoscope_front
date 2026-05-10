@@ -1998,6 +1998,20 @@
   min-height: 100dvh;
 }
 
+.summary-header {
+  color: var(--premium-text-main);
+}
+
+.summary-header__kicker,
+.summary-welcome {
+  color: var(--premium-text-main);
+}
+
+.summary-title,
+.summary-section-title {
+  color: var(--premium-text-strong);
+}
+
 
 
 @media (max-width: 900px) {

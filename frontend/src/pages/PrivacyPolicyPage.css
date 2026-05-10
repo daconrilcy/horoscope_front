@@ -44,3 +44,17 @@
   font-size: var(--type-body-size);
   line-height: var(--type-body-muted-line-height);
 }
+
+.dark .privacy-policy-page a {
+  color: var(--premium-accent-purple);
+}
+
+.dark .privacy-policy-page a:hover,
+.dark .privacy-policy-page a:focus-visible {
+  color: var(--premium-accent-purple-strong);
+}
+
+.dark .privacy-policy-page a:focus-visible {
+  outline: 2px solid var(--premium-accent-purple-strong);
+  outline-offset: 3px;
+}

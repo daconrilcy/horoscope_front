@@ -1,0 +1,289 @@
+{
+  "url": "http://127.0.0.1:5173/astrologers/c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a",
+  "body": "Astrorizon D Aujourd'hui Chat Thème Consultations Astrologues Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrol",
+  "issueCount": 94,
+  "issues": [
+    {
+      "selector": "div#root",
+      "text": "Astrorizon D Aujourd'hui Chat Thème Consultations Astrologues Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrol",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.app-shell.app-bg",
+      "text": "Astrorizon D Aujourd'hui Chat Thème Consultations Astrologues Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrol",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.app-bg-container",
+      "text": "Astrorizon D Aujourd'hui Chat Thème Consultations Astrologues Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrol",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "header.app-header",
+      "text": "Astrorizon D",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.app-header-brand",
+      "text": "Astrorizon",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.app-header-title",
+      "text": "Astrorizon",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.app-header-actions",
+      "text": "D",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.app-header-avatar-wrapper",
+      "text": "D",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "button.user-avatar.user-avatar--md",
+      "text": "D",
+      "ratio": 2.72,
+      "color": "rgb(255, 255, 255)",
+      "bg": "rgb(161, 144, 237)"
+    },
+    {
+      "selector": "span.user-avatar__initial",
+      "text": "D",
+      "ratio": 2.72,
+      "color": "rgb(255, 255, 255)",
+      "bg": "rgb(161, 144, 237)"
+    },
+    {
+      "selector": "div.app-shell-body",
+      "text": "Aujourd'hui Chat Thème Consultations Astrologues Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Générali",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "a.app-sidebar-link",
+      "text": "Aujourd'hui",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.app-sidebar-link__label",
+      "text": "Aujourd'hui",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "a.app-sidebar-link",
+      "text": "Chat",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.app-sidebar-link__label",
+      "text": "Chat",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "a.app-sidebar-link",
+      "text": "Thème",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.app-sidebar-link__label",
+      "text": "Thème",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "a.app-sidebar-link",
+      "text": "Consultations",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.app-sidebar-link__label",
+      "text": "Consultations",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "a.app-sidebar-link.app-sidebar-link--active",
+      "text": "Astrologues",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.app-sidebar-link__label",
+      "text": "Astrologues",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "main.app-shell-main",
+      "text": "Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Généraliste & Pédagogue Lancer une consultation VOTRE DÉF",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.page-layout.is-astrologer-profile-page",
+      "text": "Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Généraliste & Pédagogue Lancer une consultation VOTRE DÉF",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.page-layout__body",
+      "text": "Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Généraliste & Pédagogue Lancer une consultation VOTRE DÉF",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.page-layout__main",
+      "text": "Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Généraliste & Pédagogue Lancer une consultation VOTRE DÉF",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.astrologer-profile-container",
+      "text": "Tous les astrologues ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Généraliste & Pédagogue Lancer une consultation VOTRE DÉF",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "nav.profile-nav",
+      "text": "Tous les astrologues",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "section.profile-hero",
+      "text": "ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Généraliste & Pédagogue Lancer une consultation VOTRE DÉFAUT 55 ans 12 ans d'e",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.profile-hero-content",
+      "text": "ASTROLOGUE IA IDÉAL POUR DÉBUTANTS Étienne Garnier Astrologue Généraliste & Pédagogue Lancer une consultation VOTRE DÉFAUT 55 ans 12 ans d'e",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.profile-badge-row.profile-badge-row--identity",
+      "text": "ASTROLOGUE IA IDÉAL POUR DÉBUTANTS",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.profile-provider-badge.profile-provider-badge--ia",
+      "text": "ASTROLOGUE IA",
+      "ratio": 3.61,
+      "color": "rgb(62, 137, 220)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.profile-positioning-badge",
+      "text": "IDÉAL POUR DÉBUTANTS",
+      "ratio": 1,
+      "color": "rgb(255, 255, 255)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.profile-hero-actions",
+      "text": "Lancer une consultation VOTRE DÉFAUT",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "button.btn.btn--primary.btn--lg.premium-cta",
+      "text": "Lancer une consultation",
+      "ratio": 1,
+      "color": "rgb(255, 255, 255)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.btn__content",
+      "text": "Lancer une consultation",
+      "ratio": 1,
+      "color": "rgb(255, 255, 255)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span.profile-default-badge.profile-default-badge--selected",
+      "text": "VOTRE DÉFAUT",
+      "ratio": 3.69,
+      "color": "rgb(177, 122, 46)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "div.profile-metadata-row",
+      "text": "55 ans 12 ans d'expérience Lyon, France Astrologue par défaut",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "button.profile-meta-pill.profile-meta-pill--default-action.profile-meta-pill--default-active",
+      "text": "Astrologue par défaut",
+      "ratio": 3.69,
+      "color": "rgb(177, 122, 46)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "span",
+      "text": "Astrologue par défaut",
+      "ratio": 3.69,
+      "color": "rgb(177, 122, 46)",
+      "bg": "fallback-white"
+    },
+    {
+      "selector": "blockquote.profile-quote",
+      "text": "L'astrologie n'est pas une fatalité, c'est une météo pour mieux naviguer. — Étienne",
+      "ratio": 1.08,
+      "color": "rgba(245, 245, 255, 0.92)",
+      "bg": "fallback-white"
+    }
+  ],
+  "lightSurfaceCount": 0,
+  "lightSurfaces": []
+}

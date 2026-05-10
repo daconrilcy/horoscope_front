@@ -53,6 +53,26 @@
   box-sizing: border-box;
 }
 
+.dark .result-bg-halo {
+  background: var(--premium-app-bg);
+}
+
+.dark .result-container {
+  --consultation-result-purple: var(--premium-accent-purple);
+  --consultation-result-purple-soft: var(--color-admin-info-surface);
+  --consultation-result-purple-border: var(--color-admin-info-border);
+  --consultation-result-card-surface: var(--premium-glass-surface-2);
+  --consultation-result-card-border: var(--premium-glass-border);
+  --consultation-result-card-shadow: var(--premium-shadow-card);
+  --consultation-result-text-heading: var(--premium-text-strong);
+  --consultation-result-text-body: var(--premium-text-main);
+  --consultation-result-text-muted: var(--premium-text-meta);
+}
+
+.dark .result-back-btn {
+  color: var(--premium-text-main);
+}
+
 /* Navigation */
 .result-nav {
   margin-bottom: 2rem;

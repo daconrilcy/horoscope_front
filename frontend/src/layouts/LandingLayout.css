@@ -206,6 +206,73 @@
   color: var(--premium-text-main);
 }
 
+.dark .landing-layout {
+  --landing-page-atmosphere: var(--premium-app-bg);
+  --landing-accent-soft: var(--premium-accent-purple-soft);
+  --landing-surface-glass-strong: var(--premium-glass-surface-3);
+  --landing-surface-glass-border-strong: var(--premium-glass-border-strong);
+  --landing-surface-glass-soft: var(--premium-glass-surface-2);
+  --landing-surface-glass-border-soft: var(--premium-glass-border);
+  --landing-surface-panel: var(--premium-glass-surface-2);
+  --landing-surface-panel-border: var(--premium-glass-border);
+  --landing-surface-panel-hover: var(--premium-glass-surface-3);
+  --landing-surface-panel-muted: var(--premium-glass-surface-1);
+  --landing-surface-panel-soft: var(--premium-glass-surface-2);
+  --landing-surface-card: var(--premium-glass-surface-1);
+  --landing-surface-card-strong: var(--premium-glass-surface-2);
+  --landing-surface-card-border: var(--premium-glass-border);
+  --landing-surface-card-border-strong: var(--premium-glass-border-strong);
+  --landing-surface-card-open: var(--premium-glass-surface-2);
+  --landing-surface-final-cta: var(--premium-glass-surface-2);
+  --landing-surface-feature: var(--premium-glass-surface-2);
+  --landing-surface-recommended: var(--premium-glass-surface-2);
+  --landing-accent-border-subtle: var(--premium-glass-border-soft);
+  --landing-accent-border-hover: var(--premium-glass-border-strong);
+  --landing-accent-border-soft: var(--premium-glass-border-soft);
+  --landing-accent-border-strong: var(--premium-glass-border-strong);
+  --landing-accent-border-muted: var(--color-line);
+  --landing-accent-surface: var(--color-admin-info-surface);
+  --landing-navbar-bg: var(--premium-glass-surface-2);
+  --landing-navbar-border: var(--premium-glass-border);
+  --landing-navbar-bg-scrolled: var(--premium-glass-surface-3);
+  --landing-navbar-border-scrolled: var(--premium-glass-border-strong);
+  --landing-language-bg: var(--premium-glass-surface-2);
+  --landing-language-border: var(--premium-glass-border);
+  --landing-language-shadow: none;
+  --landing-language-bg-hover: var(--premium-glass-surface-3);
+  --landing-language-border-hover: var(--premium-glass-border-strong);
+  --landing-language-shadow-hover: var(--shadow-card);
+  --landing-language-icon: var(--premium-text-main);
+  --landing-language-icon-muted: var(--premium-text-meta);
+  --landing-language-icon-strong: var(--premium-text-strong);
+  --landing-language-dropdown-bg: var(--premium-glass-surface-3);
+  --landing-language-dropdown-shadow: var(--shadow-card);
+  --landing-language-option-bg: var(--premium-glass-surface-1);
+  --landing-language-option-bg-hover: var(--premium-glass-surface-2);
+  --landing-language-option-active-bg: var(--color-admin-info-surface);
+  --landing-language-option-shadow: none;
+  --landing-mobile-panel-bg: color-mix(in srgb, var(--color-bg-sheen) 92%, var(--color-primary) 8%);
+  --landing-mobile-lang-bg: var(--premium-glass-surface-2);
+  --landing-mobile-lang-border: var(--premium-glass-border);
+  --landing-mobile-toggle-bg: var(--premium-glass-surface-2);
+  --landing-mobile-toggle-bg-hover: var(--premium-glass-surface-3);
+  --landing-mobile-language-bg: var(--premium-glass-surface-2);
+  --landing-mobile-language-color: var(--premium-text-strong);
+  --landing-mobile-language-shadow: none;
+  --landing-hero-visual-halo-bg: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  --landing-hero-shell-bg: var(--premium-glass-surface-2);
+  --landing-hero-shell-border: var(--premium-glass-border);
+  --landing-hero-card-bg: var(--premium-glass-surface-2);
+  --landing-hero-card-summary-bg: var(--premium-glass-surface-2);
+  --landing-hero-card-chat-bg: var(--premium-glass-surface-2);
+  --landing-hero-trend-bg: var(--color-admin-info-surface);
+  --landing-hero-trend-border: var(--color-admin-info-border);
+  --landing-hero-trend-active-bg: var(--color-admin-interactive-active);
+  --landing-hero-trend-active-border: var(--premium-glass-border-strong);
+  --landing-hero-chat-question-bg: var(--premium-glass-surface-1);
+  --landing-hero-chat-answer-bg: var(--color-admin-info-surface);
+}
+
 .landing-layout__main {
   width: 100%;
 }

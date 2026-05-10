@@ -458,6 +458,52 @@
   min-height: 100vh;
 }
 
+.dark #root {
+  --app-premium-page-layout-background: var(--premium-app-bg);
+  --app-premium-hero-title-color: var(--premium-text-strong);
+  --app-premium-hero-subtitle-color: var(--premium-text-main);
+  --app-premium-section-title-color: var(--premium-text-strong);
+  --app-astro-catalog-page-bg: var(--premium-app-bg);
+  --app-astro-catalog-atmosphere: var(--premium-app-bg-atmosphere);
+  --app-astro-catalog-title-color: var(--premium-text-strong);
+  --app-astro-catalog-copy-color: var(--premium-text-main);
+  --app-activity-card-premium-background: var(--premium-glass-surface-2);
+  --app-activity-card-premium-hover-background: var(--premium-glass-surface-3);
+  --app-activity-card-premium-border: 1px solid var(--premium-glass-border);
+  --app-activity-card-premium-border-color: var(--premium-glass-border-strong);
+  --app-activity-card-premium-box-shadow: var(--premium-shadow-card);
+  --app-activity-card-premium-box-shadow-2: var(--premium-shadow-card);
+  --app-activity-card-premium-locked-background: var(--premium-glass-surface-1);
+  --app-activity-card-premium-locked-border-color: var(--premium-glass-border);
+  --app-activity-card-premium-locked-box-shadow: var(--premium-shadow-card);
+  --app-activity-card-premium-icon-background: var(--color-admin-info-surface);
+  --app-activity-card-premium-title-color: var(--premium-text-strong);
+  --app-activity-card-premium-subtitle-color: var(--premium-text-main);
+  --app-activity-premium-tag-background: var(--color-admin-info-surface);
+  --app-activity-premium-tag-border: 1px solid var(--color-admin-info-border);
+  --app-activity-premium-tag-color: var(--premium-text-strong);
+  --app-activity-card-premium-alt-background: var(--premium-glass-surface-2);
+  --app-activity-history-card-premium-background: var(--premium-glass-surface-2);
+  --app-activity-history-card-premium-hover-background: var(--premium-glass-surface-3);
+  --app-activity-history-card-premium-border: 1px solid var(--premium-glass-border);
+  --app-activity-history-card-premium-border-color: var(--premium-glass-border-strong);
+  --app-activity-history-card-icon-background: var(--color-admin-info-surface);
+  --app-activity-history-card-type-color: var(--premium-text-strong);
+  --app-activity-history-card-date-color: var(--premium-text-meta);
+  --app-activity-history-card-context-color: var(--premium-text-main);
+  --app-summary-panel-bg: var(--premium-glass-surface-2);
+  --app-summary-panel-shadow: var(--premium-shadow-card);
+  --app-summary-panel-text-color: var(--premium-text-strong);
+  --app-summary-panel-cta-color: var(--premium-text-strong);
+  --app-summary-panel-pill-bg: color-mix(in srgb, var(--color-bg-2) 72%, var(--premium-glass-surface-3) 28%);
+  --app-summary-panel-pill-shadow: var(--shadow-card);
+  --app-summary-panel-glow: color-mix(in srgb, var(--color-primary) 26%, transparent);
+  --app-summary-panel-line: linear-gradient(90deg, transparent 0%, var(--premium-glass-border) 48%, transparent 100%);
+  --app-summary-panel-action-bg: color-mix(in srgb, var(--color-bg-2) 88%, var(--premium-glass-surface-3) 12%);
+  --app-summary-panel-action-border: color-mix(in srgb, var(--premium-glass-border-strong) 70%, var(--premium-text-strong) 30%);
+  --app-summary-panel-action-shadow: var(--shadow-card);
+}
+
 .person-card {
   --app-person-card-compact-radius: 16px;
   --app-person-card-compact-background: radial-gradient(circle at 90% 14%, color-mix(in srgb, var(--astro-glow) 32%, rgba(255, 255, 255, 0) 68%) 0 20%, rgba(255, 255, 255, 0) 38%),
@@ -491,4 +537,34 @@
   --app-person-card-compact-tag-border: 1px solid color-mix(in srgb, var(--astro-chip-border) 82%, rgba(255, 255, 255, 0.3) 18%);
   --app-person-card-compact-tag-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52),
     0 4px 10px color-mix(in srgb, var(--astro-glow) 18%, rgba(255, 255, 255, 0) 82%);
+}
+
+.dark .person-card {
+  --app-person-card-name-color: var(--premium-text-strong);
+  --app-person-card-display-name-color: var(--premium-text-meta);
+  --app-person-card-style-color: var(--premium-accent-purple-soft);
+  --app-person-card-bio-color: var(--premium-text-main);
+  --app-person-card-compact-style-color: var(--premium-text-main);
+  --app-person-card-compact-background: var(--premium-glass-surface-2);
+  --app-person-card-compact-border: 1px solid var(--premium-glass-border);
+  --app-person-card-compact-box-shadow: var(--premium-shadow-card);
+  --app-person-card-compact-featured-background: var(--premium-glass-surface-3);
+  --app-person-card-compact-featured-border-color: var(--premium-glass-border-strong);
+  --app-person-card-compact-featured-box-shadow: var(--premium-shadow-card);
+  --app-person-card-compact-icon-background: var(--color-admin-info-surface);
+  --app-person-card-compact-icon-border: 1px solid var(--premium-glass-border);
+  --app-person-card-compact-icon-box-shadow: var(--shadow-card);
+  --app-person-card-compact-avatar-background: var(--premium-glass-surface-3);
+  --app-person-card-compact-avatar-border: 1px solid var(--premium-glass-border-strong);
+  --app-person-card-compact-avatar-box-shadow: var(--shadow-card);
+  --app-person-card-compact-divider-background: linear-gradient(90deg, var(--premium-glass-border) 0%, transparent 100%);
+  --app-person-card-compact-tag-background: var(--color-admin-info-surface);
+  --app-person-card-compact-tag-border: 1px solid var(--color-admin-info-border);
+  --app-person-card-compact-tag-box-shadow: none;
+  --app-person-card-provider-badge-background: var(--premium-glass-surface-2);
+  --app-person-card-provider-badge-border: 1px solid var(--premium-glass-border);
+  --app-person-card-provider-badge-color: var(--premium-text-main);
+  --app-person-card-tag-background: var(--color-admin-info-surface);
+  --app-person-card-tag-border: 1px solid var(--color-admin-info-border);
+  --app-person-card-tag-box-shadow: none;
 }

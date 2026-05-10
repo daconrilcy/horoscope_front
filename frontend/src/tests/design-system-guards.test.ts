@@ -1104,6 +1104,48 @@ describe("design-system guards", () => {
     expect(readFrontendFile("styles/typography-roles.md")).not.toContain("profile editorial sizes")
   })
 
+  it("garde les corrections dark mode CS-137 dans les owners CSS attendus", () => {
+    const appCssEntry = readFrontendFile("App.css")
+    const darkModeOwners = [
+      "styles/app/tokens.css",
+      "styles/app/cards.css",
+      "layouts/LandingLayout.css",
+      "pages/PrivacyPolicyPage.css",
+      "components/ui/UserAvatar/UserAvatar.css",
+      "components/ShortcutCard.css",
+      "pages/AstrologerProfilePage.css",
+      "pages/HelpPage.css",
+      "pages/settings/Settings.css",
+      "pages/NatalChartPage.css",
+      "features/natal-chart/NatalInterpretation.css",
+      "pages/ChatPage.css",
+      "pages/ConsultationResultPage.css",
+    ]
+    const ownerSurface = darkModeOwners.map((file) => readFrontendFile(file)).join("\n")
+
+    expect(appCssEntry).not.toMatch(/(?:^|\n)\s*(?:html\.)?\.dark\b/)
+    expect(ownerSurface).toContain(".dark #root")
+    expect(ownerSurface).toContain("--app-premium-page-layout-background: var(--premium-app-bg)")
+    expect(ownerSurface).toContain("--app-premium-hero-title-color: var(--premium-text-strong)")
+    expect(ownerSurface).toContain("--app-summary-panel-cta-color: var(--premium-text-strong)")
+    expect(ownerSurface).toContain(".summary-title")
+    expect(ownerSurface).toContain(".summary-section-title")
+    expect(ownerSurface).toContain(".dark .landing-layout")
+    expect(ownerSurface).toContain(".dark :where(.help-page, .help-bg-halo)")
+    expect(ownerSurface).toContain(".dark .is-settings-page")
+    expect(ownerSurface).toContain(".dark .astrologer-profile-container")
+    expect(ownerSurface).toContain(".dark .profile-bg-halo")
+    expect(ownerSurface).toContain(".dark .natal-page-container__bg-halo")
+    expect(ownerSurface).toContain(".dark .chat-page-container")
+    expect(ownerSurface).toContain(".dark .user-avatar")
+    expect(ownerSurface).toContain("background: var(--color-glass-shortcut)")
+    expect(ownerSurface).toContain(".dark :where(.shortcut-card__title)")
+    expect(ownerSurface).toContain("color: var(--premium-text-strong)")
+    expect(ownerSurface).toContain(".dark .privacy-policy-page a")
+    expect(ownerSurface).toContain(".dark .privacy-policy-page a:focus-visible")
+    expect(ownerSurface).not.toMatch(/#0000ee|rgb\(\s*0\s*,\s*0\s*,\s*238\s*\)|color:\s*blue\b/)
+  })
+
   it("bloque le retour des surfaces runtime E-009 fermees par CS-080", () => {
     const removedOverallSummary = ["overall", "_", "summary"].join("")
     const removedAstrologerId = ["astrologer", "Id"].join("")

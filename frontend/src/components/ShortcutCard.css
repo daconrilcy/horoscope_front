@@ -1,4 +1,4 @@
-/* ── ShortcutCard — Unified Glass (Story 60.18) ── */
+/* Carte de raccourci du dashboard : centralise les surfaces glass et leurs variantes dark. */
 
 .shortcut-card {
   display: flex;
@@ -12,8 +12,8 @@
   text-decoration: none;
   min-height: 122px;
   padding: 20px 18px 22px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 44%, transparent) 100%);
-  border: 1px solid var(--premium-glass-border);
+  background: var(--color-glass-shortcut);
+  border: 1px solid var(--color-glass-shortcut-border);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(16px) saturate(140%);
@@ -23,9 +23,9 @@
 
 .shortcut-card:hover {
   transform: translateY(-2px);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 66%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 44%, transparent) 100%);
+  background: var(--premium-glass-surface-3);
   border-color: var(--premium-glass-border-strong);
-  box-shadow:var(--shadow-card);
+  box-shadow: var(--shadow-card);
 }
 
 .shortcut-card__badge {
@@ -65,8 +65,8 @@
   min-height: 31px;
   padding: 4px 11px;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 40%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 38%, transparent);
+  background: var(--color-glass-bg-2);
+  border: 1px solid var(--color-glass-border);
   box-shadow: var(--shadow-card);
   font-size: var(--font-size-13);
   color: var(--premium-text-meta);
@@ -79,9 +79,24 @@
 }
 
 .shortcut-card__subtitle--online {
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 48%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 44%, transparent);
-  color: var(--premium-accent-purple-strong);
+  background: var(--premium-glass-surface-2);
+  border: 1px solid var(--premium-glass-border-strong);
+  color: color-mix(in srgb, var(--premium-accent-purple-strong) 78%, var(--premium-text-strong) 22%);
   font-weight: var(--font-weight-semibold);
   box-shadow: var(--shadow-card);
+}
+
+.dark :where(.shortcut-card__title) {
+  color: var(--premium-text-strong);
+}
+
+.dark :where(.shortcut-card__subtitle) {
+  border-color: var(--premium-glass-border);
+  color: var(--premium-text-main);
+}
+
+.dark :where(.shortcut-card__subtitle--online) {
+  background: var(--premium-glass-surface-3);
+  border-color: var(--premium-glass-border-strong);
+  color: var(--premium-text-strong);
 }

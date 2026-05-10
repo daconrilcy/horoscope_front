@@ -12,6 +12,11 @@
     inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 48%, transparent);
 }
 
+.dark .ni-section {
+  --natal-interpretation-selector-trigger-shadow: var(--shadow-card);
+  --natal-interpretation-selector-trigger-shadow-hover: var(--shadow-card);
+}
+
 .ni-header {
   display: flex;
   flex-direction: column;
@@ -756,6 +761,24 @@
   gap: 8px;
 }
 
+.dark .ni-actions__group,
+.dark .ni-control-trigger,
+.dark .ni-action-btn--preview,
+.dark .ni-version-dropdown,
+.dark .ni-highlight-icon,
+.dark .ni-degraded-notice--disclaimer,
+.dark .natal-interpretation__modal,
+.dark .natal-interpretation__fullscreen-modal {
+  background: var(--premium-glass-surface-2);
+  border-color: var(--premium-glass-border);
+  color: var(--premium-text-strong);
+}
+
+.dark .ni-control-trigger:hover,
+.dark .ni-action-btn--preview:hover {
+  background: var(--premium-glass-surface-3);
+}
+
 .ni-evidence-pill {
   display: inline-flex;
   align-items: center;
@@ -767,6 +790,11 @@
   background: white;
   border: 1px solid var(--premium-glass-border);
   box-shadow: var(--shadow-card);
+}
+
+.dark .ni-evidence-pill {
+  background: var(--premium-glass-surface-3);
+  border-color: var(--premium-glass-border);
 }
 
 .ni-evidence-pill-dot {

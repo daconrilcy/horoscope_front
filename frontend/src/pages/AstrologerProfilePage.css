@@ -1,4 +1,4 @@
-/* ── Astrologer Profile Page ─────────────────────────────────────────────── */
+/* Proprietaire CSS du profil astrologue, incluant les surfaces light et dark. */
 
 .astrologer-profile-container {
   --layout-padding-inline: 24px;
@@ -31,6 +31,25 @@
   box-sizing: border-box;
 }
 
+.dark .astrologer-profile-container {
+  --profile-blue: var(--premium-accent-purple);
+  --profile-blue-soft: var(--color-admin-info-surface);
+  --profile-blue-border: var(--color-admin-info-border);
+  --profile-gold: var(--premium-accent-purple-soft);
+  --profile-gold-soft: color-mix(in srgb, var(--premium-accent-purple-soft) 18%, transparent);
+  --profile-gold-border: var(--premium-glass-border-strong);
+  --profile-card-surface: var(--premium-glass-surface-2);
+  --profile-card-surface-strong: var(--premium-glass-surface-3);
+  --profile-card-border: var(--premium-glass-border);
+  --profile-card-shadow: var(--premium-shadow-card);
+  --profile-card-shadow-soft: var(--shadow-card);
+  --profile-primary-cta-background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-strong) 100%);
+  --profile-primary-cta-shadow: var(--shadow-card);
+  --profile-text-heading: var(--premium-text-strong);
+  --profile-text-body: var(--premium-text-main);
+  --profile-text-muted: var(--premium-text-meta);
+}
+
 .is-astrologer-profile-page {
   width: 100% !important;
   padding: 0 !important;
@@ -57,6 +76,10 @@
     radial-gradient(circle at 69% 18%, color-mix(in srgb, var(--color-token-rgb-241-218-168) 34%, transparent) 0%, transparent 30%),
     radial-gradient(circle at 82% 72%, color-mix(in srgb, var(--color-token-rgb-167-203-255) 28%, transparent) 0%, transparent 24%),
     linear-gradient(180deg, var(--color-token-fcfdff) 0%, var(--color-token-f5f8fe) 48%, var(--color-token-eef5ff) 100%);
+}
+
+.dark .profile-bg-halo {
+  background: var(--premium-app-bg);
 }
 
 .profile-noise {
@@ -87,6 +110,16 @@
   color: color-mix(in srgb, var(--color-token-rgb-230-187-116) 36%, transparent);
   font-size: var(--font-size-lg);
   text-shadow: var(--shadow-text-glow);
+}
+
+.dark .astrologer-profile-container::before {
+  border-color: var(--premium-glass-border);
+  box-shadow: var(--shadow-card);
+}
+
+.dark .astrologer-profile-container::after,
+.dark .profile-hero-content::before {
+  color: color-mix(in srgb, var(--premium-accent-purple-soft) 48%, transparent);
 }
 
 .profile-inline-error {
@@ -162,6 +195,20 @@
 
 .profile-back-btn__label {
   line-height: var(--type-numeric-line-height);
+}
+
+.dark .profile-back-btn,
+.dark .profile-bottom-back__button {
+  border-color: var(--premium-glass-border);
+  background: var(--premium-glass-surface-2);
+  color: var(--profile-text-heading);
+}
+
+.dark .profile-back-btn:hover,
+.dark .profile-bottom-back__button:hover {
+  border-color: var(--premium-glass-border-strong);
+  background: var(--premium-glass-surface-3);
+  color: var(--premium-accent-purple-soft);
 }
 
 .profile-hero {
@@ -240,6 +287,25 @@
   box-shadow: var(--profile-card-shadow);
 }
 
+.dark .profile-hero-avatar-glow {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--color-primary) 22%, transparent) 0%, transparent 72%);
+}
+
+.dark .profile-hero-avatar-orbit {
+  border-color: var(--premium-glass-border);
+  box-shadow: var(--shadow-card);
+}
+
+.dark .profile-hero-avatar-orbit::before {
+  background: var(--premium-accent-purple-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.dark .profile-hero-avatar--placeholder {
+  background: var(--premium-glass-surface-3);
+  color: var(--profile-text-heading);
+}
+
 .profile-hero-content {
   position: relative;
   display: flex;
@@ -305,6 +371,28 @@
   border: 1px solid var(--profile-gold-border);
   color: var(--color-token-b17a2e);
   box-shadow: var(--profile-card-shadow-soft);
+}
+
+.dark .profile-provider-badge,
+.dark .profile-default-badge,
+.dark .profile-meta-pill,
+.dark .profile-meta-pill--default-action,
+.dark .profile-meta-pill--default-active,
+.dark .profile-reviews-summary--empty,
+.dark .review-tag,
+.dark .review-empty-icon {
+  background: var(--premium-glass-surface-2);
+  border-color: var(--premium-glass-border);
+  color: var(--profile-text-heading);
+  box-shadow: var(--shadow-card);
+}
+
+.dark .profile-provider-badge--real,
+.dark .profile-default-badge,
+.dark .profile-meta-pill--default-active,
+.dark .profile-reviews-summary--empty,
+.dark .review-empty-icon {
+  color: var(--premium-accent-purple-soft);
 }
 
 .profile-full-name {
@@ -402,6 +490,11 @@
   font-weight: var(--font-weight-medium);
 }
 
+.dark .profile-quote p,
+.dark .review-comment {
+  color: var(--profile-text-body);
+}
+
 .profile-quote-signature {
   margin-top: 10px;
   color: var(--color-token-c6893b);
@@ -442,6 +535,17 @@
   bottom: 26px;
   width: 1px;
   background: color-mix(in srgb, var(--color-token-rgb-195-206-225) 90%, transparent);
+}
+
+.dark .metric-card + .metric-card::before {
+  background: var(--premium-glass-border);
+}
+
+.dark .specialty-item + .specialty-item,
+.dark .review-stats-card__grid,
+.dark .review-stats-card__metric + .review-stats-card__metric,
+.dark .review-stats-card__rating {
+  border-color: var(--premium-glass-border);
 }
 
 .metric-card__icon-wrap {
@@ -582,6 +686,22 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.dark .profile-mission-card,
+.dark .profile-mission-card__icon,
+.dark .profile-method,
+.dark .specialty-item-icon-wrap,
+.dark .review-stats-card,
+.dark .review-composer-card__textarea,
+.dark .review-composer-modal,
+.dark .review-composer-modal__close,
+.dark .profile-final-cta .btn.premium-cta--soft,
+.dark .profile-final-cta .btn.btn--secondary {
+  background: var(--premium-glass-surface-2);
+  border-color: var(--premium-glass-border);
+  color: var(--profile-text-body);
+  box-shadow: var(--shadow-card);
+}
+
 .profile-mission-text {
   margin: 0;
   color: var(--profile-text-body);
@@ -655,6 +775,20 @@
   color: var(--color-token-cf9850);
   font-size: var(--font-size-hero-sm);
   line-height: var(--type-numeric-line-height);
+}
+
+.dark .step-number {
+  background: var(--color-admin-info-surface);
+  color: var(--profile-text-heading);
+  box-shadow: var(--shadow-card);
+}
+
+.dark .method-arrow,
+.dark .profile-section-title--method svg,
+.dark .review-rating,
+.dark .profile-reviews-stars,
+.dark .profile-final-cta__sparkles {
+  color: var(--premium-accent-purple-soft);
 }
 
 .profile-col-right {
@@ -1088,6 +1222,12 @@
   transform: scale(1.04);
 }
 
+.dark .review-composer-modal__close:hover:not(:disabled) {
+  background: var(--premium-glass-surface-3);
+  border-color: var(--premium-glass-border-strong);
+  color: var(--premium-accent-purple-soft);
+}
+
 .review-composer-modal__close-glyph {
   display: block;
   font-size: var(--font-size-2xl);
@@ -1119,6 +1259,16 @@
   border: 1px solid color-mix(in srgb, var(--color-token-rgb-167-203-241) 86%, transparent);
   border-radius: var(--profile-card-radius);
   box-shadow: var(--profile-card-shadow);
+}
+
+.dark .profile-final-cta {
+  background: var(--premium-glass-surface-2);
+  border-color: var(--premium-glass-border);
+}
+
+.dark .profile-final-cta::before,
+.dark .profile-final-cta::after {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--color-primary) 24%, transparent) 0%, transparent 58%);
 }
 
 .profile-final-cta::before,

@@ -36,6 +36,10 @@
     radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 25%, transparent) 0%, transparent 45%);
 }
 
+.dark .natal-page-container__bg-halo {
+  background: var(--premium-app-bg);
+}
+
 .natal-page-container__noise {
   opacity: 0.025;
   mix-blend-mode: soft-light;
@@ -102,6 +106,12 @@
   text-transform: uppercase;
   cursor: pointer;
   transition: transform var(--duration-fast) var(--easing-default), box-shadow var(--duration-fast) var(--easing-default), background var(--duration-fast) var(--easing-default);
+}
+
+.dark .natal-page-header__cta {
+  background: var(--premium-glass-surface-2);
+  border-color: var(--premium-glass-border);
+  color: var(--premium-text-strong);
 }
 
 .natal-page-header__cta:hover {
@@ -280,6 +290,19 @@
   padding-bottom: 16px !important;
   box-shadow:
     var(--shadow-card);
+}
+
+.dark .natal-data-card,
+.dark .natal-aspect-item,
+.dark .natal-aspect-meta__item {
+  background: var(--premium-glass-surface-2);
+  border-color: var(--premium-glass-border);
+}
+
+.dark .natal-data-pill {
+  background: var(--premium-glass-surface-3);
+  border-color: var(--premium-glass-border);
+  color: var(--premium-text-main);
 }
 
 .natal-data-card__head {

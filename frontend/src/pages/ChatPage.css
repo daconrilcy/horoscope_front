@@ -140,6 +140,45 @@
   overflow: hidden;
 }
 
+.dark .chat-page-container {
+  --chat-glass-layout-bg: var(--premium-glass-surface-1);
+  --chat-glass-panel-bg: var(--premium-glass-surface-2);
+  --chat-glass-panel-soft-bg: var(--premium-glass-surface-1);
+  --chat-glass-card-bg: var(--premium-glass-surface-2);
+  --chat-glass-control-bg: var(--premium-glass-surface-2);
+  --chat-glass-control-strong-bg: var(--premium-glass-surface-3);
+  --chat-glass-control-strong-hover-bg: color-mix(in srgb, var(--premium-glass-surface-3) 82%, var(--color-primary) 18%);
+  --chat-glass-action-bg: var(--premium-glass-surface-2);
+  --chat-glass-action-strong-bg: var(--premium-glass-surface-3);
+  --chat-message-assistant-bg: var(--premium-glass-surface-2);
+  --chat-message-typing-bg: var(--premium-glass-surface-2);
+  --chat-bg-halo: var(--premium-app-bg);
+  --chat-main-bg: var(--premium-glass-surface-1);
+  --chat-window-header-bg: var(--premium-glass-surface-2);
+  --chat-border-glass: var(--premium-glass-border);
+  --chat-border-glass-soft: var(--premium-glass-border-soft);
+  --chat-border-glass-strong: var(--premium-glass-border-strong);
+  --chat-border-glass-control: var(--premium-glass-border);
+  --chat-border-glass-muted: var(--color-line);
+  --chat-surface-input: var(--premium-glass-surface-2);
+  --chat-surface-subtle: var(--color-admin-surface-subtle);
+  --chat-surface-hover: var(--color-admin-surface-hover);
+  --chat-surface-active: var(--color-admin-surface-selected);
+  --chat-surface-overlay: color-mix(in srgb, var(--color-bg-sheen) 86%, var(--color-primary) 14%);
+  --chat-surface-skeleton: var(--premium-glass-surface-2);
+  --chat-shadow-layout: var(--premium-shadow-card);
+  --chat-shadow-empty: var(--premium-shadow-card);
+  --chat-shadow-action: var(--shadow-card);
+  --chat-shadow-action-compact: var(--shadow-card);
+  --chat-shadow-action-hover: var(--shadow-card);
+  --chat-shadow-header-line: none;
+  --chat-shadow-panel-line: none;
+  --chat-shadow-chip: none;
+  --chat-shadow-chip-hover: var(--shadow-card);
+  --chat-shadow-assistant: var(--shadow-card);
+  --chat-shadow-typing: var(--shadow-card);
+}
+
 .chat-page-container .chat-layout {
   flex: 1;
   min-height: 0;
