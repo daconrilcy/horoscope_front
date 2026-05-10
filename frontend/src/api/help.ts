@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { API_BASE_URL } from "./client"
+import { apiFetch, parseApiErrorDetails } from "./client"
 import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 export type HelpCategory = {
@@ -36,33 +36,31 @@ export type CreateHelpTicketPayload = {
 export class HelpApiError extends Error {
   readonly code: string
   readonly status: number
-  readonly details: Record<string, any>
+  readonly details: Record<string, unknown>
+  readonly requestId: string | null
 
-  constructor(code: string, message: string, status: number, details: Record<string, any> = {}) {
+  constructor(
+    code: string,
+    message: string,
+    status: number,
+    details: Record<string, unknown> = {},
+    requestId: string | null = null,
+  ) {
     super(message)
     this.code = code
     this.status = status
     this.details = details
+    this.requestId = requestId
   }
 }
 
 async function parseError(response: Response): Promise<never> {
-  let payload: any = null
-  try {
-    payload = await response.json()
-  } catch {
-    payload = null
-  }
-  throw new HelpApiError(
-    payload?.error?.code ?? "unknown_error",
-    payload?.error?.message ?? `Request failed with status ${response.status}`,
-    response.status,
-    payload?.error?.details ?? {},
-  )
+  const error = await parseApiErrorDetails<Record<string, unknown>>(response, {})
+  throw new HelpApiError(error.code, error.message, response.status, error.details, error.requestId)
 }
 
 export async function getHelpCategories(lang: string = "fr"): Promise<HelpCategory[]> {
-  const response = await fetch(`${API_BASE_URL}/v1/help/categories?lang=${lang}`, {
+  const response = await apiFetch(`/v1/help/categories?lang=${lang}`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
@@ -74,7 +72,7 @@ export async function getHelpCategories(lang: string = "fr"): Promise<HelpCatego
 }
 
 export async function createHelpTicket(payload: CreateHelpTicketPayload): Promise<HelpTicket> {
-  const response = await fetch(`${API_BASE_URL}/v1/help/tickets`, {
+  const response = await apiFetch("/v1/help/tickets", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -90,7 +88,7 @@ export async function createHelpTicket(payload: CreateHelpTicketPayload): Promis
 }
 
 export async function listHelpTickets(limit: number = 20, offset: number = 0): Promise<HelpTicketsList> {
-  const response = await fetch(`${API_BASE_URL}/v1/help/tickets?limit=${limit}&offset=${offset}`, {
+  const response = await apiFetch(`/v1/help/tickets?limit=${limit}&offset=${offset}`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })

@@ -1,3 +1,4 @@
+// Client HTTP central pour les appels backend et la normalisation minimale des erreurs API.
 import { clearAccessToken } from "../utils/authToken"
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8001"
@@ -6,6 +7,34 @@ const configuredTimeout = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? DEFAULT_
 export const API_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTimeout > 0
   ? configuredTimeout
   : DEFAULT_TIMEOUT_MS
+
+export type ApiFetchInit = RequestInit & {
+  timeoutMs?: number
+}
+
+export type ApiErrorEnvelope<TDetails = Record<string, unknown>> = {
+  error?: {
+    code?: string
+    message?: string
+    details?: TDetails
+    request_id?: string | null
+  }
+}
+
+export type ApiResponseEnvelope<TData> = {
+  data: TData
+}
+
+type FastApiValidationDetail = {
+  msg?: string
+}
+
+export type ParsedApiError<TDetails> = {
+  code: string
+  message: string
+  details: TDetails
+  requestId: string | null
+}
 
 function resolveApiInput(input: RequestInfo | URL): RequestInfo | URL {
   if (typeof input === "string") {
@@ -40,12 +69,28 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+function linkAbortSignal(controller: AbortController, signal: AbortSignal | null | undefined): () => void {
+  if (!signal) {
+    return () => undefined
+  }
+  if (signal.aborted) {
+    controller.abort()
+    return () => undefined
+  }
+  const abortHandler = () => controller.abort()
+  signal.addEventListener("abort", abortHandler, { once: true })
+  return () => signal.removeEventListener("abort", abortHandler)
+}
+
+/** Execute une requete backend avec URL canonique, timeout et propagation token_expired. */
+export async function apiFetch(input: RequestInfo | URL, init: ApiFetchInit = {}): Promise<Response> {
   const controller = new AbortController()
-  const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+  const { timeoutMs = API_TIMEOUT_MS, signal, ...requestInit } = init
+  const unlinkAbortSignal = linkAbortSignal(controller, signal)
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
   try {
     const response = await fetch(resolveApiInput(input), {
-      ...init,
+      ...requestInit,
       signal: controller.signal,
     })
     if (response.status === 401) {
@@ -63,5 +108,43 @@ export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {})
     return response
   } finally {
     window.clearTimeout(timeoutId)
+    unlinkAbortSignal()
+  }
+}
+
+/** Lit une enveloppe d'erreur JSON sans masquer une reponse non JSON. */
+export async function readApiErrorEnvelope<TDetails = Record<string, unknown>>(
+  response: Response,
+): Promise<ApiErrorEnvelope<TDetails> | null> {
+  try {
+    return (await response.json()) as ApiErrorEnvelope<TDetails>
+  } catch {
+    return null
+  }
+}
+
+/** Convertit l'enveloppe d'erreur backend en champs stables pour les wrappers publics. */
+export async function parseApiErrorDetails<TDetails>(
+  response: Response,
+  fallbackDetails: TDetails,
+): Promise<ParsedApiError<TDetails>> {
+  const payload = await readApiErrorEnvelope<TDetails>(response)
+  if (!payload?.error) {
+    const raw = payload as Record<string, unknown> | null
+    if (Array.isArray(raw?.detail)) {
+      const firstDetail = raw.detail[0] as FastApiValidationDetail | undefined
+      return {
+        code: "unprocessable_entity",
+        message: firstDetail?.msg || "Données invalides",
+        details: fallbackDetails,
+        requestId: null,
+      }
+    }
+  }
+  return {
+    code: payload?.error?.code ?? "unknown_error",
+    message: payload?.error?.message ?? `Request failed with status ${response.status}`,
+    details: payload?.error?.details ?? fallbackDetails,
+    requestId: payload?.error?.request_id ?? null,
   }
 }

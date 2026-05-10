@@ -1,15 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
 
-import { API_BASE_URL } from "./client"
-
-type ErrorEnvelope = {
-  error: {
-    code: string
-    message: string
-    details?: Record<string, unknown>
-    request_id?: string
-  }
-}
+import { apiFetch, parseApiErrorDetails } from "./client"
 
 export type B2BBillingCycle = {
   cycle_id: number
@@ -65,23 +56,18 @@ export class B2BBillingApiError extends Error {
 }
 
 async function parseError(response: Response): Promise<never> {
-  let payload: ErrorEnvelope | null = null
-  try {
-    payload = (await response.json()) as ErrorEnvelope
-  } catch {
-    payload = null
-  }
+  const error = await parseApiErrorDetails<Record<string, unknown>>(response, {})
   throw new B2BBillingApiError(
-    payload?.error?.code ?? "unknown_error",
-    payload?.error?.message ?? `Request failed with status ${response.status}`,
+    error.code,
+    error.message,
     response.status,
-    payload?.error?.details ?? {},
-    payload?.error?.request_id ?? null,
+    error.details,
+    error.requestId,
   )
 }
 
 async function getLatestB2BBillingCycle(apiKey: string): Promise<B2BBillingCycle | null> {
-  const response = await fetch(`${API_BASE_URL}/v1/b2b/billing/cycles/latest`, {
+  const response = await apiFetch("/v1/b2b/billing/cycles/latest", {
     method: "GET",
     headers: { "X-API-Key": apiKey },
   })
@@ -99,8 +85,8 @@ async function listB2BBillingCycles(input: {
 }): Promise<B2BBillingCycleList> {
   const limit = input.limit ?? 20
   const offset = input.offset ?? 0
-  const response = await fetch(
-    `${API_BASE_URL}/v1/b2b/billing/cycles?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`,
+  const response = await apiFetch(
+    `/v1/b2b/billing/cycles?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`,
     {
       method: "GET",
       headers: { "X-API-Key": input.apiKey },

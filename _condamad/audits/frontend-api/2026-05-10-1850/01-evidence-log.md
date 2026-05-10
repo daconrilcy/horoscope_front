@@ -1,0 +1,19 @@
+# Evidence Log
+
+| ID | Evidence type | Command / Source | Result | Notes |
+|---|---|---|---|---|
+| E-001 | inventory | `rg --files frontend/src/api` | PASS | Surface `frontend/src/api`: 33 TypeScript files inventoried. |
+| E-002 | file-size | `Get-ChildItem frontend\src\api -File \| Select-Object Name,Length` | PASS | `adminPrompts.ts` 35696 bytes, `natalChart.ts` 18026 bytes, `billing.ts` 14092 bytes. |
+| E-003 | static-scan | `rg -n "\bfetch\(" frontend/src/api` | FAIL | Direct `fetch` outside `client.ts` found in `b2bAstrology.ts`, `b2bBilling.ts`, `b2bEditorial.ts`, `b2bUsage.ts`, `billing.ts`, `enterpriseCredentials.ts`, `geocoding.ts`, `help.ts`, `opsMonitoring.ts`, `support.ts`. |
+| E-004 | source-inspection | `Get-Content -Raw frontend\src\api\client.ts` | PASS | Central client applies base URL resolution, timeout, and token-expired cleanup. |
+| E-005 | static-scan | `rg -n "ErrorEnvelope\|ResponseEnvelope\|toTransportError\|extract.*Error\|throw new .*ApiError\|throw new Error" frontend/src/api` | FAIL | Multiple local `ErrorEnvelope`, `ResponseEnvelope`, `parseError`, `toTransportError`, and plain `Error` implementations exist. |
+| E-006 | static-scan | `rg -n 'from [''\""]@api\|from [''\""]\.\/index\|from [''\""]\.\./api\|from [''\""]\.\./\.\./api' frontend/src/api` | FAIL | `frontend/src/api/useDailyPrediction.ts:3` imports `ApiError` from `@api` instead of `./client`. |
+| E-007 | source-inspection | `Get-Content -Raw frontend\src\api\support.ts` | FAIL | `support.ts` imports `useRollbackOpsPersonaConfig` from `./opsPersona`, re-exports it as `useOpsRollbackPersona`, and contains a placeholder search-by-email comment. |
+| E-008 | static-scan | `rg -n "useOpsRollbackPersona\|useRollbackOpsPersonaConfig" frontend/src` | PASS | Runtime consumer is `features/support/SupportOpsPanel.tsx`; canonical hook exists in `api/opsPersona.ts`. |
+| E-009 | usage-scan | `rg -n 'b2bAstrology\|useB2BWeeklyBySign\|b2bBilling\|useB2BBilling\|b2bEditorial\|useB2BEditorial\|b2bUsage\|useB2BUsageSummary\|opsMonitoring\|useOpsMonitoring\|guidance\|requestGuidance\|useRequestGuidance\|useContextualGuidance' frontend/src -g '*.ts' -g '*.tsx'` | LIMITATION | `b2bAstrology.ts`, `b2bBilling.ts`, `b2bEditorial.ts`, `b2bUsage.ts`, `guidance.ts`, and `opsMonitoring.ts` are exported by `index.ts` and covered by tests, but no non-test runtime consumer was found for their exported API symbols. Text/i18n hits on `guidance` and `opsMonitoring` are not module consumers. |
+| E-010 | import-scan | `rg -n "from [''\""](@api\|\.\./api\|\.\./\.\./api\|\.\./\.\./\.\./api)" frontend/src/pages frontend/src/features frontend/src/layouts frontend/src/hooks frontend/src/utils frontend/src/i18n -g "*.ts" -g "*.tsx"` | FAIL | Mixed imports from `@api`, `@api/<domain>`, and relative `../api/...` across pages/features/layouts/hooks/utils/i18n. |
+| E-011 | guardrail-registry | `Get-Content -Raw _condamad/stories/regression-guardrails.md` | PASS | Applicable guardrails consulted: RG-053, RG-057, RG-064, RG-069. |
+| E-012 | history-scan | `if (Test-Path _condamad\audits\frontend-api) ...` | PASS | No prior `frontend-api` audit folder existed. Related frontend audits were present for components, pages, layouts, design-system, and app CSS. |
+| E-013 | git-state | `git status --short` | PASS | No pre-existing uncommitted changes were reported before audit artifact creation. |
+| E-014 | export-scan | `rg -n "^export (async function\|function\|const\|class\|type\|interface\|\{)" frontend/src/api` | PASS | All files expose public functions/types directly or through `index.ts`; `index.ts` re-exports 30 modules. |
+| E-015 | line-count | `Get-ChildItem frontend\src\api -File -Filter *.ts ... Measure-Object -Line` | PASS | `adminPrompts.ts` 1107 LOC, `natalChart.ts` 556 LOC, `billing.ts` 473 LOC, `adminContent.ts` 317 LOC, `consultations.ts` 304 LOC. |

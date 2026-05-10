@@ -1,20 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { API_BASE_URL } from "./client"
+import { apiFetch, type ApiResponseEnvelope, parseApiErrorDetails } from "./client"
 import { getAccessTokenAuthHeader } from "../utils/authToken"
-
-type ErrorEnvelope = {
-  error: {
-    code: string
-    message: string
-    details?: Record<string, string>
-    request_id?: string
-  }
-}
-
-type ResponseEnvelope<TData> = {
-  data: TData
-}
 
 export type EnterpriseCredentialMetadata = {
   credential_id: number
@@ -62,54 +49,49 @@ export class EnterpriseCredentialsApiError extends Error {
 }
 
 async function parseError(response: Response): Promise<never> {
-  let payload: ErrorEnvelope | null = null
-  try {
-    payload = (await response.json()) as ErrorEnvelope
-  } catch {
-    payload = null
-  }
+  const error = await parseApiErrorDetails<Record<string, string>>(response, {})
   throw new EnterpriseCredentialsApiError(
-    payload?.error?.code ?? "unknown_error",
-    payload?.error?.message ?? `Request failed with status ${response.status}`,
+    error.code,
+    error.message,
     response.status,
-    payload?.error?.details ?? {},
-    payload?.error?.request_id ?? null,
+    error.details,
+    error.requestId,
   )
 }
 
 async function listEnterpriseCredentials(): Promise<EnterpriseCredentialsList> {
-  const response = await fetch(`${API_BASE_URL}/v1/b2b/credentials`, {
+  const response = await apiFetch("/v1/b2b/credentials", {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as ResponseEnvelope<EnterpriseCredentialsList>
+  const body = (await response.json()) as ApiResponseEnvelope<EnterpriseCredentialsList>
   return body.data
 }
 
 async function generateCredential(): Promise<EnterpriseCredentialSecret> {
-  const response = await fetch(`${API_BASE_URL}/v1/b2b/credentials/generate`, {
+  const response = await apiFetch("/v1/b2b/credentials/generate", {
     method: "POST",
     headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as ResponseEnvelope<EnterpriseCredentialSecret>
+  const body = (await response.json()) as ApiResponseEnvelope<EnterpriseCredentialSecret>
   return body.data
 }
 
 async function rotateCredential(): Promise<EnterpriseCredentialSecret> {
-  const response = await fetch(`${API_BASE_URL}/v1/b2b/credentials/rotate`, {
+  const response = await apiFetch("/v1/b2b/credentials/rotate", {
     method: "POST",
     headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as ResponseEnvelope<EnterpriseCredentialSecret>
+  const body = (await response.json()) as ApiResponseEnvelope<EnterpriseCredentialSecret>
   return body.data
 }
 

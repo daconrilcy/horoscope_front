@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { getDailyPrediction, getDailyHistory } from "./dailyPrediction";
-import { ApiError } from "@api";
+import { ApiError } from "./client";
 import { getSubjectFromAccessToken } from "../utils/authToken";
 import { ANONYMOUS_SUBJECT } from "../utils/constants";
 

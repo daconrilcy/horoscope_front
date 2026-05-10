@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./client"
+import { apiFetch, parseApiErrorDetails } from "./client"
 
 /** Timeout en ms pour les requêtes de géocodage vers le backend (15s pour laisser le temps à Nominatim) */
 const GEOCODING_TIMEOUT_MS = 15000
@@ -40,31 +40,23 @@ export async function reverseGeocode(
   lang?: string,
 ): Promise<ReverseGeocodingResult> {
   const url = lang
-    ? `${API_BASE_URL}/v1/geocoding/reverse?lang=${lang}`
-    : `${API_BASE_URL}/v1/geocoding/reverse`
-
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), GEOCODING_TIMEOUT_MS)
+    ? `/v1/geocoding/reverse?lang=${lang}`
+    : "/v1/geocoding/reverse"
 
   try {
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ lat, lon }),
-      signal: controller.signal,
+      timeoutMs: GEOCODING_TIMEOUT_MS,
     })
 
     if (!response.ok) {
-      let errorCode = "service_unavailable"
-      try {
-        const errPayload = (await response.json()) as { error?: { code?: string } }
-        errorCode = errPayload.error?.code ?? "service_unavailable"
-      } catch {
-        // ignore
-      }
+      const error = await parseApiErrorDetails(response, {})
+      const errorCode = error.code === "unknown_error" ? "service_unavailable" : error.code
       throw new GeocodingError(`Reverse geocoding backend error: ${response.status}`, errorCode)
     }
 
@@ -75,8 +67,6 @@ export async function reverseGeocode(
       throw new GeocodingError("Reverse geocoding timed out", "service_unavailable")
     }
     throw err
-  } finally {
-    clearTimeout(timeoutId)
   }
 }
 
@@ -97,28 +87,21 @@ export async function geocodeCity(
   if (externalSignal?.aborted) {
     return null
   }
-  const controller = new AbortController()
   let timedOut = false
-  const timeoutId = setTimeout(() => {
+  const timeoutId = window.setTimeout(() => {
     timedOut = true
-    controller.abort()
   }, GEOCODING_TIMEOUT_MS)
-  const abortHandler = () => controller.abort()
-  externalSignal?.addEventListener("abort", abortHandler, { once: true })
 
   try {
     const q = encodeURIComponent(`${city.trim()}, ${country.trim()}`)
-    const url = `${API_BASE_URL}/v1/geocoding/search?q=${q}&limit=1`
-    const response = await fetch(url, { signal: controller.signal })
+    const response = await apiFetch(`/v1/geocoding/search?q=${q}&limit=1`, {
+      signal: externalSignal,
+      timeoutMs: GEOCODING_TIMEOUT_MS,
+    })
 
     if (!response.ok) {
-      let errorCode = "service_unavailable"
-      try {
-        const errPayload = (await response.json()) as { error?: { code?: string } }
-        errorCode = errPayload.error?.code ?? "service_unavailable"
-      } catch {
-        // ignore parse failure
-      }
+      const error = await parseApiErrorDetails(response, {})
+      const errorCode = error.code === "unknown_error" ? "service_unavailable" : error.code
       throw new GeocodingError(`Geocoding backend error: ${response.status}`, errorCode)
     }
 
@@ -144,10 +127,11 @@ export async function geocodeCity(
       throw new GeocodingError("Backend returned invalid coordinates", "service_unavailable")
     }
 
-    const resolveResponse = await fetch(`${API_BASE_URL}/v1/geocoding/resolve`, {
+    const resolveResponse = await apiFetch("/v1/geocoding/resolve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
+      signal: externalSignal,
+      timeoutMs: GEOCODING_TIMEOUT_MS,
       body: JSON.stringify({
         provider: candidate.provider,
         provider_place_id: candidate.provider_place_id,
@@ -156,13 +140,8 @@ export async function geocodeCity(
     })
 
     if (!resolveResponse.ok) {
-      let errorCode = "service_unavailable"
-      try {
-        const errPayload = (await resolveResponse.json()) as { error?: { code?: string } }
-        errorCode = errPayload.error?.code ?? "service_unavailable"
-      } catch {
-        // ignore parse failure
-      }
+      const error = await parseApiErrorDetails(resolveResponse, {})
+      const errorCode = error.code === "unknown_error" ? "service_unavailable" : error.code
       throw new GeocodingError(`Geocoding resolve backend error: ${resolveResponse.status}`, errorCode)
     }
 
@@ -195,7 +174,6 @@ export async function geocodeCity(
     if (err instanceof GeocodingError) throw err
     throw new GeocodingError("Geocoding service unavailable", "service_unavailable")
   } finally {
-    clearTimeout(timeoutId)
-    externalSignal?.removeEventListener("abort", abortHandler)
+    window.clearTimeout(timeoutId)
   }
 }

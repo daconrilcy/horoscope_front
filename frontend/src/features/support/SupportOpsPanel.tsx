@@ -1,7 +1,8 @@
 // Panneau admin pour rechercher un utilisateur support et declencher les actions ops.
 import { useState } from "react"
 
-import { type SupportUserContext, useOpsSearchUser, useOpsRollbackPersona } from "@api"
+import { useRollbackOpsPersonaConfig } from "../../api/opsPersona"
+import { type SupportUserContext, useOpsSearchUser } from "../../api/support"
 import { useTranslation } from "../../i18n"
 
 type PrivacyRequestView = SupportUserContext["privacy_requests"][number] & {
@@ -21,7 +22,7 @@ export function SupportOpsPanel() {
   const t = useTranslation("admin").b2b.support
   const [targetEmail, setTargetUser] = useState("")
   const supportContext = useOpsSearchUser(targetEmail)
-  const rollbackPersona = useOpsRollbackPersona()
+  const rollbackPersona = useRollbackOpsPersonaConfig()
   const supportData = supportContext.data as SupportUserContextView | undefined
   const auditEvents = supportData?.audit_events ?? supportData?.audit_log ?? []
 

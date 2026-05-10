@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { API_BASE_URL } from "./client"
+import { apiFetch, parseApiErrorDetails, type ApiResponseEnvelope } from "./client"
 import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 export type BillingPlan = {
@@ -127,37 +127,26 @@ export class BillingApiError extends Error {
   readonly code: string
   readonly status: number
   readonly details: Record<string, string>
+  readonly requestId: string | null
 
-  constructor(code: string, message: string, status: number, details: Record<string, string> = {}) {
+  constructor(
+    code: string,
+    message: string,
+    status: number,
+    details: Record<string, string> = {},
+    requestId: string | null = null,
+  ) {
     super(message)
     this.code = code
     this.status = status
     this.details = details
+    this.requestId = requestId
   }
 }
 
 async function parseError(response: Response): Promise<never> {
-  let payload: ErrorEnvelope | null = null
-  try {
-    payload = (await response.json()) as ErrorEnvelope
-  } catch {
-    payload = null
-  }
-  throw new BillingApiError(
-    payload?.error?.code ?? "unknown_error",
-    payload?.error?.message ?? `Request failed with status ${response.status}`,
-    response.status,
-    payload?.error?.details ?? {},
-  )
-}
-
-type ErrorEnvelope = {
-  error: {
-    code: string
-    message: string
-    details: Record<string, string>
-    request_id: string
-  }
+  const error = await parseApiErrorDetails<Record<string, string>>(response, {})
+  throw new BillingApiError(error.code, error.message, response.status, error.details, error.requestId)
 }
 
 export type EntitlementUsageState = {
@@ -259,7 +248,7 @@ function toChatEntitlementFeature(feature: FeatureEntitlementResponse | undefine
 }
 
 async function fetchSubscriptionStatus(): Promise<BillingSubscriptionStatus> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/subscription`, {
+  const response = await apiFetch("/v1/billing/subscription", {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
@@ -271,7 +260,7 @@ async function fetchSubscriptionStatus(): Promise<BillingSubscriptionStatus> {
 }
 
 async function fetchBillingPlans(): Promise<BillingPlan[]> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/plans`, {
+  const response = await apiFetch("/v1/billing/plans", {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
@@ -283,7 +272,7 @@ async function fetchBillingPlans(): Promise<BillingPlan[]> {
 }
 
 async function fetchEntitlementsPlans(): Promise<PlanCatalog[]> {
-  const response = await fetch(`${API_BASE_URL}/v1/entitlements/plans`, {
+  const response = await apiFetch("/v1/entitlements/plans", {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
@@ -303,7 +292,7 @@ async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus |
 }
 
 export async function fetchEntitlementsSnapshot(): Promise<EntitlementsSnapshot> {
-  const response = await fetch(`${API_BASE_URL}/v1/entitlements/me`, {
+  const response = await apiFetch("/v1/entitlements/me", {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
@@ -323,7 +312,7 @@ async function fetchChatEntitlementFeature(): Promise<ChatEntitlementFeatureStat
 }
 
 async function fetchTokenUsagePeriod(period: "current_day" | "current_week" | "current_month"): Promise<TokenUsageStatus> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/token-usage?period=${period}`, {
+  const response = await apiFetch(`/v1/billing/token-usage?period=${period}`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
@@ -410,7 +399,7 @@ export type StripeSubscriptionUpgradeData = {
 }
 
 async function postStripeCheckoutSession(plan: "basic" | "premium"): Promise<StripeCheckoutSessionData> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-checkout-session`, {
+  const response = await apiFetch("/v1/billing/stripe-checkout-session", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -426,7 +415,7 @@ async function postStripeCheckoutSession(plan: "basic" | "premium"): Promise<Str
 }
 
 async function postStripePortalSession(): Promise<StripePortalSessionData> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-customer-portal-session`, {
+  const response = await apiFetch("/v1/billing/stripe-customer-portal-session", {
     method: "POST",
     headers: getAccessTokenAuthHeader(),
   })
@@ -438,7 +427,7 @@ async function postStripePortalSession(): Promise<StripePortalSessionData> {
 }
 
 async function postStripePortalSubscriptionUpdateSession(): Promise<StripePortalSessionData> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-customer-portal-subscription-update-session`, {
+  const response = await apiFetch("/v1/billing/stripe-customer-portal-subscription-update-session", {
     method: "POST",
     headers: getAccessTokenAuthHeader(),
   })
@@ -450,8 +439,8 @@ async function postStripePortalSubscriptionUpdateSession(): Promise<StripePortal
 }
 
 async function postStripePortalSubscriptionCancelSession(): Promise<StripePortalSessionData> {
-  const response = await fetch(
-    `${API_BASE_URL}/v1/billing/stripe-customer-portal-subscription-cancel-session`,
+  const response = await apiFetch(
+    "/v1/billing/stripe-customer-portal-subscription-cancel-session",
     {
       method: "POST",
       headers: getAccessTokenAuthHeader(),
@@ -465,7 +454,7 @@ async function postStripePortalSubscriptionCancelSession(): Promise<StripePortal
 }
 
 async function postStripeSubscriptionReactivate(): Promise<BillingSubscriptionStatus> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-subscription-reactivate`, {
+  const response = await apiFetch("/v1/billing/stripe-subscription-reactivate", {
     method: "POST",
     headers: getAccessTokenAuthHeader(),
   })
@@ -479,7 +468,7 @@ async function postStripeSubscriptionReactivate(): Promise<BillingSubscriptionSt
 async function postStripeSubscriptionUpgrade(
   plan: "basic" | "premium",
 ): Promise<StripeSubscriptionUpgradeData> {
-  const response = await fetch(`${API_BASE_URL}/v1/billing/stripe-subscription-upgrade`, {
+  const response = await apiFetch("/v1/billing/stripe-subscription-upgrade", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -1,19 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { API_BASE_URL } from "./client"
+import { apiFetch, parseApiErrorDetails, type ApiResponseEnvelope } from "./client"
 import { getAccessTokenAuthHeader } from "../utils/authToken"
-
-type ErrorEnvelope = {
-  error: {
-    code: string
-    message: string
-    details?: Record<string, string>
-  }
-}
-
-type ResponseEnvelope<TData> = {
-  data: TData
-}
 
 export type SupportUserContext = {
   user: {
@@ -96,39 +84,37 @@ export class SupportApiError extends Error {
   readonly code: string
   readonly status: number
   readonly details: Record<string, string>
+  readonly requestId: string | null
 
-  constructor(code: string, message: string, status: number, details: Record<string, string> = {}) {
+  constructor(
+    code: string,
+    message: string,
+    status: number,
+    details: Record<string, string> = {},
+    requestId: string | null = null,
+  ) {
     super(message)
     this.code = code
     this.status = status
     this.details = details
+    this.requestId = requestId
   }
 }
 
 async function parseError(response: Response): Promise<never> {
-  let payload: ErrorEnvelope | null = null
-  try {
-    payload = (await response.json()) as ErrorEnvelope
-  } catch {
-    payload = null
-  }
-  throw new SupportApiError(
-    payload?.error?.code ?? "unknown_error",
-    payload?.error?.message ?? `Request failed with status ${response.status}`,
-    response.status,
-    payload?.error?.details ?? {},
-  )
+  const error = await parseApiErrorDetails<Record<string, string>>(response, {})
+  throw new SupportApiError(error.code, error.message, response.status, error.details, error.requestId)
 }
 
 async function getSupportContext(userId: number): Promise<SupportUserContext> {
-  const response = await fetch(`${API_BASE_URL}/v1/support/users/${userId}/context`, {
+  const response = await apiFetch(`/v1/support/users/${userId}/context`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as ResponseEnvelope<SupportUserContext>
+  const body = (await response.json()) as ApiResponseEnvelope<SupportUserContext>
   return body.data
 }
 
@@ -150,19 +136,19 @@ async function listSupportIncidents(filters: IncidentFilters): Promise<SupportIn
     params.set("priority", filters.priority)
   }
   const suffix = params.toString() ? `?${params.toString()}` : ""
-  const response = await fetch(`${API_BASE_URL}/v1/support/incidents${suffix}`, {
+  const response = await apiFetch(`/v1/support/incidents${suffix}`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as ResponseEnvelope<SupportIncidentList>
+  const body = (await response.json()) as ApiResponseEnvelope<SupportIncidentList>
   return body.data
 }
 
 async function createSupportIncident(payload: CreateSupportIncidentPayload): Promise<SupportIncident> {
-  const response = await fetch(`${API_BASE_URL}/v1/support/incidents`, {
+  const response = await apiFetch("/v1/support/incidents", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -173,7 +159,7 @@ async function createSupportIncident(payload: CreateSupportIncidentPayload): Pro
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as ResponseEnvelope<SupportIncident>
+  const body = (await response.json()) as ApiResponseEnvelope<SupportIncident>
   return body.data
 }
 
@@ -181,7 +167,7 @@ async function updateSupportIncident(
   incidentId: number,
   payload: UpdateSupportIncidentPayload,
 ): Promise<SupportIncident> {
-  const response = await fetch(`${API_BASE_URL}/v1/support/incidents/${incidentId}`, {
+  const response = await apiFetch(`/v1/support/incidents/${incidentId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -192,28 +178,22 @@ async function updateSupportIncident(
   if (!response.ok) {
     return parseError(response)
   }
-  const body = (await response.json()) as ResponseEnvelope<SupportIncident>
+  const body = (await response.json()) as ApiResponseEnvelope<SupportIncident>
   return body.data
 }
 
-import { useRollbackOpsPersonaConfig as useOpsRollbackPersona } from "./opsPersona"
-
-export { useOpsRollbackPersona }
-
 export function useOpsSearchUser(email: string) {
-  // This is a placeholder implementation that should ideally call a backend search-by-email endpoint
-  // For now, we'll return a query that is disabled if email is empty.
   return useQuery({
     queryKey: ["support-search-user", email],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/v1/support/users/context?email=${encodeURIComponent(email)}`, {
+      const response = await apiFetch(`/v1/support/users/context?email=${encodeURIComponent(email)}`, {
         method: "GET",
         headers: getAccessTokenAuthHeader(),
       })
       if (!response.ok) {
         return parseError(response)
       }
-      const body = (await response.json()) as ResponseEnvelope<SupportUserContext>
+      const body = (await response.json()) as ApiResponseEnvelope<SupportUserContext>
       return body.data
     },
     enabled: email.length > 0,

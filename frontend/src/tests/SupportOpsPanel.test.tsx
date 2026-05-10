@@ -11,6 +11,14 @@ vi.mock("@api", () => ({
   useOpsRollbackPersona: () => mockUseOpsRollbackPersona(),
 }))
 
+vi.mock("../api/support", () => ({
+  useOpsSearchUser: (...args: unknown[]) => mockUseOpsSearchUser(...args),
+}))
+
+vi.mock("../api/opsPersona", () => ({
+  useRollbackOpsPersonaConfig: () => mockUseOpsRollbackPersona(),
+}))
+
 afterEach(() => {
   cleanup()
   mockUseOpsSearchUser.mockReset()
