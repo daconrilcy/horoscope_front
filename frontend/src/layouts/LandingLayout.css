@@ -4,6 +4,13 @@
   --landing-surface-1: var(--premium-glass-surface-1);
   --landing-surface-2: var(--premium-glass-surface-2);
   --landing-surface-3: var(--premium-glass-surface-3);
+  --landing-contract-surface-primary: rgba(255, 255, 255, 0.62);
+  --landing-contract-surface-secondary: rgba(255, 255, 255, 0.5);
+  --landing-contract-border: rgba(255, 255, 255, 0.72);
+  --landing-contract-text: var(--premium-text-strong);
+  --landing-contract-text-muted: var(--premium-text-meta);
+  --landing-contract-cta-bg: var(--premium-accent-purple);
+  --landing-contract-cta-border: rgba(142, 124, 240, 0.26);
   --landing-accent: var(--premium-accent-purple);
   --landing-accent-soft: color-mix(in srgb, var(--premium-accent-purple-soft) 70%, white 30%);
   --landing-shadow-card: var(--premium-shadow-card);
@@ -102,6 +109,13 @@
 
 .dark .landing-layout {
   --landing-page-atmosphere: var(--premium-app-bg);
+  --landing-contract-surface-primary: var(--premium-glass-surface-3);
+  --landing-contract-surface-secondary: var(--premium-glass-surface-2);
+  --landing-contract-border: var(--premium-glass-border-strong);
+  --landing-contract-text: var(--premium-text-strong);
+  --landing-contract-text-muted: var(--premium-text-meta);
+  --landing-contract-cta-bg: var(--premium-accent-purple);
+  --landing-contract-cta-border: var(--premium-glass-border-strong);
   --landing-accent-soft: var(--premium-accent-purple-soft);
   --landing-surface-glass-strong: var(--premium-glass-surface-3);
   --landing-surface-glass-border-strong: var(--premium-glass-border-strong);

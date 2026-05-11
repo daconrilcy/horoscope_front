@@ -33,13 +33,14 @@
   --landing-language-option-bg-hover: rgba(255, 255, 255, 0.62);
   --landing-language-option-active-bg: linear-gradient(135deg, rgba(142, 124, 240, 0.16), rgba(255, 255, 255, 0.46));
   --landing-language-option-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 20px rgba(110, 87, 190, 0.1);
-  --landing-mobile-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(244, 237, 246, 0.92));
-  --landing-mobile-panel-shadow: 0 24px 60px rgba(50, 34, 78, 0.24);
+  --landing-mobile-panel-bg: var(--landing-contract-surface-primary);
+  --landing-mobile-panel-border: var(--landing-contract-border);
+  --landing-mobile-panel-shadow: 0 18px 42px rgba(50, 34, 78, 0.16);
   --landing-mobile-lang-bg: rgba(255, 255, 255, 0.74);
   --landing-mobile-lang-border: rgba(117, 94, 178, 0.12);
   --landing-mobile-toggle-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(236, 228, 255, 0.92));
   --landing-mobile-toggle-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(231, 221, 255, 0.96));
-  --landing-mobile-toggle-shadow: 0 14px 28px rgba(70, 50, 110, 0.16);
+  --landing-mobile-toggle-shadow: 0 10px 22px rgba(70, 50, 110, 0.12);
   --landing-mobile-close-shadow: 0 10px 22px rgba(70, 50, 110, 0.1);
   --landing-mobile-language-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(241, 232, 255, 0.54)),
     rgba(255, 255, 255, 0.32);
@@ -67,7 +68,8 @@
   --landing-language-option-bg-hover: var(--premium-glass-surface-2);
   --landing-language-option-active-bg: var(--color-admin-info-surface);
   --landing-language-option-shadow: none;
-  --landing-mobile-panel-bg: color-mix(in srgb, var(--color-bg-sheen) 92%, var(--color-primary) 8%);
+  --landing-mobile-panel-bg: var(--landing-contract-surface-primary);
+  --landing-mobile-panel-border: var(--landing-contract-border);
   --landing-mobile-lang-bg: var(--premium-glass-surface-2);
   --landing-mobile-lang-border: var(--premium-glass-border);
   --landing-mobile-toggle-bg: var(--premium-glass-surface-2);
@@ -288,7 +290,7 @@
   z-index: 1200;
   padding: 18px;
   background: var(--landing-overlay-mobile-bg);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(6px);
 }
 
 .landing-navbar__mobile-panel {
@@ -299,6 +301,7 @@
   padding: 18px;
   border-radius: calc(var(--landing-radius-card) + 8px);
   background: var(--landing-mobile-panel-bg);
+  border: 1px solid var(--landing-mobile-panel-border);
   box-shadow: var(--landing-mobile-panel-shadow);
 }
 

@@ -144,6 +144,15 @@ type LandingOwnerRoute = {
   }>
 }
 
+type LandingVisualComplexityException = {
+  file: string
+  selector: string
+  property: "animation" | "filter" | "backdrop-filter" | "-webkit-backdrop-filter"
+  value: string
+  reason: string
+  exitCondition: string
+}
+
 const PAGE_BACKGROUND_SELECTORS = [
   ".landing-layout",
   ".people-page",
@@ -192,6 +201,10 @@ const CANONICAL_PAGE_BACKGROUND_VALUES = new Set([
 
 const LANDING_OWNER_GROUPS = new Map<string, LandingOwnerRoute>([
   ["accent", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout", ".dark .landing-layout"] }],
+  }],
+  ["contract", {
     owner: "layout",
     declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout", ".dark .landing-layout"] }],
   }],
@@ -277,6 +290,65 @@ const LANDING_OWNER_GROUPS = new Map<string, LandingOwnerRoute>([
 ])
 
 const FORBIDDEN_LANDING_OWNER_GROUPS = new Set(["misc", "common", "temp", "shared", "base", "general", "global"])
+
+const LANDING_VISUAL_COMPLEXITY_EXCEPTIONS: LandingVisualComplexityException[] = [
+  {
+    file: "pages/landing/sections/LandingNavbar.css",
+    selector: ".landing-navbar__shell",
+    property: "backdrop-filter",
+    value: "blur(14px)",
+    reason: "Conserve la separation glass du header sticky au-dessus du contenu.",
+    exitCondition: "A retirer si le header adopte une surface opaque sans effet glass.",
+  },
+  {
+    file: "pages/landing/sections/LandingNavbar.css",
+    selector: ".landing-navbar__lang",
+    property: "backdrop-filter",
+    value: "blur(18px) saturate(135%)",
+    reason: "Maintient la lisibilite du controle langue compact sur le fond canonique.",
+    exitCondition: "A retirer si le controle langue consomme uniquement une surface opaque.",
+  },
+  {
+    file: "pages/landing/sections/LandingNavbar.css",
+    selector: ".landing-navbar__lang-dropdown",
+    property: "backdrop-filter",
+    value: "blur(22px) saturate(145%)",
+    reason: "Isole le menu langue flottant sans creer de fond page-level.",
+    exitCondition: "A retirer si le menu langue devient opaque ou inline.",
+  },
+  {
+    file: "pages/landing/sections/LandingNavbar.css",
+    selector: ".landing-navbar__mobile-menu",
+    property: "backdrop-filter",
+    value: "blur(6px)",
+    reason: "Conserve une separation legere du menu mobile apres reduction du glow dominant.",
+    exitCondition: "A retirer si le panneau mobile devient pleine page opaque.",
+  },
+  {
+    file: "pages/landing/sections/SocialProofSection.css",
+    selector: ".social-proof__container",
+    property: "backdrop-filter",
+    value: "blur(18px)",
+    reason: "Surface de preuve sociale glass deja routee par les roles landing.",
+    exitCondition: "A retirer si les cartes de preuve sociale deviennent opaques.",
+  },
+  {
+    file: "pages/landing/sections/TestimonialsSection.css",
+    selector: ".testimonial-card",
+    property: "backdrop-filter",
+    value: "blur(18px) saturate(140%)",
+    reason: "Surface temoignage glass locale sans concurrence avec le fond global.",
+    exitCondition: "A retirer si les temoignages consomment seulement les surfaces contractuelles.",
+  },
+  {
+    file: "pages/landing/sections/TestimonialsSection.css",
+    selector: ".testimonial-card",
+    property: "-webkit-backdrop-filter",
+    value: "blur(18px) saturate(140%)",
+    reason: "Pair WebKit exact de l'effet glass temoignage.",
+    exitCondition: "A retirer avec l'exception backdrop-filter temoignage.",
+  },
+]
 
 function findSelectorBeforeBrace(css: string, braceIndex: number): string {
   let cursor = braceIndex - 1
@@ -405,6 +477,47 @@ function collectLandingConsumerGroups(files: string[]): string[] {
       }),
     ),
   ].sort()
+}
+
+function collectLandingVisualComplexityDeclarations(): Array<CssDeclaration & { file: string }> {
+  const files = [
+    "layouts/LandingLayout.css",
+    ...listFiles("pages/landing", ".css"),
+  ]
+
+  return files.flatMap((file) =>
+    collectCssDeclarations(readFrontendFile(file))
+      .filter((declaration) =>
+        declaration.property === "animation" ||
+        declaration.property === "filter" ||
+        declaration.property === "backdrop-filter" ||
+        declaration.property === "-webkit-backdrop-filter",
+      )
+      .filter((declaration) => declaration.value !== "none !important")
+      .map((declaration) => ({ ...declaration, file })),
+  )
+}
+
+function collectLandingVisualComplexityViolations(): Array<CssDeclaration & { file: string }> {
+  const allowed = new Set(
+    LANDING_VISUAL_COMPLEXITY_EXCEPTIONS.map((entry) =>
+      toStableJson({
+        file: entry.file,
+        selector: entry.selector,
+        property: entry.property,
+        value: entry.value,
+      }),
+    ),
+  )
+
+  return collectLandingVisualComplexityDeclarations().filter((declaration) =>
+    !allowed.has(toStableJson({
+      file: declaration.file,
+      selector: normalizeLandingDeclarationSelector(declaration.selector),
+      property: declaration.property,
+      value: declaration.value,
+    })),
+  )
 }
 
 function selectorMatchesExactPageBackground(selector: string, pageBackgroundSelector: string): boolean {
@@ -1397,6 +1510,45 @@ describe("design-system guards", () => {
     expect(forbidden).toEqual([])
     expect(declarationRouteViolations).toEqual([])
     expect(groupsWithoutConsumer).toEqual([])
+  })
+
+  it("borne la complexite visuelle motion et filters landing par exceptions exactes", () => {
+    const landingCss = [
+      "layouts/LandingLayout.css",
+      ...listFiles("pages/landing", ".css"),
+    ].map((file) => readFrontendFile(file)).join("\n")
+    const exceptionKeys = LANDING_VISUAL_COMPLEXITY_EXCEPTIONS.map((entry) =>
+      toStableJson({
+        file: entry.file,
+        selector: entry.selector,
+        property: entry.property,
+        value: entry.value,
+      }),
+    )
+    const actualDeclarationKeys = new Set(
+      collectLandingVisualComplexityDeclarations().map((declaration) =>
+        toStableJson({
+          file: declaration.file,
+          selector: normalizeLandingDeclarationSelector(declaration.selector),
+          property: declaration.property,
+          value: declaration.value,
+        }),
+      ),
+    )
+    const wildcardExceptions = LANDING_VISUAL_COMPLEXITY_EXCEPTIONS.filter((entry) =>
+      entry.file.includes("*") ||
+      entry.selector.includes("*") ||
+      entry.value.includes("*") ||
+      entry.reason.trim().length === 0 ||
+      entry.exitCondition.trim().length === 0,
+    )
+    const staleExceptions = exceptionKeys.filter((key) => !actualDeclarationKeys.has(key))
+
+    expect(landingCss).not.toMatch(/@keyframes\s+/)
+    expect(collectLandingVisualComplexityViolations()).toEqual([])
+    expect(wildcardExceptions).toEqual([])
+    expect(staleExceptions).toEqual([])
+    expect(new Set(exceptionKeys).size).toBe(exceptionKeys.length)
   })
 
   it("bloque le retour des literals admin migres par CS-086", () => {

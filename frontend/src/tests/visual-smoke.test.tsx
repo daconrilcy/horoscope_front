@@ -306,8 +306,8 @@ describe("CS-085 — rendu smoke Landing", () => {
     expect(landingHeroSectionSource).not.toMatch(/window\.setInterval|setInterval\(|setTimeout\(|requestAnimationFrame/)
     expect(landingHeroSectionSource).toContain('track("hero_cta_click"')
     expect(landingHeroSectionSource).toContain('track("secondary_cta_click"')
-    expect(landingPageCss).toContain("@media (prefers-reduced-motion: no-preference)")
-    expect(landingPageCss).toContain("hero-tool-cycle")
+    expect(landingPageCss).not.toMatch(/@keyframes\s+hero-|animation:\s*hero-/)
+    expect(landingPageCss).not.toContain("hero-tool-cycle")
   })
 })
 

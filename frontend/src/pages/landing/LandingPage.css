@@ -1,3 +1,4 @@
+/* Styles du contenu landing et du hero marketing statique. */
 .landing-page {
   width: 100%;
   --landing-hero-reassurance-dot-shadow: 0 0 0 4px rgba(177, 151, 255, 0.14);
@@ -9,19 +10,15 @@
   --landing-hero-shell-orbit-soft-bg: radial-gradient(circle, rgba(255, 255, 255, 0.42), transparent 72%);
   --landing-hero-device-bg: linear-gradient(180deg, rgba(42, 33, 67, 0.94), rgba(72, 52, 110, 0.92));
   --landing-hero-device-shadow: 0 26px 52px rgba(45, 30, 79, 0.22);
-  --landing-hero-device-shadow-active: 0 32px 62px rgba(45, 30, 79, 0.28);
   --landing-hero-device-sheen-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24%),
     radial-gradient(circle at top left, rgba(195, 178, 255, 0.18), transparent 36%);
   --landing-hero-device-grid-line: rgba(255, 255, 255, 0.035);
   --landing-hero-device-grid-mask: linear-gradient(180deg, rgba(0, 0, 0, 0.46), transparent 72%);
-  --landing-hero-device-scan-bg: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
   --landing-hero-device-brand-color: rgba(243, 238, 255, 0.9);
   --landing-hero-device-dot-bg: rgba(255, 255, 255, 0.34);
   --landing-hero-device-status-bg: rgba(255, 255, 255, 0.12);
   --landing-hero-device-status-color: rgba(248, 245, 255, 0.82);
   --landing-hero-device-status-shadow: 0 0 0 4px rgba(147, 241, 195, 0.16);
-  --landing-hero-device-status-shadow-rest: 0 0 0 4px rgba(147, 241, 195, 0.14);
-  --landing-hero-device-status-shadow-active: 0 0 0 7px rgba(147, 241, 195, 0.08);
   --landing-hero-device-preview-color: rgba(238, 231, 255, 0.72);
   --landing-hero-tool-bg: rgba(255, 255, 255, 0.08);
   --landing-hero-tool-border: rgba(255, 255, 255, 0.09);
@@ -29,28 +26,16 @@
   --landing-hero-tool-line-bg: linear-gradient(90deg, var(--landing-accent), rgba(255, 255, 255, 0.9));
   --landing-hero-tool-active-bg: rgba(161, 144, 237, 0.24);
   --landing-hero-tool-active-border: rgba(210, 196, 255, 0.34);
-  --landing-hero-tool-active-shadow: 0 12px 24px rgba(15, 8, 34, 0.26);
   --landing-hero-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 240, 255, 0.9));
   --landing-hero-card-shadow: 0 18px 36px rgba(20, 12, 40, 0.14);
   --landing-hero-card-summary-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 236, 255, 0.92)),
     var(--landing-hero-card-bg);
-  --landing-hero-card-glow-bg: radial-gradient(circle, rgba(111, 87, 217, 0.12), transparent 72%);
-  --landing-hero-card-chat-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 243, 255, 0.9));
-  --landing-hero-card-moment-bg: linear-gradient(180deg, rgba(107, 78, 179, 0.96), rgba(74, 51, 128, 0.94)),
-    var(--landing-hero-card-bg);
-  --landing-hero-card-moment-border: rgba(208, 189, 255, 0.26);
-  --landing-hero-card-moment-shadow: 0 20px 40px rgba(33, 20, 62, 0.22);
+  --landing-hero-insight-bg: rgba(115, 90, 185, 0.08);
+  --landing-hero-insight-border: rgba(115, 90, 185, 0.1);
   --landing-hero-trend-bg: linear-gradient(180deg, rgba(115, 90, 185, 0.12), rgba(115, 90, 185, 0.04));
   --landing-hero-trend-border: rgba(115, 90, 185, 0.08);
   --landing-hero-trend-active-bg: linear-gradient(180deg, rgba(161, 144, 237, 0.26), rgba(161, 144, 237, 0.08));
   --landing-hero-trend-active-border: rgba(161, 144, 237, 0.22);
-  --landing-hero-panel-on-dark: rgba(245, 239, 255, 0.82);
-  --landing-hero-badge-glow-bg: rgba(142, 124, 240, 0.22);
-  --landing-hero-badge-glow-shadow: 0 0 0 6px rgba(142, 124, 240, 0.08);
-  --landing-hero-chat-question-bg: rgba(115, 90, 185, 0.08);
-  --landing-hero-chat-answer-bg: linear-gradient(135deg, rgba(142, 124, 240, 0.16), rgba(177, 151, 255, 0.28));
-  --landing-hero-chat-active-shadow: 0 14px 24px rgba(58, 38, 108, 0.16);
-  --landing-hero-chat-caret-bg: rgba(78, 49, 147, 0.62);
   --landing-live-status-color: #93f1c3;
 }
 
@@ -60,25 +45,19 @@
   --landing-hero-shell-border: var(--premium-glass-border);
   --landing-hero-card-bg: var(--premium-glass-surface-2);
   --landing-hero-card-summary-bg: var(--premium-glass-surface-2);
-  --landing-hero-card-chat-bg: var(--premium-glass-surface-2);
   --landing-hero-trend-bg: var(--color-admin-info-surface);
   --landing-hero-trend-border: var(--color-admin-info-border);
   --landing-hero-trend-active-bg: var(--color-admin-interactive-active);
   --landing-hero-trend-active-border: var(--premium-glass-border-strong);
-  --landing-hero-chat-question-bg: var(--premium-glass-surface-1);
-  --landing-hero-chat-answer-bg: var(--color-admin-info-surface);
+  --landing-hero-insight-bg: var(--premium-glass-surface-1);
+  --landing-hero-insight-border: var(--premium-glass-border);
   --landing-hero-device-bg: color-mix(in srgb, var(--color-bg-sheen) 84%, var(--color-primary) 16%);
   --landing-hero-device-shadow: var(--shadow-card);
-  --landing-hero-device-shadow-active: var(--shadow-card);
   --landing-hero-device-brand-color: var(--premium-text-strong);
   --landing-hero-device-status-bg: var(--premium-glass-surface-1);
   --landing-hero-device-status-color: var(--premium-text-main);
   --landing-hero-device-preview-color: var(--premium-text-meta);
   --landing-hero-card-shadow: var(--premium-shadow-card);
-  --landing-hero-card-moment-bg: var(--premium-glass-surface-3);
-  --landing-hero-card-moment-border: var(--premium-glass-border-strong);
-  --landing-hero-card-moment-shadow: var(--premium-shadow-card);
-  --landing-hero-panel-on-dark: var(--premium-text-main);
 }
 
 .skip-link {
@@ -141,8 +120,8 @@
   align-self: flex-start;
   padding: 8px 14px;
   border-radius: var(--landing-radius-cta);
-  background: var(--landing-surface-glass-strong);
-  border: 1px solid var(--landing-surface-glass-border-strong);
+  background: var(--landing-contract-surface-primary);
+  border: 1px solid var(--landing-contract-border);
   box-shadow: var(--landing-soft-card-shadow);
   color: var(--premium-accent-purple-strong);
   font-size: var(--landing-type-eyebrow-size);
@@ -226,9 +205,9 @@
   min-height: 56px;
   padding: 0 22px;
   border-radius: var(--landing-radius-cta);
-  border: 1px solid var(--landing-accent-border-subtle);
-  background: var(--landing-surface-glass-strong);
-  color: var(--premium-text-strong);
+  border: 1px solid var(--landing-contract-cta-border);
+  background: var(--landing-contract-surface-primary);
+  color: var(--landing-contract-text);
   text-decoration: none;
   font-weight: var(--font-weight-semibold);
   box-shadow: var(--landing-shadow-card);
@@ -258,10 +237,10 @@
   gap: 8px;
   padding: 10px 14px;
   border-radius: var(--landing-radius-cta);
-  background: var(--landing-surface-glass-soft);
-  border: 1px solid var(--landing-surface-glass-border-soft);
+  background: var(--landing-contract-surface-secondary);
+  border: 1px solid var(--landing-contract-border);
   font-size: var(--landing-type-small-size);
-  color: var(--premium-text-meta);
+  color: var(--landing-contract-text-muted);
 }
 
 .hero-reassurance-dot {
@@ -277,15 +256,7 @@
 }
 
 .hero-visual::after {
-  content: "";
-  position: absolute;
-  inset: 10% 4% 8%;
-  border-radius: calc(var(--landing-radius-card) + 10px);
-  background: var(--landing-hero-visual-halo-bg);
-  filter: blur(22px);
-  opacity: 0.55;
-  z-index: 0;
-  pointer-events: none;
+  content: none;
 }
 
 .hero-visual-shell {
@@ -354,17 +325,6 @@
   opacity: 0.5;
 }
 
-.hero-device__bar::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 -30%;
-  width: 42%;
-  background: var(--landing-hero-device-scan-bg);
-  transform: skewX(-18deg);
-  animation: hero-live-scan 7s ease-in-out infinite;
-  pointer-events: none;
-}
-
 .hero-device__bar {
   position: relative;
   z-index: 1;
@@ -417,7 +377,6 @@
   border-radius: var(--landing-radius-badge);
   background: var(--landing-live-status-color);
   box-shadow: var(--landing-hero-device-status-shadow);
-  animation: hero-live-pulse 2.4s ease-in-out infinite;
 }
 
 .hero-device__preview {
@@ -460,7 +419,6 @@
   font-size: var(--landing-type-hero-tool-size);
   font-weight: var(--font-weight-semibold);
   text-align: center;
-  backdrop-filter: blur(10px);
   transition:
     transform 220ms ease,
     background 220ms ease,
@@ -484,50 +442,10 @@
   transform: translateY(-2px) scale(1.03);
   background: var(--landing-hero-tool-active-bg);
   border-color: var(--landing-hero-tool-active-border);
-  box-shadow: var(--landing-hero-tool-active-shadow);
 }
 
 .hero-device__tool--active::after {
   transform: scaleX(1);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .hero-device__tool--cycle-one {
-    animation: hero-tool-cycle 7.2s ease-in-out infinite;
-  }
-
-  .hero-device__tool--cycle-two {
-    animation: hero-tool-cycle 7.2s ease-in-out infinite;
-    animation-delay: -4.8s;
-  }
-
-  .hero-device__tool--cycle-three {
-    animation: hero-tool-cycle 7.2s ease-in-out infinite;
-    animation-delay: -2.4s;
-  }
-
-  .hero-card__trend-item--cycle-one {
-    animation: hero-trend-cycle 7.2s ease-in-out infinite;
-  }
-
-  .hero-card__trend-item--cycle-two {
-    animation: hero-trend-cycle 7.2s ease-in-out infinite;
-    animation-delay: -4.8s;
-  }
-
-  .hero-card__trend-item--cycle-three {
-    animation: hero-trend-cycle 7.2s ease-in-out infinite;
-    animation-delay: -2.4s;
-  }
-}
-
-.hero-device__grid {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 16px;
-  align-items: stretch;
 }
 
 .hero-card {
@@ -540,7 +458,6 @@
   background: var(--landing-hero-card-bg);
   border: 1px solid var(--landing-hero-shell-border);
   box-shadow: var(--landing-hero-card-shadow);
-  backdrop-filter: blur(12px);
 }
 
 .hero-card--summary {
@@ -548,32 +465,6 @@
   z-index: 1;
   padding: 22px;
   background: var(--landing-hero-card-summary-bg);
-  animation: hero-card-float 4.8s ease-in-out infinite;
-}
-
-.hero-card--summary::after {
-  content: "";
-  position: absolute;
-  inset: auto 16px 0 auto;
-  width: 120px;
-  height: 120px;
-  background: var(--landing-hero-card-glow-bg);
-  pointer-events: none;
-}
-
-.hero-card--chat {
-  background: var(--landing-hero-card-chat-bg);
-  animation: hero-card-float 4.4s ease-in-out infinite;
-  animation-delay: -0.8s;
-}
-
-.hero-card--moment {
-  justify-content: space-between;
-  background: var(--landing-hero-card-moment-bg);
-  border-color: var(--landing-hero-card-moment-border);
-  box-shadow: var(--landing-hero-card-moment-shadow);
-  animation: hero-card-float 4.6s ease-in-out infinite;
-  animation-delay: -1.4s;
 }
 
 .hero-card__trend-grid {
@@ -631,11 +522,6 @@
   text-transform: uppercase;
 }
 
-.hero-card--moment .hero-panel__label,
-.hero-card--moment .hero-panel__text {
-  color: var(--landing-hero-panel-on-dark);
-}
-
 .hero-panel__badge {
   display: inline-flex;
   align-items: center;
@@ -646,7 +532,6 @@
   color: var(--premium-accent-purple-strong);
   font-size: var(--landing-type-label-size);
   font-weight: var(--font-weight-bold);
-  animation: hero-badge-glow 3s ease-in-out infinite;
 }
 
 .hero-panel__title {
@@ -658,200 +543,29 @@
   text-wrap: balance;
 }
 
-.hero-panel__text,
-.hero-panel__list {
-  margin: 0;
-  color: var(--premium-text-main);
-  font-size: var(--landing-type-body-size);
-  line-height: var(--landing-type-body-line-height);
-}
-
-.hero-chat__bubble {
-  position: relative;
-  max-width: 100%;
-  padding: 14px 16px;
+.hero-card__insight {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
   border-radius: var(--landing-radius-panel);
-  font-size: var(--landing-type-body-size);
-  line-height: var(--landing-type-body-compact-line-height);
-  margin: 0;
+  background: var(--landing-hero-insight-bg);
+  border: 1px solid var(--landing-hero-insight-border);
 }
 
-.hero-chat__text {
-  display: block;
-}
-
-.hero-chat__text--question,
-.hero-chat__text--answer {
-  opacity: 1;
-  min-height: 1lh;
-}
-
-.hero-chat__bubble--question {
-  align-self: flex-start;
-  max-width: 88%;
-  background: var(--landing-hero-chat-question-bg);
-  color: var(--premium-text-strong);
-  border-top-left-radius: 10px;
-  backdrop-filter: blur(8px);
-  transition: transform 240ms ease, box-shadow 240ms ease;
-}
-
-.hero-chat__bubble--answer {
-  align-self: flex-end;
-  max-width: 92%;
-  background: var(--landing-hero-chat-answer-bg);
-  color: color-mix(in srgb, var(--premium-text-strong) 86%, var(--premium-accent-purple-strong) 14%);
-  border-top-right-radius: 10px;
-  backdrop-filter: blur(10px);
-  transition: transform 240ms ease, box-shadow 240ms ease;
-}
-
-.hero-chat__bubble--active {
-  transform: translateY(-4px);
-  box-shadow: var(--landing-hero-chat-active-shadow);
-}
-
-.hero-moment__value {
+.hero-card__question,
+.hero-card__moment {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  align-self: stretch;
-  max-width: 100%;
-  padding: 9px 11px;
-  border-radius: var(--radius-shortcut-badge);
-  background: var(--landing-hero-device-status-bg);
-  border: 1px solid var(--landing-hero-device-status-bg);
-  color: var(--color-star-fill);
-  font-size: var(--landing-type-hero-moment-size);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--landing-type-hero-moment-line-height);
-  text-wrap: balance;
+  color: var(--premium-text-main);
+  font-size: var(--landing-type-body-size);
+  line-height: var(--landing-type-body-compact-line-height);
 }
 
-.hero-moment__value span {
-  display: block;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-@keyframes hero-card-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes hero-live-pulse {
-  0%,
-  100% {
-    box-shadow: var(--landing-hero-device-status-shadow-rest);
-    opacity: 0.92;
-  }
-
-  50% {
-    box-shadow: var(--landing-hero-device-status-shadow-active);
-    opacity: 1;
-  }
-}
-
-@keyframes hero-live-scan {
-  0% {
-    transform: translateX(0) skewX(-18deg);
-    opacity: 0;
-  }
-
-  12% {
-    opacity: 0.7;
-  }
-
-  30% {
-    transform: translateX(255%) skewX(-18deg);
-    opacity: 0;
-  }
-
-  100% {
-    transform: translateX(255%) skewX(-18deg);
-    opacity: 0;
-  }
-}
-
-@keyframes hero-tool-cycle {
-  0%,
-  29%,
-  100% {
-    transform: translateY(0) scale(1);
-    background: var(--landing-hero-tool-bg);
-    border-color: var(--landing-hero-tool-border);
-    box-shadow: none;
-  }
-
-  8%,
-  21% {
-    transform: translateY(-2px) scale(1.03);
-    background: var(--landing-hero-tool-active-bg);
-    border-color: var(--landing-hero-tool-active-border);
-    box-shadow: var(--landing-hero-tool-active-shadow);
-  }
-}
-
-@keyframes hero-trend-cycle {
-  0%,
-  29%,
-  100% {
-    transform: translateY(0);
-    background: var(--landing-hero-trend-bg);
-    border-color: var(--landing-hero-trend-border);
-  }
-
-  8%,
-  21% {
-    transform: translateY(-2px);
-    background: var(--landing-hero-trend-active-bg);
-    border-color: var(--landing-hero-trend-active-border);
-  }
-}
-
-@keyframes hero-caret-blink {
-  0%,
-  45%,
-  100% {
-    opacity: 0;
-  }
-
-  50%,
-  80% {
-    opacity: 1;
-  }
-}
-
-@keyframes hero-badge-glow {
-  0%,
-  100% {
-    background: var(--landing-accent-surface);
-    box-shadow: none;
-  }
-
-  50% {
-    background: var(--landing-hero-badge-glow-bg);
-    box-shadow: var(--landing-hero-badge-glow-shadow);
-  }
-}
-
-.hero-chat__bubble--answer::after {
-  content: "";
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  width: 2px;
-  height: 1.05em;
-  background: var(--landing-hero-chat-caret-bg);
-  animation: hero-caret-blink 1s linear infinite;
+.hero-card__moment {
+  color: var(--premium-text-strong);
+  font-weight: var(--font-weight-semibold);
 }
 
 @media (max-width: 1023px) {
@@ -877,10 +591,6 @@
   .hero-visual-shell {
     min-height: 0;
     padding: 20px;
-  }
-
-  .hero-device__grid {
-    grid-template-columns: 1fr;
   }
 
   .hero-panel__title {
@@ -983,13 +693,9 @@
     font-size: var(--landing-type-mobile-copy-size);
   }
 
-  .hero-panel__text,
-  .hero-chat__bubble {
+  .hero-card__question,
+  .hero-card__moment {
     font-size: var(--landing-type-small-size);
     line-height: var(--landing-type-body-tight-line-height);
-  }
-
-  .hero-moment__value {
-    font-size: var(--landing-type-small-size);
   }
 }

@@ -98,15 +98,15 @@ export const HeroSection = () => {
             </div>
 
             <div className="hero-device__toolbar" aria-hidden="true">
-              <span className="hero-device__tool hero-device__tool--active hero-device__tool--cycle-one">
+              <span className="hero-device__tool hero-device__tool--active">
                 <Clock3 size={13} />
                 <span>{t.hero.dailyLabel}</span>
               </span>
-              <span className="hero-device__tool hero-device__tool--cycle-two">
+              <span className="hero-device__tool">
                 <MessageCircleMore size={13} />
                 <span>{t.hero.chatLabel}</span>
               </span>
-              <span className="hero-device__tool hero-device__tool--cycle-three">
+              <span className="hero-device__tool">
                 <Star size={13} />
                 <span>{t.hero.momentLabel}</span>
               </span>
@@ -126,9 +126,7 @@ export const HeroSection = () => {
                   <div
                     key={label}
                     className={`hero-card__trend-item ${
-                      index === 0 ? "hero-card__trend-item--active hero-card__trend-item--cycle-one" : ""
-                    }${index === 1 ? " hero-card__trend-item--cycle-two" : ""}${
-                      index === 2 ? " hero-card__trend-item--cycle-three" : ""
+                      index === 0 ? "hero-card__trend-item--active" : ""
                     }`}
                   >
                     <span className="hero-card__trend-label">{label}</span>
@@ -136,42 +134,18 @@ export const HeroSection = () => {
                   </div>
                 ))}
               </div>
-            </article>
 
-            <div className="hero-device__grid">
-              <article className="hero-card hero-card--chat">
-                <div className="hero-panel__meta">
-                  <span className="hero-panel__label">
-                    <MessageCircleMore size={14} aria-hidden="true" />
-                    {t.hero.chatLabel}
-                  </span>
+              <div className="hero-card__insight">
+                <div className="hero-card__question">
+                  <MessageCircleMore size={14} aria-hidden="true" />
+                  <span>{t.hero.chatQuestion}</span>
                 </div>
-                <p
-                  className="hero-chat__bubble hero-chat__bubble--question hero-chat__bubble--active"
-                >
-                  <span className="hero-chat__text hero-chat__text--question">{t.hero.chatQuestion}</span>
-                </p>
-                <p
-                  className="hero-chat__bubble hero-chat__bubble--answer hero-chat__bubble--active"
-                >
-                  <span className="hero-chat__text hero-chat__text--answer">{t.hero.chatAnswer}</span>
-                </p>
-              </article>
-
-              <article className="hero-card hero-card--moment">
-                <div className="hero-panel__meta">
-                  <span className="hero-panel__label">
-                    <Star size={14} aria-hidden="true" />
-                    {t.hero.momentLabel}
-                  </span>
-                </div>
-                <div className="hero-moment__value">
+                <div className="hero-card__moment">
                   <Sparkles size={16} aria-hidden="true" />
                   <span>{t.solution.step3.benefit}</span>
                 </div>
-                <p className="hero-panel__text">{t.hero.momentText}</p>
-              </article>
-            </div>
+              </div>
+            </article>
           </div>
         </div>
       </div>
