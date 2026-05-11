@@ -10,7 +10,6 @@
   background: var(--landing-surface-panel-muted);
   border: 1px solid var(--landing-surface-card-border);
   box-shadow: var(--landing-shadow-card);
-  backdrop-filter: blur(18px);
 }
 
 .social-proof__intro {

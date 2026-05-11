@@ -63,6 +63,7 @@ let settingsCss: string
 let landingLayoutCss: string
 let landingPageCss: string
 let landingHeroSectionSource: string
+let pricingSectionCss: string
 
 beforeAll(() => {
   appCss = readAppCssSurface()
@@ -74,6 +75,7 @@ beforeAll(() => {
   landingLayoutCss = readFileSync(resolve(__dirname, "../layouts/LandingLayout.css"), "utf-8")
   landingPageCss = readFileSync(resolve(__dirname, "../pages/landing/LandingPage.css"), "utf-8")
   landingHeroSectionSource = readFileSync(resolve(__dirname, "../pages/landing/sections/HeroSection.tsx"), "utf-8")
+  pricingSectionCss = readFileSync(resolve(__dirname, "../pages/landing/sections/PricingSection.css"), "utf-8")
 })
 
 function expectDeclarationToUseDefinedToken(css: string, property: string, token: string) {
@@ -308,6 +310,20 @@ describe("CS-085 — rendu smoke Landing", () => {
     expect(landingHeroSectionSource).toContain('track("secondary_cta_click"')
     expect(landingPageCss).not.toMatch(/@keyframes\s+hero-|animation:\s*hero-/)
     expect(landingPageCss).not.toContain("hero-tool-cycle")
+  })
+
+  it("verrouille la densite mobile conversion CS-147 du hero", () => {
+    expect(landingHeroSectionSource).toContain("hero-proof-strip")
+    expect(landingHeroSectionSource).toContain("t.socialProof.badges.swiss")
+    expect(landingHeroSectionSource).toContain("t.socialProof.proofs.swiss")
+    expect(landingPageCss).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*\.hero-reassurance\s*\{[\s\S]*display:\s*none/)
+    expect(landingPageCss).toMatch(/@media\s*\(max-width:\s*767px\)[\s\S]*\.hero-proof-strip\s*\{[\s\S]*grid-template-columns:\s*auto minmax\(0, 1fr\)/)
+  })
+
+  it("limite les hover pricing au desktop pour la lecture mobile", () => {
+    expect(pricingSectionCss).toContain("@media (min-width: 1024px) and (prefers-reduced-motion: no-preference)")
+    expect(pricingSectionCss).toContain(".pricing-card:hover")
+    expect(pricingSectionCss).toContain(".pricing-card--recommended:hover")
   })
 })
 

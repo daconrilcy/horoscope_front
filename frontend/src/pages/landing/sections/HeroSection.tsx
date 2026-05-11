@@ -1,5 +1,5 @@
 // Section hero de la landing, limitee au rendu et aux CTA analytics.
-import { ArrowRight, Check, Clock3, MessageCircleMore, Sparkles, Star } from "lucide-react"
+import { ArrowRight, Check, Clock3, MessageCircleMore, ShieldCheck, Sparkles, Star } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "../../../components/ui/Button/Button"
 import { useAnalytics } from "../../../hooks/useAnalytics"
@@ -62,6 +62,12 @@ export const HeroSection = () => {
             <MessageCircleMore size={18} className="hero-cta-icon-left" aria-hidden="true" />
             {t.hero.ctaSecondary}
           </a>
+        </div>
+
+        <div className="hero-proof-strip" aria-label={t.socialProof.badges.swiss}>
+          <ShieldCheck size={18} className="hero-proof-strip__icon" aria-hidden="true" />
+          <strong>{t.socialProof.badges.swiss}</strong>
+          <span>{t.socialProof.proofs.swiss}</span>
         </div>
 
         <div className="hero-reassurance">

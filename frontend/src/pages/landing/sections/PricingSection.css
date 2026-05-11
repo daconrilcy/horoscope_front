@@ -210,7 +210,7 @@
   box-shadow: var(--landing-cta-shadow);
 }
 
-@media (prefers-reduced-motion: no-preference) {
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   .pricing-card {
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   }

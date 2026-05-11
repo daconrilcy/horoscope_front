@@ -174,7 +174,6 @@
   letter-spacing: var(--landing-type-compact-letter-spacing);
   text-transform: uppercase;
   box-shadow: var(--landing-language-shadow);
-  backdrop-filter: blur(18px) saturate(135%);
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -217,7 +216,6 @@
   background: var(--landing-language-dropdown-bg);
   border: 1px solid var(--landing-surface-panel-hover);
   box-shadow: var(--landing-language-dropdown-shadow);
-  backdrop-filter: blur(22px) saturate(145%);
   overflow: hidden;
 }
 

@@ -122,6 +122,45 @@ describe("LandingPage", () => {
     expect(trackMock).toHaveBeenCalledWith("secondary_cta_click", { cta_label: "Découvrir comment ça marche" })
   })
 
+  it("avance une preuve forte compacte dans le hero depuis les traductions landing", () => {
+    renderLandingPage()
+
+    const proof = screen.getByLabelText("Calculs Swiss Ephemeris")
+
+    expect(proof).toHaveClass("hero-proof-strip")
+    expect(proof).toHaveTextContent("Calculs Swiss Ephemeris")
+    expect(proof).toHaveTextContent("Positions planétaires calculées avec un moteur de référence.")
+  })
+
+  it("conserve les CTA pricing, le plan Free et le tracking plan", async () => {
+    const user = userEvent.setup()
+    const { container } = renderLandingPage()
+    trackMock.mockClear()
+
+    const pricing = container.querySelector("#pricing")
+    const freeLink = pricing?.querySelector<HTMLAnchorElement>('a[href="/register?plan=free"]')
+    const basicLink = pricing?.querySelector<HTMLAnchorElement>('a[href="/register?plan=basic"]')
+    const premiumLink = pricing?.querySelector<HTMLAnchorElement>('a[href="/register?plan=premium"]')
+
+    expect(pricing).toHaveTextContent("Free")
+    expect(pricing).toHaveTextContent("Basic")
+    expect(pricing).toHaveTextContent("Premium")
+    expect(freeLink).toBeInTheDocument()
+    expect(basicLink).toBeInTheDocument()
+    expect(premiumLink).toBeInTheDocument()
+
+    await user.click(basicLink!)
+
+    expect(trackMock).toHaveBeenCalledWith("pricing_plan_select", { plan_id: "basic" })
+  })
+
+  it("conserve le CTA final FAQ vers l'inscription", () => {
+    const { container } = renderLandingPage()
+    const faq = container.querySelector("#faq")
+
+    expect(faq?.querySelector('a[href="/register"]')).toHaveTextContent("Démarrer gratuitement")
+  })
+
   it("pose les tags SEO, Open Graph, canonical et JSON-LD", () => {
     renderLandingPage()
 

@@ -49,8 +49,6 @@
 
 .testimonial-card {
   background: var(--premium-glass-surface-1);
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
   border: 1px solid var(--premium-glass-border);
   border-radius: var(--premium-radius-card);
   box-shadow: var(--premium-shadow-card);
