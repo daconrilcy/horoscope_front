@@ -93,6 +93,7 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
 
     it("defines light gradient with radial-gradient", () => {
       expect(cssContent).toMatch(/\.app-bg\s*\{[^}]*background:\s*var\(--premium-app-bg\)/)
+      expect(cssContent).toMatch(/\.app-bg\s*\{[^}]*background-attachment:\s*fixed/)
       expect(cssContent).toMatch(/--premium-app-bg:\s*radial-gradient\(circle at 8% 18%/)
       expect(cssContent).toMatch(/radial-gradient\(circle at 69% 18%/)
     })
@@ -131,16 +132,34 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
   describe("AC3: Fond gradient dark cosmic correct", () => {
     it("defines .dark .app-bg class with dark gradients", () => {
       expect(cssContent).toMatch(/\.dark\s+\.app-bg\s*\{/)
+      expect(cssContent).toMatch(/\.dark\s+\.app-bg\s*\{[^}]*background-attachment:\s*fixed/)
       expect(cssContent).toMatch(/\.dark\s*\{[\s\S]*--premium-app-bg:/)
     })
 
     it("uses astral dawn layers for dark mode", () => {
       expect(cssContent).toMatch(
-        /\.dark\s*\{[\s\S]*rgba\(250,\s*220,\s*180,\s*0\.18\)/
+        /\.dark\s*\{[\s\S]*rgba\(255,\s*190,\s*82,\s*0\.52\)/
       )
       expect(cssContent).toMatch(
-        /\.dark\s*\{[\s\S]*linear-gradient\(122deg/
+        /\.dark\s*\{[\s\S]*linear-gradient\(180deg,\s*transparent 0%,\s*transparent 92%/
       )
+      expect(cssContent).not.toMatch(/linear-gradient\(90deg,\s*transparent 0%,\s*rgba\(255,\s*158,\s*67/)
+      expect(cssContent).toMatch(
+        /\.dark\s*\{[\s\S]*linear-gradient\(124deg/
+      )
+      expect(cssContent).toContain("--starfield-star-lavender")
+      expect(cssContent).toContain("--starfield-star-dawn")
+    })
+
+    it("keeps landing and internal dark atmosphere aligned on the canonical background", () => {
+      expect(cssContent).toMatch(/\.app-bg\s*\{[^}]*--app-bg-atmosphere-opacity-rest:\s*0\.84/)
+      expect(cssContent).toMatch(/\.app-bg\s*\{[^}]*--app-bg-atmosphere-opacity-peak:\s*1/)
+      expect(cssContent).toMatch(/\.dark\s+\.app-bg::before\s*\{[^}]*opacity:\s*var\(--app-bg-atmosphere-opacity-rest\)/)
+      expect(cssContent).toMatch(/\.dark\s+\.app-bg--internal\s*\{[^}]*--app-bg-atmosphere-opacity-rest:\s*0\.84/)
+      expect(cssContent).toMatch(/\.dark\s+\.app-bg--internal\s*\{[^}]*--app-bg-atmosphere-opacity-peak:\s*1/)
+      expect(cssContent).not.toContain("app-bg--landing")
+      expect(cssContent).toMatch(/@keyframes\s+astral-dawn-breath\s*\{[\s\S]*opacity:\s*var\(--app-bg-atmosphere-opacity-rest\)/)
+      expect(cssContent).toMatch(/@keyframes\s+astral-dawn-breath\s*\{[\s\S]*opacity:\s*var\(--app-bg-atmosphere-opacity-peak\)/)
     })
   })
 
@@ -186,8 +205,9 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
     })
 
     it("sets starfield opacity for full and sober variants", () => {
-      expect(cssContent).toMatch(/\.starfield-bg\s*\{[^}]*opacity:\s*0\.58/)
-      expect(cssContent).toMatch(/\.app-bg--internal\s+\.starfield-bg\s*\{[^}]*opacity:\s*0\.34/)
+      expect(cssContent).toMatch(/\.starfield-bg\s*\{[^}]*opacity:\s*0\.96/)
+      expect(cssContent).toMatch(/\.app-bg--internal\s+\.starfield-bg\s*\{[^}]*opacity:\s*0\.82/)
+      expect(cssContent).not.toContain("app-bg--landing")
     })
 
     it("sets starfield z-index 0 for proper layering", () => {

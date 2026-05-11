@@ -3,7 +3,7 @@ import { render, cleanup, fireEvent, act, screen } from "@testing-library/react"
 import { readFileSync } from "fs"
 import { resolve } from "path"
 import { ThemeProvider, useTheme } from "../state/ThemeProvider"
-import { StarfieldBackground, STAR_COUNT, STAR_SEED, STARS, SHOOTING_STAR_COUNT, SHOOTING_STAR_SEED, SHOOTING_STARS, seededRandom, generateStars, generateShootingStars, STAR_RADIUS_MIN, STAR_RADIUS_RANGE, STAR_OPACITY_MIN, STAR_OPACITY_RANGE, VIEWBOX_SIZE, LCG_MULTIPLIER, LCG_INCREMENT, LCG_MODULUS, type Star, type ShootingStar } from "../components/StarfieldBackground"
+import { StarfieldBackground, STAR_COUNT, STAR_SEED, STARS, MILKY_WAY_STAR_COUNT, MILKY_WAY_STAR_SEED, MILKY_WAY_STARS, JEWEL_STARS, SHOOTING_STAR_COUNT, SHOOTING_STAR_SEED, SHOOTING_STARS, seededRandom, generateStars, generateMilkyWayStars, generateJewelStars, generateShootingStars, STAR_RADIUS_MIN, STAR_RADIUS_RANGE, STAR_OPACITY_MIN, STAR_OPACITY_RANGE, VIEWBOX_SIZE, LCG_MULTIPLIER, LCG_INCREMENT, LCG_MODULUS, type Star, type ShootingStar } from "../components/StarfieldBackground"
 
 describe("StarfieldBackground", () => {
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe("StarfieldBackground", () => {
       expect(svg).toBeInTheDocument()
 
       const circles = svg?.querySelectorAll("circle")
-      expect(circles?.length).toBe(STAR_COUNT)
+      expect(circles?.length).toBe(STAR_COUNT + MILKY_WAY_STAR_COUNT + JEWEL_STARS.length + SHOOTING_STAR_COUNT)
 
       const shootingStars = svg?.querySelectorAll(".starfield-bg__shooting")
       expect(shootingStars?.length).toBe(SHOOTING_STAR_COUNT)
@@ -72,7 +72,9 @@ describe("StarfieldBackground", () => {
       const svg = document.querySelector("svg")
       const circles = svg?.querySelectorAll("circle")
 
-      circles?.forEach((circle) => {
+      Array.from(circles ?? [])
+        .filter((circle) => !circle.classList.contains("starfield-bg__shooting-head"))
+        .forEach((circle) => {
         const opacity = parseFloat(circle.getAttribute("opacity") || "0")
         expect(opacity).toBeGreaterThanOrEqual(STAR_OPACITY_MIN)
         expect(opacity).toBeLessThanOrEqual(STAR_OPACITY_MIN + STAR_OPACITY_RANGE)
@@ -91,7 +93,9 @@ describe("StarfieldBackground", () => {
       const svg = document.querySelector("svg")
       const circles = svg?.querySelectorAll("circle")
 
-      circles?.forEach((circle) => {
+      Array.from(circles ?? [])
+        .filter((circle) => !circle.classList.contains("starfield-bg__shooting-head"))
+        .forEach((circle) => {
         const radius = parseFloat(circle.getAttribute("r") || "0")
         expect(radius).toBeGreaterThanOrEqual(STAR_RADIUS_MIN)
         expect(radius).toBeLessThanOrEqual(STAR_RADIUS_MIN + STAR_RADIUS_RANGE)
@@ -124,8 +128,8 @@ describe("StarfieldBackground", () => {
       const circles = svg?.querySelectorAll("circle")
 
       circles?.forEach((circle) => {
-        expect(circle.getAttribute("fill")).toBe("var(--star-fill)")
-        expect(circle.getAttribute("class")).toMatch(/starfield-bg__star/)
+        expect(circle.getAttribute("fill")).toMatch(/(?:var\(--starfield-star-(blue|ice|lavender|violet|gold|dawn)\)|url\(#starfield-shooting-head\))/)
+        expect(circle.getAttribute("class")).toMatch(/starfield-bg__(?:milky-star|jewel-star|star|shooting-head)/)
       })
     })
 
@@ -138,9 +142,13 @@ describe("StarfieldBackground", () => {
         </ThemeProvider>
       )
 
-      expect(document.querySelector(".starfield-bg__milky-way")).toBeInTheDocument()
+      expect(document.querySelector(".starfield-bg__milky-way--smoke")).toBeInTheDocument()
+      expect(document.querySelector(".starfield-bg__milky-way--veil")).toBeInTheDocument()
+      expect(document.querySelector(".starfield-bg__milky-way--haze")).toBeInTheDocument()
+      expect(document.querySelector(".starfield-bg__milky-way--dust")).toBeInTheDocument()
+      expect(document.querySelector(".starfield-bg__milky-way--core")).toBeInTheDocument()
       expect(document.querySelectorAll(".starfield-bg__shooting")).toHaveLength(SHOOTING_STAR_COUNT)
-      expect(SHOOTING_STAR_COUNT).toBeLessThanOrEqual(3)
+      expect(SHOOTING_STAR_COUNT).toBe(1)
     })
 
     it("renders SVG with correct viewBox attribute using VIEWBOX_SIZE", () => {
@@ -263,7 +271,7 @@ describe("StarfieldBackground", () => {
       }))
 
       expect(firstRenderCircles).toEqual(secondRenderCircles)
-      expect(firstRenderCircles.length).toBe(STAR_COUNT)
+      expect(firstRenderCircles.length).toBe(STAR_COUNT + MILKY_WAY_STAR_COUNT + JEWEL_STARS.length + SHOOTING_STAR_COUNT)
     })
 
     it("exports STAR_SEED constant for documentation", () => {
@@ -307,7 +315,8 @@ describe("StarfieldBackground", () => {
         cy: 50,
         r: 0.5,
         opacity: 0.5,
-        className: "starfield-bg__star starfield-bg__star--mid",
+        className: "starfield-bg__star starfield-bg__star--soft",
+        fill: "var(--starfield-star-ice)",
       }
       expect(star.id).toBe("test-star")
       expect(star.cx).toBe(50)
@@ -347,7 +356,25 @@ describe("StarfieldBackground", () => {
         expect(star.opacity).toBeGreaterThanOrEqual(STAR_OPACITY_MIN)
         expect(star.opacity).toBeLessThanOrEqual(STAR_OPACITY_MIN + STAR_OPACITY_RANGE)
         expect(star.className).toContain("starfield-bg__star")
+        expect(star.fill).toMatch(/var\(--starfield-star-(blue|ice|lavender|violet|gold|dawn)\)/)
       })
+    })
+
+    it("keeps most stars tiny and protects a calm reading corridor", () => {
+      const stars = generateStars(STAR_COUNT, STAR_SEED)
+      const microStars = stars.filter((star) => star.className.includes("--micro"))
+      const accentStars = stars.filter((star) => star.className.includes("--accent"))
+      const wideStars = stars.filter((star) => star.r > 0.14)
+      const corridorStars = stars.filter((star) => star.cx > 24 && star.cx < 76 && star.cy > 18 && star.cy < 74)
+      const upperHalfStars = stars.filter((star) => star.cy < 50)
+      const milkyDustStars = stars.filter((star) => star.cx < 72 && star.cy > 6 && star.cy < 52)
+
+      expect(microStars.length / stars.length).toBeGreaterThan(0.7)
+      expect(accentStars.length / stars.length).toBeLessThan(0.06)
+      expect(wideStars.length / stars.length).toBeLessThan(18)
+      expect(corridorStars.length / stars.length).toBeLessThan(0.24)
+      expect(upperHalfStars.length / stars.length).toBeGreaterThan(0.64)
+      expect(milkyDustStars.length / stars.length).toBeGreaterThan(0.3)
     })
 
     it("generates deterministic stars with same seed", () => {
@@ -363,10 +390,55 @@ describe("StarfieldBackground", () => {
     })
   })
 
+  describe("generateMilkyWayStars function", () => {
+    it("generates a dense diagonal Milky Way from micro-stars", () => {
+      const stars = generateMilkyWayStars(MILKY_WAY_STAR_COUNT, MILKY_WAY_STAR_SEED)
+      const microStars = stars.filter((star) => star.className.includes("--micro"))
+      const upperLeftStars = stars.filter((star) => star.cx < 28 && star.cy < 24)
+      const middleStars = stars.filter((star) => star.cx > 36 && star.cx < 66 && star.cy > 22 && star.cy < 54)
+      const lowerRightStars = stars.filter((star) => star.cx > 72 && star.cy > 48)
+      const lowerRightFaintStars = lowerRightStars.filter((star) => star.opacity < 0.42)
+      const quietGapStars = stars.filter((star) => star.cx > 68 && star.cy > 48 && star.opacity < 0.38)
+      const upperEdgeStars = stars.filter((star) => star.cy < 10)
+
+      expect(stars.length).toBe(MILKY_WAY_STAR_COUNT)
+      expect(microStars.length / stars.length).toBeGreaterThan(0.86)
+      expect(Math.min(...stars.map((star) => star.cx))).toBeLessThan(2)
+      expect(Math.max(...stars.map((star) => star.cx))).toBeGreaterThan(94)
+      expect(Math.min(...stars.map((star) => star.cy))).toBeLessThan(13)
+      expect(Math.max(...stars.map((star) => star.cy))).toBeGreaterThan(72)
+      expect(upperLeftStars.length).toBeGreaterThan(45)
+      expect(middleStars.length).toBeGreaterThan(80)
+      expect(lowerRightStars.length).toBeGreaterThan(20)
+      expect(lowerRightFaintStars.length / lowerRightStars.length).toBeGreaterThan(0.35)
+      expect(quietGapStars.length).toBeGreaterThan(18)
+      expect(upperEdgeStars.length).toBeLessThan(48)
+      expect(stars.every((star) => star.className.includes("starfield-bg__milky-star"))).toBe(true)
+      expect(stars.every((star) => star.fill.startsWith("var(--starfield-star-"))).toBe(true)
+    })
+
+    it("generates deterministic Milky Way stars with same seed", () => {
+      const stars1 = generateMilkyWayStars(12, MILKY_WAY_STAR_SEED)
+      const stars2 = generateMilkyWayStars(12, MILKY_WAY_STAR_SEED)
+
+      expect(stars1).toEqual(stars2)
+      expect(MILKY_WAY_STARS).toEqual(generateMilkyWayStars(MILKY_WAY_STAR_COUNT, MILKY_WAY_STAR_SEED))
+    })
+  })
+
   describe("generateShootingStars function", () => {
+    it("generates rare deterministic jewel stars", () => {
+      const stars = generateJewelStars(54321)
+
+      expect(stars).toEqual(JEWEL_STARS)
+      expect(stars).toHaveLength(4)
+      expect(stars.every((star) => star.className === "starfield-bg__jewel-star")).toBe(true)
+      expect(stars.every((star) => star.fill === "var(--starfield-star-ice)")).toBe(true)
+    })
+
     it("generates deterministic rare shooting stars", () => {
-      const stars1 = generateShootingStars(3, SHOOTING_STAR_SEED)
-      const stars2 = generateShootingStars(3, SHOOTING_STAR_SEED)
+      const stars1 = generateShootingStars(SHOOTING_STAR_COUNT, SHOOTING_STAR_SEED)
+      const stars2 = generateShootingStars(SHOOTING_STAR_COUNT, SHOOTING_STAR_SEED)
 
       expect(stars1).toEqual(stars2)
       expect(stars1).toEqual(SHOOTING_STARS)
@@ -376,15 +448,15 @@ describe("StarfieldBackground", () => {
 
   describe("Star range constants", () => {
     it("exports STAR_RADIUS_MIN and STAR_RADIUS_RANGE", () => {
-      expect(STAR_RADIUS_MIN).toBe(0.16)
-      expect(STAR_RADIUS_RANGE).toBe(0.24)
-      expect(STAR_RADIUS_MIN + STAR_RADIUS_RANGE).toBe(0.4)
+      expect(STAR_RADIUS_MIN).toBe(0.035)
+      expect(STAR_RADIUS_RANGE).toBe(0.15)
+      expect(STAR_RADIUS_MIN + STAR_RADIUS_RANGE).toBe(0.185)
     })
 
     it("exports STAR_OPACITY_MIN and STAR_OPACITY_RANGE", () => {
-      expect(STAR_OPACITY_MIN).toBe(0.24)
-      expect(STAR_OPACITY_RANGE).toBe(0.58)
-      expect(STAR_OPACITY_MIN + STAR_OPACITY_RANGE).toBe(0.82)
+      expect(STAR_OPACITY_MIN).toBe(0.28)
+      expect(STAR_OPACITY_RANGE).toBe(0.66)
+      expect(STAR_OPACITY_MIN + STAR_OPACITY_RANGE).toBeCloseTo(0.94)
     })
   })
 
@@ -430,7 +502,13 @@ describe("StarfieldBackground", () => {
       const backgroundsCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
 
       expect(backgroundsCss).toContain("@media (prefers-reduced-motion: reduce)")
+      expect(backgroundsCss).toContain("astral-star-twinkle")
+      expect(backgroundsCss).toContain("astral-milky-smoke-drift")
+      expect(backgroundsCss).toContain("astral-milky-haze-drift")
+      expect(backgroundsCss).toContain("astral-milky-veil-drift")
+      expect(backgroundsCss).toContain("astral-dawn-breath")
       expect(backgroundsCss).toMatch(/\.starfield-bg__shooting\s*\{[^}]*animation:\s*none/)
+      expect(backgroundsCss).toMatch(/\.starfield-bg__milky-way--smoke,[\s\S]*animation:\s*none/)
       expect(backgroundsCss).toContain("@media (max-width: 768px)")
     })
   })

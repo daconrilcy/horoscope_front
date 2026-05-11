@@ -28,6 +28,7 @@
   --premium-shadow-page: 0 18px 60px rgba(76, 52, 122, 0.08);
   --premium-shadow-card: 0 14px 40px rgba(70, 50, 110, 0.1);
   --premium-shadow-focus: 0 18px 50px rgba(70, 50, 110, 0.14);
+  --premium-loading-glow: 0 0 24px rgba(142, 124, 240, 0.14);
   --premium-inner-light: inset 0 1px 0 rgba(255, 255, 255, 0.4);
   --premium-daily-advice-glow: radial-gradient(circle, rgba(170, 144, 255, 0.22) 0%, transparent 72%);
   --premium-daily-advice-glow-filter: blur(18px);
@@ -52,19 +53,37 @@
 
 /* Dark Mode Overrides */
 .dark {
-  --premium-bg-start: #090b18;
-  --premium-bg-mid: #111533;
-  --premium-bg-end: #17112b;
-  --premium-app-bg: radial-gradient(920px 620px at 13% 8%, rgba(75, 92, 170, 0.2), transparent 58%),
-    radial-gradient(1160px 720px at 82% 10%, rgba(92, 72, 160, 0.2), transparent 62%),
-    radial-gradient(940px 760px at 48% 104%, rgba(226, 181, 112, 0.18), transparent 56%),
-    radial-gradient(840px 620px at 74% 82%, rgba(214, 154, 57, 0.12), transparent 62%),
-    linear-gradient(180deg, #070a14 0%, #101934 54%, #1a1634 100%);
-  --premium-app-bg-atmosphere: radial-gradient(58% 28% at 50% 105%, rgba(250, 220, 180, 0.18), transparent 70%),
-    radial-gradient(62% 42% at 18% 0%, rgba(167, 203, 255, 0.12), transparent 74%),
-    radial-gradient(56% 34% at 92% 12%, rgba(191, 166, 255, 0.11), transparent 78%),
-    linear-gradient(122deg, transparent 8%, rgba(232, 222, 255, 0.04) 30%, rgba(232, 222, 255, 0.1) 46%, rgba(255, 245, 224, 0.05) 58%, transparent 78%),
-    radial-gradient(120% 96% at 50% 45%, rgba(6, 8, 18, 0) 52%, rgba(5, 6, 15, 0.36) 100%);
+  --premium-bg-start: #050814;
+  --premium-bg-mid: #0b1430;
+  --premium-bg-end: #1c1633;
+  --premium-app-bg: radial-gradient(1180px 760px at 48% -22%, rgba(8, 17, 52, 0.82), transparent 58%),
+    radial-gradient(980px 680px at -10% 10%, rgba(24, 43, 102, 0.26), transparent 56%),
+    radial-gradient(900px 620px at 108% 8%, rgba(24, 18, 74, 0.3), transparent 61%),
+    radial-gradient(1120px 780px at 42% 43%, rgba(2, 8, 30, 0.52), transparent 72%),
+    radial-gradient(820px 560px at 50% 38%, rgba(1, 4, 15, 0.42), transparent 70%),
+    radial-gradient(690px 148px at 50% 119%, rgba(238, 132, 44, 0.18), transparent 55%),
+    radial-gradient(320px 40px at 50% 102%, rgba(255, 229, 148, 0.45), transparent 64%),
+    linear-gradient(180deg, #000102 0%, #00030a 25%, #020817 56%, #080515 84%, #110817 100%);
+  --premium-app-bg-atmosphere: linear-gradient(180deg, transparent 0%, transparent 92%, rgba(255, 151, 57, 0.08) 97%, rgba(255, 221, 133, 0.38) 100%),
+    radial-gradient(29% 6.4% at 50% 109%, rgba(255, 190, 82, 0.52), transparent 72%),
+    radial-gradient(9% 2.1% at 50% 100%, rgba(255, 242, 184, 0.5), transparent 74%),
+    linear-gradient(124deg, rgba(195, 213, 255, 0) 10%, rgba(126, 164, 232, 0.012) 25%, rgba(221, 207, 255, 0.018) 38%, rgba(157, 203, 255, 0.01) 51%, rgba(195, 213, 255, 0) 66%),
+    radial-gradient(148% 116% at 50% 30%, rgba(5, 8, 20, 0) 30%, rgba(1, 3, 10, 0.88) 100%);
+  --starfield-star-blue: rgba(186, 225, 255, 0.98);
+  --starfield-star-ice: rgba(252, 254, 255, 1);
+  --starfield-star-lavender: rgba(228, 214, 255, 0.98);
+  --starfield-star-violet: rgba(198, 184, 255, 0.94);
+  --starfield-star-gold: rgba(255, 224, 158, 0.9);
+  --starfield-star-dawn: rgba(255, 220, 176, 0.92);
+  --starfield-milky-start: rgba(150, 178, 239, 0);
+  --starfield-milky-mid: rgba(190, 216, 255, 0.54);
+  --starfield-milky-core: rgba(236, 241, 255, 0.83);
+  --starfield-milky-lavender: rgba(216, 204, 255, 0.44);
+  --starfield-milky-violet: rgba(144, 156, 219, 0.34);
+  --starfield-milky-end: rgba(167, 205, 255, 0);
+  --starfield-jewel-filter: drop-shadow(0 0 3px var(--starfield-star-blue));
+  --starfield-shooting-tail: rgba(188, 214, 255, 0.64);
+  --starfield-shooting-core: rgba(252, 254, 255, 1);
   --premium-daily-page-bg: var(--premium-app-bg);
   --premium-daily-bg-atmosphere: transparent;
   --premium-daily-bg-depth: transparent;
@@ -77,6 +96,8 @@
   --premium-glass-border-strong: rgba(226, 181, 112, 0.28);
   
   --premium-shadow-card: 0 12px 34px rgba(0, 0, 0, 0.38);
+  --premium-header-shadow: 0 14px 34px color-mix(in srgb, var(--color-bg-top) 42%, transparent);
+  --premium-loading-glow: 0 0 24px color-mix(in srgb, var(--premium-accent-purple) 16%, transparent);
   
   --premium-accent-purple: #b197ff;
   --premium-text-strong: #f4eefc;

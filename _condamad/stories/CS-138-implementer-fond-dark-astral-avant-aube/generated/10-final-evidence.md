@@ -145,6 +145,19 @@ None.
 - Fix applied: added final clean review artifact, set story and registry status to `done`, normalized comments to ASCII, and reran targeted validation.
 - Review iteration 2 verdict: CLEAN.
 
+## Artistic review correction evidence
+
+- User artistic review requested a less uniform and less grey particle field, a clearer diffuse Milky Way, stronger low amber dawn glow, deeper upper sky, calmer reading corridor, and better integrated header/loading surfaces.
+- Fix applied in existing owners only: `StarfieldBackground.tsx`, `premium-theme.css`, `backgrounds.css`, `Header.css`, `styles/app/tokens.css`, `styles/app/states.css`, and test/registry evidence.
+- Validation after correction:
+  - `npm run test -- StarfieldBackground visual-smoke theme-tokens design-system AppBgStyles` PASS: 5 files, 234 tests.
+  - `npm run test -- layout App` PASS: 6 files, 69 tests.
+  - `npm run lint` PASS.
+  - `npm run build` PASS.
+  - `npm run test` PASS: 114 files, 1222 passed, 8 skipped.
+  - Targeted scans for `style=` in touched owners and `background-image: url(` in background owners returned zero hits.
+- Screenshots refreshed: landing/login desktop/mobile dark after images under `screenshots/`.
+
 ## Remaining risks
 
 - Artistic validation remains subjective; screenshots are available for reviewer/product review.

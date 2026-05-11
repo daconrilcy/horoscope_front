@@ -5,10 +5,7 @@ import { StarfieldBackground } from "../components/StarfieldBackground"
 /** Rend le fond applicatif canonique et laisse les layouts secondaires gerer leur navigation. */
 export function RootLayout() {
   const location = useLocation()
-  const backgroundClassName =
-    location.pathname === "/"
-      ? "app-shell app-bg app-bg--landing"
-      : "app-shell app-bg app-bg--internal"
+  const backgroundClassName = "app-shell app-bg app-bg--internal"
   const containerClassName = location.pathname.startsWith("/admin")
     ? "app-bg-container app-bg-container--admin"
     : "app-bg-container"

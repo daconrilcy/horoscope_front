@@ -157,7 +157,7 @@ describe("App", () => {
     expect(
       await screen.findByText(/Votre guide astrologique personnel/i, {}, { timeout: 5000 }),
     ).toBeInTheDocument()
-    expect(container.querySelector(".app-shell.app-bg")).toHaveClass("app-bg--landing")
+    expect(container.querySelector(".app-shell.app-bg")).toHaveClass("app-bg--internal")
     expect(container.querySelector(".landing-layout")).toBeInTheDocument()
     expect(container.querySelector(".landing-layout .landing-page")).toBeInTheDocument()
   })

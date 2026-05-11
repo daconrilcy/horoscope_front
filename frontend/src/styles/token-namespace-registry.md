@@ -33,6 +33,7 @@ sourcee dans ce registre.
 | `--work-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
 | `--energy-*` | semantic-extension | `frontend/src/styles/theme.css` | thematic mini-card tokens | product decision before merge |
 | `--premium-*` | semantic-extension | `frontend/src/styles/premium-theme.css` | premium product layer | product decision before merge into globals |
+| `--starfield-*` | semantic-extension | `frontend/src/styles/premium-theme.css` | dark astral background star, milky-way and shooting-star roles | permanent CS-138 background layer |
 | `--settings-*` | semantic-extension | `frontend/src/pages/settings/Settings.css` | settings page visual roles | permanent page-scoped semantic layer |
 | `--profile-*` | semantic-extension | `frontend/src/pages/AstrologerProfilePage.css` | astrologer profile page visual roles | permanent page-scoped semantic layer |
 | `--astro-*` | semantic-extension | `frontend/src/App.css` | astrologer card local visual roles | permanent component-scoped semantic layer |
@@ -42,6 +43,7 @@ sourcee dans ce registre.
 | `--app-admin-*` | semantic-extension | `frontend/src/App.css` | admin layout typography retained in App.css | retained by CS-125 positive prefix registry |
 | `--app-astro-*` | semantic-extension | `frontend/src/App.css` | astro catalog local roles in App.css | retained by CS-125 positive prefix registry |
 | `--app-banner-*` | semantic-extension | `frontend/src/App.css` | activity banner text roles in App.css | retained by CS-125 positive prefix registry |
+| `--app-bg-*` | semantic-extension | `frontend/src/styles/backgrounds.css` | canonical application background route intensity controls | permanent RG-084/RG-085 background layer |
 | `--app-bottom-*` | semantic-extension | `frontend/src/App.css` | bottom navigation primitive in App.css | retained by CS-125 positive prefix registry |
 | `--app-btn-*` | semantic-extension | `frontend/src/App.css` | button danger variant in App.css | retained by CS-125 positive prefix registry |
 | `--app-button-*` | semantic-extension | `frontend/src/App.css` | global button primitive in App.css | retained by CS-125 positive prefix registry |

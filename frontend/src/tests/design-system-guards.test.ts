@@ -700,7 +700,7 @@ describe("design-system guards", () => {
     expect(headerBlock.body).not.toContain("width: 100vw")
     expect(headerBlock.body).not.toContain("50vw")
     expect(headerBlock.body).toContain("z-index: 220")
-    expect(headerBlock.body).toContain("background: color-mix(in srgb, var(--color-bg-top) 10%, var(--color-nav-glass) 15%)")
+    expect(headerBlock.body).toContain("background: color-mix(in srgb, var(--color-bg-top) 8%, var(--color-nav-glass) 11%)")
     expect(headerBlock.body).toContain("backdrop-filter: blur(calc(var(--surface-glass-blur))) saturate(170%)")
     expect(headerBlock.body).toContain("-webkit-backdrop-filter: blur(calc(var(--surface-glass-blur))) saturate(170%)")
     expect(headerBlock.body).toContain("isolation: isolate")
@@ -1061,14 +1061,41 @@ describe("design-system guards", () => {
     expect(rootThemeBlock.body).toContain("var(--color-token-fcfdff)")
     expect(rootThemeBlock.body).toContain("--premium-app-bg-atmosphere: transparent")
     expect(darkThemeBlock.body).toContain("--premium-app-bg:")
-    expect(darkThemeBlock.body).toContain("rgba(250, 220, 180, 0.18)")
-    expect(darkThemeBlock.body).toContain("linear-gradient(122deg")
+    expect(darkThemeBlock.body).toContain("rgba(255, 190, 82, 0.52)")
+    expect(darkThemeBlock.body).toContain("linear-gradient(180deg, transparent 0%, transparent 92%")
+    expect(darkThemeBlock.body).not.toContain("linear-gradient(90deg, transparent 0%, rgba(255, 158, 67")
+    expect(darkThemeBlock.body).toContain("linear-gradient(124deg")
+    expect(darkThemeBlock.body).toContain("--starfield-star-blue:")
+    expect(darkThemeBlock.body).toContain("--starfield-star-dawn:")
+    expect(darkThemeBlock.body).toContain("--starfield-milky-mid:")
     expect(backgroundsCss).toMatch(/\.app-bg\s*\{[^}]*background:\s*var\(--premium-app-bg\)/)
+    expect(backgroundsCss).toMatch(/\.app-bg\s*\{[^}]*background-attachment:\s*fixed/)
+    expect(backgroundsCss).toMatch(/\.dark\s+\.app-bg\s*\{[^}]*background-attachment:\s*fixed/)
     expect(backgroundsCss).toMatch(/\.app-bg::before\s*\{[^}]*background:\s*var\(--premium-app-bg-atmosphere\)/)
-    expect(backgroundsCss).toContain(".app-bg--landing")
     expect(backgroundsCss).toContain(".app-bg--internal")
+    expect(backgroundsCss).not.toContain("app-bg--landing")
     expect(backgroundsCss).toContain("@media (prefers-reduced-motion: reduce)")
+    expect(backgroundsCss).toContain(".starfield-bg__milky-way--smoke")
+    expect(backgroundsCss).toContain("astral-milky-smoke-drift")
+    expect(backgroundsCss).toContain("astral-milky-haze-drift")
+    expect(backgroundsCss).toContain("astral-milky-veil-drift")
+    expect(backgroundsCss).toContain("astral-dawn-breath")
     expect(collectPageBackgroundViolations()).toEqual([])
+  })
+
+  it("bloque le retour d'une variante de fond dediee a la landing", () => {
+    const forbiddenClassName = ["app-bg", "landing"].join("--")
+    const scannedFiles = [
+      "layouts/RootLayout.tsx",
+      "styles/backgrounds.css",
+      ...listFiles("layouts", ".tsx"),
+      ...listFiles("styles", ".css"),
+      ...listFiles("pages", ".tsx"),
+    ]
+    const violations = [...new Set(scannedFiles)]
+      .filter((file) => readFrontendFile(file).includes(forbiddenClassName))
+
+    expect(violations).toEqual([])
   })
 
   it("blocks non-type App CSS module filenames", () => {

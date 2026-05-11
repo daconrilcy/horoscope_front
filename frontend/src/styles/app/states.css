@@ -23,6 +23,7 @@ button:hover:not(:disabled) {
 .app-state--loading {
   border-color: var(--app-state-loading-border);
   background: var(--app-state-loading-surface);
+  box-shadow: var(--premium-loading-glow);
 }
 
 

@@ -12,12 +12,12 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  background: color-mix(in srgb, var(--color-bg-top) 10%, var(--color-nav-glass) 15%);
+  background: color-mix(in srgb, var(--color-bg-top) 8%, var(--color-nav-glass) 11%);
   backdrop-filter: blur(calc(var(--surface-glass-blur))) saturate(170%);
   -webkit-backdrop-filter: blur(calc(var(--surface-glass-blur))) saturate(170%);
   border-bottom: 1px solid var(--color-nav-border);
   box-shadow:
-    var(--shadow-card);
+    var(--premium-header-shadow);
   isolation: isolate;
   z-index: 220;
   gap: var(--space-3);
@@ -30,8 +30,8 @@
   z-index: -1;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-bg-top) 60%, var(--color-nav-glass) 12%),
-    color-mix(in srgb, var(--color-bg-top) 40%, var(--color-nav-glass) 24%)
+    color-mix(in srgb, var(--color-bg-top) 48%, var(--color-nav-glass) 10%),
+    color-mix(in srgb, var(--color-bg-top) 28%, var(--color-nav-glass) 16%)
   );
   pointer-events: none;
 }

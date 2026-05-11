@@ -421,8 +421,8 @@
   --app-button-bg: linear-gradient(170deg, rgba(var(--color-primary-rgb), 0.1) 0%, rgba(var(--color-primary-rgb), 0.3) 100%);
   --app-state-success-surface: rgba(0, 211, 167, 0.12);
   --app-state-success-border: rgba(0, 211, 167, 0.45);
-  --app-state-loading-surface: rgba(102, 230, 255, 0.12);
-  --app-state-loading-border: rgba(102, 230, 255, 0.45);
+  --app-state-loading-surface: rgba(18, 24, 50, 0.62);
+  --app-state-loading-border: rgba(197, 174, 255, 0.28);
   --app-state-empty-surface: rgba(166, 178, 214, 0.12);
   --app-state-empty-border: rgba(166, 178, 214, 0.55);
   --app-danger-surface: rgba(255, 107, 129, 0.1);

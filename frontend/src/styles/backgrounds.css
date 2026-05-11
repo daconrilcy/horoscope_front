@@ -1,12 +1,16 @@
 /* Fond global canonique: ciel premium, atmosphere astrale et starfield dark. */
 .app-bg {
+  --app-bg-atmosphere-opacity-rest: 0.84;
+  --app-bg-atmosphere-opacity-peak: 1;
   min-height: 100dvh;
   position: relative;
   background: var(--premium-app-bg);
+  background-attachment: fixed;
 }
 
 .dark .app-bg {
   background: var(--premium-app-bg);
+  background-attachment: fixed;
 }
 
 .app-bg::before {
@@ -19,17 +23,15 @@
 }
 
 .dark .app-bg::before {
+  animation: astral-dawn-breath 22s ease-in-out infinite;
   background: var(--premium-app-bg-atmosphere);
-  mix-blend-mode: screen;
-  opacity: 0.92;
+  mix-blend-mode: normal;
+  opacity: var(--app-bg-atmosphere-opacity-rest);
 }
 
-.dark .app-bg--internal::before {
-  opacity: 0.56;
-}
-
-.dark .app-bg--landing::before {
-  opacity: 1;
+.dark .app-bg--internal {
+  --app-bg-atmosphere-opacity-rest: 0.84;
+  --app-bg-atmosphere-opacity-peak: 1;
 }
 
 /* Noise overlay - light mode only (§6.1 Option B - SVG feTurbulence) */
@@ -75,12 +77,12 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.58;
+  opacity: 0.96;
   color: var(--star-fill);
 }
 
 .app-bg--internal .starfield-bg {
-  opacity: 0.34;
+  opacity: 0.82;
 }
 
 .starfield-bg svg {
@@ -88,11 +90,36 @@
 }
 
 .starfield-bg__milky-way {
-  opacity: 0.72;
+  opacity: 0.12;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.starfield-bg__milky-way--smoke {
+  animation: astral-milky-smoke-drift 34s ease-in-out infinite;
+  opacity: 0.13;
+}
+
+.starfield-bg__milky-way--haze {
+  animation: astral-milky-haze-drift 38s ease-in-out infinite reverse;
+  opacity: 0.19;
+}
+
+.starfield-bg__milky-way--veil {
+  animation: astral-milky-veil-drift 42s ease-in-out infinite;
+  opacity: 0.078;
+}
+
+.starfield-bg__milky-way--core {
+  opacity: 0.035;
+}
+
+.starfield-bg__milky-way--dust {
+  opacity: 0.085;
 }
 
 .app-bg--internal .starfield-bg__milky-way {
-  opacity: 0.34;
+  opacity: 0.2;
 }
 
 .starfield-bg__star {
@@ -100,58 +127,173 @@
   transform-origin: center;
 }
 
-.starfield-bg__star--far {
-  opacity: 0.58;
+.starfield-bg__milky-star {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.starfield-bg__milky-cloud {
+  animation: astral-milky-breath 42s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+  mix-blend-mode: screen;
+  opacity: 1;
+}
+
+.starfield-bg__jewel-star {
+  animation: astral-star-twinkle 11s ease-in-out infinite;
+  filter: var(--starfield-jewel-filter);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.starfield-bg__milky-star--micro {
+  opacity: 0.72;
+}
+
+.starfield-bg__milky-star--soft {
+  opacity: 0.84;
+}
+
+.starfield-bg__milky-star--accent {
+  animation: astral-star-twinkle 13s ease-in-out infinite reverse;
+  opacity: 0.96;
+}
+
+.starfield-bg__star--micro {
+  opacity: 0.74;
+}
+
+.starfield-bg__star--soft {
+  opacity: 0.88;
+}
+
+.starfield-bg__star--accent {
+  animation: astral-star-twinkle 15s ease-in-out infinite;
+  opacity: 1;
 }
 
 .starfield-bg__shooting {
-  animation: astral-shooting-star 14s linear infinite;
+  animation: astral-shooting-star 15s linear infinite;
 }
 
 .starfield-bg__shooting--2 {
-  animation-delay: -5s;
-  animation-duration: 19s;
-}
-
-.starfield-bg__shooting--3 {
   animation-delay: -11s;
-  animation-duration: 23s;
+  animation-duration: 24s;
 }
 
 .app-bg--internal .starfield-bg__shooting {
-  opacity: 0;
-  animation: none;
+  animation-duration: 18s;
 }
 
 @keyframes astral-shooting-star {
   0%,
-  82% {
+  72% {
     opacity: 0;
-    transform: translate3d(-8%, 3%, 0);
+    transform: translate3d(5%, -2%, 0);
   }
 
-  86% {
-    opacity: 0.52;
+  79% {
+    opacity: 0.9;
   }
 
-  94% {
+  89% {
     opacity: 0;
-    transform: translate3d(7%, -3%, 0);
+    transform: translate3d(-12%, 6%, 0);
   }
 
   100% {
     opacity: 0;
-    transform: translate3d(7%, -3%, 0);
+    transform: translate3d(-12%, 6%, 0);
+  }
+}
+
+@keyframes astral-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.68;
+    transform: scale(1);
+  }
+
+  46% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+
+  63% {
+    opacity: 0.82;
+    transform: scale(1.07);
+  }
+}
+
+@keyframes astral-milky-breath {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  52% {
+    opacity: 1;
+  }
+}
+
+@keyframes astral-milky-smoke-drift {
+  0%,
+  100% {
+    opacity: 0.075;
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.14;
+    transform: translate3d(1.25%, -0.75%, 0);
+  }
+}
+
+@keyframes astral-milky-haze-drift {
+  0%,
+  100% {
+    opacity: 0.145;
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.245;
+    transform: translate3d(0.9%, -0.55%, 0);
+  }
+}
+
+@keyframes astral-milky-veil-drift {
+  0%,
+  100% {
+    opacity: 0.052;
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.108;
+    transform: translate3d(1.4%, -0.8%, 0);
+  }
+}
+
+@keyframes astral-dawn-breath {
+  0%,
+  100% {
+    opacity: var(--app-bg-atmosphere-opacity-rest);
+  }
+
+  52% {
+    opacity: var(--app-bg-atmosphere-opacity-peak);
   }
 }
 
 @media (max-width: 768px) {
   .starfield-bg {
-    opacity: 0.28;
+    opacity: 0.36;
   }
 
   .starfield-bg__milky-way {
-    opacity: 0.24;
+    opacity: 0.12;
   }
 
   .starfield-bg__shooting {
@@ -161,6 +303,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dark .app-bg::before,
+  .starfield-bg__jewel-star,
+  .starfield-bg__milky-cloud,
+  .starfield-bg__milky-star--accent,
+  .starfield-bg__milky-way--haze,
+  .starfield-bg__milky-way--smoke,
+  .starfield-bg__milky-way--veil,
+  .starfield-bg__star--accent {
+    animation: none;
+    transform: none;
+  }
+
   .starfield-bg__shooting {
     opacity: 0;
     animation: none;
