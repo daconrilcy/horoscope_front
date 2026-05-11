@@ -2,10 +2,9 @@
 name: condamad-ux-ui-lead
 description: >
   Coordinate a CONDAMAD UX/UI expert review or from-scratch page design plan
-  for React applications. Use when the user asks to audit an existing page,
-  analyze UX/UI, improve visual hierarchy, colors, typography, layout, cards,
-  borders, CTAs, hero sections, user journeys, React TS/TSX structure, CSS/SCSS
-  implementation, or produce a precise implementation plan before coding.
+  for React applications when the request requires cross-cutting judgment across
+  page structure, visual hierarchy, interaction design, React implementation,
+  and styling ownership.
 ---
 
 <!-- Skill CONDAMAD pour audit et conception UX/UI coordonnes par un lead. -->
@@ -14,10 +13,41 @@ description: >
 
 Coordinate four analysis roles to produce a concrete, reviewed UX/UI
 implementation plan: a lead, a UX/UI expert, a senior React expert, and a
-CSS/SCSS expert. Use the skill either to design a page from a brief or to audit
+Styling expert. Use the skill either to design a page from a brief or to audit
 an existing page and propose improvements. Do not modify application code by
 default; produce the plan first unless the user explicitly asks for
 implementation.
+
+## Scope Control
+
+Use this skill only when the request requires UX/UI judgment across page
+structure, visual hierarchy, interaction design, React implementation, and
+styling ownership.
+
+Do not use this skill for:
+
+- isolated CSS fixes with an obvious local cause;
+- small visual tweaks, icon swaps, copy-only edits, or one-token changes;
+- simple component implementation requests where the user already gave the
+  design;
+- pure bug fixes unrelated to UX/UI hierarchy or page experience;
+- generic React explanations;
+- implementation-only tasks where a plan was already approved.
+
+For small UI requests, provide the smallest useful answer. Use the full
+CONDAMAD UX/UI workflow only when the request requires cross-cutting UX, React,
+and styling judgment.
+
+## Planning Boundary
+
+For audit requests, stop at recommendations unless the user asks for an
+implementation plan.
+
+For implementation-plan requests, translate recommendations into ordered tasks,
+target files, ownership, and validation.
+
+For coding requests, only implement after the user explicitly asks for code
+changes.
 
 ## Non-Negotiable Inputs
 
@@ -26,24 +56,37 @@ Read applicable repository instructions before analysis. If
 applicable guardrails before proposing changes. Treat guardrails as constraints,
 not suggestions.
 
-When the request targets an existing page, inspect:
+When the request targets an existing page, inspect directly relevant evidence
+first:
 
-- the route/page component and its child components;
-- the related `ts`, `tsx`, `css`, `scss`, and test files;
-- shared design tokens, variables, primitives, layout helpers, and existing
-  visual conventions;
-- screenshots or browser-rendered evidence when available or necessary.
+1. repository instructions and guardrails;
+2. the route/page entrypoint;
+3. directly imported child components;
+4. directly imported style files, tokens, primitives, layout helpers, and
+   existing visual conventions;
+5. one or two neighboring pages using the same visual system;
+6. tests only when behavior, state, accessibility, or regression risk is
+   affected;
+7. screenshots or browser-rendered evidence when available or necessary.
+
+Do not expand recursively beyond directly related files unless a concrete risk
+is discovered. If evidence remains incomplete, label the recommendation as a
+hypothesis and name the missing evidence or validation step.
 
 When the request starts from a brief, inspect the current design system and
 neighboring pages before inventing new primitives. Mark missing product
 decisions explicitly instead of filling them with assumptions that would affect
 positioning, conversion goals, legal copy, or paid flows.
 
-When the user asks for market-level inspiration or when the page category is
-trend-sensitive, check recent design references or current market patterns
-before proposing the plan. Use trends as inspiration only: adapt them to the
-product, audience, accessibility, performance, existing design system, and
-regression guardrails instead of copying fashionable effects.
+Use market inspiration only when the user explicitly asks for inspiration,
+benchmarking, or trend alignment; when the page is brand-sensitive,
+conversion-sensitive, or visually underdefined; or when current category
+conventions materially affect user trust or comprehension. Never copy a
+competitor layout, brand asset, illustration, animation, or wording. Summarize
+patterns abstractly and adapt them to the existing design system, accessibility,
+performance, and regression guardrails. If current references cannot be checked
+with available tools, label market observations as non-current design
+heuristics, not as recent trends.
 
 ## Role Model
 
@@ -51,10 +94,17 @@ Use these roles as explicit analysis lenses. Delegate to subagents only when
 the runtime instructions allow it and the user explicitly asked for parallel
 agent work; otherwise perform the roles sequentially in the main agent.
 
+Do not present role-by-role transcripts by default. Use the roles as internal
+lenses and present a consolidated plan unless the user explicitly asks for
+separate expert findings or role-specific findings materially affect the final
+recommendation.
+
 ## Responsibility Boundaries
 
-Keep responsibilities separated before consolidation. Each role must produce
-findings in its own lane, then the lead merges them into one plan.
+Keep responsibilities separated before consolidation. Each role must be
+considered as a separate analysis lane before the lead merges them into one
+plan. Expose only the consolidated result unless separate expert findings are
+useful.
 
 - UX/UI owns user intent, page structure, hierarchy, content clarity, trust,
   interaction design, accessibility goals, market inspiration, and the
@@ -63,14 +113,15 @@ findings in its own lane, then the lead merges them into one plan.
 - Senior React owns component boundaries, data flow, state, hooks, routing,
   semantics in JSX, accessibility implementation feasibility, API integration,
   test strategy, and TS/TSX refactor risk. It must not invent visual tokens or
-  override CSS ownership.
-- CSS/SCSS owns style architecture, token reuse, selectors, responsive rules,
-  themes, specificity, layout mechanics, states, motion, and visual consistency
-  implementation. It must not change product messaging or component
-  responsibilities unless required by CSS ownership.
+  override styling ownership.
+- Styling owns style architecture across CSS, SCSS, Tailwind, shadcn/ui, CSS
+  variables, design tokens, component-level class composition, responsive
+  rules, themes, specificity, layout mechanics, states, motion, and visual
+  consistency implementation. It must not change product messaging or component
+  responsibilities unless required by styling ownership.
 - Lead owns scope, tradeoffs, conflict resolution, prioritization,
   non-regression constraints, and final plan quality. It decides how to combine
-  UX value, React feasibility, and CSS ownership into implementation steps.
+  UX value, React feasibility, and styling ownership into implementation steps.
 
 When subagents are allowed and explicitly requested, assign one bounded prompt
 per expert with a disjoint responsibility. Ask each expert for findings,
@@ -103,12 +154,14 @@ Audit or design the experience end to end.
   empty/loading/error states.
 - Interaction: CTA hierarchy, button labels, affordances, forms, navigation,
   feedback, focus states, mobile gestures, and accessibility.
-- Hero sections: first-viewport signal, headline clarity, proof or value
-  support, primary action, secondary action, and next-section visibility.
+- Marketing, landing, and onboarding sections: first-viewport signal, headline
+  clarity, proof or value support, primary action, secondary action, and
+  next-section visibility.
 - User journey: entry context, decision points, friction, trust signals,
   cognitive load, and completion path.
-- Market fit: recent design trends, category benchmarks, expected interaction
-  patterns, and visual conventions that improve clarity or perceived quality.
+- Market fit: current references only when checked with available tools;
+  otherwise use category heuristics, expected interaction patterns, and visual
+  conventions that improve clarity or perceived quality.
 - Content and trust: microcopy, labels, proof points, reassurance, pricing or
   commitment clarity, error wording, and credibility signals.
 - User context: likely device, expertise level, emotional state, urgency,
@@ -126,57 +179,99 @@ Audit implementation feasibility and TS/TSX structure.
   weak typing, hidden business logic in UI, and inaccessible markup.
 - Concrete TS/TSX changes required for each UX recommendation.
 
-### CSS/SCSS Expert
+### Styling Expert
 
-Audit style ownership and visual implementation details.
+Audit style ownership and visual implementation details across CSS, SCSS,
+Tailwind, shadcn/ui, CSS variables, design tokens, and component-level class
+composition.
 
 - Existing CSS variables, design tokens, theme variables, mixins, primitives,
   breakpoints, and ownership boundaries.
 - Inline styles, hardcoded visual values, duplicate selectors, fallback drift,
   specificity issues, theme inconsistencies, and responsive defects.
+- Tailwind class duplication, arbitrary values, inconsistent spacing utilities,
+  variant drift, and misuse of shadcn primitives.
 - Borders, shadows, radii, spacing scales, typography scales, layout grids,
   focus rings, hover/active states, dark/light mode behavior, and reduced motion.
-- Concrete CSS/SCSS changes required for each UX recommendation.
+- Concrete styling changes required for each UX recommendation.
 
 ## Workflow
 
-1. Clarify the mode:
-   - **Creation from brief**: produce a build plan for a new page.
-   - **Audit existing page**: inspect current code and rendered behavior, then
-     propose improvements.
-2. Gather evidence:
+1. Infer the mode whenever possible:
+   - **Audit existing page**: screenshot, route, existing component, or current
+     UI problem.
+   - **Creation from brief**: product or page brief without existing
+     implementation.
+   - **Implementation mode**: approved plan plus explicit coding request.
+   Ask a clarification question only if the ambiguity would materially change
+   the recommendation or implementation plan.
+2. Classify the page type before applying the checklist:
+   - marketing / landing page;
+   - authentication page;
+   - dashboard;
+   - data table / list view;
+   - form / wizard;
+   - editor / canvas / node-based interface;
+   - settings / admin page;
+   - upload / processing workflow;
+   - other operational surface.
+   Apply only the criteria relevant to that page type. Do not force hero, CTA,
+   proof, or conversion analysis onto operational product screens. For
+   operational screens, prioritize task success, readability, state feedback,
+   error recovery, density, and control clarity.
+3. Gather evidence:
    - read guardrails if present;
    - locate the page, components, styles, tokens, tests, and related stories;
    - capture screenshots or browser observations when useful.
-3. Build the expert findings:
+4. Build the expert findings:
    - UX/UI findings with user impact and visual rationale;
    - React findings with file-level implementation implications;
-   - CSS/SCSS findings with token/style ownership implications.
-4. Reconcile responsibilities:
-   - keep design recommendations separate from React refactors and CSS/SCSS
+   - styling findings with token/style ownership implications.
+5. Reconcile responsibilities:
+   - keep design recommendations separate from React refactors and styling
      ownership until the lead consolidation;
    - resolve conflicts explicitly, such as a desired visual effect that would
      violate tokens, accessibility, performance, or guardrails;
    - discard recommendations that only make sense in one lane but create
      avoidable debt in another.
-5. Convert findings into a precise implementation plan:
+6. Convert findings into a precise implementation plan when the request asks
+   for planning or handoff:
    - group changes by user-visible outcome, not by personal preference;
    - include target files or likely file areas;
    - include validation evidence for each meaningful change.
-6. Review and correct the plan:
+7. Review and correct the plan:
    - remove duplicate tasks;
    - resolve contradictions between experts;
    - ensure every recommendation is actionable and testable;
    - ensure guardrails are respected;
    - ensure no item is left as an unresolved issue or open question unless the
      user must make a product decision;
-   - ensure each task names a user-visible outcome, target file area, style
-     ownership, React implication, and validation evidence.
-7. Present the result:
+   - ensure each task includes the relevant implementation dimensions. Do not
+     invent React, styling, measurement, or analytics work when the change does
+     not require it. If a dimension is not applicable, write
+     "N/A - no change required" with a short reason.
+8. Present the result:
    - concise diagnosis;
    - prioritized implementation plan;
    - validation plan;
    - risks, limits, and required decisions if any.
+
+## Anti-Overdesign Rules
+
+Do not propose visual decoration unless it improves hierarchy, comprehension,
+trust, accessibility, or task success.
+
+Reject:
+
+- decorative gradients without hierarchy purpose;
+- excessive shadows, glows, borders, or nested cards;
+- animations that do not clarify state or transition;
+- new design primitives when existing primitives can be reused;
+- layout changes that increase cognitive load;
+- visual novelty that conflicts with the product's existing tone.
+
+Prefer targeted improvements over redesigns unless the current page structure
+is fundamentally broken.
 
 ## Audit Checklist
 
@@ -187,10 +282,10 @@ Use this checklist when auditing an existing page:
   emotional state, and urgency.
 - Hierarchy: primary, secondary, and tertiary content are visually distinct.
 - Flow: sections follow the user's likely decision path.
-- CTA: primary action is obvious, specific, and not competing with equal-weight
-  actions.
-- Hero: the page announces the product, offer, or task directly and leaves a
-  hint of continuation content.
+- CTA: for marketing, onboarding, and action-led screens, the primary action is
+  obvious, specific, and not competing with equal-weight actions.
+- Hero: for marketing, landing, or onboarding pages, the page announces the
+  product, offer, or task directly and leaves a hint of continuation content.
 - Cards: cards represent repeated or framed content only; avoid cards nested in
   cards or page sections disguised as cards.
 - Borders and elevation: visual separation uses consistent tokens and does not
@@ -218,8 +313,8 @@ Use this checklist when auditing an existing page:
   validate whether the UX improvement worked after delivery.
 - React: component structure, state, API boundaries, and tests support the
   proposed UX.
-- CSS/SCSS: no new inline styles, no avoidable hardcoded values, and token
-  reuse is explicit.
+- Styling: no new inline styles, no avoidable hardcoded values, and token reuse
+  is explicit across CSS, SCSS, Tailwind, shadcn/ui, and CSS variables.
 
 ## Evidence Discipline
 
@@ -234,9 +329,54 @@ each major recommendation. For new pages, cite the existing design-system
 primitives, tokens, neighboring routes, or patterns that should anchor the
 implementation.
 
+## Output Depth
+
+Default to the smallest output depth that satisfies the request.
+
+Use one of these output depths:
+
+### Quick Review
+
+For screenshot-only or narrowly scoped visual feedback:
+
+- Diagnostic
+- Corrections prioritaires
+- Validation visuelle
+
+### Full Audit
+
+For existing pages with code and rendered evidence:
+
+- Diagnostic
+- Contraintes et garde-fous
+- Plan de mise en oeuvre
+- Validation plan
+- Revue du plan
+
+### Build Plan
+
+For from-scratch page creation:
+
+- Page goal
+- UX structure
+- Component plan
+- Styling plan
+- States
+- Validation
+
+### Implementation Plan
+
+For approved recommendations that need coding guidance or handoff:
+
+- Ordered tasks
+- Target files or file areas
+- Relevant React, styling, state, accessibility, and test implications
+- Validation
+
 ## Output Contract
 
-Return a plan in this shape unless the user requested another format:
+Return a plan in this shape for Full Audit or Implementation Plan unless the
+user requested another format:
 
 ```md
 ## Diagnostic
@@ -254,14 +394,14 @@ Return a plan in this shape unless the user requested another format:
 1. <Outcome-oriented task>
    - Fichiers cibles: `<path>`, `<path>`
    - Design UX/UI: <user-visible change and rationale>
-   - React TS/TSX: <component, state, hook, route, semantic, or test impact>
-   - CSS/SCSS: <token, selector, layout, responsive, theme, or state impact>
+   - React TS/TSX: <component, state, hook, route, semantic, test impact, or "N/A - no change required">
+   - Styling: <token, selector, Tailwind utility, shadcn primitive, layout, responsive, theme, state impact, or "N/A - no change required">
    - Validation: <test, lint, screenshot, manual flow, contrast check>
-   - Mesure: <analytics, usability signal, or "non necessaire">
+   - Mesure: <only when the change affects conversion, activation, retention, or task completion>
 
 ## Revue du plan
 
-- Separation des responsabilites: <design/react/css boundaries respected>
+- Separation des responsabilites: <design/react/styling boundaries respected>
 - Duplications supprimees: <summary>
 - Contradictions resolues: <summary>
 - Elements non actionnables retires: <summary>
@@ -270,4 +410,5 @@ Return a plan in this shape unless the user requested another format:
 ```
 
 Do not present generic advice such as "improve spacing" without naming the
-surface, the likely token or CSS owner, and the expected user-visible result.
+surface, the likely token or styling owner, and the expected user-visible
+result.
