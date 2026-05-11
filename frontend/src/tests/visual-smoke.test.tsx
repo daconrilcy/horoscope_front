@@ -356,18 +356,19 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     ])
   })
 
-  it("conserve la matiere token-backed des cartes compactes", () => {
+  it("conserve la matiere token-backed et le contrat responsive des cartes compactes", () => {
+    const legacyFeaturedClass = ["person-card", "featured"].join("--")
+    const typoBlendModeProperty = ["mix", "alend", "mode"].join("-")
+
+    expectBlockToContain(appCss, ".people-page .person-grid", [
+      "grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+    ])
     expectBlockToContain(appCss, ".people-page .person-card", [
       "background: var(--app-person-card-compact-background)",
       "border: var(--app-person-card-compact-border)",
       "box-shadow: var(--app-person-card-compact-box-shadow)",
     ])
-    expectBlockToContain(appCss, ".people-page .person-card--featured", [
-      "grid-column: span 2",
-      "background: var(--app-person-card-compact-featured-background)",
-      "border-color: var(--app-person-card-compact-featured-border-color)",
-      "box-shadow: var(--app-person-card-compact-featured-box-shadow)",
-    ])
+    expect(appCss).not.toContain(`.people-page .${legacyFeaturedClass}`)
     expectBlockToContain(appCss, ".people-page .person-card-icon", [
       "position: absolute",
       "z-index: 5",
@@ -378,10 +379,11 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     expectBlockToContain(appCss, ".people-page .person-card-icon::before", [
       "background: var(--app-person-card-compact-icon-ring-background)",
     ])
-    expectBlockToContain(appCss, ".people-page .person-card-style,\n.people-page .person-card--featured .person-card-style", [
+    expectBlockToContain(appCss, ".people-page .person-card-style", [
       "color: var(--app-person-card-compact-style-color)",
+      "-webkit-line-clamp: 2",
     ])
-    expectBlockToContain(appCss, ".people-page .person-card-avatar,\n.people-page .person-card--featured .person-card-avatar", [
+    expectBlockToContain(appCss, ".people-page .person-card-avatar", [
       "background: var(--app-person-card-compact-avatar-background)",
       "border: var(--app-person-card-compact-avatar-border)",
       "box-shadow: var(--app-person-card-compact-avatar-box-shadow)",
@@ -392,11 +394,16 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
       "box-shadow: var(--app-person-card-compact-tag-box-shadow)",
     ])
     expectBlockToContain(appCss, ".people-page .person-card-provider-badge,\n.people-page .person-card-featured-badge,\n.people-page .person-default-badge", [
-      "display: none",
+      "display: inline-flex",
     ])
+    expectBlockToContain(appCss, ".people-page .person-card-cta", [
+      "margin-top: auto",
+      "text-decoration: underline",
+    ])
+    expect(appCss).not.toContain(typoBlendModeProperty)
   })
 
-  it("rend le DOM /astrologers avec icone, avatar, chips et badges compacts", () => {
+  it("rend le DOM /astrologers avec icone, avatar, chips, badges et CTA compacts", () => {
     mockUseAstrologers.mockReturnValue({
       astrologers: [
         {
@@ -434,17 +441,20 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     const peoplePage = container.querySelector(".people-page")
     const cards = container.querySelectorAll(".person-card")
     const firstCard = cards[0]
+    const legacyFeaturedClass = ["person-card", "featured"].join("--")
 
     expect(peoplePage).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Nos Astrologues" })).toBeInTheDocument()
     expect(cards).toHaveLength(2)
-    expect(firstCard).toHaveClass("person-card--featured")
+    expect(firstCard.className.toString()).not.toContain(legacyFeaturedClass)
     expect(firstCard.querySelector(".person-card-icon")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-card-avatar")).toBeInTheDocument()
     expect(firstCard.querySelectorAll(".person-card-tag")).toHaveLength(3)
     expect(firstCard.querySelector(".person-card-provider-badge")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-card-featured-badge")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-default-badge")).toBeInTheDocument()
+    expect(firstCard.querySelector(".person-card-cta")).toHaveTextContent("Voir le profil")
+    expect(firstCard.querySelector("button")).not.toBeInTheDocument()
     expect(screen.getByAltText("Avatar de Luna Caron")).toBeInTheDocument()
   })
 })

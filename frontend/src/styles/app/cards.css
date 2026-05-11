@@ -463,41 +463,6 @@
 
 
 
-.person-card--featured {
-  grid-column: span 2;
-  padding: 2.18rem 1.95rem 1.92rem;
-  background: var(--app-person-card-featured-background);
-  border-color: var(--app-person-card-featured-border-color);
-  box-shadow: var(--app-person-card-featured-box-shadow);
-}
-
-
-
-.person-card--featured:hover {
-  transform: translateY(-9px) scale(1.024);
-}
-
-
-
-.person-card--featured .person-card-name {
-  font-size: var(--app-person-card-featured-name-font-size);
-}
-
-
-
-.person-card--featured .person-card-style {
-  font-size: var(--app-person-card-featured-style-font-size);
-}
-
-
-
-.person-card--featured .person-card-bio {
-  max-width: 64ch;
-  font-size: var(--app-person-card-featured-bio-font-size);
-}
-
-
-
 .person-card-topline {
   display: flex;
   align-items: center;
@@ -700,17 +665,16 @@
 
 
 .people-page .person-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
   margin-top: 1.25rem;
 }
 
 
 
 .people-page .person-card {
-  height: 256px;
-  min-height: 256px;
-  padding: 2.55rem 1rem 0.95rem;
+  min-height: 318px;
+  padding: 2.5rem 1rem 1rem;
   background: var(--app-person-card-compact-background);
   border: var(--app-person-card-compact-border);
   border-radius: var(--app-person-card-compact-radius);
@@ -726,22 +690,10 @@
 
 
 
-.people-page .person-card--featured {
-  grid-column: span 2;
-  height: 244px;
-  min-height: 244px;
-  padding: 2.65rem 1rem 0.95rem;
-  background: var(--app-person-card-compact-featured-background);
-  border-color: var(--app-person-card-compact-featured-border-color);
-  box-shadow: var(--app-person-card-compact-featured-box-shadow);
-}
-
-
-
 .people-page .person-card-provider-badge,
 .people-page .person-card-featured-badge,
 .people-page .person-default-badge {
-  display: none;
+  display: inline-flex;
 }
 
 
@@ -755,7 +707,9 @@
 
 
 .people-page .person-card-badge-stack {
-  display: none;
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 1.9rem;
 }
 
 
@@ -790,8 +744,7 @@
 
 
 
-.people-page .person-card-avatar,
-.people-page .person-card--featured .person-card-avatar {
+.people-page .person-card-avatar {
   width: 64px;
   height: 64px;
   background: var(--app-person-card-compact-avatar-background);
@@ -802,8 +755,7 @@
 
 
 
-.people-page .person-card-name,
-.people-page .person-card--featured .person-card-name {
+.people-page .person-card-name {
   font-size: var(--font-size-sm);
 }
 
@@ -816,11 +768,15 @@
 
 
 
-.people-page .person-card-style,
-.people-page .person-card--featured .person-card-style {
+.people-page .person-card-style {
   margin-bottom: 0.54rem;
   font-size: var(--font-size-label);
   color: var(--app-person-card-compact-style-color);
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 
@@ -851,11 +807,42 @@
 
 
 
-.people-page .person-card-bio,
-.people-page .person-card--featured .person-card-bio {
+.people-page .person-card-bio {
   max-width: none;
   font-size: var(--font-size-3xs);
   line-height: var(--line-height-copy-tight);
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+
+
+.people-page .person-card-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: var(--space-2);
+  color: var(--app-person-card-style-color);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-bold);
+  text-decoration: underline;
+  text-underline-offset: var(--space-1);
+}
+
+
+
+@media (max-width: 560px) {
+  .people-page .person-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .people-page .person-card {
+    min-height: 0;
+  }
 }
 
 
@@ -1044,10 +1031,6 @@
 
   .person-grid {
     grid-template-columns: 1fr;
-  }
-
-  .person-card--featured {
-    grid-column: span 1;
   }
 
   .person-profile-header-top {

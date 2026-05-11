@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 import { AstrologersPage } from "../pages/AstrologersPage"
 import { AstrologerProfilePage } from "../pages/AstrologerProfilePage"
+import { AstrologerGrid } from "../features/astrologers"
 
 const mockUseAstrologers = vi.fn()
 const mockUseAstrologer = vi.fn()
@@ -208,6 +209,45 @@ describe("AstrologersPage", () => {
       expect(screen.getByText("Transits")).toBeInTheDocument()
       expect(screen.getByText("Relations")).toBeInTheDocument()
       expect(screen.getByAltText("Avatar de Luna Caron")).toBeInTheDocument()
+    })
+
+    it("shows choice signals and a non-nested visual CTA on each catalogue card", () => {
+      mockUseUserSettings.mockReturnValue({
+        data: { default_astrologer_id: "1" },
+        isLoading: false,
+      })
+      mockUseAstrologers.mockReturnValue({
+        data: mockAstrologersList,
+        isPending: false,
+        error: null,
+      })
+
+      const { container } = renderAstrologersPage()
+      const lunaCard = screen.getByRole("button", { name: /Voir le profil de Luna Caron/i })
+      const legacyFeaturedClass = ["person-card", "featured"].join("--")
+
+      expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
+      expect(screen.getByText("Votre défaut")).toBeInTheDocument()
+      expect(screen.getAllByText("Voir le profil")).toHaveLength(mockAstrologersList.length)
+      expect(lunaCard.querySelector(".person-card-cta")).toHaveTextContent("Voir le profil")
+      expect(lunaCard.querySelector("button")).not.toBeInTheDocument()
+      expect(container.querySelector(`.${legacyFeaturedClass}`)).not.toBeInTheDocument()
+    })
+
+    it("keeps the profile CTA opt-in for shared astrologer grids", () => {
+      const onSelectAstrologer = vi.fn()
+
+      render(
+        <AstrologerGrid
+          experts={mockAstrologersList}
+          onSelectAstrologer={onSelectAstrologer}
+          defaultAstrologerId="1"
+        />,
+      )
+
+      expect(screen.queryByText("Voir le profil")).not.toBeInTheDocument()
+      expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
+      expect(screen.getByText("Votre défaut")).toBeInTheDocument()
     })
 
     it("shows loading state while fetching", () => {

@@ -81,6 +81,7 @@ export function AstrologersPage() {
           experts={displayedAstrologers}
           onSelectAstrologer={handleSelectAstrologer}
           defaultAstrologerId={preferences?.default_astrologer_id}
+          showProfileCta
         />
       )}
     </PageLayout>

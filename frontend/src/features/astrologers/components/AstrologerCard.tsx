@@ -1,3 +1,4 @@
+// Rend une carte catalogue actionnable avec signaux de choix visibles.
 import { useState } from "react"
 import type { Astrologer } from "@api/astrologers"
 import { detectLang } from "@i18n/astrology"
@@ -5,9 +6,9 @@ import { tAstrologers as t } from "@i18n/astrologers"
 
 type AstrologerCardProps = {
   expert: Astrologer
-  featured?: boolean
   isDefault?: boolean
   onClick: () => void
+  showProfileCta?: boolean
 }
 
 function getAstrologerTheme(expert: Astrologer): string {
@@ -55,7 +56,7 @@ function getProviderBadgeLabel(providerType: Astrologer["provider_type"], lang: 
   return providerType === "real" ? t("provider_type_real", lang) : t("provider_type_ai", lang)
 }
 
-export function AstrologerCard({ expert, featured = false, isDefault, onClick }: AstrologerCardProps) {
+export function AstrologerCard({ expert, isDefault, onClick, showProfileCta = false }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
   const showImage = expert.avatar_url && !imgError
@@ -71,7 +72,7 @@ export function AstrologerCard({ expert, featured = false, isDefault, onClick }:
 
   return (
     <button
-      className={`person-card ${featured ? "person-card--featured" : ""}`}
+      className="person-card"
       onClick={onClick}
       type="button"
       aria-label={`${t("view_profile_aria", lang)} ${fullName}`}
@@ -88,7 +89,7 @@ export function AstrologerCard({ expert, featured = false, isDefault, onClick }:
             </span>
           )}
           <span className={providerBadgeClassName}>{providerBadgeLabel}</span>
-          {featured && <span className="person-card-featured-badge">{featuredBadge}</span>}
+          <span className="person-card-featured-badge">{featuredBadge}</span>
         </div>
       </div>
       <div className="person-card-avatar">
@@ -117,6 +118,11 @@ export function AstrologerCard({ expert, featured = false, isDefault, onClick }:
         ))}
       </div>
       <p className="person-card-bio">{expert.bio_short}</p>
+      {showProfileCta && (
+        <span className="person-card-cta" aria-hidden="true">
+          {t("view_profile_cta", lang)}
+        </span>
+      )}
     </button>
   )
 }

@@ -80,6 +80,11 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "View profile of",
     es: "Ver perfil de",
   },
+  view_profile_cta: {
+    fr: "Voir le profil",
+    en: "View profile",
+    es: "Ver perfil",
+  },
   avatar_alt: {
     fr: "Avatar de",
     en: "Avatar of",
