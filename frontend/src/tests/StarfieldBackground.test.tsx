@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { render, cleanup, fireEvent, act, screen } from "@testing-library/react"
+import { readFileSync } from "fs"
+import { resolve } from "path"
 import { ThemeProvider, useTheme } from "../state/ThemeProvider"
-import { StarfieldBackground, STAR_COUNT, STAR_SEED, STARS, seededRandom, generateStars, STAR_RADIUS_MIN, STAR_RADIUS_RANGE, STAR_OPACITY_MIN, STAR_OPACITY_RANGE, VIEWBOX_SIZE, LCG_MULTIPLIER, LCG_INCREMENT, LCG_MODULUS, type Star } from "../components/StarfieldBackground"
+import { StarfieldBackground, STAR_COUNT, STAR_SEED, STARS, SHOOTING_STAR_COUNT, SHOOTING_STAR_SEED, SHOOTING_STARS, seededRandom, generateStars, generateShootingStars, STAR_RADIUS_MIN, STAR_RADIUS_RANGE, STAR_OPACITY_MIN, STAR_OPACITY_RANGE, VIEWBOX_SIZE, LCG_MULTIPLIER, LCG_INCREMENT, LCG_MODULUS, type Star, type ShootingStar } from "../components/StarfieldBackground"
 
 describe("StarfieldBackground", () => {
   beforeEach(() => {
@@ -31,6 +33,9 @@ describe("StarfieldBackground", () => {
 
       const circles = svg?.querySelectorAll("circle")
       expect(circles?.length).toBe(STAR_COUNT)
+
+      const shootingStars = svg?.querySelectorAll(".starfield-bg__shooting")
+      expect(shootingStars?.length).toBe(SHOOTING_STAR_COUNT)
     })
 
     it("does not render starfield when theme is light", () => {
@@ -69,8 +74,8 @@ describe("StarfieldBackground", () => {
 
       circles?.forEach((circle) => {
         const opacity = parseFloat(circle.getAttribute("opacity") || "0")
-        expect(opacity).toBeGreaterThanOrEqual(0.3)
-        expect(opacity).toBeLessThanOrEqual(0.8)
+        expect(opacity).toBeGreaterThanOrEqual(STAR_OPACITY_MIN)
+        expect(opacity).toBeLessThanOrEqual(STAR_OPACITY_MIN + STAR_OPACITY_RANGE)
       })
     })
 
@@ -88,8 +93,8 @@ describe("StarfieldBackground", () => {
 
       circles?.forEach((circle) => {
         const radius = parseFloat(circle.getAttribute("r") || "0")
-        expect(radius).toBeGreaterThanOrEqual(0.3)
-        expect(radius).toBeLessThanOrEqual(1.1)
+        expect(radius).toBeGreaterThanOrEqual(STAR_RADIUS_MIN)
+        expect(radius).toBeLessThanOrEqual(STAR_RADIUS_MIN + STAR_RADIUS_RANGE)
       })
     })
 
@@ -120,7 +125,22 @@ describe("StarfieldBackground", () => {
 
       circles?.forEach((circle) => {
         expect(circle.getAttribute("fill")).toBe("var(--star-fill)")
+        expect(circle.getAttribute("class")).toMatch(/starfield-bg__star/)
       })
+    })
+
+    it("renders a diffuse Milky Way layer and rare shooting stars", () => {
+      localStorage.setItem("theme", "dark")
+
+      render(
+        <ThemeProvider>
+          <StarfieldBackground />
+        </ThemeProvider>
+      )
+
+      expect(document.querySelector(".starfield-bg__milky-way")).toBeInTheDocument()
+      expect(document.querySelectorAll(".starfield-bg__shooting")).toHaveLength(SHOOTING_STAR_COUNT)
+      expect(SHOOTING_STAR_COUNT).toBeLessThanOrEqual(3)
     })
 
     it("renders SVG with correct viewBox attribute using VIEWBOX_SIZE", () => {
@@ -287,9 +307,24 @@ describe("StarfieldBackground", () => {
         cy: 50,
         r: 0.5,
         opacity: 0.5,
+        className: "starfield-bg__star starfield-bg__star--mid",
       }
       expect(star.id).toBe("test-star")
       expect(star.cx).toBe(50)
+    })
+
+    it("allows typing shooting star objects correctly", () => {
+      const shootingStar: ShootingStar = {
+        id: "test-shooting-star",
+        x1: 12,
+        y1: 20,
+        x2: 28,
+        y2: 16,
+        opacity: 0.4,
+        className: "starfield-bg__shooting starfield-bg__shooting--1",
+      }
+      expect(shootingStar.id).toBe("test-shooting-star")
+      expect(shootingStar.className).toContain("shooting")
     })
   })
 
@@ -307,10 +342,11 @@ describe("StarfieldBackground", () => {
         expect(star.cx).toBeLessThan(VIEWBOX_SIZE)
         expect(star.cy).toBeGreaterThanOrEqual(0)
         expect(star.cy).toBeLessThan(VIEWBOX_SIZE)
-        expect(star.r).toBeGreaterThanOrEqual(0.3)
-        expect(star.r).toBeLessThanOrEqual(1.1)
-        expect(star.opacity).toBeGreaterThanOrEqual(0.3)
-        expect(star.opacity).toBeLessThanOrEqual(0.8)
+        expect(star.r).toBeGreaterThanOrEqual(STAR_RADIUS_MIN)
+        expect(star.r).toBeLessThanOrEqual(STAR_RADIUS_MIN + STAR_RADIUS_RANGE)
+        expect(star.opacity).toBeGreaterThanOrEqual(STAR_OPACITY_MIN)
+        expect(star.opacity).toBeLessThanOrEqual(STAR_OPACITY_MIN + STAR_OPACITY_RANGE)
+        expect(star.className).toContain("starfield-bg__star")
       })
     })
 
@@ -327,17 +363,28 @@ describe("StarfieldBackground", () => {
     })
   })
 
+  describe("generateShootingStars function", () => {
+    it("generates deterministic rare shooting stars", () => {
+      const stars1 = generateShootingStars(3, SHOOTING_STAR_SEED)
+      const stars2 = generateShootingStars(3, SHOOTING_STAR_SEED)
+
+      expect(stars1).toEqual(stars2)
+      expect(stars1).toEqual(SHOOTING_STARS)
+      expect(SHOOTING_STARS.length).toBe(SHOOTING_STAR_COUNT)
+    })
+  })
+
   describe("Star range constants", () => {
     it("exports STAR_RADIUS_MIN and STAR_RADIUS_RANGE", () => {
-      expect(STAR_RADIUS_MIN).toBe(0.3)
-      expect(STAR_RADIUS_RANGE).toBe(0.8)
-      expect(STAR_RADIUS_MIN + STAR_RADIUS_RANGE).toBe(1.1)
+      expect(STAR_RADIUS_MIN).toBe(0.16)
+      expect(STAR_RADIUS_RANGE).toBe(0.24)
+      expect(STAR_RADIUS_MIN + STAR_RADIUS_RANGE).toBe(0.4)
     })
 
     it("exports STAR_OPACITY_MIN and STAR_OPACITY_RANGE", () => {
-      expect(STAR_OPACITY_MIN).toBe(0.3)
-      expect(STAR_OPACITY_RANGE).toBe(0.5)
-      expect(STAR_OPACITY_MIN + STAR_OPACITY_RANGE).toBe(0.8)
+      expect(STAR_OPACITY_MIN).toBe(0.24)
+      expect(STAR_OPACITY_RANGE).toBe(0.58)
+      expect(STAR_OPACITY_MIN + STAR_OPACITY_RANGE).toBe(0.82)
     })
   })
 
@@ -372,9 +419,19 @@ describe("StarfieldBackground", () => {
         expect(star.id).toMatch(/^star-\d+-\d+$/)
         expect(star.cx).toBeGreaterThanOrEqual(0)
         expect(star.cy).toBeGreaterThanOrEqual(0)
-        expect(star.r).toBeGreaterThanOrEqual(0.3)
-        expect(star.opacity).toBeGreaterThanOrEqual(0.3)
+        expect(star.r).toBeGreaterThanOrEqual(STAR_RADIUS_MIN)
+        expect(star.opacity).toBeGreaterThanOrEqual(STAR_OPACITY_MIN)
       })
+    })
+  })
+
+  describe("Motion accessibility", () => {
+    it("disables shooting star motion for reduced motion and mobile", () => {
+      const backgroundsCss = readFileSync(resolve(__dirname, "../styles/backgrounds.css"), "utf-8")
+
+      expect(backgroundsCss).toContain("@media (prefers-reduced-motion: reduce)")
+      expect(backgroundsCss).toMatch(/\.starfield-bg__shooting\s*\{[^}]*animation:\s*none/)
+      expect(backgroundsCss).toContain("@media (max-width: 768px)")
     })
   })
 })

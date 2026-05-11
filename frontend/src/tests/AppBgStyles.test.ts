@@ -134,12 +134,12 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
       expect(cssContent).toMatch(/\.dark\s*\{[\s\S]*--premium-app-bg:/)
     })
 
-    it("uses different radial-gradient opacities for dark mode", () => {
+    it("uses astral dawn layers for dark mode", () => {
       expect(cssContent).toMatch(
-        /\.dark\s*\{[\s\S]*rgba\(160,\s*120,\s*255,\s*0\.22\)/
+        /\.dark\s*\{[\s\S]*rgba\(250,\s*220,\s*180,\s*0\.18\)/
       )
       expect(cssContent).toMatch(
-        /\.dark\s*\{[\s\S]*rgba\(90,\s*170,\s*255,\s*0\.14\)/
+        /\.dark\s*\{[\s\S]*linear-gradient\(122deg/
       )
     })
   })
@@ -185,8 +185,9 @@ describe("App Background CSS (AC1, AC2, AC3, AC6)", () => {
       expect(cssContent).toMatch(/\.starfield-bg\s*\{[^}]*pointer-events:\s*none/)
     })
 
-    it("sets starfield opacity 0.4", () => {
-      expect(cssContent).toMatch(/\.starfield-bg\s*\{[^}]*opacity:\s*0\.4/)
+    it("sets starfield opacity for full and sober variants", () => {
+      expect(cssContent).toMatch(/\.starfield-bg\s*\{[^}]*opacity:\s*0\.58/)
+      expect(cssContent).toMatch(/\.app-bg--internal\s+\.starfield-bg\s*\{[^}]*opacity:\s*0\.34/)
     })
 
     it("sets starfield z-index 0 for proper layering", () => {

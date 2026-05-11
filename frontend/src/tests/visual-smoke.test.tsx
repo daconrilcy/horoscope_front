@@ -155,10 +155,12 @@ describe("AC#4 — Fond dark: starfield + gradient cosmique (sans bokeh)", () =>
     expect(content).toContain("pointer-events: none")
   })
 
-  it(".dark .app-bg a des gradients cosmiques violet/bleu", () => {
+  it(".dark .app-bg a des couches astrales avant l'aube", () => {
     expect(bgCss).toMatch(/\.dark\s+\.app-bg\s*\{[^}]*background:\s*var\(--premium-app-bg\)/)
-    expect(premiumThemeCss).toMatch(/rgba\(160,\s*120,\s*255,\s*0\.22\)/)
-    expect(premiumThemeCss).toMatch(/rgba\(90,\s*170,\s*255,\s*0\.14\)/)
+    expect(premiumThemeCss).toMatch(/rgba\(250,\s*220,\s*180,\s*0\.18\)/)
+    expect(premiumThemeCss).toMatch(/linear-gradient\(122deg/)
+    expect(bgCss).toContain("starfield-bg__milky-way")
+    expect(bgCss).toContain("starfield-bg__shooting")
   })
 })
 

@@ -1,6 +1,6 @@
 # Story CS-138 implementer-fond-dark-astral-avant-aube: Implementer le fond dark astral avant l'aube
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

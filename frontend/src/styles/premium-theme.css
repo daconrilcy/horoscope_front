@@ -1,4 +1,4 @@
-/* ── Premium Design Tokens (Story 60.17 & 60.18) ── */
+/* Jetons premium globaux et fond canonique de l'application. */
 
 :root {
   --premium-layout-max-width: 912px;
@@ -52,30 +52,29 @@
 
 /* Dark Mode Overrides */
 .dark {
-  --premium-bg-start: #1a1625;
-  --premium-bg-mid: #151223;
-  --premium-bg-end: #0f0d1a;
-  --premium-app-bg: radial-gradient(820px 580px at 18% 16%, rgba(244, 236, 255, 0.12), transparent 58%),
-    radial-gradient(1200px 800px at 20% 10%, rgba(160, 120, 255, 0.22), transparent 55%),
-    radial-gradient(760px 560px at 74% 18%, rgba(180, 130, 255, 0.18), transparent 58%),
-    radial-gradient(900px 700px at 80% 60%, rgba(90, 170, 255, 0.14), transparent 60%),
-    radial-gradient(900px 640px at 46% 82%, rgba(124, 100, 228, 0.16), transparent 62%),
-    radial-gradient(680px 500px at 88% 78%, rgba(120, 214, 255, 0.1), transparent 64%),
-    linear-gradient(180deg, var(--color-bg-top) 0%, var(--color-bg-mid) 55%, var(--color-bg-bot) 100%);
-  --premium-app-bg-atmosphere: radial-gradient(44% 32% at 50% 28%, rgba(214, 198, 255, 0.12), transparent 72%),
-    radial-gradient(34% 26% at 74% 60%, rgba(140, 102, 255, 0.14), transparent 76%),
-    radial-gradient(30% 24% at 28% 74%, rgba(90, 170, 255, 0.1), transparent 76%),
-    radial-gradient(120% 92% at 50% 50%, transparent 56%, rgba(10, 7, 32, 0.18) 100%);
+  --premium-bg-start: #090b18;
+  --premium-bg-mid: #111533;
+  --premium-bg-end: #17112b;
+  --premium-app-bg: radial-gradient(920px 620px at 13% 8%, rgba(75, 92, 170, 0.2), transparent 58%),
+    radial-gradient(1160px 720px at 82% 10%, rgba(92, 72, 160, 0.2), transparent 62%),
+    radial-gradient(940px 760px at 48% 104%, rgba(226, 181, 112, 0.18), transparent 56%),
+    radial-gradient(840px 620px at 74% 82%, rgba(214, 154, 57, 0.12), transparent 62%),
+    linear-gradient(180deg, #070a14 0%, #101934 54%, #1a1634 100%);
+  --premium-app-bg-atmosphere: radial-gradient(58% 28% at 50% 105%, rgba(250, 220, 180, 0.18), transparent 70%),
+    radial-gradient(62% 42% at 18% 0%, rgba(167, 203, 255, 0.12), transparent 74%),
+    radial-gradient(56% 34% at 92% 12%, rgba(191, 166, 255, 0.11), transparent 78%),
+    linear-gradient(122deg, transparent 8%, rgba(232, 222, 255, 0.04) 30%, rgba(232, 222, 255, 0.1) 46%, rgba(255, 245, 224, 0.05) 58%, transparent 78%),
+    radial-gradient(120% 96% at 50% 45%, rgba(6, 8, 18, 0) 52%, rgba(5, 6, 15, 0.36) 100%);
   --premium-daily-page-bg: var(--premium-app-bg);
   --premium-daily-bg-atmosphere: transparent;
   --premium-daily-bg-depth: transparent;
   
   --premium-glass-surface-1: rgba(255, 255, 255, 0.04);
-  --premium-glass-surface-2: rgba(255, 255, 255, 0.07);
-  --premium-glass-surface-3: rgba(255, 255, 255, 0.09);
-  --premium-glass-border: rgba(255, 255, 255, 0.1);
-  --premium-glass-border-soft: rgba(255, 255, 255, 0.1);
-  --premium-glass-border-strong: rgba(156, 121, 255, 0.2);
+  --premium-glass-surface-2: rgba(18, 24, 50, 0.72);
+  --premium-glass-surface-3: rgba(24, 31, 62, 0.78);
+  --premium-glass-border: rgba(197, 174, 255, 0.14);
+  --premium-glass-border-soft: rgba(197, 174, 255, 0.1);
+  --premium-glass-border-strong: rgba(226, 181, 112, 0.28);
   
   --premium-shadow-card: 0 12px 34px rgba(0, 0, 0, 0.38);
   

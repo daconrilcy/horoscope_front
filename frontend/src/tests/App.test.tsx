@@ -157,6 +157,7 @@ describe("App", () => {
     expect(
       await screen.findByText(/Votre guide astrologique personnel/i, {}, { timeout: 5000 }),
     ).toBeInTheDocument()
+    expect(container.querySelector(".app-shell.app-bg")).toHaveClass("app-bg--landing")
     expect(container.querySelector(".landing-layout")).toBeInTheDocument()
     expect(container.querySelector(".landing-layout .landing-page")).toBeInTheDocument()
   })
@@ -165,11 +166,12 @@ describe("App", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(NOT_FOUND))
     localStorage.removeItem("access_token")
     
-    renderApp(["/login"])
+    const { container } = renderApp(["/login"])
     
     expect(screen.getByLabelText(/Adresse e-mail/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Mot de passe/i, { selector: 'input' })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Se connecter/i })).toBeInTheDocument()
+    expect(container.querySelector(".app-shell.app-bg")).toHaveClass("app-bg--internal")
   })
 
   it("shows privacy policy at /privacy under the public layout", async () => {

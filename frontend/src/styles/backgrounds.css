@@ -1,7 +1,4 @@
-/* Premium background - Gradient + noise overlay + starfield foundation */
-/* Source: docs/interfaces/horoscope-ui-spec.md §6 */
-
-/* Background - Premium gradient + noise overlay (§6) */
+/* Fond global canonique: ciel premium, atmosphere astrale et starfield dark. */
 .app-bg {
   min-height: 100dvh;
   position: relative;
@@ -23,6 +20,16 @@
 
 .dark .app-bg::before {
   background: var(--premium-app-bg-atmosphere);
+  mix-blend-mode: screen;
+  opacity: 0.92;
+}
+
+.dark .app-bg--internal::before {
+  opacity: 0.56;
+}
+
+.dark .app-bg--landing::before {
+  opacity: 1;
 }
 
 /* Noise overlay - light mode only (§6.1 Option B - SVG feTurbulence) */
@@ -68,5 +75,94 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.4;
+  opacity: 0.58;
+  color: var(--star-fill);
+}
+
+.app-bg--internal .starfield-bg {
+  opacity: 0.34;
+}
+
+.starfield-bg svg {
+  display: block;
+}
+
+.starfield-bg__milky-way {
+  opacity: 0.72;
+}
+
+.app-bg--internal .starfield-bg__milky-way {
+  opacity: 0.34;
+}
+
+.starfield-bg__star {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.starfield-bg__star--far {
+  opacity: 0.58;
+}
+
+.starfield-bg__shooting {
+  animation: astral-shooting-star 14s linear infinite;
+}
+
+.starfield-bg__shooting--2 {
+  animation-delay: -5s;
+  animation-duration: 19s;
+}
+
+.starfield-bg__shooting--3 {
+  animation-delay: -11s;
+  animation-duration: 23s;
+}
+
+.app-bg--internal .starfield-bg__shooting {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes astral-shooting-star {
+  0%,
+  82% {
+    opacity: 0;
+    transform: translate3d(-8%, 3%, 0);
+  }
+
+  86% {
+    opacity: 0.52;
+  }
+
+  94% {
+    opacity: 0;
+    transform: translate3d(7%, -3%, 0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(7%, -3%, 0);
+  }
+}
+
+@media (max-width: 768px) {
+  .starfield-bg {
+    opacity: 0.28;
+  }
+
+  .starfield-bg__milky-way {
+    opacity: 0.24;
+  }
+
+  .starfield-bg__shooting {
+    opacity: 0;
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starfield-bg__shooting {
+    opacity: 0;
+    animation: none;
+  }
 }
