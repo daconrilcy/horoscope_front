@@ -1,0 +1,4 @@
+interface:
+  display_name: "CONDAMAD UX/UI Lead"
+  short_description: "Audit UX/UI avec experts React et SCSS"
+  default_prompt: "Use $condamad-ux-ui-lead to audit or design this page and produce a reviewed implementation plan."
