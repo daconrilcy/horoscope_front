@@ -20,7 +20,7 @@ export const HeroSection = () => {
           {t.hero.eyebrow}
         </div>
 
-        <h1 id="hero-title">
+        <h1 id="hero-title" aria-label={`${t.hero.titleLead} - ${t.hero.titleAccent}`}>
           <span className="hero-title__lead">{t.hero.titleLead}</span>
           <span className="hero-title__accent">{t.hero.titleAccent}</span>
         </h1>

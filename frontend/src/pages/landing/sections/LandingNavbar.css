@@ -356,7 +356,7 @@
   gap: 12px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .landing-navbar__links,
   .landing-navbar__login,
   .landing-navbar__cta {
@@ -368,7 +368,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .landing-navbar {
     padding-inline: 16px;
   }
@@ -412,5 +412,16 @@
 
   .landing-navbar__mobile-close {
     box-shadow: var(--landing-mobile-close-shadow);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .landing-navbar__mobile-menu {
+    padding: 24px var(--premium-layout-padding-inline);
+  }
+
+  .landing-navbar__mobile-panel {
+    max-width: 640px;
+    margin: 0 auto;
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { ChevronDown, Globe, Menu, X } from "lucide-react"
 import { Button } from "../../../components/ui/Button/Button"
@@ -12,6 +12,8 @@ export const LandingNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
+  const mobileToggleRef = useRef<HTMLButtonElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   const langLabels: Record<string, string> = useMemo(
     () => ({
@@ -38,6 +40,75 @@ export const LandingNavbar = () => {
     window.addEventListener("keydown", handleEscape)
     return () => window.removeEventListener("keydown", handleEscape)
   }, [])
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return
+
+    setIsLangMenuOpen(false)
+
+    const previousOverflow = document.body.style.overflow
+    const menuElement = mobileMenuRef.current
+    const focusableSelector = [
+      "a[href]",
+      "button:not([disabled])",
+      "textarea:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])",
+    ].join(",")
+
+    document.body.style.overflow = "hidden"
+
+    const focusFirstMenuControl = () => {
+      const focusableElements = Array.from(
+        menuElement?.querySelectorAll<HTMLElement>(focusableSelector) ?? [],
+      )
+
+      focusableElements[0]?.focus()
+    }
+
+    const handleMenuKeydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault()
+        closeAllMenus()
+        return
+      }
+
+      if (event.key !== "Tab" || menuElement === null) return
+
+      const focusableElements = Array.from(
+        menuElement.querySelectorAll<HTMLElement>(focusableSelector),
+      )
+
+      if (focusableElements.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault()
+        lastElement.focus()
+        return
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault()
+        firstElement.focus()
+      }
+    }
+
+    window.setTimeout(focusFirstMenuControl, 0)
+    menuElement?.addEventListener("keydown", handleMenuKeydown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      menuElement?.removeEventListener("keydown", handleMenuKeydown)
+      mobileToggleRef.current?.focus()
+    }
+  }, [isMobileMenuOpen])
 
   const closeAllMenus = () => {
     setIsMobileMenuOpen(false)
@@ -131,6 +202,7 @@ export const LandingNavbar = () => {
             </Button>
 
             <button
+              ref={mobileToggleRef}
               className="landing-navbar__mobile-toggle"
               onClick={() => setIsMobileMenuOpen((value) => !value)}
               aria-label={isMobileMenuOpen ? t.navbarA11y.closeMenu : t.navbarA11y.openMenu}
@@ -145,6 +217,7 @@ export const LandingNavbar = () => {
 
       {isMobileMenuOpen && (
         <div
+          ref={mobileMenuRef}
           id="landing-mobile-menu"
           className="landing-navbar__mobile-menu"
           role="dialog"

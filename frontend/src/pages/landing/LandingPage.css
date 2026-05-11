@@ -585,7 +585,7 @@
   }
 
   .hero-subtitle {
-    max-width: 34ch;
+    max-width: 42ch;
   }
 
   .hero-visual-shell {
@@ -597,19 +597,17 @@
     max-width: none;
   }
 
-  .hero-card__trend-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .hero-card__trend-grid,
   .hero-device__toolbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 767px) {
   .hero-section {
-    padding-top: 16px;
-    gap: 16px;
+    padding-top: 12px;
+    padding-bottom: 38px;
+    gap: 12px;
   }
 
   .hero-content {
@@ -617,7 +615,7 @@
   }
 
   .hero-content h1 {
-    max-width: 9ch;
+    max-width: 12ch;
     font-size: var(--landing-type-hero-title-size-mobile);
     line-height: var(--landing-type-hero-title-line-height-mobile);
   }
@@ -657,7 +655,7 @@
   }
 
   .hero-visual {
-    margin-top: -6px;
+    margin-top: -10px;
   }
 
   .hero-visual-shell {
@@ -666,27 +664,34 @@
   }
 
   .hero-device {
-    gap: 14px;
+    gap: 10px;
     padding: 14px;
   }
 
   .hero-device__bar {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
   }
 
   .hero-device__tool {
     width: 100%;
+    gap: 6px;
+    min-height: 34px;
+    padding-inline: 8px;
   }
 
   .hero-card,
   .hero-card--summary {
-    padding: 14px;
+    padding: 12px;
   }
 
   .hero-card__trend-item {
-    padding: 10px 12px;
+    padding: 9px 10px;
+  }
+
+  .hero-card__trend-grid {
+    gap: 8px;
   }
 
   .hero-panel__title {

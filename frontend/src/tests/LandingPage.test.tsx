@@ -1,9 +1,10 @@
 // Tests DOM de la landing pour verrouiller le rendu, les CTA et l'owner SEO/head.
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { LandingPage } from "../pages/landing/LandingPage"
+import { LandingNavbar } from "../pages/landing/sections/LandingNavbar"
 import { routerFutureFlags } from "./test-utils"
 
 const originalTitle = document.title
@@ -22,6 +23,14 @@ function renderLandingPage() {
   return render(
     <MemoryRouter initialEntries={["/?utm_source=test"]} future={routerFutureFlags}>
       <LandingPage />
+    </MemoryRouter>,
+  )
+}
+
+function renderLandingNavbar() {
+  return render(
+    <MemoryRouter initialEntries={["/"]} future={routerFutureFlags}>
+      <LandingNavbar />
     </MemoryRouter>,
   )
 }
@@ -57,6 +66,48 @@ describe("LandingPage", () => {
       "href",
       "#how-it-works",
     )
+  })
+
+  it("expose un H1 accessible avec separateur sans dupliquer le titre principal", () => {
+    renderLandingPage()
+
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1)
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Votre guide astrologique personnel - Toujours disponible",
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it("confine le focus dans le menu mobile, bloque le scroll et restaure le bouton", async () => {
+    const user = userEvent.setup()
+    const { container } = renderLandingNavbar()
+    const menuButton = screen.getByRole("button", { name: /ouvrir le menu/i })
+
+    await user.click(menuButton)
+
+    const menu = await screen.findByRole("dialog", { name: /menu mobile/i })
+    const focusableControls = Array.from(
+      menu.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"),
+    )
+
+    expect(document.body.style.overflow).toBe("hidden")
+    await waitFor(() => expect(menu).toContainElement(document.activeElement as HTMLElement))
+    expect(focusableControls.length).toBeGreaterThan(2)
+
+    focusableControls[focusableControls.length - 1].focus()
+    await user.tab()
+    expect(document.activeElement).toBe(focusableControls[0])
+
+    await user.tab({ shift: true })
+    expect(document.activeElement).toBe(focusableControls[focusableControls.length - 1])
+
+    await user.keyboard("{Escape}")
+
+    expect(container.querySelector("#landing-mobile-menu")).not.toBeInTheDocument()
+    expect(document.body.style.overflow).toBe("")
+    await waitFor(() => expect(menuButton).toHaveFocus())
   })
 
   it("envoie les evenements analytics quand les CTA hero sont cliques", async () => {
