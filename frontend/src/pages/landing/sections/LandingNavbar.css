@@ -1,9 +1,80 @@
+/* Styles et variables locales de navigation landing. */
 .landing-navbar {
   position: sticky;
   top: 0;
   z-index: 1000;
   padding: 18px var(--premium-layout-padding-inline) 0;
   transition: padding 0.2s ease;
+  --landing-radius-logo: 12px;
+  --landing-radius-dropdown: 22px;
+  --landing-radius-dropdown-mobile: 20px;
+  --landing-navbar-shadow: 0 10px 28px rgba(70, 50, 110, 0.08);
+  --landing-navbar-scrolled-shadow: 0 16px 34px rgba(70, 50, 110, 0.14);
+  --landing-overlay-mobile-bg: rgba(18, 14, 32, 0.26);
+  --landing-navbar-bg: rgba(255, 255, 255, 0.28);
+  --landing-navbar-border: rgba(255, 255, 255, 0.45);
+  --landing-navbar-bg-scrolled: rgba(255, 255, 255, 0.68);
+  --landing-navbar-border-scrolled: rgba(255, 255, 255, 0.74);
+  --landing-language-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(243, 236, 255, 0.44)),
+    rgba(255, 255, 255, 0.28);
+  --landing-language-border: rgba(126, 102, 194, 0.18);
+  --landing-language-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 10px 24px rgba(76, 55, 120, 0.1);
+  --landing-language-bg-hover: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(237, 228, 255, 0.6)),
+    rgba(255, 255, 255, 0.4);
+  --landing-language-border-hover: rgba(126, 102, 194, 0.26);
+  --landing-language-shadow-hover: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 14px 30px rgba(76, 55, 120, 0.14);
+  --landing-language-icon: rgba(107, 84, 171, 0.8);
+  --landing-language-icon-muted: rgba(107, 84, 171, 0.62);
+  --landing-language-icon-strong: rgba(107, 84, 171, 0.88);
+  --landing-language-dropdown-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(244, 238, 252, 0.78)),
+    rgba(255, 255, 255, 0.76);
+  --landing-language-dropdown-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 22px 48px rgba(54, 37, 92, 0.16);
+  --landing-language-option-bg: rgba(255, 255, 255, 0.34);
+  --landing-language-option-bg-hover: rgba(255, 255, 255, 0.62);
+  --landing-language-option-active-bg: linear-gradient(135deg, rgba(142, 124, 240, 0.16), rgba(255, 255, 255, 0.46));
+  --landing-language-option-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 20px rgba(110, 87, 190, 0.1);
+  --landing-mobile-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(244, 237, 246, 0.92));
+  --landing-mobile-panel-shadow: 0 24px 60px rgba(50, 34, 78, 0.24);
+  --landing-mobile-lang-bg: rgba(255, 255, 255, 0.74);
+  --landing-mobile-lang-border: rgba(117, 94, 178, 0.12);
+  --landing-mobile-toggle-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(236, 228, 255, 0.92));
+  --landing-mobile-toggle-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(231, 221, 255, 0.96));
+  --landing-mobile-toggle-shadow: 0 14px 28px rgba(70, 50, 110, 0.16);
+  --landing-mobile-close-shadow: 0 10px 22px rgba(70, 50, 110, 0.1);
+  --landing-mobile-language-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(241, 232, 255, 0.54)),
+    rgba(255, 255, 255, 0.32);
+  --landing-mobile-language-color: rgba(57, 47, 79, 0.92);
+  --landing-mobile-language-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 22px rgba(70, 50, 110, 0.12);
+}
+
+.dark .landing-navbar {
+  --landing-navbar-bg: var(--premium-glass-surface-2);
+  --landing-navbar-border: var(--premium-glass-border);
+  --landing-navbar-bg-scrolled: var(--premium-glass-surface-3);
+  --landing-navbar-border-scrolled: var(--premium-glass-border-strong);
+  --landing-language-bg: var(--premium-glass-surface-2);
+  --landing-language-border: var(--premium-glass-border);
+  --landing-language-shadow: none;
+  --landing-language-bg-hover: var(--premium-glass-surface-3);
+  --landing-language-border-hover: var(--premium-glass-border-strong);
+  --landing-language-shadow-hover: var(--shadow-card);
+  --landing-language-icon: var(--premium-text-main);
+  --landing-language-icon-muted: var(--premium-text-meta);
+  --landing-language-icon-strong: var(--premium-text-strong);
+  --landing-language-dropdown-bg: var(--premium-glass-surface-3);
+  --landing-language-dropdown-shadow: var(--shadow-card);
+  --landing-language-option-bg: var(--premium-glass-surface-1);
+  --landing-language-option-bg-hover: var(--premium-glass-surface-2);
+  --landing-language-option-active-bg: var(--color-admin-info-surface);
+  --landing-language-option-shadow: none;
+  --landing-mobile-panel-bg: color-mix(in srgb, var(--color-bg-sheen) 92%, var(--color-primary) 8%);
+  --landing-mobile-lang-bg: var(--premium-glass-surface-2);
+  --landing-mobile-lang-border: var(--premium-glass-border);
+  --landing-mobile-toggle-bg: var(--premium-glass-surface-2);
+  --landing-mobile-toggle-bg-hover: var(--premium-glass-surface-3);
+  --landing-mobile-language-bg: var(--premium-glass-surface-2);
+  --landing-mobile-language-color: var(--premium-text-strong);
+  --landing-mobile-language-shadow: none;
 }
 
 .landing-navbar--scrolled {
@@ -153,7 +224,7 @@
   padding: 0 14px;
   border: 1px solid transparent;
   border-radius: var(--landing-radius-control);
-  background: var(--landing-hero-device-dot-bg);
+  background: var(--landing-language-option-bg);
   color: var(--premium-text-main);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;

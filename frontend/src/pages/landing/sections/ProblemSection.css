@@ -1,9 +1,14 @@
+/* Styles et variables locales de la section probleme landing. */
 .problem-section {
   max-width: var(--landing-page-max-width);
   margin: 0 auto;
   padding: 0 var(--premium-layout-padding-inline) 96px;
   display: grid;
   gap: 34px;
+  --landing-icon-success: #39805f;
+  --landing-icon-warning: #9f6b7d;
+  --landing-problem-before-bg: rgba(53, 44, 77, 0.08);
+  --landing-problem-before-title: #4f485f;
 }
 
 .problem-section__heading {

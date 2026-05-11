@@ -1,6 +1,6 @@
 # Story CS-137 converger-dark-mode-surfaces-frontend: Converger le dark mode des surfaces frontend auditees
 
-Status: ready-to-review
+Status: done
 
 ## 1. Objective
 

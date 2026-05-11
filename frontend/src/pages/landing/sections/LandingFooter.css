@@ -1,8 +1,16 @@
+/* Styles et variables locales du pied de page landing. */
 .landing-footer {
   margin-top: 24px;
   padding: 72px var(--premium-layout-padding-inline) 36px;
   background: var(--landing-footer-bg);
   color: var(--landing-text-on-dark);
+  --landing-footer-bg: rgba(21, 18, 35, 0.94);
+  --landing-footer-border: rgba(255, 255, 255, 0.1);
+  --landing-text-on-dark: rgba(245, 245, 255, 0.82);
+  --landing-text-on-dark-muted: rgba(245, 245, 255, 0.68);
+  --landing-text-on-dark-strong: rgba(245, 245, 255, 0.9);
+  --landing-text-on-dark-soft: rgba(245, 245, 255, 0.66);
+  --landing-text-on-dark-faint: rgba(245, 245, 255, 0.56);
 }
 
 .landing-footer__container {

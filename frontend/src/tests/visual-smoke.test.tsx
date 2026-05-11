@@ -62,6 +62,7 @@ let premiumThemeCss: string
 let settingsCss: string
 let landingLayoutCss: string
 let landingPageCss: string
+let landingHeroSectionSource: string
 
 beforeAll(() => {
   appCss = readAppCssSurface()
@@ -72,6 +73,7 @@ beforeAll(() => {
   settingsCss = readFileSync(resolve(__dirname, "../pages/settings/Settings.css"), "utf-8")
   landingLayoutCss = readFileSync(resolve(__dirname, "../layouts/LandingLayout.css"), "utf-8")
   landingPageCss = readFileSync(resolve(__dirname, "../pages/landing/LandingPage.css"), "utf-8")
+  landingHeroSectionSource = readFileSync(resolve(__dirname, "../pages/landing/sections/HeroSection.tsx"), "utf-8")
 })
 
 function expectDeclarationToUseDefinedToken(css: string, property: string, token: string) {
@@ -298,6 +300,14 @@ describe("CS-085 — rendu smoke Landing", () => {
     expect(landingPageCss).toMatch(/\.hero-content h1\s*\{[^}]*font-size:\s*var\(--landing-type-hero-title-size\)/)
     expect(landingPageCss).toMatch(/\.hero-device\s*\{[^}]*box-shadow:\s*var\(--landing-hero-device-shadow\)/)
     expect(landingPageCss).not.toMatch(/\.hero-device\s*\{[^}]*animation:\s*hero-device-breathe/)
+  })
+
+  it("garde le hero landing sans timer JS tout en conservant les CTA analytics", () => {
+    expect(landingHeroSectionSource).not.toMatch(/window\.setInterval|setInterval\(|setTimeout\(|requestAnimationFrame/)
+    expect(landingHeroSectionSource).toContain('track("hero_cta_click"')
+    expect(landingHeroSectionSource).toContain('track("secondary_cta_click"')
+    expect(landingPageCss).toContain("@media (prefers-reduced-motion: no-preference)")
+    expect(landingPageCss).toContain("hero-tool-cycle")
   })
 })
 

@@ -1,51 +1,16 @@
-import { useEffect, useMemo, useState } from "react"
+// Section hero de la landing, limitee au rendu et aux CTA analytics.
 import { ArrowRight, Check, Clock3, MessageCircleMore, Sparkles, Star } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "../../../components/ui/Button/Button"
 import { useAnalytics } from "../../../hooks/useAnalytics"
-import { useAstrologyLabels, useTranslation } from "../../../i18n"
+import { useTranslation } from "../../../i18n"
 
+/**
+ * Rend le premier ecran marketing sans timer JavaScript.
+ */
 export const HeroSection = () => {
   const t = useTranslation("landing")
-  const { lang } = useAstrologyLabels()
   const { track } = useAnalytics()
-  const questionChars = useMemo(() => Array.from(t.hero.chatQuestion), [t.hero.chatQuestion])
-  const answerChars = useMemo(() => Array.from(t.hero.chatAnswer), [t.hero.chatAnswer])
-  const [liveState, setLiveState] = useState({
-    toolIndex: 0,
-    trendIndex: 0,
-    questionLength: 0,
-    answerLength: 0,
-  })
-
-  useEffect(() => {
-    const cycleDurationMs = 5400
-    const answerStartMs = 1100
-    const startTime = Date.now()
-
-    const updateLiveState = () => {
-      const elapsed = (Date.now() - startTime) % cycleDurationMs
-      const toolIndex = elapsed < 1800 ? 0 : elapsed < 3600 ? 1 : 2
-      const trendIndex = elapsed < 1400 ? 0 : elapsed < 2800 ? 1 : 2
-      const questionProgress = Math.min(1, elapsed / 900)
-      const answerProgress = elapsed <= answerStartMs ? 0 : Math.min(1, (elapsed - answerStartMs) / 1700)
-
-      setLiveState({
-        toolIndex,
-        trendIndex,
-        questionLength: Math.floor(questionChars.length * questionProgress),
-        answerLength: Math.floor(answerChars.length * answerProgress),
-      })
-    }
-
-    updateLiveState()
-    const intervalId = window.setInterval(updateLiveState, 80)
-
-    return () => window.clearInterval(intervalId)
-  }, [answerChars, questionChars])
-
-  const liveQuestion = questionChars.slice(0, liveState.questionLength).join("")
-  const liveAnswer = answerChars.slice(0, liveState.answerLength).join("")
 
   return (
     <section className="hero-section" aria-labelledby="hero-title">
@@ -133,21 +98,15 @@ export const HeroSection = () => {
             </div>
 
             <div className="hero-device__toolbar" aria-hidden="true">
-              <span
-                className={`hero-device__tool ${liveState.toolIndex === 0 ? "hero-device__tool--active" : ""}`}
-              >
+              <span className="hero-device__tool hero-device__tool--active hero-device__tool--cycle-one">
                 <Clock3 size={13} />
                 <span>{t.hero.dailyLabel}</span>
               </span>
-              <span
-                className={`hero-device__tool ${liveState.toolIndex === 1 ? "hero-device__tool--active" : ""}`}
-              >
+              <span className="hero-device__tool hero-device__tool--cycle-two">
                 <MessageCircleMore size={13} />
                 <span>{t.hero.chatLabel}</span>
               </span>
-              <span
-                className={`hero-device__tool ${liveState.toolIndex === 2 ? "hero-device__tool--active" : ""}`}
-              >
+              <span className="hero-device__tool hero-device__tool--cycle-three">
                 <Star size={13} />
                 <span>{t.hero.momentLabel}</span>
               </span>
@@ -163,13 +122,13 @@ export const HeroSection = () => {
               </div>
               <h2 className="hero-panel__title">{t.hero.dailyTitle}</h2>
               <div className="hero-card__trend-grid">
-                {t.hero.dailyItems.map(({ label, value }) => (
+                {t.hero.dailyItems.map(({ label, value }, index) => (
                   <div
                     key={label}
                     className={`hero-card__trend-item ${
-                      t.hero.dailyItems[liveState.trendIndex]?.label === label
-                        ? "hero-card__trend-item--active"
-                        : ""
+                      index === 0 ? "hero-card__trend-item--active hero-card__trend-item--cycle-one" : ""
+                    }${index === 1 ? " hero-card__trend-item--cycle-two" : ""}${
+                      index === 2 ? " hero-card__trend-item--cycle-three" : ""
                     }`}
                   >
                     <span className="hero-card__trend-label">{label}</span>
@@ -188,18 +147,14 @@ export const HeroSection = () => {
                   </span>
                 </div>
                 <p
-                  className={`hero-chat__bubble hero-chat__bubble--question ${
-                    liveState.toolIndex === 1 ? "hero-chat__bubble--active" : ""
-                  }`}
+                  className="hero-chat__bubble hero-chat__bubble--question hero-chat__bubble--active"
                 >
-                  <span className="hero-chat__text hero-chat__text--question">{liveQuestion}</span>
+                  <span className="hero-chat__text hero-chat__text--question">{t.hero.chatQuestion}</span>
                 </p>
                 <p
-                  className={`hero-chat__bubble hero-chat__bubble--answer ${
-                    liveState.toolIndex === 1 ? "hero-chat__bubble--active" : ""
-                  }`}
+                  className="hero-chat__bubble hero-chat__bubble--answer hero-chat__bubble--active"
                 >
-                  <span className="hero-chat__text hero-chat__text--answer">{liveAnswer}</span>
+                  <span className="hero-chat__text hero-chat__text--answer">{t.hero.chatAnswer}</span>
                 </p>
               </article>
 

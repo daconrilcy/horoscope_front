@@ -1,11 +1,14 @@
+// Section de temoignages optionnelle de la landing publique.
 import { Lock, Star, RotateCcw, ShieldCheck } from "lucide-react"
 import { useTranslation } from "../../../i18n"
 import "./TestimonialsSection.css"
 
+/**
+ * Affiche les temoignages uniquement lorsque le flag produit les active.
+ */
 export const TestimonialsSection = () => {
   const t = useTranslation("landing")
-  
-  // AC1.3: Feature flag
+
   const showTestimonials = import.meta.env.VITE_SHOW_TESTIMONIALS === "true"
 
   if (!showTestimonials) {

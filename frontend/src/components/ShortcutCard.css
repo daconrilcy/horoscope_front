@@ -91,12 +91,13 @@
 }
 
 .dark :where(.shortcut-card__subtitle) {
+  background: var(--premium-glass-surface-1);
   border-color: var(--premium-glass-border);
   color: var(--premium-text-main);
 }
 
 .dark :where(.shortcut-card__subtitle--online) {
-  background: var(--premium-glass-surface-3);
+  background: var(--premium-glass-surface-1);
   border-color: var(--premium-glass-border-strong);
   color: var(--premium-text-strong);
 }

@@ -53,6 +53,13 @@ export const PAGE_LAYOUT_OWNER_CLASSIFICATIONS: PageLayoutOwnerClassification[] 
       exit: "Garde de route landing et inventaire CS-107.",
     },
     {
+      file: "pages/landing/LandingHead.tsx",
+      classification: "page-adjacent-component",
+      owner: "LandingPage",
+      reason: "Owner local des effets SEO/head compose par la landing publique.",
+      exit: "Reste sous namespace landing tant que LandingPage en est l'owner.",
+    },
+    {
       file: "pages/LoginPage.tsx",
       classification: "routed-page",
       route: "/login",

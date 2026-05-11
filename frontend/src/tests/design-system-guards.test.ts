@@ -136,6 +136,14 @@ type PageBackgroundViolation = {
   value: string
 }
 
+type LandingOwnerRoute = {
+  owner: string
+  declarations: Array<{
+    file: string
+    selectors: readonly string[]
+  }>
+}
+
 const PAGE_BACKGROUND_SELECTORS = [
   ".landing-layout",
   ".people-page",
@@ -181,6 +189,94 @@ const CANONICAL_PAGE_BACKGROUND_VALUES = new Set([
   "transparent",
   "none",
 ])
+
+const LANDING_OWNER_GROUPS = new Map<string, LandingOwnerRoute>([
+  ["accent", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout", ".dark .landing-layout"] }],
+  }],
+  ["compact", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout"] }],
+  }],
+  ["cta", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout"] }],
+  }],
+  ["footer", {
+    owner: "footer",
+    declarations: [{ file: "pages/landing/sections/LandingFooter.css", selectors: [".landing-footer"] }],
+  }],
+  ["hero", {
+    owner: "hero",
+    declarations: [{ file: "pages/landing/LandingPage.css", selectors: [".landing-page", ".dark .landing-page"] }],
+  }],
+  ["icon", {
+    owner: "sections",
+    declarations: [{ file: "pages/landing/sections/ProblemSection.css", selectors: [".problem-section"] }],
+  }],
+  ["language", {
+    owner: "navigation",
+    declarations: [{ file: "pages/landing/sections/LandingNavbar.css", selectors: [".landing-navbar", ".dark .landing-navbar"] }],
+  }],
+  ["live", {
+    owner: "hero",
+    declarations: [{ file: "pages/landing/LandingPage.css", selectors: [".landing-page"] }],
+  }],
+  ["mobile", {
+    owner: "navigation",
+    declarations: [{ file: "pages/landing/sections/LandingNavbar.css", selectors: [".landing-navbar", ".dark .landing-navbar"] }],
+  }],
+  ["navbar", {
+    owner: "navigation",
+    declarations: [{ file: "pages/landing/sections/LandingNavbar.css", selectors: [".landing-navbar", ".dark .landing-navbar"] }],
+  }],
+  ["overlay", {
+    owner: "navigation",
+    declarations: [{ file: "pages/landing/sections/LandingNavbar.css", selectors: [".landing-navbar"] }],
+  }],
+  ["page", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout", ".dark .landing-layout"] }],
+  }],
+  ["problem", {
+    owner: "sections",
+    declarations: [{ file: "pages/landing/sections/ProblemSection.css", selectors: [".problem-section"] }],
+  }],
+  ["radius", {
+    owner: "layout",
+    declarations: [
+      { file: "layouts/LandingLayout.css", selectors: [".landing-layout"] },
+      { file: "pages/landing/sections/LandingNavbar.css", selectors: [".landing-navbar"] },
+    ],
+  }],
+  ["rating", {
+    owner: "sections",
+    declarations: [{ file: "pages/landing/sections/TestimonialsSection.css", selectors: [".testimonials-section"] }],
+  }],
+  ["shadow", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout"] }],
+  }],
+  ["soft", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout"] }],
+  }],
+  ["surface", {
+    owner: "layout",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout", ".dark .landing-layout"] }],
+  }],
+  ["text", {
+    owner: "footer",
+    declarations: [{ file: "pages/landing/sections/LandingFooter.css", selectors: [".landing-footer"] }],
+  }],
+  ["type", {
+    owner: "typography",
+    declarations: [{ file: "layouts/LandingLayout.css", selectors: [".landing-layout"] }],
+  }],
+])
+
+const FORBIDDEN_LANDING_OWNER_GROUPS = new Set(["misc", "common", "temp", "shared", "base", "general", "global"])
 
 function findSelectorBeforeBrace(css: string, braceIndex: number): string {
   let cursor = braceIndex - 1
@@ -276,6 +372,39 @@ function collectCssDeclarations(css: string): CssDeclaration[] {
   }
 
   return declarations
+}
+
+function extractLandingGroup(property: string): string | null {
+  const match = /^--landing-([a-zA-Z0-9]+)(?:-[a-zA-Z0-9_-]+)?$/.exec(property)
+
+  return match?.[1] ?? null
+}
+
+function normalizeLandingDeclarationSelector(selector: string): string {
+  return normalizeCssValue(selector.replace(/\/\*[\s\S]*?\*\//g, ""))
+}
+
+function isLandingDeclarationAllowed(route: LandingOwnerRoute, file: string, selector: string): boolean {
+  const normalizedSelector = normalizeLandingDeclarationSelector(selector)
+
+  return route.declarations.some((declarationOwner) =>
+    declarationOwner.file === file && declarationOwner.selectors.includes(normalizedSelector),
+  )
+}
+
+function collectLandingConsumerGroups(files: string[]): string[] {
+  const declarationPattern = /--landing-[a-zA-Z0-9_-]+\s*:/g
+
+  return [
+    ...new Set(
+      files.flatMap((file) => {
+        const sourceWithoutDeclarations = readFrontendFile(file).replace(declarationPattern, "")
+
+        return [...sourceWithoutDeclarations.matchAll(/var\(\s*--landing-([a-zA-Z0-9]+)(?:-[a-zA-Z0-9_-]+)?/g)]
+          .map((match) => match[1])
+      }),
+    ),
+  ].sort()
 }
 
 function selectorMatchesExactPageBackground(selector: string, pageBackgroundSelector: string): boolean {
@@ -1165,8 +1294,20 @@ describe("design-system guards", () => {
   })
 
   it("bloque le retour des literals landing migres par CS-085", () => {
-    const layoutCss = readFrontendFile("layouts/LandingLayout.css")
-    const ownerBlock = findFlatCssBlock(layoutCss, ".landing-layout")
+    const landingOwnerBlocks = [
+      { file: "layouts/LandingLayout.css", selector: ".landing-layout" },
+      { file: "pages/landing/LandingPage.css", selector: ".landing-page" },
+      { file: "pages/landing/sections/LandingFooter.css", selector: ".landing-footer" },
+      { file: "pages/landing/sections/LandingNavbar.css", selector: ".landing-navbar" },
+      { file: "pages/landing/sections/ProblemSection.css", selector: ".problem-section" },
+      { file: "pages/landing/sections/TestimonialsSection.css", selector: ".testimonials-section" },
+    ]
+    const ownerBlocksByFile = new Map(
+      landingOwnerBlocks.map(({ file, selector }) => {
+        const source = readFrontendFile(file)
+        return [file, { source, block: findFlatCssBlock(source, selector) }]
+      }),
+    )
     const landingFiles = [
       "layouts/LandingLayout.css",
       "pages/landing/LandingPage.css",
@@ -1180,10 +1321,18 @@ describe("design-system guards", () => {
       "pages/landing/sections/TestimonialsSection.css",
     ]
     const guardedCss = landingFiles
-      .map((file) => (file === "layouts/LandingLayout.css" ? removeCssRange(layoutCss, ownerBlock.start, ownerBlock.end) : readFrontendFile(file)))
+      .map((file) => {
+        const owner = ownerBlocksByFile.get(file)
+
+        return owner === undefined
+          ? readFrontendFile(file)
+          : removeCssRange(owner.source, owner.block.start, owner.block.end)
+      })
       .join("\n")
     const normalizedGuardedCss = normalizeCssValue(guardedCss)
-    const migratedValues = extractMigratedLandingValues(ownerBlock.body)
+    const migratedValues = [...new Set(
+      [...ownerBlocksByFile.values()].flatMap(({ block }) => extractMigratedLandingValues(block.body)),
+    )]
     const forbiddenPropertyLiterals =
       /(?:#[a-fA-F0-9]{3,8}\b|rgba?\(|hsl(?:a)?\(|box-shadow:\s*(?!\s*(?:var\(|none))|border-radius:\s*(?:50%|\d)|font-size:\s*(?:clamp\(|\d)|font-weight:\s*\d|line-height:\s*\d|letter-spacing:\s*-?0\.|var\(\s*--[a-zA-Z0-9_-]+\s*,)/
     const forbiddenPageScopedNamespaceUsage = /--(?:settings|help|chat|app)-[a-zA-Z0-9_-]+/
@@ -1191,12 +1340,63 @@ describe("design-system guards", () => {
     expect(readFrontendFile("styles/token-namespace-registry.md")).toContain("| `--landing-*` | semantic-extension |")
     expect(readFrontendFile("styles/typography-roles.md")).toContain("landing-marketing")
     expect(migratedValues.length).toBeGreaterThan(100)
+    expect(ownerBlocksByFile.get("pages/landing/LandingPage.css")?.block.body).toContain("--landing-hero-")
+    expect(ownerBlocksByFile.get("pages/landing/sections/LandingNavbar.css")?.block.body).toContain("--landing-navbar-")
+    expect(ownerBlocksByFile.get("pages/landing/sections/LandingFooter.css")?.block.body).toContain("--landing-footer-")
     expect(guardedCss).toContain("var(--landing-")
     expect(guardedCss).not.toMatch(forbiddenPropertyLiterals)
     expect(guardedCss).not.toMatch(forbiddenPageScopedNamespaceUsage)
     for (const value of migratedValues) {
       expect(normalizedGuardedCss).not.toContain(value)
     }
+  })
+
+  it("garde une carte finie des groupes owners landing", () => {
+    const landingCssFiles = [
+      "layouts/LandingLayout.css",
+      ...listFiles("pages/landing", ".css"),
+    ]
+    const landingSurfaceFiles = [
+      ...landingCssFiles,
+      ...listFiles("pages/landing", ".tsx"),
+    ]
+    const landingDeclarations = landingCssFiles.flatMap((file) =>
+      collectCssDeclarations(readFrontendFile(file))
+        .map((declaration) => ({
+          ...declaration,
+          file,
+          group: extractLandingGroup(declaration.property),
+        }))
+        .filter((declaration): declaration is CssDeclaration & { file: string; group: string } =>
+          declaration.group !== null,
+        ),
+    )
+    const variables = [...new Set(landingDeclarations.map((declaration) => declaration.group))].sort()
+    const unclassified = variables.filter((group) => !LANDING_OWNER_GROUPS.has(group))
+    const forbidden = variables.filter((group) => FORBIDDEN_LANDING_OWNER_GROUPS.has(group))
+    const declarationRouteViolations = landingDeclarations.flatMap((declaration) => {
+      const route = LANDING_OWNER_GROUPS.get(declaration.group)
+
+      if (route === undefined || isLandingDeclarationAllowed(route, declaration.file, declaration.selector)) {
+        return []
+      }
+
+      return [{
+        file: declaration.file,
+        selector: declaration.selector,
+        property: declaration.property,
+        owner: route.owner,
+        allowed: route.declarations,
+      }]
+    })
+    const consumerGroups = collectLandingConsumerGroups(landingSurfaceFiles)
+    const groupsWithoutConsumer = variables.filter((group) => !consumerGroups.includes(group))
+
+    expect(variables).toEqual([...LANDING_OWNER_GROUPS.keys()].sort())
+    expect(unclassified).toEqual([])
+    expect(forbidden).toEqual([])
+    expect(declarationRouteViolations).toEqual([])
+    expect(groupsWithoutConsumer).toEqual([])
   })
 
   it("bloque le retour des literals admin migres par CS-086", () => {
@@ -1281,6 +1481,9 @@ describe("design-system guards", () => {
     expect(ownerSurface).toContain(".dark .user-avatar")
     expect(ownerSurface).toContain("background: var(--color-glass-shortcut)")
     expect(ownerSurface).toContain(".dark :where(.shortcut-card__title)")
+    expect(ownerSurface).toContain(".dark :where(.shortcut-card__subtitle)")
+    expect(ownerSurface).toContain("background: var(--premium-glass-surface-1)")
+    expect(ownerSurface).toContain(".dark .profile-metrics-bar")
     expect(ownerSurface).toContain("color: var(--premium-text-strong)")
     expect(ownerSurface).toContain(".dark .privacy-policy-page a")
     expect(ownerSurface).toContain(".dark .privacy-policy-page a:focus-visible")

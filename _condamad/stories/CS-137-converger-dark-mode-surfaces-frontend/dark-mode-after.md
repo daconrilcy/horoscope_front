@@ -1,6 +1,7 @@
 # CS-137 dark mode after
 
 Implementation date: 2026-05-10
+Review/fix update: 2026-05-11
 
 ## Changed owners
 
@@ -20,6 +21,22 @@ Implementation date: 2026-05-10
 - `frontend/src/styles/app/cards.css`: explicit dashboard title, intro and section heading colors for dark visibility.
 - `frontend/src/tests/design-system-guards.test.ts`: CS-137 guard for owners, default blue links, `App.css` isolation, `/consultations` premium tokens and astrologer profile ownership.
 - `frontend/e2e/dark-mode-cs137.spec.ts`: runtime guard for the visible `/dashboard` page, `/consultations` and `/astrologers/:id` in `html.dark`.
+
+## Review/fix update 2026-05-11
+
+- Finding: targeted Playwright audit detected two residual dark surfaces with
+  alpha `0.78` on mobile:
+  - `.shortcut-card__subtitle` on `/dashboard`;
+  - `.profile-metrics-bar` on `/astrologers/:id`.
+- Fix:
+  - `frontend/src/components/ShortcutCard.css` now uses
+    `--premium-glass-surface-1` for dark shortcut subtitles, including the
+    online variant.
+  - `frontend/src/pages/AstrologerProfilePage.css` now uses
+    `--premium-glass-surface-1` for `.dark .profile-metrics-bar`.
+  - `frontend/src/tests/design-system-guards.test.ts` guards both selectors in
+    the CS-137 owner surface.
+- Result: `npm run test:e2e -- e2e/dark-mode-cs137.spec.ts` passes, 3/3 tests.
 
 ## Verification
 
@@ -57,6 +74,24 @@ Result:
 
 - Test files: 114 passed
 - Tests: 1216 passed, 8 skipped
+
+Final review/fix suite from `frontend` on 2026-05-11:
+
+```powershell
+npm run test:e2e -- e2e/dark-mode-cs137.spec.ts
+npm run test -- ShortcutCard AstrologersPage visual-smoke design-system
+npm run lint
+npm run test
+npm run build
+```
+
+Results:
+
+- E2E CS-137: 3 passed.
+- Targeted Vitest: 4 files passed, 103 tests passed.
+- Lint/typecheck: PASS.
+- Full Vitest: 115 files passed, 1235 passed, 8 skipped.
+- Build: PASS.
 
 Additional targeted rerun after full-suite transient dashboard/router failures:
 

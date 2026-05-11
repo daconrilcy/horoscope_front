@@ -1,3 +1,4 @@
+/* Styles et variables locales des temoignages landing. */
 .testimonials-section {
   padding: 100px var(--premium-layout-padding-inline);
   max-width: 1200px;
@@ -5,6 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: 80px;
+  --landing-rating-color: #f1c40f;
 }
 
 @media (prefers-reduced-motion: reduce) {

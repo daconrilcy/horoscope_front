@@ -481,6 +481,10 @@
   color: var(--profile-text-body);
 }
 
+.dark .profile-metrics-bar {
+  background: var(--premium-glass-surface-1);
+}
+
 .profile-quote-signature {
   margin-top: 10px;
   color: var(--color-token-c6893b);
