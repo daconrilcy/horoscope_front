@@ -289,6 +289,34 @@ describe("CS-085 — rendu smoke Landing", () => {
 })
 
 describe("CS-128 — rendu smoke Astrologers compact", () => {
+  it("evite une deuxieme atmosphere floutee sur le catalogue dark", () => {
+    expectBlockToContain(appCss, ".dark #root", [
+      "--app-astro-catalog-page-bg: transparent",
+      "--app-astro-catalog-atmosphere: transparent",
+    ])
+    expectBlockToContain(appCss, ".dark .people-page", [
+      "backdrop-filter: blur(18px)",
+      "-webkit-backdrop-filter: blur(18px)",
+    ])
+    expectBlockToContain(appCss, ".dark .people-page::before", [
+      "filter: none",
+      "opacity: 0",
+    ])
+    expectBlockToContain(appCss, ".dark .people-page::after", [
+      "display: none",
+      "opacity: 0",
+      "background-image: none",
+    ])
+    expectBlockToContain(appCss, ".dark .people-page .person-card", [
+      "backdrop-filter: none",
+      "-webkit-backdrop-filter: none",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-tag", [
+      "backdrop-filter: none",
+      "-webkit-backdrop-filter: none",
+    ])
+  })
+
   it("conserve la matiere token-backed des cartes compactes", () => {
     expectBlockToContain(appCss, ".people-page .person-card", [
       "background: var(--app-person-card-compact-background)",

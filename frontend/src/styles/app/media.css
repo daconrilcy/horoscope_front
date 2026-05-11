@@ -160,6 +160,14 @@
 
 
 
+.dark .people-page::after {
+  display: none;
+  opacity: 0;
+  background-image: none;
+}
+
+
+
 .person-card-orbit {
   position: absolute;
   border-radius: var(--radius-full);

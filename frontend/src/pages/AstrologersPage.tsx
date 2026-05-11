@@ -57,32 +57,32 @@ export function AstrologersPage() {
     navigate(`/astrologers/${encodeURIComponent(expert.id)}`)
   }
 
+  const pageHeader = (
+    <header className="people-page-header">
+      <h1>{t("page_title", lang)}</h1>
+      <p>{t("page_subtitle", lang)}</p>
+    </header>
+  )
+
   return (
-    <PageLayout className="app-panel people-page">
-      <div className="people-page-shell">
-        <header className="people-page-header">
-          <h1>{t("page_title", lang)}</h1>
-          <p>{t("page_subtitle", lang)}</p>
-        </header>
+    <PageLayout className="app-panel people-page" header={pageHeader}>
+      {isLoading && (
+        <div className="people-page-loading state-centered">{t("loading", lang)}</div>
+      )}
 
-        {isLoading && (
-          <div className="people-page-loading state-centered">{t("loading", lang)}</div>
-        )}
+      {error && (
+        <div className="people-page-error notice">
+          {t("error_loading", lang)}
+        </div>
+      )}
 
-        {error && (
-          <div className="people-page-error notice">
-            {t("error_loading", lang)}
-          </div>
-        )}
-
-        {!isLoading && !error && (
-          <AstrologerGrid
-            experts={displayedAstrologers}
-            onSelectAstrologer={handleSelectAstrologer}
-            defaultAstrologerId={preferences?.default_astrologer_id}
-          />
-        )}
-      </div>
+      {!isLoading && !error && (
+        <AstrologerGrid
+          experts={displayedAstrologers}
+          onSelectAstrologer={handleSelectAstrologer}
+          defaultAstrologerId={preferences?.default_astrologer_id}
+        />
+      )}
     </PageLayout>
   )
 }

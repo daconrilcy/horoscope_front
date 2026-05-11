@@ -374,6 +374,13 @@
 
 
 
+.dark .people-page {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+
+
 .people-page::before,
 .people-page::after {
   content: "";
@@ -392,11 +399,17 @@
 
 
 
-.people-page-shell {
+.dark .people-page::before {
+  filter: none;
+  opacity: 0;
+}
+
+
+
+.people-page .page-layout__header,
+.people-page .page-layout__body {
   position: relative;
   z-index: 1;
-  max-width: 1360px;
-  margin: 0 auto;
 }
 
 
@@ -665,14 +678,8 @@
 
 
 
-.people-page .people-page-shell {
-  max-width: none;
-}
-
-
-
 .people-page .people-page-header {
-  margin-bottom: 0.85rem;
+  margin-bottom: 0;
 }
 
 
@@ -708,6 +715,13 @@
   border: var(--app-person-card-compact-border);
   border-radius: var(--app-person-card-compact-radius);
   box-shadow: var(--app-person-card-compact-box-shadow);
+}
+
+
+
+.dark .people-page .person-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 
@@ -831,6 +845,8 @@
   border: var(--app-person-card-compact-tag-border);
   font-size: var(--font-size-3xs);
   box-shadow: var(--app-person-card-compact-tag-box-shadow);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 

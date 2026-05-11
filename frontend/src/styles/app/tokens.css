@@ -453,8 +453,8 @@
   --app-premium-hero-title-color: var(--premium-text-strong);
   --app-premium-hero-subtitle-color: var(--premium-text-main);
   --app-premium-section-title-color: var(--premium-text-strong);
-  --app-astro-catalog-page-bg: var(--premium-app-bg);
-  --app-astro-catalog-atmosphere: var(--premium-app-bg-atmosphere);
+  --app-astro-catalog-page-bg: transparent;
+  --app-astro-catalog-atmosphere: transparent;
   --app-astro-catalog-title-color: var(--premium-text-strong);
   --app-astro-catalog-copy-color: var(--premium-text-main);
   --app-activity-card-premium-background: var(--premium-glass-surface-2);
@@ -535,10 +535,10 @@
   --app-person-card-style-color: var(--premium-accent-purple-soft);
   --app-person-card-bio-color: var(--premium-text-main);
   --app-person-card-compact-style-color: var(--premium-text-main);
-  --app-person-card-compact-background: var(--premium-glass-surface-2);
+  --app-person-card-compact-background: color-mix(in srgb, var(--color-bg-sheen) 88%, var(--color-bg-top) 12%);
   --app-person-card-compact-border: 1px solid var(--premium-glass-border);
   --app-person-card-compact-box-shadow: var(--premium-shadow-card);
-  --app-person-card-compact-featured-background: var(--premium-glass-surface-3);
+  --app-person-card-compact-featured-background: color-mix(in srgb, var(--color-bg-sheen) 84%, var(--color-bg-top) 16%);
   --app-person-card-compact-featured-border-color: var(--premium-glass-border-strong);
   --app-person-card-compact-featured-box-shadow: var(--premium-shadow-card);
   --app-person-card-compact-icon-background: var(--color-admin-info-surface);
