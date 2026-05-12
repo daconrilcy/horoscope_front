@@ -1,0 +1,242 @@
+[
+  {
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "metrics": {
+      "path": "/astrologers",
+      "title": "Nos Astrologues",
+      "subtitle": "Comparez les styles, le type de guide et le bon prochain pas avant d'ouvrir un profil.",
+      "cardCount": 6,
+      "columnsFirstRow": 1,
+      "gridWidth": 308,
+      "cardRects": [
+        {
+          "x": 41,
+          "y": 191.84375,
+          "w": 308,
+          "h": 334.78125,
+          "avatarY": 212.84375,
+          "badgeY": 364.1875,
+          "ctaY": 472.625,
+          "bioBottom": 472.625
+        },
+        {
+          "x": 41,
+          "y": 546.625,
+          "w": 308,
+          "h": 349.78125,
+          "avatarY": 567.625,
+          "badgeY": 718.96875,
+          "ctaY": 842.40625,
+          "bioBottom": 842.40625
+        },
+        {
+          "x": 41,
+          "y": 916.40625,
+          "w": 308,
+          "h": 362.65625,
+          "avatarY": 937.40625,
+          "badgeY": 1088.75,
+          "ctaY": 1225.0625,
+          "bioBottom": 1225.0625
+        },
+        {
+          "x": 41,
+          "y": 1299.0625,
+          "w": 308,
+          "h": 334.78125,
+          "avatarY": 1320.0625,
+          "badgeY": 1471.40625,
+          "ctaY": 1579.84375,
+          "bioBottom": 1579.84375
+        },
+        {
+          "x": 41,
+          "y": 1653.84375,
+          "w": 308,
+          "h": 334.78125,
+          "avatarY": 1674.84375,
+          "badgeY": 1826.1875,
+          "ctaY": 1934.625,
+          "bioBottom": 1934.625
+        },
+        {
+          "x": 41,
+          "y": 2008.625,
+          "w": 308,
+          "h": 334.78125,
+          "avatarY": 2029.625,
+          "badgeY": 2180.96875,
+          "ctaY": 2289.40625,
+          "bioBottom": 2289.40625
+        }
+      ],
+      "horizontalOverflow": false,
+      "firstViewportCardCount": 2,
+      "activeElementRoleCount": 0
+    }
+  },
+  {
+    "viewport": {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024
+    },
+    "metrics": {
+      "path": "/astrologers",
+      "title": "Nos Astrologues",
+      "subtitle": "Comparez les styles, le type de guide et le bon prochain pas avant d'ouvrir un profil.",
+      "cardCount": 6,
+      "columnsFirstRow": 1,
+      "gridWidth": 686,
+      "cardRects": [
+        {
+          "x": 41,
+          "y": 173.296875,
+          "w": 686,
+          "h": 344,
+          "avatarY": 194.296875,
+          "badgeY": 345.640625,
+          "ctaY": 463.296875,
+          "bioBottom": 439.578125
+        },
+        {
+          "x": 41,
+          "y": 537.296875,
+          "w": 686,
+          "h": 344,
+          "avatarY": 558.296875,
+          "badgeY": 709.640625,
+          "ctaY": 827.296875,
+          "bioBottom": 803.578125
+        },
+        {
+          "x": 41,
+          "y": 901.296875,
+          "w": 686,
+          "h": 344,
+          "avatarY": 922.296875,
+          "badgeY": 1073.640625,
+          "ctaY": 1191.296875,
+          "bioBottom": 1167.578125
+        },
+        {
+          "x": 41,
+          "y": 1265.296875,
+          "w": 686,
+          "h": 344,
+          "avatarY": 1286.296875,
+          "badgeY": 1437.640625,
+          "ctaY": 1555.296875,
+          "bioBottom": 1531.578125
+        },
+        {
+          "x": 41,
+          "y": 1629.296875,
+          "w": 686,
+          "h": 344,
+          "avatarY": 1650.296875,
+          "badgeY": 1801.640625,
+          "ctaY": 1919.296875,
+          "bioBottom": 1895.578125
+        },
+        {
+          "x": 41,
+          "y": 1993.296875,
+          "w": 686,
+          "h": 344,
+          "avatarY": 2014.296875,
+          "badgeY": 2165.640625,
+          "ctaY": 2283.296875,
+          "bioBottom": 2259.578125
+        }
+      ],
+      "horizontalOverflow": false,
+      "firstViewportCardCount": 3,
+      "activeElementRoleCount": 0
+    }
+  },
+  {
+    "viewport": {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000
+    },
+    "metrics": {
+      "path": "/astrologers",
+      "title": "Nos Astrologues",
+      "subtitle": "Comparez les styles, le type de guide et le bon prochain pas avant d'ouvrir un profil.",
+      "cardCount": 6,
+      "columnsFirstRow": 3,
+      "gridWidth": 1322,
+      "cardRects": [
+        {
+          "x": 59,
+          "y": 177.296875,
+          "w": 427.328125,
+          "h": 344,
+          "avatarY": 198.296875,
+          "badgeY": 349.640625,
+          "ctaY": 467.296875,
+          "bioBottom": 458.078125
+        },
+        {
+          "x": 506.328125,
+          "y": 177.296875,
+          "w": 427.328125,
+          "h": 344,
+          "avatarY": 198.296875,
+          "badgeY": 349.640625,
+          "ctaY": 467.296875,
+          "bioBottom": 443.578125
+        },
+        {
+          "x": 953.65625,
+          "y": 177.296875,
+          "w": 427.34375,
+          "h": 344,
+          "avatarY": 198.296875,
+          "badgeY": 349.640625,
+          "ctaY": 467.296875,
+          "bioBottom": 443.578125
+        },
+        {
+          "x": 59,
+          "y": 541.296875,
+          "w": 427.328125,
+          "h": 344,
+          "avatarY": 562.296875,
+          "badgeY": 713.640625,
+          "ctaY": 831.296875,
+          "bioBottom": 807.578125
+        },
+        {
+          "x": 506.328125,
+          "y": 541.296875,
+          "w": 427.328125,
+          "h": 344,
+          "avatarY": 562.296875,
+          "badgeY": 713.640625,
+          "ctaY": 831.296875,
+          "bioBottom": 807.578125
+        },
+        {
+          "x": 953.65625,
+          "y": 541.296875,
+          "w": 427.34375,
+          "h": 344,
+          "avatarY": 562.296875,
+          "badgeY": 713.640625,
+          "ctaY": 831.296875,
+          "bioBottom": 807.578125
+        }
+      ],
+      "horizontalOverflow": false,
+      "firstViewportCardCount": 6,
+      "activeElementRoleCount": 0
+    }
+  }
+]

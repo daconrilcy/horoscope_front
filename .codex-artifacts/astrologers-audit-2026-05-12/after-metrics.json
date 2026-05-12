@@ -1,0 +1,182 @@
+[
+  {
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "metrics": {
+      "path": "/astrologers",
+      "title": "Nos Astrologues",
+      "criteria": [
+        "Style de guidance",
+        "IA ou réel",
+        "Bon prochain pas"
+      ],
+      "cardCount": 6,
+      "columnsFirstRow": 1,
+      "gridWidth": 308,
+      "cardRects": [
+        {
+          "x": 41,
+          "y": 235.84375,
+          "w": 308,
+          "h": 334.78125
+        },
+        {
+          "x": 41,
+          "y": 590.625,
+          "w": 308,
+          "h": 349.78125
+        },
+        {
+          "x": 41,
+          "y": 960.40625,
+          "w": 308,
+          "h": 362.65625
+        },
+        {
+          "x": 41,
+          "y": 1343.0625,
+          "w": 308,
+          "h": 334.78125
+        },
+        {
+          "x": 41,
+          "y": 1697.84375,
+          "w": 308,
+          "h": 334.78125
+        },
+        {
+          "x": 41,
+          "y": 2052.625,
+          "w": 308,
+          "h": 334.78125
+        }
+      ],
+      "horizontalOverflow": false,
+      "firstViewportCardCount": 2,
+      "activeElementRoleCount": 0
+    }
+  },
+  {
+    "viewport": {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024
+    },
+    "metrics": {
+      "path": "/astrologers",
+      "title": "Nos Astrologues",
+      "criteria": [
+        "Style de guidance",
+        "IA ou réel",
+        "Bon prochain pas"
+      ],
+      "cardCount": 6,
+      "columnsFirstRow": 2,
+      "gridWidth": 686,
+      "cardRects": [
+        {
+          "x": 41,
+          "y": 217.296875,
+          "w": 333,
+          "h": 349.78125
+        },
+        {
+          "x": 394,
+          "y": 217.296875,
+          "w": 333,
+          "h": 349.78125
+        },
+        {
+          "x": 41,
+          "y": 587.078125,
+          "w": 333,
+          "h": 362.65625
+        },
+        {
+          "x": 394,
+          "y": 587.078125,
+          "w": 333,
+          "h": 362.65625
+        },
+        {
+          "x": 41,
+          "y": 969.734375,
+          "w": 333,
+          "h": 344
+        },
+        {
+          "x": 394,
+          "y": 969.734375,
+          "w": 333,
+          "h": 344
+        }
+      ],
+      "horizontalOverflow": false,
+      "firstViewportCardCount": 6,
+      "activeElementRoleCount": 0
+    }
+  },
+  {
+    "viewport": {
+      "name": "desktop",
+      "width": 1440,
+      "height": 1000
+    },
+    "metrics": {
+      "path": "/astrologers",
+      "title": "Nos Astrologues",
+      "criteria": [
+        "Style de guidance",
+        "IA ou réel",
+        "Bon prochain pas"
+      ],
+      "cardCount": 6,
+      "columnsFirstRow": 3,
+      "gridWidth": 1322,
+      "cardRects": [
+        {
+          "x": 59,
+          "y": 221.296875,
+          "w": 427.328125,
+          "h": 344
+        },
+        {
+          "x": 506.328125,
+          "y": 221.296875,
+          "w": 427.328125,
+          "h": 344
+        },
+        {
+          "x": 953.65625,
+          "y": 221.296875,
+          "w": 427.34375,
+          "h": 344
+        },
+        {
+          "x": 59,
+          "y": 585.296875,
+          "w": 427.328125,
+          "h": 344
+        },
+        {
+          "x": 506.328125,
+          "y": 585.296875,
+          "w": 427.328125,
+          "h": 344
+        },
+        {
+          "x": 953.65625,
+          "y": 585.296875,
+          "w": 427.34375,
+          "h": 344
+        }
+      ],
+      "horizontalOverflow": false,
+      "firstViewportCardCount": 6,
+      "activeElementRoleCount": 0
+    }
+  }
+]

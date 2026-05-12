@@ -1,0 +1,15 @@
+{
+  "title": "Nos Astrologues",
+  "criteria": [
+    "Style de guidance",
+    "IA ou réel",
+    "Bon prochain pas"
+  ],
+  "defaultBadge": [
+    "Guide par défaut"
+  ],
+  "oldCopyPresent": false,
+  "columnsFirstRow": 2,
+  "horizontalOverflow": false,
+  "nestedInteractive": 0
+}
