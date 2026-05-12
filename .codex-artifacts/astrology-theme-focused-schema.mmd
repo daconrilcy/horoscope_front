@@ -1,0 +1,64 @@
+graph TD
+    subgraph BASE [Tables du theme astrologique]
+        planets[planets]
+        signs[signs]
+        houses[houses]
+        aspects[aspects]
+    end
+
+    subgraph ORBES [Orbes et profils de calcul]
+        planet_profiles[planet_profiles]
+        house_profiles[house_profiles]
+        aspect_profiles[aspect_profiles]
+    end
+
+    subgraph ANGLES [Angles et maitrises]
+        astro_points[astro_points]
+        sign_rulerships[sign_rulerships]
+    end
+
+    subgraph DOMAINES [Domaines de restitution]
+        prediction_categories[prediction_categories]
+        planet_category_weights[planet_category_weights]
+        house_category_weights[house_category_weights]
+        point_category_weights[point_category_weights]
+    end
+
+    subgraph REGLES [Regles de calcul astrologique]
+        prediction_rulesets[prediction_rulesets]
+        ruleset_event_types[ruleset_event_types]
+        ruleset_parameters[ruleset_parameters]
+    end
+
+    subgraph SUPPORT [Support ou reserve]
+        astro_characteristics[astro_characteristics]
+        category_calibrations[category_calibrations vide]
+        calibration_raw_days[calibration_raw_days vide]
+        user_prediction_baselines[user_prediction_baselines vide]
+    end
+
+    planets --> planet_profiles
+    houses --> house_profiles
+    aspects --> aspect_profiles
+
+    signs --> sign_rulerships
+    planets --> sign_rulerships
+
+    planets --> planet_category_weights
+    houses --> house_category_weights
+    astro_points --> point_category_weights
+    prediction_categories --> planet_category_weights
+    prediction_categories --> house_category_weights
+    prediction_categories --> point_category_weights
+
+    prediction_rulesets --> ruleset_event_types
+    prediction_rulesets --> ruleset_parameters
+    prediction_rulesets --> category_calibrations
+    prediction_categories --> category_calibrations
+
+    planets --> astro_characteristics
+    signs --> astro_characteristics
+    aspects --> astro_characteristics
+
+    calibration_raw_days --> category_calibrations
+    prediction_categories --> user_prediction_baselines

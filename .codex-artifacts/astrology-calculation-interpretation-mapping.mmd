@@ -1,0 +1,140 @@
+graph TD
+    subgraph REF [Referentiels astrologiques]
+        reference_versions[reference_versions]
+        planets[planets]
+        signs[signs]
+        houses[houses]
+        aspects[aspects]
+        astro_characteristics[astro_characteristics]
+    end
+
+    subgraph CALCREF [Profils et poids de calcul]
+        planet_profiles[planet_profiles]
+        house_profiles[house_profiles]
+        aspect_profiles[aspect_profiles]
+        astro_points[astro_points]
+        sign_rulerships[sign_rulerships]
+        prediction_categories[prediction_categories]
+        planet_category_weights[planet_category_weights]
+        house_category_weights[house_category_weights]
+        point_category_weights[point_category_weights]
+    end
+
+    subgraph RULES [Rulesets moteur]
+        prediction_rulesets[prediction_rulesets]
+        ruleset_event_types[ruleset_event_types]
+        ruleset_parameters[ruleset_parameters]
+    end
+
+    subgraph INPUTS [Entrees utilisateur et contexte]
+        users[users]
+        user_birth_profiles[user_birth_profiles]
+        geo_place_resolved[geo_place_resolved]
+    end
+
+    subgraph NATAL [Calcul du theme natal]
+        chart_results[chart_results result_payload JSON]
+    end
+
+    subgraph DAILY [Calculs de prediction quotidienne]
+        daily_prediction_runs[daily_prediction_runs]
+        daily_prediction_category_scores[daily_prediction_category_scores contributors_json]
+        daily_prediction_turning_points[daily_prediction_turning_points driver_json]
+        daily_prediction_time_blocks[daily_prediction_time_blocks]
+    end
+
+    subgraph CALIB [Calibration et normalisation]
+        category_calibrations[category_calibrations]
+        calibration_raw_days[calibration_raw_days]
+        user_prediction_baselines[user_prediction_baselines]
+    end
+
+    subgraph LLMCONF [Configuration interpretation LLM]
+        llm_use_case_configs[llm_use_case_configs]
+        llm_prompt_versions[llm_prompt_versions]
+        llm_assembly_configs[llm_assembly_configs]
+        llm_execution_profiles[llm_execution_profiles]
+        llm_output_schemas[llm_output_schemas]
+        llm_personas[llm_personas]
+        llm_release_snapshots[llm_release_snapshots]
+    end
+
+    subgraph PERSONA [Personas et templates metier]
+        astrologer_profiles[astrologer_profiles]
+        astrologer_prompt_profiles[astrologer_prompt_profiles]
+        consultation_templates[consultation_templates]
+        editorial_template_versions[editorial_template_versions]
+    end
+
+    subgraph INTERP [Interpretations produites]
+        user_natal_interpretations[user_natal_interpretations interpretation_payload JSON]
+    end
+
+    subgraph OBS [Observabilite interpretation]
+        llm_call_logs[llm_call_logs]
+        llm_call_log_operational_metadata[llm_call_log_operational_metadata]
+        llm_replay_snapshots[llm_replay_snapshots]
+    end
+
+    reference_versions --> planets
+    reference_versions --> signs
+    reference_versions --> houses
+    reference_versions --> aspects
+    reference_versions --> astro_characteristics
+
+    planets --> planet_profiles
+    houses --> house_profiles
+    aspects --> aspect_profiles
+    signs --> sign_rulerships
+    planets --> sign_rulerships
+    planets --> planet_category_weights
+    houses --> house_category_weights
+    astro_points --> point_category_weights
+    prediction_categories --> planet_category_weights
+    prediction_categories --> house_category_weights
+    prediction_categories --> point_category_weights
+
+    reference_versions --> prediction_rulesets
+    prediction_rulesets --> ruleset_event_types
+    prediction_rulesets --> ruleset_parameters
+    prediction_rulesets --> category_calibrations
+    prediction_categories --> category_calibrations
+
+    users --> user_birth_profiles
+    geo_place_resolved --> user_birth_profiles
+    user_birth_profiles --> chart_results
+    reference_versions --> chart_results
+    prediction_rulesets --> chart_results
+
+    chart_results --> daily_prediction_runs
+    users --> daily_prediction_runs
+    reference_versions --> daily_prediction_runs
+    prediction_rulesets --> daily_prediction_runs
+    daily_prediction_runs --> daily_prediction_category_scores
+    daily_prediction_runs --> daily_prediction_turning_points
+    daily_prediction_runs --> daily_prediction_time_blocks
+    prediction_categories --> daily_prediction_category_scores
+    ruleset_event_types --> daily_prediction_turning_points
+
+    calibration_raw_days --> category_calibrations
+    daily_prediction_category_scores --> user_prediction_baselines
+    chart_results --> user_prediction_baselines
+
+    chart_results --> user_natal_interpretations
+    llm_use_case_configs --> llm_prompt_versions
+    llm_prompt_versions --> llm_assembly_configs
+    llm_personas --> llm_assembly_configs
+    llm_execution_profiles --> llm_assembly_configs
+    llm_output_schemas --> llm_assembly_configs
+    llm_release_snapshots --> llm_assembly_configs
+    llm_personas --> astrologer_profiles
+    astrologer_profiles --> astrologer_prompt_profiles
+    astrologer_profiles --> user_natal_interpretations
+    llm_prompt_versions --> user_natal_interpretations
+    llm_assembly_configs --> user_natal_interpretations
+    consultation_templates --> user_natal_interpretations
+    editorial_template_versions --> daily_prediction_runs
+
+    user_natal_interpretations --> llm_call_logs
+    llm_call_logs --> llm_call_log_operational_metadata
+    llm_call_logs --> llm_replay_snapshots

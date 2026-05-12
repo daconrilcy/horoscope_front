@@ -1,0 +1,64 @@
+erDiagram
+    reference_versions ||--o{ planets : versions
+    reference_versions ||--o{ signs : versions
+    reference_versions ||--o{ houses : versions
+    reference_versions ||--o{ aspects : versions
+    reference_versions ||--o{ astro_characteristics : versions
+    reference_versions ||--o{ prediction_categories : versions
+    reference_versions ||--o{ astro_points : versions
+    reference_versions ||--o{ prediction_rulesets : supports
+
+    planets ||--|| planet_profiles : profiles
+    houses ||--|| house_profiles : profiles
+    aspects ||--|| aspect_profiles : profiles
+    signs ||--o{ sign_rulerships : ruled_by
+    planets ||--o{ sign_rulerships : rules
+
+    planets ||--o{ planet_category_weights : weights
+    houses ||--o{ house_category_weights : weights
+    astro_points ||--o{ point_category_weights : weights
+    prediction_categories ||--o{ planet_category_weights : categories
+    prediction_categories ||--o{ house_category_weights : categories
+    prediction_categories ||--o{ point_category_weights : categories
+
+    prediction_rulesets ||--o{ ruleset_event_types : event_types
+    prediction_rulesets ||--o{ ruleset_parameters : parameters
+    prediction_rulesets ||--o{ category_calibrations : calibrates
+    prediction_categories ||--o{ category_calibrations : calibrated
+
+    users ||--o{ user_birth_profiles : owns
+    user_birth_profiles ||--o{ chart_results : produces
+    users ||--o{ chart_results : owns
+    reference_versions ||--o{ chart_results : computed_with
+    prediction_rulesets ||--o{ chart_results : computed_with
+
+    users ||--o{ daily_prediction_runs : owns
+    chart_results ||--o{ daily_prediction_runs : informs
+    reference_versions ||--o{ daily_prediction_runs : computed_with
+    prediction_rulesets ||--o{ daily_prediction_runs : computed_with
+    daily_prediction_runs ||--o{ daily_prediction_category_scores : scores
+    daily_prediction_runs ||--o{ daily_prediction_turning_points : turning_points
+    daily_prediction_runs ||--o{ daily_prediction_time_blocks : time_blocks
+    prediction_categories ||--o{ daily_prediction_category_scores : scored
+    ruleset_event_types ||--o{ daily_prediction_turning_points : triggers
+
+    calibration_raw_days ||--o{ category_calibrations : feeds
+    daily_prediction_category_scores ||--o{ user_prediction_baselines : feeds
+    chart_results ||--o{ user_prediction_baselines : feeds
+
+    chart_results ||--o{ user_natal_interpretations : interpreted
+    users ||--o{ user_natal_interpretations : owns
+    llm_use_case_configs ||--o{ llm_prompt_versions : prompts
+    llm_prompt_versions ||--o{ llm_assembly_configs : assembled
+    llm_personas ||--o{ llm_assembly_configs : persona
+    llm_execution_profiles ||--o{ llm_assembly_configs : execution
+    llm_output_schemas ||--o{ llm_assembly_configs : output_schema
+    llm_release_snapshots ||--o{ llm_assembly_configs : release
+    llm_personas ||--o{ astrologer_profiles : public_profile
+    astrologer_profiles ||--o{ astrologer_prompt_profiles : prompt_profile
+    astrologer_profiles ||--o{ user_natal_interpretations : persona_used
+    llm_prompt_versions ||--o{ user_natal_interpretations : prompt_used
+
+    user_natal_interpretations ||--o{ llm_call_logs : traced_by
+    llm_call_logs ||--o{ llm_call_log_operational_metadata : metadata
+    llm_call_logs ||--o{ llm_replay_snapshots : replay
