@@ -295,6 +295,23 @@
 
 
 
+@media (prefers-reduced-motion: reduce) {
+  .people-page .person-card-orbit {
+    animation: none;
+    transform: none;
+  }
+
+  .people-page .person-card,
+  .people-page .person-card-avatar,
+  .people-page .person-card-avatar::before,
+  .people-page .person-card-avatar-img,
+  .people-page .person-card-tag {
+    transition: none;
+  }
+}
+
+
+
 .person-profile-avatar {
   width: 96px;
   height: 96px;

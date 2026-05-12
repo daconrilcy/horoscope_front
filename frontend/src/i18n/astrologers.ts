@@ -11,9 +11,29 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "Nuestros Astrólogos",
   },
   page_subtitle: {
-    fr: "Choisissez l'astrologue qui vous correspond pour démarrer une conversation.",
-    en: "Choose the astrologer that suits you to start a conversation.",
-    es: "Elija el astrólogo que le corresponda para iniciar una conversación.",
+    fr: "Comparez les styles, le type de guide et le bon prochain pas avant d'ouvrir un profil.",
+    en: "Compare styles, guide type, and the right next step before opening a profile.",
+    es: "Compare estilos, tipo de guía y el siguiente paso adecuado antes de abrir un perfil.",
+  },
+  choice_criteria_label: {
+    fr: "Critères rapides de choix",
+    en: "Quick choice criteria",
+    es: "Criterios rápidos de elección",
+  },
+  choice_criterion_identity: {
+    fr: "Identité et style d'accompagnement",
+    en: "Identity and guidance style",
+    es: "Identidad y estilo de acompañamiento",
+  },
+  choice_criterion_method: {
+    fr: "IA ou réel, signalé sans surcharge",
+    en: "AI or human, signaled without overload",
+    es: "IA o real, señalado sin sobrecarga",
+  },
+  choice_criterion_action: {
+    fr: "Profil détaillé avant discussion",
+    en: "Detailed profile before chatting",
+    es: "Perfil detallado antes de conversar",
   },
   loading: {
     fr: "Chargement...",
@@ -31,9 +51,19 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "No se pudo cargar el perfil de este astrólogo. Inténtelo de nuevo.",
   },
   empty_state: {
-    fr: "Aucun astrologue disponible",
-    en: "No astrologers available",
-    es: "No hay astrólogos disponibles",
+    fr: "Le catalogue est momentanément vide.",
+    en: "The catalogue is temporarily empty.",
+    es: "El catálogo está vacío temporalmente.",
+  },
+  empty_state_title: {
+    fr: "Aucun guide disponible",
+    en: "No guide available",
+    es: "Ningún guía disponible",
+  },
+  empty_state_next_action: {
+    fr: "Revenez dans quelques instants ou lancez une consultation depuis votre espace.",
+    en: "Come back shortly or start a consultation from your space.",
+    es: "Vuelva en unos instantes o inicie una consulta desde su espacio.",
   },
   back_to_catalogue: {
     fr: "Retour au catalogue",
@@ -517,6 +547,7 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
   },
 }
 
+/** Retourne le libelle localise du catalogue astrologues avec repli explicite sur la cle. */
 export function tAstrologers(key: string, lang: AppLocale): string {
   const entry = ASTROLOGERS_I18N[key]
   return entry?.[lang as AstrologyLang] ?? key

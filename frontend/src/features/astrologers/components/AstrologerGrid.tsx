@@ -11,6 +11,7 @@ type AstrologerGridProps = {
   showProfileCta?: boolean
 }
 
+/** Rend la liste catalogue ou son etat vide actionnable selon les donnees disponibles. */
 export function AstrologerGrid({
   experts,
   onSelectAstrologer,
@@ -25,7 +26,9 @@ export function AstrologerGrid({
         <span className="person-grid-empty-icon" role="img" aria-label={t("aria_star", lang)}>
           ⭐
         </span>
+        <strong>{t("empty_state_title", lang)}</strong>
         <p>{t("empty_state", lang)}</p>
+        <span>{t("empty_state_next_action", lang)}</span>
       </div>
     )
   }

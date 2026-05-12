@@ -1,4 +1,4 @@
-// Rend une carte catalogue actionnable avec signaux de choix visibles.
+// Rend une carte catalogue actionnable avec une hierarchie de choix identity-first.
 import { useState } from "react"
 import type { Astrologer } from "@api/astrologers"
 import { detectLang } from "@i18n/astrology"
@@ -11,6 +11,7 @@ type AstrologerCardProps = {
   showProfileCta?: boolean
 }
 
+/** Deduit le theme visuel stable d'une carte a partir du prenom public. */
 function getAstrologerTheme(expert: Astrologer): string {
   const firstName = expert.first_name.toLowerCase()
   if (firstName === "étienne" || firstName === "etienne") return "etienne"
@@ -22,6 +23,7 @@ function getAstrologerTheme(expert: Astrologer): string {
   return "default"
 }
 
+/** Associe au theme une icone decorative courte pour la carte catalogue. */
 function getAstrologerIcon(theme: string): string {
   switch (theme) {
     case "etienne":
@@ -41,6 +43,7 @@ function getAstrologerIcon(theme: string): string {
   }
 }
 
+/** Calcule le badge principal qui resume le meilleur cas d'usage du guide. */
 function getFeaturedBadge(expert: Astrologer): string {
   const firstName = expert.first_name.toLowerCase()
   if (firstName === "orion") return "Analyse precise"
@@ -52,10 +55,12 @@ function getFeaturedBadge(expert: Astrologer): string {
   return expert.style
 }
 
+/** Localise le libelle du type de fournisseur affiche comme metadata secondaire. */
 function getProviderBadgeLabel(providerType: Astrologer["provider_type"], lang: ReturnType<typeof detectLang>) {
   return providerType === "real" ? t("provider_type_real", lang) : t("provider_type_ai", lang)
 }
 
+/** Rend une carte catalogue unique, cliquable et sans action imbriquee. */
 export function AstrologerCard({ expert, isDefault, onClick, showProfileCta = false }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
@@ -80,18 +85,6 @@ export function AstrologerCard({ expert, isDefault, onClick, showProfileCta = fa
     >
       <div className="person-card-orbit person-card-orbit--one" aria-hidden="true" />
       <div className="person-card-orbit person-card-orbit--two" aria-hidden="true" />
-      <div className="person-card-topline">
-        <span className="person-card-icon" aria-hidden="true">{icon}</span>
-        <div className="person-card-badge-stack">
-          {isDefault && (
-            <span className="person-default-badge">
-              {t("your_default", lang)}
-            </span>
-          )}
-          <span className={providerBadgeClassName}>{providerBadgeLabel}</span>
-          <span className="person-card-featured-badge">{featuredBadge}</span>
-        </div>
-      </div>
       <div className="person-card-avatar">
         {showImage ? (
           <img
@@ -109,6 +102,18 @@ export function AstrologerCard({ expert, isDefault, onClick, showProfileCta = fa
       <span className="person-card-name">{fullName}</span>
       <span className="person-card-display-name">{expert.name}</span>
       <p className="person-card-style">{expert.style}</p>
+      <div className="person-card-topline">
+        <span className="person-card-icon" aria-hidden="true">{icon}</span>
+        <div className="person-card-badge-stack">
+          <span className="person-card-featured-badge">{featuredBadge}</span>
+          <span className={providerBadgeClassName}>{providerBadgeLabel}</span>
+          {isDefault && (
+            <span className="person-default-badge">
+              {t("your_default", lang)}
+            </span>
+          )}
+        </div>
+      </div>
       <div className="person-card-divider" aria-hidden="true" />
       <div className="person-card-specialties">
         {expert.specialties.slice(0, 3).map((specialty) => (

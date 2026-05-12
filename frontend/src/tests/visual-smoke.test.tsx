@@ -1,3 +1,4 @@
+// Verifie statiquement les contrats visuels durables des routes premium.
 /**
  * Visual smoke tests — Story 17-10: Correctifs P0 contrastes, tokens, fonds premium
  *
@@ -361,7 +362,7 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     const typoBlendModeProperty = ["mix", "alend", "mode"].join("-")
 
     expectBlockToContain(appCss, ".people-page .person-grid", [
-      "grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+      "grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
     ])
     expectBlockToContain(appCss, ".people-page .person-card", [
       "background: var(--app-person-card-compact-background)",
@@ -370,8 +371,8 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     ])
     expect(appCss).not.toContain(`.people-page .${legacyFeaturedClass}`)
     expectBlockToContain(appCss, ".people-page .person-card-icon", [
-      "position: absolute",
-      "z-index: 5",
+      "position: relative",
+      "flex: 0 0 auto",
       "background: var(--app-person-card-compact-icon-background)",
       "border: var(--app-person-card-compact-icon-border)",
       "box-shadow: var(--app-person-card-compact-icon-box-shadow)",
@@ -398,8 +399,12 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     ])
     expectBlockToContain(appCss, ".people-page .person-card-cta", [
       "margin-top: auto",
-      "text-decoration: underline",
+      "display: flex",
+      "width: 100%",
+      "text-decoration: none",
     ])
+    expect(appCss).toContain("@media (prefers-reduced-motion: reduce)")
+    expect(appCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.people-page\s+\.person-card-orbit\s*\{[\s\S]*animation:\s*none/)
     expect(appCss).not.toContain(typoBlendModeProperty)
   })
 
@@ -449,6 +454,12 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     expect(firstCard.className.toString()).not.toContain(legacyFeaturedClass)
     expect(firstCard.querySelector(".person-card-icon")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-card-avatar")).toBeInTheDocument()
+    expect(firstCard.querySelector(".person-card-avatar")?.compareDocumentPosition(
+      firstCard.querySelector(".person-card-featured-badge") as Node,
+    )).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(firstCard.querySelector(".person-card-name")?.compareDocumentPosition(
+      firstCard.querySelector(".person-card-provider-badge") as Node,
+    )).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(firstCard.querySelectorAll(".person-card-tag")).toHaveLength(3)
     expect(firstCard.querySelector(".person-card-provider-badge")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-card-featured-badge")).toBeInTheDocument()

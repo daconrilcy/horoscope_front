@@ -1,3 +1,4 @@
+// Compose la route catalogue des astrologues et ses etats de chargement.
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -11,6 +12,7 @@ import { PageLayout } from "../layouts"
 
 const ASTROLOGERS_ROTATION_STORAGE_KEY = "experts_rotation_index_v1"
 
+/** Alterne l'ordre d'affichage pour repartir l'exposition des guides. */
 function rotateAstrologers(experts: Astrologer[], rotationIndex: number): Astrologer[] {
   if (experts.length <= 1) {
     return experts
@@ -24,6 +26,7 @@ function rotateAstrologers(experts: Astrologer[], rotationIndex: number): Astrol
   return [...experts.slice(safeIndex), ...experts.slice(0, safeIndex)]
 }
 
+/** Compose la page catalogue protegee et sa navigation vers les profils astrologues. */
 export function AstrologersPage() {
   const navigate = useNavigate()
   const { astrologers, isLoading, error } = useAstrologers()
@@ -61,6 +64,11 @@ export function AstrologersPage() {
     <header className="people-page-header">
       <h1>{t("page_title", lang)}</h1>
       <p>{t("page_subtitle", lang)}</p>
+      <ul className="people-page-choice-list" aria-label={t("choice_criteria_label", lang)}>
+        <li>{t("choice_criterion_identity", lang)}</li>
+        <li>{t("choice_criterion_method", lang)}</li>
+        <li>{t("choice_criterion_action", lang)}</li>
+      </ul>
     </header>
   )
 

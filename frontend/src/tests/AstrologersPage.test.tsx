@@ -1,3 +1,4 @@
+// Valide les etats et les parcours principaux du catalogue astrologues.
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
@@ -175,6 +176,9 @@ describe("AstrologersPage", () => {
       renderAstrologersPage()
 
       expect(screen.getByRole("heading", { name: "Nos Astrologues" })).toBeInTheDocument()
+      expect(screen.getByText("Identité et style d'accompagnement")).toBeInTheDocument()
+      expect(screen.getByText("IA ou réel, signalé sans surcharge")).toBeInTheDocument()
+      expect(screen.getByText("Profil détaillé avant discussion")).toBeInTheDocument()
       expect(screen.getByText("Étienne Garnier")).toBeInTheDocument()
     })
 
@@ -225,12 +229,18 @@ describe("AstrologersPage", () => {
       const { container } = renderAstrologersPage()
       const lunaCard = screen.getByRole("button", { name: /Voir le profil de Luna Caron/i })
       const legacyFeaturedClass = ["person-card", "featured"].join("--")
+      const name = lunaCard.querySelector(".person-card-name")
+      const style = lunaCard.querySelector(".person-card-style")
+      const featuredBadge = lunaCard.querySelector(".person-card-featured-badge")
 
       expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
       expect(screen.getByText("Votre défaut")).toBeInTheDocument()
       expect(screen.getAllByText("Voir le profil")).toHaveLength(mockAstrologersList.length)
       expect(lunaCard.querySelector(".person-card-cta")).toHaveTextContent("Voir le profil")
       expect(lunaCard.querySelector("button")).not.toBeInTheDocument()
+      expect(lunaCard.querySelector("a")).not.toBeInTheDocument()
+      expect(name?.compareDocumentPosition(featuredBadge as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+      expect(style?.compareDocumentPosition(featuredBadge as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
       expect(container.querySelector(`.${legacyFeaturedClass}`)).not.toBeInTheDocument()
     })
 
@@ -328,7 +338,11 @@ describe("AstrologersPage", () => {
 
       renderAstrologersPage()
 
-      expect(screen.getByText("Aucun astrologue disponible")).toBeInTheDocument()
+      expect(screen.getByText("Aucun guide disponible")).toBeInTheDocument()
+      expect(screen.getByText("Le catalogue est momentanément vide.")).toBeInTheDocument()
+      expect(
+        screen.getByText("Revenez dans quelques instants ou lancez une consultation depuis votre espace.")
+      ).toBeInTheDocument()
     })
   })
 })
