@@ -6,7 +6,6 @@ from sqlalchemy import delete, select
 from app.infra.db.base import Base
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -21,7 +20,6 @@ def _cleanup_reference_tables() -> None:
     Base.metadata.create_all(bind=app_test_engine())
     with open_app_test_db_session() as db:
         for model in (
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,
@@ -109,42 +107,21 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
     assert len(payload["signs"]) == 12
     assert len(payload["houses"]) == 12
     assert len(payload["aspects"]) == 5
-    assert len(payload["characteristics"]) >= 1
+    assert "characteristics" not in payload
 
 
-def test_reference_data_exposes_persisted_aspect_orb_traits() -> None:
+def test_reference_data_contract_does_not_expose_characteristics() -> None:
     _cleanup_reference_tables()
     with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        version_model = db.scalar(
-            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
-        )
-        assert version_model is not None
-        db.add(
-            AstroCharacteristicModel(
-                reference_version_id=version_model.id,
-                entity_type="aspect",
-                entity_code="square",
-                trait="orb_luminaries",
-                value="8.5",
-            )
-        )
-        db.add(
-            AstroCharacteristicModel(
-                reference_version_id=version_model.id,
-                entity_type="aspect",
-                entity_code="square",
-                trait="orb_pair_overrides",
-                value='{"sun-mercury": 9.0}',
-            )
-        )
-        db.commit()
         payload = ReferenceDataService.get_active_reference_data(db, version="1.0.0")
 
     aspects = cast(list[dict[str, Any]], payload["aspects"])
     square = next(item for item in aspects if item["code"] == "square")
-    assert square["orb_luminaries"] == 8.5
-    assert square["orb_pair_overrides"] == {"sun-mercury": 9.0}
+    assert "characteristics" not in payload
+    assert "orb_luminaries" not in square
+    assert "orb_pair_overrides" not in square
+    assert square["default_orb_deg"] == 6.0
 
 
 def test_clone_reference_version_preserves_previous_version() -> None:

@@ -5,7 +5,6 @@ from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -24,7 +23,6 @@ def _cleanup_reference_tables() -> None:
     with open_app_test_db_session() as db:
         for model in (
             AuditEventModel,
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,

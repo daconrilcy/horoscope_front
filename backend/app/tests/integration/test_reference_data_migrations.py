@@ -34,6 +34,14 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert "astro_characteristics" in tables
     engine.dispose()
 
+    command.upgrade(config, "head")
+
+    head_engine = create_engine(database_url, future=True)
+    head_tables = set(inspect(head_engine).get_table_names())
+    assert "reference_versions" in head_tables
+    assert "astro_characteristics" not in head_tables
+    head_engine.dispose()
+
     command.downgrade(config, "base")
 
     downgraded_engine = create_engine(database_url, future=True)

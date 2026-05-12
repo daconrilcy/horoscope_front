@@ -9,7 +9,6 @@ from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -43,7 +42,6 @@ def _cleanup_reference_tables() -> None:
     with open_app_test_db_session() as db:
         for model in (
             ChartResultModel,
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,

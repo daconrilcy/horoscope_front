@@ -9,7 +9,6 @@ from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -44,7 +43,6 @@ def _cleanup_reference_tables() -> None:
     Base.metadata.create_all(bind=app_test_engine())
     with open_app_test_db_session() as db:
         for model in (
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,

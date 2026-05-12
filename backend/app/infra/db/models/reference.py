@@ -1,3 +1,5 @@
+"""Modèles SQLAlchemy des données de référence astrologiques."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -9,7 +11,6 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Text,
     UniqueConstraint,
     event,
 )
@@ -32,9 +33,6 @@ class ReferenceVersionModel(Base):
     signs: Mapped[list["SignModel"]] = relationship(back_populates="reference_version")
     houses: Mapped[list["HouseModel"]] = relationship(back_populates="reference_version")
     aspects: Mapped[list["AspectModel"]] = relationship(back_populates="reference_version")
-    characteristics: Mapped[list["AstroCharacteristicModel"]] = relationship(
-        back_populates="reference_version"
-    )
 
 
 class PlanetModel(Base):
@@ -99,32 +97,6 @@ class AspectModel(Base):
     reference_version: Mapped[ReferenceVersionModel] = relationship(back_populates="aspects")
 
 
-class AstroCharacteristicModel(Base):
-    __tablename__ = "astro_characteristics"
-    __table_args__ = (
-        UniqueConstraint(
-            "reference_version_id",
-            "entity_type",
-            "entity_code",
-            "trait",
-        ),
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
-        index=True,
-    )
-    entity_type: Mapped[str] = mapped_column(String(32), index=True)
-    entity_code: Mapped[str] = mapped_column(String(64), index=True)
-    trait: Mapped[str] = mapped_column(String(64))
-    value: Mapped[str] = mapped_column(Text)
-
-    reference_version: Mapped[ReferenceVersionModel] = relationship(
-        back_populates="characteristics"
-    )
-
-
 def _ensure_reference_version_is_mutable(target: object) -> None:
     session = object_session(target)
     if session is None or not isinstance(session, Session):
@@ -141,7 +113,6 @@ def _ensure_reference_version_is_mutable(target: object) -> None:
 @event.listens_for(SignModel, "before_update")
 @event.listens_for(HouseModel, "before_update")
 @event.listens_for(AspectModel, "before_update")
-@event.listens_for(AstroCharacteristicModel, "before_update")
 def _prevent_update_on_locked_reference_version(
     mapper: object, connection: object, target: object
 ) -> None:

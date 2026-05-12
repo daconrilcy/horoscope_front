@@ -32,7 +32,6 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -76,7 +75,6 @@ def _cleanup_tables() -> None:
             BillingPlanModel,
             UserBirthProfileModel,
             UserModel,
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,

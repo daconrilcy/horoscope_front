@@ -13,7 +13,6 @@ from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -71,7 +70,6 @@ def _cleanup_tables() -> None:
             GeoPlaceResolvedModel,
             UserBirthProfileModel,
             UserModel,
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,

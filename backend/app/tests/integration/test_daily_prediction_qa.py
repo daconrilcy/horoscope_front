@@ -38,7 +38,6 @@ from app.infra.db.models.prediction_ruleset import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -165,7 +164,6 @@ def _reset_prediction_reference(db) -> None:
     db.execute(delete(SignRulershipModel))
     db.execute(delete(AspectProfileModel))
     db.execute(delete(PredictionCategoryModel))
-    db.execute(delete(AstroCharacteristicModel))
     db.execute(delete(AspectModel))
     db.execute(delete(HouseModel))
     db.execute(delete(SignModel))

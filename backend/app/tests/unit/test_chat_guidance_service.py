@@ -12,7 +12,6 @@ from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -47,7 +46,6 @@ def _cleanup_tables() -> None:
             ChartResultModel,
             UserBirthProfileModel,
             UserModel,
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,

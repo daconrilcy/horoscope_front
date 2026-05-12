@@ -1,6 +1,6 @@
-from __future__ import annotations
+"""Repository SQLAlchemy pour les donnees de reference astrologiques."""
 
-import json
+from __future__ import annotations
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 from app.core.constants import DEFAULT_ASPECT_ORBS
 from app.infra.db.models.reference import (
     AspectModel,
-    AstroCharacteristicModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -33,7 +32,6 @@ class ReferenceRepository:
 
     def clear_version_data(self, reference_version_id: int) -> None:
         for model in (
-            AstroCharacteristicModel,
             AspectModel,
             HouseModel,
             SignModel,
@@ -52,7 +50,6 @@ class ReferenceRepository:
                 SignModel,
                 HouseModel,
                 AspectModel,
-                AstroCharacteristicModel,
             )
         )
 
@@ -67,7 +64,6 @@ class ReferenceRepository:
                 SignModel,
                 HouseModel,
                 AspectModel,
-                AstroCharacteristicModel,
             )
         )
 
@@ -233,24 +229,6 @@ class ReferenceRepository:
                 ),
             ]
         )
-        self.db.add_all(
-            [
-                AstroCharacteristicModel(
-                    reference_version_id=reference_version_id,
-                    entity_type="planet",
-                    entity_code="sun",
-                    trait="element",
-                    value="fire",
-                ),
-                AstroCharacteristicModel(
-                    reference_version_id=reference_version_id,
-                    entity_type="sign",
-                    entity_code="aries",
-                    trait="modality",
-                    value="cardinal",
-                ),
-            ]
-        )
 
     def clone_version_data(self, source_version_id: int, target_version_id: int) -> None:
         planets = self.db.scalars(
@@ -265,12 +243,6 @@ class ReferenceRepository:
         aspects = self.db.scalars(
             select(AspectModel).where(AspectModel.reference_version_id == source_version_id)
         ).all()
-        characteristics = self.db.scalars(
-            select(AstroCharacteristicModel).where(
-                AstroCharacteristicModel.reference_version_id == source_version_id
-            )
-        ).all()
-
         self.db.add_all(
             [
                 PlanetModel(
@@ -313,18 +285,6 @@ class ReferenceRepository:
                 for item in aspects
             ]
         )
-        self.db.add_all(
-            [
-                AstroCharacteristicModel(
-                    reference_version_id=target_version_id,
-                    entity_type=item.entity_type,
-                    entity_code=item.entity_code,
-                    trait=item.trait,
-                    value=item.value,
-                )
-                for item in characteristics
-            ]
-        )
 
     def get_reference_data(self, version: str) -> dict[str, object]:
         model = self.get_version(version)
@@ -351,37 +311,6 @@ class ReferenceRepository:
             .where(AspectModel.reference_version_id == model.id)
             .order_by(AspectModel.angle, AspectModel.code)
         ).all()
-        characteristics = self.db.scalars(
-            select(AstroCharacteristicModel)
-            .where(AstroCharacteristicModel.reference_version_id == model.id)
-            .order_by(
-                AstroCharacteristicModel.entity_type,
-                AstroCharacteristicModel.entity_code,
-                AstroCharacteristicModel.trait,
-            )
-        ).all()
-
-        aspect_traits_by_code: dict[str, dict[str, object]] = {}
-        for trait in characteristics:
-            if trait.entity_type != "aspect":
-                continue
-            aspect_code = trait.entity_code.strip().lower()
-            if not aspect_code:
-                continue
-            bucket = aspect_traits_by_code.setdefault(aspect_code, {})
-            if trait.trait == "orb_luminaries":
-                try:
-                    bucket["orb_luminaries"] = float(trait.value)
-                except (TypeError, ValueError):
-                    continue
-            elif trait.trait == "orb_pair_overrides":
-                try:
-                    parsed = json.loads(trait.value)
-                except (TypeError, ValueError, json.JSONDecodeError):
-                    continue
-                if isinstance(parsed, dict):
-                    bucket["orb_pair_overrides"] = parsed
-
         return {
             "version": model.version,
             "planets": [{"code": item.code, "name": item.name} for item in planets],
@@ -393,17 +322,7 @@ class ReferenceRepository:
                     "name": item.name,
                     "angle": item.angle,
                     "default_orb_deg": item.default_orb_deg,
-                    **aspect_traits_by_code.get(item.code, {}),
                 }
                 for item in aspects
-            ],
-            "characteristics": [
-                {
-                    "entity_type": item.entity_type,
-                    "entity_code": item.entity_code,
-                    "trait": item.trait,
-                    "value": item.value,
-                }
-                for item in characteristics
             ],
         }
