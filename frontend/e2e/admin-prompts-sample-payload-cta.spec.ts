@@ -1,3 +1,4 @@
+// Verifie le passage du detail catalogue vers les echantillons runtime admin.
 import { expect, test } from "@playwright/test"
 
 /** Même encodage que les tests Vitest (JWT factice admin). */
@@ -152,10 +153,18 @@ async function setupAdminPromptsApiMocks(page: import("@playwright/test").Page) 
   await page.route("**/v1/admin/llm/catalog**", async (route) => {
     const url = route.request().url()
     if (url.includes("/resolved")) {
+      const inspectionMode = new URL(url).searchParams.get("inspection_mode") ?? "assembly_preview"
+      const body = JSON.stringify({
+        ...JSON.parse(RESOLVED_ASSEMBLY_BODY),
+        data: {
+          ...JSON.parse(RESOLVED_ASSEMBLY_BODY).data,
+          inspection_mode: inspectionMode,
+        },
+      })
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: RESOLVED_ASSEMBLY_BODY,
+        body,
       })
       return
     }
@@ -192,15 +201,18 @@ test.describe("Admin prompts — sample payloads", () => {
     await page.goto("/admin/prompts")
     await expect(page.getByRole("heading", { name: "Catalogue prompts LLM" })).toBeVisible()
 
-    await page.getByRole("button", { name: "Ouvrir le detail" }).click()
-    await expect(page.getByRole("heading", { name: "Assembly prompt résolue" })).toBeVisible()
+    await page.getByRole("button", { name: "Ouvrir le détail" }).click()
+    await expect(page.getByRole("region", { name: "Détail d'assemblage résolu" })).toBeVisible()
+    const inspectionModeSelect = page.getByLabel("Mode d'inspection du détail")
+    await inspectionModeSelect.selectOption("runtime_preview")
+    await expect(inspectionModeSelect).toHaveValue("runtime_preview")
 
     const cta = page.getByRole("button", { name: /Gérer les sample payloads \(chat \/ fr-FR\)/ })
     await expect(cta).toBeVisible()
     await cta.click()
 
-    const samplesTab = page.getByRole("tab", { name: "Échantillons runtime" })
-    await expect(samplesTab).toHaveAttribute("aria-selected", "true")
+    await expect(page).toHaveURL(/\/admin\/prompts\/sample-payloads$/)
+    await expect(page.getByRole("heading", { name: "Échantillons runtime", exact: true })).toBeVisible()
 
     await expect(page.getByRole("region", { name: "Gestion des sample payloads" })).toBeVisible()
     await expect(page.getByRole("heading", { name: "Échantillons runtime (sample payloads)" })).toBeVisible()
