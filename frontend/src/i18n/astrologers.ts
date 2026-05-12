@@ -6,14 +6,139 @@ export type AstrologersTranslation = { t: (key: string) => string };
 
 const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
   page_title: {
-    fr: "Nos Astrologues",
-    en: "Our Astrologers",
-    es: "Nuestros Astrólogos",
+    fr: "Choisis ton guide astrologique",
+    en: "Choose your astrology guide",
+    es: "Elige tu guía astrológica",
   },
   page_subtitle: {
-    fr: "Comparez les styles, le type de guide et le bon prochain pas avant d'ouvrir un profil.",
-    en: "Compare styles, guide type, and the right next step before opening a profile.",
-    es: "Compare estilos, tipo de guía y el siguiente paso adecuado antes de abrir un perfil.",
+    fr: "Chaque guide a une approche différente. Sélectionne celui qui correspond à ton besoin du moment.",
+    en: "Each guide has a different approach. Pick the one that fits what you need right now.",
+    es: "Cada guía tiene un enfoque diferente. Elige quien corresponda a tu necesidad del momento.",
+  },
+  choice_guide_title: {
+    fr: "Que veux-tu explorer aujourd'hui ?",
+    en: "What do you want to explore today?",
+    es: "¿Qué quieres explorar hoy?",
+  },
+  choice_guide_subtitle: {
+    fr: "Tu peux commencer avec le guide recommandé ou choisir une intention pour faire remonter les approches les plus adaptées.",
+    en: "You can start with the recommended guide or choose an intent to bring the most relevant approaches forward.",
+    es: "Puedes empezar con la guía recomendada o elegir una intención para destacar los enfoques más adecuados.",
+  },
+  intent_group_label: {
+    fr: "Choisir une intention de consultation",
+    en: "Choose a consultation intent",
+    es: "Elegir una intención de consulta",
+  },
+  intent_beginner: {
+    fr: "Je débute",
+    en: "I'm starting out",
+    es: "Estoy empezando",
+  },
+  intent_love: {
+    fr: "Amour",
+    en: "Love",
+    es: "Amor",
+  },
+  intent_career: {
+    fr: "Carrière",
+    en: "Career",
+    es: "Carrera",
+  },
+  intent_decision: {
+    fr: "Décision",
+    en: "Decision",
+    es: "Decisión",
+  },
+  intent_inner_work: {
+    fr: "Travail intérieur",
+    en: "Inner work",
+    es: "Trabajo interior",
+  },
+  intent_full_reading: {
+    fr: "Analyse complète",
+    en: "Full reading",
+    es: "Análisis completo",
+  },
+  intent_match_badge: {
+    fr: "Adapté à ton intention",
+    en: "Fits your intent",
+    es: "Adaptado a tu intención",
+  },
+  start_with_guide: {
+    fr: "Commencer avec {name}",
+    en: "Start with {name}",
+    es: "Empezar con {name}",
+  },
+  featured_etienne: {
+    fr: "Débutants",
+    en: "Beginners",
+    es: "Principiantes",
+  },
+  featured_luna: {
+    fr: "Relationnel",
+    en: "Relationships",
+    es: "Relaciones",
+  },
+  featured_nox: {
+    fr: "Profondeur",
+    en: "Depth",
+    es: "Profundidad",
+  },
+  featured_orion: {
+    fr: "Analyse précise",
+    en: "Precise analysis",
+    es: "Análisis preciso",
+  },
+  featured_atlas: {
+    fr: "Décisions",
+    en: "Decisions",
+    es: "Decisiones",
+  },
+  featured_selene: {
+    fr: "Cycles",
+    en: "Cycles",
+    es: "Ciclos",
+  },
+  featured_default: {
+    fr: "Guidance",
+    en: "Guidance",
+    es: "Guía",
+  },
+  card_benefit_etienne: {
+    fr: "Pour débuter sans jargon et comprendre les bases de ton thème.",
+    en: "For starting without jargon and understanding the basics of your chart.",
+    es: "Para empezar sin jerga y comprender las bases de tu carta.",
+  },
+  card_benefit_luna: {
+    fr: "Pour explorer tes relations, tes attachements et l'estime de soi.",
+    en: "For exploring relationships, attachment patterns, and self-worth.",
+    es: "Para explorar tus relaciones, vínculos y autoestima.",
+  },
+  card_benefit_nox: {
+    fr: "Pour explorer les blocages profonds et les cycles de transformation.",
+    en: "For exploring deep blocks and cycles of transformation.",
+    es: "Para explorar bloqueos profundos y ciclos de transformación.",
+  },
+  card_benefit_orion: {
+    fr: "Pour analyser les transits, la carrière et les décisions complexes.",
+    en: "For analyzing transits, career, and complex decisions.",
+    es: "Para analizar tránsitos, carrera y decisiones complejas.",
+  },
+  card_benefit_atlas: {
+    fr: "Pour transformer une question concrète en prochaine décision.",
+    en: "For turning a concrete question into a next decision.",
+    es: "Para transformar una pregunta concreta en una próxima decisión.",
+  },
+  card_benefit_selene: {
+    fr: "Pour comprendre tes cycles émotionnels et ton intuition.",
+    en: "For understanding emotional cycles and intuition.",
+    es: "Para comprender tus ciclos emocionales y tu intuición.",
+  },
+  card_benefit_default: {
+    fr: "Pour clarifier ton besoin du moment avec une lecture guidée.",
+    en: "For clarifying your current need with a guided reading.",
+    es: "Para aclarar tu necesidad del momento con una lectura guiada.",
   },
   loading: {
     fr: "Chargement...",
@@ -116,9 +241,9 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     es: "Su Astrólogo",
   },
   your_default: {
-    fr: "Votre défaut",
-    en: "Your default",
-    es: "Su defecto",
+    fr: "Recommandé pour commencer",
+    en: "Recommended to start",
+    es: "Recomendado para empezar",
   },
   online: {
     fr: "En ligne",

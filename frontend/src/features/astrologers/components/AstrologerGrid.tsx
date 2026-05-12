@@ -2,12 +2,19 @@
 import type { Astrologer } from "@api/astrologers"
 import { detectLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
+import {
+  type AstrologerIntentKey,
+  isAstrologerMatchingIntent,
+  isAstrologerRecommendedStarter,
+} from "../astrologerPositioning"
 import { AstrologerCard } from "./AstrologerCard"
 
 type AstrologerGridProps = {
   experts: Astrologer[]
   onSelectAstrologer: (expert: Astrologer) => void
+  onStartAstrologer?: (expert: Astrologer) => void
   defaultAstrologerId?: string | null
+  selectedIntent?: AstrologerIntentKey | null
   showProfileCta?: boolean
 }
 
@@ -15,7 +22,9 @@ type AstrologerGridProps = {
 export function AstrologerGrid({
   experts,
   onSelectAstrologer,
+  onStartAstrologer,
   defaultAstrologerId,
+  selectedIntent = null,
   showProfileCta = false,
 }: AstrologerGridProps) {
   const lang = detectLang()
@@ -39,9 +48,11 @@ export function AstrologerGrid({
         <AstrologerCard
           key={expert.id}
           expert={expert}
-          isDefault={expert.id === defaultAstrologerId}
+          isDefault={expert.id === defaultAstrologerId || isAstrologerRecommendedStarter(expert)}
+          isIntentMatch={selectedIntent !== null && isAstrologerMatchingIntent(expert, selectedIntent)}
           showProfileCta={showProfileCta}
           onClick={() => onSelectAstrologer(expert)}
+          onStart={onStartAstrologer === undefined ? undefined : () => onStartAstrologer(expert)}
         />
       ))}
     </div>

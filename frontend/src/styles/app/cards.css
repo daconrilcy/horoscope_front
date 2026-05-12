@@ -442,7 +442,6 @@
   -webkit-backdrop-filter: blur(20px);
   border: var(--app-person-card-border);
   border-radius: var(--app-person-card-border-radius);
-  cursor: pointer;
   text-align: left;
   transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease;
   color: inherit;
@@ -454,7 +453,8 @@
 
 
 
-.person-card:hover {
+.person-card:hover,
+.person-card:focus-within {
   transform: translateY(-8px) scale(1.022);
   border-color: var(--app-person-card-border-color);
   background: var(--app-person-card-hover-background);
@@ -571,7 +571,7 @@
   color: var(--app-person-card-display-name-color);
   font-size: var(--app-person-card-display-name-font-size);
   letter-spacing: var(--app-person-card-display-name-letter-spacing);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 
@@ -662,8 +662,65 @@
   line-height: var(--line-height-copy-tight);
 }
 
+.people-page-guide {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--app-person-card-compact-radius);
+  background: var(--premium-glass-surface-1);
+}
+
+.people-page-guide-copy {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.people-page-guide h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-tight);
+}
+
+.people-page-guide p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-copy-tight);
+}
+
+.people-page-intents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.people-page-intent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--radius-full);
+  background: var(--premium-glass-surface-2);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.people-page-intent:hover,
+.people-page-intent:focus-visible,
+.people-page-intent--active {
+  border-color: var(--premium-glass-border-strong);
+  background: var(--premium-glass-surface-3);
+}
+
 .people-page .person-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
   margin-top: 1.5rem;
 }
@@ -679,6 +736,13 @@
   box-shadow: var(--app-person-card-compact-box-shadow);
 }
 
+.people-page .person-card--recommended,
+.people-page .person-card--matched {
+  background: var(--app-person-card-compact-featured-background);
+  border-color: var(--app-person-card-compact-featured-border-color);
+  box-shadow: var(--app-person-card-compact-featured-box-shadow);
+}
+
 
 
 .dark .people-page .person-card {
@@ -690,18 +754,27 @@
 
 .people-page .person-card-provider-badge,
 .people-page .person-card-featured-badge,
-.people-page .person-default-badge {
+.people-page .person-default-badge,
+.people-page .person-card-match-badge {
   display: inline-flex;
 }
 
 .people-page .person-card-provider-badge,
-.people-page .person-default-badge {
+.people-page .person-default-badge,
+.people-page .person-card-match-badge {
   background: var(--premium-glass-surface-2);
   box-shadow: none;
   color: var(--color-text-muted);
   font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-semibold);
   text-transform: none;
+}
+
+.people-page .person-default-badge--recommended {
+  align-self: center;
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--premium-glass-border-strong);
+  color: var(--color-text-primary);
 }
 
 .people-page .person-card-featured-badge {
@@ -788,7 +861,7 @@
 
 .people-page .person-card-style {
   align-self: center;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
   font-size: var(--font-size-label);
   color: var(--app-person-card-compact-style-color);
   text-align: center;
@@ -797,6 +870,15 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+.people-page .person-card-benefit {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-copy-tight);
+  text-align: center;
 }
 
 
@@ -829,7 +911,7 @@
 
 .people-page .person-card-bio {
   max-width: none;
-  font-size: var(--font-size-3xs);
+  font-size: var(--font-size-label);
   line-height: var(--line-height-copy-tight);
   display: -webkit-box;
   overflow: hidden;
@@ -838,28 +920,44 @@
   line-clamp: 3;
 }
 
+.people-page .person-card-actions {
+  display: grid;
+  width: 100%;
+  gap: var(--space-2);
+  margin-top: auto;
+}
 
-
-.people-page .person-card-cta {
+.people-page .person-card-primary-cta,
+.people-page .person-card-secondary-cta {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-top: auto;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--premium-glass-border-strong);
   border-radius: var(--radius-md);
-  background: var(--premium-glass-surface-2);
-  color: var(--color-text-primary);
   font-size: var(--font-size-label);
   font-weight: var(--font-weight-bold);
-  text-decoration: none;
+  cursor: pointer;
 }
 
-.people-page .person-card:hover .person-card-cta,
-.people-page .person-card:focus-visible .person-card-cta {
+.people-page .person-card-primary-cta {
+  background: var(--premium-glass-surface-2);
+  color: var(--color-text-primary);
+}
+
+.people-page .person-card-secondary-cta {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.people-page .person-card-primary-cta:hover,
+.people-page .person-card-primary-cta:focus-visible,
+.people-page .person-card-secondary-cta:hover,
+.people-page .person-card-secondary-cta:focus-visible {
   border-color: var(--app-person-card-border-color);
   background: var(--premium-glass-surface-3);
+  color: var(--color-text-primary);
 }
 
 .person-grid-empty {
@@ -884,11 +982,28 @@
 
 
 
-@media (max-width: 560px) {
+@media (min-width: 700px) {
   .people-page .person-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .people-page-guide {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr);
+    align-items: center;
+  }
+}
+
+
+
+@media (min-width: 1180px) {
+  .people-page .person-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+
+
+@media (max-width: 560px) {
   .people-page .person-card {
     min-height: 0;
   }

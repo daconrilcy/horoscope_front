@@ -175,8 +175,10 @@ describe("AstrologersPage", () => {
 
       const { container } = renderAstrologersPage()
 
-      expect(screen.getByRole("heading", { name: "Nos Astrologues" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Choisis ton guide astrologique" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Que veux-tu explorer aujourd'hui ?" })).toBeInTheDocument()
       expect(container.querySelector(".people-page-header ul")).not.toBeInTheDocument()
+      expect(screen.getByText("Recommandé pour commencer")).toBeInTheDocument()
       expect(screen.getByText("Étienne Garnier")).toBeInTheDocument()
     })
 
@@ -189,7 +191,7 @@ describe("AstrologersPage", () => {
 
       renderAstrologersPage()
 
-      expect(screen.getByText("Nos Astrologues")).toBeInTheDocument()
+      expect(screen.getByText("Choisis ton guide astrologique")).toBeInTheDocument()
       expect(screen.getByText("Luna Caron")).toBeInTheDocument()
       expect(screen.getByText("Orion Vasseur")).toBeInTheDocument()
     })
@@ -213,7 +215,7 @@ describe("AstrologersPage", () => {
       expect(screen.getByAltText("Avatar de Luna Caron")).toBeInTheDocument()
     })
 
-    it("shows choice signals and a non-nested visual CTA on each catalogue card", () => {
+    it("shows choice signals with primary start CTA and secondary profile CTA", () => {
       mockUseUserSettings.mockReturnValue({
         data: { default_astrologer_id: "1" },
         isLoading: false,
@@ -225,21 +227,62 @@ describe("AstrologersPage", () => {
       })
 
       const { container } = renderAstrologersPage()
-      const lunaCard = screen.getByRole("button", { name: /Voir le profil de Luna Caron/i })
+      const lunaCard = screen.getByText("Luna Caron").closest(".person-card")
       const legacyFeaturedClass = ["person-card", "featured"].join("--")
-      const name = lunaCard.querySelector(".person-card-name")
-      const style = lunaCard.querySelector(".person-card-style")
-      const featuredBadge = lunaCard.querySelector(".person-card-featured-badge")
+      const name = lunaCard?.querySelector(".person-card-name")
+      const style = lunaCard?.querySelector(".person-card-style")
+      const featuredBadge = lunaCard?.querySelector(".person-card-featured-badge")
 
       expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
-      expect(screen.getByText("Votre défaut")).toBeInTheDocument()
+      expect(screen.getByText("Recommandé pour commencer")).toBeInTheDocument()
+      expect(screen.getByText("Pour explorer tes relations, tes attachements et l'estime de soi.")).toBeInTheDocument()
+      expect(screen.getAllByRole("button", { name: /Commencer avec/i })).toHaveLength(mockAstrologersList.length)
       expect(screen.getAllByText("Voir le profil")).toHaveLength(mockAstrologersList.length)
-      expect(lunaCard.querySelector(".person-card-cta")).toHaveTextContent("Voir le profil")
-      expect(lunaCard.querySelector("button")).not.toBeInTheDocument()
-      expect(lunaCard.querySelector("a")).not.toBeInTheDocument()
+      expect(lunaCard?.querySelector(".person-card-primary-cta")).toHaveTextContent("Commencer avec Luna")
+      expect(lunaCard?.querySelector(".person-card-secondary-cta")).toHaveTextContent("Voir le profil")
+      expect(lunaCard?.querySelector("a")).not.toBeInTheDocument()
       expect(name?.compareDocumentPosition(featuredBadge as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
       expect(style?.compareDocumentPosition(featuredBadge as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
       expect(container.querySelector(`.${legacyFeaturedClass}`)).not.toBeInTheDocument()
+    })
+
+    it("brings matching astrologers forward when selecting an intent", () => {
+      mockUseAstrologers.mockReturnValue({
+        data: [
+          {
+            id: "atlas",
+            name: "Atlas Décision",
+            first_name: "Atlas",
+            last_name: "Morel",
+            avatar_url: "/avatars/atlas.jpg",
+            provider_type: "ia",
+            specialties: ["Décisions"],
+            style: "Pragmatique",
+            bio_short: "Lecture décisionnelle.",
+          },
+          {
+            id: "luna",
+            name: "Luna Céleste",
+            first_name: "Luna",
+            last_name: "Caron",
+            avatar_url: "/avatars/luna.jpg",
+            provider_type: "ia",
+            specialties: ["Relations"],
+            style: "Chaleureuse",
+            bio_short: "Lecture relationnelle.",
+          },
+        ],
+        isPending: false,
+        error: null,
+      })
+
+      const { container } = renderAstrologersPage()
+
+      fireEvent.click(screen.getByRole("button", { name: "Amour" }))
+
+      const cards = container.querySelectorAll(".person-card")
+      expect(cards[0]).toHaveTextContent("Luna Caron")
+      expect(cards[0]).toHaveTextContent("Adapté à ton intention")
     })
 
     it("keeps the profile CTA opt-in for shared astrologer grids", () => {
@@ -255,7 +298,7 @@ describe("AstrologersPage", () => {
 
       expect(screen.queryByText("Voir le profil")).not.toBeInTheDocument()
       expect(screen.getByText("Astrologue IA")).toBeInTheDocument()
-      expect(screen.getByText("Votre défaut")).toBeInTheDocument()
+      expect(screen.getByText("Recommandé pour commencer")).toBeInTheDocument()
     })
 
     it("shows loading state while fetching", () => {
@@ -284,7 +327,7 @@ describe("AstrologersPage", () => {
   })
 
   describe("AC2: Navigation vers profil", () => {
-    it("navigates to profile page when clicking astrologer card", () => {
+    it("navigates to profile page when clicking the secondary CTA", () => {
       mockUseAstrologers.mockReturnValue({
         data: mockAstrologersList,
         isPending: false,
@@ -293,10 +336,23 @@ describe("AstrologersPage", () => {
 
       renderAstrologersPage()
 
-      const lunaCard = screen.getByRole("button", { name: /Voir le profil de Luna Caron/i })
-      fireEvent.click(lunaCard)
+      fireEvent.click(screen.getByRole("button", { name: /Voir le profil de Luna Caron/i }))
 
       expect(mockNavigate).toHaveBeenCalledWith(`/astrologers/${encodeURIComponent("1")}`)
+    })
+
+    it("starts a chat when clicking the primary catalogue CTA", () => {
+      mockUseAstrologers.mockReturnValue({
+        data: mockAstrologersList,
+        isPending: false,
+        error: null,
+      })
+
+      renderAstrologersPage()
+
+      fireEvent.click(screen.getByRole("button", { name: "Commencer avec Luna" }))
+
+      expect(mockNavigate).toHaveBeenCalledWith(`/chat?personaId=${encodeURIComponent("1")}`)
     })
 
     it("uses encodeURIComponent for profile navigation with valid ID formats", () => {
@@ -319,8 +375,7 @@ describe("AstrologersPage", () => {
 
       renderAstrologersPage()
 
-      const card = screen.getByRole("button", { name: /Voir le profil de Astro Expert/i })
-      fireEvent.click(card)
+      fireEvent.click(screen.getByRole("button", { name: /Voir le profil de Astro Expert/i }))
 
       expect(mockNavigate).toHaveBeenCalledWith(`/astrologers/${encodeURIComponent(validId)}`)
     })

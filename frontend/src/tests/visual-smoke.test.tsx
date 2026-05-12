@@ -362,8 +362,12 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     const typoBlendModeProperty = ["mix", "alend", "mode"].join("-")
 
     expectBlockToContain(appCss, ".people-page .person-grid", [
-      "grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
+      "grid-template-columns: minmax(0, 1fr)",
     ])
+    expect(appCss).toContain("@media (min-width: 700px)")
+    expect(appCss).toContain("grid-template-columns: repeat(2, minmax(0, 1fr))")
+    expect(appCss).toContain("@media (min-width: 1180px)")
+    expect(appCss).toContain("grid-template-columns: repeat(3, minmax(0, 1fr))")
     expectBlockToContain(appCss, ".people-page .person-card", [
       "background: var(--app-person-card-compact-background)",
       "border: var(--app-person-card-compact-border)",
@@ -394,14 +398,16 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
       "border: var(--app-person-card-compact-tag-border)",
       "box-shadow: var(--app-person-card-compact-tag-box-shadow)",
     ])
-    expectBlockToContain(appCss, ".people-page .person-card-provider-badge,\n.people-page .person-card-featured-badge,\n.people-page .person-default-badge", [
+    expectBlockToContain(appCss, ".people-page .person-card-provider-badge,\n.people-page .person-card-featured-badge,\n.people-page .person-default-badge,\n.people-page .person-card-match-badge", [
       "display: inline-flex",
     ])
-    expectBlockToContain(appCss, ".people-page .person-card-cta", [
+    expectBlockToContain(appCss, ".people-page .person-card-actions", [
       "margin-top: auto",
+      "width: 100%",
+    ])
+    expectBlockToContain(appCss, ".people-page .person-card-primary-cta,\n.people-page .person-card-secondary-cta", [
       "display: flex",
       "width: 100%",
-      "text-decoration: none",
     ])
     expect(appCss).toContain("@media (prefers-reduced-motion: reduce)")
     expect(appCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*\.people-page\s+\.person-card-orbit\s*\{[\s\S]*animation:\s*none/)
@@ -449,7 +455,8 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     const legacyFeaturedClass = ["person-card", "featured"].join("--")
 
     expect(peoplePage).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: "Nos Astrologues" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Choisis ton guide astrologique" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Que veux-tu explorer aujourd'hui ?" })).toBeInTheDocument()
     expect(cards).toHaveLength(2)
     expect(firstCard.className.toString()).not.toContain(legacyFeaturedClass)
     expect(firstCard.querySelector(".person-card-icon")).toBeInTheDocument()
@@ -464,8 +471,9 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
     expect(firstCard.querySelector(".person-card-provider-badge")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-card-featured-badge")).toBeInTheDocument()
     expect(firstCard.querySelector(".person-default-badge")).toBeInTheDocument()
-    expect(firstCard.querySelector(".person-card-cta")).toHaveTextContent("Voir le profil")
-    expect(firstCard.querySelector("button")).not.toBeInTheDocument()
+    expect(firstCard.querySelector(".person-card-benefit")).toHaveTextContent("Pour explorer tes relations")
+    expect(firstCard.querySelector(".person-card-primary-cta")).toHaveTextContent("Commencer avec Luna")
+    expect(firstCard.querySelector(".person-card-secondary-cta")).toHaveTextContent("Voir le profil")
     expect(screen.getByAltText("Avatar de Luna Caron")).toBeInTheDocument()
   })
 })
