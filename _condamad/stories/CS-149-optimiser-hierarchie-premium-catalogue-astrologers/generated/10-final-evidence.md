@@ -112,6 +112,7 @@
 
 - Full Playwright E2E suite was not run; targeted browser screenshots were captured at 390x844, 768x1024 and 1440x1000.
 - The broad height scan still reports pre-existing `min-height` hits in `forms.css` and `states.css`; they are outside catalogue/card scope and the catalogue-scoped scan is zero-hit.
+- Post-review correction: the header quick criteria list was removed after product feedback because it read as explanatory noise rather than a useful catalogue control. The card-level identity, provider and CTA hierarchy remains covered by tests.
 
 ## Suggested reviewer focus
 

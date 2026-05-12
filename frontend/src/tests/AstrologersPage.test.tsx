@@ -173,12 +173,10 @@ describe("AstrologersPage", () => {
         error: null,
       })
 
-      renderAstrologersPage()
+      const { container } = renderAstrologersPage()
 
       expect(screen.getByRole("heading", { name: "Nos Astrologues" })).toBeInTheDocument()
-      expect(screen.getByText("Identité et style d'accompagnement")).toBeInTheDocument()
-      expect(screen.getByText("IA ou réel, signalé sans surcharge")).toBeInTheDocument()
-      expect(screen.getByText("Profil détaillé avant discussion")).toBeInTheDocument()
+      expect(container.querySelector(".people-page-header ul")).not.toBeInTheDocument()
       expect(screen.getByText("Étienne Garnier")).toBeInTheDocument()
     })
 

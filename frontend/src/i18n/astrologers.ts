@@ -15,26 +15,6 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
     en: "Compare styles, guide type, and the right next step before opening a profile.",
     es: "Compare estilos, tipo de guía y el siguiente paso adecuado antes de abrir un perfil.",
   },
-  choice_criteria_label: {
-    fr: "Critères rapides de choix",
-    en: "Quick choice criteria",
-    es: "Criterios rápidos de elección",
-  },
-  choice_criterion_identity: {
-    fr: "Identité et style d'accompagnement",
-    en: "Identity and guidance style",
-    es: "Identidad y estilo de acompañamiento",
-  },
-  choice_criterion_method: {
-    fr: "IA ou réel, signalé sans surcharge",
-    en: "AI or human, signaled without overload",
-    es: "IA o real, señalado sin sobrecarga",
-  },
-  choice_criterion_action: {
-    fr: "Profil détaillé avant discussion",
-    en: "Detailed profile before chatting",
-    es: "Perfil detallado antes de conversar",
-  },
   loading: {
     fr: "Chargement...",
     en: "Loading...",

@@ -19,6 +19,7 @@
 - Empty state now includes title, explanation and next action.
 - Provider/default badges are visually secondary; featured badge remains the primary choice badge.
 - CTA is a full-width action row instead of underlined text.
+- The header quick criteria list was removed after product feedback; comparison signals now stay on the cards where they are actionable.
 
 ## Commands run
 

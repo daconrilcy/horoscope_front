@@ -64,11 +64,6 @@ export function AstrologersPage() {
     <header className="people-page-header">
       <h1>{t("page_title", lang)}</h1>
       <p>{t("page_subtitle", lang)}</p>
-      <ul className="people-page-choice-list" aria-label={t("choice_criteria_label", lang)}>
-        <li>{t("choice_criterion_identity", lang)}</li>
-        <li>{t("choice_criterion_method", lang)}</li>
-        <li>{t("choice_criterion_action", lang)}</li>
-      </ul>
     </header>
   )
 

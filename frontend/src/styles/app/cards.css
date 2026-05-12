@@ -662,30 +662,6 @@
   line-height: var(--line-height-copy-tight);
 }
 
-.people-page-choice-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: var(--space-4) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.people-page-choice-list li {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--premium-glass-border);
-  border-radius: var(--radius-full);
-  background: var(--premium-glass-surface-2);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-}
-
-
-
 .people-page .person-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: var(--space-5);
