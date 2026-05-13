@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from sqlalchemy import inspect
+from sqlalchemy import String, Text, inspect
 from sqlalchemy.orm import Session
 
+from app.infra.db.base import Base
 from app.infra.db.models.prediction_reference import (
     AstralPlanetSignDignityModel,
     AstroPointModel,
@@ -102,6 +103,24 @@ def test_house_models_use_canonical_astral_table_names():
     assert AstralHouseSystemModel.__tablename__ == "astral_house_systems"
     assert HouseProfileModel.__tablename__ == "astral_prediction_daily_house_profiles"
     assert HouseCategoryWeightModel.__tablename__ == "astral_house_category_weights"
+
+
+def test_runtime_models_do_not_store_house_system_codes_as_string_columns():
+    """Verrouille la référence canonique des systèmes de maisons en SQL relationnel."""
+    forbidden_columns = []
+
+    for mapper in Base.registry.mappers:
+        table = getattr(mapper.class_, "__table__", None)
+        if table is None:
+            continue
+
+        for column in table.columns:
+            if column.name in {"house_system", "house_system_effective"} and isinstance(
+                column.type, (String, Text)
+            ):
+                forbidden_columns.append(f"{table.name}.{column.name}")
+
+    assert forbidden_columns == []
 
 
 PLANET_CODES = [
