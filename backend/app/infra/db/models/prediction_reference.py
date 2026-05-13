@@ -80,7 +80,7 @@ class PlanetProfileModel(Base):
 
 
 class HouseProfileModel(Base):
-    __tablename__ = "house_profiles"
+    __tablename__ = "astral_prediction_daily_house_profiles"
     __table_args__ = (UniqueConstraint("reference_version_id", "house_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -89,7 +89,9 @@ class HouseProfileModel(Base):
         nullable=False,
         index=True,
     )
-    house_id: Mapped[int] = mapped_column(ForeignKey("houses.id"), nullable=False, index=True)
+    house_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_houses.id"), nullable=False, index=True
+    )
     # values: angular, succedent, cadent
     house_kind: Mapped[str] = mapped_column(String(16), nullable=False)
     visibility_weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
@@ -128,7 +130,7 @@ class PlanetCategoryWeightModel(Base):
 
 
 class HouseCategoryWeightModel(Base):
-    __tablename__ = "house_category_weights"
+    __tablename__ = "astral_house_category_weights"
     __table_args__ = (UniqueConstraint("reference_version_id", "house_id", "category_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -137,7 +139,9 @@ class HouseCategoryWeightModel(Base):
         nullable=False,
         index=True,
     )
-    house_id: Mapped[int] = mapped_column(ForeignKey("houses.id"), nullable=False, index=True)
+    house_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_houses.id"), nullable=False, index=True
+    )
     category_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_categories.id"), nullable=False, index=True
     )

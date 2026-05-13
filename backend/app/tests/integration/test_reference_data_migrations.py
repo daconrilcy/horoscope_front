@@ -77,6 +77,8 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert "planets" not in head_tables
     assert "astral_planets" in head_tables
     assert "signs" not in head_tables
+    assert "houses" not in head_tables
+    assert "astral_houses" in head_tables
     assert "sign_rulerships" not in head_tables
     for table_name in (
         "astral_signs",
@@ -90,7 +92,13 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     ):
         assert table_name in head_tables
     assert "astral_sign_rulerships" not in head_tables
-    for table_name in ("astral_planets", "astral_signs", "houses", "aspects", "astro_points"):
+    for table_name in (
+        "astral_planets",
+        "astral_signs",
+        "astral_houses",
+        "aspects",
+        "astro_points",
+    ):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" not in columns
     planet_foreign_key_targets = {
@@ -107,6 +115,16 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         )
     }
     assert planet_foreign_key_targets == {"astral_planets"}
+    house_foreign_key_targets = {
+        foreign_key["referred_table"]
+        for table_name in (
+            "astral_prediction_daily_house_profiles",
+            "astral_house_category_weights",
+        )
+        for foreign_key in head_inspector.get_foreign_keys(table_name)
+        if "house_id" in foreign_key["constrained_columns"]
+    }
+    assert house_foreign_key_targets == {"astral_houses"}
     profile_columns = {
         column["name"] for column in head_inspector.get_columns("astral_sign_profiles")
     }
@@ -256,15 +274,17 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         )
     for table_name in (
         "astral_prediction_daily_planet_profiles",
-        "house_profiles",
+        "astral_prediction_daily_house_profiles",
         "aspect_profiles",
         "planet_category_weights",
-        "house_category_weights",
+        "astral_house_category_weights",
         "point_category_weights",
     ):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" in columns
     assert "planet_profiles" not in set(head_inspector.get_table_names())
+    assert "house_profiles" not in set(head_inspector.get_table_names())
+    assert "house_category_weights" not in set(head_inspector.get_table_names())
     head_engine.dispose()
 
     command.downgrade(config, "base")

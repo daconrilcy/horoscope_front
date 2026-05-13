@@ -21,9 +21,9 @@ from app.infra.db.models.reference import PlanetModel, ReferenceVersionModel
 NEW_TABLES = [
     "prediction_categories",
     "astral_prediction_daily_planet_profiles",
-    "house_profiles",
+    "astral_prediction_daily_house_profiles",
     "planet_category_weights",
-    "house_category_weights",
+    "astral_house_category_weights",
     "astro_points",
     "point_category_weights",
     "aspect_profiles",
@@ -35,19 +35,19 @@ EXPECTED_INDEXES = {
         "ix_astral_prediction_daily_planet_profiles_planet_id",
         "ix_astral_prediction_daily_planet_profiles_reference_version_id",
     },
-    "house_profiles": {
-        "ix_house_profiles_house_id",
-        "ix_house_profiles_reference_version_id",
+    "astral_prediction_daily_house_profiles": {
+        "ix_astral_prediction_daily_house_profiles_house_id",
+        "ix_astral_prediction_daily_house_profiles_reference_version_id",
     },
     "planet_category_weights": {
         "ix_planet_category_weights_category_id",
         "ix_planet_category_weights_planet_id",
         "ix_planet_category_weights_reference_version_id",
     },
-    "house_category_weights": {
-        "ix_house_category_weights_category_id",
-        "ix_house_category_weights_house_id",
-        "ix_house_category_weights_reference_version_id",
+    "astral_house_category_weights": {
+        "ix_astral_house_category_weights_category_id",
+        "ix_astral_house_category_weights_house_id",
+        "ix_astral_house_category_weights_reference_version_id",
     },
     "astro_points": set(),
     "point_category_weights": {
@@ -113,6 +113,9 @@ def test_migration_a_prediction_tables_creation(
 
     tables = set(inspector.get_table_names())
     assert "planet_profiles" not in tables
+    assert "houses" not in tables
+    assert "house_profiles" not in tables
+    assert "house_category_weights" not in tables
     for table in NEW_TABLES:
         assert table in tables, f"Table {table} was not created by Alembic"
 

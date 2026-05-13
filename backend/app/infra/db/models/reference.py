@@ -135,7 +135,7 @@ class AstralSignProfileModel(Base):
 
 
 class HouseModel(Base):
-    __tablename__ = "houses"
+    __tablename__ = "astral_houses"
     __table_args__ = (UniqueConstraint("number"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

@@ -94,6 +94,13 @@ def test_planet_model_uses_canonical_astral_table_name():
     assert PlanetModel.__tablename__ == "astral_planets"
 
 
+def test_house_models_use_canonical_astral_table_names():
+    """Les modèles maison pointent vers les noms SQL canoniques astraux."""
+    assert HouseModel.__tablename__ == "astral_houses"
+    assert HouseProfileModel.__tablename__ == "astral_prediction_daily_house_profiles"
+    assert HouseCategoryWeightModel.__tablename__ == "astral_house_category_weights"
+
+
 PLANET_CODES = [
     "sun",
     "moon",
