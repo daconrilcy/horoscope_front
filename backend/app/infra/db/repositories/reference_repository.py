@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.constants import DEFAULT_ASPECT_ORBS
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralDignityTypeModel,
     AstralSignModel,
     HouseModel,
     PlanetModel,
@@ -41,6 +42,7 @@ class ReferenceRepository:
             for model in (
                 PlanetModel,
                 AstralSignModel,
+                AstralDignityTypeModel,
                 HouseModel,
                 AspectModel,
             )
@@ -96,6 +98,21 @@ class ReferenceRepository:
                 is None
             ):
                 self.db.add(AstralSignModel(code=code, name=name))
+
+        dignity_type_rows = [
+            ("domicile", "Domicile"),
+            ("detriment", "Detriment"),
+            ("exaltation", "Exaltation"),
+            ("fall", "Fall"),
+        ]
+        for code, name in dignity_type_rows:
+            if (
+                self.db.scalar(
+                    select(AstralDignityTypeModel.id).where(AstralDignityTypeModel.code == code)
+                )
+                is None
+            ):
+                self.db.add(AstralDignityTypeModel(code=code, name=name))
 
         house_rows = [
             (1, "Self"),

@@ -104,6 +104,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralDignityTypeModel,
     AstralElementModel,
     AstralModalityModel,
     AstralPolarityModel,
@@ -194,6 +195,7 @@ __all__ = [
     "UserPredictionBaselineModel",
     "UserRefreshTokenModel",
     "AspectModel",
+    "AstralDignityTypeModel",
     "AstralElementModel",
     "AstralModalityModel",
     "AstralPolarityModel",

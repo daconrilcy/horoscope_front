@@ -1,3 +1,5 @@
+"""Valide les migrations des référentiels astrologiques stables."""
+
 from pathlib import Path
 
 from alembic import command
@@ -63,6 +65,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_elements",
         "astral_modalities",
         "astral_polarities",
+        "astral_dignity_type",
         "astral_sign_profiles",
         "astral_sign_rulerships",
     ):
@@ -98,6 +101,9 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert connection.execute(text("SELECT COUNT(*) FROM astral_modalities")).scalar_one() == 3
         assert connection.execute(text("SELECT COUNT(*) FROM astral_polarities")).scalar_one() == 2
         assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_dignity_type")).scalar_one() == 4
+        )
+        assert (
             connection.execute(text("SELECT COUNT(*) FROM astral_sign_profiles")).scalar_one() == 12
         )
         assert {
@@ -109,6 +115,9 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert {
             row[0] for row in connection.execute(text("SELECT code FROM astral_polarities")).all()
         } == {"yang", "yin"}
+        assert {
+            row[0] for row in connection.execute(text("SELECT code FROM astral_dignity_type")).all()
+        } == {"domicile", "detriment", "exaltation", "fall"}
         profile_rows = connection.execute(
             text(
                 """

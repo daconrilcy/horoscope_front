@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.infra.db.models import (
     AspectModel,
     AspectProfileModel,
+    AstralDignityTypeModel,
     AstralElementModel,
     AstralModalityModel,
     AstralPolarityModel,
@@ -42,6 +43,7 @@ EXPECTED_COUNTS = {
     "house_profiles": 12,
     "aspect_profiles": 5,
     "astro_points": 4,
+    "astral_dignity_type": 4,
     "astral_elements": 4,
     "astral_modalities": 3,
     "astral_polarities": 2,
@@ -105,7 +107,9 @@ def _required_keyword_list(
 
 def _ensure_taxonomy(
     db: Session,
-    model: type[AstralElementModel | AstralModalityModel | AstralPolarityModel],
+    model: type[
+        AstralDignityTypeModel | AstralElementModel | AstralModalityModel | AstralPolarityModel
+    ],
     rows: list[tuple[str, str]],
 ) -> dict[str, int]:
     """Insère les valeurs manquantes d'une taxonomie astrale stable."""
@@ -114,6 +118,20 @@ def _ensure_taxonomy(
             db.add(model(code=code, name=name))
     db.flush()
     return {row.code: row.id for row in db.scalars(select(model)).all()}
+
+
+def _ensure_astral_dignity_types(db: Session) -> None:
+    """Garantit le référentiel stable des types de dignités astrologiques."""
+    _ensure_taxonomy(
+        db,
+        AstralDignityTypeModel,
+        [
+            ("domicile", "Domicile"),
+            ("detriment", "Detriment"),
+            ("exaltation", "Exaltation"),
+            ("fall", "Fall"),
+        ],
+    )
 
 
 def _ensure_astral_sign_profiles(db: Session) -> None:
@@ -237,6 +255,9 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         .where(AspectProfileModel.reference_version_id == reference_version_id)
     )
     actual["astro_points"] = db.scalar(select(func.count()).select_from(AstroPointModel))
+    actual["astral_dignity_type"] = db.scalar(
+        select(func.count()).select_from(AstralDignityTypeModel)
+    )
     actual["astral_elements"] = db.scalar(select(func.count()).select_from(AstralElementModel))
     actual["astral_modalities"] = db.scalar(select(func.count()).select_from(AstralModalityModel))
     actual["astral_polarities"] = db.scalar(select(func.count()).select_from(AstralPolarityModel))
@@ -340,6 +361,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     # 1. Vérification d idempotence.
     v2 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0"))
     if v2 is not None:
+        _ensure_astral_dignity_types(db)
         if db.scalar(select(func.count()).select_from(AstralSignModel)) > 0:
             _ensure_astral_sign_profiles(db)
         actual = _check_counts(db, v2.id)
@@ -469,6 +491,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             print("Seeding stable astrology structures...")
             repo.seed_version_defaults()
         db.flush()
+        _ensure_astral_dignity_types(db)
         _ensure_astral_sign_profiles(db)
 
     # 4. Alimentation des catégories de prédiction.

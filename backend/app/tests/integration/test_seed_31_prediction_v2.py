@@ -1,3 +1,5 @@
+"""Valide l'amorçage canonique du référentiel de prédiction v2."""
+
 import json
 from pathlib import Path
 
@@ -11,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.infra.db.models import (
     AspectProfileModel,
+    AstralDignityTypeModel,
     AstralElementModel,
     AstralModalityModel,
     AstralPolarityModel,
@@ -131,6 +134,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             == 5
         )
         assert session.scalar(select(func.count()).select_from(AstroPointModel)) == 4
+        assert session.scalar(select(func.count()).select_from(AstralDignityTypeModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralElementModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralModalityModel)) == 3
         assert session.scalar(select(func.count()).select_from(AstralPolarityModel)) == 2
@@ -150,6 +154,12 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
         assert {row.code for row in session.scalars(select(AstralPolarityModel)).all()} == {
             "yang",
             "yin",
+        }
+        assert {row.code for row in session.scalars(select(AstralDignityTypeModel)).all()} == {
+            "domicile",
+            "detriment",
+            "exaltation",
+            "fall",
         }
         profile_rows = session.execute(
             select(
