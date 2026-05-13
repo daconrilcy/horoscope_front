@@ -31,7 +31,9 @@ class ReferenceVersionModel(Base):
 
 
 class PlanetModel(Base):
-    __tablename__ = "planets"
+    """Planète astrologique stable utilisée comme vocabulaire canonique."""
+
+    __tablename__ = "astral_planets"
     __table_args__ = (UniqueConstraint("code"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

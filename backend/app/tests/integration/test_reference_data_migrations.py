@@ -45,6 +45,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     tables = set(inspector.get_table_names())
     assert "reference_versions" in tables
     assert "planets" in tables
+    assert "astral_planets" not in tables
     assert "signs" in tables
     assert "houses" in tables
     assert "aspects" in tables
@@ -58,6 +59,8 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     head_tables = set(head_inspector.get_table_names())
     assert "reference_versions" in head_tables
     assert "astro_characteristics" not in head_tables
+    assert "planets" not in head_tables
+    assert "astral_planets" in head_tables
     assert "signs" not in head_tables
     assert "sign_rulerships" not in head_tables
     for table_name in (
@@ -71,9 +74,20 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_sign_rulerships",
     ):
         assert table_name in head_tables
-    for table_name in ("planets", "astral_signs", "houses", "aspects", "astro_points"):
+    for table_name in ("astral_planets", "astral_signs", "houses", "aspects", "astro_points"):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" not in columns
+    planet_foreign_key_targets = {
+        foreign_key["referred_table"]
+        for table_name in (
+            "astral_prediction_daily_planet_profiles",
+            "planet_category_weights",
+            "astral_sign_rulerships",
+        )
+        for foreign_key in head_inspector.get_foreign_keys(table_name)
+        if "planet_id" in foreign_key["constrained_columns"]
+    }
+    assert planet_foreign_key_targets == {"astral_planets"}
     profile_columns = {
         column["name"] for column in head_inspector.get_columns("astral_sign_profiles")
     }

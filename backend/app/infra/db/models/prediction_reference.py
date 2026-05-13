@@ -59,7 +59,9 @@ class PlanetProfileModel(Base):
         nullable=False,
         index=True,
     )
-    planet_id: Mapped[int] = mapped_column(ForeignKey("planets.id"), nullable=False, index=True)
+    planet_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_planets.id"), nullable=False, index=True
+    )
     class_code: Mapped[str] = mapped_column(String(32), nullable=False)  # luminary, personal, etc.
     speed_rank: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     speed_class: Mapped[str] = mapped_column(String(16), nullable=False)  # fast, medium, slow
@@ -107,7 +109,9 @@ class PlanetCategoryWeightModel(Base):
         nullable=False,
         index=True,
     )
-    planet_id: Mapped[int] = mapped_column(ForeignKey("planets.id"), nullable=False, index=True)
+    planet_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_planets.id"), nullable=False, index=True
+    )
     category_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_categories.id"), nullable=False, index=True
     )
@@ -187,7 +191,9 @@ class AstralSignRulershipModel(Base):
     astral_sign_id: Mapped[int] = mapped_column(
         ForeignKey("astral_signs.id"), nullable=False, index=True
     )
-    planet_id: Mapped[int] = mapped_column(ForeignKey("planets.id"), nullable=False, index=True)
+    planet_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_planets.id"), nullable=False, index=True
+    )
     rulership_type: Mapped[str] = mapped_column(
         String(32), nullable=False, default="domicile"
     )  # domicile, exaltation, etc.

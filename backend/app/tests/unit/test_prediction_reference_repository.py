@@ -85,6 +85,11 @@ def test_structural_astrology_models_are_not_versioned():
         assert "reference_version_id" not in columns
 
 
+def test_planet_model_uses_canonical_astral_table_name():
+    """Le modèle des planètes pointe vers le nom SQL canonique astral."""
+    assert PlanetModel.__tablename__ == "astral_planets"
+
+
 PLANET_CODES = [
     "sun",
     "moon",
