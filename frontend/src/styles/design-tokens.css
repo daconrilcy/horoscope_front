@@ -19,6 +19,9 @@
   --color-overlay-modal: rgba(0,0,0,0.5);
   --color-interactive-ghost-hover: rgba(255,255,255,0.05);
 
+  /* === PLANS DE SUPERPOSITION === */
+  --z-index-modal: 1000;
+
   /* === SURFACES GLASS === */
   --color-glass-bg: rgba(255,255,255,0.55);
   --color-glass-bg-2: rgba(255,255,255,0.38);

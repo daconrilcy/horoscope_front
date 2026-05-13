@@ -910,6 +910,14 @@ describe("design-system guards", () => {
     expect(veilBlock.body).toContain("pointer-events: none")
   })
 
+  it("garde les modales au-dessus du shell applicatif", () => {
+    const modalCss = readFrontendFile("components/ui/Modal/Modal.css")
+    const designTokensCss = readFrontendFile("styles/design-tokens.css")
+
+    expect(modalCss).toContain("z-index: var(--z-index-modal)")
+    expect(designTokensCss).toMatch(/--z-index-modal:\s*1000;/)
+  })
+
   it("execute la garde des literals hardcodes migres par CS-027", () => {
     const migratedFiles = [
       "App.css",
