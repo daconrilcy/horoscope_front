@@ -62,6 +62,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert "sign_rulerships" not in head_tables
     for table_name in (
         "astral_signs",
+        "astral_systems",
         "astral_elements",
         "astral_modalities",
         "astral_polarities",
@@ -96,8 +97,11 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert "reference_version_id" not in rulership_columns
     assert "astral_sign_id" in rulership_columns
     assert "system" in rulership_columns
+    system_columns = {column["name"] for column in head_inspector.get_columns("astral_systems")}
+    assert system_columns == {"id", "name"}
     with head_engine.connect() as connection:
         assert connection.execute(text("SELECT COUNT(*) FROM astral_elements")).scalar_one() == 4
+        assert connection.execute(text("SELECT COUNT(*) FROM astral_systems")).scalar_one() == 4
         assert connection.execute(text("SELECT COUNT(*) FROM astral_modalities")).scalar_one() == 3
         assert connection.execute(text("SELECT COUNT(*) FROM astral_polarities")).scalar_one() == 2
         assert (
@@ -109,6 +113,9 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert {
             row[0] for row in connection.execute(text("SELECT code FROM astral_elements")).all()
         } == {"fire", "earth", "air", "water"}
+        assert {
+            row[0] for row in connection.execute(text("SELECT name FROM astral_systems")).all()
+        } == {"traditional", "modern", "hellenistic", "medieval"}
         assert {
             row[0] for row in connection.execute(text("SELECT code FROM astral_modalities")).all()
         } == {"cardinal", "fixed", "mutable"}
