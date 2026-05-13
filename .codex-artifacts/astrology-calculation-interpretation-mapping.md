@@ -14,7 +14,6 @@ graph TD
         signs[signs]
         houses[houses]
         aspects[aspects]
-        astro_characteristics[astro_characteristics]
     end
 
     subgraph CALCREF [Profils et poids de calcul]
@@ -89,7 +88,6 @@ graph TD
     reference_versions --> signs
     reference_versions --> houses
     reference_versions --> aspects
-    reference_versions --> astro_characteristics
 
     planets --> planet_profiles
     houses --> house_profiles
@@ -157,7 +155,6 @@ erDiagram
     reference_versions ||--o{ signs : versions
     reference_versions ||--o{ houses : versions
     reference_versions ||--o{ aspects : versions
-    reference_versions ||--o{ astro_characteristics : versions
     reference_versions ||--o{ prediction_categories : versions
     reference_versions ||--o{ astro_points : versions
     reference_versions ||--o{ prediction_rulesets : supports
@@ -220,7 +217,7 @@ erDiagram
 
 ## Lecture du flux
 
-1. Les tables `reference_versions`, `planets`, `signs`, `houses`, `aspects` et `astro_characteristics` definissent le vocabulaire astrologique versionne.
+1. Les tables `reference_versions`, `planets`, `signs`, `houses` et `aspects` definissent le vocabulaire astrologique versionne.
 2. Les tables `planet_profiles`, `house_profiles`, `aspect_profiles`, `astro_points`, `sign_rulerships` et les tables de poids par categorie enrichissent ce vocabulaire pour le calcul.
 3. Les tables `prediction_rulesets`, `ruleset_event_types` et `ruleset_parameters` portent les parametres actifs du moteur.
 4. `user_birth_profiles` fournit les donnees de naissance; `chart_results` persiste le theme calcule dans `result_payload`.

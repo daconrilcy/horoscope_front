@@ -22,7 +22,6 @@ CSV detaille: `.codex-artifacts/astrology-v1-v2-diff.csv`.
 ## Tables identiques
 
 - `aspects`: 5 entree(s) identique(s)
-- `astro_characteristics`: 2 entree(s) identique(s)
 - `houses`: 12 entree(s) identique(s)
 - `planets`: 10 entree(s) identique(s)
 - `ruleset_event_types`: 8 entree(s) identique(s)

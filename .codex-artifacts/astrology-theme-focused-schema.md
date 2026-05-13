@@ -35,8 +35,7 @@ graph TD
         ruleset_parameters[ruleset_parameters]
     end
 
-    subgraph SUPPORT [Support ou reserve]
-        astro_characteristics[astro_characteristics]
+    subgraph SUPPORT [Reserve de calibration]
         category_calibrations[category_calibrations vide]
         calibration_raw_days[calibration_raw_days vide]
         user_prediction_baselines[user_prediction_baselines vide]
@@ -60,10 +59,6 @@ graph TD
     prediction_rulesets --> ruleset_parameters
     prediction_rulesets --> category_calibrations
     prediction_categories --> category_calibrations
-
-    planets --> astro_characteristics
-    signs --> astro_characteristics
-    aspects --> astro_characteristics
 
     calibration_raw_days --> category_calibrations
     prediction_categories --> user_prediction_baselines

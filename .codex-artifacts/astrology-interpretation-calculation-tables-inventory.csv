@@ -1,7 +1,6 @@
 table,category,rows,role,columns
 aspect_profiles,calculation_reference,5,"Poids, valence et multiplicateurs des aspects.","id,aspect_id,intensity_weight,default_valence,orb_multiplier,phase_sensitive,micro_note"
 aspects,reference,10,Referentiel des aspects et orbes par defaut.,"id,reference_version_id,code,name,angle,default_orb_deg"
-astro_characteristics,reference,4,Traits descriptifs generiques pour entites astro.,"id,reference_version_id,entity_type,entity_code,trait,value"
 astro_points,calculation_reference,4,Angles et points astrologiques utilises par les calculs.,"id,reference_version_id,code,name,point_type,is_enabled"
 astrologer_profiles,interpretation_persona,6,Profils publics astrologues/personas.,"persona_id,first_name,last_name,display_name,gender,provider_type,age,photo_url,public_style_label,bio_short,bio_long,admin_category,specialties,specialties_details,professional_background,key_skills,behavioral_style,location,quote,mission_statement,ideal_for,metrics,is_public,sort_order,created_at,updated_at"
 astrologer_prompt_profiles,interpretation_persona,6,Prompts specifiques aux astrologues/personas.,"id,persona_id,prompt_content,version,is_active,created_at,updated_at"
