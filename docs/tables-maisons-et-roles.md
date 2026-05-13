@@ -2,11 +2,11 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py` et `20260512_0086_deversion_astrology_structures.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`, `20260512_0086_deversion_astrology_structures.py`, `20260513_0094_rename_house_tables.py` et `20260513_0095_create_astral_house_systems.py`.
 
 Deux catégories sont distinguées :
 
-- Tables SQL qui décrivent le vocabulaire stable des maisons ou leur paramétrage prédictif.
+- Tables SQL qui décrivent le vocabulaire stable des maisons, les systèmes de maisons ou leur paramétrage prédictif.
 - Tables et payloads qui consomment, calculent ou historisent les maisons sous forme de JSON ou de colonnes de trace.
 
 Point important : les cuspides réelles d'un thème ne sont pas stockées dans une table relationnelle dédiée. Elles sont calculées à l'exécution par SwissEph ou par le moteur simplifié, puis transportées dans les objets runtime et les payloads `chart_results.result_payload`.
@@ -16,9 +16,12 @@ Point important : les cuspides réelles d'un thème ne sont pas stockées dans u
 | Table | Lien aux maisons | Rôle principal | Versionnée |
 | --- | --- | --- | --- |
 | `astral_houses` | Table canonique des maisons 1 à 12 | Vocabulaire stable : numéro et nom métier | Non |
+| `astral_house_systems` | Table canonique des systèmes de maisons | Référence stable pour l'UI, les fallbacks, les analytics et les limites astronomiques | Non |
 | `astral_prediction_daily_house_profiles` | `house_id -> astral_houses.id` | Profil prédictif d'une maison : angularité, visibilité, priorité | Oui, via `reference_version_id` |
 | `astral_house_category_weights` | `house_id -> astral_houses.id` | Routage maison -> catégorie de vie pour le scoring | Oui, via `reference_version_id` |
-| `daily_prediction_runs` | Colonne `house_system_effective` | Trace du système de maisons réellement appliqué pendant un run daily | Indirectement via le run |
+| `prediction_rulesets` | `house_system_id -> astral_house_systems.id` | Système de maisons demandé par un ruleset | Non pour le système, versionné par le ruleset |
+| `daily_prediction_runs` | `house_system_effective_id -> astral_house_systems.id` | Trace du système de maisons réellement appliqué pendant un run daily | Indirectement via le run |
+| `user_prediction_baselines` | `house_system_effective_id -> astral_house_systems.id` | Sépare les baselines selon le système de maisons effectif | Indirectement via fenêtre/version |
 | `chart_results` | JSON `result_payload.houses`, `result_payload.house_rulers`, `result_payload.angles`, `result_payload.planets[*].house` | Snapshot du calcul natal : cuspides, signes des cuspides, maîtres de maisons, angles et maison des planètes | Version texte dans payload et colonnes |
 | `daily_prediction_category_scores` | JSON `contributors_json` | Historique des contributeurs, qui peuvent inclure maisons cible/transitée | Indirectement via le run |
 | `daily_prediction_turning_points` | JSON `driver_json` | Historique des événements conducteurs, avec métadonnées de maison si présentes | Indirectement via le run |
@@ -72,6 +75,58 @@ Maisons seedées par `ReferenceRepository.ensure_seed_data` :
 | 10 | `Career` | Ambition et rôle public |
 | 11 | `Community` | Collectif et réseaux |
 | 12 | `Subconscious` | Intériorité et ressources cachées |
+
+### `astral_house_systems`
+
+Définie par `AstralHouseSystemModel` dans `backend/app/infra/db/models/reference.py`.
+
+Créée et seedée par `20260513_0095_create_astral_house_systems.py`.
+
+Qualification :
+
+- Table de référence canonique des systèmes de maisons.
+- Stable et non versionnée.
+- Ne calcule aucune cuspide et ne remplace pas SwissEph ni le moteur simplifié.
+- Sert à éviter les typos, alimenter l'UI, piloter les fallbacks, tracer les analytics et documenter les limites astronomiques.
+
+Colonnes principales :
+
+| Colonne | Type | Rôle |
+| --- | --- | --- |
+| `id` | `BigInteger` | Identifiant technique utilisé par les tables runtime. |
+| `code` | `String(50)` | Code stable applicatif, par exemple `placidus` ou `whole_sign`. Unique. |
+| `name` | `String(100)` | Libellé lisible pour l'UI et l'administration. |
+| `description` | `Text` | Description métier du mode de découpage. |
+| `astronomical_family` | `String(50)` | Famille astronomique : `quadrant`, `sign_based` ou `ascendant_based`. |
+| `supports_polar_regions` | `Boolean` | Indique si le système reste exploitable dans les régions polaires. |
+| `is_quadrant_based` | `Boolean` | Distingue les systèmes basés sur les quadrants ASC/MC/DSC/IC. |
+| `requires_precise_birth_time` | `Boolean` | Indique une forte sensibilité à l'heure de naissance. |
+| `sort_order` | `Integer` | Ordre d'affichage UI. |
+| `is_active` | `Boolean` | Permet de masquer un système sans supprimer sa référence historique. |
+
+Contraintes :
+
+- Unicité sur `code`.
+- Check `astronomical_family IN ('quadrant', 'sign_based', 'ascendant_based')`.
+
+Systèmes seedés :
+
+| Code | Nom | Famille | Régions polaires | Quadrant | Heure précise | Ordre |
+| --- | --- | --- | --- | --- | --- | ---: |
+| `placidus` | Placidus | `quadrant` | Non | Oui | Oui | 10 |
+| `whole_sign` | Whole Sign | `sign_based` | Oui | Non | Non | 20 |
+| `equal` | Equal House | `ascendant_based` | Oui | Non | Oui | 30 |
+| `porphyry` | Porphyry | `quadrant` | Oui | Oui | Oui | 40 |
+
+Nuance importante :
+
+- `whole_sign.requires_precise_birth_time = false` ne signifie pas qu'une heure de naissance est inutile.
+- Whole Sign dépend encore du signe ascendant ; il est seulement moins sensible à quelques minutes d'écart que Placidus, Porphyry ou Equal House.
+
+Constantes applicatives :
+
+- `backend/app/domain/astrology/house_system_codes.py` expose `HouseSystemCode`.
+- Les services continuent à manipuler les codes (`placidus`, `whole_sign`, `equal`, `porphyry`) mais les tables runtime stockent les identifiants SQL.
 
 ## Tables de paramétrage du moteur de prédiction quotidienne
 
@@ -233,7 +288,8 @@ Rôle :
 
 Rôle :
 
-- Porte le système de maisons demandé dans `RulesetData.house_system`.
+- Porte le système de maisons demandé via `house_system_id -> astral_house_systems.id`.
+- `RulesetData.house_system` expose toujours le code applicatif pour les services.
 - Ce système est transmis au moteur de prédiction quotidienne comme `house_system_requested`.
 - Le système effectivement utilisé peut différer en cas de repli runtime.
 
@@ -247,13 +303,13 @@ Les cuspides ne sont pas des lignes SQL. Elles sont produites à l'exécution :
 - `houses_provider.calculate_houses` appelle `swe.houses_ex` et retourne `HouseData`.
 - `HouseData.cusps` contient les 12 cuspides normalisées dans `[0, 360)`.
 - `HouseData.ascendant_longitude` et `HouseData.mc_longitude` exposent ASC et MC.
-- Les systèmes publiquement supportés par `houses_provider` sont `placidus`, `equal` et `whole_sign`.
+- Les systèmes publiquement supportés par `houses_provider` sont `placidus`, `equal`, `whole_sign` et `porphyry`.
 
 En moteur daily V1/V3 :
 
 - `AstroCalculator` reçoit les `natal_cusps` calculées pour le thème natal.
 - À chaque pas temporel, il calcule les cuspides courantes via `swe.houses`.
-- Il tente `placidus` puis replie sur `porphyre` si Placidus échoue.
+- Il tente `placidus` puis replie sur `porphyry` si Placidus échoue.
 - Il calcule `natal_house_transited` pour chaque planète transitante en comparant sa longitude aux cuspides natales.
 
 #### Processus détaillé du calcul des cuspides natales
@@ -314,9 +370,10 @@ En moteur daily V1/V3 :
 
    ```python
    _HOUSE_SYSTEM_CODES = {
-       "placidus": b"P",
-       "equal": b"E",
-       "whole_sign": b"W",
+       HouseSystemCode.PLACIDUS: b"P",
+       HouseSystemCode.EQUAL: b"E",
+       HouseSystemCode.WHOLE_SIGN: b"W",
+       HouseSystemCode.PORPHYRY: b"O",
    }
    ```
 
@@ -389,14 +446,14 @@ return self._run_house_calculation(ut_jd, b"P", HOUSE_SYSTEM_PLACIDUS)
 ```
 
 ```python
-return self._run_house_calculation(ut_jd, b"O", HOUSE_SYSTEM_PORPHYRE)
+return self._run_house_calculation(ut_jd, b"O", HOUSE_SYSTEM_PORPHYRY)
 ```
 
 ```python
 cusps_raw, ascmc_raw = swe.houses(ut_jd, self.latitude, self.longitude, house_code)
 ```
 
-Le moteur tente donc Placidus (`b"P"`) puis Porphyre (`b"O"`) si Placidus échoue. Les cuspides natales restent l'entrée de référence pour déterminer la maison natale traversée par une planète transitante :
+Le moteur tente donc Placidus (`b"P"`) puis Porphyry (`b"O"`) si Placidus échoue. Les cuspides natales restent l'entrée de référence pour déterminer la maison natale traversée par une planète transitante :
 
 ```python
 cusp_start = self.natal_cusps[i]
@@ -569,12 +626,29 @@ Colonne pertinente :
 
 | Colonne | Rôle |
 | --- | --- |
-| `house_system_effective` | Système de maisons réellement retenu pour le run daily. Peut refléter un repli runtime. |
+| `house_system_effective_id` | FK vers le système de maisons réellement retenu pour le run daily. Peut refléter un repli runtime. |
 
 Rôle :
 
 - Trace l'écart éventuel entre le système demandé et le système réellement appliqué.
-- Utile pour diagnostiquer les cas où Placidus ne converge pas et où le moteur retient Porphyre.
+- Utile pour diagnostiquer les cas où Placidus ne converge pas et où le moteur retient Porphyry.
+- Le modèle expose toujours `house_system_effective` comme propriété Python lisible par les services, mais la persistance relationnelle passe par `house_system_effective_id`.
+
+### `user_prediction_baselines`
+
+Définie par `UserPredictionBaselineModel`.
+
+Colonne pertinente :
+
+| Colonne | Rôle |
+| --- | --- |
+| `house_system_effective_id` | FK vers le système de maisons utilisé pour calculer la baseline. |
+
+Rôle :
+
+- Empêche de mélanger des baselines issues de systèmes de maisons différents.
+- La contrainte d'unicité inclut `house_system_effective_id`.
+- `UserPredictionBaselineRepository` résout le code applicatif vers `astral_house_systems.id` avant de filtrer ou d'upserter.
 
 ### `daily_prediction_category_scores`
 
@@ -610,44 +684,50 @@ Rôle :
 ## Étapes où les maisons interviennent dans les calculs astrologiques
 
 1. `ReferenceRepository.ensure_seed_data` garantit les 12 lignes `astral_houses`.
-2. `PredictionReferenceRepository` charge `astral_prediction_daily_house_profiles` et `astral_house_category_weights` pour la version de référence active.
-3. `PredictionContextLoader` valide que les profils de maisons existent puis fige le contexte.
-4. Pour un thème natal, `build_natal_result` lit `reference_data["houses"]` pour connaître les numéros attendus.
-5. `houses_provider.calculate_houses` calcule les cuspides, l'Ascendant et le Milieu du Ciel via SwissEph.
-6. `build_natal_result` valide qu'il y a exactement 12 cuspides normalisées et non dupliquées.
-7. `assign_house_number` assigne chaque planète natale à une maison à partir de sa longitude et des intervalles de cuspides.
-8. `HouseRulerResolver` calcule `house_rulers[]` à partir des cuspides, des positions planétaires et du mapping signe -> maître issu des dignités.
-9. `chart_json_builder` sérialise les maisons, les maîtres de maisons, les maisons des planètes et les angles dans le payload public.
-10. Pour la prédiction quotidienne, `EngineOrchestrator` extrait les cuspides natales depuis `house_cusps` ou `houses`.
-11. `AstroCalculator` calcule les états astrologiques par pas temporel et la maison natale transitée par chaque planète.
-12. `EventDetector` produit des événements avec une maison cible natale et une maison transitée quand l'information est disponible.
-13. `DomainRouter` construit le vecteur maison puis le projette vers les catégories via `astral_house_category_weights`.
-14. `ContributionCalculator`, `TransitSignalBuilder` et `IntradayActivationBuilder` consomment le routage pour produire scores et timelines.
-15. `NatalSensitivityCalculator` utilise `astral_prediction_daily_house_profiles` et `astral_house_category_weights` pour moduler la sensibilité structurelle par catégorie.
-16. `daily_prediction_*` persiste les scores, contributeurs, points de bascule et la trace `house_system_effective`.
+2. La migration `20260513_0095` garantit les lignes `astral_house_systems` et migre les traces runtime vers des clés étrangères.
+3. `PredictionReferenceRepository` charge `astral_prediction_daily_house_profiles` et `astral_house_category_weights` pour la version de référence active.
+4. `PredictionContextLoader` valide que les profils de maisons existent puis fige le contexte.
+5. Pour un thème natal, `build_natal_result` lit `reference_data["houses"]` pour connaître les numéros attendus.
+6. `houses_provider.calculate_houses` calcule les cuspides, l'Ascendant et le Milieu du Ciel via SwissEph.
+7. `build_natal_result` valide qu'il y a exactement 12 cuspides normalisées et non dupliquées.
+8. `assign_house_number` assigne chaque planète natale à une maison à partir de sa longitude et des intervalles de cuspides.
+9. `HouseRulerResolver` calcule `house_rulers[]` à partir des cuspides, des positions planétaires et du mapping signe -> maître issu des dignités.
+10. `chart_json_builder` sérialise les maisons, les maîtres de maisons, les maisons des planètes et les angles dans le payload public.
+11. Pour la prédiction quotidienne, `EngineOrchestrator` extrait les cuspides natales depuis `house_cusps` ou `houses`.
+12. `AstroCalculator` calcule les états astrologiques par pas temporel et la maison natale transitée par chaque planète.
+13. `EventDetector` produit des événements avec une maison cible natale et une maison transitée quand l'information est disponible.
+14. `DomainRouter` construit le vecteur maison puis le projette vers les catégories via `astral_house_category_weights`.
+15. `ContributionCalculator`, `TransitSignalBuilder` et `IntradayActivationBuilder` consomment le routage pour produire scores et timelines.
+16. `NatalSensitivityCalculator` utilise `astral_prediction_daily_house_profiles` et `astral_house_category_weights` pour moduler la sensibilité structurelle par catégorie.
+17. `daily_prediction_*` persiste les scores, contributeurs, points de bascule et la trace `house_system_effective_id`.
 
 ## Points d'attention
 
 - `astral_houses` est stable et non versionnée. Ne pas réintroduire `reference_version_id` dans cette table sans décision d'architecture.
+- `astral_house_systems` est stable et non versionnée. Ne pas stocker de nouveau `house_system = 'placidus'` dans une table runtime relationnelle ; utiliser une FK vers `astral_house_systems`.
 - `astral_prediction_daily_house_profiles` et `astral_house_category_weights` sont des paramètres de scoring, pas des données astronomiques.
+- `astral_house_systems` ne calcule rien : le calcul reste dans SwissEph, `AstroCalculator` ou le moteur simplifié.
 - Les cuspides réelles doivent rester dans les résultats de calcul ou les objets runtime, pas dans `astral_prediction_daily_house_profiles`.
 - `visibility_weight` et `base_priority` sont seedés mais leur consommation directe n'a pas été identifiée dans les calculateurs de scoring actuels.
 - `micro_note` existe en SQL pour `astral_prediction_daily_house_profiles`, mais n'est pas exposé dans `HouseProfileData`.
 - Les colonnes JSON (`result_payload`, `contributors_json`, `driver_json`) ne garantissent pas l'intégrité référentielle avec `astral_houses`.
 - Les maîtres de maisons natales dépendent strictement de `astral_planet_sign_dignities`. Un référentiel sans 12 domiciles primaires traditionnels rend le calcul invalide au lieu de déclencher un fallback applicatif.
-- Le calcul natal public supporte `placidus`, `equal` et `whole_sign` via `houses_provider`; le calcul daily `AstroCalculator` utilise actuellement Placidus avec repli Porphyre.
+- Le calcul natal public supporte `placidus`, `equal`, `whole_sign` et `porphyry` via `houses_provider`; le calcul daily `AstroCalculator` utilise actuellement Placidus avec repli Porphyry.
 - Les modes dégradés sans heure ou sans localisation peuvent produire des maisons vides, des angles `null` et des planètes sans maison dans le payload public.
 - `PublicAstroFoundationProjector.activated_houses` utilise un mapping public simplifié par domaine, pas une lecture directe de `astral_house_category_weights`.
 
 ## Fichiers sources consultés
 
 - `backend/app/infra/db/models/reference.py`
+- `backend/app/domain/astrology/house_system_codes.py`
+- `backend/app/infra/db/models/house_system_resolution.py`
 - `backend/app/infra/db/models/prediction_reference.py`
 - `backend/app/infra/db/models/daily_prediction.py`
 - `backend/app/infra/db/models/chart_result.py`
 - `backend/app/infra/db/repositories/reference_repository.py`
 - `backend/app/infra/db/repositories/prediction_reference_repository.py`
 - `backend/app/infra/db/repositories/prediction_schemas.py`
+- `backend/app/infra/db/repositories/user_prediction_baseline_repository.py`
 - `backend/app/services/natal/calculation_service.py`
 - `backend/app/services/prediction/reference_seed_service.py`
 - `backend/app/services/prediction/context_loader.py`
@@ -670,3 +750,5 @@ Rôle :
 - `backend/migrations/versions/20260307_0032_migration_a_prediction_reference_tables.py`
 - `backend/migrations/versions/20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`
 - `backend/migrations/versions/20260512_0086_deversion_astrology_structures.py`
+- `backend/migrations/versions/20260513_0094_rename_house_tables.py`
+- `backend/migrations/versions/20260513_0095_create_astral_house_systems.py`

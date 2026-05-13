@@ -7,13 +7,14 @@ from datetime import datetime
 import swisseph as swe
 
 from app.core.ephemeris import SWISSEPH_LOCK
+from app.domain.astrology.house_system_codes import HouseSystemCode
 from app.domain.prediction.exceptions import PredictionEngineError
 from app.domain.prediction.schemas import PlanetState, StepAstroState
 
 logger = logging.getLogger(__name__)
 
-HOUSE_SYSTEM_PLACIDUS = "placidus"
-HOUSE_SYSTEM_PORPHYRE = "porphyre"
+HOUSE_SYSTEM_PLACIDUS = HouseSystemCode.PLACIDUS
+HOUSE_SYSTEM_PORPHYRY = HouseSystemCode.PORPHYRY
 _EXPECTED_CUSP_COUNT = 12
 _FLG_SWIEPH_SPEED = swe.FLG_SWIEPH | swe.FLG_SPEED
 
@@ -121,21 +122,21 @@ class AstroCalculator:
         )
 
     def _compute_houses(self, ut_jd: float) -> tuple[list[float], float, float, str]:
-        """Compute houses with Placidus (P) and fallback to Porphyre (O) if needed."""
+        """Compute houses with Placidus (P) and fallback to Porphyry (O) if needed."""
         try:
             return self._run_house_calculation(ut_jd, b"P", HOUSE_SYSTEM_PLACIDUS)
         except PredictionEngineError as exc:
             logger.warning(
-                "placidus_failed_trying_porphyre lat=%.2f lon=%.2f error=%s",
+                "placidus_failed_trying_porphyry lat=%.2f lon=%.2f error=%s",
                 self.latitude,
                 self.longitude,
                 str(exc),
             )
 
         try:
-            return self._run_house_calculation(ut_jd, b"O", HOUSE_SYSTEM_PORPHYRE)
+            return self._run_house_calculation(ut_jd, b"O", HOUSE_SYSTEM_PORPHYRY)
         except PredictionEngineError as exc:
-            msg = f"House calculation failed even with Porphyre: {str(exc)}"
+            msg = f"House calculation failed even with Porphyry: {str(exc)}"
             raise PredictionEngineError(msg) from exc
 
     def _run_house_calculation(

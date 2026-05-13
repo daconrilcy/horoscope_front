@@ -30,6 +30,7 @@ from dataclasses import dataclass
 from types import ModuleType
 
 from app.core.ephemeris import SWISSEPH_LOCK
+from app.domain.astrology.house_system_codes import HouseSystemCode
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
@@ -40,15 +41,16 @@ METRIC_ERRORS = "swisseph_errors_total"
 # Mapping nom de système public → code octet SwissEph.
 # Reference: pyswisseph houses_ex hsys parameter.
 _HOUSE_SYSTEM_CODES: dict[str, bytes] = {
-    "placidus": b"P",
-    "equal": b"E",  # Exposé public API depuis story 23.2
-    "whole_sign": b"W",  # Exposé public API depuis story 23.2
+    HouseSystemCode.PLACIDUS: b"P",
+    HouseSystemCode.EQUAL: b"E",  # Exposé public API depuis story 23.2
+    HouseSystemCode.WHOLE_SIGN: b"W",  # Exposé public API depuis story 23.2
+    HouseSystemCode.PORPHYRY: b"O",
 }
 
 # Systèmes de maisons exposés en public API.
-_SUPPORTED_HOUSE_SYSTEMS: frozenset[str] = frozenset({"placidus", "equal", "whole_sign"})
+_SUPPORTED_HOUSE_SYSTEMS: frozenset[str] = HouseSystemCode.ALL
 
-_DEFAULT_HOUSE_SYSTEM = "placidus"
+_DEFAULT_HOUSE_SYSTEM = HouseSystemCode.PLACIDUS
 _DEFAULT_FRAME = "geocentric"
 
 

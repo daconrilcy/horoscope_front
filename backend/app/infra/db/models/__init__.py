@@ -1,6 +1,7 @@
 # Registre racine des modèles SQLAlchemy hors périmètre LLM.
 """Expose les modèles DB non-LLM conservés dans le namespace racine."""
 
+from app.infra.db.models import house_system_resolution as _house_system_resolution  # noqa: F401
 from app.infra.db.models.astrologer import (
     AstrologerProfileModel,
     AstrologerPromptProfileModel,
@@ -106,6 +107,7 @@ from app.infra.db.models.reference import (
     AspectModel,
     AstralDignityTypeModel,
     AstralElementModel,
+    AstralHouseSystemModel,
     AstralModalityModel,
     AstralPolarityModel,
     AstralSignModel,
@@ -198,6 +200,7 @@ __all__ = [
     "AspectModel",
     "AstralDignityTypeModel",
     "AstralElementModel",
+    "AstralHouseSystemModel",
     "AstralModalityModel",
     "AstralPolarityModel",
     "AstralSystemModel",

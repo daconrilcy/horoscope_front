@@ -23,7 +23,7 @@ from app.infra.db.base import Base
 if TYPE_CHECKING:
     from app.infra.db.models.prediction_reference import PredictionCategoryModel
     from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
-    from app.infra.db.models.reference import ReferenceVersionModel
+    from app.infra.db.models.reference import AstralHouseSystemModel, ReferenceVersionModel
     from app.infra.db.models.user import UserModel
 
 
@@ -46,7 +46,7 @@ class UserPredictionBaselineModel(Base):
             "window_end_date",
             "reference_version_id",
             "ruleset_id",
-            "house_system_effective",
+            "house_system_effective_id",
             name="uq_user_prediction_baseline",
         ),
     )
@@ -77,7 +77,9 @@ class UserPredictionBaselineModel(Base):
         String(32), nullable=False, default="all", server_default="all", index=True
     )
 
-    house_system_effective: Mapped[str] = mapped_column(String(16), nullable=False)
+    house_system_effective_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_house_systems.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
     window_days: Mapped[int] = mapped_column(Integer, nullable=False)
     window_start_date: Mapped[date] = mapped_column(nullable=False)
     window_end_date: Mapped[date] = mapped_column(nullable=False)
@@ -101,3 +103,17 @@ class UserPredictionBaselineModel(Base):
     category: Mapped["PredictionCategoryModel"] = relationship()
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     ruleset: Mapped["PredictionRulesetModel"] = relationship()
+    house_system_effective_reference: Mapped["AstralHouseSystemModel"] = relationship()
+
+    @property
+    def house_system_effective(self) -> str:
+        """Retourne le code du système de maisons utilisé pour la baseline."""
+        pending_code = getattr(self, "_pending_house_system_code", None)
+        if pending_code is not None:
+            return str(pending_code)
+        return self.house_system_effective_reference.code
+
+    @house_system_effective.setter
+    def house_system_effective(self, code: str) -> None:
+        """Diffère la résolution SQL du code jusqu'au flush de la session."""
+        self._pending_house_system_code = code

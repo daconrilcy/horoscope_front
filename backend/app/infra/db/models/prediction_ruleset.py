@@ -23,7 +23,7 @@ from app.infra.db.base import Base
 
 if TYPE_CHECKING:
     from app.infra.db.models.prediction_reference import PredictionCategoryModel
-    from app.infra.db.models.reference import ReferenceVersionModel
+    from app.infra.db.models.reference import AstralHouseSystemModel, ReferenceVersionModel
 
 
 class PredictionRulesetModel(Base):
@@ -41,8 +41,8 @@ class PredictionRulesetModel(Base):
     coordinate_mode: Mapped[str] = mapped_column(
         String(16), nullable=False, default="geocentric", server_default="geocentric"
     )
-    house_system: Mapped[str] = mapped_column(
-        String(16), nullable=False, default="placidus", server_default="placidus"
+    house_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_house_systems.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     time_step_minutes: Mapped[int] = mapped_column(
         Integer, nullable=False, default=30, server_default="30"
@@ -56,6 +56,20 @@ class PredictionRulesetModel(Base):
     )
 
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
+    house_system_reference: Mapped["AstralHouseSystemModel"] = relationship()
+
+    @property
+    def house_system(self) -> str:
+        """Retourne le code applicatif du système de maisons référencé."""
+        pending_code = getattr(self, "_pending_house_system_code", None)
+        if pending_code is not None:
+            return str(pending_code)
+        return self.house_system_reference.code
+
+    @house_system.setter
+    def house_system(self, code: str) -> None:
+        """Diffère la résolution SQL du code jusqu'au flush de la session."""
+        self._pending_house_system_code = code
 
 
 class RulesetEventTypeModel(Base):

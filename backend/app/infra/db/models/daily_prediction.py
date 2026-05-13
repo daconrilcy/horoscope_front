@@ -15,7 +15,7 @@ if TYPE_CHECKING:
         PredictionRulesetModel,
         RulesetEventTypeModel,
     )
-    from app.infra.db.models.reference import ReferenceVersionModel
+    from app.infra.db.models.reference import AstralHouseSystemModel, ReferenceVersionModel
     from app.infra.db.models.user import UserModel
 
 
@@ -55,7 +55,9 @@ class DailyPredictionRunModel(Base):
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utc_now
     )
-    house_system_effective: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    house_system_effective_id: Mapped[int | None] = mapped_column(
+        ForeignKey("astral_house_systems.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     is_provisional_calibration: Mapped[bool | None] = mapped_column(nullable=True)
     calibration_label: Mapped[str | None] = mapped_column(String(64), nullable=True)
     overall_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -68,6 +70,27 @@ class DailyPredictionRunModel(Base):
     user: Mapped["UserModel"] = relationship()
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     ruleset: Mapped["PredictionRulesetModel"] = relationship()
+    house_system_effective_reference: Mapped["AstralHouseSystemModel | None"] = relationship()
+
+    @property
+    def house_system_effective(self) -> str | None:
+        """Retourne le code du système de maisons effectivement appliqué."""
+        pending_code = getattr(self, "_pending_house_system_code", None)
+        if pending_code is not None:
+            return str(pending_code)
+        if self.house_system_effective_reference is None:
+            return None
+        return self.house_system_effective_reference.code
+
+    @house_system_effective.setter
+    def house_system_effective(self, code: str | None) -> None:
+        """Diffère la résolution SQL du code effectif jusqu'au flush."""
+        if code is None:
+            self.house_system_effective_id = None
+            if hasattr(self, "_pending_house_system_code"):
+                delattr(self, "_pending_house_system_code")
+            return
+        self._pending_house_system_code = code
 
     category_scores: Mapped[list["DailyPredictionCategoryScoreModel"]] = relationship(
         back_populates="run", cascade="all, delete-orphan"

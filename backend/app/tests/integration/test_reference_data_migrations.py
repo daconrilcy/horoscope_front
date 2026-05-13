@@ -38,6 +38,13 @@ EXPECTED_TRADITIONAL_RULERSHIPS = {
     "pisces": "jupiter",
 }
 
+EXPECTED_HOUSE_SYSTEMS = {
+    "placidus": ("quadrant", False, True, True, 10),
+    "whole_sign": ("sign_based", True, False, False, 20),
+    "equal": ("ascendant_based", True, False, True, 30),
+    "porphyry": ("quadrant", True, True, True, 40),
+}
+
 
 def _alembic_config() -> Config:
     backend_root = Path(__file__).resolve().parents[3]
@@ -89,6 +96,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_dignity_type",
         "astral_planet_sign_dignities",
         "astral_sign_profiles",
+        "astral_house_systems",
     ):
         assert table_name in head_tables
     assert "astral_sign_rulerships" not in head_tables
@@ -144,6 +152,23 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert ("astral_polarity_id",) not in unique_columns
     system_columns = {column["name"] for column in head_inspector.get_columns("astral_systems")}
     assert system_columns == {"id", "name"}
+    house_system_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_house_systems")
+    }
+    assert house_system_columns == {
+        "id",
+        "code",
+        "name",
+        "description",
+        "astronomical_family",
+        "supports_polar_regions",
+        "is_quadrant_based",
+        "requires_precise_birth_time",
+        "sort_order",
+        "is_active",
+        "created_at",
+        "updated_at",
+    }
     dignity_columns = {
         column["name"] for column in head_inspector.get_columns("astral_planet_sign_dignities")
     }
@@ -173,6 +198,31 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert {
             row[0] for row in connection.execute(text("SELECT name FROM astral_systems")).all()
         } == {"traditional", "modern", "hellenistic", "medieval"}
+        house_system_rows = connection.execute(
+            text(
+                """
+                SELECT
+                    code,
+                    astronomical_family,
+                    supports_polar_regions,
+                    is_quadrant_based,
+                    requires_precise_birth_time,
+                    sort_order
+                FROM astral_house_systems
+                WHERE is_active IS TRUE
+                """
+            )
+        ).all()
+        assert {
+            row.code: (
+                row.astronomical_family,
+                bool(row.supports_polar_regions),
+                bool(row.is_quadrant_based),
+                bool(row.requires_precise_birth_time),
+                row.sort_order,
+            )
+            for row in house_system_rows
+        } == EXPECTED_HOUSE_SYSTEMS
         assert {
             row[0] for row in connection.execute(text("SELECT code FROM astral_modalities")).all()
         } == {"cardinal", "fixed", "mutable"}
@@ -285,6 +335,20 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert "planet_profiles" not in set(head_inspector.get_table_names())
     assert "house_profiles" not in set(head_inspector.get_table_names())
     assert "house_category_weights" not in set(head_inspector.get_table_names())
+    runtime_house_system_columns = {
+        table_name: {column["name"] for column in head_inspector.get_columns(table_name)}
+        for table_name in (
+            "prediction_rulesets",
+            "daily_prediction_runs",
+            "user_prediction_baselines",
+        )
+    }
+    assert "house_system_id" in runtime_house_system_columns["prediction_rulesets"]
+    assert "house_system" not in runtime_house_system_columns["prediction_rulesets"]
+    assert "house_system_effective_id" in runtime_house_system_columns["daily_prediction_runs"]
+    assert "house_system_effective" not in runtime_house_system_columns["daily_prediction_runs"]
+    assert "house_system_effective_id" in runtime_house_system_columns["user_prediction_baselines"]
+    assert "house_system_effective" not in runtime_house_system_columns["user_prediction_baselines"]
     head_engine.dispose()
 
     command.downgrade(config, "base")

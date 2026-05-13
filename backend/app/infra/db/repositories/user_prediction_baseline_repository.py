@@ -1,3 +1,5 @@
+"""Persistance des baselines utilisateur avec résolution canonique des maisons."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -8,6 +10,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.datetime_provider import datetime_provider
 from app.domain.prediction.persisted_baseline import PersistedUserBaseline
+from app.infra.db.models.reference import AstralHouseSystemModel
 from app.infra.db.models.user_prediction_baseline import (
     BaselineGranularity,
     UserPredictionBaselineModel,
@@ -15,8 +18,19 @@ from app.infra.db.models.user_prediction_baseline import (
 
 
 class UserPredictionBaselineRepository:
+    """Accède aux baselines utilisateur indexées par système de maisons canonique."""
+
     def __init__(self, db: Session) -> None:
         self.db = db
+
+    def _house_system_id(self, code: str) -> int:
+        """Résout le code applicatif en identifiant canonique SQL."""
+        house_system_id = self.db.scalar(
+            select(AstralHouseSystemModel.id).where(AstralHouseSystemModel.code == code)
+        )
+        if house_system_id is None:
+            raise ValueError(f"unknown astral house system code: {code!r}")
+        return int(house_system_id)
 
     def get_baseline(
         self,
@@ -31,6 +45,7 @@ class UserPredictionBaselineRepository:
         granularity_type: str = "day",
         granularity_value: str = "all",
     ) -> PersistedUserBaseline | None:
+        house_system_effective_id = self._house_system_id(house_system_effective)
         model = self.db.scalar(
             select(UserPredictionBaselineModel)
             .options(selectinload(UserPredictionBaselineModel.category))
@@ -39,7 +54,7 @@ class UserPredictionBaselineRepository:
                 UserPredictionBaselineModel.category_id == category_id,
                 UserPredictionBaselineModel.reference_version_id == reference_version_id,
                 UserPredictionBaselineModel.ruleset_id == ruleset_id,
-                UserPredictionBaselineModel.house_system_effective == house_system_effective,
+                UserPredictionBaselineModel.house_system_effective_id == house_system_effective_id,
                 UserPredictionBaselineModel.window_days == window_days,
                 UserPredictionBaselineModel.window_start_date == window_start_date,
                 UserPredictionBaselineModel.window_end_date == window_end_date,
@@ -60,6 +75,7 @@ class UserPredictionBaselineRepository:
         window_end_date: date,
         granularity_type: str | None = None,
     ) -> list[PersistedUserBaseline]:
+        house_system_effective_id = self._house_system_id(house_system_effective)
         stmt = (
             select(UserPredictionBaselineModel)
             .options(selectinload(UserPredictionBaselineModel.category))
@@ -67,7 +83,7 @@ class UserPredictionBaselineRepository:
                 UserPredictionBaselineModel.user_id == user_id,
                 UserPredictionBaselineModel.reference_version_id == reference_version_id,
                 UserPredictionBaselineModel.ruleset_id == ruleset_id,
-                UserPredictionBaselineModel.house_system_effective == house_system_effective,
+                UserPredictionBaselineModel.house_system_effective_id == house_system_effective_id,
                 UserPredictionBaselineModel.window_days == window_days,
                 UserPredictionBaselineModel.window_start_date == window_start_date,
                 UserPredictionBaselineModel.window_end_date == window_end_date,
@@ -90,6 +106,7 @@ class UserPredictionBaselineRepository:
         as_of_date: date,
         granularity_type: str = "day",
     ) -> list[PersistedUserBaseline]:
+        house_system_effective_id = self._house_system_id(house_system_effective)
         models = self.db.scalars(
             select(UserPredictionBaselineModel)
             .options(selectinload(UserPredictionBaselineModel.category))
@@ -97,7 +114,7 @@ class UserPredictionBaselineRepository:
                 UserPredictionBaselineModel.user_id == user_id,
                 UserPredictionBaselineModel.reference_version_id == reference_version_id,
                 UserPredictionBaselineModel.ruleset_id == ruleset_id,
-                UserPredictionBaselineModel.house_system_effective == house_system_effective,
+                UserPredictionBaselineModel.house_system_effective_id == house_system_effective_id,
                 UserPredictionBaselineModel.window_days == window_days,
                 UserPredictionBaselineModel.window_end_date <= as_of_date,
                 UserPredictionBaselineModel.granularity_type == granularity_type,
@@ -216,6 +233,8 @@ class UserPredictionBaselineRepository:
         from app.infra.db.models.chart_result import ChartResultModel
         from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 
+        house_system_effective_id = self._house_system_id(house_system_effective)
+
         latest_chart_subquery = (
             select(
                 ChartResultModel.user_id.label("user_id"),
@@ -230,7 +249,7 @@ class UserPredictionBaselineRepository:
             UserPredictionBaselineModel.user_id == UserBirthProfileModel.user_id,
             UserPredictionBaselineModel.reference_version_id == reference_version_id,
             UserPredictionBaselineModel.ruleset_id == ruleset_id,
-            UserPredictionBaselineModel.house_system_effective == house_system_effective,
+            UserPredictionBaselineModel.house_system_effective_id == house_system_effective_id,
             UserPredictionBaselineModel.window_days == window_days,
             # We focus on DAY level for checking needs
             UserPredictionBaselineModel.granularity_type == BaselineGranularity.DAY,
@@ -305,13 +324,14 @@ class UserPredictionBaselineRepository:
         granularity_type: str = "day",
         granularity_value: str = "all",
     ) -> UserPredictionBaselineModel | None:
+        house_system_effective_id = self._house_system_id(house_system_effective)
         return self.db.scalar(
             select(UserPredictionBaselineModel).where(
                 UserPredictionBaselineModel.user_id == user_id,
                 UserPredictionBaselineModel.category_id == category_id,
                 UserPredictionBaselineModel.reference_version_id == reference_version_id,
                 UserPredictionBaselineModel.ruleset_id == ruleset_id,
-                UserPredictionBaselineModel.house_system_effective == house_system_effective,
+                UserPredictionBaselineModel.house_system_effective_id == house_system_effective_id,
                 UserPredictionBaselineModel.window_days == window_days,
                 UserPredictionBaselineModel.window_start_date == window_start_date,
                 UserPredictionBaselineModel.window_end_date == window_end_date,

@@ -8,7 +8,7 @@ from app.infra.db.models.prediction_ruleset import (
     PredictionRulesetModel,
     RulesetParameterModel,
 )
-from app.infra.db.models.reference import ReferenceVersionModel
+from app.infra.db.models.reference import AstralHouseSystemModel, ReferenceVersionModel
 from app.infra.db.repositories.prediction_ruleset_repository import (
     PredictionRulesetRepository,
 )
@@ -43,6 +43,37 @@ def test_get_ruleset(db_session: Session):
     assert isinstance(result, RulesetData)
     assert result.version == "1.0.0"
     assert result.zodiac_type == "tropical"
+
+
+def test_dirty_ruleset_preserves_non_default_house_system(db_session: Session):
+    """Un flush sans changement de système ne remplace pas le référentiel existant."""
+    whole_sign = AstralHouseSystemModel(
+        code="whole_sign",
+        name="Whole Sign",
+        astronomical_family="sign_based",
+        supports_polar_regions=True,
+        is_quadrant_based=False,
+        requires_precise_birth_time=False,
+        sort_order=20,
+    )
+    version = ReferenceVersionModel(version="1.0.0")
+    db_session.add_all([whole_sign, version])
+    db_session.flush()
+
+    ruleset = PredictionRulesetModel(
+        version="1.0.0",
+        reference_version_id=version.id,
+        house_system_id=whole_sign.id,
+        description="initial",
+    )
+    db_session.add(ruleset)
+    db_session.commit()
+
+    ruleset.description = "updated"
+    db_session.commit()
+
+    db_session.refresh(ruleset)
+    assert ruleset.house_system == "whole_sign"
 
 
 def test_get_parameters(db_session: Session):

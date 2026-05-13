@@ -1,3 +1,5 @@
+"""Tests d'intégration des baselines utilisateur et de leur système de maisons."""
+
 from datetime import date
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -225,6 +227,27 @@ def test_baseline_repository_versions_and_windows_are_distinct(
             window_end_date=date(2025, 12, 31),
         )
         assert [baseline.id for baseline in baselines] == [first.id]
+        latest = repo.get_latest_baselines_for_user(
+            user_id=user.id,
+            reference_version_id=ref_v.id,
+            ruleset_id=ruleset.id,
+            house_system_effective="placidus",
+            window_days=365,
+            as_of_date=date(2026, 2, 1),
+        )
+        assert [baseline.id for baseline in latest] == [second.id]
+        loaded = repo.get_baseline(
+            user_id=user.id,
+            category_id=category.id,
+            reference_version_id=ref_v.id,
+            ruleset_id=ruleset.id,
+            house_system_effective="placidus",
+            window_days=365,
+            window_start_date=date(2025, 1, 1),
+            window_end_date=date(2025, 12, 31),
+        )
+        assert loaded is not None
+        assert loaded.id == first.id
     engine.dispose()
 
 

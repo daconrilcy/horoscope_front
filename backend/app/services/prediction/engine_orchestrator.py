@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import swisseph as swe
 
 from app.core.config import DailyEngineMode, settings
+from app.domain.astrology.house_system_codes import HouseSystemCode
 from app.domain.prediction.aggregator import TemporalAggregator, V3ThemeAggregator
 from app.domain.prediction.astro_calculator import AstroCalculator
 from app.domain.prediction.block_generator import BlockGenerator
@@ -1041,8 +1042,8 @@ class EngineOrchestrator:
         effective_systems = {state.house_system_effective for state in astro_states}
         if len(effective_systems) == 1:
             return effective_systems.pop()
-        if "porphyre" in effective_systems:
-            return "porphyre"
+        if HouseSystemCode.PORPHYRY in effective_systems:
+            return HouseSystemCode.PORPHYRY
         return astro_states[0].house_system_effective
 
     def _extract_house_cusps(self, natal_chart: dict) -> list[float]:

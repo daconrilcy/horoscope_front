@@ -13,6 +13,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
+from app.domain.astrology.house_system_codes import HouseSystemCode
 
 backend_root = Path(__file__).parent.parent.parent
 env_path = backend_root / ".env"
@@ -42,9 +43,10 @@ class FrameType(str, Enum):
 
 
 class HouseSystemType(str, Enum):
-    PLACIDUS = "placidus"
-    WHOLE_SIGN = "whole_sign"
-    EQUAL = "equal"
+    PLACIDUS = HouseSystemCode.PLACIDUS
+    WHOLE_SIGN = HouseSystemCode.WHOLE_SIGN
+    EQUAL = HouseSystemCode.EQUAL
+    PORPHYRY = HouseSystemCode.PORPHYRY
 
 
 class AspectSchoolType(str, Enum):

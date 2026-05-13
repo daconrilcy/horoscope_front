@@ -5,7 +5,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -104,6 +106,34 @@ class AstralSystemModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
+class AstralHouseSystemModel(Base):
+    """Référentiel canonique des systèmes de maisons disponibles."""
+
+    __tablename__ = "astral_house_systems"
+    __table_args__ = (
+        UniqueConstraint("code"),
+        CheckConstraint(
+            "astronomical_family IN ('quadrant', 'sign_based', 'ascendant_based')",
+            name="chk_astral_house_systems_astronomical_family",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True
+    )
+    code: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    astronomical_family: Mapped[str] = mapped_column(String(50), nullable=False)
+    supports_polar_regions: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_quadrant_based: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    requires_precise_birth_time: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
 
 class AstralSignProfileModel(Base):

@@ -99,7 +99,7 @@ def test_natal_house_boundary(calculator):
     assert h == 1
 
 
-def test_fallback_porphyre():
+def test_fallback_porphyry():
     # Extreme latitude where Placidus fails
     calc_extreme = AstroCalculator(
         natal_cusps=MOCK_NATAL_CUSPS,
@@ -109,7 +109,7 @@ def test_fallback_porphyre():
     jd = 2451545.0
     state = calc_extreme.compute_step(jd, datetime.now())
 
-    assert state.house_system_effective == "porphyre"
+    assert state.house_system_effective == "porphyry"
 
 
 def test_unknown_planet_raises(calculator):
@@ -135,7 +135,7 @@ def test_invalid_natal_cusp_count_raises() -> None:
         AstroCalculator(natal_cusps=[0.0, 30.0], latitude=0.0, longitude=0.0)
 
 
-def test_invalid_placidus_output_falls_back_to_porphyre(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_invalid_placidus_output_falls_back_to_porphyry(monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_houses(
         jd: float,
         lat: float,
@@ -157,7 +157,7 @@ def test_invalid_placidus_output_falls_back_to_porphyre(monkeypatch: pytest.Monk
     calc = AstroCalculator(natal_cusps=MOCK_NATAL_CUSPS, latitude=48.8566, longitude=2.3522)
     state = calc.compute_step(2451545.0, datetime.now())
 
-    assert state.house_system_effective == "porphyre"
+    assert state.house_system_effective == "porphyry"
     assert state.house_cusps == [
         0.0,
         30.0,
