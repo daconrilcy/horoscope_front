@@ -17,12 +17,12 @@ Point important : les cuspides réelles d'un thème ne sont pas stockées dans u
 | --- | --- | --- | --- |
 | `astral_houses` | Table canonique des maisons 1 à 12 | Vocabulaire stable : numéro et nom métier | Non |
 | `astral_house_systems` | Table canonique des systèmes de maisons | Référence stable pour l'UI, les fallbacks, les analytics et les limites astronomiques | Non |
-| `astral_prediction_daily_house_profiles` | `house_id -> astral_houses.id` | Profil prédictif d'une maison : angularité, visibilité, priorité | Oui, via `reference_version_id` |
+| `astral_prediction_daily_house_profiles` | `house_id -> astral_houses.id` | Source SQL scindée en profil astrologique stable et profil produit prédictif | Oui, via `reference_version_id` |
 | `astral_house_category_weights` | `house_id -> astral_houses.id` | Routage maison -> catégorie de vie pour le scoring | Oui, via `reference_version_id` |
 | `prediction_rulesets` | `house_system_id -> astral_house_systems.id` | Système de maisons demandé par un ruleset | Non pour le système, versionné par le ruleset |
 | `daily_prediction_runs` | `house_system_effective_id -> astral_house_systems.id` | Trace du système de maisons réellement appliqué pendant un run daily | Indirectement via le run |
 | `user_prediction_baselines` | `house_system_effective_id -> astral_house_systems.id` | Sépare les baselines selon le système de maisons effectif | Indirectement via fenêtre/version |
-| `chart_results` | JSON `result_payload.houses`, `result_payload.house_rulers`, `result_payload.angles`, `result_payload.planets[*].house` | Snapshot du calcul natal : cuspides, signes des cuspides, maîtres de maisons, angles et maison des planètes | Version texte dans payload et colonnes |
+| `chart_results` | JSON `result_payload.houses`, `result_payload.house_rulers`, `result_payload.angles`, `result_payload.planets[*].house` | Snapshot du calcul natal : cuspides, signes des cuspides, maîtres de maisons, force typée, angles et maison des planètes | Version texte dans payload et colonnes |
 | `daily_prediction_category_scores` | JSON `contributors_json` | Historique des contributeurs, qui peuvent inclure maisons cible/transitée | Indirectement via le run |
 | `daily_prediction_turning_points` | JSON `driver_json` | Historique des événements conducteurs, avec métadonnées de maison si présentes | Indirectement via le run |
 
@@ -138,7 +138,9 @@ Qualification :
 
 - Table de configuration du moteur de prédiction quotidienne.
 - Ne calcule pas les cuspides ni l'occupation des maisons.
-- Qualifie une maison déjà identifiée par le calcul astrologique pour moduler la sensibilité natale.
+- Qualifie une maison déjà identifiée par le calcul astrologique, puis alimente deux contrats Python distincts :
+  - `HouseAstrologyProfile`, propriétaire des attributs astrologiques stables ;
+  - `HousePredictionProfile`, propriétaire des attributs produit de prédiction.
 
 Clés :
 
@@ -152,21 +154,24 @@ Colonnes principales :
 | --- | --- |
 | `reference_version_id` | Version de référence qui porte ce paramétrage prédictif. |
 | `house_id` | Maison canonique concernée. |
-| `house_kind` | Type structurel : `angular`, `succedent` ou `cadent`. Utilisé pour scorer la force de placement. |
-| `visibility_weight` | Poids de visibilité de la maison. Seedé mais pas consommé directement dans les calculateurs identifiés. |
-| `base_priority` | Priorité éditoriale ou prédictive de base. Seedée mais pas consommée directement dans les calculateurs identifiés. |
-| `keywords_json` | Mots-clés interprétatifs optionnels, parsés dans `HouseProfileData.keywords`. |
-| `micro_note` | Note éditoriale courte, présente en SQL mais non exposée dans `HouseProfileData` au moment de cette analyse. |
+| `house_kind` | Type structurel astrologique : `angular`, `succedent` ou `cadent`. Exposé dans `HouseAstrologyProfile.house_kind`. |
+| `visibility_weight` | Poids produit de visibilité de la maison. Exposé dans `HousePredictionProfile.visibility_weight`. |
+| `base_priority` | Priorité éditoriale ou prédictive de base. Exposée dans `HousePredictionProfile.base_priority`. |
+| `keywords_json` | Mots-clés produit optionnels, parsés dans `HousePredictionProfile.keywords`. |
+| `micro_note` | Note éditoriale courte, exposée dans `HousePredictionProfile.micro_note`. |
 
-Rôle runtime :
+Rôle applicatif :
 
 - Chargée par `PredictionReferenceRepository.get_house_profiles`.
-- Injectée dans `PredictionContext.house_profiles` sous forme de mapping `house_number -> HouseProfileData`.
+- Scindée par le repository en deux mappings :
+  - `PredictionContext.house_astrology_profiles` : `house_number -> HouseAstrologyProfile` ;
+  - `PredictionContext.house_prediction_profiles` : `house_number -> HousePredictionProfile`.
 - Validée comme obligatoire par `PredictionContextLoader._validate_context`.
-- Utilisée par `NatalSensitivityCalculator._house_placement_score` pour donner une force de placement :
+- Utilisée par `NatalSensitivityCalculator._house_placement_score` via `house_astrology_profiles` pour donner une force de placement :
   - `angular` : `1.0`
   - `succedent` : `0.2`
   - `cadent` : `-0.5`
+- Les champs produit (`visibility_weight`, `base_priority`, `keywords`, `micro_note`) restent dans le contrat prediction et ne doivent pas apparaître sous `backend/app/domain/astrology`.
 
 Valeurs seedées notables :
 
@@ -212,13 +217,13 @@ Colonnes principales :
 | `weight` | Intensité du lien maison -> catégorie. |
 | `routing_role` | Rôle qualitatif : `primary` ou `secondary`. Sert de multiplicateur dans certains calculateurs V3. |
 
-Rôle runtime :
+Rôle applicatif produit :
 
 - Chargée par `PredictionReferenceRepository.get_house_category_weights`.
 - Injectée dans `PredictionContext.house_category_weights`.
 - Utilisée par `DomainRouter._project_houses_to_categories` pour transformer le vecteur maison d'un événement en poids par catégorie.
 - Utilisée par `TransitSignalBuilder._build_weighted_routing` et `IntradayActivationBuilder._build_weighted_routing` pour construire les index de routage continus.
-- Utilisée par `NatalSensitivityCalculator` pour identifier les maisons pertinentes d'une catégorie et calculer :
+- Utilisée par `NatalSensitivityCalculator` pour identifier les maisons pertinentes d'une catégorie et calculer, en consommant les faits disponibles dans `NatalChart.houses` :
   - l'occupation natale `Occ(c)`,
   - les maîtrises de maisons `Rul(c)`,
   - l'angularité des significateurs `Ang(c)`.
@@ -226,10 +231,13 @@ Rôle runtime :
 Logique de routage :
 
 - Pour un événement avec cible natale, `DomainRouter` construit un vecteur maison :
+  - il lit en priorité les métadonnées runtime `natal_house_runtime_target` et `natal_house_runtime_transited` ;
+  - il accepte aussi une maison runtime sérialisée ou un numéro brut, pour les payloads JSON ;
   - `1.0` sur la maison cible si la maison transitée est absente ou identique ;
   - `0.70` sur la maison natale cible et `0.30` sur la maison natale transitée si elles diffèrent.
 - Chaque maison du vecteur est projetée vers les catégories via `astral_house_category_weights`.
 - Le résultat maison est combiné avec le blend planète -> catégorie.
+- `DomainRouter` reste propriétaire du mapping produit maison -> catégorie ; il ne recalcule ni signe de cuspide ni maître de maison.
 - Dans les builders V3, `routing_role` module le poids :
   - `primary` : multiplicateur `1.0`
   - `secondary` : multiplicateur `0.6`
@@ -669,9 +677,9 @@ HOUSE_7_RULER_VENUS_LEO
 
 Le moteur de prédiction quotidienne conserve son champ interne `NatalChart.house_sign_rulers`.
 
-Ce nom reste ambigu historiquement : dans certains chemins, il transporte encore le signe de cuspide et non directement la planète maîtresse. La résolution prédictive continue donc à passer par `PredictionContext.sign_rulerships` dans `backend/app/domain/prediction/natal_sensitivity.py`.
+Ce nom reste ambigu historiquement : dans certains chemins, il transporte encore le signe de cuspide et non directement la planète maîtresse. Depuis CS-158, `NatalSensitivityCalculator` ne doit plus recalculer les maîtres depuis `sign_rulerships` : il lit les maîtres déjà résolus dans `NatalChart.houses[*].ruler` quand le runtime maison est disponible.
 
-Le nouveau champ public `house_rulers[]` ne remplace pas ce contrat interne prédictif. Il rend seulement explicite et sérialisée la donnée natale finale utile aux restitutions publiques.
+Le champ public `house_rulers[]` reste une projection legacy utile aux restitutions et à la compatibilité, mais la source structurelle canonique pour les calculateurs et serializers modernes est `houses[*].ruler`.
 
 ### Runtime riche des maisons natales
 
@@ -684,6 +692,7 @@ Structure canonique :
 | `number` | Numéro de maison, de `1` à `12`. |
 | `cusp_longitude` | Longitude de cuspide normalisée. |
 | `cusp_sign` | Signe zodiacal de la cuspide, champ canonique. |
+| `house_kind` | Qualité astrologique canonique : `angular`, `succedent` ou `cadent`. |
 | `sign` | Alias legacy sérialisé, synchronisé avec `cusp_sign`. |
 | `contained_signs` | Signes zodiacaux traversés par l'intervalle de maison. |
 | `intercepted_signs` | Signes entièrement contenus sans être sur la cuspide courante ou suivante. |
@@ -698,7 +707,7 @@ Sous-structures :
 - `HouseRulerRuntimeData` : `planet`, `sign`, `house`.
 - `HouseOccupantRuntimeData` : `planet`, `sign`, `longitude`, `is_dominant`.
 - `HouseAxisRuntimeData` : `opposite_house`, `theme`.
-- `HouseStrengthRuntimeData` : `score`, `dominant`, `reasons`.
+- `HouseStrengthRuntimeData` : `normalized_score`, `score` comme alias JSON historique, `level`, `dominant`, `reasons`, `modifiers`.
 
 #### Signes contenus
 
@@ -754,11 +763,19 @@ La maison opposée partage le même thème que son miroir.
 
 #### Force interprétative
 
-`backend/app/domain/astrology/calculators/house_strength.py` produit un score déterministe entre `0.0` et `1.0`.
+`backend/app/domain/astrology/interpretation/house_strength.py` produit une force interprétative déterministe. Depuis CS-156, le calcul est porté par `HouseStrengthEvaluator` dans la couche `domain/astrology/interpretation`, et non plus par le builder runtime lui-même.
+
+Depuis CS-160, la force maison utilise un contrat typé :
+
+- `normalized_score` : score normalisé borné entre `0.0` et `1.0`.
+- `score` : alias de compatibilité JSON exposant la même valeur normalisée.
+- `level` : niveau qualitatif stable, parmi `low`, `moderate` et `dominant`.
+- `reasons` : raisons canoniques issues de `HouseStrengthReason`, sérialisées en chaînes stables dans le JSON public.
+- `modifiers` : détail structuré des modificateurs astrologiques (`angularity_modifier`, `occupancy_modifier`, `ruler_condition_modifier`).
 
 Sources prises en compte dans la première version :
 
-- angularité : maisons angulaires, succédentes ou cadentes ;
+- angularité : maisons angulaires, succédentes ou cadentes, aussi exposée par `HouseRuntimeData.house_kind` ;
 - nombre d'occupants ;
 - stellium à partir de trois occupants ;
 - présence d'un luminaire ;
@@ -766,11 +783,12 @@ Sources prises en compte dans la première version :
 - maître dans son propre signe selon `sign_rulerships` ;
 - proximité symbolique des angles ASC et MC pour les maisons 1 et 10.
 
-Les raisons sont toujours explicites dans `strength.reasons`, par exemple :
+Les raisons sont toujours explicites dans `strength.reasons`. Le code Python manipule des membres `HouseStrengthReason`; le JSON public garde les valeurs textuelles stables, par exemple :
 
 ```json
 {
   "score": 1.0,
+  "level": "dominant",
   "dominant": true,
   "reasons": [
     "baseline_house",
@@ -786,6 +804,14 @@ Les raisons sont toujours explicites dans `strength.reasons`, par exemple :
 
 Ce score est interprétatif, pas astronomique. Il sert à prioriser la lecture narrative, IA ou prédictive.
 
+Seuils actuels :
+
+| Niveau | Condition sur `normalized_score` |
+| --- | --- |
+| `low` | `< 0.25` |
+| `moderate` | `>= 0.25` et `< 0.60` |
+| `dominant` | `>= 0.60` |
+
 ### `chart_results`
 
 Définie par `ChartResultModel`.
@@ -800,7 +826,8 @@ Colonnes pertinentes :
 
 Rôle des données de maison dans `result_payload` :
 
-- `houses[]` contient les maisons runtime enrichies : `number`, `cusp_longitude`, `cusp_sign`, `sign`, `contained_signs`, `intercepted_signs`, `ruler`, `occupants`, `axis`, `strength`, `metadata`.
+- `houses[]` contient les maisons runtime enrichies : `number`, `cusp_longitude`, `cusp_sign`, `house_kind`, `sign`, `contained_signs`, `intercepted_signs`, `ruler`, `occupants`, `axis`, `strength`, `metadata`.
+- `houses[].strength` expose `score` pour compatibilité, ajoute `level` et conserve des `reasons` textuelles stables issues de l'enum interne `HouseStrengthReason`.
 - `house_rulers[]` conserve la projection historique du maître planétaire de chaque maison et sa position natale : `house_number`, `cusp_sign`, `ruler_planet`, `ruler_planet_sign`, `ruler_planet_house`.
 - `planets[]` contient la maison occupée par chaque planète dans `house`, sauf en mode dégradé sans heure.
 - `angles` dérive ASC, MC, DSC et IC des cuspides 1, 10, 7 et 4.
@@ -879,37 +906,43 @@ Rôle :
 
 1. `ReferenceRepository.ensure_seed_data` garantit les 12 lignes `astral_houses`.
 2. La migration `20260513_0095` garantit les lignes `astral_house_systems` et migre les traces runtime vers des clés étrangères.
-3. `PredictionReferenceRepository` charge `astral_prediction_daily_house_profiles` et `astral_house_category_weights` pour la version de référence active.
-4. `PredictionContextLoader` valide que les profils de maisons existent puis fige le contexte.
-5. Pour un thème natal, `build_natal_result` lit `reference_data["houses"]` pour connaître les numéros attendus.
-6. `houses_provider.calculate_houses` calcule les cuspides, l'Ascendant et le Milieu du Ciel via SwissEph.
-7. `build_natal_result` valide qu'il y a exactement 12 cuspides normalisées et non dupliquées.
-8. `assign_house_number` assigne chaque planète natale à une maison à partir de sa longitude et des intervalles de cuspides.
-9. `HouseRulerResolver` calcule `house_rulers[]` à partir des cuspides, des positions planétaires et du mapping signe -> maître issu des dignités.
-10. `build_house_runtime_data` construit `HouseRuntimeData[]` avec signes contenus, interceptions, ruler intégré, occupants, axe et force.
-11. `chart_json_builder` projette les maisons enrichies, les maîtres de maisons, les maisons des planètes et les angles dans le payload public.
-12. Pour la prédiction quotidienne, `EngineOrchestrator` extrait les cuspides natales depuis `house_cusps` ou `houses`.
-13. `AstroCalculator` calcule les états astrologiques par pas temporel et la maison natale transitée par chaque planète.
-14. `EventDetector` produit des événements avec une maison cible natale et une maison transitée quand l'information est disponible.
-15. `DomainRouter` construit le vecteur maison puis le projette vers les catégories via `astral_house_category_weights`.
-16. `ContributionCalculator`, `TransitSignalBuilder` et `IntradayActivationBuilder` consomment le routage pour produire scores et timelines.
-17. `NatalSensitivityCalculator` utilise `astral_prediction_daily_house_profiles` et `astral_house_category_weights` pour moduler la sensibilité structurelle par catégorie.
-18. `daily_prediction_*` persiste les scores, contributeurs, points de bascule et la trace `house_system_effective_id`.
+3. `PredictionReferenceRepository` charge `astral_prediction_daily_house_profiles` et le scinde en `house_astrology_profiles` et `house_prediction_profiles` pour la version de référence active.
+4. Le même repository charge `astral_house_category_weights` comme mapping produit maison -> catégorie.
+5. `PredictionContextLoader` valide que les deux familles de profils de maisons existent puis fige le contexte.
+6. Pour un thème natal, `build_natal_result` lit `reference_data["houses"]` pour connaître les numéros attendus.
+7. `houses_provider.calculate_houses` calcule les cuspides, l'Ascendant et le Milieu du Ciel via SwissEph.
+8. `build_natal_result` valide qu'il y a exactement 12 cuspides normalisées et non dupliquées.
+9. `assign_house_number` assigne chaque planète natale à une maison à partir de sa longitude et des intervalles de cuspides.
+10. `HouseRulerResolver` calcule `house_rulers[]` à partir des cuspides, des positions planétaires et du mapping signe -> maître issu des dignités.
+11. `build_house_runtime_data` construit `HouseRuntimeData[]` avec signes contenus, interceptions, ruler intégré, occupants, axe et `house_kind`.
+12. `HouseStrengthEvaluator` produit `HouseStrengthRuntimeData` avec score normalisé, niveau, raisons enumérées et modificateurs.
+13. `chart_json_builder` projette les maisons enrichies, les maîtres de maisons, la force typée, les maisons des planètes et les angles dans le payload public.
+14. Pour la prédiction quotidienne, `EngineOrchestrator` extrait les cuspides natales depuis `house_cusps` ou `houses` et réhydrate les forces maison sérialisées de façon stricte.
+15. `AstroCalculator` calcule les états astrologiques par pas temporel et la maison natale transitée par chaque planète.
+16. `EventDetector` produit des événements avec une maison cible natale et une maison transitée quand l'information est disponible.
+17. `DomainRouter` construit le vecteur maison depuis les métadonnées runtime disponibles puis le projette vers les catégories via `astral_house_category_weights`.
+18. `ContributionCalculator`, `TransitSignalBuilder` et `IntradayActivationBuilder` consomment le routage pour produire scores et timelines.
+19. `NatalSensitivityCalculator` lit les occupants et maîtres depuis `NatalChart.houses`, puis applique `house_astrology_profiles` et `house_category_weights` pour moduler la sensibilité structurelle par catégorie.
+20. `daily_prediction_*` persiste les scores, contributeurs, points de bascule et la trace `house_system_effective_id`.
 
 ## Points d'attention
 
 - `astral_houses` est stable et non versionnée. Ne pas réintroduire `reference_version_id` dans cette table sans décision d'architecture.
 - `astral_house_systems` est stable et non versionnée. Ne pas stocker de nouveau `house_system = 'placidus'` dans une table runtime relationnelle ; utiliser une FK vers `astral_house_systems`.
 - Le garde-fou `test_runtime_models_do_not_store_house_system_codes_as_string_columns` interdit la réintroduction de colonnes SQL relationnelles string `house_system` ou `house_system_effective` dans les modèles SQLAlchemy. Les payloads JSON et propriétés Python calculées restent autorisés.
-- `astral_prediction_daily_house_profiles` et `astral_house_category_weights` sont des paramètres de scoring, pas des données astronomiques.
+- `astral_prediction_daily_house_profiles` mélange une source SQL historique de paramétrage, mais le code la scinde immédiatement : `house_kind` devient un fait de profil astrologique stable, tandis que `visibility_weight`, `base_priority`, `keywords` et `micro_note` restent des données produit.
+- `astral_house_category_weights` est un paramètre de scoring produit, pas une donnée astronomique.
 - `astral_house_systems` ne calcule rien : le calcul reste dans SwissEph, `AstroCalculator` ou le moteur simplifié.
 - Les cuspides réelles doivent rester dans les résultats de calcul ou les objets runtime, pas dans `astral_prediction_daily_house_profiles`.
-- Les détails runtime riches des maisons (`contained_signs`, `intercepted_signs`, `ruler`, `occupants`, `axis`, `strength`) restent dans `NatalResult` et les payloads JSON, pas dans de nouvelles tables SQL.
-- `visibility_weight` et `base_priority` sont seedés mais leur consommation directe n'a pas été identifiée dans les calculateurs de scoring actuels.
-- `micro_note` existe en SQL pour `astral_prediction_daily_house_profiles`, mais n'est pas exposé dans `HouseProfileData`.
+- Les détails runtime riches des maisons (`house_kind`, `contained_signs`, `intercepted_signs`, `ruler`, `occupants`, `axis`, `strength`) restent dans `NatalResult` et les payloads JSON, pas dans de nouvelles tables SQL.
+- `visibility_weight`, `base_priority`, `keywords` et `micro_note` sont exposés par `HousePredictionProfile`; ils ne doivent pas migrer vers `domain/astrology`.
+- `HouseProfileData` n'est plus le contrat actif : toute réintroduction doit être traitée comme une régression de séparation des responsabilités.
 - Les colonnes JSON (`result_payload`, `contributors_json`, `driver_json`) ne garantissent pas l'intégrité référentielle avec `astral_houses`.
 - Les maîtres de maisons natales dépendent strictement de `astral_planet_sign_dignities`. Un référentiel sans 12 domiciles primaires traditionnels rend le calcul invalide au lieu de déclencher un fallback applicatif.
 - Les maisons Whole Sign ne produisent pas d'interceptions dans le runtime, même si le système est reçu sous forme d'enum applicatif.
+- La force maison est un contrat d'interprétation astrologique typé : les nouvelles raisons doivent passer par `HouseStrengthReason`, pas par des chaînes ad hoc.
+- Le scoring produit peut consommer `strength.level` ou les faits runtime, mais ne doit pas comparer directement `strength.score` à des seuils produit.
+- Le garde-fou `test_astrology_prediction_boundary.py` matérialise `RG-095` : `domain/astrology` ne doit pas importer `domain/prediction` ni porter les symboles produit `house_category_weights`, `visibility_weight`, `base_priority` ou `routing_role`.
 - Le calcul natal public supporte `placidus`, `equal`, `whole_sign` et `porphyry` via `houses_provider`; le calcul daily `AstroCalculator` utilise actuellement Placidus avec repli Porphyry et ne supporte pas encore `equal` ou `whole_sign` comme systèmes effectifs de cuspides courantes.
 - Les modes dégradés sans heure ou sans localisation peuvent produire des maisons vides, des angles `null` et des planètes sans maison dans le payload public.
 - `PublicAstroFoundationProjector.activated_houses` utilise un mapping public simplifié par domaine, pas une lecture directe de `astral_house_category_weights`.
@@ -918,6 +951,7 @@ Rôle :
 
 - `backend/app/infra/db/models/reference.py`
 - `backend/app/domain/astrology/house_system_codes.py`
+- `backend/app/domain/astrology/reference/house_profiles.py`
 - `backend/app/infra/db/models/house_system_resolution.py`
 - `backend/app/infra/db/models/prediction_reference.py`
 - `backend/app/infra/db/models/daily_prediction.py`
@@ -938,9 +972,10 @@ Rôle :
 - `backend/app/domain/astrology/builders/house_runtime_builder.py`
 - `backend/app/domain/astrology/builders/house_occupants_builder.py`
 - `backend/app/domain/astrology/constants/house_axes.py`
+- `backend/app/domain/astrology/interpretation/house_strength.py`
+- `backend/app/domain/astrology/interpretation/house_strength_contracts.py`
 - `backend/app/domain/astrology/calculators/contained_signs.py`
 - `backend/app/domain/astrology/calculators/intercepted_signs.py`
-- `backend/app/domain/astrology/calculators/house_strength.py`
 - `backend/app/domain/astrology/calculators/houses.py`
 - `backend/app/domain/prediction/astro_calculator.py`
 - `backend/app/domain/prediction/schemas.py`
@@ -950,6 +985,7 @@ Rôle :
 - `backend/app/domain/prediction/intraday_activation_builder.py`
 - `backend/app/domain/prediction/public_projection.py`
 - `backend/app/domain/prediction/public_astro_vocabulary.py`
+- `backend/app/tests/unit/test_astrology_prediction_boundary.py`
 - `backend/app/services/chart/json_builder.py`
 - `backend/migrations/versions/20260218_0001_create_reference_tables.py`
 - `backend/migrations/versions/20260307_0032_migration_a_prediction_reference_tables.py`
