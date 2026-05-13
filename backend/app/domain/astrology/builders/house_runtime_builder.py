@@ -12,7 +12,7 @@ from app.domain.astrology.calculators.contained_signs import resolve_contained_s
 from app.domain.astrology.calculators.intercepted_signs import resolve_intercepted_signs
 from app.domain.astrology.constants.house_axes import resolve_house_axis
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
-from app.domain.astrology.interpretation import HouseStrengthEvaluator
+from app.domain.astrology.interpretation.house_strength import HouseStrengthEvaluator
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
     HouseRulerRuntimeData,

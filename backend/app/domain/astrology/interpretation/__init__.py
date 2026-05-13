@@ -1,8 +1,6 @@
-"""Evaluateurs d'interpretation astrologique pure.
+"""Package d'interpretation astrologique pure.
 
-Ce package enrichit les faits runtime sans connaitre le scoring produit.
+Les contrats et evaluateurs sont consommes depuis leurs modules canoniques.
 """
 
-from app.domain.astrology.interpretation.house_strength import HouseStrengthEvaluator
-
-__all__ = ["HouseStrengthEvaluator"]
+__all__: list[str] = []

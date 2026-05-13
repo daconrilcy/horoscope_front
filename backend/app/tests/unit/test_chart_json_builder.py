@@ -1,8 +1,14 @@
+"""Tests de projection JSON publique du theme natal."""
+
 from unittest.mock import MagicMock
 
 import pytest
 
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
+from app.domain.astrology.interpretation.house_strength_contracts import (
+    HouseStrengthLevel,
+    HouseStrengthReason,
+)
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
     HouseOccupantRuntimeData,
@@ -176,10 +182,9 @@ def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_bi
         )
     ]
     rich_house.axis = HouseAxisRuntimeData(opposite_house=7, theme="self_relationship")
-    rich_house.strength = HouseStrengthRuntimeData(
-        score=0.81,
-        dominant=True,
-        reasons=["angular_house"],
+    rich_house.strength = HouseStrengthRuntimeData.from_parts(
+        normalized_score=0.81,
+        reasons=(HouseStrengthReason.ANGULAR_HOUSE,),
     )
 
     chart = build_chart_json(mock_natal_result, mock_birth_profile)
@@ -202,7 +207,12 @@ def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_bi
             }
         ],
         "axis": {"opposite_house": 7, "theme": "self_relationship"},
-        "strength": {"score": 0.81, "dominant": True, "reasons": ["angular_house"]},
+        "strength": {
+            "score": 0.81,
+            "level": HouseStrengthLevel.DOMINANT.value,
+            "dominant": True,
+            "reasons": ["angular_house"],
+        },
     }
 
 

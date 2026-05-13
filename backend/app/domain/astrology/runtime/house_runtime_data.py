@@ -8,6 +8,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.domain.astrology.interpretation.house_strength_contracts import (
+    HouseStrengthLevel,
+    HouseStrengthModifiers,
+    HouseStrengthReason,
+    resolve_house_strength_level,
+)
 from app.domain.astrology.zodiac import sign_from_longitude
 
 
@@ -38,13 +44,55 @@ class HouseAxisRuntimeData:
     theme: str
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class HouseStrengthRuntimeData:
-    """Score interpretatif deterministe de dominance astrologique d'une maison."""
+    """Contrat de force maison base sur un score normalise et des raisons enumerees."""
 
-    score: float
+    normalized_score: float
     dominant: bool
-    reasons: list[str]
+    reasons: tuple[HouseStrengthReason, ...]
+    level: HouseStrengthLevel
+    modifiers: HouseStrengthModifiers = field(default_factory=HouseStrengthModifiers)
+
+    @classmethod
+    def from_parts(
+        cls,
+        *,
+        normalized_score: float,
+        reasons: tuple[HouseStrengthReason, ...],
+        modifiers: HouseStrengthModifiers | None = None,
+    ) -> HouseStrengthRuntimeData:
+        """Construit le contrat en derivant dominance et niveau qualitatif."""
+        bounded_score = round(min(max(normalized_score, 0.0), 1.0), 2)
+        return cls(
+            normalized_score=bounded_score,
+            dominant=bounded_score >= 0.6,
+            reasons=reasons,
+            level=resolve_house_strength_level(bounded_score),
+            modifiers=modifiers or HouseStrengthModifiers(),
+        )
+
+    @classmethod
+    def from_serialized(
+        cls,
+        *,
+        score: float,
+        level: str,
+        reasons: list[object],
+    ) -> HouseStrengthRuntimeData:
+        """Reconstruit le contrat runtime depuis la projection JSON publique."""
+        contract = cls.from_parts(
+            normalized_score=score,
+            reasons=tuple(HouseStrengthReason(str(reason)) for reason in reasons),
+        )
+        if contract.level.value != level:
+            raise ValueError("Serialized house strength level does not match score")
+        return contract
+
+    @property
+    def score(self) -> float:
+        """Expose le nom JSON historique pour le score normalise."""
+        return self.normalized_score
 
 
 @dataclass(slots=True)
@@ -78,10 +126,9 @@ class HouseRuntimeData:
         if self.axis is None:
             self.axis = HouseAxisRuntimeData(opposite_house=0, theme="unknown")
         if self.strength is None:
-            self.strength = HouseStrengthRuntimeData(
-                score=0.0,
-                dominant=False,
-                reasons=["baseline_house"],
+            self.strength = HouseStrengthRuntimeData.from_parts(
+                normalized_score=0.0,
+                reasons=(HouseStrengthReason.BASELINE_HOUSE,),
             )
 
 

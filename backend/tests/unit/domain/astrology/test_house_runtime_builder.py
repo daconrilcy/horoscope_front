@@ -3,6 +3,10 @@
 from app.core.config import HouseSystemType
 from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
+from app.domain.astrology.interpretation.house_strength_contracts import (
+    HouseStrengthLevel,
+    HouseStrengthReason,
+)
 from app.domain.astrology.natal_calculation import HouseResult, PlanetPosition
 
 RULERS = {
@@ -81,13 +85,14 @@ def test_runtime_builder_golden_placidus_with_interception_and_three_signs() -> 
     assert house_2.ruler.planet == "mercury"
     assert house_2.occupants[0].planet == "sun"
     assert house_2.axis.opposite_house == 8
-    assert house_2.strength.reasons == [
-        "baseline_house",
-        "succedent_house",
-        "occupants_present",
-        "luminary_present",
-        "ruler_in_own_sign",
-    ]
+    assert house_2.strength.level is HouseStrengthLevel.MODERATE
+    assert house_2.strength.reasons == (
+        HouseStrengthReason.BASELINE_HOUSE,
+        HouseStrengthReason.SUCCEDENT_HOUSE,
+        HouseStrengthReason.OCCUPANTS_PRESENT,
+        HouseStrengthReason.LUMINARY_PRESENT,
+        HouseStrengthReason.RULER_IN_OWN_SIGN,
+    )
 
 
 def test_runtime_builder_golden_whole_sign_without_interception() -> None:
@@ -148,7 +153,7 @@ def test_runtime_builder_golden_stellium_house_is_dominant() -> None:
     house_2 = next(house for house in houses if house.number == 2)
     assert len(house_2.occupants) == 3
     assert house_2.strength.dominant is True
-    assert "stellium_present" in house_2.strength.reasons
+    assert HouseStrengthReason.STELLIUM_PRESENT in house_2.strength.reasons
 
 
 def test_runtime_builder_golden_empty_house_remains_non_dominant() -> None:
@@ -171,4 +176,7 @@ def test_runtime_builder_golden_empty_house_remains_non_dominant() -> None:
     house_6 = next(house for house in houses if house.number == 6)
     assert house_6.occupants == []
     assert house_6.strength.dominant is False
-    assert house_6.strength.reasons == ["baseline_house", "cadent_house"]
+    assert house_6.strength.reasons == (
+        HouseStrengthReason.BASELINE_HOUSE,
+        HouseStrengthReason.CADENT_HOUSE,
+    )

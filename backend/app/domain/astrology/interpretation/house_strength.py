@@ -14,10 +14,11 @@ from app.domain.astrology.runtime.house_runtime_data import (
     HouseStrengthRuntimeData,
 )
 
+from .house_strength_contracts import HouseStrengthModifiers, HouseStrengthReason
+
 ANGULAR_HOUSES = {1, 4, 7, 10}
 SUCCEDENT_HOUSES = {2, 5, 8, 11}
 LUMINARIES = {"sun", "moon"}
-DOMINANT_THRESHOLD = 0.6
 
 
 class HouseStrengthEvaluator:
@@ -33,47 +34,56 @@ class HouseStrengthEvaluator:
     ) -> HouseStrengthRuntimeData:
         """Retourne un score normalise et ses raisons astrologiques."""
         score = 0.05
-        reasons: list[str] = ["baseline_house"]
+        reasons = list((HouseStrengthReason.BASELINE_HOUSE,))
+        angularity_modifier = 0.0
+        occupancy_modifier = 0.0
+        ruler_condition_modifier = 0.0
 
         if house_number in ANGULAR_HOUSES:
-            score += 0.25
-            reasons.append("angular_house")
+            angularity_modifier += 0.25
+            reasons.append(HouseStrengthReason.ANGULAR_HOUSE)
         elif house_number in SUCCEDENT_HOUSES:
-            score += 0.12
-            reasons.append("succedent_house")
+            angularity_modifier += 0.12
+            reasons.append(HouseStrengthReason.SUCCEDENT_HOUSE)
         else:
-            reasons.append("cadent_house")
+            reasons.append(HouseStrengthReason.CADENT_HOUSE)
 
         occupant_count = len(occupants)
         if occupant_count:
-            score += min(0.3, 0.1 * occupant_count)
-            reasons.append("occupants_present")
+            occupancy_modifier += min(0.3, 0.1 * occupant_count)
+            reasons.append(HouseStrengthReason.OCCUPANTS_PRESENT)
         if occupant_count >= 3:
-            score += 0.18
-            reasons.append("stellium_present")
+            occupancy_modifier += 0.18
+            reasons.append(HouseStrengthReason.STELLIUM_PRESENT)
 
         if any(occupant.planet in LUMINARIES for occupant in occupants):
-            score += 0.15
-            reasons.append("luminary_present")
+            occupancy_modifier += 0.15
+            reasons.append(HouseStrengthReason.LUMINARY_PRESENT)
 
         if ruler is not None:
             if ruler.house in ANGULAR_HOUSES:
-                score += 0.12
-                reasons.append("ruler_in_angular_house")
+                ruler_condition_modifier += 0.12
+                reasons.append(HouseStrengthReason.RULER_IN_ANGULAR_HOUSE)
             if ruler.sign is not None and sign_rulerships.get(ruler.sign) == ruler.planet:
-                score += 0.12
-                reasons.append("ruler_in_own_sign")
+                ruler_condition_modifier += 0.12
+                reasons.append(HouseStrengthReason.RULER_IN_OWN_SIGN)
 
         if house_number == 1:
-            score += 0.08
-            reasons.append("asc_angle_proximity")
+            angularity_modifier += 0.08
+            reasons.append(HouseStrengthReason.ASC_ANGLE_PROXIMITY)
         elif house_number == 10:
-            score += 0.08
-            reasons.append("mc_angle_proximity")
+            angularity_modifier += 0.08
+            reasons.append(HouseStrengthReason.MC_ANGLE_PROXIMITY)
 
-        normalized_score = round(min(score, 1.0), 2)
-        return HouseStrengthRuntimeData(
-            score=normalized_score,
-            dominant=normalized_score >= DOMINANT_THRESHOLD,
-            reasons=reasons,
+        normalized_score = (
+            score + angularity_modifier + occupancy_modifier + ruler_condition_modifier
+        )
+        return HouseStrengthRuntimeData.from_parts(
+            normalized_score=normalized_score,
+            reasons=tuple(reasons),
+            modifiers=HouseStrengthModifiers(
+                angularity_modifier=round(angularity_modifier, 2),
+                occupancy_modifier=round(occupancy_modifier, 2),
+                ruler_condition_modifier=round(ruler_condition_modifier, 2),
+            ),
         )

@@ -157,13 +157,22 @@ def _serialize_house_axis(axis: Any) -> dict[str, Any] | None:
 
 
 def _serialize_house_strength(strength: Any) -> dict[str, Any] | None:
-    """Projette le score runtime déjà calculé de la maison."""
-    if strength is None or not isinstance(getattr(strength, "reasons", None), list):
+    """Projette le score normalisee runtime deja calcule de la maison."""
+    raw_reasons = getattr(strength, "reasons", None) if strength is not None else None
+    if not isinstance(raw_reasons, list | tuple):
+        return None
+    level = getattr(strength, "level", None)
+    if hasattr(level, "value"):
+        level = level.value
+    if not isinstance(level, str):
         return None
     return {
         "score": strength.score,
+        "level": level,
         "dominant": strength.dominant,
-        "reasons": strength.reasons,
+        "reasons": [
+            reason.value if hasattr(reason, "value") else str(reason) for reason in raw_reasons
+        ],
     }
 
 
