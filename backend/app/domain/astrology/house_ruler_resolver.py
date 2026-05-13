@@ -32,11 +32,11 @@ class PlanetLike(Protocol):
 
     planet_code: str
     sign_code: str
-    house_number: int
+    house_number: int | None
 
 
 class HouseRulerResolutionError(ValueError):
-    """Erreur levée quand le référentiel des maîtrises est incomplet."""
+    """Erreur levée quand les maîtrises de maisons ne sont pas résolubles."""
 
 
 class HouseRulerResolver:
@@ -60,6 +60,8 @@ class HouseRulerResolver:
         house_rulers: list[HouseRulerResult] = []
 
         for house in sorted(houses, key=lambda item: item.number):
+            if not 1 <= house.number <= 12:
+                raise HouseRulerResolutionError(f"invalid house number: {house.number}")
             cusp_sign = sign_from_longitude(house.cusp_longitude)
             ruler_planet = self._sign_rulerships[cusp_sign]
             ruler_position = planets_by_code.get(ruler_planet)

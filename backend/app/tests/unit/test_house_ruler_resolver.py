@@ -1,6 +1,7 @@
 """Tests unitaires du resolver des maîtres de maisons natales."""
 
 import pytest
+from pydantic import BaseModel
 
 from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResolutionError,
@@ -22,6 +23,14 @@ COMPLETE_RULERS = {
     "aquarius": "saturn",
     "pisces": "jupiter",
 }
+
+
+class PlanetStub(BaseModel):
+    """Position planétaire minimale pour tester les cas dégradés."""
+
+    planet_code: str
+    sign_code: str
+    house_number: int | None
 
 
 def test_resolve_house_rulers_from_cusp_sign_and_planet_position() -> None:
@@ -75,3 +84,24 @@ def test_resolve_rejects_partial_reference_mapping() -> None:
     """Refuse un référentiel partiel au lieu d'inventer un fallback local."""
     with pytest.raises(HouseRulerResolutionError, match="taurus"):
         HouseRulerResolver({"aries": "mars"})
+
+
+def test_resolve_accepts_ruler_planet_without_house() -> None:
+    """Préserve une maison de maître inconnue en mode de calcul dégradé."""
+    houses = [HouseResult(number=7, cusp_longitude=42.5)]
+    planets = [PlanetStub(planet_code="venus", sign_code="leo", house_number=None)]
+
+    result = HouseRulerResolver(COMPLETE_RULERS).resolve(houses, planets)
+
+    assert result[0].ruler_planet == "venus"
+    assert result[0].ruler_planet_sign == "leo"
+    assert result[0].ruler_planet_house is None
+
+
+def test_resolve_rejects_invalid_house_number() -> None:
+    """Bloque la sérialisation d'une maison hors du référentiel 1 à 12."""
+    houses = [HouseResult(number=13, cusp_longitude=42.5)]
+    planets = [PlanetStub(planet_code="venus", sign_code="leo", house_number=10)]
+
+    with pytest.raises(HouseRulerResolutionError, match="invalid house number: 13"):
+        HouseRulerResolver(COMPLETE_RULERS).resolve(houses, planets)
