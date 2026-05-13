@@ -256,6 +256,240 @@ En moteur daily V1/V3 :
 - Il tente `placidus` puis replie sur `porphyre` si Placidus échoue.
 - Il calcule `natal_house_transited` pour chaque planète transitante en comparant sa longitude aux cuspides natales.
 
+#### Processus détaillé du calcul des cuspides natales
+
+1. `backend/app/services/natal/calculation_service.py` résout les options de calcul (`zodiac`, `frame`, `house_system`) puis choisit le moteur avec `_resolve_engine`.
+
+   Extrait :
+
+   ```python
+   requires_accurate = (
+       zodiac == ZodiacType.SIDEREAL
+       or frame == FrameType.TOPOCENTRIC
+       or house_system != HouseSystemType.EQUAL
+   )
+   ```
+
+   Conséquence : un système de maisons non `equal` impose le moteur précis SwissEph et `accurate=True`.
+
+2. `backend/app/domain/astrology/natal_calculation.py` construit le résultat natal. En mode `swisseph`, `build_natal_result` appelle `_build_swisseph_houses`.
+
+   Extrait :
+
+   ```python
+   houses_raw, effective_house_system = _build_swisseph_houses(
+       prepared.julian_day,
+       birth_lat,
+       birth_lon,
+       house_numbers,
+       house_system=house_system,
+       frame=frame,
+       altitude_m=altitude_m,
+   )
+   ```
+
+3. `_build_swisseph_houses` délègue le calcul astronomique à `backend/app/domain/astrology/houses_provider.py`.
+
+   Extrait :
+
+   ```python
+   house_data = calc_sw_houses(
+       jdut,
+       lat,
+       lon,
+       house_system=house_system,
+       frame=frame,
+       altitude_m=altitude_m,
+   )
+   houses_raw = [
+       {"number": number, "cusp_longitude": house_data.cusps[number - 1]}
+       for number in house_numbers
+       if 1 <= number <= 12
+   ]
+   ```
+
+4. `backend/app/domain/astrology/houses_provider.py` mappe le nom public du système vers le code SwissEph, puis appelle `swe.houses_ex`.
+
+   Extraits :
+
+   ```python
+   _HOUSE_SYSTEM_CODES = {
+       "placidus": b"P",
+       "equal": b"E",
+       "whole_sign": b"W",
+   }
+   ```
+
+   ```python
+   cusps_raw, ascmc_raw = swe.houses_ex(jdut, lat, lon, hsys_code)
+   ```
+
+5. Le même fichier extrait 12 cuspides et les normalise dans `[0, 360)`.
+
+   Extrait :
+
+   ```python
+   if len(cusps_raw) >= 13:
+       source = cusps_raw[1:13]
+   elif len(cusps_raw) == 12:
+       source = cusps_raw
+   return tuple(_normalize_longitude(float(value)) for value in source)
+   ```
+
+6. `backend/app/domain/astrology/natal_calculation.py` valide ensuite le résultat avec `_validate_house_cusps` : 12 cuspides, valeurs numériques finies, normalisées et non dupliquées.
+
+7. Les maisons des planètes sont assignées avec `assign_house_number` dans `backend/app/domain/astrology/calculators/houses.py`, en testant la longitude dans l'intervalle entre la cuspide de la maison courante et celle de la maison suivante.
+
+   Extrait :
+
+   ```python
+   start = float(house["cusp_longitude"])
+   end = float(ordered[(index + 1) % len(ordered)]["cusp_longitude"])
+   if contains_angle(longitude, start, end):
+       return int(house["number"])
+   ```
+
+8. En moteur simplifié, le même fichier fournit un calcul `equal` approximatif, sans SwissEph.
+
+   Extrait :
+
+   ```python
+   ascendant_longitude = (julian_day * 0.5) % 360.0
+   cusp_longitude = round((ascendant_longitude + (number - 1) * 30.0) % 360.0, 6)
+   ```
+
+   Ce chemin est un fallback ou un moteur interne simplifié ; il ne correspond pas au calcul astronomique réel des maisons.
+
+9. `backend/app/services/chart/json_builder.py` sérialise les cuspides dans le payload public et déduit le signe de chaque cuspide par découpage zodiacal de 30 degrés.
+
+   Extraits :
+
+   ```python
+   def _longitude_to_sign(longitude: float) -> str:
+       index = int((longitude % 360.0) // 30.0) % 12
+       return SIGNS[index]
+   ```
+
+   ```python
+   {
+       "number": h.number,
+       "cusp_longitude": round(h.cusp_longitude, 2),
+       "sign": _longitude_to_sign(h.cusp_longitude),
+   }
+   ```
+
+#### Processus daily des cuspides courantes
+
+Le moteur de prédiction quotidienne ne persiste pas les cuspides courantes en SQL. Il les calcule en mémoire dans `backend/app/domain/prediction/astro_calculator.py`.
+
+Extraits :
+
+```python
+return self._run_house_calculation(ut_jd, b"P", HOUSE_SYSTEM_PLACIDUS)
+```
+
+```python
+return self._run_house_calculation(ut_jd, b"O", HOUSE_SYSTEM_PORPHYRE)
+```
+
+```python
+cusps_raw, ascmc_raw = swe.houses(ut_jd, self.latitude, self.longitude, house_code)
+```
+
+Le moteur tente donc Placidus (`b"P"`) puis Porphyre (`b"O"`) si Placidus échoue. Les cuspides natales restent l'entrée de référence pour déterminer la maison natale traversée par une planète transitante :
+
+```python
+cusp_start = self.natal_cusps[i]
+cusp_end = self.natal_cusps[(i + 1) % 12]
+```
+
+### Détermination des maîtres de maison
+
+Un processus existe, mais il est limité au moteur de prédiction, principalement dans le calcul de sensibilité natale. Il ne semble pas être sérialisé comme champ public dédié dans `chart_results.result_payload`.
+
+Le processus identifié est le suivant :
+
+1. `backend/app/services/prediction/engine_orchestrator.py` extrait les cuspides natales depuis `house_cusps` ou depuis `houses[].cusp_longitude`, puis construit un `NatalChart` interne.
+
+   Extrait :
+
+   ```python
+   house_sign_rulers = self._extract_house_sign_rulers(natal_chart, natal_cusps)
+   return NatalChart(
+       planet_positions=normalized_positions,
+       planet_houses=point_houses,
+       house_sign_rulers=house_sign_rulers,
+       natal_aspects=natal_aspects,
+   )
+   ```
+
+2. Si le payload natal fournit déjà `house_sign_rulers`, il est repris tel quel. Sinon, le moteur déduit le signe de chaque cuspide à partir de sa longitude.
+
+   Extrait :
+
+   ```python
+   raw_house_sign_rulers = natal_chart.get("house_sign_rulers")
+   if isinstance(raw_house_sign_rulers, dict):
+       return {int(house_num): str(sign) for house_num, sign in raw_house_sign_rulers.items()}
+
+   return {
+       index + 1: _ZODIAC_SIGNS[int(cusp // 30) % len(_ZODIAC_SIGNS)]
+       for index, cusp in enumerate(natal_cusps)
+   }
+   ```
+
+   Point d'attention : le nom `house_sign_rulers` est ambigu. Dans le fallback courant, la valeur stockée est le signe de cuspide (`capricorn`, `libra`, etc.), pas directement la planète maîtresse.
+
+3. Le mapping signe -> planète maîtresse est chargé par `backend/app/infra/db/repositories/prediction_reference_repository.py` depuis les dignités planétaires canoniques.
+
+   Extraits :
+
+   ```python
+   def get_sign_rulerships(self, system: str = "traditional") -> dict[str, str]:
+       return self.get_sign_rulerships_from_dignities(system=system)
+   ```
+
+   ```python
+   return {
+       row.sign_code: row.planet_code
+       for row in self.get_planet_sign_dignities(system=system)
+       if row.dignity_type == "domicile" and row.is_primary
+   }
+   ```
+
+   Le contexte de prédiction expose ensuite ce mapping via `PredictionContext.sign_rulerships`.
+
+4. `backend/app/domain/prediction/natal_sensitivity.py` résout le maître de maison dans `_compute_rul`.
+
+   Extrait :
+
+   ```python
+   cusp_sign_or_ruler = natal.house_sign_rulers.get(house_num)
+   ruler_code = self._resolve_house_ruler_code(cusp_sign_or_ruler, pc.sign_rulerships)
+   ruler_house = self._lookup_mapping_value(natal.planet_houses, ruler_code)
+   placement_score = self._house_placement_score(ruler_house, pc)
+   ```
+
+5. `_resolve_house_ruler_code` accepte deux formes :
+
+   - si la valeur est un signe connu, elle retourne la planète maîtresse depuis `sign_rulerships` ;
+   - sinon, elle retourne la valeur brute, ce qui permet aussi d'accepter un payload déjà pré-résolu en planète.
+
+   Extrait :
+
+   ```python
+   normalized = self._normalize_code(cusp_sign_or_ruler)
+   for sign_code, planet_code in sign_rulerships.items():
+       if self._normalize_code(sign_code) == normalized:
+           return planet_code
+
+   return cusp_sign_or_ruler
+   ```
+
+6. La contribution `Rul(c)` est ensuite pondérée par les maisons pertinentes de la catégorie, la maison occupée par la planète maîtresse, et la force de placement de cette maison. Une variante `_compute_rul_legacy` ajoute un score si le maître est en maison angulaire.
+
+Conclusion : l'application détermine bien les maîtres de maison pour le scoring de sensibilité natale, à partir du signe de cuspide et du mapping traditionnel signe -> planète. En revanche, je n'ai pas trouvé de processus qui expose explicitement les maîtres de maison dans le JSON public du thème natal ; le JSON public expose les cuspides et leur signe.
+
 ### `chart_results`
 
 Définie par `ChartResultModel`.
@@ -360,6 +594,7 @@ Rôle :
 - `backend/app/infra/db/repositories/reference_repository.py`
 - `backend/app/infra/db/repositories/prediction_reference_repository.py`
 - `backend/app/infra/db/repositories/prediction_schemas.py`
+- `backend/app/services/natal/calculation_service.py`
 - `backend/app/services/prediction/reference_seed_service.py`
 - `backend/app/services/prediction/context_loader.py`
 - `backend/app/services/prediction/engine_orchestrator.py`
@@ -367,6 +602,7 @@ Rôle :
 - `backend/app/domain/astrology/natal_calculation.py`
 - `backend/app/domain/astrology/calculators/houses.py`
 - `backend/app/domain/prediction/astro_calculator.py`
+- `backend/app/domain/prediction/schemas.py`
 - `backend/app/domain/prediction/domain_router.py`
 - `backend/app/domain/prediction/natal_sensitivity.py`
 - `backend/app/domain/prediction/transit_signal_builder.py`
