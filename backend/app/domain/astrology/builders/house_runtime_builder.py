@@ -1,4 +1,7 @@
-"""Assemblage des maisons natales runtime enrichies."""
+"""Assemblage des maisons natales runtime enrichies.
+
+Ce module construit les faits de maisons et delegue leur interpretation pure.
+"""
 
 from __future__ import annotations
 
@@ -6,14 +9,15 @@ from collections.abc import Iterable, Mapping
 from typing import Protocol
 
 from app.domain.astrology.calculators.contained_signs import resolve_contained_signs
-from app.domain.astrology.calculators.house_strength import calculate_house_strength
 from app.domain.astrology.calculators.intercepted_signs import resolve_intercepted_signs
 from app.domain.astrology.constants.house_axes import resolve_house_axis
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
+from app.domain.astrology.interpretation import HouseStrengthEvaluator
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
     HouseRulerRuntimeData,
     HouseRuntimeData,
+    resolve_house_kind,
 )
 from app.domain.astrology.zodiac import sign_from_longitude
 
@@ -40,6 +44,7 @@ def build_house_runtime_data(
     rulers_by_house = {ruler.house_number: ruler for ruler in house_rulers}
     occupants_by_house = build_house_occupants(planets)
     is_whole_sign = _normalize_house_system(house_system) == "whole_sign"
+    strength_evaluator = HouseStrengthEvaluator()
     runtime_houses: list[HouseRuntimeData] = []
 
     for index, house in enumerate(ordered_houses):
@@ -54,7 +59,7 @@ def build_house_runtime_data(
         )
         ruler = _build_runtime_ruler(rulers_by_house.get(house.number))
         occupants = occupants_by_house.get(house.number, [])
-        strength = calculate_house_strength(
+        strength = strength_evaluator.evaluate(
             house_number=house.number,
             occupants=occupants,
             ruler=ruler,
@@ -67,6 +72,7 @@ def build_house_runtime_data(
                 number=house.number,
                 cusp_longitude=house.cusp_longitude,
                 cusp_sign=cusp_sign,
+                house_kind=resolve_house_kind(house.number),
                 contained_signs=contained_signs,
                 intercepted_signs=intercepted_signs,
                 ruler=ruler,

@@ -515,6 +515,15 @@ Point de compatibilité :
 
 Le thème natal expose toujours les maîtres de maisons dans `chart_results.result_payload.house_rulers`, et chaque maison runtime porte désormais directement son maître dans `chart_results.result_payload.houses[*].ruler`.
 
+Contrat public à respecter :
+
+```text
+Source canonique runtime = houses[*].ruler
+Projection legacy = house_rulers[]
+```
+
+`house_rulers[]` est un champ de compatibilité historique, conservé pour les anciens consommateurs, les évidences `HOUSE_*_RULER_*` et les prompts ou snapshots qui n'ont pas encore migré. Il ne doit pas devenir une seconde source de vérité : le serializer JSON le projette depuis `HouseRuntimeData.ruler` et ne recalcule jamais le maître depuis `cusp_sign` ou `sign_rulerships`.
+
 La règle métier appliquée est stricte :
 
 ```text
@@ -592,7 +601,7 @@ Processus détaillé :
 7. `NatalResult.house_rulers` est rempli avec une ligne par maison.
 8. `build_house_runtime_data` injecte le ruler correspondant dans `HouseRuntimeData.ruler`, sans recalculer la maîtrise.
 9. `backend/app/services/chart/result_service.py` persiste cette donnée dans `chart_results.result_payload`.
-10. `backend/app/services/chart/json_builder.py` expose à la fois `houses[*].ruler` et `house_rulers[]` dans le JSON public utilisé par l'interprétation.
+10. `backend/app/services/chart/json_builder.py` expose `houses[*].ruler` comme source canonique et projette `house_rulers[]` depuis cette source pour la compatibilité historique.
 
 #### Exemple complet
 
@@ -634,7 +643,7 @@ Payload de la même information dans la maison enrichie :
 
 #### Contrat public et évidences
 
-`chart_results.result_payload.house_rulers[]` contient :
+`chart_results.result_payload.house_rulers[]` contient la projection legacy de `houses[*].ruler` :
 
 - `house_number`
 - `cusp_sign`

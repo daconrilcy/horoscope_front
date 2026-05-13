@@ -7,5 +7,6 @@
 | Quadrant avec interceptions | `resolve_contained_signs`, `resolve_intercepted_signs`, builder Placidus golden | `test_runtime_builder_golden_placidus_with_interception_and_three_signs` | PASS |
 | JSON houses enrichi + `sign` legacy | `json_builder._serialize_house_runtime`, `HouseRuntimeData.sign` serialise | `test_build_chart_json_projects_rich_runtime_house`, `test_persist_and_get_audit_record` | PASS |
 | Rulers source canonique | `HouseRulerResolver(sign_rulerships)` puis injection runtime sans recalcul | `test_house_ruler_resolver.py`, runtime builder tests | PASS |
+| Projection legacy `house_rulers[]` | `houses[*].ruler` est la source canonique; `house_rulers[]` est projete depuis les maisons runtime dans JSON public et persistance | `test_house_rulers_legacy_payload_*`, `test_persist_trace_projects_legacy_house_rulers_from_runtime_houses`, scan zero-hit `app/services/chart` | PASS |
 | Pas de SQL runtime | Aucun fichier migration/infra touche; scan runtime SQL zero-hit | `rg -n "house_runtime\|HouseRuntimeData\|contained_signs\|intercepted_signs\|HouseStrengthRuntimeData" backend\migrations backend\app\infra` | PASS |
-| Tests et golden | Tests contained/intercepted/strength/runtime builder/golden + tests service | 101 tests cibles PASS; `ruff check .` PASS | PASS_WITH_LIMITATION |
+| Tests et golden | Tests contained/intercepted/strength/runtime builder/golden + tests service | 23 tests cibles de projection/persistance PASS; `ruff check .` PASS | PASS_WITH_LIMITATION |

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
+from app.services.chart.json_builder import serialize_legacy_house_rulers_from_houses
 
 
 class ChartResultAuditRecord(BaseModel):
@@ -108,6 +109,12 @@ class ChartResultService:
             )
 
         result_payload = natal_result.model_dump()
+        houses_payload = result_payload.get("houses", [])
+        result_payload["house_rulers"] = (
+            serialize_legacy_house_rulers_from_houses(houses_payload)
+            if isinstance(houses_payload, list)
+            else []
+        )
         if not result_payload:
             raise ChartResultServiceError(
                 code="invalid_chart_result",

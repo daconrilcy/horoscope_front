@@ -1,5 +1,6 @@
 from sqlalchemy import delete, select
 
+from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
@@ -106,6 +107,46 @@ def test_persist_and_get_audit_record() -> None:
     assert "occupants" in first_house
     assert "axis" in first_house
     assert "strength" in first_house
+
+
+def test_persist_trace_projects_legacy_house_rulers_from_runtime_houses() -> None:
+    _cleanup_chart_results()
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        result.house_rulers[0] = HouseRulerResult(
+            house_number=result.house_rulers[0].house_number,
+            cusp_sign=result.house_rulers[0].cusp_sign,
+            ruler_planet="stale_planet",
+            ruler_planet_sign="stale_sign",
+            ruler_planet_house=12,
+        )
+        chart_id = ChartResultService.persist_trace(db, payload, result)
+        db.commit()
+
+    with open_app_test_db_session() as db:
+        stored_payload = db.scalar(
+            select(ChartResultModel.result_payload).where(ChartResultModel.chart_id == chart_id)
+        )
+
+    assert stored_payload is not None
+    houses_by_number = {house["number"]: house for house in stored_payload["houses"]}
+    for legacy_ruler in stored_payload["house_rulers"]:
+        house = houses_by_number[legacy_ruler["house_number"]]
+        assert legacy_ruler["cusp_sign"] == house["cusp_sign"]
+        assert legacy_ruler["ruler_planet"] == house["ruler"]["planet"]
+        assert legacy_ruler["ruler_planet_sign"] == house["ruler"]["sign"]
+        assert legacy_ruler["ruler_planet_house"] == house["ruler"]["house"]
+    assert all(
+        legacy_ruler["ruler_planet"] != "stale_planet"
+        for legacy_ruler in stored_payload["house_rulers"]
+    )
 
 
 def test_persist_trace_generates_unique_chart_ids_for_identical_inputs() -> None:

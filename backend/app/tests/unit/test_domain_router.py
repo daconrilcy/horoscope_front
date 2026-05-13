@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from app.domain.astrology.runtime import HouseRuntimeData
 from app.domain.prediction.domain_router import DomainRouter
 from app.domain.prediction.schemas import AstroEvent
 
@@ -81,6 +82,50 @@ def test_single_house_weight_1(mock_ctx):
     )
     vector = router._build_house_vector(event)
     assert vector == {10: 1.0}
+
+
+def test_house_vector_accepts_runtime_house_facts(mock_ctx):
+    """Le routage produit lit le numero depuis le runtime astrology."""
+    router = DomainRouter()
+    event = AstroEvent(
+        event_type=EXACT_EVENT_TYPE,
+        ut_time=0,
+        local_time=datetime.now(),
+        body="Sun",
+        target="Mars",
+        aspect="conjunction",
+        orb_deg=0,
+        priority=50,
+        base_weight=1.0,
+        metadata={
+            "natal_house_runtime_target": HouseRuntimeData(number=10, cusp_longitude=270.0),
+            "natal_house_runtime_transited": HouseRuntimeData(number=6, cusp_longitude=150.0),
+        },
+    )
+
+    assert router._build_house_vector(event) == {10: 0.70, 6: 0.30}
+
+
+def test_house_vector_accepts_serialized_runtime_house_numbers(mock_ctx):
+    """Le routage accepte les maisons runtime apres serialisation JSON."""
+    router = DomainRouter()
+    event = AstroEvent(
+        event_type=EXACT_EVENT_TYPE,
+        ut_time=0,
+        local_time=datetime.now(),
+        body="Sun",
+        target="Mars",
+        aspect="conjunction",
+        orb_deg=0,
+        priority=50,
+        base_weight=1.0,
+        metadata={
+            "natal_house_runtime_target": {"number": "10", "cusp_longitude": 270.0},
+            "natal_house_runtime_transited": {"house": "6"},
+        },
+    )
+
+    assert router._build_house_vector(event) == {10: 0.70, 6: 0.30}
 
 
 def test_planet_blend_in_range(mock_ctx):

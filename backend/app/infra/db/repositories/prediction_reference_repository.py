@@ -30,8 +30,9 @@ from app.infra.db.repositories.prediction_schemas import (
     AspectProfileData,
     AstroPointData,
     CategoryData,
+    HouseAstrologyProfile,
     HouseCategoryWeightData,
-    HouseProfileData,
+    HousePredictionProfile,
     PlanetCategoryWeightData,
     PlanetProfileData,
     PlanetSignDignityData,
@@ -95,25 +96,35 @@ class PredictionReferenceRepository:
             )
         return result
 
-    def get_house_profiles(self, reference_version_id: int) -> dict[int, HouseProfileData]:
+    def get_house_profiles(
+        self, reference_version_id: int
+    ) -> tuple[dict[int, HouseAstrologyProfile], dict[int, HousePredictionProfile]]:
+        """Charge les profils maison scindes entre astrologie et produit."""
         rows = self.db.execute(
             select(HouseModel, HouseProfileModel)
             .join(HouseProfileModel, HouseModel.id == HouseProfileModel.house_id)
             .where(HouseProfileModel.reference_version_id == reference_version_id)
         ).all()
 
-        result = {}
+        astrology_profiles: dict[int, HouseAstrologyProfile] = {}
+        prediction_profiles: dict[int, HousePredictionProfile] = {}
         for house_row, profile_row in rows:
-            result[house_row.number] = HouseProfileData(
+            astrology_profiles[house_row.number] = HouseAstrologyProfile(
                 house_id=house_row.id,
-                number=house_row.number,
+                house_number=house_row.number,
                 name=house_row.name,
                 house_kind=profile_row.house_kind,
+            )
+            prediction_profiles[house_row.number] = HousePredictionProfile(
+                house_id=house_row.id,
+                house_number=house_row.number,
+                name=house_row.name,
                 visibility_weight=profile_row.visibility_weight,
                 base_priority=profile_row.base_priority,
                 keywords=self._parse_keywords(profile_row.keywords_json),
+                micro_note=profile_row.micro_note,
             )
-        return result
+        return astrology_profiles, prediction_profiles
 
     def get_planet_category_weights(
         self, reference_version_id: int
@@ -318,10 +329,14 @@ class PredictionReferenceRepository:
         )
 
     def load_prediction_context(self, reference_version_id: int) -> PredictionContext:
+        house_astrology_profiles, house_prediction_profiles = self.get_house_profiles(
+            reference_version_id
+        )
         return PredictionContext(
             categories=self.get_categories(reference_version_id),
             planet_profiles=self.get_planet_profiles(reference_version_id),
-            house_profiles=self.get_house_profiles(reference_version_id),
+            house_astrology_profiles=house_astrology_profiles,
+            house_prediction_profiles=house_prediction_profiles,
             planet_category_weights=self.get_planet_category_weights(reference_version_id),
             house_category_weights=self.get_house_category_weights(reference_version_id),
             sign_rulerships=self.get_sign_rulerships(),

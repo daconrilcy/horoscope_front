@@ -28,3 +28,40 @@ Verdict: CLEAN_WITH_VALIDATION_LIMITATION
 - Tests: 101 tests cibles PASS; lint complet PASS.
 
 Residual validation limitation: `pytest -q` complet a expire apres 304 secondes.
+
+## Follow-up Review For House Ruler Projection
+
+Context: demande utilisateur du 2026-05-13 sur le risque de divergence entre
+`houses[*].ruler` et `house_rulers[]`.
+
+### Independent Findings
+
+1. `chart_results.result_payload.house_rulers[]` persistait encore
+   `NatalResult.house_rulers` via `model_dump()`.
+   - Status: FIXED.
+   - Correction: `ChartResultService.persist_trace` remplace le champ persiste
+     par la projection de `result_payload["houses"][*]["ruler"]`.
+   - Guard: `test_persist_trace_projects_legacy_house_rulers_from_runtime_houses`.
+
+2. Le test de coherence payload ne prouvait pas l'absence de fallback vers une
+   entree stale quand `houses[*].ruler` manque.
+   - Status: FIXED.
+   - Correction: test negatif ajoutant une entree stale pour la maison 2 et
+     verifiant qu'elle n'est pas emise sans ruler runtime.
+
+3. Le contrat canonique/legacy creait un invariant durable non inscrit dans les
+   guardrails.
+   - Status: FIXED.
+   - Correction: ajout de `RG-094` avec tests et scans cibles.
+
+### Fresh Review
+
+- Public JSON: `house_rulers[]` est projete depuis `houses[*].ruler`.
+- Persistance: `chart_results.result_payload.house_rulers[]` est reprojete depuis
+  `result_payload.houses[]`.
+- Serializer/persister chart: aucun hit `natal_result.house_rulers`,
+  `HouseRulerResolver`, `sign_rulerships` ou `get_sign_rulerships`.
+- Revue independante finale: CLEAN.
+
+Residual validation limitation: `pytest -q` complet non relance; les tests
+cibles de projection/persistance passent et le lint complet passe.

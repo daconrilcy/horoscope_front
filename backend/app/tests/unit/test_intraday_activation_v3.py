@@ -75,7 +75,8 @@ def _loaded_context() -> LoadedPredictionContext:
             "Venus": venus_profile,
             "venus": venus_profile,
         },
-        house_profiles={},
+        house_astrology_profiles={},
+        house_prediction_profiles={},
         planet_category_weights=(
             PlanetCategoryWeightData(1, "Moon", 1, "work", 1.0, "primary"),
             PlanetCategoryWeightData(2, "Sun", 1, "work", 1.0, "primary"),

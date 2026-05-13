@@ -70,6 +70,8 @@ def mock_natal_result():
         h.number = i
         h.cusp_longitude = cusps.get(i, (i - 1) * 30.0 % 360.0)
         houses.append(h)
+    houses[0].ruler = HouseRulerRuntimeData(planet="saturn", sign="aries", house=9)
+    houses[9].ruler = HouseRulerRuntimeData(planet="venus", sign="taurus", house=10)
 
     result.houses = houses
     result.house_rulers = [
@@ -202,6 +204,64 @@ def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_bi
         "axis": {"opposite_house": 7, "theme": "self_relationship"},
         "strength": {"score": 0.81, "dominant": True, "reasons": ["angular_house"]},
     }
+
+
+def test_house_rulers_legacy_payload_projects_canonical_runtime_ruler(
+    mock_natal_result, mock_birth_profile
+):
+    mock_natal_result.houses[0].ruler = HouseRulerRuntimeData(planet="mars", sign="virgo", house=6)
+    mock_natal_result.house_rulers[0] = HouseRulerResult(
+        house_number=1,
+        cusp_sign="capricorn",
+        ruler_planet="saturn",
+        ruler_planet_sign="aries",
+        ruler_planet_house=9,
+    )
+
+    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+
+    assert chart["house_rulers"][0] == {
+        "house_number": 1,
+        "cusp_sign": "capricorn",
+        "ruler_planet": "mars",
+        "ruler_planet_sign": "virgo",
+        "ruler_planet_house": 6,
+    }
+
+
+def test_house_rulers_legacy_payload_stays_consistent_with_runtime_houses(
+    mock_natal_result, mock_birth_profile
+):
+    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+    houses_by_number = {house["number"]: house for house in chart["houses"]}
+
+    for legacy_ruler in chart["house_rulers"]:
+        house = houses_by_number[legacy_ruler["house_number"]]
+        assert legacy_ruler["house_number"] == house["number"]
+        assert legacy_ruler["cusp_sign"] == house["cusp_sign"]
+        assert legacy_ruler["ruler_planet"] == house["ruler"]["planet"]
+        assert legacy_ruler["ruler_planet_sign"] == house["ruler"]["sign"]
+        assert legacy_ruler["ruler_planet_house"] == house["ruler"]["house"]
+
+
+def test_house_rulers_legacy_payload_ignores_stale_result_when_runtime_ruler_missing(
+    mock_natal_result, mock_birth_profile
+):
+    mock_natal_result.house_rulers.append(
+        HouseRulerResult(
+            house_number=2,
+            cusp_sign="aquarius",
+            ruler_planet="saturn",
+            ruler_planet_sign="aries",
+            ruler_planet_house=9,
+        )
+    )
+
+    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+    expected_count = sum(1 for house in chart["houses"] if house["ruler"] is not None)
+
+    assert len(chart["house_rulers"]) == expected_count
+    assert all(legacy_ruler["house_number"] != 2 for legacy_ruler in chart["house_rulers"])
 
 
 def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):

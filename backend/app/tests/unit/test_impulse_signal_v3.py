@@ -36,7 +36,8 @@ def _loaded_context() -> LoadedPredictionContext:
     prediction_context = PredictionContext(
         categories=(CategoryData(1, "work", "Work", "Work", 1, True),),
         planet_profiles={"Sun": sun_profile, "sun": sun_profile},
-        house_profiles={},
+        house_astrology_profiles={},
+        house_prediction_profiles={},
         planet_category_weights=(PlanetCategoryWeightData(1, "Sun", 1, "work", 1.0, "primary"),),
         house_category_weights=(HouseCategoryWeightData(10, 10, 1, "work", 1.0, "primary"),),
         sign_rulerships={},

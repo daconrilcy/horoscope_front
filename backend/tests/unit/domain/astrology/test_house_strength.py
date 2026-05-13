@@ -1,6 +1,6 @@
-"""Tests du score interprétatif de dominance des maisons."""
+"""Tests du score interpretatif de dominance des maisons."""
 
-from app.domain.astrology.calculators.house_strength import calculate_house_strength
+from app.domain.astrology.interpretation import HouseStrengthEvaluator
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseOccupantRuntimeData,
     HouseRulerRuntimeData,
@@ -24,7 +24,7 @@ RULERS = {
 
 def test_calculate_house_strength_marks_stellium_luminary_house_dominant() -> None:
     """Une maison angulaire avec stellium et luminaire devient dominante."""
-    strength = calculate_house_strength(
+    strength = HouseStrengthEvaluator().evaluate(
         house_number=10,
         occupants=[
             HouseOccupantRuntimeData("sun", "aries", 12.0),
@@ -50,7 +50,7 @@ def test_calculate_house_strength_marks_stellium_luminary_house_dominant() -> No
 
 def test_calculate_house_strength_keeps_empty_cadent_house_non_dominant() -> None:
     """Une maison cadente vide reste faiblement priorisée."""
-    strength = calculate_house_strength(
+    strength = HouseStrengthEvaluator().evaluate(
         house_number=6,
         occupants=[],
         ruler=HouseRulerRuntimeData("mercury", "pisces", 12),

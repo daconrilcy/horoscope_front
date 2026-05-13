@@ -2,6 +2,11 @@ from types import SimpleNamespace
 
 import pytest
 
+from app.domain.astrology.runtime import (
+    HouseOccupantRuntimeData,
+    HouseRulerRuntimeData,
+    HouseRuntimeData,
+)
 from app.domain.prediction.natal_sensitivity import NatalSensitivityCalculator
 from app.domain.prediction.schemas import NatalChart
 
@@ -133,7 +138,7 @@ def test_strong_occupation_above_1(mock_ctx: SimpleNamespace) -> None:
     assert results["WORK"] == pytest.approx(1.23)
 
 
-def test_angular_ruler_raises_ns_from_sign_rulerships(mock_ctx: SimpleNamespace) -> None:
+def test_sign_rulerships_are_not_recomputed_in_prediction(mock_ctx: SimpleNamespace) -> None:
     calculator = NatalSensitivityCalculator()
     natal = NatalChart(
         planet_positions={},
@@ -143,7 +148,54 @@ def test_angular_ruler_raises_ns_from_sign_rulerships(mock_ctx: SimpleNamespace)
 
     results = calculator.compute(natal, mock_ctx)
 
+    assert results["WORK"] == pytest.approx(1.0)
+
+
+def test_rulership_uses_runtime_house_ruler_when_available(mock_ctx: SimpleNamespace) -> None:
+    """La sensibilite produit consomme le maitre deja resolu par astrology."""
+    calculator = NatalSensitivityCalculator()
+    natal = NatalChart(
+        planet_positions={},
+        planet_houses={},
+        house_sign_rulers={10: "unexpected"},
+        houses=(
+            HouseRuntimeData(
+                number=10,
+                cusp_longitude=270.0,
+                house_kind="angular",
+                ruler=HouseRulerRuntimeData("saturn", "capricorn", 1),
+            ),
+        ),
+    )
+
+    results = calculator.compute(natal, mock_ctx)
+
     assert results["WORK"] == pytest.approx(1.1)
+
+
+def test_occupation_uses_runtime_house_occupants_when_available(mock_ctx: SimpleNamespace) -> None:
+    """La sensibilite produit lit les occupants depuis les maisons runtime."""
+    calculator = NatalSensitivityCalculator()
+    natal = NatalChart(
+        planet_positions={},
+        planet_houses={},
+        house_sign_rulers={},
+        houses=(
+            HouseRuntimeData(
+                number=10,
+                cusp_longitude=270.0,
+                house_kind="angular",
+                occupants=[
+                    HouseOccupantRuntimeData("sun", "capricorn", 281.0),
+                    HouseOccupantRuntimeData("moon", "capricorn", 282.0),
+                ],
+            ),
+        ),
+    )
+
+    results = calculator.compute(natal, mock_ctx)
+
+    assert results["WORK"] == pytest.approx(1.18)
 
 
 def test_angular_planet_raises_ns(mock_ctx: SimpleNamespace) -> None:

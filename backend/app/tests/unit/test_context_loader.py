@@ -4,11 +4,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.domain.astrology.reference import HouseAstrologyProfile
 from app.domain.prediction.exceptions import PredictionContextError
 from app.infra.db.repositories.prediction_schemas import (
     CalibrationData,
     CategoryData,
-    HouseProfileData,
+    HousePredictionProfile,
     PlanetProfileData,
     PredictionContext,
     RulesetContext,
@@ -30,7 +31,13 @@ def mock_rv_model():
     return rv
 
 
-def build_prediction_context(*, categories=None, planet_profiles=None, house_profiles=None):
+def build_prediction_context(
+    *,
+    categories=None,
+    planet_profiles=None,
+    house_astrology_profiles=None,
+    house_prediction_profiles=None,
+):
     return PredictionContext(
         categories=categories
         if categories is not None
@@ -62,17 +69,27 @@ def build_prediction_context(*, categories=None, planet_profiles=None, house_pro
                 keywords=("vitality",),
             )
         },
-        house_profiles=house_profiles
-        if house_profiles is not None
+        house_astrology_profiles=house_astrology_profiles
+        if house_astrology_profiles is not None
         else {
-            1: HouseProfileData(
+            1: HouseAstrologyProfile(
                 house_id=1,
-                number=1,
+                house_number=1,
                 name="House 1",
                 house_kind="angular",
+            )
+        },
+        house_prediction_profiles=house_prediction_profiles
+        if house_prediction_profiles is not None
+        else {
+            1: HousePredictionProfile(
+                house_id=1,
+                house_number=1,
+                name="House 1",
                 visibility_weight=1.0,
                 base_priority=1,
                 keywords=("self",),
+                micro_note="Focus produit",
             )
         },
         planet_category_weights=(),
@@ -143,6 +160,9 @@ def test_load_complete_ok(mock_db, mock_rv_model):
     assert isinstance(ctx.calibrations, MappingProxyType)
     assert isinstance(ctx.prediction_context.categories, tuple)
     assert isinstance(ctx.ruleset_context.parameters, MappingProxyType)
+    assert ctx.prediction_context.house_astrology_profiles[1].house_number == 1
+    assert ctx.prediction_context.house_prediction_profiles[1].house_number == 1
+    assert ctx.prediction_context.house_prediction_profiles[1].micro_note == "Focus produit"
 
 
 def test_loaded_context_is_functionally_immutable(mock_db, mock_rv_model):
@@ -235,7 +255,7 @@ def test_missing_planet_profiles_raises(mock_db, mock_rv_model):
 
 def test_missing_house_profiles_raises(mock_db, mock_rv_model):
     mock_db.scalar.return_value = mock_rv_model
-    invalid_pred_ctx = build_prediction_context(house_profiles={})
+    invalid_pred_ctx = build_prediction_context(house_astrology_profiles={})
     valid_ruleset_ctx = build_ruleset_context()
 
     with (
@@ -253,7 +273,33 @@ def test_missing_house_profiles_raises(mock_db, mock_rv_model):
         )
 
         with pytest.raises(
-            PredictionContextError, match="Prediction context has no house profiles"
+            PredictionContextError, match="Prediction context has no house astrology profiles"
+        ):
+            PredictionContextLoader().load(mock_db, "V1", "V1")
+
+
+def test_missing_house_prediction_profiles_raises(mock_db, mock_rv_model):
+    """Le contexte prediction exige le profil produit maison explicite."""
+    mock_db.scalar.return_value = mock_rv_model
+    invalid_pred_ctx = build_prediction_context(house_prediction_profiles={})
+    valid_ruleset_ctx = build_ruleset_context()
+
+    with (
+        patch(
+            "app.services.prediction.context_loader.PredictionReferenceRepository"
+        ) as mock_ref_repo_cls,
+        patch(
+            "app.services.prediction.context_loader.PredictionRulesetRepository"
+        ) as mock_ruleset_repo_cls,
+    ):
+        mock_ref_repo_cls.return_value.load_prediction_context.return_value = invalid_pred_ctx
+        mock_ref_repo_cls.return_value.get_categories.return_value = invalid_pred_ctx.categories
+        mock_ruleset_repo_cls.return_value.get_active_ruleset_context.return_value = (
+            valid_ruleset_ctx
+        )
+
+        with pytest.raises(
+            PredictionContextError, match="Prediction context has no house prediction profiles"
         ):
             PredictionContextLoader().load(mock_db, "V1", "V1")
 

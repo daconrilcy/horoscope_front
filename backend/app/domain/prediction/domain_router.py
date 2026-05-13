@@ -1,3 +1,7 @@
+"""Routage produit des evenements astrologiques vers les categories."""
+
+from typing import Any
+
 from app.domain.prediction.context import LoadedPredictionContext
 from app.domain.prediction.schemas import AstroEvent
 
@@ -61,8 +65,12 @@ class DomainRouter:
         AC1 - Normalized house vector (70/30 or 1.0).
         """
         metadata = event.metadata or {}
-        natal_house = metadata.get("natal_house_target")
-        transit_house = metadata.get("natal_house_transited")
+        natal_house = self._extract_house_number(
+            metadata.get("natal_house_runtime_target", metadata.get("natal_house_target"))
+        )
+        transit_house = self._extract_house_number(
+            metadata.get("natal_house_runtime_transited", metadata.get("natal_house_transited"))
+        )
 
         if natal_house is None:
             return {}
@@ -71,6 +79,37 @@ class DomainRouter:
             return {natal_house: 1.0}
 
         return {natal_house: 0.70, transit_house: 0.30}
+
+    def _extract_house_number(self, raw_house: Any) -> int | None:
+        """Extrait un numero depuis un fait runtime maison ou une valeur brute."""
+        if raw_house is None:
+            return None
+        if isinstance(raw_house, int):
+            return raw_house
+        if isinstance(raw_house, str):
+            return self._parse_house_number(raw_house)
+        number = getattr(raw_house, "number", None)
+        if isinstance(number, int):
+            return number
+        if isinstance(number, str):
+            return self._parse_house_number(number)
+        if isinstance(raw_house, dict):
+            dict_number = raw_house.get("number") or raw_house.get("house")
+            if isinstance(dict_number, int):
+                return dict_number
+            if isinstance(dict_number, str):
+                return self._parse_house_number(dict_number)
+        return None
+
+    def _parse_house_number(self, raw_number: str) -> int | None:
+        """Normalise un numero maison issu d'une metadata JSON."""
+        try:
+            house_number = int(raw_number)
+        except ValueError:
+            return None
+        if 1 <= house_number <= 12:
+            return house_number
+        return None
 
     def _project_houses_to_categories(
         self,

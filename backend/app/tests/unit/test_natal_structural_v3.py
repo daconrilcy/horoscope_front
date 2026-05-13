@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.domain.astrology.runtime import HouseRulerRuntimeData, HouseRuntimeData
 from app.domain.prediction.natal_sensitivity import NatalSensitivityCalculator
 from app.domain.prediction.schemas import AstroEvent, NatalChart
 
@@ -23,7 +24,7 @@ def mock_context():
 
     ctx.prediction_context.categories = [work_cat]
     ctx.prediction_context.house_category_weights = []
-    ctx.prediction_context.house_profiles = {}
+    ctx.prediction_context.house_astrology_profiles = {}
     ctx.prediction_context.planet_profiles = {}
     ctx.prediction_context.planet_category_weights = []
     ctx.prediction_context.sign_rulerships = {}
@@ -113,7 +114,7 @@ def test_compute_v3_can_drop_below_center_for_weak_theme(mock_context):
     house_weight.weight = 1.0
     house_weight.routing_role = "primary"
     mock_context.prediction_context.house_category_weights = [house_weight]
-    mock_context.prediction_context.house_profiles = {
+    mock_context.prediction_context.house_astrology_profiles = {
         6: MagicMock(house_kind="cadent"),
         10: MagicMock(house_kind="angular"),
     }
@@ -138,6 +139,14 @@ def test_compute_v3_can_drop_below_center_for_weak_theme(mock_context):
         planet_positions={"Saturn": 10.0},
         planet_houses={"Saturn": 6},
         house_sign_rulers={10: "capricorn"},
+        houses=(
+            HouseRuntimeData(
+                number=10,
+                cusp_longitude=270.0,
+                house_kind="angular",
+                ruler=HouseRulerRuntimeData("Saturn", "capricorn", 6),
+            ),
+        ),
         natal_aspects=[],
     )
 

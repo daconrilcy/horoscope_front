@@ -1,4 +1,7 @@
-"""Structures runtime riches des maisons natales."""
+"""Structures runtime riches des maisons natales.
+
+Ce module porte uniquement les faits astrologiques calcules pour les maisons.
+"""
 
 from __future__ import annotations
 
@@ -37,7 +40,7 @@ class HouseAxisRuntimeData:
 
 @dataclass(slots=True)
 class HouseStrengthRuntimeData:
-    """Score interprétatif déterministe de dominance d'une maison."""
+    """Score interpretatif deterministe de dominance astrologique d'une maison."""
 
     score: float
     dominant: bool
@@ -46,11 +49,12 @@ class HouseStrengthRuntimeData:
 
 @dataclass(slots=True)
 class HouseRuntimeData:
-    """Maison natale enrichie pour les moteurs IA, narratifs et prédictifs."""
+    """Maison natale enrichie par des faits astrologiques purs."""
 
     number: int
     cusp_longitude: float
     cusp_sign: str | None = None
+    house_kind: str | None = None
     # TODO legacy compatibility field planned removal: use `cusp_sign`.
     sign: str | None = None
     contained_signs: list[str] = field(default_factory=list)
@@ -69,6 +73,8 @@ class HouseRuntimeData:
             self.cusp_sign = sign_from_longitude(self.cusp_longitude)
         if self.sign is None or self.sign != self.cusp_sign:
             self.sign = self.cusp_sign
+        if self.house_kind is None:
+            self.house_kind = resolve_house_kind(self.number)
         if self.axis is None:
             self.axis = HouseAxisRuntimeData(opposite_house=0, theme="unknown")
         if self.strength is None:
@@ -77,3 +83,12 @@ class HouseRuntimeData:
                 dominant=False,
                 reasons=["baseline_house"],
             )
+
+
+def resolve_house_kind(house_number: int) -> str:
+    """Retourne la qualite astrologique canonique d'une maison."""
+    if house_number in {1, 4, 7, 10}:
+        return "angular"
+    if house_number in {2, 5, 8, 11}:
+        return "succedent"
+    return "cadent"

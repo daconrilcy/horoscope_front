@@ -14,6 +14,13 @@ import swisseph as swe
 
 from app.core.config import DailyEngineMode, settings
 from app.domain.astrology.house_system_codes import HouseSystemCode
+from app.domain.astrology.runtime import (
+    HouseAxisRuntimeData,
+    HouseOccupantRuntimeData,
+    HouseRulerRuntimeData,
+    HouseRuntimeData,
+    HouseStrengthRuntimeData,
+)
 from app.domain.prediction.aggregator import TemporalAggregator, V3ThemeAggregator
 from app.domain.prediction.astro_calculator import AstroCalculator
 from app.domain.prediction.block_generator import BlockGenerator
@@ -1109,8 +1116,138 @@ class EngineOrchestrator:
             planet_positions=normalized_positions,
             planet_houses=point_houses,
             house_sign_rulers=house_sign_rulers,
+            houses=self._extract_runtime_houses(natal_chart),
             natal_aspects=natal_aspects,
         )
+
+    def _extract_runtime_houses(self, natal_chart: dict) -> tuple[HouseRuntimeData, ...]:
+        """Convertit les maisons runtime du payload natal en contrats astrology."""
+        raw_houses = natal_chart.get("houses")
+        if not isinstance(raw_houses, list):
+            return ()
+
+        houses: list[HouseRuntimeData] = []
+        for raw_house in raw_houses:
+            if isinstance(raw_house, HouseRuntimeData):
+                houses.append(raw_house)
+                continue
+            if not isinstance(raw_house, dict):
+                continue
+            try:
+                raw_number = (
+                    raw_house.get("number")
+                    if raw_house.get("number") is not None
+                    else raw_house.get("house")
+                )
+                number = self._coerce_required_int(raw_number)
+                cusp_longitude = float(raw_house.get("cusp_longitude", 0.0))
+            except (TypeError, ValueError):
+                continue
+            ruler = raw_house.get("ruler")
+            occupants = raw_house.get("occupants")
+            strength = raw_house.get("strength")
+            axis = raw_house.get("axis")
+            houses.append(
+                HouseRuntimeData(
+                    number=number,
+                    cusp_longitude=cusp_longitude,
+                    cusp_sign=raw_house.get("cusp_sign") or raw_house.get("sign"),
+                    house_kind=raw_house.get("house_kind"),
+                    contained_signs=list(raw_house.get("contained_signs") or ()),
+                    intercepted_signs=list(raw_house.get("intercepted_signs") or ()),
+                    ruler=self._extract_runtime_ruler(ruler),
+                    occupants=self._extract_runtime_occupants(occupants),
+                    axis=self._extract_runtime_axis(axis),
+                    strength=self._extract_runtime_strength(strength),
+                )
+            )
+        return tuple(houses)
+
+    def _extract_runtime_ruler(self, raw_ruler: object) -> HouseRulerRuntimeData | None:
+        """Convertit un maitre de maison serialise en contrat runtime."""
+        if isinstance(raw_ruler, HouseRulerRuntimeData) or raw_ruler is None:
+            return raw_ruler
+        if not isinstance(raw_ruler, dict):
+            return None
+        planet = raw_ruler.get("planet")
+        if planet is None:
+            return None
+        house = raw_ruler.get("house")
+        return HouseRulerRuntimeData(
+            planet=str(planet),
+            sign=str(raw_ruler["sign"]) if raw_ruler.get("sign") is not None else None,
+            house=self._coerce_optional_int(house),
+        )
+
+    def _extract_runtime_occupants(self, raw_occupants: object) -> list[HouseOccupantRuntimeData]:
+        """Convertit les occupants serialises en contrats runtime."""
+        if not isinstance(raw_occupants, list):
+            return []
+        occupants: list[HouseOccupantRuntimeData] = []
+        for raw_occupant in raw_occupants:
+            if isinstance(raw_occupant, HouseOccupantRuntimeData):
+                occupants.append(raw_occupant)
+                continue
+            if not isinstance(raw_occupant, dict):
+                continue
+            planet = raw_occupant.get("planet")
+            sign = raw_occupant.get("sign")
+            longitude = raw_occupant.get("longitude")
+            if planet is None or sign is None:
+                continue
+            try:
+                occupants.append(
+                    HouseOccupantRuntimeData(
+                        planet=str(planet),
+                        sign=str(sign),
+                        longitude=float(longitude or 0.0),
+                        is_dominant=bool(raw_occupant.get("is_dominant", False)),
+                    )
+                )
+            except (TypeError, ValueError):
+                continue
+        return occupants
+
+    def _extract_runtime_axis(self, raw_axis: object) -> HouseAxisRuntimeData | None:
+        """Convertit l'axe de maison serialise en contrat runtime."""
+        if isinstance(raw_axis, HouseAxisRuntimeData) or raw_axis is None:
+            return raw_axis
+        if not isinstance(raw_axis, dict):
+            return None
+        try:
+            return HouseAxisRuntimeData(
+                opposite_house=int(raw_axis.get("opposite_house", 0)),
+                theme=str(raw_axis.get("theme", "unknown")),
+            )
+        except (TypeError, ValueError):
+            return None
+
+    def _coerce_required_int(self, value: object) -> int:
+        """Convertit une valeur numerique obligatoire issue du payload natal."""
+        if isinstance(value, bool):
+            raise TypeError("Boolean values are not valid integers")
+        return int(value)
+
+    def _coerce_optional_int(self, value: object) -> int | None:
+        """Convertit une valeur numerique optionnelle issue du payload natal."""
+        if value is None:
+            return None
+        return self._coerce_required_int(value)
+
+    def _extract_runtime_strength(self, raw_strength: object) -> HouseStrengthRuntimeData | None:
+        """Convertit la force de maison serialisee en contrat runtime."""
+        if isinstance(raw_strength, HouseStrengthRuntimeData) or raw_strength is None:
+            return raw_strength
+        if not isinstance(raw_strength, dict):
+            return None
+        try:
+            return HouseStrengthRuntimeData(
+                score=float(raw_strength.get("score", 0.0)),
+                dominant=bool(raw_strength.get("dominant", False)),
+                reasons=[str(reason) for reason in raw_strength.get("reasons", [])],
+            )
+        except (TypeError, ValueError):
+            return None
 
     def _compute_natal_aspects(
         self,

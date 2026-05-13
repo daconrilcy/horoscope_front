@@ -1,3 +1,5 @@
+"""Calcul de sensibilite produit a partir des faits astrologiques."""
+
 from collections.abc import Mapping
 from dataclasses import dataclass
 
@@ -202,6 +204,22 @@ class NatalSensitivityCalculator:
 
         weighted_total = 0.0
         total_weight = 0.0
+        runtime_houses = self._runtime_houses_by_number(natal)
+        if runtime_houses:
+            for house_num, runtime_house in runtime_houses.items():
+                house_weight = house_weights.get(house_num)
+                if house_weight is None:
+                    continue
+                for occupant in runtime_house.occupants:
+                    profile = self._lookup_mapping_value(pc.planet_profiles, occupant.planet)
+                    if profile is None or not self._is_personal_or_rapid(profile):
+                        continue
+                    speed_factor = self._speed_factor(profile)
+                    climate_weight = float(getattr(profile, "weight_day_climate", 1.0) or 1.0)
+                    weighted_total += house_weight * speed_factor * climate_weight
+                    total_weight += 1.0
+            return self._normalize_component(weighted_total, total_weight)
+
         for planet_code, house_num in natal.planet_houses.items():
             house_weight = house_weights.get(house_num)
             if house_weight is None:
@@ -224,13 +242,12 @@ class NatalSensitivityCalculator:
 
         weighted_total = 0.0
         total_weight = 0.0
+        runtime_houses = self._runtime_houses_by_number(natal)
         for house_num, house_weight in house_weights.items():
-            cusp_sign_or_ruler = natal.house_sign_rulers.get(house_num)
-            ruler_code = self._resolve_house_ruler_code(cusp_sign_or_ruler, pc.sign_rulerships)
-            if ruler_code is None:
+            runtime_house = runtime_houses.get(house_num)
+            if runtime_house is None or runtime_house.ruler is None:
                 continue
-
-            ruler_house = self._lookup_mapping_value(natal.planet_houses, ruler_code)
+            ruler_house = runtime_house.ruler.house
             placement_score = self._house_placement_score(ruler_house, pc)
             if ruler_house == house_num:
                 placement_score += 0.25
@@ -271,6 +288,21 @@ class NatalSensitivityCalculator:
             return 0.0
 
         occ = 0.0
+        runtime_houses = self._runtime_houses_by_number(natal)
+        if runtime_houses:
+            for house_num in relevant_houses:
+                runtime_house = runtime_houses.get(house_num)
+                if runtime_house is None:
+                    continue
+                for occupant in runtime_house.occupants:
+                    profile = self._lookup_mapping_value(
+                        getattr(pc, "planet_profiles", {}), occupant.planet
+                    )
+                    if profile is None:
+                        continue
+                    occ += float(getattr(profile, "weight_day_climate", 1.0) or 1.0)
+            return occ
+
         for planet_code, house_num in natal.planet_houses.items():
             if house_num not in relevant_houses:
                 continue
@@ -290,12 +322,12 @@ class NatalSensitivityCalculator:
             return 0.0
 
         rul = 0.0
+        runtime_houses = self._runtime_houses_by_number(natal)
         for house_num in relevant_houses:
-            cusp_sign_or_ruler = natal.house_sign_rulers.get(house_num)
-            ruler_code = self._resolve_house_ruler_code(cusp_sign_or_ruler, pc.sign_rulerships)
-            if ruler_code is None:
-                continue
-            ruler_house = self._lookup_mapping_value(natal.planet_houses, ruler_code)
+            runtime_house = runtime_houses.get(house_num)
+            ruler_house = (
+                runtime_house.ruler.house if runtime_house and runtime_house.ruler else None
+            )
             if ruler_house in self.ANGULAR_HOUSES:
                 rul += 1.0
         return rul
@@ -309,21 +341,6 @@ class NatalSensitivityCalculator:
             if house_num in self.ANGULAR_HOUSES:
                 ang += float(planet_weight.weight)
         return ang
-
-    def _resolve_house_ruler_code(
-        self,
-        cusp_sign_or_ruler: str | None,
-        sign_rulerships: Mapping[str, str],
-    ) -> str | None:
-        if cusp_sign_or_ruler is None:
-            return None
-
-        normalized = self._normalize_code(cusp_sign_or_ruler)
-        for sign_code, planet_code in sign_rulerships.items():
-            if self._normalize_code(sign_code) == normalized:
-                return planet_code
-
-        return cusp_sign_or_ruler
 
     def _lookup_mapping_value(self, mapping: Mapping, key: object) -> object | None:
         if not isinstance(key, str):
@@ -377,7 +394,7 @@ class NatalSensitivityCalculator:
     def _house_placement_score(self, house_num: int | None, pc) -> float:
         if house_num is None:
             return -0.25
-        house_profiles = getattr(pc, "house_profiles", {})
+        house_profiles = getattr(pc, "house_astrology_profiles", {})
         house_profile = self._lookup_mapping_value(house_profiles, house_num)
         house_kind = getattr(house_profile, "house_kind", None) if house_profile else None
         if house_kind is not None:
@@ -387,6 +404,10 @@ class NatalSensitivityCalculator:
         if house_num in {2, 5, 8, 11}:
             return self.HOUSE_KIND_SCORES["succedent"]
         return self.HOUSE_KIND_SCORES["cadent"]
+
+    def _runtime_houses_by_number(self, natal: NatalChart) -> dict[int, object]:
+        """Indexe les maisons runtime disponibles dans le theme natal."""
+        return {house.number: house for house in getattr(natal, "houses", ())}
 
     def _is_personal_or_rapid(self, profile: object) -> bool:
         class_code = self._normalize_code(getattr(profile, "class_code", ""))

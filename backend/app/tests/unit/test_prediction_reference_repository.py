@@ -29,6 +29,7 @@ from app.infra.db.repositories.prediction_reference_repository import (
 )
 from app.infra.db.repositories.prediction_schemas import (
     CategoryData,
+    HousePredictionProfile,
     PlanetProfileData,
     PredictionContext,
 )
@@ -331,6 +332,8 @@ def test_load_prediction_context(db_session: Session):
             house_kind="angular",
             visibility_weight=1.0,
             base_priority=1,
+            keywords_json='["self"]',
+            micro_note="Note produit maison 1",
         )
     )
 
@@ -341,9 +344,20 @@ def test_load_prediction_context(db_session: Session):
     assert isinstance(context, PredictionContext)
     assert len(context.categories) >= 1
     assert len(context.planet_profiles) >= 1
-    assert len(context.house_profiles) >= 1
+    assert len(context.house_astrology_profiles) >= 1
+    assert len(context.house_prediction_profiles) >= 1
     assert "sun" in context.planet_profiles
-    assert 1 in context.house_profiles
+    assert 1 in context.house_astrology_profiles
+    assert 1 in context.house_prediction_profiles
+    astrology_profile = context.house_astrology_profiles[1]
+    prediction_profile = context.house_prediction_profiles[1]
+    assert astrology_profile.house_number == 1
+    assert astrology_profile.house_kind == "angular"
+    assert astrology_profile.natural_theme is None
+    assert isinstance(prediction_profile, HousePredictionProfile)
+    assert prediction_profile.house_number == 1
+    assert prediction_profile.keywords == ("self",)
+    assert prediction_profile.micro_note == "Note produit maison 1"
 
 
 def test_category_weight_queries_filter_joined_categories_by_reference_version(db_session: Session):

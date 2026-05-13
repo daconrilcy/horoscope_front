@@ -107,6 +107,30 @@ def _serialize_house_ruler(ruler: Any) -> dict[str, Any] | None:
     }
 
 
+def serialize_legacy_house_rulers_from_houses(
+    houses: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Projette le champ historique depuis la maison runtime canonique."""
+    house_rulers: list[dict[str, Any]] = []
+    for house in houses:
+        ruler = house.get("ruler")
+        if not isinstance(ruler, dict):
+            continue
+        planet = ruler.get("planet")
+        if not isinstance(planet, str):
+            continue
+        house_rulers.append(
+            {
+                "house_number": house["number"],
+                "cusp_sign": house["cusp_sign"],
+                "ruler_planet": planet,
+                "ruler_planet_sign": ruler.get("sign"),
+                "ruler_planet_house": ruler.get("house"),
+            }
+        )
+    return house_rulers
+
+
 def _serialize_house_occupants(occupants: Any) -> list[dict[str, Any]]:
     """Projette les occupants runtime déjà attachés à la maison."""
     if not isinstance(occupants, list):
@@ -218,18 +242,7 @@ def build_chart_json(
             houses.append(_serialize_house_runtime(h))
 
     # Maîtres de maisons
-    house_rulers = []
-    if not is_no_time:
-        for item in getattr(natal_result, "house_rulers", []):
-            house_rulers.append(
-                {
-                    "house_number": item.house_number,
-                    "cusp_sign": item.cusp_sign,
-                    "ruler_planet": item.ruler_planet,
-                    "ruler_planet_sign": item.ruler_planet_sign,
-                    "ruler_planet_house": item.ruler_planet_house,
-                }
-            )
+    house_rulers = [] if is_no_time else serialize_legacy_house_rulers_from_houses(houses)
 
     # Aspects
     aspects = []

@@ -1,8 +1,12 @@
-"""Expose les DTO utilises par les repositories de reference prediction."""
+"""Expose les DTO utilises par les repositories de reference prediction.
+
+Les profils maison y sont scindes entre attributs astrologiques et produit.
+"""
 
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from app.domain.astrology.reference import HouseAstrologyProfile
 from app.domain.prediction.context import CalibrationData
 
 __all__ = [
@@ -11,8 +15,9 @@ __all__ = [
     "CalibrationData",
     "CategoryData",
     "EventTypeData",
+    "HouseAstrologyProfile",
     "HouseCategoryWeightData",
-    "HouseProfileData",
+    "HousePredictionProfile",
     "PlanetCategoryWeightData",
     "PlanetProfileData",
     "PlanetSignDignityData",
@@ -50,14 +55,16 @@ class PlanetProfileData:
 
 
 @dataclass(frozen=True)
-class HouseProfileData:
+class HousePredictionProfile:
+    """Profil produit d'une maison utilise par le moteur de prediction."""
+
     house_id: int
-    number: int
+    house_number: int
     name: str
-    house_kind: str
     visibility_weight: float
     base_priority: int
     keywords: tuple[str, ...]
+    micro_note: str | None = None
 
 
 @dataclass(frozen=True)
@@ -145,7 +152,8 @@ class EventTypeData:
 class PredictionContext:
     categories: tuple[CategoryData, ...]
     planet_profiles: Mapping[str, PlanetProfileData]
-    house_profiles: Mapping[int, HouseProfileData]
+    house_astrology_profiles: Mapping[int, HouseAstrologyProfile]
+    house_prediction_profiles: Mapping[int, HousePredictionProfile]
     planet_category_weights: tuple[PlanetCategoryWeightData, ...]
     house_category_weights: tuple[HouseCategoryWeightData, ...]
     sign_rulerships: Mapping[str, str]

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.core.config import settings
+from app.domain.astrology.reference import HouseAstrologyProfile
 from app.domain.prediction.context import LoadedPredictionContext
 from app.domain.prediction.exceptions import PredictionContextError
 from app.domain.prediction.input_hash import compute_engine_input_hash
@@ -23,7 +24,7 @@ from app.infra.db.repositories.prediction_schemas import (
     CategoryData,
     EventTypeData,
     HouseCategoryWeightData,
-    HouseProfileData,
+    HousePredictionProfile,
     PlanetCategoryWeightData,
     PlanetProfileData,
     PredictionContext,
@@ -79,7 +80,8 @@ def _build_loaded_context() -> LoadedPredictionContext:
             ),
         ),
         planet_profiles=all_planet_profiles,
-        house_profiles={},
+        house_astrology_profiles={},
+        house_prediction_profiles={},
         planet_category_weights=(
             PlanetCategoryWeightData(
                 planet_id=1,
@@ -470,15 +472,23 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
                 ),
             ),
             planet_profiles={"sun": profile},
-            house_profiles={
-                10: HouseProfileData(
+            house_astrology_profiles={
+                10: HouseAstrologyProfile(
                     house_id=10,
-                    number=10,
+                    house_number=10,
                     name="Career",
                     house_kind="angular",
+                ),
+            },
+            house_prediction_profiles={
+                10: HousePredictionProfile(
+                    house_id=10,
+                    house_number=10,
+                    name="Career",
                     visibility_weight=1.0,
                     base_priority=5,
                     keywords=("career",),
+                    micro_note="Career focus",
                 ),
             },
             planet_category_weights=(
@@ -715,6 +725,38 @@ def test_build_natal_chart_uses_contextual_aspect_profiles(base_input):
     assert square.metadata["orb_max"] == pytest.approx(2.5)
 
 
+def test_build_natal_chart_parses_serialized_runtime_houses(base_input):
+    """Le moteur prediction conserve les faits runtime maison serialises."""
+    loaded_context = _build_loaded_context()
+    orchestrator = EngineOrchestrator(prediction_context_loader=lambda *_: loaded_context)
+    natal_chart_payload = {
+        "planets": [{"code": "sun", "longitude": 0.0, "house": 1}],
+        "houses": [
+            {
+                "number": str(house_number),
+                "cusp_longitude": float((house_number - 1) * 30),
+                "ruler": {"planet": "mars", "sign": "aries", "house": "1"}
+                if house_number == 1
+                else None,
+            }
+            for house_number in range(1, 13)
+        ],
+        "angles": base_input.natal_chart["angles"],
+    }
+    natal_cusps = orchestrator._extract_house_cusps(natal_chart_payload)
+
+    natal_chart = orchestrator._build_natal_chart(
+        natal_chart_payload,
+        natal_cusps,
+        loaded_context,
+    )
+
+    assert len(natal_chart.houses) == 12
+    assert natal_chart.houses[0].number == 1
+    assert natal_chart.houses[0].ruler is not None
+    assert natal_chart.houses[0].ruler.house == 1
+
+
 def test_run_v3_exposes_transit_diagnostics_and_signal(base_input):
     profile = PlanetProfileData(
         planet_id=1,
@@ -743,15 +785,23 @@ def test_run_v3_exposes_transit_diagnostics_and_signal(base_input):
                 ),
             ),
             planet_profiles={"sun": profile, "Sun": profile},
-            house_profiles={
-                10: HouseProfileData(
+            house_astrology_profiles={
+                10: HouseAstrologyProfile(
                     house_id=10,
-                    number=10,
+                    house_number=10,
                     name="Career",
                     house_kind="angular",
+                ),
+            },
+            house_prediction_profiles={
+                10: HousePredictionProfile(
+                    house_id=10,
+                    house_number=10,
+                    name="Career",
                     visibility_weight=1.0,
                     base_priority=5,
                     keywords=("career",),
+                    micro_note="Career focus",
                 ),
             },
             planet_category_weights=(
@@ -955,7 +1005,8 @@ def test_run_v3_exposes_intraday_activation_diagnostics_and_secondary_runtime(ba
                 ),
             ),
             planet_profiles={"sun": profile, "Sun": profile},
-            house_profiles={},
+            house_astrology_profiles={},
+            house_prediction_profiles={},
             planet_category_weights=(
                 PlanetCategoryWeightData(
                     planet_id=1,
@@ -1138,7 +1189,8 @@ def test_run_v3_exposes_impulse_diagnostics_and_keeps_moon_ingress_out_of_a_laye
                 "Moon": moon_profile,
                 "moon": moon_profile,
             },
-            house_profiles={},
+            house_astrology_profiles={},
+            house_prediction_profiles={},
             planet_category_weights=(
                 PlanetCategoryWeightData(
                     planet_id=1,

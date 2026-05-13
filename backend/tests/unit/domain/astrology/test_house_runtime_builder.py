@@ -77,6 +77,7 @@ def test_runtime_builder_golden_placidus_with_interception_and_three_signs() -> 
     assert house_2.contained_signs == ["gemini", "cancer", "leo"]
     assert house_2.intercepted_signs == ["cancer"]
     assert house_2.ruler is not None
+    assert house_2.house_kind == "succedent"
     assert house_2.ruler.planet == "mercury"
     assert house_2.occupants[0].planet == "sun"
     assert house_2.axis.opposite_house == 8

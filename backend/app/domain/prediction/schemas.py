@@ -1,4 +1,8 @@
-"""Définit les contrats internes canoniques du moteur de prediction."""
+"""Définit les contrats internes canoniques du moteur de prediction.
+
+Les contrats prediction peuvent consommer les faits runtime astrology, jamais
+l'inverse.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +11,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.astrology.runtime import HouseRuntimeData
 
 if TYPE_CHECKING:
     from .editorial_builder import EditorialOutput
@@ -15,11 +20,12 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class NatalChart:
-    """Internal representation of a natal chart for sensitivity calculations."""
+    """Representation interne d'un theme natal pour le scoring prediction."""
 
     planet_positions: dict[str, float]
     planet_houses: dict[str, int]
     house_sign_rulers: dict[int, str]
+    houses: tuple[HouseRuntimeData, ...] = ()
     natal_aspects: list[AstroEvent] = field(default_factory=list)
 
 

@@ -18,8 +18,9 @@ from app.infra.db.repositories.prediction_schemas import (
     CalibrationData,
     CategoryData,
     EventTypeData,
+    HouseAstrologyProfile,
     HouseCategoryWeightData,
-    HouseProfileData,
+    HousePredictionProfile,
     PlanetCategoryWeightData,
     PlanetProfileData,
     PointCategoryWeightData,
@@ -159,8 +160,11 @@ class PredictionContextLoader:
         if not pred_ctx.planet_profiles:
             raise PredictionContextError("Prediction context has no planet profiles")
 
-        if not pred_ctx.house_profiles:
-            raise PredictionContextError("Prediction context has no house profiles")
+        if not pred_ctx.house_astrology_profiles:
+            raise PredictionContextError("Prediction context has no house astrology profiles")
+
+        if not pred_ctx.house_prediction_profiles:
+            raise PredictionContextError("Prediction context has no house prediction profiles")
 
         if not ruleset_ctx.parameters:
             raise PredictionContextError("Ruleset context has no parameters")
@@ -190,10 +194,16 @@ class PredictionContextLoader:
                     for code, profile in pred_ctx.planet_profiles.items()
                 }
             ),
-            house_profiles=MappingProxyType(
+            house_astrology_profiles=MappingProxyType(
                 {
-                    number: self._freeze_house_profile(profile)
-                    for number, profile in pred_ctx.house_profiles.items()
+                    number: self._freeze_house_astrology_profile(profile)
+                    for number, profile in pred_ctx.house_astrology_profiles.items()
+                }
+            ),
+            house_prediction_profiles=MappingProxyType(
+                {
+                    number: self._freeze_house_prediction_profile(profile)
+                    for number, profile in pred_ctx.house_prediction_profiles.items()
                 }
             ),
             planet_category_weights=tuple(
@@ -261,15 +271,30 @@ class PredictionContextLoader:
             keywords=tuple(profile.keywords),
         )
 
-    def _freeze_house_profile(self, profile: HouseProfileData) -> HouseProfileData:
-        return HouseProfileData(
+    def _freeze_house_astrology_profile(
+        self, profile: HouseAstrologyProfile
+    ) -> HouseAstrologyProfile:
+        """Fige un profil astrologique maison sans champs produit."""
+        return HouseAstrologyProfile(
             house_id=profile.house_id,
-            number=profile.number,
+            house_number=profile.house_number,
             name=profile.name,
             house_kind=profile.house_kind,
+            natural_theme=profile.natural_theme,
+        )
+
+    def _freeze_house_prediction_profile(
+        self, profile: HousePredictionProfile
+    ) -> HousePredictionProfile:
+        """Fige un profil produit maison sans attribut astrologique stable."""
+        return HousePredictionProfile(
+            house_id=profile.house_id,
+            house_number=profile.house_number,
+            name=profile.name,
             visibility_weight=profile.visibility_weight,
             base_priority=profile.base_priority,
             keywords=tuple(profile.keywords),
+            micro_note=profile.micro_note,
         )
 
     def _freeze_planet_category_weight(

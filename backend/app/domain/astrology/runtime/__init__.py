@@ -6,6 +6,7 @@ from app.domain.astrology.runtime.house_runtime_data import (
     HouseRulerRuntimeData,
     HouseRuntimeData,
     HouseStrengthRuntimeData,
+    resolve_house_kind,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "HouseRulerRuntimeData",
     "HouseRuntimeData",
     "HouseStrengthRuntimeData",
+    "resolve_house_kind",
 ]
