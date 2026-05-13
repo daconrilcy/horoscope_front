@@ -77,6 +77,7 @@ from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -84,7 +85,6 @@ from app.infra.db.models.prediction_reference import (
     PlanetProfileModel,
     PointCategoryWeightModel,
     PredictionCategoryModel,
-    SignRulershipModel,
 )
 from app.infra.db.models.prediction_ruleset import (
     CategoryCalibrationModel,
@@ -104,10 +104,14 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralElementModel,
+    AstralModalityModel,
+    AstralPolarityModel,
+    AstralSignModel,
+    AstralSignProfileModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
@@ -179,7 +183,7 @@ __all__ = [
     "HouseCategoryWeightModel",
     "AstroPointModel",
     "PointCategoryWeightModel",
-    "SignRulershipModel",
+    "AstralSignRulershipModel",
     "AspectProfileModel",
     "UserPrivacyRequestModel",
     "SupportIncidentModel",
@@ -190,10 +194,14 @@ __all__ = [
     "UserPredictionBaselineModel",
     "UserRefreshTokenModel",
     "AspectModel",
+    "AstralElementModel",
+    "AstralModalityModel",
+    "AstralPolarityModel",
     "HouseModel",
     "PlanetModel",
     "ReferenceVersionModel",
-    "SignModel",
+    "AstralSignModel",
+    "AstralSignProfileModel",
     "StripeBillingProfileModel",
     "StripeWebhookEventModel",
     "UserTokenUsageLogModel",

@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
-from app.infra.db.models.reference import SignModel
+from app.infra.db.models.reference import AstralSignModel
 from app.services.b2b.editorial_service import B2BEditorialConfigData, B2BEditorialService
 
 
@@ -82,7 +82,7 @@ class B2BAstrologyService:
         Raises:
             B2BAstrologyServiceError: Si les données de référence sont indisponibles.
         """
-        signs = db.scalars(select(SignModel).order_by(SignModel.id.asc())).all()
+        signs = db.scalars(select(AstralSignModel).order_by(AstralSignModel.id.asc())).all()
         if not signs:
             raise B2BAstrologyServiceError(
                 code="reference_data_unavailable",

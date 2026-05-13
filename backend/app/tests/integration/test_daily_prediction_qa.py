@@ -21,6 +21,7 @@ from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -28,7 +29,6 @@ from app.infra.db.models.prediction_reference import (
     PlanetProfileModel,
     PointCategoryWeightModel,
     PredictionCategoryModel,
-    SignRulershipModel,
 )
 from app.infra.db.models.prediction_ruleset import (
     CategoryCalibrationModel,
@@ -38,10 +38,10 @@ from app.infra.db.models.prediction_ruleset import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
@@ -161,12 +161,12 @@ def _reset_prediction_reference(db) -> None:
     db.execute(delete(PlanetCategoryWeightModel))
     db.execute(delete(PlanetProfileModel))
     db.execute(delete(HouseProfileModel))
-    db.execute(delete(SignRulershipModel))
+    db.execute(delete(AstralSignRulershipModel))
     db.execute(delete(AspectProfileModel))
     db.execute(delete(PredictionCategoryModel))
     db.execute(delete(AspectModel))
     db.execute(delete(HouseModel))
-    db.execute(delete(SignModel))
+    db.execute(delete(AstralSignModel))
     db.execute(delete(PlanetModel))
     db.execute(delete(ReferenceVersionModel))
     db.flush()

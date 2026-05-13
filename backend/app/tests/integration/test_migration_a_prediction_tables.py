@@ -26,7 +26,7 @@ NEW_TABLES = [
     "house_category_weights",
     "astro_points",
     "point_category_weights",
-    "sign_rulerships",
+    "astral_sign_rulerships",
     "aspect_profiles",
 ]
 
@@ -56,10 +56,9 @@ EXPECTED_INDEXES = {
         "ix_point_category_weights_point_id",
         "ix_point_category_weights_reference_version_id",
     },
-    "sign_rulerships": {
-        "ix_sign_rulerships_planet_id",
-        "ix_sign_rulerships_reference_version_id",
-        "ix_sign_rulerships_sign_id",
+    "astral_sign_rulerships": {
+        "ix_astral_sign_rulerships_planet_id",
+        "ix_astral_sign_rulerships_astral_sign_id",
     },
     "aspect_profiles": {
         "ix_aspect_profiles_aspect_id",

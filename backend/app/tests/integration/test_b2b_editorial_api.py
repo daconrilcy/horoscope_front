@@ -23,10 +23,10 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.infra.db.models.user import UserModel
 from app.main import app
@@ -55,7 +55,7 @@ def _cleanup_tables() -> None:
             PlanCatalogModel,
             AspectModel,
             HouseModel,
-            SignModel,
+            AstralSignModel,
             PlanetModel,
             ReferenceVersionModel,
             UserModel,

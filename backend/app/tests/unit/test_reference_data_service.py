@@ -7,10 +7,10 @@ from app.infra.db.base import Base
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
@@ -23,7 +23,7 @@ def _cleanup_reference_tables() -> None:
         for model in (
             AspectModel,
             HouseModel,
-            SignModel,
+            AstralSignModel,
             PlanetModel,
             ReferenceVersionModel,
         ):

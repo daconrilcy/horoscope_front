@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session
 from app.core.constants import DEFAULT_ASPECT_ORBS
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 
 
@@ -40,7 +40,7 @@ class ReferenceRepository:
             self.db.scalar(select(model.id).limit(1)) is not None
             for model in (
                 PlanetModel,
-                SignModel,
+                AstralSignModel,
                 HouseModel,
                 AspectModel,
             )
@@ -52,7 +52,7 @@ class ReferenceRepository:
             self.db.scalar(select(model.id).limit(1)) is not None
             for model in (
                 PlanetModel,
-                SignModel,
+                AstralSignModel,
                 HouseModel,
                 AspectModel,
             )
@@ -91,8 +91,11 @@ class ReferenceRepository:
             ("pisces", "Pisces"),
         ]
         for code, name in sign_rows:
-            if self.db.scalar(select(SignModel.id).where(SignModel.code == code)) is None:
-                self.db.add(SignModel(code=code, name=name))
+            if (
+                self.db.scalar(select(AstralSignModel.id).where(AstralSignModel.code == code))
+                is None
+            ):
+                self.db.add(AstralSignModel(code=code, name=name))
 
         house_rows = [
             (1, "Self"),
@@ -137,7 +140,7 @@ class ReferenceRepository:
             return {}
 
         planets = self.db.scalars(select(PlanetModel).order_by(PlanetModel.code)).all()
-        signs = self.db.scalars(select(SignModel).order_by(SignModel.code)).all()
+        signs = self.db.scalars(select(AstralSignModel).order_by(AstralSignModel.code)).all()
         houses = self.db.scalars(select(HouseModel).order_by(HouseModel.number)).all()
         aspects = self.db.scalars(
             select(AspectModel).order_by(AspectModel.angle, AspectModel.code)

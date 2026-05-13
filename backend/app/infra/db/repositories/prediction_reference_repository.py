@@ -1,3 +1,5 @@
+"""Repository SQLAlchemy pour le contexte de prédiction astrologique."""
+
 from __future__ import annotations
 
 import json
@@ -7,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -14,9 +17,8 @@ from app.infra.db.models.prediction_reference import (
     PlanetProfileModel,
     PointCategoryWeightModel,
     PredictionCategoryModel,
-    SignRulershipModel,
 )
-from app.infra.db.models.reference import AspectModel, HouseModel, PlanetModel, SignModel
+from app.infra.db.models.reference import AspectModel, AstralSignModel, HouseModel, PlanetModel
 from app.infra.db.repositories.prediction_schemas import (
     AspectProfileData,
     AstroPointData,
@@ -177,15 +179,18 @@ class PredictionReferenceRepository:
             for row in rows
         )
 
-    def get_sign_rulerships(self, reference_version_id: int) -> dict[str, str]:
+    def get_sign_rulerships(self, system: str = "traditional") -> dict[str, str]:
         rows = self.db.execute(
-            select(SignModel.code.label("sign_code"), PlanetModel.code.label("planet_code"))
-            .join(SignRulershipModel, SignModel.id == SignRulershipModel.sign_id)
-            .join(PlanetModel, SignRulershipModel.planet_id == PlanetModel.id)
+            select(AstralSignModel.code.label("sign_code"), PlanetModel.code.label("planet_code"))
+            .join(
+                AstralSignRulershipModel,
+                AstralSignModel.id == AstralSignRulershipModel.astral_sign_id,
+            )
+            .join(PlanetModel, AstralSignRulershipModel.planet_id == PlanetModel.id)
             .where(
-                SignRulershipModel.reference_version_id == reference_version_id,
-                SignRulershipModel.rulership_type == "domicile",
-                SignRulershipModel.is_primary.is_(True),
+                AstralSignRulershipModel.rulership_type == "domicile",
+                AstralSignRulershipModel.system == system,
+                AstralSignRulershipModel.is_primary.is_(True),
             )
         ).all()
 
@@ -272,7 +277,7 @@ class PredictionReferenceRepository:
             house_profiles=self.get_house_profiles(reference_version_id),
             planet_category_weights=self.get_planet_category_weights(reference_version_id),
             house_category_weights=self.get_house_category_weights(reference_version_id),
-            sign_rulerships=self.get_sign_rulerships(reference_version_id),
+            sign_rulerships=self.get_sign_rulerships(),
             aspect_profiles=self.get_aspect_profiles(reference_version_id),
             astro_points=self.get_astro_points(reference_version_id),
             point_category_weights=self.get_point_category_weights(reference_version_id),

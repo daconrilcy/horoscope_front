@@ -9,10 +9,10 @@ from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.infra.observability.metrics import get_counter_sum_in_window
 from app.services.natal.calculation_service import NatalCalculationService
@@ -44,7 +44,7 @@ def _cleanup_reference_tables() -> None:
             ChartResultModel,
             AspectModel,
             HouseModel,
-            SignModel,
+            AstralSignModel,
             PlanetModel,
             ReferenceVersionModel,
         ):

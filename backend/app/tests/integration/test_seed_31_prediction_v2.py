@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,12 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.infra.db.models import (
     AspectProfileModel,
+    AstralElementModel,
+    AstralModalityModel,
+    AstralPolarityModel,
+    AstralSignModel,
+    AstralSignProfileModel,
+    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -21,10 +28,24 @@ from app.infra.db.models import (
     ReferenceVersionModel,
     RulesetEventTypeModel,
     RulesetParameterModel,
-    SignRulershipModel,
 )
 from app.services.reference_data_service import ReferenceDataService
 from scripts.seed_31_prediction_reference_v2 import SeedAbortError, run_seed
+
+EXPECTED_SIGN_PROFILE_MAPPING = {
+    "aries": ("fire", "cardinal", "yang"),
+    "taurus": ("earth", "fixed", "yin"),
+    "gemini": ("air", "mutable", "yang"),
+    "cancer": ("water", "cardinal", "yin"),
+    "leo": ("fire", "fixed", "yang"),
+    "virgo": ("earth", "mutable", "yin"),
+    "libra": ("air", "cardinal", "yang"),
+    "scorpio": ("water", "fixed", "yin"),
+    "sagittarius": ("fire", "mutable", "yang"),
+    "capricorn": ("earth", "cardinal", "yin"),
+    "aquarius": ("air", "fixed", "yang"),
+    "pisces": ("water", "mutable", "yin"),
+}
 
 
 def _alembic_config() -> Config:
@@ -110,14 +131,65 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             == 5
         )
         assert session.scalar(select(func.count()).select_from(AstroPointModel)) == 4
-        assert (
-            session.scalar(
-                select(func.count())
-                .select_from(SignRulershipModel)
-                .where(SignRulershipModel.reference_version_id == v2.id)
+        assert session.scalar(select(func.count()).select_from(AstralElementModel)) == 4
+        assert session.scalar(select(func.count()).select_from(AstralModalityModel)) == 3
+        assert session.scalar(select(func.count()).select_from(AstralPolarityModel)) == 2
+        assert session.scalar(select(func.count()).select_from(AstralSignProfileModel)) == 12
+        assert session.scalar(select(func.count()).select_from(AstralSignRulershipModel)) == 12
+        assert {row.code for row in session.scalars(select(AstralElementModel)).all()} == {
+            "fire",
+            "earth",
+            "air",
+            "water",
+        }
+        assert {row.code for row in session.scalars(select(AstralModalityModel)).all()} == {
+            "cardinal",
+            "fixed",
+            "mutable",
+        }
+        assert {row.code for row in session.scalars(select(AstralPolarityModel)).all()} == {
+            "yang",
+            "yin",
+        }
+        profile_rows = session.execute(
+            select(
+                AstralSignProfileModel,
+                AstralElementModel,
+                AstralModalityModel,
+                AstralSignModel.code,
+                AstralPolarityModel.code,
             )
-            == 12
+            .join(AstralSignModel, AstralSignProfileModel.astral_sign_id == AstralSignModel.id)
+            .join(
+                AstralElementModel,
+                AstralSignProfileModel.astral_element_id == AstralElementModel.id,
+            )
+            .join(
+                AstralModalityModel,
+                AstralSignProfileModel.astral_modality_id == AstralModalityModel.id,
+            )
+            .join(
+                AstralPolarityModel,
+                AstralSignProfileModel.astral_polarity_id == AstralPolarityModel.id,
+            )
+        ).all()
+        assert {
+            sign_code: (element.code, modality.code, polarity_code)
+            for profile, element, modality, sign_code, polarity_code in profile_rows
+        } == EXPECTED_SIGN_PROFILE_MAPPING
+        for profile, _element, _modality, _sign_code, _polarity_code in profile_rows:
+            assert profile.keywords_json is not None
+            assert profile.shadow_keywords_json is not None
+            assert json.loads(profile.keywords_json)
+            assert json.loads(profile.shadow_keywords_json)
+        assert any(
+            sign_code == "aries" and "initiative" in json.loads(profile.keywords_json or "[]")
+            for profile, _element, _modality, sign_code, _polarity_code in profile_rows
         )
+        assert {
+            (row.rulership_type, row.system, row.weight, row.is_primary)
+            for row in session.scalars(select(AstralSignRulershipModel)).all()
+        } == {("domicile", "traditional", 1.0, True)}
         assert (
             session.scalar(
                 select(func.count())
@@ -179,6 +251,18 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
         # 4. Verify idempotence (already seeded and locked)
         # Should not raise any error and just return
         run_seed(session)
+
+        session.query(AstralSignProfileModel).delete()
+        session.query(AstralElementModel).delete()
+        session.query(AstralModalityModel).delete()
+        session.query(AstralPolarityModel).delete()
+        session.commit()
+        run_seed(session)
+        session.commit()
+        assert session.scalar(select(func.count()).select_from(AstralSignProfileModel)) == 12
+        assert session.scalar(select(func.count()).select_from(AstralElementModel)) == 4
+        assert session.scalar(select(func.count()).select_from(AstralModalityModel)) == 3
+        assert session.scalar(select(func.count()).select_from(AstralPolarityModel)) == 2
 
     engine.dispose()
 

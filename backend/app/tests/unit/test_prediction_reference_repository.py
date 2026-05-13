@@ -4,6 +4,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
+    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -11,14 +12,13 @@ from app.infra.db.models.prediction_reference import (
     PlanetProfileModel,
     PointCategoryWeightModel,
     PredictionCategoryModel,
-    SignRulershipModel,
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.infra.db.repositories.prediction_reference_repository import (
     PredictionReferenceRepository,
@@ -74,7 +74,7 @@ def test_structural_astrology_models_are_not_versioned():
     """Les tables structurelles restent des référentiels stables non versionnés."""
     structural_models = (
         PlanetModel,
-        SignModel,
+        AstralSignModel,
         HouseModel,
         AspectModel,
         AstroPointModel,
@@ -153,37 +153,48 @@ SIGN_RULERSHIPS = [
 def test_get_sign_rulerships(db_session: Session):
     repo = PredictionReferenceRepository(db_session)
 
-    version = ReferenceVersionModel(version="1.0.0")
-    db_session.add(version)
+    db_session.add(ReferenceVersionModel(version="1.0.0"))
     db_session.flush()
 
     # Seed unique planet codes needed
-    planet_codes = list(dict.fromkeys(p for _, p in SIGN_RULERSHIPS))
+    planet_codes = list(dict.fromkeys([*(p for _, p in SIGN_RULERSHIPS), "pluto"]))
     planets = {code: PlanetModel(code=code, name=code.capitalize()) for code in planet_codes}
     db_session.add_all(planets.values())
 
-    signs = {code: SignModel(code=code, name=code.capitalize()) for code, _ in SIGN_RULERSHIPS}
+    signs = {
+        code: AstralSignModel(code=code, name=code.capitalize()) for code, _ in SIGN_RULERSHIPS
+    }
     db_session.add_all(signs.values())
     db_session.flush()
 
     rulerships = [
-        SignRulershipModel(
-            reference_version_id=version.id,
-            sign_id=signs[sign_code].id,
+        AstralSignRulershipModel(
+            astral_sign_id=signs[sign_code].id,
             planet_id=planets[planet_code].id,
             rulership_type="domicile",
+            system="traditional",
             is_primary=True,
         )
         for sign_code, planet_code in SIGN_RULERSHIPS
     ]
+    rulerships.append(
+        AstralSignRulershipModel(
+            astral_sign_id=signs["scorpio"].id,
+            planet_id=planets["pluto"].id,
+            rulership_type="domicile",
+            system="modern",
+            is_primary=True,
+        )
+    )
     db_session.add_all(rulerships)
     db_session.commit()
 
-    result = repo.get_sign_rulerships(version.id)
+    result = repo.get_sign_rulerships()
 
     assert len(result) == 12
     assert result["aries"] == "mars"
     assert result["leo"] == "sun"
+    assert result["scorpio"] == "mars"
 
 
 def test_load_prediction_context(db_session: Session):

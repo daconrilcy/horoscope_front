@@ -22,10 +22,10 @@ from app.infra.db.models.reference import _ensure_reference_version_is_mutable
 if TYPE_CHECKING:
     from app.infra.db.models.reference import (
         AspectModel,
+        AstralSignModel,
         HouseModel,
         PlanetModel,
         ReferenceVersionModel,
-        SignModel,
     )
 
 
@@ -177,27 +177,25 @@ class PointCategoryWeightModel(Base):
     category: Mapped["PredictionCategoryModel"] = relationship()
 
 
-class SignRulershipModel(Base):
-    __tablename__ = "sign_rulerships"
-    __table_args__ = (
-        UniqueConstraint("reference_version_id", "sign_id", "planet_id", "rulership_type"),
-    )
+class AstralSignRulershipModel(Base):
+    """Maîtrise canonique non versionnée d'un signe astrologique."""
+
+    __tablename__ = "astral_sign_rulerships"
+    __table_args__ = (UniqueConstraint("astral_sign_id", "planet_id", "rulership_type", "system"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
-        index=True,
+    astral_sign_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_signs.id"), nullable=False, index=True
     )
-    sign_id: Mapped[int] = mapped_column(ForeignKey("signs.id"), nullable=False, index=True)
     planet_id: Mapped[int] = mapped_column(ForeignKey("planets.id"), nullable=False, index=True)
     rulership_type: Mapped[str] = mapped_column(
         String(32), nullable=False, default="domicile"
     )  # domicile, exaltation, etc.
+    system: Mapped[str] = mapped_column(String(32), nullable=False, default="traditional")
     weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    reference_version: Mapped["ReferenceVersionModel"] = relationship()
-    sign: Mapped["SignModel"] = relationship()
+    sign: Mapped["AstralSignModel"] = relationship()
     planet: Mapped["PlanetModel"] = relationship()
 
 
@@ -231,7 +229,6 @@ class AspectProfileModel(Base):
 @event.listens_for(PlanetCategoryWeightModel, "before_update")
 @event.listens_for(HouseCategoryWeightModel, "before_update")
 @event.listens_for(PointCategoryWeightModel, "before_update")
-@event.listens_for(SignRulershipModel, "before_update")
 @event.listens_for(AspectProfileModel, "before_update")
 def _prevent_update_on_locked_prediction_version(
     mapper: object, connection: object, target: object

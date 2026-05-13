@@ -9,10 +9,10 @@ from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
@@ -39,7 +39,7 @@ def _cleanup_tables() -> None:
             UserModel,
             AspectModel,
             HouseModel,
-            SignModel,
+            AstralSignModel,
             PlanetModel,
             ReferenceVersionModel,
         ):

@@ -83,3 +83,4 @@ select = ["E", "F", "I"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+force-include = { "../docs/recherches astro/signs_keywords.json" = "docs/recherches astro/signs_keywords.json" }

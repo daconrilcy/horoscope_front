@@ -1,6 +1,7 @@
 """Porte le seed canonique des references et rulesets de prediction."""
 
 import json
+from pathlib import Path
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -8,6 +9,12 @@ from sqlalchemy.orm import Session
 from app.infra.db.models import (
     AspectModel,
     AspectProfileModel,
+    AstralElementModel,
+    AstralModalityModel,
+    AstralPolarityModel,
+    AstralSignModel,
+    AstralSignProfileModel,
+    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseModel,
@@ -21,8 +28,6 @@ from app.infra.db.models import (
     ReferenceVersionModel,
     RulesetEventTypeModel,
     RulesetParameterModel,
-    SignModel,
-    SignRulershipModel,
 )
 from app.infra.db.repositories import ReferenceRepository
 
@@ -37,13 +42,175 @@ EXPECTED_COUNTS = {
     "house_profiles": 12,
     "aspect_profiles": 5,
     "astro_points": 4,
-    "sign_rulerships": 12,
+    "astral_elements": 4,
+    "astral_modalities": 3,
+    "astral_polarities": 2,
+    "astral_sign_profiles": 12,
+    "astral_sign_rulerships": 12,
     "planet_category_weights": 85,
     "house_category_weights": 24,
     "point_category_weights": 8,
     "ruleset_event_types": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
     "ruleset_parameters": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
 }
+
+SIGN_PROFILE_DATA = [
+    ("aries", "fire", "cardinal", "yang"),
+    ("taurus", "earth", "fixed", "yin"),
+    ("gemini", "air", "mutable", "yang"),
+    ("cancer", "water", "cardinal", "yin"),
+    ("leo", "fire", "fixed", "yang"),
+    ("virgo", "earth", "mutable", "yin"),
+    ("libra", "air", "cardinal", "yang"),
+    ("scorpio", "water", "fixed", "yin"),
+    ("sagittarius", "fire", "mutable", "yang"),
+    ("capricorn", "earth", "cardinal", "yin"),
+    ("aquarius", "air", "fixed", "yang"),
+    ("pisces", "water", "mutable", "yin"),
+]
+
+
+def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
+    """Charge les mots-clés des signes depuis la source documentaire canonique."""
+    repo_root = Path(__file__).resolve().parents[4]
+    keywords_path = repo_root / "docs" / "recherches astro" / "signs_keywords.json"
+    if not keywords_path.exists():
+        keywords_path = (
+            Path(__file__).resolve().parents[3]
+            / "docs"
+            / "recherches astro"
+            / "signs_keywords.json"
+        )
+    with keywords_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    if not isinstance(raw, dict):
+        raise ValueError("signs keywords source must be an object")
+    return raw
+
+
+def _required_keyword_list(
+    keywords_by_sign: dict[str, dict[str, list[str]]],
+    sign_code: str,
+    field_name: str,
+) -> list[str]:
+    """Valide la présence des listes de mots-clés attendues pour un signe."""
+    sign_keywords = keywords_by_sign.get(sign_code)
+    if sign_keywords is None:
+        raise ValueError(f"missing keywords for sign {sign_code}")
+    values = sign_keywords.get(field_name)
+    if not isinstance(values, list) or not values:
+        raise ValueError(f"missing {field_name} for sign {sign_code}")
+    return [str(value) for value in values]
+
+
+def _ensure_taxonomy(
+    db: Session,
+    model: type[AstralElementModel | AstralModalityModel | AstralPolarityModel],
+    rows: list[tuple[str, str]],
+) -> dict[str, int]:
+    """Insère les valeurs manquantes d'une taxonomie astrale stable."""
+    for code, name in rows:
+        if db.scalar(select(model.id).where(model.code == code)) is None:
+            db.add(model(code=code, name=name))
+    db.flush()
+    return {row.code: row.id for row in db.scalars(select(model)).all()}
+
+
+def _ensure_astral_sign_profiles(db: Session) -> None:
+    """Crée les profils structurels des douze signes à partir des taxonomies."""
+    elements = _ensure_taxonomy(
+        db,
+        AstralElementModel,
+        [("fire", "Fire"), ("earth", "Earth"), ("air", "Air"), ("water", "Water")],
+    )
+    modalities = _ensure_taxonomy(
+        db,
+        AstralModalityModel,
+        [("cardinal", "Cardinal"), ("fixed", "Fixed"), ("mutable", "Mutable")],
+    )
+    polarities = _ensure_taxonomy(
+        db,
+        AstralPolarityModel,
+        [("yang", "Yang"), ("yin", "Yin")],
+    )
+    signs = {sign.code: sign.id for sign in db.scalars(select(AstralSignModel)).all()}
+    keywords_by_sign = _load_sign_keywords()
+
+    for sign_code, element_code, modality_code, polarity_code in SIGN_PROFILE_DATA:
+        keywords_json = json.dumps(
+            _required_keyword_list(keywords_by_sign, sign_code, "keywords"),
+            ensure_ascii=False,
+        )
+        shadow_keywords_json = json.dumps(
+            _required_keyword_list(keywords_by_sign, sign_code, "shadow_keywords"),
+            ensure_ascii=False,
+        )
+        profile = db.scalar(
+            select(AstralSignProfileModel).where(
+                AstralSignProfileModel.astral_sign_id == signs[sign_code]
+            )
+        )
+        if profile is None:
+            db.add(
+                AstralSignProfileModel(
+                    astral_sign_id=signs[sign_code],
+                    astral_element_id=elements[element_code],
+                    astral_modality_id=modalities[modality_code],
+                    astral_polarity_id=polarities[polarity_code],
+                    keywords_json=keywords_json,
+                    shadow_keywords_json=shadow_keywords_json,
+                )
+            )
+            continue
+        profile.astral_element_id = elements[element_code]
+        profile.astral_modality_id = modalities[modality_code]
+        profile.astral_polarity_id = polarities[polarity_code]
+        profile.keywords_json = keywords_json
+        profile.shadow_keywords_json = shadow_keywords_json
+    db.flush()
+
+
+def _ensure_astral_sign_rulerships(db: Session, planets: dict[str, int]) -> None:
+    """Synchronise les maîtrises traditionnelles des douze signes."""
+    rulerships_data = [
+        ("aries", "mars", True),
+        ("taurus", "venus", True),
+        ("gemini", "mercury", True),
+        ("cancer", "moon", True),
+        ("leo", "sun", True),
+        ("virgo", "mercury", True),
+        ("libra", "venus", True),
+        ("scorpio", "mars", True),
+        ("sagittarius", "jupiter", True),
+        ("capricorn", "saturn", True),
+        ("aquarius", "saturn", True),
+        ("pisces", "jupiter", True),
+    ]
+    signs = {sign.code: sign.id for sign in db.scalars(select(AstralSignModel)).all()}
+    for sign_code, planet_code, is_primary in rulerships_data:
+        rulership = db.scalar(
+            select(AstralSignRulershipModel).where(
+                AstralSignRulershipModel.astral_sign_id == signs[sign_code],
+                AstralSignRulershipModel.planet_id == planets[planet_code],
+                AstralSignRulershipModel.rulership_type == "domicile",
+                AstralSignRulershipModel.system == "traditional",
+            )
+        )
+        if rulership is None:
+            db.add(
+                AstralSignRulershipModel(
+                    astral_sign_id=signs[sign_code],
+                    planet_id=planets[planet_code],
+                    is_primary=is_primary,
+                    rulership_type="domicile",
+                    system="traditional",
+                    weight=1.0,
+                )
+            )
+            continue
+        rulership.is_primary = is_primary
+        rulership.weight = 1.0
+    db.flush()
 
 
 def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
@@ -70,10 +237,14 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         .where(AspectProfileModel.reference_version_id == reference_version_id)
     )
     actual["astro_points"] = db.scalar(select(func.count()).select_from(AstroPointModel))
-    actual["sign_rulerships"] = db.scalar(
-        select(func.count())
-        .select_from(SignRulershipModel)
-        .where(SignRulershipModel.reference_version_id == reference_version_id)
+    actual["astral_elements"] = db.scalar(select(func.count()).select_from(AstralElementModel))
+    actual["astral_modalities"] = db.scalar(select(func.count()).select_from(AstralModalityModel))
+    actual["astral_polarities"] = db.scalar(select(func.count()).select_from(AstralPolarityModel))
+    actual["astral_sign_profiles"] = db.scalar(
+        select(func.count()).select_from(AstralSignProfileModel)
+    )
+    actual["astral_sign_rulerships"] = db.scalar(
+        select(func.count()).select_from(AstralSignRulershipModel)
     )
     actual["planet_category_weights"] = db.scalar(
         select(func.count())
@@ -169,6 +340,8 @@ def run_prediction_reference_seed(db: Session) -> None:
     # 1. Vérification d idempotence.
     v2 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0"))
     if v2 is not None:
+        if db.scalar(select(func.count()).select_from(AstralSignModel)) > 0:
+            _ensure_astral_sign_profiles(db)
         actual = _check_counts(db, v2.id)
 
         # On exige au minimum la présence du ruleset 2.0.0 pour considérer
@@ -238,9 +411,8 @@ def run_prediction_reference_seed(db: Session) -> None:
             db.execute(
                 delete(PlanetProfileModel).where(PlanetProfileModel.reference_version_id == v2.id)
             )
-            db.execute(
-                delete(SignRulershipModel).where(SignRulershipModel.reference_version_id == v2.id)
-            )
+            db.execute(delete(AstralSignRulershipModel))
+            db.execute(delete(AstralSignProfileModel))
             db.execute(
                 delete(AspectProfileModel).where(AspectProfileModel.reference_version_id == v2.id)
             )
@@ -257,6 +429,7 @@ def run_prediction_reference_seed(db: Session) -> None:
                 repo = ReferenceRepository(db)
                 repo.seed_version_defaults()
             db.flush()
+            _ensure_astral_sign_profiles(db)
         else:
             # État corrompu ou incomplet alors que la version est verrouillée.
             lines = [
@@ -296,6 +469,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             print("Seeding stable astrology structures...")
             repo.seed_version_defaults()
         db.flush()
+        _ensure_astral_sign_profiles(db)
 
     # 4. Alimentation des catégories de prédiction.
     print("Seeding prediction categories...")
@@ -696,31 +870,7 @@ def run_prediction_reference_seed(db: Session) -> None:
 
     # 10. Alimentation des maîtrises de signes.
     print("Seeding sign rulerships...")
-    rulerships_data = [
-        ("aries", "mars", True),
-        ("taurus", "venus", True),
-        ("gemini", "mercury", True),
-        ("cancer", "moon", True),
-        ("leo", "sun", True),
-        ("virgo", "mercury", True),
-        ("libra", "venus", True),
-        ("scorpio", "mars", True),
-        ("sagittarius", "jupiter", True),
-        ("capricorn", "saturn", True),
-        ("aquarius", "saturn", True),
-        ("pisces", "jupiter", True),
-    ]
-    signs = {s.code: s.id for s in db.scalars(select(SignModel)).all()}
-    for s_code, p_code, is_pri in rulerships_data:
-        db.add(
-            SignRulershipModel(
-                reference_version_id=v2.id,
-                sign_id=signs[s_code],
-                planet_id=planets[p_code],
-                is_primary=is_pri,
-                rulership_type="domicile",
-            )
-        )
+    _ensure_astral_sign_rulerships(db, planets)
 
     # 11. Alimentation des profils d aspects.
     print("Seeding aspect profiles...")

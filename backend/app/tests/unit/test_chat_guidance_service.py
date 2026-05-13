@@ -12,10 +12,10 @@ from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralSignModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
-    SignModel,
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
@@ -48,7 +48,7 @@ def _cleanup_tables() -> None:
             UserModel,
             AspectModel,
             HouseModel,
-            SignModel,
+            AstralSignModel,
             PlanetModel,
             ReferenceVersionModel,
         ):
