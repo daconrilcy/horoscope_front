@@ -21,7 +21,7 @@ from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
-    AstralSignRulershipModel,
+    AstralPlanetSignDignityModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -162,7 +162,7 @@ def _reset_prediction_reference(db) -> None:
     db.execute(delete(PlanetCategoryWeightModel))
     db.execute(delete(PlanetProfileModel))
     db.execute(delete(HouseProfileModel))
-    db.execute(delete(AstralSignRulershipModel))
+    db.execute(delete(AstralPlanetSignDignityModel))
     db.execute(delete(AspectProfileModel))
     db.execute(delete(PredictionCategoryModel))
     db.execute(delete(AspectModel))

@@ -26,7 +26,6 @@ NEW_TABLES = [
     "house_category_weights",
     "astro_points",
     "point_category_weights",
-    "astral_sign_rulerships",
     "aspect_profiles",
 ]
 
@@ -55,10 +54,6 @@ EXPECTED_INDEXES = {
         "ix_point_category_weights_category_id",
         "ix_point_category_weights_point_id",
         "ix_point_category_weights_reference_version_id",
-    },
-    "astral_sign_rulerships": {
-        "ix_astral_sign_rulerships_planet_id",
-        "ix_astral_sign_rulerships_astral_sign_id",
     },
     "aspect_profiles": {
         "ix_aspect_profiles_aspect_id",
@@ -150,12 +145,8 @@ def test_migration_a_prediction_tables_creation(
             session.commit()
         session.rollback()
 
-        planet = PlanetModel(
-            code="sun",
-            name="Sun",
-        )
-        session.add(planet)
-        session.commit()
+        planet = session.scalar(sa.select(PlanetModel).where(PlanetModel.code == "sun"))
+        assert planet is not None
 
         category_weight = PlanetCategoryWeightModel(
             reference_version_id=unlocked_version.id,
@@ -206,12 +197,8 @@ def test_migration_a_prediction_tables_creation(
             session.commit()
         session.rollback()
 
-        locked_planet = PlanetModel(
-            code="moon",
-            name="Moon",
-        )
-        session.add(locked_planet)
-        session.commit()
+        locked_planet = session.scalar(sa.select(PlanetModel).where(PlanetModel.code == "moon"))
+        assert locked_planet is not None
 
         unlocked_profile = PlanetProfileModel(
             reference_version_id=unlocked_version.id,

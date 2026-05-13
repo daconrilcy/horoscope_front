@@ -78,7 +78,6 @@ from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
     AstralPlanetSignDignityModel,
-    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -187,7 +186,6 @@ __all__ = [
     "HouseCategoryWeightModel",
     "AstroPointModel",
     "PointCategoryWeightModel",
-    "AstralSignRulershipModel",
     "AspectProfileModel",
     "UserPrivacyRequestModel",
     "SupportIncidentModel",

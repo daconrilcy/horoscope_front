@@ -183,30 +183,6 @@ class PointCategoryWeightModel(Base):
     category: Mapped["PredictionCategoryModel"] = relationship()
 
 
-class AstralSignRulershipModel(Base):
-    """Maîtrise canonique non versionnée d'un signe astrologique."""
-
-    __tablename__ = "astral_sign_rulerships"
-    __table_args__ = (UniqueConstraint("astral_sign_id", "planet_id", "rulership_type", "system"),)
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    astral_sign_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_signs.id"), nullable=False, index=True
-    )
-    planet_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_planets.id"), nullable=False, index=True
-    )
-    rulership_type: Mapped[str] = mapped_column(
-        String(32), nullable=False, default="domicile"
-    )  # domicile, exaltation, etc.
-    system: Mapped[str] = mapped_column(String(32), nullable=False, default="traditional")
-    weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
-    is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-
-    sign: Mapped["AstralSignModel"] = relationship()
-    planet: Mapped["PlanetModel"] = relationship()
-
-
 class AstralPlanetSignDignityModel(Base):
     """Dignité canonique d'une planète dans un signe pour un système donné."""
 

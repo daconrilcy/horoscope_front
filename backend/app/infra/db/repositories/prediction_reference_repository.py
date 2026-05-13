@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
-    AstralSignRulershipModel,
+    AstralPlanetSignDignityModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -18,7 +18,14 @@ from app.infra.db.models.prediction_reference import (
     PointCategoryWeightModel,
     PredictionCategoryModel,
 )
-from app.infra.db.models.reference import AspectModel, AstralSignModel, HouseModel, PlanetModel
+from app.infra.db.models.reference import (
+    AspectModel,
+    AstralDignityTypeModel,
+    AstralSignModel,
+    AstralSystemModel,
+    HouseModel,
+    PlanetModel,
+)
 from app.infra.db.repositories.prediction_schemas import (
     AspectProfileData,
     AstroPointData,
@@ -27,6 +34,7 @@ from app.infra.db.repositories.prediction_schemas import (
     HouseProfileData,
     PlanetCategoryWeightData,
     PlanetProfileData,
+    PlanetSignDignityData,
     PointCategoryWeightData,
     PredictionContext,
 )
@@ -180,21 +188,60 @@ class PredictionReferenceRepository:
         )
 
     def get_sign_rulerships(self, system: str = "traditional") -> dict[str, str]:
+        """Retourne la vue métier signe -> maître depuis les dignités canoniques."""
+        return self.get_sign_rulerships_from_dignities(system=system)
+
+    def get_planet_sign_dignities(
+        self, system: str = "traditional"
+    ) -> tuple[PlanetSignDignityData, ...]:
+        """Charge les dignités planétaires normalisées pour un système astrologique."""
         rows = self.db.execute(
-            select(AstralSignModel.code.label("sign_code"), PlanetModel.code.label("planet_code"))
+            select(
+                AstralSignModel.code.label("sign_code"),
+                PlanetModel.code.label("planet_code"),
+                AstralDignityTypeModel.code.label("dignity_type"),
+                AstralSystemModel.name.label("system"),
+                AstralPlanetSignDignityModel.weight.label("weight"),
+                AstralPlanetSignDignityModel.is_primary.label("is_primary"),
+            )
             .join(
-                AstralSignRulershipModel,
-                AstralSignModel.id == AstralSignRulershipModel.astral_sign_id,
+                AstralPlanetSignDignityModel,
+                AstralSignModel.id == AstralPlanetSignDignityModel.astral_sign_id,
             )
-            .join(PlanetModel, AstralSignRulershipModel.planet_id == PlanetModel.id)
+            .join(PlanetModel, AstralPlanetSignDignityModel.astral_planet_id == PlanetModel.id)
+            .join(
+                AstralDignityTypeModel,
+                AstralPlanetSignDignityModel.astral_dignity_type_id == AstralDignityTypeModel.id,
+            )
+            .join(
+                AstralSystemModel,
+                AstralPlanetSignDignityModel.astral_system_id == AstralSystemModel.id,
+            )
             .where(
-                AstralSignRulershipModel.rulership_type == "domicile",
-                AstralSignRulershipModel.system == system,
-                AstralSignRulershipModel.is_primary.is_(True),
+                AstralSystemModel.name == system,
             )
+            .order_by(AstralSignModel.id, PlanetModel.id, AstralDignityTypeModel.code)
         ).all()
 
-        return {row.sign_code: row.planet_code for row in rows}
+        return tuple(
+            PlanetSignDignityData(
+                sign_code=row.sign_code,
+                planet_code=row.planet_code,
+                dignity_type=row.dignity_type,
+                system=row.system,
+                weight=row.weight,
+                is_primary=row.is_primary,
+            )
+            for row in rows
+        )
+
+    def get_sign_rulerships_from_dignities(self, system: str = "traditional") -> dict[str, str]:
+        """Filtre les domiciles primaires pour exposer le mapping signe -> maître."""
+        return {
+            row.sign_code: row.planet_code
+            for row in self.get_planet_sign_dignities(system=system)
+            if row.dignity_type == "domicile" and row.is_primary
+        }
 
     def get_aspect_profiles(self, reference_version_id: int) -> dict[str, AspectProfileData]:
         rows = self.db.execute(

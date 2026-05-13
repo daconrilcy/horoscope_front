@@ -16,7 +16,6 @@ from app.infra.db.models import (
     AstralPolarityModel,
     AstralSignModel,
     AstralSignProfileModel,
-    AstralSignRulershipModel,
     AstralSystemModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -51,7 +50,6 @@ EXPECTED_COUNTS = {
     "astral_polarities": 2,
     "astral_planet_sign_dignities": 50,
     "astral_sign_profiles": 12,
-    "astral_sign_rulerships": 12,
     "planet_category_weights": 85,
     "house_category_weights": 24,
     "point_category_weights": 8,
@@ -289,49 +287,6 @@ def _ensure_astral_planet_sign_dignities(db: Session) -> None:
     db.flush()
 
 
-def _ensure_astral_sign_rulerships(db: Session, planets: dict[str, int]) -> None:
-    """Synchronise les maîtrises traditionnelles des douze signes."""
-    rulerships_data = [
-        ("aries", "mars", True),
-        ("taurus", "venus", True),
-        ("gemini", "mercury", True),
-        ("cancer", "moon", True),
-        ("leo", "sun", True),
-        ("virgo", "mercury", True),
-        ("libra", "venus", True),
-        ("scorpio", "mars", True),
-        ("sagittarius", "jupiter", True),
-        ("capricorn", "saturn", True),
-        ("aquarius", "saturn", True),
-        ("pisces", "jupiter", True),
-    ]
-    signs = {sign.code: sign.id for sign in db.scalars(select(AstralSignModel)).all()}
-    for sign_code, planet_code, is_primary in rulerships_data:
-        rulership = db.scalar(
-            select(AstralSignRulershipModel).where(
-                AstralSignRulershipModel.astral_sign_id == signs[sign_code],
-                AstralSignRulershipModel.planet_id == planets[planet_code],
-                AstralSignRulershipModel.rulership_type == "domicile",
-                AstralSignRulershipModel.system == "traditional",
-            )
-        )
-        if rulership is None:
-            db.add(
-                AstralSignRulershipModel(
-                    astral_sign_id=signs[sign_code],
-                    planet_id=planets[planet_code],
-                    is_primary=is_primary,
-                    rulership_type="domicile",
-                    system="traditional",
-                    weight=1.0,
-                )
-            )
-            continue
-        rulership.is_primary = is_primary
-        rulership.weight = 1.0
-    db.flush()
-
-
 def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     """Compte les artefacts attendus pour une version de référence donnée."""
     actual = {}
@@ -367,9 +322,6 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     )
     actual["astral_sign_profiles"] = db.scalar(
         select(func.count()).select_from(AstralSignProfileModel)
-    )
-    actual["astral_sign_rulerships"] = db.scalar(
-        select(func.count()).select_from(AstralSignRulershipModel)
     )
     actual["planet_category_weights"] = db.scalar(
         select(func.count())
@@ -537,7 +489,6 @@ def run_prediction_reference_seed(db: Session) -> None:
             db.execute(
                 delete(PlanetProfileModel).where(PlanetProfileModel.reference_version_id == v2.id)
             )
-            db.execute(delete(AstralSignRulershipModel))
             db.execute(delete(AstralSignProfileModel))
             db.execute(
                 delete(AspectProfileModel).where(AspectProfileModel.reference_version_id == v2.id)
@@ -998,9 +949,8 @@ def run_prediction_reference_seed(db: Session) -> None:
             )
         )
 
-    # 10. Alimentation des maîtrises de signes.
-    print("Seeding sign rulerships...")
-    _ensure_astral_sign_rulerships(db, planets)
+    # 10. Consolidation des dignités qui portent les maîtrises de signes.
+    print("Seeding planet sign dignities...")
     _ensure_astral_planet_sign_dignities(db)
 
     # 11. Alimentation des profils d aspects.

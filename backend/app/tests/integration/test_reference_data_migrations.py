@@ -23,6 +23,21 @@ EXPECTED_SIGN_PROFILE_MAPPING = {
     "pisces": ("water", "mutable", "yin"),
 }
 
+EXPECTED_TRADITIONAL_RULERSHIPS = {
+    "aries": "mars",
+    "taurus": "venus",
+    "gemini": "mercury",
+    "cancer": "moon",
+    "leo": "sun",
+    "virgo": "mercury",
+    "libra": "venus",
+    "scorpio": "mars",
+    "sagittarius": "jupiter",
+    "capricorn": "saturn",
+    "aquarius": "saturn",
+    "pisces": "jupiter",
+}
+
 
 def _alembic_config() -> Config:
     backend_root = Path(__file__).resolve().parents[3]
@@ -72,9 +87,9 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_dignity_type",
         "astral_planet_sign_dignities",
         "astral_sign_profiles",
-        "astral_sign_rulerships",
     ):
         assert table_name in head_tables
+    assert "astral_sign_rulerships" not in head_tables
     for table_name in ("astral_planets", "astral_signs", "houses", "aspects", "astro_points"):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" not in columns
@@ -83,7 +98,6 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         for table_name in (
             "astral_prediction_daily_planet_profiles",
             "planet_category_weights",
-            "astral_sign_rulerships",
             "astral_planet_sign_dignities",
         )
         for foreign_key in head_inspector.get_foreign_keys(table_name)
@@ -110,12 +124,6 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert ("astral_element_id",) not in unique_columns
     assert ("astral_modality_id",) not in unique_columns
     assert ("astral_polarity_id",) not in unique_columns
-    rulership_columns = {
-        column["name"] for column in head_inspector.get_columns("astral_sign_rulerships")
-    }
-    assert "reference_version_id" not in rulership_columns
-    assert "astral_sign_id" in rulership_columns
-    assert "system" in rulership_columns
     system_columns = {column["name"] for column in head_inspector.get_columns("astral_systems")}
     assert system_columns == {"id", "name"}
     dignity_columns = {
@@ -179,6 +187,29 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
                 )
             ).scalar_one()
             == 12
+        )
+        rulership_rows = connection.execute(
+            text(
+                """
+                SELECT astral_signs.code AS sign_code, astral_planets.code AS planet_code
+                FROM astral_planet_sign_dignities
+                JOIN astral_signs
+                    ON astral_planet_sign_dignities.astral_sign_id = astral_signs.id
+                JOIN astral_planets
+                    ON astral_planet_sign_dignities.astral_planet_id = astral_planets.id
+                JOIN astral_dignity_type
+                    ON astral_planet_sign_dignities.astral_dignity_type_id =
+                        astral_dignity_type.id
+                JOIN astral_systems
+                    ON astral_planet_sign_dignities.astral_system_id = astral_systems.id
+                WHERE astral_dignity_type.code = 'domicile'
+                    AND astral_systems.name = 'traditional'
+                    AND astral_planet_sign_dignities.is_primary IS TRUE
+                """
+            )
+        ).all()
+        assert {row.sign_code: row.planet_code for row in rulership_rows} == (
+            EXPECTED_TRADITIONAL_RULERSHIPS
         )
         assert (
             connection.execute(

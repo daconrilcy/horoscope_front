@@ -15,6 +15,7 @@ __all__ = [
     "HouseProfileData",
     "PlanetCategoryWeightData",
     "PlanetProfileData",
+    "PlanetSignDignityData",
     "PointCategoryWeightData",
     "PredictionContext",
     "RulesetContext",
@@ -67,6 +68,18 @@ class PlanetCategoryWeightData:
     category_code: str
     weight: float
     influence_role: str
+
+
+@dataclass(frozen=True)
+class PlanetSignDignityData:
+    """Décrit une dignité planétaire normalisée pour un signe et un système."""
+
+    sign_code: str
+    planet_code: str
+    dignity_type: str
+    system: str
+    weight: float
+    is_primary: bool
 
 
 @dataclass(frozen=True)

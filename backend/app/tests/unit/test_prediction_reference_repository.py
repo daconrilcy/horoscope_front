@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
     AstralPlanetSignDignityModel,
-    AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -16,6 +15,7 @@ from app.infra.db.models.prediction_reference import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralDignityTypeModel,
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
@@ -160,6 +160,7 @@ SIGN_RULERSHIPS = [
 
 
 def test_get_sign_rulerships(db_session: Session):
+    """Vérifie que les maîtrises métier sont lues depuis les dignités canoniques."""
     repo = PredictionReferenceRepository(db_session)
 
     db_session.add(ReferenceVersionModel(version="1.0.0"))
@@ -174,28 +175,34 @@ def test_get_sign_rulerships(db_session: Session):
         code: AstralSignModel(code=code, name=code.capitalize()) for code, _ in SIGN_RULERSHIPS
     }
     db_session.add_all(signs.values())
+    dignity_type = AstralDignityTypeModel(code="domicile", name="Domicile")
+    traditional_system = AstralSystemModel(name="traditional")
+    modern_system = AstralSystemModel(name="modern")
+    db_session.add_all([dignity_type, traditional_system, modern_system])
     db_session.flush()
 
-    rulerships = [
-        AstralSignRulershipModel(
+    dignities = [
+        AstralPlanetSignDignityModel(
             astral_sign_id=signs[sign_code].id,
-            planet_id=planets[planet_code].id,
-            rulership_type="domicile",
-            system="traditional",
+            astral_planet_id=planets[planet_code].id,
+            astral_dignity_type_id=dignity_type.id,
+            astral_system_id=traditional_system.id,
+            weight=1.0,
             is_primary=True,
         )
         for sign_code, planet_code in SIGN_RULERSHIPS
     ]
-    rulerships.append(
-        AstralSignRulershipModel(
+    dignities.append(
+        AstralPlanetSignDignityModel(
             astral_sign_id=signs["scorpio"].id,
-            planet_id=planets["pluto"].id,
-            rulership_type="domicile",
-            system="modern",
+            astral_planet_id=planets["pluto"].id,
+            astral_dignity_type_id=dignity_type.id,
+            astral_system_id=modern_system.id,
+            weight=1.0,
             is_primary=True,
         )
     )
-    db_session.add_all(rulerships)
+    db_session.add_all(dignities)
     db_session.commit()
 
     result = repo.get_sign_rulerships()
@@ -204,6 +211,49 @@ def test_get_sign_rulerships(db_session: Session):
     assert result["aries"] == "mars"
     assert result["leo"] == "sun"
     assert result["scorpio"] == "mars"
+
+
+def test_get_planet_sign_dignities_filters_by_system(db_session: Session):
+    """Vérifie le chargement générique des dignités pour un système donné."""
+    repo = PredictionReferenceRepository(db_session)
+
+    aries = AstralSignModel(code="aries", name="Aries")
+    mars = PlanetModel(code="mars", name="Mars")
+    pluto = PlanetModel(code="pluto", name="Pluto")
+    domicile = AstralDignityTypeModel(code="domicile", name="Domicile")
+    traditional = AstralSystemModel(name="traditional")
+    modern = AstralSystemModel(name="modern")
+    db_session.add_all([aries, mars, pluto, domicile, traditional, modern])
+    db_session.flush()
+    db_session.add_all(
+        [
+            AstralPlanetSignDignityModel(
+                astral_sign_id=aries.id,
+                astral_planet_id=mars.id,
+                astral_dignity_type_id=domicile.id,
+                astral_system_id=traditional.id,
+                weight=1.0,
+                is_primary=True,
+            ),
+            AstralPlanetSignDignityModel(
+                astral_sign_id=aries.id,
+                astral_planet_id=pluto.id,
+                astral_dignity_type_id=domicile.id,
+                astral_system_id=modern.id,
+                weight=1.0,
+                is_primary=True,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    dignities = repo.get_planet_sign_dignities(system="traditional")
+
+    assert len(dignities) == 1
+    assert dignities[0].sign_code == "aries"
+    assert dignities[0].planet_code == "mars"
+    assert dignities[0].dignity_type == "domicile"
+    assert dignities[0].system == "traditional"
 
 
 def test_load_prediction_context(db_session: Session):

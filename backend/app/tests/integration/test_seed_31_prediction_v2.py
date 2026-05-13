@@ -20,12 +20,12 @@ from app.infra.db.models import (
     AstralPolarityModel,
     AstralSignModel,
     AstralSignProfileModel,
-    AstralSignRulershipModel,
     AstralSystemModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
     PlanetCategoryWeightModel,
+    PlanetModel,
     PlanetProfileModel,
     PointCategoryWeightModel,
     PredictionCategoryModel,
@@ -50,6 +50,21 @@ EXPECTED_SIGN_PROFILE_MAPPING = {
     "capricorn": ("earth", "cardinal", "yin"),
     "aquarius": ("air", "fixed", "yang"),
     "pisces": ("water", "mutable", "yin"),
+}
+
+EXPECTED_TRADITIONAL_RULERSHIPS = {
+    "aries": "mars",
+    "taurus": "venus",
+    "gemini": "mercury",
+    "cancer": "moon",
+    "leo": "sun",
+    "virgo": "mercury",
+    "libra": "venus",
+    "scorpio": "mars",
+    "sagittarius": "jupiter",
+    "capricorn": "saturn",
+    "aquarius": "saturn",
+    "pisces": "jupiter",
 }
 
 
@@ -143,7 +158,6 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
         assert session.scalar(select(func.count()).select_from(AstralSystemModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralPlanetSignDignityModel)) == 50
         assert session.scalar(select(func.count()).select_from(AstralSignProfileModel)) == 12
-        assert session.scalar(select(func.count()).select_from(AstralSignRulershipModel)) == 12
         assert {row.code for row in session.scalars(select(AstralElementModel)).all()} == {
             "fire",
             "earth",
@@ -223,10 +237,29 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             sign_code == "aries" and "initiative" in json.loads(profile.keywords_json or "[]")
             for profile, _element, _modality, sign_code, _polarity_code in profile_rows
         )
-        assert {
-            (row.rulership_type, row.system, row.weight, row.is_primary)
-            for row in session.scalars(select(AstralSignRulershipModel)).all()
-        } == {("domicile", "traditional", 1.0, True)}
+        traditional_rulership_rows = session.execute(
+            select(AstralSignModel.code, PlanetModel.code)
+            .select_from(AstralPlanetSignDignityModel)
+            .join(
+                AstralSignModel,
+                AstralPlanetSignDignityModel.astral_sign_id == AstralSignModel.id,
+            )
+            .join(PlanetModel, AstralPlanetSignDignityModel.astral_planet_id == PlanetModel.id)
+            .join(
+                AstralDignityTypeModel,
+                AstralPlanetSignDignityModel.astral_dignity_type_id == AstralDignityTypeModel.id,
+            )
+            .join(
+                AstralSystemModel,
+                AstralPlanetSignDignityModel.astral_system_id == AstralSystemModel.id,
+            )
+            .where(
+                AstralDignityTypeModel.code == "domicile",
+                AstralSystemModel.name == "traditional",
+                AstralPlanetSignDignityModel.is_primary.is_(True),
+            )
+        ).all()
+        assert dict(traditional_rulership_rows) == EXPECTED_TRADITIONAL_RULERSHIPS
         assert (
             session.scalar(
                 select(func.count())
