@@ -1,10 +1,12 @@
+"""Calcul du thème natal et structuration des résultats astrologiques."""
+
 from __future__ import annotations
 
 import math
 from collections.abc import Callable
 from math import isfinite
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAJOR_ASPECT_CODES, MAX_ORB_DEG, MIN_ORB_DEG
@@ -15,7 +17,13 @@ from app.domain.astrology.calculators import (
     calculate_planet_positions,
 )
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
+from app.domain.astrology.house_ruler_resolver import (
+    HouseRulerResolutionError,
+    HouseRulerResolver,
+    HouseRulerResult,
+)
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
+from app.domain.astrology.zodiac import normalize_360, sign_from_longitude
 from app.infra.observability.metrics import increment_counter
 
 
@@ -71,6 +79,7 @@ class NatalResult(BaseModel):
     prepared_input: BirthPreparedData
     planet_positions: list[PlanetPosition]
     houses: list[HouseResult]
+    house_rulers: list[HouseRulerResult] = Field(default_factory=list)
     aspects: list[AspectResult]
 
 
@@ -82,31 +91,8 @@ class NatalCalculationError(Exception):
         super().__init__(message)
 
 
-ZODIAC_SIGNS = (
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-)
-
-
 def _normalize_360(value: float) -> float:
-    normalized = value % 360.0
-    return normalized if normalized >= 0 else normalized + 360.0
-
-
-def sign_from_longitude(longitude: float) -> str:
-    normalized = _normalize_360(longitude)
-    index = int(normalized // 30.0) % 12
-    return ZODIAC_SIGNS[index]
+    return normalize_360(value)
 
 
 def _raise_invalid_reference(version: str, field: str, reason: str) -> None:
@@ -139,6 +125,14 @@ def _validate_house_cusps(version: str, houses_raw: list[dict[str, object]]) -> 
 
     if len(set(longitudes)) != len(longitudes):
         _raise_invalid_reference(version, "houses", "duplicate_cusp_longitude")
+
+
+def _extract_sign_rulerships(reference_data: dict[str, object]) -> dict[str, str]:
+    """Extrait le mapping signe -> maître depuis les dignités de référence."""
+    raw = reference_data.get("sign_rulerships")
+    if not isinstance(raw, dict):
+        return {}
+    return {str(sign): str(planet) for sign, planet in raw.items()}
 
 
 def _build_swisseph_positions(
@@ -490,6 +484,13 @@ def build_natal_result(
 
     positions = [PlanetPosition.model_validate(item) for item in positions_raw]
     houses = [HouseResult.model_validate(item) for item in houses_raw]
+    try:
+        house_rulers = HouseRulerResolver(_extract_sign_rulerships(reference_data)).resolve(
+            houses,
+            positions,
+        )
+    except HouseRulerResolutionError:
+        _raise_invalid_reference(version, "sign_rulerships", "missing_or_incomplete")
     aspects = [AspectResult.model_validate(item) for item in aspects_raw]
 
     return NatalResult(
@@ -509,5 +510,6 @@ def build_natal_result(
         prepared_input=prepared,
         planet_positions=positions,
         houses=houses,
+        house_rulers=house_rulers,
         aspects=aspects,
     )

@@ -1,4 +1,4 @@
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
@@ -90,8 +90,14 @@ def test_persist_and_get_audit_record() -> None:
 
     with open_app_test_db_session() as db:
         record = ChartResultService.get_audit_record(db, chart_id)
+        stored_payload = db.scalar(
+            select(ChartResultModel).where(ChartResultModel.chart_id == chart_id)
+        )
     assert record.chart_id == chart_id
     assert record.reference_version == "1.0.0"
+    assert record.result.house_rulers
+    assert stored_payload is not None
+    assert stored_payload.result_payload["house_rulers"]
 
 
 def test_persist_trace_generates_unique_chart_ids_for_identical_inputs() -> None:

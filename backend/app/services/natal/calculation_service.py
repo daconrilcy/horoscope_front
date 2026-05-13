@@ -23,6 +23,7 @@ from app.domain.astrology.natal_calculation import (
 )
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.models.reference import ReferenceVersionModel
+from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.observability.metrics import increment_counter
 from app.services.reference_data_service import ReferenceDataService
 
@@ -337,6 +338,10 @@ class NatalCalculationService:
                 message="reference version not found",
                 details={"version": resolved_version},
             )
+        reference_data = dict(reference_data)
+        sign_rulerships = PredictionReferenceRepository(db).get_sign_rulerships()
+        if sign_rulerships:
+            reference_data["sign_rulerships"] = sign_rulerships
 
         # Fallback to default ayanamsa if still missing (e.g. zodiac came from defaults)
         if resolved_zodiac == ZodiacType.SIDEREAL and not resolved_ayanamsa:

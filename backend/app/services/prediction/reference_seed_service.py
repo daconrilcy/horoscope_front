@@ -287,6 +287,11 @@ def _ensure_astral_planet_sign_dignities(db: Session) -> None:
     db.flush()
 
 
+def ensure_astral_planet_sign_dignities(db: Session) -> None:
+    """Synchronise les dignités stables requises par les maîtrises natales."""
+    _ensure_astral_planet_sign_dignities(db)
+
+
 def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     """Compte les artefacts attendus pour une version de référence donnée."""
     actual = {}
@@ -1026,5 +1031,6 @@ def run_prediction_reference_seed(db: Session) -> None:
 
 __all__ = [
     "PredictionReferenceSeedAbortError",
+    "ensure_astral_planet_sign_dignities",
     "run_prediction_reference_seed",
 ]

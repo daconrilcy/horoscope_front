@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.services.chart.json_builder import (
     EVIDENCE_ID_PATTERN,
     build_chart_json,
@@ -65,6 +66,22 @@ def mock_natal_result():
         houses.append(h)
 
     result.houses = houses
+    result.house_rulers = [
+        HouseRulerResult(
+            house_number=1,
+            cusp_sign="capricorn",
+            ruler_planet="saturn",
+            ruler_planet_sign="aries",
+            ruler_planet_house=9,
+        ),
+        HouseRulerResult(
+            house_number=10,
+            cusp_sign="libra",
+            ruler_planet="venus",
+            ruler_planet_sign="taurus",
+            ruler_planet_house=10,
+        ),
+    ]
 
     # Aspects
     a1 = MagicMock()
@@ -102,6 +119,22 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert len(chart["houses"]) == 12
     h1 = next(h for h in chart["houses"] if h["number"] == 1)
     assert h1["sign"] == "capricorn"
+    assert chart["house_rulers"] == [
+        {
+            "house_number": 1,
+            "cusp_sign": "capricorn",
+            "ruler_planet": "saturn",
+            "ruler_planet_sign": "aries",
+            "ruler_planet_house": 9,
+        },
+        {
+            "house_number": 10,
+            "cusp_sign": "libra",
+            "ruler_planet": "venus",
+            "ruler_planet_sign": "taurus",
+            "ruler_planet_house": 10,
+        },
+    ]
 
     # Aspects
     assert len(chart["aspects"]) == 1
@@ -131,6 +164,7 @@ def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
 
     # Houses should be empty
     assert len(chart["houses"]) == 0
+    assert chart["house_rulers"] == []
 
     # Angles should be None
     assert chart["angles"]["ASC"] is None
@@ -171,6 +205,15 @@ def test_build_evidence_catalog_priority():
         "aspects": [{"type": "trine", "planet_a": "sun", "planet_b": "moon", "orb": 0.3}],
         "angles": {"ASC": {"sign": "capricorn"}, "MC": {"sign": "libra"}},
         "houses": [{"number": 1, "sign": "capricorn"}],
+        "house_rulers": [
+            {
+                "house_number": 1,
+                "cusp_sign": "capricorn",
+                "ruler_planet": "saturn",
+                "ruler_planet_sign": "aries",
+                "ruler_planet_house": 9,
+            }
+        ],
     }
 
     evidence = build_evidence_catalog(chart_json)
@@ -179,12 +222,15 @@ def test_build_evidence_catalog_priority():
     assert evidence[0].startswith(("SUN_", "MOON_", "ASC_", "MC_"))
 
     # ASPECTS should be after H (priority 2)
-    h_indexes = [i for i, x in enumerate(evidence) if "_H" in x]
+    h_indexes = [i for i, x in enumerate(evidence) if "_H" in x and not x.startswith("HOUSE_")]
     aspect_indexes = [i for i, x in enumerate(evidence) if "ASPECT_" in x]
     assert min(aspect_indexes) > max(h_indexes)
 
     # HOUSE_1_IN_CAPRICORN should be last (priority 3)
-    assert evidence[-1] == "HOUSE_1_IN_CAPRICORN"
+    assert "HOUSE_1_IN_CAPRICORN" in evidence
+    assert "HOUSE_1_RULER_SATURN" in evidence
+    assert "HOUSE_1_RULER_SATURN_H9" in evidence
+    assert "HOUSE_1_RULER_SATURN_ARIES" in evidence
 
 
 def test_evidence_catalog_pattern():

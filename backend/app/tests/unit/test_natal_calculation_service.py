@@ -73,6 +73,9 @@ def test_calculate_natal_is_deterministic() -> None:
     assert first.reference_version == "1.0.0"
     assert len(first.planet_positions) >= 3
     assert len(first.houses) == 12
+    assert len(first.house_rulers) == 12
+    assert first.house_rulers[0].house_number == 1
+    assert first.house_rulers[0].ruler_planet_house is not None
 
 
 def test_calculate_natal_returns_major_aspects_with_extended_reference_planets() -> None:

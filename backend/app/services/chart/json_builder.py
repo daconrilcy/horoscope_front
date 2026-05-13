@@ -1,26 +1,16 @@
+"""Construction du JSON public utilisé pour restituer un thème natal."""
+
 from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING, Any
 
+from app.domain.astrology.zodiac import sign_from_longitude
+
 if TYPE_CHECKING:
     from app.domain.astrology.natal_calculation import NatalResult
     from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
-SIGNS = [
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-]
 MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
 
 PLANET_NAMES_FR = {
@@ -67,13 +57,12 @@ EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,80}$")
 
 
 def _longitude_to_sign(longitude: float) -> str:
-    """Returns the sign name for a given longitude."""
-    index = int((longitude % 360.0) // 30.0) % 12
-    return SIGNS[index]
+    """Retourne le signe correspondant à une longitude zodiacale."""
+    return sign_from_longitude(longitude)
 
 
 def _longitude_in_sign(longitude: float) -> float:
-    """Returns the longitude within the sign (0-30)."""
+    """Retourne la position en degrés à l'intérieur du signe."""
     return round(longitude % 30.0, 2)
 
 
@@ -83,17 +72,10 @@ def build_chart_json(
     degraded_mode: str | None = None,
 ) -> dict[str, Any]:
     """
-    Builds the canonical chart_json payload for LLMGateway.
+    Construit le payload public canonique du thème natal.
 
-    Args:
-        natal_result: The calculated natal result.
-        birth_profile: The user's birth profile data.
-        degraded_mode: Optional string indicating degraded modes:
-                       "no_time", "no_location", "no_location_no_time".
-                       If None, it is derived from birth_profile.
-
-    Returns:
-        A dictionary with keys: meta, planets, houses, aspects, angles.
+    Le payload regroupe les placements nécessaires aux restitutions publiques,
+    dont les maisons, les planètes et les maîtres de maisons.
     """
     # Auto-derive degraded_mode if not provided
     if degraded_mode is None:
@@ -164,6 +146,20 @@ def build_chart_json(
                 }
             )
 
+    # Maîtres de maisons
+    house_rulers = []
+    if not is_no_time:
+        for item in getattr(natal_result, "house_rulers", []):
+            house_rulers.append(
+                {
+                    "house_number": item.house_number,
+                    "cusp_sign": item.cusp_sign,
+                    "ruler_planet": item.ruler_planet,
+                    "ruler_planet_sign": item.ruler_planet_sign,
+                    "ruler_planet_house": item.ruler_planet_house,
+                }
+            )
+
     # Aspects
     aspects = []
     for a in natal_result.aspects:
@@ -206,13 +202,14 @@ def build_chart_json(
         "meta": meta,
         "planets": planets,
         "houses": houses,
+        "house_rulers": house_rulers,
         "aspects": aspects,
         "angles": angles,
     }
 
 
 def _get_evidence_priority(eid: str) -> int:
-    """Helper to determine sorting priority for evidence IDs."""
+    """Détermine la priorité de tri des identifiants d'évidence."""
     # Priority 0: Luminaries and Angles
     if any(eid.startswith(p) for p in ["SUN_", "MOON_", "ASC_", "MC_", "IC_", "DSC_"]):
         return 0
@@ -240,18 +237,17 @@ def _get_evidence_priority(eid: str) -> int:
 
 
 def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
-    """Backward compatibility wrapper. Returns a sorted list of evidence IDs."""
+    """Retourne la liste triée des identifiants d'évidence historiques."""
     enriched = build_enriched_evidence_catalog(chart_json)
     return sorted(list(enriched.keys()), key=lambda x: (_get_evidence_priority(x), x))
 
 
 def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, list[str]]:
     r"""
-    Produces a mapping of evidence identifiers to natural language labels.
-    Used for bidirectional validation (IDs in evidence field, labels in text).
+    Produit les libellés autorisés pour chaque identifiant d'évidence.
 
-    Returns:
-        Dict mapping UPPER_SNAKE_CASE IDs to list of allowed natural language labels.
+    Ce catalogue sert à valider les références entre le JSON technique et le
+    texte généré par les restitutions natales.
     """
     # Map of ID -> list of labels
     catalog: dict[str, list[str]] = {}
@@ -335,5 +331,28 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
         s_code = h["sign"]
         s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
         add(f"HOUSE_{num}_IN_{s_code.upper()}", [f"Maison {num} en {s_name}"])
+
+    # 5. House rulers
+    for ruler in chart_json.get("house_rulers", []):
+        house_num = ruler["house_number"]
+        planet_code = ruler["ruler_planet"]
+        planet_name = PLANET_NAMES_FR.get(planet_code, planet_code.capitalize())
+        base_labels = [f"Maître de Maison {house_num} : {planet_name}"]
+        add(f"HOUSE_{house_num}_RULER_{planet_code.upper()}", base_labels)
+
+        ruler_house = ruler.get("ruler_planet_house")
+        if ruler_house is not None:
+            add(
+                f"HOUSE_{house_num}_RULER_{planet_code.upper()}_H{ruler_house}",
+                [*base_labels, f"Maître de Maison {house_num} en Maison {ruler_house}"],
+            )
+
+        ruler_sign = ruler.get("ruler_planet_sign")
+        if ruler_sign:
+            sign_name = SIGN_NAMES_FR.get(ruler_sign, str(ruler_sign).capitalize())
+            add(
+                f"HOUSE_{house_num}_RULER_{planet_code.upper()}_{str(ruler_sign).upper()}",
+                [*base_labels, f"Maître de Maison {house_num} en {sign_name}"],
+            )
 
     return catalog

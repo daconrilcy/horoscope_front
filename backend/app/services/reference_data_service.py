@@ -144,6 +144,12 @@ class ReferenceDataService:
             repo.seed_version_defaults()
         elif not repo.has_complete_version_data():
             repo.seed_version_defaults()
+        db.flush()
+        from app.services.prediction.reference_seed_service import (
+            ensure_astral_planet_sign_dignities,
+        )
+
+        ensure_astral_planet_sign_dignities(db)
 
         db.commit()
         cls._invalidate_cache(target_version)
