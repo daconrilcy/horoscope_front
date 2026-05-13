@@ -1,3 +1,5 @@
+"""Modèles SQLAlchemy des paramètres versionnés du moteur de prédiction."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -49,11 +51,15 @@ class PredictionCategoryModel(Base):
 
 class PlanetProfileModel(Base):
     __tablename__ = "planet_profiles"
+    __table_args__ = (UniqueConstraint("reference_version_id", "planet_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    planet_id: Mapped[int] = mapped_column(
-        ForeignKey("planets.id"), unique=True, nullable=False, index=True
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("reference_versions.id"),
+        nullable=False,
+        index=True,
     )
+    planet_id: Mapped[int] = mapped_column(ForeignKey("planets.id"), nullable=False, index=True)
     class_code: Mapped[str] = mapped_column(String(32), nullable=False)  # luminary, personal, etc.
     speed_rank: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     speed_class: Mapped[str] = mapped_column(String(16), nullable=False)  # fast, medium, slow
@@ -65,16 +71,21 @@ class PlanetProfileModel(Base):
     keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
     planet: Mapped["PlanetModel"] = relationship()
 
 
 class HouseProfileModel(Base):
     __tablename__ = "house_profiles"
+    __table_args__ = (UniqueConstraint("reference_version_id", "house_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    house_id: Mapped[int] = mapped_column(
-        ForeignKey("houses.id"), unique=True, nullable=False, index=True
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("reference_versions.id"),
+        nullable=False,
+        index=True,
     )
+    house_id: Mapped[int] = mapped_column(ForeignKey("houses.id"), nullable=False, index=True)
     # values: angular, succedent, cadent
     house_kind: Mapped[str] = mapped_column(String(16), nullable=False)
     visibility_weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
@@ -82,14 +93,20 @@ class HouseProfileModel(Base):
     keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
     house: Mapped["HouseModel"] = relationship()
 
 
 class PlanetCategoryWeightModel(Base):
     __tablename__ = "planet_category_weights"
-    __table_args__ = (UniqueConstraint("planet_id", "category_id"),)
+    __table_args__ = (UniqueConstraint("reference_version_id", "planet_id", "category_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("reference_versions.id"),
+        nullable=False,
+        index=True,
+    )
     planet_id: Mapped[int] = mapped_column(ForeignKey("planets.id"), nullable=False, index=True)
     category_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_categories.id"), nullable=False, index=True
@@ -99,15 +116,21 @@ class PlanetCategoryWeightModel(Base):
         String(16), nullable=False, default="secondary"
     )  # primary, secondary, color
 
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
     planet: Mapped["PlanetModel"] = relationship()
     category: Mapped["PredictionCategoryModel"] = relationship()
 
 
 class HouseCategoryWeightModel(Base):
     __tablename__ = "house_category_weights"
-    __table_args__ = (UniqueConstraint("house_id", "category_id"),)
+    __table_args__ = (UniqueConstraint("reference_version_id", "house_id", "category_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("reference_versions.id"),
+        nullable=False,
+        index=True,
+    )
     house_id: Mapped[int] = mapped_column(ForeignKey("houses.id"), nullable=False, index=True)
     category_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_categories.id"), nullable=False, index=True
@@ -117,38 +140,39 @@ class HouseCategoryWeightModel(Base):
         String(16), nullable=False, default="secondary"
     )  # primary, secondary
 
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
     house: Mapped["HouseModel"] = relationship()
     category: Mapped["PredictionCategoryModel"] = relationship()
 
 
 class AstroPointModel(Base):
     __tablename__ = "astro_points"
-    __table_args__ = (UniqueConstraint("reference_version_id", "code"),)
+    __table_args__ = (UniqueConstraint("code"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
-        index=True,
-    )
     code: Mapped[str] = mapped_column(String(32), nullable=False)  # asc, dsc, mc, ic
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     point_type: Mapped[str] = mapped_column(String(32), nullable=False, default="angle")
     is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
-    reference_version: Mapped["ReferenceVersionModel"] = relationship()
-
 
 class PointCategoryWeightModel(Base):
     __tablename__ = "point_category_weights"
-    __table_args__ = (UniqueConstraint("point_id", "category_id"),)
+    __table_args__ = (UniqueConstraint("reference_version_id", "point_id", "category_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("reference_versions.id"),
+        nullable=False,
+        index=True,
+    )
     point_id: Mapped[int] = mapped_column(ForeignKey("astro_points.id"), nullable=False, index=True)
     category_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_categories.id"), nullable=False, index=True
     )
     weight: Mapped[float] = mapped_column(Float, nullable=False)
 
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
     point: Mapped["AstroPointModel"] = relationship()
     category: Mapped["PredictionCategoryModel"] = relationship()
 
@@ -179,11 +203,15 @@ class SignRulershipModel(Base):
 
 class AspectProfileModel(Base):
     __tablename__ = "aspect_profiles"
+    __table_args__ = (UniqueConstraint("reference_version_id", "aspect_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    aspect_id: Mapped[int] = mapped_column(
-        ForeignKey("aspects.id"), unique=True, nullable=False, index=True
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("reference_versions.id"),
+        nullable=False,
+        index=True,
     )
+    aspect_id: Mapped[int] = mapped_column(ForeignKey("aspects.id"), nullable=False, index=True)
     intensity_weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     default_valence: Mapped[str] = mapped_column(
         String(16), nullable=False, default="contextual"
@@ -192,13 +220,19 @@ class AspectProfileModel(Base):
     phase_sensitive: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
     aspect: Mapped["AspectModel"] = relationship()
 
 
 # Mechanisms for version protection
 @event.listens_for(PredictionCategoryModel, "before_update")
-@event.listens_for(AstroPointModel, "before_update")
+@event.listens_for(PlanetProfileModel, "before_update")
+@event.listens_for(HouseProfileModel, "before_update")
+@event.listens_for(PlanetCategoryWeightModel, "before_update")
+@event.listens_for(HouseCategoryWeightModel, "before_update")
+@event.listens_for(PointCategoryWeightModel, "before_update")
 @event.listens_for(SignRulershipModel, "before_update")
+@event.listens_for(AspectProfileModel, "before_update")
 def _prevent_update_on_locked_prediction_version(
     mapper: object, connection: object, target: object
 ) -> None:

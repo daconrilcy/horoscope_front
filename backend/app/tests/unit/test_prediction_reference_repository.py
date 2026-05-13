@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
@@ -13,6 +14,7 @@ from app.infra.db.models.prediction_reference import (
     SignRulershipModel,
 )
 from app.infra.db.models.reference import (
+    AspectModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -68,6 +70,21 @@ def test_get_categories(db_session: Session):
     assert isinstance(result[0], CategoryData)
 
 
+def test_structural_astrology_models_are_not_versioned():
+    """Les tables structurelles restent des référentiels stables non versionnés."""
+    structural_models = (
+        PlanetModel,
+        SignModel,
+        HouseModel,
+        AspectModel,
+        AstroPointModel,
+    )
+
+    for model in structural_models:
+        columns = {column.key for column in inspect(model).columns}
+        assert "reference_version_id" not in columns
+
+
 PLANET_CODES = [
     "sun",
     "moon",
@@ -90,10 +107,11 @@ def test_get_planet_profiles(db_session: Session):
     db_session.flush()
 
     for i, code in enumerate(PLANET_CODES):
-        planet = PlanetModel(reference_version_id=version.id, code=code, name=code.capitalize())
+        planet = PlanetModel(code=code, name=code.capitalize())
         db_session.add(planet)
         db_session.flush()
         profile = PlanetProfileModel(
+            reference_version_id=version.id,
             planet_id=planet.id,
             class_code="luminary" if code in ("sun", "moon") else "personal",
             speed_rank=i + 1,
@@ -141,16 +159,10 @@ def test_get_sign_rulerships(db_session: Session):
 
     # Seed unique planet codes needed
     planet_codes = list(dict.fromkeys(p for _, p in SIGN_RULERSHIPS))
-    planets = {
-        code: PlanetModel(reference_version_id=version.id, code=code, name=code.capitalize())
-        for code in planet_codes
-    }
+    planets = {code: PlanetModel(code=code, name=code.capitalize()) for code in planet_codes}
     db_session.add_all(planets.values())
 
-    signs = {
-        code: SignModel(reference_version_id=version.id, code=code, name=code.capitalize())
-        for code, _ in SIGN_RULERSHIPS
-    }
+    signs = {code: SignModel(code=code, name=code.capitalize()) for code, _ in SIGN_RULERSHIPS}
     db_session.add_all(signs.values())
     db_session.flush()
 
@@ -194,11 +206,12 @@ def test_load_prediction_context(db_session: Session):
     )
 
     # Seed one planet with profile
-    planet = PlanetModel(reference_version_id=version.id, code="sun", name="Sun")
+    planet = PlanetModel(code="sun", name="Sun")
     db_session.add(planet)
     db_session.flush()
     db_session.add(
         PlanetProfileModel(
+            reference_version_id=version.id,
             planet_id=planet.id,
             class_code="luminary",
             speed_rank=1,
@@ -209,11 +222,12 @@ def test_load_prediction_context(db_session: Session):
     )
 
     # Seed one house with profile
-    house = HouseModel(reference_version_id=version.id, number=1, name="House 1")
+    house = HouseModel(number=1, name="House 1")
     db_session.add(house)
     db_session.flush()
     db_session.add(
         HouseProfileModel(
+            reference_version_id=version.id,
             house_id=house.id,
             house_kind="angular",
             visibility_weight=1.0,
@@ -241,8 +255,8 @@ def test_category_weight_queries_filter_joined_categories_by_reference_version(d
     db_session.add_all([version_a, version_b])
     db_session.flush()
 
-    planet = PlanetModel(reference_version_id=version_a.id, code="sun", name="Sun")
-    house = HouseModel(reference_version_id=version_a.id, number=1, name="House 1")
+    planet = PlanetModel(code="sun", name="Sun")
+    house = HouseModel(number=1, name="House 1")
     db_session.add_all([planet, house])
     db_session.flush()
 
@@ -263,7 +277,6 @@ def test_category_weight_queries_filter_joined_categories_by_reference_version(d
         is_enabled=True,
     )
     point = AstroPointModel(
-        reference_version_id=version_a.id,
         code="asc",
         name="Asc",
         point_type="angle",
@@ -274,35 +287,41 @@ def test_category_weight_queries_filter_joined_categories_by_reference_version(d
     db_session.add_all(
         [
             PlanetCategoryWeightModel(
+                reference_version_id=version_a.id,
                 planet_id=planet.id,
                 category_id=category_a.id,
                 weight=0.8,
                 influence_role="primary",
             ),
             PlanetCategoryWeightModel(
+                reference_version_id=version_b.id,
                 planet_id=planet.id,
                 category_id=category_b.id,
                 weight=0.2,
                 influence_role="secondary",
             ),
             HouseCategoryWeightModel(
+                reference_version_id=version_a.id,
                 house_id=house.id,
                 category_id=category_a.id,
                 weight=0.7,
                 routing_role="primary",
             ),
             HouseCategoryWeightModel(
+                reference_version_id=version_b.id,
                 house_id=house.id,
                 category_id=category_b.id,
                 weight=0.1,
                 routing_role="secondary",
             ),
             PointCategoryWeightModel(
+                reference_version_id=version_a.id,
                 point_id=point.id,
                 category_id=category_a.id,
                 weight=0.6,
             ),
             PointCategoryWeightModel(
+                reference_version_id=version_b.id,
                 point_id=point.id,
                 category_id=category_b.id,
                 weight=0.2,

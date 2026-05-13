@@ -64,7 +64,7 @@ class PredictionReferenceRepository:
         rows = self.db.execute(
             select(PlanetModel, PlanetProfileModel)
             .join(PlanetProfileModel, PlanetModel.id == PlanetProfileModel.planet_id)
-            .where(PlanetModel.reference_version_id == reference_version_id)
+            .where(PlanetProfileModel.reference_version_id == reference_version_id)
         ).all()
 
         result = {}
@@ -89,7 +89,7 @@ class PredictionReferenceRepository:
         rows = self.db.execute(
             select(HouseModel, HouseProfileModel)
             .join(HouseProfileModel, HouseModel.id == HouseProfileModel.house_id)
-            .where(HouseModel.reference_version_id == reference_version_id)
+            .where(HouseProfileModel.reference_version_id == reference_version_id)
         ).all()
 
         result = {}
@@ -123,7 +123,7 @@ class PredictionReferenceRepository:
                 PlanetCategoryWeightModel.category_id == PredictionCategoryModel.id,
             )
             .where(
-                PlanetModel.reference_version_id == reference_version_id,
+                PlanetCategoryWeightModel.reference_version_id == reference_version_id,
                 PredictionCategoryModel.reference_version_id == reference_version_id,
             )
             .order_by(PlanetModel.code, PredictionCategoryModel.code)
@@ -159,7 +159,7 @@ class PredictionReferenceRepository:
                 HouseCategoryWeightModel.category_id == PredictionCategoryModel.id,
             )
             .where(
-                HouseModel.reference_version_id == reference_version_id,
+                HouseCategoryWeightModel.reference_version_id == reference_version_id,
                 PredictionCategoryModel.reference_version_id == reference_version_id,
             )
             .order_by(HouseModel.number, PredictionCategoryModel.code)
@@ -195,7 +195,7 @@ class PredictionReferenceRepository:
         rows = self.db.execute(
             select(AspectModel, AspectProfileModel)
             .join(AspectProfileModel, AspectModel.id == AspectProfileModel.aspect_id)
-            .where(AspectModel.reference_version_id == reference_version_id)
+            .where(AspectProfileModel.reference_version_id == reference_version_id)
         ).all()
 
         result = {}
@@ -214,7 +214,6 @@ class PredictionReferenceRepository:
         rows = (
             self.db.execute(
                 select(AstroPointModel).where(
-                    AstroPointModel.reference_version_id == reference_version_id,
                     AstroPointModel.is_enabled.is_(True),
                 )
             )
@@ -249,7 +248,7 @@ class PredictionReferenceRepository:
                 PointCategoryWeightModel.category_id == PredictionCategoryModel.id,
             )
             .where(
-                AstroPointModel.reference_version_id == reference_version_id,
+                PointCategoryWeightModel.reference_version_id == reference_version_id,
                 PredictionCategoryModel.reference_version_id == reference_version_id,
             )
             .order_by(AstroPointModel.code, PredictionCategoryModel.code)

@@ -58,7 +58,7 @@ def upgrade() -> None:
         sa.Column("micro_note", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(["planet_id"], ["planets.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("planet_id"),
+        sa.UniqueConstraint("planet_id", name="uq_planet_profiles_planet_id"),
     )
     op.create_index(
         op.f("ix_planet_profiles_planet_id"),
@@ -79,7 +79,7 @@ def upgrade() -> None:
         sa.Column("micro_note", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(["house_id"], ["houses.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("house_id"),
+        sa.UniqueConstraint("house_id", name="uq_house_profiles_house_id"),
     )
     op.create_index(
         op.f("ix_house_profiles_house_id"),
@@ -101,7 +101,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["category_id"], ["prediction_categories.id"]),
         sa.ForeignKeyConstraint(["planet_id"], ["planets.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("planet_id", "category_id"),
+        sa.UniqueConstraint(
+            "planet_id",
+            "category_id",
+            name="uq_planet_category_weights_planet_id_category_id",
+        ),
     )
     op.create_index(
         op.f("ix_planet_category_weights_category_id"),
@@ -127,7 +131,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["category_id"], ["prediction_categories.id"]),
         sa.ForeignKeyConstraint(["house_id"], ["houses.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("house_id", "category_id"),
+        sa.UniqueConstraint(
+            "house_id",
+            "category_id",
+            name="uq_house_category_weights_house_id_category_id",
+        ),
     )
     op.create_index(
         op.f("ix_house_category_weights_category_id"),
@@ -172,7 +180,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["category_id"], ["prediction_categories.id"]),
         sa.ForeignKeyConstraint(["point_id"], ["astro_points.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("point_id", "category_id"),
+        sa.UniqueConstraint(
+            "point_id",
+            "category_id",
+            name="uq_point_category_weights_point_id_category_id",
+        ),
     )
     op.create_index(
         op.f("ix_point_category_weights_category_id"),
@@ -238,7 +250,7 @@ def upgrade() -> None:
         sa.Column("micro_note", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(["aspect_id"], ["aspects.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("aspect_id"),
+        sa.UniqueConstraint("aspect_id", name="uq_aspect_profiles_aspect_id"),
     )
     op.create_index(
         op.f("ix_aspect_profiles_aspect_id"),

@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
+from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.reference import (
     AspectModel,
     HouseModel,
@@ -88,7 +89,6 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
         db.flush()
         db.add(
             AspectModel(
-                reference_version_id=partial.id,
                 code="conjunction",
                 name="Conjunction",
                 angle=0,
@@ -134,7 +134,6 @@ def test_clone_reference_version_preserves_previous_version() -> None:
         if source_version is not None:
             db.add(
                 PlanetModel(
-                    reference_version_id=source_version.id,
                     code="test_planet",
                     name="Test Planet",
                 )
@@ -156,13 +155,24 @@ def test_clone_reference_version_preserves_previous_version() -> None:
     assert any(item["code"] == "test_planet" for item in cloned_planets)
 
 
-def test_locked_reference_version_rejects_in_place_mutation() -> None:
+def test_locked_reference_version_rejects_parametric_mutation() -> None:
     _cleanup_reference_tables()
     with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        planet = db.scalar(select(PlanetModel).where(PlanetModel.code == "sun"))
-        assert planet is not None
-        planet.name = "Mutated Sun"
+        version = db.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
+        )
+        assert version is not None
+        category = PredictionCategoryModel(
+            reference_version_id=version.id,
+            code="energy",
+            name="Energy",
+            display_name="Energy",
+        )
+        db.add(category)
+        db.commit()
+
+        category.name = "Mutated Energy"
         try:
             db.commit()
             assert False, "expected commit failure on locked reference version"

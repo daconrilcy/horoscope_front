@@ -57,26 +57,19 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     actual["planet_profiles"] = db.scalar(
         select(func.count())
         .select_from(PlanetProfileModel)
-        .join(PlanetModel, PlanetProfileModel.planet_id == PlanetModel.id)
-        .where(PlanetModel.reference_version_id == reference_version_id)
+        .where(PlanetProfileModel.reference_version_id == reference_version_id)
     )
     actual["house_profiles"] = db.scalar(
         select(func.count())
         .select_from(HouseProfileModel)
-        .join(HouseModel, HouseProfileModel.house_id == HouseModel.id)
-        .where(HouseModel.reference_version_id == reference_version_id)
+        .where(HouseProfileModel.reference_version_id == reference_version_id)
     )
     actual["aspect_profiles"] = db.scalar(
         select(func.count())
         .select_from(AspectProfileModel)
-        .join(AspectModel, AspectProfileModel.aspect_id == AspectModel.id)
-        .where(AspectModel.reference_version_id == reference_version_id)
+        .where(AspectProfileModel.reference_version_id == reference_version_id)
     )
-    actual["astro_points"] = db.scalar(
-        select(func.count())
-        .select_from(AstroPointModel)
-        .where(AstroPointModel.reference_version_id == reference_version_id)
-    )
+    actual["astro_points"] = db.scalar(select(func.count()).select_from(AstroPointModel))
     actual["sign_rulerships"] = db.scalar(
         select(func.count())
         .select_from(SignRulershipModel)
@@ -85,20 +78,17 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     actual["planet_category_weights"] = db.scalar(
         select(func.count())
         .select_from(PlanetCategoryWeightModel)
-        .join(PlanetModel, PlanetCategoryWeightModel.planet_id == PlanetModel.id)
-        .where(PlanetModel.reference_version_id == reference_version_id)
+        .where(PlanetCategoryWeightModel.reference_version_id == reference_version_id)
     )
     actual["house_category_weights"] = db.scalar(
         select(func.count())
         .select_from(HouseCategoryWeightModel)
-        .join(HouseModel, HouseCategoryWeightModel.house_id == HouseModel.id)
-        .where(HouseModel.reference_version_id == reference_version_id)
+        .where(HouseCategoryWeightModel.reference_version_id == reference_version_id)
     )
     actual["point_category_weights"] = db.scalar(
         select(func.count())
         .select_from(PointCategoryWeightModel)
-        .join(AstroPointModel, PointCategoryWeightModel.point_id == AstroPointModel.id)
-        .where(AstroPointModel.reference_version_id == reference_version_id)
+        .where(PointCategoryWeightModel.reference_version_id == reference_version_id)
     )
 
     # Les rulesets sont rattachés à la version de référence ciblée.
@@ -229,51 +219,30 @@ def run_prediction_reference_seed(db: Session) -> None:
             )
             db.execute(
                 delete(PointCategoryWeightModel).where(
-                    PointCategoryWeightModel.point_id.in_(
-                        select(AstroPointModel.id).where(
-                            AstroPointModel.reference_version_id == v2.id
-                        )
-                    )
+                    PointCategoryWeightModel.reference_version_id == v2.id
                 )
             )
-            db.execute(delete(AstroPointModel).where(AstroPointModel.reference_version_id == v2.id))
             db.execute(
                 delete(HouseCategoryWeightModel).where(
-                    HouseCategoryWeightModel.house_id.in_(
-                        select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
-                    )
+                    HouseCategoryWeightModel.reference_version_id == v2.id
                 )
             )
             db.execute(
                 delete(PlanetCategoryWeightModel).where(
-                    PlanetCategoryWeightModel.planet_id.in_(
-                        select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
-                    )
+                    PlanetCategoryWeightModel.reference_version_id == v2.id
                 )
             )
             db.execute(
-                delete(HouseProfileModel).where(
-                    HouseProfileModel.house_id.in_(
-                        select(HouseModel.id).where(HouseModel.reference_version_id == v2.id)
-                    )
-                )
+                delete(HouseProfileModel).where(HouseProfileModel.reference_version_id == v2.id)
             )
             db.execute(
-                delete(PlanetProfileModel).where(
-                    PlanetProfileModel.planet_id.in_(
-                        select(PlanetModel.id).where(PlanetModel.reference_version_id == v2.id)
-                    )
-                )
+                delete(PlanetProfileModel).where(PlanetProfileModel.reference_version_id == v2.id)
             )
             db.execute(
                 delete(SignRulershipModel).where(SignRulershipModel.reference_version_id == v2.id)
             )
             db.execute(
-                delete(AspectProfileModel).where(
-                    AspectProfileModel.aspect_id.in_(
-                        select(AspectModel.id).where(AspectModel.reference_version_id == v2.id)
-                    )
-                )
+                delete(AspectProfileModel).where(AspectProfileModel.reference_version_id == v2.id)
             )
             db.execute(
                 delete(PredictionCategoryModel).where(
@@ -281,31 +250,12 @@ def run_prediction_reference_seed(db: Session) -> None:
                 )
             )
 
-            # L étape 3 doit être rejouée en mode réparation, car
-            # `clone_version_data` a pu s exécuter partiellement. Le rollback fin
-            # de cette étape n étant pas trivial sans supprimer la ReferenceVersion,
-            # on considère ici que si V2 existe, le clone a déjà été tenté.
-            # Le garde-fou complémentaire consiste à vérifier la présence des
-            # données de base avant d éviter un re-clone.
-            has_basic_data = (
-                db.scalar(
-                    select(func.count())
-                    .select_from(PlanetModel)
-                    .where(PlanetModel.reference_version_id == v2.id)
-                )
-                > 0
-            )
+            # Les structures sont stables et globales. En réparation on vérifie
+            # seulement que le vocabulaire de base existe.
+            has_basic_data = db.scalar(select(func.count()).select_from(PlanetModel)) > 0
             if not has_basic_data:
-                v1 = db.scalar(
-                    select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
-                )
-                if not v1:
-                    raise PredictionReferenceSeedAbortError(
-                        "Reference version 1.0.0 not found for cloning."
-                    )
-                print("Cloning V1 data to V2...")
                 repo = ReferenceRepository(db)
-                repo.clone_version_data(v1.id, v2.id)
+                repo.seed_version_defaults()
             db.flush()
         else:
             # État corrompu ou incomplet alors que la version est verrouillée.
@@ -341,9 +291,10 @@ def run_prediction_reference_seed(db: Session) -> None:
         v2.is_locked = False
         db.flush()
 
-        # 3. Clonage de V1 vers V2.
-        print("Cloning V1 data to V2...")
-        repo.clone_version_data(v1.id, v2.id)
+        # 3. Les structures stables existent deja via la reference 1.0.0.
+        if not repo.has_complete_version_data():
+            print("Seeding stable astrology structures...")
+            repo.seed_version_defaults()
         db.flush()
 
     # 4. Alimentation des catégories de prédiction.
@@ -385,12 +336,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             )
         ).all()
     }
-    planets = {
-        p.code: p.id
-        for p in db.scalars(
-            select(PlanetModel).where(PlanetModel.reference_version_id == v2.id)
-        ).all()
-    }
+    planets = {p.code: p.id for p in db.scalars(select(PlanetModel)).all()}
 
     # 5. Alimentation des profils planétaires.
     print("Seeding planet profiles...")
@@ -530,6 +476,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     ) in planet_profiles_data:
         db.add(
             PlanetProfileModel(
+                reference_version_id=v2.id,
                 planet_id=planets[code],
                 class_code=class_code,
                 speed_rank=rank,
@@ -560,15 +507,11 @@ def run_prediction_reference_seed(db: Session) -> None:
         (11, "succedent", 0.6, 5),
         (12, "cadent", 0.4, 3),
     ]
-    houses = {
-        h.number: h.id
-        for h in db.scalars(
-            select(HouseModel).where(HouseModel.reference_version_id == v2.id)
-        ).all()
-    }
+    houses = {h.number: h.id for h in db.scalars(select(HouseModel)).all()}
     for num, kind, vis, prio in house_profiles_data:
         db.add(
             HouseProfileModel(
+                reference_version_id=v2.id,
                 house_id=houses[num],
                 house_kind=kind,
                 visibility_weight=vis,
@@ -668,6 +611,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     for p_code, c_code, weight, role in pcw_data:
         db.add(
             PlanetCategoryWeightModel(
+                reference_version_id=v2.id,
                 planet_id=planets[p_code],
                 category_id=categories[c_code],
                 weight=weight,
@@ -706,6 +650,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     for house_num, c_code, weight, role in hcw_data:
         db.add(
             HouseCategoryWeightModel(
+                reference_version_id=v2.id,
                 house_id=houses[house_num],
                 category_id=categories[c_code],
                 weight=weight,
@@ -722,16 +667,13 @@ def run_prediction_reference_seed(db: Session) -> None:
         ("ic", "Imum Coeli (IC)", "angle"),
     ]
     for code, name, ptype in points_data:
-        db.add(AstroPointModel(reference_version_id=v2.id, code=code, name=name, point_type=ptype))
+        existing_point = db.scalar(select(AstroPointModel).where(AstroPointModel.code == code))
+        if existing_point is None:
+            db.add(AstroPointModel(code=code, name=name, point_type=ptype))
     db.flush()
 
     # Alimentation des poids point -> catégorie.
-    points = {
-        p.code: p.id
-        for p in db.scalars(
-            select(AstroPointModel).where(AstroPointModel.reference_version_id == v2.id)
-        ).all()
-    }
+    points = {p.code: p.id for p in db.scalars(select(AstroPointModel)).all()}
     pcw_points_data = [
         ("asc", "energy", 0.8),
         ("asc", "mood", 0.7),
@@ -745,7 +687,10 @@ def run_prediction_reference_seed(db: Session) -> None:
     for p_code, c_code, weight in pcw_points_data:
         db.add(
             PointCategoryWeightModel(
-                point_id=points[p_code], category_id=categories[c_code], weight=weight
+                reference_version_id=v2.id,
+                point_id=points[p_code],
+                category_id=categories[c_code],
+                weight=weight,
             )
         )
 
@@ -765,10 +710,7 @@ def run_prediction_reference_seed(db: Session) -> None:
         ("aquarius", "saturn", True),
         ("pisces", "jupiter", True),
     ]
-    signs = {
-        s.code: s.id
-        for s in db.scalars(select(SignModel).where(SignModel.reference_version_id == v2.id)).all()
-    }
+    signs = {s.code: s.id for s in db.scalars(select(SignModel)).all()}
     for s_code, p_code, is_pri in rulerships_data:
         db.add(
             SignRulershipModel(
@@ -790,15 +732,11 @@ def run_prediction_reference_seed(db: Session) -> None:
         ("trine", 1.0, "favorable", 1.0, False),
         ("opposition", 1.3, "polarizing", 1.0, True),
     ]
-    aspects = {
-        a.code: a.id
-        for a in db.scalars(
-            select(AspectModel).where(AspectModel.reference_version_id == v2.id)
-        ).all()
-    }
+    aspects = {a.code: a.id for a in db.scalars(select(AspectModel)).all()}
     for code, intensity, valence, orb, phase in aspects_data:
         db.add(
             AspectProfileModel(
+                reference_version_id=v2.id,
                 aspect_id=aspects[code],
                 intensity_weight=intensity,
                 default_valence=valence,

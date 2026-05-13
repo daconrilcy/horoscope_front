@@ -37,9 +37,23 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     command.upgrade(config, "head")
 
     head_engine = create_engine(database_url, future=True)
-    head_tables = set(inspect(head_engine).get_table_names())
+    head_inspector = inspect(head_engine)
+    head_tables = set(head_inspector.get_table_names())
     assert "reference_versions" in head_tables
     assert "astro_characteristics" not in head_tables
+    for table_name in ("planets", "signs", "houses", "aspects", "astro_points"):
+        columns = {column["name"] for column in head_inspector.get_columns(table_name)}
+        assert "reference_version_id" not in columns
+    for table_name in (
+        "planet_profiles",
+        "house_profiles",
+        "aspect_profiles",
+        "planet_category_weights",
+        "house_category_weights",
+        "point_category_weights",
+    ):
+        columns = {column["name"] for column in head_inspector.get_columns(table_name)}
+        assert "reference_version_id" in columns
     head_engine.dispose()
 
     command.downgrade(config, "base")

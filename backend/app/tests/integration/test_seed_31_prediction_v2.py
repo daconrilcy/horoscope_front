@@ -9,14 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.infra.db.models import (
-    AspectModel,
     AspectProfileModel,
     AstroPointModel,
     HouseCategoryWeightModel,
-    HouseModel,
     HouseProfileModel,
     PlanetCategoryWeightModel,
-    PlanetModel,
     PlanetProfileModel,
     PointCategoryWeightModel,
     PredictionCategoryModel,
@@ -92,8 +89,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             session.scalar(
                 select(func.count())
                 .select_from(PlanetProfileModel)
-                .join(PlanetModel, PlanetProfileModel.planet_id == PlanetModel.id)
-                .where(PlanetModel.reference_version_id == v2.id)
+                .where(PlanetProfileModel.reference_version_id == v2.id)
             )
             == 10
         )
@@ -101,8 +97,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             session.scalar(
                 select(func.count())
                 .select_from(HouseProfileModel)
-                .join(HouseModel, HouseProfileModel.house_id == HouseModel.id)
-                .where(HouseModel.reference_version_id == v2.id)
+                .where(HouseProfileModel.reference_version_id == v2.id)
             )
             == 12
         )
@@ -110,19 +105,11 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             session.scalar(
                 select(func.count())
                 .select_from(AspectProfileModel)
-                .join(AspectModel, AspectProfileModel.aspect_id == AspectModel.id)
-                .where(AspectModel.reference_version_id == v2.id)
+                .where(AspectProfileModel.reference_version_id == v2.id)
             )
             == 5
         )
-        assert (
-            session.scalar(
-                select(func.count())
-                .select_from(AstroPointModel)
-                .where(AstroPointModel.reference_version_id == v2.id)
-            )
-            == 4
-        )
+        assert session.scalar(select(func.count()).select_from(AstroPointModel)) == 4
         assert (
             session.scalar(
                 select(func.count())
@@ -135,8 +122,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             session.scalar(
                 select(func.count())
                 .select_from(PlanetCategoryWeightModel)
-                .join(PlanetModel, PlanetCategoryWeightModel.planet_id == PlanetModel.id)
-                .where(PlanetModel.reference_version_id == v2.id)
+                .where(PlanetCategoryWeightModel.reference_version_id == v2.id)
             )
             >= 30
         )
@@ -144,8 +130,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             session.scalar(
                 select(func.count())
                 .select_from(HouseCategoryWeightModel)
-                .join(HouseModel, HouseCategoryWeightModel.house_id == HouseModel.id)
-                .where(HouseModel.reference_version_id == v2.id)
+                .where(HouseCategoryWeightModel.reference_version_id == v2.id)
             )
             >= 20
         )
@@ -153,8 +138,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             session.scalar(
                 select(func.count())
                 .select_from(PointCategoryWeightModel)
-                .join(AstroPointModel, PointCategoryWeightModel.point_id == AstroPointModel.id)
-                .where(AstroPointModel.reference_version_id == v2.id)
+                .where(PointCategoryWeightModel.reference_version_id == v2.id)
             )
             == 8
         )

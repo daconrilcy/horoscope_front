@@ -32,27 +32,39 @@ NEW_TABLES = [
 
 EXPECTED_INDEXES = {
     "prediction_categories": {"ix_prediction_categories_reference_version_id"},
-    "planet_profiles": {"ix_planet_profiles_planet_id"},
-    "house_profiles": {"ix_house_profiles_house_id"},
+    "planet_profiles": {
+        "ix_planet_profiles_planet_id",
+        "ix_planet_profiles_reference_version_id",
+    },
+    "house_profiles": {
+        "ix_house_profiles_house_id",
+        "ix_house_profiles_reference_version_id",
+    },
     "planet_category_weights": {
         "ix_planet_category_weights_category_id",
         "ix_planet_category_weights_planet_id",
+        "ix_planet_category_weights_reference_version_id",
     },
     "house_category_weights": {
         "ix_house_category_weights_category_id",
         "ix_house_category_weights_house_id",
+        "ix_house_category_weights_reference_version_id",
     },
-    "astro_points": {"ix_astro_points_reference_version_id"},
+    "astro_points": set(),
     "point_category_weights": {
         "ix_point_category_weights_category_id",
         "ix_point_category_weights_point_id",
+        "ix_point_category_weights_reference_version_id",
     },
     "sign_rulerships": {
         "ix_sign_rulerships_planet_id",
         "ix_sign_rulerships_reference_version_id",
         "ix_sign_rulerships_sign_id",
     },
-    "aspect_profiles": {"ix_aspect_profiles_aspect_id"},
+    "aspect_profiles": {
+        "ix_aspect_profiles_aspect_id",
+        "ix_aspect_profiles_reference_version_id",
+    },
 }
 
 
@@ -100,7 +112,7 @@ def test_migration_a_prediction_tables_creation(
     config = _alembic_config()
 
     command.downgrade(config, "base")
-    command.upgrade(config, "20260307_0032")
+    command.upgrade(config, "head")
 
     engine = _sqlite_engine(database_url)
     inspector = inspect(engine)
@@ -139,7 +151,6 @@ def test_migration_a_prediction_tables_creation(
         session.rollback()
 
         planet = PlanetModel(
-            reference_version_id=unlocked_version.id,
             code="sun",
             name="Sun",
         )
@@ -147,6 +158,7 @@ def test_migration_a_prediction_tables_creation(
         session.commit()
 
         category_weight = PlanetCategoryWeightModel(
+            reference_version_id=unlocked_version.id,
             planet_id=planet.id,
             category_id=category.id,
             weight=0.8,
@@ -156,6 +168,7 @@ def test_migration_a_prediction_tables_creation(
         session.commit()
 
         duplicate_weight = PlanetCategoryWeightModel(
+            reference_version_id=unlocked_version.id,
             planet_id=planet.id,
             category_id=category.id,
             weight=0.4,
@@ -167,6 +180,7 @@ def test_migration_a_prediction_tables_creation(
         session.rollback()
 
         invalid_profile = PlanetProfileModel(
+            reference_version_id=unlocked_version.id,
             planet_id=999_999,
             class_code="luminary",
             speed_class="fast",
@@ -193,7 +207,6 @@ def test_migration_a_prediction_tables_creation(
         session.rollback()
 
         locked_planet = PlanetModel(
-            reference_version_id=locked_version.id,
             code="moon",
             name="Moon",
         )
@@ -201,6 +214,7 @@ def test_migration_a_prediction_tables_creation(
         session.commit()
 
         unlocked_profile = PlanetProfileModel(
+            reference_version_id=unlocked_version.id,
             planet_id=locked_planet.id,
             class_code="luminary",
             speed_class="fast",
@@ -224,7 +238,7 @@ def test_migration_a_prediction_tables_downgrade(
     config = _alembic_config()
 
     command.downgrade(config, "base")
-    command.upgrade(config, "20260307_0032")
+    command.upgrade(config, "head")
     command.downgrade(config, "20260307_0031")
 
     engine = _sqlite_engine(database_url)

@@ -82,11 +82,7 @@ class B2BAstrologyService:
         Raises:
             B2BAstrologyServiceError: Si les données de référence sont indisponibles.
         """
-        signs = db.scalars(
-            select(SignModel)
-            .where(SignModel.reference_version_id.is_not(None))
-            .order_by(SignModel.id.asc())
-        ).all()
+        signs = db.scalars(select(SignModel).order_by(SignModel.id.asc())).all()
         if not signs:
             raise B2BAstrologyServiceError(
                 code="reference_data_unavailable",
