@@ -9,6 +9,22 @@ from pydantic import BaseModel
 
 from app.domain.astrology.zodiac import ZODIAC_SIGNS, sign_from_longitude
 
+DEFAULT_TRADITIONAL_SIGN_RULERSHIPS: dict[str, str] = {
+    "aries": "mars",
+    "taurus": "venus",
+    "gemini": "mercury",
+    "cancer": "moon",
+    "leo": "sun",
+    "virgo": "mercury",
+    "libra": "venus",
+    "scorpio": "mars",
+    "sagittarius": "jupiter",
+    "capricorn": "saturn",
+    "aquarius": "saturn",
+    "pisces": "jupiter",
+}
+"""Maîtrises traditionnelles stables utilisées pour les fixtures sans base SQL."""
+
 
 class HouseRulerResult(BaseModel):
     """Placement public du maître planétaire d'une maison natale."""

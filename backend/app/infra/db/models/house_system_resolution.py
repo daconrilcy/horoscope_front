@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import event, select
+from sqlalchemy import event, inspect, select
 from sqlalchemy.orm import Session
 
 from app.domain.astrology.house_system_codes import (
@@ -28,6 +28,19 @@ def _resolve_house_system(session: Session, code: str) -> AstralHouseSystemModel
     return house_system
 
 
+def resolve_house_system_id(session: Session, code: str) -> int:
+    """Retourne l'identifiant SQL canonique, en seedant la ligne si besoin."""
+    house_system = _resolve_house_system(session, code)
+    if house_system.id is None:
+        session.flush()
+    return int(house_system.id)
+
+
+def _has_house_system_reference_table(session: Session) -> bool:
+    """Détecte si le schéma courant supporte le référentiel canonique."""
+    return inspect(session.connection()).has_table(AstralHouseSystemModel.__tablename__)
+
+
 @event.listens_for(Session, "before_flush")
 def _resolve_pending_house_system_codes(
     session: Session, flush_context: object, instances: object
@@ -45,6 +58,8 @@ def _resolve_pending_house_system_codes(
         ):
             pending_code = HouseSystemCode.PLACIDUS
         if pending_code is None:
+            continue
+        if not _has_house_system_reference_table(session):
             continue
         house_system = _resolve_house_system(session, str(pending_code))
         if isinstance(obj, PredictionRulesetModel):

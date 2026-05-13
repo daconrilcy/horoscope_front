@@ -19,6 +19,7 @@ from app.domain.astrology.calculators import (
 )
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
 from app.domain.astrology.house_ruler_resolver import (
+    DEFAULT_TRADITIONAL_SIGN_RULERSHIPS,
     HouseRulerResolutionError,
     HouseRulerResolver,
     HouseRulerResult,
@@ -131,7 +132,7 @@ def _extract_sign_rulerships(reference_data: dict[str, object]) -> dict[str, str
     """Extrait le mapping signe -> maître depuis les dignités de référence."""
     raw = reference_data.get("sign_rulerships")
     if not isinstance(raw, dict):
-        return {}
+        return dict(DEFAULT_TRADITIONAL_SIGN_RULERSHIPS)
     return {str(sign): str(planet) for sign, planet in raw.items()}
 
 

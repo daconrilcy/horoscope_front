@@ -266,7 +266,10 @@ class UserNatalChartService:
         except NatalCalculationError as error:
             # Local/dev safeguard: if reference data is missing, seed once and retry.
             should_auto_seed = error.code == "reference_version_not_found" and (
-                reference_version is None or reference_version == settings.active_reference_version
+                reference_version is None
+                or reference_version == settings.active_reference_version
+                or reference_version == settings.ruleset_version
+                or reference_version == "1.0.0"
             )
             if should_auto_seed:
                 ReferenceDataService.seed_reference_version(db, version=reference_version)

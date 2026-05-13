@@ -1184,12 +1184,12 @@
     "category_scores": {
       "career": {
         "is_provisional": true,
-        "normalized_score": 2.636281203582392e-05,
+        "normalized_score": 2.5519202050677558e-05,
         "note_20": 20,
-        "power": 0.00021463528383148676,
-        "raw_score": 2.636281203582392e-05,
+        "power": 0.00020776695474887923,
+        "raw_score": 2.5519202050677558e-05,
         "sort_order": 5,
-        "volatility": 3.192515778724781e-05
+        "volatility": 3.0903552738055886e-05
       },
       "communication": {
         "is_provisional": true,
@@ -1202,12 +1202,12 @@
       },
       "energy": {
         "is_provisional": true,
-        "normalized_score": 1.305586881774137e-05,
+        "normalized_score": 1.2115846262863993e-05,
         "note_20": 14,
-        "power": 0.00010629556913559344,
-        "raw_score": 1.305586881774137e-05,
+        "power": 9.864228815783074e-05,
+        "raw_score": 1.2115846262863993e-05,
         "sort_order": 1,
-        "volatility": 1.5810554332732246e-05
+        "volatility": 1.4672194420775528e-05
       },
       "family_home": {
         "is_provisional": true,
@@ -1247,12 +1247,12 @@
       },
       "mood": {
         "is_provisional": true,
-        "normalized_score": 1.2051571216376649e-05,
+        "normalized_score": 1.1183858088797532e-05,
         "note_20": 14,
-        "power": 9.811898689439394e-05,
-        "raw_score": 1.2051571216376649e-05,
+        "power": 9.105441983799759e-05,
+        "raw_score": 1.1183858088797532e-05,
         "sort_order": 2,
-        "volatility": 1.4594357845598996e-05
+        "volatility": 1.3543564080715872e-05
       },
       "pleasure_creativity": {
         "is_provisional": true,
@@ -1283,12 +1283,12 @@
       },
       "work": {
         "is_provisional": true,
-        "normalized_score": 1.757520802388261e-05,
+        "normalized_score": 1.6731598038736245e-05,
         "note_20": 17,
-        "power": 0.00014309018922099116,
-        "raw_score": 1.757520802388261e-05,
+        "power": 0.0001362218601383836,
+        "raw_score": 1.6731598038736245e-05,
         "sort_order": 4,
-        "volatility": 2.128343852483187e-05
+        "volatility": 2.0261833475639944e-05
       }
     },
     "time_blocks": [
@@ -1808,7 +1808,7 @@
             {
               "aspect": "trine",
               "body": "Venus",
-              "contribution": 0.0006439058514944603,
+              "contribution": 0.0006233008642466377,
               "event_type": "aspect_enter_orb",
               "local_time": "2026-03-29T20:30:00+02:00",
               "orb_deg": 2.9939258862996496,
@@ -1878,7 +1878,7 @@
             {
               "aspect": "trine",
               "body": "Venus",
-              "contribution": 0.00031888670740678034,
+              "contribution": 0.0002959268644734922,
               "event_type": "aspect_enter_orb",
               "local_time": "2026-03-29T20:30:00+02:00",
               "orb_deg": 2.9939258862996496,
@@ -2053,7 +2053,7 @@
             {
               "aspect": "trine",
               "body": "Venus",
-              "contribution": 0.00029435696068318183,
+              "contribution": 0.0002731632595139928,
               "event_type": "aspect_enter_orb",
               "local_time": "2026-03-29T20:30:00+02:00",
               "orb_deg": 2.9939258862996496,
@@ -2193,7 +2193,7 @@
             {
               "aspect": "trine",
               "body": "Venus",
-              "contribution": 0.00042927056766297353,
+              "contribution": 0.00040866558041515084,
               "event_type": "aspect_enter_orb",
               "local_time": "2026-03-29T20:30:00+02:00",
               "orb_deg": 2.9939258862996496,
@@ -2966,18 +2966,18 @@
         "2026-03-29T20:30:00+02:00": [
           {
             "contributions": {
-              "career": 0.0006439058514944603,
+              "career": 0.0006233008642466377,
               "communication": 0.0,
-              "energy": 0.00031888670740678034,
+              "energy": 0.0002959268644734922,
               "family_home": 0.0,
               "health": 0.0,
               "love": 0.0,
               "money": 0.0,
-              "mood": 0.00029435696068318183,
+              "mood": 0.0002731632595139928,
               "pleasure_creativity": 0.0,
               "sex_intimacy": 0.0,
               "social_network": 0.0,
-              "work": 0.00042927056766297353
+              "work": 0.00040866558041515084
             },
             "event": {
               "aspect": "trine",
@@ -3416,20 +3416,20 @@
         {
           "code": "career",
           "note_20": 20,
-          "power": 0.00021463528383148676,
-          "volatility": 3.192515778724781e-05
+          "power": 0.00020776695474887923,
+          "volatility": 3.0903552738055886e-05
         },
         {
           "code": "work",
           "note_20": 17,
-          "power": 0.00014309018922099116,
-          "volatility": 2.128343852483187e-05
+          "power": 0.0001362218601383836,
+          "volatility": 2.0261833475639944e-05
         },
         {
           "code": "energy",
           "note_20": 14,
-          "power": 0.00010629556913559344,
-          "volatility": 1.5810554332732246e-05
+          "power": 9.864228815783074e-05,
+          "volatility": 1.4672194420775528e-05
         }
       ],
       "top3_contributors_per_category": {
@@ -3437,7 +3437,7 @@
           {
             "aspect": "trine",
             "body": "Venus",
-            "contribution": 0.0006439058514944603,
+            "contribution": 0.0006233008642466377,
             "event_type": "aspect_enter_orb",
             "local_time": "2026-03-29T20:30:00+02:00",
             "orb_deg": 2.9939258862996496,
@@ -3501,7 +3501,7 @@
           {
             "aspect": "trine",
             "body": "Venus",
-            "contribution": 0.00031888670740678034,
+            "contribution": 0.0002959268644734922,
             "event_type": "aspect_enter_orb",
             "local_time": "2026-03-29T20:30:00+02:00",
             "orb_deg": 2.9939258862996496,
@@ -3661,7 +3661,7 @@
           {
             "aspect": "trine",
             "body": "Venus",
-            "contribution": 0.00029435696068318183,
+            "contribution": 0.0002731632595139928,
             "event_type": "aspect_enter_orb",
             "local_time": "2026-03-29T20:30:00+02:00",
             "orb_deg": 2.9939258862996496,
@@ -3789,7 +3789,7 @@
           {
             "aspect": "trine",
             "body": "Venus",
-            "contribution": 0.00042927056766297353,
+            "contribution": 0.00040866558041515084,
             "event_type": "aspect_enter_orb",
             "local_time": "2026-03-29T20:30:00+02:00",
             "orb_deg": 2.9939258862996496,
@@ -3822,7 +3822,7 @@
     "editorial_text": null,
     "decision_windows": [
       {
-        "confidence": 0.9999946791403688,
+        "confidence": 0.999994849407877,
         "dominant_categories": [
           "career",
           "communication"
@@ -3835,7 +3835,7 @@
         "window_type": "pivot"
       },
       {
-        "confidence": 0.99999204404798,
+        "confidence": 0.9999924040421402,
         "dominant_categories": [
           "career",
           "energy"
@@ -3848,7 +3848,7 @@
         "window_type": "favorable"
       },
       {
-        "confidence": 0.9999946791403688,
+        "confidence": 0.999994849407877,
         "dominant_categories": [
           "career",
           "communication"
@@ -3861,7 +3861,7 @@
         "window_type": "pivot"
       },
       {
-        "confidence": 0.9999946791403688,
+        "confidence": 0.999994849407877,
         "dominant_categories": [
           "career",
           "communication"
@@ -3874,7 +3874,7 @@
         "window_type": "pivot"
       },
       {
-        "confidence": 0.9999946791403688,
+        "confidence": 0.999994849407877,
         "dominant_categories": [
           "career",
           "communication"

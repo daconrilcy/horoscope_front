@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.core.datetime_provider import datetime_provider
 from app.domain.prediction.persisted_baseline import PersistedUserBaseline
+from app.infra.db.models.house_system_resolution import resolve_house_system_id
 from app.infra.db.models.reference import AstralHouseSystemModel
 from app.infra.db.models.user_prediction_baseline import (
     BaselineGranularity,
@@ -29,7 +30,7 @@ class UserPredictionBaselineRepository:
             select(AstralHouseSystemModel.id).where(AstralHouseSystemModel.code == code)
         )
         if house_system_id is None:
-            raise ValueError(f"unknown astral house system code: {code!r}")
+            return resolve_house_system_id(self.db, code)
         return int(house_system_id)
 
     def get_baseline(

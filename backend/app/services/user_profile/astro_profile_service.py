@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.domain.astrology.natal_calculation import NatalCalculationError, sign_from_longitude
 from app.domain.astrology.natal_preparation import BirthInput
 from app.services.natal.calculation_service import NatalCalculationService
+from app.services.reference_data_service import ReferenceDataService
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
@@ -92,7 +93,12 @@ class UserAstroProfileService:
             # Fallback to non-accurate (simplified) if SwissEph is unavailable.
             is_unavailable = error.code in ("natal_engine_unavailable", "swisseph_calc_failed")
 
-            if is_unavailable:
+            if error.code == "reference_version_not_found":
+                ReferenceDataService.seed_reference_version(db)
+                natal_result = NatalCalculationService.calculate(
+                    db, birth_input=birth_input, accurate=False
+                )
+            elif is_unavailable:
                 natal_result = NatalCalculationService.calculate(
                     db, birth_input=birth_input, accurate=False
                 )

@@ -115,19 +115,19 @@
     "category_scores": {
       "energy": {
         "note_20": 14,
-        "raw_score": 0.00576435231250155,
-        "normalized_score": 0.00576435231250155,
-        "power": 0.04729724974360246,
-        "volatility": 0.0068923275345334455,
+        "raw_score": 0.005349318946001439,
+        "normalized_score": 0.005349318946001439,
+        "power": 0.04389184776206309,
+        "volatility": 0.006396079952047038,
         "sort_order": 1,
         "is_provisional": true
       },
       "mood": {
         "note_20": 14,
-        "raw_score": 0.005320940596155276,
-        "normalized_score": 0.005320940596155276,
-        "power": 0.04365899976332534,
-        "volatility": 0.006362148493415487,
+        "raw_score": 0.004937832873232098,
+        "normalized_score": 0.004937832873232098,
+        "power": 0.04051555178036592,
+        "volatility": 0.005904073801889573,
         "sort_order": 2,
         "is_provisional": true
       },
@@ -142,19 +142,19 @@
       },
       "work": {
         "note_20": 17,
-        "raw_score": 0.007759705036059777,
-        "normalized_score": 0.007759705036059777,
-        "power": 0.06366937465484945,
-        "volatility": 0.009278133219564253,
+        "raw_score": 0.007387239194328909,
+        "normalized_score": 0.007387239194328909,
+        "power": 0.06061324467141668,
+        "volatility": 0.008832782825025169,
         "sort_order": 4,
         "is_provisional": true
       },
       "career": {
         "note_20": 20,
-        "raw_score": 0.011639557554089668,
-        "normalized_score": 0.011639557554089668,
-        "power": 0.0955040619822742,
-        "volatility": 0.01391719982934638,
+        "raw_score": 0.0112670917123588,
+        "normalized_score": 0.0112670917123588,
+        "power": 0.09244793199884141,
+        "volatility": 0.013471849434807295,
         "sort_order": 5,
         "is_provisional": true
       },

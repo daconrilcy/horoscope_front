@@ -1,10 +1,13 @@
+"""Tests du schéma historique de la migration B des rulesets de prédiction."""
+
 from datetime import date, datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine, event, inspect
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -13,7 +16,6 @@ from app.core.config import settings
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.prediction_ruleset import (
     CategoryCalibrationModel,
-    PredictionRulesetModel,
     RulesetEventTypeModel,
     RulesetParameterModel,
 )
@@ -81,15 +83,36 @@ def _seed_reference_version(
 
 def _seed_ruleset(
     session: Session, ref_version: ReferenceVersionModel, *, version: str = "1.0.0"
-) -> PredictionRulesetModel:
-    ruleset = PredictionRulesetModel(
-        version=version,
-        reference_version_id=ref_version.id,
-        description="Test ruleset",
+) -> SimpleNamespace:
+    result = session.execute(
+        text(
+            """
+            INSERT INTO prediction_rulesets (
+                version,
+                reference_version_id,
+                zodiac_type,
+                coordinate_mode,
+                house_system,
+                time_step_minutes,
+                description,
+                is_locked
+            )
+            VALUES (
+                :version,
+                :reference_version_id,
+                'tropical',
+                'geocentric',
+                'placidus',
+                30,
+                'Test ruleset',
+                0
+            )
+            """
+        ),
+        {"version": version, "reference_version_id": ref_version.id},
     )
-    session.add(ruleset)
     session.commit()
-    return ruleset
+    return SimpleNamespace(id=result.lastrowid, version=version)
 
 
 def test_migration_b_tables_exist(
@@ -122,12 +145,32 @@ def test_migration_b_ruleset_unique_version(
         ref_version = _seed_reference_version(session, version="1.0.0", is_locked=False)
         _seed_ruleset(session, ref_version, version="1.0.0")
 
-        duplicate = PredictionRulesetModel(
-            version="1.0.0",
-            reference_version_id=ref_version.id,
-        )
-        session.add(duplicate)
         with pytest.raises(IntegrityError):
+            session.execute(
+                text(
+                    """
+                    INSERT INTO prediction_rulesets (
+                        version,
+                        reference_version_id,
+                        zodiac_type,
+                        coordinate_mode,
+                        house_system,
+                        time_step_minutes,
+                        is_locked
+                    )
+                    VALUES (
+                        '1.0.0',
+                        :reference_version_id,
+                        'tropical',
+                        'geocentric',
+                        'placidus',
+                        30,
+                        0
+                    )
+                    """
+                ),
+                {"reference_version_id": ref_version.id},
+            )
             session.commit()
         session.rollback()
 
