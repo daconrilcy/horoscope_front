@@ -51,6 +51,21 @@ ZODIAC_SIGNS = (
     "pisces",
 )
 
+COMPLETE_SIGN_RULERS = {
+    "aries": "mars",
+    "taurus": "venus",
+    "gemini": "mercury",
+    "cancer": "moon",
+    "leo": "sun",
+    "virgo": "mercury",
+    "libra": "venus",
+    "scorpio": "mars",
+    "sagittarius": "jupiter",
+    "capricorn": "saturn",
+    "aquarius": "saturn",
+    "pisces": "jupiter",
+}
+
 # Tolérance pour l'invariant (Lt - Ls) mod 360 ≈ ayanamsa.
 # SwissEph applique l'ayanamsa à un niveau plus fondamental que la simple soustraction
 # de get_ayanamsa_ut(), ce qui introduit un écart résiduel jusqu'à ~0.005° avec Moshier.
@@ -88,6 +103,7 @@ def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, obj
         "aspects": [
             {"code": "conjunction", "name": "Conjunction", "angle": 0, "default_orb_deg": 8.0}
         ],
+        "sign_rulerships": COMPLETE_SIGN_RULERS,
     }
 
 

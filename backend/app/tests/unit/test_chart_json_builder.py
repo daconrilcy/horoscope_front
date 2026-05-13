@@ -3,6 +3,12 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
+from app.domain.astrology.runtime.house_runtime_data import (
+    HouseAxisRuntimeData,
+    HouseOccupantRuntimeData,
+    HouseRulerRuntimeData,
+    HouseStrengthRuntimeData,
+)
 from app.services.chart.json_builder import (
     EVIDENCE_ID_PATTERN,
     build_chart_json,
@@ -149,6 +155,53 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert chart["angles"]["MC"]["sign"] == "libra"
     assert chart["angles"]["DSC"]["sign"] == "cancer"
     assert chart["angles"]["IC"]["sign"] == "aries"
+
+
+def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):
+    rich_house = mock_natal_result.houses[0]
+    rich_house.number = 1
+    rich_house.cusp_longitude = 12.4
+    rich_house.cusp_sign = "aries"
+    rich_house.contained_signs = ["aries", "taurus"]
+    rich_house.intercepted_signs = []
+    rich_house.ruler = HouseRulerRuntimeData(planet="mars", sign="virgo", house=6)
+    rich_house.occupants = [
+        HouseOccupantRuntimeData(
+            planet="sun",
+            sign="aries",
+            longitude=12.4,
+            is_dominant=True,
+        )
+    ]
+    rich_house.axis = HouseAxisRuntimeData(opposite_house=7, theme="self_relationship")
+    rich_house.strength = HouseStrengthRuntimeData(
+        score=0.81,
+        dominant=True,
+        reasons=["angular_house"],
+    )
+
+    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+    house = next(item for item in chart["houses"] if item["number"] == 1)
+
+    assert house == {
+        "number": 1,
+        "cusp_longitude": 12.4,
+        "cusp_sign": "aries",
+        "sign": "aries",
+        "contained_signs": ["aries", "taurus"],
+        "intercepted_signs": [],
+        "ruler": {"planet": "mars", "sign": "virgo", "house": 6},
+        "occupants": [
+            {
+                "planet": "sun",
+                "sign": "aries",
+                "longitude": 12.4,
+                "is_dominant": True,
+            }
+        ],
+        "axis": {"opposite_house": 7, "theme": "self_relationship"},
+        "strength": {"score": 0.81, "dominant": True, "reasons": ["angular_house"]},
+    }
 
 
 def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):

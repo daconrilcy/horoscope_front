@@ -160,3 +160,4 @@
 | CS-154 | renommer-tables-maisons-astrales | Renommer les tables SQL des maisons astrales | ready-to-review | `_condamad/stories/renommer-tables-maisons-astrales/00-story.md` | Demande utilisateur du 2026-05-13 | 2026-05-13 |
 | USR-20260512-001 | supprimer-astro-characteristics | Supprimer proprement astro_characteristics | ready-to-review | `_condamad/stories/supprimer-astro-characteristics/00-story.md` | Demande utilisateur du 2026-05-12 | 2026-05-12 |
 | USR-20260512-002 | deversionner-referentiels-astrologiques | Deversionner les referentiels structurels astrologiques | ready-to-review | `_condamad/stories/deversionner-referentiels-astrologiques/00-story.md` | Demande utilisateur du 2026-05-12 | 2026-05-12 |
+| USR-20260513-003 | priorite-3-runtime-maisons-riches | Runtime astrologique riche des maisons | done | `_condamad/stories/priorite-3-runtime-maisons-riches/00-story.md` | Demande utilisateur du 2026-05-13 | 2026-05-13 |

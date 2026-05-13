@@ -21,6 +21,21 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
 # Helpers
 # ---------------------------------------------------------------------------
 
+COMPLETE_SIGN_RULERS = {
+    "aries": "mars",
+    "taurus": "venus",
+    "gemini": "mercury",
+    "cancer": "moon",
+    "leo": "sun",
+    "virgo": "mercury",
+    "libra": "venus",
+    "scorpio": "mars",
+    "sagittarius": "jupiter",
+    "capricorn": "saturn",
+    "aquarius": "saturn",
+    "pisces": "jupiter",
+}
+
 
 def _make_birth_input(
     birth_lat: float = 48.85,
@@ -50,6 +65,7 @@ def _make_reference_data(
         "signs": [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}],
         "houses": [{"number": n, "name": f"House {n}"} for n in range(1, 13)],
         "aspects": aspects if aspects is not None else default_aspects,
+        "sign_rulerships": COMPLETE_SIGN_RULERS,
     }
 
 

@@ -23,6 +23,21 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
 # Helpers
 # ---------------------------------------------------------------------------
 
+COMPLETE_SIGN_RULERS = {
+    "aries": "mars",
+    "taurus": "venus",
+    "gemini": "mercury",
+    "cancer": "moon",
+    "leo": "sun",
+    "virgo": "mercury",
+    "libra": "venus",
+    "scorpio": "mars",
+    "sagittarius": "jupiter",
+    "capricorn": "saturn",
+    "aquarius": "saturn",
+    "pisces": "jupiter",
+}
+
 
 def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, object]:
     codes = planet_codes or ["sun"]
@@ -36,6 +51,7 @@ def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, obj
         "signs": signs,
         "houses": houses,
         "aspects": aspects,
+        "sign_rulerships": COMPLETE_SIGN_RULERS,
     }
 
 

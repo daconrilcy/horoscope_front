@@ -98,6 +98,14 @@ def test_persist_and_get_audit_record() -> None:
     assert record.result.house_rulers
     assert stored_payload is not None
     assert stored_payload.result_payload["house_rulers"]
+    first_house = stored_payload.result_payload["houses"][0]
+    assert first_house["sign"] == first_house["cusp_sign"]
+    assert "contained_signs" in first_house
+    assert "intercepted_signs" in first_house
+    assert "ruler" in first_house
+    assert "occupants" in first_house
+    assert "axis" in first_house
+    assert "strength" in first_house
 
 
 def test_persist_trace_generates_unique_chart_ids_for_identical_inputs() -> None:

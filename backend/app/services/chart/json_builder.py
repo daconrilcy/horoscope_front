@@ -66,6 +66,83 @@ def _longitude_in_sign(longitude: float) -> float:
     return round(longitude % 30.0, 2)
 
 
+def _serialize_house_runtime(house: Any) -> dict[str, Any]:
+    """Projette une maison runtime sans calcul astrologique métier."""
+    cusp_longitude = float(house.cusp_longitude)
+    cusp_sign = getattr(house, "cusp_sign", None)
+    if not isinstance(cusp_sign, str):
+        cusp_sign = _longitude_to_sign(cusp_longitude)
+
+    contained_signs = getattr(house, "contained_signs", None)
+    if not isinstance(contained_signs, list):
+        contained_signs = [cusp_sign]
+
+    intercepted_signs = getattr(house, "intercepted_signs", None)
+    if not isinstance(intercepted_signs, list):
+        intercepted_signs = []
+
+    return {
+        "number": house.number,
+        "cusp_longitude": round(cusp_longitude, 2),
+        "cusp_sign": cusp_sign,
+        # TODO legacy compatibility field planned removal: use `cusp_sign`.
+        "sign": cusp_sign,
+        "contained_signs": contained_signs,
+        "intercepted_signs": intercepted_signs,
+        "ruler": _serialize_house_ruler(getattr(house, "ruler", None)),
+        "occupants": _serialize_house_occupants(getattr(house, "occupants", None)),
+        "axis": _serialize_house_axis(getattr(house, "axis", None)),
+        "strength": _serialize_house_strength(getattr(house, "strength", None)),
+    }
+
+
+def _serialize_house_ruler(ruler: Any) -> dict[str, Any] | None:
+    """Projette le maître runtime déjà résolu de la maison."""
+    if ruler is None or not isinstance(getattr(ruler, "planet", None), str):
+        return None
+    return {
+        "planet": ruler.planet,
+        "sign": ruler.sign,
+        "house": ruler.house,
+    }
+
+
+def _serialize_house_occupants(occupants: Any) -> list[dict[str, Any]]:
+    """Projette les occupants runtime déjà attachés à la maison."""
+    if not isinstance(occupants, list):
+        return []
+    return [
+        {
+            "planet": occupant.planet,
+            "sign": occupant.sign,
+            "longitude": round(float(occupant.longitude), 2),
+            "is_dominant": bool(occupant.is_dominant),
+        }
+        for occupant in occupants
+    ]
+
+
+def _serialize_house_axis(axis: Any) -> dict[str, Any] | None:
+    """Projette l'axe runtime déjà attaché à la maison."""
+    if axis is None or not isinstance(getattr(axis, "theme", None), str):
+        return None
+    return {
+        "opposite_house": axis.opposite_house,
+        "theme": axis.theme,
+    }
+
+
+def _serialize_house_strength(strength: Any) -> dict[str, Any] | None:
+    """Projette le score runtime déjà calculé de la maison."""
+    if strength is None or not isinstance(getattr(strength, "reasons", None), list):
+        return None
+    return {
+        "score": strength.score,
+        "dominant": strength.dominant,
+        "reasons": strength.reasons,
+    }
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -138,13 +215,7 @@ def build_chart_json(
     houses = []
     if not is_no_time:
         for h in natal_result.houses:
-            houses.append(
-                {
-                    "number": h.number,
-                    "cusp_longitude": round(h.cusp_longitude, 2),
-                    "sign": _longitude_to_sign(h.cusp_longitude),
-                }
-            )
+            houses.append(_serialize_house_runtime(h))
 
     # Maîtres de maisons
     house_rulers = []

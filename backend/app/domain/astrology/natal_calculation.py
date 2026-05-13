@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAJOR_ASPECT_CODES, MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.angle_utils import contains_angle
+from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
 from app.domain.astrology.calculators import (
     calculate_houses,
     calculate_major_aspects,
@@ -23,6 +24,7 @@ from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResult,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
+from app.domain.astrology.runtime.house_runtime_data import HouseRuntimeData
 from app.domain.astrology.zodiac import normalize_360, sign_from_longitude
 from app.infra.observability.metrics import increment_counter
 
@@ -36,9 +38,7 @@ class PlanetPosition(BaseModel):
     is_retrograde: bool | None = None
 
 
-class HouseResult(BaseModel):
-    number: int
-    cusp_longitude: float
+HouseResult = HouseRuntimeData
 
 
 class AspectResult(BaseModel):
@@ -78,7 +78,7 @@ class NatalResult(BaseModel):
     aspect_rules_version: str = "1.0.0"
     prepared_input: BirthPreparedData
     planet_positions: list[PlanetPosition]
-    houses: list[HouseResult]
+    houses: list[HouseRuntimeData]
     house_rulers: list[HouseRulerResult] = Field(default_factory=list)
     aspects: list[AspectResult]
 
@@ -483,14 +483,28 @@ def build_natal_result(
         increment_counter("aspects_rejected_orb_total", float(_rejected))
 
     positions = [PlanetPosition.model_validate(item) for item in positions_raw]
-    houses = [HouseResult.model_validate(item) for item in houses_raw]
+    cusp_houses = [
+        HouseRuntimeData(
+            number=int(item["number"]),
+            cusp_longitude=float(item["cusp_longitude"]),
+        )
+        for item in houses_raw
+    ]
+    sign_rulerships = _extract_sign_rulerships(reference_data)
     try:
-        house_rulers = HouseRulerResolver(_extract_sign_rulerships(reference_data)).resolve(
-            houses,
+        house_rulers = HouseRulerResolver(sign_rulerships).resolve(
+            cusp_houses,
             positions,
         )
     except HouseRulerResolutionError:
         _raise_invalid_reference(version, "sign_rulerships", "missing_or_incomplete")
+    houses = build_house_runtime_data(
+        houses=cusp_houses,
+        planets=positions,
+        house_rulers=house_rulers,
+        house_system=effective_house_system,
+        sign_rulerships=sign_rulerships,
+    )
     aspects = [AspectResult.model_validate(item) for item in aspects_raw]
 
     return NatalResult(
