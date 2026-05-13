@@ -22,7 +22,9 @@ from app.infra.db.models.reference import _ensure_reference_version_is_mutable
 if TYPE_CHECKING:
     from app.infra.db.models.reference import (
         AspectModel,
+        AstralDignityTypeModel,
         AstralSignModel,
+        AstralSystemModel,
         HouseModel,
         PlanetModel,
         ReferenceVersionModel,
@@ -203,6 +205,41 @@ class AstralSignRulershipModel(Base):
 
     sign: Mapped["AstralSignModel"] = relationship()
     planet: Mapped["PlanetModel"] = relationship()
+
+
+class AstralPlanetSignDignityModel(Base):
+    """Dignité canonique d'une planète dans un signe pour un système donné."""
+
+    __tablename__ = "astral_planet_sign_dignities"
+    __table_args__ = (
+        UniqueConstraint(
+            "astral_sign_id",
+            "astral_planet_id",
+            "astral_dignity_type_id",
+            "astral_system_id",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    astral_sign_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_signs.id"), nullable=False, index=True
+    )
+    astral_planet_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_planets.id"), nullable=False, index=True
+    )
+    astral_dignity_type_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_dignity_type.id"), nullable=False, index=True
+    )
+    astral_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_systems.id"), nullable=False, index=True
+    )
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    sign: Mapped["AstralSignModel"] = relationship()
+    planet: Mapped["PlanetModel"] = relationship()
+    dignity_type: Mapped["AstralDignityTypeModel"] = relationship()
+    system: Mapped["AstralSystemModel"] = relationship()
 
 
 class AspectProfileModel(Base):

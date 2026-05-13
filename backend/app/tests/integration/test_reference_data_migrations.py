@@ -70,6 +70,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_modalities",
         "astral_polarities",
         "astral_dignity_type",
+        "astral_planet_sign_dignities",
         "astral_sign_profiles",
         "astral_sign_rulerships",
     ):
@@ -83,9 +84,13 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
             "astral_prediction_daily_planet_profiles",
             "planet_category_weights",
             "astral_sign_rulerships",
+            "astral_planet_sign_dignities",
         )
         for foreign_key in head_inspector.get_foreign_keys(table_name)
-        if "planet_id" in foreign_key["constrained_columns"]
+        if (
+            "planet_id" in foreign_key["constrained_columns"]
+            or "astral_planet_id" in foreign_key["constrained_columns"]
+        )
     }
     assert planet_foreign_key_targets == {"astral_planets"}
     profile_columns = {
@@ -113,6 +118,18 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert "system" in rulership_columns
     system_columns = {column["name"] for column in head_inspector.get_columns("astral_systems")}
     assert system_columns == {"id", "name"}
+    dignity_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_planet_sign_dignities")
+    }
+    assert dignity_columns == {
+        "id",
+        "astral_sign_id",
+        "astral_planet_id",
+        "astral_dignity_type_id",
+        "astral_system_id",
+        "weight",
+        "is_primary",
+    }
     with head_engine.connect() as connection:
         assert connection.execute(text("SELECT COUNT(*) FROM astral_elements")).scalar_one() == 4
         assert connection.execute(text("SELECT COUNT(*) FROM astral_systems")).scalar_one() == 4
@@ -139,6 +156,43 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert {
             row[0] for row in connection.execute(text("SELECT code FROM astral_dignity_type")).all()
         } == {"domicile", "detriment", "exaltation", "fall"}
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_planet_sign_dignities")
+            ).scalar_one()
+            == 50
+        )
+        assert (
+            connection.execute(
+                text(
+                    """
+                    SELECT COUNT(*)
+                    FROM astral_planet_sign_dignities
+                    JOIN astral_dignity_type
+                        ON astral_planet_sign_dignities.astral_dignity_type_id =
+                            astral_dignity_type.id
+                    JOIN astral_systems
+                        ON astral_planet_sign_dignities.astral_system_id = astral_systems.id
+                    WHERE astral_dignity_type.code = 'domicile'
+                        AND astral_systems.name = 'traditional'
+                    """
+                )
+            ).scalar_one()
+            == 12
+        )
+        assert (
+            connection.execute(
+                text(
+                    """
+                    SELECT COUNT(*)
+                    FROM astral_planet_sign_dignities
+                    WHERE astral_dignity_type_id IS NULL
+                        OR astral_system_id IS NULL
+                    """
+                )
+            ).scalar_one()
+            == 0
+        )
         profile_rows = connection.execute(
             text(
                 """

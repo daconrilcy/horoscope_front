@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models import (
@@ -12,10 +12,12 @@ from app.infra.db.models import (
     AstralDignityTypeModel,
     AstralElementModel,
     AstralModalityModel,
+    AstralPlanetSignDignityModel,
     AstralPolarityModel,
     AstralSignModel,
     AstralSignProfileModel,
     AstralSignRulershipModel,
+    AstralSystemModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseModel,
@@ -47,6 +49,7 @@ EXPECTED_COUNTS = {
     "astral_elements": 4,
     "astral_modalities": 3,
     "astral_polarities": 2,
+    "astral_planet_sign_dignities": 50,
     "astral_sign_profiles": 12,
     "astral_sign_rulerships": 12,
     "planet_category_weights": 85,
@@ -70,6 +73,22 @@ SIGN_PROFILE_DATA = [
     ("aquarius", "air", "fixed", "yang"),
     ("pisces", "water", "mutable", "yin"),
 ]
+SIGN_CODE_BY_SOURCE_ID = {
+    index: sign_code
+    for index, (sign_code, _element, _modality, _polarity) in enumerate(SIGN_PROFILE_DATA, 1)
+}
+PLANET_CODE_BY_SOURCE_ID = {
+    1: "sun",
+    2: "moon",
+    3: "mercury",
+    4: "venus",
+    5: "mars",
+    6: "jupiter",
+    7: "saturn",
+    8: "uranus",
+    9: "neptune",
+    10: "pluto",
+}
 
 
 def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
@@ -87,6 +106,24 @@ def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
         raw = json.load(stream)
     if not isinstance(raw, dict):
         raise ValueError("signs keywords source must be an object")
+    return raw
+
+
+def _load_planet_sign_dignities() -> list[dict[str, object]]:
+    """Charge les dignités planétaires depuis la source documentaire canonique."""
+    repo_root = Path(__file__).resolve().parents[4]
+    source_path = repo_root / "docs" / "recherches astro" / "planet_sign_diginities.json"
+    if not source_path.exists():
+        source_path = (
+            Path(__file__).resolve().parents[3]
+            / "docs"
+            / "recherches astro"
+            / "planet_sign_diginities.json"
+        )
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("planet sign dignities source must be a non-empty list")
     return raw
 
 
@@ -132,6 +169,15 @@ def _ensure_astral_dignity_types(db: Session) -> None:
             ("fall", "Fall"),
         ],
     )
+
+
+def _ensure_astral_systems(db: Session) -> dict[str, int]:
+    """Garantit le référentiel stable des systèmes astrologiques."""
+    for name in ("traditional", "modern", "hellenistic", "medieval"):
+        if db.scalar(select(AstralSystemModel.id).where(AstralSystemModel.name == name)) is None:
+            db.add(AstralSystemModel(name=name))
+    db.flush()
+    return {row.name: row.id for row in db.scalars(select(AstralSystemModel)).all()}
 
 
 def _ensure_astral_sign_profiles(db: Session) -> None:
@@ -185,6 +231,61 @@ def _ensure_astral_sign_profiles(db: Session) -> None:
         profile.astral_polarity_id = polarities[polarity_code]
         profile.keywords_json = keywords_json
         profile.shadow_keywords_json = shadow_keywords_json
+    db.flush()
+
+
+def _ensure_astral_planet_sign_dignities(db: Session) -> None:
+    """Synchronise les dignités planétaires par signe depuis le JSON canonique."""
+    _ensure_astral_dignity_types(db)
+    systems = _ensure_astral_systems(db)
+    dignity_types = {row.code: row.id for row in db.scalars(select(AstralDignityTypeModel)).all()}
+    sign_ids = {row.code: row.id for row in db.scalars(select(AstralSignModel)).all()}
+    planet_ids = {row.code: row.id for row in db.scalars(select(PlanetModel)).all()}
+    expected_ids: set[int] = set()
+
+    for source_row in _load_planet_sign_dignities():
+        row_id = int(source_row["id"])
+        source_sign_id = int(source_row["astral_sign_id"])
+        source_planet_id = int(source_row["planet_id"])
+        sign_code = SIGN_CODE_BY_SOURCE_ID.get(source_sign_id)
+        planet_code = PLANET_CODE_BY_SOURCE_ID.get(source_planet_id)
+        dignity_type = str(source_row["dignity_type"])
+        system = str(source_row["system"])
+        if sign_code not in sign_ids:
+            raise ValueError(f"unknown astral_sign_id: {source_sign_id}")
+        if planet_code not in planet_ids:
+            raise ValueError(f"unknown astral_planet_id: {source_planet_id}")
+        if dignity_type not in dignity_types:
+            raise ValueError(f"unknown dignity_type: {dignity_type}")
+        if system not in systems:
+            raise ValueError(f"unknown astral system: {system}")
+        expected_ids.add(row_id)
+        dignity = db.get(AstralPlanetSignDignityModel, row_id)
+        if dignity is None:
+            db.add(
+                AstralPlanetSignDignityModel(
+                    id=row_id,
+                    astral_sign_id=sign_ids[sign_code],
+                    astral_planet_id=planet_ids[planet_code],
+                    astral_dignity_type_id=dignity_types[dignity_type],
+                    astral_system_id=systems[system],
+                    weight=float(source_row["weight"]),
+                    is_primary=bool(source_row["is_primary"]),
+                )
+            )
+            continue
+        dignity.astral_sign_id = sign_ids[sign_code]
+        dignity.astral_planet_id = planet_ids[planet_code]
+        dignity.astral_dignity_type_id = dignity_types[dignity_type]
+        dignity.astral_system_id = systems[system]
+        dignity.weight = float(source_row["weight"])
+        dignity.is_primary = bool(source_row["is_primary"])
+
+    db.execute(
+        delete(AstralPlanetSignDignityModel).where(
+            AstralPlanetSignDignityModel.id.not_in(expected_ids)
+        )
+    )
     db.flush()
 
 
@@ -261,6 +362,9 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     actual["astral_elements"] = db.scalar(select(func.count()).select_from(AstralElementModel))
     actual["astral_modalities"] = db.scalar(select(func.count()).select_from(AstralModalityModel))
     actual["astral_polarities"] = db.scalar(select(func.count()).select_from(AstralPolarityModel))
+    actual["astral_planet_sign_dignities"] = db.scalar(
+        select(func.count()).select_from(AstralPlanetSignDignityModel)
+    )
     actual["astral_sign_profiles"] = db.scalar(
         select(func.count()).select_from(AstralSignProfileModel)
     )
@@ -362,8 +466,10 @@ def run_prediction_reference_seed(db: Session) -> None:
     v2 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0"))
     if v2 is not None:
         _ensure_astral_dignity_types(db)
+        _ensure_astral_systems(db)
         if db.scalar(select(func.count()).select_from(AstralSignModel)) > 0:
             _ensure_astral_sign_profiles(db)
+            _ensure_astral_planet_sign_dignities(db)
         actual = _check_counts(db, v2.id)
 
         # On exige au minimum la présence du ruleset 2.0.0 pour considérer
@@ -387,8 +493,6 @@ def run_prediction_reference_seed(db: Session) -> None:
         if not v2.is_locked:
             print("2.0.0 exists but is unlocked — proceeding with repair/seed")
             # Chemin de réparation : purge des données partielles avant reseed.
-            from sqlalchemy import delete
-
             db.execute(
                 delete(RulesetEventTypeModel).where(
                     RulesetEventTypeModel.ruleset_id.in_(
@@ -452,6 +556,7 @@ def run_prediction_reference_seed(db: Session) -> None:
                 repo.seed_version_defaults()
             db.flush()
             _ensure_astral_sign_profiles(db)
+            _ensure_astral_planet_sign_dignities(db)
         else:
             # État corrompu ou incomplet alors que la version est verrouillée.
             lines = [
@@ -492,7 +597,9 @@ def run_prediction_reference_seed(db: Session) -> None:
             repo.seed_version_defaults()
         db.flush()
         _ensure_astral_dignity_types(db)
+        _ensure_astral_systems(db)
         _ensure_astral_sign_profiles(db)
+        _ensure_astral_planet_sign_dignities(db)
 
     # 4. Alimentation des catégories de prédiction.
     print("Seeding prediction categories...")
@@ -894,6 +1001,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     # 10. Alimentation des maîtrises de signes.
     print("Seeding sign rulerships...")
     _ensure_astral_sign_rulerships(db, planets)
+    _ensure_astral_planet_sign_dignities(db)
 
     # 11. Alimentation des profils d aspects.
     print("Seeding aspect profiles...")

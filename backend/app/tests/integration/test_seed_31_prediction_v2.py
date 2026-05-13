@@ -16,10 +16,12 @@ from app.infra.db.models import (
     AstralDignityTypeModel,
     AstralElementModel,
     AstralModalityModel,
+    AstralPlanetSignDignityModel,
     AstralPolarityModel,
     AstralSignModel,
     AstralSignProfileModel,
     AstralSignRulershipModel,
+    AstralSystemModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseProfileModel,
@@ -138,6 +140,8 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
         assert session.scalar(select(func.count()).select_from(AstralElementModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralModalityModel)) == 3
         assert session.scalar(select(func.count()).select_from(AstralPolarityModel)) == 2
+        assert session.scalar(select(func.count()).select_from(AstralSystemModel)) == 4
+        assert session.scalar(select(func.count()).select_from(AstralPlanetSignDignityModel)) == 50
         assert session.scalar(select(func.count()).select_from(AstralSignProfileModel)) == 12
         assert session.scalar(select(func.count()).select_from(AstralSignRulershipModel)) == 12
         assert {row.code for row in session.scalars(select(AstralElementModel)).all()} == {
@@ -161,6 +165,29 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             "exaltation",
             "fall",
         }
+        assert {row.name for row in session.scalars(select(AstralSystemModel)).all()} == {
+            "traditional",
+            "modern",
+            "hellenistic",
+            "medieval",
+        }
+        domicile_traditional_count = session.scalar(
+            select(func.count())
+            .select_from(AstralPlanetSignDignityModel)
+            .join(
+                AstralDignityTypeModel,
+                AstralPlanetSignDignityModel.astral_dignity_type_id == AstralDignityTypeModel.id,
+            )
+            .join(
+                AstralSystemModel,
+                AstralPlanetSignDignityModel.astral_system_id == AstralSystemModel.id,
+            )
+            .where(
+                AstralDignityTypeModel.code == "domicile",
+                AstralSystemModel.name == "traditional",
+            )
+        )
+        assert domicile_traditional_count == 12
         profile_rows = session.execute(
             select(
                 AstralSignProfileModel,

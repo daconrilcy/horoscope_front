@@ -96,6 +96,16 @@ class AstralDignityTypeModel(Base):
     name: Mapped[str] = mapped_column(String(64), nullable=False)
 
 
+class AstralSystemModel(Base):
+    """Taxonomie stable des systèmes astrologiques disponibles."""
+
+    __tablename__ = "astral_systems"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
 class AstralSignProfileModel(Base):
     """Profil structurel canonique d'un signe astrologique."""
 

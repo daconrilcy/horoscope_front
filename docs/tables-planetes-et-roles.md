@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py` et `20260513_0089_rename_daily_planet_profiles.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py`, `20260513_0089_rename_daily_planet_profiles.py`, `20260513_0090_create_astral_systems.py`, `20260513_0091_rename_planets_to_astral_planets.py` et `20260513_0092_create_astral_planet_sign_dignities.py`.
 
 Deux catégories sont distinguées :
 
@@ -13,10 +13,11 @@ Deux catégories sont distinguées :
 
 | Table | Lien aux planètes | Rôle principal | Versionnée |
 | --- | --- | --- | --- |
-| `planets` | Table canonique des planètes | Vocabulaire stable des corps planétaires | Non |
-| `astral_prediction_daily_planet_profiles` | `planet_id -> planets.id` | Profil de pondération prédictive quotidienne, sans rôle dans le calcul du thème astral | Oui, via `reference_version_id` |
-| `planet_category_weights` | `planet_id -> planets.id` | Pondération planète -> catégorie de vie | Oui, via `reference_version_id` |
-| `astral_sign_rulerships` | `planet_id -> planets.id` | Maîtrises planétaires des signes astraux | Non |
+| `astral_planets` | Table canonique des planètes | Vocabulaire stable des corps planétaires | Non |
+| `astral_prediction_daily_planet_profiles` | `planet_id -> astral_planets.id` | Profil de pondération prédictive quotidienne, sans rôle dans le calcul du thème astral | Oui, via `reference_version_id` |
+| `planet_category_weights` | `planet_id -> astral_planets.id` | Pondération planète -> catégorie de vie | Oui, via `reference_version_id` |
+| `astral_sign_rulerships` | `planet_id -> astral_planets.id` | Maîtrises planétaires principales des signes astraux | Non |
+| `astral_planet_sign_dignities` | `astral_planet_id -> astral_planets.id` | Dignités planétaires par signe, type de dignité et système astrologique | Non |
 | `daily_prediction_category_scores` | JSON `contributors_json` | Historique des contributeurs, dont planètes/aspects | Indirectement via le run |
 | `daily_prediction_turning_points` | JSON `driver_json` | Historique des événements déclencheurs, dont planètes conductrices | Indirectement via le run |
 | `chart_results` | JSON `result_payload` | Snapshot de résultat de thème astral/calcul contenant les positions | Version texte dans payload et colonnes |
@@ -24,9 +25,14 @@ Deux catégories sont distinguées :
 
 ## Tables de référence directes
 
-### `planets`
+### `astral_planets`
 
 Définie par `PlanetModel` dans `backend/app/infra/db/models/reference.py`.
+
+Ancien nom :
+
+- `planets` jusqu'à la migration `20260513_0091`.
+- Renommée en `astral_planets` par `20260513_0091_rename_planets_to_astral_planets.py`.
 
 Colonnes principales :
 
@@ -41,7 +47,7 @@ Rôle métier :
 - Sert de dictionnaire canonique des planètes.
 - Depuis la migration `20260512_0086`, la table n'est plus rattachée à `reference_versions`.
 - Les doublons historiques par version ont été repliés vers une ligne canonique par `code`.
-- Les tables paramétriques référencent ce vocabulaire stable via `planet_id`.
+- Les tables paramétriques référencent ce vocabulaire stable via `planet_id` ou `astral_planet_id`.
 
 Contraintes :
 
@@ -78,7 +84,7 @@ Qualification :
 
 Clés :
 
-- `planet_id -> planets.id`
+- `planet_id -> astral_planets.id`
 - `reference_version_id -> reference_versions.id`
 - Unicité : `(reference_version_id, planet_id)`
 
@@ -135,7 +141,7 @@ Définie par `PlanetCategoryWeightModel` dans `backend/app/infra/db/models/predi
 
 Clés :
 
-- `planet_id -> planets.id`
+- `planet_id -> astral_planets.id`
 - `category_id -> prediction_categories.id`
 - `reference_version_id -> reference_versions.id`
 - Unicité : `(reference_version_id, planet_id, category_id)`
@@ -193,7 +199,7 @@ Ancien nom :
 Clés :
 
 - `astral_sign_id -> astral_signs.id`
-- `planet_id -> planets.id`
+- `planet_id -> astral_planets.id`
 - Unicité : `(astral_sign_id, planet_id, rulership_type, system)`
 
 Colonnes principales :
@@ -229,6 +235,70 @@ Maîtrises traditionnelles seedées :
 | `capricorn` | `saturn` |
 | `aquarius` | `saturn` |
 | `pisces` | `jupiter` |
+
+## Table de dignité planète -> signe
+
+### `astral_planet_sign_dignities`
+
+Définie par `AstralPlanetSignDignityModel` dans `backend/app/infra/db/models/prediction_reference.py`.
+
+Qualification :
+
+- Table de référence stable non versionnée.
+- Décrit la condition essentielle d'une planète dans un signe pour un système astrologique donné.
+- Complète `astral_sign_rulerships`, qui ne garde que les maîtrises principales traditionnelles utilisées par le contexte de prédiction actuel.
+- Alimentée depuis `docs/recherches astro/planet_sign_diginities.json` par la migration `20260513_0092_create_astral_planet_sign_dignities.py` et par le seed applicatif idempotent.
+
+Clés :
+
+- `astral_sign_id -> astral_signs.id`
+- `astral_planet_id -> astral_planets.id`
+- `astral_dignity_type_id -> astral_dignity_type.id`
+- `astral_system_id -> astral_systems.id`
+- Unicité : `(astral_sign_id, astral_planet_id, astral_dignity_type_id, astral_system_id)`
+
+Colonnes principales :
+
+| Colonne | Rôle |
+| --- | --- |
+| `astral_sign_id` | Signe dans lequel la dignité est évaluée. |
+| `astral_planet_id` | Planète concernée. |
+| `astral_dignity_type_id` | Type de dignité : domicile, détriment, exaltation ou chute. |
+| `astral_system_id` | Système astrologique applicable : traditionnel, moderne, hellénistique ou médiéval. |
+| `weight` | Pondération qualitative de la dignité, positive pour une dignité favorable et négative pour une faiblesse. |
+| `is_primary` | Indique si l'association est considérée comme principale dans son système. |
+
+Rôle des données JSON :
+
+- Le JSON source contient des identifiants de signes et planètes, ainsi que les libellés `dignity_type` et `system`.
+- À l'injection, `dignity_type` est remplacé par `astral_dignity_type.id`.
+- À l'injection, `system` est remplacé par `astral_systems.id`.
+- Les identifiants de signes et planètes sont résolus vers les lignes canoniques `astral_signs` et `astral_planets`.
+
+Comptage attendu :
+
+| Groupe | Nombre de lignes |
+| --- | ---: |
+| Dignités traditionnelles | 38 |
+| Dignités modernes | 12 |
+| Total | 50 |
+
+Exemples seedés :
+
+| Signe | Planète | Dignité | Système | Poids | Principale |
+| --- | --- | --- | --- | ---: | --- |
+| `aries` | `mars` | `domicile` | `traditional` | 1.0 | Oui |
+| `taurus` | `venus` | `domicile` | `traditional` | 1.0 | Oui |
+| `libra` | `mars` | `detriment` | `traditional` | -1.0 | Oui |
+| `aries` | `sun` | `exaltation` | `traditional` | 0.8 | Oui |
+| `libra` | `sun` | `fall` | `traditional` | -0.8 | Oui |
+| `scorpio` | `uranus` | `domicile` | `modern` | 1.0 | Oui |
+
+Rôle runtime courant :
+
+- La table est disponible comme référentiel normalisé pour les futures lectures de dignité.
+- Elle n'est pas encore chargée dans `PredictionContext` au même titre que `astral_sign_rulerships`.
+- Aucun calcul de position astronomique ne dépend de cette table : elle qualifie une relation planète/signe, elle ne produit pas les positions.
 
 ## Tables adjacentes nécessaires au fonctionnement
 
@@ -333,24 +403,26 @@ Rôle :
 
 ## Flux fonctionnel simplifié
 
-1. `planets` fournit les codes stables.
+1. `astral_planets` fournit les codes stables.
 2. `astral_prediction_daily_planet_profiles` ajoute les paramètres de pondération prédictive par version de référence.
 3. `planet_category_weights` mappe chaque planète vers les catégories de vie.
 4. `astral_sign_rulerships` fournit le mapping signe -> planète maîtresse.
-5. `PredictionReferenceRepository` charge ces tables dans `PredictionContext`.
-6. `EventDetector` détecte les événements planète transitante -> cible natale.
-7. `DomainRouter` route les événements vers les catégories avec les poids planète/maison.
-8. `ContributionCalculator` calcule la contribution numérique.
-9. `TransitSignalBuilder` produit les timelines continues par thème.
-10. `daily_prediction_*` persiste les scores, contributeurs et points de bascule.
+5. `astral_planet_sign_dignities` fournit les dignités planète -> signe normalisées, disponibles pour enrichir les règles futures.
+6. `PredictionReferenceRepository` charge les tables prédictives actives dans `PredictionContext`.
+7. `EventDetector` détecte les événements planète transitante -> cible natale.
+8. `DomainRouter` route les événements vers les catégories avec les poids planète/maison.
+9. `ContributionCalculator` calcule la contribution numérique.
+10. `TransitSignalBuilder` produit les timelines continues par thème.
+11. `daily_prediction_*` persiste les scores, contributeurs et points de bascule.
 
 ## Points d'attention
 
-- `planets` est désormais stable et non versionnée. Ne pas réintroduire `reference_version_id` dans cette table sans décision d'architecture.
-- Les paramètres d'interprétation ou de scoring de prédiction quotidienne doivent aller dans `astral_prediction_daily_planet_profiles` ou `planet_category_weights`, pas dans `planets`.
+- `astral_planets` est désormais stable et non versionnée. Ne pas réintroduire `reference_version_id` dans cette table sans décision d'architecture.
+- Les paramètres d'interprétation ou de scoring de prédiction quotidienne doivent aller dans `astral_prediction_daily_planet_profiles` ou `planet_category_weights`, pas dans `astral_planets`.
 - Les données astronomiques calculées pour un thème astral ne doivent pas être ajoutées dans `astral_prediction_daily_planet_profiles`; elles relèvent des payloads de calcul (`chart_results`) ou des objets runtime de thème.
 - `astral_sign_rulerships` est non versionnée dans l'état courant. Elle représente une taxonomie canonique des maîtrises, pas un paramétrage par version.
-- Les colonnes JSON (`result_payload`, `contributors_json`, `driver_json`) ne garantissent pas l'intégrité référentielle avec `planets`. Elles servent à la traçabilité et à la restitution.
+- `astral_planet_sign_dignities` est non versionnée dans l'état courant. Elle représente une taxonomie canonique des dignités planète/signe par système, alimentée depuis le JSON documentaire.
+- Les colonnes JSON (`result_payload`, `contributors_json`, `driver_json`) ne garantissent pas l'intégrité référentielle avec `astral_planets`. Elles servent à la traçabilité et à la restitution.
 - Les noms de planètes peuvent exister en minuscules (`sun`) dans les tables de référence et en forme titrée (`Sun`) dans certains objets runtime. Les repositories et calculateurs normalisent partiellement ces accès.
 
 ## Fichiers sources consultés
@@ -373,3 +445,7 @@ Rôle :
 - `backend/migrations/versions/20260512_0086_deversion_astrology_structures.py`
 - `backend/migrations/versions/20260513_0087_normalize_astral_sign_profiles.py`
 - `backend/migrations/versions/20260513_0089_rename_daily_planet_profiles.py`
+- `backend/migrations/versions/20260513_0090_create_astral_systems.py`
+- `backend/migrations/versions/20260513_0091_rename_planets_to_astral_planets.py`
+- `backend/migrations/versions/20260513_0092_create_astral_planet_sign_dignities.py`
+- `docs/recherches astro/planet_sign_diginities.json`

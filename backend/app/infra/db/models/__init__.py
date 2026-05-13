@@ -77,6 +77,7 @@ from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralPlanetSignDignityModel,
     AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -110,6 +111,7 @@ from app.infra.db.models.reference import (
     AstralPolarityModel,
     AstralSignModel,
     AstralSignProfileModel,
+    AstralSystemModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -179,6 +181,7 @@ __all__ = [
     "FeatureUsageCounterModel",
     "PredictionCategoryModel",
     "PlanetProfileModel",
+    "AstralPlanetSignDignityModel",
     "HouseProfileModel",
     "PlanetCategoryWeightModel",
     "HouseCategoryWeightModel",
@@ -199,6 +202,7 @@ __all__ = [
     "AstralElementModel",
     "AstralModalityModel",
     "AstralPolarityModel",
+    "AstralSystemModel",
     "HouseModel",
     "PlanetModel",
     "ReferenceVersionModel",

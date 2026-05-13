@@ -10,6 +10,7 @@ from app.infra.db.models.reference import (
     AspectModel,
     AstralDignityTypeModel,
     AstralSignModel,
+    AstralSystemModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -43,6 +44,7 @@ class ReferenceRepository:
                 PlanetModel,
                 AstralSignModel,
                 AstralDignityTypeModel,
+                AstralSystemModel,
                 HouseModel,
                 AspectModel,
             )
@@ -113,6 +115,13 @@ class ReferenceRepository:
                 is None
             ):
                 self.db.add(AstralDignityTypeModel(code=code, name=name))
+
+        for name in ("traditional", "modern", "hellenistic", "medieval"):
+            if (
+                self.db.scalar(select(AstralSystemModel.id).where(AstralSystemModel.name == name))
+                is None
+            ):
+                self.db.add(AstralSystemModel(name=name))
 
         house_rows = [
             (1, "Self"),

@@ -4,6 +4,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from app.infra.db.models.prediction_reference import (
+    AstralPlanetSignDignityModel,
     AstralSignRulershipModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -16,6 +17,7 @@ from app.infra.db.models.prediction_reference import (
 from app.infra.db.models.reference import (
     AspectModel,
     AstralSignModel,
+    AstralSystemModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -78,6 +80,8 @@ def test_structural_astrology_models_are_not_versioned():
         HouseModel,
         AspectModel,
         AstroPointModel,
+        AstralSystemModel,
+        AstralPlanetSignDignityModel,
     )
 
     for model in structural_models:
