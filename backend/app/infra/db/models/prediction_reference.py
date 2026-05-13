@@ -50,7 +50,7 @@ class PredictionCategoryModel(Base):
 
 
 class PlanetProfileModel(Base):
-    __tablename__ = "planet_profiles"
+    __tablename__ = "astral_prediction_daily_planet_profiles"
     __table_args__ = (UniqueConstraint("reference_version_id", "planet_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

@@ -20,7 +20,7 @@ from app.infra.db.models.reference import PlanetModel, ReferenceVersionModel
 
 NEW_TABLES = [
     "prediction_categories",
-    "planet_profiles",
+    "astral_prediction_daily_planet_profiles",
     "house_profiles",
     "planet_category_weights",
     "house_category_weights",
@@ -32,9 +32,9 @@ NEW_TABLES = [
 
 EXPECTED_INDEXES = {
     "prediction_categories": {"ix_prediction_categories_reference_version_id"},
-    "planet_profiles": {
-        "ix_planet_profiles_planet_id",
-        "ix_planet_profiles_reference_version_id",
+    "astral_prediction_daily_planet_profiles": {
+        "ix_astral_prediction_daily_planet_profiles_planet_id",
+        "ix_astral_prediction_daily_planet_profiles_reference_version_id",
     },
     "house_profiles": {
         "ix_house_profiles_house_id",
@@ -117,6 +117,7 @@ def test_migration_a_prediction_tables_creation(
     inspector = inspect(engine)
 
     tables = set(inspector.get_table_names())
+    assert "planet_profiles" not in tables
     for table in NEW_TABLES:
         assert table in tables, f"Table {table} was not created by Alembic"
 

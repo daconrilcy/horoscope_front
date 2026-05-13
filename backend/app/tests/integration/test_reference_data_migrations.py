@@ -149,7 +149,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
             row.sign_code == "aries" and "initiative" in row.keywords_json for row in profile_rows
         )
     for table_name in (
-        "planet_profiles",
+        "astral_prediction_daily_planet_profiles",
         "house_profiles",
         "aspect_profiles",
         "planet_category_weights",
@@ -158,6 +158,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     ):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" in columns
+    assert "planet_profiles" not in set(head_inspector.get_table_names())
     head_engine.dispose()
 
     command.downgrade(config, "base")

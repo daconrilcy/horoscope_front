@@ -196,9 +196,7 @@ def get_astrologer(
         action_state.last_natal_interpretation_id = (
             str(last_natal_interpretation_id) if last_natal_interpretation_id is not None else None
         )
-        action_state.has_natal_interpretation = (
-            last_natal_interpretation_id is not None
-        )
+        action_state.has_natal_interpretation = last_natal_interpretation_id is not None
 
     return {
         "data": AstrologerProfile(
