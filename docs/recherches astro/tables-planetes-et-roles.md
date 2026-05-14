@@ -9,6 +9,12 @@ Deux catégories sont distinguées :
 - Tables directement liées aux planètes par clé étrangère ou modèle SQLAlchemy explicite.
 - Tables qui consomment ou historisent des informations planétaires sous forme de JSON, sans colonne `planet_id`.
 
+## Héritage des systèmes astrologiques
+
+`astral_systems` sert de taxonomie commune aux dignités planétaires et aux règles d'aspects. Son héritage est explicite : `modern` et `traditional` sont racines, `hellenistic` hérite de `traditional`, et `medieval` hérite de `traditional`.
+
+Les dignités planétaires restent des lignes propres à leur système quand elles divergent. L'héritage d'orbes ne doit donc pas être confondu avec une recopie des maîtrises ou dignités : il évite seulement de dupliquer les règles `traditional` dans `hellenistic` et `medieval`.
+
 ## Vue d'ensemble
 
 | Table | Lien aux planètes | Rôle principal | Versionnée |
@@ -241,6 +247,7 @@ Colonnes principales :
 | --- | --- | --- |
 | `id` | `Integer` | Identifiant technique utilisé par les clés étrangères. |
 | `name` | `String(32)` | Nom canonique du système ou de la tradition astrologique. Unique. |
+| `inherits_from_system_id` | `Integer`, nullable | Parent d'héritage dans `astral_systems.id`; `hellenistic` et `medieval` héritent de `traditional`, tandis que `modern` et `traditional` restent racines. |
 
 Systèmes seedés :
 

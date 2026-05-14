@@ -52,7 +52,14 @@ def test_seed_reference_version_is_idempotent() -> None:
     assert len(payload["planets"]) == 10
     assert len(payload["signs"]) == 12
     assert len(payload["aspects"]) == 20
-    assert len(payload["aspect_orb_rules"]) == 159
+    assert len(payload["aspect_orb_rules"]) == 79
+    systems = cast(list[dict[str, Any]], payload["astral_systems"])
+    assert {item["code"]: item["inherits_from_system_code"] for item in systems} == {
+        "hellenistic": "traditional",
+        "medieval": "traditional",
+        "modern": None,
+        "traditional": None,
+    }
     planets = cast(list[dict[str, Any]], payload["planets"])
     signs = cast(list[dict[str, Any]], payload["signs"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
@@ -112,7 +119,7 @@ def test_seed_reference_version_is_idempotent() -> None:
                 .select_from(AstralAspectOrbRuleModel)
                 .where(AstralAspectOrbRuleModel.reference_version_id == version.id)
             )
-            == 159
+            == 79
         )
         house_10_profile = db.scalar(
             select(HouseInterpretationProfileModel)
@@ -162,7 +169,7 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
     assert len(payload["signs"]) == 12
     assert len(payload["houses"]) == 12
     assert len(payload["aspects"]) == 20
-    assert len(payload["aspect_orb_rules"]) == 159
+    assert len(payload["aspect_orb_rules"]) == 79
     assert "characteristics" not in payload
 
 

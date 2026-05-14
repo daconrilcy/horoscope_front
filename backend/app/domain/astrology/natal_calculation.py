@@ -246,6 +246,7 @@ def build_natal_result(
     houses_data = reference_data.get("houses")
     aspects_data = reference_data.get("aspects")
     aspect_orb_rules_data = reference_data.get("aspect_orb_rules")
+    astral_systems_data = reference_data.get("astral_systems")
 
     if not isinstance(planets_data, list) or not planets_data:
         _raise_invalid_reference(version, "planets", "missing_or_empty")
@@ -257,6 +258,8 @@ def build_natal_result(
         _raise_invalid_reference(version, "aspects", "missing_or_empty")
     if aspect_orb_rules_data is not None and not isinstance(aspect_orb_rules_data, list):
         _raise_invalid_reference(version, "aspect_orb_rules", "invalid_entry")
+    if astral_systems_data is not None and not isinstance(astral_systems_data, list):
+        _raise_invalid_reference(version, "astral_systems", "invalid_entry")
 
     prepared = prepare_birth_data(birth_input, tt_enabled=tt_enabled, derive_enabled=derive_enabled)
     if timeout_check is not None:
@@ -499,6 +502,7 @@ def build_natal_result(
         orb_rules=aspect_orb_rules,
         system_code=aspect_school,
         calculation_context="natal",
+        system_inheritance=astral_systems_data,
     )
     if timeout_check is not None:
         timeout_check()

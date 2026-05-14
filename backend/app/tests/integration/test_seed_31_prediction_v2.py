@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.infra.db.models import (
     AspectProfileModel,
+    AstralAspectOrbRuleModel,
     AstralDignityTypeModel,
     AstralElementModel,
     AstralModalityModel,
@@ -35,6 +36,10 @@ from app.infra.db.models import (
     ReferenceVersionModel,
     RulesetEventTypeModel,
     RulesetParameterModel,
+)
+from app.services.prediction.reference_seed_service import (
+    _ensure_no_complete_inherited_orb_rule_copy,
+    _resolve_aspect_orb_rule_groups,
 )
 from app.services.reference_data_service import ReferenceDataService
 from scripts.seed_31_prediction_reference_v2 import SeedAbortError, run_seed
@@ -68,6 +73,49 @@ EXPECTED_TRADITIONAL_RULERSHIPS = {
     "aquarius": "saturn",
     "pisces": "jupiter",
 }
+
+
+def test_seed_rejects_complete_inherited_orb_rule_copy() -> None:
+    """Le seed refuse qu'un enfant stocke une copie complete des règles héritées."""
+    parent_rule = {
+        "aspect_code": "square",
+        "calculation_context": "natal",
+        "source_body_type": "luminary",
+        "target_body_type": "any",
+        "orb_deg": 8.0,
+        "priority": 800,
+        "is_enabled": True,
+    }
+
+    with pytest.raises(ValueError, match="duplicate inherited parent"):
+        _ensure_no_complete_inherited_orb_rule_copy(
+            {
+                "traditional": [parent_rule],
+                "hellenistic": [dict(parent_rule)],
+            },
+            {
+                "traditional": None,
+                "hellenistic": "traditional",
+            },
+        )
+
+
+def test_seed_rejects_unknown_inherited_orb_rule_parent(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Le JSON d'orbes échoue si un parent d'héritage est inconnu."""
+    monkeypatch.setattr(
+        "app.services.prediction.reference_seed_service._load_aspect_orb_rule_groups",
+        lambda: [
+            {
+                "reference_version_id": 1,
+                "astral_system_code": "hellenistic",
+                "inherits_from": "traditonal",
+                "rules": [],
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError, match="unknown inherited aspect orb rule system"):
+        _resolve_aspect_orb_rule_groups()
 
 
 def _alembic_config() -> Config:
@@ -172,7 +220,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
                 .select_from(AspectProfileModel)
                 .where(AspectProfileModel.reference_version_id == v2.id)
             )
-            == 5
+            == 20
         )
         assert session.scalar(select(func.count()).select_from(AstroPointModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralDignityTypeModel)) == 4
@@ -208,6 +256,35 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             "modern",
             "hellenistic",
             "medieval",
+        }
+        assert {
+            system.name: (None if system.inherits_from is None else system.inherits_from.name)
+            for system in session.scalars(select(AstralSystemModel)).all()
+        } == {
+            "hellenistic": "traditional",
+            "medieval": "traditional",
+            "modern": None,
+            "traditional": None,
+        }
+        orb_rule_counts_by_system = dict(
+            session.execute(
+                select(AstralSystemModel.name, func.count(AstralAspectOrbRuleModel.id))
+                .outerjoin(
+                    AstralAspectOrbRuleModel,
+                    AstralAspectOrbRuleModel.astral_system_id == AstralSystemModel.id,
+                )
+                .where(
+                    (AstralAspectOrbRuleModel.reference_version_id == v2.id)
+                    | (AstralAspectOrbRuleModel.id.is_(None))
+                )
+                .group_by(AstralSystemModel.name)
+            ).all()
+        )
+        assert orb_rule_counts_by_system == {
+            "hellenistic": 0,
+            "medieval": 0,
+            "modern": 39,
+            "traditional": 40,
         }
         domicile_traditional_count = session.scalar(
             select(func.count())

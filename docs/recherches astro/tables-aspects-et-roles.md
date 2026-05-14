@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py` et `20260514_0104_add_astral_aspect_orb_rules.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py`, `20260514_0104_add_astral_aspect_orb_rules.py` et `20260514_0105_add_astral_system_inheritance.py`.
 
 Deux catégories sont distinguées :
 
@@ -10,6 +10,12 @@ Deux catégories sont distinguées :
 - Payloads et objets runtime qui calculent, transportent ou restituent des aspects sous forme de JSON ou d'événements.
 
 Point important : les aspects réels d'un thème ne sont pas stockés dans une table relationnelle dédiée. Ils sont calculés à l'exécution à partir des longitudes planétaires ou des états temporels, puis transportés dans `NatalResult.aspects`, `chart_results.result_payload.aspects`, les événements de prédiction et les payloads publics.
+
+## Héritage des systèmes astrologiques
+
+`astral_systems.inherits_from_system_id` porte l'héritage des règles d'orbes entre systèmes astrologiques. `modern` et `traditional` restent racines. `hellenistic` hérite de `traditional`, et `medieval` hérite de `traditional`.
+
+Les règles physiques de `astral_aspect_orb_rules` restent locales au système qui les possède : `modern` conserve ses 39 règles, `traditional` conserve ses 40 règles, tandis que `hellenistic` et `medieval` ne stockent pas de copie complète de `traditional`. Un système enfant peut seulement ajouter des overrides locaux explicites, qui gagnent avant les règles héritées.
 
 ## Vue d'ensemble
 
@@ -288,18 +294,20 @@ Contraintes :
 
 Seed attendu :
 
-- 159 règles par version de référence complète.
+- 79 règles physiques par version de référence complète.
 - `modern` définit 39 règles.
-- `traditional`, `hellenistic` et `medieval` copient les règles traditionnelles dérivées de `modern`, avec une surcharge de désactivation du `quincunx`, soit 40 règles par système.
+- `traditional` définit 40 règles locales : les 39 règles standards plus la désactivation traditionnelle du `quincunx`.
+- `hellenistic` et `medieval` stockent 0 règle physique quand ils n'ont pas d'override local ; ils héritent de `traditional` via `astral_systems.inherits_from_system_id`.
 
 Résolution runtime :
 
 1. Charger la définition `(aspect_code, system_code)` depuis `astral_aspect_definitions`.
 2. Si la définition est absente ou désactivée, ne pas calculer l'aspect.
-3. Filtrer les règles activées sur l'aspect, le système, le contexte (`context` ou `any`) et les corps source/cible.
-4. Trier les règles candidates par priorité effective, puis par spécificité.
-5. Retourner `rule.orb_deg` si une règle matche.
-6. Sinon retourner `astral_aspect_definitions.default_orb_deg`.
+3. Construire la chaîne système locale puis parente via `astral_systems.inherits_from_system_id`, en refusant les cycles.
+4. Filtrer les règles activées sur l'aspect, la chaîne de systèmes, le contexte (`context` ou `any`) et les corps source/cible.
+5. Trier les règles candidates par profondeur d'héritage ascendante, puis par priorité effective descendante, puis par spécificité descendante.
+6. Retourner `rule.orb_deg` si une règle matche.
+7. Sinon retourner `astral_aspect_definitions.default_orb_deg`.
 
 Priorités fonctionnelles appliquées par le resolver :
 
@@ -580,6 +588,7 @@ Point d'attention :
 - `backend/app/services/chart/json_builder.py`
 - `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
 - `backend/migrations/versions/20260514_0104_add_astral_aspect_orb_rules.py`
+- `backend/migrations/versions/20260514_0105_add_astral_system_inheritance.py`
 - `docs/recherches astro/aspects.json`
 - `docs/recherches astro/astral_aspect_family.json`
 - `docs/recherches astro/astral_aspect_profiles.json`

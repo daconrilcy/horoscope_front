@@ -11,6 +11,12 @@ Deux catégories sont distinguées :
 
 Point important : les cuspides réelles d'un thème ne sont pas stockées dans une table relationnelle dédiée. Elles sont calculées à l'exécution par SwissEph ou par le moteur simplifié, enrichies dans le runtime astrologique, puis transportées dans les objets `NatalResult`, les projections IA et les payloads `chart_results.result_payload`.
 
+## Héritage des systèmes astrologiques
+
+Le référentiel `astral_systems` est commun aux doctrines de maisons, d'aspects et de dignités planétaires. Son héritage explicite est stocké dans `astral_systems.inherits_from_system_id` : `modern` et `traditional` sont racines, `hellenistic` hérite de `traditional`, et `medieval` hérite de `traditional`.
+
+Pour les maisons, cet héritage ne change pas les cuspides ni les systèmes de maisons physiques. Il documente seulement la tradition astrologique commune utilisée par les profils éditoriaux et évite que les doctrines liées aux orbes soient recopiées dans des systèmes enfants.
+
 ## Vue d'ensemble
 
 | Table | Lien aux maisons | Rôle principal | Versionnée |

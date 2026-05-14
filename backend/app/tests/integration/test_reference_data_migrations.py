@@ -166,7 +166,12 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert ("astral_modality_id",) not in unique_columns
     assert ("astral_polarity_id",) not in unique_columns
     system_columns = {column["name"] for column in head_inspector.get_columns("astral_systems")}
-    assert system_columns == {"id", "name"}
+    assert system_columns == {"id", "name", "inherits_from_system_id"}
+    system_foreign_keys = {
+        tuple(foreign_key["constrained_columns"]): foreign_key["referred_table"]
+        for foreign_key in head_inspector.get_foreign_keys("astral_systems")
+    }
+    assert system_foreign_keys[("inherits_from_system_id",)] == "astral_systems"
     house_system_columns = {
         column["name"] for column in head_inspector.get_columns("astral_house_systems")
     }
@@ -213,6 +218,23 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert {
             row[0] for row in connection.execute(text("SELECT name FROM astral_systems")).all()
         } == {"traditional", "modern", "hellenistic", "medieval"}
+        assert dict(
+            connection.execute(
+                text(
+                    """
+                    SELECT child.name, parent.name
+                    FROM astral_systems AS child
+                    LEFT JOIN astral_systems AS parent
+                        ON child.inherits_from_system_id = parent.id
+                    """
+                )
+            ).all()
+        ) == {
+            "hellenistic": "traditional",
+            "medieval": "traditional",
+            "modern": None,
+            "traditional": None,
+        }
         house_system_rows = connection.execute(
             text(
                 """
@@ -300,7 +322,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         ).scalar_one()
         if reference_version_count:
             assert modern_definition_count == 20 * reference_version_count
-            assert orb_rule_count == 159 * reference_version_count
+            assert orb_rule_count == 79 * reference_version_count
         else:
             assert modern_definition_count == 0
             assert orb_rule_count == 0
@@ -484,6 +506,159 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert "house_system_effective_id" in runtime_house_system_columns["user_prediction_baselines"]
     assert "house_system_effective" not in runtime_house_system_columns["user_prediction_baselines"]
     head_engine.dispose()
+
+
+def test_system_inheritance_migration_removes_old_child_orb_rule_copies(
+    monkeypatch: object, tmp_path: Path
+) -> None:
+    """Simule une base deja passee par l'ancien seed 0104 puis nettoyee par 0105."""
+    db_path = tmp_path / "migration-orb-copy-cleanup.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.downgrade(config, "base")
+    command.upgrade(config, "20260514_0104")
+
+    engine = create_engine(database_url, future=True)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO astral_reference_versions (
+                    id,
+                    version,
+                    description,
+                    is_locked,
+                    created_at
+                )
+                VALUES (999, 'legacy-copy-test', '', 0, '2026-05-14 00:00:00')
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO astral_aspect_orb_rules (
+                    reference_version_id,
+                    astral_system_id,
+                    aspect_id,
+                    calculation_context,
+                    source_body_type,
+                    source_planet_id,
+                    source_point_code,
+                    target_body_type,
+                    target_planet_id,
+                    target_point_code,
+                    orb_deg,
+                    priority,
+                    is_enabled,
+                    micro_note
+                )
+                SELECT
+                    999,
+                    astral_systems.id,
+                    (SELECT id FROM astral_aspects WHERE code = 'square'),
+                    'natal',
+                    'luminary',
+                    NULL,
+                    NULL,
+                    'any',
+                    NULL,
+                    NULL,
+                    8.0,
+                    800,
+                    1,
+                    'legacy copied parent rule'
+                FROM astral_systems
+                WHERE astral_systems.name = 'traditional'
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO astral_aspect_orb_rules (
+                    reference_version_id,
+                    astral_system_id,
+                    aspect_id,
+                    calculation_context,
+                    source_body_type,
+                    source_planet_id,
+                    source_point_code,
+                    target_body_type,
+                    target_planet_id,
+                    target_point_code,
+                    orb_deg,
+                    priority,
+                    is_enabled,
+                    micro_note
+                )
+                SELECT
+                    parent_rule.reference_version_id,
+                    child_system.id,
+                    parent_rule.aspect_id,
+                    parent_rule.calculation_context,
+                    parent_rule.source_body_type,
+                    parent_rule.source_planet_id,
+                    parent_rule.source_point_code,
+                    parent_rule.target_body_type,
+                    parent_rule.target_planet_id,
+                    parent_rule.target_point_code,
+                    parent_rule.orb_deg,
+                    parent_rule.priority,
+                    parent_rule.is_enabled,
+                    parent_rule.micro_note
+                FROM astral_aspect_orb_rules AS parent_rule
+                JOIN astral_systems AS parent_system
+                    ON parent_rule.astral_system_id = parent_system.id
+                JOIN astral_systems AS child_system
+                    ON child_system.name IN ('hellenistic', 'medieval')
+                WHERE parent_system.name = 'traditional'
+                    AND parent_rule.reference_version_id = 999
+                """
+            )
+        )
+        copied_counts = dict(
+            connection.execute(
+                text(
+                    """
+                    SELECT astral_systems.name, COUNT(astral_aspect_orb_rules.id)
+                    FROM astral_systems
+                    LEFT JOIN astral_aspect_orb_rules
+                        ON astral_aspect_orb_rules.astral_system_id = astral_systems.id
+                    GROUP BY astral_systems.name
+                    """
+                )
+            ).all()
+        )
+        assert copied_counts["traditional"] == 1
+        assert copied_counts["hellenistic"] == 1
+        assert copied_counts["medieval"] == 1
+    engine.dispose()
+
+    command.upgrade(config, "head")
+
+    head_engine = create_engine(database_url, future=True)
+    with head_engine.connect() as connection:
+        final_counts = dict(
+            connection.execute(
+                text(
+                    """
+                    SELECT astral_systems.name, COUNT(astral_aspect_orb_rules.id)
+                    FROM astral_systems
+                    LEFT JOIN astral_aspect_orb_rules
+                        ON astral_aspect_orb_rules.astral_system_id = astral_systems.id
+                    GROUP BY astral_systems.name
+                    """
+                )
+            ).all()
+        )
+    head_engine.dispose()
+
+    assert final_counts["traditional"] == 1
+    assert final_counts["hellenistic"] == 0
+    assert final_counts["medieval"] == 0
 
     command.downgrade(config, "base")
 

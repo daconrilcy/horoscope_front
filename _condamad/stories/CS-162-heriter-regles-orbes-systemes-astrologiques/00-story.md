@@ -1,6 +1,6 @@
 # Story CS-162 heriter-regles-orbes-systemes-astrologiques: Heriter les regles d'orbes des systemes astrologiques
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

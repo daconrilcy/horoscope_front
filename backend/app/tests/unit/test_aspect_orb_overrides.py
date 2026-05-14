@@ -235,6 +235,311 @@ class TestOrbPriorityResolution:
 
         assert resolve_orb("square", "modern", "natal", "moon", "asc", definitions, rules) == 5.0
 
+    def test_traditional_orb_rules_remain_local(self) -> None:
+        """Les règles traditional restent résolues comme règles locales."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "traditional",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "traditional",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 800,
+                "is_enabled": True,
+            }
+        ]
+
+        assert (
+            resolve_orb("square", "traditional", "natal", "sun", "mars", definitions, rules) == 8.0
+        )
+
+    def test_hellenistic_inherits_traditional_orb_rules(self) -> None:
+        """hellenistic hérite des règles d'orbes traditional sans copie locale."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "hellenistic",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "traditional",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 800,
+                "is_enabled": True,
+            }
+        ]
+
+        assert (
+            resolve_orb(
+                "square",
+                "hellenistic",
+                "natal",
+                "sun",
+                "mars",
+                definitions,
+                rules,
+                {"hellenistic": "traditional", "traditional": None},
+            )
+            == 8.0
+        )
+
+    def test_medieval_inherits_traditional_orb_rules(self) -> None:
+        """medieval hérite des règles d'orbes traditional sans copie locale."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "medieval",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "traditional",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 800,
+                "is_enabled": True,
+            }
+        ]
+
+        assert (
+            resolve_orb(
+                "square",
+                "medieval",
+                "natal",
+                "sun",
+                "mars",
+                definitions,
+                rules,
+                {"medieval": "traditional", "traditional": None},
+            )
+            == 8.0
+        )
+
+    def test_child_rule_overrides_parent_rule(self) -> None:
+        """Une règle locale enfant gagne avant la règle parente."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "hellenistic",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "traditional",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 1000,
+                "is_enabled": True,
+            },
+            {
+                "aspect_code": "square",
+                "system_code": "hellenistic",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 4.0,
+                "priority": 1,
+                "is_enabled": True,
+            },
+        ]
+
+        assert (
+            resolve_orb(
+                "square",
+                "hellenistic",
+                "natal",
+                "sun",
+                "mars",
+                definitions,
+                rules,
+                {"hellenistic": "traditional", "traditional": None},
+            )
+            == 4.0
+        )
+
+    def test_higher_priority_wins_at_same_inheritance_depth(self) -> None:
+        """A profondeur égale, la priorité la plus élevée gagne."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "modern",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 700,
+                "is_enabled": True,
+            },
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 9.0,
+                "priority": 900,
+                "is_enabled": True,
+            },
+        ]
+
+        assert resolve_orb("square", "modern", "natal", "sun", "mars", definitions, rules) == 9.0
+
+    def test_more_specific_rule_wins_at_same_priority(self) -> None:
+        """A priorité égale, la règle la plus spécifique gagne."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "modern",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 800,
+                "is_enabled": True,
+            },
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "source_planet_code": "sun",
+                "target_body_type": "any",
+                "orb_deg": 9.0,
+                "priority": 800,
+                "is_enabled": True,
+            },
+        ]
+
+        assert resolve_orb("square", "modern", "natal", "sun", "mars", definitions, rules) == 9.0
+
+    def test_system_inheritance_cycle_raises_explicit_error(self) -> None:
+        """Un cycle d'héritage entre systèmes échoue explicitement."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "hellenistic",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+
+        with pytest.raises(ValueError, match="inheritance cycle"):
+            resolve_orb(
+                "square",
+                "hellenistic",
+                "natal",
+                "sun",
+                "mars",
+                definitions,
+                [],
+                {"hellenistic": "traditional", "traditional": "hellenistic"},
+            )
+
+    def test_missing_inheritance_metadata_raises_for_child_without_local_rules(self) -> None:
+        """Un système sans règle locale n'hérite pas silencieusement sans métadonnées."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "hellenistic",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "traditional",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 800,
+                "is_enabled": True,
+            }
+        ]
+
+        with pytest.raises(ValueError, match="inheritance metadata missing"):
+            resolve_orb("square", "hellenistic", "natal", "sun", "mars", definitions, rules)
+
+        with pytest.raises(ValueError, match="inheritance metadata missing"):
+            resolve_orb(
+                "square",
+                "hellenistic",
+                "natal",
+                "sun",
+                "mars",
+                definitions,
+                rules,
+                [],
+            )
+
+    def test_disabled_orb_rule_does_not_match(self) -> None:
+        """Une règle d'orbe désactivée ne remplace pas le fallback."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "modern",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 800,
+                "is_enabled": False,
+            }
+        ]
+
+        assert resolve_orb("square", "modern", "natal", "sun", "mars", definitions, rules) == 6.0
+
     def test_orb_rules_fallback_to_default_orb_deg(self) -> None:
         """Sans exception ciblée, default_orb_deg reste l'orbe obligatoire."""
         definitions = [

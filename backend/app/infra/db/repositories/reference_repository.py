@@ -203,6 +203,15 @@ class ReferenceRepository:
         planets = self.db.scalars(select(PlanetModel).order_by(PlanetModel.code)).all()
         signs = self.db.scalars(select(AstralSignModel).order_by(AstralSignModel.code)).all()
         houses = self.db.scalars(select(HouseModel).order_by(HouseModel.number)).all()
+        systems = self.db.execute(
+            select(
+                AstralSystemModel.name,
+                AstralSystemModel.inherits_from_system_id,
+            ).order_by(AstralSystemModel.name)
+        ).all()
+        system_name_by_id = {
+            row.id: row.name for row in self.db.scalars(select(AstralSystemModel)).all()
+        }
         aspects = self.db.execute(
             select(
                 AspectModel,
@@ -256,6 +265,16 @@ class ReferenceRepository:
             "planets": [{"code": item.code, "name": item.name} for item in planets],
             "signs": [{"code": item.code, "name": item.name} for item in signs],
             "houses": [{"number": item.number, "name": item.name} for item in houses],
+            "astral_systems": [
+                {
+                    "code": name,
+                    "name": name,
+                    "inherits_from_system_code": (
+                        None if parent_id is None else system_name_by_id.get(int(parent_id))
+                    ),
+                }
+                for name, parent_id in systems
+            ],
             "aspects": [
                 {
                     "code": aspect.code,

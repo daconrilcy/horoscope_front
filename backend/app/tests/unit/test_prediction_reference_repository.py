@@ -102,6 +102,18 @@ def test_structural_astrology_models_are_not_versioned():
         assert "reference_version_id" not in columns
 
 
+def test_astral_system_model_supports_nullable_self_inheritance():
+    """Les systèmes astrologiques portent une self-FK nullable d'héritage."""
+    columns = {column.key for column in inspect(AstralSystemModel).columns}
+    assert columns == {"id", "name", "inherits_from_system_id"}
+    foreign_key_targets = {
+        foreign_key.column.table.name
+        for column in AstralSystemModel.__table__.columns
+        for foreign_key in column.foreign_keys
+    }
+    assert foreign_key_targets == {"astral_systems"}
+
+
 def test_planet_model_uses_canonical_astral_table_name():
     """Le modèle des planètes pointe vers le nom SQL canonique astral."""
     assert PlanetModel.__tablename__ == "astral_planets"

@@ -50,18 +50,13 @@ def _load_rule_groups() -> list[dict[str, object]]:
 
 
 def _resolve_rule_groups() -> list[dict[str, object]]:
-    """Déplie les copies de règles pour chaque système astrologique."""
-    resolved: dict[str, list[dict[str, object]]] = {}
+    """Retourne seulement les règles physiques locales par système."""
     final_groups: list[dict[str, object]] = []
     for group in _load_rule_groups():
         system_code = str(group["astral_system_code"])
-        rules: list[dict[str, object]] = []
-        copy_from = group.get("copy_rules_from")
-        if copy_from is not None:
-            rules.extend(dict(rule) for rule in resolved[str(copy_from)])
-        rules.extend(dict(rule) for rule in group.get("rules", []))
-        rules.extend(dict(rule) for rule in group.get("override_rules", []))
-        resolved[system_code] = rules
+        if "copy_rules_from" in group:
+            raise RuntimeError("copy_rules_from is forbidden for aspect orb rule groups")
+        rules = [dict(rule) for rule in group.get("rules", [])]
         final_groups.append({"astral_system_code": system_code, "rules": rules})
     return final_groups
 

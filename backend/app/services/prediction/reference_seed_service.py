@@ -54,7 +54,7 @@ EXPECTED_COUNTS = {
     "astral_house_interpretation_profiles": 12,
     "astral_aspect_profiles": 20,
     "astral_aspect_definitions": 80,
-    "astral_aspect_orb_rules": 159,
+    "astral_aspect_orb_rules": 79,
     "astral_default_valence": 4,
     "astral_interpretive_valence": 5,
     "astro_points": 4,
@@ -182,23 +182,22 @@ def _load_aspect_orb_rule_groups() -> list[dict[str, object]]:
 
 
 def _resolve_aspect_orb_rule_groups() -> list[dict[str, object]]:
-    """Déplie les groupes copiés pour obtenir les règles finales par système."""
+    """Retourne les règles physiques locales sans déplier l'héritage."""
     raw_groups = _load_aspect_orb_rule_groups()
-    resolved: dict[str, list[dict[str, object]]] = {}
+    rules_by_system: dict[str, list[dict[str, object]]] = {}
+    inheritance_by_system: dict[str, str | None] = {}
     final_groups: list[dict[str, object]] = []
 
     for group in raw_groups:
         system_code = str(group["astral_system_code"])
-        rules: list[dict[str, object]] = []
-        copy_from = group.get("copy_rules_from")
-        if copy_from is not None:
-            copied_rules = resolved.get(str(copy_from))
-            if copied_rules is None:
-                raise ValueError(f"unknown source aspect orb rule group: {copy_from}")
-            rules.extend(dict(rule) for rule in copied_rules)
-        rules.extend(dict(rule) for rule in group.get("rules", []))
-        rules.extend(dict(rule) for rule in group.get("override_rules", []))
-        resolved[system_code] = rules
+        if "copy_rules_from" in group:
+            raise ValueError("copy_rules_from is forbidden for aspect orb rule groups")
+        parent_code = group.get("inherits_from")
+        inheritance_by_system[system_code] = None if parent_code is None else str(parent_code)
+        rules = [dict(rule) for rule in group.get("rules", [])]
+        if "override_rules" in group:
+            rules.extend(dict(rule) for rule in group.get("override_rules", []))
+        rules_by_system[system_code] = rules
         final_groups.append(
             {
                 "reference_version_id": group["reference_version_id"],
@@ -207,7 +206,53 @@ def _resolve_aspect_orb_rule_groups() -> list[dict[str, object]]:
             }
         )
 
+    unknown_parent_codes = {
+        parent_code
+        for parent_code in inheritance_by_system.values()
+        if parent_code is not None and parent_code not in rules_by_system
+    }
+    if unknown_parent_codes:
+        raise ValueError(
+            "unknown inherited aspect orb rule system: " + ", ".join(sorted(unknown_parent_codes))
+        )
+    _ensure_no_complete_inherited_orb_rule_copy(rules_by_system, inheritance_by_system)
     return final_groups
+
+
+def _orb_rule_signature(rule: dict[str, object]) -> tuple[object, ...]:
+    """Construit une signature stable pour detecter une copie physique."""
+    return (
+        str(rule.get("aspect_code")),
+        str(rule.get("calculation_context")),
+        str(rule.get("source_body_type")),
+        rule.get("source_planet_code"),
+        rule.get("source_point_code"),
+        str(rule.get("target_body_type")),
+        rule.get("target_planet_code"),
+        rule.get("target_point_code"),
+        float(rule.get("orb_deg", 0)),
+        int(rule.get("priority", 0)),
+        bool(rule.get("is_enabled", True)),
+    )
+
+
+def _ensure_no_complete_inherited_orb_rule_copy(
+    rules_by_system: dict[str, list[dict[str, object]]],
+    inheritance_by_system: dict[str, str | None],
+) -> None:
+    """Refuse qu'un systeme enfant stocke une copie complete de son parent."""
+    for system_code, parent_code in inheritance_by_system.items():
+        if parent_code is None:
+            continue
+        parent_rules = rules_by_system.get(parent_code)
+        if not parent_rules:
+            continue
+        child_signatures = {_orb_rule_signature(rule) for rule in rules_by_system[system_code]}
+        parent_signatures = {_orb_rule_signature(rule) for rule in parent_rules}
+        if parent_signatures and parent_signatures <= child_signatures:
+            raise ValueError(
+                f"aspect orb rules for {system_code} duplicate inherited parent {parent_code}"
+            )
 
 
 def _required_keyword_list(
@@ -256,9 +301,20 @@ def _ensure_astral_dignity_types(db: Session) -> None:
 
 def _ensure_astral_systems(db: Session) -> dict[str, int]:
     """Garantit le référentiel stable des systèmes astrologiques."""
-    for name in ("traditional", "modern", "hellenistic", "medieval"):
+    inheritance = {
+        "traditional": None,
+        "modern": None,
+        "hellenistic": "traditional",
+        "medieval": "traditional",
+    }
+    for name in inheritance:
         if db.scalar(select(AstralSystemModel.id).where(AstralSystemModel.name == name)) is None:
             db.add(AstralSystemModel(name=name))
+    db.flush()
+    systems = {row.name: row for row in db.scalars(select(AstralSystemModel)).all()}
+    for name, parent_name in inheritance.items():
+        system = systems[name]
+        system.inherits_from_system_id = None if parent_name is None else systems[parent_name].id
     db.flush()
     return {row.name: row.id for row in db.scalars(select(AstralSystemModel)).all()}
 

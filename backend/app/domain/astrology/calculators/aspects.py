@@ -143,6 +143,74 @@ def _rule_effective_priority(rule: dict[str, object]) -> int:
     return raw_priority
 
 
+def _normalize_system_inheritance(
+    system_inheritance: dict[str, str | None] | list[dict[str, object]] | None,
+    orb_rules: list[dict[str, object]],
+) -> dict[str, str | None]:
+    """Normalise la carte d'heritage des systemes astrologiques."""
+    if isinstance(system_inheritance, dict):
+        return {
+            str(system_code).strip().lower(): (
+                None if parent_code is None else str(parent_code).strip().lower()
+            )
+            for system_code, parent_code in system_inheritance.items()
+        }
+    if isinstance(system_inheritance, list):
+        return {
+            str(item.get("code", item.get("name", ""))).strip().lower(): (
+                None
+                if item.get("inherits_from_system_code") is None
+                else str(item.get("inherits_from_system_code")).strip().lower()
+            )
+            for item in system_inheritance
+            if isinstance(item, dict) and str(item.get("code", item.get("name", ""))).strip()
+        }
+
+    inheritance: dict[str, str | None] = {}
+    for rule in orb_rules:
+        system_code = str(rule.get("system_code", rule.get("astral_system_code", ""))).strip()
+        if not system_code:
+            continue
+        parent_code = rule.get("inherits_from_system_code")
+        inheritance.setdefault(
+            system_code.lower(),
+            None if parent_code is None else str(parent_code).strip().lower(),
+        )
+    return inheritance
+
+
+def _system_chain(
+    system_code: str,
+    system_inheritance: dict[str, str | None] | list[dict[str, object]] | None,
+    orb_rules: list[dict[str, object]],
+) -> list[str]:
+    """Construit la chaine local -> parent en refusant les cycles."""
+    inheritance = _normalize_system_inheritance(system_inheritance, orb_rules)
+    known_rule_systems = {
+        str(rule.get("system_code", rule.get("astral_system_code", ""))).strip().lower()
+        for rule in orb_rules
+        if str(rule.get("system_code", rule.get("astral_system_code", ""))).strip()
+    }
+    normalized_system_code = system_code.strip().lower()
+    if (
+        orb_rules
+        and normalized_system_code not in known_rule_systems
+        and normalized_system_code not in inheritance
+    ):
+        raise ValueError(f"astral system inheritance metadata missing for {normalized_system_code}")
+    chain: list[str] = []
+    seen: set[str] = set()
+    current: str | None = normalized_system_code
+    while current:
+        if current in seen:
+            cycle = " -> ".join([*chain, current])
+            raise ValueError(f"astral system inheritance cycle detected: {cycle}")
+        seen.add(current)
+        chain.append(current)
+        current = inheritance.get(current)
+    return chain
+
+
 def resolve_orb(
     aspect_code: str,
     system_code: str,
@@ -151,6 +219,7 @@ def resolve_orb(
     target_body: str | dict[str, object],
     aspect_definitions: list[dict[str, object]],
     orb_rules: list[dict[str, object]],
+    system_inheritance: dict[str, str | None] | list[dict[str, object]] | None = None,
 ) -> float | None:
     """Résout l'orbe astrologique de calcul.
 
@@ -176,23 +245,32 @@ def resolve_orb(
     if definition is None or not bool(definition.get("is_enabled", True)):
         return None
 
-    matching_rules = [
-        rule
-        for rule in orb_rules
-        if bool(rule.get("is_enabled", True))
-        and str(rule.get("aspect_code", "")).strip().lower() == normalized_aspect_code
-        and str(rule.get("system_code", rule.get("astral_system_code", ""))).strip().lower()
-        == normalized_system_code
-        and str(rule.get("calculation_context", rule.get("context", "any"))).strip().lower()
-        in (context.strip().lower(), "any")
-        and _rule_matches_bodies(rule, source_body, target_body, context)
-    ]
+    system_chain = _system_chain(normalized_system_code, system_inheritance, orb_rules)
+    depth_by_system = {code: depth for depth, code in enumerate(system_chain)}
+    matching_rules = []
+    for rule in orb_rules:
+        rule_system_code = (
+            str(rule.get("system_code", rule.get("astral_system_code", ""))).strip().lower()
+        )
+        if rule_system_code not in depth_by_system:
+            continue
+        if (
+            bool(rule.get("is_enabled", True))
+            and str(rule.get("aspect_code", "")).strip().lower() == normalized_aspect_code
+            and str(rule.get("calculation_context", rule.get("context", "any"))).strip().lower()
+            in (context.strip().lower(), "any")
+            and _rule_matches_bodies(rule, source_body, target_body, context)
+        ):
+            matching_rules.append((depth_by_system[rule_system_code], rule))
     if matching_rules:
         selected = sorted(
             matching_rules,
-            key=lambda rule: (_rule_effective_priority(rule), _rule_specificity_score(rule)),
-            reverse=True,
-        )[0]
+            key=lambda item: (
+                item[0],
+                -_rule_effective_priority(item[1]),
+                -_rule_specificity_score(item[1]),
+            ),
+        )[0][1]
         return float(selected["orb_deg"])
     return float(definition["default_orb_deg"])
 
@@ -251,6 +329,7 @@ def calculate_major_aspects(
     orb_rules: list[dict[str, object]] | None = None,
     system_code: str = "modern",
     calculation_context: str = "natal",
+    system_inheritance: dict[str, str | None] | list[dict[str, object]] | None = None,
 ) -> list[dict[str, object]]:
     """Calcule les aspects entre positions planétaires avec résolution hiérarchique.
 
@@ -300,6 +379,7 @@ def calculate_major_aspects(
                     target_body=str(planet_b),
                     aspect_definitions=normalized_definitions,
                     orb_rules=orb_rules,
+                    system_inheritance=system_inheritance,
                 )
                 if resolved_orb is None:
                     continue

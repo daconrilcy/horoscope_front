@@ -99,13 +99,21 @@ class AstralDignityTypeModel(Base):
 
 
 class AstralSystemModel(Base):
-    """Taxonomie stable des systèmes astrologiques disponibles."""
+    """Taxonomie stable des systèmes astrologiques et de leur héritage."""
 
     __tablename__ = "astral_systems"
     __table_args__ = (UniqueConstraint("name"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(32), nullable=False)
+    inherits_from_system_id: Mapped[int | None] = mapped_column(
+        ForeignKey("astral_systems.id"), nullable=True, index=True
+    )
+
+    inherits_from: Mapped["AstralSystemModel | None"] = relationship(
+        remote_side=[id], back_populates="inherited_by"
+    )
+    inherited_by: Mapped[list["AstralSystemModel"]] = relationship(back_populates="inherits_from")
 
 
 class AstralAspectFamilyModel(Base):
