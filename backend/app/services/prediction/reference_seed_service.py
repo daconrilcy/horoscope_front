@@ -19,6 +19,7 @@ from app.infra.db.models import (
     AstralSystemModel,
     AstroPointModel,
     HouseCategoryWeightModel,
+    HouseInterpretationProfileModel,
     HouseModel,
     HouseProfileModel,
     PlanetCategoryWeightModel,
@@ -32,6 +33,7 @@ from app.infra.db.models import (
     RulesetParameterModel,
 )
 from app.infra.db.repositories import ReferenceRepository
+from app.services.house_interpretation_seed_service import sync_house_interpretation_profiles
 
 
 class PredictionReferenceSeedAbortError(RuntimeError):
@@ -42,6 +44,7 @@ EXPECTED_COUNTS = {
     "prediction_categories": 12,
     "planet_profiles": 10,
     "house_profiles": 12,
+    "house_interpretation_profiles": 12,
     "aspect_profiles": 5,
     "astro_points": 4,
     "astral_dignity_type": 4,
@@ -310,6 +313,11 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         .select_from(HouseProfileModel)
         .where(HouseProfileModel.reference_version_id == reference_version_id)
     )
+    actual["house_interpretation_profiles"] = db.scalar(
+        select(func.count())
+        .select_from(HouseInterpretationProfileModel)
+        .where(HouseInterpretationProfileModel.reference_version_id == reference_version_id)
+    )
     actual["aspect_profiles"] = db.scalar(
         select(func.count())
         .select_from(AspectProfileModel)
@@ -427,6 +435,7 @@ def run_prediction_reference_seed(db: Session) -> None:
         if db.scalar(select(func.count()).select_from(AstralSignModel)) > 0:
             _ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
+            sync_house_interpretation_profiles(db, v2.id)
         actual = _check_counts(db, v2.id)
 
         # On exige au minimum la présence du ruleset 2.0.0 pour considérer
@@ -490,6 +499,11 @@ def run_prediction_reference_seed(db: Session) -> None:
             )
             db.execute(
                 delete(HouseProfileModel).where(HouseProfileModel.reference_version_id == v2.id)
+            )
+            db.execute(
+                delete(HouseInterpretationProfileModel).where(
+                    HouseInterpretationProfileModel.reference_version_id == v2.id
+                )
             )
             db.execute(
                 delete(PlanetProfileModel).where(PlanetProfileModel.reference_version_id == v2.id)
@@ -778,6 +792,7 @@ def run_prediction_reference_seed(db: Session) -> None:
                 base_priority=prio,
             )
         )
+    sync_house_interpretation_profiles(db, v2.id)
 
     # 7. Alimentation des poids planète -> catégorie.
     print("Seeding planet category weights...")

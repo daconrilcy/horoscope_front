@@ -150,6 +150,11 @@ class ReferenceDataService:
         )
 
         ensure_astral_planet_sign_dignities(db)
+        from app.services.house_interpretation_seed_service import (
+            sync_house_interpretation_profiles,
+        )
+
+        sync_house_interpretation_profiles(db, model.id)
 
         db.commit()
         cls._invalidate_cache(target_version)

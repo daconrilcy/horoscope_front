@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`, `20260512_0086_deversion_astrology_structures.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py` et `20260514_0096_create_house_interpretation_profiles.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`, `20260512_0086_deversion_astrology_structures.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py` et `20260514_0097_rename_astral_house_interpretation_profiles.py`.
 
 Deux catégories sont distinguées :
 
@@ -17,7 +17,7 @@ Point important : les cuspides réelles d'un thème ne sont pas stockées dans u
 | --- | --- | --- | --- |
 | `astral_houses` | Table canonique des maisons 1 à 12 | Vocabulaire stable : numéro et nom métier | Non |
 | `astral_house_systems` | Table canonique des systèmes de maisons | Référence stable pour l'UI, les fallbacks, les analytics et les limites astronomiques | Non |
-| `house_interpretation_profiles` | `house_id -> astral_houses.id` | Vocabulaire éditorial pour interprétation, prompts IA et variantes langue/tradition | Oui, via `reference_version_id` |
+| `astral_house_interpretation_profiles` | `house_id -> astral_houses.id`, `astral_system_id -> astral_systems.id` | Vocabulaire éditorial pour interprétation, prompts IA et variantes langue/système astrologique | Oui, via `reference_version_id` |
 | `astral_prediction_daily_house_profiles` | `house_id -> astral_houses.id` | Source SQL scindée en profil astrologique stable et profil produit prédictif | Oui, via `reference_version_id` |
 | `astral_house_category_weights` | `house_id -> astral_houses.id` | Routage maison -> catégorie de vie pour le scoring | Oui, via `reference_version_id` |
 | `prediction_rulesets` | `house_system_id -> astral_house_systems.id` | Système de maisons demandé par un ruleset | Non pour le système, versionné par le ruleset |
@@ -57,7 +57,7 @@ Rôle métier :
 
 - Sert de dictionnaire canonique des douze maisons.
 - Fournit les numéros attendus par `build_natal_result` pour demander et valider douze cuspides.
-- Sert de cible relationnelle à `house_interpretation_profiles`, `astral_prediction_daily_house_profiles` et `astral_house_category_weights`.
+- Sert de cible relationnelle à `astral_house_interpretation_profiles`, `astral_prediction_daily_house_profiles` et `astral_house_category_weights`.
 - Ne contient pas de longitude, cuspide, signe de cuspide, système de maisons ou donnée utilisateur.
 
 Maisons seedées par `ReferenceRepository.ensure_seed_data` :
@@ -131,16 +131,16 @@ Constantes applicatives :
 
 ## Table éditoriale d'interprétation
 
-### `house_interpretation_profiles`
+### `astral_house_interpretation_profiles`
 
 Définie par `HouseInterpretationProfileModel` dans `backend/app/infra/db/models/interpretation_reference.py`.
 
-Créée par `20260514_0096_create_house_interpretation_profiles.py`.
+Créée par `20260514_0096_create_house_interpretation_profiles.py`, puis renommée par `20260514_0097_rename_astral_house_interpretation_profiles.py`.
 
 Qualification :
 
 - Table de vocabulaire interprétatif, distincte du runtime astrologique et du scoring produit.
-- Versionnée par `reference_version_id` pour permettre l'évolution du ton éditorial, des prompts, des marchés, des langues et des traditions.
+- Versionnée par `reference_version_id` pour permettre l'évolution du ton éditorial, des prompts, des marchés, des langues et des systèmes astrologiques.
 - Rattachée à `astral_houses.id`, sans ajouter de contenu interprétatif dans `astral_houses`.
 - Non consommée par `domain/astrology` : le runtime conserve uniquement les faits calculés du thème.
 
@@ -151,7 +151,7 @@ Colonnes principales :
 | `reference_version_id` | `Integer` | Version éditoriale ou référentielle active. |
 | `house_id` | `Integer` | Maison canonique ciblée. |
 | `language` | `String(16)` | Langue du profil, par exemple `en` ou `fr`. |
-| `tradition` | `String(32)` | Tradition éditoriale, par exemple `modern` ou `traditional`. |
+| `astral_system_id` | `ForeignKey(astral_systems.id)` | Système astrologique éditorial, par exemple `modern` ou `traditional`. |
 | `title` | `String(128)` | Titre court exploitable en restitution ou prompt. |
 | `summary` | `Text` | Synthèse éditoriale de la maison. |
 | `*_keywords_json` | `Text` | Listes JSON de mots-clés par axe d'interprétation. |
@@ -160,7 +160,7 @@ Colonnes principales :
 
 Contraintes :
 
-- Unicité sur `(reference_version_id, house_id, language, tradition)`.
+- Unicité sur `(reference_version_id, house_id, language, astral_system_id)`.
 - Clés étrangères vers `reference_versions.id` et `astral_houses.id`.
 - Mise à jour bloquée quand la version de référence liée est verrouillée.
 
@@ -305,13 +305,13 @@ Rôle :
 
 - Versionne les paramètres de prédiction, pas le vocabulaire stable `astral_houses`.
 - Verrouille les versions via `is_locked`.
-- Les mises à jour de `house_interpretation_profiles`, `astral_prediction_daily_house_profiles` et `astral_house_category_weights` passent par `_ensure_reference_version_is_mutable`.
+- Les mises à jour de `astral_house_interpretation_profiles`, `astral_prediction_daily_house_profiles` et `astral_house_category_weights` passent par `_ensure_reference_version_is_mutable`.
 
 Tables liées aux maisons versionnées via `reference_version_id` :
 
 - `astral_prediction_daily_house_profiles`
 - `astral_house_category_weights`
-- `house_interpretation_profiles`
+- `astral_house_interpretation_profiles`
 
 ### `prediction_categories`
 
@@ -972,7 +972,7 @@ Rôle :
 - `astral_house_systems` ne calcule rien : le calcul reste dans SwissEph, `AstroCalculator` ou le moteur simplifié.
 - Les cuspides réelles doivent rester dans les résultats de calcul ou les objets runtime, pas dans `astral_prediction_daily_house_profiles`.
 - Les détails runtime riches des maisons (`house_kind`, `contained_signs`, `intercepted_signs`, `ruler`, `occupants`, `axis`, `strength`) restent dans `NatalResult` et les payloads JSON, pas dans de nouvelles tables SQL.
-- `house_interpretation_profiles` porte uniquement le vocabulaire éditorial versionné ; il ne doit pas devenir une source de cuspides, maîtres, occupants, force maison ou poids produit.
+- `astral_house_interpretation_profiles` porte uniquement le vocabulaire éditorial versionné ; il ne doit pas devenir une source de cuspides, maîtres, occupants, force maison ou poids produit.
 - `visibility_weight`, `base_priority`, `keywords` et `micro_note` sont exposés par `HousePredictionProfile`; ils ne doivent pas migrer vers `domain/astrology`.
 - `HouseProfileData` n'est plus le contrat actif : toute réintroduction doit être traitée comme une régression de séparation des responsabilités.
 - Les colonnes JSON (`result_payload`, `contributors_json`, `driver_json`) ne garantissent pas l'intégrité référentielle avec `astral_houses`.
@@ -1033,3 +1033,4 @@ Rôle :
 - `backend/migrations/versions/20260513_0094_rename_house_tables.py`
 - `backend/migrations/versions/20260513_0095_create_astral_house_systems.py`
 - `backend/migrations/versions/20260514_0096_create_house_interpretation_profiles.py`
+- `backend/migrations/versions/20260514_0097_rename_astral_house_interpretation_profiles.py`

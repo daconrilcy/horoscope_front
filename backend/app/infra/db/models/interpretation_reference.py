@@ -11,15 +11,15 @@ from app.infra.db.base import Base
 from app.infra.db.models.reference import _ensure_reference_version_is_mutable
 
 if TYPE_CHECKING:
-    from app.infra.db.models.reference import HouseModel, ReferenceVersionModel
+    from app.infra.db.models.reference import AstralSystemModel, HouseModel, ReferenceVersionModel
 
 
 class HouseInterpretationProfileModel(Base):
     """Profil éditorial versionné pour interpréter une maison astrologique."""
 
-    __tablename__ = "house_interpretation_profiles"
+    __tablename__ = "astral_house_interpretation_profiles"
     __table_args__ = (
-        UniqueConstraint("reference_version_id", "house_id", "language", "tradition"),
+        UniqueConstraint("reference_version_id", "house_id", "language", "astral_system_id"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -34,7 +34,11 @@ class HouseInterpretationProfileModel(Base):
         index=True,
     )
     language: Mapped[str] = mapped_column(String(16), nullable=False)
-    tradition: Mapped[str] = mapped_column(String(32), nullable=False)
+    astral_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_systems.id"),
+        nullable=False,
+        index=True,
+    )
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     core_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -54,6 +58,7 @@ class HouseInterpretationProfileModel(Base):
 
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     house: Mapped["HouseModel"] = relationship()
+    astral_system: Mapped["AstralSystemModel"] = relationship()
 
 
 @event.listens_for(HouseInterpretationProfileModel, "before_update")

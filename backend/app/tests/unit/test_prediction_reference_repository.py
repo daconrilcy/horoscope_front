@@ -106,6 +106,7 @@ def test_house_models_use_canonical_astral_table_names():
     assert AstralHouseSystemModel.__tablename__ == "astral_house_systems"
     assert HouseProfileModel.__tablename__ == "astral_prediction_daily_house_profiles"
     assert HouseCategoryWeightModel.__tablename__ == "astral_house_category_weights"
+    assert HouseInterpretationProfileModel.__tablename__ == "astral_house_interpretation_profiles"
 
 
 def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
@@ -116,7 +117,7 @@ def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
         "reference_version_id",
         "house_id",
         "language",
-        "tradition",
+        "astral_system_id",
         "title",
         "summary",
         "core_keywords_json",
@@ -139,13 +140,13 @@ def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
         for constraint in HouseInterpretationProfileModel.__table__.constraints
         if isinstance(constraint, UniqueConstraint)
     }
-    assert ("reference_version_id", "house_id", "language", "tradition") in constraints
+    assert ("reference_version_id", "house_id", "language", "astral_system_id") in constraints
     foreign_key_targets = {
         foreign_key.column.table.name
         for column in HouseInterpretationProfileModel.__table__.columns
         for foreign_key in column.foreign_keys
     }
-    assert foreign_key_targets == {"reference_versions", "astral_houses"}
+    assert foreign_key_targets == {"reference_versions", "astral_houses", "astral_systems"}
 
 
 def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(
@@ -154,13 +155,14 @@ def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(
     """Vérifie le verrouillage des profils éditoriaux après publication de version."""
     version = ReferenceVersionModel(version="locked-editorial", is_locked=True)
     house = HouseModel(number=10, name="Career")
-    db_session.add_all([version, house])
+    system = AstralSystemModel(name="modern")
+    db_session.add_all([version, house, system])
     db_session.flush()
     profile = HouseInterpretationProfileModel(
         reference_version_id=version.id,
         house_id=house.id,
         language="en",
-        tradition="modern",
+        astral_system_id=system.id,
         title="Career and Public Role",
         summary="Original editorial summary.",
     )

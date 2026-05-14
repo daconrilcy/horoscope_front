@@ -97,9 +97,10 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_planet_sign_dignities",
         "astral_sign_profiles",
         "astral_house_systems",
-        "house_interpretation_profiles",
+        "astral_house_interpretation_profiles",
     ):
         assert table_name in head_tables
+    assert "house_interpretation_profiles" not in head_tables
     assert "astral_sign_rulerships" not in head_tables
     for table_name in (
         "astral_planets",
@@ -326,7 +327,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     for table_name in (
         "astral_prediction_daily_planet_profiles",
         "astral_prediction_daily_house_profiles",
-        "house_interpretation_profiles",
+        "astral_house_interpretation_profiles",
         "aspect_profiles",
         "planet_category_weights",
         "astral_house_category_weights",
@@ -335,14 +336,15 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" in columns
     house_interpretation_columns = {
-        column["name"] for column in head_inspector.get_columns("house_interpretation_profiles")
+        column["name"]
+        for column in head_inspector.get_columns("astral_house_interpretation_profiles")
     }
     assert house_interpretation_columns == {
         "id",
         "reference_version_id",
         "house_id",
         "language",
-        "tradition",
+        "astral_system_id",
         "title",
         "summary",
         "core_keywords_json",
@@ -362,20 +364,23 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     }
     house_interpretation_unique_columns = {
         tuple(constraint["column_names"])
-        for constraint in head_inspector.get_unique_constraints("house_interpretation_profiles")
+        for constraint in head_inspector.get_unique_constraints(
+            "astral_house_interpretation_profiles"
+        )
     }
     assert (
         "reference_version_id",
         "house_id",
         "language",
-        "tradition",
+        "astral_system_id",
     ) in house_interpretation_unique_columns
     house_interpretation_foreign_keys = {
         tuple(foreign_key["constrained_columns"]): foreign_key["referred_table"]
-        for foreign_key in head_inspector.get_foreign_keys("house_interpretation_profiles")
+        for foreign_key in head_inspector.get_foreign_keys("astral_house_interpretation_profiles")
     }
     assert house_interpretation_foreign_keys[("reference_version_id",)] == "reference_versions"
     assert house_interpretation_foreign_keys[("house_id",)] == "astral_houses"
+    assert house_interpretation_foreign_keys[("astral_system_id",)] == "astral_systems"
     assert "planet_profiles" not in set(head_inspector.get_table_names())
     assert "house_profiles" not in set(head_inspector.get_table_names())
     assert "house_category_weights" not in set(head_inspector.get_table_names())

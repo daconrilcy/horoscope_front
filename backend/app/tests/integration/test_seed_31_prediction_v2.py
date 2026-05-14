@@ -23,6 +23,8 @@ from app.infra.db.models import (
     AstralSystemModel,
     AstroPointModel,
     HouseCategoryWeightModel,
+    HouseInterpretationProfileModel,
+    HouseModel,
     HouseProfileModel,
     PlanetCategoryWeightModel,
     PlanetModel,
@@ -142,6 +144,28 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             )
             == 12
         )
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(HouseInterpretationProfileModel)
+                .where(HouseInterpretationProfileModel.reference_version_id == v2.id)
+            )
+            == 12
+        )
+        house_10_profile = session.scalar(
+            select(HouseInterpretationProfileModel)
+            .where(
+                HouseInterpretationProfileModel.reference_version_id == v2.id,
+                HouseInterpretationProfileModel.language == "en",
+            )
+            .join(HouseInterpretationProfileModel.house)
+            .join(HouseInterpretationProfileModel.astral_system)
+            .where(HouseModel.number == 10)
+            .where(AstralSystemModel.name == "modern")
+        )
+        assert house_10_profile is not None
+        assert house_10_profile.title == "Career and Public Role"
+        assert "career" in json.loads(house_10_profile.core_keywords_json or "[]")
         assert (
             session.scalar(
                 select(func.count())

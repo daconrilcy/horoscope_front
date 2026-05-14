@@ -1,13 +1,16 @@
+import json
 from typing import Any, cast
 
 import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from app.infra.db.base import Base
+from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstralSignModel,
+    AstralSystemModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -79,6 +82,36 @@ def test_seed_reference_version_is_idempotent() -> None:
         "opposition": 8.0,
     }
     assert {item["code"]: item.get("default_orb_deg") for item in aspects} == expected_default_orbs
+    with open_app_test_db_session() as db:
+        version = db.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
+        )
+        assert version is not None
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(HouseInterpretationProfileModel)
+                .where(HouseInterpretationProfileModel.reference_version_id == version.id)
+            )
+            == 12
+        )
+        house_10_profile = db.scalar(
+            select(HouseInterpretationProfileModel)
+            .join(HouseModel, HouseInterpretationProfileModel.house_id == HouseModel.id)
+            .where(
+                HouseInterpretationProfileModel.reference_version_id == version.id,
+                HouseInterpretationProfileModel.language == "en",
+                HouseModel.number == 10,
+            )
+            .join(
+                AstralSystemModel,
+                HouseInterpretationProfileModel.astral_system_id == AstralSystemModel.id,
+            )
+            .where(AstralSystemModel.name == "modern")
+        )
+        assert house_10_profile is not None
+        assert house_10_profile.title == "Career and Public Role"
+        assert "career" in json.loads(house_10_profile.core_keywords_json or "[]")
 
 
 def test_seed_reference_version_repairs_partial_existing_version() -> None:
