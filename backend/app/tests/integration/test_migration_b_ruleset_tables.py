@@ -13,13 +13,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.infra.db.models.prediction_reference import PredictionCategoryModel
-from app.infra.db.models.prediction_ruleset import (
-    CategoryCalibrationModel,
-    RulesetEventTypeModel,
-    RulesetParameterModel,
-)
-from app.infra.db.models.reference import ReferenceVersionModel
 
 NEW_TABLES_B = [
     "prediction_rulesets",
@@ -67,22 +60,27 @@ def _setup_engine(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, db_name: str)
     return _sqlite_engine(database_url)
 
 
-def _seed_reference_version(
-    session: Session, *, version: str, is_locked: bool
-) -> ReferenceVersionModel:
-    reference_version = ReferenceVersionModel(
-        version=version,
-        description=f"Seed for {version}",
-        is_locked=is_locked,
-        created_at=datetime.now(timezone.utc),
+def _seed_reference_version(session: Session, *, version: str, is_locked: bool) -> SimpleNamespace:
+    result = session.execute(
+        text(
+            """
+            INSERT INTO reference_versions (version, description, is_locked, created_at)
+            VALUES (:version, :description, :is_locked, :created_at)
+            """
+        ),
+        {
+            "version": version,
+            "description": f"Seed for {version}",
+            "is_locked": is_locked,
+            "created_at": datetime.now(timezone.utc),
+        },
     )
-    session.add(reference_version)
     session.commit()
-    return reference_version
+    return SimpleNamespace(id=result.lastrowid, version=version, is_locked=is_locked)
 
 
 def _seed_ruleset(
-    session: Session, ref_version: ReferenceVersionModel, *, version: str = "1.0.0"
+    session: Session, ref_version: SimpleNamespace, *, version: str = "1.0.0"
 ) -> SimpleNamespace:
     result = session.execute(
         text(
@@ -113,6 +111,25 @@ def _seed_ruleset(
     )
     session.commit()
     return SimpleNamespace(id=result.lastrowid, version=version)
+
+
+def _seed_prediction_category(session: Session, ref_version: SimpleNamespace) -> SimpleNamespace:
+    result = session.execute(
+        text(
+            """
+            INSERT INTO prediction_categories (
+                reference_version_id,
+                code,
+                name,
+                display_name
+            )
+            VALUES (:reference_version_id, 'career', 'Career', 'Career')
+            """
+        ),
+        {"reference_version_id": ref_version.id},
+    )
+    session.commit()
+    return SimpleNamespace(id=result.lastrowid, code="career")
 
 
 def test_migration_b_tables_exist(
@@ -187,18 +204,27 @@ def test_migration_b_event_type_unique_code(
         ref_version = _seed_reference_version(session, version="1.0.0", is_locked=False)
         ruleset = _seed_ruleset(session, ref_version)
 
-        session.add(
-            RulesetEventTypeModel(
-                ruleset_id=ruleset.id, code="aspect_exact", name="Aspect Exact", base_weight=2.0
-            )
+        session.execute(
+            text(
+                """
+                INSERT INTO ruleset_event_types (ruleset_id, code, name, base_weight)
+                VALUES (:ruleset_id, 'aspect_exact', 'Aspect Exact', 2.0)
+                """
+            ),
+            {"ruleset_id": ruleset.id},
         )
         session.commit()
 
-        duplicate = RulesetEventTypeModel(
-            ruleset_id=ruleset.id, code="aspect_exact", name="Duplicate"
-        )
-        session.add(duplicate)
         with pytest.raises(IntegrityError):
+            session.execute(
+                text(
+                    """
+                    INSERT INTO ruleset_event_types (ruleset_id, code, name)
+                    VALUES (:ruleset_id, 'aspect_exact', 'Duplicate')
+                    """
+                ),
+                {"ruleset_id": ruleset.id},
+            )
             session.commit()
         session.rollback()
 
@@ -215,21 +241,27 @@ def test_migration_b_parameter_unique_key(
         ref_version = _seed_reference_version(session, version="1.0.0", is_locked=False)
         ruleset = _seed_ruleset(session, ref_version)
 
-        session.add(
-            RulesetParameterModel(
-                ruleset_id=ruleset.id,
-                param_key="orb_multiplier",
-                param_value="1.2",
-                data_type="float",
-            )
+        session.execute(
+            text(
+                """
+                INSERT INTO ruleset_parameters (ruleset_id, param_key, param_value, data_type)
+                VALUES (:ruleset_id, 'orb_multiplier', '1.2', 'float')
+                """
+            ),
+            {"ruleset_id": ruleset.id},
         )
         session.commit()
 
-        duplicate = RulesetParameterModel(
-            ruleset_id=ruleset.id, param_key="orb_multiplier", param_value="1.5"
-        )
-        session.add(duplicate)
         with pytest.raises(IntegrityError):
+            session.execute(
+                text(
+                    """
+                    INSERT INTO ruleset_parameters (ruleset_id, param_key, param_value)
+                    VALUES (:ruleset_id, 'orb_multiplier', '1.5')
+                    """
+                ),
+                {"ruleset_id": ruleset.id},
+            )
             session.commit()
         session.rollback()
 
@@ -246,14 +278,16 @@ def test_migration_b_parameter_data_type_check_constraint(
         ref_version = _seed_reference_version(session, version="1.0.0", is_locked=False)
         ruleset = _seed_ruleset(session, ref_version)
 
-        invalid = RulesetParameterModel(
-            ruleset_id=ruleset.id,
-            param_key="bad_param",
-            param_value="value",
-            data_type="invalid_type",
-        )
-        session.add(invalid)
         with pytest.raises(IntegrityError):
+            session.execute(
+                text(
+                    """
+                    INSERT INTO ruleset_parameters (ruleset_id, param_key, param_value, data_type)
+                    VALUES (:ruleset_id, 'bad_param', 'value', 'invalid_type')
+                    """
+                ),
+                {"ruleset_id": ruleset.id},
+            )
             session.commit()
         session.rollback()
 
@@ -270,33 +304,37 @@ def test_migration_b_calibration_unique_constraint(
         ref_version = _seed_reference_version(session, version="1.0.0", is_locked=False)
         ruleset = _seed_ruleset(session, ref_version)
 
-        category = PredictionCategoryModel(
-            reference_version_id=ref_version.id,
-            code="career",
-            name="Career",
-            display_name="Career",
+        category = _seed_prediction_category(session, ref_version)
+
+        session.execute(
+            text(
+                """
+                INSERT INTO category_calibrations (ruleset_id, category_id, p50, valid_from)
+                VALUES (:ruleset_id, :category_id, 50.0, :valid_from)
+                """
+            ),
+            {
+                "ruleset_id": ruleset.id,
+                "category_id": category.id,
+                "valid_from": date(2024, 1, 1),
+            },
         )
-        session.add(category)
         session.commit()
 
-        session.add(
-            CategoryCalibrationModel(
-                ruleset_id=ruleset.id,
-                category_id=category.id,
-                p50=50.0,
-                valid_from=date(2024, 1, 1),
-            )
-        )
-        session.commit()
-
-        duplicate = CategoryCalibrationModel(
-            ruleset_id=ruleset.id,
-            category_id=category.id,
-            valid_from=date(2024, 1, 1),
-            p50=60.0,
-        )
-        session.add(duplicate)
         with pytest.raises(IntegrityError):
+            session.execute(
+                text(
+                    """
+                    INSERT INTO category_calibrations (ruleset_id, category_id, p50, valid_from)
+                    VALUES (:ruleset_id, :category_id, 60.0, :valid_from)
+                    """
+                ),
+                {
+                    "ruleset_id": ruleset.id,
+                    "category_id": category.id,
+                    "valid_from": date(2024, 1, 1),
+                },
+            )
             session.commit()
         session.rollback()
 

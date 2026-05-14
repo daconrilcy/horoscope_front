@@ -33,7 +33,9 @@ from app.infra.db.models import (
     RulesetParameterModel,
 )
 from app.infra.db.repositories import ReferenceRepository
-from app.services.house_interpretation_seed_service import sync_house_interpretation_profiles
+from app.services.reference_data.house_interpretation_seed_service import (
+    sync_house_interpretation_profiles,
+)
 
 
 class PredictionReferenceSeedAbortError(RuntimeError):

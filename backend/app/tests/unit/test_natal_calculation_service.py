@@ -7,6 +7,7 @@ from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
+from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstralSignModel,
@@ -348,6 +349,7 @@ def test_calculate_natal_fails_with_incomplete_reference_data() -> None:
     )
     with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        db.execute(delete(HouseInterpretationProfileModel))
         db.execute(delete(HouseModel))
         db.commit()
         try:

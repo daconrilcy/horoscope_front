@@ -150,7 +150,7 @@ class ReferenceDataService:
         )
 
         ensure_astral_planet_sign_dignities(db)
-        from app.services.house_interpretation_seed_service import (
+        from app.services.reference_data.house_interpretation_seed_service import (
             sync_house_interpretation_profiles,
         )
 

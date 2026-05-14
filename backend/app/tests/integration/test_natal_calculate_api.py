@@ -12,6 +12,7 @@ from app.domain.astrology.natal_calculation import (
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.infra.db.base import Base
+from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
 from app.infra.db.models.reference import (
     HouseModel,
 )
@@ -172,6 +173,7 @@ def test_calculate_natal_fails_when_reference_is_incomplete() -> None:
     _cleanup_reference_tables()
     _seed_reference_data()
     with open_app_test_db_session() as db:
+        db.execute(delete(HouseInterpretationProfileModel))
         db.execute(delete(HouseModel))
         db.commit()
 
