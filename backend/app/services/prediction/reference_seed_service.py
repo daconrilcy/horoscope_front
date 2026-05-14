@@ -44,8 +44,8 @@ EXPECTED_COUNTS = {
     "prediction_categories": 12,
     "planet_profiles": 10,
     "house_profiles": 12,
-    "house_interpretation_profiles": 12,
-    "aspect_profiles": 5,
+    "astral_house_interpretation_profiles": 12,
+    "astral_aspect_profiles": 5,
     "astro_points": 4,
     "astral_dignity_type": 4,
     "astral_elements": 4,
@@ -53,7 +53,7 @@ EXPECTED_COUNTS = {
     "astral_polarities": 2,
     "astral_planet_sign_dignities": 50,
     "astral_sign_profiles": 12,
-    "planet_category_weights": 85,
+    "astral_planet_category_weights": 85,
     "house_category_weights": 24,
     "point_category_weights": 8,
     "ruleset_event_types": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
@@ -313,12 +313,12 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         .select_from(HouseProfileModel)
         .where(HouseProfileModel.reference_version_id == reference_version_id)
     )
-    actual["house_interpretation_profiles"] = db.scalar(
+    actual["astral_house_interpretation_profiles"] = db.scalar(
         select(func.count())
         .select_from(HouseInterpretationProfileModel)
         .where(HouseInterpretationProfileModel.reference_version_id == reference_version_id)
     )
-    actual["aspect_profiles"] = db.scalar(
+    actual["astral_aspect_profiles"] = db.scalar(
         select(func.count())
         .select_from(AspectProfileModel)
         .where(AspectProfileModel.reference_version_id == reference_version_id)
@@ -336,7 +336,7 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     actual["astral_sign_profiles"] = db.scalar(
         select(func.count()).select_from(AstralSignProfileModel)
     )
-    actual["planet_category_weights"] = db.scalar(
+    actual["astral_planet_category_weights"] = db.scalar(
         select(func.count())
         .select_from(PlanetCategoryWeightModel)
         .where(PlanetCategoryWeightModel.reference_version_id == reference_version_id)

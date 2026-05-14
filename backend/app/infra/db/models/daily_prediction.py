@@ -40,7 +40,7 @@ class DailyPredictionRunModel(Base):
     local_date: Mapped[date] = mapped_column(nullable=False)
     timezone: Mapped[str] = mapped_column(String(64), nullable=False)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("astral_reference_versions.id", ondelete="RESTRICT"), nullable=False
     )
     ruleset_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_rulesets.id", ondelete="RESTRICT"), nullable=False

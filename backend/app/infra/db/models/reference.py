@@ -23,7 +23,7 @@ from app.infra.db.base import Base
 
 
 class ReferenceVersionModel(Base):
-    __tablename__ = "reference_versions"
+    __tablename__ = "astral_reference_versions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     version: Mapped[str] = mapped_column(String(32), unique=True, index=True)
@@ -174,7 +174,7 @@ class HouseModel(Base):
 
 
 class AspectModel(Base):
-    __tablename__ = "aspects"
+    __tablename__ = "astral_aspects"
     __table_args__ = (UniqueConstraint("code"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

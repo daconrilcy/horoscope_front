@@ -33,7 +33,9 @@ class PredictionRulesetModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     version: Mapped[str] = mapped_column(String(32), nullable=False)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id", ondelete="RESTRICT"), nullable=False, index=True
+        ForeignKey("astral_reference_versions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
     )
     zodiac_type: Mapped[str] = mapped_column(
         String(16), nullable=False, default="tropical", server_default="tropical"

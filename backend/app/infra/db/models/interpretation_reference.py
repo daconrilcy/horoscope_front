@@ -24,7 +24,7 @@ class HouseInterpretationProfileModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         nullable=False,
         index=True,
     )

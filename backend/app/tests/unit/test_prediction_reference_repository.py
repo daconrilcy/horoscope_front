@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.infra.db.base import Base
 from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
 from app.infra.db.models.prediction_reference import (
+    AspectProfileModel,
     AstralPlanetSignDignityModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -100,6 +101,21 @@ def test_planet_model_uses_canonical_astral_table_name():
     assert PlanetModel.__tablename__ == "astral_planets"
 
 
+def test_reference_and_aspect_models_use_canonical_astral_table_names():
+    """Les modèles de versions et d'aspects pointent vers les noms SQL canoniques."""
+    assert ReferenceVersionModel.__tablename__ == "astral_reference_versions"
+    assert AspectModel.__tablename__ == "astral_aspects"
+
+
+def test_prediction_aspect_and_planet_weight_tables_are_astral_namespaced():
+    """Les tables prédictives liées aux aspects et planètes sont préfixées astral."""
+    assert PlanetCategoryWeightModel.__tablename__ == "astral_planet_category_weights"
+    assert AspectProfileModel.__tablename__ == "astral_aspect_profiles"
+    assert inspect(PlanetCategoryWeightModel).persist_selectable.name == (
+        "astral_planet_category_weights"
+    )
+
+
 def test_house_models_use_canonical_astral_table_names():
     """Les modèles maison pointent vers les noms SQL canoniques astraux."""
     assert HouseModel.__tablename__ == "astral_houses"
@@ -146,7 +162,7 @@ def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
         for column in HouseInterpretationProfileModel.__table__.columns
         for foreign_key in column.foreign_keys
     }
-    assert foreign_key_targets == {"reference_versions", "astral_houses", "astral_systems"}
+    assert foreign_key_targets == {"astral_reference_versions", "astral_houses", "astral_systems"}
 
 
 def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(

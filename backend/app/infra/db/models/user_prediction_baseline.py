@@ -61,7 +61,7 @@ class UserPredictionBaselineModel(Base):
         index=True,
     )
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("astral_reference_versions.id", ondelete="RESTRICT"), nullable=False
     )
     ruleset_id: Mapped[int] = mapped_column(
         ForeignKey("prediction_rulesets.id", ondelete="RESTRICT"), nullable=False

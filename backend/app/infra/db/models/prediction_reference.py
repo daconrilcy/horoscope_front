@@ -37,7 +37,7 @@ class PredictionCategoryModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         index=True,
     )
     code: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -57,7 +57,7 @@ class PlanetProfileModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         nullable=False,
         index=True,
     )
@@ -85,7 +85,7 @@ class HouseProfileModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         nullable=False,
         index=True,
     )
@@ -104,12 +104,12 @@ class HouseProfileModel(Base):
 
 
 class PlanetCategoryWeightModel(Base):
-    __tablename__ = "planet_category_weights"
+    __tablename__ = "astral_planet_category_weights"
     __table_args__ = (UniqueConstraint("reference_version_id", "planet_id", "category_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         nullable=False,
         index=True,
     )
@@ -135,7 +135,7 @@ class HouseCategoryWeightModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         nullable=False,
         index=True,
     )
@@ -172,7 +172,7 @@ class PointCategoryWeightModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         nullable=False,
         index=True,
     )
@@ -223,16 +223,18 @@ class AstralPlanetSignDignityModel(Base):
 
 
 class AspectProfileModel(Base):
-    __tablename__ = "aspect_profiles"
+    __tablename__ = "astral_aspect_profiles"
     __table_args__ = (UniqueConstraint("reference_version_id", "aspect_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
-        ForeignKey("reference_versions.id"),
+        ForeignKey("astral_reference_versions.id"),
         nullable=False,
         index=True,
     )
-    aspect_id: Mapped[int] = mapped_column(ForeignKey("aspects.id"), nullable=False, index=True)
+    aspect_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_aspects.id"), nullable=False, index=True
+    )
     intensity_weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     default_valence: Mapped[str] = mapped_column(
         String(16), nullable=False, default="contextual"

@@ -22,11 +22,11 @@ NEW_TABLES = [
     "prediction_categories",
     "astral_prediction_daily_planet_profiles",
     "astral_prediction_daily_house_profiles",
-    "planet_category_weights",
+    "astral_planet_category_weights",
     "astral_house_category_weights",
     "astro_points",
     "point_category_weights",
-    "aspect_profiles",
+    "astral_aspect_profiles",
 ]
 
 EXPECTED_INDEXES = {
@@ -39,10 +39,10 @@ EXPECTED_INDEXES = {
         "ix_astral_prediction_daily_house_profiles_house_id",
         "ix_astral_prediction_daily_house_profiles_reference_version_id",
     },
-    "planet_category_weights": {
-        "ix_planet_category_weights_category_id",
-        "ix_planet_category_weights_planet_id",
-        "ix_planet_category_weights_reference_version_id",
+    "astral_planet_category_weights": {
+        "ix_astral_planet_category_weights_category_id",
+        "ix_astral_planet_category_weights_planet_id",
+        "ix_astral_planet_category_weights_reference_version_id",
     },
     "astral_house_category_weights": {
         "ix_astral_house_category_weights_category_id",
@@ -55,9 +55,9 @@ EXPECTED_INDEXES = {
         "ix_point_category_weights_point_id",
         "ix_point_category_weights_reference_version_id",
     },
-    "aspect_profiles": {
-        "ix_aspect_profiles_aspect_id",
-        "ix_aspect_profiles_reference_version_id",
+    "astral_aspect_profiles": {
+        "ix_astral_aspect_profiles_aspect_id",
+        "ix_astral_aspect_profiles_reference_version_id",
     },
 }
 
