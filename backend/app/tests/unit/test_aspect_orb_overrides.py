@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.constants import MAJOR_ASPECT_CODES
-from app.domain.astrology.calculators.aspects import calculate_major_aspects
+from app.domain.astrology.calculators.aspects import calculate_major_aspects, resolve_orb
 from app.domain.astrology.natal_calculation import build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput
 
@@ -56,13 +56,26 @@ def _swisseph_positions_sun_moon(
     ]
 
 
+def _swisseph_positions_sun_mars_wide_square(
+    jdut: float, planet_codes: list[str], **kwargs: object
+) -> list[dict[str, object]]:
+    """Soleil à 0°, Mars à 97° — square hors default mais dans règle luminaire."""
+    return [
+        {"planet_code": "sun", "longitude": 0.0, "sign_code": "aries"},
+        {"planet_code": "mars", "longitude": 97.0, "sign_code": "cancer"},
+    ]
+
+
 def _swisseph_houses_mock(
     jdut: float, lat: float, lon: float, house_numbers: list[int], **kwargs: object
 ) -> tuple[list[dict[str, object]], str]:
     return [{"number": n, "cusp_longitude": float((n - 1) * 30)} for n in house_numbers], "placidus"
 
 
-def _make_reference_two_planets(aspects: list[dict[str, object]]) -> dict[str, object]:
+def _make_reference_two_planets(
+    aspects: list[dict[str, object]],
+    aspect_orb_rules: list[dict[str, object]] | None = None,
+) -> dict[str, object]:
     return {
         "version": "1.0.0",
         "planets": [{"code": "sun", "name": "Sun"}, {"code": "mars", "name": "Mars"}],
@@ -74,6 +87,7 @@ def _make_reference_two_planets(aspects: list[dict[str, object]]) -> dict[str, o
         ],
         "houses": [{"number": n, "name": f"House {n}"} for n in range(1, 13)],
         "aspects": aspects,
+        "aspect_orb_rules": aspect_orb_rules or [],
     }
 
 
@@ -185,6 +199,130 @@ class TestOrbPriorityResolution:
         assert len(result) == 1
         assert result[0]["orb_max"] == 7.0  # pair override pour venus-mars
         assert result[0]["orb_used"] == 6.0  # déviation réelle
+
+    def test_orb_rules_angle_priority_beats_luminary_rule(self) -> None:
+        """Une règle angle prioritaire gagne sur une règle luminaire plus large."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "modern",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "luminary",
+                "target_body_type": "any",
+                "orb_deg": 8.0,
+                "priority": 900,
+                "is_enabled": True,
+            },
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "angle",
+                "target_body_type": "any",
+                "orb_deg": 5.0,
+                "priority": 850,
+                "is_enabled": True,
+            },
+        ]
+
+        assert resolve_orb("square", "modern", "natal", "moon", "asc", definitions, rules) == 5.0
+
+    def test_orb_rules_fallback_to_default_orb_deg(self) -> None:
+        """Sans exception ciblée, default_orb_deg reste l'orbe obligatoire."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "modern",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+
+        assert resolve_orb("square", "modern", "natal", "mars", "saturn", definitions, []) == 6.0
+
+    def test_calculate_major_aspects_uses_orb_rules_when_provided(self) -> None:
+        """Les aspects calculés utilisent les exceptions sans modifier default_orb_deg."""
+        positions = [
+            {"planet_code": "uranus", "longitude": 0.0},
+            {"planet_code": "neptune", "longitude": 94.0},
+        ]
+        definitions = [{"code": "square", "angle": 90.0, "default_orb_deg": 6.0}]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "transpersonal_planet",
+                "target_body_type": "transpersonal_planet",
+                "orb_deg": 3.0,
+                "priority": 700,
+                "is_enabled": True,
+            }
+        ]
+
+        assert calculate_major_aspects(positions, definitions, orb_rules=rules) == []
+
+    def test_calculate_major_aspects_uses_requested_system_for_plain_definitions(self) -> None:
+        """Une définition sans system_code reste utilisable pour un système non modern."""
+        positions = [
+            {"planet_code": "sun", "longitude": 0.0},
+            {"planet_code": "mars", "longitude": 95.0},
+        ]
+        definitions = [{"code": "square", "angle": 90.0, "default_orb_deg": 6.0}]
+
+        result = calculate_major_aspects(
+            positions,
+            definitions,
+            orb_rules=[],
+            system_code="traditional",
+        )
+
+        assert len(result) == 1
+        assert result[0]["orb_max"] == 6.0
+
+    def test_transit_to_natal_rules_are_directional(self) -> None:
+        """Une règle prédictive target luminary ne matche pas le sens inversé."""
+        definitions = [
+            {
+                "code": "square",
+                "system_code": "modern",
+                "default_orb_deg": 6.0,
+                "is_enabled": True,
+            }
+        ]
+        rules = [
+            {
+                "aspect_code": "square",
+                "system_code": "modern",
+                "calculation_context": "transit_to_natal",
+                "source_body_type": "any",
+                "target_body_type": "luminary",
+                "orb_deg": 2.5,
+                "priority": 500,
+                "is_enabled": True,
+            }
+        ]
+
+        assert (
+            resolve_orb(
+                "square",
+                "modern",
+                "transit_to_natal",
+                "sun",
+                "saturn",
+                definitions,
+                rules,
+            )
+            == 6.0
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -440,6 +578,49 @@ class TestGoldenAspectDetection:
         assert aspect.orb_used == 3.0
         assert aspect.orb_max == 6.0
         assert aspect.orb_used <= aspect.orb_max
+
+    def test_build_natal_result_consumes_reference_aspect_orb_rules(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Le pipeline natal applique les règles seedées du payload de référence."""
+        ref = _make_reference_two_planets(
+            aspects=[
+                {"code": "square", "angle": 90.0, "default_orb_deg": 6.0},
+            ],
+            aspect_orb_rules=[
+                {
+                    "aspect_code": "square",
+                    "system_code": "modern",
+                    "calculation_context": "natal",
+                    "source_body_type": "luminary",
+                    "target_body_type": "any",
+                    "orb_deg": 8.0,
+                    "priority": 800,
+                    "is_enabled": True,
+                }
+            ],
+        )
+        monkeypatch.setattr(
+            "app.domain.astrology.natal_calculation._build_swisseph_positions",
+            _swisseph_positions_sun_mars_wide_square,
+        )
+        monkeypatch.setattr(
+            "app.domain.astrology.natal_calculation._build_swisseph_houses",
+            _swisseph_houses_mock,
+        )
+
+        result = build_natal_result(
+            birth_input=_make_birth_input(),
+            reference_data=ref,
+            ruleset_version="1.0.0",
+            engine="swisseph",
+            birth_lat=45.75,
+            birth_lon=4.85,
+        )
+
+        assert len(result.aspects) == 1
+        assert result.aspects[0].orb == 7.0
+        assert result.aspects[0].orb_max == 8.0
 
     def test_golden_deterministic_sort_order(self) -> None:
         """Golden: les aspects sont triés de manière déterministe (code, planet_a, planet_b)."""

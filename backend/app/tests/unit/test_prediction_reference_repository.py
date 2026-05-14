@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import String, Text, UniqueConstraint, inspect
+from sqlalchemy import CheckConstraint, String, Text, UniqueConstraint, inspect
 from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
@@ -9,6 +9,7 @@ from app.infra.db.models.interpretation_reference import HouseInterpretationProf
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
     AstralAspectDefinitionModel,
+    AstralAspectOrbRuleModel,
     AstralDefaultValenceModel,
     AstralInterpretiveValenceModel,
     AstralPlanetSignDignityModel,
@@ -118,11 +119,61 @@ def test_prediction_aspect_and_planet_weight_tables_are_astral_namespaced():
     assert PlanetCategoryWeightModel.__tablename__ == "astral_planet_category_weights"
     assert AspectProfileModel.__tablename__ == "astral_aspect_profiles"
     assert AstralAspectDefinitionModel.__tablename__ == "astral_aspect_definitions"
+    assert AstralAspectOrbRuleModel.__tablename__ == "astral_aspect_orb_rules"
     assert AstralDefaultValenceModel.__tablename__ == "astral_default_valence"
     assert AstralInterpretiveValenceModel.__tablename__ == "astral_interpretive_valence"
     assert inspect(PlanetCategoryWeightModel).persist_selectable.name == (
         "astral_planet_category_weights"
     )
+
+
+def test_enabled_aspect_definitions_require_default_orb_deg():
+    """Un aspect activé doit toujours porter son orbe standard de fallback."""
+    constraints = {
+        constraint.name
+        for constraint in AstralAspectDefinitionModel.__table__.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+    assert "ck_astral_aspect_definitions_enabled_default_orb" in constraints
+
+
+def test_aspect_orb_rule_model_stores_only_targeted_overrides():
+    """Verrouille la structure des exceptions d'orbes versionnées."""
+    columns = {column.key for column in inspect(AstralAspectOrbRuleModel).columns}
+    assert columns == {
+        "id",
+        "reference_version_id",
+        "astral_system_id",
+        "aspect_id",
+        "calculation_context",
+        "source_body_type",
+        "source_planet_id",
+        "source_point_code",
+        "target_body_type",
+        "target_planet_id",
+        "target_point_code",
+        "orb_deg",
+        "priority",
+        "is_enabled",
+        "micro_note",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralAspectOrbRuleModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert (
+        "reference_version_id",
+        "astral_system_id",
+        "aspect_id",
+        "calculation_context",
+        "source_body_type",
+        "source_planet_id",
+        "source_point_code",
+        "target_body_type",
+        "target_planet_id",
+        "target_point_code",
+    ) in constraints
 
 
 def test_house_models_use_canonical_astral_table_names():

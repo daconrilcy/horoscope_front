@@ -11,6 +11,7 @@ from app.infra.db.models import (
     AspectProfileModel,
     AstralAspectDefinitionModel,
     AstralAspectFamilyModel,
+    AstralAspectOrbRuleModel,
     AstralDefaultValenceModel,
     AstralDignityTypeModel,
     AstralElementModel,
@@ -53,6 +54,7 @@ EXPECTED_COUNTS = {
     "astral_house_interpretation_profiles": 12,
     "astral_aspect_profiles": 20,
     "astral_aspect_definitions": 80,
+    "astral_aspect_orb_rules": 159,
     "astral_default_valence": 4,
     "astral_interpretive_valence": 5,
     "astro_points": 4,
@@ -167,6 +169,45 @@ def _load_aspect_definition_groups() -> list[dict[str, object]]:
     if not isinstance(groups, list) or not groups:
         raise ValueError("aspect definitions source must contain a non-empty seed list")
     return groups
+
+
+def _load_aspect_orb_rule_groups() -> list[dict[str, object]]:
+    """Charge les règles de surcharge d'orbes depuis la source documentaire."""
+    with _astro_research_path("astral_aspect_orb_rules.json").open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    groups = raw.get("seed") if isinstance(raw, dict) else None
+    if not isinstance(groups, list) or not groups:
+        raise ValueError("aspect orb rules source must contain a non-empty seed list")
+    return groups
+
+
+def _resolve_aspect_orb_rule_groups() -> list[dict[str, object]]:
+    """Déplie les groupes copiés pour obtenir les règles finales par système."""
+    raw_groups = _load_aspect_orb_rule_groups()
+    resolved: dict[str, list[dict[str, object]]] = {}
+    final_groups: list[dict[str, object]] = []
+
+    for group in raw_groups:
+        system_code = str(group["astral_system_code"])
+        rules: list[dict[str, object]] = []
+        copy_from = group.get("copy_rules_from")
+        if copy_from is not None:
+            copied_rules = resolved.get(str(copy_from))
+            if copied_rules is None:
+                raise ValueError(f"unknown source aspect orb rule group: {copy_from}")
+            rules.extend(dict(rule) for rule in copied_rules)
+        rules.extend(dict(rule) for rule in group.get("rules", []))
+        rules.extend(dict(rule) for rule in group.get("override_rules", []))
+        resolved[system_code] = rules
+        final_groups.append(
+            {
+                "reference_version_id": group["reference_version_id"],
+                "astral_system_code": system_code,
+                "rules": rules,
+            }
+        )
+
+    return final_groups
 
 
 def _required_keyword_list(
@@ -429,6 +470,101 @@ def _sync_astral_aspect_definitions(db: Session, reference_version_id: int) -> N
     db.flush()
 
 
+def _sync_astral_aspect_orb_rules(db: Session, reference_version_id: int) -> None:
+    """Synchronise les exceptions d'orbes sans dupliquer les orbes standards."""
+    aspects = {row.code: row.id for row in db.scalars(select(AspectModel)).all()}
+    systems = _ensure_astral_systems(db)
+    planets = {row.code: row.id for row in db.scalars(select(PlanetModel)).all()}
+    expected_keys: set[tuple[object, ...]] = set()
+
+    for group in _resolve_aspect_orb_rule_groups():
+        system_code = str(group["astral_system_code"])
+        if system_code not in systems:
+            raise ValueError(f"unknown astral system in aspect orb rules: {system_code}")
+        system_id = systems[system_code]
+        for source_row in group["rules"]:
+            aspect_code = str(source_row["aspect_code"])
+            if aspect_code not in aspects:
+                raise ValueError(f"unknown aspect code in orb rules: {aspect_code}")
+            source_planet_code = source_row.get("source_planet_code")
+            target_planet_code = source_row.get("target_planet_code")
+            source_planet_id = (
+                None if source_planet_code is None else planets[str(source_planet_code)]
+            )
+            target_planet_id = (
+                None if target_planet_code is None else planets[str(target_planet_code)]
+            )
+            payload = {
+                "reference_version_id": reference_version_id,
+                "astral_system_id": system_id,
+                "aspect_id": aspects[aspect_code],
+                "calculation_context": str(source_row["calculation_context"]),
+                "source_body_type": str(source_row["source_body_type"]),
+                "source_planet_id": source_planet_id,
+                "source_point_code": source_row.get("source_point_code"),
+                "target_body_type": str(source_row["target_body_type"]),
+                "target_planet_id": target_planet_id,
+                "target_point_code": source_row.get("target_point_code"),
+                "orb_deg": float(source_row["orb_deg"]),
+                "priority": int(source_row["priority"]),
+                "is_enabled": bool(source_row["is_enabled"]),
+                "micro_note": source_row.get("micro_note"),
+            }
+            key = (
+                payload["reference_version_id"],
+                payload["astral_system_id"],
+                payload["aspect_id"],
+                payload["calculation_context"],
+                payload["source_body_type"],
+                payload["source_planet_id"],
+                payload["source_point_code"],
+                payload["target_body_type"],
+                payload["target_planet_id"],
+                payload["target_point_code"],
+            )
+            expected_keys.add(key)
+            rule = db.scalar(
+                select(AstralAspectOrbRuleModel).where(
+                    AstralAspectOrbRuleModel.reference_version_id == reference_version_id,
+                    AstralAspectOrbRuleModel.astral_system_id == system_id,
+                    AstralAspectOrbRuleModel.aspect_id == aspects[aspect_code],
+                    AstralAspectOrbRuleModel.calculation_context == payload["calculation_context"],
+                    AstralAspectOrbRuleModel.source_body_type == payload["source_body_type"],
+                    AstralAspectOrbRuleModel.source_planet_id == source_planet_id,
+                    AstralAspectOrbRuleModel.source_point_code == payload["source_point_code"],
+                    AstralAspectOrbRuleModel.target_body_type == payload["target_body_type"],
+                    AstralAspectOrbRuleModel.target_planet_id == target_planet_id,
+                    AstralAspectOrbRuleModel.target_point_code == payload["target_point_code"],
+                )
+            )
+            if rule is None:
+                db.add(AstralAspectOrbRuleModel(**payload))
+                continue
+            for field_name, field_value in payload.items():
+                setattr(rule, field_name, field_value)
+
+    for existing in db.scalars(
+        select(AstralAspectOrbRuleModel).where(
+            AstralAspectOrbRuleModel.reference_version_id == reference_version_id
+        )
+    ).all():
+        existing_key = (
+            existing.reference_version_id,
+            existing.astral_system_id,
+            existing.aspect_id,
+            existing.calculation_context,
+            existing.source_body_type,
+            existing.source_planet_id,
+            existing.source_point_code,
+            existing.target_body_type,
+            existing.target_planet_id,
+            existing.target_point_code,
+        )
+        if existing_key not in expected_keys:
+            db.delete(existing)
+    db.flush()
+
+
 def ensure_astral_aspect_reference_data(db: Session, reference_version_id: int) -> None:
     """Synchronise les référentiels d'aspects et leurs profils versionnés."""
     _ensure_astral_valences(db)
@@ -444,15 +580,22 @@ def ensure_astral_aspect_reference_data(db: Session, reference_version_id: int) 
         .select_from(AstralAspectDefinitionModel)
         .where(AstralAspectDefinitionModel.reference_version_id == reference_version_id)
     )
+    orb_rules_count = db.scalar(
+        select(func.count())
+        .select_from(AstralAspectOrbRuleModel)
+        .where(AstralAspectOrbRuleModel.reference_version_id == reference_version_id)
+    )
     if (
         version is not None
         and version.is_locked
         and profiles_count == EXPECTED_COUNTS["astral_aspect_profiles"]
         and definitions_count == EXPECTED_COUNTS["astral_aspect_definitions"]
+        and orb_rules_count == EXPECTED_COUNTS["astral_aspect_orb_rules"]
     ):
         return
     _sync_astral_aspect_profiles(db, reference_version_id)
     _sync_astral_aspect_definitions(db, reference_version_id)
+    _sync_astral_aspect_orb_rules(db, reference_version_id)
 
 
 def _ensure_astral_sign_profiles(db: Session) -> None:
@@ -601,6 +744,11 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         select(func.count())
         .select_from(AstralAspectDefinitionModel)
         .where(AstralAspectDefinitionModel.reference_version_id == reference_version_id)
+    )
+    actual["astral_aspect_orb_rules"] = db.scalar(
+        select(func.count())
+        .select_from(AstralAspectOrbRuleModel)
+        .where(AstralAspectOrbRuleModel.reference_version_id == reference_version_id)
     )
     actual["astral_default_valence"] = db.scalar(
         select(func.count()).select_from(AstralDefaultValenceModel)
@@ -795,6 +943,11 @@ def run_prediction_reference_seed(db: Session) -> None:
                 delete(PlanetProfileModel).where(PlanetProfileModel.reference_version_id == v2.id)
             )
             db.execute(delete(AstralSignProfileModel))
+            db.execute(
+                delete(AstralAspectOrbRuleModel).where(
+                    AstralAspectOrbRuleModel.reference_version_id == v2.id
+                )
+            )
             db.execute(
                 delete(AstralAspectDefinitionModel).where(
                     AstralAspectDefinitionModel.reference_version_id == v2.id

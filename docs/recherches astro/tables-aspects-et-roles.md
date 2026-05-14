@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py` et `20260514_0102_normalize_astral_aspects.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py` et `20260514_0104_add_astral_aspect_orb_rules.py`.
 
 Deux catégories sont distinguées :
 
@@ -21,6 +21,7 @@ Point important : les aspects réels d'un thème ne sont pas stockés dans une t
 | `astral_interpretive_valence` | Catalogue id/name | Valences interprétatives principales | Non |
 | `astral_aspect_profiles` | `aspect_id -> astral_aspects.id` | Paramétrage du moteur daily : intensité, valence, polarité, énergie, orbe, phase | Oui, via `reference_version_id` |
 | `astral_aspect_definitions` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Activation et qualification des aspects par système astrologique | Oui, via `reference_version_id` |
+| `astral_aspect_orb_rules` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Exceptions ciblées à l'orbe standard des définitions | Oui, via `reference_version_id` |
 | `ruleset_event_types` | Codes d'événements d'aspect | Pondération et priorité des événements `aspect_*` | Indirectement via le ruleset |
 | `ruleset_parameters` | Paramètres de phase/orbe | Multiplicateurs runtime applicables à certains événements | Indirectement via le ruleset |
 | `chart_results` | JSON `result_payload.aspects` | Snapshot des aspects natals calculés pour un thème | Version texte dans payload et colonnes |
@@ -230,6 +231,7 @@ Contraintes :
 
 - Unicité `(reference_version_id, aspect_id, astral_system_id)`.
 - Index sur `reference_version_id`, `aspect_id`, `astral_system_id`.
+- `default_orb_deg` obligatoire pour tout aspect activé via la contrainte `ck_astral_aspect_definitions_enabled_default_orb`.
 - Mise à jour bloquée quand la version de référence liée est verrouillée.
 
 Seed attendu :
@@ -237,6 +239,106 @@ Seed attendu :
 - 80 définitions par version de référence complète : 20 aspects x 4 systèmes.
 - Pour `modern`, les 20 aspects sont définis ; les aspects avancés sont généralement `is_enabled = false`.
 - Pour `traditional`, `hellenistic` et `medieval`, les cinq aspects majeurs sont actifs et les autres aspects sont injectés comme désactivés pour garder une matrice complète.
+
+### `astral_aspect_orb_rules`
+
+Définie par `AstralAspectOrbRuleModel` dans `backend/app/infra/db/models/prediction_reference.py`.
+
+Qualification :
+
+- Table de surcharges ciblées de l'orbe standard.
+- Versionnée par `reference_version_id`.
+- Reliée à `astral_systems.id`, `astral_aspects.id` et optionnellement à `astral_planets.id`.
+- Seedée depuis `docs/recherches astro/astral_aspect_orb_rules.json`.
+- Synchronisée par `ensure_astral_aspect_reference_data`.
+- Consommée par le calcul natal via `ReferenceRepository.get_reference_data -> build_natal_result -> calculate_major_aspects`.
+
+Rôle métier :
+
+- `astral_aspect_definitions.default_orb_deg` reste l'orbe standard obligatoire pour chaque aspect activé.
+- `astral_aspect_orb_rules` ne stocke que les exceptions plus spécifiques.
+- Les orbes observés d'un aspect réel restent dans les payloads runtime (`AspectResult.orb`, événements daily) et ne doivent pas être persistés dans cette table.
+
+Colonnes principales :
+
+| Colonne | Rôle |
+| --- | --- |
+| `reference_version_id` | Version de référence qui porte la surcharge. |
+| `astral_system_id` | Système astrologique concerné. |
+| `aspect_id` | Aspect canonique concerné. |
+| `calculation_context` | Contexte d'application : `natal`, `transit_to_natal`, `sky_to_sky`, `progression_to_natal` ou `any`. |
+| `source_body_type` | Type du corps source : `any`, `planet`, `luminary`, `personal_planet`, `social_planet`, `transpersonal_planet`, `angle` ou `point`. |
+| `source_planet_id` | Planète source exacte optionnelle. |
+| `source_point_code` | Point source exact optionnel, par exemple `asc` ou `mc`. |
+| `target_body_type` | Type du corps cible. |
+| `target_planet_id` | Planète cible exacte optionnelle. |
+| `target_point_code` | Point cible exact optionnel. |
+| `orb_deg` | Orbe de calcul à utiliser quand la règle matche. |
+| `priority` | Priorité de résolution. |
+| `is_enabled` | Active ou désactive la règle. |
+| `micro_note` | Note éditoriale optionnelle. |
+
+Contraintes :
+
+- Unicité sur la clé naturelle complète `(reference_version_id, astral_system_id, aspect_id, calculation_context, source_body_type, source_planet_id, source_point_code, target_body_type, target_planet_id, target_point_code)`.
+- `orb_deg > 0`.
+- `priority >= 0`.
+- Si une planète exacte est renseignée, le type associé doit être compatible avec une planète (`planet`, `luminary`, `personal_planet`, `social_planet`, `transpersonal_planet`).
+- Mise à jour bloquée quand la version de référence liée est verrouillée.
+
+Seed attendu :
+
+- 159 règles par version de référence complète.
+- `modern` définit 39 règles.
+- `traditional`, `hellenistic` et `medieval` copient les règles traditionnelles dérivées de `modern`, avec une surcharge de désactivation du `quincunx`, soit 40 règles par système.
+
+Résolution runtime :
+
+1. Charger la définition `(aspect_code, system_code)` depuis `astral_aspect_definitions`.
+2. Si la définition est absente ou désactivée, ne pas calculer l'aspect.
+3. Filtrer les règles activées sur l'aspect, le système, le contexte (`context` ou `any`) et les corps source/cible.
+4. Trier les règles candidates par priorité effective, puis par spécificité.
+5. Retourner `rule.orb_deg` si une règle matche.
+6. Sinon retourner `astral_aspect_definitions.default_orb_deg`.
+
+Priorités fonctionnelles appliquées par le resolver :
+
+| Cas | Priorité effective |
+| --- | ---: |
+| Paire planète-planète exacte | 1000 |
+| Règle impliquant un angle | 900 |
+| Règle impliquant un luminaire | 800 à 899 |
+| Règle de classe planétaire | 700 |
+| Fallback `default_orb_deg` | 0 |
+
+Exemple :
+
+- `square` en `modern` a `default_orb_deg = 6.0`.
+- Mars carré Saturne sans règle spécifique donne `orb_max = 6.0`.
+- Soleil carré Saturne matche la règle luminaire et donne `orb_max = 8.0`.
+- Uranus carré Neptune matche la règle transpersonnelle et donne `orb_max = 3.0`.
+- Lune carré ASC matche à la fois une règle luminaire et une règle angle ; la règle angle gagne et donne `orb_max = 5.0`.
+
+Direction source/cible :
+
+- En contexte `natal` ou `any`, les aspects géométriques sont traités de manière symétrique.
+- En contexte orienté comme `transit_to_natal`, le sens source -> cible est respecté. Une règle `any -> luminary` ne doit pas matcher automatiquement `luminary -> any`.
+
+Relation avec `astral_aspect_profiles.orb_multiplier` :
+
+Pour le calcul natal pur, la résolution s'arrête à l'orbe astrologique :
+
+```text
+orb_max = resolved_orb_deg
+```
+
+Pour le moteur prédictif ou produit, un seuil dérivé peut ensuite appliquer le profil d'aspect :
+
+```text
+predictive_orb_max = resolved_orb_deg x astral_aspect_profiles.orb_multiplier
+```
+
+`resolved_orb_deg` est l'orbe astrologique de calcul. `orb_multiplier` est une modulation prédictive ou produit. Ces deux dimensions ne doivent pas être fusionnées dans une seule valeur de référence, ni injecter la logique de scoring daily dans le calcul natal pur.
 
 ## Tables adjacentes nécessaires au fonctionnement
 
@@ -289,10 +391,12 @@ Le calcul natal est porté par `build_natal_result` dans `backend/app/domain/ast
 Flux courant :
 
 1. `ReferenceRepository.get_reference_data` expose `aspects[]` depuis `astral_aspects`, enrichi avec `family` et `default_orb_deg` moderne depuis `astral_aspect_definitions`.
-2. `build_natal_result` vérifie que `aspects[]` existe et que chaque entrée contient un `code`, un `angle` et un `default_orb_deg` valide.
-3. Le calcul filtre explicitement sur `MAJOR_ASPECT_CODES`, soit `conjunction`, `sextile`, `square`, `trine`, `opposition`.
-4. `calculate_major_aspects` compare toutes les paires de positions planétaires et applique la résolution hiérarchique des orbes.
-5. Les résultats sont convertis en `AspectResult`.
+2. Le même payload expose `aspect_orb_rules[]` depuis `astral_aspect_orb_rules`.
+3. `build_natal_result` vérifie que `aspects[]` existe et que chaque entrée contient un `code`, un `angle` et un `default_orb_deg` valide.
+4. Si `aspect_orb_rules[]` est présent, `build_natal_result` valide les règles et les transmet au calculateur.
+5. Le calcul filtre explicitement sur `MAJOR_ASPECT_CODES`, soit `conjunction`, `sextile`, `square`, `trine`, `opposition`.
+6. `calculate_major_aspects` compare toutes les paires de positions planétaires et applique la résolution hiérarchique des orbes.
+7. Les résultats sont convertis en `AspectResult`.
 
 Contrat `AspectResult` :
 
@@ -310,6 +414,7 @@ Nuance importante :
 - Le référentiel relationnel contient maintenant les aspects majeurs, mineurs et avancés.
 - Le calcul natal public reste limité aux cinq aspects majeurs par `MAJOR_ASPECT_CODES`.
 - Les orbes par défaut ne vivent plus dans `astral_aspects`; ils sont résolus via `astral_aspect_definitions`.
+- Les exceptions d'orbe ne vivent pas dans `aspects[]`; elles sont transportées par `aspect_orb_rules[]`.
 
 ### `chart_results`
 
@@ -423,30 +528,35 @@ Point d'attention :
 ## Étapes où les aspects interviennent dans les calculs
 
 1. `ReferenceRepository.seed_version_defaults` garantit les familles et les 20 lignes `astral_aspects`.
-2. `ensure_astral_aspect_reference_data` garantit les valences, profils et définitions par version.
+2. `ensure_astral_aspect_reference_data` garantit les valences, profils, définitions et règles d'orbes par version.
 3. `ReferenceRepository.get_reference_data` expose les aspects stables avec l'orbe moderne issu des définitions.
-4. `build_natal_result` valide les définitions d'aspect et filtre les aspects majeurs.
-5. `calculate_major_aspects` compare toutes les paires de positions et résout les orbes.
-6. `NatalResult.aspects` transporte les `AspectResult`.
-7. `chart_json_builder` sérialise les aspects majeurs dans `result_payload.aspects`.
-8. `build_enriched_evidence_catalog` produit les preuves `ASPECT_*`.
-9. `PredictionReferenceRepository.get_aspect_profiles` charge les profils dans `PredictionContext`.
-10. `PredictionContextLoader` fige les profils d'aspect dans le contexte chargé.
-11. `EventDetector` détecte les entrées/sorties d'orbe et aspects exacts transit -> natal.
-12. `ContributionCalculator` applique `w_aspect`, `f_orb`, `f_phase` et la polarité.
-13. `EngineOrchestrator` reconstruit des `natal_aspect` internes pour la sensibilité daily.
-14. `NatalSensitivityCalculator` intègre les aspects natals dans la sensibilité par catégorie.
-15. `IntradayActivationBuilder` construit les activations lunaires par aspect.
-16. `daily_prediction_*` persiste les scores, contributeurs et drivers incluant les événements d'aspect.
-17. Les projecteurs publics extraient `aspects`, `sky_aspects` et `dominant_aspects`.
-18. Le frontend traduit et affiche les aspects natals et daily.
+4. `ReferenceRepository.get_reference_data` expose aussi les règles `aspect_orb_rules[]`.
+5. `build_natal_result` valide les définitions d'aspect, les règles d'orbes et filtre les aspects majeurs.
+6. `calculate_major_aspects` compare toutes les paires de positions et résout les orbes par règle ou fallback.
+7. `NatalResult.aspects` transporte les `AspectResult`.
+8. `chart_json_builder` sérialise les aspects majeurs dans `result_payload.aspects`.
+9. `build_enriched_evidence_catalog` produit les preuves `ASPECT_*`.
+10. `PredictionReferenceRepository.get_aspect_profiles` charge les profils dans `PredictionContext`.
+11. `PredictionContextLoader` fige les profils d'aspect dans le contexte chargé.
+12. `EventDetector` détecte les entrées/sorties d'orbe et aspects exacts transit -> natal.
+13. `ContributionCalculator` applique `w_aspect`, `f_orb`, `f_phase` et la polarité.
+14. `EngineOrchestrator` reconstruit des `natal_aspect` internes pour la sensibilité daily.
+15. `NatalSensitivityCalculator` intègre les aspects natals dans la sensibilité par catégorie.
+16. `IntradayActivationBuilder` construit les activations lunaires par aspect.
+17. `daily_prediction_*` persiste les scores, contributeurs et drivers incluant les événements d'aspect.
+18. Les projecteurs publics extraient `aspects`, `sky_aspects` et `dominant_aspects`.
+19. Le frontend traduit et affiche les aspects natals et daily.
 
 ## Points d'attention
 
 - `astral_aspects` est stable et non versionnée. Ne pas réintroduire `reference_version_id` dans cette table sans décision d'architecture.
 - Les paramètres de scoring quotidien doivent rester dans `astral_aspect_profiles`, pas dans `astral_aspects`.
 - Les orbes par système doivent rester dans `astral_aspect_definitions`, pas dans `astral_aspects`.
-- Les orbes observés d'un thème ou d'un événement ne doivent pas être stockés dans `astral_aspects`, `astral_aspect_profiles` ou `astral_aspect_definitions`.
+- Les exceptions d'orbes doivent rester dans `astral_aspect_orb_rules`, pas dans `astral_aspects` ni dans `astral_aspect_profiles`.
+- Les orbes observés d'un thème ou d'un événement ne doivent pas être stockés dans `astral_aspects`, `astral_aspect_profiles`, `astral_aspect_definitions` ou `astral_aspect_orb_rules`.
+- Ne pas dupliquer toutes les valeurs standards dans `astral_aspect_orb_rules` : cette table ne contient que les dérogations ciblées.
+- En calcul natal pur, `orb_max` doit rester égal à `resolved_orb_deg`.
+- Ne pas fusionner `resolved_orb_deg` et `astral_aspect_profiles.orb_multiplier`, ni appliquer `orb_multiplier` au calcul natal pur.
 - La colonne `astral_aspects.family` est un entier lié à `astral_aspect_families`.
 - Le référentiel relationnel contient 20 aspects, mais le calcul natal et la détection V1 restent limités aux cinq majeurs.
 - Les aspects mineurs ne doivent pas être activés dans les calculs publics sans mettre à jour `MAJOR_ASPECT_CODES`, les seeds, les tests, les traductions et les contrats.
@@ -469,7 +579,9 @@ Point d'attention :
 - `backend/app/domain/prediction/contribution_calculator.py`
 - `backend/app/services/chart/json_builder.py`
 - `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
+- `backend/migrations/versions/20260514_0104_add_astral_aspect_orb_rules.py`
 - `docs/recherches astro/aspects.json`
 - `docs/recherches astro/astral_aspect_family.json`
 - `docs/recherches astro/astral_aspect_profiles.json`
 - `docs/recherches astro/astral_aspect_definitions.json`
+- `docs/recherches astro/astral_aspect_orb_rules.json`

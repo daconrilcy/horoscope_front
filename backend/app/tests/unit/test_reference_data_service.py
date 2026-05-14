@@ -6,7 +6,10 @@ from sqlalchemy import delete, func, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
-from app.infra.db.models.prediction_reference import PredictionCategoryModel
+from app.infra.db.models.prediction_reference import (
+    AstralAspectOrbRuleModel,
+    PredictionCategoryModel,
+)
 from app.infra.db.models.reference import (
     AspectModel,
     AstralAspectFamilyModel,
@@ -49,6 +52,7 @@ def test_seed_reference_version_is_idempotent() -> None:
     assert len(payload["planets"]) == 10
     assert len(payload["signs"]) == 12
     assert len(payload["aspects"]) == 20
+    assert len(payload["aspect_orb_rules"]) == 159
     planets = cast(list[dict[str, Any]], payload["planets"])
     signs = cast(list[dict[str, Any]], payload["signs"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
@@ -102,6 +106,14 @@ def test_seed_reference_version_is_idempotent() -> None:
             )
             == 12
         )
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(AstralAspectOrbRuleModel)
+                .where(AstralAspectOrbRuleModel.reference_version_id == version.id)
+            )
+            == 159
+        )
         house_10_profile = db.scalar(
             select(HouseInterpretationProfileModel)
             .join(HouseModel, HouseInterpretationProfileModel.house_id == HouseModel.id)
@@ -150,6 +162,7 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
     assert len(payload["signs"]) == 12
     assert len(payload["houses"]) == 12
     assert len(payload["aspects"]) == 20
+    assert len(payload["aspect_orb_rules"]) == 159
     assert "characteristics" not in payload
 
 

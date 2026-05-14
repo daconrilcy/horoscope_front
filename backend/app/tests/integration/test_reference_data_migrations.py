@@ -103,6 +103,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_default_valence",
         "astral_interpretive_valence",
         "astral_aspect_definitions",
+        "astral_aspect_orb_rules",
     ):
         assert table_name in head_tables
     assert "house_interpretation_profiles" not in head_tables
@@ -116,6 +117,13 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     ):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" not in columns
+    aspect_definition_check_constraints = {
+        constraint["name"]
+        for constraint in head_inspector.get_check_constraints("astral_aspect_definitions")
+    }
+    assert "ck_astral_aspect_definitions_enabled_default_orb" in (
+        aspect_definition_check_constraints
+    )
     planet_foreign_key_targets = {
         foreign_key["referred_table"]
         for table_name in (
@@ -287,10 +295,15 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
                 """
             )
         ).scalar_one()
+        orb_rule_count = connection.execute(
+            text("SELECT COUNT(*) FROM astral_aspect_orb_rules")
+        ).scalar_one()
         if reference_version_count:
             assert modern_definition_count == 20 * reference_version_count
+            assert orb_rule_count == 159 * reference_version_count
         else:
             assert modern_definition_count == 0
+            assert orb_rule_count == 0
         assert (
             connection.execute(
                 text(

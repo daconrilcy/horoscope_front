@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
-from app.infra.db.models.prediction_reference import AstralAspectDefinitionModel
+from app.infra.db.models.prediction_reference import (
+    AstralAspectDefinitionModel,
+    AstralAspectOrbRuleModel,
+)
 from app.infra.db.models.reference import (
     AspectModel,
     AstralAspectFamilyModel,
@@ -219,6 +222,35 @@ class ReferenceRepository:
             )
             .order_by(AspectModel.angle, AspectModel.code)
         ).all()
+        SourcePlanetModel = aliased(PlanetModel)
+        TargetPlanetModel = aliased(PlanetModel)
+        orb_rules = self.db.execute(
+            select(
+                AstralAspectOrbRuleModel,
+                AspectModel.code.label("aspect_code"),
+                AstralSystemModel.name.label("system_code"),
+                SourcePlanetModel.code.label("source_planet_code"),
+                TargetPlanetModel.code.label("target_planet_code"),
+            )
+            .join(AspectModel, AstralAspectOrbRuleModel.aspect_id == AspectModel.id)
+            .join(
+                AstralSystemModel, AstralAspectOrbRuleModel.astral_system_id == AstralSystemModel.id
+            )
+            .outerjoin(
+                SourcePlanetModel,
+                AstralAspectOrbRuleModel.source_planet_id == SourcePlanetModel.id,
+            )
+            .outerjoin(
+                TargetPlanetModel,
+                AstralAspectOrbRuleModel.target_planet_id == TargetPlanetModel.id,
+            )
+            .where(AstralAspectOrbRuleModel.reference_version_id == model.id)
+            .order_by(
+                AstralSystemModel.name,
+                AspectModel.code,
+                AstralAspectOrbRuleModel.priority.desc(),
+            )
+        ).all()
         return {
             "version": model.version,
             "planets": [{"code": item.code, "name": item.name} for item in planets],
@@ -233,5 +265,29 @@ class ReferenceRepository:
                     "default_orb_deg": default_orb_deg,
                 }
                 for aspect, family_name, default_orb_deg in aspects
+            ],
+            "aspect_orb_rules": [
+                {
+                    "aspect_code": aspect_code,
+                    "system_code": system_code,
+                    "calculation_context": rule.calculation_context,
+                    "source_body_type": rule.source_body_type,
+                    "source_planet_code": source_planet_code,
+                    "source_point_code": rule.source_point_code,
+                    "target_body_type": rule.target_body_type,
+                    "target_planet_code": target_planet_code,
+                    "target_point_code": rule.target_point_code,
+                    "orb_deg": rule.orb_deg,
+                    "priority": rule.priority,
+                    "is_enabled": rule.is_enabled,
+                    "micro_note": rule.micro_note,
+                }
+                for (
+                    rule,
+                    aspect_code,
+                    system_code,
+                    source_planet_code,
+                    target_planet_code,
+                ) in orb_rules
             ],
         }

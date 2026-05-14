@@ -80,6 +80,7 @@ from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
     AstralAspectDefinitionModel,
+    AstralAspectOrbRuleModel,
     AstralDefaultValenceModel,
     AstralInterpretiveValenceModel,
     AstralPlanetSignDignityModel,
@@ -196,6 +197,7 @@ __all__ = [
     "PointCategoryWeightModel",
     "AspectProfileModel",
     "AstralAspectDefinitionModel",
+    "AstralAspectOrbRuleModel",
     "AstralDefaultValenceModel",
     "AstralInterpretiveValenceModel",
     "UserPrivacyRequestModel",

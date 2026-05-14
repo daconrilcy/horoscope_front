@@ -245,6 +245,7 @@ def build_natal_result(
     signs_data = reference_data.get("signs")
     houses_data = reference_data.get("houses")
     aspects_data = reference_data.get("aspects")
+    aspect_orb_rules_data = reference_data.get("aspect_orb_rules")
 
     if not isinstance(planets_data, list) or not planets_data:
         _raise_invalid_reference(version, "planets", "missing_or_empty")
@@ -254,6 +255,8 @@ def build_natal_result(
         _raise_invalid_reference(version, "houses", "missing_or_empty")
     if not isinstance(aspects_data, list) or not aspects_data:
         _raise_invalid_reference(version, "aspects", "missing_or_empty")
+    if aspect_orb_rules_data is not None and not isinstance(aspect_orb_rules_data, list):
+        _raise_invalid_reference(version, "aspect_orb_rules", "invalid_entry")
 
     prepared = prepare_birth_data(birth_input, tt_enabled=tt_enabled, derive_enabled=derive_enabled)
     if timeout_check is not None:
@@ -471,8 +474,32 @@ def build_natal_result(
         for d in aspect_definitions
         if str(d.get("code", "")).strip().lower() in MAJOR_ASPECT_CODES
     ]
+    aspect_orb_rules: list[dict[str, object]] | None = None
+    if isinstance(aspect_orb_rules_data, list):
+        aspect_orb_rules = []
+        for item in aspect_orb_rules_data:
+            if not isinstance(item, dict):
+                _raise_invalid_reference(version, "aspect_orb_rules", "invalid_entry")
+            if "aspect_code" not in item or "orb_deg" not in item:
+                _raise_invalid_reference(version, "aspect_orb_rules", "missing_aspect_or_orb")
+            try:
+                orb_rule_value = float(item["orb_deg"])
+            except (TypeError, ValueError):
+                _raise_invalid_reference(version, "aspect_orb_rules", "invalid_orb_deg")
+            rule_in_bounds = (
+                isfinite(orb_rule_value) and MIN_ORB_DEG < orb_rule_value <= MAX_ORB_DEG
+            )
+            if not rule_in_bounds:
+                _raise_invalid_reference(version, "aspect_orb_rules", "invalid_orb_deg")
+            aspect_orb_rules.append(dict(item))
 
-    aspects_raw = calculate_major_aspects(positions_raw, major_aspect_definitions)
+    aspects_raw = calculate_major_aspects(
+        positions_raw,
+        major_aspect_definitions,
+        orb_rules=aspect_orb_rules,
+        system_code=aspect_school,
+        calculation_context="natal",
+    )
     if timeout_check is not None:
         timeout_check()
 

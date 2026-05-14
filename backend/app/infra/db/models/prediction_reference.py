@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -256,7 +258,13 @@ class AstralAspectDefinitionModel(Base):
     """Configuration d'activation d'un aspect pour un système astrologique."""
 
     __tablename__ = "astral_aspect_definitions"
-    __table_args__ = (UniqueConstraint("reference_version_id", "aspect_id", "astral_system_id"),)
+    __table_args__ = (
+        UniqueConstraint("reference_version_id", "aspect_id", "astral_system_id"),
+        CheckConstraint(
+            "is_enabled IS NOT TRUE OR default_orb_deg IS NOT NULL",
+            name="ck_astral_aspect_definitions_enabled_default_orb",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     reference_version_id: Mapped[int] = mapped_column(
@@ -282,6 +290,86 @@ class AstralAspectDefinitionModel(Base):
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     aspect: Mapped["AspectModel"] = relationship()
     astral_system: Mapped["AstralSystemModel"] = relationship()
+
+
+class AstralAspectOrbRuleModel(Base):
+    """Surcharge ciblee de l'orbe standard d'un aspect active."""
+
+    __tablename__ = "astral_aspect_orb_rules"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "astral_system_id",
+            "aspect_id",
+            "calculation_context",
+            "source_body_type",
+            "source_planet_id",
+            "source_point_code",
+            "target_body_type",
+            "target_planet_id",
+            "target_point_code",
+        ),
+        CheckConstraint("orb_deg > 0", name="ck_astral_aspect_orb_rules_orb_deg_positive"),
+        CheckConstraint("priority >= 0", name="ck_astral_aspect_orb_rules_priority_positive"),
+        CheckConstraint(
+            (
+                "source_planet_id IS NULL OR source_body_type IN "
+                "('planet', 'luminary', 'personal_planet', 'social_planet', "
+                "'transpersonal_planet')"
+            ),
+            name="ck_astral_aspect_orb_rules_source_planet_type",
+        ),
+        CheckConstraint(
+            (
+                "target_planet_id IS NULL OR target_body_type IN "
+                "('planet', 'luminary', 'personal_planet', 'social_planet', "
+                "'transpersonal_planet')"
+            ),
+            name="ck_astral_aspect_orb_rules_target_planet_type",
+        ),
+        Index(
+            "ix_astral_aspect_orb_rules_reference_system_aspect",
+            "reference_version_id",
+            "astral_system_id",
+            "aspect_id",
+        ),
+        Index("ix_astral_aspect_orb_rules_calculation_context", "calculation_context"),
+        Index("ix_astral_aspect_orb_rules_priority", "priority"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"),
+        nullable=False,
+        index=True,
+    )
+    astral_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_systems.id"), nullable=False, index=True
+    )
+    aspect_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_aspects.id"), nullable=False, index=True
+    )
+    calculation_context: Mapped[str] = mapped_column(String(32), nullable=False)
+    source_body_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    source_planet_id: Mapped[int | None] = mapped_column(
+        ForeignKey("astral_planets.id"), nullable=True, index=True
+    )
+    source_point_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    target_body_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    target_planet_id: Mapped[int | None] = mapped_column(
+        ForeignKey("astral_planets.id"), nullable=True, index=True
+    )
+    target_point_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    orb_deg: Mapped[float] = mapped_column(Float, nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
+    astral_system: Mapped["AstralSystemModel"] = relationship()
+    aspect: Mapped["AspectModel"] = relationship()
+    source_planet: Mapped["PlanetModel | None"] = relationship(foreign_keys=[source_planet_id])
+    target_planet: Mapped["PlanetModel | None"] = relationship(foreign_keys=[target_planet_id])
 
 
 class AstralDefaultValenceModel(Base):
@@ -313,6 +401,7 @@ class AstralInterpretiveValenceModel(Base):
 @event.listens_for(PointCategoryWeightModel, "before_update")
 @event.listens_for(AspectProfileModel, "before_update")
 @event.listens_for(AstralAspectDefinitionModel, "before_update")
+@event.listens_for(AstralAspectOrbRuleModel, "before_update")
 def _prevent_update_on_locked_prediction_version(
     mapper: object, connection: object, target: object
 ) -> None:
