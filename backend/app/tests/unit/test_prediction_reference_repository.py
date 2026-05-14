@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from sqlalchemy import String, Text, inspect
+import pytest
+from sqlalchemy import String, Text, UniqueConstraint, inspect
 from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
+from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
 from app.infra.db.models.prediction_reference import (
     AstralPlanetSignDignityModel,
     AstroPointModel,
@@ -104,6 +106,72 @@ def test_house_models_use_canonical_astral_table_names():
     assert AstralHouseSystemModel.__tablename__ == "astral_house_systems"
     assert HouseProfileModel.__tablename__ == "astral_prediction_daily_house_profiles"
     assert HouseCategoryWeightModel.__tablename__ == "astral_house_category_weights"
+
+
+def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
+    """Verrouille le modèle éditorial versionné distinct du runtime et du scoring."""
+    columns = {column.key for column in inspect(HouseInterpretationProfileModel).columns}
+    assert columns == {
+        "id",
+        "reference_version_id",
+        "house_id",
+        "language",
+        "tradition",
+        "title",
+        "summary",
+        "core_keywords_json",
+        "shadow_keywords_json",
+        "psychological_keywords_json",
+        "material_keywords_json",
+        "relationship_keywords_json",
+        "career_keywords_json",
+        "health_keywords_json",
+        "spiritual_keywords_json",
+        "body_parts_json",
+        "archetypes_json",
+        "dos_json",
+        "donts_json",
+        "prompt_hints_json",
+        "micro_note",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in HouseInterpretationProfileModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("reference_version_id", "house_id", "language", "tradition") in constraints
+    foreign_key_targets = {
+        foreign_key.column.table.name
+        for column in HouseInterpretationProfileModel.__table__.columns
+        for foreign_key in column.foreign_keys
+    }
+    assert foreign_key_targets == {"reference_versions", "astral_houses"}
+
+
+def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(
+    db_session: Session,
+):
+    """Vérifie le verrouillage des profils éditoriaux après publication de version."""
+    version = ReferenceVersionModel(version="locked-editorial", is_locked=True)
+    house = HouseModel(number=10, name="Career")
+    db_session.add_all([version, house])
+    db_session.flush()
+    profile = HouseInterpretationProfileModel(
+        reference_version_id=version.id,
+        house_id=house.id,
+        language="en",
+        tradition="modern",
+        title="Career and Public Role",
+        summary="Original editorial summary.",
+    )
+    db_session.add(profile)
+    db_session.commit()
+
+    profile.title = "Changed title"
+
+    with pytest.raises(ValueError, match="reference version is immutable"):
+        db_session.commit()
+    db_session.rollback()
 
 
 def test_runtime_models_do_not_store_house_system_codes_as_string_columns():

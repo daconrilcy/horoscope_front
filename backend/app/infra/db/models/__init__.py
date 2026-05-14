@@ -74,6 +74,7 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_rule impor
 from app.infra.db.models.feature_flag import FeatureFlagModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
+from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
 from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
@@ -186,6 +187,7 @@ __all__ = [
     "HouseProfileModel",
     "PlanetCategoryWeightModel",
     "HouseCategoryWeightModel",
+    "HouseInterpretationProfileModel",
     "AstroPointModel",
     "PointCategoryWeightModel",
     "AspectProfileModel",
