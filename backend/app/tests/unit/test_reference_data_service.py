@@ -9,6 +9,7 @@ from app.infra.db.models.interpretation_reference import HouseInterpretationProf
 from app.infra.db.models.prediction_reference import PredictionCategoryModel
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAspectFamilyModel,
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
@@ -47,7 +48,7 @@ def test_seed_reference_version_is_idempotent() -> None:
     assert payload["version"] == "1.0.0"
     assert len(payload["planets"]) == 10
     assert len(payload["signs"]) == 12
-    assert len(payload["aspects"]) == 5
+    assert len(payload["aspects"]) == 20
     planets = cast(list[dict[str, Any]], payload["planets"])
     signs = cast(list[dict[str, Any]], payload["signs"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
@@ -67,12 +68,14 @@ def test_seed_reference_version_is_idempotent() -> None:
         "aquarius",
         "pisces",
     }
-    assert {item["code"] for item in aspects} == {
+    assert {item["code"] for item in aspects} >= {
         "conjunction",
         "sextile",
         "square",
         "trine",
         "opposition",
+        "quincunx",
+        "septile",
     }
     expected_default_orbs = {
         "conjunction": 8.0,
@@ -81,7 +84,11 @@ def test_seed_reference_version_is_idempotent() -> None:
         "trine": 6.0,
         "opposition": 8.0,
     }
-    assert {item["code"]: item.get("default_orb_deg") for item in aspects} == expected_default_orbs
+    assert {
+        item["code"]: item.get("default_orb_deg")
+        for item in aspects
+        if item["code"] in expected_default_orbs
+    } == expected_default_orbs
     with open_app_test_db_session() as db:
         version = db.scalar(
             select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
@@ -120,12 +127,15 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
         partial = ReferenceVersionModel(version="2.0.0", description="partial", is_locked=True)
         db.add(partial)
         db.flush()
+        family = AstralAspectFamilyModel(name="major")
+        db.add(family)
+        db.flush()
         db.add(
             AspectModel(
                 code="conjunction",
                 name="Conjunction",
                 angle=0,
-                default_orb_deg=8.0,
+                family=family.id,
             )
         )
         db.commit()
@@ -139,7 +149,7 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
     assert len(payload["planets"]) == 10
     assert len(payload["signs"]) == 12
     assert len(payload["houses"]) == 12
-    assert len(payload["aspects"]) == 5
+    assert len(payload["aspects"]) == 20
     assert "characteristics" not in payload
 
 

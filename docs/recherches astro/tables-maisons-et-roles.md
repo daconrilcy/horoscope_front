@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`, `20260512_0086_deversion_astrology_structures.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py` et `20260514_0098_reference_house_interpretation_system.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`, `20260512_0086_deversion_astrology_structures.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py`, `20260514_0098_reference_house_interpretation_system.py`, `20260514_0099_rename_astral_reference_tables.py` et `20260514_0102_normalize_astral_aspects.py`.
 
 Deux catégories sont distinguées :
 
@@ -60,7 +60,7 @@ Rôle métier :
 - Sert de cible relationnelle à `astral_house_interpretation_profiles`, `astral_prediction_daily_house_profiles` et `astral_house_category_weights`.
 - Ne contient pas de longitude, cuspide, signe de cuspide, système de maisons ou donnée utilisateur.
 
-Maisons seedées par `ReferenceRepository.ensure_seed_data` :
+Maisons seedées par `ReferenceRepository.seed_version_defaults` :
 
 | Numéro | Nom SQL | Domaine public utilisé en restitution |
 | ---: | --- | --- |
@@ -163,7 +163,7 @@ Colonnes principales :
 Contraintes :
 
 - Unicité sur `(reference_version_id, house_id, language, astral_system_id)`.
-- Clés étrangères vers `reference_versions.id`, `astral_houses.id` et `astral_systems.id`.
+- Clés étrangères vers `astral_reference_versions.id`, `astral_houses.id` et `astral_systems.id`.
 - Mise à jour bloquée quand la version de référence liée est verrouillée.
 
 ## Tables de paramétrage du moteur de prédiction quotidienne
@@ -183,7 +183,7 @@ Qualification :
 Clés :
 
 - `house_id -> astral_houses.id`
-- `reference_version_id -> reference_versions.id`
+- `reference_version_id -> astral_reference_versions.id`
 - Unicité : `(reference_version_id, house_id)`
 
 Colonnes principales :
@@ -242,7 +242,7 @@ Clés :
 
 - `house_id -> astral_houses.id`
 - `category_id -> prediction_categories.id`
-- `reference_version_id -> reference_versions.id`
+- `reference_version_id -> astral_reference_versions.id`
 - Unicité : `(reference_version_id, house_id, category_id)`
 
 Colonnes principales :
@@ -301,7 +301,7 @@ Le seed attend `24` lignes de poids maison -> catégorie pour une version de ré
 
 ## Tables adjacentes nécessaires au fonctionnement
 
-### `reference_versions`
+### `astral_reference_versions`
 
 Rôle :
 
@@ -943,7 +943,7 @@ Rôle :
 
 ## Étapes où les maisons interviennent dans les calculs astrologiques
 
-1. `ReferenceRepository.ensure_seed_data` garantit les 12 lignes `astral_houses`.
+1. `ReferenceRepository.seed_version_defaults` garantit les 12 lignes `astral_houses`.
 2. La migration `20260513_0095` garantit les lignes `astral_house_systems` et migre les traces runtime vers des clés étrangères.
 3. `sync_house_interpretation_profiles` alimente `astral_house_interpretation_profiles` depuis le JSON éditorial en résolvant les maisons par numéro et les traditions par `astral_systems.name`.
 4. `PredictionReferenceRepository` charge `astral_prediction_daily_house_profiles` et le scinde en `house_astrology_profiles` et `house_prediction_profiles` pour la version de référence active.
@@ -1040,4 +1040,6 @@ Rôle :
 - `backend/migrations/versions/20260514_0096_create_house_interpretation_profiles.py`
 - `backend/migrations/versions/20260514_0097_rename_astral_house_interpretation_profiles.py`
 - `backend/migrations/versions/20260514_0098_reference_house_interpretation_system.py`
+- `backend/migrations/versions/20260514_0099_rename_astral_reference_tables.py`
+- `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
 - `docs/recherches astro/house_interpretation_vocabulary.json`

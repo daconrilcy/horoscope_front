@@ -9,8 +9,12 @@ from sqlalchemy.orm import Session
 from app.infra.db.models import (
     AspectModel,
     AspectProfileModel,
+    AstralAspectDefinitionModel,
+    AstralAspectFamilyModel,
+    AstralDefaultValenceModel,
     AstralDignityTypeModel,
     AstralElementModel,
+    AstralInterpretiveValenceModel,
     AstralModalityModel,
     AstralPlanetSignDignityModel,
     AstralPolarityModel,
@@ -47,7 +51,10 @@ EXPECTED_COUNTS = {
     "planet_profiles": 10,
     "house_profiles": 12,
     "astral_house_interpretation_profiles": 12,
-    "astral_aspect_profiles": 5,
+    "astral_aspect_profiles": 20,
+    "astral_aspect_definitions": 80,
+    "astral_default_valence": 4,
+    "astral_interpretive_valence": 5,
     "astro_points": 4,
     "astral_dignity_type": 4,
     "astral_elements": 4,
@@ -94,17 +101,18 @@ PLANET_CODE_BY_SOURCE_ID = {
 }
 
 
+def _astro_research_path(file_name: str) -> Path:
+    """Construit le chemin vers les sources JSON astrologiques documentaires."""
+    repo_root = Path(__file__).resolve().parents[4]
+    source_path = repo_root / "docs" / "recherches astro" / file_name
+    if source_path.exists():
+        return source_path
+    return Path(__file__).resolve().parents[3] / "docs" / "recherches astro" / file_name
+
+
 def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
     """Charge les mots-clés des signes depuis la source documentaire canonique."""
-    repo_root = Path(__file__).resolve().parents[4]
-    keywords_path = repo_root / "docs" / "recherches astro" / "signs_keywords.json"
-    if not keywords_path.exists():
-        keywords_path = (
-            Path(__file__).resolve().parents[3]
-            / "docs"
-            / "recherches astro"
-            / "signs_keywords.json"
-        )
+    keywords_path = _astro_research_path("signs_keywords.json")
     with keywords_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
     if not isinstance(raw, dict):
@@ -114,20 +122,51 @@ def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
 
 def _load_planet_sign_dignities() -> list[dict[str, object]]:
     """Charge les dignités planétaires depuis la source documentaire canonique."""
-    repo_root = Path(__file__).resolve().parents[4]
-    source_path = repo_root / "docs" / "recherches astro" / "planet_sign_diginities.json"
-    if not source_path.exists():
-        source_path = (
-            Path(__file__).resolve().parents[3]
-            / "docs"
-            / "recherches astro"
-            / "planet_sign_diginities.json"
-        )
+    source_path = _astro_research_path("planet_sign_diginities.json")
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
     if not isinstance(raw, list) or not raw:
         raise ValueError("planet sign dignities source must be a non-empty list")
     return raw
+
+
+def _load_aspect_families() -> list[str]:
+    """Charge les familles d'aspects depuis la source documentaire canonique."""
+    with _astro_research_path("astral_aspect_family.json").open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    families = raw.get("family") if isinstance(raw, dict) else None
+    if not isinstance(families, list) or not families:
+        raise ValueError("aspect families source must contain a non-empty family list")
+    return [str(value) for value in families]
+
+
+def _load_aspects() -> list[dict[str, object]]:
+    """Charge les aspects astrologiques depuis la source documentaire canonique."""
+    with _astro_research_path("aspects.json").open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("aspects source must be a non-empty list")
+    return raw
+
+
+def _load_aspect_profiles() -> list[dict[str, object]]:
+    """Charge les profils prédictifs d'aspects depuis la source documentaire."""
+    with _astro_research_path("astral_aspect_profiles.json").open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    profiles = raw.get("astral_aspect_profiles", {}).get("seed") if isinstance(raw, dict) else None
+    if not isinstance(profiles, list) or not profiles:
+        raise ValueError("aspect profiles source must contain a non-empty seed list")
+    return profiles
+
+
+def _load_aspect_definition_groups() -> list[dict[str, object]]:
+    """Charge les définitions d'aspects par système depuis la source documentaire."""
+    with _astro_research_path("astral_aspect_definitions.json").open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    groups = raw.get("astral_aspect_definitions", {}).get("seed") if isinstance(raw, dict) else None
+    if not isinstance(groups, list) or not groups:
+        raise ValueError("aspect definitions source must contain a non-empty seed list")
+    return groups
 
 
 def _required_keyword_list(
@@ -181,6 +220,239 @@ def _ensure_astral_systems(db: Session) -> dict[str, int]:
             db.add(AstralSystemModel(name=name))
     db.flush()
     return {row.name: row.id for row in db.scalars(select(AstralSystemModel)).all()}
+
+
+def _ensure_astral_aspect_families(db: Session) -> dict[str, int]:
+    """Garantit les familles stables d'aspects depuis le JSON canonique."""
+    for name in _load_aspect_families():
+        if (
+            db.scalar(
+                select(AstralAspectFamilyModel.id).where(AstralAspectFamilyModel.name == name)
+            )
+            is None
+        ):
+            db.add(AstralAspectFamilyModel(name=name))
+    db.flush()
+    return {row.name: row.id for row in db.scalars(select(AstralAspectFamilyModel)).all()}
+
+
+def _ensure_astral_valences(db: Session) -> None:
+    """Garantit les référentiels stables de valences d'aspects."""
+    for name in ("positive", "negative", "neutral", "contextual"):
+        if (
+            db.scalar(
+                select(AstralDefaultValenceModel.id).where(AstralDefaultValenceModel.name == name)
+            )
+            is None
+        ):
+            db.add(AstralDefaultValenceModel(name=name))
+    for name in (
+        "supportive",
+        "harmonious",
+        "dynamic_challenging",
+        "polarizing",
+        "amplifying",
+    ):
+        if (
+            db.scalar(
+                select(AstralInterpretiveValenceModel.id).where(
+                    AstralInterpretiveValenceModel.name == name
+                )
+            )
+            is None
+        ):
+            db.add(AstralInterpretiveValenceModel(name=name))
+    db.flush()
+
+
+def _sync_astral_aspects(db: Session) -> None:
+    """Synchronise les aspects stables et leur famille depuis le JSON canonique."""
+    families = _ensure_astral_aspect_families(db)
+    expected_codes: set[str] = set()
+    for source_row in _load_aspects():
+        code = str(source_row["code"])
+        family_name = str(source_row["family"])
+        if family_name not in families:
+            raise ValueError(f"unknown aspect family: {family_name}")
+        expected_codes.add(code)
+        aspect = db.scalar(select(AspectModel).where(AspectModel.code == code))
+        if aspect is None:
+            db.add(
+                AspectModel(
+                    code=code,
+                    name=str(source_row["name"]),
+                    angle=float(source_row["angle"]),
+                    family=families[family_name],
+                )
+            )
+            continue
+        aspect.name = str(source_row["name"])
+        aspect.angle = float(source_row["angle"])
+        aspect.family = families[family_name]
+    db.execute(delete(AspectModel).where(AspectModel.code.not_in(expected_codes)))
+    db.flush()
+
+
+def _sync_astral_aspect_profiles(db: Session, reference_version_id: int) -> None:
+    """Synchronise les profils prédictifs d'aspects pour une version."""
+    aspects = {row.code: row.id for row in db.scalars(select(AspectModel)).all()}
+    expected_aspect_ids: set[int] = set()
+    for source_row in _load_aspect_profiles():
+        aspect_code = str(source_row["aspect_code"])
+        if aspect_code not in aspects:
+            raise ValueError(f"unknown aspect code in profiles: {aspect_code}")
+        aspect_id = aspects[aspect_code]
+        expected_aspect_ids.add(aspect_id)
+        profile = db.scalar(
+            select(AspectProfileModel).where(
+                AspectProfileModel.reference_version_id == reference_version_id,
+                AspectProfileModel.aspect_id == aspect_id,
+            )
+        )
+        payload = {
+            "intensity_weight": float(source_row["intensity_weight"]),
+            "default_valence": str(source_row["default_valence"]),
+            "interpretive_valence": str(source_row["interpretive_valence"]),
+            "polarity_score": float(source_row["polarity_score"]),
+            "energy_type": str(source_row["energy_type"]),
+            "orb_multiplier": float(source_row["orb_multiplier"]),
+            "phase_sensitive": bool(source_row["phase_sensitive"]),
+            "phase_behavior_json": json.dumps(
+                source_row["phase_behavior_json"], ensure_ascii=False
+            ),
+            "strength_thresholds_json": json.dumps(
+                source_row["strength_thresholds_json"], ensure_ascii=False
+            ),
+            "micro_note": source_row.get("micro_note"),
+        }
+        if profile is None:
+            db.add(
+                AspectProfileModel(
+                    reference_version_id=reference_version_id,
+                    aspect_id=aspect_id,
+                    **payload,
+                )
+            )
+            continue
+        for key, value in payload.items():
+            setattr(profile, key, value)
+    db.execute(
+        delete(AspectProfileModel).where(
+            AspectProfileModel.reference_version_id == reference_version_id,
+            AspectProfileModel.aspect_id.not_in(expected_aspect_ids),
+        )
+    )
+    db.flush()
+
+
+def _sync_astral_aspect_definitions(db: Session, reference_version_id: int) -> None:
+    """Synchronise les définitions d'aspects par système astrologique."""
+    aspects = {row.code: row.id for row in db.scalars(select(AspectModel)).all()}
+    systems = _ensure_astral_systems(db)
+    modern_defaults: dict[str, dict[str, object]] = {}
+    for group in _load_aspect_definition_groups():
+        if str(group["astral_system_code"]) == "modern":
+            modern_defaults = {str(row["aspect_code"]): row for row in group.get("definitions", [])}
+            break
+    expected_pairs: set[tuple[int, int]] = set()
+
+    for group in _load_aspect_definition_groups():
+        system_name = str(group["astral_system_code"])
+        if system_name not in systems:
+            raise ValueError(f"unknown astral system in aspect definitions: {system_name}")
+        system_id = systems[system_name]
+        definitions = {str(row["aspect_code"]): row for row in group.get("definitions", [])}
+        disabled_codes = {str(code) for code in group.get("disabled_aspect_codes", [])}
+        for aspect_code in disabled_codes:
+            if aspect_code in modern_defaults and aspect_code not in definitions:
+                definitions[aspect_code] = {
+                    **modern_defaults[aspect_code],
+                    "is_enabled": False,
+                    "scoring_weight": 0.0,
+                }
+        for aspect_code, source_row in definitions.items():
+            if aspect_code not in aspects:
+                raise ValueError(f"unknown aspect code in definitions: {aspect_code}")
+            aspect_id = aspects[aspect_code]
+            expected_pairs.add((aspect_id, system_id))
+            definition = db.scalar(
+                select(AstralAspectDefinitionModel).where(
+                    AstralAspectDefinitionModel.reference_version_id == reference_version_id,
+                    AstralAspectDefinitionModel.aspect_id == aspect_id,
+                    AstralAspectDefinitionModel.astral_system_id == system_id,
+                )
+            )
+            payload = {
+                "is_enabled": bool(source_row["is_enabled"]),
+                "is_major": bool(source_row["is_major"]),
+                "is_minor": bool(source_row["is_minor"]),
+                "default_orb_deg": (
+                    None
+                    if source_row.get("default_orb_deg") is None
+                    else float(source_row["default_orb_deg"])
+                ),
+                "display_priority": (
+                    None
+                    if source_row.get("display_priority") is None
+                    else int(source_row["display_priority"])
+                ),
+                "interpretation_weight": float(source_row["interpretation_weight"]),
+                "scoring_weight": float(source_row["scoring_weight"]),
+                "micro_note": source_row.get("micro_note"),
+            }
+            if definition is None:
+                db.add(
+                    AstralAspectDefinitionModel(
+                        reference_version_id=reference_version_id,
+                        aspect_id=aspect_id,
+                        astral_system_id=system_id,
+                        **payload,
+                    )
+                )
+                continue
+            for key, value in payload.items():
+                setattr(definition, key, value)
+    valid_aspect_ids = {aspect_id for aspect_id, _system_id in expected_pairs}
+    valid_system_ids = {system_id for _aspect_id, system_id in expected_pairs}
+    db.execute(
+        delete(AstralAspectDefinitionModel).where(
+            AstralAspectDefinitionModel.reference_version_id == reference_version_id,
+            AstralAspectDefinitionModel.aspect_id.not_in(valid_aspect_ids),
+        )
+    )
+    db.execute(
+        delete(AstralAspectDefinitionModel).where(
+            AstralAspectDefinitionModel.reference_version_id == reference_version_id,
+            AstralAspectDefinitionModel.astral_system_id.not_in(valid_system_ids),
+        )
+    )
+    db.flush()
+
+
+def ensure_astral_aspect_reference_data(db: Session, reference_version_id: int) -> None:
+    """Synchronise les référentiels d'aspects et leurs profils versionnés."""
+    _ensure_astral_valences(db)
+    _sync_astral_aspects(db)
+    version = db.get(ReferenceVersionModel, reference_version_id)
+    profiles_count = db.scalar(
+        select(func.count())
+        .select_from(AspectProfileModel)
+        .where(AspectProfileModel.reference_version_id == reference_version_id)
+    )
+    definitions_count = db.scalar(
+        select(func.count())
+        .select_from(AstralAspectDefinitionModel)
+        .where(AstralAspectDefinitionModel.reference_version_id == reference_version_id)
+    )
+    if (
+        version is not None
+        and version.is_locked
+        and profiles_count == EXPECTED_COUNTS["astral_aspect_profiles"]
+        and definitions_count == EXPECTED_COUNTS["astral_aspect_definitions"]
+    ):
+        return
+    _sync_astral_aspect_profiles(db, reference_version_id)
+    _sync_astral_aspect_definitions(db, reference_version_id)
 
 
 def _ensure_astral_sign_profiles(db: Session) -> None:
@@ -325,6 +597,17 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         .select_from(AspectProfileModel)
         .where(AspectProfileModel.reference_version_id == reference_version_id)
     )
+    actual["astral_aspect_definitions"] = db.scalar(
+        select(func.count())
+        .select_from(AstralAspectDefinitionModel)
+        .where(AstralAspectDefinitionModel.reference_version_id == reference_version_id)
+    )
+    actual["astral_default_valence"] = db.scalar(
+        select(func.count()).select_from(AstralDefaultValenceModel)
+    )
+    actual["astral_interpretive_valence"] = db.scalar(
+        select(func.count()).select_from(AstralInterpretiveValenceModel)
+    )
     actual["astro_points"] = db.scalar(select(func.count()).select_from(AstroPointModel))
     actual["astral_dignity_type"] = db.scalar(
         select(func.count()).select_from(AstralDignityTypeModel)
@@ -438,6 +721,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             _ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
             sync_house_interpretation_profiles(db, v2.id)
+            ensure_astral_aspect_reference_data(db, v2.id)
         actual = _check_counts(db, v2.id)
 
         # On exige au minimum la présence du ruleset 2.0.0 pour considérer
@@ -512,6 +796,11 @@ def run_prediction_reference_seed(db: Session) -> None:
             )
             db.execute(delete(AstralSignProfileModel))
             db.execute(
+                delete(AstralAspectDefinitionModel).where(
+                    AstralAspectDefinitionModel.reference_version_id == v2.id
+                )
+            )
+            db.execute(
                 delete(AspectProfileModel).where(AspectProfileModel.reference_version_id == v2.id)
             )
             db.execute(
@@ -529,6 +818,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             db.flush()
             _ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
+            ensure_astral_aspect_reference_data(db, v2.id)
         else:
             # État corrompu ou incomplet alors que la version est verrouillée.
             lines = [
@@ -572,6 +862,7 @@ def run_prediction_reference_seed(db: Session) -> None:
         _ensure_astral_systems(db)
         _ensure_astral_sign_profiles(db)
         _ensure_astral_planet_sign_dignities(db)
+        ensure_astral_aspect_reference_data(db, v2.id)
 
     # 4. Alimentation des catégories de prédiction.
     print("Seeding prediction categories...")
@@ -975,28 +1266,9 @@ def run_prediction_reference_seed(db: Session) -> None:
     print("Seeding planet sign dignities...")
     _ensure_astral_planet_sign_dignities(db)
 
-    # 11. Alimentation des profils d aspects.
+    # 11. Alimentation des profils et définitions d aspects.
     print("Seeding aspect profiles...")
-    aspects_data = [
-        # code, intensité, valence, multiplicateur d orbe, sensibilité à la phase
-        ("conjunction", 1.5, "contextual", 1.0, False),
-        ("sextile", 0.8, "favorable", 0.9, False),
-        ("square", 1.2, "challenging", 1.0, False),
-        ("trine", 1.0, "favorable", 1.0, False),
-        ("opposition", 1.3, "polarizing", 1.0, True),
-    ]
-    aspects = {a.code: a.id for a in db.scalars(select(AspectModel)).all()}
-    for code, intensity, valence, orb, phase in aspects_data:
-        db.add(
-            AspectProfileModel(
-                reference_version_id=v2.id,
-                aspect_id=aspects[code],
-                intensity_weight=intensity,
-                default_valence=valence,
-                orb_multiplier=orb,
-                phase_sensitive=phase,
-            )
-        )
+    ensure_astral_aspect_reference_data(db, v2.id)
 
     # 12. Alimentation du ruleset 1.0.0 (legacy).
     print("Seeding ruleset 1.0.0 (legacy)...")
@@ -1048,6 +1320,7 @@ def run_prediction_reference_seed(db: Session) -> None:
 
 __all__ = [
     "PredictionReferenceSeedAbortError",
+    "ensure_astral_aspect_reference_data",
     "ensure_astral_planet_sign_dignities",
     "run_prediction_reference_seed",
 ]

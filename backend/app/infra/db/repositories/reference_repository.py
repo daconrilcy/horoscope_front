@@ -5,15 +5,40 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.constants import DEFAULT_ASPECT_ORBS
+from app.infra.db.models.prediction_reference import AstralAspectDefinitionModel
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAspectFamilyModel,
     AstralDignityTypeModel,
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
     PlanetModel,
     ReferenceVersionModel,
+)
+
+ASPECT_FAMILY_ROWS = ("major", "minor", "advanced")
+ASPECT_ROWS = (
+    ("conjunction", "Conjunction", 0.0, "major"),
+    ("sextile", "Sextile", 60.0, "major"),
+    ("square", "Square", 90.0, "major"),
+    ("trine", "Trine", 120.0, "major"),
+    ("opposition", "Opposition", 180.0, "major"),
+    ("semi_sextile", "Semi-sextile", 30.0, "minor"),
+    ("semi_square", "Semi-square", 45.0, "minor"),
+    ("quintile", "Quintile", 72.0, "minor"),
+    ("sesquiquadrate", "Sesquiquadrate", 135.0, "minor"),
+    ("quincunx", "Quincunx", 150.0, "minor"),
+    ("biquintile", "Biquintile", 144.0, "minor"),
+    ("septile", "Septile", 51.428571, "advanced"),
+    ("biseptile", "Biseptile", 102.857143, "advanced"),
+    ("triseptile", "Triseptile", 154.285714, "advanced"),
+    ("novile", "Novile", 40.0, "advanced"),
+    ("binovile", "Binovile", 80.0, "advanced"),
+    ("quadranovile", "Quadranovile", 160.0, "advanced"),
+    ("decile", "Decile", 36.0, "advanced"),
+    ("tredecile", "Tredecile", 108.0, "advanced"),
+    ("quindecile", "Quindecile", 165.0, "advanced"),
 )
 
 
@@ -59,6 +84,7 @@ class ReferenceRepository:
                 AstralSignModel,
                 HouseModel,
                 AspectModel,
+                AstralAspectFamilyModel,
             )
         )
 
@@ -141,21 +167,27 @@ class ReferenceRepository:
             if self.db.scalar(select(HouseModel.id).where(HouseModel.number == number)) is None:
                 self.db.add(HouseModel(number=number, name=name))
 
-        aspect_rows = [
-            ("conjunction", "Conjunction", 0),
-            ("sextile", "Sextile", 60),
-            ("square", "Square", 90),
-            ("trine", "Trine", 120),
-            ("opposition", "Opposition", 180),
-        ]
-        for code, name, angle in aspect_rows:
+        for name in ASPECT_FAMILY_ROWS:
+            if (
+                self.db.scalar(
+                    select(AstralAspectFamilyModel.id).where(AstralAspectFamilyModel.name == name)
+                )
+                is None
+            ):
+                self.db.add(AstralAspectFamilyModel(name=name))
+        self.db.flush()
+        families = {
+            row.name: row.id for row in self.db.scalars(select(AstralAspectFamilyModel)).all()
+        }
+
+        for code, name, angle, family_name in ASPECT_ROWS:
             if self.db.scalar(select(AspectModel.id).where(AspectModel.code == code)) is None:
                 self.db.add(
                     AspectModel(
                         code=code,
                         name=name,
                         angle=angle,
-                        default_orb_deg=DEFAULT_ASPECT_ORBS[code],
+                        family=families[family_name],
                     )
                 )
 
@@ -168,8 +200,24 @@ class ReferenceRepository:
         planets = self.db.scalars(select(PlanetModel).order_by(PlanetModel.code)).all()
         signs = self.db.scalars(select(AstralSignModel).order_by(AstralSignModel.code)).all()
         houses = self.db.scalars(select(HouseModel).order_by(HouseModel.number)).all()
-        aspects = self.db.scalars(
-            select(AspectModel).order_by(AspectModel.angle, AspectModel.code)
+        aspects = self.db.execute(
+            select(
+                AspectModel,
+                AstralAspectFamilyModel.name,
+                AstralAspectDefinitionModel.default_orb_deg,
+            )
+            .join(AstralAspectFamilyModel, AspectModel.family == AstralAspectFamilyModel.id)
+            .outerjoin(
+                AstralSystemModel,
+                AstralSystemModel.name == "modern",
+            )
+            .outerjoin(
+                AstralAspectDefinitionModel,
+                (AstralAspectDefinitionModel.aspect_id == AspectModel.id)
+                & (AstralAspectDefinitionModel.reference_version_id == model.id)
+                & (AstralAspectDefinitionModel.astral_system_id == AstralSystemModel.id),
+            )
+            .order_by(AspectModel.angle, AspectModel.code)
         ).all()
         return {
             "version": model.version,
@@ -178,11 +226,12 @@ class ReferenceRepository:
             "houses": [{"number": item.number, "name": item.name} for item in houses],
             "aspects": [
                 {
-                    "code": item.code,
-                    "name": item.name,
-                    "angle": item.angle,
-                    "default_orb_deg": item.default_orb_deg,
+                    "code": aspect.code,
+                    "name": aspect.name,
+                    "angle": aspect.angle,
+                    "family": family_name,
+                    "default_orb_deg": default_orb_deg,
                 }
-                for item in aspects
+                for aspect, family_name, default_orb_deg in aspects
             ],
         }

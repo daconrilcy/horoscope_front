@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py`, `20260513_0089_rename_daily_planet_profiles.py`, `20260513_0090_create_astral_systems.py`, `20260513_0091_rename_planets_to_astral_planets.py`, `20260513_0092_create_astral_planet_sign_dignities.py`, `20260513_0093_drop_astral_sign_rulerships.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py`, `20260514_0098_reference_house_interpretation_system.py` et `20260514_0099_rename_astral_reference_tables.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py`, `20260513_0089_rename_daily_planet_profiles.py`, `20260513_0090_create_astral_systems.py`, `20260513_0091_rename_planets_to_astral_planets.py`, `20260513_0092_create_astral_planet_sign_dignities.py`, `20260513_0093_drop_astral_sign_rulerships.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py`, `20260514_0098_reference_house_interpretation_system.py`, `20260514_0099_rename_astral_reference_tables.py` et `20260514_0102_normalize_astral_aspects.py`.
 
 Deux catégories sont distinguées :
 
@@ -344,12 +344,15 @@ Rôle :
 - Catalogue les domaines de prédiction : énergie, humeur, santé, travail, carrière, argent, amour, intimité, foyer, social, communication, créativité.
 - Sert de cible aux poids `astral_planet_category_weights`.
 
-### `astral_aspects` et `astral_aspect_profiles`
+### `astral_aspects`, `astral_aspect_profiles` et `astral_aspect_definitions`
 
 Rôle :
 
 - Ne référencent pas directement les planètes.
-- Définissent les aspects utilisables pour mesurer les relations planète transitante -> cible natale.
+- `astral_aspects` définit les 20 aspects canoniques seedés depuis `docs/recherches astro/aspects.json`, avec `family -> astral_aspect_families.id`.
+- `astral_aspect_profiles` porte le scoring prédictif par aspect : intensité, valence, polarité, énergie, multiplicateur d'orbe et comportement de phase.
+- `astral_aspect_definitions` porte l'activation par système astrologique et l'orbe par défaut ; l'ancien `astral_aspects.default_orb_deg` n'existe plus.
+- Les calculs runtime V1 restent centrés sur les cinq aspects majeurs, même si le référentiel relationnel contient aussi les aspects mineurs et avancés.
 - `ContributionCalculator` combine `w_planet`, `w_aspect`, `f_orb`, `f_phase`, `f_target` et la polarité pour produire une contribution.
 
 ### `astro_points` et `point_category_weights`
@@ -479,5 +482,6 @@ Rôle :
 - `backend/migrations/versions/20260514_0097_rename_astral_house_interpretation_profiles.py`
 - `backend/migrations/versions/20260514_0098_reference_house_interpretation_system.py`
 - `backend/migrations/versions/20260514_0099_rename_astral_reference_tables.py`
+- `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
 - `docs/recherches astro/planet_sign_diginities.json`
 - `docs/recherches astro/house_interpretation_vocabulary.json`

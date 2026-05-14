@@ -79,6 +79,9 @@ from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralAspectDefinitionModel,
+    AstralDefaultValenceModel,
+    AstralInterpretiveValenceModel,
     AstralPlanetSignDignityModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -106,6 +109,7 @@ from app.infra.db.models.product_entitlements import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAspectFamilyModel,
     AstralDignityTypeModel,
     AstralElementModel,
     AstralHouseSystemModel,
@@ -191,6 +195,9 @@ __all__ = [
     "AstroPointModel",
     "PointCategoryWeightModel",
     "AspectProfileModel",
+    "AstralAspectDefinitionModel",
+    "AstralDefaultValenceModel",
+    "AstralInterpretiveValenceModel",
     "UserPrivacyRequestModel",
     "SupportIncidentModel",
     "SupportTicketCategoryModel",
@@ -200,6 +207,7 @@ __all__ = [
     "UserPredictionBaselineModel",
     "UserRefreshTokenModel",
     "AspectModel",
+    "AstralAspectFamilyModel",
     "AstralDignityTypeModel",
     "AstralElementModel",
     "AstralHouseSystemModel",

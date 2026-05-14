@@ -146,10 +146,12 @@ class ReferenceDataService:
             repo.seed_version_defaults()
         db.flush()
         from app.services.prediction.reference_seed_service import (
+            ensure_astral_aspect_reference_data,
             ensure_astral_planet_sign_dignities,
         )
 
         ensure_astral_planet_sign_dignities(db)
+        ensure_astral_aspect_reference_data(db, model.id)
         from app.services.reference_data.house_interpretation_seed_service import (
             sync_house_interpretation_profiles,
         )

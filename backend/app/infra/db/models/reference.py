@@ -108,6 +108,16 @@ class AstralSystemModel(Base):
     name: Mapped[str] = mapped_column(String(32), nullable=False)
 
 
+class AstralAspectFamilyModel(Base):
+    """Famille stable regroupant les aspects par usage astrologique."""
+
+    __tablename__ = "astral_aspect_families"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
 class AstralHouseSystemModel(Base):
     """Référentiel canonique des systèmes de maisons disponibles."""
 
@@ -174,14 +184,18 @@ class HouseModel(Base):
 
 
 class AspectModel(Base):
+    """Aspect astrologique stable, relié à sa famille canonique."""
+
     __tablename__ = "astral_aspects"
     __table_args__ = (UniqueConstraint("code"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(32), index=True)
     name: Mapped[str] = mapped_column(String(64))
-    angle: Mapped[int] = mapped_column(Integer)
-    default_orb_deg: Mapped[float] = mapped_column(Float, nullable=False)
+    angle: Mapped[float] = mapped_column(Float)
+    family: Mapped[int] = mapped_column(ForeignKey("astral_aspect_families.id"), nullable=False)
+
+    aspect_family: Mapped["AstralAspectFamilyModel"] = relationship()
 
 
 def _ensure_reference_version_is_mutable(target: object) -> None:

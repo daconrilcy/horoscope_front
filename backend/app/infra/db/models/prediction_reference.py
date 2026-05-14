@@ -223,6 +223,8 @@ class AstralPlanetSignDignityModel(Base):
 
 
 class AspectProfileModel(Base):
+    """Profil de scoring et de polarité associé à un aspect."""
+
     __tablename__ = "astral_aspect_profiles"
     __table_args__ = (UniqueConstraint("reference_version_id", "aspect_id"),)
 
@@ -236,15 +238,70 @@ class AspectProfileModel(Base):
         ForeignKey("astral_aspects.id"), nullable=False, index=True
     )
     intensity_weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
-    default_valence: Mapped[str] = mapped_column(
-        String(16), nullable=False, default="contextual"
-    )  # favorable, challenging, etc.
+    default_valence: Mapped[str] = mapped_column(String(16), nullable=False, default="contextual")
+    interpretive_valence: Mapped[str] = mapped_column(String(64), nullable=False)
+    polarity_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    energy_type: Mapped[str] = mapped_column(String(64), nullable=False)
     orb_multiplier: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     phase_sensitive: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    phase_behavior_json: Mapped[str] = mapped_column(Text, nullable=False)
+    strength_thresholds_json: Mapped[str] = mapped_column(Text, nullable=False)
     micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     aspect: Mapped["AspectModel"] = relationship()
+
+
+class AstralAspectDefinitionModel(Base):
+    """Configuration d'activation d'un aspect pour un système astrologique."""
+
+    __tablename__ = "astral_aspect_definitions"
+    __table_args__ = (UniqueConstraint("reference_version_id", "aspect_id", "astral_system_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"),
+        nullable=False,
+        index=True,
+    )
+    aspect_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_aspects.id"), nullable=False, index=True
+    )
+    astral_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_systems.id"), nullable=False, index=True
+    )
+    is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_major: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_minor: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    default_orb_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    display_priority: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    interpretation_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    scoring_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
+    aspect: Mapped["AspectModel"] = relationship()
+    astral_system: Mapped["AstralSystemModel"] = relationship()
+
+
+class AstralDefaultValenceModel(Base):
+    """Référentiel des valences par défaut autorisées pour les aspects."""
+
+    __tablename__ = "astral_default_valence"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
+class AstralInterpretiveValenceModel(Base):
+    """Référentiel des valences interprétatives principales."""
+
+    __tablename__ = "astral_interpretive_valence"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
 
 
 # Mechanisms for version protection
@@ -255,6 +312,7 @@ class AspectProfileModel(Base):
 @event.listens_for(HouseCategoryWeightModel, "before_update")
 @event.listens_for(PointCategoryWeightModel, "before_update")
 @event.listens_for(AspectProfileModel, "before_update")
+@event.listens_for(AstralAspectDefinitionModel, "before_update")
 def _prevent_update_on_locked_prediction_version(
     mapper: object, connection: object, target: object
 ) -> None:

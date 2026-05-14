@@ -27,6 +27,10 @@ NEW_TABLES = [
     "astro_points",
     "point_category_weights",
     "astral_aspect_profiles",
+    "astral_aspect_families",
+    "astral_default_valence",
+    "astral_interpretive_valence",
+    "astral_aspect_definitions",
 ]
 
 EXPECTED_INDEXES = {
@@ -58,6 +62,14 @@ EXPECTED_INDEXES = {
     "astral_aspect_profiles": {
         "ix_astral_aspect_profiles_aspect_id",
         "ix_astral_aspect_profiles_reference_version_id",
+    },
+    "astral_aspect_families": set(),
+    "astral_default_valence": set(),
+    "astral_interpretive_valence": set(),
+    "astral_aspect_definitions": {
+        "ix_astral_aspect_definitions_reference_version_id",
+        "ix_astral_aspect_definitions_aspect_id",
+        "ix_astral_aspect_definitions_astral_system_id",
     },
 }
 
@@ -238,3 +250,45 @@ def test_migration_a_prediction_tables_downgrade(
         assert table not in tables, f"Table {table} still exists after downgrade"
 
     engine.dispose()
+
+
+def test_aspect_normalization_migration_resumes_after_partial_sqlite_ddl(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Vérifie la reprise après création DDL partielle avec l'ancien nom fautif."""
+    db_path = tmp_path / "test-aspect-partial-ddl.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.downgrade(config, "base")
+    command.upgrade(config, "20260514_0101")
+
+    engine = _sqlite_engine(database_url)
+    with engine.begin() as connection:
+        connection.execute(
+            sa.text(
+                """
+                CREATE TABLE astal_aspect_families (
+                    id INTEGER NOT NULL,
+                    name VARCHAR(32) NOT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE (name)
+                )
+                """
+            )
+        )
+    engine.dispose()
+
+    command.upgrade(config, "head")
+
+    migrated_engine = _sqlite_engine(database_url)
+    with migrated_engine.connect() as connection:
+        assert (
+            connection.execute(sa.text("SELECT COUNT(*) FROM astral_aspect_families")).scalar_one()
+            == 3
+        )
+        assert "astal_aspect_families" not in inspect(migrated_engine).get_table_names()
+        assert connection.execute(sa.text("SELECT COUNT(*) FROM astral_aspects")).scalar_one() == 20
+    migrated_engine.dispose()

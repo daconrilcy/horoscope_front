@@ -118,12 +118,19 @@ class PointCategoryWeightData:
 
 @dataclass(frozen=True)
 class AspectProfileData:
+    """Profil de scoring enrichi pour un aspect astrologique."""
+
     aspect_id: int
     code: str
     intensity_weight: float
     default_valence: str
     orb_multiplier: float
     phase_sensitive: bool
+    interpretive_valence: str = "amplifying"
+    polarity_score: float = 0.0
+    energy_type: str = "contextual"
+    phase_behavior: Mapping[str, Any] | None = None
+    strength_thresholds: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)

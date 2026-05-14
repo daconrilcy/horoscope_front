@@ -268,8 +268,13 @@ class PredictionReferenceRepository:
                 code=aspect_row.code,
                 intensity_weight=profile_row.intensity_weight,
                 default_valence=profile_row.default_valence,
+                interpretive_valence=profile_row.interpretive_valence,
+                polarity_score=profile_row.polarity_score,
+                energy_type=profile_row.energy_type,
                 orb_multiplier=profile_row.orb_multiplier,
                 phase_sensitive=profile_row.phase_sensitive,
+                phase_behavior=self._parse_json_object(profile_row.phase_behavior_json),
+                strength_thresholds=self._parse_json_object(profile_row.strength_thresholds_json),
             )
         return result
 
@@ -355,3 +360,15 @@ class PredictionReferenceRepository:
         except (json.JSONDecodeError, TypeError):
             pass
         return ()
+
+    def _parse_json_object(self, raw: str | None) -> dict[str, object]:
+        """Convertit un objet JSON stocké en texte pour les profils d'aspects."""
+        if not raw:
+            return {}
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                return {str(key): value for key, value in parsed.items()}
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return {}

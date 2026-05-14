@@ -99,6 +99,10 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_sign_profiles",
         "astral_house_systems",
         "astral_house_interpretation_profiles",
+        "astral_aspect_families",
+        "astral_default_valence",
+        "astral_interpretive_valence",
+        "astral_aspect_definitions",
     ):
         assert table_name in head_tables
     assert "house_interpretation_profiles" not in head_tables
@@ -241,6 +245,52 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
             ).scalar_one()
             == 50
         )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_aspect_families")).scalar_one()
+            == 3
+        )
+        assert "astal_aspect_families" not in head_tables
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_default_valence")).scalar_one()
+            == 4
+        )
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_interpretive_valence")
+            ).scalar_one()
+            == 5
+        )
+        assert connection.execute(text("SELECT COUNT(*) FROM astral_aspects")).scalar_one() == 20
+        assert (
+            connection.execute(
+                text(
+                    """
+                    SELECT COUNT(*)
+                    FROM astral_aspects
+                    WHERE family IS NULL
+                    """
+                )
+            ).scalar_one()
+            == 0
+        )
+        reference_version_count = connection.execute(
+            text("SELECT COUNT(*) FROM astral_reference_versions")
+        ).scalar_one()
+        modern_definition_count = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM astral_aspect_definitions
+                JOIN astral_systems
+                    ON astral_aspect_definitions.astral_system_id = astral_systems.id
+                WHERE astral_systems.name = 'modern'
+                """
+            )
+        ).scalar_one()
+        if reference_version_count:
+            assert modern_definition_count == 20 * reference_version_count
+        else:
+            assert modern_definition_count == 0
         assert (
             connection.execute(
                 text(

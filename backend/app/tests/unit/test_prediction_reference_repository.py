@@ -8,6 +8,9 @@ from app.infra.db.base import Base
 from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralAspectDefinitionModel,
+    AstralDefaultValenceModel,
+    AstralInterpretiveValenceModel,
     AstralPlanetSignDignityModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -19,6 +22,7 @@ from app.infra.db.models.prediction_reference import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAspectFamilyModel,
     AstralDignityTypeModel,
     AstralHouseSystemModel,
     AstralSignModel,
@@ -89,6 +93,7 @@ def test_structural_astrology_models_are_not_versioned():
         AstralSystemModel,
         AstralHouseSystemModel,
         AstralPlanetSignDignityModel,
+        AstralAspectFamilyModel,
     )
 
     for model in structural_models:
@@ -105,12 +110,16 @@ def test_reference_and_aspect_models_use_canonical_astral_table_names():
     """Les modèles de versions et d'aspects pointent vers les noms SQL canoniques."""
     assert ReferenceVersionModel.__tablename__ == "astral_reference_versions"
     assert AspectModel.__tablename__ == "astral_aspects"
+    assert AstralAspectFamilyModel.__tablename__ == "astral_aspect_families"
 
 
 def test_prediction_aspect_and_planet_weight_tables_are_astral_namespaced():
     """Les tables prédictives liées aux aspects et planètes sont préfixées astral."""
     assert PlanetCategoryWeightModel.__tablename__ == "astral_planet_category_weights"
     assert AspectProfileModel.__tablename__ == "astral_aspect_profiles"
+    assert AstralAspectDefinitionModel.__tablename__ == "astral_aspect_definitions"
+    assert AstralDefaultValenceModel.__tablename__ == "astral_default_valence"
+    assert AstralInterpretiveValenceModel.__tablename__ == "astral_interpretive_valence"
     assert inspect(PlanetCategoryWeightModel).persist_selectable.name == (
         "astral_planet_category_weights"
     )
