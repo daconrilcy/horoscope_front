@@ -99,6 +99,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_sign_profiles",
         "astral_house_systems",
         "astral_house_interpretation_profiles",
+        "astral_aspect_interpretation_profiles",
         "astral_aspect_families",
         "astral_default_valence",
         "astral_interpretive_valence",
@@ -414,6 +415,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_prediction_daily_planet_profiles",
         "astral_prediction_daily_house_profiles",
         "astral_house_interpretation_profiles",
+        "astral_aspect_interpretation_profiles",
         "astral_aspect_profiles",
         "astral_planet_category_weights",
         "astral_house_category_weights",
@@ -469,11 +471,60 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     )
     assert house_interpretation_foreign_keys[("house_id",)] == "astral_houses"
     assert house_interpretation_foreign_keys[("astral_system_id",)] == "astral_systems"
+    aspect_interpretation_columns = {
+        column["name"]
+        for column in head_inspector.get_columns("astral_aspect_interpretation_profiles")
+    }
+    assert aspect_interpretation_columns == {
+        "id",
+        "reference_version_id",
+        "aspect_id",
+        "astral_system_id",
+        "language",
+        "title",
+        "summary",
+        "core_keywords_json",
+        "shadow_keywords_json",
+        "psychological_keywords_json",
+        "relationship_keywords_json",
+        "career_keywords_json",
+        "spiritual_keywords_json",
+        "energetic_dynamics_json",
+        "growth_patterns_json",
+        "conflict_patterns_json",
+        "archetypes_json",
+        "dos_json",
+        "donts_json",
+        "prompt_hints_json",
+        "micro_note",
+    }
+    aspect_interpretation_unique_columns = {
+        tuple(constraint["column_names"])
+        for constraint in head_inspector.get_unique_constraints(
+            "astral_aspect_interpretation_profiles"
+        )
+    }
+    assert (
+        "reference_version_id",
+        "aspect_id",
+        "astral_system_id",
+        "language",
+    ) in aspect_interpretation_unique_columns
+    aspect_interpretation_foreign_keys = {
+        tuple(foreign_key["constrained_columns"]): foreign_key["referred_table"]
+        for foreign_key in head_inspector.get_foreign_keys("astral_aspect_interpretation_profiles")
+    }
+    assert (
+        aspect_interpretation_foreign_keys[("reference_version_id",)] == "astral_reference_versions"
+    )
+    assert aspect_interpretation_foreign_keys[("aspect_id",)] == "astral_aspects"
+    assert aspect_interpretation_foreign_keys[("astral_system_id",)] == "astral_systems"
     for table_name in (
         "prediction_categories",
         "astral_prediction_daily_planet_profiles",
         "astral_prediction_daily_house_profiles",
         "astral_house_interpretation_profiles",
+        "astral_aspect_interpretation_profiles",
         "astral_aspect_profiles",
         "astral_planet_category_weights",
         "astral_house_category_weights",

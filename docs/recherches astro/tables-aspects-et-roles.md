@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py`, `20260514_0104_add_astral_aspect_orb_rules.py` et `20260514_0105_add_astral_system_inheritance.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py`, `20260514_0104_add_astral_aspect_orb_rules.py`, `20260514_0105_add_astral_system_inheritance.py` et `20260514_0106_create_astral_aspect_interpretation_profiles.py`.
 
 Deux catégories sont distinguées :
 
@@ -26,6 +26,7 @@ Les règles physiques de `astral_aspect_orb_rules` restent locales au système q
 | `astral_default_valence` | Catalogue id/name | Valences par défaut autorisées pour les profils d'aspects | Non |
 | `astral_interpretive_valence` | Catalogue id/name | Valences interprétatives principales | Non |
 | `astral_aspect_profiles` | `aspect_id -> astral_aspects.id` | Paramétrage du moteur daily : intensité, valence, polarité, énergie, orbe, phase | Oui, via `reference_version_id` |
+| `astral_aspect_interpretation_profiles` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Vocabulaire éditorial d'interprétation des aspects pour prompts et synthèses | Oui, via `reference_version_id` |
 | `astral_aspect_definitions` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Activation et qualification des aspects par système astrologique | Oui, via `reference_version_id` |
 | `astral_aspect_orb_rules` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Exceptions ciblées à l'orbe standard des définitions | Oui, via `reference_version_id` |
 | `ruleset_event_types` | Codes d'événements d'aspect | Pondération et priorité des événements `aspect_*` | Indirectement via le ruleset |
@@ -197,6 +198,25 @@ Rôle runtime :
 
 - Chargée par `PredictionReferenceRepository.get_aspect_profiles`.
 - Injectée dans `PredictionContext.aspect_profiles` sous forme de mapping `code -> AspectProfileData`.
+
+### `astral_aspect_interpretation_profiles`
+
+Cette table porte le vocabulaire éditorial versionné des aspects. Elle est
+distincte de `astral_aspect_profiles`, qui reste réservé au scoring prédictif.
+
+| Colonne | Rôle |
+|---|---|
+| `reference_version_id` | Version de référence propriétaire du vocabulaire éditorial. |
+| `aspect_id` | Aspect canonique ciblé dans `astral_aspects`. |
+| `astral_system_id` | Système astrologique de l'interprétation éditoriale. |
+| `language` | Langue du profil, actuellement seedée en `en`. |
+| `title`, `summary`, `micro_note` | Texte éditorial court exploitable par l'interprétation et les prompts. |
+| `*_json` | Listes JSON stockées en texte pour mots-clés, dynamiques, patterns, archétypes et consignes de prompt. |
+
+- Seedée depuis `docs/recherches astro/astral_aspect_interpretation_profiles.json`.
+- Synchronisée par `sync_aspect_interpretation_profiles` pendant le seed des versions de référence.
+- Unicité : `(reference_version_id, aspect_id, astral_system_id, language)`.
+- Elle ne doit pas devenir une source d'orbes, de poids produit, de valence de scoring ou de calcul runtime.
 - Utilisée par :
   - `EventDetector._orb_max` pour moduler l'orbe actif planète x aspect ;
   - `ContributionCalculator._w_aspect` pour pondérer les contributions ;

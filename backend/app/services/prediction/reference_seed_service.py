@@ -11,6 +11,7 @@ from app.infra.db.models import (
     AspectProfileModel,
     AstralAspectDefinitionModel,
     AstralAspectFamilyModel,
+    AstralAspectInterpretationProfileModel,
     AstralAspectOrbRuleModel,
     AstralDefaultValenceModel,
     AstralDignityTypeModel,
@@ -38,6 +39,9 @@ from app.infra.db.models import (
     RulesetParameterModel,
 )
 from app.infra.db.repositories import ReferenceRepository
+from app.services.reference_data.aspect_interpretation_seed_service import (
+    sync_aspect_interpretation_profiles,
+)
 from app.services.reference_data.house_interpretation_seed_service import (
     sync_house_interpretation_profiles,
 )
@@ -52,6 +56,7 @@ EXPECTED_COUNTS = {
     "planet_profiles": 10,
     "house_profiles": 12,
     "astral_house_interpretation_profiles": 12,
+    "astral_aspect_interpretation_profiles": 20,
     "astral_aspect_profiles": 20,
     "astral_aspect_definitions": 80,
     "astral_aspect_orb_rules": 79,
@@ -791,6 +796,11 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         .select_from(HouseInterpretationProfileModel)
         .where(HouseInterpretationProfileModel.reference_version_id == reference_version_id)
     )
+    actual["astral_aspect_interpretation_profiles"] = db.scalar(
+        select(func.count())
+        .select_from(AstralAspectInterpretationProfileModel)
+        .where(AstralAspectInterpretationProfileModel.reference_version_id == reference_version_id)
+    )
     actual["astral_aspect_profiles"] = db.scalar(
         select(func.count())
         .select_from(AspectProfileModel)
@@ -926,6 +936,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             _ensure_astral_planet_sign_dignities(db)
             sync_house_interpretation_profiles(db, v2.id)
             ensure_astral_aspect_reference_data(db, v2.id)
+            sync_aspect_interpretation_profiles(db, v2.id)
         actual = _check_counts(db, v2.id)
 
         # On exige au minimum la présence du ruleset 2.0.0 pour considérer
@@ -996,6 +1007,11 @@ def run_prediction_reference_seed(db: Session) -> None:
                 )
             )
             db.execute(
+                delete(AstralAspectInterpretationProfileModel).where(
+                    AstralAspectInterpretationProfileModel.reference_version_id == v2.id
+                )
+            )
+            db.execute(
                 delete(PlanetProfileModel).where(PlanetProfileModel.reference_version_id == v2.id)
             )
             db.execute(delete(AstralSignProfileModel))
@@ -1028,6 +1044,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             _ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
             ensure_astral_aspect_reference_data(db, v2.id)
+            sync_aspect_interpretation_profiles(db, v2.id)
         else:
             # État corrompu ou incomplet alors que la version est verrouillée.
             lines = [
@@ -1478,6 +1495,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     # 11. Alimentation des profils et définitions d aspects.
     print("Seeding aspect profiles...")
     ensure_astral_aspect_reference_data(db, v2.id)
+    sync_aspect_interpretation_profiles(db, v2.id)
 
     # 12. Alimentation du ruleset 1.0.0 (legacy).
     print("Seeding ruleset 1.0.0 (legacy)...")

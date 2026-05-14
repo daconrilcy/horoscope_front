@@ -5,7 +5,10 @@ import pytest
 from sqlalchemy import delete, func, select
 
 from app.infra.db.base import Base
-from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
+from app.infra.db.models.interpretation_reference import (
+    AstralAspectInterpretationProfileModel,
+    HouseInterpretationProfileModel,
+)
 from app.infra.db.models.prediction_reference import (
     AstralAspectOrbRuleModel,
     PredictionCategoryModel,
@@ -120,6 +123,14 @@ def test_seed_reference_version_is_idempotent() -> None:
                 .where(AstralAspectOrbRuleModel.reference_version_id == version.id)
             )
             == 79
+        )
+        assert (
+            db.scalar(
+                select(func.count())
+                .select_from(AstralAspectInterpretationProfileModel)
+                .where(AstralAspectInterpretationProfileModel.reference_version_id == version.id)
+            )
+            == 20
         )
         house_10_profile = db.scalar(
             select(HouseInterpretationProfileModel)

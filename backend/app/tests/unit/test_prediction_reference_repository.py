@@ -5,7 +5,10 @@ from sqlalchemy import CheckConstraint, String, Text, UniqueConstraint, inspect
 from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
-from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
+from app.infra.db.models.interpretation_reference import (
+    AstralAspectInterpretationProfileModel,
+    HouseInterpretationProfileModel,
+)
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
     AstralAspectDefinitionModel,
@@ -130,6 +133,10 @@ def test_prediction_aspect_and_planet_weight_tables_are_astral_namespaced():
     """Les tables prédictives liées aux aspects et planètes sont préfixées astral."""
     assert PlanetCategoryWeightModel.__tablename__ == "astral_planet_category_weights"
     assert AspectProfileModel.__tablename__ == "astral_aspect_profiles"
+    assert (
+        AstralAspectInterpretationProfileModel.__tablename__
+        == "astral_aspect_interpretation_profiles"
+    )
     assert AstralAspectDefinitionModel.__tablename__ == "astral_aspect_definitions"
     assert AstralAspectOrbRuleModel.__tablename__ == "astral_aspect_orb_rules"
     assert AstralDefaultValenceModel.__tablename__ == "astral_default_valence"
@@ -237,6 +244,51 @@ def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
     assert foreign_key_targets == {"astral_reference_versions", "astral_houses", "astral_systems"}
 
 
+def test_aspect_interpretation_profile_is_dedicated_editorial_reference_model():
+    """Verrouille le modèle éditorial versionné distinct des profils de scoring."""
+    columns = {column.key for column in inspect(AstralAspectInterpretationProfileModel).columns}
+    assert columns == {
+        "id",
+        "reference_version_id",
+        "aspect_id",
+        "astral_system_id",
+        "language",
+        "title",
+        "summary",
+        "core_keywords_json",
+        "shadow_keywords_json",
+        "psychological_keywords_json",
+        "relationship_keywords_json",
+        "career_keywords_json",
+        "spiritual_keywords_json",
+        "energetic_dynamics_json",
+        "growth_patterns_json",
+        "conflict_patterns_json",
+        "archetypes_json",
+        "dos_json",
+        "donts_json",
+        "prompt_hints_json",
+        "micro_note",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralAspectInterpretationProfileModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert (
+        "reference_version_id",
+        "aspect_id",
+        "astral_system_id",
+        "language",
+    ) in constraints
+    foreign_key_targets = {
+        foreign_key.column.table.name
+        for column in AstralAspectInterpretationProfileModel.__table__.columns
+        for foreign_key in column.foreign_keys
+    }
+    assert foreign_key_targets == {"astral_reference_versions", "astral_aspects", "astral_systems"}
+
+
 def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(
     db_session: Session,
 ):
@@ -252,6 +304,36 @@ def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(
         language="en",
         astral_system_id=system.id,
         title="Career and Public Role",
+        summary="Original editorial summary.",
+    )
+    db_session.add(profile)
+    db_session.commit()
+
+    profile.title = "Changed title"
+
+    with pytest.raises(ValueError, match="reference version is immutable"):
+        db_session.commit()
+    db_session.rollback()
+
+
+def test_aspect_interpretation_profile_update_is_blocked_when_version_is_locked(
+    db_session: Session,
+):
+    """Vérifie le verrouillage des profils éditoriaux d'aspects publiés."""
+    version = ReferenceVersionModel(version="locked-aspect-editorial", is_locked=True)
+    family = AstralAspectFamilyModel(name="major")
+    db_session.add(family)
+    db_session.flush()
+    aspect = AspectModel(code="conjunction", name="Conjunction", angle=0.0, family=family.id)
+    system = AstralSystemModel(name="modern")
+    db_session.add_all([version, aspect, system])
+    db_session.flush()
+    profile = AstralAspectInterpretationProfileModel(
+        reference_version_id=version.id,
+        aspect_id=aspect.id,
+        astral_system_id=system.id,
+        language="en",
+        title="Fusion",
         summary="Original editorial summary.",
     )
     db_session.add(profile)

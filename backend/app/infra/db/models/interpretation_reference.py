@@ -11,7 +11,12 @@ from app.infra.db.base import Base
 from app.infra.db.models.reference import _ensure_reference_version_is_mutable
 
 if TYPE_CHECKING:
-    from app.infra.db.models.reference import AstralSystemModel, HouseModel, ReferenceVersionModel
+    from app.infra.db.models.reference import (
+        AspectModel,
+        AstralSystemModel,
+        HouseModel,
+        ReferenceVersionModel,
+    )
 
 
 class HouseInterpretationProfileModel(Base):
@@ -61,10 +66,66 @@ class HouseInterpretationProfileModel(Base):
     astral_system: Mapped["AstralSystemModel"] = relationship()
 
 
+class AstralAspectInterpretationProfileModel(Base):
+    """Profil éditorial versionné pour interpréter un aspect astrologique."""
+
+    __tablename__ = "astral_aspect_interpretation_profiles"
+    __table_args__ = (
+        UniqueConstraint("reference_version_id", "aspect_id", "astral_system_id", "language"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"),
+        nullable=False,
+        index=True,
+    )
+    aspect_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_aspects.id"),
+        nullable=False,
+        index=True,
+    )
+    astral_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_systems.id"),
+        nullable=False,
+        index=True,
+    )
+    language: Mapped[str] = mapped_column(String(16), nullable=False)
+    title: Mapped[str] = mapped_column(String(128), nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    core_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    shadow_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    psychological_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    relationship_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    career_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    spiritual_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    energetic_dynamics_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    growth_patterns_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    conflict_patterns_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    archetypes_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dos_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    donts_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prompt_hints_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
+    aspect: Mapped["AspectModel"] = relationship()
+    astral_system: Mapped["AstralSystemModel"] = relationship()
+
+
 @event.listens_for(HouseInterpretationProfileModel, "before_update")
 def _prevent_update_on_locked_interpretation_version(
     mapper: object, connection: object, target: object
 ) -> None:
     """Bloque les modifications directes d'un profil rattaché à une version verrouillée."""
+    del mapper, connection
+    _ensure_reference_version_is_mutable(target)
+
+
+@event.listens_for(AstralAspectInterpretationProfileModel, "before_update")
+def _prevent_update_on_locked_aspect_interpretation_version(
+    mapper: object, connection: object, target: object
+) -> None:
+    """Bloque les modifications directes d'un profil d'aspect publié."""
     del mapper, connection
     _ensure_reference_version_is_mutable(target)

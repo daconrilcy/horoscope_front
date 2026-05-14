@@ -12,7 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.infra.db.models import (
+    AspectModel,
     AspectProfileModel,
+    AstralAspectInterpretationProfileModel,
     AstralAspectOrbRuleModel,
     AstralDignityTypeModel,
     AstralElementModel,
@@ -222,6 +224,28 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             )
             == 20
         )
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(AstralAspectInterpretationProfileModel)
+                .where(AstralAspectInterpretationProfileModel.reference_version_id == v2.id)
+            )
+            == 20
+        )
+        conjunction_interpretation = session.scalar(
+            select(AstralAspectInterpretationProfileModel)
+            .where(
+                AstralAspectInterpretationProfileModel.reference_version_id == v2.id,
+                AstralAspectInterpretationProfileModel.language == "en",
+            )
+            .join(AstralAspectInterpretationProfileModel.aspect)
+            .join(AstralAspectInterpretationProfileModel.astral_system)
+            .where(AstralSystemModel.name == "modern")
+            .where(AspectModel.code == "conjunction")
+        )
+        assert conjunction_interpretation is not None
+        assert conjunction_interpretation.title == "Fusion and Intensification"
+        assert "fusion" in json.loads(conjunction_interpretation.core_keywords_json or "[]")
         assert session.scalar(select(func.count()).select_from(AstroPointModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralDignityTypeModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralElementModel)) == 4

@@ -152,11 +152,15 @@ class ReferenceDataService:
 
         ensure_astral_planet_sign_dignities(db)
         ensure_astral_aspect_reference_data(db, model.id)
+        from app.services.reference_data.aspect_interpretation_seed_service import (
+            sync_aspect_interpretation_profiles,
+        )
         from app.services.reference_data.house_interpretation_seed_service import (
             sync_house_interpretation_profiles,
         )
 
         sync_house_interpretation_profiles(db, model.id)
+        sync_aspect_interpretation_profiles(db, model.id)
 
         db.commit()
         cls._invalidate_cache(target_version)

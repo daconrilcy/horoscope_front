@@ -67,11 +67,29 @@ def _row_count(table_name: str) -> int:
     return int(op.get_bind().execute(sa.text(f"SELECT COUNT(*) FROM {table_name}")).scalar_one())
 
 
+def _index_names(table_name: str, inspector: sa.Inspector) -> set[str]:
+    """Retourne les noms d'index sans refléter les index d'expression SQLite."""
+    bind = op.get_bind()
+    if bind.dialect.name == "sqlite":
+        rows = bind.execute(
+            sa.text(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'index' AND tbl_name = :table_name
+                """
+            ),
+            {"table_name": table_name},
+        )
+        return {str(row.name) for row in rows if row.name}
+    return {str(index["name"]) for index in inspector.get_indexes(table_name)}
+
+
 def _index_table(index_name: str) -> str | None:
     """Retourne la table propriétaire d'un index existant."""
     inspector = sa.inspect(op.get_bind())
     for table_name in inspector.get_table_names():
-        if index_name in {index["name"] for index in inspector.get_indexes(table_name)}:
+        if index_name in _index_names(table_name, inspector):
             return table_name
     return None
 

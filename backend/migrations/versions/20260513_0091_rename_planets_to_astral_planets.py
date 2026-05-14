@@ -27,12 +27,29 @@ def _table_exists(table_name: str) -> bool:
     return table_name in sa.inspect(op.get_bind()).get_table_names()
 
 
+def _index_names(table_name: str, inspector: sa.Inspector) -> set[str]:
+    """Retourne les noms d'index sans refléter les index d'expression SQLite."""
+    bind = op.get_bind()
+    if bind.dialect.name == "sqlite":
+        rows = bind.execute(
+            sa.text(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'index' AND tbl_name = :table_name
+                """
+            ),
+            {"table_name": table_name},
+        )
+        return {str(row.name) for row in rows if row.name}
+    return {str(index["name"]) for index in inspector.get_indexes(table_name)}
+
+
 def _index_table(index_name: str) -> str | None:
     """Retourne la table propriétaire d'un index si elle existe."""
     inspector = sa.inspect(op.get_bind())
     for table_name in inspector.get_table_names():
-        indexes = {index["name"] for index in inspector.get_indexes(table_name)}
-        if index_name in indexes:
+        if index_name in _index_names(table_name, inspector):
             return table_name
     return None
 
