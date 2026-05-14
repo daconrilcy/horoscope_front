@@ -717,3 +717,80 @@ def test_system_inheritance_migration_removes_old_child_orb_rule_copies(
     downgraded_tables = set(inspect(downgraded_engine).get_table_names())
     assert "reference_versions" not in downgraded_tables
     downgraded_engine.dispose()
+
+
+def test_aspect_interpretation_migration_accepts_matching_precreated_table(
+    monkeypatch: object, tmp_path: Path
+) -> None:
+    """Valide la reprise si la table a été créée avant le stamp Alembic."""
+    db_path = tmp_path / "migration-precreated-aspect-interpretation.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.downgrade(config, "base")
+    command.upgrade(config, "20260514_0105")
+
+    engine = create_engine(database_url, future=True)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE astral_aspect_interpretation_profiles (
+                    id INTEGER NOT NULL,
+                    reference_version_id INTEGER NOT NULL,
+                    aspect_id INTEGER NOT NULL,
+                    astral_system_id INTEGER NOT NULL,
+                    language VARCHAR(16) NOT NULL,
+                    title VARCHAR(128) NOT NULL,
+                    summary TEXT,
+                    core_keywords_json TEXT,
+                    shadow_keywords_json TEXT,
+                    psychological_keywords_json TEXT,
+                    relationship_keywords_json TEXT,
+                    career_keywords_json TEXT,
+                    spiritual_keywords_json TEXT,
+                    energetic_dynamics_json TEXT,
+                    growth_patterns_json TEXT,
+                    conflict_patterns_json TEXT,
+                    archetypes_json TEXT,
+                    dos_json TEXT,
+                    donts_json TEXT,
+                    prompt_hints_json TEXT,
+                    micro_note TEXT,
+                    PRIMARY KEY (id),
+                    FOREIGN KEY(reference_version_id) REFERENCES astral_reference_versions (id),
+                    FOREIGN KEY(aspect_id) REFERENCES astral_aspects (id),
+                    FOREIGN KEY(astral_system_id) REFERENCES astral_systems (id),
+                    UNIQUE (reference_version_id, aspect_id, astral_system_id, language)
+                )
+                """
+            )
+        )
+    engine.dispose()
+
+    command.upgrade(config, "head")
+
+    head_engine = create_engine(database_url, future=True)
+    head_inspector = inspect(head_engine)
+    indexes = {
+        index["name"]
+        for index in head_inspector.get_indexes("astral_aspect_interpretation_profiles")
+    }
+    with head_engine.connect() as connection:
+        version = connection.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        profile_count = connection.execute(
+            text("SELECT COUNT(*) FROM astral_aspect_interpretation_profiles")
+        ).scalar()
+        version_count = connection.execute(
+            text("SELECT COUNT(*) FROM astral_reference_versions")
+        ).scalar()
+    head_engine.dispose()
+
+    assert version == "20260514_0106"
+    assert profile_count == version_count * 20
+    assert {
+        "ix_astral_aspect_interpretation_profiles_reference_version_id",
+        "ix_astral_aspect_interpretation_profiles_aspect_id",
+        "ix_astral_aspect_interpretation_profiles_astral_system_id",
+    } <= indexes
