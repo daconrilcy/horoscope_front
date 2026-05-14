@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAJOR_ASPECT_CODES, MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.angle_utils import contains_angle
+from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
 from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
 from app.domain.astrology.calculators import (
     calculate_houses,
@@ -25,6 +26,7 @@ from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResult,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
+from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import HouseRuntimeData
 from app.domain.astrology.zodiac import normalize_360, sign_from_longitude
 from app.infra.observability.metrics import increment_counter
@@ -50,6 +52,7 @@ class AspectResult(BaseModel):
     orb: float  # actual angular deviation (backward compat)
     orb_used: float | None = None  # actual angular deviation, story 24-2 (same as orb)
     orb_max: float | None = None  # resolved max threshold by priority chain, story 24-2
+    aspect_runtime: AspectRuntimeData | None = Field(default=None, exclude=True)
 
     @model_validator(mode="after")
     def _fill_orb_fields(self) -> AspectResult:
@@ -58,6 +61,8 @@ class AspectResult(BaseModel):
         if self.orb_max is None:
             # Backward compatibility for legacy payloads that only carried `orb`.
             self.orb_max = self.orb_used
+        if self.aspect_runtime is None:
+            self.aspect_runtime = build_aspect_runtime_data(self)
         return self
 
 
@@ -230,6 +235,7 @@ def build_natal_result(
     aspect_school: str = "modern",
     aspect_rules_version: str = "1.0.0",
 ) -> NatalResult:
+    aspect_school_code = str(getattr(aspect_school, "value", aspect_school)).strip().lower()
     if timeout_check is not None:
         timeout_check()
 
@@ -500,7 +506,7 @@ def build_natal_result(
         positions_raw,
         major_aspect_definitions,
         orb_rules=aspect_orb_rules,
-        system_code=aspect_school,
+        system_code=aspect_school_code,
         calculation_context="natal",
         system_inheritance=astral_systems_data,
     )
@@ -508,7 +514,7 @@ def build_natal_result(
         timeout_check()
 
     # story 24-2 Observability: track aspects calculated and rejected by orb
-    increment_counter(f"aspects_calculated_total_{aspect_school}", float(len(aspects_raw)))
+    increment_counter(f"aspects_calculated_total_{aspect_school_code}", float(len(aspects_raw)))
     _total_checks = math.comb(len(positions_raw), 2) * len(major_aspect_definitions)
     _rejected = _total_checks - len(aspects_raw)
     if _rejected > 0:
@@ -551,7 +557,7 @@ def build_natal_result(
         ephemeris_path_version=ephemeris_path_version,
         ephemeris_path_hash=ephemeris_path_hash,
         time_scale=prepared.time_scale,
-        aspect_school=aspect_school,
+        aspect_school=aspect_school_code,
         aspect_rules_version=aspect_rules_version,
         prepared_input=prepared,
         planet_positions=positions,

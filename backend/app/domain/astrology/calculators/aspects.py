@@ -1,6 +1,6 @@
 """Calcule les aspects astrologiques avec une résolution explicite des orbes."""
 
-from itertools import combinations
+from itertools import combinations, product
 
 from app.core.constants import DEFAULT_FALLBACK_ORB, LUMINARIES
 
@@ -406,6 +406,80 @@ def calculate_major_aspects(
                     }
                 )
 
+    aspects.sort(
+        key=lambda item: (
+            str(item["aspect_code"]),
+            str(item["planet_a"]),
+            str(item["planet_b"]),
+        )
+    )
+    return aspects
+
+
+def calculate_interchart_aspects(
+    source_positions: list[dict[str, object]],
+    target_positions: list[dict[str, object]],
+    aspect_definitions: list[tuple[str, float] | dict[str, object]],
+    max_orb: float = DEFAULT_FALLBACK_ORB,
+    orb_rules: list[dict[str, object]] | None = None,
+    system_code: str = "modern",
+    system_inheritance: dict[str, str | None] | list[dict[str, object]] | None = None,
+) -> list[dict[str, object]]:
+    """Calcule les aspects entre deux jeux de positions sans referentiel dedie."""
+    normalized_definitions = [
+        _normalize_aspect_definition(definition, max_orb, system_code)
+        for definition in aspect_definitions
+    ]
+    aspects: list[dict[str, object]] = []
+    for source, target in product(source_positions, target_positions):
+        source_code = str(source["planet_code"]).strip().lower()
+        target_code = str(target["planet_code"]).strip().lower()
+        distance = _angular_distance(float(source["longitude"]), float(target["longitude"]))
+        for aspect_def in normalized_definitions:
+            if not bool(aspect_def["is_enabled"]):
+                continue
+            angle = float(aspect_def["angle"])
+            orb = abs(distance - angle)
+            if orb_rules is not None:
+                resolved_orb = resolve_orb(
+                    aspect_code=str(aspect_def["aspect_code"]),
+                    system_code=system_code,
+                    context="interchart",
+                    source_body=source_code,
+                    target_body=target_code,
+                    aspect_definitions=normalized_definitions,
+                    orb_rules=orb_rules,
+                    system_inheritance=system_inheritance,
+                )
+                if resolved_orb is None:
+                    continue
+                orb_limit = resolved_orb
+            else:
+                pair_key = _normalize_pair_key(source_code, target_code)
+                source_is_luminary = source_code in LUMINARIES
+                target_is_luminary = target_code in LUMINARIES
+                if pair_key in aspect_def["orb_pair_overrides"]:
+                    orb_limit = aspect_def["orb_pair_overrides"][pair_key]
+                elif (source_is_luminary or target_is_luminary) and aspect_def[
+                    "orb_luminaries"
+                ] is not None:
+                    orb_limit = aspect_def["orb_luminaries"]
+                else:
+                    orb_limit = aspect_def["default_orb"]
+            if orb <= orb_limit:
+                aspects.append(
+                    {
+                        "aspect_code": aspect_def["aspect_code"],
+                        "planet_a": source_code,
+                        "planet_b": target_code,
+                        "chart_a": "source",
+                        "chart_b": "target",
+                        "angle": round(angle, 6),
+                        "orb": round(orb, 6),
+                        "orb_used": round(orb, 6),
+                        "orb_max": round(orb_limit, 6),
+                    }
+                )
     aspects.sort(
         key=lambda item: (
             str(item["aspect_code"]),

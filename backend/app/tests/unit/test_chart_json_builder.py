@@ -9,6 +9,7 @@ from app.domain.astrology.interpretation.house_strength_contracts import (
     HouseStrengthLevel,
     HouseStrengthReason,
 )
+from app.domain.astrology.natal_calculation import AspectResult
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
     HouseOccupantRuntimeData,
@@ -98,12 +99,15 @@ def mock_natal_result():
     ]
 
     # Aspects
-    a1 = MagicMock()
-    a1.aspect_code = "trine"
-    a1.planet_a = "sun"
-    a1.planet_b = "moon"
-    a1.angle = 120.3
-    a1.orb_used = 0.3
+    a1 = AspectResult(
+        aspect_code="trine",
+        planet_a="sun",
+        planet_b="moon",
+        angle=120.3,
+        orb=0.3,
+        orb_used=0.3,
+        orb_max=6.0,
+    )
 
     result.aspects = [a1]
 
@@ -153,8 +157,18 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     # Aspects
     assert len(chart["aspects"]) == 1
     assert chart["aspects"][0]["type"] == "trine"
+    assert chart["aspects"][0]["aspect_code"] == "trine"
     assert chart["aspects"][0]["planet_a"] == "sun"
     assert chart["aspects"][0]["orb"] == 0.3
+    assert chart["aspects"][0]["orb_used"] == 0.3
+    assert chart["aspects"][0]["orb_max"] == 6.0
+    assert chart["aspects"][0]["family"] == "major"
+    assert chart["aspects"][0]["strength_level"] == "dominant"
+    assert chart["aspects"][0]["normalized_strength"] == 1.0
+    assert chart["aspects"][0]["is_exact"] is True
+    assert chart["aspects"][0]["is_tight"] is True
+    assert chart["aspects"][0]["interpretive_valence"] == "harmonious"
+    assert chart["aspects"][0]["energy_type"] == "flow"
     assert chart["aspects"][0]["applying"] is None
     assert chart["meta"]["aspects_applying_available"] is False
 

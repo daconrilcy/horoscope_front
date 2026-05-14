@@ -80,7 +80,7 @@ def test_calculate_major_aspects_applies_pair_override_with_priority() -> None:
 
 
 def test_aspect_result_serialization_exposes_orb_orb_used_and_orb_max() -> None:
-    """AspectResult expose orb (compat), orb_used (déviation) et orb_max (seuil)."""
+    """AspectResult expose les champs historiques sans exposer le runtime interne."""
     aspect = AspectResult(
         aspect_code="square",
         planet_a="mars",
@@ -97,3 +97,5 @@ def test_aspect_result_serialization_exposes_orb_orb_used_and_orb_max() -> None:
     assert payload["orb"] == 3.5
     assert payload["orb_used"] == 3.5
     assert payload["orb_max"] == 6.0
+    assert "aspect_runtime" not in payload
+    assert aspect.aspect_runtime is not None

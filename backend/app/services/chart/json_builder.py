@@ -176,6 +176,47 @@ def _serialize_house_strength(strength: Any) -> dict[str, Any] | None:
     }
 
 
+def _serialize_aspect_runtime(aspect: Any) -> dict[str, Any]:
+    """Projette un aspect public depuis son runtime canonique si disponible."""
+    from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
+
+    orb_value = aspect.orb_used if aspect.orb_used is not None else aspect.orb
+    payload = {
+        "type": aspect.aspect_code,
+        "aspect_code": aspect.aspect_code,
+        "planet_a": aspect.planet_a,
+        "planet_b": aspect.planet_b,
+        "angle": round(float(aspect.angle), 2),
+        "orb": round(orb_value, 2) if orb_value is not None else None,
+        "orb_used": round(orb_value, 2) if orb_value is not None else None,
+        "orb_max": (
+            round(float(aspect.orb_max), 2)
+            if getattr(aspect, "orb_max", None) is not None
+            else None
+        ),
+        "applying": None,
+    }
+    runtime = getattr(aspect, "aspect_runtime", None)
+    if runtime is None:
+        runtime = build_aspect_runtime_data(aspect)
+    interpretation = getattr(runtime, "interpretation", None)
+    payload.update(
+        {
+            "family": runtime.aspect.family,
+            "strength_level": runtime.strength.level.value,
+            "normalized_strength": runtime.strength.normalized_score,
+            "phase_type": runtime.phase.type if runtime.phase is not None else None,
+            "interpretive_valence": (
+                interpretation.interpretive_valence if interpretation is not None else None
+            ),
+            "energy_type": interpretation.energy_type if interpretation is not None else None,
+            "is_exact": runtime.metadata.is_exact,
+            "is_tight": runtime.metadata.is_tight,
+        }
+    )
+    return payload
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -260,17 +301,7 @@ def build_chart_json(
         # Minor aspects are currently calculated by the engine
         # but not supported by the JSON contract.
         if a.aspect_code in MAJOR_ASPECTS:
-            orb_value = a.orb_used if a.orb_used is not None else a.orb
-            aspects.append(
-                {
-                    "type": a.aspect_code,
-                    "planet_a": a.planet_a,
-                    "planet_b": a.planet_b,
-                    "angle": round(a.angle, 2),
-                    "orb": round(orb_value, 2) if orb_value is not None else None,
-                    "applying": None,  # Unknown status
-                }
-            )
+            aspects.append(_serialize_aspect_runtime(a))
 
     # Angles
     angles = {
