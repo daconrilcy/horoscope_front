@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py`, `20260513_0089_rename_daily_planet_profiles.py`, `20260513_0090_create_astral_systems.py`, `20260513_0091_rename_planets_to_astral_planets.py`, `20260513_0092_create_astral_planet_sign_dignities.py` et `20260513_0093_drop_astral_sign_rulerships.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py`, `20260513_0089_rename_daily_planet_profiles.py`, `20260513_0090_create_astral_systems.py`, `20260513_0091_rename_planets_to_astral_planets.py`, `20260513_0092_create_astral_planet_sign_dignities.py`, `20260513_0093_drop_astral_sign_rulerships.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py` et `20260514_0098_reference_house_interpretation_system.py`.
 
 Deux catégories sont distinguées :
 
@@ -16,7 +16,9 @@ Deux catégories sont distinguées :
 | `astral_planets` | Table canonique des planètes | Vocabulaire stable des corps planétaires | Non |
 | `astral_prediction_daily_planet_profiles` | `planet_id -> astral_planets.id` | Profil de pondération prédictive quotidienne, sans rôle dans le calcul du thème astral | Oui, via `reference_version_id` |
 | `planet_category_weights` | `planet_id -> astral_planets.id` | Pondération planète -> catégorie de vie | Oui, via `reference_version_id` |
+| `astral_systems` | Référencé par `astral_planet_sign_dignities.astral_system_id` | Taxonomie stable des traditions/systèmes astrologiques utilisés pour qualifier les dignités planète -> signe | Non |
 | `astral_planet_sign_dignities` | `astral_planet_id -> astral_planets.id` | Dignités planétaires par signe, type de dignité et système astrologique ; source canonique des maîtrises signe -> planète | Non |
+| `astral_house_interpretation_profiles` | Pas de planète directe ; `astral_system_id -> astral_systems.id` | Vocabulaire éditorial maison, rattaché au même référentiel de systèmes que les dignités planétaires | Oui, via `reference_version_id` |
 | `daily_prediction_category_scores` | JSON `contributors_json` | Historique des contributeurs, dont planètes/aspects | Indirectement via le run |
 | `daily_prediction_turning_points` | JSON `driver_json` | Historique des événements déclencheurs, dont planètes conductrices | Indirectement via le run |
 | `chart_results` | JSON `result_payload` | Snapshot de résultat de thème astral/calcul contenant les positions | Version texte dans payload et colonnes |
@@ -223,6 +225,38 @@ Maîtrises traditionnelles attendues :
 
 ## Table de dignité planète -> signe
 
+### `astral_systems`
+
+Définie par `AstralSystemModel` dans `backend/app/infra/db/models/reference.py`.
+
+Qualification :
+
+- Table stable et non versionnée.
+- Créée par `20260513_0090_create_astral_systems.py`.
+- Sert de référentiel commun aux dignités planétaires et, depuis `20260514_0098_reference_house_interpretation_system.py`, aux profils éditoriaux d'interprétation de maisons.
+
+Colonnes principales :
+
+| Colonne | Type | Rôle |
+| --- | --- | --- |
+| `id` | `Integer` | Identifiant technique utilisé par les clés étrangères. |
+| `name` | `String(32)` | Nom canonique du système ou de la tradition astrologique. Unique. |
+
+Systèmes seedés :
+
+| Nom | Usage courant |
+| --- | --- |
+| `traditional` | Maîtrises traditionnelles, notamment `scorpio -> mars`, `aquarius -> saturn`, `pisces -> jupiter`. |
+| `modern` | Dignités modernes et vocabulaire éditorial maison issu de `house_interpretation_vocabulary.json`. |
+| `hellenistic` | Référence disponible pour extensions historiques. |
+| `medieval` | Référence disponible pour extensions historiques. |
+
+Point d'architecture :
+
+- Les données sources JSON peuvent encore contenir des libellés comme `"system": "traditional"` ou `"tradition": "modern"`.
+- Le seed applicatif résout ces libellés vers `astral_systems.id` avant insertion.
+- Les tables relationnelles ne doivent pas stocker ces valeurs en dur quand une FK vers `astral_systems` existe.
+
 ### `astral_planet_sign_dignities`
 
 Définie par `AstralPlanetSignDignityModel` dans `backend/app/infra/db/models/prediction_reference.py`.
@@ -407,6 +441,7 @@ Rôle :
 - Les paramètres d'interprétation ou de scoring de prédiction quotidienne doivent aller dans `astral_prediction_daily_planet_profiles` ou `planet_category_weights`, pas dans `astral_planets`.
 - Les données astronomiques calculées pour un thème astral ne doivent pas être ajoutées dans `astral_prediction_daily_planet_profiles`; elles relèvent des payloads de calcul (`chart_results`) ou des objets runtime de thème.
 - `astral_planet_sign_dignities` est non versionnée dans l'état courant. Elle représente une taxonomie canonique des dignités planète/signe par système, alimentée depuis le JSON documentaire.
+- `astral_systems` est désormais le référentiel partagé pour les systèmes/traditions astrologiques : les dignités planétaires et les profils d'interprétation de maisons doivent y référencer un identifiant, pas du texte libre.
 - `astral_sign_rulerships` ne doit pas être réintroduite : les maîtrises sont une vue filtrée de `astral_planet_sign_dignities`.
 - Le moteur actuel utilise le système `traditional` pour éviter de remplacer `scorpio -> mars`, `aquarius -> saturn` et `pisces -> jupiter` par des maîtrises modernes.
 - Les colonnes JSON (`result_payload`, `contributors_json`, `driver_json`) ne garantissent pas l'intégrité référentielle avec `astral_planets`. Elles servent à la traçabilité et à la restitution.
@@ -416,12 +451,14 @@ Rôle :
 
 - `backend/app/infra/db/models/reference.py`
 - `backend/app/infra/db/models/prediction_reference.py`
+- `backend/app/infra/db/models/interpretation_reference.py`
 - `backend/app/infra/db/models/daily_prediction.py`
 - `backend/app/infra/db/models/chart_result.py`
 - `backend/app/infra/db/models/user_prediction_baseline.py`
 - `backend/app/infra/db/repositories/prediction_reference_repository.py`
 - `backend/app/infra/db/repositories/prediction_schemas.py`
 - `backend/app/services/prediction/reference_seed_service.py`
+- `backend/app/services/house_interpretation_seed_service.py`
 - `backend/app/services/prediction/context_loader.py`
 - `backend/app/domain/prediction/domain_router.py`
 - `backend/app/domain/prediction/contribution_calculator.py`
@@ -436,4 +473,10 @@ Rôle :
 - `backend/migrations/versions/20260513_0091_rename_planets_to_astral_planets.py`
 - `backend/migrations/versions/20260513_0092_create_astral_planet_sign_dignities.py`
 - `backend/migrations/versions/20260513_0093_drop_astral_sign_rulerships.py`
+- `backend/migrations/versions/20260513_0094_rename_house_tables.py`
+- `backend/migrations/versions/20260513_0095_create_astral_house_systems.py`
+- `backend/migrations/versions/20260514_0096_create_house_interpretation_profiles.py`
+- `backend/migrations/versions/20260514_0097_rename_astral_house_interpretation_profiles.py`
+- `backend/migrations/versions/20260514_0098_reference_house_interpretation_system.py`
 - `docs/recherches astro/planet_sign_diginities.json`
+- `docs/recherches astro/house_interpretation_vocabulary.json`
