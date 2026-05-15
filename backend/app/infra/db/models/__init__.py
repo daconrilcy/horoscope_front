@@ -123,6 +123,7 @@ from app.infra.db.models.reference import (
     AstralSignProfileModel,
     AstralSystemModel,
     HouseModel,
+    LanguageModel,
     PlanetModel,
     ReferenceVersionModel,
 )
@@ -221,6 +222,7 @@ __all__ = [
     "AstralPolarityModel",
     "AstralSystemModel",
     "HouseModel",
+    "LanguageModel",
     "PlanetModel",
     "ReferenceVersionModel",
     "AstralSignModel",

@@ -154,6 +154,17 @@ class AstralHouseSystemModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
 
+class LanguageModel(Base):
+    """Langue disponible pour les contenus localisés de l'application."""
+
+    __tablename__ = "languages"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
 class AstralSignProfileModel(Base):
     """Profil structurel canonique d'un signe astrologique."""
 

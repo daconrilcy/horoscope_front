@@ -44,6 +44,13 @@ EXPECTED_HOUSE_SYSTEMS = {
     "equal": ("ascendant_based", True, False, True, 30),
     "porphyry": ("quadrant", True, True, True, 40),
 }
+EXPECTED_LANGUAGES = {
+    "en": "english",
+    "fr": "french",
+    "es": "spanish",
+    "de": "german",
+    "it": "italian",
+}
 
 
 def _alembic_config() -> Config:
@@ -105,6 +112,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_interpretive_valence",
         "astral_aspect_definitions",
         "astral_aspect_orb_rules",
+        "languages",
     ):
         assert table_name in head_tables
     assert "house_interpretation_profiles" not in head_tables
@@ -292,6 +300,9 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
             == 5
         )
         assert connection.execute(text("SELECT COUNT(*) FROM astral_aspects")).scalar_one() == 20
+        assert dict(connection.execute(text("SELECT code, name FROM languages")).all()) == (
+            EXPECTED_LANGUAGES
+        )
         assert (
             connection.execute(
                 text(
@@ -787,7 +798,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260514_0107"
+    assert version == "20260515_0108"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",
