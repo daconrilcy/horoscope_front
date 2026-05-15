@@ -18,6 +18,7 @@ from app.domain.astrology.natal_calculation import (
 from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData
 from app.domain.astrology.runtime.runtime_reference import HouseAxisReferenceData
 from tests.factories.astrology_runtime_reference_factory import complete_reference
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 RULERS = {
     "aries": "mars",
@@ -101,6 +102,7 @@ def test_runtime_builder_golden_placidus_with_interception_and_three_signs() -> 
         house_system="placidus",
         sign_rulerships=RULERS,
         house_axes=HOUSE_AXIS_REFERENCES,
+        celestial_catalog=make_celestial_catalog(),
     )
 
     house_2 = next(house for house in houses if house.number == 2)
@@ -131,6 +133,7 @@ def test_runtime_builder_golden_whole_sign_without_interception() -> None:
         house_system="whole_sign",
         sign_rulerships=RULERS,
         house_axes=HOUSE_AXIS_REFERENCES,
+        celestial_catalog=make_celestial_catalog(),
     )
 
     assert all(house.intercepted_signs == [] for house in houses)
@@ -145,6 +148,7 @@ def test_runtime_builder_whole_sign_enum_without_interception() -> None:
         house_system=HouseSystemType.WHOLE_SIGN,
         sign_rulerships=RULERS,
         house_axes=HOUSE_AXIS_REFERENCES,
+        celestial_catalog=make_celestial_catalog(),
     )
 
     assert all(house.intercepted_signs == [] for house in houses)
@@ -178,6 +182,7 @@ def test_runtime_builder_golden_stellium_house_is_dominant() -> None:
         house_system="placidus",
         sign_rulerships=RULERS,
         house_axes=HOUSE_AXIS_REFERENCES,
+        celestial_catalog=make_celestial_catalog(),
     )
 
     house_2 = next(house for house in houses if house.number == 2)
@@ -202,6 +207,7 @@ def test_runtime_builder_golden_empty_house_remains_non_dominant() -> None:
         house_system="placidus",
         sign_rulerships=RULERS,
         house_axes=HOUSE_AXIS_REFERENCES,
+        celestial_catalog=make_celestial_catalog(),
     )
 
     house_6 = next(house for house in houses if house.number == 6)
@@ -226,6 +232,7 @@ def test_runtime_builder_rejects_missing_house_axis() -> None:
             house_system="placidus",
             sign_rulerships=RULERS,
             house_axes=incomplete_axes,
+            celestial_catalog=make_celestial_catalog(),
         )
     except ValueError as error:
         assert str(error) == "missing house axis reference for house 6"

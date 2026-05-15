@@ -287,10 +287,7 @@ class NatalCalculationService:
             house_system=house_system,
             altitude_m=altitude_m,
             prefer_simplified_defaults=not accurate
-            and (
-                not engine_override
-                or engine_override.strip().lower() == "simplified"
-            ),
+            and (not engine_override or engine_override.strip().lower() == "simplified"),
         )
 
         # Validate user-supplied options before checking reference payload availability.

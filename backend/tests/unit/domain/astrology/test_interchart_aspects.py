@@ -8,6 +8,7 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
 )
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
 def _definition() -> AspectDefinitionRuntimeData:
@@ -28,9 +29,17 @@ def _definition() -> AspectDefinitionRuntimeData:
 
 def test_interchart_aspects_reuse_existing_aspect_definitions() -> None:
     """Le calcul inter-chart reutilise les definitions d'aspects existantes."""
-    source_positions = [build_aspect_body_from_position({"planet_code": "sun", "longitude": 0.0})]
+    source_positions = [
+        build_aspect_body_from_position(
+            {"planet_code": "sun", "longitude": 0.0},
+            make_celestial_catalog(),
+        )
+    ]
     target_positions = [
-        build_aspect_body_from_position({"planet_code": "moon", "longitude": 120.2})
+        build_aspect_body_from_position(
+            {"planet_code": "moon", "longitude": 120.2},
+            make_celestial_catalog(),
+        )
     ]
 
     aspects = calculate_interchart_aspects(
@@ -64,9 +73,17 @@ def test_interchart_aspects_reuse_existing_aspect_definitions() -> None:
 
 def test_interchart_aspects_apply_targeted_orb_rules_to_original_body_codes() -> None:
     """Les regles ciblees matchent les codes originaux sans namespace inter-chart."""
-    source_positions = [build_aspect_body_from_position({"planet_code": "sun", "longitude": 0.0})]
+    source_positions = [
+        build_aspect_body_from_position(
+            {"planet_code": "sun", "longitude": 0.0},
+            make_celestial_catalog(),
+        )
+    ]
     target_positions = [
-        build_aspect_body_from_position({"planet_code": "moon", "longitude": 127.0})
+        build_aspect_body_from_position(
+            {"planet_code": "moon", "longitude": 127.0},
+            make_celestial_catalog(),
+        )
     ]
     definitions = [
         AspectDefinitionRuntimeData(

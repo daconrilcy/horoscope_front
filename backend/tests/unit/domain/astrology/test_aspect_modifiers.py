@@ -2,12 +2,14 @@
 
 import pytest
 
+from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
 from app.domain.astrology.natal_calculation import AspectResult
 from app.domain.astrology.runtime.aspect_modifiers import (
     AspectModifierRuntimeData,
     AspectModifierType,
     AspectRuntimeWeightTaxonomy,
 )
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 ASPECT_META = {
     "family": "major",
@@ -62,8 +64,9 @@ def test_aspect_runtime_exposes_typed_modifiers() -> None:
         **ASPECT_META,
     )
 
-    assert aspect.aspect_runtime is not None
-    assert {item.modifier_type for item in aspect.aspect_runtime.modifiers} == {
+    runtime = build_aspect_runtime_data(aspect, make_celestial_catalog())
+
+    assert {item.modifier_type for item in runtime.modifiers} == {
         AspectModifierType.EXACT_ORB,
         AspectModifierType.LUMINARY,
     }

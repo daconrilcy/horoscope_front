@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from itertools import combinations, product
 
-from app.domain.astrology.celestial_runtime_catalog import (
-    ANGLE_POINT_CODES,
-    BODY_CLASS_BY_CODE,
-)
+from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
     PLANET_BODY_TYPES,
     AspectBodyRuntimeData,
@@ -23,14 +20,22 @@ def _angular_distance(angle_a: float, angle_b: float) -> float:
     return min(diff, 360.0 - diff)
 
 
-def build_aspect_body_from_position(payload: dict[str, object]) -> AspectBodyRuntimeData:
+def build_aspect_body_from_position(
+    payload: dict[str, object],
+    celestial_catalog: CelestialRuntimeCatalog | None = None,
+) -> AspectBodyRuntimeData:
     """Valide une position brute à la frontière du calculateur."""
-    return AspectBodyRuntimeData.from_position(payload, BODY_CLASS_BY_CODE, ANGLE_POINT_CODES)
+    catalog = celestial_catalog or CelestialRuntimeCatalog.empty()
+    return AspectBodyRuntimeData.from_position(payload, catalog)
 
 
-def build_aspect_body_from_code(code: str) -> AspectBodyRuntimeData:
+def build_aspect_body_from_code(
+    code: str,
+    celestial_catalog: CelestialRuntimeCatalog | None = None,
+) -> AspectBodyRuntimeData:
     """Valide un code de corps à la frontière du calculateur."""
-    return AspectBodyRuntimeData.from_code(code, BODY_CLASS_BY_CODE, ANGLE_POINT_CODES)
+    catalog = celestial_catalog or CelestialRuntimeCatalog.empty()
+    return AspectBodyRuntimeData.from_code(code, catalog)
 
 
 def _body_matches(

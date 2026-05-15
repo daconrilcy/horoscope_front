@@ -15,6 +15,7 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectOrbRuleRuntimeData,
 )
 from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
 def _definition(system_code: str = "modern") -> AspectDefinitionRuntimeData:
@@ -94,8 +95,8 @@ def test_angle_rule_beats_luminary_rule_by_effective_priority() -> None:
             "square",
             "modern",
             "natal",
-            build_aspect_body_from_code("moon"),
-            build_aspect_body_from_code("asc"),
+            build_aspect_body_from_code("moon", make_celestial_catalog()),
+            build_aspect_body_from_code("asc", make_celestial_catalog()),
             definitions,
             rules,
             {"modern": None},
@@ -114,8 +115,8 @@ def test_child_system_inherits_parent_orb_rules_without_copy() -> None:
             "square",
             "hellenistic",
             "natal",
-            build_aspect_body_from_code("sun"),
-            build_aspect_body_from_code("mars"),
+            build_aspect_body_from_code("sun", make_celestial_catalog()),
+            build_aspect_body_from_code("mars", make_celestial_catalog()),
             definitions,
             rules,
             {"hellenistic": "traditional", "traditional": None},
@@ -131,8 +132,8 @@ def test_missing_inheritance_metadata_raises_explicit_error() -> None:
             "square",
             "hellenistic",
             "natal",
-            build_aspect_body_from_code("sun"),
-            build_aspect_body_from_code("mars"),
+            build_aspect_body_from_code("sun", make_celestial_catalog()),
+            build_aspect_body_from_code("mars", make_celestial_catalog()),
             [_definition("hellenistic")],
             [_rule(system_code="traditional", source_body_type="luminary", orb_deg=8.0)],
             {},
@@ -142,8 +143,14 @@ def test_missing_inheritance_metadata_raises_explicit_error() -> None:
 def test_calculate_major_aspects_requires_typed_rules() -> None:
     """Le calcul utilise exclusivement les règles typées pour résoudre l'orbe."""
     positions = [
-        build_aspect_body_from_position({"planet_code": "uranus", "longitude": 0.0}),
-        build_aspect_body_from_position({"planet_code": "neptune", "longitude": 94.0}),
+        build_aspect_body_from_position(
+            {"planet_code": "uranus", "longitude": 0.0},
+            make_celestial_catalog(),
+        ),
+        build_aspect_body_from_position(
+            {"planet_code": "neptune", "longitude": 94.0},
+            make_celestial_catalog(),
+        ),
     ]
 
     assert (
@@ -180,8 +187,12 @@ def test_build_natal_result_rejects_legacy_orb_fields(monkeypatch: pytest.Monkey
         "aspects": [
             {
                 "code": "square",
+                "name": "Square",
                 "angle": 90.0,
                 "family": "major",
+                "is_enabled": True,
+                "is_major": True,
+                "is_minor": False,
                 "default_orb_deg": 6.0,
                 "default_valence": "negative",
                 "interpretive_valence": "dynamic_challenging",

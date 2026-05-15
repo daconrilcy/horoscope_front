@@ -9,12 +9,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from app.domain.astrology.celestial_runtime_catalog import (
-    ANGLE_POINT_CODES,
-    BODY_CLASS_BY_CODE,
-    LIGHT_BODY_CODES,
-    OUTER_PLANET_CODES,
-)
+from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 
 from .aspect_strength_contracts import (
     AspectStrengthReason,
@@ -35,13 +30,18 @@ class AspectStrengthThresholds:
 class AspectStrengthEvaluator:
     """Calcule la force technique d'un aspect a partir de son runtime brut."""
 
-    def __init__(self, thresholds: AspectStrengthThresholds | None = None) -> None:
+    def __init__(
+        self,
+        thresholds: AspectStrengthThresholds | None = None,
+        celestial_catalog: CelestialRuntimeCatalog | None = None,
+    ) -> None:
         """Initialise l'evaluateur avec des seuils injectables et immutables."""
         self._thresholds = thresholds or AspectStrengthThresholds(
             exact_orb_deg=0.5,
             tight_ratio=0.25,
             moderate_ratio=0.6,
         )
+        self._celestial_catalog = celestial_catalog or CelestialRuntimeCatalog.empty()
 
     def evaluate(
         self,
@@ -82,14 +82,14 @@ class AspectStrengthEvaluator:
         else:
             reasons.append(AspectStrengthReason.WIDE_ORB)
 
-        if any(code in LIGHT_BODY_CODES for code in participant_codes):
+        if any(self._celestial_catalog.is_luminary(code) for code in participant_codes):
             score += 0.08
             reasons.append(AspectStrengthReason.LUMINARY_PARTICIPANT)
-        if any(code in ANGLE_POINT_CODES for code in participant_codes):
+        if any(self._celestial_catalog.is_angle_point(code) for code in participant_codes):
             score += 0.06
             reasons.append(AspectStrengthReason.ANGLE_PARTICIPANT)
         if len(participant_codes) == 2 and all(
-            code in OUTER_PLANET_CODES for code in participant_codes
+            self._celestial_catalog.is_transpersonal(code) for code in participant_codes
         ):
             score -= 0.08
             reasons.append(AspectStrengthReason.TRANSPERSONAL_PAIR)
@@ -111,9 +111,10 @@ class AspectStrengthEvaluator:
         )
 
 
-def participant_class(code: str) -> str:
+def participant_class(
+    code: str,
+    celestial_catalog: CelestialRuntimeCatalog | None = None,
+) -> str:
     """Retourne la classe astrologique d'un participant."""
-    normalized_code = code.strip().lower()
-    if normalized_code in ANGLE_POINT_CODES:
-        return "angle"
-    return BODY_CLASS_BY_CODE.get(normalized_code, "point")
+    catalog = celestial_catalog or CelestialRuntimeCatalog.empty()
+    return catalog.body_type_for_code(code)

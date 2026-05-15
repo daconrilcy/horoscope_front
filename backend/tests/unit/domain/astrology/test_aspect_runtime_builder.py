@@ -10,6 +10,7 @@ from app.domain.astrology.runtime.aspect_runtime_data import (
     AspectOrbRuntimeData,
     AspectParticipantsRuntimeData,
 )
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 ASPECT_META = {
     "family": "major",
@@ -67,7 +68,8 @@ def test_runtime_builder_adds_typed_modifiers() -> None:
                 "interpretive_valence": "dynamic_challenging",
                 "energy_type": "friction_activation",
             },
-        )
+        ),
+        make_celestial_catalog(),
     )
 
     modifier_types = {modifier.modifier_type for modifier in runtime.modifiers}

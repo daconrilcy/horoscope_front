@@ -10,6 +10,7 @@ from typing import Protocol
 
 from app.domain.astrology.calculators.contained_signs import resolve_contained_signs
 from app.domain.astrology.calculators.intercepted_signs import resolve_intercepted_signs
+from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.interpretation.house_strength import HouseStrengthEvaluator
 from app.domain.astrology.runtime.house_runtime_data import (
@@ -38,13 +39,14 @@ def build_house_runtime_data(
     house_system: object,
     sign_rulerships: Mapping[str, str],
     house_axes: Mapping[int, HouseAxisRuntimeData],
+    celestial_catalog: CelestialRuntimeCatalog | None = None,
 ) -> list[HouseRuntimeData]:
     """Construit les maisons enrichies sans recalculer les maîtres."""
     ordered_houses = sorted(houses, key=lambda item: item.number)
     rulers_by_house = {ruler.house_number: ruler for ruler in house_rulers}
     occupants_by_house = build_house_occupants(planets)
     is_whole_sign = _normalize_house_system(house_system) == "whole_sign"
-    strength_evaluator = HouseStrengthEvaluator()
+    strength_evaluator = HouseStrengthEvaluator(celestial_catalog=celestial_catalog)
     runtime_houses: list[HouseRuntimeData] = []
 
     for index, house in enumerate(ordered_houses):

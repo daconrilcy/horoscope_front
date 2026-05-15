@@ -15,6 +15,7 @@ from app.domain.astrology.runtime.house_runtime_data import (
     HouseRulerRuntimeData,
     HouseStrengthRuntimeData,
 )
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 RULERS = {
     "aries": "mars",
@@ -34,7 +35,7 @@ RULERS = {
 
 def test_calculate_house_strength_marks_stellium_luminary_house_dominant() -> None:
     """Une maison angulaire avec stellium et luminaire devient dominante."""
-    strength = HouseStrengthEvaluator().evaluate(
+    strength = HouseStrengthEvaluator(celestial_catalog=make_celestial_catalog()).evaluate(
         house_number=10,
         occupants=[
             HouseOccupantRuntimeData("sun", "aries", 12.0),
@@ -65,7 +66,7 @@ def test_calculate_house_strength_marks_stellium_luminary_house_dominant() -> No
 
 def test_calculate_house_strength_keeps_empty_cadent_house_non_dominant() -> None:
     """Une maison cadente vide reste faiblement priorisée."""
-    strength = HouseStrengthEvaluator().evaluate(
+    strength = HouseStrengthEvaluator(celestial_catalog=make_celestial_catalog()).evaluate(
         house_number=6,
         occupants=[],
         ruler=HouseRulerRuntimeData("mercury", "pisces", 12),

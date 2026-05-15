@@ -99,6 +99,7 @@ class AstrologyRuntimeReferenceMapper:
                         default_valence=str(item["default_valence"]),
                         interpretive_valence=str(item["interpretive_valence"]),
                         energy_type=str(item["energy_type"]),
+                        legacy_orb_fields=self._legacy_orb_fields(item),
                     )
                     for item in self._items(payload, "aspects")
                 ),
@@ -188,3 +189,14 @@ class AstrologyRuntimeReferenceMapper:
         if value is None:
             return None
         return float(value)
+
+    def _legacy_orb_fields(self, item: Mapping[str, object]) -> tuple[str, ...]:
+        """Liste les anciens champs d'orbe interdits encore presents."""
+        forbidden_fields = {
+            "orb_" + "luminaries_override_deg",
+            "orb_" + "pair_overrides",
+            "orb_" + "luminaries",
+            "orb_" + "pairs",
+            "orb_" + "overrides",
+        }
+        return tuple(sorted(forbidden_fields & set(item)))

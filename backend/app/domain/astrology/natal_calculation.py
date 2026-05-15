@@ -20,6 +20,7 @@ from app.domain.astrology.calculators import (
 )
 from app.domain.astrology.calculators.aspects import build_aspect_body_from_position
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
+from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResolutionError,
     HouseRulerResolver,
@@ -96,6 +97,16 @@ class NatalResult(BaseModel):
     houses: list[HouseRuntimeData]
     house_rulers: list[HouseRulerResult] = Field(default_factory=list)
     aspects: list[AspectResult]
+
+
+def _build_aspect_result(
+    payload: dict[str, object],
+    celestial_catalog: CelestialRuntimeCatalog,
+) -> AspectResult:
+    """Construit un resultat d'aspect avec le catalogue celeste de reference."""
+    aspect = AspectResult.model_validate(payload)
+    aspect.aspect_runtime = build_aspect_runtime_data(aspect, celestial_catalog)
+    return aspect
 
 
 class NatalCalculationError(Exception):
@@ -318,6 +329,7 @@ def build_natal_result(
     houses_data = runtime_reference.houses.items
     aspects_data = runtime_reference.aspects.items
     aspect_orb_rules_data = runtime_reference.aspects.orb_rules
+    celestial_catalog = CelestialRuntimeCatalog.from_runtime_reference(runtime_reference)
 
     if not planets_data:
         _raise_invalid_reference(version, "planets", "missing_or_empty")
@@ -449,6 +461,12 @@ def build_natal_result(
 
     aspect_definitions: list[AspectDefinitionRuntimeData] = []
     for item in aspects_data:
+        if item.legacy_orb_fields:
+            _raise_invalid_reference(
+                version,
+                "aspects",
+                "legacy aspect orb fields are forbidden: " + ", ".join(item.legacy_orb_fields),
+            )
         try:
             aspect_definition = AspectDefinitionRuntimeData(
                 code=item.code,
@@ -514,7 +532,9 @@ def build_natal_result(
         aspect_orb_rules.append(aspect_orb_rule)
 
     system_inheritance = _build_system_inheritance(version, runtime_reference.systems)
-    aspect_positions = [build_aspect_body_from_position(position) for position in positions_raw]
+    aspect_positions = [
+        build_aspect_body_from_position(position, celestial_catalog) for position in positions_raw
+    ]
 
     aspects_raw = calculate_major_aspects(
         aspect_positions,
@@ -558,8 +578,9 @@ def build_natal_result(
         house_system=effective_house_system,
         sign_rulerships=sign_rulerships,
         house_axes=house_axes,
+        celestial_catalog=celestial_catalog,
     )
-    aspects = [AspectResult.model_validate(item) for item in aspects_raw]
+    aspects = [_build_aspect_result(item, celestial_catalog) for item in aspects_raw]
 
     return NatalResult(
         reference_version=version,

@@ -97,6 +97,7 @@ class AspectReferenceData:
     default_valence: str
     interpretive_valence: str
     energy_type: str
+    legacy_orb_fields: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

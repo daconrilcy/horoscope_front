@@ -8,11 +8,12 @@ from app.domain.astrology.interpretation.aspect_strength_contracts import (
     AspectStrengthReason,
     AspectStrengthRuntimeData,
 )
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
 def test_aspect_strength_uses_enum_reasons_and_normalized_score() -> None:
     """La force aspect expose un score borne et des raisons enumerees."""
-    strength = AspectStrengthEvaluator().evaluate(
+    strength = AspectStrengthEvaluator(celestial_catalog=make_celestial_catalog()).evaluate(
         aspect_code="trine",
         orb_used=0.3,
         orb_max=6.0,
@@ -33,7 +34,7 @@ def test_aspect_strength_uses_enum_reasons_and_normalized_score() -> None:
 
 def test_aspect_strength_reduces_score_for_wide_orb() -> None:
     """Un orbe large produit une force plus faible qu'un orbe serre."""
-    evaluator = AspectStrengthEvaluator()
+    evaluator = AspectStrengthEvaluator(celestial_catalog=make_celestial_catalog())
     tight = evaluator.evaluate(
         aspect_code="square",
         orb_used=0.5,

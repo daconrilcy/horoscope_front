@@ -27,6 +27,10 @@ def _planet_profile(weight_day_climate: float) -> SimpleNamespace:
     return SimpleNamespace(weight_day_climate=weight_day_climate)
 
 
+def _house_profile(house_kind: str) -> SimpleNamespace:
+    return SimpleNamespace(house_kind=house_kind)
+
+
 @pytest.fixture
 def mock_ctx() -> SimpleNamespace:
     prediction_context = SimpleNamespace(
@@ -50,6 +54,20 @@ def mock_ctx() -> SimpleNamespace:
             "moon": _planet_profile(0.8),
             "venus": _planet_profile(1.0),
             "saturn": _planet_profile(0.7),
+        },
+        house_astrology_profiles={
+            1: _house_profile("angular"),
+            2: _house_profile("succedent"),
+            3: _house_profile("cadent"),
+            4: _house_profile("angular"),
+            5: _house_profile("succedent"),
+            6: _house_profile("cadent"),
+            7: _house_profile("angular"),
+            8: _house_profile("succedent"),
+            9: _house_profile("cadent"),
+            10: _house_profile("angular"),
+            11: _house_profile("succedent"),
+            12: _house_profile("cadent"),
         },
         sign_rulerships={
             "aries": "mars",

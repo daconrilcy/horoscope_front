@@ -11,6 +11,7 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
 )
+from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
 def _definition(code: str = "square", angle: float = 90.0) -> AspectDefinitionRuntimeData:
@@ -46,8 +47,14 @@ def _rule(orb_deg: float = 6.0) -> AspectOrbRuleRuntimeData:
 def test_calculate_major_aspects_uses_typed_orb_rules() -> None:
     """Le calcul détecte un aspect via contrats typés uniquement."""
     positions = [
-        build_aspect_body_from_position({"planet_code": "sun", "longitude": 0.0}),
-        build_aspect_body_from_position({"planet_code": "mars", "longitude": 95.5}),
+        build_aspect_body_from_position(
+            {"planet_code": "sun", "longitude": 0.0},
+            make_celestial_catalog(),
+        ),
+        build_aspect_body_from_position(
+            {"planet_code": "mars", "longitude": 95.5},
+            make_celestial_catalog(),
+        ),
     ]
 
     result = calculate_major_aspects(

@@ -8,10 +8,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from app.domain.astrology.celestial_runtime_catalog import (
-    LIGHT_BODY_CODES,
-    OUTER_PLANET_CODES,
-)
+from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 from app.domain.astrology.interpretation.aspect_strength import (
     AspectStrengthEvaluator,
 )
@@ -47,15 +44,19 @@ class AspectLike(Protocol):
     energy_type: str
 
 
-def build_aspect_runtime_data(aspect: AspectLike) -> AspectRuntimeData:
+def build_aspect_runtime_data(
+    aspect: AspectLike,
+    celestial_catalog: CelestialRuntimeCatalog | None = None,
+) -> AspectRuntimeData:
     """Construit le runtime enrichi depuis un aspect plat existant."""
+    catalog = celestial_catalog or CelestialRuntimeCatalog.empty()
     code = aspect.aspect_code.strip().lower()
     orb_used = float(aspect.orb_used)
     orb_max = float(aspect.orb_max)
     safe_orb_max = max(orb_max, 0.01)
     ratio = round(min(max(orb_used / safe_orb_max, 0.0), 1.0), 4)
     participants = (aspect.planet_a.strip().lower(), aspect.planet_b.strip().lower())
-    strength = AspectStrengthEvaluator().evaluate(
+    strength = AspectStrengthEvaluator(celestial_catalog=catalog).evaluate(
         aspect_code=code,
         orb_used=orb_used,
         orb_max=safe_orb_max,
@@ -63,7 +64,7 @@ def build_aspect_runtime_data(aspect: AspectLike) -> AspectRuntimeData:
         is_major=aspect.is_major,
         is_minor=aspect.is_minor,
     )
-    modifiers = _build_modifiers(strength.is_exact, strength.is_tight, participants)
+    modifiers = _build_modifiers(strength.is_exact, strength.is_tight, participants, catalog)
     return AspectRuntimeData(
         aspect=AspectIdentityRuntimeData(
             code=code,
@@ -100,6 +101,7 @@ def _build_modifiers(
     is_exact: bool,
     is_tight: bool,
     participants: tuple[str, str],
+    celestial_catalog: CelestialRuntimeCatalog,
 ) -> tuple[AspectModifierRuntimeData, ...]:
     """Derive les modifiers locaux disponibles sans source externe."""
     modifiers: list[AspectModifierRuntimeData] = []
@@ -121,16 +123,17 @@ def _build_modifiers(
                 applies_to=participants,
             )
         )
-    if any(code in LIGHT_BODY_CODES for code in participants):
+    light_participants = tuple(code for code in participants if celestial_catalog.is_luminary(code))
+    if light_participants:
         modifiers.append(
             AspectModifierRuntimeData(
                 modifier_type=AspectModifierType.LUMINARY,
                 source="participants",
                 intensity=0.8,
-                applies_to=tuple(code for code in participants if code in LIGHT_BODY_CODES),
+                applies_to=light_participants,
             )
         )
-    if all(code in OUTER_PLANET_CODES for code in participants):
+    if all(celestial_catalog.is_transpersonal(code) for code in participants):
         modifiers.append(
             AspectModifierRuntimeData(
                 modifier_type=AspectModifierType.TRANSPERSONAL,

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from math import isfinite
 from typing import Any
 
+from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
+
 PLANET_BODY_TYPES = frozenset(
     {"luminary", "personal_planet", "social_planet", "transpersonal_planet"}
 )
@@ -156,15 +158,13 @@ class AspectBodyRuntimeData:
     def from_position(
         cls,
         payload: dict[str, object],
-        body_class_by_code: dict[str, str],
-        angle_point_codes: frozenset[str],
+        celestial_catalog: CelestialRuntimeCatalog,
     ) -> AspectBodyRuntimeData:
         """Valide une position planétaire d'entrée."""
         code = _required_text(payload.get("planet_code"), "planet_code")
-        body_type = "angle" if code in angle_point_codes else body_class_by_code.get(code, "point")
         return cls(
             code=code,
-            body_type=body_type,
+            body_type=celestial_catalog.body_type_for_code(code),
             longitude=_required_float(payload.get("longitude"), "longitude"),
         )
 
@@ -172,17 +172,14 @@ class AspectBodyRuntimeData:
     def from_code(
         cls,
         code: str,
-        body_class_by_code: dict[str, str],
-        angle_point_codes: frozenset[str],
+        celestial_catalog: CelestialRuntimeCatalog,
     ) -> AspectBodyRuntimeData:
         """Construit un participant depuis son code canonique."""
         normalized_code = _required_text(code, "body_code")
-        body_type = (
-            "angle"
-            if normalized_code in angle_point_codes
-            else body_class_by_code.get(normalized_code, "point")
+        return cls(
+            code=normalized_code,
+            body_type=celestial_catalog.body_type_for_code(normalized_code),
         )
-        return cls(code=normalized_code, body_type=body_type)
 
 
 @dataclass(frozen=True, slots=True)

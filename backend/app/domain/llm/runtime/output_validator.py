@@ -60,39 +60,6 @@ class ValidationResult(BaseModel):
     normalizations_applied: List[str] = Field(default_factory=list)
 
 
-_PLANET_CODES = {
-    "SUN",
-    "MOON",
-    "MERCURY",
-    "VENUS",
-    "MARS",
-    "JUPITER",
-    "SATURN",
-    "URANUS",
-    "NEPTUNE",
-    "PLUTO",
-    "CHIRON",
-    "LILITH",
-    "NODE",
-}
-VALID_ANGLE_POINT_CODES = {"ASC", "MC", "DSC", "IC"}
-_ASPECT_CODES = {"CONJUNCTION", "OPPOSITION", "TRINE", "SQUARE", "SEXTILE"}
-_SIGN_CODES = {
-    "ARIES",
-    "TAURUS",
-    "GEMINI",
-    "CANCER",
-    "LEO",
-    "VIRGO",
-    "LIBRA",
-    "SCORPIO",
-    "SAGITTARIUS",
-    "CAPRICORN",
-    "AQUARIUS",
-    "PISCES",
-}
-
-
 def parse_json(raw_output: str, schema_version: str) -> ParseResult:
     """
     Stage 1: Parses raw string into JSON and applies version-specific cleanup.
@@ -363,7 +330,12 @@ def _normalize_evidence_item(
     if cleaned in catalog_set:
         return cleaned
 
-    if cleaned in VALID_ANGLE_POINT_CODES:
+    planet_codes = _catalog_planet_codes(catalog_set)
+    angle_point_codes = _catalog_angle_point_codes(catalog_set)
+    aspect_codes = _catalog_aspect_codes(catalog_set)
+    sign_codes = _catalog_sign_codes(catalog_set, planet_codes)
+
+    if cleaned in angle_point_codes:
         prefix = f"{cleaned}_"
         for key in catalog_set:
             if key.startswith(prefix):
@@ -375,13 +347,13 @@ def _normalize_evidence_item(
             if key.startswith(prefix):
                 return key
 
-    if cleaned in _PLANET_CODES:
+    if cleaned in planet_codes:
         prefix = f"PLANET_{cleaned}_"
         for key in catalog_set:
             if key.startswith(prefix):
                 return key
 
-    if cleaned in _SIGN_CODES:
+    if cleaned in sign_codes:
         needle = f"_{cleaned}"
         for key in catalog_set:
             if key.endswith(needle) or f"{needle}_" in key:
@@ -390,9 +362,9 @@ def _normalize_evidence_item(
     parts = cleaned.split("_")
     if (
         len(parts) == 3
-        and parts[0] in _PLANET_CODES
-        and parts[1] in _ASPECT_CODES
-        and parts[2] in _PLANET_CODES
+        and parts[0] in planet_codes
+        and parts[1] in aspect_codes
+        and parts[2] in planet_codes
     ):
         p1, aspect, p2 = parts
         pair = sorted([p1, p2])
@@ -402,9 +374,9 @@ def _normalize_evidence_item(
 
     if (
         len(parts) == 3
-        and parts[0] in _ASPECT_CODES
-        and parts[1] in _PLANET_CODES
-        and parts[2] in _PLANET_CODES
+        and parts[0] in aspect_codes
+        and parts[1] in planet_codes
+        and parts[2] in planet_codes
     ):
         aspect, p1, p2 = parts
         pair = sorted([p1, p2])
@@ -412,12 +384,7 @@ def _normalize_evidence_item(
         if canonical in catalog_set:
             return canonical
 
-    if (
-        len(parts) == 3
-        and parts[0] in _PLANET_CODES
-        and parts[1] == "IN"
-        and parts[2] in _SIGN_CODES
-    ):
+    if len(parts) == 3 and parts[0] in planet_codes and parts[1] == "IN" and parts[2] in sign_codes:
         p, _, s = parts
         prefix = f"{p}_{s}"
         for key in catalog_set:
@@ -428,9 +395,9 @@ def _normalize_evidence_item(
         parts = cleaned.split("_")
         if (
             len(parts) == 4
-            and parts[1] in _PLANET_CODES
-            and parts[2] in _ASPECT_CODES
-            and parts[3] in _PLANET_CODES
+            and parts[1] in planet_codes
+            and parts[2] in aspect_codes
+            and parts[3] in planet_codes
         ):
             pair = sorted([parts[1], parts[3]])
             canonical = f"ASPECT_{pair[0]}_{pair[1]}_{parts[2]}"
@@ -455,6 +422,45 @@ def _normalize_evidence_item(
                     return canonical_id
 
     return cleaned
+
+
+def _catalog_planet_codes(catalog_set: set[str]) -> set[str]:
+    """Extrait les codes planetaires depuis les identifiants de preuves."""
+    codes: set[str] = set()
+    for key in catalog_set:
+        codes.update(re.findall(r"(?:^|_)PLANET_([A-Z0-9]+)(?:_|$)", key))
+        aspect_match = re.fullmatch(r"ASPECT_([A-Z0-9]+)_([A-Z0-9]+)_([A-Z0-9]+)", key)
+        if aspect_match:
+            codes.update({aspect_match.group(1), aspect_match.group(2)})
+    return codes
+
+
+def _catalog_angle_point_codes(catalog_set: set[str]) -> set[str]:
+    """Extrait les codes d'angles depuis les identifiants de preuves."""
+    codes: set[str] = set()
+    for key in catalog_set:
+        codes.update(re.findall(r"(?:^|_)ANGLE_([A-Z0-9]+)(?:_|$)", key))
+    return codes
+
+
+def _catalog_aspect_codes(catalog_set: set[str]) -> set[str]:
+    """Extrait les codes d'aspects depuis les identifiants de preuves."""
+    codes: set[str] = set()
+    for key in catalog_set:
+        aspect_match = re.fullmatch(r"ASPECT_([A-Z0-9]+)_([A-Z0-9]+)_([A-Z0-9]+)", key)
+        if aspect_match:
+            codes.add(aspect_match.group(3))
+    return codes
+
+
+def _catalog_sign_codes(catalog_set: set[str], planet_codes: set[str]) -> set[str]:
+    """Extrait les codes de signes depuis les identifiants planetaires."""
+    codes: set[str] = set()
+    for key in catalog_set:
+        parts = key.split("_")
+        if len(parts) >= 2 and parts[0] in planet_codes:
+            codes.add(parts[1])
+    return codes
 
 
 def _normalize_for_matching(value: str) -> str:

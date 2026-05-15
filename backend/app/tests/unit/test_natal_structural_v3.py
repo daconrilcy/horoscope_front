@@ -24,7 +24,7 @@ def mock_context():
 
     ctx.prediction_context.categories = [work_cat]
     ctx.prediction_context.house_category_weights = []
-    ctx.prediction_context.house_astrology_profiles = {}
+    ctx.prediction_context.house_astrology_profiles = {1: MagicMock(house_kind="angular")}
     ctx.prediction_context.planet_profiles = {}
     ctx.prediction_context.planet_category_weights = []
     ctx.prediction_context.sign_rulerships = {}

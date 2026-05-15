@@ -8,11 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from app.domain.astrology.celestial_runtime_catalog import (
-    ANGULAR_HOUSE_NUMBERS,
-    LIGHT_BODY_CODES,
-    SUCCEDENT_HOUSE_NUMBERS,
-)
+from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseOccupantRuntimeData,
     HouseRulerRuntimeData,
@@ -24,6 +20,10 @@ from .house_strength_contracts import HouseStrengthModifiers, HouseStrengthReaso
 
 class HouseStrengthEvaluator:
     """Calcule la force astrologique d'une maison a partir du runtime natal."""
+
+    def __init__(self, celestial_catalog: CelestialRuntimeCatalog | None = None) -> None:
+        """Initialise l'evaluateur avec les classifications du referentiel."""
+        self._celestial_catalog = celestial_catalog or CelestialRuntimeCatalog.empty()
 
     def evaluate(
         self,
@@ -40,10 +40,10 @@ class HouseStrengthEvaluator:
         occupancy_modifier = 0.0
         ruler_condition_modifier = 0.0
 
-        if house_number in ANGULAR_HOUSE_NUMBERS:
+        if house_number in self._celestial_catalog.angular_house_numbers:
             angularity_modifier += 0.25
             reasons.append(HouseStrengthReason.ANGULAR_HOUSE)
-        elif house_number in SUCCEDENT_HOUSE_NUMBERS:
+        elif house_number in self._celestial_catalog.succedent_house_numbers:
             angularity_modifier += 0.12
             reasons.append(HouseStrengthReason.SUCCEDENT_HOUSE)
         else:
@@ -57,22 +57,22 @@ class HouseStrengthEvaluator:
             occupancy_modifier += 0.18
             reasons.append(HouseStrengthReason.STELLIUM_PRESENT)
 
-        if any(occupant.planet in LIGHT_BODY_CODES for occupant in occupants):
+        if any(self._celestial_catalog.is_luminary(occupant.planet) for occupant in occupants):
             occupancy_modifier += 0.15
             reasons.append(HouseStrengthReason.LUMINARY_PRESENT)
 
         if ruler is not None:
-            if ruler.house in ANGULAR_HOUSE_NUMBERS:
+            if ruler.house in self._celestial_catalog.angular_house_numbers:
                 ruler_condition_modifier += 0.12
                 reasons.append(HouseStrengthReason.RULER_IN_ANGULAR_HOUSE)
             if ruler.sign is not None and sign_rulerships.get(ruler.sign) == ruler.planet:
                 ruler_condition_modifier += 0.12
                 reasons.append(HouseStrengthReason.RULER_IN_OWN_SIGN)
 
-        if house_number == 1:
+        if house_number == _first_angle_house(self._celestial_catalog, "asc"):
             angularity_modifier += 0.08
             reasons.append(HouseStrengthReason.ASC_ANGLE_PROXIMITY)
-        elif house_number == 10:
+        elif house_number == _first_angle_house(self._celestial_catalog, "mc"):
             angularity_modifier += 0.08
             reasons.append(HouseStrengthReason.MC_ANGLE_PROXIMITY)
 
@@ -88,3 +88,8 @@ class HouseStrengthEvaluator:
                 ruler_condition_modifier=round(ruler_condition_modifier, 2),
             ),
         )
+
+
+def _first_angle_house(celestial_catalog: CelestialRuntimeCatalog, angle_code: str) -> int | None:
+    """Retourne la maison associee a un angle quand le referentiel la fournit."""
+    return celestial_catalog.house_for_angle(angle_code)

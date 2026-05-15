@@ -3,10 +3,6 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from app.domain.astrology.celestial_runtime_catalog import (
-    ANGULAR_HOUSE_NUMBERS,
-    SUCCEDENT_HOUSE_NUMBERS,
-)
 from app.domain.prediction.context import LoadedPredictionContext
 from app.domain.prediction.schemas import NatalChart
 
@@ -331,7 +327,7 @@ class NatalSensitivityCalculator:
             ruler_house = (
                 runtime_house.ruler.house if runtime_house and runtime_house.ruler else None
             )
-            if ruler_house in ANGULAR_HOUSE_NUMBERS:
+            if self._house_placement_kind(ruler_house, natal, pc) == "angular":
                 rul += 1.0
         return rul
 
@@ -341,7 +337,7 @@ class NatalSensitivityCalculator:
             if planet_weight.category_code != cat_code or planet_weight.weight <= 0:
                 continue
             house_num = self._lookup_mapping_value(natal.planet_houses, planet_weight.planet_code)
-            if house_num in ANGULAR_HOUSE_NUMBERS:
+            if self._house_placement_kind(house_num, natal, pc) == "angular":
                 ang += float(planet_weight.weight)
         return ang
 
@@ -401,16 +397,30 @@ class NatalSensitivityCalculator:
         house_profile = self._lookup_mapping_value(house_profiles, house_num)
         house_kind = getattr(house_profile, "house_kind", None) if house_profile else None
         if house_kind is not None:
-            return self.HOUSE_KIND_SCORES.get(self._normalize_code(house_kind), 0.0)
-        if house_num in ANGULAR_HOUSE_NUMBERS:
-            return self.HOUSE_KIND_SCORES["angular"]
-        if house_num in SUCCEDENT_HOUSE_NUMBERS:
-            return self.HOUSE_KIND_SCORES["succedent"]
-        return self.HOUSE_KIND_SCORES["cadent"]
+            normalized_kind = self._normalize_code(str(getattr(house_kind, "value", house_kind)))
+            return self.HOUSE_KIND_SCORES.get(normalized_kind, 0.0)
+        placement_kind = self._house_placement_kind(house_num, None, pc)
+        return self.HOUSE_KIND_SCORES.get(placement_kind, self.HOUSE_KIND_SCORES["cadent"])
 
     def _runtime_houses_by_number(self, natal: NatalChart) -> dict[int, object]:
         """Indexe les maisons runtime disponibles dans le theme natal."""
         return {house.number: house for house in getattr(natal, "houses", ())}
+
+    def _house_placement_kind(self, house_num: object, natal: NatalChart | None, pc) -> str:
+        """Determine la modalite d'une maison depuis les profils ou le runtime natal."""
+        if not isinstance(house_num, int):
+            return "cadent"
+        runtime_houses = self._runtime_houses_by_number(natal) if natal is not None else {}
+        runtime_house = runtime_houses.get(house_num)
+        runtime_kind = getattr(runtime_house, "house_kind", None) if runtime_house else None
+        if runtime_kind is not None:
+            return self._normalize_code(str(getattr(runtime_kind, "value", runtime_kind)))
+        house_profiles = getattr(pc, "house_astrology_profiles", {})
+        house_profile = self._lookup_mapping_value(house_profiles, house_num)
+        house_kind = getattr(house_profile, "house_kind", None) if house_profile else None
+        if house_kind is not None:
+            return self._normalize_code(str(getattr(house_kind, "value", house_kind)))
+        return "cadent"
 
     def _is_personal_or_rapid(self, profile: object) -> bool:
         class_code = self._normalize_code(getattr(profile, "class_code", ""))
