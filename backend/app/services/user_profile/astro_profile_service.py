@@ -11,7 +11,12 @@ from __future__ import annotations
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.domain.astrology.natal_calculation import NatalCalculationError, sign_from_longitude
+from app.core.config import settings
+from app.domain.astrology.natal_calculation import (
+    NatalCalculationError,
+    NatalResult,
+    sign_from_longitude,
+)
 from app.domain.astrology.natal_preparation import BirthInput
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
@@ -49,6 +54,39 @@ class UserAstroProfileService:
     """
 
     @staticmethod
+    def _from_natal_result(
+        natal_result: NatalResult, *, missing_birth_time: bool
+    ) -> UserAstroProfileData:
+        """Construit le profil astro depuis un résultat natal déjà calculé."""
+        sun_position = next(
+            (planet for planet in natal_result.planet_positions if planet.planet_code == "sun"),
+            None,
+        )
+        sun_sign_code = (
+            sign_from_longitude(sun_position.longitude) if sun_position is not None else None
+        )
+
+        if missing_birth_time:
+            return UserAstroProfileData(
+                sun_sign_code=sun_sign_code,
+                ascendant_sign_code=None,
+                missing_birth_time=True,
+            )
+
+        first_house = next(
+            (house for house in natal_result.houses if house.number == 1),
+            None,
+        )
+        ascendant_sign_code = (
+            sign_from_longitude(first_house.cusp_longitude) if first_house is not None else None
+        )
+        return UserAstroProfileData(
+            sun_sign_code=sun_sign_code,
+            ascendant_sign_code=ascendant_sign_code,
+            missing_birth_time=False,
+        )
+
+    @staticmethod
     def get_for_user(db: Session, user_id: int) -> UserAstroProfileData:
         """
         Calcule le profil astrologique d'un utilisateur.
@@ -73,6 +111,24 @@ class UserAstroProfileService:
             ) from error
 
         coords = UserBirthProfileService.resolve_coordinates(db, profile)
+        try:
+            from app.services.user_profile.natal_chart_service import (
+                UserNatalChartService,
+                UserNatalChartServiceError,
+            )
+
+            latest_chart = UserNatalChartService.get_latest_for_user(db=db, user_id=user_id)
+            return UserAstroProfileService._from_natal_result(
+                latest_chart.result,
+                missing_birth_time=profile.birth_time is None,
+            )
+        except UserNatalChartServiceError as error:
+            if error.code != "natal_chart_not_found":
+                raise UserAstroProfileServiceError(
+                    code=error.code,
+                    message=error.message,
+                    details=error.details,
+                ) from error
 
         birth_input = BirthInput(
             birth_date=profile.birth_date,
@@ -84,24 +140,26 @@ class UserAstroProfileService:
             birth_lon=coords.birth_lon,
         )
 
-        try:
-            # Attempt accurate calculation (SwissEph) first for maximum quality.
-            natal_result = NatalCalculationService.calculate(
-                db, birth_input=birth_input, accurate=True
-            )
-        except NatalCalculationError as error:
-            # Fallback to non-accurate (simplified) if SwissEph is unavailable.
-            is_unavailable = error.code in ("natal_engine_unavailable", "swisseph_calc_failed")
+        can_use_accurate = (
+            settings.swisseph_enabled
+            and coords.birth_place_resolved_id is not None
+            and coords.birth_lat is not None
+            and coords.birth_lon is not None
+        )
+        calculation_kwargs = {
+            "db": db,
+            "birth_input": birth_input,
+            "accurate": can_use_accurate,
+            "engine_override": None if can_use_accurate else "simplified",
+            "internal_request": not can_use_accurate,
+        }
 
+        try:
+            natal_result = NatalCalculationService.calculate(**calculation_kwargs)
+        except NatalCalculationError as error:
             if error.code == "reference_version_not_found":
                 ReferenceDataService.seed_reference_version(db)
-                natal_result = NatalCalculationService.calculate(
-                    db, birth_input=birth_input, accurate=False
-                )
-            elif is_unavailable:
-                natal_result = NatalCalculationService.calculate(
-                    db, birth_input=birth_input, accurate=False
-                )
+                natal_result = NatalCalculationService.calculate(**calculation_kwargs)
             else:
                 raise UserAstroProfileServiceError(
                     code=error.code,
@@ -109,30 +167,7 @@ class UserAstroProfileService:
                     details=error.details,
                 ) from error
 
-        sun_position = next(
-            (planet for planet in natal_result.planet_positions if planet.planet_code == "sun"),
-            None,
-        )
-        sun_sign_code = (
-            sign_from_longitude(sun_position.longitude) if sun_position is not None else None
-        )
-
-        if profile.birth_time is None:
-            return UserAstroProfileData(
-                sun_sign_code=sun_sign_code,
-                ascendant_sign_code=None,
-                missing_birth_time=True,
-            )
-
-        first_house = next(
-            (house for house in natal_result.houses if house.number == 1),
-            None,
-        )
-        ascendant_sign_code = (
-            sign_from_longitude(first_house.cusp_longitude) if first_house is not None else None
-        )
-        return UserAstroProfileData(
-            sun_sign_code=sun_sign_code,
-            ascendant_sign_code=ascendant_sign_code,
-            missing_birth_time=False,
+        return UserAstroProfileService._from_natal_result(
+            natal_result,
+            missing_birth_time=profile.birth_time is None,
         )

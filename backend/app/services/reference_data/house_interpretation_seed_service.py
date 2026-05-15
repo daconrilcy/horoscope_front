@@ -37,12 +37,16 @@ JSON_FIELD_NAMES = (
 
 def _house_interpretation_source_path() -> Path:
     """Retourne le chemin du JSON documentaire des profils de maisons."""
-    relative_path = Path("docs") / "recherches astro" / "house_interpretation_vocabulary.json"
+    candidate_relative_paths = (
+        Path("docs") / "db_seeder" / "astrology" / "house_interpretation_vocabulary.json",
+        Path("docs") / "recherches astro" / "house_interpretation_vocabulary.json",
+    )
     for parent in Path(__file__).resolve().parents:
-        source_path = parent / relative_path
-        if source_path.exists():
-            return source_path
-    return Path(__file__).resolve().parents[3] / relative_path
+        for relative_path in candidate_relative_paths:
+            source_path = parent / relative_path
+            if source_path.exists():
+                return source_path
+    raise FileNotFoundError("missing astrology seed house_interpretation_vocabulary.json")
 
 
 def load_house_interpretation_profiles_source() -> list[dict[str, Any]]:

@@ -7,7 +7,7 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel
 
-from app.domain.astrology.zodiac import ZODIAC_SIGNS, sign_from_longitude
+from app.domain.astrology.zodiac import ordered_sign_codes, sign_from_longitude
 
 
 class HouseRulerResult(BaseModel):
@@ -45,7 +45,7 @@ class HouseRulerResolver:
     def __init__(self, sign_rulerships: Mapping[str, str] | None = None) -> None:
         """Initialise le resolver avec le mapping signe -> planète maîtresse."""
         normalized = self._normalize_rulerships(sign_rulerships or {})
-        missing_signs = sorted(set(ZODIAC_SIGNS) - set(normalized))
+        missing_signs = sorted(set(ordered_sign_codes()) - set(normalized))
         if missing_signs:
             raise HouseRulerResolutionError("missing sign rulerships: " + ", ".join(missing_signs))
         self._sign_rulerships = normalized

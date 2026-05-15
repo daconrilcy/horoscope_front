@@ -1,0 +1,11 @@
+{
+  "story": "CS-172-big-bang-reference-runtime-astrology",
+  "captured": "2026-05-15",
+  "state": "before",
+  "summary": "Pre-existing flow used loose reference payloads and legacy tests passed business dicts into astrology domain helpers.",
+  "legacy_surfaces": [
+    "NatalCalculationService resolved reference data outside a typed runtime contract",
+    "build_natal_result did not require AstrologyRuntimeReference",
+    "tests used partial dict fixtures for natal/aspect references"
+  ]
+}

@@ -21,6 +21,7 @@ from app.domain.astrology.natal_calculation import (
     build_natal_result,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
+from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -223,8 +224,8 @@ def test_engine_selection_swisseph_when_accurate_and_enabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
             try:
@@ -288,8 +289,8 @@ def test_engine_selection_simplified_when_not_accurate(
     mock_bootstrap.path_version = "se-test-v1"
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
             natal_calculation_service.NatalCalculationService.calculate(
@@ -311,8 +312,8 @@ def test_engine_selection_error_when_accurate_and_swisseph_disabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with pytest.raises(NatalCalculationError) as exc_info:
             natal_calculation_service.NatalCalculationService.calculate(
@@ -369,8 +370,8 @@ def test_engine_selection_internal_override_simplified_when_enabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         natal_calculation_service.NatalCalculationService.calculate(
             db=db,
@@ -401,8 +402,8 @@ def test_engine_selection_internal_override_rejected_when_disabled(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with pytest.raises(NatalCalculationError) as exc_info:
             natal_calculation_service.NatalCalculationService.calculate(
@@ -440,8 +441,8 @@ def test_bootstrap_data_missing_error_propagated(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
             with pytest.raises(EphemerisDataMissingError) as exc_info:
@@ -471,8 +472,8 @@ def test_bootstrap_init_error_propagated(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
             with pytest.raises(SwissEphInitError) as exc_info:
@@ -497,8 +498,8 @@ def test_bootstrap_none_raises_init_error(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=None):
             with pytest.raises(SwissEphInitError):
@@ -585,7 +586,7 @@ def test_build_natal_result_swisseph_calls_calculate_planets_and_houses(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -605,7 +606,7 @@ def test_build_natal_result_swisseph_requires_lat_lon() -> None:
     with pytest.raises(NatalCalculationError) as exc_info:
         build_natal_result(
             birth_input=birth_input,
-            reference_data=ref_data,
+            runtime_reference=runtime_reference_from_mapping(ref_data),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=None,
@@ -651,7 +652,7 @@ def test_build_natal_result_swisseph_coherence_sign_longitude(
     with pytest.raises(NatalCalculationError) as exc_info:
         build_natal_result(
             birth_input=birth_input,
-            reference_data=ref_data,
+            runtime_reference=runtime_reference_from_mapping(ref_data),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -694,7 +695,7 @@ def test_build_natal_result_swisseph_coherence_house_interval(
     with pytest.raises(NatalCalculationError) as exc_info:
         build_natal_result(
             birth_input=birth_input,
-            reference_data=ref_data,
+            runtime_reference=runtime_reference_from_mapping(ref_data),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -810,7 +811,7 @@ def test_build_natal_result_simplified_engine_unchanged(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="simplified",
     )

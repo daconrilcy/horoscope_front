@@ -1,0 +1,8 @@
+CS-172 architecture guard evidence
+
+PASS pytest -q app/tests/unit/test_astrology_runtime_reference_guard.py
+PASS rg -n "ReferenceDataService\.get_active_reference_data|reference_data: dict" backend/app/domain/astrology backend/app/services/natal
+PASS rg -n "PLANET_KEYWORDS|SIGN_RULERS|DEFAULT_ORB|ASPECT_WEIGHTS|HOUSE_MEANINGS" backend/app/domain/astrology backend/app/services/natal
+PASS rg -n "UNKNOWN_SIGN|EXACT_ORB_DEG|TIGHT_RATIO|MODERATE_RATIO" backend/app/domain/astrology backend/app/services/natal
+PASS rg -n "SwissEph.*simplified|simplified.*SwissEph|calculation_engine.*simplified" backend/app/domain/astrology backend/app/services/natal
+PASS rg -n "domain\.prediction|app\.domain\.prediction|app\.services\.prediction|AIEngineAdapter|OpenAI|chat\.completions|llm" backend/app/domain/astrology

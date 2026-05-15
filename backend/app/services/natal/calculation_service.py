@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import FrameType, HouseSystemType, ZodiacType, settings
@@ -22,11 +21,11 @@ from app.domain.astrology.natal_calculation import (
     build_natal_result,
 )
 from app.domain.astrology.natal_preparation import BirthInput
-from app.infra.db.models.reference import ReferenceVersionModel
-from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
-from app.infra.db.repositories.reference_repository import ReferenceRepository
+from app.infra.db.repositories.astrology_runtime_reference_repository import (
+    AstrologyRuntimeReferenceError,
+    AstrologyRuntimeReferenceRepository,
+)
 from app.infra.observability.metrics import increment_counter
-from app.services.reference_data_service import ReferenceDataService
 
 logger = logging.getLogger(__name__)
 
@@ -51,21 +50,6 @@ class NatalCalculationService:
         return error.__class__.__name__ in {"EphemerisCalcError", "HousesCalcError"}
 
     @staticmethod
-    def _allows_simplified_fallback(
-        *,
-        accurate: bool,
-        zodiac: ZodiacType,
-        frame: FrameType,
-        house_system: HouseSystemType,
-    ) -> bool:
-        return (
-            not accurate
-            and zodiac == ZodiacType.TROPICAL
-            and frame == FrameType.GEOCENTRIC
-            and house_system == HouseSystemType.EQUAL
-        )
-
-    @staticmethod
     def _resolve_engine(
         *,
         accurate: bool,
@@ -85,11 +69,7 @@ class NatalCalculationService:
                     details={"allowed": "swisseph,simplified", "actual": override},
                 )
             if override == "simplified":
-                if (
-                    not internal_request
-                    or settings.app_env == "production"
-                    or not settings.natal_engine_simplified_enabled
-                ):
+                if not internal_request or settings.app_env == "production":
                     raise NatalCalculationError(
                         code="natal_engine_override_forbidden",
                         message="natal engine override is forbidden",
@@ -141,6 +121,12 @@ class NatalCalculationService:
         preferred = "swisseph" if (accurate or requires_accurate) else settings.natal_engine_default
         if preferred == "swisseph" and settings.swisseph_enabled:
             return "swisseph"
+        if preferred == "swisseph":
+            raise NatalCalculationError(
+                code="natal_engine_unavailable",
+                message="requested natal engine is unavailable",
+                details={"engine": "swisseph"},
+            )
         return "simplified"
 
     @staticmethod
@@ -300,7 +286,11 @@ class NatalCalculationService:
             frame=frame,
             house_system=house_system,
             altitude_m=altitude_m,
-            prefer_simplified_defaults=not accurate and not engine_override,
+            prefer_simplified_defaults=not accurate
+            and (
+                not engine_override
+                or engine_override.strip().lower() == "simplified"
+            ),
         )
 
         # Validate user-supplied options before checking reference payload availability.
@@ -314,45 +304,21 @@ class NatalCalculationService:
 
         if timeout_check is not None:
             timeout_check()
-        reference_data = ReferenceDataService.get_active_reference_data(
-            db,
-            version=resolved_version,
-        )
-        if not reference_data and reference_version is None:
-            fallback_version = db.scalar(
-                select(ReferenceVersionModel.version)
-                .order_by(ReferenceVersionModel.created_at.desc(), ReferenceVersionModel.id.desc())
-                .limit(1)
+        try:
+            runtime_reference = AstrologyRuntimeReferenceRepository(db).load(resolved_version)
+        except AstrologyRuntimeReferenceError as error:
+            error_code = (
+                "invalid_reference_data"
+                if error.code == "invalid_astrology_runtime_reference"
+                else error.code
             )
-            if fallback_version and fallback_version != resolved_version:
-                resolved_version = fallback_version
-                reference_data = ReferenceDataService.get_active_reference_data(
-                    db,
-                    version=resolved_version,
-                )
+            raise NatalCalculationError(
+                code=error_code,
+                message=error.message,
+                details=error.details,
+            ) from error
         if timeout_check is not None:
             timeout_check()
-
-        if not reference_data:
-            raise NatalCalculationError(
-                code="reference_version_not_found",
-                message="reference version not found",
-                details={"version": resolved_version},
-            )
-        reference_data = dict(reference_data)
-        prediction_reference_repository = PredictionReferenceRepository(db)
-        sign_rulerships = prediction_reference_repository.get_sign_rulerships()
-        if not sign_rulerships and isinstance(db, Session):
-            from app.services.prediction.reference_seed_service import (
-                ensure_astral_planet_sign_dignities,
-            )
-
-            ReferenceRepository(db).seed_version_defaults()
-            ensure_astral_planet_sign_dignities(db)
-            db.flush()
-            sign_rulerships = prediction_reference_repository.get_sign_rulerships()
-        if sign_rulerships:
-            reference_data["sign_rulerships"] = sign_rulerships
 
         # Fallback to default ayanamsa if still missing (e.g. zodiac came from defaults)
         if resolved_zodiac == ZodiacType.SIDEREAL and not resolved_ayanamsa:
@@ -396,28 +362,11 @@ class NatalCalculationService:
 
             bootstrap = get_bootstrap_result()
             if bootstrap is None:
-                if NatalCalculationService._allows_simplified_fallback(
-                    accurate=accurate,
-                    zodiac=resolved_zodiac,
-                    frame=resolved_frame,
-                    house_system=resolved_house_system,
-                ):
-                    engine = "simplified"
-                else:
-                    raise SwissEphInitError("SwissEph bootstrap was not called at startup")
+                raise SwissEphInitError("SwissEph bootstrap was not called at startup")
             elif not bootstrap.success:
-                # Re-raise the stored bootstrap error
-                if NatalCalculationService._allows_simplified_fallback(
-                    accurate=accurate,
-                    zodiac=resolved_zodiac,
-                    frame=resolved_frame,
-                    house_system=resolved_house_system,
-                ):
-                    engine = "simplified"
-                else:
-                    if bootstrap.error is not None:
-                        raise bootstrap.error
-                    raise SwissEphInitError("SwissEph bootstrap failed with unknown error")
+                if bootstrap.error is not None:
+                    raise bootstrap.error
+                raise SwissEphInitError("SwissEph bootstrap failed with unknown error")
             else:
                 engine = "swisseph"
                 ephemeris_path_version = bootstrap.path_version
@@ -426,7 +375,7 @@ class NatalCalculationService:
         # Story 24-1: aspect school and versioned rules identifier.
         from app.core.config import AspectSchoolType
 
-        resolved_ruleset_version = str(reference_data.get("version") or settings.ruleset_version)
+        resolved_ruleset_version = runtime_reference.reference_version or settings.ruleset_version
 
         aspect_school_str = (aspect_school or "").strip().lower()
         if not aspect_school_str:
@@ -450,7 +399,7 @@ class NatalCalculationService:
         try:
             return build_natal_result(
                 birth_input=birth_input,
-                reference_data=reference_data,
+                runtime_reference=runtime_reference,
                 ruleset_version=resolved_ruleset_version,
                 timeout_check=timeout_check,
                 engine=engine,

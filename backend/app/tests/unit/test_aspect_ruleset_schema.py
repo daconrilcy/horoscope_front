@@ -16,6 +16,7 @@ from app.domain.astrology.natal_calculation import (
     build_natal_result,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
+from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -132,7 +133,7 @@ class TestAspectRulesetSchemaValidation:
 
         result = build_natal_result(
             birth_input=_make_birth_input(),
-            reference_data=ref,
+            runtime_reference=runtime_reference_from_mapping(ref),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -163,7 +164,7 @@ class TestAspectRulesetSchemaValidation:
         with pytest.raises(NatalCalculationError) as exc_info:
             build_natal_result(
                 birth_input=_make_birth_input(),
-                reference_data=ref,
+                runtime_reference=runtime_reference_from_mapping(ref),
                 ruleset_version="1.0.0",
                 engine="swisseph",
                 birth_lat=48.85,
@@ -190,7 +191,7 @@ class TestAspectRulesetSchemaValidation:
 
         result = build_natal_result(
             birth_input=_make_birth_input(),
-            reference_data=ref,
+            runtime_reference=runtime_reference_from_mapping(ref),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -219,7 +220,7 @@ class TestAspectRulesetSchemaValidation:
         with pytest.raises(NatalCalculationError) as exc_info:
             build_natal_result(
                 birth_input=_make_birth_input(),
-                reference_data=ref,
+                runtime_reference=runtime_reference_from_mapping(ref),
                 ruleset_version="1.0.0",
                 engine="swisseph",
                 birth_lat=48.85,
@@ -247,7 +248,7 @@ class TestAspectRulesetSchemaValidation:
 
         result = build_natal_result(
             birth_input=_make_birth_input(),
-            reference_data=ref,
+            runtime_reference=runtime_reference_from_mapping(ref),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -281,7 +282,7 @@ class TestAspectOrbOverrides:
         with pytest.raises(NatalCalculationError) as exc_info:
             build_natal_result(
                 birth_input=_make_birth_input(),
-                reference_data=ref,
+                runtime_reference=runtime_reference_from_mapping(ref),
                 ruleset_version="1.0.0",
                 engine="swisseph",
                 birth_lat=48.85,
@@ -308,7 +309,7 @@ class TestAspectOrbOverrides:
         with pytest.raises(NatalCalculationError) as exc_info:
             build_natal_result(
                 birth_input=_make_birth_input(),
-                reference_data=ref,
+                runtime_reference=runtime_reference_from_mapping(ref),
                 ruleset_version="1.0.0",
                 engine="swisseph",
                 birth_lat=48.85,
@@ -333,7 +334,7 @@ class TestAspectOrbOverrides:
         with pytest.raises(NatalCalculationError) as exc_info:
             build_natal_result(
                 birth_input=_make_birth_input(),
-                reference_data=ref,
+                runtime_reference=runtime_reference_from_mapping(ref),
                 ruleset_version="1.0.0",
                 engine="swisseph",
                 birth_lat=48.85,
@@ -358,7 +359,7 @@ class TestAspectOrbOverrides:
         with pytest.raises(NatalCalculationError) as exc_info:
             build_natal_result(
                 birth_input=_make_birth_input(),
-                reference_data=ref,
+                runtime_reference=runtime_reference_from_mapping(ref),
                 ruleset_version="1.0.0",
                 engine="swisseph",
                 birth_lat=48.85,
@@ -512,7 +513,7 @@ class TestAspectSchoolMetadataSerialization:
 
         result = build_natal_result(
             birth_input=_make_birth_input(),
-            reference_data=ref,
+            runtime_reference=runtime_reference_from_mapping(ref),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -539,7 +540,7 @@ class TestAspectSchoolMetadataSerialization:
 
         result = build_natal_result(
             birth_input=_make_birth_input(),
-            reference_data=ref,
+            runtime_reference=runtime_reference_from_mapping(ref),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,

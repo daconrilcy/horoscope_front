@@ -24,6 +24,7 @@ from app.domain.astrology.natal_preparation import (
     prepare_birth_data,
 )
 from app.infra.observability.metrics import get_counter_sum_in_window, reset_metrics
+from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -319,7 +320,7 @@ def test_build_natal_result_time_scale_tt_enabled(monkeypatch: pytest.MonkeyPatc
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -401,7 +402,7 @@ def test_build_natal_result_time_scale_tt_disabled(monkeypatch: pytest.MonkeyPat
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,

@@ -59,7 +59,7 @@ HOUSE_SYSTEM_SEED_DATA = {
 }
 
 
-def ensure_house_system_reference_data(session: Session) -> None:
+def sync_house_system_seed_data(session: Session) -> None:
     """Garantit les lignes SQL canoniques des systèmes de maisons."""
     for code, payload in HOUSE_SYSTEM_SEED_DATA.items():
         house_system = session.scalar(
@@ -70,3 +70,8 @@ def ensure_house_system_reference_data(session: Session) -> None:
             continue
         for field_name, value in payload.items():
             setattr(house_system, field_name, value)
+
+
+def ensure_house_system_reference_data(session: Session) -> None:
+    """Compatibilite applicative pour garantir le referentiel des maisons."""
+    sync_house_system_seed_data(session)

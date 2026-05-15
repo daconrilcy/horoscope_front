@@ -23,12 +23,14 @@ def _load_astral_system_names() -> list[str]:
     """Charge les noms de systemes depuis la source documentaire canonique."""
     migration_path = Path(__file__).resolve()
     candidate_paths = (
+        migration_path.parents[3] / "docs" / "db_seeder" / "astrology" / "astral_systems.json",
+        migration_path.parents[2] / "docs" / "db_seeder" / "astrology" / "astral_systems.json",
         migration_path.parents[3] / "docs" / "recherches astro" / "astral_systems.json",
         migration_path.parents[2] / "docs" / "recherches astro" / "astral_systems.json",
     )
     systems_path = next((path for path in candidate_paths if path.exists()), None)
     if systems_path is None:
-        raise RuntimeError("missing docs/recherches astro/astral_systems.json")
+        raise RuntimeError("missing astrology seed astral_systems.json")
 
     with systems_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)

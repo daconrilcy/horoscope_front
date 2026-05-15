@@ -12,7 +12,11 @@ from app.domain.astrology.natal_calculation import (
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.infra.db.base import Base
-from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
+from app.infra.db.models.interpretation_reference import (
+    AstralHouseAxisDefinitionModel,
+    AstralHouseAxisMemberModel,
+    HouseInterpretationProfileModel,
+)
 from app.infra.db.models.reference import (
     HouseModel,
 )
@@ -43,10 +47,15 @@ def _create_support_access_token(email: str = "support-audit@example.com") -> st
         return auth.tokens.access_token
 
 
-def test_calculate_natal_success_and_repeatable() -> None:
+def test_calculate_natal_success_and_repeatable(monkeypatch: pytest.MonkeyPatch) -> None:
     _cleanup_reference_tables()
     _seed_reference_data()
     support_access_token = _create_support_access_token()
+
+    monkeypatch.setattr(
+        "app.services.natal.calculation_service.settings.natal_engine_default",
+        "simplified",
+    )
 
     payload = {
         "birth_date": "1990-06-15",
@@ -66,8 +75,8 @@ def test_calculate_natal_success_and_repeatable() -> None:
         headers={"x-request-id": "rid-natal-second"},
     )
 
-    assert first.status_code == 200
-    assert second.status_code == 200
+    assert first.status_code == 200, first.text
+    assert second.status_code == 200, second.text
     first_data = first.json()["data"]
     second_data = second.json()["data"]
     assert first_data["chart_id"] != second_data["chart_id"]
@@ -174,6 +183,8 @@ def test_calculate_natal_fails_when_reference_is_incomplete() -> None:
     _seed_reference_data()
     with open_app_test_db_session() as db:
         db.execute(delete(HouseInterpretationProfileModel))
+        db.execute(delete(AstralHouseAxisMemberModel))
+        db.execute(delete(AstralHouseAxisDefinitionModel))
         db.execute(delete(HouseModel))
         db.commit()
 

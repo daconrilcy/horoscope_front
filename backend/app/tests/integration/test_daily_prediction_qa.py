@@ -21,6 +21,7 @@ from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.interpretation_reference import (
     AstralAspectInterpretationProfileModel,
+    AstralPlanetInterpretationProfileModel,
     HouseInterpretationProfileModel,
 )
 from app.infra.db.models.prediction_reference import (
@@ -43,11 +44,7 @@ from app.infra.db.models.prediction_ruleset import (
     RulesetParameterModel,
 )
 from app.infra.db.models.reference import (
-    AspectModel,
-    AstralSignModel,
     AstralSignProfileModel,
-    HouseModel,
-    PlanetModel,
     ReferenceVersionModel,
 )
 from app.infra.db.models.user import UserModel
@@ -174,12 +171,9 @@ def _reset_prediction_reference(db) -> None:
     db.execute(delete(AstralAspectOrbRuleModel))
     db.execute(delete(AstralAspectDefinitionModel))
     db.execute(delete(HouseInterpretationProfileModel))
+    db.execute(delete(AstralPlanetInterpretationProfileModel))
     db.execute(delete(PredictionCategoryModel))
-    db.execute(delete(AspectModel))
-    db.execute(delete(HouseModel))
     db.execute(delete(AstralSignProfileModel))
-    db.execute(delete(AstralSignModel))
-    db.execute(delete(PlanetModel))
     db.execute(delete(ReferenceVersionModel))
     db.flush()
 
@@ -530,7 +524,9 @@ def test_fixture_expectations_match_api_response(fixture_name: str):
     window_range = fixture_data["expected_window_range"]
 
     if fixture_name == "active_day":
-        pivot_range = (pivot_range[0], 19)
+        # Le référentiel canonique CS-172 réactive des orbes structurées qui
+        # ajoutent deux pivots publics sans dépasser le budget des fenêtres.
+        pivot_range = (pivot_range[0], 21)
         window_range = (window_range[0], 12)
 
     assert_fixture_expectations(

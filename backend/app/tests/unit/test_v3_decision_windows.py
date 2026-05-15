@@ -49,6 +49,17 @@ def test_build_v3_sobriety_filter():
     assert len(windows) == 0
 
 
+def test_build_v3_sobriety_filter_applies_to_falling_blocks():
+    builder = DecisionWindowBuilder()
+    start = datetime(2026, 3, 11, 12, 0, tzinfo=UTC)
+
+    blocks = [V3TimeBlock(0, start, start + timedelta(hours=2), "falling", 2.0, 0.8, ["work"])]
+
+    windows = builder.build_v3(blocks, [], {})
+
+    assert windows == []
+
+
 def test_build_v3_confidence_filter():
     builder = DecisionWindowBuilder()
     start = datetime(2026, 3, 11, 12, 0, tzinfo=UTC)

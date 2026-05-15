@@ -213,6 +213,7 @@ def test_accurate_mode_swisseph_disabled_raises_error(
             NatalCalculationService.calculate(
                 db=db,
                 birth_input=birth_input,
+                reference_version="1.0.0",
                 accurate=True,
             )
 

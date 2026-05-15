@@ -36,7 +36,17 @@ def _check_constraint_exists(table_name: str, constraint_name: str) -> bool:
 
 def _research_path(file_name: str) -> Path:
     """Construit le chemin vers les JSON de référence astrologique."""
-    return Path(__file__).resolve().parents[3] / "docs" / "recherches astro" / file_name
+    migration_path = Path(__file__).resolve()
+    candidates = (
+        migration_path.parents[3] / "docs" / "db_seeder" / "astrology" / file_name,
+        migration_path.parents[2] / "docs" / "db_seeder" / "astrology" / file_name,
+        migration_path.parents[3] / "docs" / "recherches astro" / file_name,
+        migration_path.parents[2] / "docs" / "recherches astro" / file_name,
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise RuntimeError(f"missing astrology seed {file_name}")
 
 
 def _load_rule_groups() -> list[dict[str, object]]:

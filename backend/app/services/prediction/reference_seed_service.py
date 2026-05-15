@@ -111,10 +111,16 @@ PLANET_CODE_BY_SOURCE_ID = {
 def _astro_research_path(file_name: str) -> Path:
     """Construit le chemin vers les sources JSON astrologiques documentaires."""
     repo_root = Path(__file__).resolve().parents[4]
-    source_path = repo_root / "docs" / "recherches astro" / file_name
-    if source_path.exists():
-        return source_path
-    return Path(__file__).resolve().parents[3] / "docs" / "recherches astro" / file_name
+    candidates = (
+        repo_root / "docs" / "db_seeder" / "astrology" / file_name,
+        Path(__file__).resolve().parents[3] / "docs" / "db_seeder" / "astrology" / file_name,
+        repo_root / "docs" / "recherches astro" / file_name,
+        Path(__file__).resolve().parents[3] / "docs" / "recherches astro" / file_name,
+    )
+    for source_path in candidates:
+        if source_path.exists():
+            return source_path
+    raise FileNotFoundError(f"missing astrology seed source: {file_name}")
 
 
 def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:

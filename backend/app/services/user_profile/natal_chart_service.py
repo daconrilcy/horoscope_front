@@ -249,20 +249,32 @@ class UserNatalChartService:
             if perf_counter() > timeout_deadline:
                 raise TimeoutError("natal generation timeout budget exceeded")
 
+        uses_default_simplified_options = (
+            not accurate
+            and zodiac is None
+            and ayanamsa is None
+            and frame is None
+            and house_system is None
+            and altitude_m is None
+        )
+        calculation_kwargs = {
+            "db": db,
+            "birth_input": birth_input,
+            "reference_version": reference_version,
+            "timeout_check": _timeout_check,
+            "accurate": accurate,
+            "engine_override": "simplified" if uses_default_simplified_options else None,
+            "internal_request": uses_default_simplified_options,
+            "zodiac": zodiac,
+            "ayanamsa": ayanamsa,
+            "frame": frame,
+            "house_system": house_system,
+            "altitude_m": altitude_m,
+            "derive_enabled": settings.timezone_derived_enabled,
+        }
+
         try:
-            result = NatalCalculationService.calculate(
-                db=db,
-                birth_input=birth_input,
-                reference_version=reference_version,
-                timeout_check=_timeout_check,
-                accurate=accurate,
-                zodiac=zodiac,
-                ayanamsa=ayanamsa,
-                frame=frame,
-                house_system=house_system,
-                altitude_m=altitude_m,
-                derive_enabled=settings.timezone_derived_enabled,
-            )
+            result = NatalCalculationService.calculate(**calculation_kwargs)
         except NatalCalculationError as error:
             # Local/dev safeguard: if reference data is missing, seed once and retry.
             should_auto_seed = error.code == "reference_version_not_found" and (
@@ -274,19 +286,7 @@ class UserNatalChartService:
             if should_auto_seed:
                 ReferenceDataService.seed_reference_version(db, version=reference_version)
                 try:
-                    result = NatalCalculationService.calculate(
-                        db=db,
-                        birth_input=birth_input,
-                        reference_version=reference_version,
-                        timeout_check=_timeout_check,
-                        accurate=accurate,
-                        zodiac=zodiac,
-                        ayanamsa=ayanamsa,
-                        frame=frame,
-                        house_system=house_system,
-                        altitude_m=altitude_m,
-                        derive_enabled=settings.timezone_derived_enabled,
-                    )
+                    result = NatalCalculationService.calculate(**calculation_kwargs)
                 except NatalCalculationError as retry_error:
                     raise UserNatalChartServiceError(
                         code=retry_error.code,

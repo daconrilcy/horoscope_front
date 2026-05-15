@@ -79,6 +79,7 @@ class EventDetector:
     def __init__(self, ctx: LoadedPredictionContext, natal_chart: NatalChart):
         self.ctx = ctx
         self.natal_chart = natal_chart
+        self._orb_max_cache: dict[tuple[str, str, str | None], float] = {}
         # Filter natal positions for V1 targets
         self.natal_positions = {
             k: v for k, v in natal_chart.planet_positions.items() if k in self.V1_NATAL_TARGETS
@@ -401,16 +402,26 @@ class EventDetector:
         target_code: str | None = None,
     ) -> float:
         """Résout l'orbe via les règles d'aspects versionnées du contexte daily."""
+        cache_key = (planet_code, aspect_code, target_code)
+        cached = self._orb_max_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         rule = self._matching_orb_rule(planet_code, aspect_code, target_code)
         if rule is not None:
-            return float(rule.orb_deg)
+            resolved = float(rule.orb_deg)
+            self._orb_max_cache[cache_key] = resolved
+            return resolved
 
         param_key = f"orb_max_{aspect_code.lower()}"
         orb_max = self.ctx.ruleset_context.parameters.get(param_key)
         if orb_max is not None:
-            return float(orb_max)
+            resolved = float(orb_max)
+            self._orb_max_cache[cache_key] = resolved
+            return resolved
 
         logger.warning("orb_max_fallback planet=%s aspect=%s default=2.0", planet_code, aspect_code)
+        self._orb_max_cache[cache_key] = 2.0
         return 2.0
 
     def _matching_orb_rule(

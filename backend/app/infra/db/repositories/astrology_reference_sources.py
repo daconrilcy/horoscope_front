@@ -10,7 +10,7 @@ from typing import Any
 def astrology_research_path(file_name: str) -> Path:
     """Construit le chemin vers une source JSON astrologique canonique."""
     repo_root = Path(__file__).resolve().parents[5]
-    return repo_root / "docs" / "recherches astro" / file_name
+    return repo_root / "docs" / "db_seeder" / "astrology" / file_name
 
 
 def load_aspect_family_names() -> tuple[str, ...]:
@@ -112,6 +112,21 @@ def load_astral_house_modality_rows() -> tuple[dict[str, Any], ...]:
 def load_astral_object_type_rows() -> tuple[dict[str, Any], ...]:
     """Charge les types d'objets astrologiques depuis la source canonique."""
     return _load_data_rows("astral_object_types.json", "object types")
+
+
+def load_astral_speed_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les classes de vitesse astrologiques depuis la source canonique."""
+    return _load_data_rows("astral_speed.json", "speed classes")
+
+
+def load_astral_typical_polarity_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les polarites typiques astrologiques depuis la source canonique."""
+    return _load_data_rows("astral_typical_polarities.json", "typical polarities")
+
+
+def load_astral_planet_definition_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les definitions structurelles planetaires depuis la source canonique."""
+    return _load_data_rows("astral_planet_definitions.json", "planet definitions")
 
 
 def _load_data_rows(file_name: str, label: str) -> tuple[dict[str, Any], ...]:

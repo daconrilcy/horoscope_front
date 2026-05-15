@@ -18,6 +18,7 @@ import pytest
 
 from app.domain.astrology.natal_calculation import NatalResult, build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
+from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -222,7 +223,7 @@ def test_build_natal_result_swisseph_engine_metadata(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -255,7 +256,7 @@ def test_build_natal_result_ephemeris_path_version_propagated(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -288,7 +289,7 @@ def test_build_natal_result_aspect_school_propagated(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -319,7 +320,7 @@ def test_build_natal_result_ephemeris_path_hash_propagated(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -337,7 +338,7 @@ def test_build_natal_result_simplified_engine_metadata() -> None:
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="simplified",
     )
@@ -381,7 +382,7 @@ def test_build_natal_result_sidereal_zodiac_metadata(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -415,7 +416,7 @@ def test_build_natal_result_sidereal_default_ayanamsa_lahiri(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -460,7 +461,7 @@ def test_build_natal_result_topocentric_frame_metadata(
 
     result = build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -502,7 +503,7 @@ def test_build_natal_result_topocentric_altitude_zero_default(
 
     build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -540,7 +541,7 @@ def test_build_natal_result_topocentric_propagates_frame_and_coordinates_to_plan
 
     build_natal_result(
         birth_input=birth_input,
-        reference_data=ref_data,
+        runtime_reference=runtime_reference_from_mapping(ref_data),
         ruleset_version="1.0.0",
         engine="swisseph",
         birth_lat=48.85,
@@ -774,8 +775,8 @@ def test_natal_calculation_service_extracts_ephemeris_path_version(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         with patch("app.core.ephemeris.get_bootstrap_result", return_value=mock_bootstrap):
             natal_calculation_service.NatalCalculationService.calculate(
@@ -822,8 +823,8 @@ def test_natal_calculation_service_ephemeris_path_version_none_for_simplified(
     birth_input = _make_birth_input()
 
     with patch(
-        "app.services.natal.calculation_service.ReferenceDataService.get_active_reference_data",
-        return_value=ref_data,
+        "app.services.natal.calculation_service.AstrologyRuntimeReferenceRepository.load",
+        return_value=runtime_reference_from_mapping(ref_data),
     ):
         natal_calculation_service.NatalCalculationService.calculate(
             db=db, birth_input=birth_input, accurate=False, house_system="equal"

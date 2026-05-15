@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
 from app.infra.db.repositories.reference_repository import ReferenceRepository
+from app.infra.db.seed.house_system_reference import sync_house_system_seed_data
 
 
 class ReferenceDataServiceError(Exception):
@@ -142,6 +143,7 @@ class ReferenceDataService:
         if model is None:
             model = repo.create_version(target_version, description="Initial seeded version")
         repo.seed_version_defaults()
+        sync_house_system_seed_data(db)
         db.flush()
         from app.services.prediction.reference_seed_service import (
             ensure_astral_aspect_reference_data,

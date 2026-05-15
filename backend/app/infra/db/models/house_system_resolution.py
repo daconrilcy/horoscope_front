@@ -6,16 +6,16 @@ from sqlalchemy import event, inspect, select
 from sqlalchemy.orm import Session
 
 from app.domain.astrology.house_system_codes import HouseSystemCode
-from app.infra.db.house_system_reference import ensure_house_system_reference_data
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import AstralHouseSystemModel
 from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
+from app.infra.db.seed.house_system_reference import sync_house_system_seed_data
 
 
 def _resolve_house_system(session: Session, code: str) -> AstralHouseSystemModel:
     """Retourne la ligne canonique d'un code de système de maisons."""
-    ensure_house_system_reference_data(session)
+    sync_house_system_seed_data(session)
     house_system = session.scalar(
         select(AstralHouseSystemModel).where(AstralHouseSystemModel.code == code)
     )

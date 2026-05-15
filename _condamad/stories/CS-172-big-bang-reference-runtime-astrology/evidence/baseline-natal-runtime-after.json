@@ -1,0 +1,13 @@
+{
+  "story": "CS-172-big-bang-reference-runtime-astrology",
+  "captured": "2026-05-15",
+  "state": "after",
+  "summary": "Natal calculation consumes AstrologyRuntimeReference loaded by infra and validated before domain use.",
+  "runtime_contract": "app.domain.astrology.runtime.runtime_reference.AstrologyRuntimeReference",
+  "loader": "app.infra.db.repositories.astrology_runtime_reference_repository.AstrologyRuntimeReferenceRepository",
+  "validation": {
+    "targeted_tests": "37 passed",
+    "domain_subset": "97 passed",
+    "ruff_check": "pass"
+  }
+}

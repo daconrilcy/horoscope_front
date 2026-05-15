@@ -104,6 +104,9 @@ class ConsultationGenerationService:
                 db,
                 birth_input=birth_input,
                 accurate=False,
+                engine_override="simplified",
+                internal_request=True,
+                house_system="equal",
                 derive_enabled=True,
             )
         except NatalCalculationError as error:
@@ -115,6 +118,9 @@ class ConsultationGenerationService:
                         db,
                         birth_input=birth_input,
                         accurate=False,
+                        engine_override="simplified",
+                        internal_request=True,
+                        house_system="equal",
                         derive_enabled=True,
                     )
                 except (BirthPreparationError, NatalCalculationError) as recalculation_error:

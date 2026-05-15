@@ -103,7 +103,6 @@ class HouseRuntimeData:
     cusp_longitude: float
     cusp_sign: str | None = None
     house_kind: str | None = None
-    # TODO legacy compatibility field planned removal: use `cusp_sign`.
     sign: str | None = None
     contained_signs: list[str] = field(default_factory=list)
     intercepted_signs: list[str] = field(default_factory=list)
@@ -123,8 +122,6 @@ class HouseRuntimeData:
             self.sign = self.cusp_sign
         if self.house_kind is None:
             self.house_kind = resolve_house_kind(self.number)
-        if self.axis is None:
-            self.axis = HouseAxisRuntimeData(opposite_house=0, theme="unknown")
         if self.strength is None:
             self.strength = HouseStrengthRuntimeData.from_parts(
                 normalized_score=0.0,

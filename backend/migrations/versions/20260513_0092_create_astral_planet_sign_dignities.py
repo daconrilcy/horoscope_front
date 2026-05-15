@@ -52,12 +52,22 @@ def _source_path() -> Path:
     """Retourne le chemin du JSON source des dignites planetaires."""
     migration_path = Path(__file__).resolve()
     candidate_paths = (
+        migration_path.parents[3]
+        / "docs"
+        / "db_seeder"
+        / "astrology"
+        / "planet_sign_diginities.json",
+        migration_path.parents[2]
+        / "docs"
+        / "db_seeder"
+        / "astrology"
+        / "planet_sign_diginities.json",
         migration_path.parents[3] / "docs" / "recherches astro" / "planet_sign_diginities.json",
         migration_path.parents[2] / "docs" / "recherches astro" / "planet_sign_diginities.json",
     )
     source_path = next((path for path in candidate_paths if path.exists()), None)
     if source_path is None:
-        raise RuntimeError("missing docs/recherches astro/planet_sign_diginities.json")
+        raise RuntimeError("missing astrology seed planet_sign_diginities.json")
     return source_path
 
 

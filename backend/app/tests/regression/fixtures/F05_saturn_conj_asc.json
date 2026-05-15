@@ -142,46 +142,46 @@
       },
       "work": {
         "note_20": 17,
-        "raw_score": 0.014193661757713801,
-        "normalized_score": 0.014193661757713801,
-        "power": 0.11545376798453921,
-        "volatility": 0.016796446475206683,
+        "raw_score": 0.01428036892569431,
+        "normalized_score": 0.01428036892569431,
+        "power": 0.11545366871660093,
+        "volatility": 0.01680016339980454,
         "sort_order": 4,
         "is_provisional": true
       },
       "career": {
         "note_20": 20,
-        "raw_score": 0.02164831604222735,
-        "normalized_score": 0.02164831604222735,
-        "power": 0.17609125116969632,
-        "volatility": 0.025618109539916067,
+        "raw_score": 0.02181182807854193,
+        "normalized_score": 0.02181182807854193,
+        "power": 0.1760910997652359,
+        "volatility": 0.025614562618596976,
         "sort_order": 5,
         "is_provisional": true
       },
       "money": {
         "note_20": 13,
-        "raw_score": 0.005744248645595126,
-        "normalized_score": 0.005744248645595126,
-        "power": 0.047816986740295345,
-        "volatility": 0.007028829672766051,
+        "raw_score": 0.005766452854384683,
+        "normalized_score": 0.005766452854384683,
+        "power": 0.047816945626923554,
+        "volatility": 0.006997101884563696,
         "sort_order": 6,
         "is_provisional": true
       },
       "love": {
         "note_20": 4,
-        "raw_score": -0.002561187498433661,
-        "normalized_score": -0.002561187498433661,
-        "power": 0.13494599879545097,
-        "volatility": 0.019692066507878834,
+        "raw_score": -0.0029229669093446603,
+        "normalized_score": -0.0029229669093446603,
+        "power": 0.1281966748558507,
+        "volatility": 0.018661264967545176,
         "sort_order": 7,
         "is_provisional": true
       },
       "sex_intimacy": {
         "note_20": 15,
-        "raw_score": 0.009323997801545712,
-        "normalized_score": 0.009323997801545712,
-        "power": 0.07761597847700114,
-        "volatility": 0.011409114831156487,
+        "raw_score": 0.009417919144862454,
+        "normalized_score": 0.009417919144862454,
+        "power": 0.07761591174225274,
+        "volatility": 0.011336245372447224,
         "sort_order": 8,
         "is_provisional": true
       },
@@ -196,10 +196,10 @@
       },
       "social_network": {
         "note_20": 1,
-        "raw_score": -0.0075417145619747555,
-        "normalized_score": -0.0075417145619747555,
-        "power": 0.3333333333333333,
-        "volatility": 0.0485483400403699,
+        "raw_score": -0.007743066880583208,
+        "normalized_score": -0.007743066880583208,
+        "power": 0.3291274157659903,
+        "volatility": 0.047862058139901006,
         "sort_order": 10,
         "is_provisional": true
       },
@@ -214,16 +214,16 @@
       },
       "pleasure_creativity": {
         "note_20": 3,
-        "raw_score": -0.003953316981234995,
-        "normalized_score": -0.003953316981234995,
-        "power": 0.1678556235016945,
-        "volatility": 0.024445259858561906,
+        "raw_score": -0.003939575442326177,
+        "normalized_score": -0.003939575442326177,
+        "power": 0.1678556174148285,
+        "volatility": 0.02440895270533336,
         "sort_order": 12,
         "is_provisional": true
       }
     },
     "detected_events_count": 50,
-    "turning_points_count": 9,
+    "turning_points_count": 14,
     "sample_count": 96,
     "is_provisional_calibration": true
   }

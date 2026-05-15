@@ -23,8 +23,11 @@ from app.infra.db.models.reference import (
     AstralDignityTypeModel,
     AstralHouseModalityModel,
     AstralObjectTypeModel,
+    AstralPlanetDefinitionModel,
     AstralSignModel,
+    AstralSpeedModel,
     AstralSystemModel,
+    AstralTypicalPolarityModel,
     HouseModel,
     LanguageModel,
     PlanetModel,
@@ -38,7 +41,10 @@ from app.infra.db.repositories.astrology_reference_sources import (
     load_astral_calculation_type_rows,
     load_astral_house_modality_rows,
     load_astral_object_type_rows,
+    load_astral_planet_definition_rows,
+    load_astral_speed_rows,
     load_astral_system_names,
+    load_astral_typical_polarity_rows,
     load_house_axis_definition_rows,
     load_house_axis_member_rows,
     load_language_rows,
@@ -194,6 +200,34 @@ class ReferenceRepository:
         for row in load_astral_object_type_rows():
             self._upsert_code_label_description(AstralObjectTypeModel, row)
 
+        for row in load_astral_speed_rows():
+            speed = self.db.scalar(
+                select(AstralSpeedModel).where(AstralSpeedModel.name == str(row["name"]))
+            )
+            if speed is None:
+                self.db.add(
+                    AstralSpeedModel(
+                        id=int(row["id"]),
+                        name=str(row["name"]),
+                        speed_rank=None
+                        if row.get("speed_rank") is None
+                        else int(row["speed_rank"]),
+                    )
+                )
+            else:
+                speed.speed_rank = None if row.get("speed_rank") is None else int(row["speed_rank"])
+
+        for row in load_astral_typical_polarity_rows():
+            polarity = self.db.scalar(
+                select(AstralTypicalPolarityModel).where(
+                    AstralTypicalPolarityModel.name == str(row["name"])
+                )
+            )
+            if polarity is None:
+                self.db.add(AstralTypicalPolarityModel(id=int(row["id"]), name=str(row["name"])))
+            else:
+                polarity.name = str(row["name"])
+
         for row in load_astral_house_modality_rows():
             name = str(row["name"])
             modality = self.db.scalar(
@@ -205,6 +239,40 @@ class ReferenceRepository:
                 modality.name = name
 
         self.db.flush()
+        self.seed_planet_definition_defaults()
+
+    def seed_planet_definition_defaults(self) -> None:
+        """Synchronise les definitions planetaires structurelles canoniques."""
+        for row in load_astral_planet_definition_rows():
+            planet_definition = self.db.scalar(
+                select(AstralPlanetDefinitionModel).where(
+                    AstralPlanetDefinitionModel.planet_id == int(row["planet_id"])
+                )
+            )
+            payload = {
+                "object_type_id": int(row["object_type_id"]),
+                "astrological_role_id": int(row["astrological_role_id"]),
+                "calculation_type_id": int(row["calculation_type_id"]),
+                "speed_rank": int(row["speed_rank"]),
+                "speed_class_id": int(row["speed_class_id"]),
+                "typical_polarity_id": int(row["typical_polarity_id"]),
+                "is_physical_body": bool(row["is_physical_body"]),
+                "is_luminary": bool(row["is_luminary"]),
+                "is_planet": bool(row["is_planet"]),
+                "is_visible_to_naked_eye": bool(row["is_visible_to_naked_eye"]),
+                "micro_note": None if row.get("micro_note") is None else str(row["micro_note"]),
+            }
+            if planet_definition is None:
+                self.db.add(
+                    AstralPlanetDefinitionModel(
+                        id=int(row["id"]),
+                        planet_id=int(row["planet_id"]),
+                        **payload,
+                    )
+                )
+                continue
+            for field_name, value in payload.items():
+                setattr(planet_definition, field_name, value)
 
     def _upsert_code_label_description(
         self,

@@ -233,8 +233,9 @@ class TurningPointDetector:
         previous_theme_set: set[str],
         current_theme_set: set[str],
     ) -> bool:
-        if previous_theme_set ^ current_theme_set:
-            return True
+        """Valide qu'une rotation thematique porte un mouvement mesurable."""
+        if not previous_theme_set ^ current_theme_set:
+            return False
         if movement is not None and abs(movement.delta_composite) >= self.MIN_V3_THEME_DELTA_SCORE:
             return True
         return any(

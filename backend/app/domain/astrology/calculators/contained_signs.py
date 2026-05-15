@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.domain.astrology.zodiac import ZODIAC_SIGNS, normalize_360, sign_from_longitude
+from app.domain.astrology.zodiac import normalize_360, ordered_sign_codes, sign_from_longitude
 
 
 def resolve_contained_signs(start_longitude: float, end_longitude: float) -> list[str]:
@@ -15,14 +15,15 @@ def resolve_contained_signs(start_longitude: float, end_longitude: float) -> lis
     if start_sign == end_sign and start != end:
         return [start_sign]
 
+    sign_codes = ordered_sign_codes()
     signs: list[str] = []
-    index = ZODIAC_SIGNS.index(start_sign)
-    end_index = ZODIAC_SIGNS.index(end_sign)
+    index = sign_codes.index(start_sign)
+    end_index = sign_codes.index(end_sign)
 
     while True:
-        signs.append(ZODIAC_SIGNS[index])
+        signs.append(sign_codes[index])
         if index == end_index:
             break
-        index = (index + 1) % len(ZODIAC_SIGNS)
+        index = (index + 1) % len(sign_codes)
 
     return signs

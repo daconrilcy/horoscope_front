@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-ZODIAC_SIGNS = (
+_ORDERED_SIGN_CODES = (
     "aries",
     "taurus",
     "gemini",
@@ -27,5 +27,10 @@ def normalize_360(value: float) -> float:
 def sign_from_longitude(longitude: float) -> str:
     """Retourne le signe zodiacal correspondant à une longitude."""
     normalized = normalize_360(longitude)
-    index = int(normalized // 30.0) % len(ZODIAC_SIGNS)
-    return ZODIAC_SIGNS[index]
+    index = int(normalized // 30.0) % len(_ORDERED_SIGN_CODES)
+    return _ORDERED_SIGN_CODES[index]
+
+
+def ordered_sign_codes() -> tuple[str, ...]:
+    """Retourne l'ordre zodiacal technique utilise par les calculs geometriques."""
+    return _ORDERED_SIGN_CODES

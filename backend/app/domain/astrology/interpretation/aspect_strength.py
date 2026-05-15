@@ -7,6 +7,7 @@ normalise, sans categorie produit ni dependance prediction.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from app.domain.astrology.celestial_runtime_catalog import (
     ANGLE_POINT_CODES,
@@ -21,13 +22,26 @@ from .aspect_strength_contracts import (
     resolve_aspect_strength_level,
 )
 
-EXACT_ORB_DEG = 0.5
-TIGHT_RATIO = 0.25
-MODERATE_RATIO = 0.6
+
+@dataclass(frozen=True, slots=True)
+class AspectStrengthThresholds:
+    """Seuils explicites de qualification technique de l'orbe."""
+
+    exact_orb_deg: float
+    tight_ratio: float
+    moderate_ratio: float
 
 
 class AspectStrengthEvaluator:
     """Calcule la force technique d'un aspect a partir de son runtime brut."""
+
+    def __init__(self, thresholds: AspectStrengthThresholds | None = None) -> None:
+        """Initialise l'evaluateur avec des seuils injectables et immutables."""
+        self._thresholds = thresholds or AspectStrengthThresholds(
+            exact_orb_deg=0.5,
+            tight_ratio=0.25,
+            moderate_ratio=0.6,
+        )
 
     def evaluate(
         self,
@@ -57,13 +71,13 @@ class AspectStrengthEvaluator:
         else:
             reasons.append(AspectStrengthReason.ADVANCED_ASPECT)
 
-        if float(orb_used) <= EXACT_ORB_DEG:
+        if float(orb_used) <= self._thresholds.exact_orb_deg:
             score += 0.15
             reasons.append(AspectStrengthReason.EXACT_ORB)
-        elif ratio <= TIGHT_RATIO:
+        elif ratio <= self._thresholds.tight_ratio:
             score += 0.08
             reasons.append(AspectStrengthReason.TIGHT_ORB)
-        elif ratio <= MODERATE_RATIO:
+        elif ratio <= self._thresholds.moderate_ratio:
             reasons.append(AspectStrengthReason.MODERATE_ORB)
         else:
             reasons.append(AspectStrengthReason.WIDE_ORB)
@@ -91,8 +105,8 @@ class AspectStrengthEvaluator:
         return AspectStrengthRuntimeData(
             normalized_score=bounded_score,
             level=resolve_aspect_strength_level(bounded_score),
-            is_exact=float(orb_used) <= EXACT_ORB_DEG,
-            is_tight=ratio <= TIGHT_RATIO,
+            is_exact=float(orb_used) <= self._thresholds.exact_orb_deg,
+            is_tight=ratio <= self._thresholds.tight_ratio,
             reasons=tuple(reasons),
         )
 

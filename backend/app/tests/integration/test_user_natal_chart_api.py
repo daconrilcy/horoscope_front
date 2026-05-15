@@ -749,6 +749,7 @@ def test_generate_natal_chart_sidereal_with_simplified_override_fails(monkeypatc
             NatalCalculationService.calculate(
                 db,
                 birth_input,
+                reference_version="1.0.0",
                 zodiac="sidereal",
                 ayanamsa="lahiri",
                 engine_override="simplified",

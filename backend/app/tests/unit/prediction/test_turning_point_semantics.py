@@ -466,3 +466,53 @@ def test_detect_v3_detects_material_theme_rotation_on_stable_day():
     assert any(
         delta.code == "social_network" and delta.direction == "down" for delta in tp.category_deltas
     )
+
+
+def test_detect_v3_ignores_non_material_theme_rotation_on_stable_day():
+    from app.domain.prediction.schemas import V3SignalLayer, V3ThemeSignal
+
+    detector = TurningPointDetector()
+    start = datetime(2026, 3, 12, 8, 45, tzinfo=UTC)
+
+    blocks = [
+        V3TimeBlock(
+            0,
+            start - timedelta(hours=2),
+            start,
+            "stable",
+            2.54,
+            0.98,
+            ["health", "money", "social_network"],
+        ),
+        V3TimeBlock(
+            1,
+            start,
+            start + timedelta(hours=2),
+            "stable",
+            2.55,
+            0.99,
+            ["health", "money", "work"],
+        ),
+    ]
+
+    t_prev = start - timedelta(hours=1)
+    t_curr = start + timedelta(hours=1)
+    theme_signals = {
+        code: V3ThemeSignal(
+            theme_code=code,
+            timeline={
+                t_prev: V3SignalLayer(0, 0, 0, 0, value),
+                t_curr: V3SignalLayer(0, 0, 0, 0, value + 0.01),
+            },
+        )
+        for code, value in {
+            "health": 1.0,
+            "money": 0.9,
+            "social_network": 0.8,
+            "work": 0.79,
+        }.items()
+    }
+
+    pivots = detector.detect_v3(blocks, [], theme_signals)
+
+    assert pivots == []

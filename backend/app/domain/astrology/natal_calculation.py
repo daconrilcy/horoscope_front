@@ -32,6 +32,10 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
 )
 from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData, HouseRuntimeData
+from app.domain.astrology.runtime.runtime_reference import (
+    AstrologyRuntimeReference,
+    AstrologySystemReferenceSet,
+)
 from app.domain.astrology.zodiac import normalize_360, sign_from_longitude
 from app.infra.observability.metrics import increment_counter
 
@@ -134,39 +138,31 @@ def _validate_house_cusps(version: str, houses_raw: list[dict[str, object]]) -> 
         _raise_invalid_reference(version, "houses", "duplicate_cusp_longitude")
 
 
-def _extract_sign_rulerships(reference_data: dict[str, object]) -> dict[str, str]:
+def _extract_sign_rulerships(runtime_reference: AstrologyRuntimeReference) -> dict[str, str]:
     """Extrait le mapping signe -> maître depuis les dignités de référence."""
-    raw = reference_data.get("sign_rulerships")
-    if not isinstance(raw, dict):
-        return {}
-    return {str(sign): str(planet) for sign, planet in raw.items()}
+    return dict(runtime_reference.dignities.sign_rulerships)
 
 
 def _extract_house_axes(
     version: str,
-    reference_data: dict[str, object],
+    runtime_reference: AstrologyRuntimeReference,
 ) -> dict[int, HouseAxisRuntimeData]:
     """Valide les axes de maisons charges depuis le referentiel canonique."""
-    raw_axes = reference_data.get("house_axes")
-    if not isinstance(raw_axes, list):
+    raw_axes = runtime_reference.house_axes
+    if not raw_axes:
         _raise_invalid_reference(version, "house_axes", "missing_or_empty")
 
     axes: dict[int, HouseAxisRuntimeData] = {}
     for item in raw_axes:
-        if not isinstance(item, dict):
-            _raise_invalid_reference(version, "house_axes", "invalid_entry")
-        if "house_number" not in item or "opposite_house" not in item:
-            _raise_invalid_reference(version, "house_axes", "invalid_house_numbers")
-        house_number = _parse_house_axis_number(version, item["house_number"])
-        opposite_house = _parse_house_axis_number(version, item["opposite_house"])
-        theme = item.get("theme")
+        house_number = _parse_house_axis_number(version, item.house_number)
+        opposite_house = _parse_house_axis_number(version, item.opposite_house)
+        theme = item.theme
         if (
             house_number < 1
             or house_number > 12
             or opposite_house < 1
             or opposite_house > 12
             or house_number == opposite_house
-            or not isinstance(theme, str)
             or not theme.strip()
         ):
             _raise_invalid_reference(version, "house_axes", "invalid_entry")
@@ -192,20 +188,18 @@ def _parse_house_axis_number(version: str, value: object) -> int:
 
 def _build_system_inheritance(
     version: str,
-    astral_systems_data: list[object] | None,
+    systems: AstrologySystemReferenceSet,
 ) -> dict[str, str | None]:
     """Valide la carte d'héritage des systèmes astrologiques."""
-    if astral_systems_data is None:
+    if not systems.items:
         _raise_invalid_reference(version, "astral_systems", "missing_or_empty")
     inheritance: dict[str, str | None] = {}
-    for item in astral_systems_data:
-        if not isinstance(item, dict):
-            _raise_invalid_reference(version, "astral_systems", "invalid_entry")
-        code = item.get("code") or item.get("name")
-        if not isinstance(code, str) or not code.strip():
+    for item in systems.items:
+        code = item.code
+        if not code.strip():
             _raise_invalid_reference(version, "astral_systems", "missing_code")
-        parent = item.get("inherits_from_system_code")
-        if parent is not None and (not isinstance(parent, str) or not parent.strip()):
+        parent = item.inherits_from_system_code
+        if parent is not None and not parent.strip():
             _raise_invalid_reference(version, "astral_systems", "invalid_parent")
         inheritance[code.strip().lower()] = None if parent is None else parent.strip().lower()
     if not inheritance:
@@ -289,7 +283,7 @@ def _build_swisseph_houses(
 
 def build_natal_result(
     birth_input: BirthInput,
-    reference_data: dict[str, object],
+    runtime_reference: AstrologyRuntimeReference,
     ruleset_version: str,
     timeout_check: Callable[[], None] | None = None,
     engine: str = "simplified",
@@ -311,65 +305,43 @@ def build_natal_result(
     if timeout_check is not None:
         timeout_check()
 
-    version = reference_data.get("version")
-    if not isinstance(version, str) or not version:
+    version = runtime_reference.reference_version
+    if not version:
         raise NatalCalculationError(
             code="reference_version_not_found",
             message="reference version not found",
-            details={"version": "unknown"},
+            details={"version": ""},
         )
 
-    planets_data = reference_data.get("planets")
-    signs_data = reference_data.get("signs")
-    houses_data = reference_data.get("houses")
-    aspects_data = reference_data.get("aspects")
-    aspect_orb_rules_data = reference_data.get("aspect_orb_rules")
-    astral_systems_data = reference_data.get("astral_systems")
+    planets_data = runtime_reference.planets.items
+    signs_data = runtime_reference.signs.items
+    houses_data = runtime_reference.houses.items
+    aspects_data = runtime_reference.aspects.items
+    aspect_orb_rules_data = runtime_reference.aspects.orb_rules
 
-    if not isinstance(planets_data, list) or not planets_data:
+    if not planets_data:
         _raise_invalid_reference(version, "planets", "missing_or_empty")
-    if not isinstance(signs_data, list) or not signs_data:
+    if not signs_data:
         _raise_invalid_reference(version, "signs", "missing_or_empty")
-    if not isinstance(houses_data, list) or not houses_data:
+    if not houses_data:
         _raise_invalid_reference(version, "houses", "missing_or_empty")
-    if not isinstance(aspects_data, list) or not aspects_data:
+    if not aspects_data:
         _raise_invalid_reference(version, "aspects", "missing_or_empty")
-    if aspect_orb_rules_data is not None and not isinstance(aspect_orb_rules_data, list):
-        _raise_invalid_reference(version, "aspect_orb_rules", "invalid_entry")
-    if astral_systems_data is not None and not isinstance(astral_systems_data, list):
-        _raise_invalid_reference(version, "astral_systems", "invalid_entry")
 
     prepared = prepare_birth_data(birth_input, tt_enabled=tt_enabled, derive_enabled=derive_enabled)
     if timeout_check is not None:
         timeout_check()
-    planet_codes = [
-        str(item["code"])
-        for item in planets_data
-        if isinstance(item, dict) and isinstance(item.get("code"), str)
-    ]
+    planet_codes = [item.code for item in planets_data if item.code]
     if not planet_codes:
         _raise_invalid_reference(version, "planets", "missing_code")
 
-    sign_codes = [
-        str(item["code"])
-        for item in signs_data
-        if isinstance(item, dict) and isinstance(item.get("code"), str)
-    ]
+    sign_codes = [item.code for item in signs_data if item.code]
     if not sign_codes:
         _raise_invalid_reference(version, "signs", "missing_code")
 
     house_numbers: list[int] = []
     for item in houses_data:
-        if not isinstance(item, dict) or "number" not in item:
-            _raise_invalid_reference(version, "houses", "missing_number")
-        number_value = item["number"]
-        if isinstance(number_value, bool):
-            _raise_invalid_reference(version, "houses", "invalid_number")
-        try:
-            number = int(number_value)
-        except (TypeError, ValueError):
-            _raise_invalid_reference(version, "houses", "invalid_number")
-        house_numbers.append(number)
+        house_numbers.append(item.number)
     if not house_numbers:
         _raise_invalid_reference(version, "houses", "missing_number")
 
@@ -477,18 +449,20 @@ def build_natal_result(
 
     aspect_definitions: list[AspectDefinitionRuntimeData] = []
     for item in aspects_data:
-        if not isinstance(item, dict):
-            _raise_invalid_reference(version, "aspects", "invalid_entry")
-        if {
-            "orb_" + "luminaries_override_deg",
-            "orb_" + "pair_overrides",
-            "orb_" + "luminaries",
-            "orb_" + "pairs",
-            "orb_" + "overrides",
-        } & set(item):
-            _raise_invalid_reference(version, "aspects", "legacy_orb_fields_forbidden")
         try:
-            aspect_definition = AspectDefinitionRuntimeData.from_mapping(item)
+            aspect_definition = AspectDefinitionRuntimeData(
+                code=item.code,
+                angle=item.angle,
+                family=item.family,
+                is_enabled=item.is_enabled,
+                is_major=item.is_major,
+                is_minor=item.is_minor,
+                default_orb_deg=item.default_orb_deg,
+                system_code=aspect_school_code,
+                default_valence=item.default_valence,
+                interpretive_valence=item.interpretive_valence,
+                energy_type=item.energy_type,
+            )
         except ValueError as error:
             _raise_invalid_reference(version, "aspects", str(error))
         default_orb_value = aspect_definition.default_orb_deg
@@ -505,16 +479,29 @@ def build_natal_result(
     major_aspect_definitions = [
         definition
         for definition in aspect_definitions
-        if definition.is_major and definition.system_code == aspect_school_code
+        if definition.is_enabled
+        and definition.is_major
+        and definition.system_code == aspect_school_code
     ]
-    if not isinstance(aspect_orb_rules_data, list):
+    if not aspect_orb_rules_data:
         _raise_invalid_reference(version, "aspect_orb_rules", "missing_or_empty")
     aspect_orb_rules: list[AspectOrbRuleRuntimeData] = []
     for item in aspect_orb_rules_data:
-        if not isinstance(item, dict):
-            _raise_invalid_reference(version, "aspect_orb_rules", "invalid_entry")
         try:
-            aspect_orb_rule = AspectOrbRuleRuntimeData.from_mapping(item)
+            aspect_orb_rule = AspectOrbRuleRuntimeData(
+                aspect_code=item.aspect_code,
+                system_code=item.system_code,
+                calculation_context=item.calculation_context,
+                source_body_type=item.source_body_type,
+                source_planet_code=item.source_planet_code,
+                source_point_code=item.source_point_code,
+                target_body_type=item.target_body_type,
+                target_planet_code=item.target_planet_code,
+                target_point_code=item.target_point_code,
+                orb_deg=item.orb_deg,
+                priority=item.priority,
+                is_enabled=item.is_enabled,
+            )
         except ValueError as error:
             _raise_invalid_reference(version, "aspect_orb_rules", str(error))
         orb_rule_value = aspect_orb_rule.orb_deg
@@ -526,7 +513,7 @@ def build_natal_result(
                 _raise_invalid_reference(version, "aspect_orb_rules", "invalid_orb_deg")
         aspect_orb_rules.append(aspect_orb_rule)
 
-    system_inheritance = _build_system_inheritance(version, astral_systems_data)
+    system_inheritance = _build_system_inheritance(version, runtime_reference.systems)
     aspect_positions = [build_aspect_body_from_position(position) for position in positions_raw]
 
     aspects_raw = calculate_major_aspects(
@@ -555,8 +542,8 @@ def build_natal_result(
         )
         for item in houses_raw
     ]
-    sign_rulerships = _extract_sign_rulerships(reference_data)
-    house_axes = _extract_house_axes(version, reference_data)
+    sign_rulerships = _extract_sign_rulerships(runtime_reference)
+    house_axes = _extract_house_axes(version, runtime_reference)
     try:
         house_rulers = HouseRulerResolver(sign_rulerships).resolve(
             cusp_houses,

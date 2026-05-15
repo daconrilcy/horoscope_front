@@ -61,13 +61,15 @@ def _research_path(file_name: str) -> Path:
     """Construit le chemin robuste vers un JSON de recherche astrologique."""
     migration_path = Path(__file__).resolve()
     candidates = (
+        migration_path.parents[3] / "docs" / "db_seeder" / "astrology" / file_name,
+        migration_path.parents[2] / "docs" / "db_seeder" / "astrology" / file_name,
         migration_path.parents[3] / "docs" / "recherches astro" / file_name,
         migration_path.parents[2] / "docs" / "recherches astro" / file_name,
     )
     for candidate in candidates:
         if candidate.exists():
             return candidate
-    raise RuntimeError(f"missing docs/recherches astro/{file_name}")
+    raise RuntimeError(f"missing astrology seed {file_name}")
 
 
 def _load_daily_rows() -> list[dict[str, object]]:

@@ -49,7 +49,17 @@ def _aspect_family_by_code() -> dict[str, str]:
 
 def _research_path(file_name: str) -> Path:
     """Construit le chemin vers une source JSON astrologique canonique."""
-    return Path(__file__).resolve().parents[3] / "docs" / "recherches astro" / file_name
+    migration_path = Path(__file__).resolve()
+    candidates = (
+        migration_path.parents[3] / "docs" / "db_seeder" / "astrology" / file_name,
+        migration_path.parents[2] / "docs" / "db_seeder" / "astrology" / file_name,
+        migration_path.parents[3] / "docs" / "recherches astro" / file_name,
+        migration_path.parents[2] / "docs" / "recherches astro" / file_name,
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise RuntimeError(f"missing astrology seed {file_name}")
 
 
 def upgrade() -> None:

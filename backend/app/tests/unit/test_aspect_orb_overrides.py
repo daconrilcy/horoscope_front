@@ -14,6 +14,7 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
 )
+from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
 
 
 def _definition(system_code: str = "modern") -> AspectDefinitionRuntimeData:
@@ -209,7 +210,7 @@ def test_build_natal_result_rejects_legacy_orb_fields(monkeypatch: pytest.Monkey
     with pytest.raises(NatalCalculationError, match="aspects reference data is invalid"):
         build_natal_result(
             birth_input=_birth_input(),
-            reference_data=reference,
+            runtime_reference=runtime_reference_from_mapping(reference),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=45.75,

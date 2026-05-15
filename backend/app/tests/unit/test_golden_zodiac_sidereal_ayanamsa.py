@@ -30,6 +30,7 @@ from app.domain.astrology.ephemeris_provider import (
     calculate_planets,
 )
 from app.domain.astrology.zodiac import sign_from_longitude
+from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -297,7 +298,7 @@ class TestSiderealResultAyanamsa:
 
         result = build_natal_result(
             birth_input=birth_input,
-            reference_data=ref_data,
+            runtime_reference=runtime_reference_from_mapping(ref_data),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -359,7 +360,7 @@ class TestSiderealResultAyanamsa:
 
         result = build_natal_result(
             birth_input=birth_input,
-            reference_data=ref_data,
+            runtime_reference=runtime_reference_from_mapping(ref_data),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,
@@ -418,7 +419,7 @@ class TestSiderealResultAyanamsa:
 
         result = build_natal_result(
             birth_input=birth_input,
-            reference_data=ref_data,
+            runtime_reference=runtime_reference_from_mapping(ref_data),
             ruleset_version="1.0.0",
             engine="swisseph",
             birth_lat=48.85,

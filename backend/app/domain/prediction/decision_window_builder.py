@@ -79,7 +79,7 @@ class DecisionWindowBuilder:
         for block in v3_blocks:
             # 1. Actionability Filter (AC3, AC4)
             # Sobriety on weak days: ignore low intensity or low confidence blocks
-            if block.intensity < self.MIN_V3_WINDOW_INTENSITY and block.orientation == "stable":
+            if block.intensity < self.MIN_V3_WINDOW_INTENSITY:
                 continue
 
             if block.confidence < self.MIN_V3_WINDOW_CONFIDENCE:

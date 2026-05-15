@@ -7,7 +7,11 @@ from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
-from app.infra.db.models.interpretation_reference import HouseInterpretationProfileModel
+from app.infra.db.models.interpretation_reference import (
+    AstralHouseAxisDefinitionModel,
+    AstralHouseAxisMemberModel,
+    HouseInterpretationProfileModel,
+)
 from app.infra.db.models.reference import (
     AspectModel,
     AstralSignModel,
@@ -34,6 +38,15 @@ SIGNS = [
     "aquarius",
     "pisces",
 ]
+
+
+@pytest.fixture(autouse=True)
+def _use_simplified_engine_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stabilise les tests unitaires natal sans dependance SwissEph locale."""
+    monkeypatch.setattr(
+        "app.services.natal.calculation_service.settings.natal_engine_default",
+        "simplified",
+    )
 
 
 def _cleanup_reference_tables() -> None:
@@ -302,7 +315,7 @@ def test_calculate_natal_calls_timeout_check_around_reference_loading() -> None:
     assert len(checkpoints) >= 2
 
 
-def test_calculate_natal_uses_reference_cache_for_same_version(
+def test_calculate_natal_loads_runtime_reference_without_legacy_reference_cache(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _cleanup_reference_tables()
@@ -336,7 +349,7 @@ def test_calculate_natal_uses_reference_cache_for_same_version(
             db, payload, reference_version="1.0.0", house_system="equal"
         )
 
-    assert calls["count"] == 1
+    assert calls["count"] == 2
 
 
 def test_calculate_natal_fails_with_incomplete_reference_data() -> None:
@@ -350,6 +363,8 @@ def test_calculate_natal_fails_with_incomplete_reference_data() -> None:
     with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         db.execute(delete(HouseInterpretationProfileModel))
+        db.execute(delete(AstralHouseAxisMemberModel))
+        db.execute(delete(AstralHouseAxisDefinitionModel))
         db.execute(delete(HouseModel))
         db.commit()
         try:
@@ -523,7 +538,13 @@ def test_calculate_natal_topocentric_without_coordinates_fails_422(
     with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
         with pytest.raises(NatalCalculationError) as exc:
-            NatalCalculationService.calculate(db, payload, frame="topocentric", accurate=True)
+            NatalCalculationService.calculate(
+                db,
+                payload,
+                reference_version="1.0.0",
+                frame="topocentric",
+                accurate=True,
+            )
         assert exc.value.code == "missing_topocentric_coordinates"
 
 
@@ -590,8 +611,20 @@ def test_calculate_natal_topocentric_vs_geocentric_asc_mc_diff_ac2(
     )
     with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        geo = NatalCalculationService.calculate(db, payload, frame="geocentric", accurate=True)
-        topo = NatalCalculationService.calculate(db, payload, frame="topocentric", accurate=True)
+        geo = NatalCalculationService.calculate(
+            db,
+            payload,
+            reference_version="1.0.0",
+            frame="geocentric",
+            accurate=True,
+        )
+        topo = NatalCalculationService.calculate(
+            db,
+            payload,
+            reference_version="1.0.0",
+            frame="topocentric",
+            accurate=True,
+        )
 
     def _angular_diff(a: float, b: float) -> float:
         diff = abs(a - b)
@@ -634,5 +667,11 @@ def test_calculate_natal_simplified_engine_rejects_non_equal_house_system(
         # accurate=False -> tries simplified by default (if not overridden)
         # but if we ask for Placidus, it should require accurate=True
         with pytest.raises(NatalCalculationError) as exc:
-            NatalCalculationService.calculate(db, payload, house_system="placidus", accurate=False)
+            NatalCalculationService.calculate(
+                db,
+                payload,
+                reference_version="1.0.0",
+                house_system="placidus",
+                accurate=False,
+            )
         assert exc.value.code == "accurate_mode_required"

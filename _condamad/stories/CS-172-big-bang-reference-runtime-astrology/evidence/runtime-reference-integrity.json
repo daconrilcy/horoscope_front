@@ -1,0 +1,28 @@
+{
+  "story": "CS-172-big-bang-reference-runtime-astrology",
+  "captured": "2026-05-15",
+  "integrity_owner": "AstrologyRuntimeReferenceRepository._validate",
+  "blocking_checks": [
+    "12 signs",
+    "12 houses",
+    "required planets",
+    "ASC/DSC/MC/IC angle points",
+    "active required house systems",
+    "aspect definitions",
+    "aspect orb rules",
+    "sign rulerships",
+    "orphan aspect orb rules",
+    "orphan dignity/rulership references",
+    "orphan house axes and angle houses",
+    "unknown runtime codes forbidden"
+  ],
+  "evidence": [
+    "pytest -q app/tests/unit/test_astrology_runtime_reference_repository.py",
+    "pytest -q app/tests/unit/test_natal_calculation_service.py",
+    "pytest -q tests/unit/domain/astrology/test_runtime_ref.py",
+    "repository DB load test",
+    "unknown sign negative test",
+    "orphan aspect rule negative test"
+  ],
+  "result": "PASS"
+}

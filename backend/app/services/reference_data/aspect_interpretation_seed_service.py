@@ -44,12 +44,16 @@ JSON_FIELD_NAMES = (
 
 def _aspect_interpretation_source_path() -> Path:
     """Retourne le chemin du JSON documentaire des profils d'aspects."""
-    relative_path = Path("docs") / "recherches astro" / "astral_aspect_interpretation_profiles.json"
+    candidate_relative_paths = (
+        Path("docs") / "db_seeder" / "astrology" / "astral_aspect_interpretation_profiles.json",
+        Path("docs") / "recherches astro" / "astral_aspect_interpretation_profiles.json",
+    )
     for parent in Path(__file__).resolve().parents:
-        source_path = parent / relative_path
-        if source_path.exists():
-            return source_path
-    return Path(__file__).resolve().parents[3] / relative_path
+        for relative_path in candidate_relative_paths:
+            source_path = parent / relative_path
+            if source_path.exists():
+                return source_path
+    raise FileNotFoundError("missing astrology seed astral_aspect_interpretation_profiles.json")
 
 
 def load_aspect_interpretation_profiles_source() -> list[dict[str, Any]]:

@@ -25,7 +25,6 @@ from app.domain.astrology.runtime.aspect_runtime_data import (
     AspectMetadataRuntimeData,
     AspectOrbRuntimeData,
     AspectParticipantsRuntimeData,
-    AspectPhaseRuntimeData,
     AspectRuntimeData,
 )
 
@@ -81,7 +80,7 @@ def build_aspect_runtime_data(aspect: AspectLike) -> AspectRuntimeData:
             ratio=ratio,
             strength_level=strength.level.value,
         ),
-        phase=AspectPhaseRuntimeData(type="unknown"),
+        phase=None,
         interpretation=AspectInterpretationRuntimeData(
             default_valence=aspect.default_valence,
             interpretive_valence=aspect.interpretive_valence,

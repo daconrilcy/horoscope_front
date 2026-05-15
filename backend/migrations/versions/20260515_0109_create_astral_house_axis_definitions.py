@@ -25,12 +25,31 @@ TABLE_NAME = "astral_house_axis_definitions"
 
 def _source_path() -> Path:
     """Retourne le chemin du JSON canonique des axes de maisons."""
-    return (
-        Path(__file__).resolve().parents[3]
+    migration_path = Path(__file__).resolve()
+    candidates = (
+        migration_path.parents[3]
+        / "docs"
+        / "db_seeder"
+        / "astrology"
+        / "astral_house_axis_definitions.json",
+        migration_path.parents[2]
+        / "docs"
+        / "db_seeder"
+        / "astrology"
+        / "astral_house_axis_definitions.json",
+        migration_path.parents[3]
         / "docs"
         / "recherches astro"
-        / "astral_house_axis_definitions.json"
+        / "astral_house_axis_definitions.json",
+        migration_path.parents[2]
+        / "docs"
+        / "recherches astro"
+        / "astral_house_axis_definitions.json",
     )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise RuntimeError("missing astrology seed astral_house_axis_definitions.json")
 
 
 def _load_axis_rows() -> list[dict[str, object]]:

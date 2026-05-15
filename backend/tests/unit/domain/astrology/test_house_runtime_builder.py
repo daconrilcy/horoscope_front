@@ -1,5 +1,7 @@
 """Tests golden du builder runtime des maisons enrichies."""
 
+from dataclasses import replace
+
 from app.core.config import HouseSystemType
 from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
@@ -14,6 +16,8 @@ from app.domain.astrology.natal_calculation import (
     _extract_house_axes,
 )
 from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData
+from app.domain.astrology.runtime.runtime_reference import HouseAxisReferenceData
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 
 RULERS = {
     "aries": "mars",
@@ -231,18 +235,19 @@ def test_runtime_builder_rejects_missing_house_axis() -> None:
 
 def test_reference_house_axes_extraction_rejects_incomplete_payload() -> None:
     """La validation de calcul natal refuse un referentiel sans les douze axes."""
-    payload = {
-        "house_axes": [
-            {
-                "house_number": 1,
-                "opposite_house": 7,
-                "theme": "self_relationship",
-            }
-        ]
-    }
+    reference = replace(
+        complete_reference(),
+        house_axes=(
+            HouseAxisReferenceData(
+                house_number=1,
+                opposite_house=7,
+                theme="self_relationship",
+            ),
+        ),
+    )
 
     try:
-        _extract_house_axes("test-version", payload)
+        _extract_house_axes("test-version", reference)
     except NatalCalculationError as error:
         assert error.code == "invalid_reference_data"
         assert error.details == {
@@ -256,18 +261,19 @@ def test_reference_house_axes_extraction_rejects_incomplete_payload() -> None:
 
 def test_reference_house_axes_extraction_rejects_coerced_numbers() -> None:
     """Les numeros d'axes doivent etre des entiers stricts, pas des valeurs coercibles."""
-    payload = {
-        "house_axes": [
-            {
-                "house_number": True,
-                "opposite_house": 7,
-                "theme": "self_relationship",
-            }
-        ]
-    }
+    reference = replace(
+        complete_reference(),
+        house_axes=(
+            HouseAxisReferenceData(
+                house_number=True,
+                opposite_house=7,
+                theme="self_relationship",
+            ),
+        ),
+    )
 
     try:
-        _extract_house_axes("test-version", payload)
+        _extract_house_axes("test-version", reference)
     except NatalCalculationError as error:
         assert error.details["reason"] == "invalid_house_numbers"
     else:
