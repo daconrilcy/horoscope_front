@@ -15,8 +15,13 @@ from app.infra.db.models.prediction_reference import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAnglePointModel,
     AstralAspectFamilyModel,
+    AstralAstrologicalRoleModel,
+    AstralCalculationTypeModel,
     AstralDignityTypeModel,
+    AstralHouseModalityModel,
+    AstralObjectTypeModel,
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
@@ -133,6 +138,17 @@ def test_seed_reference_version_is_idempotent() -> None:
             )
             == 20
         )
+        assert db.scalar(select(func.count()).select_from(AstralAnglePointModel)) == 4
+        assert db.scalar(select(func.count()).select_from(AstralAstrologicalRoleModel)) == 6
+        assert db.scalar(select(func.count()).select_from(AstralCalculationTypeModel)) == 2
+        assert db.scalar(select(func.count()).select_from(AstralHouseModalityModel)) == 3
+        assert db.scalar(select(func.count()).select_from(AstralObjectTypeModel)) == 3
+        ascendant = db.scalar(
+            select(AstralAnglePointModel).where(AstralAnglePointModel.code == "asc")
+        )
+        assert ascendant is not None
+        assert ascendant.short_label == "ASC"
+        assert ascendant.associated_house == 1
         house_10_profile = db.scalar(
             select(HouseInterpretationProfileModel)
             .join(HouseModel, HouseInterpretationProfileModel.house_id == HouseModel.id)

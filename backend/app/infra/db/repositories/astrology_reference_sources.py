@@ -87,3 +87,39 @@ def load_house_axis_member_rows() -> tuple[dict[str, Any], ...]:
     if not isinstance(rows, list) or not rows:
         raise ValueError("house axis members source must contain data rows")
     return tuple(dict(row) for row in rows)
+
+
+def load_astral_angle_point_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les angles astrologiques structurels depuis la source canonique."""
+    return _load_data_rows("astral_angle_points.json", "angle points")
+
+
+def load_astral_astrological_role_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les rôles astrologiques structurels depuis la source canonique."""
+    return _load_data_rows("astral_astrological_roles.json", "astrological roles")
+
+
+def load_astral_calculation_type_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les types de calcul astrologique depuis la source canonique."""
+    return _load_data_rows("astral_calculation_types.json", "calculation types")
+
+
+def load_astral_house_modality_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les modalités de maisons astrologiques depuis la source canonique."""
+    return _load_data_rows("astral_house_modalities.json", "house modalities")
+
+
+def load_astral_object_type_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les types d'objets astrologiques depuis la source canonique."""
+    return _load_data_rows("astral_object_types.json", "object types")
+
+
+def _load_data_rows(file_name: str, label: str) -> tuple[dict[str, Any], ...]:
+    """Charge une liste `data` non vide depuis un fichier documentaire."""
+    source_path = astrology_research_path(file_name)
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError(f"{label} source must contain data rows")
+    return tuple(dict(row) for row in rows)

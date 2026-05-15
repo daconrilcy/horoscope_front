@@ -154,6 +154,78 @@ class AstralHouseSystemModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utc_now)
 
 
+class AstralAnglePointModel(Base):
+    """Angle astrologique majeur utilisé comme point structurel du thème."""
+
+    __tablename__ = "astral_angle_points"
+    __table_args__ = (
+        UniqueConstraint("code"),
+        CheckConstraint(
+            "axis IN ('horizontal', 'vertical')",
+            name="ck_astral_angle_points_axis",
+        ),
+        CheckConstraint(
+            "associated_house BETWEEN 1 AND 12",
+            name="ck_astral_angle_points_associated_house",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    short_label: Mapped[str] = mapped_column(String(16), nullable=False)
+    full_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    axis: Mapped[str] = mapped_column(String(16), nullable=False)
+    opposite_angle_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    associated_house: Mapped[int] = mapped_column(Integer, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AstralAstrologicalRoleModel(Base):
+    """Rôle interprétatif stable d'un objet astrologique."""
+
+    __tablename__ = "astral_astrological_roles"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AstralCalculationTypeModel(Base):
+    """Mode d'obtention d'un objet astrologique par le moteur."""
+
+    __tablename__ = "astral_calculation_types"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AstralHouseModalityModel(Base):
+    """Modalité structurelle d'une maison astrologique."""
+
+    __tablename__ = "astral_house_modalities"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+
+
+class AstralObjectTypeModel(Base):
+    """Nature physique ou géométrique d'un objet astrologique."""
+
+    __tablename__ = "astral_object_types"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 class LanguageModel(Base):
     """Langue disponible pour les contenus localisés de l'application."""
 

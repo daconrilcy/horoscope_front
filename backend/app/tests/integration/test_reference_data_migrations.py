@@ -115,6 +115,11 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "languages",
         "astral_house_axis_definitions",
         "astral_house_axis_members",
+        "astral_angle_points",
+        "astral_astrological_roles",
+        "astral_calculation_types",
+        "astral_house_modalities",
+        "astral_object_types",
     ):
         assert table_name in head_tables
     assert "house_interpretation_profiles" not in head_tables
@@ -328,6 +333,41 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
             connection.execute(text("SELECT COUNT(*) FROM astral_house_axis_members")).scalar_one()
             == 12
         )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_angle_points")).scalar_one() == 4
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_astrological_roles")).scalar_one()
+            == 6
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_calculation_types")).scalar_one()
+            == 2
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_house_modalities")).scalar_one()
+            == 3
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_object_types")).scalar_one() == 3
+        )
+        assert dict(
+            connection.execute(text("SELECT code, associated_house FROM astral_angle_points")).all()
+        ) == {"asc": 1, "dsc": 7, "mc": 10, "ic": 4}
+        assert {
+            row[0]
+            for row in connection.execute(text("SELECT code FROM astral_astrological_roles")).all()
+        } == {
+            "luminary",
+            "personal_planet",
+            "social_planet",
+            "transpersonal_planet",
+            "angle",
+            "lunar_node",
+        }
+        assert {
+            row[0] for row in connection.execute(text("SELECT name FROM astral_house_modalities"))
+        } == {"angular", "succedent", "cadent"}
         axis_member_rows = connection.execute(
             text(
                 """
@@ -846,7 +886,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260515_0111"
+    assert version == "20260515_0112"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

@@ -16,8 +16,13 @@ from app.infra.db.models.prediction_reference import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAnglePointModel,
     AstralAspectFamilyModel,
+    AstralAstrologicalRoleModel,
+    AstralCalculationTypeModel,
     AstralDignityTypeModel,
+    AstralHouseModalityModel,
+    AstralObjectTypeModel,
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
@@ -28,6 +33,11 @@ from app.infra.db.models.reference import (
 from app.infra.db.repositories.astrology_reference_sources import (
     load_aspect_family_names,
     load_aspect_rows,
+    load_astral_angle_point_rows,
+    load_astral_astrological_role_rows,
+    load_astral_calculation_type_rows,
+    load_astral_house_modality_rows,
+    load_astral_object_type_rows,
     load_astral_system_names,
     load_house_axis_definition_rows,
     load_house_axis_member_rows,
@@ -145,7 +155,77 @@ class ReferenceRepository:
                 aspect.angle = float(source_row["angle"])
                 aspect.family = families[family_name]
         self.db.flush()
+        self.seed_astral_object_reference_defaults()
         self.seed_house_axis_defaults()
+
+    def seed_astral_object_reference_defaults(self) -> None:
+        """Synchronise les référentiels structurels des objets astrologiques."""
+        for row in load_astral_angle_point_rows():
+            code = str(row["code"])
+            angle = self.db.scalar(
+                select(AstralAnglePointModel).where(AstralAnglePointModel.code == code)
+            )
+            payload = {
+                "id": int(row["id"]),
+                "short_label": str(row["short_label"]),
+                "full_name": str(row["full_name"]),
+                "axis": str(row["axis"]),
+                "opposite_angle_code": (
+                    None
+                    if row.get("opposite_angle_code") is None
+                    else str(row["opposite_angle_code"])
+                ),
+                "associated_house": int(row["associated_house"]),
+                "description": str(row["description"]),
+            }
+            if angle is None:
+                self.db.add(AstralAnglePointModel(code=code, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(angle, field_name, value)
+
+        for row in load_astral_astrological_role_rows():
+            self._upsert_code_label_description(AstralAstrologicalRoleModel, row)
+
+        for row in load_astral_calculation_type_rows():
+            self._upsert_code_label_description(AstralCalculationTypeModel, row)
+
+        for row in load_astral_object_type_rows():
+            self._upsert_code_label_description(AstralObjectTypeModel, row)
+
+        for row in load_astral_house_modality_rows():
+            name = str(row["name"])
+            modality = self.db.scalar(
+                select(AstralHouseModalityModel).where(AstralHouseModalityModel.name == name)
+            )
+            if modality is None:
+                self.db.add(AstralHouseModalityModel(id=int(row["id"]), name=name))
+            else:
+                modality.name = name
+
+        self.db.flush()
+
+    def _upsert_code_label_description(
+        self,
+        model_class: type[
+            AstralAstrologicalRoleModel | AstralCalculationTypeModel | AstralObjectTypeModel
+        ],
+        row: dict[str, object],
+    ) -> None:
+        """Synchronise une table simple identifiée par `code`."""
+        code = str(row["code"])
+        model = self.db.scalar(select(model_class).where(model_class.code == code))
+        payload = {
+            "id": int(row["id"]),
+            "label": str(row["label"]),
+            "description": str(row["description"]),
+        }
+        if model is None:
+            self.db.add(model_class(code=code, **payload))
+            return
+        model.label = payload["label"]
+        model.description = payload["description"]
 
     def seed_house_axis_defaults(self) -> None:
         """Synchronise les axes de maisons structurels depuis les sources canoniques."""
