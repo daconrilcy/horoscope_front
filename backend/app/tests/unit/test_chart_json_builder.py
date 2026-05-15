@@ -107,6 +107,12 @@ def mock_natal_result():
         orb=0.3,
         orb_used=0.3,
         orb_max=6.0,
+        family="major",
+        is_major=True,
+        is_minor=False,
+        default_valence="positive",
+        interpretive_valence="harmonious",
+        energy_type="harmonious_flow",
     )
 
     result.aspects = [a1]
@@ -168,7 +174,7 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert chart["aspects"][0]["is_exact"] is True
     assert chart["aspects"][0]["is_tight"] is True
     assert chart["aspects"][0]["interpretive_valence"] == "harmonious"
-    assert chart["aspects"][0]["energy_type"] == "flow"
+    assert chart["aspects"][0]["energy_type"] == "harmonious_flow"
     assert chart["aspects"][0]["applying"] is None
     assert chart["meta"]["aspects_applying_available"] is False
 

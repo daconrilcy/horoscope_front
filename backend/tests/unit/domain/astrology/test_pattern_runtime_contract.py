@@ -14,6 +14,15 @@ from app.domain.astrology.runtime.pattern_runtime_data import (
     PatternType,
 )
 
+ASPECT_META = {
+    "family": "major",
+    "is_major": True,
+    "is_minor": False,
+    "default_valence": "positive",
+    "interpretive_valence": "harmonious",
+    "energy_type": "harmonious_flow",
+}
+
 
 def test_pattern_runtime_references_existing_aspect_runtime() -> None:
     """Le pattern reference les runtime existants au lieu de les copier."""
@@ -23,7 +32,9 @@ def test_pattern_runtime_references_existing_aspect_runtime() -> None:
         planet_b="moon",
         angle=120.0,
         orb=0.3,
+        orb_used=0.3,
         orb_max=6.0,
+        **ASPECT_META,
     ).aspect_runtime
     assert runtime is not None
 
@@ -52,7 +63,9 @@ def test_pattern_runtime_validates_confidence() -> None:
         planet_b="moon",
         angle=120.0,
         orb=0.3,
+        orb_used=0.3,
         orb_max=6.0,
+        **ASPECT_META,
     ).aspect_runtime
     assert runtime is not None
 

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
-from app.domain.astrology.celestial_runtime_catalog import is_major_aspect_code
 from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
@@ -155,7 +154,7 @@ def build_natal_chart_summary(
 
     lines.append("")
     lines.append("ASPECTS MAJEURS:")
-    major_aspects = [a for a in natal_result.aspects if is_major_aspect_code(a.aspect_code)]
+    major_aspects = [a for a in natal_result.aspects if a.is_major]
     for aspect in major_aspects[:6]:
         planet_a_name = PLANET_NAMES_FR.get(aspect.planet_a, aspect.planet_a)
         planet_b_name = PLANET_NAMES_FR.get(aspect.planet_b, aspect.planet_b)
@@ -196,7 +195,7 @@ def build_chat_natal_hint(natal_result: "NatalResult", degraded_mode: str | None
         parts.append(f"Ascendant {asc_name}")
 
     major = sorted(
-        [a for a in natal_result.aspects if is_major_aspect_code(a.aspect_code)],
+        [a for a in natal_result.aspects if a.is_major],
         key=lambda a: a.orb,
     )[:3]
     for aspect in major:

@@ -11,6 +11,7 @@ from app.domain.astrology.runtime.dominant_aspect_runtime_data import (
 
 
 def _runtime(aspect_code: str, orb: float) -> object:
+    family = "major"
     runtime = AspectResult(
         aspect_code=aspect_code,
         planet_a="sun",
@@ -19,6 +20,12 @@ def _runtime(aspect_code: str, orb: float) -> object:
         orb=orb,
         orb_used=orb,
         orb_max=6.0,
+        family=family,
+        is_major=family == "major",
+        is_minor=False,
+        default_valence="positive",
+        interpretive_valence="harmonious",
+        energy_type="harmonious_flow",
     ).aspect_runtime
     assert runtime is not None
     return runtime

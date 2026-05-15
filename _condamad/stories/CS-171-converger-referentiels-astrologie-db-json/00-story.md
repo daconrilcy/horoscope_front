@@ -230,6 +230,7 @@ After implementation:
   - `RG-103` - les modifiers et poids restent separes par owner.
   - `RG-104` - les patterns restent sous runtime astrology.
   - `RG-105` - prediction ne choisit pas la semantique des aspects.
+  - `RG-106` - les calculateurs astrology consomment des contrats types sans anciens tuples, champs legacy d'orbes, constantes recopiees ni fallback silencieux.
 - Non-applicable invariants:
   - `RG-001` a `RG-090` - ces invariants protegent API, frontend, LLM, Stripe ou prediction hors referentiels astrology touches par cette story.
   - `RG-094` - la projection publique des maitres de maisons n'est pas modifiee.
@@ -253,6 +254,7 @@ After implementation:
 | AC8 | La validation standard backend passe dans le venv. | `.\.venv\Scripts\Activate.ps1; cd backend; ruff format .; ruff check .; pytest -q`. |
 | AC9 | Les helpers dupliques audites sont converges vers un owner unique. | Guard pytest + tests astrology cibles + scan. |
 | AC10 | Les constantes catalogues redondantes auditees sont supprimees du code actif. | Guard pytest + scan. |
+| AC11 | Les contrats de calcul d'aspects sont types et bloquent les anciennes formes legacy. | `pytest -q app/tests/unit/test_astrology_reference_catalog_guard.py app/tests/unit/test_aspects_calculator.py app/tests/unit/test_aspect_orb_overrides.py`. |
 
 ## 8. Implementation Tasks
 

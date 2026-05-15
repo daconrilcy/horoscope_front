@@ -13,7 +13,6 @@ from app.domain.astrology.celestial_runtime_catalog import (
     BODY_CLASS_BY_CODE,
     LIGHT_BODY_CODES,
     OUTER_PLANET_CODES,
-    is_major_aspect_code,
 )
 
 from .aspect_strength_contracts import (
@@ -22,7 +21,6 @@ from .aspect_strength_contracts import (
     resolve_aspect_strength_level,
 )
 
-MINOR_ASPECTS = {"semi_sextile", "semi_square", "quincunx", "sesquiquadrate"}
 EXACT_ORB_DEG = 0.5
 TIGHT_RATIO = 0.25
 MODERATE_RATIO = 0.6
@@ -38,20 +36,22 @@ class AspectStrengthEvaluator:
         orb_used: float,
         orb_max: float,
         participants: Iterable[str],
+        is_major: bool,
+        is_minor: bool,
         phase_type: str | None = None,
     ) -> AspectStrengthRuntimeData:
         """Retourne le score normalise, le niveau et les raisons enumerees."""
-        normalized_code = aspect_code.strip().lower()
+        del aspect_code
         participant_codes = tuple(code.strip().lower() for code in participants)
         safe_orb_max = max(float(orb_max), 0.01)
         ratio = min(max(float(orb_used) / safe_orb_max, 0.0), 1.0)
         score = 1.0 - ratio
         reasons: list[AspectStrengthReason] = []
 
-        if is_major_aspect_code(normalized_code):
+        if is_major:
             score += 0.12
             reasons.append(AspectStrengthReason.MAJOR_ASPECT)
-        elif normalized_code in MINOR_ASPECTS:
+        elif is_minor:
             score += 0.04
             reasons.append(AspectStrengthReason.MINOR_ASPECT)
         else:
@@ -95,16 +95,6 @@ class AspectStrengthEvaluator:
             is_tight=ratio <= TIGHT_RATIO,
             reasons=tuple(reasons),
         )
-
-
-def aspect_family(aspect_code: str) -> str:
-    """Retourne la famille astrologique courte d'un aspect."""
-    normalized_code = aspect_code.strip().lower()
-    if is_major_aspect_code(normalized_code):
-        return "major"
-    if normalized_code in MINOR_ASPECTS:
-        return "minor"
-    return "advanced"
 
 
 def participant_class(code: str) -> str:

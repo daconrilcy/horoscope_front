@@ -51,13 +51,29 @@ def _make_reference_data(
     planets = [{"code": c, "name": c.capitalize()} for c in codes]
     signs = [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}]
     houses = [{"number": n, "name": f"House {n}"} for n in range(1, house_count + 1)]
-    aspects = [{"code": "conjunction", "name": "Conjunction", "angle": 0, "default_orb_deg": 8.0}]
+    aspects = [
+        {
+            "code": "conjunction",
+            "name": "Conjunction",
+            "angle": 0,
+            "family": "major",
+            "default_orb_deg": 8.0,
+            "is_enabled": True,
+            "is_major": True,
+            "is_minor": False,
+            "default_valence": "contextual",
+            "interpretive_valence": "amplifying",
+            "energy_type": "fusion_intensification",
+        }
+    ]
     return {
         "version": "1.0.0",
         "planets": planets,
         "signs": signs,
         "houses": houses,
         "aspects": aspects,
+        "aspect_orb_rules": [],
+        "astral_systems": [{"code": "modern", "name": "modern", "inherits_from_system_code": None}],
         "sign_rulerships": COMPLETE_SIGN_RULERS,
     }
 

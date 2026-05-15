@@ -1,8 +1,8 @@
 """Tests unitaires pour le schema de ruleset aspects schools versionnees (story 24-1).
 
 Couvre:
-- AC1: validation schema ruleset — code, angle, default_orb_deg obligatoires avec bornes
-- AC1: orb_luminaries_override_deg et orb_pair_overrides valides/invalides
+- AC1: validation schema ruleset — code, angle, famille, orbe et sémantique obligatoires
+- AC1: anciens champs d'orbes refuses sans compatibilite
 - AC2: serialization metadata — aspect_school et aspect_rules_version presents
 """
 
@@ -52,12 +52,35 @@ def _make_birth_input(
     )
 
 
+def _aspect_payload(code: str, angle: float, orb: float) -> dict[str, object]:
+    """Construit un aspect référentiel complet pour les tests."""
+    return {
+        "code": code,
+        "angle": angle,
+        "family": "major",
+        "default_orb_deg": orb,
+        "is_enabled": True,
+        "is_major": True,
+        "is_minor": False,
+        "default_valence": "contextual",
+        "interpretive_valence": "amplifying",
+        "energy_type": "fusion_intensification",
+    }
+
+
+def _legacy_aspect_payload(field_name: str, value: object) -> dict[str, object]:
+    """Construit un aspect complet portant un champ legacy interdit."""
+    payload = _aspect_payload("conjunction", 0, 8.0)
+    payload[field_name] = value
+    return payload
+
+
 def _make_reference_data(
     aspects: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
     default_aspects = [
-        {"code": "conjunction", "angle": 0, "default_orb_deg": 8.0},
-        {"code": "opposition", "angle": 180, "default_orb_deg": 8.0},
+        _aspect_payload("conjunction", 0, 8.0),
+        _aspect_payload("opposition", 180, 8.0),
     ]
     return {
         "version": "1.0.0",
@@ -65,6 +88,8 @@ def _make_reference_data(
         "signs": [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}],
         "houses": [{"number": n, "name": f"House {n}"} for n in range(1, 13)],
         "aspects": aspects if aspects is not None else default_aspects,
+        "aspect_orb_rules": [],
+        "astral_systems": [{"code": "modern", "name": "modern", "inherits_from_system_code": None}],
         "sign_rulerships": COMPLETE_SIGN_RULERS,
     }
 
@@ -93,7 +118,7 @@ class TestAspectRulesetSchemaValidation:
         """Un aspect valide avec code, angle, default_orb_deg ne leve pas d'erreur."""
         ref = _make_reference_data(
             aspects=[
-                {"code": "conjunction", "angle": 0, "default_orb_deg": 8.0},
+                _aspect_payload("conjunction", 0, 8.0),
             ]
         )
         monkeypatch.setattr(
@@ -119,7 +144,11 @@ class TestAspectRulesetSchemaValidation:
         """Un aspect sans default_orb_deg est invalide et leve NatalCalculationError."""
         ref = _make_reference_data(
             aspects=[
-                {"code": "conjunction", "angle": 0},  # pas de default_orb_deg
+                {
+                    key: value
+                    for key, value in _aspect_payload("conjunction", 0, 8.0).items()
+                    if key != "default_orb_deg"
+                },
             ]
         )
         monkeypatch.setattr(
@@ -147,7 +176,7 @@ class TestAspectRulesetSchemaValidation:
         """default_orb_deg=0 (aspect exact) est desormais valide."""
         ref = _make_reference_data(
             aspects=[
-                {"code": "conjunction", "angle": 0, "default_orb_deg": 0.0},
+                _aspect_payload("conjunction", 0, 0.0),
             ]
         )
         monkeypatch.setattr(
@@ -175,7 +204,7 @@ class TestAspectRulesetSchemaValidation:
         """default_orb_deg=16.0 (hors bornes: doit etre <= MAX_ORB_DEG=15) est invalide."""
         ref = _make_reference_data(
             aspects=[
-                {"code": "conjunction", "angle": 0, "default_orb_deg": 16.0},
+                _aspect_payload("conjunction", 0, 16.0),
             ]
         )
         monkeypatch.setattr(
@@ -204,7 +233,7 @@ class TestAspectRulesetSchemaValidation:
         """default_orb_deg=15.0 (egal a MAX_ORB_DEG=15) est valide."""
         ref = _make_reference_data(
             aspects=[
-                {"code": "conjunction", "angle": 0, "default_orb_deg": 15.0},
+                _aspect_payload("conjunction", 0, 15.0),
             ]
         )
         monkeypatch.setattr(
@@ -228,24 +257,17 @@ class TestAspectRulesetSchemaValidation:
 
 
 # ---------------------------------------------------------------------------
-# AC1 — Overrides: orb_luminaries_override_deg et orb_pair_overrides
+# AC1 — anciens overrides interdits
 # ---------------------------------------------------------------------------
 
 
 class TestAspectOrbOverrides:
-    """Validation des overrides d'orbes dans le ruleset."""
+    """Validation du refus des overrides d'orbes legacy."""
 
-    def test_orb_luminaries_override_deg_valid(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """orb_luminaries_override_deg valide est accepte."""
+    def test_orb_luminaries_override_deg_is_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """orb_luminaries_override_deg n'est plus accepte."""
         ref = _make_reference_data(
-            aspects=[
-                {
-                    "code": "conjunction",
-                    "angle": 0,
-                    "default_orb_deg": 8.0,
-                    "orb_luminaries_override_deg": 10.0,
-                },
-            ]
+            aspects=[_legacy_aspect_payload("orb_luminaries_override_deg", 10.0)]
         )
         monkeypatch.setattr(
             "app.domain.astrology.natal_calculation._build_swisseph_positions",
@@ -256,29 +278,23 @@ class TestAspectOrbOverrides:
             _swisseph_houses_mock,
         )
 
-        result = build_natal_result(
-            birth_input=_make_birth_input(),
-            reference_data=ref,
-            ruleset_version="1.0.0",
-            engine="swisseph",
-            birth_lat=48.85,
-            birth_lon=2.35,
-        )
-        assert result is not None
+        with pytest.raises(NatalCalculationError) as exc_info:
+            build_natal_result(
+                birth_input=_make_birth_input(),
+                reference_data=ref,
+                ruleset_version="1.0.0",
+                engine="swisseph",
+                birth_lat=48.85,
+                birth_lon=2.35,
+            )
+        assert exc_info.value.details["reason"] == "legacy_orb_fields_forbidden"
 
     def test_orb_luminaries_override_deg_out_of_bounds_raises(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """orb_luminaries_override_deg hors bornes leve NatalCalculationError."""
         ref = _make_reference_data(
-            aspects=[
-                {
-                    "code": "conjunction",
-                    "angle": 0,
-                    "default_orb_deg": 8.0,
-                    "orb_luminaries_override_deg": 20.0,  # > MAX_ORB_DEG
-                },
-            ]
+            aspects=[_legacy_aspect_payload("orb_luminaries_override_deg", 20.0)]
         )
         monkeypatch.setattr(
             "app.domain.astrology.natal_calculation._build_swisseph_positions",
@@ -301,16 +317,9 @@ class TestAspectOrbOverrides:
         assert exc_info.value.code == "invalid_reference_data"
 
     def test_orb_pair_overrides_out_of_bounds_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """orb_pair_overrides avec valeur hors bornes leve NatalCalculationError."""
+        """orb_pair_overrides est refuse avant validation de bornes."""
         ref = _make_reference_data(
-            aspects=[
-                {
-                    "code": "conjunction",
-                    "angle": 0,
-                    "default_orb_deg": 8.0,
-                    "orb_pair_overrides": {"sun-moon": 20.0},  # > MAX_ORB_DEG
-                },
-            ]
+            aspects=[_legacy_aspect_payload("orb_pair_overrides", {"sun-moon": 20.0})]
         )
         monkeypatch.setattr(
             "app.domain.astrology.natal_calculation._build_swisseph_positions",
@@ -332,17 +341,10 @@ class TestAspectOrbOverrides:
             )
         assert exc_info.value.code == "invalid_reference_data"
 
-    def test_orb_pair_overrides_zero_is_valid(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """orb_pair_overrides avec valeur 0 est desormais valide."""
+    def test_orb_pair_overrides_zero_is_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """orb_pair_overrides n'est plus accepte, meme avec une valeur bornee."""
         ref = _make_reference_data(
-            aspects=[
-                {
-                    "code": "conjunction",
-                    "angle": 0,
-                    "default_orb_deg": 8.0,
-                    "orb_pair_overrides": {"sun-moon": 0.0},
-                },
-            ]
+            aspects=[_legacy_aspect_payload("orb_pair_overrides", {"sun-moon": 0.0})]
         )
         monkeypatch.setattr(
             "app.domain.astrology.natal_calculation._build_swisseph_positions",
@@ -353,15 +355,16 @@ class TestAspectOrbOverrides:
             _swisseph_houses_mock,
         )
 
-        result = build_natal_result(
-            birth_input=_make_birth_input(),
-            reference_data=ref,
-            ruleset_version="1.0.0",
-            engine="swisseph",
-            birth_lat=48.85,
-            birth_lon=2.35,
-        )
-        assert result is not None
+        with pytest.raises(NatalCalculationError) as exc_info:
+            build_natal_result(
+                birth_input=_make_birth_input(),
+                reference_data=ref,
+                ruleset_version="1.0.0",
+                engine="swisseph",
+                birth_lat=48.85,
+                birth_lon=2.35,
+            )
+        assert exc_info.value.details["reason"] == "legacy_orb_fields_forbidden"
 
 
 # ---------------------------------------------------------------------------

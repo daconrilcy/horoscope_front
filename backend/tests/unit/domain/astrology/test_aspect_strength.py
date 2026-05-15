@@ -17,6 +17,8 @@ def test_aspect_strength_uses_enum_reasons_and_normalized_score() -> None:
         orb_used=0.3,
         orb_max=6.0,
         participants=("sun", "moon"),
+        is_major=True,
+        is_minor=False,
     )
 
     assert strength.normalized_score == 1.0
@@ -37,12 +39,16 @@ def test_aspect_strength_reduces_score_for_wide_orb() -> None:
         orb_used=0.5,
         orb_max=6.0,
         participants=("mars", "saturn"),
+        is_major=True,
+        is_minor=False,
     )
     wide = evaluator.evaluate(
         aspect_code="square",
         orb_used=5.5,
         orb_max=6.0,
         participants=("mars", "saturn"),
+        is_major=True,
+        is_minor=False,
     )
 
     assert tight.normalized_score > wide.normalized_score

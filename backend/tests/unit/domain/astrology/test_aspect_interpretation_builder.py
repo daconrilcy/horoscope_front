@@ -10,6 +10,15 @@ from app.domain.astrology.interpretation.aspect_interpretation_facts import (
 )
 from app.domain.astrology.natal_calculation import AspectResult
 
+ASPECT_META = {
+    "family": "major",
+    "is_major": True,
+    "is_minor": False,
+    "default_valence": "positive",
+    "interpretive_valence": "harmonious",
+    "energy_type": "harmonious_flow",
+}
+
 
 def _profile() -> dict[str, object]:
     return {
@@ -32,7 +41,9 @@ def _runtime_and_facts() -> tuple[object, AspectInterpretationFacts]:
         planet_b="moon",
         angle=120.0,
         orb=0.3,
+        orb_used=0.3,
         orb_max=6.0,
+        **ASPECT_META,
     ).aspect_runtime
     assert runtime is not None
     return runtime, AspectInterpretationFacts.from_profile(runtime=runtime, profile=_profile())

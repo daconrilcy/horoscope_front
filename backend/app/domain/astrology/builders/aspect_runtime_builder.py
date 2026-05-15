@@ -11,11 +11,9 @@ from typing import Protocol
 from app.domain.astrology.celestial_runtime_catalog import (
     LIGHT_BODY_CODES,
     OUTER_PLANET_CODES,
-    is_major_aspect_code,
 )
 from app.domain.astrology.interpretation.aspect_strength import (
     AspectStrengthEvaluator,
-    aspect_family,
 )
 from app.domain.astrology.runtime.aspect_modifiers import (
     AspectModifierRuntimeData,
@@ -31,21 +29,6 @@ from app.domain.astrology.runtime.aspect_runtime_data import (
     AspectRuntimeData,
 )
 
-VALENCE_BY_ASPECT = {
-    "conjunction": "contextual",
-    "opposition": "polarized",
-    "trine": "harmonious",
-    "square": "dynamic",
-    "sextile": "constructive",
-}
-ENERGY_BY_ASPECT = {
-    "conjunction": "fusion",
-    "opposition": "polarity",
-    "trine": "flow",
-    "square": "friction",
-    "sextile": "opportunity",
-}
-
 
 class AspectLike(Protocol):
     """Interface minimale d'un resultat aspect consommable par le builder."""
@@ -55,15 +38,21 @@ class AspectLike(Protocol):
     planet_b: str
     angle: float
     orb: float
-    orb_used: float | None
-    orb_max: float | None
+    orb_used: float
+    orb_max: float
+    family: str
+    is_major: bool
+    is_minor: bool
+    default_valence: str
+    interpretive_valence: str
+    energy_type: str
 
 
 def build_aspect_runtime_data(aspect: AspectLike) -> AspectRuntimeData:
     """Construit le runtime enrichi depuis un aspect plat existant."""
     code = aspect.aspect_code.strip().lower()
-    orb_used = float(aspect.orb_used if aspect.orb_used is not None else aspect.orb)
-    orb_max = float(aspect.orb_max if aspect.orb_max is not None else orb_used)
+    orb_used = float(aspect.orb_used)
+    orb_max = float(aspect.orb_max)
     safe_orb_max = max(orb_max, 0.01)
     ratio = round(min(max(orb_used / safe_orb_max, 0.0), 1.0), 4)
     participants = (aspect.planet_a.strip().lower(), aspect.planet_b.strip().lower())
@@ -72,12 +61,14 @@ def build_aspect_runtime_data(aspect: AspectLike) -> AspectRuntimeData:
         orb_used=orb_used,
         orb_max=safe_orb_max,
         participants=participants,
+        is_major=aspect.is_major,
+        is_minor=aspect.is_minor,
     )
     modifiers = _build_modifiers(strength.is_exact, strength.is_tight, participants)
     return AspectRuntimeData(
         aspect=AspectIdentityRuntimeData(
             code=code,
-            family=aspect_family(code),
+            family=aspect.family.strip().lower(),
             angle=float(aspect.angle),
         ),
         participants=AspectParticipantsRuntimeData(
@@ -92,12 +83,12 @@ def build_aspect_runtime_data(aspect: AspectLike) -> AspectRuntimeData:
         ),
         phase=AspectPhaseRuntimeData(type="unknown"),
         interpretation=AspectInterpretationRuntimeData(
-            default_valence=VALENCE_BY_ASPECT.get(code, "contextual"),
-            interpretive_valence=VALENCE_BY_ASPECT.get(code, "contextual"),
-            energy_type=ENERGY_BY_ASPECT.get(code, aspect_family(code)),
+            default_valence=aspect.default_valence,
+            interpretive_valence=aspect.interpretive_valence,
+            energy_type=aspect.energy_type,
         ),
         metadata=AspectMetadataRuntimeData(
-            is_major=is_major_aspect_code(code),
+            is_major=aspect.is_major,
             is_exact=strength.is_exact,
             is_tight=strength.is_tight,
         ),

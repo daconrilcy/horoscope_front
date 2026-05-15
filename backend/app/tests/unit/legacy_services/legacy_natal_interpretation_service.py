@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
-from app.domain.astrology.celestial_runtime_catalog import is_major_aspect_code
 from app.domain.llm.runtime.adapter import AIEngineAdapter, AIEngineAdapterError
 from app.services.llm_generation.guidance.current_context import build_current_prompt_context
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
@@ -211,7 +210,7 @@ def build_natal_chart_summary(
 
     lines.append("")
     lines.append("ASPECTS MAJEURS:")
-    major_aspects = [a for a in natal_result.aspects if is_major_aspect_code(a.aspect_code)]
+    major_aspects = [a for a in natal_result.aspects if a.is_major]
     for aspect in major_aspects[:6]:
         planet_a_name = PLANET_NAMES_FR.get(aspect.planet_a, aspect.planet_a)
         planet_b_name = PLANET_NAMES_FR.get(aspect.planet_b, aspect.planet_b)
@@ -270,7 +269,7 @@ def build_chat_natal_hint(
 
     # Top 3 major aspects by tightest orb
     major = sorted(
-        [a for a in natal_result.aspects if is_major_aspect_code(a.aspect_code)],
+        [a for a in natal_result.aspects if a.is_major],
         key=lambda a: a.orb,
     )[:3]
     for asp in major:

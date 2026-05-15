@@ -60,7 +60,19 @@ def _make_natal_result() -> NatalResult:
         ],
         aspects=[
             AspectResult(
-                aspect_code="conjunction", planet_a="sun", planet_b="moon", angle=0.0, orb=2.0
+                aspect_code="conjunction",
+                planet_a="sun",
+                planet_b="moon",
+                angle=0.0,
+                orb=2.0,
+                orb_used=2.0,
+                orb_max=8.0,
+                family="major",
+                is_major=True,
+                is_minor=False,
+                default_valence="contextual",
+                interpretive_valence="amplifying",
+                energy_type="fusion_intensification",
             ),
         ],
     )

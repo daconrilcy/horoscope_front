@@ -22,12 +22,9 @@ BODY_CLASS_BY_CODE = {
 }
 
 
-def is_major_aspect_code(aspect_code: str) -> bool:
-    """Indique si un code d'aspect appartient a la famille majeure canonique."""
-    return aspect_code.strip().lower() in {
-        "conjunction",
-        "opposition",
-        "trine",
-        "square",
-        "sextile",
-    }
+def is_major_aspect_code(aspect: object) -> bool:
+    """Lit le statut majeur depuis un contrat d'aspect déjà validé."""
+    is_major = getattr(aspect, "is_major", None)
+    if isinstance(is_major, bool):
+        return is_major
+    raise TypeError("is_major_aspect_code requires a typed aspect contract")

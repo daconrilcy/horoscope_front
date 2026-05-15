@@ -1,21 +1,25 @@
+"""Calcule et assigne les maisons simplifiées sans fallback silencieux."""
+
 from app.domain.astrology.angle_utils import contains_angle
 
 HOUSE_SYSTEM_CODE = "equal"
 
 
 def assign_house_number(longitude: float, houses: list[dict[str, object]]) -> int:
+    """Retourne la maison contenant une longitude ou échoue explicitement."""
     if not houses:
-        return 1
+        raise ValueError("house assignment requires at least one house cusp")
     ordered = sorted(houses, key=lambda item: int(item["number"]))
     for index, house in enumerate(ordered):
         start = float(house["cusp_longitude"])
         end = float(ordered[(index + 1) % len(ordered)]["cusp_longitude"])
         if contains_angle(longitude, start, end):
             return int(house["number"])
-    return int(ordered[0]["number"])
+    raise ValueError(f"house assignment failed for longitude {longitude}")
 
 
 def calculate_houses(julian_day: float, house_numbers: list[int]) -> list[dict[str, object]]:
+    """Produit des cuspides égales pour le moteur simplifié."""
     ascendant_longitude = (julian_day * 0.5) % 360.0
     houses: list[dict[str, object]] = []
     ordered_numbers = sorted(house_numbers)

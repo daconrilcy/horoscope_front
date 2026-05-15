@@ -18,14 +18,18 @@ from app.domain.astrology.calculators import (
     calculate_major_aspects,
     calculate_planet_positions,
 )
+from app.domain.astrology.calculators.aspects import build_aspect_body_from_position
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
-from app.domain.astrology.celestial_runtime_catalog import is_major_aspect_code
 from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResolutionError,
     HouseRulerResolver,
     HouseRulerResult,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
+from app.domain.astrology.runtime.aspect_calculation_contracts import (
+    AspectDefinitionRuntimeData,
+    AspectOrbRuleRuntimeData,
+)
 from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import HouseRuntimeData
 from app.domain.astrology.zodiac import normalize_360, sign_from_longitude
@@ -49,18 +53,19 @@ class AspectResult(BaseModel):
     planet_a: str
     planet_b: str
     angle: float
-    orb: float  # actual angular deviation (backward compat)
-    orb_used: float | None = None  # actual angular deviation, story 24-2 (same as orb)
-    orb_max: float | None = None  # resolved max threshold by priority chain, story 24-2
+    orb: float
+    orb_used: float
+    orb_max: float
+    family: str
+    is_major: bool
+    is_minor: bool
+    default_valence: str
+    interpretive_valence: str
+    energy_type: str
     aspect_runtime: AspectRuntimeData | None = Field(default=None, exclude=True)
 
     @model_validator(mode="after")
     def _fill_orb_fields(self) -> AspectResult:
-        if self.orb_used is None:
-            self.orb_used = self.orb
-        if self.orb_max is None:
-            # Backward compatibility for legacy payloads that only carried `orb`.
-            self.orb_max = self.orb_used
         if self.aspect_runtime is None:
             self.aspect_runtime = build_aspect_runtime_data(self)
         return self
@@ -135,6 +140,29 @@ def _extract_sign_rulerships(reference_data: dict[str, object]) -> dict[str, str
     if not isinstance(raw, dict):
         return {}
     return {str(sign): str(planet) for sign, planet in raw.items()}
+
+
+def _build_system_inheritance(
+    version: str,
+    astral_systems_data: list[object] | None,
+) -> dict[str, str | None]:
+    """Valide la carte d'héritage des systèmes astrologiques."""
+    if astral_systems_data is None:
+        _raise_invalid_reference(version, "astral_systems", "missing_or_empty")
+    inheritance: dict[str, str | None] = {}
+    for item in astral_systems_data:
+        if not isinstance(item, dict):
+            _raise_invalid_reference(version, "astral_systems", "invalid_entry")
+        code = item.get("code") or item.get("name")
+        if not isinstance(code, str) or not code.strip():
+            _raise_invalid_reference(version, "astral_systems", "missing_code")
+        parent = item.get("inherits_from_system_code")
+        if parent is not None and (not isinstance(parent, str) or not parent.strip()):
+            _raise_invalid_reference(version, "astral_systems", "invalid_parent")
+        inheritance[code.strip().lower()] = None if parent is None else parent.strip().lower()
+    if not inheritance:
+        _raise_invalid_reference(version, "astral_systems", "missing_or_empty")
+    return inheritance
 
 
 def _build_swisseph_positions(
@@ -399,110 +427,67 @@ def build_natal_result(
                 },
             )
 
-    aspect_definitions: list[dict[str, object]] = []
+    aspect_definitions: list[AspectDefinitionRuntimeData] = []
     for item in aspects_data:
         if not isinstance(item, dict):
             _raise_invalid_reference(version, "aspects", "invalid_entry")
-        if "code" not in item or "angle" not in item:
-            _raise_invalid_reference(version, "aspects", "missing_code_or_angle")
-        code_value = item["code"]
-        if not isinstance(code_value, str) or not code_value.strip():
-            _raise_invalid_reference(version, "aspects", "invalid_code")
+        if {
+            "orb_" + "luminaries_override_deg",
+            "orb_" + "pair_overrides",
+            "orb_" + "luminaries",
+            "orb_" + "pairs",
+            "orb_" + "overrides",
+        } & set(item):
+            _raise_invalid_reference(version, "aspects", "legacy_orb_fields_forbidden")
         try:
-            angle_value = float(item["angle"])
-        except (TypeError, ValueError):
-            _raise_invalid_reference(version, "aspects", "invalid_angle")
-
-        # AC1 story 24-1: default_orb_deg is required and must be within strict bounds.
-        if "default_orb_deg" not in item:
-            _raise_invalid_reference(version, "aspects", "missing_default_orb_deg")
-        try:
-            default_orb_value = float(item["default_orb_deg"])
-        except (TypeError, ValueError):
-            _raise_invalid_reference(version, "aspects", "invalid_default_orb_deg")
-        # Fix: Allow 0.0 for exact aspects (MIN_ORB_DEG is 0.0).
+            aspect_definition = AspectDefinitionRuntimeData.from_mapping(item)
+        except ValueError as error:
+            _raise_invalid_reference(version, "aspects", str(error))
+        default_orb_value = aspect_definition.default_orb_deg
         orb_in_bounds = (
             isfinite(default_orb_value) and MIN_ORB_DEG <= default_orb_value <= MAX_ORB_DEG
         )
         if not orb_in_bounds:
             _raise_invalid_reference(version, "aspects", "invalid_default_orb_deg")
-
-        aspect_definition: dict[str, object] = {
-            "code": code_value.strip(),
-            "angle": angle_value,
-            "default_orb_deg": default_orb_value,
-        }
-
-        # story 24-1: support orb_luminaries_override_deg (new) and orb_luminaries (legacy).
-        # Validate bounds when provided.
-        if "orb_luminaries_override_deg" in item:
-            orb_lum_raw = item.get("orb_luminaries_override_deg")
-        else:
-            orb_lum_raw = item.get("orb_luminaries")
-        if orb_lum_raw is not None:
-            try:
-                orb_lum_value = float(orb_lum_raw)
-            except (TypeError, ValueError):
-                _raise_invalid_reference(version, "aspects", "invalid_orb_luminaries_override_deg")
-            lum_in_bounds = isfinite(orb_lum_value) and MIN_ORB_DEG <= orb_lum_value <= MAX_ORB_DEG
-            if not lum_in_bounds:
-                _raise_invalid_reference(version, "aspects", "invalid_orb_luminaries_override_deg")
-            aspect_definition["orb_luminaries"] = orb_lum_value
-
-        # AC1 story 24-1: validate orb_pair_overrides values within bounds.
-        # Prioritize 'orb_pair_overrides' then 'orb_pairs' then 'orb_overrides'.
-        pair_overrides_raw = item.get("orb_pair_overrides")
-        if pair_overrides_raw is None:
-            pair_overrides_raw = item.get("orb_pairs") or item.get("orb_overrides")
-
-        if pair_overrides_raw is not None:
-            if not isinstance(pair_overrides_raw, dict):
-                _raise_invalid_reference(version, "aspects", "invalid_orb_pair_overrides")
-            for pair_val in pair_overrides_raw.values():
-                try:
-                    pair_orb = float(pair_val)
-                except (TypeError, ValueError):
-                    _raise_invalid_reference(version, "aspects", "invalid_orb_pair_override_value")
-                pair_in_bounds = isfinite(pair_orb) and MIN_ORB_DEG <= pair_orb <= MAX_ORB_DEG
-                if not pair_in_bounds:
-                    _raise_invalid_reference(version, "aspects", "invalid_orb_pair_override_value")
-            aspect_definition["orb_pair_overrides"] = pair_overrides_raw
-
         aspect_definitions.append(aspect_definition)
     if not aspect_definitions:
         _raise_invalid_reference(version, "aspects", "missing_code_or_angle")
-    aspect_definitions.sort(key=lambda item: (float(item["angle"]), str(item["code"])))
+    aspect_definitions.sort(key=lambda item: (item.angle, item.code))
 
-    # story 24-2 Task 3: limit to major aspects only
     major_aspect_definitions = [
-        d for d in aspect_definitions if is_major_aspect_code(str(d.get("code", "")))
+        definition
+        for definition in aspect_definitions
+        if definition.is_major and definition.system_code == aspect_school_code
     ]
-    aspect_orb_rules: list[dict[str, object]] | None = None
-    if isinstance(aspect_orb_rules_data, list):
-        aspect_orb_rules = []
-        for item in aspect_orb_rules_data:
-            if not isinstance(item, dict):
-                _raise_invalid_reference(version, "aspect_orb_rules", "invalid_entry")
-            if "aspect_code" not in item or "orb_deg" not in item:
-                _raise_invalid_reference(version, "aspect_orb_rules", "missing_aspect_or_orb")
-            try:
-                orb_rule_value = float(item["orb_deg"])
-            except (TypeError, ValueError):
-                _raise_invalid_reference(version, "aspect_orb_rules", "invalid_orb_deg")
+    if not isinstance(aspect_orb_rules_data, list):
+        _raise_invalid_reference(version, "aspect_orb_rules", "missing_or_empty")
+    aspect_orb_rules: list[AspectOrbRuleRuntimeData] = []
+    for item in aspect_orb_rules_data:
+        if not isinstance(item, dict):
+            _raise_invalid_reference(version, "aspect_orb_rules", "invalid_entry")
+        try:
+            aspect_orb_rule = AspectOrbRuleRuntimeData.from_mapping(item)
+        except ValueError as error:
+            _raise_invalid_reference(version, "aspect_orb_rules", str(error))
+        orb_rule_value = aspect_orb_rule.orb_deg
+        if aspect_orb_rule.is_enabled:
             rule_in_bounds = (
                 isfinite(orb_rule_value) and MIN_ORB_DEG < orb_rule_value <= MAX_ORB_DEG
             )
             if not rule_in_bounds:
                 _raise_invalid_reference(version, "aspect_orb_rules", "invalid_orb_deg")
-            aspect_orb_rules.append(dict(item))
+        aspect_orb_rules.append(aspect_orb_rule)
+
+    system_inheritance = _build_system_inheritance(version, astral_systems_data)
+    aspect_positions = [build_aspect_body_from_position(position) for position in positions_raw]
 
     aspects_raw = calculate_major_aspects(
-        positions_raw,
+        aspect_positions,
         major_aspect_definitions,
         orb_rules=aspect_orb_rules,
         system_code=aspect_school_code,
         calculation_context="natal",
-        system_inheritance=astral_systems_data,
+        system_inheritance=system_inheritance,
     )
     if timeout_check is not None:
         timeout_check()

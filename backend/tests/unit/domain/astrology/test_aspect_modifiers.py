@@ -9,6 +9,15 @@ from app.domain.astrology.runtime.aspect_modifiers import (
     AspectRuntimeWeightTaxonomy,
 )
 
+ASPECT_META = {
+    "family": "major",
+    "is_major": True,
+    "is_minor": False,
+    "default_valence": "positive",
+    "interpretive_valence": "harmonious",
+    "energy_type": "harmonious_flow",
+}
+
 
 def test_aspect_modifier_runtime_data_is_typed() -> None:
     """Un modifier porte un type enumere, une source et une intensite."""
@@ -50,6 +59,7 @@ def test_aspect_runtime_exposes_typed_modifiers() -> None:
         orb=0.2,
         orb_used=0.2,
         orb_max=6.0,
+        **ASPECT_META,
     )
 
     assert aspect.aspect_runtime is not None

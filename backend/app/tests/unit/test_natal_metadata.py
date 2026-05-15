@@ -44,13 +44,56 @@ def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, obj
     planets = [{"code": c, "name": c.capitalize()} for c in codes]
     signs = [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}]
     houses = [{"number": n, "name": f"House {n}"} for n in range(1, 13)]
-    aspects = [{"code": "conjunction", "name": "Conjunction", "angle": 0, "default_orb_deg": 8.0}]
+    conjunction_payload = {
+        "code": "conjunction",
+        "name": "Conjunction",
+        "angle": 0,
+        "family": "major",
+        "default_orb_deg": 8.0,
+        "is_enabled": True,
+        "is_major": True,
+        "is_minor": False,
+        "default_valence": "neutral",
+        "interpretive_valence": "neutral",
+        "energy_type": "fusion",
+    }
+    aspects = [
+        {
+            **conjunction_payload,
+            "system_code": "modern",
+        },
+        {
+            **conjunction_payload,
+            "system_code": "strict",
+        },
+    ]
+    aspect_orb_rules = [
+        {
+            "aspect_code": "conjunction",
+            "system_code": "modern",
+            "calculation_context": "natal",
+            "orb_deg": 8.0,
+            "priority": 10,
+            "source_body_type": "any",
+            "target_body_type": "any",
+            "source_planet_code": None,
+            "source_point_code": None,
+            "target_planet_code": None,
+            "target_point_code": None,
+        }
+    ]
+    astral_systems = [
+        {"code": "modern", "name": "modern", "inherits_from_system_code": None},
+        {"code": "strict", "name": "strict", "inherits_from_system_code": "modern"},
+    ]
     return {
         "version": "1.0.0",
         "planets": planets,
         "signs": signs,
         "houses": houses,
         "aspects": aspects,
+        "aspect_orb_rules": aspect_orb_rules,
+        "astral_systems": astral_systems,
         "sign_rulerships": COMPLETE_SIGN_RULERS,
     }
 

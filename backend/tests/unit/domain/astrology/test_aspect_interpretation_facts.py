@@ -7,6 +7,15 @@ from app.domain.astrology.interpretation.aspect_interpretation_facts import (
 )
 from app.domain.astrology.natal_calculation import AspectResult
 
+ASPECT_META = {
+    "family": "major",
+    "is_major": True,
+    "is_minor": False,
+    "default_valence": "positive",
+    "interpretive_valence": "harmonious",
+    "energy_type": "harmonious_flow",
+}
+
 
 def _profile() -> dict[str, object]:
     return {
@@ -28,7 +37,9 @@ def test_interpretation_facts_expose_symbolic_primitives() -> None:
         planet_b="moon",
         angle=120.0,
         orb=0.3,
+        orb_used=0.3,
         orb_max=6.0,
+        **ASPECT_META,
     ).aspect_runtime
     assert runtime is not None
 
@@ -49,7 +60,9 @@ def test_interpretation_facts_keep_editorial_theme_out_of_semantic_axes() -> Non
         planet_b="moon",
         angle=120.0,
         orb=0.3,
+        orb_used=0.3,
         orb_max=6.0,
+        **ASPECT_META,
     ).aspect_runtime
     assert runtime is not None
 
@@ -67,7 +80,9 @@ def test_interpretation_facts_reject_blank_required_axes() -> None:
         planet_b="moon",
         angle=120.0,
         orb=0.3,
+        orb_used=0.3,
         orb_max=6.0,
+        **ASPECT_META,
     ).aspect_runtime
     assert runtime is not None
     profile = _profile()

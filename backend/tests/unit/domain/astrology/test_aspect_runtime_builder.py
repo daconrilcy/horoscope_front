@@ -11,6 +11,15 @@ from app.domain.astrology.runtime.aspect_runtime_data import (
     AspectParticipantsRuntimeData,
 )
 
+ASPECT_META = {
+    "family": "major",
+    "is_major": True,
+    "is_minor": False,
+    "default_valence": "positive",
+    "interpretive_valence": "harmonious",
+    "energy_type": "harmonious_flow",
+}
+
 
 def test_aspect_result_builds_canonical_runtime_without_changing_flat_fields() -> None:
     """Le runtime enrichit l'aspect sans modifier les champs historiques."""
@@ -22,6 +31,7 @@ def test_aspect_result_builds_canonical_runtime_without_changing_flat_fields() -
         orb=0.3,
         orb_used=0.3,
         orb_max=6.0,
+        **ASPECT_META,
     )
 
     runtime = aspect.aspect_runtime
@@ -37,7 +47,7 @@ def test_aspect_result_builds_canonical_runtime_without_changing_flat_fields() -
     assert runtime.orb.ratio == 0.05
     assert runtime.metadata.is_exact is True
     assert runtime.interpretation is not None
-    assert runtime.interpretation.energy_type == "flow"
+    assert runtime.interpretation.energy_type == "harmonious_flow"
 
 
 def test_runtime_builder_adds_typed_modifiers() -> None:
@@ -51,6 +61,12 @@ def test_runtime_builder_adds_typed_modifiers() -> None:
             orb=1.0,
             orb_used=1.0,
             orb_max=8.0,
+            **{
+                **ASPECT_META,
+                "default_valence": "negative",
+                "interpretive_valence": "dynamic_challenging",
+                "energy_type": "friction_activation",
+            },
         )
     )
 

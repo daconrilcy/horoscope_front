@@ -52,6 +52,14 @@ def _make_natal_result() -> NatalResult:
                 planet_b="moon",
                 angle=120.0,
                 orb=2.0,
+                orb_used=2.0,
+                orb_max=6.0,
+                family="major",
+                is_major=True,
+                is_minor=False,
+                default_valence="positive",
+                interpretive_valence="harmonious",
+                energy_type="harmonious_flow",
             )
         ],
     )

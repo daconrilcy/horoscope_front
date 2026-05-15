@@ -290,7 +290,22 @@ def test_build_natal_result_time_scale_tt_enabled(monkeypatch: pytest.MonkeyPatc
             {"code": "pisces"},
         ],
         "houses": [{"number": n} for n in range(1, 13)],
-        "aspects": [{"code": "conjunction", "angle": 0, "default_orb_deg": 8.0}],
+        "aspects": [
+            {
+                "code": "conjunction",
+                "angle": 0,
+                "family": "major",
+                "default_orb_deg": 8.0,
+                "is_enabled": True,
+                "is_major": True,
+                "is_minor": False,
+                "default_valence": "contextual",
+                "interpretive_valence": "amplifying",
+                "energy_type": "fusion_intensification",
+            }
+        ],
+        "aspect_orb_rules": [],
+        "astral_systems": [{"code": "modern", "name": "modern", "inherits_from_system_code": None}],
         "sign_rulerships": SIGN_RULERSHIPS,
     }
     birth_input = BirthInput(
@@ -357,7 +372,22 @@ def test_build_natal_result_time_scale_tt_disabled(monkeypatch: pytest.MonkeyPat
             {"code": "pisces"},
         ],
         "houses": [{"number": n} for n in range(1, 13)],
-        "aspects": [{"code": "conjunction", "angle": 0, "default_orb_deg": 8.0}],
+        "aspects": [
+            {
+                "code": "conjunction",
+                "angle": 0,
+                "family": "major",
+                "default_orb_deg": 8.0,
+                "is_enabled": True,
+                "is_major": True,
+                "is_minor": False,
+                "default_valence": "contextual",
+                "interpretive_valence": "amplifying",
+                "energy_type": "fusion_intensification",
+            }
+        ],
+        "aspect_orb_rules": [],
+        "astral_systems": [{"code": "modern", "name": "modern", "inherits_from_system_code": None}],
         "sign_rulerships": SIGN_RULERSHIPS,
     }
     birth_input = BirthInput(

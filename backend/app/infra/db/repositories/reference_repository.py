@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, aliased
 
 from app.infra.db.models.prediction_reference import (
+    AspectProfileModel,
     AstralAspectDefinitionModel,
     AstralAspectOrbRuleModel,
 )
@@ -158,7 +159,13 @@ class ReferenceRepository:
             select(
                 AspectModel,
                 AstralAspectFamilyModel.name,
+                AstralAspectDefinitionModel.is_enabled,
+                AstralAspectDefinitionModel.is_major,
+                AstralAspectDefinitionModel.is_minor,
                 AstralAspectDefinitionModel.default_orb_deg,
+                AspectProfileModel.default_valence,
+                AspectProfileModel.interpretive_valence,
+                AspectProfileModel.energy_type,
             )
             .join(AstralAspectFamilyModel, AspectModel.family == AstralAspectFamilyModel.id)
             .outerjoin(
@@ -170,6 +177,11 @@ class ReferenceRepository:
                 (AstralAspectDefinitionModel.aspect_id == AspectModel.id)
                 & (AstralAspectDefinitionModel.reference_version_id == model.id)
                 & (AstralAspectDefinitionModel.astral_system_id == AstralSystemModel.id),
+            )
+            .outerjoin(
+                AspectProfileModel,
+                (AspectProfileModel.aspect_id == AspectModel.id)
+                & (AspectProfileModel.reference_version_id == model.id),
             )
             .order_by(AspectModel.angle, AspectModel.code)
         ).all()
@@ -223,9 +235,25 @@ class ReferenceRepository:
                     "name": aspect.name,
                     "angle": aspect.angle,
                     "family": family_name,
+                    "is_enabled": is_enabled,
+                    "is_major": is_major,
+                    "is_minor": is_minor,
                     "default_orb_deg": default_orb_deg,
+                    "default_valence": default_valence,
+                    "interpretive_valence": interpretive_valence,
+                    "energy_type": energy_type,
                 }
-                for aspect, family_name, default_orb_deg in aspects
+                for (
+                    aspect,
+                    family_name,
+                    is_enabled,
+                    is_major,
+                    is_minor,
+                    default_orb_deg,
+                    default_valence,
+                    interpretive_valence,
+                    energy_type,
+                ) in aspects
             ],
             "aspect_orb_rules": [
                 {

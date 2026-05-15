@@ -20,6 +20,7 @@ def _forbidden_symbols() -> set[str]:
         "ASPECT_" + "ROWS",
         "DEFAULT_ASPECT_" + "ORBS",
         "MAJOR_" + "ASPECTS",
+        "MINOR_" + "ASPECTS",
         "LUM" + "INARIES",
         "PLANET_CLASS_BY_" + "CODE",
         "ANGLE_" + "CODES",
@@ -27,6 +28,9 @@ def _forbidden_symbols() -> set[str]:
         "SUCCEDENT_" + "HOUSES",
         "DEFAULT_TRADITIONAL_SIGN_" + "RULERSHIPS",
         "_HOUSE_SYSTEM_" + "CODES",
+        "HOUSE_SYSTEM_REFERENCE_" + "ROWS",
+        "VALENCE_BY_" + "ASPECT",
+        "ENERGY_BY_" + "ASPECT",
         "planet_" + "rows",
         "sign_" + "rows",
         "dignity_type_" + "rows",
@@ -106,3 +110,28 @@ def test_runtime_helper_owners_are_unique() -> None:
             if isinstance(node, ast.FunctionDef) and node.name in definitions:
                 definitions[node.name].append(str(path.relative_to(REPO_ROOT)).replace("\\", "/"))
     assert definitions == {name: [owner] for name, owner in owner_expectations.items()}
+
+
+def test_legacy_aspect_orb_shapes_are_not_used_by_runtime_sources() -> None:
+    """Bloque les anciennes formes d'entrée du calculateur d'aspects."""
+    forbidden_fragments = {
+        "tuple[str, float]",
+        "orb_" + "luminaries_override_deg",
+        "orb_" + "pair_overrides",
+        "orb_" + "luminaries",
+        "orb_" + "pairs",
+        "orb_" + "overrides",
+    }
+    checked_roots = (
+        REPO_ROOT / "backend" / "app" / "domain" / "astrology",
+        REPO_ROOT / "backend" / "app" / "services" / "chart",
+        REPO_ROOT / "backend" / "app" / "services" / "llm_generation",
+    )
+    hits: list[str] = []
+    for root in checked_roots:
+        for path in root.rglob("*.py"):
+            content = path.read_text(encoding="utf-8")
+            for fragment in forbidden_fragments:
+                if fragment in content:
+                    hits.append(f"{path.relative_to(REPO_ROOT)}:{fragment}")
+    assert hits == []
