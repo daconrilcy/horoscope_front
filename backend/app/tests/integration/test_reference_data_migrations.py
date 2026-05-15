@@ -113,6 +113,8 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_aspect_definitions",
         "astral_aspect_orb_rules",
         "languages",
+        "astral_house_axis_definitions",
+        "astral_house_axis_members",
     ):
         assert table_name in head_tables
     assert "house_interpretation_profiles" not in head_tables
@@ -303,6 +305,39 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert dict(connection.execute(text("SELECT code, name FROM languages")).all()) == (
             EXPECTED_LANGUAGES
         )
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_house_axis_definitions")
+            ).scalar_one()
+            == 6
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_house_axis_members")).scalar_one()
+            == 12
+        )
+        axis_member_rows = connection.execute(
+            text(
+                """
+                SELECT house_id, opposite_house_id
+                FROM astral_house_axis_members
+                ORDER BY house_id
+                """
+            )
+        ).all()
+        assert {row.house_id: row.opposite_house_id for row in axis_member_rows} == {
+            1: 7,
+            2: 8,
+            3: 9,
+            4: 10,
+            5: 11,
+            6: 12,
+            7: 1,
+            8: 2,
+            9: 3,
+            10: 4,
+            11: 5,
+            12: 6,
+        }
         assert (
             connection.execute(
                 text(
@@ -798,7 +833,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260515_0108"
+    assert version == "20260515_0110"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

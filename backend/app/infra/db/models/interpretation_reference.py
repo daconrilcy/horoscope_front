@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint, event
+from sqlalchemy import CheckConstraint, ForeignKey, Integer, String, Text, UniqueConstraint, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
@@ -152,6 +152,45 @@ class AstralHouseAxisDefinitionModel(Base):
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     astral_system: Mapped["AstralSystemModel"] = relationship()
     language: Mapped["LanguageModel"] = relationship()
+
+
+class AstralHouseAxisMemberModel(Base):
+    """Association canonique entre une maison, son axe et sa maison opposée."""
+
+    __tablename__ = "astral_house_axis_members"
+    __table_args__ = (
+        UniqueConstraint("house_id", name="uq_astral_house_axis_members_house_id"),
+        UniqueConstraint(
+            "axis_id",
+            "house_id",
+            name="uq_astral_house_axis_members_axis_house",
+        ),
+        CheckConstraint(
+            "house_id <> opposite_house_id",
+            name="ck_astral_house_axis_members_distinct_houses",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    axis_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_house_axis_definitions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    house_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_houses.id"),
+        nullable=False,
+        index=True,
+    )
+    opposite_house_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_houses.id"),
+        nullable=False,
+        index=True,
+    )
+
+    axis: Mapped["AstralHouseAxisDefinitionModel"] = relationship()
+    house: Mapped["HouseModel"] = relationship(foreign_keys=[house_id])
+    opposite_house: Mapped["HouseModel"] = relationship(foreign_keys=[opposite_house_id])
 
 
 @event.listens_for(HouseInterpretationProfileModel, "before_update")
