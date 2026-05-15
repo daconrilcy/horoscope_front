@@ -16,8 +16,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
+from app.infra.db.repositories.house_system_reference import sync_house_system_seed_data
 from app.infra.db.repositories.reference_repository import ReferenceRepository
-from app.infra.db.seed.house_system_reference import sync_house_system_seed_data
 
 
 class ReferenceDataServiceError(Exception):

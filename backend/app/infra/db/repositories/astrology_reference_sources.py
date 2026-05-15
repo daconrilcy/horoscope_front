@@ -109,6 +109,11 @@ def load_astral_house_modality_rows() -> tuple[dict[str, Any], ...]:
     return _load_data_rows("astral_house_modalities.json", "house modalities")
 
 
+def load_astral_house_system_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les systèmes de maisons astrologiques depuis la source canonique."""
+    return _load_data_rows("astral_house_system.json", "house systems")
+
+
 def load_astral_object_type_rows() -> tuple[dict[str, Any], ...]:
     """Charge les types d'objets astrologiques depuis la source canonique."""
     return _load_data_rows("astral_object_types.json", "object types")

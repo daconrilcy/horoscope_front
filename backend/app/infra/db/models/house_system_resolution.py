@@ -10,11 +10,13 @@ from app.infra.db.models.daily_prediction import DailyPredictionRunModel
 from app.infra.db.models.prediction_ruleset import PredictionRulesetModel
 from app.infra.db.models.reference import AstralHouseSystemModel
 from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
-from app.infra.db.seed.house_system_reference import sync_house_system_seed_data
 
 
 def _resolve_house_system(session: Session, code: str) -> AstralHouseSystemModel:
     """Retourne la ligne canonique d'un code de système de maisons."""
+    # Import local pour eviter une boucle pendant l'enregistrement des hooks SQLAlchemy.
+    from app.infra.db.repositories.house_system_reference import sync_house_system_seed_data
+
     sync_house_system_seed_data(session)
     house_system = session.scalar(
         select(AstralHouseSystemModel).where(AstralHouseSystemModel.code == code)
