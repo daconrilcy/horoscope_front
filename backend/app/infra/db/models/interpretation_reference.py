@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         AspectModel,
         AstralSystemModel,
         HouseModel,
+        LanguageModel,
         ReferenceVersionModel,
     )
 
@@ -113,6 +114,46 @@ class AstralAspectInterpretationProfileModel(Base):
     astral_system: Mapped["AstralSystemModel"] = relationship()
 
 
+class AstralHouseAxisDefinitionModel(Base):
+    """Définition localisée d'un axe de maisons astrologiques."""
+
+    __tablename__ = "astral_house_axis_definitions"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "astral_system_id",
+            "key",
+            "language_id",
+            name="uq_astral_house_axis_definitions_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    astral_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_systems.id"),
+        nullable=False,
+        index=True,
+    )
+    key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(128), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    language_id: Mapped[int] = mapped_column(
+        ForeignKey("languages.id"),
+        nullable=False,
+        index=True,
+    )
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
+    astral_system: Mapped["AstralSystemModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
+
+
 @event.listens_for(HouseInterpretationProfileModel, "before_update")
 def _prevent_update_on_locked_interpretation_version(
     mapper: object, connection: object, target: object
@@ -127,5 +168,14 @@ def _prevent_update_on_locked_aspect_interpretation_version(
     mapper: object, connection: object, target: object
 ) -> None:
     """Bloque les modifications directes d'un profil d'aspect publié."""
+    del mapper, connection
+    _ensure_reference_version_is_mutable(target)
+
+
+@event.listens_for(AstralHouseAxisDefinitionModel, "before_update")
+def _prevent_update_on_locked_house_axis_version(
+    mapper: object, connection: object, target: object
+) -> None:
+    """Bloque les modifications directes d'un axe rattaché à une version verrouillée."""
     del mapper, connection
     _ensure_reference_version_is_mutable(target)

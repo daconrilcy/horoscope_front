@@ -76,6 +76,7 @@ from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
 from app.infra.db.models.interpretation_reference import (
     AstralAspectInterpretationProfileModel,
+    AstralHouseAxisDefinitionModel,
     HouseInterpretationProfileModel,
 )
 from app.infra.db.models.pdf_template import PdfTemplateModel
@@ -146,6 +147,7 @@ __all__ = [
     "AstrologerPromptProfileModel",
     "AstrologerReviewModel",
     "AstralAspectInterpretationProfileModel",
+    "AstralHouseAxisDefinitionModel",
     "BillingPlanModel",
     "PaymentAttemptModel",
     "SubscriptionPlanChangeModel",
