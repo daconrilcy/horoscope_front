@@ -87,6 +87,67 @@ class AstralPolarityModel(Base):
     name: Mapped[str] = mapped_column(String(32), nullable=False)
 
 
+class AstralTypicalPolarityModel(Base):
+    """Polarité usuelle utilisée par les profils interprétatifs planétaires."""
+
+    __tablename__ = "astral_typical_polarities"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+
+
+class AstralSpeedModel(Base):
+    """Classe de vitesse relative utilisée pour qualifier les planètes."""
+
+    __tablename__ = "astral_speed"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    speed_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class AstralPlanetDefinitionModel(Base):
+    """Définition structurelle d'une planète astrologique canonique."""
+
+    __tablename__ = "astral_planet_definitions"
+    __table_args__ = (UniqueConstraint("planet_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    planet_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_planets.id"), nullable=False, index=True
+    )
+    object_type_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_object_types.id"), nullable=False, index=True
+    )
+    astrological_role_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_astrological_roles.id"), nullable=False, index=True
+    )
+    calculation_type_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_calculation_types.id"), nullable=False, index=True
+    )
+    speed_rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    speed_class_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_speed.id"), nullable=False, index=True
+    )
+    typical_polarity_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_typical_polarities.id"), nullable=False, index=True
+    )
+    is_physical_body: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_luminary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_planet: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_visible_to_naked_eye: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    planet: Mapped["PlanetModel"] = relationship()
+    object_type: Mapped["AstralObjectTypeModel"] = relationship()
+    astrological_role: Mapped["AstralAstrologicalRoleModel"] = relationship()
+    calculation_type: Mapped["AstralCalculationTypeModel"] = relationship()
+    speed_class: Mapped["AstralSpeedModel"] = relationship()
+    typical_polarity: Mapped["AstralTypicalPolarityModel"] = relationship()
+
+
 class AstralDignityTypeModel(Base):
     """Taxonomie stable des types de dignités astrologiques."""
 

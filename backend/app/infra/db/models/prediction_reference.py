@@ -54,6 +54,8 @@ class PredictionCategoryModel(Base):
 
 
 class PlanetProfileModel(Base):
+    """Paramètres strictement propres au moteur de prédiction quotidienne."""
+
     __tablename__ = "astral_prediction_daily_planet_profiles"
     __table_args__ = (UniqueConstraint("reference_version_id", "planet_id"),)
 
@@ -66,15 +68,16 @@ class PlanetProfileModel(Base):
     planet_id: Mapped[int] = mapped_column(
         ForeignKey("astral_planets.id"), nullable=False, index=True
     )
-    class_code: Mapped[str] = mapped_column(String(32), nullable=False)  # luminary, personal, etc.
-    speed_rank: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    speed_class: Mapped[str] = mapped_column(String(16), nullable=False)  # fast, medium, slow
     weight_intraday: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     weight_day_climate: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
-    typical_polarity: Mapped[str | None] = mapped_column(String(16), nullable=True)
-    orb_active_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
-    orb_peak_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
-    keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    daily_visibility_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    daily_emotional_impact_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    daily_conscious_activation_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=1.0,
+    )
+    is_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     reference_version: Mapped["ReferenceVersionModel"] = relationship()

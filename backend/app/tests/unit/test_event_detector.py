@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,6 +15,29 @@ def _make_event_type_mock(priority: int, base_weight: float) -> MagicMock:
     m.priority = priority
     m.base_weight = base_weight
     return m
+
+
+def _orb_rule(
+    aspect_code: str = "conjunction",
+    orb_deg: float = 2.0,
+    system_code: str = "modern",
+    priority: int = 500,
+) -> SimpleNamespace:
+    """Construit une règle d'orbe prédictive minimale."""
+    return SimpleNamespace(
+        aspect_code=aspect_code,
+        system_code=system_code,
+        calculation_context="transit_to_natal",
+        source_body_type="any",
+        target_body_type="any",
+        source_planet_code=None,
+        source_point_code=None,
+        target_planet_code=None,
+        target_point_code=None,
+        orb_deg=orb_deg,
+        priority=priority,
+        is_enabled=True,
+    )
 
 
 @pytest.fixture
@@ -33,6 +57,7 @@ def mock_ctx():
         "square": MagicMock(orb_multiplier=1.0),
     }
     ctx.prediction_context.aspect_profiles = aspect_profiles
+    ctx.prediction_context.aspect_orb_rules = (_orb_rule(), _orb_rule("square"))
 
     # Mock event types for priority/weight — empty (always fallback)
     ctx.ruleset_context.event_types = {}
@@ -54,6 +79,7 @@ def mock_ctx_with_event_types():
         "conjunction": MagicMock(orb_multiplier=1.0),
         "square": MagicMock(orb_multiplier=1.0),
     }
+    ctx.prediction_context.aspect_orb_rules = (_orb_rule(), _orb_rule("square"))
     ctx.ruleset_context.event_types = {
         "aspect_exact_to_angle": _make_event_type_mock(80, 2.0),
         "aspect_exact_to_luminary": _make_event_type_mock(75, 1.8),
@@ -319,13 +345,11 @@ def test_separating_true_on_increasing_orb(mock_ctx, natal_chart):
     assert exit_evts[0].metadata["phase"] == "separating"
 
 
-def test_orb_max_resolves_lowercase_profiles_without_fallback(mock_ctx):
+def test_orb_max_resolves_reference_orb_rule(mock_ctx):
     mock_ctx.prediction_context.planet_profiles = {
-        "sun": MagicMock(orb_active_deg=3.0),
+        "sun": MagicMock(class_code="luminary"),
     }
-    mock_ctx.prediction_context.aspect_profiles = {
-        "conjunction": MagicMock(orb_multiplier=1.5),
-    }
+    mock_ctx.prediction_context.aspect_orb_rules = (_orb_rule(orb_deg=6.0),)
     chart = NatalChart(
         planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
     )
@@ -333,16 +357,19 @@ def test_orb_max_resolves_lowercase_profiles_without_fallback(mock_ctx):
 
     orb_max = detector._orb_max("Sun", "conjunction")
 
-    assert orb_max == pytest.approx(4.5)
+    assert orb_max == pytest.approx(6.0)
 
 
-def test_orb_max_falls_back_when_profile_value_is_none(mock_ctx):
+def test_orb_max_ignores_reference_orb_rules_from_other_astral_system(mock_ctx):
+    """Régression : une règle traditional prioritaire ne doit pas écraser le daily modern."""
     mock_ctx.prediction_context.planet_profiles = {
-        "sun": MagicMock(orb_active_deg=None),
+        "sun": MagicMock(class_code="luminary"),
     }
-    mock_ctx.prediction_context.aspect_profiles = {
-        "conjunction": MagicMock(orb_multiplier=1.5),
-    }
+    mock_ctx.prediction_context.aspect_orb_rules = (
+        _orb_rule(orb_deg=0.1, system_code="traditional", priority=1000),
+        _orb_rule(orb_deg=6.0, system_code="modern", priority=500),
+    )
+    mock_ctx.ruleset_context.parameters = {"aspect_system": "modern"}
     chart = NatalChart(
         planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
     )
@@ -350,7 +377,89 @@ def test_orb_max_falls_back_when_profile_value_is_none(mock_ctx):
 
     orb_max = detector._orb_max("Sun", "conjunction")
 
-    assert orb_max == pytest.approx(3.0)
+    assert orb_max == pytest.approx(6.0)
+
+
+def test_orb_max_prefers_local_aspect_system_before_inherited_parent(mock_ctx):
+    """Régression : une règle locale hellenistic gagne sur son parent traditional."""
+    mock_ctx.prediction_context.planet_profiles = {
+        "sun": MagicMock(class_code="luminary"),
+    }
+    mock_ctx.prediction_context.aspect_orb_rules = (
+        _orb_rule(orb_deg=9.0, system_code="traditional", priority=1000),
+        _orb_rule(orb_deg=4.0, system_code="hellenistic", priority=100),
+    )
+    mock_ctx.ruleset_context.parameters = {"aspect_system": "hellenistic"}
+    chart = NatalChart(
+        planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
+    )
+    detector = EventDetector(mock_ctx, chart)
+
+    orb_max = detector._orb_max("Sun", "conjunction")
+
+    assert orb_max == pytest.approx(4.0)
+
+
+def test_orb_max_matches_planet_body_type_for_luminary(mock_ctx):
+    """Régression : body_type=planet inclut aussi les luminaires, comme le resolver canonique."""
+    mock_ctx.prediction_context.planet_profiles = {
+        "sun": MagicMock(class_code="luminary"),
+    }
+    mock_ctx.prediction_context.aspect_orb_rules = (
+        SimpleNamespace(
+            **{
+                **_orb_rule(orb_deg=5.0).__dict__,
+                "source_body_type": "planet",
+            }
+        ),
+    )
+    chart = NatalChart(
+        planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
+    )
+    detector = EventDetector(mock_ctx, chart)
+
+    orb_max = detector._orb_max("Sun", "conjunction")
+
+    assert orb_max == pytest.approx(5.0)
+
+
+def test_orb_max_uses_reference_system_inheritance_from_context(mock_ctx):
+    """Régression : l'héritage vient du contexte de référence, pas d'une liste hardcodée."""
+    mock_ctx.prediction_context.planet_profiles = {
+        "sun": MagicMock(class_code="luminary"),
+    }
+    mock_ctx.prediction_context.aspect_system_inheritance = {
+        "experimental": "traditional",
+        "traditional": None,
+    }
+    mock_ctx.prediction_context.aspect_orb_rules = (
+        _orb_rule(orb_deg=7.0, system_code="traditional", priority=500),
+    )
+    mock_ctx.ruleset_context.parameters = {"aspect_system": "experimental"}
+    chart = NatalChart(
+        planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
+    )
+    detector = EventDetector(mock_ctx, chart)
+
+    orb_max = detector._orb_max("Sun", "conjunction")
+
+    assert orb_max == pytest.approx(7.0)
+
+
+def test_orb_max_falls_back_to_ruleset_parameter(mock_ctx):
+    mock_ctx.prediction_context.planet_profiles = {
+        "sun": MagicMock(class_code="luminary"),
+    }
+    mock_ctx.prediction_context.aspect_orb_rules = ()
+    mock_ctx.ruleset_context.parameters = {"orb_max_conjunction": "4.25"}
+    chart = NatalChart(
+        planet_positions={"Sun": 0.0}, planet_houses={"Sun": 1}, house_sign_rulers={}
+    )
+    detector = EventDetector(mock_ctx, chart)
+
+    orb_max = detector._orb_max("Sun", "conjunction")
+
+    assert orb_max == pytest.approx(4.25)
 
 
 # ── T5: Nouveaux tests de taxonomie ───────────────────────────────────────────

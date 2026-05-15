@@ -16,6 +16,7 @@ if TYPE_CHECKING:
         AstralSystemModel,
         HouseModel,
         LanguageModel,
+        PlanetModel,
         ReferenceVersionModel,
     )
 
@@ -114,6 +115,64 @@ class AstralAspectInterpretationProfileModel(Base):
     astral_system: Mapped["AstralSystemModel"] = relationship()
 
 
+class AstralPlanetInterpretationProfileModel(Base):
+    """Profil éditorial versionné pour interpréter une planète astrologique."""
+
+    __tablename__ = "astral_planet_interpretation_profiles"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "planet_id",
+            "astral_system_id",
+            "language_id",
+            name="uq_astral_planet_interpretation_profiles_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"),
+        nullable=False,
+        index=True,
+    )
+    planet_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_planets.id"),
+        nullable=False,
+        index=True,
+    )
+    astral_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_systems.id"),
+        nullable=False,
+        index=True,
+    )
+    language_id: Mapped[int] = mapped_column(
+        ForeignKey("languages.id"),
+        nullable=False,
+        index=True,
+    )
+    title: Mapped[str] = mapped_column(String(128), nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    core_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    shadow_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    psychological_expression_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    relational_expression_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    vocational_expression_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    spiritual_expression_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    energetic_dynamics_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    growth_patterns_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    conflict_patterns_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    archetypes_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    dos_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    donts_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prompt_hints_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    reference_version: Mapped["ReferenceVersionModel"] = relationship()
+    planet: Mapped["PlanetModel"] = relationship()
+    astral_system: Mapped["AstralSystemModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
+
+
 class AstralHouseAxisDefinitionModel(Base):
     """Définition localisée d'un axe de maisons astrologiques."""
 
@@ -200,5 +259,14 @@ def _prevent_update_on_locked_aspect_interpretation_version(
     mapper: object, connection: object, target: object
 ) -> None:
     """Bloque les modifications directes d'un profil d'aspect publié."""
+    del mapper, connection
+    _ensure_reference_version_is_mutable(target)
+
+
+@event.listens_for(AstralPlanetInterpretationProfileModel, "before_update")
+def _prevent_update_on_locked_planet_interpretation_version(
+    mapper: object, connection: object, target: object
+) -> None:
+    """Bloque les modifications directes d'un profil planétaire publié."""
     del mapper, connection
     _ensure_reference_version_is_mutable(target)

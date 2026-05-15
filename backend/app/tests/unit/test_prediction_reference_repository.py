@@ -29,10 +29,16 @@ from app.infra.db.models.prediction_reference import (
 from app.infra.db.models.reference import (
     AspectModel,
     AstralAspectFamilyModel,
+    AstralAstrologicalRoleModel,
+    AstralCalculationTypeModel,
     AstralDignityTypeModel,
     AstralHouseSystemModel,
+    AstralObjectTypeModel,
+    AstralPlanetDefinitionModel,
     AstralSignModel,
+    AstralSpeedModel,
     AstralSystemModel,
+    AstralTypicalPolarityModel,
     HouseModel,
     LanguageModel,
     PlanetModel,
@@ -410,19 +416,64 @@ def test_get_planet_profiles(db_session: Session):
     db_session.add(version)
     db_session.flush()
 
+    object_type = AstralObjectTypeModel(code="celestial_body", label="Body", description="Body")
+    calculation_type = AstralCalculationTypeModel(
+        code="ephemeris",
+        label="Ephemeris",
+        description="Ephemeris",
+    )
+    roles = {
+        "luminary": AstralAstrologicalRoleModel(
+            code="luminary",
+            label="Luminary",
+            description="Luminary",
+        ),
+        "personal_planet": AstralAstrologicalRoleModel(
+            code="personal_planet",
+            label="Personal",
+            description="Personal",
+        ),
+    }
+    polarities = {
+        "positive": AstralTypicalPolarityModel(name="positive"),
+        "neutral": AstralTypicalPolarityModel(name="neutral"),
+    }
+    db_session.add_all([object_type, calculation_type, *roles.values(), *polarities.values()])
+    db_session.flush()
+
     for i, code in enumerate(PLANET_CODES):
         planet = PlanetModel(code=code, name=code.capitalize())
         db_session.add(planet)
         db_session.flush()
+        speed = AstralSpeedModel(name=f"fast_{i}", speed_rank=i + 1)
+        db_session.add(speed)
+        db_session.flush()
+        role_code = "luminary" if code in ("sun", "moon") else "personal_planet"
+        polarity_code = "positive" if code == "sun" else "neutral"
+        db_session.add(
+            AstralPlanetDefinitionModel(
+                planet_id=planet.id,
+                object_type_id=object_type.id,
+                astrological_role_id=roles[role_code].id,
+                calculation_type_id=calculation_type.id,
+                speed_rank=i + 1,
+                speed_class_id=speed.id,
+                typical_polarity_id=polarities[polarity_code].id,
+                is_physical_body=True,
+                is_luminary=code in ("sun", "moon"),
+                is_planet=code not in ("sun", "moon"),
+                is_visible_to_naked_eye=True,
+            )
+        )
         profile = PlanetProfileModel(
             reference_version_id=version.id,
             planet_id=planet.id,
-            class_code="luminary" if code in ("sun", "moon") else "personal",
-            speed_rank=i + 1,
-            speed_class="fast",
             weight_intraday=1.0,
             weight_day_climate=1.0,
-            keywords_json='["vitality", "ego", "purpose"]' if code == "sun" else None,
+            daily_visibility_score=1.0,
+            daily_emotional_impact_score=0.5,
+            daily_conscious_activation_score=0.8,
+            micro_note="Daily note" if code == "sun" else None,
         )
         db_session.add(profile)
     db_session.commit()
@@ -434,8 +485,11 @@ def test_get_planet_profiles(db_session: Session):
     sun_profile = result["sun"]
     assert isinstance(sun_profile, PlanetProfileData)
     assert sun_profile.code == "sun"
-    assert sun_profile.keywords == ("vitality", "ego", "purpose")
-    assert isinstance(result["moon"].keywords, tuple)
+    assert sun_profile.class_code == "luminary"
+    assert sun_profile.typical_polarity == "positive"
+    assert sun_profile.daily_conscious_activation_score == 0.8
+    assert sun_profile.micro_note == "Daily note"
+    assert result["mercury"].class_code == "personal"
 
 
 SIGN_RULERSHIPS = [
@@ -506,6 +560,24 @@ def test_get_sign_rulerships(db_session: Session):
     assert result["aries"] == "mars"
     assert result["leo"] == "sun"
     assert result["scorpio"] == "mars"
+
+
+def test_get_aspect_system_inheritance_reads_reference_parent_links(db_session: Session) -> None:
+    """Vérifie que l'héritage des systèmes astrologiques vient du référentiel SQL."""
+    repo = PredictionReferenceRepository(db_session)
+    traditional = AstralSystemModel(name="traditional")
+    modern = AstralSystemModel(name="modern")
+    experimental = AstralSystemModel(name="experimental", inherits_from=traditional)
+    db_session.add_all([traditional, modern, experimental])
+    db_session.commit()
+
+    inheritance = repo.get_aspect_system_inheritance()
+
+    assert inheritance == {
+        "traditional": None,
+        "modern": None,
+        "experimental": "traditional",
+    }
 
 
 def test_get_reference_data_exposes_house_axes_from_canonical_tables(db_session: Session) -> None:
@@ -615,18 +687,49 @@ def test_load_prediction_context(db_session: Session):
     )
 
     # Seed one planet with profile
+    object_type = AstralObjectTypeModel(code="celestial_body", label="Body", description="Body")
+    calculation_type = AstralCalculationTypeModel(
+        code="ephemeris",
+        label="Ephemeris",
+        description="Ephemeris",
+    )
+    role = AstralAstrologicalRoleModel(
+        code="luminary",
+        label="Luminary",
+        description="Luminary",
+    )
+    speed = AstralSpeedModel(name="fast", speed_rank=1)
+    polarity = AstralTypicalPolarityModel(name="positive")
+    db_session.add_all([object_type, calculation_type, role, speed, polarity])
+    db_session.flush()
+
     planet = PlanetModel(code="sun", name="Sun")
     db_session.add(planet)
     db_session.flush()
     db_session.add(
+        AstralPlanetDefinitionModel(
+            planet_id=planet.id,
+            object_type_id=object_type.id,
+            astrological_role_id=role.id,
+            calculation_type_id=calculation_type.id,
+            speed_rank=1,
+            speed_class_id=speed.id,
+            typical_polarity_id=polarity.id,
+            is_physical_body=True,
+            is_luminary=True,
+            is_planet=False,
+            is_visible_to_naked_eye=True,
+        )
+    )
+    db_session.add(
         PlanetProfileModel(
             reference_version_id=version.id,
             planet_id=planet.id,
-            class_code="luminary",
-            speed_rank=1,
-            speed_class="fast",
             weight_intraday=1.5,
             weight_day_climate=1.2,
+            daily_visibility_score=1.0,
+            daily_emotional_impact_score=0.5,
+            daily_conscious_activation_score=1.0,
         )
     )
 

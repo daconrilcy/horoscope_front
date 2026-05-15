@@ -1,5 +1,8 @@
+"""Détecte les événements astrologiques du moteur de prédiction daily."""
+
 import dataclasses
 import logging
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from datetime import timezone as dt_tz
 from zoneinfo import ZoneInfo
@@ -11,6 +14,11 @@ from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 from app.domain.prediction.temporal_sampler import DayGrid
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_ASPECT_SYSTEM = "modern"
+PLANET_BODY_TYPES = frozenset(
+    {"luminary", "personal_planet", "social_planet", "transpersonal_planet"}
+)
 
 
 class EventDetector:
@@ -178,7 +186,7 @@ class EventDetector:
                     for aspect_deg, aspect_code in self.ASPECTS_V1.items():
                         key = (body_code, target_code, aspect_deg)
                         orb = self._orb(transit_lon, natal_lon, aspect_deg)
-                        orb_max = self._orb_max(body_code, aspect_code)
+                        orb_max = self._orb_max(body_code, aspect_code, target_code)
 
                         if key not in history:
                             history[key] = []
@@ -386,24 +394,146 @@ class EventDetector:
             diff = 360 - diff
         return abs(diff - aspect_deg)
 
-    def _orb_max(self, planet_code: str, aspect_code: str) -> float:
-        planet_profile = self._lookup_mapping_value(
-            self.ctx.prediction_context.planet_profiles,
-            planet_code,
-        )
-        orb_active_raw = getattr(planet_profile, "orb_active_deg", None) if planet_profile else None
-        if orb_active_raw is None:
-            logger.warning(
-                "orb_max_fallback planet=%s aspect=%s default=2.0", planet_code, aspect_code
+    def _orb_max(
+        self,
+        planet_code: str,
+        aspect_code: str,
+        target_code: str | None = None,
+    ) -> float:
+        """Résout l'orbe via les règles d'aspects versionnées du contexte daily."""
+        rule = self._matching_orb_rule(planet_code, aspect_code, target_code)
+        if rule is not None:
+            return float(rule.orb_deg)
+
+        param_key = f"orb_max_{aspect_code.lower()}"
+        orb_max = self.ctx.ruleset_context.parameters.get(param_key)
+        if orb_max is not None:
+            return float(orb_max)
+
+        logger.warning("orb_max_fallback planet=%s aspect=%s default=2.0", planet_code, aspect_code)
+        return 2.0
+
+    def _matching_orb_rule(
+        self,
+        planet_code: str,
+        aspect_code: str,
+        target_code: str | None,
+    ) -> object | None:
+        """Sélectionne la règle d'orbe transit-to-natal la plus spécifique."""
+        rules = getattr(self.ctx.prediction_context, "aspect_orb_rules", ())
+        if not isinstance(rules, (list, tuple)):
+            rules = ()
+        if not rules:
+            return None
+        source_type = self._body_type_for_code(planet_code)
+        target_type = "any" if target_code is None else self._body_type_for_code(target_code)
+        candidates = [
+            rule
+            for rule in rules
+            if str(rule.aspect_code).lower() == aspect_code.lower()
+            and self._aspect_system_matches(rule)
+            and bool(getattr(rule, "is_enabled", True))
+            and str(rule.calculation_context).lower() in {"transit_to_natal", "any"}
+            and self._body_type_matches(str(rule.source_body_type), source_type)
+            and self._body_type_matches(str(rule.target_body_type), target_type)
+            and self._planet_code_matches(getattr(rule, "source_planet_code", None), planet_code)
+            and self._planet_code_matches(getattr(rule, "target_planet_code", None), target_code)
+        ]
+        if not candidates:
+            return None
+        system_rank = self._active_aspect_system_rank()
+        return sorted(
+            candidates,
+            key=lambda rule: (
+                system_rank.get(str(getattr(rule, "system_code", "")).lower(), 99),
+                -int(getattr(rule, "priority", 0)),
+                -self._orb_rule_specificity(rule),
+            ),
+        )[0]
+
+    def _aspect_system_matches(self, rule: object) -> bool:
+        """Vérifie que la règle appartient au système d'aspects daily actif."""
+        return str(getattr(rule, "system_code", "")).lower() in self._active_aspect_system_codes()
+
+    def _active_aspect_system_codes(self) -> tuple[str, ...]:
+        """Retourne le système d'aspects daily actif avec ses parents hérités."""
+        parameters = getattr(self.ctx.ruleset_context, "parameters", {})
+        configured_system = DEFAULT_ASPECT_SYSTEM
+        if isinstance(parameters, Mapping):
+            configured_system = str(
+                parameters.get("aspect_system")
+                or parameters.get("aspect_school")
+                or DEFAULT_ASPECT_SYSTEM
             )
-        orb_active = float(orb_active_raw) if orb_active_raw is not None else 2.0
-        aspect_profile = self._lookup_mapping_value(
-            self.ctx.prediction_context.aspect_profiles,
-            aspect_code,
+        normalized = configured_system.strip().lower() or DEFAULT_ASPECT_SYSTEM
+        return self._aspect_system_chain(normalized)
+
+    def _aspect_system_chain(self, system_code: str) -> tuple[str, ...]:
+        """Construit la chaîne système local -> parent depuis le contexte référence."""
+        inheritance = getattr(self.ctx.prediction_context, "aspect_system_inheritance", None)
+        if not isinstance(inheritance, Mapping):
+            return (system_code,)
+        chain: list[str] = []
+        seen: set[str] = set()
+        current: str | None = system_code
+        while current:
+            normalized = current.strip().lower()
+            if not normalized or normalized in seen:
+                break
+            seen.add(normalized)
+            chain.append(normalized)
+            parent = inheritance.get(normalized)
+            current = None if parent is None else str(parent)
+        return tuple(chain) or (system_code,)
+
+    def _active_aspect_system_rank(self) -> dict[str, int]:
+        """Classe les systèmes d'aspects du plus local au plus hérité."""
+        return {
+            system_code: index
+            for index, system_code in enumerate(self._active_aspect_system_codes())
+        }
+
+    def _orb_rule_specificity(self, rule: object) -> int:
+        """Pondère les règles ciblées pour départager une priorité identique."""
+        score = 0
+        for field_name in (
+            "source_planet_code",
+            "target_planet_code",
+            "source_point_code",
+            "target_point_code",
+        ):
+            if getattr(rule, field_name, None):
+                score += 2
+        for field_name in ("source_body_type", "target_body_type"):
+            if str(getattr(rule, field_name, "any")).lower() != "any":
+                score += 1
+        return score
+
+    def _body_type_for_code(self, body_code: str) -> str:
+        """Retourne la famille de corps attendue par les règles d'orbes."""
+        if body_code in self.ANGLE_TARGETS:
+            return "angle"
+        profile = self._lookup_mapping_value(self.ctx.prediction_context.planet_profiles, body_code)
+        class_code = str(getattr(profile, "class_code", "") or "").lower()
+        if class_code in {"luminary", "planet"}:
+            return class_code
+        if class_code in {"personal", "social", "transpersonal"}:
+            return f"{class_code}_planet"
+        return "planet"
+
+    def _body_type_matches(self, rule_type: str, actual_type: str) -> bool:
+        """Compare une famille de règle et une famille runtime."""
+        normalized_rule = rule_type.lower()
+        normalized_actual = actual_type.lower()
+        return normalized_rule in {"any", normalized_actual} or (
+            normalized_rule == "planet" and normalized_actual in PLANET_BODY_TYPES
         )
-        multiplier_raw = getattr(aspect_profile, "orb_multiplier", None) if aspect_profile else None
-        multiplier = float(multiplier_raw) if multiplier_raw is not None else 1.0
-        return orb_active * multiplier
+
+    def _planet_code_matches(self, rule_code: str | None, actual_code: str | None) -> bool:
+        """Vérifie une contrainte optionnelle de planète source."""
+        return rule_code is None or (
+            actual_code is not None and rule_code.lower() == actual_code.lower()
+        )
 
     def _discriminate_exact_code(self, target: str | None) -> str:
         """Return the taxonomy V2 exact event code based on the natal target family."""

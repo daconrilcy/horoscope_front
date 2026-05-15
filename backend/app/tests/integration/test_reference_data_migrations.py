@@ -177,6 +177,12 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         if "house_id" in foreign_key["constrained_columns"]
     }
     assert house_foreign_key_targets == {"astral_houses"}
+    aspect_family_foreign_key_targets = {
+        foreign_key["referred_table"]
+        for foreign_key in head_inspector.get_foreign_keys("astral_aspects")
+        if foreign_key["constrained_columns"] == ["family"]
+    }
+    assert aspect_family_foreign_key_targets == {"astral_aspect_families"}
     profile_columns = {
         column["name"] for column in head_inspector.get_columns("astral_sign_profiles")
     }
@@ -522,6 +528,34 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     ):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" in columns
+    daily_planet_columns = {
+        column["name"]
+        for column in head_inspector.get_columns("astral_prediction_daily_planet_profiles")
+    }
+    assert daily_planet_columns == {
+        "id",
+        "reference_version_id",
+        "planet_id",
+        "weight_intraday",
+        "weight_day_climate",
+        "daily_visibility_score",
+        "daily_emotional_impact_score",
+        "daily_conscious_activation_score",
+        "is_enabled",
+        "micro_note",
+    }
+    assert (
+        not {
+            "class_code",
+            "speed_rank",
+            "speed_class",
+            "typical_polarity",
+            "orb_active_deg",
+            "orb_peak_deg",
+            "keywords_json",
+        }
+        & daily_planet_columns
+    )
     house_interpretation_columns = {
         column["name"]
         for column in head_inspector.get_columns("astral_house_interpretation_profiles")
@@ -886,10 +920,84 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260515_0112"
+    assert version == "20260515_0115"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",
         "ix_astral_aspect_interpretation_profiles_aspect_id",
         "ix_astral_aspect_interpretation_profiles_astral_system_id",
     } <= indexes
+
+
+def test_daily_planet_profile_simplification_preserves_existing_versions(
+    monkeypatch: object,
+    tmp_path: Path,
+) -> None:
+    """Vérifie que la simplification daily ne supprime pas les versions existantes."""
+    db_path = tmp_path / "daily-planet-profile-simplification.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.downgrade(config, "base")
+    command.upgrade(config, "20260515_0114")
+
+    engine = create_engine(database_url, future=True)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO astral_reference_versions
+                    (id, version, description, is_locked, created_at)
+                VALUES
+                    (101, 'test-101', 'Test 101', 0, '2026-05-15 00:00:00'),
+                    (202, 'test-202', 'Test 202', 0, '2026-05-15 00:00:00')
+                """
+            )
+        )
+    engine.dispose()
+
+    command.upgrade(config, "head")
+
+    head_engine = create_engine(database_url, future=True)
+    with head_engine.connect() as connection:
+        counts = dict(
+            connection.execute(
+                text(
+                    """
+                    SELECT reference_version_id, COUNT(*)
+                    FROM astral_prediction_daily_planet_profiles
+                    WHERE reference_version_id IN (101, 202)
+                    GROUP BY reference_version_id
+                    """
+                )
+            ).all()
+        )
+        planet_codes = {
+            row[0]
+            for row in connection.execute(
+                text(
+                    """
+                    SELECT planet.code
+                    FROM astral_prediction_daily_planet_profiles AS profile
+                    JOIN astral_planets AS planet ON planet.id = profile.planet_id
+                    WHERE profile.reference_version_id = 101
+                    """
+                )
+            ).all()
+        }
+    head_engine.dispose()
+
+    assert counts == {101: 10, 202: 10}
+    assert planet_codes == {
+        "sun",
+        "moon",
+        "mercury",
+        "venus",
+        "mars",
+        "jupiter",
+        "saturn",
+        "uranus",
+        "neptune",
+        "pluto",
+    }

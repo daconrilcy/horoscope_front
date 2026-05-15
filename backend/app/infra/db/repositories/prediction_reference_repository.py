@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralAspectOrbRuleModel,
     AstralPlanetSignDignityModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -20,13 +21,18 @@ from app.infra.db.models.prediction_reference import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAstrologicalRoleModel,
     AstralDignityTypeModel,
+    AstralPlanetDefinitionModel,
     AstralSignModel,
+    AstralSpeedModel,
     AstralSystemModel,
+    AstralTypicalPolarityModel,
     HouseModel,
     PlanetModel,
 )
 from app.infra.db.repositories.prediction_schemas import (
+    AspectOrbRuleData,
     AspectProfileData,
     AstroPointData,
     CategoryData,
@@ -73,28 +79,137 @@ class PredictionReferenceRepository:
 
     def get_planet_profiles(self, reference_version_id: int) -> dict[str, PlanetProfileData]:
         rows = self.db.execute(
-            select(PlanetModel, PlanetProfileModel)
+            select(
+                PlanetModel,
+                PlanetProfileModel,
+                AstralPlanetDefinitionModel,
+                AstralAstrologicalRoleModel,
+                AstralSpeedModel,
+                AstralTypicalPolarityModel,
+            )
             .join(PlanetProfileModel, PlanetModel.id == PlanetProfileModel.planet_id)
-            .where(PlanetProfileModel.reference_version_id == reference_version_id)
+            .outerjoin(
+                AstralPlanetDefinitionModel,
+                PlanetModel.id == AstralPlanetDefinitionModel.planet_id,
+            )
+            .outerjoin(
+                AstralAstrologicalRoleModel,
+                AstralPlanetDefinitionModel.astrological_role_id == AstralAstrologicalRoleModel.id,
+            )
+            .outerjoin(
+                AstralSpeedModel,
+                AstralPlanetDefinitionModel.speed_class_id == AstralSpeedModel.id,
+            )
+            .outerjoin(
+                AstralTypicalPolarityModel,
+                AstralPlanetDefinitionModel.typical_polarity_id == AstralTypicalPolarityModel.id,
+            )
+            .where(
+                PlanetProfileModel.reference_version_id == reference_version_id,
+                PlanetProfileModel.is_enabled.is_(True),
+            )
         ).all()
 
         result = {}
-        for planet_row, profile_row in rows:
+        for planet_row, profile_row, definition_row, role_row, speed_row, polarity_row in rows:
+            if (
+                definition_row is None
+                or role_row is None
+                or speed_row is None
+                or polarity_row is None
+            ):
+                raise ValueError(
+                    "incomplete planet reference definition for "
+                    f"{planet_row.code} in reference version {reference_version_id}"
+                )
             result[planet_row.code] = PlanetProfileData(
                 planet_id=planet_row.id,
                 code=planet_row.code,
                 name=planet_row.name,
-                class_code=profile_row.class_code,
-                speed_rank=profile_row.speed_rank,
-                speed_class=profile_row.speed_class,
+                class_code=self._runtime_planet_class(role_row.code),
+                speed_rank=definition_row.speed_rank,
+                speed_class=speed_row.name,
                 weight_intraday=profile_row.weight_intraday,
                 weight_day_climate=profile_row.weight_day_climate,
-                typical_polarity=profile_row.typical_polarity,
-                orb_active_deg=profile_row.orb_active_deg,
-                orb_peak_deg=profile_row.orb_peak_deg,
-                keywords=self._parse_keywords(profile_row.keywords_json),
+                daily_visibility_score=profile_row.daily_visibility_score,
+                daily_emotional_impact_score=profile_row.daily_emotional_impact_score,
+                daily_conscious_activation_score=profile_row.daily_conscious_activation_score,
+                is_enabled=profile_row.is_enabled,
+                micro_note=profile_row.micro_note,
+                typical_polarity=polarity_row.name,
+                orb_active_deg=None,
+                orb_peak_deg=None,
+                keywords=(),
             )
         return result
+
+    def get_aspect_orb_rules(self, reference_version_id: int) -> tuple[AspectOrbRuleData, ...]:
+        """Charge les règles d'orbes versionnées utilisées par le moteur daily."""
+        SourcePlanetModel = aliased(PlanetModel)
+        TargetPlanetModel = aliased(PlanetModel)
+        rows = self.db.execute(
+            select(
+                AstralAspectOrbRuleModel,
+                AspectModel.code.label("aspect_code"),
+                AstralSystemModel.name.label("system_code"),
+                SourcePlanetModel.code.label("source_planet_code"),
+                TargetPlanetModel.code.label("target_planet_code"),
+            )
+            .join(AspectModel, AstralAspectOrbRuleModel.aspect_id == AspectModel.id)
+            .join(
+                AstralSystemModel,
+                AstralAspectOrbRuleModel.astral_system_id == AstralSystemModel.id,
+            )
+            .outerjoin(
+                SourcePlanetModel,
+                AstralAspectOrbRuleModel.source_planet_id == SourcePlanetModel.id,
+            )
+            .outerjoin(
+                TargetPlanetModel,
+                AstralAspectOrbRuleModel.target_planet_id == TargetPlanetModel.id,
+            )
+            .where(
+                AstralAspectOrbRuleModel.reference_version_id == reference_version_id,
+                AstralAspectOrbRuleModel.is_enabled.is_(True),
+            )
+            .order_by(AstralAspectOrbRuleModel.priority.desc(), AspectModel.code)
+        ).all()
+        return tuple(
+            AspectOrbRuleData(
+                aspect_code=aspect_code,
+                system_code=system_code,
+                calculation_context=rule.calculation_context,
+                source_body_type=rule.source_body_type,
+                source_planet_code=source_planet_code,
+                source_point_code=rule.source_point_code,
+                target_body_type=rule.target_body_type,
+                target_planet_code=target_planet_code,
+                target_point_code=rule.target_point_code,
+                orb_deg=rule.orb_deg,
+                priority=rule.priority,
+                is_enabled=rule.is_enabled,
+            )
+            for rule, aspect_code, system_code, source_planet_code, target_planet_code in rows
+        )
+
+    def get_aspect_system_inheritance(self) -> dict[str, str | None]:
+        """Charge la chaîne d'héritage des systèmes astrologiques depuis la référence SQL."""
+        ParentSystemModel = aliased(AstralSystemModel)
+        rows = self.db.execute(
+            select(
+                AstralSystemModel.name.label("system_code"),
+                ParentSystemModel.name.label("parent_system_code"),
+            ).outerjoin(
+                ParentSystemModel,
+                AstralSystemModel.inherits_from_system_id == ParentSystemModel.id,
+            )
+        ).all()
+        return {
+            str(system_code).lower(): (
+                None if parent_system_code is None else str(parent_system_code).lower()
+            )
+            for system_code, parent_system_code in rows
+        }
 
     def get_house_profiles(
         self, reference_version_id: int
@@ -346,6 +461,8 @@ class PredictionReferenceRepository:
             house_category_weights=self.get_house_category_weights(reference_version_id),
             sign_rulerships=self.get_sign_rulerships(),
             aspect_profiles=self.get_aspect_profiles(reference_version_id),
+            aspect_orb_rules=self.get_aspect_orb_rules(reference_version_id),
+            aspect_system_inheritance=self.get_aspect_system_inheritance(),
             astro_points=self.get_astro_points(reference_version_id),
             point_category_weights=self.get_point_category_weights(reference_version_id),
         )
@@ -360,6 +477,12 @@ class PredictionReferenceRepository:
         except (json.JSONDecodeError, TypeError):
             pass
         return ()
+
+    def _runtime_planet_class(self, role_code: str | None) -> str:
+        """Convertit le rôle canonique en famille historique attendue par le moteur daily."""
+        if role_code is None:
+            return ""
+        return role_code.removesuffix("_planet")
 
     def _parse_json_object(self, raw: str | None) -> dict[str, object]:
         """Convertit un objet JSON stocké en texte pour les profils d'aspects."""

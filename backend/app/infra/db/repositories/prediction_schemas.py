@@ -11,6 +11,7 @@ from app.domain.prediction.context import CalibrationData
 
 __all__ = [
     "AspectProfileData",
+    "AspectOrbRuleData",
     "AstroPointData",
     "CalibrationData",
     "CategoryData",
@@ -40,6 +41,8 @@ class CategoryData:
 
 @dataclass(frozen=True)
 class PlanetProfileData:
+    """Vue runtime fusionnant configuration daily et référentiels planétaires."""
+
     planet_id: int
     code: str
     name: str
@@ -48,10 +51,15 @@ class PlanetProfileData:
     speed_class: str
     weight_intraday: float
     weight_day_climate: float
-    typical_polarity: str | None
-    orb_active_deg: float | None
-    orb_peak_deg: float | None
-    keywords: tuple[str, ...]
+    daily_visibility_score: float = 1.0
+    daily_emotional_impact_score: float = 1.0
+    daily_conscious_activation_score: float = 1.0
+    is_enabled: bool = True
+    micro_note: str | None = None
+    typical_polarity: str | None = None
+    orb_active_deg: float | None = None
+    orb_peak_deg: float | None = None
+    keywords: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -134,6 +142,24 @@ class AspectProfileData:
 
 
 @dataclass(frozen=True)
+class AspectOrbRuleData:
+    """Règle d'orbe daily issue du référentiel versionné des aspects."""
+
+    aspect_code: str
+    system_code: str
+    calculation_context: str
+    source_body_type: str
+    target_body_type: str
+    orb_deg: float
+    priority: int
+    is_enabled: bool
+    source_planet_code: str | None = None
+    source_point_code: str | None = None
+    target_planet_code: str | None = None
+    target_point_code: str | None = None
+
+
+@dataclass(frozen=True)
 class RulesetData:
     id: int
     version: str
@@ -167,6 +193,8 @@ class PredictionContext:
     aspect_profiles: Mapping[str, AspectProfileData]
     astro_points: Mapping[str, AstroPointData]
     point_category_weights: tuple[PointCategoryWeightData, ...]
+    aspect_orb_rules: tuple[AspectOrbRuleData, ...] = ()
+    aspect_system_inheritance: Mapping[str, str | None] | None = None
 
 
 @dataclass(frozen=True)

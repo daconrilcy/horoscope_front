@@ -188,8 +188,8 @@ def test_migration_a_prediction_tables_creation(
         invalid_profile = PlanetProfileModel(
             reference_version_id=unlocked_version.id,
             planet_id=999_999,
-            class_code="luminary",
-            speed_class="fast",
+            weight_intraday=1.0,
+            weight_day_climate=1.0,
         )
         session.add(invalid_profile)
         with pytest.raises(IntegrityError):
@@ -218,13 +218,16 @@ def test_migration_a_prediction_tables_creation(
         unlocked_profile = PlanetProfileModel(
             reference_version_id=unlocked_version.id,
             planet_id=locked_planet.id,
-            class_code="luminary",
-            speed_class="fast",
+            weight_intraday=1.0,
+            weight_day_climate=1.0,
+            daily_visibility_score=0.7,
+            daily_emotional_impact_score=1.0,
+            daily_conscious_activation_score=0.6,
         )
         session.add(unlocked_profile)
         session.commit()
 
-        unlocked_profile.class_code = "personal"
+        unlocked_profile.weight_intraday = 0.8
         session.commit()
 
     engine.dispose()
@@ -291,4 +294,96 @@ def test_aspect_normalization_migration_resumes_after_partial_sqlite_ddl(
         )
         assert "astal_aspect_families" not in inspect(migrated_engine).get_table_names()
         assert connection.execute(sa.text("SELECT COUNT(*) FROM astral_aspects")).scalar_one() == 20
+    migrated_engine.dispose()
+
+
+def test_aspect_family_fk_repair_removes_legacy_table(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Vérifie la réparation d'une base liée à l'ancien nom de table fautif."""
+    db_path = tmp_path / "test-aspect-family-fk-repair.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.downgrade(config, "base")
+    command.upgrade(config, "20260515_0112")
+
+    engine = _sqlite_engine(database_url)
+    with engine.begin() as connection:
+        connection.execute(
+            sa.text(
+                """
+                CREATE TABLE astal_aspect_families (
+                    id INTEGER NOT NULL,
+                    name VARCHAR(32) NOT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE (name)
+                )
+                """
+            )
+        )
+        connection.execute(
+            sa.text(
+                """
+                INSERT INTO astal_aspect_families (id, name)
+                SELECT id, name FROM astral_aspect_families
+                """
+            )
+        )
+        connection.execute(sa.text("ALTER TABLE astral_aspects RENAME TO astral_aspects_new"))
+        connection.execute(
+            sa.text(
+                """
+                CREATE TABLE astral_aspects (
+                    id INTEGER NOT NULL,
+                    code VARCHAR(32),
+                    name VARCHAR(64),
+                    angle FLOAT,
+                    family INTEGER NOT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE (code),
+                    FOREIGN KEY(family) REFERENCES astal_aspect_families (id)
+                )
+                """
+            )
+        )
+        connection.execute(
+            sa.text(
+                """
+                INSERT INTO astral_aspects (id, code, name, angle, family)
+                SELECT id, code, name, angle, family FROM astral_aspects_new
+                """
+            )
+        )
+        connection.execute(sa.text("DROP TABLE astral_aspects_new"))
+        connection.execute(sa.text("CREATE INDEX ix_astral_aspects_code ON astral_aspects (code)"))
+    engine.dispose()
+
+    command.upgrade(config, "head")
+
+    migrated_engine = _sqlite_engine(database_url)
+    migrated_inspector = inspect(migrated_engine)
+    tables = set(migrated_inspector.get_table_names())
+    aspect_family_targets = {
+        foreign_key["referred_table"]
+        for foreign_key in migrated_inspector.get_foreign_keys("astral_aspects")
+        if foreign_key["constrained_columns"] == ["family"]
+    }
+    with migrated_engine.connect() as connection:
+        orphan_count = connection.execute(
+            sa.text(
+                """
+                SELECT COUNT(*)
+                FROM astral_aspects AS aspect
+                LEFT JOIN astral_aspect_families AS family ON family.id = aspect.family
+                WHERE family.id IS NULL
+                """
+            )
+        ).scalar_one()
+
+    assert "astal_aspect_families" not in tables
+    assert aspect_family_targets == {"astral_aspect_families"}
+    assert orphan_count == 0
     migrated_engine.dispose()

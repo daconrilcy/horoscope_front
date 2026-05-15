@@ -166,6 +166,22 @@ def _load_aspect_profiles() -> list[dict[str, object]]:
     return profiles
 
 
+def _load_daily_planet_profiles() -> list[dict[str, object]]:
+    """Charge les paramètres daily des planètes depuis la source documentaire."""
+    with _astro_research_path("astral_prediction_daily_planet_profiles.json").open(
+        encoding="utf-8"
+    ) as stream:
+        raw = json.load(stream)
+    if not isinstance(raw, dict) or raw.get("name") != "astral_prediction_daily_planet_profiles":
+        raise ValueError("daily planet profiles source targets an unexpected table")
+    profiles = raw.get("data")
+    if not isinstance(profiles, list) or not profiles:
+        raise ValueError("daily planet profiles source must contain a non-empty data list")
+    if not all(isinstance(profile, dict) for profile in profiles):
+        raise ValueError("daily planet profiles rows must be objects")
+    return profiles
+
+
 def _load_aspect_definition_groups() -> list[dict[str, object]]:
     """Charge les définitions d'aspects par système depuis la source documentaire."""
     with _astro_research_path("astral_aspect_definitions.json").open(encoding="utf-8") as stream:
@@ -1132,153 +1148,26 @@ def run_prediction_reference_seed(db: Session) -> None:
 
     # 5. Alimentation des profils planétaires.
     print("Seeding planet profiles...")
-    planet_profiles_data = [
-        (
-            "sun",
-            "luminary",
-            1,
-            "slow",
-            0.6,
-            1.0,
-            "positive",
-            5.0,
-            1.5,
-            ["identité", "vitalité", "volonté", "ego", "créativité"],
-        ),
-        (
-            "moon",
-            "luminary",
-            0,
-            "fast",
-            1.0,
-            0.8,
-            "neutral",
-            4.5,
-            1.2,
-            ["émotions", "instinct", "humeur", "inconscient", "réceptivité"],
-        ),
-        (
-            "mercury",
-            "personal",
-            2,
-            "fast",
-            0.9,
-            0.7,
-            "neutral",
-            3.0,
-            1.0,
-            ["pensée", "communication", "analyse", "adaptation", "arbitrage"],
-        ),
-        (
-            "venus",
-            "personal",
-            3,
-            "medium",
-            0.7,
-            0.8,
-            "positive",
-            3.0,
-            1.0,
-            ["amour", "beauté", "harmonie", "plaisir", "relation"],
-        ),
-        (
-            "mars",
-            "personal",
-            4,
-            "medium",
-            0.8,
-            0.9,
-            "negative",
-            3.0,
-            1.0,
-            ["action", "énergie", "désir", "conflits", "sexualité"],
-        ),
-        (
-            "jupiter",
-            "social",
-            5,
-            "slow",
-            0.4,
-            1.0,
-            "positive",
-            2.5,
-            0.8,
-            ["expansion", "chance", "philosophie", "sagesse", "optimisme"],
-        ),
-        (
-            "saturn",
-            "social",
-            6,
-            "slow",
-            0.3,
-            1.0,
-            "negative",
-            2.5,
-            0.8,
-            ["structure", "discipline", "limites", "responsabilité", "karma"],
-        ),
-        (
-            "uranus",
-            "transpersonal",
-            7,
-            "slow",
-            0.1,
-            0.5,
-            "neutral",
-            2.0,
-            0.6,
-            ["rupture", "originalité", "innovation", "liberté", "révolution"],
-        ),
-        (
-            "neptune",
-            "transpersonal",
-            8,
-            "slow",
-            0.1,
-            0.4,
-            "neutral",
-            2.0,
-            0.6,
-            ["dissolution", "spiritualité", "illusion", "idéal", "compassion"],
-        ),
-        (
-            "pluto",
-            "transpersonal",
-            9,
-            "slow",
-            0.1,
-            0.3,
-            "neutral",
-            2.0,
-            0.6,
-            ["transformation", "pouvoir", "mort-renaissance", "profondeur", "obsession"],
-        ),
-    ]
-    for (
-        code,
-        class_code,
-        rank,
-        speed,
-        w_intra,
-        w_climate,
-        pol,
-        orb_active,
-        orb_peak,
-        kws,
-    ) in planet_profiles_data:
+    planet_code_by_source_id = {
+        source_id: code for source_id, code in PLANET_CODE_BY_SOURCE_ID.items()
+    }
+    for source_row in _load_daily_planet_profiles():
+        planet_code = planet_code_by_source_id[int(source_row["planet_id"])]
         db.add(
             PlanetProfileModel(
                 reference_version_id=v2.id,
-                planet_id=planets[code],
-                class_code=class_code,
-                speed_rank=rank,
-                speed_class=speed,
-                weight_intraday=w_intra,
-                weight_day_climate=w_climate,
-                typical_polarity=pol,
-                orb_active_deg=orb_active,
-                orb_peak_deg=orb_peak,
-                keywords_json=json.dumps(kws),
+                planet_id=planets[planet_code],
+                weight_intraday=float(source_row["weight_intraday"]),
+                weight_day_climate=float(source_row["weight_day_climate"]),
+                daily_visibility_score=float(source_row["daily_visibility_score"]),
+                daily_emotional_impact_score=float(source_row["daily_emotional_impact_score"]),
+                daily_conscious_activation_score=float(
+                    source_row["daily_conscious_activation_score"]
+                ),
+                is_enabled=bool(source_row["is_enabled"]),
+                micro_note=(
+                    None if source_row.get("micro_note") is None else str(source_row["micro_note"])
+                ),
             )
         )
 

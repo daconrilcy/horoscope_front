@@ -221,6 +221,10 @@ class PredictionContextLoader:
                     for code, profile in pred_ctx.aspect_profiles.items()
                 }
             ),
+            aspect_orb_rules=tuple(pred_ctx.aspect_orb_rules),
+            aspect_system_inheritance=MappingProxyType(
+                dict(pred_ctx.aspect_system_inheritance or {})
+            ),
             astro_points=MappingProxyType(
                 {
                     code: self._freeze_astro_point(point)
@@ -265,6 +269,11 @@ class PredictionContextLoader:
             speed_class=profile.speed_class,
             weight_intraday=profile.weight_intraday,
             weight_day_climate=profile.weight_day_climate,
+            daily_visibility_score=profile.daily_visibility_score,
+            daily_emotional_impact_score=profile.daily_emotional_impact_score,
+            daily_conscious_activation_score=profile.daily_conscious_activation_score,
+            is_enabled=profile.is_enabled,
+            micro_note=profile.micro_note,
             typical_polarity=profile.typical_polarity,
             orb_active_deg=profile.orb_active_deg,
             orb_peak_deg=profile.orb_peak_deg,
