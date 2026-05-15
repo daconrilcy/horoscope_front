@@ -125,9 +125,22 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_houses",
         "astral_aspects",
         "astro_points",
+        "astral_house_axis_definitions",
     ):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" not in columns
+    axis_definition_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_house_axis_definitions")
+    }
+    assert axis_definition_columns == {
+        "id",
+        "astral_system_id",
+        "key",
+        "title",
+        "summary",
+        "language_id",
+        "micro_note",
+    }
     aspect_definition_check_constraints = {
         constraint["name"]
         for constraint in head_inspector.get_check_constraints("astral_aspect_definitions")
@@ -833,7 +846,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260515_0110"
+    assert version == "20260515_0111"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

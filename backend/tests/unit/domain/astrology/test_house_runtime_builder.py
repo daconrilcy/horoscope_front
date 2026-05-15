@@ -7,7 +7,13 @@ from app.domain.astrology.interpretation.house_strength_contracts import (
     HouseStrengthLevel,
     HouseStrengthReason,
 )
-from app.domain.astrology.natal_calculation import HouseResult, PlanetPosition
+from app.domain.astrology.natal_calculation import (
+    HouseResult,
+    NatalCalculationError,
+    PlanetPosition,
+    _extract_house_axes,
+)
+from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData
 
 RULERS = {
     "aries": "mars",
@@ -22,6 +28,21 @@ RULERS = {
     "capricorn": "saturn",
     "aquarius": "saturn",
     "pisces": "jupiter",
+}
+
+HOUSE_AXIS_REFERENCES = {
+    1: HouseAxisRuntimeData(opposite_house=7, theme="self_relationship"),
+    2: HouseAxisRuntimeData(opposite_house=8, theme="resources_sharing"),
+    3: HouseAxisRuntimeData(opposite_house=9, theme="local_distant"),
+    4: HouseAxisRuntimeData(opposite_house=10, theme="private_public"),
+    5: HouseAxisRuntimeData(opposite_house=11, theme="creation_collective"),
+    6: HouseAxisRuntimeData(opposite_house=12, theme="control_surrender"),
+    7: HouseAxisRuntimeData(opposite_house=1, theme="self_relationship"),
+    8: HouseAxisRuntimeData(opposite_house=2, theme="resources_sharing"),
+    9: HouseAxisRuntimeData(opposite_house=3, theme="local_distant"),
+    10: HouseAxisRuntimeData(opposite_house=4, theme="private_public"),
+    11: HouseAxisRuntimeData(opposite_house=5, theme="creation_collective"),
+    12: HouseAxisRuntimeData(opposite_house=6, theme="control_surrender"),
 }
 
 
@@ -75,6 +96,7 @@ def test_runtime_builder_golden_placidus_with_interception_and_three_signs() -> 
         ],
         house_system="placidus",
         sign_rulerships=RULERS,
+        house_axes=HOUSE_AXIS_REFERENCES,
     )
 
     house_2 = next(house for house in houses if house.number == 2)
@@ -85,6 +107,7 @@ def test_runtime_builder_golden_placidus_with_interception_and_three_signs() -> 
     assert house_2.ruler.planet == "mercury"
     assert house_2.occupants[0].planet == "sun"
     assert house_2.axis.opposite_house == 8
+    assert house_2.axis.theme == "resources_sharing"
     assert house_2.strength.level is HouseStrengthLevel.MODERATE
     assert house_2.strength.reasons == (
         HouseStrengthReason.BASELINE_HOUSE,
@@ -103,6 +126,7 @@ def test_runtime_builder_golden_whole_sign_without_interception() -> None:
         house_rulers=[],
         house_system="whole_sign",
         sign_rulerships=RULERS,
+        house_axes=HOUSE_AXIS_REFERENCES,
     )
 
     assert all(house.intercepted_signs == [] for house in houses)
@@ -116,6 +140,7 @@ def test_runtime_builder_whole_sign_enum_without_interception() -> None:
         house_rulers=[],
         house_system=HouseSystemType.WHOLE_SIGN,
         sign_rulerships=RULERS,
+        house_axes=HOUSE_AXIS_REFERENCES,
     )
 
     assert all(house.intercepted_signs == [] for house in houses)
@@ -148,6 +173,7 @@ def test_runtime_builder_golden_stellium_house_is_dominant() -> None:
         house_rulers=[],
         house_system="placidus",
         sign_rulerships=RULERS,
+        house_axes=HOUSE_AXIS_REFERENCES,
     )
 
     house_2 = next(house for house in houses if house.number == 2)
@@ -171,6 +197,7 @@ def test_runtime_builder_golden_empty_house_remains_non_dominant() -> None:
         house_rulers=[],
         house_system="placidus",
         sign_rulerships=RULERS,
+        house_axes=HOUSE_AXIS_REFERENCES,
     )
 
     house_6 = next(house for house in houses if house.number == 6)
@@ -180,3 +207,68 @@ def test_runtime_builder_golden_empty_house_remains_non_dominant() -> None:
         HouseStrengthReason.BASELINE_HOUSE,
         HouseStrengthReason.CADENT_HOUSE,
     )
+
+
+def test_runtime_builder_rejects_missing_house_axis() -> None:
+    """Un axe absent du referentiel provoque une erreur explicite."""
+    incomplete_axes = dict(HOUSE_AXIS_REFERENCES)
+    del incomplete_axes[6]
+
+    try:
+        build_house_runtime_data(
+            houses=_houses_with_interception(),
+            planets=[],
+            house_rulers=[],
+            house_system="placidus",
+            sign_rulerships=RULERS,
+            house_axes=incomplete_axes,
+        )
+    except ValueError as error:
+        assert str(error) == "missing house axis reference for house 6"
+    else:
+        raise AssertionError("expected missing house axis error")
+
+
+def test_reference_house_axes_extraction_rejects_incomplete_payload() -> None:
+    """La validation de calcul natal refuse un referentiel sans les douze axes."""
+    payload = {
+        "house_axes": [
+            {
+                "house_number": 1,
+                "opposite_house": 7,
+                "theme": "self_relationship",
+            }
+        ]
+    }
+
+    try:
+        _extract_house_axes("test-version", payload)
+    except NatalCalculationError as error:
+        assert error.code == "invalid_reference_data"
+        assert error.details == {
+            "reference_version": "test-version",
+            "field": "house_axes",
+            "reason": "missing_house",
+        }
+    else:
+        raise AssertionError("expected incomplete house axes reference error")
+
+
+def test_reference_house_axes_extraction_rejects_coerced_numbers() -> None:
+    """Les numeros d'axes doivent etre des entiers stricts, pas des valeurs coercibles."""
+    payload = {
+        "house_axes": [
+            {
+                "house_number": True,
+                "opposite_house": 7,
+                "theme": "self_relationship",
+            }
+        ]
+    }
+
+    try:
+        _extract_house_axes("test-version", payload)
+    except NatalCalculationError as error:
+        assert error.details["reason"] == "invalid_house_numbers"
+    else:
+        raise AssertionError("expected invalid house axis number error")

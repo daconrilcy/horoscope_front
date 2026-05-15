@@ -5,6 +5,10 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session, aliased
 
+from app.infra.db.models.interpretation_reference import (
+    AstralHouseAxisDefinitionModel,
+    AstralHouseAxisMemberModel,
+)
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
     AstralAspectDefinitionModel,
@@ -17,6 +21,7 @@ from app.infra.db.models.reference import (
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
+    LanguageModel,
     PlanetModel,
     ReferenceVersionModel,
 )
@@ -24,6 +29,9 @@ from app.infra.db.repositories.astrology_reference_sources import (
     load_aspect_family_names,
     load_aspect_rows,
     load_astral_system_names,
+    load_house_axis_definition_rows,
+    load_house_axis_member_rows,
+    load_language_rows,
     load_structural_reference_rows,
 )
 
@@ -136,6 +144,88 @@ class ReferenceRepository:
                 aspect.name = str(source_row["name"])
                 aspect.angle = float(source_row["angle"])
                 aspect.family = families[family_name]
+        self.db.flush()
+        self.seed_house_axis_defaults()
+
+    def seed_house_axis_defaults(self) -> None:
+        """Synchronise les axes de maisons structurels depuis les sources canoniques."""
+        for row in load_language_rows():
+            code = str(row["code"])
+            language = self.db.scalar(select(LanguageModel).where(LanguageModel.code == code))
+            if language is None:
+                self.db.add(LanguageModel(code=code, name=str(row["name"])))
+            else:
+                language.name = str(row["name"])
+        self.db.flush()
+
+        source_system_names = load_astral_system_names()
+        system_ids_by_source_id = {
+            index: self.db.scalar(
+                select(AstralSystemModel.id).where(AstralSystemModel.name == name)
+            )
+            for index, name in enumerate(source_system_names, start=1)
+        }
+        language_ids_by_source_id = {
+            int(row["id"]): self.db.scalar(
+                select(LanguageModel.id).where(LanguageModel.code == str(row["code"]))
+            )
+            for row in load_language_rows()
+        }
+        axis_definitions_by_source_id: dict[int, int] = {}
+        for row in load_house_axis_definition_rows():
+            source_axis_id = int(row["id"])
+            system_id = system_ids_by_source_id[int(row["astral_system_id"])]
+            language_id = language_ids_by_source_id[int(row["language_id"])]
+            if system_id is None or language_id is None:
+                raise ValueError("house axis seed requires canonical systems and languages")
+            key = str(row["key"])
+            axis = self.db.scalar(
+                select(AstralHouseAxisDefinitionModel).where(
+                    AstralHouseAxisDefinitionModel.astral_system_id == system_id,
+                    AstralHouseAxisDefinitionModel.language_id == language_id,
+                    AstralHouseAxisDefinitionModel.key == key,
+                )
+            )
+            if axis is None:
+                axis = AstralHouseAxisDefinitionModel(
+                    astral_system_id=system_id,
+                    key=key,
+                    title=str(row["title"]),
+                    summary=str(row["summary"]),
+                    language_id=language_id,
+                    micro_note=None if row.get("micro_note") is None else str(row["micro_note"]),
+                )
+                self.db.add(axis)
+                self.db.flush()
+            else:
+                axis.title = str(row["title"])
+                axis.summary = str(row["summary"])
+                axis.micro_note = None if row.get("micro_note") is None else str(row["micro_note"])
+            axis_definitions_by_source_id[source_axis_id] = axis.id
+
+        house_ids = {house.id for house in self.db.scalars(select(HouseModel)).all()}
+        for row in load_house_axis_member_rows():
+            house_id = int(row["house_id"])
+            opposite_house_id = int(row["opposite_house_id"])
+            axis_id = axis_definitions_by_source_id[int(row["axis_id"])]
+            if house_id not in house_ids or opposite_house_id not in house_ids:
+                raise ValueError("house axis seed requires canonical astral houses")
+            member = self.db.scalar(
+                select(AstralHouseAxisMemberModel).where(
+                    AstralHouseAxisMemberModel.house_id == house_id,
+                )
+            )
+            if member is None:
+                self.db.add(
+                    AstralHouseAxisMemberModel(
+                        axis_id=axis_id,
+                        house_id=house_id,
+                        opposite_house_id=opposite_house_id,
+                    )
+                )
+            else:
+                member.axis_id = axis_id
+                member.opposite_house_id = opposite_house_id
 
     def get_reference_data(self, version: str) -> dict[str, object]:
         """Retourne le vocabulaire stable expose pour une version existante."""
@@ -219,6 +309,7 @@ class ReferenceRepository:
             "planets": [{"code": item.code, "name": item.name} for item in planets],
             "signs": [{"code": item.code, "name": item.name} for item in signs],
             "houses": [{"number": item.number, "name": item.name} for item in houses],
+            "house_axes": self._get_house_axes(),
             "astral_systems": [
                 {
                     "code": name,
@@ -280,3 +371,44 @@ class ReferenceRepository:
                 ) in orb_rules
             ],
         }
+
+    def _get_house_axes(self) -> list[dict[str, object]]:
+        """Charge les axes de maisons localises depuis les tables canoniques."""
+        AxisHouseModel = aliased(HouseModel)
+        OppositeHouseModel = aliased(HouseModel)
+        rows = self.db.execute(
+            select(
+                AxisHouseModel.number.label("house_number"),
+                OppositeHouseModel.number.label("opposite_house"),
+                AstralHouseAxisDefinitionModel.key.label("theme"),
+            )
+            .select_from(AstralHouseAxisMemberModel)
+            .join(AxisHouseModel, AstralHouseAxisMemberModel.house_id == AxisHouseModel.id)
+            .join(
+                OppositeHouseModel,
+                AstralHouseAxisMemberModel.opposite_house_id == OppositeHouseModel.id,
+            )
+            .join(
+                AstralHouseAxisDefinitionModel,
+                AstralHouseAxisMemberModel.axis_id == AstralHouseAxisDefinitionModel.id,
+            )
+            .join(LanguageModel, AstralHouseAxisDefinitionModel.language_id == LanguageModel.id)
+            .join(
+                AstralSystemModel,
+                AstralHouseAxisDefinitionModel.astral_system_id == AstralSystemModel.id,
+            )
+            .where(
+                LanguageModel.code == "en",
+                AstralSystemModel.name == "modern",
+            )
+            .order_by(AxisHouseModel.number)
+        ).all()
+
+        return [
+            {
+                "house_number": row.house_number,
+                "opposite_house": row.opposite_house,
+                "theme": row.theme,
+            }
+            for row in rows
+        ]

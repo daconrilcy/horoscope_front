@@ -50,14 +50,13 @@ def _load_axis_rows() -> list[dict[str, object]]:
             raise RuntimeError("house axis definition rows must be objects")
 
         axis_id = _required_positive_int(row, "id")
-        reference_version_id = _required_positive_int(row, "reference_version_id")
         astral_system_id = _required_positive_int(row, "astral_system_id")
         key = _required_text(row, "key", max_length=64)
         title = _required_text(row, "title", max_length=128)
         summary = _required_text(row, "summary")
         language_id = _required_positive_int(row, "language_id")
         micro_note = _optional_text(row, "micro_note")
-        scope = (reference_version_id, astral_system_id, key, language_id)
+        scope = (astral_system_id, key, language_id)
 
         if axis_id in seen_ids or scope in seen_scopes:
             raise RuntimeError("house axis definition ids and scoped keys must be unique")
@@ -66,7 +65,6 @@ def _load_axis_rows() -> list[dict[str, object]]:
         parsed_rows.append(
             {
                 "id": axis_id,
-                "reference_version_id": reference_version_id,
                 "astral_system_id": astral_system_id,
                 "key": key,
                 "title": title,
@@ -128,7 +126,6 @@ def _seed_house_axis_definitions() -> None:
                 f"""
                 INSERT INTO {TABLE_NAME} (
                     id,
-                    reference_version_id,
                     astral_system_id,
                     key,
                     title,
@@ -138,7 +135,6 @@ def _seed_house_axis_definitions() -> None:
                 )
                 SELECT
                     :id,
-                    :reference_version_id,
                     :astral_system_id,
                     :key,
                     :title,
@@ -150,8 +146,7 @@ def _seed_house_axis_definitions() -> None:
                     FROM {TABLE_NAME}
                     WHERE id = :id
                         OR (
-                            reference_version_id = :reference_version_id
-                            AND astral_system_id = :astral_system_id
+                            astral_system_id = :astral_system_id
                             AND key = :key
                             AND language_id = :language_id
                         )
@@ -168,35 +163,21 @@ def upgrade() -> None:
         op.create_table(
             TABLE_NAME,
             sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-            sa.Column("reference_version_id", sa.Integer(), nullable=False),
             sa.Column("astral_system_id", sa.Integer(), nullable=False),
             sa.Column("key", sa.String(length=64), nullable=False),
             sa.Column("title", sa.String(length=128), nullable=False),
             sa.Column("summary", sa.Text(), nullable=False),
             sa.Column("language_id", sa.Integer(), nullable=False),
             sa.Column("micro_note", sa.Text(), nullable=True),
-            sa.ForeignKeyConstraint(
-                ["reference_version_id"],
-                ["astral_reference_versions.id"],
-                ondelete="RESTRICT",
-            ),
             sa.ForeignKeyConstraint(["astral_system_id"], ["astral_systems.id"]),
             sa.ForeignKeyConstraint(["language_id"], ["languages.id"]),
             sa.PrimaryKeyConstraint("id"),
             sa.UniqueConstraint(
-                "reference_version_id",
                 "astral_system_id",
                 "key",
                 "language_id",
                 name="uq_astral_house_axis_definitions_scope",
             ),
-        )
-    if not _index_exists(TABLE_NAME, "ix_astral_house_axis_definitions_reference_version_id"):
-        op.create_index(
-            "ix_astral_house_axis_definitions_reference_version_id",
-            TABLE_NAME,
-            ["reference_version_id"],
-            unique=False,
         )
     if not _index_exists(TABLE_NAME, "ix_astral_house_axis_definitions_astral_system_id"):
         op.create_index(
@@ -228,7 +209,6 @@ def downgrade() -> None:
         "ix_astral_house_axis_definitions_key",
         "ix_astral_house_axis_definitions_language_id",
         "ix_astral_house_axis_definitions_astral_system_id",
-        "ix_astral_house_axis_definitions_reference_version_id",
     ):
         if _index_exists(TABLE_NAME, index_name):
             op.drop_index(index_name, table_name=TABLE_NAME)

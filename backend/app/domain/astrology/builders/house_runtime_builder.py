@@ -10,7 +10,6 @@ from typing import Protocol
 
 from app.domain.astrology.calculators.contained_signs import resolve_contained_signs
 from app.domain.astrology.calculators.intercepted_signs import resolve_intercepted_signs
-from app.domain.astrology.constants.house_axes import resolve_house_axis
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.interpretation.house_strength import HouseStrengthEvaluator
 from app.domain.astrology.runtime.house_runtime_data import (
@@ -38,6 +37,7 @@ def build_house_runtime_data(
     house_rulers: Iterable[HouseRulerResult],
     house_system: object,
     sign_rulerships: Mapping[str, str],
+    house_axes: Mapping[int, HouseAxisRuntimeData],
 ) -> list[HouseRuntimeData]:
     """Construit les maisons enrichies sans recalculer les maîtres."""
     ordered_houses = sorted(houses, key=lambda item: item.number)
@@ -65,7 +65,9 @@ def build_house_runtime_data(
             ruler=ruler,
             sign_rulerships=sign_rulerships,
         )
-        axis_data = resolve_house_axis(house.number)
+        axis = house_axes.get(house.number)
+        if axis is None:
+            raise ValueError(f"missing house axis reference for house {house.number}")
 
         runtime_houses.append(
             HouseRuntimeData(
@@ -77,10 +79,7 @@ def build_house_runtime_data(
                 intercepted_signs=intercepted_signs,
                 ruler=ruler,
                 occupants=occupants,
-                axis=HouseAxisRuntimeData(
-                    opposite_house=int(axis_data["opposite_house"]),
-                    theme=str(axis_data["theme"]),
-                ),
+                axis=axis,
                 strength=strength,
             )
         )

@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from app.infra.db.base import Base
 from app.infra.db.models.interpretation_reference import (
     AstralAspectInterpretationProfileModel,
+    AstralHouseAxisDefinitionModel,
+    AstralHouseAxisMemberModel,
     HouseInterpretationProfileModel,
 )
 from app.infra.db.models.prediction_reference import (
@@ -32,6 +34,7 @@ from app.infra.db.models.reference import (
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
+    LanguageModel,
     PlanetModel,
     ReferenceVersionModel,
 )
@@ -44,6 +47,7 @@ from app.infra.db.repositories.prediction_schemas import (
     PlanetProfileData,
     PredictionContext,
 )
+from app.infra.db.repositories.reference_repository import ReferenceRepository
 
 
 def test_get_categories(db_session: Session):
@@ -97,6 +101,7 @@ def test_structural_astrology_models_are_not_versioned():
         AstralSystemModel,
         AstralHouseSystemModel,
         AstralPlanetSignDignityModel,
+        AstralHouseAxisDefinitionModel,
         AstralAspectFamilyModel,
     )
 
@@ -202,6 +207,26 @@ def test_house_models_use_canonical_astral_table_names():
     assert HouseProfileModel.__tablename__ == "astral_prediction_daily_house_profiles"
     assert HouseCategoryWeightModel.__tablename__ == "astral_house_category_weights"
     assert HouseInterpretationProfileModel.__tablename__ == "astral_house_interpretation_profiles"
+
+
+def test_house_axis_definition_is_structural_not_versioned():
+    """Les definitions d'axes de maisons sont structurelles et non versionnees."""
+    columns = {column.key for column in inspect(AstralHouseAxisDefinitionModel).columns}
+    assert columns == {
+        "id",
+        "astral_system_id",
+        "key",
+        "title",
+        "summary",
+        "language_id",
+        "micro_note",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralHouseAxisDefinitionModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("astral_system_id", "key", "language_id") in constraints
 
 
 def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
@@ -481,6 +506,50 @@ def test_get_sign_rulerships(db_session: Session):
     assert result["aries"] == "mars"
     assert result["leo"] == "sun"
     assert result["scorpio"] == "mars"
+
+
+def test_get_reference_data_exposes_house_axes_from_canonical_tables(db_session: Session) -> None:
+    """Les axes de maisons du payload de reference proviennent des tables relationnelles."""
+    repo = ReferenceRepository(db_session)
+
+    version = ReferenceVersionModel(version="axis-reference")
+    system = AstralSystemModel(name="modern")
+    language = LanguageModel(code="en", name="English")
+    houses = {number: HouseModel(number=number, name=f"House {number}") for number in range(1, 13)}
+    db_session.add_all([version, system, language, *houses.values()])
+    db_session.flush()
+
+    axis = AstralHouseAxisDefinitionModel(
+        astral_system_id=system.id,
+        key="self_relationship",
+        title="Self and Relationship",
+        summary="Axis summary",
+        language_id=language.id,
+    )
+    db_session.add(axis)
+    db_session.flush()
+    db_session.add_all(
+        [
+            AstralHouseAxisMemberModel(
+                axis_id=axis.id,
+                house_id=houses[1].id,
+                opposite_house_id=houses[7].id,
+            ),
+            AstralHouseAxisMemberModel(
+                axis_id=axis.id,
+                house_id=houses[7].id,
+                opposite_house_id=houses[1].id,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    payload = repo.get_reference_data("axis-reference")
+
+    assert payload["house_axes"] == [
+        {"house_number": 1, "opposite_house": 7, "theme": "self_relationship"},
+        {"house_number": 7, "opposite_house": 1, "theme": "self_relationship"},
+    ]
 
 
 def test_get_planet_sign_dignities_filters_by_system(db_session: Session):

@@ -793,7 +793,8 @@ Règle actuelle de dominance d'occupant :
 
 #### Axes
 
-`backend/app/domain/astrology/constants/house_axes.py` définit les axes miroir :
+Les axes miroir sont maintenant portés par les tables canoniques
+`astral_house_axis_definitions` et `astral_house_axis_members` :
 
 | Maisons | Thème |
 | --- | --- |
@@ -1021,7 +1022,7 @@ Rôle :
 - `backend/app/domain/astrology/runtime/house_runtime_data.py`
 - `backend/app/domain/astrology/builders/house_runtime_builder.py`
 - `backend/app/domain/astrology/builders/house_occupants_builder.py`
-- `backend/app/domain/astrology/constants/house_axes.py`
+- `backend/app/infra/db/repositories/reference_repository.py`
 - `backend/app/domain/astrology/interpretation/house_strength.py`
 - `backend/app/domain/astrology/interpretation/house_strength_contracts.py`
 - `backend/app/domain/astrology/calculators/contained_signs.py`

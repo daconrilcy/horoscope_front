@@ -31,7 +31,7 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectOrbRuleRuntimeData,
 )
 from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
-from app.domain.astrology.runtime.house_runtime_data import HouseRuntimeData
+from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData, HouseRuntimeData
 from app.domain.astrology.zodiac import normalize_360, sign_from_longitude
 from app.infra.observability.metrics import increment_counter
 
@@ -140,6 +140,54 @@ def _extract_sign_rulerships(reference_data: dict[str, object]) -> dict[str, str
     if not isinstance(raw, dict):
         return {}
     return {str(sign): str(planet) for sign, planet in raw.items()}
+
+
+def _extract_house_axes(
+    version: str,
+    reference_data: dict[str, object],
+) -> dict[int, HouseAxisRuntimeData]:
+    """Valide les axes de maisons charges depuis le referentiel canonique."""
+    raw_axes = reference_data.get("house_axes")
+    if not isinstance(raw_axes, list):
+        _raise_invalid_reference(version, "house_axes", "missing_or_empty")
+
+    axes: dict[int, HouseAxisRuntimeData] = {}
+    for item in raw_axes:
+        if not isinstance(item, dict):
+            _raise_invalid_reference(version, "house_axes", "invalid_entry")
+        if "house_number" not in item or "opposite_house" not in item:
+            _raise_invalid_reference(version, "house_axes", "invalid_house_numbers")
+        house_number = _parse_house_axis_number(version, item["house_number"])
+        opposite_house = _parse_house_axis_number(version, item["opposite_house"])
+        theme = item.get("theme")
+        if (
+            house_number < 1
+            or house_number > 12
+            or opposite_house < 1
+            or opposite_house > 12
+            or house_number == opposite_house
+            or not isinstance(theme, str)
+            or not theme.strip()
+        ):
+            _raise_invalid_reference(version, "house_axes", "invalid_entry")
+        if house_number in axes:
+            _raise_invalid_reference(version, "house_axes", "duplicate_house")
+        axes[house_number] = HouseAxisRuntimeData(
+            opposite_house=opposite_house,
+            theme=theme,
+        )
+
+    missing_houses = set(range(1, 13)) - set(axes)
+    if missing_houses:
+        _raise_invalid_reference(version, "house_axes", "missing_house")
+    return axes
+
+
+def _parse_house_axis_number(version: str, value: object) -> int:
+    """Extrait un numéro de maison entier sans coercition silencieuse."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        _raise_invalid_reference(version, "house_axes", "invalid_house_numbers")
+    return value
 
 
 def _build_system_inheritance(
@@ -508,6 +556,7 @@ def build_natal_result(
         for item in houses_raw
     ]
     sign_rulerships = _extract_sign_rulerships(reference_data)
+    house_axes = _extract_house_axes(version, reference_data)
     try:
         house_rulers = HouseRulerResolver(sign_rulerships).resolve(
             cusp_houses,
@@ -521,6 +570,7 @@ def build_natal_result(
         house_rulers=house_rulers,
         house_system=effective_house_system,
         sign_rulerships=sign_rulerships,
+        house_axes=house_axes,
     )
     aspects = [AspectResult.model_validate(item) for item in aspects_raw]
 

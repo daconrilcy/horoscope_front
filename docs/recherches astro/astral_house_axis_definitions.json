@@ -1,7 +1,6 @@
 {
     "structure": {
         "id": "integer",
-        "reference_version_id": "integer",
         "astral_system_id": "integer",
         "key": "string",
         "title": "string",
@@ -12,7 +11,6 @@
     "data": [
         {
             "id": 1,
-            "reference_version_id": 1,
             "astral_system_id": 2,
             "key": "self_relationship",
             "title": "Self and Relationship",
@@ -22,7 +20,6 @@
         },
         {
             "id": 2,
-            "reference_version_id": 1,
             "astral_system_id": 2,
             "key": "resources_sharing",
             "title": "Resources and Sharing",
@@ -32,7 +29,6 @@
         },
         {
             "id": 3,
-            "reference_version_id": 1,
             "astral_system_id": 2,
             "key": "local_distant",
             "title": "Local and Distant",
@@ -42,7 +38,6 @@
         },
         {
             "id": 4,
-            "reference_version_id": 1,
             "astral_system_id": 2,
             "key": "private_public",
             "title": "Private and Public",
@@ -52,7 +47,6 @@
         },
         {
             "id": 5,
-            "reference_version_id": 1,
             "astral_system_id": 2,
             "key": "creation_collective",
             "title": "Creation and Collective",
@@ -62,7 +56,6 @@
         },
         {
             "id": 6,
-            "reference_version_id": 1,
             "astral_system_id": 2,
             "key": "control_surrender",
             "title": "Control and Surrender",

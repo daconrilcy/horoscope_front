@@ -54,3 +54,36 @@ def load_astral_system_names() -> tuple[str, ...]:
     if not isinstance(systems, list) or not systems:
         raise ValueError("astral systems source must contain a non-empty name list")
     return tuple(str(value) for value in systems)
+
+
+def load_language_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les langues supportees depuis la source documentaire canonique."""
+    source_path = Path(__file__).resolve().parents[5] / "docs" / "languages.json"
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("languages source must contain data rows")
+    return tuple(dict(row) for row in rows)
+
+
+def load_house_axis_definition_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les definitions structurelles d'axes de maisons."""
+    source_path = astrology_research_path("astral_house_axis_definitions.json")
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("house axis definitions source must contain data rows")
+    return tuple(dict(row) for row in rows)
+
+
+def load_house_axis_member_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les associations structurelles maisons/axes."""
+    source_path = astrology_research_path("astral_house_axis_members.json")
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("house axis members source must contain data rows")
+    return tuple(dict(row) for row in rows)

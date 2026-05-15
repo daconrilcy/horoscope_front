@@ -180,6 +180,22 @@ def test_seed_reference_version_repairs_partial_existing_version() -> None:
     assert len(payload["planets"]) == 10
     assert len(payload["signs"]) == 12
     assert len(payload["houses"]) == 12
+    house_axes = cast(list[dict[str, Any]], payload["house_axes"])
+    assert len(house_axes) == 12
+    assert {item["house_number"]: item["opposite_house"] for item in house_axes} == {
+        1: 7,
+        2: 8,
+        3: 9,
+        4: 10,
+        5: 11,
+        6: 12,
+        7: 1,
+        8: 2,
+        9: 3,
+        10: 4,
+        11: 5,
+        12: 6,
+    }
     assert len(payload["aspects"]) == 20
     assert len(payload["aspect_orb_rules"]) == 79
     assert "characteristics" not in payload
