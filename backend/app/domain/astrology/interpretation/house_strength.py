@@ -8,6 +8,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from app.domain.astrology.celestial_runtime_catalog import (
+    ANGULAR_HOUSE_NUMBERS,
+    LIGHT_BODY_CODES,
+    SUCCEDENT_HOUSE_NUMBERS,
+)
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseOccupantRuntimeData,
     HouseRulerRuntimeData,
@@ -15,10 +20,6 @@ from app.domain.astrology.runtime.house_runtime_data import (
 )
 
 from .house_strength_contracts import HouseStrengthModifiers, HouseStrengthReason
-
-ANGULAR_HOUSES = {1, 4, 7, 10}
-SUCCEDENT_HOUSES = {2, 5, 8, 11}
-LUMINARIES = {"sun", "moon"}
 
 
 class HouseStrengthEvaluator:
@@ -39,10 +40,10 @@ class HouseStrengthEvaluator:
         occupancy_modifier = 0.0
         ruler_condition_modifier = 0.0
 
-        if house_number in ANGULAR_HOUSES:
+        if house_number in ANGULAR_HOUSE_NUMBERS:
             angularity_modifier += 0.25
             reasons.append(HouseStrengthReason.ANGULAR_HOUSE)
-        elif house_number in SUCCEDENT_HOUSES:
+        elif house_number in SUCCEDENT_HOUSE_NUMBERS:
             angularity_modifier += 0.12
             reasons.append(HouseStrengthReason.SUCCEDENT_HOUSE)
         else:
@@ -56,12 +57,12 @@ class HouseStrengthEvaluator:
             occupancy_modifier += 0.18
             reasons.append(HouseStrengthReason.STELLIUM_PRESENT)
 
-        if any(occupant.planet in LUMINARIES for occupant in occupants):
+        if any(occupant.planet in LIGHT_BODY_CODES for occupant in occupants):
             occupancy_modifier += 0.15
             reasons.append(HouseStrengthReason.LUMINARY_PRESENT)
 
         if ruler is not None:
-            if ruler.house in ANGULAR_HOUSES:
+            if ruler.house in ANGULAR_HOUSE_NUMBERS:
                 ruler_condition_modifier += 0.12
                 reasons.append(HouseStrengthReason.RULER_IN_ANGULAR_HOUSE)
             if ruler.sign is not None and sign_rulerships.get(ruler.sign) == ruler.planet:

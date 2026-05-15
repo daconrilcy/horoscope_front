@@ -24,6 +24,7 @@ from app.domain.astrology.natal_calculation import (
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
+from app.infra.db.repositories.reference_repository import ReferenceRepository
 from app.infra.observability.metrics import increment_counter
 from app.services.reference_data_service import ReferenceDataService
 
@@ -339,7 +340,17 @@ class NatalCalculationService:
                 details={"version": resolved_version},
             )
         reference_data = dict(reference_data)
-        sign_rulerships = PredictionReferenceRepository(db).get_sign_rulerships()
+        prediction_reference_repository = PredictionReferenceRepository(db)
+        sign_rulerships = prediction_reference_repository.get_sign_rulerships()
+        if not sign_rulerships and isinstance(db, Session):
+            from app.services.prediction.reference_seed_service import (
+                ensure_astral_planet_sign_dignities,
+            )
+
+            ReferenceRepository(db).seed_version_defaults()
+            ensure_astral_planet_sign_dignities(db)
+            db.flush()
+            sign_rulerships = prediction_reference_repository.get_sign_rulerships()
         if sign_rulerships:
             reference_data["sign_rulerships"] = sign_rulerships
 

@@ -1,3 +1,5 @@
+"""Valide et normalise les sorties structurées produites par les moteurs LLM."""
+
 from __future__ import annotations
 
 import json
@@ -73,7 +75,7 @@ _PLANET_CODES = {
     "LILITH",
     "NODE",
 }
-_ANGLE_CODES = {"ASC", "MC", "DSC", "IC"}
+VALID_ANGLE_POINT_CODES = {"ASC", "MC", "DSC", "IC"}
 _ASPECT_CODES = {"CONJUNCTION", "OPPOSITION", "TRINE", "SQUARE", "SEXTILE"}
 _SIGN_CODES = {
     "ARIES",
@@ -361,7 +363,7 @@ def _normalize_evidence_item(
     if cleaned in catalog_set:
         return cleaned
 
-    if cleaned in _ANGLE_CODES:
+    if cleaned in VALID_ANGLE_POINT_CODES:
         prefix = f"{cleaned}_"
         for key in catalog_set:
             if key.startswith(prefix):

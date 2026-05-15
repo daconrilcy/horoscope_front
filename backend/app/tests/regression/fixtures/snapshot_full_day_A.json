@@ -123,7 +123,7 @@
         2461106.4583333335,
         2461107.4583333335
       ],
-      "overall_tone": "neutral",
+      "overall_tone": "positive",
       "run_id": null,
       "snapshot_version": null
     },
@@ -1317,12 +1317,12 @@
     "category_scores": {
       "career": {
         "is_provisional": true,
-        "normalized_score": 0.0,
-        "note_20": 10,
-        "power": 0.0,
-        "raw_score": 0.0,
+        "normalized_score": 0.03341708915151487,
+        "note_20": 20,
+        "power": 0.17609125116969632,
+        "raw_score": 0.03341708915151487,
         "sort_order": 5,
-        "volatility": 0.0
+        "volatility": 0.03835603457034278
       },
       "communication": {
         "is_provisional": true,
@@ -1362,21 +1362,21 @@
       },
       "love": {
         "is_provisional": true,
-        "normalized_score": 0.0,
-        "note_20": 10,
-        "power": 0.0,
-        "raw_score": 0.0,
+        "normalized_score": 0.003249338498376406,
+        "note_20": 12,
+        "power": 0.03992002516008349,
+        "raw_score": 0.003249338498376406,
         "sort_order": 7,
-        "volatility": 0.0
+        "volatility": 0.007798555040176859
       },
       "money": {
         "is_provisional": true,
-        "normalized_score": 0.0,
-        "note_20": 10,
-        "power": 0.0,
-        "raw_score": 0.0,
+        "normalized_score": 0.005804821370413711,
+        "note_20": 13,
+        "power": 0.047816986740295345,
+        "raw_score": 0.005804821370413711,
         "sort_order": 6,
-        "volatility": 0.0
+        "volatility": 0.006982125910699217
       },
       "mood": {
         "is_provisional": true,
@@ -1389,39 +1389,39 @@
       },
       "pleasure_creativity": {
         "is_provisional": true,
-        "normalized_score": 0.0,
-        "note_20": 10,
-        "power": 0.0,
-        "raw_score": 0.0,
+        "normalized_score": -0.0037869907165640603,
+        "note_20": 2,
+        "power": 0.1678556235016945,
+        "raw_score": -0.0037869907165640603,
         "sort_order": 12,
-        "volatility": 0.0
+        "volatility": 0.024436901841000502
       },
       "sex_intimacy": {
         "is_provisional": true,
-        "normalized_score": 0.0,
-        "note_20": 10,
-        "power": 0.0,
-        "raw_score": 0.0,
+        "normalized_score": 0.009422318746178777,
+        "note_20": 15,
+        "power": 0.07761597847700114,
+        "raw_score": 0.009422318746178777,
         "sort_order": 8,
-        "volatility": 0.0
+        "volatility": 0.011333305826062496
       },
       "social_network": {
         "is_provisional": true,
-        "normalized_score": 0.0,
-        "note_20": 10,
-        "power": 0.0,
-        "raw_score": 0.0,
+        "normalized_score": -0.003938635350548724,
+        "note_20": 1,
+        "power": 0.2711417500186812,
+        "raw_score": -0.003938635350548724,
         "sort_order": 10,
-        "volatility": 0.0
+        "volatility": 0.03843985145646364
       },
       "work": {
         "is_provisional": true,
-        "normalized_score": 0.0,
-        "note_20": 10,
-        "power": 0.0,
-        "raw_score": 0.0,
+        "normalized_score": 0.02190982704699873,
+        "note_20": 18,
+        "power": 0.11545376798453921,
+        "raw_score": 0.02190982704699873,
         "sort_order": 4,
-        "volatility": 0.0
+        "volatility": 0.02514803368523852
       }
     },
     "time_blocks": [
@@ -1429,8 +1429,8 @@
         "block_index": 0,
         "dominant_categories": [
           "career",
-          "communication",
-          "energy"
+          "love",
+          "work"
         ],
         "driver_events": [
           {
@@ -1464,7 +1464,21 @@
             "priority": 78,
             "target": null,
             "ut_time": 2461106.5208333335
-          },
+          }
+        ],
+        "end_local": "2026-03-07T04:00:00+01:00",
+        "start_local": "2026-03-07T00:00:00+01:00",
+        "summary": "",
+        "tone_code": "neutral"
+      },
+      {
+        "block_index": 1,
+        "dominant_categories": [
+          "career",
+          "work",
+          "love"
+        ],
+        "driver_events": [
           {
             "aspect": null,
             "base_weight": 2.0,
@@ -1481,38 +1495,58 @@
             "ut_time": 2461106.625
           }
         ],
-        "end_local": "2026-03-07T05:00:00+01:00",
-        "start_local": "2026-03-07T00:00:00+01:00",
+        "end_local": "2026-03-07T04:15:00+01:00",
+        "start_local": "2026-03-07T04:00:00+01:00",
         "summary": "",
-        "tone_code": "neutral"
+        "tone_code": "positive"
       },
       {
-        "block_index": 1,
+        "block_index": 2,
         "dominant_categories": [
           "career",
-          "communication",
-          "energy"
+          "love",
+          "work"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T04:30:00+01:00",
+        "start_local": "2026-03-07T04:15:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 3,
+        "dominant_categories": [
+          "career",
+          "work",
+          "love"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T04:45:00+01:00",
+        "start_local": "2026-03-07T04:30:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 4,
+        "dominant_categories": [
+          "career",
+          "work",
+          "communication"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T05:00:00+01:00",
+        "start_local": "2026-03-07T04:45:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 5,
+        "dominant_categories": [
+          "career",
+          "work",
+          "communication"
         ],
         "driver_events": [
-          {
-            "aspect": "square",
-            "base_weight": 1.5,
-            "body": "Moon",
-            "event_type": "aspect_exact_to_personal",
-            "local_time": "2026-03-07T05:01:29.999987+01:00",
-            "metadata": {
-              "coarse_ut_time": 2461106.6666666665,
-              "natal_house_target": 11,
-              "natal_house_transited": 7,
-              "orb_max": 4.5,
-              "phase": "applying",
-              "refined": true
-            },
-            "orb_deg": 0.0004251525110134935,
-            "priority": 68,
-            "target": "Uranus",
-            "ut_time": 2461106.667708333
-          },
           {
             "aspect": "sextile",
             "base_weight": 2.0,
@@ -1531,19 +1565,38 @@
             "priority": 80,
             "target": "MC",
             "ut_time": 2461106.667708333
+          },
+          {
+            "aspect": "square",
+            "base_weight": 1.5,
+            "body": "Moon",
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "metadata": {
+              "coarse_ut_time": 2461106.6666666665,
+              "natal_house_target": 11,
+              "natal_house_transited": 7,
+              "orb_max": 4.5,
+              "phase": "applying",
+              "refined": true
+            },
+            "orb_deg": 0.0004251525110134935,
+            "priority": 68,
+            "target": "Uranus",
+            "ut_time": 2461106.667708333
           }
         ],
         "end_local": "2026-03-07T05:15:00+01:00",
         "start_local": "2026-03-07T05:00:00+01:00",
         "summary": "",
-        "tone_code": "neutral"
+        "tone_code": "positive"
       },
       {
-        "block_index": 2,
+        "block_index": 6,
         "dominant_categories": [
           "career",
-          "communication",
-          "energy"
+          "work",
+          "communication"
         ],
         "driver_events": [
           {
@@ -1560,7 +1613,34 @@
             "priority": 72,
             "target": null,
             "ut_time": 2461106.6770833335
-          },
+          }
+        ],
+        "end_local": "2026-03-07T05:30:00+01:00",
+        "start_local": "2026-03-07T05:15:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 7,
+        "dominant_categories": [
+          "career",
+          "work",
+          "love"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T05:45:00+01:00",
+        "start_local": "2026-03-07T05:30:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 8,
+        "dominant_categories": [
+          "career",
+          "love",
+          "work"
+        ],
+        "driver_events": [
           {
             "aspect": null,
             "base_weight": 2.0,
@@ -1575,7 +1655,34 @@
             "priority": 78,
             "target": null,
             "ut_time": 2461106.6979166665
-          },
+          }
+        ],
+        "end_local": "2026-03-07T06:00:00+01:00",
+        "start_local": "2026-03-07T05:45:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 9,
+        "dominant_categories": [
+          "career",
+          "work",
+          "love"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T06:15:00+01:00",
+        "start_local": "2026-03-07T06:00:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 10,
+        "dominant_categories": [
+          "career",
+          "communication",
+          "energy"
+        ],
+        "driver_events": [
           {
             "aspect": null,
             "base_weight": 2.0,
@@ -1590,19 +1697,91 @@
             "priority": 78,
             "target": null,
             "ut_time": 2461106.75
+          },
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Saturn",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T07:20:25.059097+01:00",
+            "metadata": {
+              "hour_number": 1
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461106.7641789247
+          },
+          {
+            "aspect": "sextile",
+            "base_weight": 0.5,
+            "body": "Moon",
+            "event_type": "aspect_exit_orb",
+            "local_time": "2026-03-07T08:00:00+01:00",
+            "metadata": {
+              "natal_house_target": 5,
+              "natal_house_transited": 8,
+              "orb_max": 4.05,
+              "phase": "separating"
+            },
+            "orb_deg": 4.053647574011791,
+            "priority": 25,
+            "target": "Mars",
+            "ut_time": 2461106.7916666665
           }
         ],
-        "end_local": "2026-03-07T08:45:00+01:00",
-        "start_local": "2026-03-07T05:15:00+01:00",
+        "end_local": "2026-03-07T08:15:00+01:00",
+        "start_local": "2026-03-07T06:15:00+01:00",
         "summary": "",
         "tone_code": "neutral"
       },
       {
-        "block_index": 3,
+        "block_index": 11,
         "dominant_categories": [
           "career",
-          "communication",
-          "energy"
+          "work",
+          "sex_intimacy"
+        ],
+        "driver_events": [
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Jupiter",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T08:17:20.870865+01:00",
+            "metadata": {
+              "hour_number": 2
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461106.803713783
+          }
+        ],
+        "end_local": "2026-03-07T08:30:00+01:00",
+        "start_local": "2026-03-07T08:15:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 12,
+        "dominant_categories": [
+          "career",
+          "money",
+          "sex_intimacy"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T08:45:00+01:00",
+        "start_local": "2026-03-07T08:30:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 13,
+        "dominant_categories": [
+          "career",
+          "money",
+          "sex_intimacy"
         ],
         "driver_events": [
           {
@@ -1638,7 +1817,21 @@
             "priority": 78,
             "target": null,
             "ut_time": 2461106.8333333335
-          },
+          }
+        ],
+        "end_local": "2026-03-07T09:15:00+01:00",
+        "start_local": "2026-03-07T08:45:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 14,
+        "dominant_categories": [
+          "career",
+          "work",
+          "sex_intimacy"
+        ],
+        "driver_events": [
           {
             "aspect": null,
             "base_weight": 0.8,
@@ -1654,13 +1847,275 @@
             "ut_time": 2461106.843248642
           }
         ],
+        "end_local": "2026-03-07T09:30:00+01:00",
+        "start_local": "2026-03-07T09:15:00+01:00",
+        "summary": "",
+        "tone_code": "positive"
+      },
+      {
+        "block_index": 15,
+        "dominant_categories": [
+          "career",
+          "communication",
+          "energy"
+        ],
+        "driver_events": [
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Sun",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T10:11:12.494441+01:00",
+            "metadata": {
+              "hour_number": 4
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461106.8827835005
+          },
+          {
+            "aspect": null,
+            "base_weight": 2.0,
+            "body": "Asc",
+            "event_type": "asc_sign_change",
+            "local_time": "2026-03-07T10:15:00+01:00",
+            "metadata": {
+              "from_sign": 1,
+              "to_sign": 2
+            },
+            "orb_deg": 0.0,
+            "priority": 78,
+            "target": null,
+            "ut_time": 2461106.8854166665
+          },
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Venus",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T11:08:08.306250+01:00",
+            "metadata": {
+              "hour_number": 5
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461106.9223183594
+          }
+        ],
+        "end_local": "2026-03-07T15:30:00+01:00",
+        "start_local": "2026-03-07T09:30:00+01:00",
+        "summary": "",
+        "tone_code": "neutral"
+      },
+      {
+        "block_index": 16,
+        "dominant_categories": [
+          "career",
+          "communication",
+          "energy"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T15:45:00+01:00",
+        "start_local": "2026-03-07T15:30:00+01:00",
+        "summary": "",
+        "tone_code": "neutral"
+      },
+      {
+        "block_index": 17,
+        "dominant_categories": [
+          "career",
+          "communication",
+          "energy"
+        ],
+        "driver_events": [
+          {
+            "aspect": "square",
+            "base_weight": 1.0,
+            "body": "Moon",
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T16:00:00+01:00",
+            "metadata": {
+              "natal_house_target": 11,
+              "natal_house_transited": 8,
+              "orb_max": 4.5,
+              "phase": "applying"
+            },
+            "orb_deg": 4.392885162623344,
+            "priority": 40,
+            "target": "Neptune",
+            "ut_time": 2461107.125
+          },
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Mars",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T15:52:47.365171+01:00",
+            "metadata": {
+              "hour_number": 10
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461107.1199926524
+          }
+        ],
+        "end_local": "2026-03-07T16:30:00+01:00",
+        "start_local": "2026-03-07T15:45:00+01:00",
+        "summary": "",
+        "tone_code": "neutral"
+      },
+      {
+        "block_index": 18,
+        "dominant_categories": [
+          "career",
+          "communication",
+          "energy"
+        ],
+        "driver_events": [],
+        "end_local": "2026-03-07T16:45:00+01:00",
+        "start_local": "2026-03-07T16:30:00+01:00",
+        "summary": "",
+        "tone_code": "neutral"
+      },
+      {
+        "block_index": 19,
+        "dominant_categories": [
+          "career",
+          "sex_intimacy",
+          "work"
+        ],
+        "driver_events": [
+          {
+            "aspect": "sextile",
+            "base_weight": 1.0,
+            "body": "Moon",
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T17:30:00+01:00",
+            "metadata": {
+              "natal_house_target": 10,
+              "natal_house_transited": 8,
+              "orb_max": 4.05,
+              "phase": "applying"
+            },
+            "orb_deg": 3.998938788126111,
+            "priority": 40,
+            "target": "Sun",
+            "ut_time": 2461107.1875
+          },
+          {
+            "aspect": "sextile",
+            "base_weight": 0.5,
+            "body": "Moon",
+            "event_type": "aspect_exit_orb",
+            "local_time": "2026-03-07T16:45:00+01:00",
+            "metadata": {
+              "natal_house_target": 10,
+              "natal_house_transited": 8,
+              "orb_max": 4.05,
+              "phase": "separating"
+            },
+            "orb_deg": 4.09937207955258,
+            "priority": 25,
+            "target": "Mercury",
+            "ut_time": 2461107.15625
+          },
+          {
+            "aspect": "opposition",
+            "base_weight": 1.0,
+            "body": "Moon",
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T16:45:00+01:00",
+            "metadata": {
+              "natal_house_target": 2,
+              "natal_house_transited": 8,
+              "orb_max": 4.5,
+              "phase": "applying"
+            },
+            "orb_deg": 4.40699192044741,
+            "priority": 40,
+            "target": "Saturn",
+            "ut_time": 2461107.15625
+          }
+        ],
         "end_local": "2026-03-08T00:00:00+01:00",
-        "start_local": "2026-03-07T08:45:00+01:00",
+        "start_local": "2026-03-07T16:45:00+01:00",
         "summary": "",
         "tone_code": "neutral"
       }
     ],
     "turning_points": [
+      {
+        "categories_impacted": [
+          "career",
+          "communication",
+          "energy",
+          "love",
+          "social_network",
+          "work"
+        ],
+        "driver_events": [
+          {
+            "aspect": null,
+            "base_weight": 2.0,
+            "body": "Asc",
+            "event_type": "asc_sign_change",
+            "local_time": "2026-03-07T04:00:00+01:00",
+            "metadata": {
+              "from_sign": 8,
+              "to_sign": 9
+            },
+            "orb_deg": 0.0,
+            "priority": 78,
+            "target": null,
+            "ut_time": 2461106.625
+          }
+        ],
+        "local_time": "2026-03-07T04:00:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "love",
+          "social_network"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T04:15:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "love",
+          "pleasure_creativity",
+          "social_network"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T04:30:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "communication",
+          "love"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T04:45:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
       {
         "categories_impacted": [],
         "driver_events": [
@@ -1767,6 +2222,118 @@
         }
       },
       {
+        "categories_impacted": [
+          "communication",
+          "love"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T05:30:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "love",
+          "pleasure_creativity",
+          "social_network"
+        ],
+        "driver_events": [
+          {
+            "aspect": null,
+            "base_weight": 2.0,
+            "body": "Asc",
+            "event_type": "asc_sign_change",
+            "local_time": "2026-03-07T05:45:00+01:00",
+            "metadata": {
+              "from_sign": 9,
+              "to_sign": 10
+            },
+            "orb_deg": 0.0,
+            "priority": 78,
+            "target": null,
+            "ut_time": 2461106.6979166665
+          }
+        ],
+        "local_time": "2026-03-07T05:45:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "love",
+          "social_network"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T06:00:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "career",
+          "communication",
+          "energy",
+          "love",
+          "social_network",
+          "work"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T06:15:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "career",
+          "communication",
+          "energy",
+          "money",
+          "sex_intimacy",
+          "work"
+        ],
+        "driver_events": [
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Jupiter",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T08:17:20.870865+01:00",
+            "metadata": {
+              "hour_number": 2
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461106.803713783
+          }
+        ],
+        "local_time": "2026-03-07T08:15:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "money",
+          "work"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T08:30:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
         "categories_impacted": [],
         "driver_events": [
           {
@@ -1812,6 +2379,146 @@
           "target": "Mercury",
           "ut_time": 2461106.8211805555
         }
+      },
+      {
+        "categories_impacted": [
+          "money",
+          "work"
+        ],
+        "driver_events": [
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Mars",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T09:14:16.682673+01:00",
+            "metadata": {
+              "hour_number": 3
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461106.843248642
+          }
+        ],
+        "local_time": "2026-03-07T09:15:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "career",
+          "communication",
+          "energy",
+          "money",
+          "sex_intimacy",
+          "work"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T09:30:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "pleasure_creativity",
+          "social_network"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T15:30:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "pleasure_creativity",
+          "social_network"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T15:45:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "pleasure_creativity",
+          "social_network"
+        ],
+        "driver_events": [],
+        "local_time": "2026-03-07T16:30:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
+      },
+      {
+        "categories_impacted": [
+          "pleasure_creativity",
+          "social_network"
+        ],
+        "driver_events": [
+          {
+            "aspect": "sextile",
+            "base_weight": 0.5,
+            "body": "Moon",
+            "event_type": "aspect_exit_orb",
+            "local_time": "2026-03-07T16:45:00+01:00",
+            "metadata": {
+              "natal_house_target": 10,
+              "natal_house_transited": 8,
+              "orb_max": 4.05,
+              "phase": "separating"
+            },
+            "orb_deg": 4.09937207955258,
+            "priority": 25,
+            "target": "Mercury",
+            "ut_time": 2461107.15625
+          },
+          {
+            "aspect": "opposition",
+            "base_weight": 1.0,
+            "body": "Moon",
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T16:45:00+01:00",
+            "metadata": {
+              "natal_house_target": 2,
+              "natal_house_transited": 8,
+              "orb_max": 4.5,
+              "phase": "applying"
+            },
+            "orb_deg": 4.40699192044741,
+            "priority": 40,
+            "target": "Saturn",
+            "ut_time": 2461107.15625
+          },
+          {
+            "aspect": null,
+            "base_weight": 0.8,
+            "body": "Sun",
+            "event_type": "planetary_hour_change",
+            "local_time": "2026-03-07T16:49:43.176939+01:00",
+            "metadata": {
+              "hour_number": 11
+            },
+            "orb_deg": 0.0,
+            "priority": 20,
+            "target": null,
+            "ut_time": 2461107.159527511
+          }
+        ],
+        "local_time": "2026-03-07T16:45:00+01:00",
+        "reason": "delta_note",
+        "severity": 0.8,
+        "summary": "",
+        "trigger_event": null
       }
     ],
     "explainability": {
@@ -1822,32 +2529,32 @@
             {
               "aspect": "sextile",
               "body": "Moon",
-              "contribution": 0.0,
+              "contribution": 0.8324315908266491,
+              "event_type": "aspect_exact_to_angle",
+              "local_time": "2026-03-07T05:01:29.999987+01:00",
+              "orb_deg": 0.0004251525110134935,
+              "phase": "applying",
+              "target": "MC"
+            },
+            {
+              "aspect": "sextile",
+              "body": "Moon",
+              "contribution": 0.528273753509089,
+              "event_type": "aspect_exact_to_personal",
+              "local_time": "2026-03-07T08:42:29.999987+01:00",
+              "orb_deg": 0.00213270499497753,
+              "phase": "applying",
+              "target": "Mercury"
+            },
+            {
+              "aspect": "sextile",
+              "body": "Moon",
+              "contribution": 0.01604575902191278,
               "event_type": "aspect_enter_orb",
               "local_time": "2026-03-07T01:00:00+01:00",
               "orb_deg": 3.956663645961072,
               "phase": "applying",
               "target": "Mercury"
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T01:30:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T04:00:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
             }
           ]
         },
@@ -1997,32 +2704,32 @@
             {
               "aspect": "sextile",
               "body": "Moon",
-              "contribution": 0.0,
+              "contribution": 0.49900031450104365,
+              "event_type": "aspect_exact_to_angle",
+              "local_time": "2026-03-07T05:01:29.999987+01:00",
+              "orb_deg": 0.0004251525110134935,
+              "phase": "applying",
+              "target": "MC"
+            },
+            {
+              "aspect": "square",
+              "body": "Moon",
+              "contribution": -0.4048379963863529,
+              "event_type": "aspect_exact_to_personal",
+              "local_time": "2026-03-07T05:01:29.999987+01:00",
+              "orb_deg": 0.0004251525110134935,
+              "phase": "applying",
+              "target": "Uranus"
+            },
+            {
+              "aspect": "sextile",
+              "body": "Moon",
+              "contribution": 0.009618614774568105,
               "event_type": "aspect_enter_orb",
               "local_time": "2026-03-07T01:00:00+01:00",
               "orb_deg": 3.956663645961072,
               "phase": "applying",
               "target": "Mercury"
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T01:30:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T04:00:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
             }
           ]
         },
@@ -2032,32 +2739,32 @@
             {
               "aspect": "sextile",
               "body": "Moon",
-              "contribution": 0.0,
-              "event_type": "aspect_enter_orb",
-              "local_time": "2026-03-07T01:00:00+01:00",
-              "orb_deg": 3.956663645961072,
+              "contribution": 0.14345096022088605,
+              "event_type": "aspect_exact_to_personal",
+              "local_time": "2026-03-07T08:42:29.999987+01:00",
+              "orb_deg": 0.00213270499497753,
               "phase": "applying",
               "target": "Mercury"
             },
             {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T01:30:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
+              "aspect": "square",
+              "body": "Moon",
+              "contribution": -0.005751080686072203,
+              "event_type": "aspect_enter_orb",
+              "local_time": "2026-03-07T16:00:00+01:00",
+              "orb_deg": 4.392885162623344,
+              "phase": "applying",
+              "target": "Neptune"
             },
             {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T04:00:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
+              "aspect": "sextile",
+              "body": "Moon",
+              "contribution": 0.002614090255016129,
+              "event_type": "aspect_enter_orb",
+              "local_time": "2026-03-07T17:30:00+01:00",
+              "orb_deg": 3.998938788126111,
+              "phase": "applying",
+              "target": "Sun"
             }
           ]
         },
@@ -2100,6 +2807,26 @@
           "category_code": "pleasure_creativity",
           "top_contributors": [
             {
+              "aspect": "square",
+              "body": "Moon",
+              "contribution": -0.5035668705050835,
+              "event_type": "aspect_exact_to_personal",
+              "local_time": "2026-03-07T05:01:29.999987+01:00",
+              "orb_deg": 0.0004251525110134935,
+              "phase": "applying",
+              "target": "Uranus"
+            },
+            {
+              "aspect": "square",
+              "body": "Moon",
+              "contribution": -0.015791856337987638,
+              "event_type": "aspect_enter_orb",
+              "local_time": "2026-03-07T16:00:00+01:00",
+              "orb_deg": 4.392885162623344,
+              "phase": "applying",
+              "target": "Neptune"
+            },
+            {
               "aspect": "sextile",
               "body": "Moon",
               "contribution": 0.0,
@@ -2108,26 +2835,6 @@
               "orb_deg": 3.956663645961072,
               "phase": "applying",
               "target": "Mercury"
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T01:30:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T04:00:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
             }
           ]
         },
@@ -2137,32 +2844,32 @@
             {
               "aspect": "sextile",
               "body": "Moon",
-              "contribution": 0.0,
-              "event_type": "aspect_enter_orb",
-              "local_time": "2026-03-07T01:00:00+01:00",
-              "orb_deg": 3.956663645961072,
+              "contribution": 0.23284793543100343,
+              "event_type": "aspect_exact_to_personal",
+              "local_time": "2026-03-07T08:42:29.999987+01:00",
+              "orb_deg": 0.00213270499497753,
               "phase": "applying",
               "target": "Mercury"
             },
             {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T01:30:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
+              "aspect": "square",
+              "body": "Moon",
+              "contribution": -0.009335087490436041,
+              "event_type": "aspect_enter_orb",
+              "local_time": "2026-03-07T16:00:00+01:00",
+              "orb_deg": 4.392885162623344,
+              "phase": "applying",
+              "target": "Neptune"
             },
             {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T04:00:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
+              "aspect": "sextile",
+              "body": "Moon",
+              "contribution": 0.0042431609936493695,
+              "event_type": "aspect_enter_orb",
+              "local_time": "2026-03-07T17:30:00+01:00",
+              "orb_deg": 3.998938788126111,
+              "phase": "applying",
+              "target": "Sun"
             }
           ]
         },
@@ -2170,34 +2877,34 @@
           "category_code": "social_network",
           "top_contributors": [
             {
+              "aspect": "square",
+              "body": "Moon",
+              "contribution": -1.0,
+              "event_type": "aspect_exact_to_personal",
+              "local_time": "2026-03-07T05:01:29.999987+01:00",
+              "orb_deg": 0.0004251525110134935,
+              "phase": "applying",
+              "target": "Uranus"
+            },
+            {
               "aspect": "sextile",
               "body": "Moon",
-              "contribution": 0.0,
-              "event_type": "aspect_enter_orb",
-              "local_time": "2026-03-07T01:00:00+01:00",
-              "orb_deg": 3.956663645961072,
+              "contribution": 0.3109579165732606,
+              "event_type": "aspect_exact_to_angle",
+              "local_time": "2026-03-07T05:01:29.999987+01:00",
+              "orb_deg": 0.0004251525110134935,
               "phase": "applying",
-              "target": "Mercury"
+              "target": "MC"
             },
             {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T01:30:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T04:00:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
+              "aspect": "square",
+              "body": "Moon",
+              "contribution": -0.0276902032685059,
+              "event_type": "aspect_enter_orb",
+              "local_time": "2026-03-07T16:00:00+01:00",
+              "orb_deg": 4.392885162623344,
+              "phase": "applying",
+              "target": "Neptune"
             }
           ]
         },
@@ -2207,32 +2914,32 @@
             {
               "aspect": "sextile",
               "body": "Moon",
-              "contribution": 0.0,
+              "contribution": 0.5457815939855165,
+              "event_type": "aspect_exact_to_angle",
+              "local_time": "2026-03-07T05:01:29.999987+01:00",
+              "orb_deg": 0.0004251525110134935,
+              "phase": "applying",
+              "target": "MC"
+            },
+            {
+              "aspect": "sextile",
+              "body": "Moon",
+              "contribution": 0.34636130395361764,
+              "event_type": "aspect_exact_to_personal",
+              "local_time": "2026-03-07T08:42:29.999987+01:00",
+              "orb_deg": 0.00213270499497753,
+              "phase": "applying",
+              "target": "Mercury"
+            },
+            {
+              "aspect": "sextile",
+              "body": "Moon",
+              "contribution": 0.010520359909683863,
               "event_type": "aspect_enter_orb",
               "local_time": "2026-03-07T01:00:00+01:00",
               "orb_deg": 3.956663645961072,
               "phase": "applying",
               "target": "Mercury"
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T01:30:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
-            },
-            {
-              "aspect": null,
-              "body": "Asc",
-              "contribution": 0.0,
-              "event_type": "asc_sign_change",
-              "local_time": "2026-03-07T04:00:00+01:00",
-              "orb_deg": 0.0,
-              "phase": null,
-              "target": null
             }
           ]
         }
@@ -2245,18 +2952,18 @@
         "2026-03-07T01:00:00+01:00": [
           {
             "contributions": {
-              "career": 0.0,
+              "career": 0.01604575902191278,
               "communication": 0.0,
               "energy": 0.0,
               "family_home": 0.0,
               "health": 0.0,
-              "love": 0.0,
+              "love": 0.009618614774568105,
               "money": 0.0,
               "mood": 0.0,
               "pleasure_creativity": 0.0,
               "sex_intimacy": 0.0,
-              "social_network": 0.0,
-              "work": 0.0
+              "social_network": 0.005993952956945932,
+              "work": 0.010520359909683863
             },
             "event": {
               "aspect": "sextile",
@@ -2330,18 +3037,18 @@
         "2026-03-07T05:00:00+01:00": [
           {
             "contributions": {
-              "career": 0.0,
-              "communication": 0.0,
-              "energy": 0.0,
-              "family_home": 0.0,
-              "health": 0.0,
-              "love": 0.0,
-              "money": 0.0,
-              "mood": 0.0,
-              "pleasure_creativity": 0.0,
-              "sex_intimacy": 0.0,
-              "social_network": 0.0,
-              "work": 0.0
+              "career": -0.0,
+              "communication": -0.0,
+              "energy": -0.0,
+              "family_home": -0.0,
+              "health": -0.0,
+              "love": -0.4048379963863529,
+              "money": -0.0,
+              "mood": -0.0,
+              "pleasure_creativity": -0.5035668705050835,
+              "sex_intimacy": -0.0,
+              "social_network": -1.0,
+              "work": -0.0
             },
             "event": {
               "aspect": "square",
@@ -2352,18 +3059,18 @@
           },
           {
             "contributions": {
-              "career": 0.0,
+              "career": 0.8324315908266491,
               "communication": 0.0,
               "energy": 0.0,
               "family_home": 0.0,
               "health": 0.0,
-              "love": 0.0,
+              "love": 0.49900031450104365,
               "money": 0.0,
               "mood": 0.0,
               "pleasure_creativity": 0.0,
               "sex_intimacy": 0.0,
-              "social_network": 0.0,
-              "work": 0.0
+              "social_network": 0.3109579165732606,
+              "work": 0.5457815939855165
             },
             "event": {
               "aspect": "sextile",
@@ -2550,18 +3257,18 @@
         "2026-03-07T08:45:00+01:00": [
           {
             "contributions": {
-              "career": 0.0,
+              "career": 0.528273753509089,
               "communication": 0.0,
               "energy": 0.0,
               "family_home": 0.0,
               "health": 0.0,
               "love": 0.0,
-              "money": 0.0,
+              "money": 0.14345096022088605,
               "mood": 0.0,
               "pleasure_creativity": 0.0,
-              "sex_intimacy": 0.0,
+              "sex_intimacy": 0.23284793543100343,
               "social_network": 0.0,
-              "work": 0.0
+              "work": 0.34636130395361764
             },
             "event": {
               "aspect": "sextile",
@@ -2986,18 +3693,18 @@
           },
           {
             "contributions": {
-              "career": 0.0,
-              "communication": 0.0,
-              "energy": 0.0,
-              "family_home": 0.0,
-              "health": 0.0,
-              "love": 0.0,
-              "money": 0.0,
-              "mood": 0.0,
-              "pleasure_creativity": 0.0,
-              "sex_intimacy": 0.0,
-              "social_network": 0.0,
-              "work": 0.0
+              "career": -0.0,
+              "communication": -0.0,
+              "energy": -0.0,
+              "family_home": -0.0,
+              "health": -0.0,
+              "love": -0.0,
+              "money": -0.005751080686072203,
+              "mood": -0.0,
+              "pleasure_creativity": -0.015791856337987638,
+              "sex_intimacy": -0.009335087490436041,
+              "social_network": -0.0276902032685059,
+              "work": -0.0
             },
             "event": {
               "aspect": "square",
@@ -3105,18 +3812,18 @@
         "2026-03-07T17:30:00+01:00": [
           {
             "contributions": {
-              "career": 0.0,
+              "career": 0.009626671504342007,
               "communication": 0.0,
               "energy": 0.0,
               "family_home": 0.0,
               "health": 0.0,
               "love": 0.0,
-              "money": 0.0,
+              "money": 0.002614090255016129,
               "mood": 0.0,
               "pleasure_creativity": 0.0,
-              "sex_intimacy": 0.0,
+              "sex_intimacy": 0.0042431609936493695,
               "social_network": 0.0,
-              "work": 0.0
+              "work": 0.006311701978053437
             },
             "event": {
               "aspect": "sextile",
@@ -3519,21 +4226,21 @@
     "editorial": {
       "best_window": {
         "dominant_category": "career",
-        "end_local": "2026-03-07T05:00:00+01:00",
-        "start_local": "2026-03-07T00:00:00+01:00"
+        "end_local": "2026-03-07T08:30:00+01:00",
+        "start_local": "2026-03-07T08:15:00+01:00"
       },
       "bottom2_categories": [
         {
-          "code": "work",
-          "note_20": 10,
-          "power": 0.0,
-          "volatility": 0.0
+          "code": "social_network",
+          "note_20": 1,
+          "power": 0.2711417500186812,
+          "volatility": 0.03843985145646364
         },
         {
-          "code": "career",
-          "note_20": 10,
-          "power": 0.0,
-          "volatility": 0.0
+          "code": "pleasure_creativity",
+          "note_20": 2,
+          "power": 0.1678556235016945,
+          "volatility": 0.024436901841000502
         }
       ],
       "caution_flags": {
@@ -3607,25 +4314,25 @@
           "ut_time": 2461106.667708333
         }
       },
-      "overall_tone": "neutral",
+      "overall_tone": "positive",
       "top3_categories": [
         {
-          "code": "energy",
-          "note_20": 10,
-          "power": 0.0,
-          "volatility": 0.0
+          "code": "career",
+          "note_20": 20,
+          "power": 0.17609125116969632,
+          "volatility": 0.03835603457034278
         },
         {
-          "code": "mood",
-          "note_20": 10,
-          "power": 0.0,
-          "volatility": 0.0
+          "code": "work",
+          "note_20": 18,
+          "power": 0.11545376798453921,
+          "volatility": 0.02514803368523852
         },
         {
-          "code": "health",
-          "note_20": 10,
-          "power": 0.0,
-          "volatility": 0.0
+          "code": "sex_intimacy",
+          "note_20": 15,
+          "power": 0.07761597847700114,
+          "volatility": 0.011333305826062496
         }
       ],
       "top3_contributors_per_category": {
@@ -3633,32 +4340,32 @@
           {
             "aspect": "sextile",
             "body": "Moon",
-            "contribution": 0.0,
+            "contribution": 0.8324315908266491,
+            "event_type": "aspect_exact_to_angle",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "orb_deg": 0.0004251525110134935,
+            "phase": "applying",
+            "target": "MC"
+          },
+          {
+            "aspect": "sextile",
+            "body": "Moon",
+            "contribution": 0.528273753509089,
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T08:42:29.999987+01:00",
+            "orb_deg": 0.00213270499497753,
+            "phase": "applying",
+            "target": "Mercury"
+          },
+          {
+            "aspect": "sextile",
+            "body": "Moon",
+            "contribution": 0.01604575902191278,
             "event_type": "aspect_enter_orb",
             "local_time": "2026-03-07T01:00:00+01:00",
             "orb_deg": 3.956663645961072,
             "phase": "applying",
             "target": "Mercury"
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T01:30:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T04:00:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
           }
         ],
         "communication": [
@@ -3793,64 +4500,64 @@
           {
             "aspect": "sextile",
             "body": "Moon",
-            "contribution": 0.0,
+            "contribution": 0.49900031450104365,
+            "event_type": "aspect_exact_to_angle",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "orb_deg": 0.0004251525110134935,
+            "phase": "applying",
+            "target": "MC"
+          },
+          {
+            "aspect": "square",
+            "body": "Moon",
+            "contribution": -0.4048379963863529,
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "orb_deg": 0.0004251525110134935,
+            "phase": "applying",
+            "target": "Uranus"
+          },
+          {
+            "aspect": "sextile",
+            "body": "Moon",
+            "contribution": 0.009618614774568105,
             "event_type": "aspect_enter_orb",
             "local_time": "2026-03-07T01:00:00+01:00",
             "orb_deg": 3.956663645961072,
             "phase": "applying",
             "target": "Mercury"
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T01:30:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T04:00:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
           }
         ],
         "money": [
           {
             "aspect": "sextile",
             "body": "Moon",
-            "contribution": 0.0,
-            "event_type": "aspect_enter_orb",
-            "local_time": "2026-03-07T01:00:00+01:00",
-            "orb_deg": 3.956663645961072,
+            "contribution": 0.14345096022088605,
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T08:42:29.999987+01:00",
+            "orb_deg": 0.00213270499497753,
             "phase": "applying",
             "target": "Mercury"
           },
           {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T01:30:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
+            "aspect": "square",
+            "body": "Moon",
+            "contribution": -0.005751080686072203,
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T16:00:00+01:00",
+            "orb_deg": 4.392885162623344,
+            "phase": "applying",
+            "target": "Neptune"
           },
           {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T04:00:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
+            "aspect": "sextile",
+            "body": "Moon",
+            "contribution": 0.002614090255016129,
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T17:30:00+01:00",
+            "orb_deg": 3.998938788126111,
+            "phase": "applying",
+            "target": "Sun"
           }
         ],
         "mood": [
@@ -3887,6 +4594,26 @@
         ],
         "pleasure_creativity": [
           {
+            "aspect": "square",
+            "body": "Moon",
+            "contribution": -0.5035668705050835,
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "orb_deg": 0.0004251525110134935,
+            "phase": "applying",
+            "target": "Uranus"
+          },
+          {
+            "aspect": "square",
+            "body": "Moon",
+            "contribution": -0.015791856337987638,
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T16:00:00+01:00",
+            "orb_deg": 4.392885162623344,
+            "phase": "applying",
+            "target": "Neptune"
+          },
+          {
             "aspect": "sextile",
             "body": "Moon",
             "contribution": 0.0,
@@ -3895,122 +4622,102 @@
             "orb_deg": 3.956663645961072,
             "phase": "applying",
             "target": "Mercury"
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T01:30:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T04:00:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
           }
         ],
         "sex_intimacy": [
           {
             "aspect": "sextile",
             "body": "Moon",
-            "contribution": 0.0,
-            "event_type": "aspect_enter_orb",
-            "local_time": "2026-03-07T01:00:00+01:00",
-            "orb_deg": 3.956663645961072,
+            "contribution": 0.23284793543100343,
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T08:42:29.999987+01:00",
+            "orb_deg": 0.00213270499497753,
             "phase": "applying",
             "target": "Mercury"
           },
           {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T01:30:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
+            "aspect": "square",
+            "body": "Moon",
+            "contribution": -0.009335087490436041,
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T16:00:00+01:00",
+            "orb_deg": 4.392885162623344,
+            "phase": "applying",
+            "target": "Neptune"
           },
           {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T04:00:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
+            "aspect": "sextile",
+            "body": "Moon",
+            "contribution": 0.0042431609936493695,
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T17:30:00+01:00",
+            "orb_deg": 3.998938788126111,
+            "phase": "applying",
+            "target": "Sun"
           }
         ],
         "social_network": [
           {
+            "aspect": "square",
+            "body": "Moon",
+            "contribution": -1.0,
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "orb_deg": 0.0004251525110134935,
+            "phase": "applying",
+            "target": "Uranus"
+          },
+          {
             "aspect": "sextile",
             "body": "Moon",
-            "contribution": 0.0,
-            "event_type": "aspect_enter_orb",
-            "local_time": "2026-03-07T01:00:00+01:00",
-            "orb_deg": 3.956663645961072,
+            "contribution": 0.3109579165732606,
+            "event_type": "aspect_exact_to_angle",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "orb_deg": 0.0004251525110134935,
             "phase": "applying",
-            "target": "Mercury"
+            "target": "MC"
           },
           {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T01:30:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T04:00:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
+            "aspect": "square",
+            "body": "Moon",
+            "contribution": -0.0276902032685059,
+            "event_type": "aspect_enter_orb",
+            "local_time": "2026-03-07T16:00:00+01:00",
+            "orb_deg": 4.392885162623344,
+            "phase": "applying",
+            "target": "Neptune"
           }
         ],
         "work": [
           {
             "aspect": "sextile",
             "body": "Moon",
-            "contribution": 0.0,
+            "contribution": 0.5457815939855165,
+            "event_type": "aspect_exact_to_angle",
+            "local_time": "2026-03-07T05:01:29.999987+01:00",
+            "orb_deg": 0.0004251525110134935,
+            "phase": "applying",
+            "target": "MC"
+          },
+          {
+            "aspect": "sextile",
+            "body": "Moon",
+            "contribution": 0.34636130395361764,
+            "event_type": "aspect_exact_to_personal",
+            "local_time": "2026-03-07T08:42:29.999987+01:00",
+            "orb_deg": 0.00213270499497753,
+            "phase": "applying",
+            "target": "Mercury"
+          },
+          {
+            "aspect": "sextile",
+            "body": "Moon",
+            "contribution": 0.010520359909683863,
             "event_type": "aspect_enter_orb",
             "local_time": "2026-03-07T01:00:00+01:00",
             "orb_deg": 3.956663645961072,
             "phase": "applying",
             "target": "Mercury"
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T01:30:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
-          },
-          {
-            "aspect": null,
-            "body": "Asc",
-            "contribution": 0.0,
-            "event_type": "asc_sign_change",
-            "local_time": "2026-03-07T04:00:00+01:00",
-            "orb_deg": 0.0,
-            "phase": null,
-            "target": null
           }
         ]
       }
@@ -4018,42 +4725,250 @@
     "editorial_text": null,
     "decision_windows": [
       {
-        "confidence": 1.0,
+        "confidence": 0.9894159886240698,
         "dominant_categories": [
           "career",
-          "communication"
+          "work"
+        ],
+        "end_local": "2026-03-07T04:15:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 19.0,
+        "start_local": "2026-03-07T04:00:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9923075683982467,
+        "dominant_categories": [
+          "career",
+          "love"
+        ],
+        "end_local": "2026-03-07T04:30:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 16.0,
+        "start_local": "2026-03-07T04:15:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9894159886240698,
+        "dominant_categories": [
+          "career",
+          "work"
+        ],
+        "end_local": "2026-03-07T04:45:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 19.0,
+        "start_local": "2026-03-07T04:30:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9894159886240698,
+        "dominant_categories": [
+          "career",
+          "work"
+        ],
+        "end_local": "2026-03-07T05:00:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 19.0,
+        "start_local": "2026-03-07T04:45:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9894159886240698,
+        "dominant_categories": [
+          "career",
+          "work"
         ],
         "end_local": "2026-03-07T05:15:00+01:00",
         "intensity": null,
         "orientation": null,
-        "score": 12.0,
+        "score": 19.0,
         "start_local": "2026-03-07T05:00:00+01:00",
-        "window_type": "pivot"
+        "window_type": "favorable"
       },
       {
-        "confidence": 1.0,
+        "confidence": 0.9894159886240698,
         "dominant_categories": [
           "career",
-          "communication"
+          "work"
         ],
-        "end_local": "2026-03-07T06:45:00+01:00",
+        "end_local": "2026-03-07T05:30:00+01:00",
         "intensity": null,
         "orientation": null,
-        "score": 12.0,
+        "score": 19.0,
         "start_local": "2026-03-07T05:15:00+01:00",
-        "window_type": "pivot"
+        "window_type": "favorable"
       },
       {
-        "confidence": 1.0,
+        "confidence": 0.9894159886240698,
+        "dominant_categories": [
+          "career",
+          "work"
+        ],
+        "end_local": "2026-03-07T05:45:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 19.0,
+        "start_local": "2026-03-07T05:30:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9923075683982467,
+        "dominant_categories": [
+          "career",
+          "love"
+        ],
+        "end_local": "2026-03-07T06:00:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 16.0,
+        "start_local": "2026-03-07T05:45:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9894159886240698,
+        "dominant_categories": [
+          "career",
+          "work"
+        ],
+        "end_local": "2026-03-07T06:15:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 19.0,
+        "start_local": "2026-03-07T06:00:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9936073275716095,
         "dominant_categories": [
           "career",
           "communication"
         ],
-        "end_local": "2026-03-07T10:15:00+01:00",
+        "end_local": "2026-03-07T07:45:00+01:00",
         "intensity": null,
         "orientation": null,
         "score": 12.0,
+        "start_local": "2026-03-07T06:15:00+01:00",
+        "window_type": "pivot"
+      },
+      {
+        "confidence": 0.9894159886240698,
+        "dominant_categories": [
+          "career",
+          "work"
+        ],
+        "end_local": "2026-03-07T08:30:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 19.0,
+        "start_local": "2026-03-07T08:15:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9924436399198263,
+        "dominant_categories": [
+          "career",
+          "money"
+        ],
+        "end_local": "2026-03-07T08:45:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 16.5,
+        "start_local": "2026-03-07T08:30:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9924436399198263,
+        "dominant_categories": [
+          "career",
+          "money"
+        ],
+        "end_local": "2026-03-07T09:15:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 16.5,
         "start_local": "2026-03-07T08:45:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9894159886240698,
+        "dominant_categories": [
+          "career",
+          "work"
+        ],
+        "end_local": "2026-03-07T09:30:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 19.0,
+        "start_local": "2026-03-07T09:15:00+01:00",
+        "window_type": "favorable"
+      },
+      {
+        "confidence": 0.9936073275716095,
+        "dominant_categories": [
+          "career",
+          "communication"
+        ],
+        "end_local": "2026-03-07T11:00:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 12.0,
+        "start_local": "2026-03-07T09:30:00+01:00",
+        "window_type": "pivot"
+      },
+      {
+        "confidence": 0.9936073275716095,
+        "dominant_categories": [
+          "career",
+          "communication"
+        ],
+        "end_local": "2026-03-07T15:45:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 12.0,
+        "start_local": "2026-03-07T15:30:00+01:00",
+        "window_type": "pivot"
+      },
+      {
+        "confidence": 0.9936073275716095,
+        "dominant_categories": [
+          "career",
+          "communication"
+        ],
+        "end_local": "2026-03-07T16:30:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 12.0,
+        "start_local": "2026-03-07T15:45:00+01:00",
+        "window_type": "pivot"
+      },
+      {
+        "confidence": 0.9936073275716095,
+        "dominant_categories": [
+          "career",
+          "communication"
+        ],
+        "end_local": "2026-03-07T16:45:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 12.0,
+        "start_local": "2026-03-07T16:30:00+01:00",
+        "window_type": "pivot"
+      },
+      {
+        "confidence": 0.9917184432672658,
+        "dominant_categories": [
+          "career",
+          "sex_intimacy"
+        ],
+        "end_local": "2026-03-07T18:15:00+01:00",
+        "intensity": null,
+        "orientation": null,
+        "score": 12.0,
+        "start_local": "2026-03-07T16:45:00+01:00",
         "window_type": "pivot"
       }
     ]

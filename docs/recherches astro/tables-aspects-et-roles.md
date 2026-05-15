@@ -50,7 +50,7 @@ Colonnes :
 | `id` | `Integer` | Identifiant technique référencé par `astral_aspects.family`. |
 | `name` | `String(32)` | Nom stable de famille. |
 
-Valeurs seedées depuis `docs/recherches astro/astral_aspect_family.json` :
+Valeurs seedées depuis `docs/recherches astro/astral_aspect_families.json` :
 
 | id logique | name |
 | --- | --- |
@@ -422,7 +422,7 @@ Flux courant :
 2. Le même payload expose `aspect_orb_rules[]` depuis `astral_aspect_orb_rules`.
 3. `build_natal_result` vérifie que `aspects[]` existe et que chaque entrée contient un `code`, un `angle` et un `default_orb_deg` valide.
 4. Si `aspect_orb_rules[]` est présent, `build_natal_result` valide les règles et les transmet au calculateur.
-5. Le calcul filtre explicitement sur `MAJOR_ASPECT_CODES`, soit `conjunction`, `sextile`, `square`, `trine`, `opposition`.
+5. Le calcul filtre explicitement via le helper runtime canonique des aspects majeurs, soit `conjunction`, `sextile`, `square`, `trine`, `opposition`.
 6. `calculate_major_aspects` compare toutes les paires de positions planétaires et applique la résolution hiérarchique des orbes.
 7. Les résultats sont convertis en `AspectResult`.
 
@@ -440,7 +440,7 @@ Contrat `AspectResult` :
 Nuance importante :
 
 - Le référentiel relationnel contient maintenant les aspects majeurs, mineurs et avancés.
-- Le calcul natal public reste limité aux cinq aspects majeurs par `MAJOR_ASPECT_CODES`.
+- Le calcul natal public reste limité aux cinq aspects majeurs par le helper runtime canonique.
 - Les orbes par défaut ne vivent plus dans `astral_aspects`; ils sont résolus via `astral_aspect_definitions`.
 - Les exceptions d'orbe ne vivent pas dans `aspects[]`; elles sont transportées par `aspect_orb_rules[]`.
 
@@ -551,7 +551,7 @@ Point d'attention :
 Point d'attention :
 
 - `quincunx` est maintenant présent dans le référentiel relationnel, dans la famille `minor`.
-- Sa présence en table ne signifie pas que le calcul natal public l'émet : `MAJOR_ASPECT_CODES` reste le garde-fou des aspects majeurs calculés.
+- Sa présence en table ne signifie pas que le calcul natal public l'émet : le helper runtime canonique reste le garde-fou des aspects majeurs calculés.
 
 ## Étapes où les aspects interviennent dans les calculs
 
@@ -587,7 +587,7 @@ Point d'attention :
 - Ne pas fusionner `resolved_orb_deg` et `astral_aspect_profiles.orb_multiplier`, ni appliquer `orb_multiplier` au calcul natal pur.
 - La colonne `astral_aspects.family` est un entier lié à `astral_aspect_families`.
 - Le référentiel relationnel contient 20 aspects, mais le calcul natal et la détection V1 restent limités aux cinq majeurs.
-- Les aspects mineurs ne doivent pas être activés dans les calculs publics sans mettre à jour `MAJOR_ASPECT_CODES`, les seeds, les tests, les traductions et les contrats.
+- Les aspects mineurs ne doivent pas être activés dans les calculs publics sans mettre à jour le helper runtime canonique, les seeds, les tests, les traductions et les contrats.
 - Les colonnes JSON (`result_payload`, `contributors_json`, `driver_json`) ne garantissent pas d'intégrité référentielle avec `astral_aspects`.
 - `phase_sensitive` et `phase_behavior_json` documentent une intention de comportement ; vérifier les calculateurs avant de conclure à une exploitation exhaustive.
 - Les paires d'aspects dans le catalogue d'évidence sont triées pour stabilité ; ne pas dépendre de l'ordre original des planètes.
@@ -610,7 +610,7 @@ Point d'attention :
 - `backend/migrations/versions/20260514_0104_add_astral_aspect_orb_rules.py`
 - `backend/migrations/versions/20260514_0105_add_astral_system_inheritance.py`
 - `docs/recherches astro/aspects.json`
-- `docs/recherches astro/astral_aspect_family.json`
+- `docs/recherches astro/astral_aspect_families.json`
 - `docs/recherches astro/astral_aspect_profiles.json`
 - `docs/recherches astro/astral_aspect_definitions.json`
 - `docs/recherches astro/astral_aspect_orb_rules.json`

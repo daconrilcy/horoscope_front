@@ -141,9 +141,7 @@ class ReferenceDataService:
         model = repo.get_version(target_version)
         if model is None:
             model = repo.create_version(target_version, description="Initial seeded version")
-            repo.seed_version_defaults()
-        elif not repo.has_complete_version_data():
-            repo.seed_version_defaults()
+        repo.seed_version_defaults()
         db.flush()
         from app.services.prediction.reference_seed_service import (
             ensure_astral_aspect_reference_data,

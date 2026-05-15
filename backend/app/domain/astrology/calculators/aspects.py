@@ -2,21 +2,12 @@
 
 from itertools import combinations, product
 
-from app.core.constants import DEFAULT_FALLBACK_ORB, LUMINARIES
-
-PLANET_CLASS_BY_CODE = {
-    "sun": "luminary",
-    "moon": "luminary",
-    "mercury": "personal_planet",
-    "venus": "personal_planet",
-    "mars": "personal_planet",
-    "jupiter": "social_planet",
-    "saturn": "social_planet",
-    "uranus": "transpersonal_planet",
-    "neptune": "transpersonal_planet",
-    "pluto": "transpersonal_planet",
-}
-ANGLE_CODES = {"asc", "dsc", "mc", "ic"}
+from app.core.constants import DEFAULT_FALLBACK_ORB
+from app.domain.astrology.celestial_runtime_catalog import (
+    ANGLE_POINT_CODES,
+    BODY_CLASS_BY_CODE,
+    LIGHT_BODY_CODES,
+)
 
 
 def _angular_distance(angle_a: float, angle_b: float) -> float:
@@ -58,9 +49,9 @@ def _body_code(body: str | dict[str, object]) -> str:
 def _body_type(body: str | dict[str, object]) -> str:
     """Classe un corps pour les règles d'orbe ciblées."""
     code = _body_code(body)
-    if code in ANGLE_CODES:
+    if code in ANGLE_POINT_CODES:
         return "angle"
-    return PLANET_CLASS_BY_CODE.get(code, "point")
+    return BODY_CLASS_BY_CODE.get(code, "point")
 
 
 def _body_matches(rule: dict[str, object], side: str, body: str | dict[str, object]) -> bool:
@@ -350,7 +341,7 @@ def calculate_major_aspects(
             {
                 "planet_code": code,
                 "longitude": float(pos["longitude"]),
-                "is_luminary": code in LUMINARIES,
+                "is_luminary": code in LIGHT_BODY_CODES,
             }
         )
 
@@ -456,8 +447,8 @@ def calculate_interchart_aspects(
                 orb_limit = resolved_orb
             else:
                 pair_key = _normalize_pair_key(source_code, target_code)
-                source_is_luminary = source_code in LUMINARIES
-                target_is_luminary = target_code in LUMINARIES
+                source_is_luminary = source_code in LIGHT_BODY_CODES
+                target_is_luminary = target_code in LIGHT_BODY_CODES
                 if pair_key in aspect_def["orb_pair_overrides"]:
                     orb_limit = aspect_def["orb_pair_overrides"][pair_key]
                 elif (source_is_luminary or target_is_luminary) and aspect_def[

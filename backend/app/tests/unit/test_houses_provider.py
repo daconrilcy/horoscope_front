@@ -28,8 +28,8 @@ import pytest
 
 from app.domain.astrology.calculators.houses import assign_house_number
 from app.domain.astrology.houses_provider import (
-    _HOUSE_SYSTEM_CODES,
     _SUPPORTED_HOUSE_SYSTEMS,
+    SWISS_HOUSE_SYSTEM_BYTES,
     HousesCalcError,
     UnsupportedHouseSystemError,
     calculate_houses,
@@ -277,8 +277,8 @@ class TestWholeSingAndEqualSystems:
     def test_all_three_systems_have_byte_codes(self) -> None:
         """Chaque système supporté doit avoir un code octet SwissEph."""
         for system in ("placidus", "equal", "whole_sign"):
-            assert system in _HOUSE_SYSTEM_CODES, f"{system} manque dans _HOUSE_SYSTEM_CODES"
-            assert isinstance(_HOUSE_SYSTEM_CODES[system], bytes)
+            assert system in SWISS_HOUSE_SYSTEM_BYTES, f"{system} manque dans le mapping SwissEph"
+            assert isinstance(SWISS_HOUSE_SYSTEM_BYTES[system], bytes)
 
     def test_whole_sign_returns_12_cusps(self) -> None:
         """Whole Sign doit retourner 12 cuspides normalisées."""
@@ -447,7 +447,7 @@ class TestHousesCalcError:
     def test_import_error_raises_houses_calc_error(self) -> None:
         """Si pyswisseph n'est pas installé → HousesCalcError."""
         with patch(
-            "app.domain.astrology.houses_provider._get_swe_module",
+            "app.domain.astrology.houses_provider.load_swisseph",
             side_effect=HousesCalcError("pyswisseph module is not installed"),
         ):
             with pytest.raises(HousesCalcError) as exc_info:

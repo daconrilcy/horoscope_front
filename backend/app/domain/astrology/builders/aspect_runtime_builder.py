@@ -8,6 +8,11 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from app.domain.astrology.celestial_runtime_catalog import (
+    LIGHT_BODY_CODES,
+    OUTER_PLANET_CODES,
+    is_major_aspect_code,
+)
 from app.domain.astrology.interpretation.aspect_strength import (
     AspectStrengthEvaluator,
     aspect_family,
@@ -26,7 +31,6 @@ from app.domain.astrology.runtime.aspect_runtime_data import (
     AspectRuntimeData,
 )
 
-MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
 VALENCE_BY_ASPECT = {
     "conjunction": "contextual",
     "opposition": "polarized",
@@ -93,7 +97,7 @@ def build_aspect_runtime_data(aspect: AspectLike) -> AspectRuntimeData:
             energy_type=ENERGY_BY_ASPECT.get(code, aspect_family(code)),
         ),
         metadata=AspectMetadataRuntimeData(
-            is_major=code in MAJOR_ASPECTS,
+            is_major=is_major_aspect_code(code),
             is_exact=strength.is_exact,
             is_tight=strength.is_tight,
         ),
@@ -127,16 +131,16 @@ def _build_modifiers(
                 applies_to=participants,
             )
         )
-    if any(code in {"sun", "moon"} for code in participants):
+    if any(code in LIGHT_BODY_CODES for code in participants):
         modifiers.append(
             AspectModifierRuntimeData(
                 modifier_type=AspectModifierType.LUMINARY,
                 source="participants",
                 intensity=0.8,
-                applies_to=tuple(code for code in participants if code in {"sun", "moon"}),
+                applies_to=tuple(code for code in participants if code in LIGHT_BODY_CODES),
             )
         )
-    if all(code in {"uranus", "neptune", "pluto"} for code in participants):
+    if all(code in OUTER_PLANET_CODES for code in participants):
         modifiers.append(
             AspectModifierRuntimeData(
                 modifier_type=AspectModifierType.TRANSPERSONAL,

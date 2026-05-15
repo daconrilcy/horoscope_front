@@ -29,27 +29,13 @@ from app.domain.astrology.ephemeris_provider import (
     EphemerisCalcError,
     calculate_planets,
 )
+from app.domain.astrology.zodiac import sign_from_longitude
 
 # ---------------------------------------------------------------------------
 # Constantes
 # ---------------------------------------------------------------------------
 
 JDUT_J2000 = 2451545.0  # J2000.0 — 2000-01-01 12:00 UTC
-
-ZODIAC_SIGNS = (
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-)
 
 COMPLETE_SIGN_RULERS = {
     "aries": "mars",
@@ -76,10 +62,6 @@ INVARIANT_TOLERANCE_DEG: float = 0.01
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _sign_from_longitude(lon: float) -> str:
-    return ZODIAC_SIGNS[int(lon // 30) % 12]
 
 
 def _make_swe_mock(*, lon: float = 100.0, speed_lon: float = 1.0) -> MagicMock:
@@ -456,8 +438,7 @@ def test_tropical_vs_sidereal_sign_differs() -> None:
     sid_map = {p.planet_id: p for p in sidereal}
 
     sign_differs = any(
-        _sign_from_longitude(trop_map[pid].longitude)
-        != _sign_from_longitude(sid_map[pid].longitude)
+        sign_from_longitude(trop_map[pid].longitude) != sign_from_longitude(sid_map[pid].longitude)
         for pid in ("sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn")
         if pid in trop_map and pid in sid_map
     )

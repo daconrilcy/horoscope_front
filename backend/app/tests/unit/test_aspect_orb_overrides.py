@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.core.constants import MAJOR_ASPECT_CODES
 from app.domain.astrology.calculators.aspects import calculate_major_aspects, resolve_orb
+from app.domain.astrology.celestial_runtime_catalog import is_major_aspect_code
 from app.domain.astrology.natal_calculation import build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput
 
@@ -76,6 +76,20 @@ def _make_reference_two_planets(
     aspects: list[dict[str, object]],
     aspect_orb_rules: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
+    sign_rulerships = {
+        "aries": "mars",
+        "taurus": "venus",
+        "gemini": "mercury",
+        "cancer": "moon",
+        "leo": "sun",
+        "virgo": "mercury",
+        "libra": "venus",
+        "scorpio": "mars",
+        "sagittarius": "jupiter",
+        "capricorn": "saturn",
+        "aquarius": "saturn",
+        "pisces": "jupiter",
+    }
     return {
         "version": "1.0.0",
         "planets": [{"code": "sun", "name": "Sun"}, {"code": "mars", "name": "Mars"}],
@@ -88,6 +102,7 @@ def _make_reference_two_planets(
         "houses": [{"number": n, "name": f"House {n}"} for n in range(1, 13)],
         "aspects": aspects,
         "aspect_orb_rules": aspect_orb_rules or [],
+        "sign_rulerships": sign_rulerships,
     }
 
 
@@ -694,7 +709,7 @@ class TestOrbUsedLteOrbMax:
         result = calculate_major_aspects(positions, aspect_definitions)
 
         for aspect in result:
-            assert aspect["aspect_code"] in MAJOR_ASPECT_CODES, (
+            assert is_major_aspect_code(str(aspect["aspect_code"])), (
                 f"Aspect code '{aspect['aspect_code']}' non trouvé dans les aspects majeurs"
             )
 
@@ -708,8 +723,10 @@ class TestMajorAspectsFilter:
     """build_natal_result ne calcule que les aspects majeurs (filtre les mineurs)."""
 
     def test_major_aspect_codes_contains_five_aspects(self) -> None:
-        """MAJOR_ASPECT_CODES contient exactement les 5 aspects majeurs."""
-        assert MAJOR_ASPECT_CODES == {"conjunction", "sextile", "square", "trine", "opposition"}
+        """Le helper owner reconnait exactement les 5 aspects majeurs."""
+        candidates = {"conjunction", "sextile", "square", "trine", "opposition"}
+        assert {code for code in candidates if is_major_aspect_code(code)} == candidates
+        assert not is_major_aspect_code("quincunx")
 
     def test_minor_aspects_ignored_in_calculation(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Les aspects mineurs dans le ruleset sont ignorés — seuls les majeurs sont calculés."""

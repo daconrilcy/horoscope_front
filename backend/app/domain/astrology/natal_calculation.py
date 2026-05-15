@@ -9,7 +9,7 @@ from math import isfinite
 from pydantic import BaseModel, Field, model_validator
 
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
-from app.core.constants import MAJOR_ASPECT_CODES, MAX_ORB_DEG, MIN_ORB_DEG
+from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
 from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
@@ -19,8 +19,8 @@ from app.domain.astrology.calculators import (
     calculate_planet_positions,
 )
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
+from app.domain.astrology.celestial_runtime_catalog import is_major_aspect_code
 from app.domain.astrology.house_ruler_resolver import (
-    DEFAULT_TRADITIONAL_SIGN_RULERSHIPS,
     HouseRulerResolutionError,
     HouseRulerResolver,
     HouseRulerResult,
@@ -97,10 +97,6 @@ class NatalCalculationError(Exception):
         super().__init__(message)
 
 
-def _normalize_360(value: float) -> float:
-    return normalize_360(value)
-
-
 def _raise_invalid_reference(version: str, field: str, reason: str) -> None:
     raise NatalCalculationError(
         code="invalid_reference_data",
@@ -124,7 +120,7 @@ def _validate_house_cusps(version: str, houses_raw: list[dict[str, object]]) -> 
             _raise_invalid_reference(version, "houses", "invalid_cusp_longitude")
         if not isfinite(longitude):
             _raise_invalid_reference(version, "houses", "non_finite_cusp_longitude")
-        normalized = _normalize_360(longitude)
+        normalized = normalize_360(longitude)
         if normalized != longitude:
             _raise_invalid_reference(version, "houses", "non_normalized_cusp_longitude")
         longitudes.append(normalized)
@@ -137,7 +133,7 @@ def _extract_sign_rulerships(reference_data: dict[str, object]) -> dict[str, str
     """Extrait le mapping signe -> maître depuis les dignités de référence."""
     raw = reference_data.get("sign_rulerships")
     if not isinstance(raw, dict):
-        return dict(DEFAULT_TRADITIONAL_SIGN_RULERSHIPS)
+        return {}
     return {str(sign): str(planet) for sign, planet in raw.items()}
 
 
@@ -479,9 +475,7 @@ def build_natal_result(
 
     # story 24-2 Task 3: limit to major aspects only
     major_aspect_definitions = [
-        d
-        for d in aspect_definitions
-        if str(d.get("code", "")).strip().lower() in MAJOR_ASPECT_CODES
+        d for d in aspect_definitions if is_major_aspect_code(str(d.get("code", "")))
     ]
     aspect_orb_rules: list[dict[str, object]] | None = None
     if isinstance(aspect_orb_rules_data, list):

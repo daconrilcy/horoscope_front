@@ -20,10 +20,11 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from types import ModuleType
 from typing import TYPE_CHECKING
 
 from app.core.ephemeris import SWISSEPH_LOCK
+from app.domain.astrology.swisseph_runtime import load_swisseph
+from app.domain.astrology.zodiac import normalize_360
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 if TYPE_CHECKING:
@@ -94,21 +95,6 @@ class EphemerisCalcError(Exception):
         super().__init__(message)
 
 
-def _get_swe_module() -> ModuleType:
-    """Lazy import and validation of swisseph module."""
-    try:
-        import swisseph as swe
-
-        return swe
-    except ImportError as exc:
-        raise EphemerisCalcError("pyswisseph module is not installed") from exc
-
-
-def _normalize_longitude(lon: float) -> float:
-    """Normalise une longitude écliptique dans [0, 360)."""
-    return lon % 360.0
-
-
 def calculate_planets(
     jdut: float,
     lat: float | None = None,
@@ -140,7 +126,10 @@ def calculate_planets(
     """
     start = time.monotonic()
     try:
-        swe = _get_swe_module()
+        try:
+            swe = load_swisseph()
+        except ImportError as exc:
+            raise EphemerisCalcError("pyswisseph module is not installed") from exc
 
         is_sidereal = zodiac == "sidereal"
         effective_ayanamsa = (ayanamsa or "lahiri") if is_sidereal else None
@@ -210,7 +199,7 @@ def calculate_planets(
                             f"calc_ut returned error flag for planet {planet_id}"
                         )
 
-                    lon = _normalize_longitude(float(xx[0]))
+                    lon = normalize_360(float(xx[0]))
                     speed_lon = float(xx[3])
 
                     # Vérification de l'invariant structurel (Lt - Ls) mod 360 ~= ayanamsa

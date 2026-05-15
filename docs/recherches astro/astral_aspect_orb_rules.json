@@ -908,6 +908,6 @@
         "The fallback remains astral_aspect_definitions.default_orb_deg.",
         "astral_aspect_profiles.orb_multiplier should remain predictive/scoring-oriented and should not be used as a canonical natal orb definition.",
         "Rules should be resolved by local system before inherited parent, then by descending priority, then by specificity.",
-        "For V1 runtime compatibility, only major aspects should be consumed by natal and transit calculators until MAJOR_ASPECT_CODES and EventDetector.ASPECTS_V1 are explicitly extended."
+        "For V1 runtime compatibility, only major aspects should be consumed by natal and transit calculators until the canonical major-aspect helper and EventDetector.ASPECTS_V1 are explicitly extended."
     ]
 }

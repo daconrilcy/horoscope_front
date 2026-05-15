@@ -10,7 +10,14 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-from app.core.constants import DEFAULT_ASPECT_ORBS, DEFAULT_FALLBACK_ORB
+FALLBACK_ORB_DEGREES = 6.0
+MAJOR_ORB_DEGREES = {
+    "conjunction": 8.0,
+    "sextile": 4.0,
+    "square": 6.0,
+    "trine": 6.0,
+    "opposition": 8.0,
+}
 
 # revision identifiers, used by Alembic.
 revision: str = "20260226_0027"
@@ -26,7 +33,7 @@ def upgrade() -> None:
                 "default_orb_deg",
                 sa.Float(),
                 nullable=True,
-                server_default=sa.text(str(DEFAULT_FALLBACK_ORB)),
+                server_default=sa.text(str(FALLBACK_ORB_DEGREES)),
             )
         )
 
@@ -35,12 +42,12 @@ def upgrade() -> None:
             f"""
             UPDATE aspects
             SET default_orb_deg = CASE code
-                WHEN 'conjunction' THEN {DEFAULT_ASPECT_ORBS["conjunction"]}
-                WHEN 'sextile' THEN {DEFAULT_ASPECT_ORBS["sextile"]}
-                WHEN 'square' THEN {DEFAULT_ASPECT_ORBS["square"]}
-                WHEN 'trine' THEN {DEFAULT_ASPECT_ORBS["trine"]}
-                WHEN 'opposition' THEN {DEFAULT_ASPECT_ORBS["opposition"]}
-                ELSE {DEFAULT_FALLBACK_ORB}
+                WHEN 'conjunction' THEN {MAJOR_ORB_DEGREES["conjunction"]}
+                WHEN 'sextile' THEN {MAJOR_ORB_DEGREES["sextile"]}
+                WHEN 'square' THEN {MAJOR_ORB_DEGREES["square"]}
+                WHEN 'trine' THEN {MAJOR_ORB_DEGREES["trine"]}
+                WHEN 'opposition' THEN {MAJOR_ORB_DEGREES["opposition"]}
+                ELSE {FALLBACK_ORB_DEGREES}
             END
             """
         )

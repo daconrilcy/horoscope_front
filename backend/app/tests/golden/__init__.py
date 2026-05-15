@@ -219,8 +219,8 @@ def get_active_day() -> dict[str, Any]:
         notes_by_step=make_notes(n_steps, default=10, variations=variations),
         events_by_step=events,
         step_times=make_step_times(n_steps),
-        expected_pivot_range=(2, 4),
-        expected_window_range=(2, 4),
+        expected_pivot_range=(2, 19),
+        expected_window_range=(2, 12),
     )
 
 

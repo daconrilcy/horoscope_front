@@ -1,3 +1,5 @@
+"""Construit les exports PDF de thèmes natals depuis les données canoniques."""
+
 from __future__ import annotations
 
 import io
@@ -12,6 +14,7 @@ from sqlalchemy.orm import Session
 from xhtml2pdf import pisa
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.astrology.zodiac import sign_from_longitude
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
@@ -906,26 +909,12 @@ class NatalPdfExportService:
         return labels.get(sign_code.lower(), sign_code)
 
     @staticmethod
-    def _sign_from_longitude(longitude: Any) -> str | None:
+    def _safe_sign_code(longitude: Any) -> str | None:
         try:
-            normalized = float(longitude) % 360.0
+            parsed_longitude = float(longitude)
         except (TypeError, ValueError):
             return None
-        sign_codes = [
-            "aries",
-            "taurus",
-            "gemini",
-            "cancer",
-            "leo",
-            "virgo",
-            "libra",
-            "scorpio",
-            "sagittarius",
-            "capricorn",
-            "aquarius",
-            "pisces",
-        ]
-        return sign_codes[int(normalized // 30.0) % 12]
+        return sign_from_longitude(parsed_longitude)
 
     @staticmethod
     def _extract_sun_and_ascendant_signs(payload: dict[str, Any]) -> tuple[str | None, str | None]:
@@ -961,7 +950,7 @@ class NatalPdfExportService:
                 if isinstance(raw_sign, str) and raw_sign:
                     asc_sign = raw_sign.lower()
                     break
-                asc_sign = NatalPdfExportService._sign_from_longitude(item.get("cusp_longitude"))
+                asc_sign = NatalPdfExportService._safe_sign_code(item.get("cusp_longitude"))
                 if asc_sign:
                     break
 
@@ -973,6 +962,6 @@ class NatalPdfExportService:
                 if isinstance(raw_sign, str) and raw_sign:
                     asc_sign = raw_sign.lower()
                 if asc_sign is None:
-                    asc_sign = NatalPdfExportService._sign_from_longitude(asc.get("longitude"))
+                    asc_sign = NatalPdfExportService._safe_sign_code(asc.get("longitude"))
 
         return sun_sign, asc_sign

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domain.astrology.natal_preparation import BirthInput
+from app.domain.astrology.zodiac import sign_from_longitude
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
@@ -41,24 +42,6 @@ def _mock_swisseph(monkeypatch: object) -> None:
 
 
 client = TestClient(app)
-
-
-def _sign_from_longitude(longitude: float) -> str:
-    signs = (
-        "aries",
-        "taurus",
-        "gemini",
-        "cancer",
-        "leo",
-        "virgo",
-        "libra",
-        "scorpio",
-        "sagittarius",
-        "capricorn",
-        "aquarius",
-        "pisces",
-    )
-    return signs[int((longitude % 360.0) // 30.0) % 12]
 
 
 def _cleanup_tables() -> None:
@@ -1047,8 +1030,8 @@ def test_get_latest_natal_chart_astro_profile_matches_result_geometry() -> None:
         planet for planet in payload["result"]["planet_positions"] if planet["planet_code"] == "sun"
     )
     house1 = next(house for house in payload["result"]["houses"] if house["number"] == 1)
-    assert astro["sun_sign_code"] == _sign_from_longitude(float(sun["longitude"]))
-    assert astro["ascendant_sign_code"] == _sign_from_longitude(float(house1["cusp_longitude"]))
+    assert astro["sun_sign_code"] == sign_from_longitude(float(sun["longitude"]))
+    assert astro["ascendant_sign_code"] == sign_from_longitude(float(house1["cusp_longitude"]))
 
 
 def test_get_latest_natal_chart_returns_200_when_astro_profile_service_error(

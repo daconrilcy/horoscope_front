@@ -8,7 +8,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from app.domain.astrology.calculators.aspects import ANGLE_CODES, PLANET_CLASS_BY_CODE
+from app.domain.astrology.celestial_runtime_catalog import (
+    ANGLE_POINT_CODES,
+    BODY_CLASS_BY_CODE,
+    LIGHT_BODY_CODES,
+    OUTER_PLANET_CODES,
+    is_major_aspect_code,
+)
 
 from .aspect_strength_contracts import (
     AspectStrengthReason,
@@ -16,10 +22,7 @@ from .aspect_strength_contracts import (
     resolve_aspect_strength_level,
 )
 
-MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
 MINOR_ASPECTS = {"semi_sextile", "semi_square", "quincunx", "sesquiquadrate"}
-LUMINARIES = {"sun", "moon"}
-TRANSPERSONAL = {"uranus", "neptune", "pluto"}
 EXACT_ORB_DEG = 0.5
 TIGHT_RATIO = 0.25
 MODERATE_RATIO = 0.6
@@ -45,7 +48,7 @@ class AspectStrengthEvaluator:
         score = 1.0 - ratio
         reasons: list[AspectStrengthReason] = []
 
-        if normalized_code in MAJOR_ASPECTS:
+        if is_major_aspect_code(normalized_code):
             score += 0.12
             reasons.append(AspectStrengthReason.MAJOR_ASPECT)
         elif normalized_code in MINOR_ASPECTS:
@@ -65,13 +68,15 @@ class AspectStrengthEvaluator:
         else:
             reasons.append(AspectStrengthReason.WIDE_ORB)
 
-        if any(code in LUMINARIES for code in participant_codes):
+        if any(code in LIGHT_BODY_CODES for code in participant_codes):
             score += 0.08
             reasons.append(AspectStrengthReason.LUMINARY_PARTICIPANT)
-        if any(code in ANGLE_CODES for code in participant_codes):
+        if any(code in ANGLE_POINT_CODES for code in participant_codes):
             score += 0.06
             reasons.append(AspectStrengthReason.ANGLE_PARTICIPANT)
-        if len(participant_codes) == 2 and all(code in TRANSPERSONAL for code in participant_codes):
+        if len(participant_codes) == 2 and all(
+            code in OUTER_PLANET_CODES for code in participant_codes
+        ):
             score -= 0.08
             reasons.append(AspectStrengthReason.TRANSPERSONAL_PAIR)
 
@@ -95,7 +100,7 @@ class AspectStrengthEvaluator:
 def aspect_family(aspect_code: str) -> str:
     """Retourne la famille astrologique courte d'un aspect."""
     normalized_code = aspect_code.strip().lower()
-    if normalized_code in MAJOR_ASPECTS:
+    if is_major_aspect_code(normalized_code):
         return "major"
     if normalized_code in MINOR_ASPECTS:
         return "minor"
@@ -105,6 +110,6 @@ def aspect_family(aspect_code: str) -> str:
 def participant_class(code: str) -> str:
     """Retourne la classe astrologique d'un participant."""
     normalized_code = code.strip().lower()
-    if normalized_code in ANGLE_CODES:
+    if normalized_code in ANGLE_POINT_CODES:
         return "angle"
-    return PLANET_CLASS_BY_CODE.get(normalized_code, "point")
+    return BODY_CLASS_BY_CODE.get(normalized_code, "point")

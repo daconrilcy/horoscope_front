@@ -2,7 +2,6 @@
 
 from app.services.llm_generation.shared.natal_context import (
     ASPECT_NAMES_FR,
-    MAJOR_ASPECTS,
     PLANET_NAMES_FR,
     SIGN_NAMES_FR,
     UNKNOWN_BIRTH_TIME_SENTINEL,
@@ -16,7 +15,6 @@ from app.services.llm_generation.shared.natal_context import (
 
 __all__ = [
     "ASPECT_NAMES_FR",
-    "MAJOR_ASPECTS",
     "PLANET_NAMES_FR",
     "SIGN_NAMES_FR",
     "UNKNOWN_BIRTH_TIME_SENTINEL",

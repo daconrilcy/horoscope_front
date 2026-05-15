@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.infra.db.models import (
     AspectModel,
     AspectProfileModel,
+    AstralAspectFamilyModel,
     AstralAspectInterpretationProfileModel,
     AstralAspectOrbRuleModel,
     AstralDignityTypeModel,
@@ -224,6 +225,14 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             )
             == 20
         )
+        assert session.scalar(select(func.count()).select_from(AstralAspectFamilyModel)) == 3
+        reference_payload = ReferenceDataService.get_active_reference_data(session, "2.0.0")
+        assert len(reference_payload["aspects"]) == 20
+        assert {item["family"] for item in reference_payload["aspects"]} == {
+            "major",
+            "minor",
+            "advanced",
+        }
         assert (
             session.scalar(
                 select(func.count())

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
+from app.domain.astrology.celestial_runtime_catalog import is_major_aspect_code
 from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
@@ -68,7 +69,6 @@ ASPECT_NAMES_FR = {
     "sextile": "sextile",
 }
 
-MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
 UNKNOWN_BIRTH_TIME_SENTINEL = "00:00"
 UNKNOWN_LOCATION_SENTINELS = {"", "unknown", "non spécifié"}
 
@@ -155,7 +155,7 @@ def build_natal_chart_summary(
 
     lines.append("")
     lines.append("ASPECTS MAJEURS:")
-    major_aspects = [a for a in natal_result.aspects if a.aspect_code in MAJOR_ASPECTS]
+    major_aspects = [a for a in natal_result.aspects if is_major_aspect_code(a.aspect_code)]
     for aspect in major_aspects[:6]:
         planet_a_name = PLANET_NAMES_FR.get(aspect.planet_a, aspect.planet_a)
         planet_b_name = PLANET_NAMES_FR.get(aspect.planet_b, aspect.planet_b)
@@ -196,7 +196,7 @@ def build_chat_natal_hint(natal_result: "NatalResult", degraded_mode: str | None
         parts.append(f"Ascendant {asc_name}")
 
     major = sorted(
-        [a for a in natal_result.aspects if a.aspect_code in MAJOR_ASPECTS],
+        [a for a in natal_result.aspects if is_major_aspect_code(a.aspect_code)],
         key=lambda a: a.orb,
     )[:3]
     for aspect in major:
@@ -256,7 +256,6 @@ def build_user_natal_chart_summary_context(
 
 __all__ = [
     "ASPECT_NAMES_FR",
-    "MAJOR_ASPECTS",
     "PLANET_NAMES_FR",
     "SIGN_NAMES_FR",
     "UNKNOWN_BIRTH_TIME_SENTINEL",

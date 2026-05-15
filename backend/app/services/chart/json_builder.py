@@ -5,13 +5,12 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
+from app.domain.astrology.celestial_runtime_catalog import is_major_aspect_code
 from app.domain.astrology.zodiac import sign_from_longitude
 
 if TYPE_CHECKING:
     from app.domain.astrology.natal_calculation import NatalResult
     from app.services.user_profile.birth_profile_service import UserBirthProfileData
-
-MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
 
 PLANET_NAMES_FR = {
     "sun": "Soleil",
@@ -300,7 +299,7 @@ def build_chart_json(
         # Filter for major aspects only as per Epic 29 requirements.
         # Minor aspects are currently calculated by the engine
         # but not supported by the JSON contract.
-        if a.aspect_code in MAJOR_ASPECTS:
+        if is_major_aspect_code(a.aspect_code):
             aspects.append(_serialize_aspect_runtime(a))
 
     # Angles

@@ -1,6 +1,6 @@
 # Story CS-171 converger-referentiels-astrologie-db-json: Converger les referentiels astrologiques DB et JSON
 
-Status: ready-to-dev
+Status: ready-to-review
 
 ## 1. Objective
 

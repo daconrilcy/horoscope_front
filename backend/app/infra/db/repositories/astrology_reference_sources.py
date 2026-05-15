@@ -1,0 +1,56 @@
+"""Charge les catalogues astrologiques documentaires utilises par le seed SQL."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+
+def astrology_research_path(file_name: str) -> Path:
+    """Construit le chemin vers une source JSON astrologique canonique."""
+    repo_root = Path(__file__).resolve().parents[5]
+    return repo_root / "docs" / "recherches astro" / file_name
+
+
+def load_aspect_family_names() -> tuple[str, ...]:
+    """Charge les familles d'aspects depuis le fichier pluriel canonique."""
+    source_path = astrology_research_path("astral_aspect_families.json")
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    families = raw.get("family") if isinstance(raw, dict) else None
+    if not isinstance(families, list) or not families:
+        raise ValueError("aspect families source must contain a non-empty family list")
+    return tuple(str(value) for value in families)
+
+
+def load_aspect_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les aspects stables depuis la source JSON canonique."""
+    source_path = astrology_research_path("aspects.json")
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    if not isinstance(raw, list) or not raw:
+        raise ValueError("aspects source must be a non-empty list")
+    return tuple(dict(row) for row in raw)
+
+
+def load_structural_reference_rows(section: str) -> tuple[dict[str, Any], ...]:
+    """Charge une section du catalogue structurel astrologique."""
+    source_path = astrology_research_path("structural_reference_catalog.json")
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    rows = raw.get(section) if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError(f"structural reference section must be non-empty: {section}")
+    return tuple(dict(row) for row in rows)
+
+
+def load_astral_system_names() -> tuple[str, ...]:
+    """Charge les systemes astraux depuis le JSON documentaire canonique."""
+    source_path = astrology_research_path("astral_systems.json")
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    systems = raw.get("name") if isinstance(raw, dict) else None
+    if not isinstance(systems, list) or not systems:
+        raise ValueError("astral systems source must contain a non-empty name list")
+    return tuple(str(value) for value in systems)

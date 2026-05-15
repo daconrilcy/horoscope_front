@@ -29,6 +29,21 @@ from app.infra.observability.metrics import get_counter_sum_in_window, reset_met
 # Helpers
 # ---------------------------------------------------------------------------
 
+SIGN_RULERSHIPS = {
+    "aries": "mars",
+    "taurus": "venus",
+    "gemini": "mercury",
+    "cancer": "moon",
+    "leo": "sun",
+    "virgo": "mercury",
+    "libra": "venus",
+    "scorpio": "mars",
+    "sagittarius": "jupiter",
+    "capricorn": "saturn",
+    "aquarius": "saturn",
+    "pisces": "jupiter",
+}
+
 
 def _make_birth_input(birth_date: str = "1990-06-15") -> BirthInput:
     return BirthInput(
@@ -276,6 +291,7 @@ def test_build_natal_result_time_scale_tt_enabled(monkeypatch: pytest.MonkeyPatc
         ],
         "houses": [{"number": n} for n in range(1, 13)],
         "aspects": [{"code": "conjunction", "angle": 0, "default_orb_deg": 8.0}],
+        "sign_rulerships": SIGN_RULERSHIPS,
     }
     birth_input = BirthInput(
         birth_date="1990-06-15",
@@ -342,6 +358,7 @@ def test_build_natal_result_time_scale_tt_disabled(monkeypatch: pytest.MonkeyPat
         ],
         "houses": [{"number": n} for n in range(1, 13)],
         "aspects": [{"code": "conjunction", "angle": 0, "default_orb_deg": 8.0}],
+        "sign_rulerships": SIGN_RULERSHIPS,
     }
     birth_input = BirthInput(
         birth_date="1990-06-15",

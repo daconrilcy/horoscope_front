@@ -3,6 +3,10 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from app.domain.astrology.celestial_runtime_catalog import (
+    ANGULAR_HOUSE_NUMBERS,
+    SUCCEDENT_HOUSE_NUMBERS,
+)
 from app.domain.prediction.context import LoadedPredictionContext
 from app.domain.prediction.schemas import NatalChart
 
@@ -38,7 +42,6 @@ class NatalSensitivityCalculator:
 
     NS_MIN = 0.75
     NS_MAX = 1.25
-    ANGULAR_HOUSES = {1, 4, 7, 10}
     PRIMARY_ROLE_MULTIPLIER = 1.0
     SECONDARY_ROLE_MULTIPLIER = 0.6
     HOUSE_KIND_SCORES = {
@@ -328,7 +331,7 @@ class NatalSensitivityCalculator:
             ruler_house = (
                 runtime_house.ruler.house if runtime_house and runtime_house.ruler else None
             )
-            if ruler_house in self.ANGULAR_HOUSES:
+            if ruler_house in ANGULAR_HOUSE_NUMBERS:
                 rul += 1.0
         return rul
 
@@ -338,7 +341,7 @@ class NatalSensitivityCalculator:
             if planet_weight.category_code != cat_code or planet_weight.weight <= 0:
                 continue
             house_num = self._lookup_mapping_value(natal.planet_houses, planet_weight.planet_code)
-            if house_num in self.ANGULAR_HOUSES:
+            if house_num in ANGULAR_HOUSE_NUMBERS:
                 ang += float(planet_weight.weight)
         return ang
 
@@ -399,9 +402,9 @@ class NatalSensitivityCalculator:
         house_kind = getattr(house_profile, "house_kind", None) if house_profile else None
         if house_kind is not None:
             return self.HOUSE_KIND_SCORES.get(self._normalize_code(house_kind), 0.0)
-        if house_num in self.ANGULAR_HOUSES:
+        if house_num in ANGULAR_HOUSE_NUMBERS:
             return self.HOUSE_KIND_SCORES["angular"]
-        if house_num in {2, 5, 8, 11}:
+        if house_num in SUCCEDENT_HOUSE_NUMBERS:
             return self.HOUSE_KIND_SCORES["succedent"]
         return self.HOUSE_KIND_SCORES["cadent"]
 

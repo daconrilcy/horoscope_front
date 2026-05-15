@@ -114,25 +114,25 @@
     "input_hash": "05d93f9be6a885f9c3f9841a91db1e80155299bbf47c5a841ff5707b91691065",
     "category_scores": {
       "energy": {
-        "note_20": 14,
-        "raw_score": 1.2115846262863993e-05,
-        "normalized_score": 1.2115846262863993e-05,
-        "power": 9.864228815783074e-05,
-        "volatility": 1.4672194420775528e-05,
+        "note_20": 10,
+        "raw_score": 2.4231692525727985e-05,
+        "normalized_score": 2.4231692525727985e-05,
+        "power": 0.00019728457631566147,
+        "volatility": 2.9344388841551055e-05,
         "sort_order": 1,
         "is_provisional": true
       },
       "mood": {
-        "note_20": 14,
-        "raw_score": 1.1183858088797532e-05,
-        "normalized_score": 1.1183858088797532e-05,
-        "power": 9.105441983799759e-05,
-        "volatility": 1.3543564080715872e-05,
+        "note_20": 10,
+        "raw_score": 2.2367716177595063e-05,
+        "normalized_score": 2.2367716177595063e-05,
+        "power": 0.00018210883967599518,
+        "volatility": 2.7087128161431744e-05,
         "sort_order": 2,
         "is_provisional": true
       },
       "health": {
-        "note_20": 10,
+        "note_20": 6,
         "raw_score": 0.0,
         "normalized_score": 0.0,
         "power": 0.0,
@@ -141,25 +141,25 @@
         "is_provisional": true
       },
       "work": {
-        "note_20": 17,
-        "raw_score": 1.6731598038736245e-05,
-        "normalized_score": 1.6731598038736245e-05,
-        "power": 0.0001362218601383836,
-        "volatility": 2.0261833475639944e-05,
+        "note_20": 20,
+        "raw_score": 0.026488686362863507,
+        "normalized_score": 0.026488686362863507,
+        "power": 0.1364453805183233,
+        "volatility": 0.02525766557121416,
         "sort_order": 4,
         "is_provisional": true
       },
       "career": {
-        "note_20": 20,
-        "raw_score": 2.5519202050677558e-05,
-        "normalized_score": 2.5519202050677558e-05,
-        "power": 0.00020776695474887923,
-        "volatility": 3.0903552738055886e-05,
+        "note_20": 19,
+        "raw_score": 0.02610314317864519,
+        "normalized_score": 0.02610314317864519,
+        "power": 0.09994813928540855,
+        "volatility": 0.024109305213511976,
         "sort_order": 5,
         "is_provisional": true
       },
       "money": {
-        "note_20": 10,
+        "note_20": 6,
         "raw_score": 0.0,
         "normalized_score": 0.0,
         "power": 0.0,
@@ -168,16 +168,16 @@
         "is_provisional": true
       },
       "love": {
-        "note_20": 10,
-        "raw_score": 0.0,
-        "normalized_score": 0.0,
-        "power": 0.0,
-        "volatility": 0.0,
+        "note_20": 15,
+        "raw_score": 0.00527336398798719,
+        "normalized_score": 0.00527336398798719,
+        "power": 0.0374250186564544,
+        "volatility": 0.006924454647114373,
         "sort_order": 7,
         "is_provisional": true
       },
       "sex_intimacy": {
-        "note_20": 10,
+        "note_20": 6,
         "raw_score": 0.0,
         "normalized_score": 0.0,
         "power": 0.0,
@@ -186,7 +186,7 @@
         "is_provisional": true
       },
       "family_home": {
-        "note_20": 10,
+        "note_20": 6,
         "raw_score": 0.0,
         "normalized_score": 0.0,
         "power": 0.0,
@@ -195,7 +195,7 @@
         "is_provisional": true
       },
       "social_network": {
-        "note_20": 10,
+        "note_20": 6,
         "raw_score": 0.0,
         "normalized_score": 0.0,
         "power": 0.0,
@@ -204,7 +204,7 @@
         "is_provisional": true
       },
       "communication": {
-        "note_20": 10,
+        "note_20": 6,
         "raw_score": 0.0,
         "normalized_score": 0.0,
         "power": 0.0,
@@ -213,17 +213,17 @@
         "is_provisional": true
       },
       "pleasure_creativity": {
-        "note_20": 10,
-        "raw_score": 0.0,
-        "normalized_score": 0.0,
-        "power": 0.0,
-        "volatility": 0.0,
+        "note_20": 12,
+        "raw_score": 0.0007554907795115747,
+        "normalized_score": 0.0007554907795115747,
+        "power": 0.1776391846366704,
+        "volatility": 0.0254413916040965,
         "sort_order": 12,
         "is_provisional": true
       }
     },
     "detected_events_count": 45,
-    "turning_points_count": 5,
+    "turning_points_count": 16,
     "sample_count": 92,
     "is_provisional_calibration": true
   }

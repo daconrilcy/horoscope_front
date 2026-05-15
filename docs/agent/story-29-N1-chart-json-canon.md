@@ -154,7 +154,7 @@ compatible avec le placeholder {{chart_json}} des prompts du gateway.
 ```python
 SIGNS = ["aries", "taurus", "gemini", "cancer", "leo", "virgo",
          "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
-MAJOR_ASPECTS = {"conjunction", "opposition", "trine", "square", "sextile"}
+Le filtrage des aspects majeurs passe par le helper runtime canonique du domaine astrology.
 
 def _longitude_to_sign(longitude: float) -> str: ...
 def _longitude_in_sign(longitude: float) -> float: ...

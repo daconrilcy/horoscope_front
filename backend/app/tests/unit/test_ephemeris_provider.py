@@ -268,7 +268,7 @@ class TestErrorHandling:
     def test_import_error_raises_ephemeris_calc_error(self) -> None:
         """Si pyswisseph n'est pas installé → EphemerisCalcError."""
         with patch(
-            "app.domain.astrology.ephemeris_provider._get_swe_module",
+            "app.domain.astrology.ephemeris_provider.load_swisseph",
             side_effect=EphemerisCalcError("pyswisseph module is not installed"),
         ):
             with pytest.raises(EphemerisCalcError) as exc_info:

@@ -16,6 +16,7 @@ from .aspect_semantic_provenance import (
     SemanticProvenance,
     prioritize_semantic_candidates,
 )
+from .profile_fields import optional_profile_values, required_profile_values
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,10 +47,10 @@ class AspectInterpretationFacts:
             runtime.participants.planet_a,
             runtime.participants.planet_b,
         )
-        semantic_axes = _require_list(profile, "core_keywords_json")
-        growth_axes = _require_list(profile, "growth_patterns_json")
-        relationship_axes = _optional_list(profile, "relationship_keywords_json")
-        shadow_axes = _optional_list(profile, "shadow_keywords_json")
+        semantic_axes = required_profile_values(profile, "core_keywords_json")
+        growth_axes = required_profile_values(profile, "growth_patterns_json")
+        relationship_axes = optional_profile_values(profile, "relationship_keywords_json")
+        shadow_axes = optional_profile_values(profile, "shadow_keywords_json")
         candidates = prioritize_semantic_candidates(
             (
                 AspectSemanticCandidate(
@@ -75,22 +76,3 @@ class AspectInterpretationFacts:
             source_profile_code=aspect_code,
             semantic_candidates=candidates,
         )
-
-
-def _require_list(profile: dict[str, Any], field_name: str) -> tuple[str, ...]:
-    """Extrait une liste semantique obligatoire depuis un profil."""
-    values = profile.get(field_name)
-    if not isinstance(values, list) or not values:
-        raise ValueError(f"aspect interpretation profile misses {field_name}")
-    normalized_values = tuple(str(value).strip() for value in values)
-    if any(not value for value in normalized_values):
-        raise ValueError(f"aspect interpretation profile misses {field_name}")
-    return normalized_values
-
-
-def _optional_list(profile: dict[str, Any], field_name: str) -> tuple[str, ...]:
-    """Extrait une liste semantique optionnelle depuis un profil."""
-    values = profile.get(field_name)
-    if not isinstance(values, list):
-        return ()
-    return tuple(str(value).strip() for value in values if str(value).strip())

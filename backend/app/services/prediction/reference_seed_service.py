@@ -139,7 +139,7 @@ def _load_planet_sign_dignities() -> list[dict[str, object]]:
 
 def _load_aspect_families() -> list[str]:
     """Charge les familles d'aspects depuis la source documentaire canonique."""
-    with _astro_research_path("astral_aspect_family.json").open(encoding="utf-8") as stream:
+    with _astro_research_path("astral_aspect_families.json").open(encoding="utf-8") as stream:
         raw = json.load(stream)
     families = raw.get("family") if isinstance(raw, dict) else None
     if not isinstance(families, list) or not families:
@@ -1079,10 +1079,9 @@ def run_prediction_reference_seed(db: Session) -> None:
         v2.is_locked = False
         db.flush()
 
-        # 3. Les structures stables existent deja via la reference 1.0.0.
-        if not repo.has_complete_version_data():
-            print("Seeding stable astrology structures...")
-            repo.seed_version_defaults()
+        # 3. Les structures stables sont resynchronisées depuis les JSON canoniques.
+        print("Syncing stable astrology structures...")
+        repo.seed_version_defaults()
         db.flush()
         _ensure_astral_dignity_types(db)
         _ensure_astral_systems(db)

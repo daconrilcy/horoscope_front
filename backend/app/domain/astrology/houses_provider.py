@@ -4,7 +4,7 @@ Calcule les cuspides des 12 maisons natales (Placidus par défaut),
 l'Ascendant et le Milieu-du-Ciel via pyswisseph.
 
 Architecture strategy :
-- ``_HOUSE_SYSTEM_CODES`` centralise le mapping nom public → code octet SwissEph.
+- le mapping des systèmes publics centralise le code octet SwissEph.
 - ``_SUPPORTED_HOUSE_SYSTEMS`` expose publiquement ``"placidus"``, ``"equal"``
   et ``"whole_sign"`` (story 23.2).
 - ``UnsupportedHouseSystemError`` → 422 (erreur fonctionnelle).
@@ -27,10 +27,11 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from types import ModuleType
 
 from app.core.ephemeris import SWISSEPH_LOCK
 from app.domain.astrology.house_system_codes import HouseSystemCode
+from app.domain.astrology.swisseph_runtime import load_swisseph
+from app.domain.astrology.zodiac import normalize_360
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ METRIC_ERRORS = "swisseph_errors_total"
 
 # Mapping nom de système public → code octet SwissEph.
 # Reference: pyswisseph houses_ex hsys parameter.
-_HOUSE_SYSTEM_CODES: dict[str, bytes] = {
+SWISS_HOUSE_SYSTEM_BYTES: dict[str, bytes] = {
     HouseSystemCode.PLACIDUS: b"P",
     HouseSystemCode.EQUAL: b"E",  # Exposé public API depuis story 23.2
     HouseSystemCode.WHOLE_SIGN: b"W",  # Exposé public API depuis story 23.2
@@ -89,21 +90,6 @@ class UnsupportedHouseSystemError(Exception):
         super().__init__(self.message)
 
 
-def _get_swe_module() -> ModuleType:
-    """Lazy import and validation of swisseph module."""
-    try:
-        import swisseph as swe  # type: ignore[import-untyped]
-
-        return swe
-    except ImportError as exc:
-        raise HousesCalcError("pyswisseph module is not installed") from exc
-
-
-def _normalize_longitude(lon: float) -> float:
-    """Normalise une longitude dans [0, 360)."""
-    return lon % 360.0
-
-
 def _extract_cusps(cusps_raw: tuple[object, ...]) -> tuple[float, ...]:
     """Extrait 12 cuspides à partir du format SwissEph.
 
@@ -117,7 +103,7 @@ def _extract_cusps(cusps_raw: tuple[object, ...]) -> tuple[float, ...]:
         source = cusps_raw
     else:
         raise HousesCalcError(f"houses_ex returned invalid cusp array length: {len(cusps_raw)}")
-    return tuple(_normalize_longitude(float(value)) for value in source)
+    return tuple(normalize_360(float(value)) for value in source)
 
 
 def calculate_houses(
@@ -161,13 +147,16 @@ def calculate_houses(
     is_topocentric = frame == "topocentric"
     # AC3 : altitude implicite 0 si frame topocentric sans altitude fournie.
     effective_altitude = altitude_m if altitude_m is not None else 0.0
-    hsys_code = _HOUSE_SYSTEM_CODES[house_system]
+    hsys_code = SWISS_HOUSE_SYSTEM_BYTES[house_system]
 
     topo_set = False
     start = time.monotonic()
 
     try:
-        swe = _get_swe_module()
+        try:
+            swe = load_swisseph()
+        except ImportError as exc:
+            raise HousesCalcError("pyswisseph module is not installed") from exc
 
         with SWISSEPH_LOCK:
             try:
@@ -204,8 +193,8 @@ def calculate_houses(
 
     # SwissEph peut retourner 12 ou 13 cuspides selon version/binding.
     cusps = _extract_cusps(cusps_raw)
-    asc = _normalize_longitude(float(ascmc_raw[0]))
-    mc = _normalize_longitude(float(ascmc_raw[1]))
+    asc = normalize_360(float(ascmc_raw[0]))
+    mc = normalize_360(float(ascmc_raw[1]))
 
     logger.debug(
         "houses_calculated jdut=%.4f house_system=%s frame=%s altitude_m=%s",

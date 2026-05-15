@@ -430,7 +430,7 @@ En moteur daily V1/V3 :
    Extraits :
 
    ```python
-   _HOUSE_SYSTEM_CODES = {
+   SWISS_HOUSE_SYSTEM_BYTES = {
        HouseSystemCode.PLACIDUS: b"P",
        HouseSystemCode.EQUAL: b"E",
        HouseSystemCode.WHOLE_SIGN: b"W",
@@ -451,7 +451,7 @@ En moteur daily V1/V3 :
        source = cusps_raw[1:13]
    elif len(cusps_raw) == 12:
        source = cusps_raw
-   return tuple(_normalize_longitude(float(value)) for value in source)
+   return tuple(normalize_360(float(value)) for value in source)
    ```
 
 6. `backend/app/domain/astrology/natal_calculation.py` valide ensuite le résultat avec `_validate_house_cusps` : 12 cuspides, valeurs numériques finies, normalisées et non dupliquées.

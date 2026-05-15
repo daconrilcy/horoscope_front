@@ -264,7 +264,7 @@ class TestHousesCalcErrors:
     def test_error_counter_incremented_on_import_error(self) -> None:
         """swisseph_errors_total|code=houses_calc_failed|house_system=X si module absent."""
         with patch(
-            "app.domain.astrology.houses_provider._get_swe_module",
+            "app.domain.astrology.houses_provider.load_swisseph",
             side_effect=HousesCalcError("pyswisseph module is not installed"),
         ):
             with pytest.raises(HousesCalcError):

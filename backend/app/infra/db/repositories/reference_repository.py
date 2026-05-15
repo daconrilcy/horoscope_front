@@ -19,29 +19,11 @@ from app.infra.db.models.reference import (
     PlanetModel,
     ReferenceVersionModel,
 )
-
-ASPECT_FAMILY_ROWS = ("major", "minor", "advanced")
-ASPECT_ROWS = (
-    ("conjunction", "Conjunction", 0.0, "major"),
-    ("sextile", "Sextile", 60.0, "major"),
-    ("square", "Square", 90.0, "major"),
-    ("trine", "Trine", 120.0, "major"),
-    ("opposition", "Opposition", 180.0, "major"),
-    ("semi_sextile", "Semi-sextile", 30.0, "minor"),
-    ("semi_square", "Semi-square", 45.0, "minor"),
-    ("quintile", "Quintile", 72.0, "minor"),
-    ("sesquiquadrate", "Sesquiquadrate", 135.0, "minor"),
-    ("quincunx", "Quincunx", 150.0, "minor"),
-    ("biquintile", "Biquintile", 144.0, "minor"),
-    ("septile", "Septile", 51.428571, "advanced"),
-    ("biseptile", "Biseptile", 102.857143, "advanced"),
-    ("triseptile", "Triseptile", 154.285714, "advanced"),
-    ("novile", "Novile", 40.0, "advanced"),
-    ("binovile", "Binovile", 80.0, "advanced"),
-    ("quadranovile", "Quadranovile", 160.0, "advanced"),
-    ("decile", "Decile", 36.0, "advanced"),
-    ("tredecile", "Tredecile", 108.0, "advanced"),
-    ("quindecile", "Quindecile", 165.0, "advanced"),
+from app.infra.db.repositories.astrology_reference_sources import (
+    load_aspect_family_names,
+    load_aspect_rows,
+    load_astral_system_names,
+    load_structural_reference_rows,
 )
 
 
@@ -78,99 +60,50 @@ class ReferenceRepository:
             )
         )
 
-    def has_complete_version_data(self) -> bool:
-        """Indique si chaque table structurelle stable contient au moins une entree."""
-        return all(
-            self.db.scalar(select(model.id).limit(1)) is not None
-            for model in (
-                PlanetModel,
-                AstralSignModel,
-                HouseModel,
-                AspectModel,
-                AstralAspectFamilyModel,
-            )
-        )
-
     def seed_version_defaults(self) -> None:
-        """Insere les entrees manquantes du vocabulaire invariant."""
-        planet_rows = [
-            ("sun", "Sun"),
-            ("moon", "Moon"),
-            ("mercury", "Mercury"),
-            ("venus", "Venus"),
-            ("mars", "Mars"),
-            ("jupiter", "Jupiter"),
-            ("saturn", "Saturn"),
-            ("uranus", "Uranus"),
-            ("neptune", "Neptune"),
-            ("pluto", "Pluto"),
-        ]
-        for code, name in planet_rows:
-            if self.db.scalar(select(PlanetModel.id).where(PlanetModel.code == code)) is None:
-                self.db.add(PlanetModel(code=code, name=name))
+        """Synchronise le vocabulaire invariant depuis les sources JSON canoniques."""
+        for row in load_structural_reference_rows("planets"):
+            code = str(row["code"])
+            planet = self.db.scalar(select(PlanetModel).where(PlanetModel.code == code))
+            if planet is None:
+                self.db.add(PlanetModel(code=code, name=str(row["name"])))
+            else:
+                planet.name = str(row["name"])
 
-        sign_rows = [
-            ("aries", "Aries"),
-            ("taurus", "Taurus"),
-            ("gemini", "Gemini"),
-            ("cancer", "Cancer"),
-            ("leo", "Leo"),
-            ("virgo", "Virgo"),
-            ("libra", "Libra"),
-            ("scorpio", "Scorpio"),
-            ("sagittarius", "Sagittarius"),
-            ("capricorn", "Capricorn"),
-            ("aquarius", "Aquarius"),
-            ("pisces", "Pisces"),
-        ]
-        for code, name in sign_rows:
-            if (
-                self.db.scalar(select(AstralSignModel.id).where(AstralSignModel.code == code))
-                is None
-            ):
-                self.db.add(AstralSignModel(code=code, name=name))
+        for row in load_structural_reference_rows("signs"):
+            code = str(row["code"])
+            sign = self.db.scalar(select(AstralSignModel).where(AstralSignModel.code == code))
+            if sign is None:
+                self.db.add(AstralSignModel(code=code, name=str(row["name"])))
+            else:
+                sign.name = str(row["name"])
 
-        dignity_type_rows = [
-            ("domicile", "Domicile"),
-            ("detriment", "Detriment"),
-            ("exaltation", "Exaltation"),
-            ("fall", "Fall"),
-        ]
-        for code, name in dignity_type_rows:
-            if (
-                self.db.scalar(
-                    select(AstralDignityTypeModel.id).where(AstralDignityTypeModel.code == code)
-                )
-                is None
-            ):
-                self.db.add(AstralDignityTypeModel(code=code, name=name))
+        for row in load_structural_reference_rows("dignity_types"):
+            code = str(row["code"])
+            dignity_type = self.db.scalar(
+                select(AstralDignityTypeModel).where(AstralDignityTypeModel.code == code)
+            )
+            if dignity_type is None:
+                self.db.add(AstralDignityTypeModel(code=code, name=str(row["name"])))
+            else:
+                dignity_type.name = str(row["name"])
 
-        for name in ("traditional", "modern", "hellenistic", "medieval"):
+        for name in load_astral_system_names():
             if (
                 self.db.scalar(select(AstralSystemModel.id).where(AstralSystemModel.name == name))
                 is None
             ):
                 self.db.add(AstralSystemModel(name=name))
 
-        house_rows = [
-            (1, "Self"),
-            (2, "Resources"),
-            (3, "Communication"),
-            (4, "Home"),
-            (5, "Creativity"),
-            (6, "Health"),
-            (7, "Partnership"),
-            (8, "Transformation"),
-            (9, "Beliefs"),
-            (10, "Career"),
-            (11, "Community"),
-            (12, "Subconscious"),
-        ]
-        for number, name in house_rows:
-            if self.db.scalar(select(HouseModel.id).where(HouseModel.number == number)) is None:
-                self.db.add(HouseModel(number=number, name=name))
+        for row in load_structural_reference_rows("houses"):
+            number = int(row["number"])
+            house = self.db.scalar(select(HouseModel).where(HouseModel.number == number))
+            if house is None:
+                self.db.add(HouseModel(number=number, name=str(row["name"])))
+            else:
+                house.name = str(row["name"])
 
-        for name in ASPECT_FAMILY_ROWS:
+        for name in load_aspect_family_names():
             if (
                 self.db.scalar(
                     select(AstralAspectFamilyModel.id).where(AstralAspectFamilyModel.name == name)
@@ -183,16 +116,25 @@ class ReferenceRepository:
             row.name: row.id for row in self.db.scalars(select(AstralAspectFamilyModel)).all()
         }
 
-        for code, name, angle, family_name in ASPECT_ROWS:
-            if self.db.scalar(select(AspectModel.id).where(AspectModel.code == code)) is None:
+        for source_row in load_aspect_rows():
+            code = str(source_row["code"])
+            family_name = str(source_row["family"])
+            if family_name not in families:
+                raise ValueError(f"unknown aspect family: {family_name}")
+            aspect = self.db.scalar(select(AspectModel).where(AspectModel.code == code))
+            if aspect is None:
                 self.db.add(
                     AspectModel(
                         code=code,
-                        name=name,
-                        angle=angle,
+                        name=str(source_row["name"]),
+                        angle=float(source_row["angle"]),
                         family=families[family_name],
                     )
                 )
+            else:
+                aspect.name = str(source_row["name"])
+                aspect.angle = float(source_row["angle"])
+                aspect.family = families[family_name]
 
     def get_reference_data(self, version: str) -> dict[str, object]:
         """Retourne le vocabulaire stable expose pour une version existante."""

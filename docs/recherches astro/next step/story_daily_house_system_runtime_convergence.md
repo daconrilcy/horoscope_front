@@ -57,7 +57,7 @@ houses_provider.calculate_houses
 avec un mapping canonique :
 
 ```python
-_HOUSE_SYSTEM_CODES = {
+SWISS_HOUSE_SYSTEM_BYTES = {
     HouseSystemCode.PLACIDUS: b"P",
     HouseSystemCode.EQUAL: b"E",
     HouseSystemCode.WHOLE_SIGN: b"W",
@@ -713,4 +713,3 @@ avec :
 - traçabilité ;
 - analytics cohérentes ;
 - architecture canonique alignée avec les références SQL.
-
