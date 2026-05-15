@@ -42,6 +42,7 @@ from app.infra.db.repositories.astrology_reference_sources import (
     load_astral_house_modality_rows,
     load_astral_object_type_rows,
     load_astral_planet_definition_rows,
+    load_astral_planet_rows,
     load_astral_speed_rows,
     load_astral_system_names,
     load_astral_typical_polarity_rows,
@@ -87,13 +88,19 @@ class ReferenceRepository:
 
     def seed_version_defaults(self) -> None:
         """Synchronise le vocabulaire invariant depuis les sources JSON canoniques."""
-        for row in load_structural_reference_rows("planets"):
+        for row in load_astral_planet_rows():
             code = str(row["code"])
             planet = self.db.scalar(select(PlanetModel).where(PlanetModel.code == code))
+            payload = {
+                "id": int(row["id"]),
+                "name": str(row["name"]),
+                "swe_id": int(row["swe_id"]),
+            }
             if planet is None:
-                self.db.add(PlanetModel(code=code, name=str(row["name"])))
+                self.db.add(PlanetModel(code=code, **payload))
             else:
-                planet.name = str(row["name"])
+                planet.name = payload["name"]
+                planet.swe_id = payload["swe_id"]
 
         for row in load_structural_reference_rows("signs"):
             code = str(row["code"])
@@ -454,7 +461,9 @@ class ReferenceRepository:
         ).all()
         return {
             "version": model.version,
-            "planets": [{"code": item.code, "name": item.name} for item in planets],
+            "planets": [
+                {"code": item.code, "name": item.name, "swe_id": item.swe_id} for item in planets
+            ],
             "signs": [{"code": item.code, "name": item.name} for item in signs],
             "houses": [{"number": item.number, "name": item.name} for item in houses],
             "house_axes": self._get_house_axes(),

@@ -14,6 +14,7 @@ import swisseph as swe
 
 from app.core.config import DailyEngineMode, settings
 from app.domain.astrology.house_system_codes import HouseSystemCode
+from app.domain.astrology.planet_catalog import load_default_planet_catalog
 from app.domain.astrology.runtime import (
     HouseAxisRuntimeData,
     HouseOccupantRuntimeData,
@@ -76,18 +77,7 @@ _ZODIAC_SIGNS = (
     "pisces",
 )
 
-_PLANET_NAME_MAP = {
-    "sun": "Sun",
-    "moon": "Moon",
-    "mercury": "Mercury",
-    "venus": "Venus",
-    "mars": "Mars",
-    "jupiter": "Jupiter",
-    "saturn": "Saturn",
-    "uranus": "Uranus",
-    "neptune": "Neptune",
-    "pluto": "Pluto",
-}
+_PLANET_NAME_MAP = {item.code: item.name for item in load_default_planet_catalog()}
 
 
 class EngineOrchestrator:

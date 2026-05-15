@@ -1,3 +1,5 @@
+"""Calcule les contributions pondérées des événements prédictifs."""
+
 import logging
 
 from app.domain.prediction.context import LoadedPredictionContext
@@ -14,21 +16,6 @@ class ContributionCalculator:
         -1.0, +1.0
     )
     """
-
-    TARGET_CLASS_MAP: dict[str, str] = {
-        "Asc": "angle",
-        "MC": "angle",
-        "Sun": "luminary",
-        "Moon": "luminary",
-        "Mercury": "personal",
-        "Venus": "personal",
-        "Mars": "personal",
-        "Jupiter": "social",
-        "Saturn": "social",
-        "Uranus": "transpersonal",
-        "Neptune": "transpersonal",
-        "Pluto": "transpersonal",
-    }
 
     TARGET_CLASS_WEIGHTS: dict[str, float] = {
         "angle": 1.30,
@@ -62,7 +49,7 @@ class ContributionCalculator:
         w_planet = self._w_planet(event.body, ctx)
         w_aspect = self._w_aspect(event.aspect, ctx)
         f_phase = self._f_phase(event)
-        f_target = self._f_target(event.target)
+        f_target = self._f_target(event.target, ctx)
 
         base_contribution = w_event * w_planet * w_aspect * f_orb * f_phase * f_target
 
@@ -137,14 +124,22 @@ class ContributionCalculator:
         phase = event.metadata.get("phase", "exact")
         return self.PHASE_WEIGHTS.get(phase, 1.0)
 
-    def _f_target(self, target_code: str | None) -> float:
+    def _f_target(self, target_code: str | None, ctx: LoadedPredictionContext) -> float:
         """AC5 - target class factor."""
         if not target_code:
             return 1.0
-        target_class = self.TARGET_CLASS_MAP.get(target_code)
-        if target_class is None:
+        if target_code in {"Asc", "MC"}:
+            target_class = "angle"
+        else:
+            profile = self._lookup_mapping_value(
+                ctx.prediction_context.planet_profiles, target_code
+            )
+            target_class = str(getattr(profile, "class_code", "") or "").lower()
+            if target_class.endswith("_planet"):
+                target_class = target_class.removesuffix("_planet")
+        if not target_class:
             return 1.0  # Unknown target: neutral weight
-        return self.TARGET_CLASS_WEIGHTS[target_class]
+        return self.TARGET_CLASS_WEIGHTS.get(target_class, 1.0)
 
     def _pol(self, event: AstroEvent, cat_code: str, ctx: LoadedPredictionContext) -> float:
         """AC6 - contextual valence.

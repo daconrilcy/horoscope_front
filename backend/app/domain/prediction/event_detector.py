@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 import swisseph as swe
 
+from app.domain.astrology.planet_catalog import planet_runtime_codes
 from app.domain.prediction.context import LoadedPredictionContext
 from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 from app.domain.prediction.temporal_sampler import DayGrid
@@ -50,24 +51,11 @@ class EventDetector:
 
     CHALDEAN_ORDER = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"]
 
-    V1_NATAL_TARGETS = {
-        "Sun",
-        "Moon",
-        "Mercury",
-        "Venus",
-        "Mars",
-        "Jupiter",
-        "Saturn",
-        "Uranus",
-        "Neptune",
-        "Pluto",
-        "Asc",
-        "MC",
-    }
+    V1_NATAL_TARGETS = {*planet_runtime_codes(), "Asc", "MC"}
 
     # Taxonomy V2: codes emitted for exact aspects, discriminated by target family
     ANGLE_TARGETS: frozenset[str] = frozenset({"Asc", "MC"})
-    LUMINARY_TARGETS: frozenset[str] = frozenset({"Sun", "Moon"})
+    LUMINARY_TARGETS: frozenset[str] = frozenset(planet_runtime_codes()[:2])
     EXACT_EVENT_TYPES: frozenset[str] = frozenset(
         {
             "aspect_exact_to_angle",

@@ -1,3 +1,5 @@
+"""Construit les événements astrologiques enrichis du moteur daily."""
+
 from __future__ import annotations
 
 import logging
@@ -5,6 +7,7 @@ from datetime import date, datetime
 
 import swisseph as swe
 
+from app.domain.astrology.planet_catalog import planet_runtime_codes, planet_swe_ids_by_runtime_code
 from app.domain.prediction.public_astro_vocabulary import FIXED_STARS
 from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 
@@ -12,18 +15,7 @@ logger = logging.getLogger(__name__)
 
 _FLG_SWIEPH_SPEED = swe.FLG_SWIEPH | swe.FLG_SPEED
 
-SWE_BODY_IDS = {
-    "Sun": swe.SUN,
-    "Moon": swe.MOON,
-    "Mercury": swe.MERCURY,
-    "Venus": swe.VENUS,
-    "Mars": swe.MARS,
-    "Jupiter": swe.JUPITER,
-    "Saturn": swe.SATURN,
-    "Uranus": swe.URANUS,
-    "Neptune": swe.NEPTUNE,
-    "Pluto": swe.PLUTO,
-}
+SWE_BODY_IDS = dict(planet_swe_ids_by_runtime_code())
 
 ASPECTS = {
     0: "conjunction",
@@ -77,18 +69,7 @@ class EnrichedAstroEventsBuilder:
         # Track best orbs for deduplication across the day
         best_orbs: dict[tuple[str, str, str], tuple[float, StepAstroState]] = {}
 
-        planets_to_check = [
-            "Sun",
-            "Moon",
-            "Mercury",
-            "Venus",
-            "Mars",
-            "Jupiter",
-            "Saturn",
-            "Uranus",
-            "Neptune",
-            "Pluto",
-        ]
+        planets_to_check = list(planet_runtime_codes())
 
         for step in steps:
             for i, p1_name in enumerate(planets_to_check):
@@ -119,7 +100,7 @@ class EnrichedAstroEventsBuilder:
         for (body, target, asp_code), (orb, step) in best_orbs.items():
             # AC1 prioritization: slower planets first
             priority = 50
-            slow_planets = {"jupiter", "saturn", "uranus", "neptune", "pluto"}
+            slow_planets = set(item.lower() for item in planet_runtime_codes()[5:])
             if body in slow_planets or target in slow_planets:
                 priority = 70
             if body == "moon" or target == "moon":
@@ -299,7 +280,7 @@ class EnrichedAstroEventsBuilder:
         )
         progressed_jd = birth_jd + progressed_offset
 
-        progressed_planets = ["Sun", "Moon", "Mercury", "Venus", "Mars"]
+        progressed_planets = [code for code in planet_runtime_codes() if code in SWE_BODY_IDS][:5]
         prog_positions = {}
 
         for p in progressed_planets:

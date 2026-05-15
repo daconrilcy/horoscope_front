@@ -9,6 +9,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.astrology.runtime.runtime_reference import AstrologyRuntimeReference
 from app.infra.db.models.prediction_reference import AstralPlanetSignDignityModel
 from app.infra.db.models.reference import (
@@ -40,20 +41,7 @@ class AstrologyRuntimeReferenceError(Exception):
 class AstrologyRuntimeReferenceRepository:
     """Charge et valide la photographie runtime astrologique depuis la DB."""
 
-    _REQUIRED_PLANETS = frozenset(
-        {
-            "sun",
-            "moon",
-            "mercury",
-            "venus",
-            "mars",
-            "jupiter",
-            "saturn",
-            "uranus",
-            "neptune",
-            "pluto",
-        }
-    )
+    _REQUIRED_PLANETS = frozenset(planet_codes())
     _REQUIRED_ANGLE_POINTS = frozenset({"asc", "dsc", "mc", "ic"})
     _REQUIRED_HOUSE_SYSTEMS = frozenset({"placidus", "whole_sign", "equal", "porphyry"})
 

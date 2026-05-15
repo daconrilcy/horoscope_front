@@ -131,6 +131,8 @@ def test_astral_system_model_supports_nullable_self_inheritance():
 def test_planet_model_uses_canonical_astral_table_name():
     """Le modèle des planètes pointe vers le nom SQL canonique astral."""
     assert PlanetModel.__tablename__ == "astral_planets"
+    columns = {column.key for column in inspect(PlanetModel).columns}
+    assert columns == {"id", "code", "name", "swe_id"}
 
 
 def test_reference_and_aspect_models_use_canonical_astral_table_names():

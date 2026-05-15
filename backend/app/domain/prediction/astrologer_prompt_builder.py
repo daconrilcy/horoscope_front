@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from app.domain.astrology.natal_calculation import sign_from_longitude
+from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
 from app.domain.prediction.public_astro_vocabulary import get_planet_name_fr, get_sign_name_fr
 
@@ -118,7 +119,7 @@ PARAMÈTRES UTILISATEUR :
 
         pos = ctx.natal_data.get("planet_positions", [])
         planets = []
-        important_codes = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"]
+        important_codes = planet_codes()[:7]
         fallback_codes = ["SO", "LU", "ME", "VE", "MA", "JU", "SA"]
         for p in pos:
             code = str(p.get("planet_code", ""))

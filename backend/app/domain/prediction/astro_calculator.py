@@ -1,3 +1,5 @@
+"""Calcule les états astrologiques intermédiaires du moteur daily."""
+
 from __future__ import annotations
 
 import logging
@@ -8,6 +10,7 @@ import swisseph as swe
 
 from app.core.ephemeris import SWISSEPH_LOCK
 from app.domain.astrology.house_system_codes import HouseSystemCode
+from app.domain.astrology.planet_catalog import planet_swe_ids_by_runtime_code
 from app.domain.prediction.exceptions import PredictionEngineError
 from app.domain.prediction.schemas import PlanetState, StepAstroState
 
@@ -18,18 +21,7 @@ HOUSE_SYSTEM_PORPHYRY = HouseSystemCode.PORPHYRY
 _EXPECTED_CUSP_COUNT = 12
 _FLG_SWIEPH_SPEED = swe.FLG_SWIEPH | swe.FLG_SPEED
 
-V1_PLANETS: dict[str, int] = {
-    "Sun": swe.SUN,
-    "Moon": swe.MOON,
-    "Mercury": swe.MERCURY,
-    "Venus": swe.VENUS,
-    "Mars": swe.MARS,
-    "Jupiter": swe.JUPITER,
-    "Saturn": swe.SATURN,
-    "Uranus": swe.URANUS,
-    "Neptune": swe.NEPTUNE,
-    "Pluto": swe.PLUTO,
-}
+V1_PLANETS: dict[str, int] = dict(planet_swe_ids_by_runtime_code())
 
 
 class AstroCalculator:

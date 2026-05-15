@@ -8,11 +8,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
 from app.domain.astrology.runtime.dominant_aspect_runtime_data import (
     DominantAspectReason,
     DominantAspectRuntimeData,
 )
+
+DOMINANT_ASPECT_LUMINARY_CODES = frozenset(planet_codes()[:2])
 
 
 class DominantAspectEvaluator:
@@ -60,7 +63,7 @@ class DominantAspectEvaluator:
         if {
             aspect.participants.planet_a,
             aspect.participants.planet_b,
-        } & {"sun", "moon"}:
+        } & DOMINANT_ASPECT_LUMINARY_CODES:
             score += 0.08
             reasons.append(DominantAspectReason.LUMINARY_INVOLVED)
         if aspect.strength.normalized_score >= 0.65:

@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Protocol
 
+from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.astrology.runtime.house_runtime_data import HouseOccupantRuntimeData
+
+DOMINANT_PLANET_CODES = frozenset(planet_codes()[:2])
 
 
 class PlanetRuntimeData(Protocol):
@@ -35,7 +38,7 @@ def build_house_occupants(
                 planet=planet.planet_code,
                 sign=planet.sign_code,
                 longitude=planet.longitude,
-                is_dominant=planet.planet_code in {"sun", "moon"},
+                is_dominant=planet.planet_code in DOMINANT_PLANET_CODES,
             )
         )
 

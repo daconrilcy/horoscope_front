@@ -73,7 +73,10 @@ def test_seed_reference_version_is_idempotent() -> None:
     signs = cast(list[dict[str, Any]], payload["signs"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
     assert any(item["code"] == "sun" and item["name"] == "Sun" for item in planets)
-    assert any(item["code"] == "pluto" and item["name"] == "Pluto" for item in planets)
+    assert any(
+        item["code"] == "pluto" and item["name"] == "Pluto" and item["swe_id"] == 9
+        for item in planets
+    )
     assert {item["code"] for item in signs} == {
         "aries",
         "taurus",
@@ -252,7 +255,9 @@ def test_seed_reference_version_repairs_superficially_complete_catalog() -> None
     planets = cast(list[dict[str, Any]], payload["planets"])
     houses = cast(list[dict[str, Any]], payload["houses"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
-    assert next(item for item in planets if item["code"] == "sun")["name"] == "Sun"
+    seeded_sun = next(item for item in planets if item["code"] == "sun")
+    assert seeded_sun["name"] == "Sun"
+    assert seeded_sun["swe_id"] == 0
     assert next(item for item in houses if item["number"] == 1)["name"] == "Self"
     assert next(item for item in aspects if item["code"] == "conjunction")["angle"] == 0.0
 

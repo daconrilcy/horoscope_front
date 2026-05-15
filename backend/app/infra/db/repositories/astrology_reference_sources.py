@@ -45,6 +45,11 @@ def load_structural_reference_rows(section: str) -> tuple[dict[str, Any], ...]:
     return tuple(dict(row) for row in rows)
 
 
+def load_astral_planet_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les planètes canoniques depuis la table JSON dédiée."""
+    return _load_data_rows("astral_planets.json", "astral planets")
+
+
 def load_astral_system_names() -> tuple[str, ...]:
     """Charge les systemes astraux depuis le JSON documentaire canonique."""
     source_path = astrology_research_path("astral_systems.json")

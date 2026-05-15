@@ -17,6 +17,7 @@ class PlanetReferenceData:
 
     code: str
     name: str
+    swe_id: int = 0
     body_class: str | None = None
     is_luminary: bool = False
 

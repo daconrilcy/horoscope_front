@@ -41,6 +41,7 @@ class PlanetModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(32), index=True)
     name: Mapped[str] = mapped_column(String(64))
+    swe_id: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
 class AstralSignModel(Base):

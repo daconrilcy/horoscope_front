@@ -134,6 +134,8 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     ):
         columns = {column["name"] for column in head_inspector.get_columns(table_name)}
         assert "reference_version_id" not in columns
+    planet_columns = {column["name"] for column in head_inspector.get_columns("astral_planets")}
+    assert planet_columns == {"id", "code", "name", "swe_id"}
     axis_definition_columns = {
         column["name"] for column in head_inspector.get_columns("astral_house_axis_definitions")
     }
@@ -326,6 +328,18 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
             == 5
         )
         assert connection.execute(text("SELECT COUNT(*) FROM astral_aspects")).scalar_one() == 20
+        assert dict(connection.execute(text("SELECT code, swe_id FROM astral_planets")).all()) == {
+            "sun": 0,
+            "moon": 1,
+            "mercury": 2,
+            "venus": 3,
+            "mars": 4,
+            "jupiter": 5,
+            "saturn": 6,
+            "uranus": 7,
+            "neptune": 8,
+            "pluto": 9,
+        }
         assert dict(connection.execute(text("SELECT code, name FROM languages")).all()) == (
             EXPECTED_LANGUAGES
         )
@@ -920,7 +934,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260515_0115"
+    assert version == "20260515_0116"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

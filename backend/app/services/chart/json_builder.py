@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
+from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.astrology.zodiac import sign_from_longitude
 
 if TYPE_CHECKING:
@@ -52,6 +53,8 @@ ASPECT_NAMES_FR = {
 
 # Regex for evidence IDs as per Story 29.1 AC4
 EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,80}$")
+_CATALOG_PLANET_PREFIXES = tuple(f"{code.upper()}_" for code in planet_codes())
+_LUMINARY_EVIDENCE_PREFIXES = (*_CATALOG_PLANET_PREFIXES[:2], "ASC_", "MC_", "IC_", "DSC_")
 
 
 def _longitude_to_sign(longitude: float) -> str:
@@ -333,18 +336,11 @@ def build_chart_json(
 def _get_evidence_priority(eid: str) -> int:
     """Détermine la priorité de tri des identifiants d'évidence."""
     # Priority 0: Luminaries and Angles
-    if any(eid.startswith(p) for p in ["SUN_", "MOON_", "ASC_", "MC_", "IC_", "DSC_"]):
+    if any(eid.startswith(p) for p in _LUMINARY_EVIDENCE_PREFIXES):
         return 0
     # Priority 1: Positions (Signs, Houses, Retrograde)
     planets = [
-        "MERCURY_",
-        "VENUS_",
-        "MARS_",
-        "JUPITER_",
-        "SATURN_",
-        "URANUS_",
-        "NEPTUNE_",
-        "PLUTO_",
+        *_CATALOG_PLANET_PREFIXES[2:],
         "CHIRON_",
         "LILITH_",
         "NODE_",

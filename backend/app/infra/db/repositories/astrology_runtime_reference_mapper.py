@@ -55,6 +55,7 @@ class AstrologyRuntimeReferenceMapper:
                     PlanetReferenceData(
                         code=str(item["code"]),
                         name=str(item["name"]),
+                        swe_id=int(item["swe_id"]),
                         body_class=self._optional_str(
                             planet_definitions.get(str(item["code"]), {}).get("body_class")
                         ),

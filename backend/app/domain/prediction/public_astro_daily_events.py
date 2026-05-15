@@ -6,6 +6,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
+from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.prediction.public_astro_vocabulary import (
     get_aspect_label,
     get_fixed_star_name_fr,
@@ -25,6 +26,8 @@ PUBLIC_ASTRO_ASPECT_EVENT_TYPES = frozenset(
         "aspect_exact_to_personal",
     }
 )
+PUBLIC_POSITION_PLANET_CODES = frozenset(planet_codes()[:5])
+PUBLIC_POSITION_PLANET_ORDER = planet_codes()[:5]
 
 
 def resolve_public_astro_events(
@@ -108,7 +111,7 @@ class PublicAstroDailyEventsPolicy:
                 if len(aspects) >= 4:
                     break
 
-        # 4. Extract Planet Positions (Slow planets: Soleil, Lune, Mercure, Vénus, Mars)
+        # 4. Extract Planet Positions
         # AC3: positions from transit events or snapshot sign fields
         planet_positions = self._extract_planet_positions(snapshot, events, evidence)
 
@@ -218,8 +221,7 @@ class PublicAstroDailyEventsPolicy:
         events: list[Any],
         evidence: V3EvidencePack | None,
     ) -> list[str] | None:
-        # Lentes selon AC: Soleil, Lune, Mercure, Vénus, Mars
-        targets = {"sun", "moon", "mercury", "venus", "mars"}
+        targets = PUBLIC_POSITION_PLANET_CODES
         positions: dict[str, str] = {}
 
         # 1. Try from evidence metadata if present
@@ -259,7 +261,7 @@ class PublicAstroDailyEventsPolicy:
 
         # Return in specific order
         ordered = []
-        for p in ["sun", "moon", "mercury", "venus", "mars"]:
+        for p in PUBLIC_POSITION_PLANET_ORDER:
             if p in positions:
                 ordered.append(positions[p])
 

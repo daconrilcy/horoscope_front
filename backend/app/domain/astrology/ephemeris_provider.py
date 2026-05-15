@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from app.core.ephemeris import SWISSEPH_LOCK
+from app.domain.astrology.planet_catalog import planet_swe_ids_by_code
 from app.domain.astrology.swisseph_runtime import load_swisseph
 from app.domain.astrology.zodiac import normalize_360
 from app.infra.observability.metrics import increment_counter, observe_duration
@@ -35,21 +36,8 @@ logger = logging.getLogger(__name__)
 METRIC_CALC_LATENCY = "swisseph_calc_latency_ms"
 METRIC_ERRORS = "swisseph_errors_total"
 
-# Mapping stable : id planète interne → constante entière SwissEph.
-# swe.SUN=0, swe.MOON=1, swe.MERCURY=2, swe.VENUS=3, swe.MARS=4,
-# swe.JUPITER=5, swe.SATURN=6, swe.URANUS=7, swe.NEPTUNE=8, swe.PLUTO=9
-_PLANET_IDS: dict[str, int] = {
-    "sun": 0,
-    "moon": 1,
-    "mercury": 2,
-    "venus": 3,
-    "mars": 4,
-    "jupiter": 5,
-    "saturn": 6,
-    "uranus": 7,
-    "neptune": 8,
-    "pluto": 9,
-}
+# Mapping stable : code `astral_planets.code` → `astral_planets.swe_id`.
+_PLANET_IDS: dict[str, int] = dict(planet_swe_ids_by_code())
 
 # Ayanamsa name → constante SwissEph SIDM.
 _AYANAMSA_IDS: dict[str, int] = {
