@@ -8,10 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.prediction.public_astro_vocabulary import (
-    get_aspect_label,
-    get_fixed_star_name_fr,
-    get_planet_name_fr,
-    get_sign_name_fr,
+    PublicAstroVocabulary,
 )
 
 if TYPE_CHECKING:
@@ -64,9 +61,11 @@ class PublicAstroDailyEventsPolicy:
         self,
         snapshot: PersistedPredictionSnapshot,
         *,
+        astro_vocabulary: PublicAstroVocabulary,
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any] | None:
+        vocabulary = astro_vocabulary
         # 1. Resolve Astro Events
         events = resolve_public_astro_events(evidence, engine_output, snapshot)
 
@@ -74,7 +73,7 @@ class PublicAstroDailyEventsPolicy:
         ingresses = []
         for e in events:
             if getattr(e, "event_type", None) == "moon_sign_ingress" and getattr(e, "target", None):
-                text = f"{get_planet_name_fr(e.body)} entre en {get_sign_name_fr(e.target)}"
+                text = f"{vocabulary.planet(e.body)} entre en {vocabulary.sign(e.target)}"
                 time = None
                 # Check for occurred_at_local (datetime or string)
                 dt = getattr(e, "occurred_at_local", None) or getattr(e, "local_time", None)
@@ -100,9 +99,9 @@ class PublicAstroDailyEventsPolicy:
 
         seen_aspects = set()
         for e in aspect_events:
-            aspect_label = get_aspect_label(e.aspect)
-            planet_a = get_planet_name_fr(e.body)
-            planet_b = get_planet_name_fr(e.target)
+            aspect_label = vocabulary.aspect(e.aspect)
+            planet_a = vocabulary.planet(e.body)
+            planet_b = vocabulary.planet(e.target)
             aspect_text = f"{planet_a} {aspect_label} {planet_b}"
 
             if aspect_text not in seen_aspects:
@@ -113,14 +112,14 @@ class PublicAstroDailyEventsPolicy:
 
         # 4. Extract Planet Positions
         # AC3: positions from transit events or snapshot sign fields
-        planet_positions = self._extract_planet_positions(snapshot, events, evidence)
+        planet_positions = self._extract_planet_positions(snapshot, events, evidence, vocabulary)
 
         # 5. Story 60.15 Enriched Events
         returns = self._extract_returns(events)
-        progressions = self._extract_progressions(events)
-        nodes = self._extract_nodes(events)
-        sky_aspects = self._extract_sky_aspects(events)
-        fixed_stars = self._extract_fixed_stars(events)
+        progressions = self._extract_progressions(events, vocabulary)
+        nodes = self._extract_nodes(events, vocabulary)
+        sky_aspects = self._extract_sky_aspects(events, vocabulary)
+        fixed_stars = self._extract_fixed_stars(events, vocabulary)
 
         if (
             not ingresses
@@ -164,46 +163,52 @@ class PublicAstroDailyEventsPolicy:
                 found.append("Retour Lunaire (la Lune retrouve sa place natale)")
         return found
 
-    def _extract_progressions(self, events: list[Any]) -> list[str]:
+    def _extract_progressions(
+        self, events: list[Any], vocabulary: PublicAstroVocabulary
+    ) -> list[str]:
         # AC9: Progressions Secondaires
         found = []
         for e in events:
             if getattr(e, "event_type", None) == "progression_aspect":
-                p_name = get_planet_name_fr(e.body)
-                asp_label = get_aspect_label(e.aspect)
-                target_name = get_planet_name_fr(e.target)
+                p_name = vocabulary.planet(e.body)
+                asp_label = vocabulary.aspect(e.aspect)
+                target_name = vocabulary.planet(e.target)
                 found.append(f"{p_name} {asp_label} {target_name} (progression)")
         return found
 
-    def _extract_nodes(self, events: list[Any]) -> list[str]:
+    def _extract_nodes(self, events: list[Any], vocabulary: PublicAstroVocabulary) -> list[str]:
         # AC10: Nœuds Lunaires
         found = []
         for e in events:
             if getattr(e, "event_type", None) == "node_conjunction":
-                p_name = get_planet_name_fr(e.body)
-                target_name = get_planet_name_fr(e.target)
-                # Formatter: "Planète Conjonction Nœud" ou "Nœud Conjonction Planète"
-                found.append(f"{p_name} Conjonction {target_name}")
+                p_name = vocabulary.planet(e.body)
+                target_name = vocabulary.planet(e.target)
+                conjunction = vocabulary.aspect("conjunction")
+                found.append(f"{p_name} {conjunction} {target_name}")
         return found
 
-    def _extract_sky_aspects(self, events: list[Any]) -> list[str]:
+    def _extract_sky_aspects(
+        self, events: list[Any], vocabulary: PublicAstroVocabulary
+    ) -> list[str]:
         # AC11: Aspects du Ciel (Sky-to-Sky)
         found = []
         for e in events:
             if getattr(e, "event_type", None) == "sky_aspect":
-                p1 = get_planet_name_fr(e.body)
-                asp = get_aspect_label(e.aspect)
-                p2 = get_planet_name_fr(e.target)
+                p1 = vocabulary.planet(e.body)
+                asp = vocabulary.aspect(e.aspect)
+                p2 = vocabulary.planet(e.target)
                 found.append(f"{p1} {asp} {p2}")
         return found
 
-    def _extract_fixed_stars(self, events: list[Any]) -> list[str]:
+    def _extract_fixed_stars(
+        self, events: list[Any], vocabulary: PublicAstroVocabulary
+    ) -> list[str]:
         # AC12: Étoiles Fixes
         found = []
         for e in events:
             if getattr(e, "event_type", None) == "fixed_star_conjunction":
-                p_name = get_planet_name_fr(e.body)
-                star_name = get_fixed_star_name_fr(e.target)
+                p_name = vocabulary.planet(e.body)
+                star_name = vocabulary.star(e.target)
                 found.append(f"{p_name} conjoint à l'étoile {star_name}")
         return found
 
@@ -220,6 +225,7 @@ class PublicAstroDailyEventsPolicy:
         snapshot: PersistedPredictionSnapshot,
         events: list[Any],
         evidence: V3EvidencePack | None,
+        vocabulary: PublicAstroVocabulary,
     ) -> list[str] | None:
         targets = PUBLIC_POSITION_PLANET_CODES
         positions: dict[str, str] = {}
@@ -230,7 +236,7 @@ class PublicAstroDailyEventsPolicy:
             if isinstance(raw_pos, dict):
                 for p, sign in raw_pos.items():
                     if p in targets:
-                        positions[p] = f"{get_planet_name_fr(p)} en {get_sign_name_fr(sign)}"
+                        positions[p] = f"{vocabulary.planet(p)} en {vocabulary.sign(sign)}"
 
         # 2. Try from events (transit_to_natal often carry sign info)
         if not positions or len(positions) < len(targets):
@@ -241,7 +247,7 @@ class PublicAstroDailyEventsPolicy:
                         meta.get("body_sign") if isinstance(meta, dict) else None
                     )
                     if sign and e.body not in positions:
-                        label = f"{get_planet_name_fr(e.body)} en {get_sign_name_fr(sign)}"
+                        label = f"{vocabulary.planet(e.body)} en {vocabulary.sign(sign)}"
                         positions[e.body] = label
 
         # 3. Try from snapshot v3_metrics if available
@@ -254,7 +260,7 @@ class PublicAstroDailyEventsPolicy:
             if isinstance(v3_pos, dict):
                 for p, sign in v3_pos.items():
                     if p in targets and p not in positions:
-                        positions[p] = f"{get_planet_name_fr(p)} en {get_sign_name_fr(sign)}"
+                        positions[p] = f"{vocabulary.planet(p)} en {vocabulary.sign(sign)}"
 
         if not positions:
             return None

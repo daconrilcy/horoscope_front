@@ -102,7 +102,7 @@ async def enrich_public_prediction_with_horoscope_narration(
     trace_id: str,
     variant_code: str | None,
     astrologer_profile_key: str = "standard",
-    lang: str = "fr",
+    lang: str | None = None,
 ) -> dict[str, Any]:
     """Ajoute la narration horoscope via le service canonique sans modifier la projection."""
     if assembled.get("has_llm_narrative") or not settings.llm_narrator_enabled:

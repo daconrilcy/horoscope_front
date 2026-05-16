@@ -4,6 +4,7 @@ import pytest
 
 from app.domain.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
 from app.domain.prediction.schemas import AstroEvent, V3EvidencePack
+from app.tests.helpers.prediction_astro_labels import make_test_public_astro_vocabulary
 
 
 @pytest.fixture
@@ -47,8 +48,10 @@ def test_extract_aspects(policy):
         metadata={"astro_events": events},
     )
 
-    result = policy.build(None, evidence=evidence)
-    assert "Vénus Trigone Saturne" in result["aspects"]
+    result = policy.build(
+        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+    )
+    assert "Venus Trigone Saturne" in result["aspects"]
     assert "Mercure Sextile Jupiter" in result["aspects"]
 
 
@@ -77,7 +80,9 @@ def test_extract_ingress(policy):
         metadata={"astro_events": events},
     )
 
-    result = policy.build(None, evidence=evidence)
+    result = policy.build(
+        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+    )
     assert len(result["ingresses"]) == 1
     assert result["ingresses"][0]["text"] == "Lune entre en Lion"
     assert result["ingresses"][0]["time"] == "14:35"
@@ -93,7 +98,9 @@ def test_fallback_none(policy):
         turning_points=[],
         metadata={"astro_events": []},
     )
-    result = policy.build(None, evidence=evidence)
+    result = policy.build(
+        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+    )
     assert result is None
 
 
@@ -122,7 +129,9 @@ def test_multi_aspects_limit(policy):
         turning_points=[],
         metadata={"astro_events": events},
     )
-    result = policy.build(None, evidence=evidence)
+    result = policy.build(
+        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+    )
     assert len(result["aspects"]) == 4
 
 
@@ -161,9 +170,13 @@ def test_self_aspects_excluded(policy):
         turning_points=[],
         metadata={"astro_events": events},
     )
-    result = policy.build(None, evidence=evidence)
+    result = policy.build(
+        None,
+        evidence=evidence,
+        astro_vocabulary=make_test_public_astro_vocabulary(),
+    )
     assert len(result["aspects"]) == 1
-    assert "Lune Carré Lune" not in result["aspects"]
+    assert "Lune Carre Lune" not in result["aspects"]
     assert "Lune Sextile Saturne" in result["aspects"]
 
 
@@ -236,10 +249,12 @@ def test_extract_enriched_events(policy):
         metadata={"astro_events": events},
     )
 
-    result = policy.build(None, evidence=evidence)
+    result = policy.build(
+        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+    )
 
     assert "Retour Solaire (votre anniversaire astrologique)" in result["returns"]
     assert "Soleil Progressé Trigone Lune (progression)" in result["progressions"]
-    assert "Vénus Conjonction Nœud Nord (Rahu)" in result["nodes"]
+    assert "Venus Conjonction Noeud Nord" in result["nodes"]
     assert "Jupiter Sextile Saturne" in result["sky_aspects"]
-    assert "Lune conjoint à l'étoile Régulus" in result["fixed_stars"]
+    assert "Lune conjoint à l'étoile Regulus" in result["fixed_stars"]

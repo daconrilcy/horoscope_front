@@ -9,6 +9,7 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 SERVICES_ROOT = BACKEND_ROOT / "services"
 PDF_EXPORT_PATH = SERVICES_ROOT / "natal" / "pdf_export_service.py"
 DOMAIN_ASTROLOGY_ROOT = BACKEND_ROOT / "domain" / "astrology"
+DOMAIN_PREDICTION_ROOT = BACKEND_ROOT / "domain" / "prediction"
 
 
 def test_targeted_services_do_not_reintroduce_local_label_mappings() -> None:
@@ -65,3 +66,49 @@ def test_domain_astrology_does_not_import_translation_resolver_or_models() -> No
                 violations.append(f"{path.relative_to(BACKEND_ROOT)}::{fragment}")
 
     assert violations == []
+
+
+def test_domain_prediction_does_not_reintroduce_local_astro_label_mappings() -> None:
+    """Prediction ne doit pas redevenir proprietaire des libelles astrologiques."""
+    forbidden_fragments = {
+        "PLANET_NAMES_FR",
+        "SIGN_NAMES_FR",
+        "SIGN_LABELS_FR",
+        "PLANET_CODE_LABELS",
+        "ASPECT_LABELS",
+        "HOUSE_SIGNIFICATIONS",
+        "EFFECT_LABELS",
+        "get_planet_name_fr",
+        "get_sign_name_fr",
+        "get_aspect_label",
+        "get_effect_label",
+    }
+    violations: list[str] = []
+    for path in DOMAIN_PREDICTION_ROOT.rglob("*.py"):
+        content = path.read_text(encoding="utf-8")
+        for fragment in forbidden_fragments:
+            if fragment in content:
+                violations.append(f"{path.relative_to(BACKEND_ROOT)}::{fragment}")
+
+    assert violations == []
+
+
+def test_prediction_aspect_tone_mapping_stays_classified_metadata_only() -> None:
+    """La seule carte d'aspect restante est une metadata de tonalite classee."""
+    source_path = DOMAIN_PREDICTION_ROOT / "public_astro_vocabulary.py"
+    tree = ast.parse(source_path.read_text(encoding="utf-8"))
+    aspect_assignments: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and "ASPECT" in target.id:
+                    aspect_assignments.add(target.id)
+        if (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and "ASPECT" in node.target.id
+        ):
+            aspect_assignments.add(node.target.id)
+
+    assert aspect_assignments <= {"_ASPECT_TONES"}
+    assert "_ASPECT_TONES" in source_path.read_text(encoding="utf-8")

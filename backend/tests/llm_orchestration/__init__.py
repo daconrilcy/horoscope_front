@@ -7,6 +7,7 @@ from app.domain.prediction.persisted_snapshot import (
     PersistedPredictionSnapshot,
 )
 from app.domain.prediction.public_projection import PublicPredictionAssembler
+from app.tests.helpers.prediction_astro_labels import make_test_prediction_astro_labels
 
 
 def _build_base_snapshot():
@@ -45,7 +46,11 @@ async def test_scenario_flat_day():
     cat_id_to_code = {s.category_id: s.category_code for s in snapshot.category_scores}
 
     result = await assembler.assemble(
-        snapshot, cat_id_to_code, reference_version="1", ruleset_version="1"
+        snapshot,
+        cat_id_to_code,
+        reference_version="1",
+        ruleset_version="1",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["day_climate"]["intensity"] < 6.0
@@ -91,7 +96,11 @@ async def test_scenario_polarized_day():
     cat_id_to_code = {s.category_id: s.category_code for s in snapshot.category_scores}
 
     result = await assembler.assemble(
-        snapshot, cat_id_to_code, reference_version="1", ruleset_version="1"
+        snapshot,
+        cat_id_to_code,
+        reference_version="1",
+        ruleset_version="1",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert any(d["score_10"] >= 8.5 for d in result["domain_ranking"])
@@ -142,6 +151,7 @@ async def test_scenario_turning_point():
         reference_version="1",
         ruleset_version="1",
         engine_output=mock_bundle,
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["turning_point"] is not None
@@ -155,7 +165,13 @@ async def test_scenario_low_events():
     data = _build_base_snapshot()
     snapshot = PersistedPredictionSnapshot(**data)
 
-    result = await assembler.assemble(snapshot, {}, reference_version="1", ruleset_version="1")
+    result = await assembler.assemble(
+        snapshot,
+        {},
+        reference_version="1",
+        ruleset_version="1",
+        astro_labels=make_test_prediction_astro_labels(),
+    )
 
     assert result["astro_foundation"] is None
     assert len(result["time_windows"]) == 4

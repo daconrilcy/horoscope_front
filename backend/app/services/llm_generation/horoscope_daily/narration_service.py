@@ -17,6 +17,7 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
+from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ async def generate_horoscope_narration_via_gateway(
     trace_id: str,
     db: Session,
     astrologer_profile_key: str = "standard",
-    lang: str = "fr",
+    lang: str | None = None,
     day_climate: dict[str, Any] | None = None,
     best_window: dict[str, Any] | None = None,
     turning_point: dict[str, Any] | None = None,
@@ -100,18 +101,24 @@ async def generate_horoscope_narration_via_gateway(
     else:
         raise ValueError(f"Invalid variant_code for daily narration: {variant_code}")
 
+    astro_labels = AstrologyTranslationResolver(db).resolve_labels(
+        language_code=lang,
+        user_id=user_id,
+    )
+    effective_lang = astro_labels.effective_language_code
     min_sentences = 7 if plan == "free" else 10
     base_question = AstrologerPromptBuilder().build(
         common_context=common_context,
         time_windows=time_windows,
         astro_daily_events=astro_daily_events,
         astrologer_profile_key=astrologer_profile_key,
-        lang=lang,
+        lang=effective_lang,
         day_climate=day_climate,
         best_window=best_window,
         turning_point=turning_point,
         domain_ranking=domain_ranking,
         variant_code=variant_code,
+        astro_labels=astro_labels,
     )
 
     final_result: NarratorResult | None = None
@@ -131,7 +138,7 @@ async def generate_horoscope_narration_via_gateway(
                 feature=feature,
                 subfeature=subfeature,
                 plan=plan,
-                locale="fr-FR" if lang == "fr" else "en-US",
+                locale="fr-FR" if effective_lang == "fr" else "en-US",
                 question=question,
             ),
             context=ExecutionContext(

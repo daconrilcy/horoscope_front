@@ -8,7 +8,10 @@ from datetime import date, datetime
 import swisseph as swe
 
 from app.domain.astrology.planet_catalog import planet_runtime_codes, planet_swe_ids_by_runtime_code
-from app.domain.prediction.public_astro_vocabulary import FIXED_STARS
+from app.domain.prediction.public_astro_vocabulary import (
+    fixed_star_display_name,
+    fixed_star_longitudes,
+)
 from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 
 logger = logging.getLogger(__name__)
@@ -319,8 +322,8 @@ class EnrichedAstroEventsBuilder:
 
         for step in steps:
             for p_name, p_state in step.planets.items():
-                for star_key, star_data in FIXED_STARS.items():
-                    dist = self._angular_distance(p_state.longitude, star_data["lon"])
+                for star_key, star_longitude in fixed_star_longitudes().items():
+                    dist = self._angular_distance(p_state.longitude, star_longitude)
                     if dist <= 1.0:  # AC5 orb 1.0
                         key = (p_name.lower(), star_key)
                         if key not in best_orbs or dist < best_orbs[key][0]:
@@ -338,7 +341,7 @@ class EnrichedAstroEventsBuilder:
                     orb_deg=orb,
                     priority=45,
                     base_weight=0.0,  # display-only, no signal contribution
-                    metadata={"star_name_fr": FIXED_STARS[star_key]["name_fr"]},
+                    metadata={"star_display_name": fixed_star_display_name(star_key)},
                 )
             )
 

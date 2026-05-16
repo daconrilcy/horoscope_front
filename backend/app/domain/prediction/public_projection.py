@@ -17,13 +17,8 @@ from app.domain.prediction.public_astro_daily_events import (
     resolve_public_astro_events,
 )
 from app.domain.prediction.public_astro_vocabulary import (
-    HOUSE_SIGNIFICATIONS,
-    get_aspect_label,
-    get_aspect_tonality,
-    get_effect_label,
-    get_fixed_star_name_fr,
-    get_planet_name_fr,
-    get_sign_name_fr,
+    PredictionAstroLabels,
+    PublicAstroVocabulary,
 )
 from app.domain.prediction.public_domain_taxonomy import (
     DISPLAY_ORDER,
@@ -81,8 +76,10 @@ class PublicPredictionAssembler:
         was_reused: bool = False,
         reference_version: str,
         ruleset_version: str,
+        astro_labels: PredictionAstroLabels,
         variant_code: str | None = None,
     ) -> dict[str, Any]:
+        astro_vocabulary = PublicAstroVocabulary(astro_labels)
         # AC1 Story 42.16: Resolve evidence pack
         evidence = self._resolve_evidence_pack(snapshot, engine_output)
 
@@ -162,6 +159,7 @@ class PublicPredictionAssembler:
             turning_points=turning_points,
             engine_output=engine_output,
             evidence=evidence,
+            astro_vocabulary=astro_vocabulary,
         )
 
         # New: Main Turning Point (V4)
@@ -178,6 +176,7 @@ class PublicPredictionAssembler:
             domain_ranking=public_domains,
             engine_output=engine_output,
             evidence=evidence,
+            astro_vocabulary=astro_vocabulary,
         )
 
         # New: Astro Daily Events (V4)
@@ -185,6 +184,7 @@ class PublicPredictionAssembler:
             snapshot,
             engine_output=engine_output,
             evidence=evidence,
+            astro_vocabulary=astro_vocabulary,
         )
 
         # 8. LLM Narration (V4) - Story 60.16
@@ -366,9 +366,11 @@ class PublicAstroFoundationPolicy:
         *,
         day_climate: dict[str, Any],
         domain_ranking: list[dict[str, Any]],
+        astro_vocabulary: PublicAstroVocabulary,
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any] | None:
+        vocabulary = astro_vocabulary
         events = resolve_public_astro_events(evidence, engine_output, snapshot)
 
         if not events:
@@ -382,11 +384,11 @@ class PublicAstroFoundationPolicy:
         for e in significant_events[:5]:
             key_movements.append(
                 {
-                    "planet": get_planet_name_fr(e.body),
+                    "planet": vocabulary.planet(e.body),
                     "event_type": e.event_type,
-                    "target": get_planet_name_fr(e.target) if e.target else None,
+                    "target": vocabulary.planet(e.target) if e.target else None,
                     "orb_deg": round(e.orb_deg, 1) if hasattr(e, "orb_deg") else None,
-                    "effect_label": get_effect_label(e.event_type),
+                    "effect_label": vocabulary.event_kind(e.event_type),
                 }
             )
 
@@ -408,12 +410,11 @@ class PublicAstroFoundationPolicy:
         for d in top_public:
             h_num = DOMAIN_TO_HOUSE.get(d["key"])
             if h_num and h_num not in seen_houses:
-                sig = HOUSE_SIGNIFICATIONS[h_num]
                 activated_houses.append(
                     {
                         "house_number": h_num,
-                        "house_label": sig["label"],
-                        "domain_label": sig["domain"],
+                        "house_label": vocabulary.house(h_num),
+                        "domain_label": d["label"],
                     }
                 )
                 seen_houses.add(h_num)
@@ -432,11 +433,11 @@ class PublicAstroFoundationPolicy:
         for e in aspect_events[:4]:
             dominant_aspects.append(
                 {
-                    "aspect_type": get_aspect_label(e.aspect),
-                    "planet_a": get_planet_name_fr(e.body),
-                    "planet_b": get_planet_name_fr(e.target) if e.target else None,
-                    "tonality": get_aspect_tonality(e.aspect),
-                    "effect_label": get_effect_label("aspect"),
+                    "aspect_type": vocabulary.aspect(e.aspect),
+                    "planet_a": vocabulary.planet(e.body),
+                    "planet_b": vocabulary.planet(e.target) if e.target else None,
+                    "tonality": vocabulary.aspect_tone(e.aspect),
+                    "effect_label": vocabulary.event_kind("aspect"),
                 }
             )
 
@@ -659,11 +660,13 @@ class PublicTimeWindowPolicy:
         snapshot: PersistedPredictionSnapshot,
         turning_points: list[dict[str, Any]],
         *,
+        astro_vocabulary: PublicAstroVocabulary,
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]]:
         from collections import Counter
 
+        vocabulary = astro_vocabulary
         # 0. Resolve Astro Events for per-period enrichment
         all_events = self._resolve_events(evidence, engine_output, snapshot)
 
@@ -747,7 +750,7 @@ class PublicTimeWindowPolicy:
             astro_events: list[str] = []
             seen_texts: set[str] = set()
             for ev in slot_events:
-                text = self._format_event_text(ev)
+                text = self._format_event_text(ev, vocabulary)
                 if text and text not in seen_texts:
                     astro_events.append(text)
                     seen_texts.add(text)
@@ -850,7 +853,7 @@ class PublicTimeWindowPolicy:
                 result.append(e)
         return result
 
-    def _format_event_text(self, e: Any) -> str | None:
+    def _format_event_text(self, e: Any, vocabulary: PublicAstroVocabulary) -> str | None:
         ev_type = getattr(e, "event_type", None)
         body = getattr(e, "body", None)
         target = getattr(e, "target", None)
@@ -861,8 +864,8 @@ class PublicTimeWindowPolicy:
         if ev_type == "lunar_return":
             return "Retour Lunaire"
         if ev_type == "moon_sign_ingress" and body and target:
-            planet = get_planet_name_fr(body)
-            sign = get_sign_name_fr(target)
+            planet = vocabulary.planet(body)
+            sign = vocabulary.sign(target)
             dt = getattr(e, "local_time", None) or getattr(e, "occurred_at_local", None)
             if isinstance(dt, str):
                 try:
@@ -872,16 +875,16 @@ class PublicTimeWindowPolicy:
             time_str = f" ({dt.strftime('%H:%M')})" if dt else ""
             return f"{planet} → {sign}{time_str}"
         if ev_type == "fixed_star_conjunction" and body and target:
-            return f"{get_planet_name_fr(body)} ☌ {get_fixed_star_name_fr(target)}"
+            return f"{vocabulary.planet(body)} ☌ {vocabulary.star(target)}"
         if ev_type == "node_conjunction" and body and target:
-            return f"{get_planet_name_fr(body)} ☌ {get_planet_name_fr(target)}"
+            return f"{vocabulary.planet(body)} ☌ {vocabulary.planet(target)}"
         if ev_type == "progression_aspect" and body and aspect and target:
-            label = get_aspect_label(aspect)
-            return f"{get_planet_name_fr(body)} {label} {get_planet_name_fr(target)} (progressé)"
+            label = vocabulary.aspect(aspect)
+            return f"{vocabulary.planet(body)} {label} {vocabulary.planet(target)} (progressé)"
         if ev_type == "sky_aspect" and body and aspect and target:
-            label = get_aspect_label(aspect)
-            p1 = get_planet_name_fr(body)
-            p2 = get_planet_name_fr(target)
+            label = vocabulary.aspect(aspect)
+            p1 = vocabulary.planet(body)
+            p2 = vocabulary.planet(target)
             return f"{p1} {label} {p2}"
         if (
             ev_type
@@ -896,13 +899,13 @@ class PublicTimeWindowPolicy:
             and target
             and body != target
         ):
-            label = get_aspect_label(aspect)
-            p1 = get_planet_name_fr(body)
-            p2 = get_planet_name_fr(target)
+            label = vocabulary.aspect(aspect)
+            p1 = vocabulary.planet(body)
+            p2 = vocabulary.planet(target)
             return f"{p1} {label} {p2}"
         if ev_type == "transit_to_natal" and body and aspect and target:
-            label = get_aspect_label(aspect)
-            return f"{get_planet_name_fr(body)} {label} {get_planet_name_fr(target)} natal"
+            label = vocabulary.aspect(aspect)
+            return f"{vocabulary.planet(body)} {label} {vocabulary.planet(target)} natal"
         return None
 
     def _map_domains(self, internal_themes: list[str]) -> list[str]:

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from app.domain.prediction.public_projection import PublicAstroFoundationPolicy
+from app.tests.helpers.prediction_astro_labels import make_test_public_astro_vocabulary
 
 
 def test_astro_foundation_key_movements_limit():
@@ -25,7 +26,11 @@ def test_astro_foundation_key_movements_limit():
 
     day_climate = {"label": "Stable"}
     result = policy.build(
-        MagicMock(), day_climate=day_climate, domain_ranking=[], evidence=evidence
+        MagicMock(),
+        day_climate=day_climate,
+        domain_ranking=[],
+        evidence=evidence,
+        astro_vocabulary=make_test_public_astro_vocabulary(),
     )
 
     assert len(result["key_movements"]) == 5
@@ -48,7 +53,11 @@ def test_astro_foundation_tonality():
 
     day_climate = {"label": "Stable"}
     result = policy.build(
-        MagicMock(), day_climate=day_climate, domain_ranking=[], evidence=evidence
+        MagicMock(),
+        day_climate=day_climate,
+        domain_ranking=[],
+        evidence=evidence,
+        astro_vocabulary=make_test_public_astro_vocabulary(),
     )
 
     assert result["dominant_aspects"][0]["tonality"] == "ajustement"
@@ -74,6 +83,7 @@ def test_astro_foundation_activated_houses():
         day_climate=day_climate,
         domain_ranking=domain_ranking,
         evidence=evidence,
+        astro_vocabulary=make_test_public_astro_vocabulary(),
     )
 
     assert result["activated_houses"][0]["house_number"] == 10
@@ -97,13 +107,14 @@ def test_astro_foundation_reads_detected_events_from_engine_output():
         day_climate={"label": "Stable"},
         domain_ranking=[],
         engine_output=engine_output,
+        astro_vocabulary=make_test_public_astro_vocabulary(),
     )
 
     assert result is not None
     assert result["key_movements"][0]["event_type"] == "aspect_exact_to_angle"
     assert result["dominant_aspects"][0]["aspect_type"] == "Conjonction"
     assert result["dominant_aspects"][0]["planet_a"] == "Mars"
-    assert result["dominant_aspects"][0]["planet_b"] == "Mc"
+    assert result["dominant_aspects"][0]["planet_b"] == "mc"
 
 
 def test_astro_foundation_recognizes_all_exact_aspect_event_types():
@@ -131,6 +142,7 @@ def test_astro_foundation_recognizes_all_exact_aspect_event_types():
         day_climate={"label": "Stable"},
         domain_ranking=[],
         engine_output=engine_output,
+        astro_vocabulary=make_test_public_astro_vocabulary(),
     )
 
     assert [movement["event_type"] for movement in result["key_movements"]] == exact_types

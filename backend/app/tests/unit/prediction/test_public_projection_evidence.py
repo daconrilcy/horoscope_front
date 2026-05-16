@@ -20,6 +20,7 @@ from app.domain.prediction.schemas import (
 from app.services.prediction.public_predictions import (
     enrich_public_prediction_with_horoscope_narration,
 )
+from app.tests.helpers.prediction_astro_labels import make_test_prediction_astro_labels
 
 
 def _json_ready(value):
@@ -109,6 +110,7 @@ async def test_assemble_uses_evidence_pack():
         engine_output=v3_output,
         reference_version="2.0.0",
         ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     # Check that summary comes from evidence pack
@@ -188,6 +190,7 @@ async def test_assemble_uses_persisted_evidence_pack_snapshot():
         {1: "work"},
         reference_version="2.0.0",
         ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["summary"]["overall_summary"] == "Persisted evidence summary"
@@ -241,6 +244,7 @@ async def test_assemble_reuses_persisted_llm_narrative_without_regeneration():
         {1: "work"},
         reference_version="2.0.0",
         ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["has_llm_narrative"] is True
@@ -308,6 +312,7 @@ async def test_assemble_regenerates_when_persisted_free_narrative_is_too_short()
             {1: "work"},
             reference_version="2.0.0",
             ruleset_version="2.0.0",
+            astro_labels=make_test_prediction_astro_labels(),
             variant_code="summary_only",
         )
         result = await enrich_public_prediction_with_horoscope_narration(
@@ -385,6 +390,7 @@ async def test_assemble_includes_enriched_turning_points():
         {1: "love"},
         reference_version="2.0.0",
         ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     tp = result["turning_points"][0]
@@ -455,6 +461,7 @@ async def test_assemble_includes_movement_indicators():
         {1: "love"},
         reference_version="2.0.0",
         ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     tp = result["turning_points"][0]
@@ -524,6 +531,7 @@ async def test_assemble_keeps_evidence_turning_points_even_on_flat_day():
         {1: "health", 2: "work"},
         reference_version="2.0.0",
         ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["summary"]["flat_day"] is True

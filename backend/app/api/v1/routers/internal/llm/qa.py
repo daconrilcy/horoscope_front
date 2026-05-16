@@ -346,6 +346,15 @@ async def run_horoscope_daily_generation(
             except Exception:
                 logger.warning("llm_qa_daily_prompt_context_failed", exc_info=True)
 
+        from app.services.reference_data.astrology_translation_resolver import (
+            AstrologyTranslationResolver,
+        )
+
+        astro_labels = AstrologyTranslationResolver(db).resolve_labels(
+            language_code=None,
+            user_id=target_user.id,
+        )
+
         assembled = await PublicPredictionAssembler().assemble(
             snapshot=snapshot,
             cat_id_to_code=cat_id_to_code,
@@ -354,6 +363,7 @@ async def run_horoscope_daily_generation(
             reference_version=reference_version,
             ruleset_version=settings.ruleset_version,
             variant_code=variant_code,
+            astro_labels=astro_labels,
         )
         assembled = await enrich_public_prediction_with_horoscope_narration(
             assembled,
@@ -364,7 +374,7 @@ async def run_horoscope_daily_generation(
             trace_id=request_id,
             variant_code=variant_code,
             astrologer_profile_key=target_user.astrologer_profile or "standard",
-            lang="fr",
+            lang=None,
         )
 
         if settings.llm_narrator_enabled and not getattr(snapshot, "llm_narrative", None):

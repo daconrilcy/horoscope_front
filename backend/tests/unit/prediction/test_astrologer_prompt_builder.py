@@ -4,6 +4,7 @@ from pathlib import Path
 
 from app.domain.llm.prompting.context import PromptCommonContext
 from app.domain.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
+from app.tests.helpers.prediction_astro_labels import make_test_prediction_astro_labels
 
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
@@ -32,6 +33,7 @@ def test_build_keeps_summary_variant_as_context_without_length_instruction() -> 
         common_context=_make_common_context(),
         time_windows=[],
         variant_code="summary_only",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert "Variante de narration : summary_only" in prompt
@@ -44,6 +46,7 @@ def test_build_keeps_full_variant_as_context_without_length_instruction() -> Non
     prompt = AstrologerPromptBuilder().build(
         common_context=_make_common_context(),
         time_windows=[],
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert "Variante de narration : standard" in prompt
@@ -57,3 +60,28 @@ def test_builder_source_does_not_reintroduce_durable_narration_instructions() ->
 
     for forbidden in FORBIDDEN_DURABLE_INSTRUCTIONS:
         assert forbidden not in source
+
+
+def test_build_natal_section_uses_injected_astrology_labels() -> None:
+    """Le contexte natal quotidien ne possede plus de mapping FR local."""
+    context = PromptCommonContext(
+        precision_level="precise",
+        astrologer_profile={"tonality": "bienveillant"},
+        period_covered="journee",
+        today_date="samedi 21 mars 2026",
+        use_case_name="daily-prediction-narrator-v1",
+        use_case_key="daily_prediction",
+        natal_data={
+            "planet_positions": [{"planet_code": "SO", "sign_code": "leo"}],
+            "houses": [{"cusp_longitude": 5.0}],
+        },
+    )
+
+    prompt = AstrologerPromptBuilder().build(
+        common_context=context,
+        time_windows=[],
+        astro_labels=make_test_prediction_astro_labels(),
+    )
+
+    assert "Soleil en Lion" in prompt
+    assert "Ascendant : Belier" in prompt

@@ -337,6 +337,14 @@ async def get_daily_prediction(
 
     # AC1/AC2/AC4 - Call Assembler with typed snapshot
     assembler = PublicPredictionAssembler()
+    from app.services.reference_data.astrology_translation_resolver import (
+        AstrologyTranslationResolver,
+    )
+
+    astro_labels = AstrologyTranslationResolver(db).resolve_labels(
+        language_code=None,
+        user_id=current_user.id,
+    )
 
     try:
         assembled = await assembler.assemble(
@@ -347,6 +355,7 @@ async def get_daily_prediction(
             reference_version=reference_version,
             ruleset_version=settings.ruleset_version,
             variant_code=variant_code,
+            astro_labels=astro_labels,
         )
         request_id = resolve_request_id(request)
         trace_id = resolve_trace_id(request, fallback=request_id)
@@ -359,7 +368,7 @@ async def get_daily_prediction(
             trace_id=trace_id,
             variant_code=variant_code,
             astrologer_profile_key=astrologer_profile_key,
-            lang=current_user.lang if hasattr(current_user, "lang") else "fr",
+            lang=None,
         )
     except ValueError as exc:
         raise_api_error(

@@ -8,48 +8,12 @@ from typing import Any
 from app.domain.astrology.natal_calculation import sign_from_longitude
 from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
-from app.domain.prediction.public_astro_vocabulary import get_planet_name_fr, get_sign_name_fr
+from app.domain.prediction.public_astro_vocabulary import (
+    PredictionAstroLabels,
+    PublicAstroVocabulary,
+)
 
 logger = logging.getLogger(__name__)
-
-PLANET_CODE_LABELS = {
-    "SO": "Soleil",
-    "LU": "Lune",
-    "ME": "Mercure",
-    "VE": "Vénus",
-    "MA": "Mars",
-    "JU": "Jupiter",
-    "SA": "Saturne",
-    "UR": "Uranus",
-    "NE": "Neptune",
-    "PL": "Pluton",
-}
-
-SIGN_LABELS_FR = {
-    "ari": "Bélier",
-    "aries": "Bélier",
-    "tau": "Taureau",
-    "taurus": "Taureau",
-    "gem": "Gémeaux",
-    "gemini": "Gémeaux",
-    "can": "Cancer",
-    "cancer": "Cancer",
-    "leo": "Lion",
-    "vir": "Vierge",
-    "virgo": "Vierge",
-    "lib": "Balance",
-    "libra": "Balance",
-    "sco": "Scorpion",
-    "scorpio": "Scorpion",
-    "sag": "Sagittaire",
-    "sagittarius": "Sagittaire",
-    "cap": "Capricorne",
-    "capricorn": "Capricorne",
-    "aqu": "Verseau",
-    "aquarius": "Verseau",
-    "pis": "Poissons",
-    "pisces": "Poissons",
-}
 
 
 class AstrologerPromptBuilder:
@@ -59,6 +23,7 @@ class AstrologerPromptBuilder:
         self,
         common_context: PromptCommonContext | QualifiedContext,
         time_windows: list[dict[str, Any]],
+        astro_labels: PredictionAstroLabels,
         astrologer_profile_key: str = "standard",
         lang: str = "fr",
         astro_daily_events: dict[str, Any] | None = None,
@@ -69,7 +34,8 @@ class AstrologerPromptBuilder:
         variant_code: str | None = None,
     ) -> str:
         payload = self._resolve_payload(common_context)
-        natal_section = self._build_natal_section(payload)
+        astro_vocabulary = PublicAstroVocabulary(astro_labels)
+        natal_section = self._build_natal_section(payload, astro_vocabulary)
         date_str = payload.today_date
         events_str = self._format_astro_daily_events(astro_daily_events)
         day_profile_str = self._format_day_profile(
@@ -109,7 +75,9 @@ PARAMÈTRES UTILISATEUR :
             return common_context.payload
         return common_context
 
-    def _build_natal_section(self, ctx: PromptCommonContext) -> str:
+    def _build_natal_section(
+        self, ctx: PromptCommonContext, astro_vocabulary: PublicAstroVocabulary
+    ) -> str:
         if ctx.natal_interpretation:
             natal_summary = " ".join(ctx.natal_interpretation.split())[:1400]
             return f"Synthèse natale existante : {natal_summary}"
@@ -125,8 +93,8 @@ PARAMÈTRES UTILISATEUR :
             code = str(p.get("planet_code", ""))
             normalized = code.lower()
             if normalized in important_codes or code.upper() in fallback_codes:
-                label = PLANET_CODE_LABELS.get(code.upper()) or get_planet_name_fr(normalized)
-                sign = self._format_sign_label(p.get("sign_code"))
+                label = astro_vocabulary.planet(normalized or code)
+                sign = self._format_sign_label(p.get("sign_code"), astro_vocabulary)
                 planets.append(f"{label} en {sign}")
             if len(planets) >= 6:
                 break
@@ -135,7 +103,7 @@ PARAMÈTRES UTILISATEUR :
         asc = "Inconnu"
         if houses:
             asc = sign_from_longitude(houses[0].get("cusp_longitude", 0))
-            asc = self._format_sign_label(asc)
+            asc = self._format_sign_label(asc, astro_vocabulary)
 
         return (
             f"Placements de base : {', '.join(planets) if planets else 'non disponibles'}. "
@@ -278,12 +246,7 @@ PARAMÈTRES UTILISATEUR :
         labels = [label_by_key.get(key, str(key)) for key in domain_keys]
         return ", ".join(labels)
 
-    def _format_sign_label(self, raw_sign: Any) -> str:
+    def _format_sign_label(self, raw_sign: Any, astro_vocabulary: PublicAstroVocabulary) -> str:
         if raw_sign is None:
             return "signe inconnu"
-        sign = str(raw_sign).strip().lower()
-        if sign in SIGN_LABELS_FR:
-            return SIGN_LABELS_FR[sign]
-        if len(sign) == 3:
-            return get_sign_name_fr(sign)
-        return str(raw_sign).capitalize()
+        return astro_vocabulary.sign(str(raw_sign))

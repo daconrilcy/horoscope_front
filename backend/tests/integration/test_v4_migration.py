@@ -7,6 +7,7 @@ from app.domain.prediction.persisted_snapshot import (
     PersistedPredictionSnapshot,
 )
 from app.domain.prediction.public_projection import PublicPredictionAssembler
+from app.tests.helpers.prediction_astro_labels import make_test_prediction_astro_labels
 
 
 @pytest.mark.asyncio
@@ -52,6 +53,7 @@ async def test_v4_payload_contains_v3_fields():
         cat_id_to_code=cat_id_to_code,
         reference_version="1.0.0",
         ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     # V4 fields
@@ -90,7 +92,11 @@ async def test_v4_payload_compatibility_with_v3_client():
     )
 
     result = await assembler.assemble(
-        snapshot=snapshot, cat_id_to_code={}, reference_version="1.0.0", ruleset_version="2.0.0"
+        snapshot=snapshot,
+        cat_id_to_code={},
+        reference_version="1.0.0",
+        ruleset_version="2.0.0",
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert isinstance(result["categories"], list)

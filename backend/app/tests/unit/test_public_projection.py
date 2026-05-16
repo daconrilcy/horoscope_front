@@ -18,6 +18,7 @@ from app.domain.prediction.public_projection import (
     PublicTimelinePolicy,
     PublicTurningPointPolicy,
 )
+from app.tests.helpers.prediction_astro_labels import make_test_prediction_astro_labels
 
 
 @pytest.fixture
@@ -184,6 +185,7 @@ async def test_assembler_integration(cat_map, sample_snapshot):
         reference_version="2.0.0",
         ruleset_version="2.0.0",
         was_reused=False,
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["meta"]["date_local"] == "2026-03-10"
@@ -212,6 +214,7 @@ async def test_assembler_falls_back_to_engine_output_house_system(cat_map, sampl
         reference_version="2.0.0",
         ruleset_version="2.0.0",
         was_reused=False,
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["meta"]["house_system_effective"] == "placidus"
@@ -231,6 +234,7 @@ async def test_assembler_summary_uses_provisional_flag(cat_map, sample_snapshot)
         reference_version="2.0.0",
         ruleset_version="2.0.0",
         was_reused=False,
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert "scores sont calculés sans données historiques" in result["summary"]["calibration_note"]
@@ -340,6 +344,7 @@ async def test_assembler_hides_non_actionable_turning_points_and_best_window(cat
         reference_version="2.0.0",
         ruleset_version="2.0.0",
         was_reused=False,
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert result["decision_windows"] is None
@@ -409,6 +414,7 @@ async def test_assembler_keeps_public_luminary_pivots_without_major_category_not
         reference_version="2.0.0",
         ruleset_version="2.0.0",
         was_reused=False,
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert len(result["decision_windows"]) == 1
@@ -486,6 +492,7 @@ async def test_assembler_keeps_public_pivots_for_structuring_runtime_event_types
         reference_version="2.0.0",
         ruleset_version="2.0.0",
         was_reused=False,
+        astro_labels=make_test_prediction_astro_labels(),
     )
 
     assert len(result["decision_windows"]) == 1
