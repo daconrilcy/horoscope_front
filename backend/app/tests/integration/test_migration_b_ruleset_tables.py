@@ -32,7 +32,18 @@ EXPECTED_INDEXES_B = {
 }
 
 
+def _sqlite_datetime(value: datetime) -> str:
+    """Sérialise une date-heure pour éviter les adaptateurs sqlite3 dépréciés."""
+    return value.isoformat()
+
+
+def _sqlite_date(value: date) -> str:
+    """Sérialise une date civile pour éviter les adaptateurs sqlite3 dépréciés."""
+    return value.isoformat()
+
+
 def _alembic_config() -> Config:
+    """Construit la configuration Alembic utilisée par les tests de migration."""
     backend_root = Path(__file__).resolve().parents[3]
     config = Config(str(backend_root / "alembic.ini"))
     config.set_main_option("script_location", str(backend_root / "migrations"))
@@ -40,6 +51,7 @@ def _alembic_config() -> Config:
 
 
 def _sqlite_engine(database_url: str) -> Engine:
+    """Crée un moteur SQLite de test avec les clés étrangères activées."""
     engine = create_engine(database_url, future=True)
 
     @event.listens_for(engine, "connect")
@@ -53,6 +65,7 @@ def _sqlite_engine(database_url: str) -> Engine:
 
 
 def _setup_engine(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, db_name: str) -> Engine:
+    """Prépare une base temporaire migrée jusqu'à la migration B."""
     db_path = tmp_path / db_name
     database_url = f"sqlite:///{db_path.as_posix()}"
     monkeypatch.setattr(settings, "database_url", database_url)
@@ -61,6 +74,7 @@ def _setup_engine(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, db_name: str)
 
 
 def _seed_reference_version(session: Session, *, version: str, is_locked: bool) -> SimpleNamespace:
+    """Insère une version de référence minimale pour les contraintes de migration."""
     result = session.execute(
         text(
             """
@@ -72,7 +86,7 @@ def _seed_reference_version(session: Session, *, version: str, is_locked: bool) 
             "version": version,
             "description": f"Seed for {version}",
             "is_locked": is_locked,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": _sqlite_datetime(datetime.now(timezone.utc)),
         },
     )
     session.commit()
@@ -82,6 +96,7 @@ def _seed_reference_version(session: Session, *, version: str, is_locked: bool) 
 def _seed_ruleset(
     session: Session, ref_version: SimpleNamespace, *, version: str = "1.0.0"
 ) -> SimpleNamespace:
+    """Insère un ruleset minimal lié à une version de référence."""
     result = session.execute(
         text(
             """
@@ -114,6 +129,7 @@ def _seed_ruleset(
 
 
 def _seed_prediction_category(session: Session, ref_version: SimpleNamespace) -> SimpleNamespace:
+    """Insère une catégorie de prédiction minimale pour tester les calibrations."""
     result = session.execute(
         text(
             """
@@ -316,7 +332,7 @@ def test_migration_b_calibration_unique_constraint(
             {
                 "ruleset_id": ruleset.id,
                 "category_id": category.id,
-                "valid_from": date(2024, 1, 1),
+                "valid_from": _sqlite_date(date(2024, 1, 1)),
             },
         )
         session.commit()
@@ -332,7 +348,7 @@ def test_migration_b_calibration_unique_constraint(
                 {
                     "ruleset_id": ruleset.id,
                     "category_id": category.id,
-                    "valid_from": date(2024, 1, 1),
+                    "valid_from": _sqlite_date(date(2024, 1, 1)),
                 },
             )
             session.commit()
