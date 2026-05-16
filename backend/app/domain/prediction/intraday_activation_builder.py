@@ -306,7 +306,7 @@ class IntradayActivationBuilder:
             * self._contribution_calculator._w_aspect(event.aspect, ctx)
             * self._contribution_calculator._f_orb(event, ctx)
             * self._contribution_calculator._f_phase(event)
-            * self._contribution_calculator._f_target(event.target)
+            * self._contribution_calculator._f_target(event.target, ctx)
             * self._contribution_calculator._pol(event, "_continuous_", ctx)
         )
 

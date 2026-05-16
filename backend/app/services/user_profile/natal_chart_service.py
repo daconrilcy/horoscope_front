@@ -263,8 +263,14 @@ class UserNatalChartService:
             "reference_version": reference_version,
             "timeout_check": _timeout_check,
             "accurate": accurate,
-            "engine_override": "simplified" if uses_default_simplified_options else None,
-            "internal_request": uses_default_simplified_options,
+            "engine_override": (
+                "simplified"
+                if uses_default_simplified_options and settings.natal_engine_simplified_enabled
+                else None
+            ),
+            "internal_request": (
+                uses_default_simplified_options and settings.natal_engine_simplified_enabled
+            ),
             "zodiac": zodiac,
             "ayanamsa": ayanamsa,
             "frame": frame,
@@ -364,7 +370,7 @@ class UserNatalChartService:
         model = repo.get_latest_by_user_id(user_id)
         if model is None:
             try:
-                profile = UserBirthProfileService.get_for_user(db, user_id=user_id)
+                profile = UserBirthProfileService.get_for_user(db, user_id)
             except UserBirthProfileServiceError as error:
                 raise UserNatalChartServiceError(
                     code=error.code,

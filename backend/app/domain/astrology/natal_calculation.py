@@ -486,6 +486,8 @@ def build_natal_result(
         except ValueError as error:
             _raise_invalid_reference(version, "aspects", str(error))
         default_orb_value = aspect_definition.default_orb_deg
+        if default_orb_value is None:
+            _raise_invalid_reference(version, "aspects", "missing_default_orb_deg")
         orb_in_bounds = (
             isfinite(default_orb_value) and MIN_ORB_DEG <= default_orb_value <= MAX_ORB_DEG
         )

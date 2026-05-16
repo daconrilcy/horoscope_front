@@ -150,16 +150,28 @@ class UserAstroProfileService:
             "db": db,
             "birth_input": birth_input,
             "accurate": can_use_accurate,
-            "engine_override": None if can_use_accurate else "simplified",
-            "internal_request": not can_use_accurate,
+            "engine_override": None,
+            "internal_request": False,
         }
 
         try:
-            natal_result = NatalCalculationService.calculate(**calculation_kwargs)
+            natal_result = NatalCalculationService.calculate(
+                db,
+                birth_input,
+                accurate=calculation_kwargs["accurate"],
+                engine_override=calculation_kwargs["engine_override"],
+                internal_request=calculation_kwargs["internal_request"],
+            )
         except NatalCalculationError as error:
             if error.code == "reference_version_not_found":
                 ReferenceDataService.seed_reference_version(db)
-                natal_result = NatalCalculationService.calculate(**calculation_kwargs)
+                natal_result = NatalCalculationService.calculate(
+                    db,
+                    birth_input,
+                    accurate=calculation_kwargs["accurate"],
+                    engine_override=calculation_kwargs["engine_override"],
+                    internal_request=calculation_kwargs["internal_request"],
+                )
             else:
                 raise UserAstroProfileServiceError(
                     code=error.code,

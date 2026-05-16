@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from app.domain.astrology.planet_catalog import planet_swe_ids_by_code
 from app.domain.astrology.runtime.runtime_reference import (
     AnglePointReferenceData,
     AnglePointReferenceSet,
@@ -34,6 +35,8 @@ from app.domain.astrology.runtime.runtime_reference import (
 class AstrologyRuntimeReferenceMapper:
     """Convertit les donnees chargees par l'infra en contrats immutables."""
 
+    _DEFAULT_PLANET_SWE_IDS = planet_swe_ids_by_code()
+
     def map_payload(
         self,
         *,
@@ -54,8 +57,8 @@ class AstrologyRuntimeReferenceMapper:
                 tuple(
                     PlanetReferenceData(
                         code=str(item["code"]),
-                        name=str(item["name"]),
-                        swe_id=int(item["swe_id"]),
+                        name=self._display_name(item),
+                        swe_id=self._planet_swe_id(item),
                         body_class=self._optional_str(
                             planet_definitions.get(str(item["code"]), {}).get("body_class")
                         ),
@@ -68,13 +71,16 @@ class AstrologyRuntimeReferenceMapper:
             ),
             signs=SignReferenceSet(
                 tuple(
-                    SignReferenceData(code=str(item["code"]), name=str(item["name"]))
+                    SignReferenceData(code=str(item["code"]), name=self._display_name(item))
                     for item in self._items(payload, "signs")
                 )
             ),
             houses=HouseReferenceSet(
                 tuple(
-                    HouseReferenceData(number=int(item["number"]), name=str(item["name"]))
+                    HouseReferenceData(
+                        number=int(item["number"]),
+                        name=self._display_name(item, fallback=f"House {item['number']}"),
+                    )
                     for item in self._items(payload, "houses")
                 )
             ),
@@ -90,16 +96,16 @@ class AstrologyRuntimeReferenceMapper:
                 items=tuple(
                     AspectReferenceData(
                         code=str(item["code"]),
-                        name=str(item["name"]),
+                        name=self._display_name(item),
                         angle=float(item["angle"]),
-                        family=str(item["family"]),
-                        is_enabled=bool(item["is_enabled"]),
-                        is_major=bool(item["is_major"]),
-                        is_minor=bool(item["is_minor"]),
+                        family=str(item.get("family", "major")),
+                        is_enabled=bool(item.get("is_enabled", True)),
+                        is_major=bool(item.get("is_major", True)),
+                        is_minor=bool(item.get("is_minor", False)),
                         default_orb_deg=self._optional_float(item.get("default_orb_deg")),
-                        default_valence=str(item["default_valence"]),
-                        interpretive_valence=str(item["interpretive_valence"]),
-                        energy_type=str(item["energy_type"]),
+                        default_valence=str(item.get("default_valence", "contextual")),
+                        interpretive_valence=str(item.get("interpretive_valence", "contextual")),
+                        energy_type=str(item.get("energy_type", "neutral")),
                         legacy_orb_fields=self._legacy_orb_fields(item),
                     )
                     for item in self._items(payload, "aspects")
@@ -107,17 +113,17 @@ class AstrologyRuntimeReferenceMapper:
                 orb_rules=tuple(
                     AspectOrbRuleReferenceData(
                         aspect_code=str(item["aspect_code"]),
-                        system_code=str(item["system_code"]),
-                        calculation_context=str(item["calculation_context"]),
-                        source_body_type=str(item["source_body_type"]),
+                        system_code=str(item.get("system_code", "modern")),
+                        calculation_context=str(item.get("calculation_context", "natal")),
+                        source_body_type=str(item.get("source_body_type", "any")),
                         source_planet_code=self._optional_str(item.get("source_planet_code")),
                         source_point_code=self._optional_str(item.get("source_point_code")),
-                        target_body_type=str(item["target_body_type"]),
+                        target_body_type=str(item.get("target_body_type", "any")),
                         target_planet_code=self._optional_str(item.get("target_planet_code")),
                         target_point_code=self._optional_str(item.get("target_point_code")),
                         orb_deg=float(item["orb_deg"]),
-                        priority=int(item["priority"]),
-                        is_enabled=bool(item["is_enabled"]),
+                        priority=int(item.get("priority", 1)),
+                        is_enabled=bool(item.get("is_enabled", True)),
                     )
                     for item in self._items(payload, "aspect_orb_rules")
                 ),
@@ -190,6 +196,21 @@ class AstrologyRuntimeReferenceMapper:
         if value is None:
             return None
         return float(value)
+
+    def _display_name(self, item: Mapping[str, object], fallback: str | None = None) -> str:
+        """Retourne le nom humain en conservant les fixtures historiques minimales."""
+        raw = item.get("name")
+        if raw is None:
+            raw = fallback or str(item.get("code", "")).replace("_", " ").title()
+        return str(raw)
+
+    def _planet_swe_id(self, item: Mapping[str, object]) -> int:
+        """Résout l'identifiant SwissEph depuis le payload ou le catalogue canonique."""
+        raw = item.get("swe_id")
+        if raw is not None:
+            return int(raw)
+        code = str(item["code"]).strip().lower()
+        return int(self._DEFAULT_PLANET_SWE_IDS.get(code, 0))
 
     def _legacy_orb_fields(self, item: Mapping[str, object]) -> tuple[str, ...]:
         """Liste les anciens champs d'orbe interdits encore presents."""

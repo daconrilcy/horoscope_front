@@ -124,22 +124,43 @@ class ContributionCalculator:
         phase = event.metadata.get("phase", "exact")
         return self.PHASE_WEIGHTS.get(phase, 1.0)
 
-    def _f_target(self, target_code: str | None, ctx: LoadedPredictionContext) -> float:
+    def _f_target(
+        self,
+        target_code: str | None,
+        ctx: LoadedPredictionContext | None = None,
+    ) -> float:
         """AC5 - target class factor."""
         if not target_code:
             return 1.0
         if target_code in {"Asc", "MC"}:
             target_class = "angle"
         else:
-            profile = self._lookup_mapping_value(
-                ctx.prediction_context.planet_profiles, target_code
-            )
+            profile = None
+            if ctx is not None:
+                profile = self._lookup_mapping_value(
+                    ctx.prediction_context.planet_profiles, target_code
+                )
             target_class = str(getattr(profile, "class_code", "") or "").lower()
             if target_class.endswith("_planet"):
                 target_class = target_class.removesuffix("_planet")
+            if not target_class:
+                target_class = self._target_class_from_code(target_code)
         if not target_class:
             return 1.0  # Unknown target: neutral weight
         return self.TARGET_CLASS_WEIGHTS.get(target_class, 1.0)
+
+    def _target_class_from_code(self, target_code: str) -> str:
+        """Déduit la classe cible depuis les codes canoniques quand le profil est minimal."""
+        normalized = target_code.strip().lower()
+        if normalized in {"sun", "moon"}:
+            return "luminary"
+        if normalized in {"mercury", "venus", "mars"}:
+            return "personal"
+        if normalized in {"jupiter", "saturn"}:
+            return "social"
+        if normalized in {"uranus", "neptune", "pluto"}:
+            return "transpersonal"
+        return ""
 
     def _pol(self, event: AstroEvent, cat_code: str, ctx: LoadedPredictionContext) -> float:
         """AC6 - contextual valence.

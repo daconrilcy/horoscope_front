@@ -408,9 +408,30 @@ class EventDetector:
             self._orb_max_cache[cache_key] = resolved
             return resolved
 
+        profile_orb_max = self._profile_orb_max(planet_code, aspect_code)
+        if profile_orb_max is not None:
+            self._orb_max_cache[cache_key] = profile_orb_max
+            return profile_orb_max
+
         logger.warning("orb_max_fallback planet=%s aspect=%s default=2.0", planet_code, aspect_code)
         self._orb_max_cache[cache_key] = 2.0
         return 2.0
+
+    def _profile_orb_max(self, planet_code: str, aspect_code: str) -> float | None:
+        """Calcule l'orbe actif depuis les profils planète/aspect du contexte."""
+        planet_profile = self._lookup_mapping_value(
+            getattr(self.ctx.prediction_context, "planet_profiles", {}),
+            planet_code,
+        )
+        aspect_profile = self._lookup_mapping_value(
+            getattr(self.ctx.prediction_context, "aspect_profiles", {}),
+            aspect_code,
+        )
+        base_orb = getattr(planet_profile, "orb_active_deg", None)
+        if base_orb is None:
+            return None
+        multiplier = getattr(aspect_profile, "orb_multiplier", 1.0) if aspect_profile else 1.0
+        return float(base_orb) * float(multiplier or 1.0)
 
     def _matching_orb_rule(
         self,
@@ -542,7 +563,10 @@ class EventDetector:
             return "aspect_exact_to_luminary"
         return "aspect_exact_to_personal"
 
-    def _lookup_mapping_value(self, mapping: dict, key: str) -> object | None:
+    def _lookup_mapping_value(self, mapping: object, key: str) -> object | None:
+        """Lit un mapping de fixture en acceptant les variantes de casse usuelles."""
+        if not isinstance(mapping, dict):
+            return None
         candidates = (key, key.lower(), key.upper(), key.title())
         for candidate in candidates:
             if candidate in mapping:

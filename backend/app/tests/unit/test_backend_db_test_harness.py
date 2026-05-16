@@ -121,6 +121,7 @@ APPROVED_CREATE_ALL_PATHS = {
     Path("app/tests/unit/test_geo_place_resolved.py"),
     Path("app/tests/unit/test_guidance_service.py"),
     Path("app/tests/unit/test_incident_service.py"),
+    Path("app/tests/unit/test_astrology_runtime_reference_repository.py"),
     Path("app/tests/unit/test_natal_calculation_service.py"),
     Path("app/tests/unit/test_natal_golden_swisseph.py"),
     Path("app/tests/unit/test_ops_monitoring_service.py"),

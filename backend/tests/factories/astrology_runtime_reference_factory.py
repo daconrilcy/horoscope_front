@@ -20,6 +20,7 @@ def runtime_reference_from_mapping(
     reference_version_id: int = 1,
 ) -> AstrologyRuntimeReference:
     """Convertit un ancien payload de fixture en runtime reference type."""
+    payload = dict(payload)
     sign_rulerships = payload.get("sign_rulerships")
     if not isinstance(sign_rulerships, Mapping):
         sign_rulerships = {
@@ -37,6 +38,17 @@ def runtime_reference_from_mapping(
             "pisces": "jupiter",
         }
     version = str(payload.get("version") or "test")
+    if not payload.get("aspect_orb_rules"):
+        payload["aspect_orb_rules"] = list(_default_aspect_orb_rules(payload))
+    if not payload.get("house_axes"):
+        payload["house_axes"] = [
+            {
+                "house_number": number,
+                "opposite_house": number + 6 if number <= 6 else number - 6,
+                "theme": f"axis_{number}",
+            }
+            for number in range(1, 13)
+        ]
     return AstrologyRuntimeReferenceMapper().map_payload(
         reference_version_id=reference_version_id,
         reference_version=version,
@@ -102,6 +114,39 @@ def runtime_reference_from_mapping(
             {"code": "porphyry", "name": "Porphyry", "is_active": True},
         ),
     )
+
+
+def _default_aspect_orb_rules(payload: Mapping[str, object]) -> tuple[dict[str, object], ...]:
+    """Crée des règles d'orbe neutres pour les anciennes fixtures sans table dédiée."""
+    aspects = payload.get("aspects")
+    if not isinstance(aspects, list):
+        return ()
+
+    rules: list[dict[str, object]] = []
+    for item in aspects:
+        if not isinstance(item, Mapping):
+            continue
+        code = item.get("code")
+        orb = item.get("default_orb_deg")
+        if code is None or orb is None:
+            continue
+        rules.append(
+            {
+                "aspect_code": str(code),
+                "system_code": "modern",
+                "calculation_context": "natal",
+                "source_body_type": "any",
+                "source_planet_code": None,
+                "source_point_code": None,
+                "target_body_type": "any",
+                "target_planet_code": None,
+                "target_point_code": None,
+                "orb_deg": max(float(orb), 0.1),
+                "priority": 1,
+                "is_enabled": True,
+            }
+        )
+    return tuple(rules)
 
 
 def complete_reference() -> AstrologyRuntimeReference:
