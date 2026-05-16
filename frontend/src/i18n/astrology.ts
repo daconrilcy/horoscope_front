@@ -1,3 +1,4 @@
+// Catalogue de libellés astrologiques et état de langue d'interface.
 import { useCallback, useSyncExternalStore } from "react"
 import type { AppLocale } from "./types"
 
@@ -220,9 +221,10 @@ export function translateAspect(code: string, lang: AstrologyLang): string {
 
 /**
  * Détecte la langue de l'utilisateur selon la priorité:
- * 1. localStorage.getItem("lang") si valide
+ * 1. choix explicite de session si valide
  * 2. navigator.language (préfixe 2 lettres) si supporté
- * 3. Fallback sur "fr"
+ * 3. localStorage.getItem("lang") si valide comme cache de dernier recours
+ * 4. Fallback sur "fr"
  * 
  * @returns Langue détectée parmi "fr" | "en" | "es", avec "fr" comme fallback par défaut
  * 
@@ -231,10 +233,10 @@ export function translateAspect(code: string, lang: AstrologyLang): string {
  * - Pour les composants nécessitant les traductions astrologiques: `const { lang, translatePlanet, ... } = useAstrologyLabels()`
  */
 export function detectLang(): AstrologyLang {
-  const stored = typeof localStorage !== "undefined" ? localStorage.getItem("lang") : null
-  if (stored && SUPPORTED_LANGS.includes(stored as AstrologyLang)) {
-    return stored as AstrologyLang
-  }
+  const stored = readStoredLang()
+  const activeLang = resolveActiveLangOverride(stored)
+  if (activeLang) return activeLang
+
   const navLang = typeof navigator !== "undefined" ? navigator.language : null
   if (navLang && navLang.length >= 2) {
     const prefix = navLang.substring(0, 2)
@@ -242,6 +244,7 @@ export function detectLang(): AstrologyLang {
       return prefix as AstrologyLang
     }
   }
+  if (stored) return stored
   return "fr"
 }
 
@@ -249,6 +252,19 @@ export function detectLang(): AstrologyLang {
 const LANG_STORAGE_KEY = "lang"
 
 const langStoreListeners = new Set<() => void>()
+let activeLangOverride: AstrologyLang | null = null
+
+function readStoredLang(): AstrologyLang | null {
+  const stored = typeof localStorage !== "undefined" ? localStorage.getItem(LANG_STORAGE_KEY) : null
+  return stored && SUPPORTED_LANGS.includes(stored as AstrologyLang) ? (stored as AstrologyLang) : null
+}
+
+function resolveActiveLangOverride(stored: AstrologyLang | null): AstrologyLang | null {
+  if (!activeLangOverride) return null
+  if (stored === activeLangOverride) return activeLangOverride
+  activeLangOverride = null
+  return null
+}
 
 function notifyLangStoreListeners() {
   langStoreListeners.forEach((listener) => listener())
@@ -259,6 +275,10 @@ function subscribeToLangStore(listener: () => void) {
 
   const handleStorageChange = (event: StorageEvent) => {
     if (event.key === LANG_STORAGE_KEY) {
+      activeLangOverride =
+        event.newValue && SUPPORTED_LANGS.includes(event.newValue as AstrologyLang)
+          ? (event.newValue as AstrologyLang)
+          : null
       listener()
     }
   }
@@ -276,6 +296,7 @@ function getLangSnapshot(): AstrologyLang {
 }
 
 function updateLangStore(newLang: AstrologyLang) {
+  activeLangOverride = newLang
   if (typeof localStorage !== "undefined") {
     localStorage.setItem(LANG_STORAGE_KEY, newLang)
   }

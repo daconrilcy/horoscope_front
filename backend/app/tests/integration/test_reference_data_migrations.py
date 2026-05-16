@@ -745,11 +745,15 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert aspect_interpretation_foreign_keys[("aspect_id",)] == "astral_aspects"
     assert aspect_interpretation_foreign_keys[("astral_system_id",)] == "astral_systems"
     assert aspect_interpretation_foreign_keys[("language_id",)] == "languages"
-    user_columns = {column["name"] for column in head_inspector.get_columns("users")}
+    user_column_definitions = {
+        column["name"]: column for column in head_inspector.get_columns("users")
+    }
+    user_columns = set(user_column_definitions)
     assert "default_language_id" in user_columns
     assert "detected_locale" in user_columns
     assert "detected_country_code" in user_columns
     assert "detected_timezone" in user_columns
+    assert getattr(user_column_definitions["detected_locale"]["type"], "length", None) == 64
     user_foreign_keys = {
         tuple(foreign_key["constrained_columns"]): foreign_key["referred_table"]
         for foreign_key in head_inspector.get_foreign_keys("users")
@@ -1023,7 +1027,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260515_0116"
+    assert version == "20260516_0119"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

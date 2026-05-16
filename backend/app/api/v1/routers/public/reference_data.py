@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Body, Depends, Header, Query, Request, status
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, get_optional_authenticated_user
+from app.api.errors import build_error_response
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.reference import LanguageModel
@@ -23,6 +27,7 @@ from app.services.reference_data.public_support import (
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 
 router = APIRouter(prefix="/v1/reference-data", tags=["reference-data"])
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -32,10 +37,23 @@ router = APIRouter(prefix="/v1/reference-data", tags=["reference-data"])
 def list_languages(
     request: Request,
     db: Session = Depends(get_db_session),
-) -> dict[str, object]:
+) -> dict[str, object] | JSONResponse:
     """Retourne les langues canoniques disponibles dans la table `languages`."""
     request_id = resolve_request_id(request)
-    languages = db.query(LanguageModel).order_by(LanguageModel.code.asc()).all()
+    try:
+        languages = db.query(LanguageModel).order_by(LanguageModel.code.asc()).all()
+    except SQLAlchemyError:
+        logger.exception(
+            "reference languages lookup failed",
+            extra={"request_id": request_id},
+        )
+        return build_error_response(
+            status_code=500,
+            request_id=request_id,
+            code="reference_languages_unavailable",
+            message="reference languages could not be loaded",
+            details={},
+        )
     return {
         "data": [{"code": item.code, "name": item.name} for item in languages],
         "meta": {"request_id": request_id},

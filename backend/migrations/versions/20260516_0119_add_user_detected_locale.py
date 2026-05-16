@@ -31,14 +31,32 @@ def _columns(table_name: str) -> set[str]:
     return {str(column["name"]) for column in sa.inspect(op.get_bind()).get_columns(table_name)}
 
 
+def _column_lengths(table_name: str) -> dict[str, int | None]:
+    """Retourne les longueurs déclarées des colonnes texte existantes."""
+    if not _table_exists(table_name):
+        return {}
+    return {
+        str(column["name"]): getattr(column["type"], "length", None)
+        for column in sa.inspect(op.get_bind()).get_columns(table_name)
+    }
+
+
 def upgrade() -> None:
     """Expose la localisation navigateur comme métadonnée utilisateur persistée."""
     if not _table_exists("users"):
         return
     columns = _columns("users")
+    column_lengths = _column_lengths("users")
     with op.batch_alter_table("users") as batch_op:
         if "detected_locale" not in columns:
-            batch_op.add_column(sa.Column("detected_locale", sa.String(length=16), nullable=True))
+            batch_op.add_column(sa.Column("detected_locale", sa.String(length=64), nullable=True))
+        elif column_lengths.get("detected_locale") != 64:
+            batch_op.alter_column(
+                "detected_locale",
+                existing_type=sa.String(length=column_lengths.get("detected_locale")),
+                type_=sa.String(length=64),
+                nullable=True,
+            )
         if "detected_country_code" not in columns:
             batch_op.add_column(
                 sa.Column("detected_country_code", sa.String(length=2), nullable=True)

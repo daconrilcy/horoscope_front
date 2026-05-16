@@ -55,6 +55,9 @@ export function useUpdateUserSettings() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: patchUserSettings,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["user-settings"] }),
+    onSuccess: (settings) => {
+      qc.setQueryData(["user-settings"], settings);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["user-settings"] }),
   });
 }

@@ -31,7 +31,7 @@ class UserModel(Base):
         nullable=True,
         index=True,
     )
-    detected_locale: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    detected_locale: Mapped[str | None] = mapped_column(String(64), nullable=True)
     detected_country_code: Mapped[str | None] = mapped_column(String(2), nullable=True)
     detected_timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     email_unsubscribed: Mapped[bool] = mapped_column(Boolean, default=False)

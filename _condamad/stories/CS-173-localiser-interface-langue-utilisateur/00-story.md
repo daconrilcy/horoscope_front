@@ -1,6 +1,6 @@
 # Story CS-173 localiser-interface-langue-utilisateur: Localiser l'interface selon la langue utilisateur
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -229,23 +229,23 @@ Après implémentation:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Enrichir les contrats backend de préférences utilisateur (AC: AC2)
-  - [ ] Ajouter les colonnes nullable de localisation détectée.
-  - [ ] Exposer les champs dans GET/PATCH settings.
+- [x] Task 1 - Enrichir les contrats backend de préférences utilisateur (AC: AC2)
+  - [x] Ajouter les colonnes nullable de localisation détectée.
+  - [x] Exposer les champs dans GET/PATCH settings.
 
-- [ ] Task 2 - Exposer le catalogue `languages` (AC: AC1)
-  - [ ] Ajouter contrat Pydantic public.
-  - [ ] Ajouter une route publique de lecture triée.
+- [x] Task 2 - Exposer le catalogue `languages` (AC: AC1)
+  - [x] Ajouter contrat Pydantic public.
+  - [x] Ajouter une route publique de lecture triée.
 
-- [ ] Task 3 - Ajouter le sélecteur Header (AC: AC3, AC4)
-  - [ ] Créer le client API front des langues.
-  - [ ] Ajouter un composant de sélection sans style inline.
-  - [ ] Synchroniser langue stockée et préférence backend.
+- [x] Task 3 - Ajouter le sélecteur Header (AC: AC3, AC4)
+  - [x] Créer le client API front des langues.
+  - [x] Ajouter un composant de sélection sans style inline.
+  - [x] Synchroniser langue stockée et préférence backend.
 
-- [ ] Task 4 - Couvrir et vérifier (AC: AC1, AC2, AC3, AC4)
-  - [ ] Tests backend ciblés.
-  - [ ] Test composant Header.
-  - [ ] Lint/tests ciblés et démarrage local si possible.
+- [x] Task 4 - Couvrir et vérifier (AC: AC1, AC2, AC3, AC4)
+  - [x] Tests backend ciblés.
+  - [x] Test composant Header.
+  - [x] Lint/tests ciblés et démarrage local si possible.
 
 ## 9. Mandatory Reuse / DRY Constraints
 

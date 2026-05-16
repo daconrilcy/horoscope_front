@@ -145,20 +145,32 @@ def test_patch_me_settings_default_language_code(auth_token: str):
 
 
 def test_patch_me_settings_detected_localization(auth_token: str):
+    long_locale = "sl-rozaj-biske-1994-x-browser"
     response = client.patch(
         "/v1/users/me/settings",
         headers={"Authorization": f"Bearer {auth_token}"},
         json={
-            "detected_locale": "fr-FR",
+            "detected_locale": long_locale,
             "detected_country_code": "fr",
             "detected_timezone": "Europe/Paris",
         },
     )
     assert response.status_code == 200
     data = response.json()["data"]
-    assert data["detected_locale"] == "fr-FR"
+    assert data["detected_locale"] == long_locale
     assert data["detected_country_code"] == "FR"
     assert data["detected_timezone"] == "Europe/Paris"
+
+
+def test_patch_me_settings_rejects_invalid_detected_country_code(auth_token: str):
+    response = client.patch(
+        "/v1/users/me/settings",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"detected_country_code": "1@"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_detected_country_code"
 
 
 def test_patch_me_settings_invalid_profile(auth_token: str):

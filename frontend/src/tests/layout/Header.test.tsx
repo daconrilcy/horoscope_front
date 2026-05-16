@@ -1,11 +1,17 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
-import { fireEvent, render, cleanup, screen } from "@testing-library/react"
+import { fireEvent, render, cleanup, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { Header } from "../../layouts/components/Header"
 import { SidebarProvider } from "../../state/SidebarContext"
 
 const toggleThemeMock = vi.fn()
 const updateSettingsMock = vi.fn()
+let languagesMock = [
+  { code: "fr", name: "Français API" },
+  { code: "en", name: "English API" },
+  { code: "es", name: "Español API" },
+]
+let defaultLanguageCodeMock: string | null = null
 
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
 
@@ -22,11 +28,7 @@ vi.mock("../../api/authMe", () => ({
 
 vi.mock("../../api/languages", () => ({
   useLanguages: () => ({
-    data: [
-      { code: "fr", name: "french" },
-      { code: "en", name: "english" },
-      { code: "es", name: "spanish" },
-    ],
+    data: languagesMock,
   }),
 }))
 
@@ -35,7 +37,7 @@ vi.mock("../../api/userSettings", () => ({
     data: {
       astrologer_profile: "standard",
       default_astrologer_id: null,
-      default_language_code: null,
+      default_language_code: defaultLanguageCodeMock,
       detected_locale: "fr-FR",
       detected_country_code: "FR",
       detected_timezone: "Europe/Paris",
@@ -57,6 +59,14 @@ vi.mock("../../state/ThemeProvider", () => ({
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
+  localStorage.clear()
+  languagesMock = [
+    { code: "fr", name: "Français API" },
+    { code: "en", name: "English API" },
+    { code: "es", name: "Español API" },
+  ]
+  defaultLanguageCodeMock = null
 })
 
 describe("Header", () => {
@@ -144,10 +154,109 @@ describe("Header", () => {
     )
 
     fireEvent.click(screen.getByRole("button", { name: "Choisir la langue" }))
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "English" }))
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "English API" }))
 
     expect(updateSettingsMock).toHaveBeenCalledWith(
       expect.objectContaining({ default_language_code: "en" }),
+      expect.objectContaining({
+        onError: expect.any(Function),
+        onSuccess: expect.any(Function),
+      }),
     )
+  })
+
+  it("ne laisse pas une préférence compte stale annuler une sélection explicite", async () => {
+    defaultLanguageCodeMock = "fr"
+
+    render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Choisir la langue" }))
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "English API" }))
+
+    await waitFor(() => {
+      expect(localStorage.getItem("lang")).toBe("en")
+    })
+  })
+
+  it("affiche les libellés de langues fournis par l'API", () => {
+    render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Choisir la langue" }))
+
+    expect(screen.getByRole("menuitemradio", { name: "Français API" })).toBeInTheDocument()
+    expect(screen.getByRole("menuitemradio", { name: "English API" })).toBeInTheDocument()
+  })
+
+  it("applique la préférence compte quand la langue existe dans les options API", async () => {
+    defaultLanguageCodeMock = "es"
+
+    render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    await waitFor(() => {
+      expect(localStorage.getItem("lang")).toBe("es")
+    })
+  })
+
+  it("ignore la préférence compte si la langue manque des options API", () => {
+    defaultLanguageCodeMock = "en"
+    languagesMock = [
+      { code: "fr", name: "Français API" },
+      { code: "es", name: "Español API" },
+    ]
+
+    render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Choisir la langue" }))
+
+    expect(screen.queryByRole("menuitemradio", { name: "English API" })).not.toBeInTheDocument()
+    expect(localStorage.getItem("lang")).not.toBe("en")
+  })
+
+  it("persiste le pays detecte depuis une locale BCP47 avec script", async () => {
+    vi.stubGlobal("navigator", { language: "zh-Hant-TW" })
+
+    render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    await waitFor(() => {
+      expect(updateSettingsMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detected_locale: "zh-Hant-TW",
+          detected_country_code: "TW",
+        }),
+        expect.objectContaining({
+          onError: expect.any(Function),
+        }),
+      )
+    })
   })
 })

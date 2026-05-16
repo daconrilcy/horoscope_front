@@ -152,6 +152,6 @@ class UserSettingsPatchRequest(BaseModel):
     astrologer_profile: str | None = None
     default_astrologer_id: str | None = None
     default_language_code: str | None = Field(default=None, max_length=16)
-    detected_locale: str | None = Field(default=None, max_length=16)
+    detected_locale: str | None = Field(default=None, max_length=64)
     detected_country_code: str | None = Field(default=None, max_length=2)
     detected_timezone: str | None = Field(default=None, max_length=64)

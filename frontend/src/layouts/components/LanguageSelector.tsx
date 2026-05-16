@@ -1,6 +1,6 @@
 // Sélecteur de langue d'interface synchronisé avec les préférences utilisateur.
 import { Languages } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useLanguages } from "@api/languages"
 import { useUpdateUserSettings, useUserSettings } from "@api/userSettings"
@@ -13,12 +13,6 @@ const LANGUAGE_FLAGS: Record<AstrologyLang, string> = {
   es: "🇪🇸",
 }
 
-const LANGUAGE_NAMES: Record<AstrologyLang, string> = {
-  fr: "Français",
-  en: "English",
-  es: "Español",
-}
-
 function isSupportedInterfaceLanguage(code: string): code is AstrologyLang {
   return SUPPORTED_LANGS.includes(code as AstrologyLang)
 }
@@ -28,8 +22,20 @@ function resolveDetectedLocale(): string | null {
 }
 
 function resolveDetectedCountryCode(locale: string | null): string | null {
-  const region = locale?.split("-")[1]
-  return region && region.length === 2 ? region.toUpperCase() : null
+  if (!locale) return null
+  try {
+    const region = new Intl.Locale(locale).region
+    if (region && /^[A-Za-z]{2}$/.test(region)) {
+      return region.toUpperCase()
+    }
+  } catch {
+    // Les locales navigateur non canoniques restent traitees par le parseur de secours.
+  }
+  const region = locale
+    .split(/[-_]/)
+    .slice(1)
+    .find((part) => /^[A-Za-z]{2}$/.test(part))
+  return region ? region.toUpperCase() : null
 }
 
 function resolveDetectedTimezone(): string | null {
@@ -53,6 +59,8 @@ export function LanguageSelector() {
   const { lang, setLang } = useAstrologyLabels()
   const t = commonTranslations(lang)
   const [isOpen, setIsOpen] = useState(false)
+  const lastSubmittedLocalization = useRef<string | null>(null)
+  const pendingLanguageCode = useRef<AstrologyLang | null>(null)
   const languagesQuery = useLanguages()
   const settingsQuery = useUserSettings()
   const updateSettings = useUpdateUserSettings()
@@ -68,18 +76,33 @@ export function LanguageSelector() {
           return [{
             code,
             flag: LANGUAGE_FLAGS[code],
-            label: LANGUAGE_NAMES[code],
+            label: language.name,
           }]
         }),
     [languagesQuery.data],
   )
+  const supportedLanguageCodes = useMemo(
+    () => new Set(languageOptions.map((language) => language.code)),
+    [languageOptions],
+  )
 
   useEffect(() => {
     const defaultCode = settingsQuery.data?.default_language_code
-    if (defaultCode && isSupportedInterfaceLanguage(defaultCode) && defaultCode !== lang) {
+    if (pendingLanguageCode.current) {
+      if (defaultCode === pendingLanguageCode.current) {
+        pendingLanguageCode.current = null
+      }
+      return
+    }
+    if (
+      defaultCode &&
+      isSupportedInterfaceLanguage(defaultCode) &&
+      supportedLanguageCodes.has(defaultCode) &&
+      defaultCode !== lang
+    ) {
       setLang(defaultCode)
     }
-  }, [lang, setLang, settingsQuery.data?.default_language_code])
+  }, [lang, setLang, settingsQuery.data?.default_language_code, supportedLanguageCodes])
 
   useEffect(() => {
     if (!settingsQuery.data || updateSettings.isPending) {
@@ -90,18 +113,39 @@ export function LanguageSelector() {
       settingsQuery.data.detected_locale === payload.detected_locale &&
       settingsQuery.data.detected_country_code === payload.detected_country_code &&
       settingsQuery.data.detected_timezone === payload.detected_timezone
-    if (!isSameLocalization) {
-      updateSettings.mutate(payload)
+    const payloadKey = JSON.stringify(payload)
+    if (isSameLocalization) {
+      lastSubmittedLocalization.current = null
+      return
     }
+    if (lastSubmittedLocalization.current === payloadKey) {
+      return
+    }
+    lastSubmittedLocalization.current = payloadKey
+    updateSettings.mutate(payload, {
+      onError: () => {
+        lastSubmittedLocalization.current = null
+      },
+    })
   }, [settingsQuery.data, updateSettings])
 
   const current = languageOptions.find((language) => language.code === lang)
 
   function selectLanguage(code: AstrologyLang) {
+    pendingLanguageCode.current = code
     setLang(code)
     updateSettings.mutate({
       default_language_code: code,
       ...buildLocalizationPayload(),
+    }, {
+      onError: () => {
+        pendingLanguageCode.current = null
+      },
+      onSuccess: (settings) => {
+        if (settings.default_language_code === code) {
+          pendingLanguageCode.current = null
+        }
+      },
     })
     setIsOpen(false)
   }

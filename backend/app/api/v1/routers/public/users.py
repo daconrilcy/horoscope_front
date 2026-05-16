@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from threading import Lock
 from time import monotonic
 from typing import Any
@@ -63,6 +64,7 @@ logger = logging.getLogger(__name__)
 _INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
 _INCONSISTENT_LOG_ALWAYS_PER_WINDOW = 10
 _INCONSISTENT_LOG_SAMPLING_RATIO = 0.01
+_COUNTRY_CODE_PATTERN = re.compile(r"^[A-Z]{2}$")
 _inconsistent_log_sampling_lock = Lock()
 _inconsistent_log_sampling_state = {"window_start": monotonic(), "count": 0}
 
@@ -643,13 +645,38 @@ def patch_me_settings(
         user.detected_locale = _normalize_optional_text(update_data["detected_locale"])
 
     if "detected_country_code" in update_data:
-        user.detected_country_code = _normalize_country_code(update_data["detected_country_code"])
+        detected_country_code = _normalize_country_code(update_data["detected_country_code"])
+        if detected_country_code is not None and not _COUNTRY_CODE_PATTERN.fullmatch(
+            detected_country_code
+        ):
+            return build_error_response(
+                status_code=422,
+                request_id=request_id,
+                code="invalid_detected_country_code",
+                message="detected country code must be an ISO alpha-2 code",
+                details={"detected_country_code": update_data["detected_country_code"]},
+            )
+        user.detected_country_code = detected_country_code
 
     if "detected_timezone" in update_data:
         user.detected_timezone = _normalize_optional_text(update_data["detected_timezone"])
 
-    db.commit()
-    db.refresh(user)
+    try:
+        db.commit()
+        db.refresh(user)
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception(
+            "user settings persistence failed",
+            extra={"user_id": current_user.id, "request_id": request_id},
+        )
+        return build_error_response(
+            status_code=500,
+            request_id=request_id,
+            code="user_settings_persistence_error",
+            message="user settings could not be persisted",
+            details={},
+        )
 
     return {
         "data": _settings_payload(user),
