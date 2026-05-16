@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py`, `20260514_0104_add_astral_aspect_orb_rules.py`, `20260514_0105_add_astral_system_inheritance.py` et `20260514_0106_create_astral_aspect_interpretation_profiles.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux aspects astrologiques dans l'état courant du schéma Alembic, après les migrations `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py`, `20260514_0104_add_astral_aspect_orb_rules.py`, `20260514_0105_add_astral_system_inheritance.py`, `20260514_0106_create_astral_aspect_interpretation_profiles.py`, `20260515_0112_create_astral_object_reference_tables.py`, `20260515_0114_create_astral_planet_reference_tables.py` et `20260515_0115_simplify_daily_planet_profiles.py`.
 
 Deux catégories sont distinguées :
 
@@ -10,6 +10,10 @@ Deux catégories sont distinguées :
 - Payloads et objets runtime qui calculent, transportent ou restituent des aspects sous forme de JSON ou d'événements.
 
 Point important : les aspects réels d'un thème ne sont pas stockés dans une table relationnelle dédiée. Ils sont calculés à l'exécution à partir des longitudes planétaires ou des états temporels, puis transportés dans `NatalResult.aspects`, `chart_results.result_payload.aspects`, les événements de prédiction et les payloads publics.
+
+Depuis le refactor runtime, les payloads SQL/JSON libres restent confinés à l'infra. `AstrologyRuntimeReferenceRepository` charge `ReferenceRepository.get_reference_data`, les dignités, les points d'angle et les systèmes de maisons, puis `AstrologyRuntimeReferenceMapper` retourne une photographie immutable consommée par le domaine.
+
+Les sources JSON canoniques utilisées par le seed applicatif sont désormais sous `docs/db_seeder/astrology/`. Les anciens chemins `docs/recherches astro/*.json` ne doivent plus être considérés comme sources actives pour les seeds.
 
 ## Héritage des systèmes astrologiques
 
@@ -29,6 +33,8 @@ Les règles physiques de `astral_aspect_orb_rules` restent locales au système q
 | `astral_aspect_interpretation_profiles` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Vocabulaire éditorial d'interprétation des aspects pour prompts et synthèses | Oui, via `reference_version_id` |
 | `astral_aspect_definitions` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Activation et qualification des aspects par système astrologique | Oui, via `reference_version_id` |
 | `astral_aspect_orb_rules` | `aspect_id -> astral_aspects.id`, `astral_system_id -> astral_systems.id` | Exceptions ciblées à l'orbe standard des définitions | Oui, via `reference_version_id` |
+| `astral_planet_definitions` | Joint par les règles d'orbe via les planètes impliquées | Classe les corps en luminaire, personnelle, sociale, transpersonnelle pour les règles corps/type | Non |
+| `astral_angle_points` | Codes `asc`, `dsc`, `mc`, `ic` utilisés par les règles `angle` ou `point` | Référentiel stable des points angulaires pouvant être sources ou cibles d'aspect | Non |
 | `ruleset_event_types` | Codes d'événements d'aspect | Pondération et priorité des événements `aspect_*` | Indirectement via le ruleset |
 | `ruleset_parameters` | Paramètres de phase/orbe | Multiplicateurs runtime applicables à certains événements | Indirectement via le ruleset |
 | `chart_results` | JSON `result_payload.aspects` | Snapshot des aspects natals calculés pour un thème | Version texte dans payload et colonnes |
@@ -50,7 +56,7 @@ Colonnes :
 | `id` | `Integer` | Identifiant technique référencé par `astral_aspects.family`. |
 | `name` | `String(32)` | Nom stable de famille. |
 
-Valeurs seedées depuis `docs/recherches astro/astral_aspect_families.json` :
+Valeurs seedées depuis `docs/db_seeder/astrology/astral_aspect_families.json` :
 
 | id logique | name |
 | --- | --- |
@@ -67,7 +73,7 @@ Historique :
 - Créée initialement sous `aspects` par `20260218_0001_create_reference_tables.py`.
 - Déversionnée par `20260512_0086_deversion_astrology_structures.py`.
 - Renommée en `astral_aspects` par `20260514_0099_rename_astral_reference_tables.py`.
-- Refactorée par `20260514_0102_normalize_astral_aspects.py` : suppression de `default_orb_deg`, ajout de `family`, passage de `angle` en `Float`, seed des 20 aspects depuis `docs/recherches astro/aspects.json`.
+- Refactorée par `20260514_0102_normalize_astral_aspects.py` : suppression de `default_orb_deg`, ajout de `family`, passage de `angle` en `Float`, seed des 20 aspects depuis `docs/db_seeder/astrology/aspects.json`.
 
 Colonnes principales :
 
@@ -86,7 +92,7 @@ Contraintes :
 - Plus de `reference_version_id`.
 - Plus de `default_orb_deg` : l'orbe par défaut dépend maintenant de `astral_aspect_definitions`.
 
-Aspects seedés depuis `docs/recherches astro/aspects.json` :
+Aspects seedés depuis `docs/db_seeder/astrology/aspects.json` :
 
 | Code | Nom SQL | Angle | Famille |
 | --- | --- | ---: | --- |
@@ -158,7 +164,7 @@ Qualification :
 - Ne calcule aucun aspect : elle qualifie un aspect déjà identifié par le calcul natal ou par `EventDetector`.
 - Versionnée par `reference_version_id`.
 - Verrouillée via `_ensure_reference_version_is_mutable` quand la version de référence est verrouillée.
-- Seedée depuis `docs/recherches astro/astral_aspect_profiles.json`.
+- Seedée depuis `docs/db_seeder/astrology/astral_aspect_profiles.json`.
 
 Colonnes principales :
 
@@ -213,18 +219,21 @@ distincte de `astral_aspect_profiles`, qui reste réservé au scoring prédictif
 | `title`, `summary`, `micro_note` | Texte éditorial court exploitable par l'interprétation et les prompts. |
 | `*_json` | Listes JSON stockées en texte pour mots-clés, dynamiques, patterns, archétypes et consignes de prompt. |
 
-- Seedée depuis `docs/recherches astro/astral_aspect_interpretation_profiles.json`.
+- Seedée depuis `docs/db_seeder/astrology/astral_aspect_interpretation_profiles.json`.
 - Synchronisée par `sync_aspect_interpretation_profiles` pendant le seed des versions de référence.
 - Unicité : `(reference_version_id, aspect_id, astral_system_id, language)`.
 - Elle ne doit pas devenir une source d'orbes, de poids produit, de valence de scoring ou de calcul runtime.
-- Utilisée par :
-  - `EventDetector._orb_max` pour moduler l'orbe actif planète x aspect ;
-  - `ContributionCalculator._w_aspect` pour pondérer les contributions ;
-  - `ContributionCalculator._pol` pour résoudre la polarité de l'événement ;
-  - `IntradayActivationBuilder` pour construire les activations lunaires intraday ;
-  - `TransitSignalBuilder` via les mêmes événements/contributions ;
-  - `NatalSensitivityCalculator._compute_natal_aspects_contribution` pour moduler la sensibilité structurelle par thème ;
-  - `EngineOrchestrator._compute_natal_aspects` pour enrichir le `NatalChart` interne du moteur daily.
+- Utilisée comme vocabulaire éditorial par les prompts et synthèses d'interprétation. Elle n'est pas utilisée par `EventDetector`, `ContributionCalculator` ou `calculate_major_aspects` pour calculer les aspects.
+
+Les usages de scoring et de seuils restent portés par `astral_aspect_profiles` :
+
+- `EventDetector._orb_max` pour son fallback profil historique quand aucune règle d'orbe ne matche ;
+- `ContributionCalculator._w_aspect` pour pondérer les contributions ;
+- `ContributionCalculator._pol` pour résoudre la polarité de l'événement ;
+- `IntradayActivationBuilder` pour construire les activations lunaires intraday ;
+- `TransitSignalBuilder` via les mêmes événements/contributions ;
+- `NatalSensitivityCalculator._compute_natal_aspects_contribution` pour moduler la sensibilité structurelle par thème ;
+- `EngineOrchestrator._compute_natal_aspects` pour enrichir le `NatalChart` interne du moteur daily.
 
 ### `astral_aspect_definitions`
 
@@ -235,7 +244,7 @@ Qualification :
 - Table de qualification d'un aspect par système astrologique.
 - Versionnée par `reference_version_id`.
 - Reliée à `astral_systems.id`.
-- Seedée depuis `docs/recherches astro/astral_aspect_definitions.json`.
+- Seedée depuis `docs/db_seeder/astrology/astral_aspect_definitions.json`.
 
 Colonnes principales :
 
@@ -275,7 +284,7 @@ Qualification :
 - Table de surcharges ciblées de l'orbe standard.
 - Versionnée par `reference_version_id`.
 - Reliée à `astral_systems.id`, `astral_aspects.id` et optionnellement à `astral_planets.id`.
-- Seedée depuis `docs/recherches astro/astral_aspect_orb_rules.json`.
+- Seedée depuis `docs/db_seeder/astrology/astral_aspect_orb_rules.json`.
 - Synchronisée par `ensure_astral_aspect_reference_data`.
 - Consommée par le calcul natal via `ReferenceRepository.get_reference_data -> build_natal_result -> calculate_major_aspects`.
 
@@ -369,6 +378,21 @@ predictive_orb_max = resolved_orb_deg x astral_aspect_profiles.orb_multiplier
 `resolved_orb_deg` est l'orbe astrologique de calcul. `orb_multiplier` est une modulation prédictive ou produit. Ces deux dimensions ne doivent pas être fusionnées dans une seule valeur de référence, ni injecter la logique de scoring daily dans le calcul natal pur.
 
 ## Tables adjacentes nécessaires au fonctionnement
+
+### Référentiels de corps et points
+
+Les règles d'orbes manipulent des types de corps (`luminary`, `personal_planet`, `social_planet`, `transpersonal_planet`, `angle`, `point`) et parfois des planètes ou points exacts.
+
+Ces types sont maintenant adossés aux tables stables suivantes :
+
+| Table | Rôle pour les aspects |
+| --- | --- |
+| `astral_astrological_roles` | Définit les rôles `luminary`, `personal_planet`, `social_planet`, `transpersonal_planet`, `angle`, `lunar_node`. |
+| `astral_object_types` | Distingue `celestial_body`, `chart_angle` et `mathematical_point`. |
+| `astral_planet_definitions` | Relie chaque planète à son rôle, son type d'objet, sa vitesse structurelle et sa polarité typique. |
+| `astral_angle_points` | Porte les quatre angles `asc`, `dsc`, `mc`, `ic`, leur axe et leur maison associée. |
+
+`PredictionReferenceRepository.get_planet_profiles` joint `astral_prediction_daily_planet_profiles` à `astral_planet_definitions`, `astral_astrological_roles`, `astral_speed` et `astral_typical_polarities`. Une définition planétaire incomplète devient bloquante.
 
 ### `astral_reference_versions`
 
@@ -597,6 +621,10 @@ Point d'attention :
 - `backend/app/infra/db/models/reference.py`
 - `backend/app/infra/db/models/prediction_reference.py`
 - `backend/app/infra/db/repositories/reference_repository.py`
+- `backend/app/infra/db/repositories/astrology_reference_sources.py`
+- `backend/app/infra/db/repositories/astrology_runtime_reference_repository.py`
+- `backend/app/infra/db/repositories/astrology_runtime_reference_mapper.py`
+- `backend/app/domain/astrology/runtime/runtime_reference.py`
 - `backend/app/infra/db/repositories/prediction_reference_repository.py`
 - `backend/app/infra/db/repositories/prediction_schemas.py`
 - `backend/app/services/prediction/reference_seed_service.py`
@@ -609,8 +637,10 @@ Point d'attention :
 - `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
 - `backend/migrations/versions/20260514_0104_add_astral_aspect_orb_rules.py`
 - `backend/migrations/versions/20260514_0105_add_astral_system_inheritance.py`
-- `docs/recherches astro/aspects.json`
-- `docs/recherches astro/astral_aspect_families.json`
-- `docs/recherches astro/astral_aspect_profiles.json`
-- `docs/recherches astro/astral_aspect_definitions.json`
-- `docs/recherches astro/astral_aspect_orb_rules.json`
+- `docs/db_seeder/astrology/aspects.json`
+- `docs/db_seeder/astrology/astral_aspect_families.json`
+- `docs/db_seeder/astrology/astral_aspect_profiles.json`
+- `docs/db_seeder/astrology/astral_aspect_definitions.json`
+- `docs/db_seeder/astrology/astral_aspect_orb_rules.json`
+- `docs/db_seeder/astrology/astral_angle_points.json`
+- `docs/db_seeder/astrology/astral_planet_definitions.json`

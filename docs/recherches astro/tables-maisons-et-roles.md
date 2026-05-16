@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`, `20260512_0086_deversion_astrology_structures.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py`, `20260514_0098_reference_house_interpretation_system.py`, `20260514_0099_rename_astral_reference_tables.py` et `20260514_0102_normalize_astral_aspects.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux maisons astrologiques dans l'état courant du schéma Alembic, après les migrations `20260218_0001_create_reference_tables.py`, `20260307_0032_migration_a_prediction_reference_tables.py`, `20260308_0038_add_house_system_effective_to_daily_prediction_runs.py`, `20260512_0086_deversion_astrology_structures.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py`, `20260514_0098_reference_house_interpretation_system.py`, `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py`, `20260515_0109_create_astral_house_axis_definitions.py`, `20260515_0110_create_astral_house_axis_members.py`, `20260515_0111_deversion_astral_house_axis_definitions.py` et `20260515_0112_create_astral_object_reference_tables.py`.
 
 Deux catégories sont distinguées :
 
@@ -10,6 +10,8 @@ Deux catégories sont distinguées :
 - Tables et payloads qui consomment, calculent ou historisent les maisons sous forme de JSON ou de colonnes de trace.
 
 Point important : les cuspides réelles d'un thème ne sont pas stockées dans une table relationnelle dédiée. Elles sont calculées à l'exécution par SwissEph ou par le moteur simplifié, enrichies dans le runtime astrologique, puis transportées dans les objets `NatalResult`, les projections IA et les payloads `chart_results.result_payload`.
+
+Depuis le refactor runtime, les sources JSON canoniques de seed sont sous `docs/db_seeder/astrology/`. Les tables stables sont chargées par `ReferenceRepository.seed_version_defaults`, puis `AstrologyRuntimeReferenceRepository` expose une photographie immutable au domaine via `AstrologyRuntimeReferenceMapper`.
 
 ## Héritage des systèmes astrologiques
 
@@ -23,6 +25,10 @@ Pour les maisons, cet héritage ne change pas les cuspides ni les systèmes de m
 | --- | --- | --- | --- |
 | `astral_houses` | Table canonique des maisons 1 à 12 | Vocabulaire stable : numéro et nom métier | Non |
 | `astral_house_systems` | Table canonique des systèmes de maisons | Référence stable pour l'UI, les fallbacks, les analytics et les limites astronomiques | Non |
+| `astral_house_modalities` | Taxonomie `angular`, `succedent`, `cadent` | Référence structurelle des modalités de maisons ; le profil daily conserve encore `house_kind` en texte | Non |
+| `astral_angle_points` | Angles liés aux cuspides 1/7/10/4 | Référence stable des points `asc`, `dsc`, `mc`, `ic` et de leur maison associée | Non |
+| `astral_house_axis_definitions` | Définition éditoriale des axes maison opposée | Axe localisé par système astrologique et langue | Non |
+| `astral_house_axis_members` | `house_id -> astral_houses.id`, `opposite_house_id -> astral_houses.id` | Association canonique maison -> axe -> maison opposée | Non |
 | `astral_house_interpretation_profiles` | `house_id -> astral_houses.id`, `astral_system_id -> astral_systems.id` | Vocabulaire éditorial pour interprétation, prompts IA et variantes langue/système astrologique | Oui, via `reference_version_id` |
 | `astral_prediction_daily_house_profiles` | `house_id -> astral_houses.id` | Source SQL scindée en profil astrologique stable et profil produit prédictif | Oui, via `reference_version_id` |
 | `astral_house_category_weights` | `house_id -> astral_houses.id` | Routage maison -> catégorie de vie pour le scoring | Oui, via `reference_version_id` |
@@ -83,6 +89,8 @@ Maisons seedées par `ReferenceRepository.seed_version_defaults` :
 | 11 | `Community` | Collectif et réseaux |
 | 12 | `Subconscious` | Intériorité et ressources cachées |
 
+Source actuelle : section `houses` de `docs/db_seeder/astrology/structural_reference_catalog.json`.
+
 ### `astral_house_systems`
 
 Définie par `AstralHouseSystemModel` dans `backend/app/infra/db/models/reference.py`.
@@ -125,6 +133,8 @@ Systèmes seedés :
 | `equal` | Equal House | `ascendant_based` | Oui | Non | Oui | 30 |
 | `porphyry` | Porphyry | `quadrant` | Oui | Oui | Oui | 40 |
 
+Source actuelle : `docs/db_seeder/astrology/astral_house_system.json`, synchronisée par `sync_house_system_seed_data`.
+
 Nuance importante :
 
 - `whole_sign.requires_precise_birth_time = false` ne signifie pas qu'une heure de naissance est inutile.
@@ -134,6 +144,40 @@ Constantes applicatives :
 
 - `backend/app/domain/astrology/house_system_codes.py` expose `HouseSystemCode`.
 - Les services continuent à manipuler les codes (`placidus`, `whole_sign`, `equal`, `porphyry`) mais les tables runtime stockent les identifiants SQL.
+
+### `astral_angle_points`
+
+Définie par `AstralAnglePointModel` dans `backend/app/infra/db/models/reference.py`.
+
+Qualification :
+
+- Table stable et non versionnée.
+- Seedée depuis `docs/db_seeder/astrology/astral_angle_points.json`.
+- Chargée par `AstrologyRuntimeReferenceRepository._load_angle_points`.
+- Validée comme obligatoire pour `asc`, `dsc`, `mc` et `ic`.
+
+| Code | Libellé | Axe | Maison associée | Opposé |
+| --- | --- | --- | ---: | --- |
+| `asc` | ASC / Ascendant | `horizontal` | 1 | `dsc` |
+| `dsc` | DSC / Descendant | `horizontal` | 7 | `asc` |
+| `mc` | MC / Midheaven | `vertical` | 10 | `ic` |
+| `ic` | IC / Imum Coeli | `vertical` | 4 | `mc` |
+
+Ces lignes structurent les angles du thème et les règles d'aspects impliquant des points ou angles. Elles ne stockent pas la longitude réelle des angles d'un thème utilisateur.
+
+### `astral_house_modalities`
+
+Définie par `AstralHouseModalityModel` dans `backend/app/infra/db/models/reference.py`.
+
+Valeurs seedées depuis `docs/db_seeder/astrology/astral_house_modalities.json` :
+
+| id logique | name |
+| ---: | --- |
+| 1 | `angular` |
+| 2 | `succedent` |
+| 3 | `cadent` |
+
+La table documente la taxonomie stable. Le profil prédictif `astral_prediction_daily_house_profiles.house_kind` reste actuellement une colonne texte, scindée ensuite dans `HouseAstrologyProfile`.
 
 ## Table éditoriale d'interprétation
 
@@ -149,7 +193,7 @@ Qualification :
 - Versionnée par `reference_version_id` pour permettre l'évolution du ton éditorial, des prompts, des marchés, des langues et des systèmes astrologiques.
 - Rattachée à `astral_houses.id`, sans ajouter de contenu interprétatif dans `astral_houses`.
 - Rattachée à `astral_systems.id` pour éviter une tradition éditoriale stockée en texte libre.
-- Alimentée par `sync_house_interpretation_profiles` depuis `docs/recherches astro/house_interpretation_vocabulary.json`. Le JSON peut contenir `"tradition": "modern"`, mais le seed résout cette valeur vers `astral_systems.id` avant insertion.
+- Alimentée par `sync_house_interpretation_profiles` depuis `docs/db_seeder/astrology/house_interpretation_vocabulary.json`. Le JSON peut contenir `"tradition": "modern"`, mais le seed résout cette valeur vers `astral_systems.id` avant insertion.
 - Non consommée par `domain/astrology` : le runtime conserve uniquement les faits calculés du thème.
 
 Colonnes principales :
@@ -336,6 +380,31 @@ Rôle :
 - Complètent les maisons pour les angles astrologiques (`asc`, `dsc`, `mc`, `ic`).
 - Les angles sont liés aux cuspides 1, 7, 10 et 4 dans `chart_json_builder`.
 - Dans `IntradayActivationBuilder`, les événements `asc` et `mc` peuvent utiliser le routage point -> catégorie en plus du routage maison.
+
+### `astral_house_axis_definitions` et `astral_house_axis_members`
+
+Définies par `AstralHouseAxisDefinitionModel` et `AstralHouseAxisMemberModel` dans `backend/app/infra/db/models/interpretation_reference.py`.
+
+Qualification :
+
+- Tables stables et non versionnées depuis `20260515_0111_deversion_astral_house_axis_definitions.py`.
+- Seedées par `ReferenceRepository.seed_house_axis_defaults`.
+- Sources : `docs/db_seeder/astrology/astral_house_axis_definitions.json` et `docs/db_seeder/astrology/astral_house_axis_members.json`.
+- `astral_house_axis_definitions` est localisée par `astral_system_id`, `language_id` et `key`.
+- `astral_house_axis_members` impose une ligne par maison (`house_id` unique) et une maison opposée distincte.
+
+Axes seedés :
+
+| Maisons | Clé | Titre |
+| --- | --- | --- |
+| 1 / 7 | `self_relationship` | Self and Relationship |
+| 2 / 8 | `resources_sharing` | Resources and Sharing |
+| 3 / 9 | `local_distant` | Local and Distant |
+| 4 / 10 | `private_public` | Private and Public |
+| 5 / 11 | `creation_collective` | Creation and Collective |
+| 6 / 12 | `control_surrender` | Control and Surrender |
+
+`ReferenceRepository._get_house_axes` expose au runtime la projection moderne anglophone `house_number`, `opposite_house`, `theme`. `HouseRuntimeData.axis` consomme ensuite cette donnée sous forme `HouseAxisRuntimeData`.
 
 ### `prediction_rulesets`
 
@@ -1007,6 +1076,9 @@ Rôle :
 - `backend/app/infra/db/models/daily_prediction.py`
 - `backend/app/infra/db/models/chart_result.py`
 - `backend/app/infra/db/repositories/reference_repository.py`
+- `backend/app/infra/db/repositories/astrology_reference_sources.py`
+- `backend/app/infra/db/repositories/astrology_runtime_reference_repository.py`
+- `backend/app/infra/db/repositories/astrology_runtime_reference_mapper.py`
 - `backend/app/infra/db/repositories/prediction_reference_repository.py`
 - `backend/app/infra/db/repositories/prediction_schemas.py`
 - `backend/app/infra/db/repositories/user_prediction_baseline_repository.py`
@@ -1019,6 +1091,7 @@ Rôle :
 - `backend/app/domain/astrology/houses_provider.py`
 - `backend/app/domain/astrology/natal_calculation.py`
 - `backend/app/domain/astrology/zodiac.py`
+- `backend/app/domain/astrology/runtime/runtime_reference.py`
 - `backend/app/domain/astrology/runtime/house_runtime_data.py`
 - `backend/app/domain/astrology/builders/house_runtime_builder.py`
 - `backend/app/domain/astrology/builders/house_occupants_builder.py`
@@ -1049,4 +1122,14 @@ Rôle :
 - `backend/migrations/versions/20260514_0098_reference_house_interpretation_system.py`
 - `backend/migrations/versions/20260514_0099_rename_astral_reference_tables.py`
 - `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
-- `docs/recherches astro/house_interpretation_vocabulary.json`
+- `backend/migrations/versions/20260515_0109_create_astral_house_axis_definitions.py`
+- `backend/migrations/versions/20260515_0110_create_astral_house_axis_members.py`
+- `backend/migrations/versions/20260515_0111_deversion_astral_house_axis_definitions.py`
+- `backend/migrations/versions/20260515_0112_create_astral_object_reference_tables.py`
+- `docs/db_seeder/astrology/structural_reference_catalog.json`
+- `docs/db_seeder/astrology/astral_house_system.json`
+- `docs/db_seeder/astrology/astral_angle_points.json`
+- `docs/db_seeder/astrology/astral_house_modalities.json`
+- `docs/db_seeder/astrology/astral_house_axis_definitions.json`
+- `docs/db_seeder/astrology/astral_house_axis_members.json`
+- `docs/db_seeder/astrology/house_interpretation_vocabulary.json`

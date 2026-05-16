@@ -2,12 +2,14 @@
 
 ## Périmètre
 
-Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py`, `20260513_0089_rename_daily_planet_profiles.py`, `20260513_0090_create_astral_systems.py`, `20260513_0091_rename_planets_to_astral_planets.py`, `20260513_0092_create_astral_planet_sign_dignities.py`, `20260513_0093_drop_astral_sign_rulerships.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py`, `20260514_0098_reference_house_interpretation_system.py`, `20260514_0099_rename_astral_reference_tables.py` et `20260514_0102_normalize_astral_aspects.py`.
+Ce document recense les tables du backend liées directement ou indirectement aux planètes dans l'état courant du schéma Alembic, après les migrations `20260512_0086_deversion_astrology_structures.py`, `20260513_0087_normalize_astral_sign_profiles.py`, `20260513_0089_rename_daily_planet_profiles.py`, `20260513_0090_create_astral_systems.py`, `20260513_0091_rename_planets_to_astral_planets.py`, `20260513_0092_create_astral_planet_sign_dignities.py`, `20260513_0093_drop_astral_sign_rulerships.py`, `20260513_0094_rename_house_tables.py`, `20260513_0095_create_astral_house_systems.py`, `20260514_0096_create_house_interpretation_profiles.py`, `20260514_0097_rename_astral_house_interpretation_profiles.py`, `20260514_0098_reference_house_interpretation_system.py`, `20260514_0099_rename_astral_reference_tables.py`, `20260514_0102_normalize_astral_aspects.py`, `20260515_0112_create_astral_object_reference_tables.py`, `20260515_0114_create_astral_planet_reference_tables.py` et `20260515_0115_simplify_daily_planet_profiles.py`.
 
 Deux catégories sont distinguées :
 
 - Tables directement liées aux planètes par clé étrangère ou modèle SQLAlchemy explicite.
 - Tables qui consomment ou historisent des informations planétaires sous forme de JSON, sans colonne `planet_id`.
+
+Depuis le refactor, les sources JSON canoniques de seed sont sous `docs/db_seeder/astrology/`. `docs/recherches astro/` reste un espace documentaire et ne doit plus être cité comme source active des seeds applicatifs.
 
 ## Héritage des systèmes astrologiques
 
@@ -20,10 +22,17 @@ Les dignités planétaires restent des lignes propres à leur système quand ell
 | Table | Lien aux planètes | Rôle principal | Versionnée |
 | --- | --- | --- | --- |
 | `astral_planets` | Table canonique des planètes | Vocabulaire stable des corps planétaires | Non |
-| `astral_prediction_daily_planet_profiles` | `planet_id -> astral_planets.id` | Profil de pondération prédictive quotidienne, sans rôle dans le calcul du thème astral | Oui, via `reference_version_id` |
+| `astral_planet_definitions` | `planet_id -> astral_planets.id` | Définition structurelle : type d'objet, rôle astrologique, vitesse, polarité typique, flags physiques | Non |
+| `astral_astrological_roles` | Référencé par `astral_planet_definitions.astrological_role_id` | Taxonomie des rôles `luminary`, `personal_planet`, `social_planet`, `transpersonal_planet`, `angle`, `lunar_node` | Non |
+| `astral_object_types` | Référencé par `astral_planet_definitions.object_type_id` | Nature `celestial_body`, `chart_angle` ou `mathematical_point` | Non |
+| `astral_calculation_types` | Référencé par `astral_planet_definitions.calculation_type_id` | Mode d'obtention : éphéméride ou calcul géométrique | Non |
+| `astral_speed` | Référencé par `astral_planet_definitions.speed_class_id` | Classes de vitesse structurelles `fast`, `medium`, `slow` | Non |
+| `astral_typical_polarities` | Référencé par `astral_planet_definitions.typical_polarity_id` | Polarités typiques `positive`, `neutral`, `negative` | Non |
+| `astral_prediction_daily_planet_profiles` | `planet_id -> astral_planets.id` | Profil produit de pondération prédictive quotidienne, sans rôle dans le calcul du thème astral | Oui, via `reference_version_id` |
 | `astral_planet_category_weights` | `planet_id -> astral_planets.id` | Pondération planète -> catégorie de vie | Oui, via `reference_version_id` |
 | `astral_systems` | Référencé par `astral_planet_sign_dignities.astral_system_id` | Taxonomie stable des traditions/systèmes astrologiques utilisés pour qualifier les dignités planète -> signe | Non |
 | `astral_planet_sign_dignities` | `astral_planet_id -> astral_planets.id` | Dignités planétaires par signe, type de dignité et système astrologique ; source canonique des maîtrises signe -> planète | Non |
+| `astral_planet_interpretation_profiles` | `planet_id -> astral_planets.id`, `astral_system_id -> astral_systems.id`, `language_id -> languages.id` | Vocabulaire éditorial versionné des planètes pour interprétation et prompts | Oui, via `reference_version_id` |
 | `astral_house_interpretation_profiles` | Pas de planète directe ; `astral_system_id -> astral_systems.id` | Vocabulaire éditorial maison, rattaché au même référentiel de systèmes que les dignités planétaires | Oui, via `reference_version_id` |
 | `daily_prediction_category_scores` | JSON `contributors_json` | Historique des contributeurs, dont planètes/aspects | Indirectement via le run |
 | `daily_prediction_turning_points` | JSON `driver_json` | Historique des événements déclencheurs, dont planètes conductrices | Indirectement via le run |
@@ -48,6 +57,7 @@ Colonnes principales :
 | `id` | `Integer` | Identifiant technique. |
 | `code` | `String(32)` | Code stable utilisé dans les calculs et mappings, par exemple `sun`, `moon`, `mars`. Unique. |
 | `name` | `String(64)` | Nom lisible. |
+| `swe_id` | `Integer` | Identifiant SwissEph canonique utilisé par le domaine et le mapper runtime. |
 
 Rôle métier :
 
@@ -63,18 +73,61 @@ Contraintes :
 
 Planètes attendues par le seed de prédiction :
 
-| Code | Classe fonctionnelle attendue |
+| Code | Nom | `swe_id` | Rôle structurel |
+| --- | --- | ---: | --- |
+| `sun` | `Sun` | 0 | `luminary` |
+| `moon` | `Moon` | 1 | `luminary` |
+| `mercury` | `Mercury` | 2 | `personal_planet` |
+| `venus` | `Venus` | 3 | `personal_planet` |
+| `mars` | `Mars` | 4 | `personal_planet` |
+| `jupiter` | `Jupiter` | 5 | `social_planet` |
+| `saturn` | `Saturn` | 6 | `social_planet` |
+| `uranus` | `Uranus` | 7 | `transpersonal_planet` |
+| `neptune` | `Neptune` | 8 | `transpersonal_planet` |
+| `pluto` | `Pluto` | 9 | `transpersonal_planet` |
+
+Les lignes sont seedées depuis `docs/db_seeder/astrology/astral_planets.json`. `backend/app/domain/astrology/planet_catalog.py` charge ce fichier pour exposer les codes SQL, les codes runtime historiques et les identifiants SwissEph.
+
+### `astral_planet_definitions`
+
+Définie par `AstralPlanetDefinitionModel` dans `backend/app/infra/db/models/reference.py`.
+
+Qualification :
+
+- Table stable et non versionnée.
+- Une ligne par planète canonique (`planet_id` unique).
+- Source d'autorité structurelle pour les rôles planétaires, les flags physiques, la classe de vitesse et la polarité typique.
+- Seedée depuis `docs/db_seeder/astrology/astral_planet_definitions.json`.
+
+Colonnes principales :
+
+| Colonne | Rôle |
 | --- | --- |
-| `sun` | Luminaire |
-| `moon` | Luminaire |
-| `mercury` | Personnelle |
-| `venus` | Personnelle |
-| `mars` | Personnelle |
-| `jupiter` | Sociale |
-| `saturn` | Sociale |
-| `uranus` | Transpersonnelle |
-| `neptune` | Transpersonnelle |
-| `pluto` | Transpersonnelle |
+| `planet_id` | Planète canonique ciblée. |
+| `object_type_id` | Nature de l'objet, actuellement `celestial_body` pour les dix planètes seedées. |
+| `astrological_role_id` | Rôle astrologique : luminaire, personnelle, sociale ou transpersonnelle. |
+| `calculation_type_id` | Mode d'obtention du point, actuellement éphéméride pour les planètes. |
+| `speed_rank` | Rang structurel de vitesse : Lune `0`, Soleil `1`, Mercure `2`, jusqu'à Pluton `9`. |
+| `speed_class_id` | Classe `fast`, `medium` ou `slow`. |
+| `typical_polarity_id` | Polarité typique : positive, neutral ou negative. |
+| `is_physical_body`, `is_luminary`, `is_planet`, `is_visible_to_naked_eye` | Flags structurels utilisés pour les garde-fous et les mappings runtime. |
+| `micro_note` | Note documentaire optionnelle. |
+
+Rôle runtime :
+
+- `PredictionReferenceRepository.get_planet_profiles` joint cette table aux profils daily. Si une définition, un rôle, une vitesse ou une polarité manque, le chargement lève une erreur.
+- `AstrologyRuntimeReferenceRepository._load_planet_definitions` expose `body_class` et `is_luminary` à `AstrologyRuntimeReferenceMapper`.
+- `AstrologyRuntimeReferenceMapper` ajoute `body_class`, `is_luminary` et `swe_id` à chaque `PlanetReferenceData`.
+
+### Taxonomies planétaires structurelles
+
+| Table | Valeurs seedées | Rôle |
+| --- | --- | --- |
+| `astral_astrological_roles` | `luminary`, `personal_planet`, `social_planet`, `transpersonal_planet`, `angle`, `lunar_node` | Rôle interprétatif stable d'un objet astrologique. |
+| `astral_object_types` | `celestial_body`, `chart_angle`, `mathematical_point` | Nature physique ou géométrique de l'objet. |
+| `astral_calculation_types` | `ephemeris`, `derived_geometry` | Mode d'obtention technique. |
+| `astral_speed` | `fast`, `medium`, `slow` | Classe de vitesse relative. |
+| `astral_typical_polarities` | `positive`, `neutral`, `negative` | Polarité usuelle utilisée par le moteur daily. |
 
 ## Tables de paramétrage du moteur de prédiction quotidienne
 
@@ -99,16 +152,17 @@ Colonnes principales :
 
 | Colonne | Rôle |
 | --- | --- |
-| `class_code` | Famille astrologique utilisée par les pondérations prédictives : `luminary`, `personal`, `social`, `transpersonal`. Sert notamment à `NatalSensitivity` pour distinguer les planètes personnelles/rapides des planètes plus structurelles. |
-| `speed_rank` | Rang relatif de vitesse ou de priorité temporelle. Sert de critère secondaire dans `NatalSensitivity` pour reconnaître une planète rapide/personnelle. |
-| `speed_class` | Classe de vitesse : `fast`, `medium`, `slow`. Sert à filtrer ou pondérer la sensibilité natale, pas à calculer la vitesse astronomique réelle. |
 | `weight_intraday` | Poids d'une planète dans les contributions intraday. Utilisé par `ContributionCalculator._w_planet`. |
 | `weight_day_climate` | Poids de climat quotidien ou natal plus structurel. Utilisé dans `NatalSensitivity` pour pondérer l'occupation des maisons liées à une catégorie. |
-| `typical_polarity` | Polarité usuelle : `positive`, `negative`, `neutral`. Sert à résoudre les valences contextuelles dans `ContributionCalculator` et à polariser certains modulateurs intraday. |
-| `orb_active_deg` | Orbe maximal actif propre à la planète transitante. Utilisé par `EventDetector._orb_max`, combiné au multiplicateur d'aspect. |
-| `orb_peak_deg` | Orbe de pic d'influence prévu par le modèle de référence. Actuellement chargé dans `PlanetProfileData`, mais sans consommation directe identifiée dans le runtime de scoring. |
-| `keywords_json` | Mots-clés interprétatifs de la planète. Parsés par le repository en `keywords`; surtout utile comme matériau éditorial ou futur template, pas comme donnée de calcul astronomique. |
-| `micro_note` | Note éditoriale courte, optionnelle. Présente dans le modèle SQL, mais non exposée dans `PlanetProfileData` au moment de cette analyse. |
+| `daily_visibility_score` | Score produit de visibilité consciente ou narrative dans la journée. |
+| `daily_emotional_impact_score` | Score produit d'impact émotionnel quotidien. |
+| `daily_conscious_activation_score` | Score produit d'activation consciente quotidienne. |
+| `is_enabled` | Permet de désactiver une planète pour le contexte daily sans la supprimer du vocabulaire stable. |
+| `micro_note` | Note éditoriale courte, exposée dans `PlanetProfileData.micro_note`. |
+
+Les champs `class_code`, `speed_rank`, `speed_class` et `typical_polarity` restent exposés dans `PlanetProfileData`, mais ils ne viennent plus de `astral_prediction_daily_planet_profiles`. Ils sont dérivés par jointure avec `astral_planet_definitions` et ses taxonomies.
+
+Les anciens champs `orb_active_deg`, `orb_peak_deg` et `keywords_json` ne sont plus stockés dans la table SQL daily simplifiée. Le DTO conserve des champs optionnels à `None` ou vides pour compatibilité, mais ils ne sont plus alimentés par une colonne de cette table.
 
 Rôle runtime :
 
@@ -116,7 +170,7 @@ Rôle runtime :
 - Injectée dans `PredictionContext.planet_profiles`.
 - Validée comme obligatoire par `PredictionContextLoader._validate_context`.
 - Utilisée par :
-  - `EventDetector._orb_max` pour déterminer l'orbe actif d'un événement transitant.
+  - `EventDetector._orb_max` seulement en fallback historique si aucune règle `astral_aspect_orb_rules` ne résout l'orbe. Dans l'état courant, les champs `orb_active_deg` des DTO issus de cette table valent `None`, donc le chemin actif passe par les règles d'aspects ou par le fallback technique.
   - `ContributionCalculator._w_planet` pour pondérer les événements selon le corps en transit.
   - `ContributionCalculator._pol` pour donner une polarité aux aspects contextuels.
   - `IntradayActivationBuilder` et `TransitSignalBuilder` pour moduler les signaux continus.
@@ -129,18 +183,42 @@ Hors périmètre :
 
 Valeurs seedées notables :
 
-| Planète | Classe | Vitesse | Intraday | Climat jour | Polarité | Orbe actif | Orbe pic |
-| --- | --- | --- | ---: | ---: | --- | ---: | ---: |
-| `sun` | `luminary` | `slow` | 0.6 | 1.0 | `positive` | 5.0 | 1.5 |
-| `moon` | `luminary` | `fast` | 1.0 | 0.8 | `neutral` | 4.5 | 1.2 |
-| `mercury` | `personal` | `fast` | 0.9 | 0.7 | `neutral` | 3.0 | 1.0 |
-| `venus` | `personal` | `medium` | 0.7 | 0.8 | `positive` | 3.0 | 1.0 |
-| `mars` | `personal` | `medium` | 0.8 | 0.9 | `negative` | 3.0 | 1.0 |
-| `jupiter` | `social` | `slow` | 0.4 | 1.0 | `positive` | 2.5 | 0.8 |
-| `saturn` | `social` | `slow` | 0.3 | 1.0 | `negative` | 2.5 | 0.8 |
-| `uranus` | `transpersonal` | `slow` | 0.1 | 0.5 | `neutral` | 2.0 | 0.6 |
-| `neptune` | `transpersonal` | `slow` | 0.1 | 0.4 | `neutral` | 2.0 | 0.6 |
-| `pluto` | `transpersonal` | `slow` | 0.1 | 0.3 | `neutral` | 2.0 | 0.6 |
+| Planète | Classe | Vitesse | Intraday | Climat jour | Visibilité | Impact émotionnel | Activation consciente |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| `sun` | `luminary` | `slow` | 0.6 | 1.0 | 1.0 | 0.5 | 1.0 |
+| `moon` | `luminary` | `fast` | 1.0 | 0.8 | 0.7 | 1.0 | 0.6 |
+| `mercury` | `personal` | `fast` | 0.9 | 0.7 | 0.7 | 0.4 | 0.8 |
+| `venus` | `personal` | `medium` | 0.7 | 0.8 | 0.8 | 0.8 | 0.5 |
+| `mars` | `personal` | `medium` | 0.8 | 0.9 | 0.9 | 0.7 | 0.9 |
+| `jupiter` | `social` | `slow` | 0.4 | 1.0 | 0.9 | 0.5 | 0.8 |
+| `saturn` | `social` | `slow` | 0.3 | 1.0 | 0.9 | 0.6 | 0.9 |
+| `uranus` | `transpersonal` | `slow` | 0.1 | 0.5 | 0.5 | 0.3 | 0.7 |
+| `neptune` | `transpersonal` | `slow` | 0.1 | 0.4 | 0.4 | 0.7 | 0.3 |
+| `pluto` | `transpersonal` | `slow` | 0.1 | 0.3 | 0.5 | 0.6 | 0.8 |
+
+### `astral_planet_interpretation_profiles`
+
+Définie par `AstralPlanetInterpretationProfileModel` dans `backend/app/infra/db/models/interpretation_reference.py`.
+
+Qualification :
+
+- Table éditoriale versionnée, distincte de `astral_prediction_daily_planet_profiles`.
+- Une ligne par planète, système astrologique et langue pour chaque version publiée.
+- Seed courant : 20 lignes, soit 10 planètes pour deux versions de référence, en système `modern` et langue `en`.
+- Source JSON : `docs/db_seeder/astrology/astral_planet_interpretation_profiles.json`.
+
+Colonnes principales :
+
+| Colonne | Rôle |
+| --- | --- |
+| `reference_version_id` | Version éditoriale ou référentielle active. |
+| `planet_id` | Planète canonique ciblée. |
+| `astral_system_id` | Système astrologique de l'interprétation. |
+| `language_id` | Langue localisée issue de `languages`. |
+| `title`, `summary`, `micro_note` | Texte éditorial court. |
+| `*_json` | Listes structurées pour mots-clés, expressions psychologiques, relationnelles, vocationnelles, spirituelles, dynamiques, patterns, archétypes et consignes de prompt. |
+
+Cette table ne doit pas porter de poids produit, de vitesse, de polarité de scoring, d'orbe ou de calcul astronomique. Elle alimente les interprétations et prompts, pas les positions ni les événements.
 
 ### `astral_planet_category_weights`
 
@@ -273,7 +351,7 @@ Qualification :
 - Table de référence stable non versionnée.
 - Décrit la condition essentielle d'une planète dans un signe pour un système astrologique donné.
 - Remplace `astral_sign_rulerships` comme source canonique des maîtrises principales traditionnelles utilisées par le contexte de prédiction actuel.
-- Alimentée depuis `docs/recherches astro/planet_sign_diginities.json` par la migration `20260513_0092_create_astral_planet_sign_dignities.py` et par le seed applicatif idempotent.
+- Alimentée depuis `docs/db_seeder/astrology/planet_sign_diginities.json` par la migration `20260513_0092_create_astral_planet_sign_dignities.py` et par le seed applicatif idempotent.
 
 Clés :
 
@@ -356,7 +434,7 @@ Rôle :
 Rôle :
 
 - Ne référencent pas directement les planètes.
-- `astral_aspects` définit les 20 aspects canoniques seedés depuis `docs/recherches astro/aspects.json`, avec `family -> astral_aspect_families.id`.
+- `astral_aspects` définit les 20 aspects canoniques seedés depuis `docs/db_seeder/astrology/aspects.json`, avec `family -> astral_aspect_families.id`.
 - `astral_aspect_profiles` porte le scoring prédictif par aspect : intensité, valence, polarité, énergie, multiplicateur d'orbe et comportement de phase.
 - `astral_aspect_definitions` porte l'activation par système astrologique et l'orbe par défaut ; l'ancien `astral_aspects.default_orb_deg` n'existe plus.
 - Les calculs runtime V1 restent centrés sur les cinq aspects majeurs, même si le référentiel relationnel contient aussi les aspects mineurs et avancés.
@@ -433,22 +511,27 @@ Rôle :
 
 ## Flux fonctionnel simplifié
 
-1. `astral_planets` fournit les codes stables.
-2. `astral_prediction_daily_planet_profiles` ajoute les paramètres de pondération prédictive par version de référence.
-3. `astral_planet_category_weights` mappe chaque planète vers les catégories de vie.
-4. `astral_planet_sign_dignities` fournit les dignités planète -> signe normalisées.
-5. `PredictionReferenceRepository.get_sign_rulerships_from_dignities` dérive le mapping signe -> planète maîtresse depuis les domiciles traditionnels primaires.
-6. `PredictionReferenceRepository` charge les tables prédictives actives dans `PredictionContext`.
-7. `EventDetector` détecte les événements planète transitante -> cible natale.
-8. `DomainRouter` route les événements vers les catégories avec les poids planète/maison.
-9. `ContributionCalculator` calcule la contribution numérique.
-10. `TransitSignalBuilder` produit les timelines continues par thème.
-11. `daily_prediction_*` persiste les scores, contributeurs et points de bascule.
+1. `astral_planets` fournit les codes stables et `swe_id`.
+2. `astral_planet_definitions` ajoute rôle, type d'objet, vitesse structurelle, polarité typique et flags physiques.
+3. `astral_prediction_daily_planet_profiles` ajoute les paramètres produit de pondération prédictive par version de référence.
+4. `astral_planet_category_weights` mappe chaque planète vers les catégories de vie.
+5. `astral_planet_sign_dignities` fournit les dignités planète -> signe normalisées.
+6. `PredictionReferenceRepository.get_sign_rulerships_from_dignities` dérive le mapping signe -> planète maîtresse depuis les domiciles traditionnels primaires.
+7. `PredictionReferenceRepository.get_planet_profiles` fusionne profil daily et définition structurelle dans `PlanetProfileData`.
+8. `AstrologyRuntimeReferenceRepository` expose les planètes, dignités et classes de corps dans `AstrologyRuntimeReference`.
+9. `EventDetector` détecte les événements planète transitante -> cible natale.
+10. `DomainRouter` route les événements vers les catégories avec les poids planète/maison.
+11. `ContributionCalculator` calcule la contribution numérique.
+12. `TransitSignalBuilder` produit les timelines continues par thème.
+13. `daily_prediction_*` persiste les scores, contributeurs et points de bascule.
 
 ## Points d'attention
 
 - `astral_planets` est désormais stable et non versionnée. Ne pas réintroduire `reference_version_id` dans cette table sans décision d'architecture.
 - Les paramètres d'interprétation ou de scoring de prédiction quotidienne doivent aller dans `astral_prediction_daily_planet_profiles` ou `astral_planet_category_weights`, pas dans `astral_planets`.
+- Les attributs structurels de corps (`is_luminary`, rôle astrologique, vitesse, polarité typique, visibilité à l'oeil nu) doivent rester dans `astral_planet_definitions` et ses taxonomies, pas dans la table daily.
+- `astral_prediction_daily_planet_profiles` a été simplifiée : ne pas y réintroduire `class_code`, `speed_rank`, `speed_class`, `typical_polarity`, `orb_active_deg`, `orb_peak_deg` ou `keywords_json`.
+- `astral_planet_interpretation_profiles` est éditoriale : ne pas l'utiliser comme source de scoring, d'orbes ou de calcul astronomique.
 - Les données astronomiques calculées pour un thème astral ne doivent pas être ajoutées dans `astral_prediction_daily_planet_profiles`; elles relèvent des payloads de calcul (`chart_results`) ou des objets runtime de thème.
 - `astral_planet_sign_dignities` est non versionnée dans l'état courant. Elle représente une taxonomie canonique des dignités planète/signe par système, alimentée depuis le JSON documentaire.
 - `astral_systems` est désormais le référentiel partagé pour les systèmes/traditions astrologiques : les dignités planétaires et les profils d'interprétation de maisons doivent y référencer un identifiant, pas du texte libre.
@@ -466,6 +549,12 @@ Rôle :
 - `backend/app/infra/db/models/chart_result.py`
 - `backend/app/infra/db/models/user_prediction_baseline.py`
 - `backend/app/infra/db/repositories/prediction_reference_repository.py`
+- `backend/app/infra/db/repositories/reference_repository.py`
+- `backend/app/infra/db/repositories/astrology_reference_sources.py`
+- `backend/app/infra/db/repositories/astrology_runtime_reference_repository.py`
+- `backend/app/infra/db/repositories/astrology_runtime_reference_mapper.py`
+- `backend/app/domain/astrology/planet_catalog.py`
+- `backend/app/domain/astrology/runtime/runtime_reference.py`
 - `backend/app/infra/db/repositories/prediction_schemas.py`
 - `backend/app/services/prediction/reference_seed_service.py`
 - `backend/app/services/house_interpretation_seed_service.py`
@@ -490,5 +579,12 @@ Rôle :
 - `backend/migrations/versions/20260514_0098_reference_house_interpretation_system.py`
 - `backend/migrations/versions/20260514_0099_rename_astral_reference_tables.py`
 - `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
-- `docs/recherches astro/planet_sign_diginities.json`
-- `docs/recherches astro/house_interpretation_vocabulary.json`
+- `backend/migrations/versions/20260515_0112_create_astral_object_reference_tables.py`
+- `backend/migrations/versions/20260515_0114_create_astral_planet_reference_tables.py`
+- `backend/migrations/versions/20260515_0115_simplify_daily_planet_profiles.py`
+- `docs/db_seeder/astrology/astral_planets.json`
+- `docs/db_seeder/astrology/astral_planet_definitions.json`
+- `docs/db_seeder/astrology/astral_prediction_daily_planet_profiles.json`
+- `docs/db_seeder/astrology/astral_planet_interpretation_profiles.json`
+- `docs/db_seeder/astrology/planet_sign_diginities.json`
+- `docs/db_seeder/astrology/house_interpretation_vocabulary.json`
