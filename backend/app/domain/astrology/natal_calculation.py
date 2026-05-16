@@ -13,6 +13,7 @@ from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
 from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
+from app.domain.astrology.builders.sign_runtime_builder import build_sign_runtime_data
 from app.domain.astrology.calculators import (
     calculate_houses,
     calculate_major_aspects,
@@ -26,17 +27,20 @@ from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResolver,
     HouseRulerResult,
 )
+from app.domain.astrology.interpretation.chart_signature import ChartSignatureCalculator
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
 )
 from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
+from app.domain.astrology.runtime.chart_signature_runtime_data import ChartBalanceRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData, HouseRuntimeData
 from app.domain.astrology.runtime.runtime_reference import (
     AstrologyRuntimeReference,
     AstrologySystemReferenceSet,
 )
+from app.domain.astrology.runtime.sign_runtime_data import SignRuntimeData
 from app.domain.astrology.zodiac import normalize_360, sign_from_longitude
 from app.infra.observability.metrics import increment_counter
 
@@ -95,6 +99,8 @@ class NatalResult(BaseModel):
     prepared_input: BirthPreparedData
     planet_positions: list[PlanetPosition]
     houses: list[HouseRuntimeData]
+    signs_runtime: list[SignRuntimeData] = Field(default_factory=list)
+    chart_balance: ChartBalanceRuntimeData | None = None
     house_rulers: list[HouseRulerResult] = Field(default_factory=list)
     aspects: list[AspectResult]
 
@@ -590,7 +596,20 @@ def build_natal_result(
         celestial_catalog=celestial_catalog,
         sign_codes=sign_codes,
     )
+    signs_runtime = build_sign_runtime_data(
+        signs=runtime_reference.signs,
+        planets=positions,
+        dignities=runtime_reference.dignities,
+        celestial_catalog=celestial_catalog,
+    )
     aspects = [_build_aspect_result(item, celestial_catalog) for item in aspects_raw]
+    chart_balance = ChartSignatureCalculator().calculate(
+        signs=signs_runtime,
+        houses=houses,
+        aspects=tuple(
+            aspect.aspect_runtime for aspect in aspects if aspect.aspect_runtime is not None
+        ),
+    )
 
     return NatalResult(
         reference_version=version,
@@ -609,6 +628,8 @@ def build_natal_result(
         prepared_input=prepared,
         planet_positions=positions,
         houses=houses,
+        signs_runtime=signs_runtime,
+        chart_balance=chart_balance,
         house_rulers=house_rulers,
         aspects=aspects,
     )

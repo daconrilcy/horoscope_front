@@ -1,4 +1,4 @@
-"""Gardes anti-réintroduction des mappings locaux de signes astrologiques."""
+"""Gardes anti-réintroduction des mappings locaux de libellés astrologiques."""
 
 from __future__ import annotations
 
@@ -11,13 +11,17 @@ PDF_EXPORT_PATH = SERVICES_ROOT / "natal" / "pdf_export_service.py"
 DOMAIN_ASTROLOGY_ROOT = BACKEND_ROOT / "domain" / "astrology"
 
 
-def test_targeted_services_do_not_reintroduce_sign_name_mappings() -> None:
-    """Les surfaces ciblées ne doivent plus porter de mapping local de signes."""
-    forbidden_names = {"SIGN_NAMES_FR", "SIGN_LABELS", "SIGNS"}
+def test_targeted_services_do_not_reintroduce_local_label_mappings() -> None:
+    """Les surfaces ciblées ne doivent plus porter de mapping local de libellés."""
+    forbidden_names = {
+        "ASPECT_NAMES_FR",
+        "PLANET_NAMES_FR",
+        "SIGN_LABELS",
+        "SIGN_NAMES_FR",
+        "SIGNS",
+    }
     violations: list[str] = []
     for path in SERVICES_ROOT.rglob("*.py"):
-        if path == PDF_EXPORT_PATH:
-            continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Assign):
@@ -38,11 +42,11 @@ def test_targeted_services_do_not_reintroduce_sign_name_mappings() -> None:
     assert violations == []
 
 
-def test_pdf_sign_labels_exception_is_documented_out_of_scope() -> None:
-    """L'exception PDF reste explicite et hors périmètre de CS-174."""
+def test_pdf_sign_labels_exception_is_removed() -> None:
+    """Le PDF ne doit plus conserver de mapping local de signes."""
     content = PDF_EXPORT_PATH.read_text(encoding="utf-8")
 
-    assert "SIGN_LABELS" in content
+    assert "SIGN_LABELS" not in content
 
 
 def test_domain_astrology_does_not_import_translation_resolver_or_models() -> None:

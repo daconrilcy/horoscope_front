@@ -19,27 +19,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-PLANET_NAMES_FR = {
-    "sun": "Soleil",
-    "moon": "Lune",
-    "mercury": "Mercure",
-    "venus": "Vénus",
-    "mars": "Mars",
-    "jupiter": "Jupiter",
-    "saturn": "Saturne",
-    "uranus": "Uranus",
-    "neptune": "Neptune",
-    "pluto": "Pluton",
-}
-
-ASPECT_NAMES_FR = {
-    "conjunction": "conjonction",
-    "opposition": "opposition",
-    "trine": "trigone",
-    "square": "carré",
-    "sextile": "sextile",
-}
-
 UNKNOWN_BIRTH_TIME_SENTINEL = "00:00"
 UNKNOWN_LOCATION_SENTINELS = {"", "unknown", "non spécifié"}
 
@@ -129,9 +108,9 @@ def build_natal_chart_summary(
     lines.append("ASPECTS MAJEURS:")
     major_aspects = [a for a in natal_result.aspects if a.is_major]
     for aspect in major_aspects[:6]:
-        planet_a_name = PLANET_NAMES_FR.get(aspect.planet_a, aspect.planet_a)
-        planet_b_name = PLANET_NAMES_FR.get(aspect.planet_b, aspect.planet_b)
-        aspect_name = ASPECT_NAMES_FR.get(aspect.aspect_code, aspect.aspect_code)
+        planet_a_name = labels.planet_label(aspect.planet_a)
+        planet_b_name = labels.planet_label(aspect.planet_b)
+        aspect_name = labels.aspect_label(aspect.aspect_code)
         orb_rounded = round(aspect.orb, 1)
         lines.append(f"- {planet_a_name} {aspect_name} {planet_b_name} (orbe {orb_rounded}°)")
 
@@ -177,9 +156,9 @@ def build_chat_natal_hint(
         key=lambda a: a.orb,
     )[:3]
     for aspect in major:
-        planet_a_name = PLANET_NAMES_FR.get(aspect.planet_a, aspect.planet_a)
-        planet_b_name = PLANET_NAMES_FR.get(aspect.planet_b, aspect.planet_b)
-        aspect_name = ASPECT_NAMES_FR.get(aspect.aspect_code, aspect.aspect_code)
+        planet_a_name = labels.planet_label(aspect.planet_a)
+        planet_b_name = labels.planet_label(aspect.planet_b)
+        aspect_name = labels.aspect_label(aspect.aspect_code)
         parts.append(f"{planet_a_name} {aspect_name} {planet_b_name}")
 
     return " · ".join(parts)
@@ -236,9 +215,7 @@ def build_user_natal_chart_summary_context(
 
 
 __all__ = [
-    "ASPECT_NAMES_FR",
     "AstrologyLabels",
-    "PLANET_NAMES_FR",
     "UNKNOWN_BIRTH_TIME_SENTINEL",
     "UNKNOWN_LOCATION_SENTINELS",
     "_detect_degraded_mode",

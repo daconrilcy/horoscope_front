@@ -255,9 +255,9 @@ class TestBuildNatalChartSummary:
             birth_time="14:30",
         )
 
-        assert "conjonction" in summary
-        assert "carré" in summary
-        assert "trigone" in summary
+        assert "conjunction" in summary
+        assert "square" in summary
+        assert "trine" in summary
 
     def test_degraded_mode_no_time(self) -> None:
         natal_result = _make_natal_result()

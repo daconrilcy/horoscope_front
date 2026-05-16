@@ -13,30 +13,6 @@ if TYPE_CHECKING:
     from app.domain.astrology.natal_calculation import NatalResult
     from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
-PLANET_NAMES_FR = {
-    "sun": "Soleil",
-    "moon": "Lune",
-    "mercury": "Mercure",
-    "venus": "Vénus",
-    "mars": "Mars",
-    "jupiter": "Jupiter",
-    "saturn": "Saturne",
-    "uranus": "Uranus",
-    "neptune": "Neptune",
-    "pluto": "Pluton",
-    "chiron": "Chiron",
-    "lilith": "Lune Noire",
-    "node": "Nœud Nord",
-}
-
-ASPECT_NAMES_FR = {
-    "conjunction": "conjonction",
-    "opposition": "opposition",
-    "trine": "trigone",
-    "square": "carré",
-    "sextile": "sextile",
-}
-
 # Regex for evidence IDs as per Story 29.1 AC4
 EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,80}$")
 _CATALOG_PLANET_PREFIXES = tuple(f"{code.upper()}_" for code in planet_codes())
@@ -208,6 +184,45 @@ def _serialize_aspect_runtime(aspect: Any) -> dict[str, Any]:
     return payload
 
 
+def _serialize_chart_balance(balance: Any) -> dict[str, Any] | None:
+    """Projette une signature deja calculee sans recalculer les scores."""
+    if balance is None:
+        return None
+    synthesis = getattr(balance, "synthesis", None)
+    return {
+        "version": balance.version,
+        "elements": [_serialize_rank(item) for item in balance.elements],
+        "modalities": [_serialize_rank(item) for item in balance.modalities],
+        "dominant_signs": [_serialize_dominance(item) for item in balance.dominant_signs],
+        "dominant_planets": [_serialize_dominance(item) for item in balance.dominant_planets],
+        "dominant_houses": [_serialize_dominance(item) for item in balance.dominant_houses],
+        "dominant_aspects": [_serialize_dominance(item) for item in balance.dominant_aspects],
+        "chart_signature": (
+            {
+                "primary_element": synthesis.primary_element,
+                "primary_modality": synthesis.primary_modality,
+                "primary_sign": synthesis.primary_sign,
+                "primary_planet": synthesis.primary_planet,
+                "primary_house": synthesis.primary_house,
+            }
+            if synthesis is not None
+            else None
+        ),
+    }
+
+
+def _serialize_rank(item: Any) -> dict[str, Any]:
+    """Projette un score classe deja normalise."""
+    return {"code": item.code, "score": item.score, "rank": item.rank}
+
+
+def _serialize_dominance(item: Any) -> dict[str, Any]:
+    """Projette une dominance classee deja sourcee."""
+    payload = _serialize_rank(item)
+    payload["source"] = item.source
+    return payload
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -317,7 +332,8 @@ def build_chart_json(
                 }
                 angles[angle_key]["sign_label"] = labels.sign_label(angles[angle_key]["sign"])
 
-    return {
+    chart_balance = _serialize_chart_balance(getattr(natal_result, "chart_balance", None))
+    payload = {
         "meta": meta,
         "planets": planets,
         "houses": houses,
@@ -325,6 +341,10 @@ def build_chart_json(
         "aspects": aspects,
         "angles": angles,
     }
+    if chart_balance is not None:
+        payload["chart_balance"] = chart_balance
+        payload["chart_signature"] = chart_balance["chart_signature"]
+    return payload
 
 
 def _get_evidence_priority(eid: str) -> int:
@@ -354,13 +374,17 @@ def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
     return sorted(list(enriched.keys()), key=lambda x: (_get_evidence_priority(x), x))
 
 
-def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, list[str]]:
+def build_enriched_evidence_catalog(
+    chart_json: dict[str, Any],
+    labels: AstrologyLabels | None = None,
+) -> dict[str, list[str]]:
     r"""
     Produit les libellés autorisés pour chaque identifiant d'évidence.
 
     Ce catalogue sert à valider les références entre le JSON technique et le
     texte généré par les restitutions natales.
     """
+    labels = labels or AstrologyLabels.technical_fallback()
     # Map of ID -> list of labels
     catalog: dict[str, list[str]] = {}
 
@@ -377,7 +401,7 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
     for p in chart_json.get("planets", []):
         p_code = p["code"]
         s_code = p["sign"]
-        p_name = PLANET_NAMES_FR.get(p_code, p_code.capitalize())
+        p_name = labels.planet_label(p_code)
         s_name = p.get("sign_label") or s_code
 
         # PLANET_SIGN
@@ -403,23 +427,23 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
         p1 = a["planet_a"]
         p2 = a["planet_b"]
         asp_type = a["type"]
-        p1_name = PLANET_NAMES_FR.get(p1, p1.capitalize())
-        p2_name = PLANET_NAMES_FR.get(p2, p2.capitalize())
-        asp_name = ASPECT_NAMES_FR.get(asp_type, asp_type)
+        p1_name = labels.planet_label(p1)
+        p2_name = labels.planet_label(p2)
+        asp_name = labels.aspect_label(asp_type)
 
         pair = sorted([p1.upper(), p2.upper()])
         base_id = f"ASPECT_{pair[0]}_{pair[1]}_{asp_type.upper()}"
 
-        labels = [
+        aspect_labels = [
             f"{asp_name} entre {p1_name} et {p2_name}",
             f"{p1_name} {asp_name} {p2_name}",
         ]
-        add(base_id, labels)
+        add(base_id, aspect_labels)
 
         orb = a.get("orb")
         if orb is not None:
             orb_int = int(round(orb))
-            add(f"{base_id}_ORB{orb_int}", labels)
+            add(f"{base_id}_ORB{orb_int}", aspect_labels)
 
     # 3. Angles
     angles = chart_json.get("angles", {})
@@ -448,7 +472,7 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
     for ruler in chart_json.get("house_rulers", []):
         house_num = ruler["house_number"]
         planet_code = ruler["ruler_planet"]
-        planet_name = PLANET_NAMES_FR.get(planet_code, planet_code.capitalize())
+        planet_name = labels.planet_label(planet_code)
         base_labels = [f"Maître de Maison {house_num} : {planet_name}"]
         add(f"HOUSE_{house_num}_RULER_{planet_code.upper()}", base_labels)
 

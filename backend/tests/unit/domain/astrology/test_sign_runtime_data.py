@@ -1,0 +1,38 @@
+"""Tests du contrat runtime canonique des signes natals."""
+
+import pytest
+
+from app.domain.astrology.runtime.sign_runtime_data import (
+    SignDominanceReason,
+    SignOccupantRuntimeData,
+    SignRuntimeData,
+)
+
+
+def test_sign_runtime_contract_accepts_complete_shape() -> None:
+    """Le contrat expose les faits attendus avec un poids borne."""
+    runtime = SignRuntimeData(
+        sign="aries",
+        occupants=(SignOccupantRuntimeData(planet="sun", longitude=12.0, house=1),),
+        weight=0.7,
+        dominant=True,
+        active_dignities=(),
+        reasons=(SignDominanceReason.OCCUPANTS_PRESENT,),
+        synthesis_role="dominant_focus",
+    )
+
+    assert runtime.sign == "aries"
+    assert runtime.dominant is True
+
+
+def test_sign_runtime_contract_rejects_unbounded_weight() -> None:
+    """Le poids de signe reste normalise entre zero et un."""
+    with pytest.raises(ValueError, match="weight"):
+        SignRuntimeData(
+            sign="aries",
+            occupants=(),
+            weight=1.2,
+            dominant=False,
+            active_dignities=(),
+            reasons=(),
+        )

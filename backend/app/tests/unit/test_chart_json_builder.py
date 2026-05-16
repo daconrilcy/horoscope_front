@@ -477,7 +477,7 @@ def test_evidence_catalog_uses_chart_sign_labels() -> None:
 
     catalog = build_enriched_evidence_catalog(chart_json)
 
-    assert "Soleil en Taurus" in catalog["SUN_TAURUS"]
+    assert "sun en Taurus" in catalog["SUN_TAURUS"]
     assert "Ascendant en Aries" in catalog["ASC_ARIES"]
     assert "Maison 1 en Capricorn" in catalog["HOUSE_1_IN_CAPRICORN"]
     assert "Maître de Maison 1 en Aries" in catalog["HOUSE_1_RULER_SATURN_ARIES"]

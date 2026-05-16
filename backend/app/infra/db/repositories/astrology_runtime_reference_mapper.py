@@ -71,7 +71,13 @@ class AstrologyRuntimeReferenceMapper:
             ),
             signs=SignReferenceSet(
                 tuple(
-                    SignReferenceData(code=str(item["code"]), name=self._display_name(item))
+                    SignReferenceData(
+                        code=str(item["code"]),
+                        name=self._display_name(item),
+                        element=self._optional_str(item.get("element")),
+                        modality=self._optional_str(item.get("modality")),
+                        polarity=self._optional_str(item.get("polarity")),
+                    )
                     for item in self._items(payload, "signs")
                 )
             ),

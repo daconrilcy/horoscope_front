@@ -40,6 +40,9 @@ class SignReferenceData:
 
     code: str
     name: str
+    element: str | None = None
+    modality: str | None = None
+    polarity: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

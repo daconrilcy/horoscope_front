@@ -18,6 +18,10 @@ from app.domain.astrology.zodiac import sign_from_longitude
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+from app.services.reference_data.astrology_translation_resolver import (
+    AstrologyLabels,
+    AstrologyTranslationResolver,
+)
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
 
 logger = logging.getLogger(__name__)
@@ -37,51 +41,6 @@ class NatalPdfExportService:
     SECTION_TAIL_SPACING_LINES = 1
     SECTIONS_START_NEW_PAGE_MIN_REMAINING_LINES = 10
     PAGINATION_DEBUG = False
-
-    SIGN_LABELS: dict[str, dict[str, str]] = {
-        "fr": {
-            "aries": "Belier",
-            "taurus": "Taureau",
-            "gemini": "Gemeaux",
-            "cancer": "Cancer",
-            "leo": "Lion",
-            "virgo": "Vierge",
-            "libra": "Balance",
-            "scorpio": "Scorpion",
-            "sagittarius": "Sagittaire",
-            "capricorn": "Capricorne",
-            "aquarius": "Verseau",
-            "pisces": "Poissons",
-        },
-        "en": {
-            "aries": "Aries",
-            "taurus": "Taurus",
-            "gemini": "Gemini",
-            "cancer": "Cancer",
-            "leo": "Leo",
-            "virgo": "Virgo",
-            "libra": "Libra",
-            "scorpio": "Scorpio",
-            "sagittarius": "Sagittarius",
-            "capricorn": "Capricorn",
-            "aquarius": "Aquarius",
-            "pisces": "Pisces",
-        },
-        "es": {
-            "aries": "Aries",
-            "taurus": "Tauro",
-            "gemini": "Geminis",
-            "cancer": "Cancer",
-            "leo": "Leo",
-            "virgo": "Virgo",
-            "libra": "Libra",
-            "scorpio": "Escorpio",
-            "sagittarius": "Sagitario",
-            "capricorn": "Capricornio",
-            "aquarius": "Acuario",
-            "pisces": "Piscis",
-        },
-    }
 
     @staticmethod
     def generate_pdf(
@@ -199,11 +158,11 @@ class NatalPdfExportService:
         )
 
         normalized_locale = (locale or "fr").split("-")[0].lower()
-        sun_sign_label = NatalPdfExportService._localize_sign_label(
-            sun_sign_code, normalized_locale
-        )
+        labels = NatalPdfExportService._resolve_pdf_labels(db, normalized_locale)
+        sun_sign_label = NatalPdfExportService._localize_sign_label(sun_sign_code, labels)
         ascendant_sign_label = NatalPdfExportService._localize_sign_label(
-            ascendant_sign_code, normalized_locale
+            ascendant_sign_code,
+            labels,
         )
 
         # Data enrichment
@@ -558,6 +517,11 @@ class NatalPdfExportService:
         return default
 
     @staticmethod
+    def _resolve_pdf_labels(db: Session, language_code: str) -> AstrologyLabels:
+        """Résout les labels PDF via le resolver canonique."""
+        return AstrologyTranslationResolver(db).resolve_labels(language_code=language_code)
+
+    @staticmethod
     def _estimate_heading_lines(heading: str) -> int:
         return max(
             1,
@@ -900,13 +864,11 @@ class NatalPdfExportService:
         return prepared
 
     @staticmethod
-    def _localize_sign_label(sign_code: str | None, locale: str) -> str | None:
+    def _localize_sign_label(sign_code: str | None, labels: AstrologyLabels) -> str | None:
+        """Résout un signe PDF via le resolver canonique."""
         if not sign_code:
             return None
-        labels = (
-            NatalPdfExportService.SIGN_LABELS.get(locale) or NatalPdfExportService.SIGN_LABELS["fr"]
-        )
-        return labels.get(sign_code.lower(), sign_code)
+        return labels.sign_label(sign_code.lower())
 
     @staticmethod
     def _safe_sign_code(longitude: Any) -> str | None:

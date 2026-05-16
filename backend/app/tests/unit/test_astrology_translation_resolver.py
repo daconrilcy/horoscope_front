@@ -2,26 +2,26 @@
 
 from __future__ import annotations
 
-import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.infra.db.base import Base
-from app.infra.db.models.reference import AstralSignModel, LanguageModel
-from app.infra.db.models.translation_reference import AstralSignTranslationModel
+from app.infra.db.models.reference import (
+    AspectModel,
+    AstralAspectFamilyModel,
+    AstralSignModel,
+    HouseModel,
+    LanguageModel,
+    PlanetModel,
+)
+from app.infra.db.models.translation_reference import (
+    AstralAspectTranslationModel,
+    AstralHouseTranslationModel,
+    AstralPlanetTranslationModel,
+    AstralSignTranslationModel,
+)
 from app.infra.db.models.user import UserModel
 from app.services.reference_data.astrology_translation_resolver import (
     AstrologyTranslationResolver,
 )
-
-
-@pytest.fixture
-def db_session() -> Session:
-    """Crée une base SQLite isolée pour tester les priorités de langue."""
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
 
 
 def _seed_reference_rows(db: Session) -> None:
@@ -31,7 +31,13 @@ def _seed_reference_rows(db: Session) -> None:
     es = LanguageModel(code="es", name="Espanol")
     aries = AstralSignModel(code="aries", name="Aries")
     taurus = AstralSignModel(code="taurus", name="Taurus")
-    db.add_all([fr, en, es, aries, taurus])
+    sun = PlanetModel(code="sun", name="Sun", swe_id=0)
+    house_one = HouseModel(number=1, name="House 1")
+    family = AstralAspectFamilyModel(name="major")
+    db.add_all([fr, en, es, aries, taurus, sun, house_one, family])
+    db.flush()
+    conjunction = AspectModel(code="conjunction", name="Conjunction", angle=0.0, family=family.id)
+    db.add(conjunction)
     db.flush()
     db.add_all(
         [
@@ -54,6 +60,21 @@ def _seed_reference_rows(db: Session) -> None:
                 astral_sign_id=aries.id,
                 language_id=es.id,
                 translated_name="Aries ES",
+            ),
+            AstralPlanetTranslationModel(
+                planet_id=sun.id,
+                language_id=fr.id,
+                translated_name="Soleil",
+            ),
+            AstralAspectTranslationModel(
+                aspect_id=conjunction.id,
+                language_id=fr.id,
+                translated_name="conjonction",
+            ),
+            AstralHouseTranslationModel(
+                house_id=house_one.id,
+                language_id=fr.id,
+                translated_name="Maison 1",
             ),
         ]
     )
@@ -114,3 +135,15 @@ def test_resolver_falls_back_to_canonical_code(db_session: Session) -> None:
 
     assert labels.effective_language_code == "fr"
     assert labels.sign_label("pisces") == "pisces"
+
+
+def test_resolver_covers_planet_aspect_and_house_labels(db_session: Session) -> None:
+    """Les familles de libellés DB ciblées sont exposées par le même contrat."""
+    _seed_reference_rows(db_session)
+
+    labels = AstrologyTranslationResolver(db_session).resolve_labels(language_code="fr")
+
+    assert labels.planet_label("sun") == "Soleil"
+    assert labels.aspect_label("conjunction") == "conjonction"
+    assert labels.house_label(1) == "Maison 1"
+    assert labels.planet_label("mars") == "mars"

@@ -11,6 +11,16 @@ from app.infra.db.models.user_natal_interpretation import (
 from app.services.natal.pdf_export_service import NatalPdfExportService
 
 
+def _empty_label_query_results() -> list[MagicMock]:
+    """Prépare les quatre résultats vides attendus par le resolver de labels."""
+    results: list[MagicMock] = []
+    for _ in range(4):
+        result = MagicMock()
+        result.all.return_value = []
+        results.append(result)
+    return results
+
+
 class TestNatalPdfExportService:
     def test_render_html_basic(self):
         data = {
@@ -104,7 +114,7 @@ class TestNatalPdfExportService:
         r1.scalar_one_or_none.return_value = template_model
         r2 = MagicMock()
         r2.scalar_one_or_none.return_value = chart_result
-        mock_db.execute.side_effect = [r1, r2]
+        mock_db.execute.side_effect = [r1, r2, *_empty_label_query_results()]
 
         interpretation = UserNatalInterpretationModel(
             chart_id="test-chart",
@@ -170,7 +180,7 @@ class TestNatalPdfExportService:
         r1.scalar_one_or_none.return_value = template_model
         r2 = MagicMock()
         r2.scalar_one_or_none.return_value = chart_result
-        mock_db.execute.side_effect = [r1, r2]
+        mock_db.execute.side_effect = [r1, r2, *_empty_label_query_results()]
 
         interpretation = UserNatalInterpretationModel(
             chart_id="test-chart",
@@ -424,7 +434,7 @@ class TestNatalPdfExportService:
         r1.scalar_one_or_none.return_value = template_model
         r2 = MagicMock()
         r2.scalar_one_or_none.return_value = chart_result
-        mock_db.execute.side_effect = [r1, r2]
+        mock_db.execute.side_effect = [r1, r2, *_empty_label_query_results()]
 
         interpretation = UserNatalInterpretationModel(
             chart_id="test-chart",

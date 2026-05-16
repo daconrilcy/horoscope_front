@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.reference import AstralSignModel, LanguageModel
-from app.infra.db.models.translation_reference import AstralSignTranslationModel
+from app.infra.db.models.reference import (
+    AspectModel,
+    AstralSignModel,
+    HouseModel,
+    LanguageModel,
+    PlanetModel,
+)
+from app.infra.db.models.translation_reference import (
+    AstralAspectTranslationModel,
+    AstralHouseTranslationModel,
+    AstralPlanetTranslationModel,
+    AstralSignTranslationModel,
+)
 from app.infra.db.models.user import UserModel
 
 SYSTEM_LANGUAGE_CODE = "fr"
@@ -20,17 +31,45 @@ class AstrologyLabels:
 
     sign_labels: dict[str, str]
     effective_language_code: str
+    planet_labels: dict[str, str] = field(default_factory=dict)
+    aspect_labels: dict[str, str] = field(default_factory=dict)
+    house_labels: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def technical_fallback(cls) -> "AstrologyLabels":
         """Construit un contrat qui retourne les codes canoniques."""
-        return cls(sign_labels={}, effective_language_code=SYSTEM_LANGUAGE_CODE)
+        return cls(
+            sign_labels={},
+            planet_labels={},
+            aspect_labels={},
+            house_labels={},
+            effective_language_code=SYSTEM_LANGUAGE_CODE,
+        )
 
     def sign_label(self, sign_code: str | None) -> str:
         """Retourne le libellé localisé d'un signe ou son code canonique."""
         if not sign_code:
             return ""
         return self.sign_labels.get(sign_code, sign_code)
+
+    def planet_label(self, planet_code: str | None) -> str:
+        """Retourne le libellé localisé d'une planète ou son code canonique."""
+        if not planet_code:
+            return ""
+        return self.planet_labels.get(planet_code, planet_code)
+
+    def aspect_label(self, aspect_code: str | None) -> str:
+        """Retourne le libellé localisé d'un aspect ou son code canonique."""
+        if not aspect_code:
+            return ""
+        return self.aspect_labels.get(aspect_code, aspect_code)
+
+    def house_label(self, house_number: int | str | None) -> str:
+        """Retourne le libellé localisé d'une maison ou son numéro canonique."""
+        if house_number is None:
+            return ""
+        code = str(house_number)
+        return self.house_labels.get(code, code)
 
 
 class AstrologyTranslationResolver:
@@ -51,11 +90,29 @@ class AstrologyTranslationResolver:
             language_code=language_code,
             user_id=user_id,
         )
+        sign_labels, effective_language_code = self._resolve_sign_labels(requested_codes)
+        planet_labels, planet_language_code = self._resolve_planet_labels(requested_codes)
+        aspect_labels, aspect_language_code = self._resolve_aspect_labels(requested_codes)
+        house_labels, house_language_code = self._resolve_house_labels(requested_codes)
+        return AstrologyLabels(
+            sign_labels=sign_labels,
+            planet_labels=planet_labels,
+            aspect_labels=aspect_labels,
+            house_labels=house_labels,
+            effective_language_code=(
+                effective_language_code
+                or planet_language_code
+                or aspect_language_code
+                or house_language_code
+                or SYSTEM_LANGUAGE_CODE
+            ),
+        )
+
+    def _resolve_sign_labels(self, requested_codes: list[str]) -> tuple[dict[str, str], str | None]:
+        """Résout les labels de signes depuis la table canonique."""
         rows = self._db.execute(
             select(
-                AstralSignModel.code,
-                LanguageModel.code,
-                AstralSignTranslationModel.translated_name,
+                AstralSignModel.code, LanguageModel.code, AstralSignTranslationModel.translated_name
             )
             .join(
                 AstralSignTranslationModel,
@@ -64,20 +121,74 @@ class AstrologyTranslationResolver:
             .join(LanguageModel, LanguageModel.id == AstralSignTranslationModel.language_id)
             .where(LanguageModel.code.in_(requested_codes))
         ).all()
+        return self._labels_by_preference(rows, requested_codes)
 
+    def _resolve_planet_labels(
+        self, requested_codes: list[str]
+    ) -> tuple[dict[str, str], str | None]:
+        """Résout les labels de planètes depuis la table canonique."""
+        rows = self._db.execute(
+            select(
+                PlanetModel.code, LanguageModel.code, AstralPlanetTranslationModel.translated_name
+            )
+            .join(
+                AstralPlanetTranslationModel,
+                AstralPlanetTranslationModel.planet_id == PlanetModel.id,
+            )
+            .join(LanguageModel, LanguageModel.id == AstralPlanetTranslationModel.language_id)
+            .where(LanguageModel.code.in_(requested_codes))
+        ).all()
+        return self._labels_by_preference(rows, requested_codes)
+
+    def _resolve_aspect_labels(
+        self, requested_codes: list[str]
+    ) -> tuple[dict[str, str], str | None]:
+        """Résout les labels d'aspects depuis la table canonique."""
+        rows = self._db.execute(
+            select(
+                AspectModel.code, LanguageModel.code, AstralAspectTranslationModel.translated_name
+            )
+            .join(
+                AstralAspectTranslationModel,
+                AstralAspectTranslationModel.aspect_id == AspectModel.id,
+            )
+            .join(LanguageModel, LanguageModel.id == AstralAspectTranslationModel.language_id)
+            .where(LanguageModel.code.in_(requested_codes))
+        ).all()
+        return self._labels_by_preference(rows, requested_codes)
+
+    def _resolve_house_labels(
+        self, requested_codes: list[str]
+    ) -> tuple[dict[str, str], str | None]:
+        """Résout les labels de maisons depuis la table canonique."""
+        rows = self._db.execute(
+            select(
+                HouseModel.number, LanguageModel.code, AstralHouseTranslationModel.translated_name
+            )
+            .join(
+                AstralHouseTranslationModel, AstralHouseTranslationModel.house_id == HouseModel.id
+            )
+            .join(LanguageModel, LanguageModel.id == AstralHouseTranslationModel.language_id)
+            .where(LanguageModel.code.in_(requested_codes))
+        ).all()
+        return self._labels_by_preference(rows, requested_codes)
+
+    @staticmethod
+    def _labels_by_preference(
+        rows: list[tuple[object, object, object]],
+        requested_codes: list[str],
+    ) -> tuple[dict[str, str], str | None]:
+        """Conserve le premier libellé disponible selon la priorité de langue."""
         labels: dict[str, str] = {}
         effective_language_code: str | None = None
         for preferred_code in requested_codes:
-            for sign_code, row_language_code, translated_name in rows:
-                if row_language_code == preferred_code and sign_code not in labels:
-                    labels[str(sign_code)] = str(translated_name)
+            for item_code, row_language_code, translated_name in rows:
+                code = str(item_code)
+                if row_language_code == preferred_code and code not in labels:
+                    labels[code] = str(translated_name)
                     if effective_language_code is None:
                         effective_language_code = preferred_code
-
-        return AstrologyLabels(
-            sign_labels=labels,
-            effective_language_code=effective_language_code or SYSTEM_LANGUAGE_CODE,
-        )
+        return labels, effective_language_code
 
     def _language_preference_codes(
         self,
