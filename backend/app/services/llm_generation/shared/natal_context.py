@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
+from app.domain.astrology.zodiac import sign_from_longitude
+from app.services.reference_data.astrology_translation_resolver import AstrologyLabels
 from app.services.user_profile.natal_chart_service import (
     UserNatalChartService,
     UserNatalChartServiceError,
@@ -16,36 +18,6 @@ if TYPE_CHECKING:
     from app.domain.astrology.natal_calculation import NatalResult
 
 logger = logging.getLogger(__name__)
-
-SIGNS = [
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-]
-
-SIGN_NAMES_FR = {
-    "aries": "Bélier",
-    "taurus": "Taureau",
-    "gemini": "Gémeaux",
-    "cancer": "Cancer",
-    "leo": "Lion",
-    "virgo": "Vierge",
-    "libra": "Balance",
-    "scorpio": "Scorpion",
-    "sagittarius": "Sagittaire",
-    "capricorn": "Capricorne",
-    "aquarius": "Verseau",
-    "pisces": "Poissons",
-}
 
 PLANET_NAMES_FR = {
     "sun": "Soleil",
@@ -74,8 +46,7 @@ UNKNOWN_LOCATION_SENTINELS = {"", "unknown", "non spécifié"}
 
 def _longitude_to_sign(longitude: float) -> str:
     """Convertit une longitude en signe zodiacal."""
-    index = int(longitude / 30) % 12
-    return SIGNS[index]
+    return sign_from_longitude(longitude)
 
 
 def _format_longitude(longitude: float) -> str:
@@ -114,8 +85,10 @@ def build_natal_chart_summary(
     birth_date: str,
     birth_time: str,
     degraded_mode: str | None = None,
+    labels: AstrologyLabels | None = None,
 ) -> str:
     """Construit un résumé textuel du thème natal pour les prompts applicatifs."""
+    labels = labels or AstrologyLabels.technical_fallback()
     lines: list[str] = []
 
     time_display = birth_time
@@ -133,7 +106,7 @@ def build_natal_chart_summary(
 
     sun_position = next((p for p in natal_result.planet_positions if p.planet_code == "sun"), None)
     if sun_position:
-        sign_name = SIGN_NAMES_FR.get(sun_position.sign_code, sun_position.sign_code)
+        sign_name = labels.sign_label(sun_position.sign_code)
         lon_fmt = _format_longitude(sun_position.longitude)
         lines.append(f"SOLEIL: {sign_name} à {lon_fmt} (Maison {sun_position.house_number})")
 
@@ -141,14 +114,14 @@ def build_natal_chart_summary(
         (p for p in natal_result.planet_positions if p.planet_code == "moon"), None
     )
     if moon_position:
-        sign_name = SIGN_NAMES_FR.get(moon_position.sign_code, moon_position.sign_code)
+        sign_name = labels.sign_label(moon_position.sign_code)
         lon_fmt = _format_longitude(moon_position.longitude)
         lines.append(f"LUNE: {sign_name} à {lon_fmt} (Maison {moon_position.house_number})")
 
     house1 = next((h for h in natal_result.houses if h.number == 1), None)
     if house1:
         asc_sign = _longitude_to_sign(house1.cusp_longitude)
-        asc_sign_name = SIGN_NAMES_FR.get(asc_sign, asc_sign)
+        asc_sign_name = labels.sign_label(asc_sign)
         asc_lon_fmt = _format_longitude(house1.cusp_longitude)
         lines.append(f"ASCENDANT: {asc_sign_name} à {asc_lon_fmt}")
 
@@ -169,14 +142,19 @@ def build_natal_chart_summary(
         house = next((h for h in natal_result.houses if h.number == house_num), None)
         if house:
             sign = _longitude_to_sign(house.cusp_longitude)
-            sign_name = SIGN_NAMES_FR.get(sign, sign)
+            sign_name = labels.sign_label(sign)
             lines.append(f"- Maison {house_num} ({house_label}): {sign_name}")
 
     return "\n".join(lines)
 
 
-def build_chat_natal_hint(natal_result: "NatalResult", degraded_mode: str | None = None) -> str:
+def build_chat_natal_hint(
+    natal_result: "NatalResult",
+    degraded_mode: str | None = None,
+    labels: AstrologyLabels | None = None,
+) -> str:
     """Construit un hint natal compact pour le contexte de chat."""
+    labels = labels or AstrologyLabels.technical_fallback()
     parts: list[str] = []
 
     sun = next((p for p in natal_result.planet_positions if p.planet_code == "sun"), None)
@@ -184,14 +162,14 @@ def build_chat_natal_hint(natal_result: "NatalResult", degraded_mode: str | None
     house1 = next((h for h in natal_result.houses if h.number == 1), None)
 
     if sun:
-        sign_name = SIGN_NAMES_FR.get(sun.sign_code, sun.sign_code)
+        sign_name = labels.sign_label(sun.sign_code)
         parts.append(f"Soleil en {sign_name} (Maison {sun.house_number})")
     if moon:
-        sign_name = SIGN_NAMES_FR.get(moon.sign_code, moon.sign_code)
+        sign_name = labels.sign_label(moon.sign_code)
         parts.append(f"Lune en {sign_name} (Maison {moon.house_number})")
     if house1 and degraded_mode not in {"no_location", "no_location_no_time"}:
         asc_sign = _longitude_to_sign(house1.cusp_longitude)
-        asc_name = SIGN_NAMES_FR.get(asc_sign, asc_sign)
+        asc_name = labels.sign_label(asc_sign)
         parts.append(f"Ascendant {asc_name}")
 
     major = sorted(
@@ -213,6 +191,7 @@ def build_natal_chart_summary_with_defaults(
     birth_date: str,
     birth_time: str | None,
     birth_place: str | None,
+    labels: AstrologyLabels | None = None,
 ) -> str:
     """Construit un resume natal robuste meme avec des donnees partielles."""
     return build_natal_chart_summary(
@@ -224,6 +203,7 @@ def build_natal_chart_summary_with_defaults(
             birth_time=birth_time,
             birth_place=birth_place,
         ),
+        labels=labels,
     )
 
 
@@ -235,6 +215,7 @@ def build_user_natal_chart_summary_context(
     birth_time: str | None,
     birth_place: str | None,
     warning_event: str = "llm_natal_chart_context_unavailable",
+    labels: AstrologyLabels | None = None,
 ) -> str | None:
     """Charge le theme natal persiste et retourne le resume LLM partage."""
     try:
@@ -250,13 +231,14 @@ def build_user_natal_chart_summary_context(
         birth_date=birth_date,
         birth_time=birth_time,
         birth_place=birth_place,
+        labels=labels,
     )
 
 
 __all__ = [
     "ASPECT_NAMES_FR",
+    "AstrologyLabels",
     "PLANET_NAMES_FR",
-    "SIGN_NAMES_FR",
     "UNKNOWN_BIRTH_TIME_SENTINEL",
     "UNKNOWN_LOCATION_SENTINELS",
     "_detect_degraded_mode",

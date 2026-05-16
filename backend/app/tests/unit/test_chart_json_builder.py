@@ -134,6 +134,7 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert len(chart["planets"]) == 2
     sun = next(p for p in chart["planets"] if p["code"] == "sun")
     assert sun["sign"] == "taurus"
+    assert sun["sign_label"] == "taurus"
     assert sun["longitude"] == 35.4
     assert sun["longitude_in_sign"] == pytest.approx(5.4)
     assert sun["house"] == 10
@@ -143,19 +144,24 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert len(chart["houses"]) == 12
     h1 = next(h for h in chart["houses"] if h["number"] == 1)
     assert h1["sign"] == "capricorn"
+    assert h1["cusp_sign_label"] == "capricorn"
     assert chart["house_rulers"] == [
         {
             "house_number": 1,
             "cusp_sign": "capricorn",
+            "cusp_sign_label": "capricorn",
             "ruler_planet": "saturn",
             "ruler_planet_sign": "aries",
+            "ruler_planet_sign_label": "aries",
             "ruler_planet_house": 9,
         },
         {
             "house_number": 10,
             "cusp_sign": "libra",
+            "cusp_sign_label": "libra",
             "ruler_planet": "venus",
             "ruler_planet_sign": "taurus",
+            "ruler_planet_sign_label": "taurus",
             "ruler_planet_house": 10,
         },
     ]
@@ -180,6 +186,7 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
 
     # Angles
     assert chart["angles"]["ASC"]["sign"] == "capricorn"
+    assert chart["angles"]["ASC"]["sign_label"] == "capricorn"
     assert chart["angles"]["MC"]["sign"] == "libra"
     assert chart["angles"]["DSC"]["sign"] == "cancer"
     assert chart["angles"]["IC"]["sign"] == "aries"
@@ -214,6 +221,7 @@ def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_bi
         "number": 1,
         "cusp_longitude": 12.4,
         "cusp_sign": "aries",
+        "cusp_sign_label": "aries",
         "sign": "aries",
         "contained_signs": ["aries", "taurus"],
         "intercepted_signs": [],
@@ -253,8 +261,10 @@ def test_house_rulers_legacy_payload_projects_canonical_runtime_ruler(
     assert chart["house_rulers"][0] == {
         "house_number": 1,
         "cusp_sign": "capricorn",
+        "cusp_sign_label": "capricorn",
         "ruler_planet": "mars",
         "ruler_planet_sign": "virgo",
+        "ruler_planet_sign_label": "virgo",
         "ruler_planet_house": 6,
     }
 
@@ -406,3 +416,68 @@ def test_build_chart_json_handles_none_speed_and_orb_used(mock_natal_result, moc
 
     assert chart["planets"][0]["speed"] is None
     assert chart["aspects"][0]["orb"] == pytest.approx(1.25)
+
+
+def test_build_chart_json_uses_resolved_sign_labels(mock_natal_result, mock_birth_profile):
+    """Le JSON public conserve les codes et ajoute les libellés localisés."""
+    from app.services.reference_data.astrology_translation_resolver import AstrologyLabels
+
+    labels = AstrologyLabels(
+        effective_language_code="en",
+        sign_labels={
+            "aries": "Aries",
+            "taurus": "Taurus",
+            "capricorn": "Capricorn",
+            "libra": "Libra",
+            "cancer": "Cancer",
+        },
+    )
+
+    chart = build_chart_json(mock_natal_result, mock_birth_profile, labels=labels)
+
+    assert chart["planets"][0]["sign"] == "taurus"
+    assert chart["planets"][0]["sign_label"] == "Taurus"
+    assert chart["houses"][0]["cusp_sign"] == "capricorn"
+    assert chart["houses"][0]["cusp_sign_label"] == "Capricorn"
+    assert chart["house_rulers"][0]["ruler_planet_sign"] == "aries"
+    assert chart["house_rulers"][0]["ruler_planet_sign_label"] == "Aries"
+    assert chart["angles"]["ASC"]["sign"] == "capricorn"
+    assert chart["angles"]["ASC"]["sign_label"] == "Capricorn"
+
+
+def test_evidence_catalog_uses_chart_sign_labels() -> None:
+    """Le catalogue d'évidence lit les libellés depuis le payload enrichi."""
+    from app.services.chart.json_builder import build_enriched_evidence_catalog
+
+    chart_json = {
+        "planets": [
+            {
+                "code": "sun",
+                "sign": "taurus",
+                "sign_label": "Taurus",
+                "house": 10,
+                "is_retrograde": False,
+            }
+        ],
+        "aspects": [],
+        "angles": {"ASC": {"sign": "aries", "sign_label": "Aries"}},
+        "houses": [{"number": 1, "cusp_sign": "capricorn", "cusp_sign_label": "Capricorn"}],
+        "house_rulers": [
+            {
+                "house_number": 1,
+                "cusp_sign": "capricorn",
+                "cusp_sign_label": "Capricorn",
+                "ruler_planet": "saturn",
+                "ruler_planet_sign": "aries",
+                "ruler_planet_sign_label": "Aries",
+                "ruler_planet_house": 9,
+            }
+        ],
+    }
+
+    catalog = build_enriched_evidence_catalog(chart_json)
+
+    assert "Soleil en Taurus" in catalog["SUN_TAURUS"]
+    assert "Ascendant en Aries" in catalog["ASC_ARIES"]
+    assert "Maison 1 en Capricorn" in catalog["HOUSE_1_IN_CAPRICORN"]
+    assert "Maître de Maison 1 en Aries" in catalog["HOUSE_1_RULER_SATURN_ARIES"]

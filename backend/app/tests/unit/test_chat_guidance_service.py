@@ -322,7 +322,7 @@ def test_send_message_follow_up_turn_restores_extended_context(
     )
     monkeypatch.setattr(
         "app.services.llm_generation.chat.chat_guidance_service.build_chat_natal_hint",
-        lambda natal_result, degraded_mode: "Résumé natal synthétique",
+        lambda natal_result, degraded_mode, labels=None: "Résumé natal synthétique",
     )
 
     with open_app_test_db_session() as db:

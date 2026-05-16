@@ -40,6 +40,7 @@ from app.services.llm_generation.natal.prompt_context import (
 )
 from app.services.llm_generation.off_scope_policy import assess_off_scope
 from app.services.quota.usage_service import QuotaExhaustedError, QuotaUsageService
+from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
 )
@@ -916,9 +917,11 @@ class ChatGuidanceService:
             )
             if not is_first_user_turn:
                 natal_chart = UserNatalChartService.get_latest_for_user(db, user_id=user_id)
+                labels = AstrologyTranslationResolver(db).resolve_labels(user_id=user_id)
                 natal_summary = build_chat_natal_hint(
                     natal_chart.result,
                     _detect_degraded_mode(birth_profile),
+                    labels=labels,
                 )
         except Exception:
             pass

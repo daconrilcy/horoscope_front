@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.astrology.zodiac import sign_from_longitude
+from app.services.reference_data.astrology_translation_resolver import AstrologyLabels
 
 if TYPE_CHECKING:
     from app.domain.astrology.natal_calculation import NatalResult
@@ -26,21 +27,6 @@ PLANET_NAMES_FR = {
     "chiron": "Chiron",
     "lilith": "Lune Noire",
     "node": "Nœud Nord",
-}
-
-SIGN_NAMES_FR = {
-    "aries": "Bélier",
-    "taurus": "Taureau",
-    "gemini": "Gémeaux",
-    "cancer": "Cancer",
-    "leo": "Lion",
-    "virgo": "Vierge",
-    "libra": "Balance",
-    "scorpio": "Scorpion",
-    "sagittarius": "Sagittaire",
-    "capricorn": "Capricorne",
-    "aquarius": "Verseau",
-    "pisces": "Poissons",
 }
 
 ASPECT_NAMES_FR = {
@@ -67,7 +53,7 @@ def _longitude_in_sign(longitude: float) -> float:
     return round(longitude % 30.0, 2)
 
 
-def _serialize_house_runtime(house: Any) -> dict[str, Any]:
+def _serialize_house_runtime(house: Any, labels: AstrologyLabels) -> dict[str, Any]:
     """Projette une maison runtime sans calcul astrologique métier."""
     cusp_longitude = float(house.cusp_longitude)
     cusp_sign = getattr(house, "cusp_sign", None)
@@ -86,6 +72,7 @@ def _serialize_house_runtime(house: Any) -> dict[str, Any]:
         "number": house.number,
         "cusp_longitude": round(cusp_longitude, 2),
         "cusp_sign": cusp_sign,
+        "cusp_sign_label": labels.sign_label(cusp_sign),
         # TODO legacy compatibility field planned removal: use `cusp_sign`.
         "sign": cusp_sign,
         "contained_signs": contained_signs,
@@ -109,9 +96,10 @@ def _serialize_house_ruler(ruler: Any) -> dict[str, Any] | None:
 
 
 def serialize_legacy_house_rulers_from_houses(
-    houses: list[dict[str, Any]],
+    houses: list[dict[str, Any]], labels: AstrologyLabels | None = None
 ) -> list[dict[str, Any]]:
     """Projette le champ historique depuis la maison runtime canonique."""
+    labels = labels or AstrologyLabels.technical_fallback()
     house_rulers: list[dict[str, Any]] = []
     for house in houses:
         ruler = house.get("ruler")
@@ -124,8 +112,10 @@ def serialize_legacy_house_rulers_from_houses(
             {
                 "house_number": house["number"],
                 "cusp_sign": house["cusp_sign"],
+                "cusp_sign_label": labels.sign_label(str(house["cusp_sign"])),
                 "ruler_planet": planet,
                 "ruler_planet_sign": ruler.get("sign"),
+                "ruler_planet_sign_label": labels.sign_label(ruler.get("sign")),
                 "ruler_planet_house": ruler.get("house"),
             }
         )
@@ -222,6 +212,7 @@ def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
     degraded_mode: str | None = None,
+    labels: AstrologyLabels | None = None,
 ) -> dict[str, Any]:
     """
     Construit le payload public canonique du thème natal.
@@ -229,6 +220,7 @@ def build_chart_json(
     Le payload regroupe les placements nécessaires aux restitutions publiques,
     dont les maisons, les planètes et les maîtres de maisons.
     """
+    labels = labels or AstrologyLabels.technical_fallback()
     # Auto-derive degraded_mode if not provided
     if degraded_mode is None:
         no_time = birth_profile.birth_time is None
@@ -278,6 +270,7 @@ def build_chart_json(
             {
                 "code": p.planet_code,
                 "sign": p.sign_code,
+                "sign_label": labels.sign_label(p.sign_code),
                 "longitude": round(p.longitude, 2),
                 "longitude_in_sign": _longitude_in_sign(p.longitude),
                 "house": None if is_no_time else p.house_number,
@@ -290,10 +283,10 @@ def build_chart_json(
     houses = []
     if not is_no_time:
         for h in natal_result.houses:
-            houses.append(_serialize_house_runtime(h))
+            houses.append(_serialize_house_runtime(h, labels))
 
     # Maîtres de maisons
-    house_rulers = [] if is_no_time else serialize_legacy_house_rulers_from_houses(houses)
+    house_rulers = [] if is_no_time else serialize_legacy_house_rulers_from_houses(houses, labels)
 
     # Aspects
     aspects = []
@@ -322,6 +315,7 @@ def build_chart_json(
                     "longitude": round(h.cusp_longitude, 2),
                     "sign": _longitude_to_sign(h.cusp_longitude),
                 }
+                angles[angle_key]["sign_label"] = labels.sign_label(angles[angle_key]["sign"])
 
     return {
         "meta": meta,
@@ -384,7 +378,7 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
         p_code = p["code"]
         s_code = p["sign"]
         p_name = PLANET_NAMES_FR.get(p_code, p_code.capitalize())
-        s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
+        s_name = p.get("sign_label") or s_code
 
         # PLANET_SIGN
         add(
@@ -439,15 +433,15 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
         for angle_key, data in angles.items():
             if data and data.get("sign"):
                 s_code = data["sign"]
-                s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
+                s_name = data.get("sign_label") or s_code
                 a_name = angle_names.get(angle_key, angle_key)
                 add(f"{angle_key}_{s_code.upper()}", [f"{a_name} en {s_name}"])
 
     # 4. Houses
     for h in chart_json.get("houses", []):
         num = h["number"]
-        s_code = h["sign"]
-        s_name = SIGN_NAMES_FR.get(s_code, s_code.capitalize())
+        s_code = h.get("cusp_sign") or h["sign"]
+        s_name = h.get("cusp_sign_label") or s_code
         add(f"HOUSE_{num}_IN_{s_code.upper()}", [f"Maison {num} en {s_name}"])
 
     # 5. House rulers
@@ -467,7 +461,7 @@ def build_enriched_evidence_catalog(chart_json: dict[str, Any]) -> dict[str, lis
 
         ruler_sign = ruler.get("ruler_planet_sign")
         if ruler_sign:
-            sign_name = SIGN_NAMES_FR.get(ruler_sign, str(ruler_sign).capitalize())
+            sign_name = ruler.get("ruler_planet_sign_label") or str(ruler_sign)
             add(
                 f"HOUSE_{house_num}_RULER_{planet_code.upper()}_{str(ruler_sign).upper()}",
                 [*base_labels, f"Maître de Maison {house_num} en {sign_name}"],

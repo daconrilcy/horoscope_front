@@ -33,6 +33,7 @@ from app.services.llm_generation.shared.natal_context import (
     build_user_natal_chart_summary_context,
     detect_degraded_natal_mode,
 )
+from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
     UserBirthProfileServiceError,
@@ -156,6 +157,7 @@ class GuidanceService:
         birth_place: str | None,
     ) -> str | None:
         """Construit le resume natal partage en conservant le contrat du service."""
+        labels = AstrologyTranslationResolver(db).resolve_labels(user_id=user_id)
         return build_user_natal_chart_summary_context(
             db,
             user_id=user_id,
@@ -163,6 +165,7 @@ class GuidanceService:
             birth_time=birth_time,
             birth_place=birth_place,
             warning_event="guidance_natal_chart_context_unavailable",
+            labels=labels,
         )
 
     @staticmethod

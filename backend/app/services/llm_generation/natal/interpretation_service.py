@@ -46,6 +46,7 @@ from app.services.chart.json_builder import (
 )
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.services.llm_generation.natal.prompt_context import _detect_degraded_mode
+from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from app.services.user_profile.natal_chart_service import UserNatalChartReadData
@@ -475,7 +476,11 @@ class NatalInterpretationService:
         # 1. Normalization (N1)
         degraded_mode_str = _detect_degraded_mode(birth_profile)
 
-        chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str)
+        labels = AstrologyTranslationResolver(db).resolve_labels(
+            language_code=locale,
+            user_id=user_id,
+        )
+        chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
         evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
 
         # 3. Use case selection

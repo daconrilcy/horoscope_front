@@ -32,6 +32,7 @@ from app.services.llm_generation.shared.natal_context import (
     build_user_natal_chart_summary_context,
 )
 from app.services.natal.calculation_service import NatalCalculationService
+from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.reference_data_service import ReferenceDataService
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileService,
@@ -83,6 +84,7 @@ class ConsultationGenerationService:
     def _calculate_other_person_natal_summary(
         db: Session,
         request: ConsultationGenerateRequest,
+        user_id: int | None = None,
     ) -> str | None:
         other_person = request.other_person
         if other_person is None:
@@ -144,11 +146,13 @@ class ConsultationGenerationService:
             )
             return None
 
+        labels = AstrologyTranslationResolver(db).resolve_labels(user_id=user_id)
         return build_natal_chart_summary_with_defaults(
             natal_result=natal_result,
             birth_date=other_person.birth_date,
             birth_time=other_person.birth_time if other_person.birth_time_known else None,
             birth_place=other_person.birth_place,
+            labels=labels,
         )
 
     @staticmethod
@@ -163,6 +167,7 @@ class ConsultationGenerationService:
         except UserBirthProfileServiceError:
             return None, False
 
+        labels = AstrologyTranslationResolver(db).resolve_labels(user_id=user_id)
         user_summary = build_user_natal_chart_summary_context(
             db,
             user_id=user_id,
@@ -170,10 +175,12 @@ class ConsultationGenerationService:
             birth_time=user_profile.birth_time,
             birth_place=user_profile.birth_place,
             warning_event="consultation_natal_chart_context_unavailable",
+            labels=labels,
         )
         other_summary = ConsultationGenerationService._calculate_other_person_natal_summary(
             db,
             request,
+            user_id=user_id,
         )
         if other_summary is None:
             return user_summary, False

@@ -10,8 +10,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.datetime_provider import datetime_provider
-from app.services.llm_generation.shared.natal_context import SIGN_NAMES_FR, _longitude_to_sign
+from app.services.llm_generation.shared.natal_context import AstrologyLabels, _longitude_to_sign
 from app.services.prediction import DailyPredictionService
+from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.user_profile.birth_profile_service import UserBirthProfileService
 
 logger = logging.getLogger(__name__)
@@ -63,8 +64,9 @@ class AstroContextBuilder:
     """
 
     @staticmethod
-    def _get_lunar_phase_label(jdut: float) -> str:
+    def _get_lunar_phase_label(jdut: float, labels: AstrologyLabels | None = None) -> str:
         """Calculate human-readable lunar phase."""
+        labels = labels or AstrologyLabels.technical_fallback()
         from app.domain.astrology.ephemeris_provider import calculate_planets
 
         res = calculate_planets(jdut)
@@ -75,7 +77,7 @@ class AstroContextBuilder:
         dist = (moon.longitude - sun.longitude) % 360
 
         moon_sign = _longitude_to_sign(moon.longitude)
-        sign_label = SIGN_NAMES_FR.get(moon_sign, moon_sign)
+        sign_label = labels.sign_label(moon_sign)
 
         illumination = abs(180 - abs(dist - 180)) / 180.0 * 100
 
@@ -178,7 +180,8 @@ class AstroContextBuilder:
             dt_noon = datetime.combine(target_date, time(12, 0))
             timestamp = dt_noon.timestamp()
             jd = 2440587.5 + timestamp / 86400.0
-            lunar_phase = cls._get_lunar_phase_label(jd)
+            labels = AstrologyTranslationResolver(db).resolve_labels(user_id=user_id)
+            lunar_phase = cls._get_lunar_phase_label(jd, labels)
 
             return AstroContextData(
                 user_id=user_id,

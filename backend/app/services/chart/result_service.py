@@ -19,6 +19,7 @@ from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.services.chart.json_builder import serialize_legacy_house_rulers_from_houses
+from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 
 
 class ChartResultAuditRecord(BaseModel):
@@ -110,8 +111,9 @@ class ChartResultService:
 
         result_payload = natal_result.model_dump()
         houses_payload = result_payload.get("houses", [])
+        labels = AstrologyTranslationResolver(db).resolve_labels(user_id=user_id)
         result_payload["house_rulers"] = (
-            serialize_legacy_house_rulers_from_houses(houses_payload)
+            serialize_legacy_house_rulers_from_houses(houses_payload, labels)
             if isinstance(houses_payload, list)
             else []
         )
