@@ -503,21 +503,25 @@ export const settingsTranslations = {
       fr: "Problème de connexion réseau. Vérifiez votre connexion.",
       en: "Network connection problem. Please check your connection.",
       es: "Problema de conexión de red. Verifique su conexión.",
+      de: "Netzwerkverbindungsproblem. Bitte prüfen Sie Ihre Verbindung.",
     },
     unauthorized: {
       fr: "Session expirée. Veuillez vous reconnecter.",
       en: "Session expired. Please log in again.",
       es: "Sesión expirada. Por favor, inicie sesión de nuevo.",
+      de: "Sitzung abgelaufen. Bitte melden Sie sich erneut an.",
     },
     server_error: {
       fr: "Erreur serveur. Réessayez dans quelques instants.",
       en: "Server error. Please try again in a moment.",
       es: "Error del servidor. Inténtelo de nuevo en unos momentos.",
+      de: "Serverfehler. Bitte versuchen Sie es gleich erneut.",
     },
     default: {
       fr: "Une erreur inattendue est survenue.",
       en: "An unexpected error occurred.",
       es: "Ocurrió un error inesperado.",
+      de: "Ein unerwarteter Fehler ist aufgetreten.",
     },
   } as Record<string, Record<AstrologyLang, string>>,
 
@@ -584,3 +588,15 @@ export const settingsTranslations = {
     }
   >,
 }
+
+settingsTranslations.page.de = { title: "Einstellungen" }
+settingsTranslations.tabs.de = {
+  navLabel: "Einstellungsnavigation",
+  account: "Konto",
+  subscription: "Abonnement",
+  usage: "Nutzung",
+}
+settingsTranslations.account.de = settingsTranslations.account.en
+settingsTranslations.subscription.de = settingsTranslations.subscription.en
+settingsTranslations.usage.de = settingsTranslations.usage.en
+settingsTranslations.deleteModal.de = settingsTranslations.deleteModal.en

@@ -6,15 +6,28 @@ import { useLanguages } from "@api/languages"
 import { useUpdateUserSettings, useUserSettings } from "@api/userSettings"
 import { SUPPORTED_LANGS, useAstrologyLabels, type AstrologyLang } from "@i18n/astrology"
 import { commonTranslations } from "@i18n/common"
+import deFlagUrl from "../../assets/flags/de.svg"
+import esFlagUrl from "../../assets/flags/es.svg"
+import frFlagUrl from "../../assets/flags/fr.svg"
+import gbFlagUrl from "../../assets/flags/gb.svg"
 
-const LANGUAGE_FLAGS: Record<AstrologyLang, string> = {
-  fr: "🇫🇷",
-  en: "🇬🇧",
-  es: "🇪🇸",
+type InterfaceLanguageCode = AstrologyLang | "de"
+
+const SUPPORTED_INTERFACE_LANGUAGE_CODES: readonly InterfaceLanguageCode[] = ["fr", "en", "es", "de"]
+
+const LANGUAGE_FLAGS: Record<InterfaceLanguageCode, string> = {
+  fr: frFlagUrl,
+  en: gbFlagUrl,
+  es: esFlagUrl,
+  de: deFlagUrl,
 }
 
 function isSupportedInterfaceLanguage(code: string): code is AstrologyLang {
   return SUPPORTED_LANGS.includes(code as AstrologyLang)
+}
+
+function isSelectableInterfaceLanguage(code: string): code is InterfaceLanguageCode {
+  return SUPPORTED_INTERFACE_LANGUAGE_CODES.includes(code as InterfaceLanguageCode)
 }
 
 function resolveDetectedLocale(): string | null {
@@ -59,8 +72,9 @@ export function LanguageSelector() {
   const { lang, setLang } = useAstrologyLabels()
   const t = commonTranslations(lang)
   const [isOpen, setIsOpen] = useState(false)
+  const [selectedLanguageCode, setSelectedLanguageCode] = useState<InterfaceLanguageCode>(lang)
   const lastSubmittedLocalization = useRef<string | null>(null)
-  const pendingLanguageCode = useRef<AstrologyLang | null>(null)
+  const pendingLanguageCode = useRef<InterfaceLanguageCode | null>(null)
   const languagesQuery = useLanguages()
   const settingsQuery = useUserSettings()
   const updateSettings = useUpdateUserSettings()
@@ -69,13 +83,13 @@ export function LanguageSelector() {
     () =>
       (languagesQuery.data ?? [])
         .flatMap((language) => {
-          if (!isSupportedInterfaceLanguage(language.code)) {
+          if (!isSelectableInterfaceLanguage(language.code)) {
             return []
           }
           const code = language.code
           return [{
             code,
-            flag: LANGUAGE_FLAGS[code],
+            flagUrl: LANGUAGE_FLAGS[code],
             label: language.name,
           }]
         }),
@@ -96,13 +110,22 @@ export function LanguageSelector() {
     }
     if (
       defaultCode &&
-      isSupportedInterfaceLanguage(defaultCode) &&
+      isSelectableInterfaceLanguage(defaultCode) &&
       supportedLanguageCodes.has(defaultCode) &&
-      defaultCode !== lang
+      defaultCode !== selectedLanguageCode
     ) {
-      setLang(defaultCode)
+      setSelectedLanguageCode(defaultCode)
+      if (isSupportedInterfaceLanguage(defaultCode) && defaultCode !== lang) {
+        setLang(defaultCode)
+      }
     }
-  }, [lang, setLang, settingsQuery.data?.default_language_code, supportedLanguageCodes])
+  }, [lang, selectedLanguageCode, setLang, settingsQuery.data?.default_language_code, supportedLanguageCodes])
+
+  useEffect(() => {
+    if (isSupportedInterfaceLanguage(selectedLanguageCode) && selectedLanguageCode !== lang) {
+      setSelectedLanguageCode(lang)
+    }
+  }, [lang, selectedLanguageCode])
 
   useEffect(() => {
     if (!settingsQuery.data || updateSettings.isPending) {
@@ -129,11 +152,14 @@ export function LanguageSelector() {
     })
   }, [settingsQuery.data, updateSettings])
 
-  const current = languageOptions.find((language) => language.code === lang)
+  const current = languageOptions.find((language) => language.code === selectedLanguageCode)
 
-  function selectLanguage(code: AstrologyLang) {
+  function selectLanguage(code: InterfaceLanguageCode) {
     pendingLanguageCode.current = code
-    setLang(code)
+    setSelectedLanguageCode(code)
+    if (isSupportedInterfaceLanguage(code)) {
+      setLang(code)
+    }
     updateSettings.mutate({
       default_language_code: code,
       ...buildLocalizationPayload(),
@@ -161,7 +187,12 @@ export function LanguageSelector() {
       >
         <Languages size={18} aria-hidden="true" />
         <span className="app-header-language-flag" aria-hidden="true">
-          {current?.flag ?? LANGUAGE_FLAGS.fr}
+          <img
+            className="app-header-language-flag-image"
+            src={current?.flagUrl ?? LANGUAGE_FLAGS.fr}
+            alt=""
+            aria-hidden="true"
+          />
         </span>
       </button>
       {isOpen ? (
@@ -172,10 +203,15 @@ export function LanguageSelector() {
               type="button"
               className="app-header-language-option"
               role="menuitemradio"
-              aria-checked={language.code === lang}
+              aria-checked={language.code === selectedLanguageCode}
               onClick={() => selectLanguage(language.code)}
             >
-              <span aria-hidden="true">{language.flag}</span>
+              <img
+                className="app-header-language-flag-image"
+                src={language.flagUrl}
+                alt=""
+                aria-hidden="true"
+              />
               <span>{language.label}</span>
             </button>
           ))}

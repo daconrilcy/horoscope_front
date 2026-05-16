@@ -9,6 +9,7 @@ export function generateSimpleInterpretation(context: string, lang: AstrologyLan
     fr: `Votre question "${truncatedContext}" mérite une réflexion approfondie. Les astres vous invitent à faire confiance à votre intuition tout en restant ancré(e) dans la réalité. Prenez le temps de peser le pour et le contre avant de prendre une décision importante.`,
     en: `Your question "${truncatedContext}" deserves deep reflection. The stars invite you to trust your intuition while staying grounded in reality. Take time to weigh the pros and cons before making an important decision.`,
     es: `Su pregunta "${truncatedContext}" merece una reflexión profunda. Las estrellas le invitan a confiar en su intuición mientras permanece anclado en la realidad. Tómese el tiempo para sopesar los pros y los contras antes de tomar una decisión importante.`,
+    de: `Ihre Frage "${truncatedContext}" verdient eine gründliche Betrachtung. Die Sterne laden Sie ein, Ihrer Intuition zu vertrauen und zugleich geerdet zu bleiben. Nehmen Sie sich Zeit, Vor- und Nachteile abzuwägen, bevor Sie eine wichtige Entscheidung treffen.`,
   }
   return interpretations[lang] ?? interpretations.fr
 }

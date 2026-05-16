@@ -168,6 +168,47 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       noData: "No hay datos disponibles",
     },
   },
+  de: {
+    header: {
+      appTitle: APP_NAME,
+      logout: "Abmelden",
+      defaultRole: "Benutzer",
+      openMenu: "Menü öffnen",
+      closeMenu: "Menü schließen",
+      toggleTheme: "Theme wechseln",
+      openUserMenu: "Benutzermenü",
+      chooseLanguage: "Sprache wählen",
+    },
+    userMenu: {
+      editAccount: "Mein Konto bearbeiten",
+      astrologers: "Astrologen ansehen",
+      help: "Hilfe & Support",
+      logout: "Abmelden",
+      settings: "Einstellungen",
+    },
+    heroCard: {
+      readShort: "In 2 Min. lesen",
+      readDetailed: "Detaillierte Version",
+      ariaReadShort: "Das vollständige Horoskop in 2 Minuten lesen",
+      ariaReadDetailed: "Die detaillierte Version des Horoskops ansehen",
+    },
+    actions: {
+      close: "Schließen",
+      cancel: "Abbrechen",
+      confirm: "Bestätigen",
+      retry: "Erneut versuchen",
+      back: "Zurück",
+      next: "Weiter",
+      delete: "Löschen",
+      save: "Speichern",
+    },
+    states: {
+      loading: "Wird geladen...",
+      error: "Fehler",
+      empty: "Keine Ergebnisse",
+      noData: "Keine Daten verfügbar",
+    },
+  },
 }
 
 export function commonTranslations(lang: AstrologyLang = "fr"): CommonTranslation {

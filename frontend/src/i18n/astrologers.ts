@@ -4,7 +4,7 @@ import type { AppLocale } from "./types"
 
 export type AstrologersTranslation = { t: (key: string) => string };
 
-const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
+const ASTROLOGERS_I18N: Record<string, Partial<Record<AstrologyLang, string>>> = {
   page_title: {
     fr: "Choisis ton guide astrologique",
     en: "Choose your astrology guide",
@@ -652,8 +652,8 @@ const ASTROLOGERS_I18N: Record<string, Record<AstrologyLang, string>> = {
   },
 }
 
-/** Retourne le libelle localise du catalogue astrologues avec repli explicite sur la cle. */
+/** Retourne le libelle localise du catalogue astrologues avec repli lisible. */
 export function tAstrologers(key: string, lang: AppLocale): string {
   const entry = ASTROLOGERS_I18N[key]
-  return entry?.[lang as AstrologyLang] ?? key
+  return entry?.[lang as AstrologyLang] ?? entry?.en ?? key
 }

@@ -4,7 +4,8 @@ import { B2BReconciliationPanel } from "../../features/enterprise/B2BReconciliat
 
 export function ReconciliationAdmin() {
   const lang = detectLang()
-  const t = adminTranslations.reconciliation[lang]
+  const adminLang = lang === "de" ? "en" : lang
+  const t = adminTranslations.reconciliation[adminLang]
 
   return (
     <section className="reconciliation-admin" aria-labelledby="reconciliation-admin-title">

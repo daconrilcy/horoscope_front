@@ -69,14 +69,16 @@ function findLatestShortInterpretation(
   return items.find((item) => item.level === "short") ?? null
 }
 
-function localeFromLang(lang: AstrologyLang): "fr-FR" | "en-US" | "es-ES" {
+function localeFromLang(lang: AstrologyLang): "fr-FR" | "en-US" | "es-ES" | "de-DE" {
   if (lang === "en") return "en-US"
   if (lang === "es") return "es-ES"
+  if (lang === "de") return "de-DE"
   return "fr-FR"
 }
 
 function pdfLocaleFromLang(lang: AstrologyLang): "fr" | "en" | "es" {
-  return lang === "fr" ? "fr" : lang
+  if (lang === "fr" || lang === "en" || lang === "es") return lang
+  return "en"
 }
 
 export function NatalInterpretationSection({

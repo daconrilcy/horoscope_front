@@ -42,7 +42,7 @@ export type AdminPromptsEditorStrings = {
   noFallbackSummary: string
 }
 
-export const adminPromptsEditorByLang: Record<AstrologyLang, AdminPromptsEditorStrings> = {
+export const adminPromptsEditorByLang: Record<Exclude<AstrologyLang, "de">, AdminPromptsEditorStrings> = {
   fr: {
     sectionTitle: "Préparer une nouvelle version",
     sectionIntro:

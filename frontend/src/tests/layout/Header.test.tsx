@@ -10,6 +10,7 @@ let languagesMock = [
   { code: "fr", name: "Français API" },
   { code: "en", name: "English API" },
   { code: "es", name: "Español API" },
+  { code: "de", name: "Deutsch API" },
 ]
 let defaultLanguageCodeMock: string | null = null
 
@@ -65,6 +66,7 @@ afterEach(() => {
     { code: "fr", name: "Français API" },
     { code: "en", name: "English API" },
     { code: "es", name: "Español API" },
+    { code: "de", name: "Deutsch API" },
   ]
   defaultLanguageCodeMock = null
 })
@@ -197,6 +199,51 @@ describe("Header", () => {
 
     expect(screen.getByRole("menuitemradio", { name: "Français API" })).toBeInTheDocument()
     expect(screen.getByRole("menuitemradio", { name: "English API" })).toBeInTheDocument()
+    expect(screen.getByRole("menuitemradio", { name: "Deutsch API" })).toBeInTheDocument()
+  })
+
+  it("accompagne chaque langue affichée d'une image de drapeau pays", () => {
+    const { container } = render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Choisir la langue" }))
+
+    const flagImages = Array.from(container.querySelectorAll(".app-header-language-flag-image"))
+    expect(flagImages).toHaveLength(5)
+    expect(flagImages.every((image) => image instanceof HTMLImageElement)).toBe(true)
+    expect(flagImages.every((image) => (image as HTMLImageElement).src.startsWith("data:image/svg+xml"))).toBe(true)
+    expect(screen.getByRole("menuitemradio", { name: "Français API" }).querySelector("img")).toBeInTheDocument()
+    expect(screen.getByRole("menuitemradio", { name: "English API" }).querySelector("img")).toBeInTheDocument()
+    expect(screen.getByRole("menuitemradio", { name: "Español API" }).querySelector("img")).toBeInTheDocument()
+    expect(screen.getByRole("menuitemradio", { name: "Deutsch API" }).querySelector("img")).toBeInTheDocument()
+  })
+
+  it("persiste l'allemand quand il est fourni par le référentiel API", () => {
+    render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Choisir la langue" }))
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Deutsch API" }))
+
+    fireEvent.click(screen.getByRole("button", { name: "Sprache wählen" }))
+    expect(screen.getByRole("menuitemradio", { name: "Deutsch API" })).toHaveAttribute("aria-checked", "true")
+    expect(updateSettingsMock).toHaveBeenCalledWith(
+      expect.objectContaining({ default_language_code: "de" }),
+      expect.objectContaining({
+        onError: expect.any(Function),
+        onSuccess: expect.any(Function),
+      }),
+    )
   })
 
   it("applique la préférence compte quand la langue existe dans les options API", async () => {

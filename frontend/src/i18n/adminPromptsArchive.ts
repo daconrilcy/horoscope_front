@@ -56,7 +56,7 @@ export type AdminPromptsArchiveStrings = {
   successRestore: string
 }
 
-export const adminPromptsArchiveByLang: Record<AstrologyLang, AdminPromptsArchiveStrings> = {
+export const adminPromptsArchiveByLang: Record<Exclude<AstrologyLang, "de">, AdminPromptsArchiveStrings> = {
   fr: {
     regionAriaLabel: "Investigation historique LLM hors catalogue",
     loadingHistory: "Chargement de l'historique archive…",

@@ -5,6 +5,7 @@ import { TypingIndicator } from "./TypingIndicator"
 import { ChatComposer } from "./ChatComposer"
 import { useAutoScroll } from "../hooks/useAutoScroll"
 import { detectLang } from "@i18n/astrology"
+import type { AstrologyLang } from "@i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
 import "./ChatWindow.css"
 
@@ -32,7 +33,7 @@ type ChatWindowProps = {
   onBack?: () => void
 }
 
-function resolveDisplayedErrorMessage(error: Error, lang: "fr" | "en" | "es"): string {
+function resolveDisplayedErrorMessage(error: Error, lang: AstrologyLang): string {
   const chatErrorCode =
     "code" in error && typeof error.code === "string" ? error.code : null
 

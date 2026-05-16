@@ -2,11 +2,17 @@ import type { AstrologyLang } from "./astrology"
 import type { AdminConsumptionRow, AdminConsumptionView, AdminInspectionMode } from "@api"
 import type { AdminResolvedPlaceholder } from "@api"
 
+type AdminPromptLocale = Exclude<AstrologyLang, "de">
+
+function adminPromptLocale(lang: AstrologyLang): AdminPromptLocale {
+  return lang === "de" ? "en" : lang
+}
+
 function mapOrRaw(map: Readonly<Record<string, string>>, raw: string): string {
   return map[raw] ?? raw
 }
 
-const SOURCE_OF_TRUTH: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const SOURCE_OF_TRUTH: Record<AdminPromptLocale, Readonly<Record<string, string>>> = {
   fr: {
     active_snapshot: "Snapshot actif (catalogue)",
     live_table_fallback: "Repli table live",
@@ -24,7 +30,7 @@ const SOURCE_OF_TRUTH: Record<AstrologyLang, Readonly<Record<string, string>>> =
   },
 }
 
-const RELEASE_HEALTH: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RELEASE_HEALTH: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     monitoring: "Surveillance",
     activated: "Activé",
@@ -51,7 +57,7 @@ const RELEASE_HEALTH: Record<AstrologyLang, Readonly<Record<string, string>>> = 
   },
 }
 
-const CATALOG_VISIBILITY: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const CATALOG_VISIBILITY: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     visible: "Visible",
     orphaned: "Orpheline",
@@ -72,7 +78,7 @@ const CATALOG_VISIBILITY: Record<AstrologyLang, Readonly<Record<string, string>>
   },
 }
 
-const RUNTIME_SIGNAL: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RUNTIME_SIGNAL: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     fresh: "À jour",
     stale: "Périmé",
@@ -90,7 +96,7 @@ const RUNTIME_SIGNAL: Record<AstrologyLang, Readonly<Record<string, string>>> = 
   },
 }
 
-const ASSEMBLY_STATUS: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const ASSEMBLY_STATUS: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     published: "Publié",
     draft: "Brouillon",
@@ -109,7 +115,7 @@ const ASSEMBLY_STATUS: Record<AstrologyLang, Readonly<Record<string, string>>> =
 }
 
 /** Messages d'erreur API résolue (codes métier) — alignés sur AdminPromptsApiError.code */
-const RESOLVED_ASSEMBLY_ERRORS: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RESOLVED_ASSEMBLY_ERRORS: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     sample_payload_inactive:
       "Ce sample payload est inactif. Choisissez un autre payload ou réactivez-le dans le catalogue.",
@@ -157,7 +163,7 @@ const RESOLVED_ASSEMBLY_ERRORS: Record<AstrologyLang, Readonly<Record<string, st
   },
 }
 
-const MANUAL_EXEC_FAILURE_LEADS: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const MANUAL_EXEC_FAILURE_LEADS: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     runtime_preview_incomplete: "Prévisualisation runtime incomplète (placeholders bloquants)",
     input_validation: "Validation des entrées (schéma ou contexte)",
@@ -191,7 +197,7 @@ const MANUAL_EXEC_FAILURE_LEADS: Record<AstrologyLang, Readonly<Record<string, s
 }
 
 const RENDER_ERROR_LEADS: Record<
-  AstrologyLang,
+  AdminPromptLocale,
   { staticIncomplete: string; live: string; default: string }
 > = {
   fr: {
@@ -221,7 +227,7 @@ type ReleaseDiffCategoryLabels = {
   apiUnknown: (raw: string) => string
 }
 
-const RELEASE_DIFF_CATEGORY: Record<AstrologyLang, ReleaseDiffCategoryLabels> = {
+const RELEASE_DIFF_CATEGORY: Record<Exclude<AstrologyLang, "de">, ReleaseDiffCategoryLabels> = {
   fr: {
     changed: "Écart sur cette fiche",
     added: "Ajout",
@@ -248,7 +254,7 @@ const RELEASE_DIFF_CATEGORY: Record<AstrologyLang, ReleaseDiffCategoryLabels> = 
   },
 }
 
-const RELEASE_EVENT_TYPE: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RELEASE_EVENT_TYPE: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     created: "Création",
     validated: "Validation",
@@ -281,7 +287,7 @@ const RELEASE_EVENT_TYPE: Record<AstrologyLang, Readonly<Record<string, string>>
   },
 }
 
-const RELEASE_CURRENT_STATUS: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RELEASE_CURRENT_STATUS: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     active: "Actif",
     archived: "Archivé",
@@ -311,7 +317,7 @@ const RELEASE_CURRENT_STATUS: Record<AstrologyLang, Readonly<Record<string, stri
   },
 }
 
-const RELEASE_PROOF_TYPE: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RELEASE_PROOF_TYPE: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     qualification: "Qualification",
     golden: "Jeu golden",
@@ -332,7 +338,7 @@ const RELEASE_PROOF_TYPE: Record<AstrologyLang, Readonly<Record<string, string>>
   },
 }
 
-const RELEASE_PROOF_VERDICT: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RELEASE_PROOF_VERDICT: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     go: "Go",
     pass: "Succès",
@@ -353,7 +359,7 @@ const RELEASE_PROOF_VERDICT: Record<AstrologyLang, Readonly<Record<string, strin
   },
 }
 
-const RELEASE_PROOF_STATUS: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const RELEASE_PROOF_STATUS: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     present: "Présente",
     missing: "Manquante",
@@ -369,7 +375,7 @@ const RELEASE_PROOF_STATUS: Record<AstrologyLang, Readonly<Record<string, string
 }
 
 const MANUAL_LLM_MODAL: Record<
-  AstrologyLang,
+  AdminPromptLocale,
   {
     title: string
     introBeforeSample: string
@@ -420,7 +426,7 @@ const MANUAL_LLM_MODAL: Record<
   },
 }
 
-const CONTEXT_COMPENSATION: Record<AstrologyLang, Readonly<Record<string, string>>> = {
+const CONTEXT_COMPENSATION: Record<Exclude<AstrologyLang, "de">, Readonly<Record<string, string>>> = {
   fr: {
     none: "Aucune compensation",
     not_needed: "Non nécessaire",
@@ -1136,27 +1142,28 @@ function buildStrings(lang: AstrologyLang) {
 }
 
 export function adminPromptsCatalogStrings(lang: AstrologyLang): AdminPromptsCatalogStrings {
-  const sot = SOURCE_OF_TRUTH[lang]
-  const rel = RELEASE_HEALTH[lang]
-  const vis = CATALOG_VISIBILITY[lang]
-  const run = RUNTIME_SIGNAL[lang]
-  const asm = ASSEMBLY_STATUS[lang]
-  const ctx = CONTEXT_COMPENSATION[lang]
-  const releaseEvents = RELEASE_EVENT_TYPE[lang]
-  const releaseStatuses = RELEASE_CURRENT_STATUS[lang]
-  const proofTypes = RELEASE_PROOF_TYPE[lang]
-  const proofVerdicts = RELEASE_PROOF_VERDICT[lang]
-  const proofStatuses = RELEASE_PROOF_STATUS[lang]
-  const base = buildStrings(lang)
+  const catalogLang = adminPromptLocale(lang)
+  const sot = SOURCE_OF_TRUTH[catalogLang]
+  const rel = RELEASE_HEALTH[catalogLang]
+  const vis = CATALOG_VISIBILITY[catalogLang]
+  const run = RUNTIME_SIGNAL[catalogLang]
+  const asm = ASSEMBLY_STATUS[catalogLang]
+  const ctx = CONTEXT_COMPENSATION[catalogLang]
+  const releaseEvents = RELEASE_EVENT_TYPE[catalogLang]
+  const releaseStatuses = RELEASE_CURRENT_STATUS[catalogLang]
+  const proofTypes = RELEASE_PROOF_TYPE[catalogLang]
+  const proofVerdicts = RELEASE_PROOF_VERDICT[catalogLang]
+  const proofStatuses = RELEASE_PROOF_STATUS[catalogLang]
+  const base = buildStrings(catalogLang)
 
   const inspectionModeOptions: { value: AdminInspectionMode; label: string }[] =
-    lang === "en"
+    catalogLang === "en"
       ? [
           { value: "assembly_preview", label: "Assembly preview" },
           { value: "runtime_preview", label: "Runtime preview" },
           { value: "live_execution", label: "Live execution (runtime semantics)" },
         ]
-      : lang === "es"
+      : catalogLang === "es"
         ? [
             { value: "assembly_preview", label: "Previsualización de assembly" },
             { value: "runtime_preview", label: "Previsualización runtime" },
@@ -1496,18 +1503,18 @@ export function adminPromptsCatalogStrings(lang: AstrologyLang): AdminPromptsCat
         return row.user_email ?? `user:${uidStr}`
       }
       if (view === "subscription") {
-        return row.subscription_plan ?? (lang === "en" ? "unknown" : lang === "es" ? "desconocido" : "inconnu")
+        return row.subscription_plan ?? (catalogLang === "en" ? "unknown" : catalogLang === "es" ? "desconocido" : "inconnu")
       }
-      return `${row.feature ?? (lang === "en" ? "unknown" : lang === "es" ? "desconocido" : "inconnu")} / ${row.subfeature ?? "—"}`
+      return `${row.feature ?? (catalogLang === "en" ? "unknown" : catalogLang === "es" ? "desconocido" : "inconnu")} / ${row.subfeature ?? "—"}`
     },
     consumptionUnknownFeatureCell: (feature, subfeature) =>
-      `${feature ?? (lang === "en" ? "unknown" : lang === "es" ? "desconocido" : "inconnu")} / ${subfeature ?? "—"}`,
+      `${feature ?? (catalogLang === "en" ? "unknown" : catalogLang === "es" ? "desconocido" : "inconnu")} / ${subfeature ?? "—"}`,
     ...(() => {
-      const modal = MANUAL_LLM_MODAL[lang]
-      const resolvedAsm = RESOLVED_ASSEMBLY_ERRORS[lang]
-      const manualFail = MANUAL_EXEC_FAILURE_LEADS[lang]
-      const renderErr = RENDER_ERROR_LEADS[lang]
-      const relDiff = RELEASE_DIFF_CATEGORY[lang]
+      const modal = MANUAL_LLM_MODAL[catalogLang]
+      const resolvedAsm = RESOLVED_ASSEMBLY_ERRORS[catalogLang]
+      const manualFail = MANUAL_EXEC_FAILURE_LEADS[catalogLang]
+      const renderErr = RENDER_ERROR_LEADS[catalogLang]
+      const relDiff = RELEASE_DIFF_CATEGORY[catalogLang]
       return {
         manualLlmModalTitle: modal.title,
         manualLlmModalIntroBeforeSample: modal.introBeforeSample,

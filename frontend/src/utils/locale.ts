@@ -4,6 +4,7 @@ const localeMap: Record<AstrologyLang, string> = {
   fr: "fr-FR",
   en: "en-US",
   es: "es-ES",
+  de: "de-DE",
 }
 
 export function getLocale(lang: AstrologyLang): string {

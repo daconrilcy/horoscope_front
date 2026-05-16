@@ -62,7 +62,7 @@ function clearPendingBillingPortalAction() {
 export function SubscriptionSettings() {
   const lang = detectLang()
   const t = settingsTranslations.subscription[lang]
-  const subscriptionGuide = supportTranslations[lang].subscriptions
+  const subscriptionGuide = supportTranslations[lang === "de" ? "en" : lang].subscriptions
   const {
     data: subscription,
     isLoading: subLoading,
@@ -72,7 +72,7 @@ export function SubscriptionSettings() {
   const currentSubscriptionPlan = subscription?.plan ?? subscription?.active_plan ?? null
   const isLoading = subLoading || plansLoading
   const PLANS = useMemo(() => {
-    const locale = lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-US"
+    const locale = lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : lang === "de" ? "de-DE" : "en-US"
     const basicPlan = catalog?.find(p => p.code === "basic")
     const premiumPlan = catalog?.find(p => p.code === "premium")
     return [

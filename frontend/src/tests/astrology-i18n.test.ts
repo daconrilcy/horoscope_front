@@ -163,8 +163,13 @@ describe("detectLang", () => {
     expect(detectLang()).toBe("es")
   })
 
-  it("falls back to French for unsupported language", () => {
+  it("returns German when navigator.language is de-DE", () => {
     vi.stubGlobal("navigator", { language: "de-DE" })
+    expect(detectLang()).toBe("de")
+  })
+
+  it("falls back to French for unsupported language", () => {
+    vi.stubGlobal("navigator", { language: "it-IT" })
     expect(detectLang()).toBe("fr")
   })
 
@@ -175,7 +180,7 @@ describe("detectLang", () => {
   })
 
   it("uses cached localStorage lang when navigator.language is unsupported", () => {
-    vi.stubGlobal("navigator", { language: "de-DE" })
+    vi.stubGlobal("navigator", { language: "it-IT" })
     localStorage.setItem("lang", "es")
     expect(detectLang()).toBe("es")
   })

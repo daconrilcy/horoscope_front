@@ -7,7 +7,8 @@ import { formatCurrencyCents } from "@utils/formatPrice"
 
 export function AdminPricingPanel() {
   const lang = detectLang()
-  const t = adminTranslations.pricing[lang]
+  const adminLang = lang === "de" ? "en" : lang
+  const t = adminTranslations.pricing[adminLang]
   const locale = getLocale(lang)
 
   const plansQuery = useBillingPlans()

@@ -159,6 +159,45 @@ const translations: Record<AstrologyLang, AuthTranslation> = {
       passwordTooShort: "La contraseña debe tener al menos 8 caracteres.",
     },
   },
+  de: {
+    signIn: {
+      title: "Anmelden",
+      emailLabel: "E-Mail-Adresse",
+      passwordLabel: "Passwort",
+      submitButton: "Anmelden",
+      submitLoading: "Anmeldung läuft...",
+      errorInvalidCredentials: "Ungültige Zugangsdaten. Bitte versuchen Sie es erneut.",
+      errorGeneric: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      noAccount: "Noch kein Konto?",
+      createAccount: "Konto erstellen",
+    },
+    signUp: {
+      title: "Konto erstellen",
+      emailLabel: "E-Mail-Adresse",
+      passwordLabel: "Passwort",
+      submitButton: "Mein Konto erstellen",
+      submitLoading: "Registrierung läuft...",
+      errorEmailTaken: "Diese E-Mail-Adresse wird bereits verwendet.",
+      errorRegistrationFailed: "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      errorGeneric: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      alreadyHaveAccount: "Schon ein Konto?",
+      signInLink: "Anmelden",
+      selectedPlanLabel: "Ausgewählter Tarif:",
+      googleButton: "Mit Google fortfahren",
+      googleComingSoon: "Demnächst verfügbar",
+      reassurance: {
+        noCard: "Keine Kreditkarte erforderlich",
+        cancelAnytime: "Jederzeit kündbar",
+        gdpr: "DSGVO-geschützte Daten",
+      },
+    },
+    validation: {
+      emailInvalid: "Ungültige E-Mail-Adresse.",
+      emailRequired: "Die E-Mail-Adresse ist erforderlich.",
+      passwordRequired: "Das Passwort ist erforderlich.",
+      passwordTooShort: "Das Passwort muss mindestens 8 Zeichen enthalten.",
+    },
+  },
 }
 
 export function authTranslations(lang: AstrologyLang = "fr"): AuthTranslation {

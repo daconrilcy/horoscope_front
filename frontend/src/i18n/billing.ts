@@ -10,16 +10,19 @@ export const UPGRADE_BENEFIT_LABELS: Record<UpgradeBenefitKey, Record<AstrologyL
     fr: "Accéder à l'horoscope complet",
     en: "Get full horoscope",
     es: "Obtener el horóscopo completo",
+    de: "Vollständiges Horoskop freischalten",
   },
   "upgrade.natal_chart_long.full_interpretation": {
     fr: "Débloquer l'interprétation complète",
     en: "Unlock full interpretation",
     es: "Desbloquear la interpretación completa",
+    de: "Vollständige Deutung freischalten",
   },
   "upgrade.astrologer_chat.unlimited_messages": {
     fr: "Échanger sans limite",
     en: "Chat without limits",
     es: "Chatear sin límites",
+    de: "Unbegrenzt chatten",
   },
 }
 
@@ -50,6 +53,11 @@ const CHAT_QUOTA_MESSAGES: Record<AstrologyLang, ChatQuotaMessages> = {
     remaining: (r, l) => `${r}/${l} mensaje(s) restante(s)`,
     exhausted: (d) => `Cuota alcanzada — reinicia el ${d}`,
     resetDate: (d) => `Reinicio el ${d}`,
+  },
+  de: {
+    remaining: (r, l) => `${r}/${l} Nachricht(en) übrig`,
+    exhausted: (d) => `Kontingent erreicht — wird am ${d} zurückgesetzt`,
+    resetDate: (d) => `Zurücksetzung am ${d}`,
   },
 }
 
@@ -180,6 +188,29 @@ const billingData = {
       pendingStateMessage:
         "El backend todavía no ha confirmado un estado utilizable. Vuelva dentro de unos instantes para comprobar la reconciliación.",
     },
+    de: {
+      trialStarted: "Kostenlose Testphase gestartet",
+      trialStartedMessage:
+        "Ihre kostenlose Testphase wurde gestartet. Der Produktzugang folgt nun dem tatsächlichen Stripe-Abonnementstatus.",
+      activationPending: "Aktivierung wartet auf Bestätigung",
+      activationPendingMessage:
+        "Ihr Abonnement wartet noch auf Bestätigung. Stripe muss die erste Zahlung noch validieren.",
+      subscriptionActive: "Abonnement aktiviert",
+      subscriptionActiveMessage:
+        "Ihr Abonnement ist jetzt aktiv. Sie können die Funktionen Ihres Tarifs nutzen.",
+      backToDashboard: "Zurück zum Dashboard",
+      viewSubscription: "Mein Abonnement ansehen",
+      waitingForWebhook: "Zahlungsbestätigung läuft...",
+      waitingForWebhookMessage:
+        "Der Stripe-Abgleich läuft noch. Laden Sie diese Seite in Kürze neu, falls sich der Status nicht geändert hat.",
+      billingStateUnavailable: "Abrechnungsstatus kann nicht geprüft werden",
+      billingStateUnavailableMessage:
+        "Wir konnten den Status Ihres Abonnements momentan nicht abrufen. Bitte versuchen Sie es gleich erneut.",
+      retryStatusCheck: "Erneut versuchen",
+      pendingStateTitle: "Abrechnungsstatus wartet auf Synchronisierung",
+      pendingStateMessage:
+        "Das Backend hat noch keinen nutzbaren Status bestätigt. Prüfen Sie den Stripe-Abgleich in Kürze erneut.",
+    },
   } as Record<
     AstrologyLang,
     {
@@ -218,6 +249,12 @@ const billingData = {
       message: "El proceso de pago fue interrumpido. No se ha debitado ningún importe de su cuenta.",
       backToSettings: "Volver a suscripciones",
       tryAgain: "Reintentar",
+    },
+    de: {
+      title: "Zahlung abgebrochen",
+      message: "Der Zahlungsvorgang wurde unterbrochen. Ihrem Konto wurde kein Betrag belastet.",
+      backToSettings: "Zurück zu den Abonnements",
+      tryAgain: "Erneut versuchen",
     },
   } as Record<
     AstrologyLang,

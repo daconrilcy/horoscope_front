@@ -216,7 +216,7 @@ export const adminTranslations = {
     fr: { title: "Administration", backToHub: "← Retour au hub" },
     en: { title: "Administration", backToHub: "← Back to hub" },
     es: { title: "Administración", backToHub: "← Volver al hub" },
-  } as Record<AstrologyLang, { title: string; backToHub: string }>,
+  } as Record<Exclude<AstrologyLang, "de">, { title: string; backToHub: string }>,
 
   promptsSubNav: {
     fr: {
@@ -401,25 +401,25 @@ export const adminTranslations = {
       personas: "Personas Astrólogos",
       reconciliation: "Reconciliación B2B",
     },
-  } as Record<AstrologyLang, Record<string, string>>,
+  } as Record<Exclude<AstrologyLang, "de">, Record<string, string>>,
 
   monitoring: {
     fr: { title: "Monitoring Opérationnel" },
     en: { title: "Operational Monitoring" },
     es: { title: "Monitoreo Operativo" },
-  } as Record<AstrologyLang, { title: string }>,
+  } as Record<Exclude<AstrologyLang, "de">, { title: string }>,
 
   personas: {
     fr: { title: "Personas Astrologues" },
     en: { title: "Astrologer Personas" },
     es: { title: "Personas Astrólogos" },
-  } as Record<AstrologyLang, { title: string }>,
+  } as Record<Exclude<AstrologyLang, "de">, { title: string }>,
 
   reconciliation: {
     fr: { title: "Réconciliation B2B" },
     en: { title: "B2B Reconciliation" },
     es: { title: "Reconciliación B2B" },
-  } as Record<AstrologyLang, { title: string }>,
+  } as Record<Exclude<AstrologyLang, "de">, { title: string }>,
 
   b2b: {
     fr: {
@@ -908,23 +908,24 @@ export const adminTranslations = {
       upcomingNote:
         "Estas funcionalidades requieren la implementación de une API admin dedicada (fuera del alcance de la story 16.7).",
     },
-  } as Record<AstrologyLang, PricingTranslations>,
+  } as Record<Exclude<AstrologyLang, "de">, PricingTranslations>,
 }
 
 export function translateAdmin(lang: AstrologyLang = "fr"): AdminTranslation {
+  const adminLang: Exclude<AstrologyLang, "de"> = lang === "de" ? "en" : lang
   return {
-    page: adminTranslations.page[lang],
-    promptsSubNav: adminTranslations.promptsSubNav[lang],
-    promptsPageHeader: adminTranslations.promptsPageHeader[lang],
-    sections: adminTranslations.sections[lang],
-    monitoring: adminTranslations.monitoring[lang],
-    personas: adminTranslations.personas[lang],
-    reconciliation: adminTranslations.reconciliation[lang],
-    b2b: adminTranslations.b2b[lang],
-    pricing: adminTranslations.pricing[lang],
-    promptsArchive: adminPromptsArchiveByLang[lang],
-    promptsEditor: adminPromptsEditorByLang[lang],
-    promptsConsumption: adminPromptsConsumptionByLang[lang],
-    promptsCatalog: adminPromptsCatalogStrings(lang),
+    page: adminTranslations.page[adminLang],
+    promptsSubNav: adminTranslations.promptsSubNav[adminLang],
+    promptsPageHeader: adminTranslations.promptsPageHeader[adminLang],
+    sections: adminTranslations.sections[adminLang],
+    monitoring: adminTranslations.monitoring[adminLang],
+    personas: adminTranslations.personas[adminLang],
+    reconciliation: adminTranslations.reconciliation[adminLang],
+    b2b: adminTranslations.b2b[adminLang],
+    pricing: adminTranslations.pricing[adminLang],
+    promptsArchive: adminPromptsArchiveByLang[adminLang],
+    promptsEditor: adminPromptsEditorByLang[adminLang],
+    promptsConsumption: adminPromptsConsumptionByLang[adminLang],
+    promptsCatalog: adminPromptsCatalogStrings(adminLang),
   }
 }

@@ -59,6 +59,13 @@ const dashboardCardTranslations: Record<SupportedLocale, Record<DashboardCardId,
     astrologers: { label: "Astrólogos", description: "Nuestros astrólogos" },
     settings: { label: "Ajustes", description: "Gestiona tus preferencias" },
   },
+  de: {
+    natal: { label: "Mein Geburtshoroskop", description: "Ihr Geburtshoroskop ansehen" },
+    chat: { label: "Astrologen-Chat", description: "Mit Ihrem Astrologen chatten" },
+    consultations: { label: "Beratungen", description: "Ihre vergangenen Beratungen" },
+    astrologers: { label: "Astrologen", description: "Unsere Astrologen" },
+    settings: { label: "Einstellungen", description: "Ihre Präferenzen verwalten" },
+  },
 }
 
 const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslation> = {
@@ -141,6 +148,33 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
       switchToDark: "Cambiar a modo oscuro",
       profileLoading: "Cargando perfil",
       profileOf: (displayName: string) => `Perfil de ${displayName}`,
+    },
+  },
+  de: {
+    title: "Dashboard",
+    welcome: "Willkommen! Greifen Sie schnell auf alle Funktionen zu.",
+    viewHoroscope: "Vollständiges Horoskop ansehen",
+    noPrediction: "Keine Vorhersage verfügbar.",
+    errorPrediction: "Die Tageszusammenfassung konnte nicht geladen werden.",
+    retry: "Erneut versuchen",
+    summaryLoading: "Das Tageshoroskop wird gerade geschrieben",
+    activities: "Aktivitäten",
+    shortcuts: {
+      chatTitle: "Astrologen-Chat",
+      chatSubtitle: "Online",
+      consultationTitle: "Beratung",
+      consultationSubtitle: "Gezielte Begleitung",
+      historyTitle: "Verlauf",
+      historySubtitle: "Meine Vorhersagen",
+    },
+    header: {
+      kicker: "Heute",
+      title: "Horoskop",
+      backToDashboard: "Zurück zum Dashboard",
+      switchToLight: "Zum hellen Modus wechseln",
+      switchToDark: "Zum dunklen Modus wechseln",
+      profileLoading: "Profil wird geladen",
+      profileOf: (displayName: string) => `Profil von ${displayName}`,
     },
   },
 }

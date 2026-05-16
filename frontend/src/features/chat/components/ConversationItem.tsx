@@ -9,6 +9,7 @@ const LOCALE_MAP: Record<AstrologyLang, string> = {
   fr: "fr-FR",
   en: "en-US",
   es: "es-ES",
+  de: "de-DE",
 }
 
 type ConversationItemProps = {

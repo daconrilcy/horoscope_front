@@ -236,7 +236,7 @@ export interface LandingTranslation {
   }
 }
 
-const translations: Record<AstrologyLang, LandingTranslation> = {
+const translationsBase: Record<Exclude<AstrologyLang, "de">, LandingTranslation> = {
   fr: {
     hero: {
       titleLead: "Votre guide astrologique personnel",
@@ -1062,6 +1062,11 @@ const translations: Record<AstrologyLang, LandingTranslation> = {
       separatorOr: "o",
     },
   },
+}
+
+const translations: Record<AstrologyLang, LandingTranslation> = {
+  ...translationsBase,
+  de: translationsBase.en,
 }
 
 export function landingTranslations(lang: AstrologyLang = "fr"): LandingTranslation {

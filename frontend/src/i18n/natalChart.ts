@@ -152,7 +152,7 @@ type NatalChartTranslations = {
 }
 
 export type NatalChartTranslation = NatalChartTranslations;
-export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslations> = {
+const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChartTranslations> = {
   fr: {
     title: "Thème natal",
     basicTitle: "Thème natal de base",
@@ -800,6 +800,11 @@ export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslation
       ],
     },
   },
+}
+
+export const natalChartTranslations: Record<AstrologyLang, NatalChartTranslations> = {
+  ...natalChartTranslationsBase,
+  de: natalChartTranslationsBase.en,
 }
 
 /**

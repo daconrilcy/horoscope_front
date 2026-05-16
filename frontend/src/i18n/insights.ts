@@ -29,12 +29,18 @@ const insightTranslations: Record<AstrologyLang, Record<InsightId, InsightTransl
     travail: { title: "Trabajo", description: "Nueva oportunidad para aprovechar" },
     energie: { title: "Energía", description: "Energía alta, humor positivo" },
   },
+  de: {
+    amour: { title: "Liebe", description: "Balance in Ihrer Beziehung" },
+    travail: { title: "Arbeit", description: "Neue Chance zum Ergreifen" },
+    energie: { title: "Energie", description: "Hohe Energie, positive Stimmung" },
+  },
 }
 
 export const INSIGHT_SECTION_TRANSLATIONS: Record<AstrologyLang, { title: string; ariaLabel: string }> = {
   fr: { title: "Amour", ariaLabel: "Voir tous les insights amour" },
   en: { title: "Love", ariaLabel: "View all love insights" },
   es: { title: "Amor", ariaLabel: "Ver todos los insights de amor" },
+  de: { title: "Liebe", ariaLabel: "Alle Liebes-Insights ansehen" },
 }
 
 export function translateInsight(

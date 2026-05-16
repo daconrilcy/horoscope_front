@@ -71,7 +71,7 @@ const translationFunctions: {
   birthProfile: (lang) => birthProfileTranslations[lang],
   billing: billingTranslations,
   predictions: (lang) => {
-    const l: PredictionsLang = lang === 'es' ? 'fr' : lang
+    const l: PredictionsLang = lang === "en" ? "en" : "fr"
     return {
       getToneLabel: (tone: string) => TONE_LABELS[tone]?.[l] ?? tone,
       getMessage: (key: string) => PREDICTION_UI_MESSAGES[key as keyof typeof PREDICTION_UI_MESSAGES]?.[l] ?? key,
@@ -84,7 +84,7 @@ const translationFunctions: {
     translate: (id: InsightId) => translateInsight(id, lang),
     section: () => translateInsightSection(lang)
   }),
-  support: (lang) => supportTranslations[lang] as any,
+  support: (lang) => supportTranslations[lang === "de" ? "en" : lang] as any,
   landing: landingTranslations,
 }
 

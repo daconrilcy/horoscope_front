@@ -20,6 +20,7 @@ const LOCALE_BY_LANG = {
   fr: "fr-FR",
   en: "en-US",
   es: "es-ES",
+  de: "de-DE",
 } as const
 
 export function SubscriptionGuidePage() {

@@ -129,7 +129,19 @@
 }
 
 .app-header-language-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: var(--line-height-none);
+}
+
+.app-header-language-flag-image {
+  display: block;
+  width: 22px;
+  height: 16px;
+  border: 1px solid var(--color-nav-border);
+  border-radius: var(--radius-xs);
+  object-fit: cover;
 }
 
 .app-header-language-menu {

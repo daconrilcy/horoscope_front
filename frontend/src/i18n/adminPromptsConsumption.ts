@@ -59,7 +59,7 @@ export type AdminPromptsConsumptionStrings = {
   drillTableValidation: string
 }
 
-export const adminPromptsConsumptionByLang: Record<AstrologyLang, AdminPromptsConsumptionStrings> = {
+export const adminPromptsConsumptionByLang: Record<Exclude<AstrologyLang, "de">, AdminPromptsConsumptionStrings> = {
   fr: {
     regionAriaLabel: "Pilotage de la consommation LLM",
     kicker: "Exploitation",

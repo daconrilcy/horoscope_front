@@ -10,6 +10,7 @@ const HOUSE_FALLBACK_PREFIX: Record<AstrologyLang, string> = {
   fr: "Maison",
   en: "House",
   es: "Casa",
+  de: "Haus",
 }
 
 export type GeocodingMessageKey = "loading" | "success" | "error_not_found" | "error_unavailable"
@@ -19,21 +20,25 @@ export const GEOCODING_MESSAGES: Record<GeocodingMessageKey, Record<AstrologyLan
     fr: "Géolocalisation en cours...",
     en: "Geocoding in progress...",
     es: "Geolocalización en curso...",
+    de: "Geokodierung läuft...",
   },
   success: {
     fr: "Lieu résolu",
     en: "Location resolved",
     es: "Ubicación resuelta",
+    de: "Ort aufgelöst",
   },
   error_not_found: {
     fr: "Ville ou pays introuvable. Vérifiez l'orthographe. Le thème sera calculé en mode dégradé (maisons égales).",
     en: "City or country not found. Check spelling. Chart will be calculated in degraded mode (equal houses).",
     es: "Ciudad o país no encontrado. Verifique la ortografía. El tema se calculará en modo degradado (casas iguales).",
+    de: "Stadt oder Land nicht gefunden. Prüfen Sie die Schreibweise. Das Horoskop wird im eingeschränkten Modus berechnet (gleiche Häuser).",
   },
   error_unavailable: {
     fr: "Service de géolocalisation temporairement indisponible. Le thème sera calculé en mode dégradé (maisons égales).",
     en: "Geocoding service temporarily unavailable. Chart will be calculated in degraded mode (equal houses).",
     es: "Servicio de geolocalización temporalmente no disponible. El tema se calculará en modo degradado (casas iguales).",
+    de: "Der Geokodierungsdienst ist vorübergehend nicht verfügbar. Das Horoskop wird im eingeschränkten Modus berechnet (gleiche Häuser).",
   },
 }
 
@@ -44,11 +49,13 @@ export const DEGRADED_MODE_MESSAGES: Record<DegradedModeMessageKey, Record<Astro
     fr: "Thème calculé en maisons égales — lieu de naissance non renseigné ou non trouvé. Pour un calcul précis, renseignez votre ville et pays dans votre profil.",
     en: "Chart calculated with equal houses — birth location not provided or not found. For accurate calculation, enter your city and country in your profile.",
     es: "Tema calculado con casas iguales — lugar de nacimiento no proporcionado o no encontrado. Para un cálculo preciso, ingrese su ciudad y país en su perfil.",
+    de: "Horoskop mit gleichen Häusern berechnet — Geburtsort nicht angegeben oder nicht gefunden. Für eine präzise Berechnung geben Sie Stadt und Land in Ihrem Profil an.",
   },
   no_time: {
     fr: "Thème calculé en thème solaire — heure de naissance non renseignée. Les positions des maisons et de la Lune peuvent être inexactes.",
     en: "Chart calculated as solar chart — birth time not provided. House and Moon positions may be inaccurate.",
     es: "Tema calculado como tema solar — hora de nacimiento no proporcionada. Las posiciones de las casas y la Luna pueden ser inexactas.",
+    de: "Horoskop als Sonnenhoroskop berechnet — Geburtszeit nicht angegeben. Häuser- und Mondpositionen können ungenau sein.",
   },
 }
 
@@ -59,80 +66,84 @@ export const TIMEZONE_SELECT_MESSAGES: Record<TimezoneSelectMessageKey, Record<A
     fr: "Rechercher un fuseau horaire...",
     en: "Search for a timezone...",
     es: "Buscar zona horaria...",
+    de: "Zeitzone suchen...",
   },
   no_results: {
     fr: "Aucun fuseau horaire trouvé",
     en: "No timezone found",
     es: "No se encontró zona horaria",
+    de: "Keine Zeitzone gefunden",
   },
   hint: {
     fr: "Tapez pour filtrer",
     en: "Type to filter",
     es: "Escriba para filtrar",
+    de: "Tippen, um zu filtern",
   },
 }
 
 const SIGNS: Record<string, Record<AstrologyLang, string>> = {
-  aries: { fr: "Bélier", en: "Aries", es: "Aries" },
-  taurus: { fr: "Taureau", en: "Taurus", es: "Tauro" },
-  gemini: { fr: "Gémeaux", en: "Gemini", es: "Géminis" },
-  cancer: { fr: "Cancer", en: "Cancer", es: "Cáncer" },
-  leo: { fr: "Lion", en: "Leo", es: "Leo" },
-  virgo: { fr: "Vierge", en: "Virgo", es: "Virgo" },
-  libra: { fr: "Balance", en: "Libra", es: "Libra" },
-  scorpio: { fr: "Scorpion", en: "Scorpio", es: "Escorpio" },
-  sagittarius: { fr: "Sagittaire", en: "Sagittarius", es: "Sagitario" },
-  capricorn: { fr: "Capricorne", en: "Capricorn", es: "Capricornio" },
-  aquarius: { fr: "Verseau", en: "Aquarius", es: "Acuario" },
-  pisces: { fr: "Poissons", en: "Pisces", es: "Piscis" },
+  aries: { fr: "Bélier", en: "Aries", es: "Aries", de: "Widder" },
+  taurus: { fr: "Taureau", en: "Taurus", es: "Tauro", de: "Stier" },
+  gemini: { fr: "Gémeaux", en: "Gemini", es: "Géminis", de: "Zwillinge" },
+  cancer: { fr: "Cancer", en: "Cancer", es: "Cáncer", de: "Krebs" },
+  leo: { fr: "Lion", en: "Leo", es: "Leo", de: "Löwe" },
+  virgo: { fr: "Vierge", en: "Virgo", es: "Virgo", de: "Jungfrau" },
+  libra: { fr: "Balance", en: "Libra", es: "Libra", de: "Waage" },
+  scorpio: { fr: "Scorpion", en: "Scorpio", es: "Escorpio", de: "Skorpion" },
+  sagittarius: { fr: "Sagittaire", en: "Sagittarius", es: "Sagitario", de: "Schütze" },
+  capricorn: { fr: "Capricorne", en: "Capricorn", es: "Capricornio", de: "Steinbock" },
+  aquarius: { fr: "Verseau", en: "Aquarius", es: "Acuario", de: "Wassermann" },
+  pisces: { fr: "Poissons", en: "Pisces", es: "Piscis", de: "Fische" },
 }
 
 const PLANETS: Record<string, Record<AstrologyLang, string>> = {
-  sun: { fr: "Soleil", en: "Sun", es: "Sol" },
-  moon: { fr: "Lune", en: "Moon", es: "Luna" },
-  mercury: { fr: "Mercure", en: "Mercury", es: "Mercurio" },
-  venus: { fr: "Vénus", en: "Venus", es: "Venus" },
-  mars: { fr: "Mars", en: "Mars", es: "Marte" },
-  jupiter: { fr: "Jupiter", en: "Jupiter", es: "Júpiter" },
-  saturn: { fr: "Saturne", en: "Saturn", es: "Saturno" },
-  uranus: { fr: "Uranus", en: "Uranus", es: "Urano" },
-  neptune: { fr: "Neptune", en: "Neptune", es: "Neptuno" },
-  pluto: { fr: "Pluton", en: "Pluto", es: "Plutón" },
+  sun: { fr: "Soleil", en: "Sun", es: "Sol", de: "Sonne" },
+  moon: { fr: "Lune", en: "Moon", es: "Luna", de: "Mond" },
+  mercury: { fr: "Mercure", en: "Mercury", es: "Mercurio", de: "Merkur" },
+  venus: { fr: "Vénus", en: "Venus", es: "Venus", de: "Venus" },
+  mars: { fr: "Mars", en: "Mars", es: "Marte", de: "Mars" },
+  jupiter: { fr: "Jupiter", en: "Jupiter", es: "Júpiter", de: "Jupiter" },
+  saturn: { fr: "Saturne", en: "Saturn", es: "Saturno", de: "Saturn" },
+  uranus: { fr: "Uranus", en: "Uranus", es: "Urano", de: "Uranus" },
+  neptune: { fr: "Neptune", en: "Neptune", es: "Neptuno", de: "Neptun" },
+  pluto: { fr: "Pluton", en: "Pluto", es: "Plutón", de: "Pluto" },
 }
 
 const HOUSES: Record<number, Record<AstrologyLang, string>> = {
-  1: { fr: "Maison I — Identité", en: "House I — Identity", es: "Casa I — Identidad" },
-  2: { fr: "Maison II — Valeurs", en: "House II — Values", es: "Casa II — Valores" },
-  3: { fr: "Maison III — Communication", en: "House III — Communication", es: "Casa III — Comunicación" },
-  4: { fr: "Maison IV — Foyer", en: "House IV — Home", es: "Casa IV — Hogar" },
-  5: { fr: "Maison V — Créativité", en: "House V — Creativity", es: "Casa V — Creatividad" },
+  1: { fr: "Maison I — Identité", en: "House I — Identity", es: "Casa I — Identidad", de: "Haus I — Identität" },
+  2: { fr: "Maison II — Valeurs", en: "House II — Values", es: "Casa II — Valores", de: "Haus II — Werte" },
+  3: { fr: "Maison III — Communication", en: "House III — Communication", es: "Casa III — Comunicación", de: "Haus III — Kommunikation" },
+  4: { fr: "Maison IV — Foyer", en: "House IV — Home", es: "Casa IV — Hogar", de: "Haus IV — Zuhause" },
+  5: { fr: "Maison V — Créativité", en: "House V — Creativity", es: "Casa V — Creatividad", de: "Haus V — Kreativität" },
   6: {
     fr: "Maison VI — Routines / hygiène de vie",
     en: "House VI — Routines / lifestyle hygiene",
     es: "Casa VI — Rutinas / higiene de vida",
+    de: "Haus VI — Routinen / Lebenshygiene",
   },
-  7: { fr: "Maison VII — Relations", en: "House VII — Relationships", es: "Casa VII — Relaciones" },
-  8: { fr: "Maison VIII — Transformation", en: "House VIII — Transformation", es: "Casa VIII — Transformación" },
-  9: { fr: "Maison IX — Philosophie", en: "House IX — Philosophy", es: "Casa IX — Filosofía" },
-  10: { fr: "Maison X — Carrière", en: "House X — Career", es: "Casa X — Carrera" },
-  11: { fr: "Maison XI — Communauté", en: "House XI — Community", es: "Casa XI — Comunidad" },
-  12: { fr: "Maison XII — Inconscient", en: "House XII — Unconscious", es: "Casa XII — Inconsciente" },
+  7: { fr: "Maison VII — Relations", en: "House VII — Relationships", es: "Casa VII — Relaciones", de: "Haus VII — Beziehungen" },
+  8: { fr: "Maison VIII — Transformation", en: "House VIII — Transformation", es: "Casa VIII — Transformación", de: "Haus VIII — Transformation" },
+  9: { fr: "Maison IX — Philosophie", en: "House IX — Philosophy", es: "Casa IX — Filosofía", de: "Haus IX — Philosophie" },
+  10: { fr: "Maison X — Carrière", en: "House X — Career", es: "Casa X — Carrera", de: "Haus X — Karriere" },
+  11: { fr: "Maison XI — Communauté", en: "House XI — Community", es: "Casa XI — Comunidad", de: "Haus XI — Gemeinschaft" },
+  12: { fr: "Maison XII — Inconscient", en: "House XII — Unconscious", es: "Casa XII — Inconsciente", de: "Haus XII — Unbewusstes" },
 }
 
 const ASPECTS: Record<string, Record<AstrologyLang, string>> = {
-  conjunction: { fr: "Conjonction", en: "Conjunction", es: "Conjunción" },
-  sextile: { fr: "Sextile", en: "Sextile", es: "Sextil" },
-  square: { fr: "Carré", en: "Square", es: "Cuadratura" },
-  trine: { fr: "Trigone", en: "Trine", es: "Trígono" },
-  opposition: { fr: "Opposition", en: "Opposition", es: "Oposición" },
-  semisextile: { fr: "Semi-sextile", en: "Semi-sextile", es: "Semisextil" },
-  quincunx: { fr: "Quinconce", en: "Quincunx", es: "Quincuncio" },
-  semisquare: { fr: "Semi-carré", en: "Semi-square", es: "Semicuadratura" },
-  sesquiquadrate: { fr: "Sesqui-carré", en: "Sesquiquadrate", es: "Sesquicuadratura" },
+  conjunction: { fr: "Conjonction", en: "Conjunction", es: "Conjunción", de: "Konjunktion" },
+  sextile: { fr: "Sextile", en: "Sextile", es: "Sextil", de: "Sextil" },
+  square: { fr: "Carré", en: "Square", es: "Cuadratura", de: "Quadrat" },
+  trine: { fr: "Trigone", en: "Trine", es: "Trígono", de: "Trigon" },
+  opposition: { fr: "Opposition", en: "Opposition", es: "Oposición", de: "Opposition" },
+  semisextile: { fr: "Semi-sextile", en: "Semi-sextile", es: "Semisextil", de: "Halbsextil" },
+  quincunx: { fr: "Quinconce", en: "Quincunx", es: "Quincuncio", de: "Quinkunx" },
+  semisquare: { fr: "Semi-carré", en: "Semi-square", es: "Semicuadratura", de: "Halbquadrat" },
+  sesquiquadrate: { fr: "Sesqui-carré", en: "Sesquiquadrate", es: "Sesquicuadratura", de: "Sesquiquadrat" },
 }
 
 /** Liste des langues supportées pour validation */
-export const SUPPORTED_LANGS: AstrologyLang[] = ["fr", "en", "es"]
+export const SUPPORTED_LANGS: AstrologyLang[] = ["fr", "en", "es", "de"]
 
 /**
  * Traduit un code de signe zodiacal vers la langue spécifiée.

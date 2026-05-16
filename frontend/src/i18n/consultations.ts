@@ -3,7 +3,7 @@ import type { AppLocale } from "./types"
 
 export type ConsultationsTranslation = { t: (key: string) => string };
 
-const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
+const CONSULTATIONS_I18N: Record<string, Partial<Record<AstrologyLang, string>>> = {
   back_to_dashboard: {
     fr: "Retour au tableau de bord",
     en: "Back to dashboard",
@@ -664,5 +664,5 @@ const CONSULTATIONS_I18N: Record<string, Record<AstrologyLang, string>> = {
 
 export function tConsultations(key: string, lang: AppLocale): string {
   const entry = CONSULTATIONS_I18N[key]
-  return entry?.[lang as AstrologyLang] ?? key
+  return entry?.[lang as AstrologyLang] ?? entry?.en ?? key
 }

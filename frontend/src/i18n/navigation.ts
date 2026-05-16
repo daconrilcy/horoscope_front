@@ -82,6 +82,26 @@ const translations: Record<AstrologyLang, NavigationTranslation> = {
       ent_billing: "Facturación",
     },
   },
+  de: {
+    nav: {
+      today: "Heute",
+      chat: "Chat",
+      natal: "Horoskop",
+      consultations: "Beratungen",
+      astrologers: "Astrologen",
+      help: "Support",
+      profile: "Profil",
+      privacy: "Datenschutz",
+      support: "Support",
+      monitoring: "Monitoring",
+      reconciliation: "Abgleich",
+      ent_api: "API",
+      ent_astro: "Astrologie",
+      ent_usage: "Nutzung",
+      ent_editorial: "Redaktion",
+      ent_billing: "Abrechnung",
+    },
+  },
 }
 
 export function navigationTranslations(lang: AstrologyLang = "fr"): NavigationTranslation {
