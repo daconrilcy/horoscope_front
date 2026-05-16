@@ -45,7 +45,11 @@ def _create_name_translation_table(
             sa.Column(parent_column, sa.Integer(), nullable=False),
             sa.Column("language_id", sa.Integer(), nullable=False),
             sa.Column("translated_name", sa.String(length=128), nullable=False),
-            sa.ForeignKeyConstraint([parent_column], [f"{parent_table}.id"]),
+            sa.ForeignKeyConstraint(
+                [parent_column],
+                [f"{parent_table}.id"],
+                ondelete="CASCADE",
+            ),
             sa.ForeignKeyConstraint(["language_id"], ["languages.id"]),
             sa.UniqueConstraint(parent_column, "language_id", name=unique_name),
         )
@@ -68,7 +72,11 @@ def _create_profile_translation_table(
             sa.Column("title", sa.String(length=128), nullable=False),
             sa.Column("summary", sa.Text(), nullable=True),
             sa.Column("micro_note", sa.Text(), nullable=True),
-            sa.ForeignKeyConstraint(["source_profile_id"], [f"{parent_table}.id"]),
+            sa.ForeignKeyConstraint(
+                ["source_profile_id"],
+                [f"{parent_table}.id"],
+                ondelete="CASCADE",
+            ),
             sa.ForeignKeyConstraint(["language_id"], ["languages.id"]),
             sa.UniqueConstraint("source_profile_id", "language_id", name=unique_name),
         )

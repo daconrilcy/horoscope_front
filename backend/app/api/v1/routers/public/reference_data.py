@@ -4,14 +4,12 @@ import logging
 
 from fastapi import APIRouter, Body, Depends, Header, Query, Request, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, get_optional_authenticated_user
 from app.api.errors import build_error_response
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
-from app.infra.db.models.reference import LanguageModel
 from app.infra.db.session import get_db_session
 from app.services.api_contracts.common import ErrorEnvelope
 from app.services.api_contracts.public.reference_data import (
@@ -19,6 +17,10 @@ from app.services.api_contracts.public.reference_data import (
     LanguagesApiResponse,
 )
 from app.services.ops.audit_service import AuditServiceError
+from app.services.reference_data.language_service import (
+    ReferenceLanguageService,
+    ReferenceLanguageServiceError,
+)
 from app.services.reference_data.public_support import (
     _raise_error,
     _record_reference_audit,
@@ -41,8 +43,8 @@ def list_languages(
     """Retourne les langues canoniques disponibles dans la table `languages`."""
     request_id = resolve_request_id(request)
     try:
-        languages = db.query(LanguageModel).order_by(LanguageModel.code.asc()).all()
-    except SQLAlchemyError:
+        languages = ReferenceLanguageService.list_languages(db)
+    except ReferenceLanguageServiceError as error:
         logger.exception(
             "reference languages lookup failed",
             extra={"request_id": request_id},
@@ -50,12 +52,12 @@ def list_languages(
         return build_error_response(
             status_code=500,
             request_id=request_id,
-            code="reference_languages_unavailable",
-            message="reference languages could not be loaded",
-            details={},
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
     return {
-        "data": [{"code": item.code, "name": item.name} for item in languages],
+        "data": languages,
         "meta": {"request_id": request_id},
     }
 

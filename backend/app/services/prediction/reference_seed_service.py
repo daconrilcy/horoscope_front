@@ -12,10 +12,12 @@ from app.infra.db.models import (
     AstralAspectDefinitionModel,
     AstralAspectFamilyModel,
     AstralAspectInterpretationProfileModel,
+    AstralAspectInterpretationProfileTranslationModel,
     AstralAspectOrbRuleModel,
     AstralDefaultValenceModel,
     AstralDignityTypeModel,
     AstralElementModel,
+    AstralHouseInterpretationProfileTranslationModel,
     AstralInterpretiveValenceModel,
     AstralModalityModel,
     AstralPlanetSignDignityModel,
@@ -1057,6 +1059,24 @@ def run_prediction_reference_seed(db: Session) -> None:
             )
             db.execute(
                 delete(HouseProfileModel).where(HouseProfileModel.reference_version_id == v2.id)
+            )
+            db.execute(
+                delete(AstralHouseInterpretationProfileTranslationModel).where(
+                    AstralHouseInterpretationProfileTranslationModel.source_profile_id.in_(
+                        select(HouseInterpretationProfileModel.id).where(
+                            HouseInterpretationProfileModel.reference_version_id == v2.id
+                        )
+                    )
+                )
+            )
+            db.execute(
+                delete(AstralAspectInterpretationProfileTranslationModel).where(
+                    AstralAspectInterpretationProfileTranslationModel.source_profile_id.in_(
+                        select(AstralAspectInterpretationProfileModel.id).where(
+                            AstralAspectInterpretationProfileModel.reference_version_id == v2.id
+                        )
+                    )
+                )
             )
             db.execute(
                 delete(HouseInterpretationProfileModel).where(

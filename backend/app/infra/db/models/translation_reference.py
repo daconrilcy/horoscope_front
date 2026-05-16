@@ -38,7 +38,7 @@ class AstralSignTranslationModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     astral_sign_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_signs.id"), nullable=False, index=True
+        ForeignKey("astral_signs.id", ondelete="CASCADE"), nullable=False, index=True
     )
     language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
     translated_name: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -61,7 +61,7 @@ class AstralHouseTranslationModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     house_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_houses.id"), nullable=False, index=True
+        ForeignKey("astral_houses.id", ondelete="CASCADE"), nullable=False, index=True
     )
     language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
     translated_name: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -84,7 +84,7 @@ class AstralPlanetTranslationModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     planet_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_planets.id"), nullable=False, index=True
+        ForeignKey("astral_planets.id", ondelete="CASCADE"), nullable=False, index=True
     )
     language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
     translated_name: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -107,7 +107,7 @@ class AstralAspectTranslationModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     aspect_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_aspects.id"), nullable=False, index=True
+        ForeignKey("astral_aspects.id", ondelete="CASCADE"), nullable=False, index=True
     )
     language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
     translated_name: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -130,7 +130,7 @@ class AstralHouseInterpretationProfileTranslationModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source_profile_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_house_interpretation_profiles.id"),
+        ForeignKey("astral_house_interpretation_profiles.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -157,7 +157,7 @@ class AstralPlanetInterpretationProfileTranslationModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source_profile_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_planet_interpretation_profiles.id"),
+        ForeignKey("astral_planet_interpretation_profiles.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -184,7 +184,7 @@ class AstralAspectInterpretationProfileTranslationModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source_profile_id: Mapped[int] = mapped_column(
-        ForeignKey("astral_aspect_interpretation_profiles.id"),
+        ForeignKey("astral_aspect_interpretation_profiles.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )

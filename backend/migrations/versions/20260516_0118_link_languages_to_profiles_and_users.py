@@ -139,7 +139,7 @@ def _upgrade_profile_language(
     if not _table_exists(table_name):
         return
     _add_language_id_column(table_name)
-    with op.batch_alter_table(table_name) as batch_op:
+    with op.batch_alter_table(table_name, reflect_kwargs={"resolve_fks": False}) as batch_op:
         unique_names = _unique_constraint_names(table_name)
         fk_names = _foreign_key_names(table_name)
         if old_unique in unique_names:
@@ -186,7 +186,7 @@ def _downgrade_profile_language(
     index_name = f"ix_{table_name}_language_id"
     if _index_exists(table_name, index_name):
         op.drop_index(index_name, table_name=table_name)
-    with op.batch_alter_table(table_name) as batch_op:
+    with op.batch_alter_table(table_name, reflect_kwargs={"resolve_fks": False}) as batch_op:
         unique_names = _unique_constraint_names(table_name)
         fk_names = _foreign_key_names(table_name)
         if new_unique in unique_names:

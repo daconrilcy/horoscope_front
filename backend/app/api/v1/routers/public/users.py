@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import re
 from threading import Lock
 from time import monotonic
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import ValidationError
-from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -20,8 +18,6 @@ from app.api.errors import build_error_response
 from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
 from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
-from app.infra.db.models.reference import LanguageModel
-from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
 from app.services.api_contracts.common import ErrorEnvelope
@@ -58,43 +54,18 @@ from app.services.user_profile.public_users import (
     _natal_inconsistent_metric_name,
     _should_log_inconsistent_result_event,
 )
+from app.services.user_profile.settings_service import (
+    UserSettingsService,
+    UserSettingsServiceError,
+)
 
 router = APIRouter(prefix="/v1/users", tags=["users"])
 logger = logging.getLogger(__name__)
 _INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
 _INCONSISTENT_LOG_ALWAYS_PER_WINDOW = 10
 _INCONSISTENT_LOG_SAMPLING_RATIO = 0.01
-_COUNTRY_CODE_PATTERN = re.compile(r"^[A-Z]{2}$")
 _inconsistent_log_sampling_lock = Lock()
 _inconsistent_log_sampling_state = {"window_start": monotonic(), "count": 0}
-
-
-def _normalize_optional_text(value: str | None) -> str | None:
-    """Nettoie une valeur optionnelle issue du navigateur sans inventer de fallback."""
-    if value is None:
-        return None
-    stripped = value.strip()
-    return stripped or None
-
-
-def _normalize_country_code(value: str | None) -> str | None:
-    """Normalise un code pays ISO alpha-2 optionnel."""
-    normalized = _normalize_optional_text(value)
-    return normalized.upper() if normalized is not None else None
-
-
-def _settings_payload(user: UserModel) -> dict[str, object]:
-    """Construit la réponse settings sans dupliquer la forme entre GET et PATCH."""
-    return {
-        "astrologer_profile": user.astrologer_profile,
-        "default_astrologer_id": user.default_astrologer_id,
-        "default_language_code": (
-            user.default_language.code if user.default_language is not None else None
-        ),
-        "detected_locale": user.detected_locale,
-        "detected_country_code": user.detected_country_code,
-        "detected_timezone": user.detected_timezone,
-    }
 
 
 @router.get(
@@ -560,18 +531,19 @@ def get_me_settings(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-    user = db.get(UserModel, current_user.id)
-    if not user:
+    try:
+        data = UserSettingsService.get_for_user(db, current_user.id)
+    except UserSettingsServiceError as error:
         return build_error_response(
             status_code=404,
             request_id=request_id,
-            code="user_not_found",
-            message="user not found",
-            details={},
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
     return {
-        "data": _settings_payload(user),
+        "data": data,
         "meta": {"request_id": request_id},
     }
 
@@ -593,92 +565,33 @@ def patch_me_settings(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
-
-    if (
-        payload.astrologer_profile is not None
-        and payload.astrologer_profile not in VALID_ASTROLOGER_PROFILES
-    ):
-        return build_error_response(
-            status_code=422,
-            request_id=request_id,
-            code="invalid_astrologer_profile",
-            message=f"profile must be one of {VALID_ASTROLOGER_PROFILES}",
-            details={"allowed_values": list(VALID_ASTROLOGER_PROFILES)},
-        )
-
-    user = db.get(UserModel, current_user.id)
-    if not user:
-        return build_error_response(
-            status_code=404,
-            request_id=request_id,
-            code="user_not_found",
-            message="user not found",
-            details={},
-        )
-
-    # Partial update logic
-    update_data = payload.model_dump(exclude_unset=True)
-
-    if "astrologer_profile" in update_data:
-        user.astrologer_profile = update_data["astrologer_profile"]
-
-    if "default_astrologer_id" in update_data:
-        user.default_astrologer_id = update_data["default_astrologer_id"]
-
-    if "default_language_code" in update_data:
-        language_code = update_data["default_language_code"]
-        if language_code is None:
-            user.default_language_id = None
-        else:
-            language = db.scalar(select(LanguageModel).where(LanguageModel.code == language_code))
-            if language is None:
-                return build_error_response(
-                    status_code=422,
-                    request_id=request_id,
-                    code="invalid_default_language",
-                    message="language code is not supported",
-                    details={"language_code": language_code},
-                )
-            user.default_language_id = language.id
-
-    if "detected_locale" in update_data:
-        user.detected_locale = _normalize_optional_text(update_data["detected_locale"])
-
-    if "detected_country_code" in update_data:
-        detected_country_code = _normalize_country_code(update_data["detected_country_code"])
-        if detected_country_code is not None and not _COUNTRY_CODE_PATTERN.fullmatch(
-            detected_country_code
-        ):
-            return build_error_response(
-                status_code=422,
-                request_id=request_id,
-                code="invalid_detected_country_code",
-                message="detected country code must be an ISO alpha-2 code",
-                details={"detected_country_code": update_data["detected_country_code"]},
-            )
-        user.detected_country_code = detected_country_code
-
-    if "detected_timezone" in update_data:
-        user.detected_timezone = _normalize_optional_text(update_data["detected_timezone"])
-
     try:
-        db.commit()
-        db.refresh(user)
-    except SQLAlchemyError:
-        db.rollback()
-        logger.exception(
-            "user settings persistence failed",
-            extra={"user_id": current_user.id, "request_id": request_id},
+        data = UserSettingsService.patch_for_user(
+            db,
+            current_user.id,
+            payload,
+            set(VALID_ASTROLOGER_PROFILES),
         )
+    except UserSettingsServiceError as error:
+        if error.code == "user_not_found":
+            status_code = 404
+        elif error.code == "user_settings_persistence_error":
+            status_code = 500
+            logger.exception(
+                "user settings persistence failed",
+                extra={"user_id": current_user.id, "request_id": request_id},
+            )
+        else:
+            status_code = 422
         return build_error_response(
-            status_code=500,
+            status_code=status_code,
             request_id=request_id,
-            code="user_settings_persistence_error",
-            message="user settings could not be persisted",
-            details={},
+            code=error.code,
+            message=error.message,
+            details=error.details,
         )
 
     return {
-        "data": _settings_payload(user),
+        "data": data,
         "meta": {"request_id": request_id},
     }
