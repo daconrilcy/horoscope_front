@@ -72,6 +72,7 @@ from app.infra.db.models.entitlement_mutation.suppression.suppression_rule impor
     CanonicalEntitlementMutationAlertSuppressionRuleModel,
 )
 from app.infra.db.models.feature_flag import FeatureFlagModel
+from app.infra.db.models.flagged_content import FlaggedContentModel
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.models.geocoding_query_cache import GeocodingQueryCacheModel
 from app.infra.db.models.interpretation_reference import (
@@ -215,6 +216,7 @@ __all__ = [
     "EnterpriseEditorialConfigModel",
     "EnterpriseFeatureUsageCounterModel",
     "FeatureFlagModel",
+    "FlaggedContentModel",
     "GeoPlaceResolvedModel",
     "GeocodingQueryCacheModel",
     "PdfTemplateModel",
