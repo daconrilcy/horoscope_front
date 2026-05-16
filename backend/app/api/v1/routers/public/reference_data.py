@@ -7,10 +7,12 @@ from sqlalchemy.orm import Session
 from app.api.dependencies.auth import AuthenticatedUser, get_optional_authenticated_user
 from app.core.config import settings
 from app.core.request_id import resolve_request_id
+from app.infra.db.models.reference import LanguageModel
 from app.infra.db.session import get_db_session
 from app.services.api_contracts.common import ErrorEnvelope
 from app.services.api_contracts.public.reference_data import (
     CloneReferenceVersionPayload,
+    LanguagesApiResponse,
 )
 from app.services.ops.audit_service import AuditServiceError
 from app.services.reference_data.public_support import (
@@ -21,6 +23,23 @@ from app.services.reference_data.public_support import (
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 
 router = APIRouter(prefix="/v1/reference-data", tags=["reference-data"])
+
+
+@router.get(
+    "/languages",
+    response_model=LanguagesApiResponse,
+)
+def list_languages(
+    request: Request,
+    db: Session = Depends(get_db_session),
+) -> dict[str, object]:
+    """Retourne les langues canoniques disponibles dans la table `languages`."""
+    request_id = resolve_request_id(request)
+    languages = db.query(LanguageModel).order_by(LanguageModel.code.asc()).all()
+    return {
+        "data": [{"code": item.code, "name": item.name} for item in languages],
+        "meta": {"request_id": request_id},
+    }
 
 
 @router.post(

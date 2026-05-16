@@ -16,3 +16,17 @@ class CloneReferenceVersionPayload(BaseModel):
 
     source_version: str
     new_version: str
+
+
+class LanguageData(BaseModel):
+    """Langue disponible pour la localisation de l'interface."""
+
+    code: str
+    name: str
+
+
+class LanguagesApiResponse(BaseModel):
+    """Liste des langues supportées par le référentiel applicatif."""
+
+    data: list[LanguageData]
+    meta: ResponseMeta

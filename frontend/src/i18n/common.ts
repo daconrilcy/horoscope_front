@@ -11,6 +11,7 @@ export interface CommonTranslation {
     closeMenu: string
     toggleTheme: string
     openUserMenu: string
+    chooseLanguage: string
   }
   userMenu: {
     editAccount: string
@@ -53,6 +54,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       closeMenu: "Fermer le menu",
       toggleTheme: "Changer le thème",
       openUserMenu: "Menu utilisateur",
+      chooseLanguage: "Choisir la langue",
     },
     userMenu: {
       editAccount: "Modifier mon compte",
@@ -93,6 +95,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       closeMenu: "Close menu",
       toggleTheme: "Toggle theme",
       openUserMenu: "User menu",
+      chooseLanguage: "Choose language",
     },
     userMenu: {
       editAccount: "Edit account",
@@ -133,6 +136,7 @@ const translations: Record<AstrologyLang, CommonTranslation> = {
       closeMenu: "Cerrar menú",
       toggleTheme: "Cambiar tema",
       openUserMenu: "Menú de usuario",
+      chooseLanguage: "Elegir idioma",
     },
     userMenu: {
       editAccount: "Editar cuenta",

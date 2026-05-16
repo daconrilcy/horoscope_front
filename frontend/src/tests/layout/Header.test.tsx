@@ -5,6 +5,7 @@ import { Header } from "../../layouts/components/Header"
 import { SidebarProvider } from "../../state/SidebarContext"
 
 const toggleThemeMock = vi.fn()
+const updateSettingsMock = vi.fn()
 
 const routerFutureFlags = { v7_startTransition: true, v7_relativeSplatPath: true }
 
@@ -16,6 +17,33 @@ vi.mock("../../utils/authToken", () => ({
 vi.mock("../../api/authMe", () => ({
   useAuthMe: () => ({
     data: { role: "user", email: "test@example.com" },
+  }),
+}))
+
+vi.mock("../../api/languages", () => ({
+  useLanguages: () => ({
+    data: [
+      { code: "fr", name: "french" },
+      { code: "en", name: "english" },
+      { code: "es", name: "spanish" },
+    ],
+  }),
+}))
+
+vi.mock("../../api/userSettings", () => ({
+  useUserSettings: () => ({
+    data: {
+      astrologer_profile: "standard",
+      default_astrologer_id: null,
+      default_language_code: null,
+      detected_locale: "fr-FR",
+      detected_country_code: "FR",
+      detected_timezone: "Europe/Paris",
+    },
+  }),
+  useUpdateUserSettings: () => ({
+    mutate: updateSettingsMock,
+    isPending: false,
   }),
 }))
 
@@ -56,6 +84,7 @@ describe("Header", () => {
 
     expect(screen.getByRole("button", { name: "Ouvrir le menu" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Changer le thème" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Choisir la langue" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Menu utilisateur" })).toBeInTheDocument()
   })
 
@@ -103,5 +132,22 @@ describe("Header", () => {
     const menuButton = screen.getByRole("button", { name: "Ouvrir le menu" })
     fireEvent.click(menuButton)
     expect(screen.getByRole("button", { name: "Fermer le menu" })).toBeInTheDocument()
+  })
+
+  it("ouvre le choix de langue et persiste la langue sélectionnée", () => {
+    render(
+      <SidebarProvider>
+        <MemoryRouter initialEntries={["/dashboard"]} future={routerFutureFlags}>
+          <Header />
+        </MemoryRouter>
+      </SidebarProvider>,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Choisir la langue" }))
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "English" }))
+
+    expect(updateSettingsMock).toHaveBeenCalledWith(
+      expect.objectContaining({ default_language_code: "en" }),
+    )
   })
 })

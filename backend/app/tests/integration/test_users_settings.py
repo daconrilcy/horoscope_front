@@ -66,9 +66,15 @@ def test_get_me_settings_authenticated(auth_token: str):
     assert "astrologer_profile" in data
     assert "default_astrologer_id" in data
     assert "default_language_code" in data
+    assert "detected_locale" in data
+    assert "detected_country_code" in data
+    assert "detected_timezone" in data
     assert data["astrologer_profile"] == "standard"
     assert data["default_astrologer_id"] is None
     assert data["default_language_code"] is None
+    assert data["detected_locale"] is None
+    assert data["detected_country_code"] is None
+    assert data["detected_timezone"] is None
 
 
 def test_patch_me_settings_astrologer_profile(auth_token: str):
@@ -136,6 +142,23 @@ def test_patch_me_settings_default_language_code(auth_token: str):
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "invalid_default_language"
+
+
+def test_patch_me_settings_detected_localization(auth_token: str):
+    response = client.patch(
+        "/v1/users/me/settings",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "detected_locale": "fr-FR",
+            "detected_country_code": "fr",
+            "detected_timezone": "Europe/Paris",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["detected_locale"] == "fr-FR"
+    assert data["detected_country_code"] == "FR"
+    assert data["detected_timezone"] == "Europe/Paris"
 
 
 def test_patch_me_settings_invalid_profile(auth_token: str):

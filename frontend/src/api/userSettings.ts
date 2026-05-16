@@ -43,9 +43,11 @@ async function patchUserSettings(payload: Partial<UserSettings>): Promise<UserSe
 }
 
 export function useUserSettings() {
+  const token = getAccessTokenSnapshot();
   return useQuery({
     queryKey: ["user-settings"],
     queryFn: fetchUserSettings,
+    enabled: Boolean(token),
   });
 }
 

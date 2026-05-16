@@ -6,7 +6,7 @@ from threading import Lock
 from time import monotonic
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationData,
@@ -134,6 +134,9 @@ class UserSettingsData(BaseModel):
     astrologer_profile: str
     default_astrologer_id: str | None = None
     default_language_code: str | None = None
+    detected_locale: str | None = None
+    detected_country_code: str | None = None
+    detected_timezone: str | None = None
 
 
 class UserSettingsApiResponse(BaseModel):
@@ -148,4 +151,7 @@ class UserSettingsPatchRequest(BaseModel):
 
     astrologer_profile: str | None = None
     default_astrologer_id: str | None = None
-    default_language_code: str | None = None
+    default_language_code: str | None = Field(default=None, max_length=16)
+    detected_locale: str | None = Field(default=None, max_length=16)
+    detected_country_code: str | None = Field(default=None, max_length=2)
+    detected_timezone: str | None = Field(default=None, max_length=64)

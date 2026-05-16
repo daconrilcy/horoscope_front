@@ -67,6 +67,34 @@ _inconsistent_log_sampling_lock = Lock()
 _inconsistent_log_sampling_state = {"window_start": monotonic(), "count": 0}
 
 
+def _normalize_optional_text(value: str | None) -> str | None:
+    """Nettoie une valeur optionnelle issue du navigateur sans inventer de fallback."""
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped or None
+
+
+def _normalize_country_code(value: str | None) -> str | None:
+    """Normalise un code pays ISO alpha-2 optionnel."""
+    normalized = _normalize_optional_text(value)
+    return normalized.upper() if normalized is not None else None
+
+
+def _settings_payload(user: UserModel) -> dict[str, object]:
+    """Construit la réponse settings sans dupliquer la forme entre GET et PATCH."""
+    return {
+        "astrologer_profile": user.astrologer_profile,
+        "default_astrologer_id": user.default_astrologer_id,
+        "default_language_code": (
+            user.default_language.code if user.default_language is not None else None
+        ),
+        "detected_locale": user.detected_locale,
+        "detected_country_code": user.detected_country_code,
+        "detected_timezone": user.detected_timezone,
+    }
+
+
 @router.get(
     "/me/birth-data",
     response_model=UserBirthProfileWithAstroApiResponse,
@@ -540,17 +568,8 @@ def get_me_settings(
             details={},
         )
 
-    profile = getattr(user, "astrologer_profile", "standard")
-    default_astrologer_id = getattr(user, "default_astrologer_id", None)
-    default_language_code = (
-        user.default_language.code if user.default_language is not None else None
-    )
     return {
-        "data": {
-            "astrologer_profile": profile,
-            "default_astrologer_id": default_astrologer_id,
-            "default_language_code": default_language_code,
-        },
+        "data": _settings_payload(user),
         "meta": {"request_id": request_id},
     }
 
@@ -620,16 +639,19 @@ def patch_me_settings(
                 )
             user.default_language_id = language.id
 
+    if "detected_locale" in update_data:
+        user.detected_locale = _normalize_optional_text(update_data["detected_locale"])
+
+    if "detected_country_code" in update_data:
+        user.detected_country_code = _normalize_country_code(update_data["detected_country_code"])
+
+    if "detected_timezone" in update_data:
+        user.detected_timezone = _normalize_optional_text(update_data["detected_timezone"])
+
     db.commit()
     db.refresh(user)
 
     return {
-        "data": {
-            "astrologer_profile": user.astrologer_profile,
-            "default_astrologer_id": user.default_astrologer_id,
-            "default_language_code": (
-                user.default_language.code if user.default_language is not None else None
-            ),
-        },
+        "data": _settings_payload(user),
         "meta": {"request_id": request_id},
     }

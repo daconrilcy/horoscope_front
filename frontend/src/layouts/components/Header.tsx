@@ -5,7 +5,7 @@ import { Menu, Moon, Sun, X } from "lucide-react"
 import { useState } from "react"
 
 import { useAuthMe } from "@api/authMe"
-import { detectLang } from "@i18n/astrology"
+import { useAstrologyLabels } from "@i18n/astrology"
 import { commonTranslations } from "@i18n/common"
 import { useSidebarContext } from "@state/SidebarContext"
 import { useTheme } from "@state/ThemeProvider"
@@ -13,8 +13,10 @@ import { UserAvatar, UserMenu } from "@ui"
 import { APP_LOGO, APP_NAME } from "@utils/appConfig"
 import { useAccessTokenSnapshot } from "@utils/authToken"
 
+import { LanguageSelector } from "./LanguageSelector"
+
 export function Header() {
-  const lang = detectLang()
+  const { lang } = useAstrologyLabels()
   const t = commonTranslations(lang)
   const token = useAccessTokenSnapshot()
   const authMe = useAuthMe(token)
@@ -54,6 +56,7 @@ export function Header() {
             : <Moon size={20} aria-hidden="true" />
           }
         </button>
+        <LanguageSelector />
         <div className="app-header-avatar-wrapper">
           <UserAvatar
             email={avatarEmail}
