@@ -43,6 +43,7 @@ from app.infra.db.repositories.astrology_reference_sources import (
     load_astral_object_type_rows,
     load_astral_planet_definition_rows,
     load_astral_planet_rows,
+    load_astral_sign_rows,
     load_astral_speed_rows,
     load_astral_system_names,
     load_astral_typical_polarity_rows,
@@ -102,13 +103,14 @@ class ReferenceRepository:
                 planet.name = payload["name"]
                 planet.swe_id = payload["swe_id"]
 
-        for row in load_structural_reference_rows("signs"):
+        for row in load_astral_sign_rows():
             code = str(row["code"])
             sign = self.db.scalar(select(AstralSignModel).where(AstralSignModel.code == code))
+            payload = {"id": int(row["id"]), "name": str(row["name"])}
             if sign is None:
-                self.db.add(AstralSignModel(code=code, name=str(row["name"])))
+                self.db.add(AstralSignModel(code=code, **payload))
             else:
-                sign.name = str(row["name"])
+                sign.name = payload["name"]
 
         for row in load_structural_reference_rows("dignity_types"):
             code = str(row["code"])
@@ -389,7 +391,7 @@ class ReferenceRepository:
             return {}
 
         planets = self.db.scalars(select(PlanetModel).order_by(PlanetModel.code)).all()
-        signs = self.db.scalars(select(AstralSignModel).order_by(AstralSignModel.code)).all()
+        signs = self.db.scalars(select(AstralSignModel).order_by(AstralSignModel.id)).all()
         houses = self.db.scalars(select(HouseModel).order_by(HouseModel.number)).all()
         systems = self.db.execute(
             select(

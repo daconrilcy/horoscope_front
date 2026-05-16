@@ -221,6 +221,7 @@ def _build_system_inheritance(
 def _build_swisseph_positions(
     jdut: float,
     planet_codes: list[str],
+    sign_codes: list[str],
     zodiac: ZodiacType = ZodiacType.TROPICAL,
     ayanamsa: str | None = None,
     frame: FrameType = FrameType.GEOCENTRIC,
@@ -252,7 +253,7 @@ def _build_swisseph_positions(
             {
                 "planet_code": code,
                 "longitude": longitude,
-                "sign_code": sign_from_longitude(longitude),
+                "sign_code": sign_from_longitude(longitude, sign_codes),
                 "speed_longitude": pd.speed_longitude,
                 "is_retrograde": pd.is_retrograde,
             }
@@ -368,6 +369,7 @@ def build_natal_result(
         positions_raw = _build_swisseph_positions(
             prepared.julian_day,
             planet_codes,
+            sign_codes,
             zodiac=zodiac,
             ayanamsa=ayanamsa,
             frame=frame,
@@ -401,7 +403,7 @@ def build_natal_result(
     for position in positions_raw:
         longitude = float(position["longitude"])
         position["house_number"] = assign_house_number(longitude, houses_raw)
-        expected_sign = sign_from_longitude(longitude)
+        expected_sign = sign_from_longitude(longitude, sign_codes)
         if str(position.get("sign_code")) != expected_sign:
             raise NatalCalculationError(
                 code="inconsistent_natal_result",
@@ -565,7 +567,7 @@ def build_natal_result(
     sign_rulerships = _extract_sign_rulerships(runtime_reference)
     house_axes = _extract_house_axes(version, runtime_reference)
     try:
-        house_rulers = HouseRulerResolver(sign_rulerships).resolve(
+        house_rulers = HouseRulerResolver(sign_rulerships, sign_codes=sign_codes).resolve(
             cusp_houses,
             positions,
         )
@@ -579,6 +581,7 @@ def build_natal_result(
         sign_rulerships=sign_rulerships,
         house_axes=house_axes,
         celestial_catalog=celestial_catalog,
+        sign_codes=sign_codes,
     )
     aspects = [_build_aspect_result(item, celestial_catalog) for item in aspects_raw]
 

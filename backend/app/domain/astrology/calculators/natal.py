@@ -36,11 +36,10 @@ def calculate_planet_positions(
     planet_codes: list[str],
     sign_codes: list[str],
 ) -> list[dict[str, object]]:
-    del sign_codes
     positions: list[dict[str, object]] = []
     for index, code in enumerate(planet_codes):
         longitude = round(_planet_longitude(julian_day, code, index), 6)
-        sign_code = sign_from_longitude(longitude)
+        sign_code = sign_from_longitude(longitude, sign_codes)
         positions.append(
             {
                 "planet_code": code,

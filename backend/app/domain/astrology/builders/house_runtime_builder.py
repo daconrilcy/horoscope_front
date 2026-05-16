@@ -5,7 +5,7 @@ Ce module construit les faits de maisons et delegue leur interpretation pure.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Protocol
 
 from app.domain.astrology.calculators.contained_signs import resolve_contained_signs
@@ -40,6 +40,7 @@ def build_house_runtime_data(
     sign_rulerships: Mapping[str, str],
     house_axes: Mapping[int, HouseAxisRuntimeData],
     celestial_catalog: CelestialRuntimeCatalog | None = None,
+    sign_codes: Sequence[str] | None = None,
 ) -> list[HouseRuntimeData]:
     """Construit les maisons enrichies sans recalculer les maîtres."""
     ordered_houses = sorted(houses, key=lambda item: item.number)
@@ -51,9 +52,13 @@ def build_house_runtime_data(
 
     for index, house in enumerate(ordered_houses):
         next_house = ordered_houses[(index + 1) % len(ordered_houses)]
-        cusp_sign = sign_from_longitude(house.cusp_longitude)
-        next_cusp_sign = sign_from_longitude(next_house.cusp_longitude)
-        contained_signs = resolve_contained_signs(house.cusp_longitude, next_house.cusp_longitude)
+        cusp_sign = sign_from_longitude(house.cusp_longitude, sign_codes)
+        next_cusp_sign = sign_from_longitude(next_house.cusp_longitude, sign_codes)
+        contained_signs = resolve_contained_signs(
+            house.cusp_longitude,
+            next_house.cusp_longitude,
+            sign_codes,
+        )
         intercepted_signs = (
             []
             if is_whole_sign

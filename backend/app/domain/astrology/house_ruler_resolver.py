@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Protocol
 
 from pydantic import BaseModel
@@ -42,10 +42,16 @@ class HouseRulerResolutionError(ValueError):
 class HouseRulerResolver:
     """Déduit les maîtres de maisons à partir des cuspides et des planètes."""
 
-    def __init__(self, sign_rulerships: Mapping[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        sign_rulerships: Mapping[str, str] | None = None,
+        *,
+        sign_codes: Sequence[str] | None = None,
+    ) -> None:
         """Initialise le resolver avec le mapping signe -> planète maîtresse."""
+        self._sign_codes = ordered_sign_codes(sign_codes)
         normalized = self._normalize_rulerships(sign_rulerships or {})
-        missing_signs = sorted(set(ordered_sign_codes()) - set(normalized))
+        missing_signs = sorted(set(self._sign_codes) - set(normalized))
         if missing_signs:
             raise HouseRulerResolutionError("missing sign rulerships: " + ", ".join(missing_signs))
         self._sign_rulerships = normalized
@@ -62,7 +68,7 @@ class HouseRulerResolver:
         for house in sorted(houses, key=lambda item: item.number):
             if not 1 <= house.number <= 12:
                 raise HouseRulerResolutionError(f"invalid house number: {house.number}")
-            cusp_sign = sign_from_longitude(house.cusp_longitude)
+            cusp_sign = sign_from_longitude(house.cusp_longitude, self._sign_codes)
             ruler_planet = self._sign_rulerships[cusp_sign]
             ruler_position = planets_by_code.get(ruler_planet)
             house_rulers.append(

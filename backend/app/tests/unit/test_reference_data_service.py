@@ -28,6 +28,10 @@ from app.infra.db.models.reference import (
     PlanetModel,
     ReferenceVersionModel,
 )
+from app.infra.db.repositories.astrology_reference_sources import (
+    astrology_research_path,
+    load_astral_sign_rows,
+)
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
@@ -45,6 +49,16 @@ def _cleanup_reference_tables() -> None:
         ):
             db.execute(delete(model))
         db.commit()
+
+
+def test_astral_sign_seed_source_matches_model_contract() -> None:
+    """Le JSON dédié expose uniquement les champs persistés par AstralSignModel."""
+    source_path = astrology_research_path("astral_signs.json")
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+
+    assert payload["name"] == AstralSignModel.__tablename__
+    assert payload["structure"] == {"id": "integer", "code": "string", "name": "string"}
+    assert [set(row) for row in payload["data"]] == [{"id", "code", "name"}] * 12
 
 
 def test_seed_reference_version_is_idempotent() -> None:
@@ -72,6 +86,7 @@ def test_seed_reference_version_is_idempotent() -> None:
     planets = cast(list[dict[str, Any]], payload["planets"])
     signs = cast(list[dict[str, Any]], payload["signs"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
+    expected_sign_rows = load_astral_sign_rows()
     assert any(item["code"] == "sun" and item["name"] == "Sun" for item in planets)
     assert any(
         item["code"] == "pluto" and item["name"] == "Pluto" and item["swe_id"] == 9
@@ -91,6 +106,7 @@ def test_seed_reference_version_is_idempotent() -> None:
         "aquarius",
         "pisces",
     }
+    assert [item["code"] for item in signs] == [str(row["code"]) for row in expected_sign_rows]
     assert {item["code"] for item in aspects} >= {
         "conjunction",
         "sextile",

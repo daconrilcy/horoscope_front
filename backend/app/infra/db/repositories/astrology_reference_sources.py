@@ -50,6 +50,11 @@ def load_astral_planet_rows() -> tuple[dict[str, Any], ...]:
     return _load_data_rows("astral_planets.json", "astral planets")
 
 
+def load_astral_sign_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les signes canoniques depuis la table JSON dédiée."""
+    return _load_data_rows("astral_signs.json", "astral signs")
+
+
 def load_astral_system_names() -> tuple[str, ...]:
     """Charge les systemes astraux depuis le JSON documentaire canonique."""
     source_path = astrology_research_path("astral_systems.json")
