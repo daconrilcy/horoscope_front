@@ -39,12 +39,14 @@ from app.infra.db.models import (
     RulesetParameterModel,
 )
 from app.infra.db.repositories import ReferenceRepository
+from app.infra.db.repositories.house_system_reference import sync_house_system_seed_data
 from app.services.reference_data.aspect_interpretation_seed_service import (
     sync_aspect_interpretation_profiles,
 )
 from app.services.reference_data.house_interpretation_seed_service import (
     sync_house_interpretation_profiles,
 )
+from app.services.reference_data.translation_seed_service import sync_astral_translation_seed_data
 
 
 class PredictionReferenceSeedAbortError(RuntimeError):
@@ -955,6 +957,29 @@ def _seed_ruleset_content(db: Session, ruleset_id: int):
         )
 
 
+def _ensure_legacy_reference_version_seeded(db: Session) -> ReferenceVersionModel:
+    """Réamorce la référence 1.0.0 quand une base migrée ne contient aucune donnée."""
+    repo = ReferenceRepository(db)
+    v1 = repo.get_version("1.0.0")
+    if v1 is None:
+        print("Creating reference version 1.0.0...")
+        v1 = repo.create_version("1.0.0", description="Initial seeded version")
+
+    repo.seed_version_defaults()
+    sync_house_system_seed_data(db)
+    db.flush()
+    _ensure_astral_dignity_types(db)
+    _ensure_astral_systems(db)
+    _ensure_astral_sign_profiles(db)
+    _ensure_astral_planet_sign_dignities(db)
+    ensure_astral_aspect_reference_data(db, v1.id)
+    sync_house_interpretation_profiles(db, v1.id)
+    sync_aspect_interpretation_profiles(db, v1.id)
+    sync_astral_translation_seed_data(db, v1.id)
+    db.flush()
+    return v1
+
+
 def run_prediction_reference_seed(db: Session) -> None:
     """Crée ou répare le seed canonique de la référence 2.0.0 et de ses rulesets."""
     # 1. Vérification d idempotence.
@@ -968,6 +993,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             sync_house_interpretation_profiles(db, v2.id)
             ensure_astral_aspect_reference_data(db, v2.id)
             sync_aspect_interpretation_profiles(db, v2.id)
+            sync_astral_translation_seed_data(db, v2.id)
         actual = _check_counts(db, v2.id)
 
         # On exige au minimum la présence du ruleset 2.0.0 pour considérer
@@ -1076,6 +1102,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             _ensure_astral_planet_sign_dignities(db)
             ensure_astral_aspect_reference_data(db, v2.id)
             sync_aspect_interpretation_profiles(db, v2.id)
+            sync_astral_translation_seed_data(db, v2.id)
         else:
             # État corrompu ou incomplet alors que la version est verrouillée.
             lines = [
@@ -1097,9 +1124,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
         )
         if not v1:
-            raise PredictionReferenceSeedAbortError(
-                "Reference version 1.0.0 not found. Seed failed."
-            )
+            v1 = _ensure_legacy_reference_version_seeded(db)
 
         print("Creating reference version 2.0.0...")
         repo = ReferenceRepository(db)
@@ -1399,6 +1424,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     print("Seeding aspect profiles...")
     ensure_astral_aspect_reference_data(db, v2.id)
     sync_aspect_interpretation_profiles(db, v2.id)
+    sync_astral_translation_seed_data(db, v2.id)
 
     # 12. Alimentation du ruleset 1.0.0 (legacy).
     print("Seeding ruleset 1.0.0 (legacy)...")

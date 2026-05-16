@@ -52,12 +52,89 @@ EXPECTED_LANGUAGES = {
     "it": "italian",
 }
 
+EXPECTED_TRANSLATION_TABLES = {
+    "astral_sign_translations": {
+        "id",
+        "astral_sign_id",
+        "language_id",
+        "translated_name",
+    },
+    "astral_house_translations": {
+        "id",
+        "house_id",
+        "language_id",
+        "translated_name",
+    },
+    "astral_planet_translations": {
+        "id",
+        "planet_id",
+        "language_id",
+        "translated_name",
+    },
+    "astral_aspect_translations": {
+        "id",
+        "aspect_id",
+        "language_id",
+        "translated_name",
+    },
+    "astral_house_interpretation_profile_translations": {
+        "id",
+        "source_profile_id",
+        "language_id",
+        "title",
+        "summary",
+        "micro_note",
+    },
+    "astral_planet_interpretation_profile_translations": {
+        "id",
+        "source_profile_id",
+        "language_id",
+        "title",
+        "summary",
+        "micro_note",
+    },
+    "astral_aspect_interpretation_profile_translations": {
+        "id",
+        "source_profile_id",
+        "language_id",
+        "title",
+        "summary",
+        "micro_note",
+    },
+}
+
 
 def _alembic_config() -> Config:
     backend_root = Path(__file__).resolve().parents[3]
     config = Config(str(backend_root / "alembic.ini"))
     config.set_main_option("script_location", str(backend_root / "migrations"))
     return config
+
+
+def test_translation_tables_migration_creates_expected_schema(
+    monkeypatch: object, tmp_path: Path
+) -> None:
+    """La migration dédiée crée uniquement les tables de traduction attendues."""
+    db_path = tmp_path / "migration-translation-test.db"
+    database_url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setattr(settings, "database_url", database_url)
+    config = _alembic_config()
+
+    command.downgrade(config, "base")
+    command.upgrade(config, "20260516_0117")
+
+    engine = create_engine(database_url, future=True)
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    for table_name, expected_columns in EXPECTED_TRANSLATION_TABLES.items():
+        assert table_name in tables
+        columns = {column["name"] for column in inspector.get_columns(table_name)}
+        assert columns == expected_columns
+        foreign_key_targets = {
+            foreign_key["referred_table"] for foreign_key in inspector.get_foreign_keys(table_name)
+        }
+        assert "languages" in foreign_key_targets
+    engine.dispose()
 
 
 def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_path: Path) -> None:

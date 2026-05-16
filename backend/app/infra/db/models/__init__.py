@@ -143,6 +143,15 @@ from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
+from app.infra.db.models.translation_reference import (
+    AstralAspectInterpretationProfileTranslationModel,
+    AstralAspectTranslationModel,
+    AstralHouseInterpretationProfileTranslationModel,
+    AstralHouseTranslationModel,
+    AstralPlanetInterpretationProfileTranslationModel,
+    AstralPlanetTranslationModel,
+    AstralSignTranslationModel,
+)
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
 from app.infra.db.models.user_natal_interpretation import (
@@ -158,9 +167,16 @@ __all__ = [
     "AstrologerReviewModel",
     "AstralAnglePointModel",
     "AstralAspectInterpretationProfileModel",
+    "AstralAspectInterpretationProfileTranslationModel",
+    "AstralAspectTranslationModel",
     "AstralHouseAxisDefinitionModel",
     "AstralHouseAxisMemberModel",
+    "AstralHouseInterpretationProfileTranslationModel",
+    "AstralHouseTranslationModel",
     "AstralPlanetInterpretationProfileModel",
+    "AstralPlanetInterpretationProfileTranslationModel",
+    "AstralPlanetTranslationModel",
+    "AstralSignTranslationModel",
     "AstralAstrologicalRoleModel",
     "AstralCalculationTypeModel",
     "BillingPlanModel",

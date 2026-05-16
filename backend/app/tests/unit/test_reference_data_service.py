@@ -7,6 +7,7 @@ from sqlalchemy import delete, func, select
 from app.infra.db.base import Base
 from app.infra.db.models.interpretation_reference import (
     AstralAspectInterpretationProfileModel,
+    AstralPlanetInterpretationProfileModel,
     HouseInterpretationProfileModel,
 )
 from app.infra.db.models.prediction_reference import (
@@ -25,13 +26,24 @@ from app.infra.db.models.reference import (
     AstralSignModel,
     AstralSystemModel,
     HouseModel,
+    LanguageModel,
     PlanetModel,
     ReferenceVersionModel,
+)
+from app.infra.db.models.translation_reference import (
+    AstralAspectInterpretationProfileTranslationModel,
+    AstralAspectTranslationModel,
+    AstralHouseInterpretationProfileTranslationModel,
+    AstralHouseTranslationModel,
+    AstralPlanetInterpretationProfileTranslationModel,
+    AstralPlanetTranslationModel,
+    AstralSignTranslationModel,
 )
 from app.infra.db.repositories.astrology_reference_sources import (
     astrology_research_path,
     load_astral_sign_rows,
 )
+from app.services.reference_data.translation_seed_service import sync_astral_translation_seed_data
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
@@ -185,6 +197,84 @@ def test_seed_reference_version_is_idempotent() -> None:
         assert house_10_profile is not None
         assert house_10_profile.title == "Career and Public Role"
         assert "career" in json.loads(house_10_profile.core_keywords_json or "[]")
+
+
+def test_seed_reference_version_populates_translation_tables() -> None:
+    """Le seed de référence alimente les traductions stables et éditoriales."""
+    _cleanup_reference_tables()
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+
+    with open_app_test_db_session() as db:
+        assert db.scalar(select(func.count()).select_from(AstralSignTranslationModel)) == 48
+        assert db.scalar(select(func.count()).select_from(AstralHouseTranslationModel)) == 48
+        assert db.scalar(select(func.count()).select_from(AstralPlanetTranslationModel)) == 40
+        assert db.scalar(select(func.count()).select_from(AstralAspectTranslationModel)) == 80
+        assert (
+            db.scalar(
+                select(func.count()).select_from(AstralHouseInterpretationProfileTranslationModel)
+            )
+            == 48
+        )
+        assert (
+            db.scalar(
+                select(func.count()).select_from(AstralAspectInterpretationProfileTranslationModel)
+            )
+            == 80
+        )
+        assert (
+            db.scalar(
+                select(func.count()).select_from(AstralPlanetInterpretationProfileTranslationModel)
+            )
+            == 0
+        )
+
+        aries_fr = db.scalar(
+            select(AstralSignTranslationModel.translated_name)
+            .join(AstralSignTranslationModel.sign)
+            .where(
+                AstralSignModel.code == "aries",
+                AstralSignTranslationModel.language.has(code="fr"),
+            )
+        )
+        assert aries_fr == "Bélier"
+
+
+def test_translation_seed_populates_planet_interpretation_translations_when_sources_exist() -> None:
+    """Les traductions éditoriales planétaires se rattachent aux profils source existants."""
+    _cleanup_reference_tables()
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        version = db.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
+        )
+        sun = db.scalar(select(PlanetModel).where(PlanetModel.code == "sun"))
+        modern = db.scalar(select(AstralSystemModel).where(AstralSystemModel.name == "modern"))
+        english = db.scalar(select(LanguageModel).where(LanguageModel.code == "en"))
+        assert version is not None
+        assert sun is not None
+        assert modern is not None
+        assert english is not None
+        db.add(
+            AstralPlanetInterpretationProfileModel(
+                reference_version_id=version.id,
+                planet_id=sun.id,
+                astral_system_id=modern.id,
+                language_id=english.id,
+                title="Identity and Vitality",
+            )
+        )
+        db.flush()
+        sync_astral_translation_seed_data(db, version.id)
+        db.commit()
+
+    with open_app_test_db_session() as db:
+        rows = db.scalars(select(AstralPlanetInterpretationProfileTranslationModel)).all()
+        assert len(rows) == 4
+        assert {row.language.code for row in rows} == {"fr", "es", "de", "it"}
+        assert (
+            next(row for row in rows if row.language.code == "fr").title == "Identité et vitalité"
+        )
 
 
 def test_seed_reference_version_repairs_partial_existing_version() -> None:

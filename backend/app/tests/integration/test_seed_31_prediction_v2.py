@@ -40,6 +40,12 @@ from app.infra.db.models import (
     RulesetEventTypeModel,
     RulesetParameterModel,
 )
+from app.infra.db.models.translation_reference import (
+    AstralAspectTranslationModel,
+    AstralHouseTranslationModel,
+    AstralPlanetTranslationModel,
+    AstralSignTranslationModel,
+)
 from app.services.prediction.reference_seed_service import (
     _ensure_no_complete_inherited_orb_rule_copy,
     _resolve_aspect_orb_rule_groups,
@@ -467,6 +473,37 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
         assert session.scalar(select(func.count()).select_from(AstralElementModel)) == 4
         assert session.scalar(select(func.count()).select_from(AstralModalityModel)) == 3
         assert session.scalar(select(func.count()).select_from(AstralPolarityModel)) == 2
+
+    engine.dispose()
+
+
+def test_seed_31_prediction_v2_bootstraps_empty_migrated_database(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """Le seed repart d'une base migrée au head mais sans données de référence."""
+    engine = _setup_engine(monkeypatch, tmp_path, "test-seed-v2-empty.db")
+
+    with Session(engine) as session:
+        run_seed(session)
+        session.commit()
+
+        v1 = session.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
+        )
+        v2 = session.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0")
+        )
+        assert v1 is not None
+        assert v2 is not None
+        assert v2.is_locked is True
+        assert session.scalar(select(func.count()).select_from(AstralSignModel)) == 12
+        assert session.scalar(select(func.count()).select_from(PlanetModel)) == 10
+        assert session.scalar(select(func.count()).select_from(HouseModel)) == 12
+        assert session.scalar(select(func.count()).select_from(AspectModel)) == 20
+        assert session.scalar(select(func.count()).select_from(AstralSignTranslationModel)) == 48
+        assert session.scalar(select(func.count()).select_from(AstralHouseTranslationModel)) == 48
+        assert session.scalar(select(func.count()).select_from(AstralPlanetTranslationModel)) == 40
+        assert session.scalar(select(func.count()).select_from(AstralAspectTranslationModel)) == 80
 
     engine.dispose()
 
