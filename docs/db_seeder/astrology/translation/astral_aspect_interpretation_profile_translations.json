@@ -1,0 +1,562 @@
+{
+  "name": "astral_aspect_interpretation_profile_translations",
+  "structure": {
+    "source_table": "astral_aspect_interpretation_profiles",
+    "translation_table": "astral_aspect_interpretation_profile_translations",
+    "source_reference": {
+      "reference_version_id": "integer, reference astral_aspect_interpretation_profiles.reference_version_id",
+      "aspect_code": "string, reference astral_aspects.code",
+      "astral_system_code": "string, reference astral_systems.name"
+    },
+    "translations": {
+      "locale": "string, one of fr/es/de/it",
+      "title": "string",
+      "summary": "text",
+      "micro_note": "text"
+    }
+  },
+  "data": {
+    "profiles": [
+      {
+        "reference_version_id": 1,
+        "aspect_code": "conjunction",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Fusion et intensification",
+            "summary": "Une conjonction fusionne deux principes planétaires dans un champ intensifié. Elle amplifie les planètes impliquées et peut paraître naturelle, puissante, excessive ou difficile à distinguer.",
+            "micro_note": "La conjonction dépend du contexte : elle amplifie ce qu'elle touche."
+          },
+          "es": {
+            "title": "Fusión e intensificación",
+            "summary": "Una conjunción mezcla dos principios planetarios en un campo intensificado. Amplifica los planetas implicados y puede sentirse natural, poderosa, excesiva o difícil de separar.",
+            "micro_note": "La conjunción es contextual: magnifica todo lo que toca."
+          },
+          "de": {
+            "title": "Verschmelzung und Intensivierung",
+            "summary": "Eine Konjunktion verbindet zwei planetare Prinzipien zu einem intensivierten Feld. Sie verstärkt die beteiligten Planeten und kann natürlich, kraftvoll, übermäßig oder schwer zu trennen wirken.",
+            "micro_note": "Die Konjunktion ist kontextabhängig: Sie verstärkt alles, was sie berührt."
+          },
+          "it": {
+            "title": "Fusione e intensificazione",
+            "summary": "Una congiunzione fonde due principi planetari in un campo intensificato. Amplifica i pianeti coinvolti e può apparire naturale, potente, eccessiva o difficile da separare.",
+            "micro_note": "La congiunzione è contestuale: amplifica ciò che tocca."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "sextile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Opportunité et coopération",
+            "summary": "Un sextile crée une connexion soutenante qui ouvre des possibilités. Il est constructif et aidant, mais demande généralement une participation consciente pour devenir pleinement actif.",
+            "micro_note": "Le sextile est une porte ; elle doit encore être ouverte."
+          },
+          "es": {
+            "title": "Oportunidad y cooperación",
+            "summary": "Un sextil crea una conexión de apoyo que abre posibilidades. Es constructivo y útil, pero normalmente requiere participación consciente para activarse plenamente.",
+            "micro_note": "El sextil es una puerta; aún hay que abrirla."
+          },
+          "de": {
+            "title": "Chance und Kooperation",
+            "summary": "Ein Sextil schafft eine unterstützende Verbindung, die Möglichkeiten eröffnet. Es ist konstruktiv und hilfreich, benötigt aber meist bewusste Beteiligung, um voll wirksam zu werden.",
+            "micro_note": "Das Sextil ist eine Tür; sie muss noch geöffnet werden."
+          },
+          "it": {
+            "title": "Opportunità e cooperazione",
+            "summary": "Un sestile crea una connessione di sostegno che apre possibilità. È costruttivo e utile, ma di solito richiede partecipazione consapevole per attivarsi pienamente.",
+            "micro_note": "Il sestile è una porta; deve ancora essere aperta."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "square",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Friction et activation",
+            "summary": "Un carré crée une tension entre deux principes planétaires. Il se manifeste souvent par pression, conflit, urgence ou frustration, mais génère aussi mouvement, effort et croissance.",
+            "micro_note": "Le carré est difficile, mais il est l'un des moteurs les plus puissants de croissance."
+          },
+          "es": {
+            "title": "Fricción y activación",
+            "summary": "Una cuadratura crea tensión entre dos principios planetarios. A menudo se manifiesta como presión, conflicto, urgencia o frustración, pero también genera movimiento, esfuerzo y crecimiento.",
+            "micro_note": "La cuadratura es difícil, pero es uno de los motores más fuertes de crecimiento."
+          },
+          "de": {
+            "title": "Reibung und Aktivierung",
+            "summary": "Ein Quadrat erzeugt Spannung zwischen zwei planetaren Prinzipien. Es zeigt sich oft als Druck, Konflikt, Dringlichkeit oder Frustration, erzeugt aber auch Bewegung, Anstrengung und Wachstum.",
+            "micro_note": "Das Quadrat ist schwierig, aber einer der stärksten Wachstumsmotoren."
+          },
+          "it": {
+            "title": "Attrito e attivazione",
+            "summary": "Una quadratura crea tensione tra due principi planetari. Spesso si manifesta come pressione, conflitto, urgenza o frustrazione, ma genera anche movimento, sforzo e crescita.",
+            "micro_note": "La quadratura è difficile, ma è uno dei motori più forti della crescita."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "trine",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Fluidité et intégration",
+            "summary": "Un trigone indique une aisance naturelle entre deux principes planétaires. Il soutient le talent, la fluidité et l'intégration, même s'il peut devenir passif s'il n'est pas utilisé consciemment.",
+            "micro_note": "Le trigone montre ce qui circule naturellement, mais la fluidité a tout de même besoin d'une direction."
+          },
+          "es": {
+            "title": "Fluidez e integración",
+            "summary": "Un trígono indica facilidad natural entre dos principios planetarios. Favorece talento, fluidez e integración, aunque puede volverse pasivo si no se usa conscientemente.",
+            "micro_note": "El trígono muestra lo que fluye naturalmente, pero el flujo aún necesita dirección."
+          },
+          "de": {
+            "title": "Fluss und Integration",
+            "summary": "Ein Trigon zeigt natürliche Leichtigkeit zwischen zwei planetaren Prinzipien. Es unterstützt Talent, Fluss und Integration, kann aber passiv werden, wenn es nicht bewusst genutzt wird.",
+            "micro_note": "Das Trigon zeigt, was natürlich fließt, doch Fluss braucht weiterhin Richtung."
+          },
+          "it": {
+            "title": "Flusso e integrazione",
+            "summary": "Un trigono indica naturale facilità tra due principi planetari. Sostiene talento, fluidità e integrazione, anche se può diventare passivo se non usato consapevolmente.",
+            "micro_note": "Il trigono mostra ciò che scorre naturalmente, ma il flusso ha comunque bisogno di direzione."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "opposition",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Polarité et conscience",
+            "summary": "Une opposition place deux principes planétaires face à face. Elle crée polarité, tension, projection et prise de conscience par contraste, demandant souvent équilibre et intégration.",
+            "micro_note": "L'opposition révèle ce qui doit être équilibré, reconnu et intégré."
+          },
+          "es": {
+            "title": "Polaridad y conciencia",
+            "summary": "Una oposición sitúa dos principios planetarios frente a frente. Crea polaridad, tensión, proyección y conciencia por contraste, y suele requerir equilibrio e integración.",
+            "micro_note": "La oposición revela lo que debe equilibrarse, asumirse e integrarse."
+          },
+          "de": {
+            "title": "Polarität und Bewusstsein",
+            "summary": "Eine Opposition stellt zwei planetare Prinzipien einander gegenüber. Sie erzeugt Polarität, Spannung, Projektion und Bewusstwerdung durch Kontrast und verlangt oft Ausgleich und Integration.",
+            "micro_note": "Die Opposition zeigt, was ausgeglichen, angenommen und integriert werden muss."
+          },
+          "it": {
+            "title": "Polarità e consapevolezza",
+            "summary": "Un'opposizione pone due principi planetari l'uno di fronte all'altro. Crea polarità, tensione, proiezione e consapevolezza attraverso il contrasto, richiedendo spesso equilibrio e integrazione.",
+            "micro_note": "L'opposizione rivela ciò che deve essere equilibrato, riconosciuto e integrato."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "semi_sextile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Ajustement subtil",
+            "summary": "Un semi-sextile relie des principes adjacents, proches mais pas naturellement alignés. Il indique de petites adaptations, une conscience émergente et une friction développementale subtile.",
+            "micro_note": "Le semi-sextile est mineur, mais utile pour les ajustements fins."
+          },
+          "es": {
+            "title": "Ajuste sutil",
+            "summary": "Un semisextil vincula principios adyacentes que están cerca pero no naturalmente alineados. Indica pequeñas adaptaciones, conciencia emergente y fricción evolutiva sutil.",
+            "micro_note": "El semisextil es menor, pero útil para afinar."
+          },
+          "de": {
+            "title": "Feine Anpassung",
+            "summary": "Ein Halbsextil verbindet benachbarte Prinzipien, die nahe beieinander liegen, aber nicht natürlich ausgerichtet sind. Es zeigt kleine Anpassungen, wachsendes Bewusstsein und subtile Entwicklungsreibung.",
+            "micro_note": "Das Halbsextil ist klein, aber nützlich für Feineinstellungen."
+          },
+          "it": {
+            "title": "Aggiustamento sottile",
+            "summary": "Un semisestile collega principi adiacenti, vicini ma non naturalmente allineati. Indica piccoli adattamenti, consapevolezza emergente e sottile attrito evolutivo.",
+            "micro_note": "Il semisestile è minore, ma utile per le regolazioni fini."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "semi_square",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Friction mineure",
+            "summary": "Un semi-carré crée une tension de faible intensité. Moins puissant qu'un carré, il peut produire irritation, agitation et pression récurrente qui demande un ajustement.",
+            "micro_note": "Le semi-carré est une petite pression qui devient utile lorsqu'elle est remarquée tôt."
+          },
+          "es": {
+            "title": "Fricción menor",
+            "summary": "Una semicuadratura crea tensión de baja intensidad. Es menos fuerte que una cuadratura, pero puede producir irritación, inquietud y presión recurrente que pide ajuste.",
+            "micro_note": "La semicuadratura es una pequeña presión que se vuelve útil cuando se detecta pronto."
+          },
+          "de": {
+            "title": "Kleine Reibung",
+            "summary": "Ein Halbquadrat erzeugt unterschwellige Spannung. Es ist weniger kraftvoll als ein Quadrat, kann aber Reizbarkeit, Unruhe und wiederkehrenden Anpassungsdruck hervorbringen.",
+            "micro_note": "Das Halbquadrat ist kleiner Druck, der nützlich wird, wenn er früh erkannt wird."
+          },
+          "it": {
+            "title": "Attrito minore",
+            "summary": "Un semiquadrato crea una tensione di bassa intensità. Meno forte di una quadratura, può produrre irritazione, irrequietezza e pressione ricorrente che chiede aggiustamento.",
+            "micro_note": "Il semiquadrato è una piccola pressione che diventa utile se notata presto."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "quintile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Organisation créative",
+            "summary": "Un quintile suggère intelligence créative, talent, conception, artisanat et capacité à façonner l'expérience intentionnellement. Il est subtil mais très expressif lorsqu'il est cultivé.",
+            "micro_note": "Le quintile indique un talent cultivé et un ordre créatif."
+          },
+          "es": {
+            "title": "Patronaje creativo",
+            "summary": "Un quintil sugiere inteligencia creativa, talento, diseño, oficio y capacidad de dar forma intencional a la experiencia. Es sutil pero muy expresivo cuando se cultiva.",
+            "micro_note": "El quintil apunta a talento cultivado y orden creativo."
+          },
+          "de": {
+            "title": "Kreative Musterbildung",
+            "summary": "Ein Quintil weist auf kreative Intelligenz, Talent, Gestaltung, Handwerk und die Fähigkeit hin, Erfahrung bewusst zu formen. Es ist subtil, aber sehr ausdrucksstark, wenn es gepflegt wird.",
+            "micro_note": "Das Quintil verweist auf kultiviertes Talent und kreative Ordnung."
+          },
+          "it": {
+            "title": "Strutturazione creativa",
+            "summary": "Un quintile suggerisce intelligenza creativa, talento, design, mestiere e capacità di modellare intenzionalmente l'esperienza. È sottile ma molto espressivo se coltivato.",
+            "micro_note": "Il quintile indica talento coltivato e ordine creativo."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "sesquiquadrate",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Tension accumulée",
+            "summary": "Un sesquicarré indique une tension indirecte ou accumulée. Il peut se vivre comme une pression répétée, une frustration ou un stress non résolu qui pousse à corriger.",
+            "micro_note": "Le sesquicarré montre une pression qui s'est construite indirectement."
+          },
+          "es": {
+            "title": "Tensión acumulada",
+            "summary": "Una sesquicuadratura indica tensión indirecta o acumulada. Puede sentirse como presión repetida, frustración o estrés no resuelto que empuja a corregir.",
+            "micro_note": "La sesquicuadratura muestra una presión que se ha ido acumulando indirectamente."
+          },
+          "de": {
+            "title": "Angestaute Spannung",
+            "summary": "Ein Anderthalbquadrat zeigt indirekte oder angesammelte Spannung. Es kann sich wie wiederholter Druck, Frustration oder ungelöster Stress anfühlen, der Korrektur verlangt.",
+            "micro_note": "Das Anderthalbquadrat zeigt Druck, der sich indirekt aufgebaut hat."
+          },
+          "it": {
+            "title": "Tensione accumulata",
+            "summary": "Un sesquiquadrato indica tensione indiretta o accumulata. Può sembrare pressione ripetuta, frustrazione o stress irrisolto che spinge alla correzione.",
+            "micro_note": "Il sesquiquadrato mostra una pressione che si è accumulata indirettamente."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "quincunx",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Ajustement incongru",
+            "summary": "Un quinconce relie des principes planétaires qui ne se comprennent pas naturellement. Il demande souvent adaptation, recalibrage et ajustement pratique sans intégration facile.",
+            "micro_note": "Le quinconce n'est pas un conflit net ; c'est un décalage qui demande un ajustement."
+          },
+          "es": {
+            "title": "Ajuste incongruente",
+            "summary": "Un quincuncio vincula principios planetarios que no se entienden naturalmente. Suele requerir adaptación, recalibración y ajuste práctico sin integración fácil.",
+            "micro_note": "El quincuncio no es un conflicto claro; es un desajuste que pide ajuste."
+          },
+          "de": {
+            "title": "Unstimmige Anpassung",
+            "summary": "Ein Quinkunx verbindet planetare Prinzipien, die einander nicht natürlich verstehen. Er verlangt oft Anpassung, Neukalibrierung und praktische Korrektur ohne einfache Integration.",
+            "micro_note": "Der Quinkunx ist kein klarer Konflikt, sondern eine Unstimmigkeit, die Anpassung verlangt."
+          },
+          "it": {
+            "title": "Aggiustamento incongruente",
+            "summary": "Un quinconce collega principi planetari che non si comprendono naturalmente. Richiede spesso adattamento, ricalibrazione e aggiustamento pratico senza facile integrazione.",
+            "micro_note": "Il quinconce non è un conflitto netto; è una discrepanza che chiede aggiustamento."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "biquintile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Expression créative affinée",
+            "summary": "Un biquintile est une harmonique créative subtile. Il suggère raffinement, intelligence symbolique, capacité de conception et aptitude à donner au talent une forme distinctive.",
+            "micro_note": "Le biquintile affine l'élan créatif du quintile."
+          },
+          "es": {
+            "title": "Expresión creativa refinada",
+            "summary": "Un biquintil es una armónica creativa sutil. Sugiere refinamiento, inteligencia simbólica, capacidad de diseño y la aptitud de dar al talento una forma distintiva.",
+            "micro_note": "El biquintil refina el impulso creativo del quintil."
+          },
+          "de": {
+            "title": "Verfeinerter kreativer Ausdruck",
+            "summary": "Ein Biquintil ist eine subtile kreative Harmonik. Es weist auf Verfeinerung, symbolische Intelligenz, Gestaltungsfähigkeit und die Fähigkeit hin, Talent in eine besondere Form zu bringen.",
+            "micro_note": "Das Biquintil verfeinert den kreativen Impuls des Quintils."
+          },
+          "it": {
+            "title": "Espressione creativa raffinata",
+            "summary": "Un biquintile è un'armonica creativa sottile. Suggerisce raffinatezza, intelligenza simbolica, capacità progettuale e abilità di dare al talento una forma distintiva.",
+            "micro_note": "Il biquintile raffina l'impulso creativo del quintile."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "septile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Compulsion symbolique",
+            "summary": "Un septile est un aspect symbolique avancé associé à une nécessité intérieure, un timing inhabituel, une compulsion subtile et des expériences ressenties comme significatives ou destinées.",
+            "micro_note": "Le septile doit rester subtil et contextualisé dans les interprétations publiques."
+          },
+          "es": {
+            "title": "Compulsión simbólica",
+            "summary": "Un septil es un aspecto simbólico avanzado asociado con necesidad interior, tiempos inusuales, compulsión sutil y experiencias que se sienten significativas o destinadas.",
+            "micro_note": "El septil debe mantenerse sutil y contextual en interpretaciones públicas."
+          },
+          "de": {
+            "title": "Symbolischer Drang",
+            "summary": "Ein Septil ist ein fortgeschrittener symbolischer Aspekt, verbunden mit innerer Notwendigkeit, ungewöhnlichem Timing, subtilem Drang und Erfahrungen, die bedeutungsvoll oder schicksalhaft wirken.",
+            "micro_note": "Das Septil sollte in öffentlichen Deutungen subtil und kontextbezogen bleiben."
+          },
+          "it": {
+            "title": "Compulsione simbolica",
+            "summary": "Un settile è un aspetto simbolico avanzato associato a necessità interiore, tempi insoliti, compulsione sottile ed esperienze percepite come significative o destinate.",
+            "micro_note": "Il settile dovrebbe restare sottile e contestuale nelle interpretazioni pubbliche."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "biseptile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Résonance symbolique profonde",
+            "summary": "Un biseptile prolonge la famille du septile, indiquant une pression symbolique subtile, une résonance inhabituelle et un sentiment de mouvement intérieur significatif.",
+            "micro_note": "Le biseptile est significatif, mais doit être manié avec retenue."
+          },
+          "es": {
+            "title": "Resonancia simbólica profunda",
+            "summary": "Un biseptil extiende la familia del septil e indica presión simbólica sutil, resonancia inusual y sensación de movimiento interior significativo.",
+            "micro_note": "El biseptil es significativo, pero debe tratarse con prudencia."
+          },
+          "de": {
+            "title": "Tiefe symbolische Resonanz",
+            "summary": "Ein Biseptil erweitert die Septil-Familie und zeigt subtilen symbolischen Druck, ungewöhnliche Resonanz und ein Gefühl bedeutsamer innerer Bewegung.",
+            "micro_note": "Das Biseptil ist bedeutsam, sollte aber zurückhaltend behandelt werden."
+          },
+          "it": {
+            "title": "Risonanza simbolica profonda",
+            "summary": "Un bisettile estende la famiglia del settile e indica sottile pressione simbolica, risonanza insolita e senso di movimento interiore significativo.",
+            "micro_note": "Il bisettile è significativo, ma va trattato con misura."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "triseptile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Motif symbolique intensifié",
+            "summary": "Un triseptile appartient à la famille du septile et indique une structuration symbolique intensifiée, une compulsion subtile et des mouvements intérieurs chargés de sens.",
+            "micro_note": "Le triseptile est avancé et ne doit pas dominer seul une lecture."
+          },
+          "es": {
+            "title": "Patrón simbólico intensificado",
+            "summary": "Un triseptil pertenece a la familia del septil y señala patrones simbólicos intensificados, compulsión sutil y movimientos interiores cargados de significado.",
+            "micro_note": "El triseptil es avanzado y no debe dominar una lectura por sí solo."
+          },
+          "de": {
+            "title": "Intensiviertes symbolisches Muster",
+            "summary": "Ein Triseptil gehört zur Septil-Familie und weist auf intensivierte symbolische Muster, subtilen Drang und innere Bewegungen hin, die bedeutungsgeladen wirken können.",
+            "micro_note": "Das Triseptil ist fortgeschritten und sollte eine Deutung nicht allein dominieren."
+          },
+          "it": {
+            "title": "Schema simbolico intensificato",
+            "summary": "Un trisettile appartiene alla famiglia del settile e indica schemi simbolici intensificati, compulsione sottile e movimenti interiori carichi di significato.",
+            "micro_note": "Il trisettile è avanzato e non dovrebbe dominare da solo una lettura."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "novile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Accomplissement intérieur",
+            "summary": "Un novile suggère intégration intérieure, maturation et développement spirituel subtil. Il indique souvent un processus calme d'accomplissement plutôt qu'une pression extérieure visible.",
+            "micro_note": "Le novile est subtil, intérieur et développemental."
+          },
+          "es": {
+            "title": "Cumplimiento interior",
+            "summary": "Un novil sugiere integración interior, maduración y desarrollo espiritual sutil. A menudo apunta a un proceso silencioso de cumplimiento más que a presión externa visible.",
+            "micro_note": "El novil es sutil, interior y evolutivo."
+          },
+          "de": {
+            "title": "Innere Vollendung",
+            "summary": "Ein Novil weist auf innere Integration, Reifung und subtile spirituelle Entwicklung hin. Es zeigt eher einen stillen Prozess der Vollendung als sichtbaren äußeren Druck.",
+            "micro_note": "Das Novil ist subtil, nach innen gerichtet und entwicklungsbezogen."
+          },
+          "it": {
+            "title": "Compimento interiore",
+            "summary": "Un novile suggerisce integrazione interiore, maturazione e sottile sviluppo spirituale. Indica spesso un processo quieto di compimento più che una pressione esterna visibile.",
+            "micro_note": "Il novile è sottile, interiore ed evolutivo."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "binovile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Approfondissement de l'intégration intérieure",
+            "summary": "Un binovile prolonge la famille du novile, suggérant un approfondissement de l'alignement intérieur, de la maturation spirituelle et d'une synthèse discrète.",
+            "micro_note": "Le binovile approfondit le thème d'accomplissement intérieur du novile."
+          },
+          "es": {
+            "title": "Profundización de la integración interior",
+            "summary": "Un binovil extiende la familia del novil y sugiere un proceso más profundo de alineación interior, maduración espiritual y síntesis silenciosa.",
+            "micro_note": "El binovil profundiza el tema de cumplimiento interior del novil."
+          },
+          "de": {
+            "title": "Vertiefung innerer Integration",
+            "summary": "Ein Binovil erweitert die Novil-Familie und weist auf eine Vertiefung innerer Ausrichtung, spiritueller Reifung und stiller Synthese hin.",
+            "micro_note": "Das Binovil vertieft das Thema innerer Vollendung des Novils."
+          },
+          "it": {
+            "title": "Approfondimento dell'integrazione interiore",
+            "summary": "Un binovile estende la famiglia del novile, suggerendo un approfondimento dell'allineamento interiore, della maturazione spirituale e di una sintesi quieta.",
+            "micro_note": "Il binovile approfondisce il tema del compimento interiore del novile."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "quadranovile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Synthèse intérieure culminante",
+            "summary": "Un quadranovile suggère une phase culminante d'intégration intérieure. Il indique un accomplissement subtil, une synthèse spirituelle et la consolidation discrète de l'expérience.",
+            "micro_note": "Le quadranovile indique une culmination calme plutôt qu'une action extérieure évidente."
+          },
+          "es": {
+            "title": "Síntesis interior culminante",
+            "summary": "Un cuadranovil sugiere una fase culminante de integración interior. Señala cumplimiento sutil, síntesis espiritual y consolidación silenciosa de la experiencia.",
+            "micro_note": "El cuadranovil apunta a una culminación tranquila más que a una acción externa evidente."
+          },
+          "de": {
+            "title": "Kulminierende innere Synthese",
+            "summary": "Ein Quadranovil deutet auf eine kulminierende Phase innerer Integration hin. Er zeigt subtile Vollendung, spirituelle Synthese und die stille Konsolidierung von Erfahrung.",
+            "micro_note": "Das Quadranovil verweist auf stille Kulmination statt auf offensichtliches äußeres Handeln."
+          },
+          "it": {
+            "title": "Sintesi interiore culminante",
+            "summary": "Un quadranovile suggerisce una fase culminante di integrazione interiore. Indica compimento sottile, sintesi spirituale e consolidamento quieto dell'esperienza.",
+            "micro_note": "Il quadranovile indica una culminazione quieta più che un'azione esterna evidente."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "decile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Ordonnancement créatif",
+            "summary": "Un décile est une harmonique créative subtile liée à l'ordre, la proportion, la conception intelligente et la capacité à structurer le talent en forme utile.",
+            "micro_note": "Le décile donne forme et ordre à l'intelligence créative."
+          },
+          "es": {
+            "title": "Ordenamiento creativo",
+            "summary": "Un decil es una armónica creativa sutil vinculada al orden, la proporción, el diseño inteligente y la capacidad de estructurar el talento en una forma útil.",
+            "micro_note": "El decil da forma y orden a la inteligencia creativa."
+          },
+          "de": {
+            "title": "Kreative Ordnung",
+            "summary": "Ein Dezil ist eine subtile kreative Harmonik, verbunden mit Ordnung, Proportion, intelligenter Gestaltung und der Fähigkeit, Talent in nützliche Form zu bringen.",
+            "micro_note": "Das Dezil gibt kreativer Intelligenz Form und Ordnung."
+          },
+          "it": {
+            "title": "Ordinamento creativo",
+            "summary": "Un decile è un'armonica creativa sottile legata a ordine, proporzione, design intelligente e capacità di strutturare il talento in una forma utile.",
+            "micro_note": "Il decile dà forma e ordine all'intelligenza creativa."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "tredecile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Intelligence créative spécialisée",
+            "summary": "Un trédécile suggère une intelligence créative spécialisée, un talent inhabituel et la capacité à combiner inspiration et expression structurée.",
+            "micro_note": "Le trédécile est un marqueur subtil de compétence créative distinctive."
+          },
+          "es": {
+            "title": "Inteligencia creativa especializada",
+            "summary": "Un tredecil sugiere inteligencia creativa especializada, habilidad inusual y capacidad de combinar inspiración con expresión estructurada.",
+            "micro_note": "El tredecil es un marcador sutil de habilidad creativa distintiva."
+          },
+          "de": {
+            "title": "Spezialisierte kreative Intelligenz",
+            "summary": "Ein Tredezil weist auf spezialisierte kreative Intelligenz, ungewöhnliche Fähigkeit und die Fähigkeit hin, Inspiration mit strukturierter Ausdrucksform zu verbinden.",
+            "micro_note": "Das Tredezil ist ein subtiler Hinweis auf besondere kreative Begabung."
+          },
+          "it": {
+            "title": "Intelligenza creativa specializzata",
+            "summary": "Un tredecile suggerisce intelligenza creativa specializzata, abilità insolita e capacità di unire ispirazione ed espressione strutturata.",
+            "micro_note": "Il tredecile è un indicatore sottile di abilità creativa distintiva."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "aspect_code": "quindecile",
+        "astral_system_code": "modern",
+        "translations": {
+          "fr": {
+            "title": "Concentration intense et fixation",
+            "summary": "Un quindécile suggère concentration intense, compulsion, obsession ou focalisation profonde. Il peut créer une persistance remarquable, mais aussi une fixation s'il reste inconscient.",
+            "micro_note": "Le quindécile peut devenir maîtrise ou obsession selon le degré de conscience."
+          },
+          "es": {
+            "title": "Enfoque intenso y fijación",
+            "summary": "Un quindecil sugiere enfoque intenso, compulsión, obsesión o concentración profunda. Puede crear persistencia extraordinaria, pero también fijación si opera inconscientemente.",
+            "micro_note": "El quindecil puede convertirse en maestría u obsesión según la conciencia."
+          },
+          "de": {
+            "title": "Intensiver Fokus und Fixierung",
+            "summary": "Ein Quindezil weist auf intensiven Fokus, Zwang, Besessenheit oder tiefe Konzentration hin. Es kann außergewöhnliche Ausdauer schaffen, aber unbewusst auch Fixierung.",
+            "micro_note": "Das Quindezil kann je nach Bewusstsein zu Meisterschaft oder Besessenheit werden."
+          },
+          "it": {
+            "title": "Focalizzazione intensa e fissazione",
+            "summary": "Un quindecile suggerisce focalizzazione intensa, compulsione, ossessione o concentrazione profonda. Può creare persistenza straordinaria, ma anche fissazione se inconsapevole.",
+            "micro_note": "Il quindecile può diventare maestria o ossessione secondo il livello di consapevolezza."
+          }
+        }
+      }
+    ]
+  }
+}

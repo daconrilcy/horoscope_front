@@ -1,8 +1,20 @@
 {
-    "name": [
-        "traditional",
-        "modern",
-        "hellenistic",
-        "medieval"
-    ]
+  "name": "astral_systems",
+  "structure": {
+    "name": "string"
+  },
+  "data": [
+    {
+      "name": "traditional"
+    },
+    {
+      "name": "modern"
+    },
+    {
+      "name": "hellenistic"
+    },
+    {
+      "name": "medieval"
+    }
+  ]
 }

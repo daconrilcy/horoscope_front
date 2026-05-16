@@ -369,7 +369,7 @@ def build_natal_result(
         positions_raw = _build_swisseph_positions(
             prepared.julian_day,
             planet_codes,
-            sign_codes,
+            sign_codes=sign_codes,
             zodiac=zodiac,
             ayanamsa=ayanamsa,
             frame=frame,
@@ -464,10 +464,15 @@ def build_natal_result(
     aspect_definitions: list[AspectDefinitionRuntimeData] = []
     for item in aspects_data:
         if item.legacy_orb_fields:
-            _raise_invalid_reference(
-                version,
-                "aspects",
-                "legacy aspect orb fields are forbidden: " + ", ".join(item.legacy_orb_fields),
+            raise NatalCalculationError(
+                code="invalid_reference_data",
+                message="aspects reference data is invalid",
+                details={
+                    "reference_version": version,
+                    "field": "aspects",
+                    "reason": "legacy_orb_fields_forbidden",
+                    "legacy_fields": ",".join(item.legacy_orb_fields),
+                },
             )
         try:
             aspect_definition = AspectDefinitionRuntimeData(

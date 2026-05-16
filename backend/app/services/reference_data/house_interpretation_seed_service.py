@@ -16,7 +16,6 @@ from app.infra.db.models import (
     ReferenceVersionModel,
 )
 
-SOURCE_KEY = "house_interpretation_profiles"
 DEFAULT_LANGUAGE = "en"
 JSON_FIELD_NAMES = (
     "core_keywords_json",
@@ -38,15 +37,15 @@ JSON_FIELD_NAMES = (
 def _house_interpretation_source_path() -> Path:
     """Retourne le chemin du JSON documentaire des profils de maisons."""
     candidate_relative_paths = (
-        Path("docs") / "db_seeder" / "astrology" / "house_interpretation_vocabulary.json",
-        Path("docs") / "recherches astro" / "house_interpretation_vocabulary.json",
+        Path("docs") / "db_seeder" / "astrology" / "astral_house_interpretation_profiles.json",
+        Path("docs") / "recherches astro" / "astral_house_interpretation_profiles.json",
     )
     for parent in Path(__file__).resolve().parents:
         for relative_path in candidate_relative_paths:
             source_path = parent / relative_path
             if source_path.exists():
                 return source_path
-    raise FileNotFoundError("missing astrology seed house_interpretation_vocabulary.json")
+    raise FileNotFoundError("missing astrology seed astral_house_interpretation_profiles.json")
 
 
 def load_house_interpretation_profiles_source() -> list[dict[str, Any]]:
@@ -56,7 +55,7 @@ def load_house_interpretation_profiles_source() -> list[dict[str, Any]]:
         raw = json.load(stream)
     if not isinstance(raw, dict):
         raise ValueError("house interpretation source must be an object")
-    rows = raw.get(SOURCE_KEY)
+    rows = raw.get("data")
     if not isinstance(rows, list) or len(rows) != 12:
         raise ValueError("house interpretation source must contain 12 profiles")
     return rows

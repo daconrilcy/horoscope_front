@@ -56,18 +56,24 @@ def _source_path() -> Path:
         / "docs"
         / "db_seeder"
         / "astrology"
-        / "planet_sign_diginities.json",
+        / "astral_planet_sign_dignities.json",
         migration_path.parents[2]
         / "docs"
         / "db_seeder"
         / "astrology"
-        / "planet_sign_diginities.json",
-        migration_path.parents[3] / "docs" / "recherches astro" / "planet_sign_diginities.json",
-        migration_path.parents[2] / "docs" / "recherches astro" / "planet_sign_diginities.json",
+        / "astral_planet_sign_dignities.json",
+        migration_path.parents[3]
+        / "docs"
+        / "recherches astro"
+        / "astral_planet_sign_dignities.json",
+        migration_path.parents[2]
+        / "docs"
+        / "recherches astro"
+        / "astral_planet_sign_dignities.json",
     )
     source_path = next((path for path in candidate_paths if path.exists()), None)
     if source_path is None:
-        raise RuntimeError("missing astrology seed planet_sign_diginities.json")
+        raise RuntimeError("missing astrology seed astral_planet_sign_dignities.json")
     return source_path
 
 
@@ -75,7 +81,8 @@ def _load_source_rows() -> list[dict[str, Any]]:
     """Charge et valide la structure minimale du JSON de dignites."""
     with _source_path().open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    if not isinstance(raw, list) or not raw:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise RuntimeError("planet sign dignities source must be a non-empty list")
     required_keys = {
         "id",
@@ -86,13 +93,13 @@ def _load_source_rows() -> list[dict[str, Any]]:
         "weight",
         "is_primary",
     }
-    for row in raw:
+    for row in rows:
         if not isinstance(row, dict) or required_keys - row.keys():
             raise RuntimeError("planet sign dignity rows have an invalid structure")
-    ids = [int(row["id"]) for row in raw]
+    ids = [int(row["id"]) for row in rows]
     if len(ids) != len(set(ids)):
         raise RuntimeError("planet sign dignity ids must be unique")
-    return raw
+    return rows
 
 
 def _lookup_ids(table_name: str, key_column: str) -> dict[str, int]:

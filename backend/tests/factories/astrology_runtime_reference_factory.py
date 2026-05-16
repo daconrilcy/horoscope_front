@@ -13,6 +13,21 @@ from app.infra.db.repositories.astrology_runtime_reference_mapper import (
     AstrologyRuntimeReferenceMapper,
 )
 
+_CANONICAL_SIGN_CODES = (
+    "aries",
+    "taurus",
+    "gemini",
+    "cancer",
+    "leo",
+    "virgo",
+    "libra",
+    "scorpio",
+    "sagittarius",
+    "capricorn",
+    "aquarius",
+    "pisces",
+)
+
 
 def runtime_reference_from_mapping(
     payload: Mapping[str, object],
@@ -21,6 +36,7 @@ def runtime_reference_from_mapping(
 ) -> AstrologyRuntimeReference:
     """Convertit un ancien payload de fixture en runtime reference type."""
     payload = dict(payload)
+    payload["signs"] = _complete_sign_payload(payload.get("signs"))
     sign_rulerships = payload.get("sign_rulerships")
     if not isinstance(sign_rulerships, Mapping):
         sign_rulerships = {
@@ -149,22 +165,28 @@ def _default_aspect_orb_rules(payload: Mapping[str, object]) -> tuple[dict[str, 
     return tuple(rules)
 
 
+def _complete_sign_payload(raw_signs: object) -> list[dict[str, object]]:
+    """Complete les anciennes fixtures partielles avec le catalogue zodiacal canonique."""
+    existing: dict[str, dict[str, object]] = {}
+    if isinstance(raw_signs, list):
+        for item in raw_signs:
+            if not isinstance(item, Mapping):
+                continue
+            code = str(item.get("code") or "").strip().lower()
+            if code:
+                existing[code] = dict(item)
+
+    signs: list[dict[str, object]] = []
+    for code in _CANONICAL_SIGN_CODES:
+        payload = dict(existing.get(code) or {})
+        payload.setdefault("code", code)
+        payload.setdefault("name", code.title())
+        signs.append(payload)
+    return signs
+
+
 def complete_reference() -> AstrologyRuntimeReference:
     """Retourne une reference minimale complete pour les tests de garde."""
-    signs = (
-        "aries",
-        "taurus",
-        "gemini",
-        "cancer",
-        "leo",
-        "virgo",
-        "libra",
-        "scorpio",
-        "sagittarius",
-        "capricorn",
-        "aquarius",
-        "pisces",
-    )
     planets = (
         "sun",
         "moon",
@@ -181,7 +203,7 @@ def complete_reference() -> AstrologyRuntimeReference:
         {
             "version": "test",
             "planets": [{"code": code, "name": code.title()} for code in planets],
-            "signs": [{"code": code, "name": code.title()} for code in signs],
+            "signs": [{"code": code, "name": code.title()} for code in _CANONICAL_SIGN_CODES],
             "houses": [{"number": number, "name": f"House {number}"} for number in range(1, 13)],
             "house_axes": [
                 {

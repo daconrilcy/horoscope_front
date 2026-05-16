@@ -89,7 +89,7 @@ Maisons seedées par `ReferenceRepository.seed_version_defaults` :
 | 11 | `Community` | Collectif et réseaux |
 | 12 | `Subconscious` | Intériorité et ressources cachées |
 
-Source actuelle : section `houses` de `docs/db_seeder/astrology/structural_reference_catalog.json`.
+Source actuelle : section `houses` de `docs/db_seeder/astrology/astral_structural_reference_catalog.json`.
 
 ### `astral_house_systems`
 
@@ -193,7 +193,7 @@ Qualification :
 - Versionnée par `reference_version_id` pour permettre l'évolution du ton éditorial, des prompts, des marchés, des langues et des systèmes astrologiques.
 - Rattachée à `astral_houses.id`, sans ajouter de contenu interprétatif dans `astral_houses`.
 - Rattachée à `astral_systems.id` pour éviter une tradition éditoriale stockée en texte libre.
-- Alimentée par `sync_house_interpretation_profiles` depuis `docs/db_seeder/astrology/house_interpretation_vocabulary.json`. Le JSON peut contenir `"tradition": "modern"`, mais le seed résout cette valeur vers `astral_systems.id` avant insertion.
+- Alimentée par `sync_house_interpretation_profiles` depuis `docs/db_seeder/astrology/astral_house_interpretation_profiles.json`. Le JSON peut contenir `"tradition": "modern"`, mais le seed résout cette valeur vers `astral_systems.id` avant insertion.
 - Non consommée par `domain/astrology` : le runtime conserve uniquement les faits calculés du thème.
 
 Colonnes principales :
@@ -1126,10 +1126,10 @@ Rôle :
 - `backend/migrations/versions/20260515_0110_create_astral_house_axis_members.py`
 - `backend/migrations/versions/20260515_0111_deversion_astral_house_axis_definitions.py`
 - `backend/migrations/versions/20260515_0112_create_astral_object_reference_tables.py`
-- `docs/db_seeder/astrology/structural_reference_catalog.json`
+- `docs/db_seeder/astrology/astral_structural_reference_catalog.json`
 - `docs/db_seeder/astrology/astral_house_system.json`
 - `docs/db_seeder/astrology/astral_angle_points.json`
 - `docs/db_seeder/astrology/astral_house_modalities.json`
 - `docs/db_seeder/astrology/astral_house_axis_definitions.json`
 - `docs/db_seeder/astrology/astral_house_axis_members.json`
-- `docs/db_seeder/astrology/house_interpretation_vocabulary.json`
+- `docs/db_seeder/astrology/astral_house_interpretation_profiles.json`

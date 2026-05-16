@@ -81,19 +81,34 @@ def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
     """Charge les mots-clés des signes depuis la source documentaire canonique."""
     migration_path = Path(__file__).resolve()
     candidate_paths = (
-        migration_path.parents[3] / "docs" / "db_seeder" / "astrology" / "signs_keywords.json",
-        migration_path.parents[2] / "docs" / "db_seeder" / "astrology" / "signs_keywords.json",
-        migration_path.parents[3] / "docs" / "recherches astro" / "signs_keywords.json",
-        migration_path.parents[2] / "docs" / "recherches astro" / "signs_keywords.json",
+        migration_path.parents[3]
+        / "docs"
+        / "db_seeder"
+        / "astrology"
+        / "astral_sign_keywords.json",
+        migration_path.parents[2]
+        / "docs"
+        / "db_seeder"
+        / "astrology"
+        / "astral_sign_keywords.json",
+        migration_path.parents[3] / "docs" / "recherches astro" / "astral_sign_keywords.json",
+        migration_path.parents[2] / "docs" / "recherches astro" / "astral_sign_keywords.json",
     )
     keywords_path = next((path for path in candidate_paths if path.exists()), None)
     if keywords_path is None:
-        raise RuntimeError("missing astrology seed signs_keywords.json")
+        raise RuntimeError("missing astrology seed astral_sign_keywords.json")
     with keywords_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    if not isinstance(raw, dict):
-        raise RuntimeError("signs keywords source must be an object")
-    return raw
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise RuntimeError("signs keywords source must contain a non-empty data list")
+    return {
+        str(row["code"]): {
+            "keywords": [str(value) for value in row["keywords_json"]],
+            "shadow_keywords": [str(value) for value in row["shadow_keywords_json"]],
+        }
+        for row in rows
+    }
 
 
 def _required_keyword_list(

@@ -37,9 +37,9 @@ def _backend_test_files() -> set[Path]:
 
 
 def _collected_test_files() -> set[Path]:
-    """Execute la collecte standard et extrait les fichiers qui portent des tests."""
+    """Execute la collecte complete et extrait les fichiers qui portent des tests."""
     result = subprocess.run(
-        [sys.executable, "-m", "pytest", "--collect-only", "-q", "--ignore=.tmp-pytest"],
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", "--long", "--ignore=.tmp-pytest"],
         cwd=BACKEND_ROOT,
         check=False,
         capture_output=True,

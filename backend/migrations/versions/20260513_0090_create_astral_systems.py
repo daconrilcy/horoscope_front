@@ -34,9 +34,12 @@ def _load_astral_system_names() -> list[str]:
 
     with systems_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    names = raw.get("name") if isinstance(raw, dict) else None
-    if not isinstance(names, list) or not names:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise RuntimeError("astral systems source must contain a non-empty name list")
+    names = [row.get("name") for row in rows if isinstance(row, dict)]
+    if len(names) != len(rows):
+        raise RuntimeError("astral system rows must be objects")
     if not all(isinstance(name, str) and name.strip() for name in names):
         raise RuntimeError("astral system names must be non-empty strings")
     if len(set(names)) != len(names):

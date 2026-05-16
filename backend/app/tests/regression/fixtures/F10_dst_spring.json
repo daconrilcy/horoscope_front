@@ -114,20 +114,20 @@
     "input_hash": "05d93f9be6a885f9c3f9841a91db1e80155299bbf47c5a841ff5707b91691065",
     "category_scores": {
       "energy": {
-        "note_20": 14,
-        "raw_score": 8.825111138450557e-06,
-        "normalized_score": 8.825111138450557e-06,
-        "power": 7.185046236614611e-05,
-        "volatility": 1.0687140097277063e-05,
+        "note_20": 7,
+        "raw_score": -7.529049035637153e-06,
+        "normalized_score": -7.529049035637153e-06,
+        "power": 0.0003887690353535887,
+        "volatility": 5.63418109967563e-05,
         "sort_order": 1,
         "is_provisional": true
       },
       "mood": {
-        "note_20": 14,
-        "raw_score": 8.146256435492821e-06,
-        "normalized_score": 8.146256435492821e-06,
-        "power": 6.632350372259643e-05,
-        "volatility": 9.86505239748652e-06,
+        "note_20": 9,
+        "raw_score": -4.394134389765563e-06,
+        "normalized_score": -4.394134389765563e-06,
+        "power": 0.00024689722658339315,
+        "volatility": 3.548774573666984e-05,
         "sort_order": 2,
         "is_provisional": true
       },
@@ -142,19 +142,19 @@
       },
       "work": {
         "note_20": 19,
-        "raw_score": 0.027405021918145048,
-        "normalized_score": 0.027405021918145048,
+        "raw_score": 0.027389116002712027,
+        "normalized_score": 0.027389116002712027,
         "power": 0.14400744685091035,
-        "volatility": 0.026296737200931414,
+        "volatility": 0.026303383340115803,
         "sort_order": 4,
         "is_provisional": true
       },
       "career": {
         "note_20": 20,
-        "raw_score": 0.027475800645183908,
-        "normalized_score": 0.027475800645183908,
+        "raw_score": 0.027448508299742897,
+        "normalized_score": 0.027448508299742897,
         "power": 0.11148205785817561,
-        "volatility": 0.025493276368140187,
+        "volatility": 0.025505446243545744,
         "sort_order": 5,
         "is_provisional": true
       },
@@ -222,8 +222,8 @@
         "is_provisional": true
       }
     },
-    "detected_events_count": 47,
-    "turning_points_count": 17,
+    "detected_events_count": 48,
+    "turning_points_count": 21,
     "sample_count": 92,
     "is_provisional_calibration": true
   }

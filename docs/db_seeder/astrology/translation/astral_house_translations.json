@@ -1,0 +1,348 @@
+{
+  "name": "astral_house_translations",
+  "structure": {
+    "id": "integer",
+    "astral_house_id": "integer foreign key astral_houses.id",
+    "astral_house_number": "integer reference astral_houses.number",
+    "locale": "string",
+    "translated_name": "string"
+  },
+  "data": [
+    {
+      "id": 1,
+      "astral_house_id": 1,
+      "astral_house_number": 1,
+      "locale": "fr",
+      "translated_name": "Soi"
+    },
+    {
+      "id": 2,
+      "astral_house_id": 1,
+      "astral_house_number": 1,
+      "locale": "es",
+      "translated_name": "Yo"
+    },
+    {
+      "id": 3,
+      "astral_house_id": 1,
+      "astral_house_number": 1,
+      "locale": "de",
+      "translated_name": "Selbst"
+    },
+    {
+      "id": 4,
+      "astral_house_id": 1,
+      "astral_house_number": 1,
+      "locale": "it",
+      "translated_name": "Io"
+    },
+    {
+      "id": 5,
+      "astral_house_id": 2,
+      "astral_house_number": 2,
+      "locale": "fr",
+      "translated_name": "Ressources"
+    },
+    {
+      "id": 6,
+      "astral_house_id": 2,
+      "astral_house_number": 2,
+      "locale": "es",
+      "translated_name": "Recursos"
+    },
+    {
+      "id": 7,
+      "astral_house_id": 2,
+      "astral_house_number": 2,
+      "locale": "de",
+      "translated_name": "Ressourcen"
+    },
+    {
+      "id": 8,
+      "astral_house_id": 2,
+      "astral_house_number": 2,
+      "locale": "it",
+      "translated_name": "Risorse"
+    },
+    {
+      "id": 9,
+      "astral_house_id": 3,
+      "astral_house_number": 3,
+      "locale": "fr",
+      "translated_name": "Communication"
+    },
+    {
+      "id": 10,
+      "astral_house_id": 3,
+      "astral_house_number": 3,
+      "locale": "es",
+      "translated_name": "Comunicación"
+    },
+    {
+      "id": 11,
+      "astral_house_id": 3,
+      "astral_house_number": 3,
+      "locale": "de",
+      "translated_name": "Kommunikation"
+    },
+    {
+      "id": 12,
+      "astral_house_id": 3,
+      "astral_house_number": 3,
+      "locale": "it",
+      "translated_name": "Comunicazione"
+    },
+    {
+      "id": 13,
+      "astral_house_id": 4,
+      "astral_house_number": 4,
+      "locale": "fr",
+      "translated_name": "Foyer"
+    },
+    {
+      "id": 14,
+      "astral_house_id": 4,
+      "astral_house_number": 4,
+      "locale": "es",
+      "translated_name": "Hogar"
+    },
+    {
+      "id": 15,
+      "astral_house_id": 4,
+      "astral_house_number": 4,
+      "locale": "de",
+      "translated_name": "Zuhause"
+    },
+    {
+      "id": 16,
+      "astral_house_id": 4,
+      "astral_house_number": 4,
+      "locale": "it",
+      "translated_name": "Casa"
+    },
+    {
+      "id": 17,
+      "astral_house_id": 5,
+      "astral_house_number": 5,
+      "locale": "fr",
+      "translated_name": "Créativité"
+    },
+    {
+      "id": 18,
+      "astral_house_id": 5,
+      "astral_house_number": 5,
+      "locale": "es",
+      "translated_name": "Creatividad"
+    },
+    {
+      "id": 19,
+      "astral_house_id": 5,
+      "astral_house_number": 5,
+      "locale": "de",
+      "translated_name": "Kreativität"
+    },
+    {
+      "id": 20,
+      "astral_house_id": 5,
+      "astral_house_number": 5,
+      "locale": "it",
+      "translated_name": "Creatività"
+    },
+    {
+      "id": 21,
+      "astral_house_id": 6,
+      "astral_house_number": 6,
+      "locale": "fr",
+      "translated_name": "Santé"
+    },
+    {
+      "id": 22,
+      "astral_house_id": 6,
+      "astral_house_number": 6,
+      "locale": "es",
+      "translated_name": "Salud"
+    },
+    {
+      "id": 23,
+      "astral_house_id": 6,
+      "astral_house_number": 6,
+      "locale": "de",
+      "translated_name": "Gesundheit"
+    },
+    {
+      "id": 24,
+      "astral_house_id": 6,
+      "astral_house_number": 6,
+      "locale": "it",
+      "translated_name": "Salute"
+    },
+    {
+      "id": 25,
+      "astral_house_id": 7,
+      "astral_house_number": 7,
+      "locale": "fr",
+      "translated_name": "Partenariat"
+    },
+    {
+      "id": 26,
+      "astral_house_id": 7,
+      "astral_house_number": 7,
+      "locale": "es",
+      "translated_name": "Asociación"
+    },
+    {
+      "id": 27,
+      "astral_house_id": 7,
+      "astral_house_number": 7,
+      "locale": "de",
+      "translated_name": "Partnerschaft"
+    },
+    {
+      "id": 28,
+      "astral_house_id": 7,
+      "astral_house_number": 7,
+      "locale": "it",
+      "translated_name": "Partnership"
+    },
+    {
+      "id": 29,
+      "astral_house_id": 8,
+      "astral_house_number": 8,
+      "locale": "fr",
+      "translated_name": "Transformation"
+    },
+    {
+      "id": 30,
+      "astral_house_id": 8,
+      "astral_house_number": 8,
+      "locale": "es",
+      "translated_name": "Transformación"
+    },
+    {
+      "id": 31,
+      "astral_house_id": 8,
+      "astral_house_number": 8,
+      "locale": "de",
+      "translated_name": "Transformation"
+    },
+    {
+      "id": 32,
+      "astral_house_id": 8,
+      "astral_house_number": 8,
+      "locale": "it",
+      "translated_name": "Trasformazione"
+    },
+    {
+      "id": 33,
+      "astral_house_id": 9,
+      "astral_house_number": 9,
+      "locale": "fr",
+      "translated_name": "Croyances"
+    },
+    {
+      "id": 34,
+      "astral_house_id": 9,
+      "astral_house_number": 9,
+      "locale": "es",
+      "translated_name": "Creencias"
+    },
+    {
+      "id": 35,
+      "astral_house_id": 9,
+      "astral_house_number": 9,
+      "locale": "de",
+      "translated_name": "Überzeugungen"
+    },
+    {
+      "id": 36,
+      "astral_house_id": 9,
+      "astral_house_number": 9,
+      "locale": "it",
+      "translated_name": "Credenze"
+    },
+    {
+      "id": 37,
+      "astral_house_id": 10,
+      "astral_house_number": 10,
+      "locale": "fr",
+      "translated_name": "Carrière"
+    },
+    {
+      "id": 38,
+      "astral_house_id": 10,
+      "astral_house_number": 10,
+      "locale": "es",
+      "translated_name": "Carrera"
+    },
+    {
+      "id": 39,
+      "astral_house_id": 10,
+      "astral_house_number": 10,
+      "locale": "de",
+      "translated_name": "Karriere"
+    },
+    {
+      "id": 40,
+      "astral_house_id": 10,
+      "astral_house_number": 10,
+      "locale": "it",
+      "translated_name": "Carriera"
+    },
+    {
+      "id": 41,
+      "astral_house_id": 11,
+      "astral_house_number": 11,
+      "locale": "fr",
+      "translated_name": "Communauté"
+    },
+    {
+      "id": 42,
+      "astral_house_id": 11,
+      "astral_house_number": 11,
+      "locale": "es",
+      "translated_name": "Comunidad"
+    },
+    {
+      "id": 43,
+      "astral_house_id": 11,
+      "astral_house_number": 11,
+      "locale": "de",
+      "translated_name": "Gemeinschaft"
+    },
+    {
+      "id": 44,
+      "astral_house_id": 11,
+      "astral_house_number": 11,
+      "locale": "it",
+      "translated_name": "Comunità"
+    },
+    {
+      "id": 45,
+      "astral_house_id": 12,
+      "astral_house_number": 12,
+      "locale": "fr",
+      "translated_name": "Inconscient"
+    },
+    {
+      "id": 46,
+      "astral_house_id": 12,
+      "astral_house_number": 12,
+      "locale": "es",
+      "translated_name": "Subconsciente"
+    },
+    {
+      "id": 47,
+      "astral_house_id": 12,
+      "astral_house_number": 12,
+      "locale": "de",
+      "translated_name": "Unterbewusstsein"
+    },
+    {
+      "id": 48,
+      "astral_house_id": 12,
+      "astral_house_number": 12,
+      "locale": "it",
+      "translated_name": "Subconscio"
+    }
+  ]
+}

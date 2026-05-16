@@ -25,17 +25,19 @@ FORBIDDEN_NATAL_FLOW_PATTERNS = (
     r"calculation_engine\s*=\s*[\"']simplified[\"']",
 )
 
+BACKEND_ROOT = Path(__file__).resolve().parents[3]
+
 
 def _source(path: str) -> str:
     """Retourne le contenu source d'un fichier backend."""
-    return Path(path).read_text(encoding="utf-8")
+    return (BACKEND_ROOT / path).read_text(encoding="utf-8")
 
 
 def test_natal_flow_does_not_use_legacy_reference_service_or_symbols() -> None:
     """Le flux natal ne depend plus des donnees reference legacy."""
     files = [
-        *Path("app/domain/astrology").rglob("*.py"),
-        *Path("app/services/natal").rglob("*.py"),
+        *(BACKEND_ROOT / "app/domain/astrology").rglob("*.py"),
+        *(BACKEND_ROOT / "app/services/natal").rglob("*.py"),
     ]
     hits: list[str] = []
 
@@ -70,7 +72,7 @@ def test_astrology_domain_does_not_import_prediction_or_llm_runtime() -> None:
     """Le domaine astrology reste separe de prediction et du runtime LLM."""
     forbidden = ("app.domain.prediction", "app.services.prediction", "AIEngineAdapter", "OpenAI")
     hits: list[str] = []
-    for path in Path("app/domain/astrology").rglob("*.py"):
+    for path in (BACKEND_ROOT / "app/domain/astrology").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
         for pattern in forbidden:
             if pattern in text:

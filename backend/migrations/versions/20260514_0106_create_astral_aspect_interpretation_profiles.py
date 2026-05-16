@@ -145,9 +145,9 @@ def _load_profiles() -> list[dict[str, object]]:
         encoding="utf-8"
     ) as stream:
         raw = json.load(stream)
-    if not isinstance(raw, dict) or raw.get("table") != TABLE_NAME:
+    if not isinstance(raw, dict) or raw.get("name") != TABLE_NAME:
         raise RuntimeError("astral_aspect_interpretation_profiles.json targets an unexpected table")
-    profiles = raw.get("profiles")
+    profiles = raw.get("data")
     if not isinstance(profiles, list) or len(profiles) != 20:
         raise RuntimeError("astral_aspect_interpretation_profiles.json must contain 20 profiles")
     return profiles

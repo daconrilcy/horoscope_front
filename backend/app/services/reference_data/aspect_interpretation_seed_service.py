@@ -16,7 +16,6 @@ from app.infra.db.models import (
     ReferenceVersionModel,
 )
 
-SOURCE_KEY = "profiles"
 DEFAULT_LANGUAGE = "en"
 EXPECTED_PROFILE_COUNT = 20
 SOURCE_UNIQUE_FIELDS = (
@@ -63,10 +62,10 @@ def load_aspect_interpretation_profiles_source() -> list[dict[str, Any]]:
         raw = json.load(stream)
     if not isinstance(raw, dict):
         raise ValueError("aspect interpretation source must be an object")
-    table_name = raw.get("table")
+    table_name = raw.get("name")
     if table_name != "astral_aspect_interpretation_profiles":
         raise ValueError("aspect interpretation source targets an unexpected table")
-    rows = raw.get(SOURCE_KEY)
+    rows = raw.get("data")
     if not isinstance(rows, list) or len(rows) != EXPECTED_PROFILE_COUNT:
         raise ValueError("aspect interpretation source must contain 20 profiles")
     _validate_unique_profile_keys(rows)

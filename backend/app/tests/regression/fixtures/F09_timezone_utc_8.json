@@ -159,11 +159,11 @@
         "is_provisional": true
       },
       "money": {
-        "note_20": 3,
-        "raw_score": -0.013590911247012057,
-        "normalized_score": -0.013590911247012057,
-        "power": 0.1467112499543553,
-        "volatility": 0.03078683504076233,
+        "note_20": 2,
+        "raw_score": -0.014042956717504204,
+        "normalized_score": -0.014042956717504204,
+        "power": 0.1467112498972994,
+        "volatility": 0.030096363588755386,
         "sort_order": 6,
         "is_provisional": true
       },
@@ -178,10 +178,10 @@
       },
       "sex_intimacy": {
         "note_20": 1,
-        "raw_score": -0.016526916161319384,
-        "normalized_score": -0.016526916161319384,
-        "power": 0.23813999992591006,
-        "volatility": 0.04075546275392233,
+        "raw_score": -0.015906245288576377,
+        "normalized_score": -0.015906245288576377,
+        "power": 0.23813999983329753,
+        "volatility": 0.04077250744369642,
         "sort_order": 8,
         "is_provisional": true
       },
@@ -223,7 +223,7 @@
       }
     },
     "detected_events_count": 54,
-    "turning_points_count": 12,
+    "turning_points_count": 14,
     "sample_count": 96,
     "is_provisional_calibration": true
   }

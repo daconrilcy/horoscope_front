@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.domain.astrology.natal_calculation import NatalCalculationError
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
 from app.infra.db.repositories.consultation_third_party_repository import (
@@ -100,12 +101,13 @@ class ConsultationGenerationService:
         )
 
         try:
+            simplified_override_enabled = settings.natal_engine_simplified_enabled
             natal_result = NatalCalculationService.calculate(
                 db,
                 birth_input=birth_input,
                 accurate=False,
-                engine_override="simplified",
-                internal_request=True,
+                engine_override="simplified" if simplified_override_enabled else None,
+                internal_request=simplified_override_enabled,
                 house_system="equal",
                 derive_enabled=True,
             )
@@ -118,8 +120,8 @@ class ConsultationGenerationService:
                         db,
                         birth_input=birth_input,
                         accurate=False,
-                        engine_override="simplified",
-                        internal_request=True,
+                        engine_override="simplified" if simplified_override_enabled else None,
+                        internal_request=simplified_override_enabled,
                         house_system="equal",
                         derive_enabled=True,
                     )

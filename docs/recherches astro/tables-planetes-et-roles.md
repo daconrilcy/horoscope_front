@@ -332,7 +332,7 @@ Systèmes seedés :
 | Nom | Usage courant |
 | --- | --- |
 | `traditional` | Maîtrises traditionnelles, notamment `scorpio -> mars`, `aquarius -> saturn`, `pisces -> jupiter`. |
-| `modern` | Dignités modernes et vocabulaire éditorial maison issu de `house_interpretation_vocabulary.json`. |
+| `modern` | Dignités modernes et vocabulaire éditorial maison issu de `astral_house_interpretation_profiles.json`. |
 | `hellenistic` | Référence disponible pour extensions historiques. |
 | `medieval` | Référence disponible pour extensions historiques. |
 
@@ -351,7 +351,7 @@ Qualification :
 - Table de référence stable non versionnée.
 - Décrit la condition essentielle d'une planète dans un signe pour un système astrologique donné.
 - Remplace `astral_sign_rulerships` comme source canonique des maîtrises principales traditionnelles utilisées par le contexte de prédiction actuel.
-- Alimentée depuis `docs/db_seeder/astrology/planet_sign_diginities.json` par la migration `20260513_0092_create_astral_planet_sign_dignities.py` et par le seed applicatif idempotent.
+- Alimentée depuis `docs/db_seeder/astrology/astral_planet_sign_dignities.json` par la migration `20260513_0092_create_astral_planet_sign_dignities.py` et par le seed applicatif idempotent.
 
 Clés :
 
@@ -434,7 +434,7 @@ Rôle :
 Rôle :
 
 - Ne référencent pas directement les planètes.
-- `astral_aspects` définit les 20 aspects canoniques seedés depuis `docs/db_seeder/astrology/aspects.json`, avec `family -> astral_aspect_families.id`.
+- `astral_aspects` définit les 20 aspects canoniques seedés depuis `docs/db_seeder/astrology/astral_aspects.json`, avec `family -> astral_aspect_families.id`.
 - `astral_aspect_profiles` porte le scoring prédictif par aspect : intensité, valence, polarité, énergie, multiplicateur d'orbe et comportement de phase.
 - `astral_aspect_definitions` porte l'activation par système astrologique et l'orbe par défaut ; l'ancien `astral_aspects.default_orb_deg` n'existe plus.
 - Les calculs runtime V1 restent centrés sur les cinq aspects majeurs, même si le référentiel relationnel contient aussi les aspects mineurs et avancés.
@@ -586,5 +586,5 @@ Rôle :
 - `docs/db_seeder/astrology/astral_planet_definitions.json`
 - `docs/db_seeder/astrology/astral_prediction_daily_planet_profiles.json`
 - `docs/db_seeder/astrology/astral_planet_interpretation_profiles.json`
-- `docs/db_seeder/astrology/planet_sign_diginities.json`
-- `docs/db_seeder/astrology/house_interpretation_vocabulary.json`
+- `docs/db_seeder/astrology/astral_planet_sign_dignities.json`
+- `docs/db_seeder/astrology/astral_house_interpretation_profiles.json`

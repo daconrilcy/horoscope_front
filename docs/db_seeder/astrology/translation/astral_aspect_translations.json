@@ -1,0 +1,572 @@
+{
+  "name": "astral_aspect_translations",
+  "structure": {
+    "id": "integer",
+    "astral_aspect_id": "integer foreign key astral_aspects.id",
+    "astral_aspect_code": "string reference astral_aspects.code",
+    "locale": "string",
+    "translated_name": "string"
+  },
+  "data": [
+    {
+      "id": 1,
+      "astral_aspect_id": 1,
+      "astral_aspect_code": "conjunction",
+      "locale": "fr",
+      "translated_name": "Conjonction"
+    },
+    {
+      "id": 2,
+      "astral_aspect_id": 1,
+      "astral_aspect_code": "conjunction",
+      "locale": "es",
+      "translated_name": "Conjunción"
+    },
+    {
+      "id": 3,
+      "astral_aspect_id": 1,
+      "astral_aspect_code": "conjunction",
+      "locale": "de",
+      "translated_name": "Konjunktion"
+    },
+    {
+      "id": 4,
+      "astral_aspect_id": 1,
+      "astral_aspect_code": "conjunction",
+      "locale": "it",
+      "translated_name": "Congiunzione"
+    },
+    {
+      "id": 5,
+      "astral_aspect_id": 2,
+      "astral_aspect_code": "sextile",
+      "locale": "fr",
+      "translated_name": "Sextile"
+    },
+    {
+      "id": 6,
+      "astral_aspect_id": 2,
+      "astral_aspect_code": "sextile",
+      "locale": "es",
+      "translated_name": "Sextil"
+    },
+    {
+      "id": 7,
+      "astral_aspect_id": 2,
+      "astral_aspect_code": "sextile",
+      "locale": "de",
+      "translated_name": "Sextil"
+    },
+    {
+      "id": 8,
+      "astral_aspect_id": 2,
+      "astral_aspect_code": "sextile",
+      "locale": "it",
+      "translated_name": "Sestile"
+    },
+    {
+      "id": 9,
+      "astral_aspect_id": 3,
+      "astral_aspect_code": "square",
+      "locale": "fr",
+      "translated_name": "Carré"
+    },
+    {
+      "id": 10,
+      "astral_aspect_id": 3,
+      "astral_aspect_code": "square",
+      "locale": "es",
+      "translated_name": "Cuadratura"
+    },
+    {
+      "id": 11,
+      "astral_aspect_id": 3,
+      "astral_aspect_code": "square",
+      "locale": "de",
+      "translated_name": "Quadrat"
+    },
+    {
+      "id": 12,
+      "astral_aspect_id": 3,
+      "astral_aspect_code": "square",
+      "locale": "it",
+      "translated_name": "Quadratura"
+    },
+    {
+      "id": 13,
+      "astral_aspect_id": 4,
+      "astral_aspect_code": "trine",
+      "locale": "fr",
+      "translated_name": "Trigone"
+    },
+    {
+      "id": 14,
+      "astral_aspect_id": 4,
+      "astral_aspect_code": "trine",
+      "locale": "es",
+      "translated_name": "Trígono"
+    },
+    {
+      "id": 15,
+      "astral_aspect_id": 4,
+      "astral_aspect_code": "trine",
+      "locale": "de",
+      "translated_name": "Trigon"
+    },
+    {
+      "id": 16,
+      "astral_aspect_id": 4,
+      "astral_aspect_code": "trine",
+      "locale": "it",
+      "translated_name": "Trigono"
+    },
+    {
+      "id": 17,
+      "astral_aspect_id": 5,
+      "astral_aspect_code": "opposition",
+      "locale": "fr",
+      "translated_name": "Opposition"
+    },
+    {
+      "id": 18,
+      "astral_aspect_id": 5,
+      "astral_aspect_code": "opposition",
+      "locale": "es",
+      "translated_name": "Oposición"
+    },
+    {
+      "id": 19,
+      "astral_aspect_id": 5,
+      "astral_aspect_code": "opposition",
+      "locale": "de",
+      "translated_name": "Opposition"
+    },
+    {
+      "id": 20,
+      "astral_aspect_id": 5,
+      "astral_aspect_code": "opposition",
+      "locale": "it",
+      "translated_name": "Opposizione"
+    },
+    {
+      "id": 21,
+      "astral_aspect_id": 6,
+      "astral_aspect_code": "semi_sextile",
+      "locale": "fr",
+      "translated_name": "Semi-sextile"
+    },
+    {
+      "id": 22,
+      "astral_aspect_id": 6,
+      "astral_aspect_code": "semi_sextile",
+      "locale": "es",
+      "translated_name": "Semisextil"
+    },
+    {
+      "id": 23,
+      "astral_aspect_id": 6,
+      "astral_aspect_code": "semi_sextile",
+      "locale": "de",
+      "translated_name": "Halbsextil"
+    },
+    {
+      "id": 24,
+      "astral_aspect_id": 6,
+      "astral_aspect_code": "semi_sextile",
+      "locale": "it",
+      "translated_name": "Semisestile"
+    },
+    {
+      "id": 25,
+      "astral_aspect_id": 7,
+      "astral_aspect_code": "semi_square",
+      "locale": "fr",
+      "translated_name": "Semi-carré"
+    },
+    {
+      "id": 26,
+      "astral_aspect_id": 7,
+      "astral_aspect_code": "semi_square",
+      "locale": "es",
+      "translated_name": "Semicuadratura"
+    },
+    {
+      "id": 27,
+      "astral_aspect_id": 7,
+      "astral_aspect_code": "semi_square",
+      "locale": "de",
+      "translated_name": "Halbquadrat"
+    },
+    {
+      "id": 28,
+      "astral_aspect_id": 7,
+      "astral_aspect_code": "semi_square",
+      "locale": "it",
+      "translated_name": "Semiquadrato"
+    },
+    {
+      "id": 29,
+      "astral_aspect_id": 8,
+      "astral_aspect_code": "quintile",
+      "locale": "fr",
+      "translated_name": "Quintile"
+    },
+    {
+      "id": 30,
+      "astral_aspect_id": 8,
+      "astral_aspect_code": "quintile",
+      "locale": "es",
+      "translated_name": "Quintil"
+    },
+    {
+      "id": 31,
+      "astral_aspect_id": 8,
+      "astral_aspect_code": "quintile",
+      "locale": "de",
+      "translated_name": "Quintil"
+    },
+    {
+      "id": 32,
+      "astral_aspect_id": 8,
+      "astral_aspect_code": "quintile",
+      "locale": "it",
+      "translated_name": "Quintile"
+    },
+    {
+      "id": 33,
+      "astral_aspect_id": 9,
+      "astral_aspect_code": "sesquiquadrate",
+      "locale": "fr",
+      "translated_name": "Sesquicarré"
+    },
+    {
+      "id": 34,
+      "astral_aspect_id": 9,
+      "astral_aspect_code": "sesquiquadrate",
+      "locale": "es",
+      "translated_name": "Sesquicuadratura"
+    },
+    {
+      "id": 35,
+      "astral_aspect_id": 9,
+      "astral_aspect_code": "sesquiquadrate",
+      "locale": "de",
+      "translated_name": "Anderthalbquadrat"
+    },
+    {
+      "id": 36,
+      "astral_aspect_id": 9,
+      "astral_aspect_code": "sesquiquadrate",
+      "locale": "it",
+      "translated_name": "Sesquiquadrato"
+    },
+    {
+      "id": 37,
+      "astral_aspect_id": 10,
+      "astral_aspect_code": "quincunx",
+      "locale": "fr",
+      "translated_name": "Quinconce"
+    },
+    {
+      "id": 38,
+      "astral_aspect_id": 10,
+      "astral_aspect_code": "quincunx",
+      "locale": "es",
+      "translated_name": "Quincuncio"
+    },
+    {
+      "id": 39,
+      "astral_aspect_id": 10,
+      "astral_aspect_code": "quincunx",
+      "locale": "de",
+      "translated_name": "Quinkunx"
+    },
+    {
+      "id": 40,
+      "astral_aspect_id": 10,
+      "astral_aspect_code": "quincunx",
+      "locale": "it",
+      "translated_name": "Quinconce"
+    },
+    {
+      "id": 41,
+      "astral_aspect_id": 11,
+      "astral_aspect_code": "biquintile",
+      "locale": "fr",
+      "translated_name": "Biquintile"
+    },
+    {
+      "id": 42,
+      "astral_aspect_id": 11,
+      "astral_aspect_code": "biquintile",
+      "locale": "es",
+      "translated_name": "Biquintil"
+    },
+    {
+      "id": 43,
+      "astral_aspect_id": 11,
+      "astral_aspect_code": "biquintile",
+      "locale": "de",
+      "translated_name": "Biquintil"
+    },
+    {
+      "id": 44,
+      "astral_aspect_id": 11,
+      "astral_aspect_code": "biquintile",
+      "locale": "it",
+      "translated_name": "Biquintile"
+    },
+    {
+      "id": 45,
+      "astral_aspect_id": 12,
+      "astral_aspect_code": "septile",
+      "locale": "fr",
+      "translated_name": "Septile"
+    },
+    {
+      "id": 46,
+      "astral_aspect_id": 12,
+      "astral_aspect_code": "septile",
+      "locale": "es",
+      "translated_name": "Septil"
+    },
+    {
+      "id": 47,
+      "astral_aspect_id": 12,
+      "astral_aspect_code": "septile",
+      "locale": "de",
+      "translated_name": "Septil"
+    },
+    {
+      "id": 48,
+      "astral_aspect_id": 12,
+      "astral_aspect_code": "septile",
+      "locale": "it",
+      "translated_name": "Settile"
+    },
+    {
+      "id": 49,
+      "astral_aspect_id": 13,
+      "astral_aspect_code": "biseptile",
+      "locale": "fr",
+      "translated_name": "Biseptile"
+    },
+    {
+      "id": 50,
+      "astral_aspect_id": 13,
+      "astral_aspect_code": "biseptile",
+      "locale": "es",
+      "translated_name": "Biseptil"
+    },
+    {
+      "id": 51,
+      "astral_aspect_id": 13,
+      "astral_aspect_code": "biseptile",
+      "locale": "de",
+      "translated_name": "Biseptil"
+    },
+    {
+      "id": 52,
+      "astral_aspect_id": 13,
+      "astral_aspect_code": "biseptile",
+      "locale": "it",
+      "translated_name": "Bisettile"
+    },
+    {
+      "id": 53,
+      "astral_aspect_id": 14,
+      "astral_aspect_code": "triseptile",
+      "locale": "fr",
+      "translated_name": "Triseptile"
+    },
+    {
+      "id": 54,
+      "astral_aspect_id": 14,
+      "astral_aspect_code": "triseptile",
+      "locale": "es",
+      "translated_name": "Triseptil"
+    },
+    {
+      "id": 55,
+      "astral_aspect_id": 14,
+      "astral_aspect_code": "triseptile",
+      "locale": "de",
+      "translated_name": "Triseptil"
+    },
+    {
+      "id": 56,
+      "astral_aspect_id": 14,
+      "astral_aspect_code": "triseptile",
+      "locale": "it",
+      "translated_name": "Trisettile"
+    },
+    {
+      "id": 57,
+      "astral_aspect_id": 15,
+      "astral_aspect_code": "novile",
+      "locale": "fr",
+      "translated_name": "Novile"
+    },
+    {
+      "id": 58,
+      "astral_aspect_id": 15,
+      "astral_aspect_code": "novile",
+      "locale": "es",
+      "translated_name": "Novil"
+    },
+    {
+      "id": 59,
+      "astral_aspect_id": 15,
+      "astral_aspect_code": "novile",
+      "locale": "de",
+      "translated_name": "Novil"
+    },
+    {
+      "id": 60,
+      "astral_aspect_id": 15,
+      "astral_aspect_code": "novile",
+      "locale": "it",
+      "translated_name": "Novile"
+    },
+    {
+      "id": 61,
+      "astral_aspect_id": 16,
+      "astral_aspect_code": "binovile",
+      "locale": "fr",
+      "translated_name": "Binovile"
+    },
+    {
+      "id": 62,
+      "astral_aspect_id": 16,
+      "astral_aspect_code": "binovile",
+      "locale": "es",
+      "translated_name": "Binovil"
+    },
+    {
+      "id": 63,
+      "astral_aspect_id": 16,
+      "astral_aspect_code": "binovile",
+      "locale": "de",
+      "translated_name": "Binovil"
+    },
+    {
+      "id": 64,
+      "astral_aspect_id": 16,
+      "astral_aspect_code": "binovile",
+      "locale": "it",
+      "translated_name": "Binovile"
+    },
+    {
+      "id": 65,
+      "astral_aspect_id": 17,
+      "astral_aspect_code": "quadranovile",
+      "locale": "fr",
+      "translated_name": "Quadranovile"
+    },
+    {
+      "id": 66,
+      "astral_aspect_id": 17,
+      "astral_aspect_code": "quadranovile",
+      "locale": "es",
+      "translated_name": "Cuadranovil"
+    },
+    {
+      "id": 67,
+      "astral_aspect_id": 17,
+      "astral_aspect_code": "quadranovile",
+      "locale": "de",
+      "translated_name": "Quadranovil"
+    },
+    {
+      "id": 68,
+      "astral_aspect_id": 17,
+      "astral_aspect_code": "quadranovile",
+      "locale": "it",
+      "translated_name": "Quadranovile"
+    },
+    {
+      "id": 69,
+      "astral_aspect_id": 18,
+      "astral_aspect_code": "decile",
+      "locale": "fr",
+      "translated_name": "Décile"
+    },
+    {
+      "id": 70,
+      "astral_aspect_id": 18,
+      "astral_aspect_code": "decile",
+      "locale": "es",
+      "translated_name": "Decil"
+    },
+    {
+      "id": 71,
+      "astral_aspect_id": 18,
+      "astral_aspect_code": "decile",
+      "locale": "de",
+      "translated_name": "Dezil"
+    },
+    {
+      "id": 72,
+      "astral_aspect_id": 18,
+      "astral_aspect_code": "decile",
+      "locale": "it",
+      "translated_name": "Decile"
+    },
+    {
+      "id": 73,
+      "astral_aspect_id": 19,
+      "astral_aspect_code": "tredecile",
+      "locale": "fr",
+      "translated_name": "Trédécile"
+    },
+    {
+      "id": 74,
+      "astral_aspect_id": 19,
+      "astral_aspect_code": "tredecile",
+      "locale": "es",
+      "translated_name": "Tredecil"
+    },
+    {
+      "id": 75,
+      "astral_aspect_id": 19,
+      "astral_aspect_code": "tredecile",
+      "locale": "de",
+      "translated_name": "Tredezil"
+    },
+    {
+      "id": 76,
+      "astral_aspect_id": 19,
+      "astral_aspect_code": "tredecile",
+      "locale": "it",
+      "translated_name": "Tredecile"
+    },
+    {
+      "id": 77,
+      "astral_aspect_id": 20,
+      "astral_aspect_code": "quindecile",
+      "locale": "fr",
+      "translated_name": "Quindécile"
+    },
+    {
+      "id": 78,
+      "astral_aspect_id": 20,
+      "astral_aspect_code": "quindecile",
+      "locale": "es",
+      "translated_name": "Quindecil"
+    },
+    {
+      "id": 79,
+      "astral_aspect_id": 20,
+      "astral_aspect_code": "quindecile",
+      "locale": "de",
+      "translated_name": "Quindezil"
+    },
+    {
+      "id": 80,
+      "astral_aspect_id": 20,
+      "astral_aspect_code": "quindecile",
+      "locale": "it",
+      "translated_name": "Quindecile"
+    }
+  ]
+}

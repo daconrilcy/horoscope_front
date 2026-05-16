@@ -53,7 +53,7 @@ def _load_rule_groups() -> list[dict[str, object]]:
     """Charge les groupes de règles d'orbes depuis la source documentaire."""
     with _research_path("astral_aspect_orb_rules.json").open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    groups = raw.get("seed") if isinstance(raw, dict) else None
+    groups = raw.get("data") if isinstance(raw, dict) else None
     if not isinstance(groups, list) or not groups:
         raise RuntimeError("astral_aspect_orb_rules.json must contain a non-empty seed list")
     return groups

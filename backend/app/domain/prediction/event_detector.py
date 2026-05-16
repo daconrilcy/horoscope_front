@@ -68,6 +68,7 @@ class EventDetector:
         self.ctx = ctx
         self.natal_chart = natal_chart
         self._orb_max_cache: dict[tuple[str, str, str | None], float] = {}
+        self._orb_fallback_warnings: set[tuple[str, str]] = set()
         # Filter natal positions for V1 targets
         self.natal_positions = {
             k: v for k, v in natal_chart.planet_positions.items() if k in self.V1_NATAL_TARGETS
@@ -413,7 +414,14 @@ class EventDetector:
             self._orb_max_cache[cache_key] = profile_orb_max
             return profile_orb_max
 
-        logger.warning("orb_max_fallback planet=%s aspect=%s default=2.0", planet_code, aspect_code)
+        warning_key = (planet_code, aspect_code)
+        if warning_key not in self._orb_fallback_warnings:
+            self._orb_fallback_warnings.add(warning_key)
+            logger.debug(
+                "orb_max_fallback planet=%s aspect=%s default=2.0",
+                planet_code,
+                aspect_code,
+            )
         self._orb_max_cache[cache_key] = 2.0
         return 2.0
 

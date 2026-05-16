@@ -1,7 +1,17 @@
 {
-    "family": [
-        "major",
-        "minor",
-        "advanced"
-    ]
+  "name": "astral_aspect_families",
+  "structure": {
+    "name": "string"
+  },
+  "data": [
+    {
+      "name": "major"
+    },
+    {
+      "name": "minor"
+    },
+    {
+      "name": "advanced"
+    }
+  ]
 }

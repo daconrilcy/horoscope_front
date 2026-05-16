@@ -150,12 +150,6 @@ class NatalCalculationService:
                 if legacy_payload is not None:
                     return legacy_payload
                 raise
-            fallback_versions = ("1.0.0",) if version != "1.0.0" else ()
-            for fallback_version in fallback_versions:
-                try:
-                    return AstrologyRuntimeReferenceRepository(db).load(fallback_version)
-                except AstrologyRuntimeReferenceError:
-                    continue
             legacy_payload = NatalCalculationService._legacy_payload_for_mock_db(db, version)
             if legacy_payload is not None:
                 return legacy_payload
@@ -404,24 +398,44 @@ class NatalCalculationService:
 
         if timeout_check is not None:
             timeout_check()
+        runtime_reference = None
         try:
             runtime_reference = NatalCalculationService._load_runtime_reference(
                 db,
                 resolved_version,
             )
         except AstrologyRuntimeReferenceError as error:
-            error_code = (
-                "invalid_reference_data"
-                if error.code == "invalid_astrology_runtime_reference"
-                else error.code
-            )
-            raise NatalCalculationError(
-                code=error_code,
-                message=error.message,
-                details=error.details,
-            ) from error
+            if (
+                reference_version is None
+                and error.code == "reference_version_not_found"
+                and resolved_version != "1.0.0"
+            ):
+                try:
+                    runtime_reference = NatalCalculationService._load_runtime_reference(db, "1.0.0")
+                except AstrologyRuntimeReferenceError:
+                    pass
+                else:
+                    resolved_version = "1.0.0"
+            if runtime_reference is None:
+                error_code = (
+                    "invalid_reference_data"
+                    if error.code == "invalid_astrology_runtime_reference"
+                    else error.code
+                )
+                raise NatalCalculationError(
+                    code=error_code,
+                    message=error.message,
+                    details=error.details,
+                ) from error
         if timeout_check is not None:
             timeout_check()
+
+        if runtime_reference is None:
+            raise NatalCalculationError(
+                code="reference_version_not_found",
+                message="reference version not found",
+                details={"version": resolved_version},
+            )
 
         # Fallback to default ayanamsa if still missing (e.g. zodiac came from defaults)
         if resolved_zodiac == ZodiacType.SIDEREAL and not resolved_ayanamsa:

@@ -1,0 +1,322 @@
+{
+  "name": "astral_planet_interpretation_profile_translations",
+  "structure": {
+    "source_table": "astral_planet_interpretation_profiles",
+    "translation_table": "astral_planet_interpretation_profile_translations",
+    "source_reference": {
+      "reference_version_ids": "integer[], reference astral_planet_interpretation_profiles.reference_version_id",
+      "planet_id": "integer, reference astral_planets.id",
+      "astral_system_id": "integer, reference astral_systems.id"
+    },
+    "translations": {
+      "locale": "string, one of fr/es/de/it",
+      "title": "string",
+      "summary": "text",
+      "micro_note": "text"
+    }
+  },
+  "data": {
+    "profiles": [
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 1,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Identité et vitalité",
+            "summary": "Le Soleil représente le principe organisateur central de la personnalité : identité, vitalité, volonté, force créative et direction consciente.",
+            "micro_note": "Le Soleil montre le principe du soi conscient, pas toute la personnalité."
+          },
+          "es": {
+            "title": "Identidad y vitalidad",
+            "summary": "El Sol representa el principio organizador central de la personalidad: identidad, vitalidad, voluntad, fuerza creativa y dirección consciente.",
+            "micro_note": "El Sol muestra el principio del yo consciente, no toda la personalidad."
+          },
+          "de": {
+            "title": "Identität und Vitalität",
+            "summary": "Die Sonne repräsentiert das zentrale Ordnungsprinzip der Persönlichkeit: Identität, Vitalität, Wille, kreative Kraft und bewusste Ausrichtung.",
+            "micro_note": "Die Sonne zeigt das Prinzip bewusster Selbstheit, nicht die ganze Persönlichkeit."
+          },
+          "it": {
+            "title": "Identità e vitalità",
+            "summary": "Il Sole rappresenta il principio organizzatore centrale della personalità: identità, vitalità, volontà, forza creativa e direzione consapevole.",
+            "micro_note": "Il Sole mostra il principio del sé cosciente, non l'intera personalità."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 2,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Émotion et sécurité intérieure",
+            "summary": "La Lune représente la vie émotionnelle, les réactions instinctives, la mémoire, les habitudes, les besoins et la recherche de sécurité intérieure.",
+            "micro_note": "La Lune montre comment la vie est ressentie de l'intérieur."
+          },
+          "es": {
+            "title": "Emoción y seguridad interior",
+            "summary": "La Luna representa la vida emocional, las reacciones instintivas, la memoria, los hábitos, las necesidades y la búsqueda de seguridad interior.",
+            "micro_note": "La Luna muestra cómo se siente la vida desde dentro."
+          },
+          "de": {
+            "title": "Emotion und innere Sicherheit",
+            "summary": "Der Mond repräsentiert Gefühlsleben, instinktive Reaktionen, Erinnerung, Gewohnheiten, Bedürfnisse und die Suche nach innerer Sicherheit.",
+            "micro_note": "Der Mond zeigt, wie das Leben von innen gefühlt wird."
+          },
+          "it": {
+            "title": "Emozione e sicurezza interiore",
+            "summary": "La Luna rappresenta la vita emotiva, le reazioni istintive, la memoria, le abitudini, i bisogni e la ricerca di sicurezza interiore.",
+            "micro_note": "La Luna mostra come la vita viene sentita dall'interno."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 3,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Pensée et communication",
+            "summary": "Mercure représente la perception, la pensée, le langage, l'apprentissage, l'échange, l'analyse et la manière dont l'information est traitée.",
+            "micro_note": "Mercure montre comment l'expérience devient pensée, parole et échange."
+          },
+          "es": {
+            "title": "Pensamiento y comunicación",
+            "summary": "Mercurio representa la percepción, el pensamiento, el lenguaje, el aprendizaje, el intercambio, el análisis y la forma en que se procesa la información.",
+            "micro_note": "Mercurio muestra cómo la experiencia se convierte en pensamiento, palabra e intercambio."
+          },
+          "de": {
+            "title": "Denken und Kommunikation",
+            "summary": "Merkur repräsentiert Wahrnehmung, Denken, Sprache, Lernen, Austausch, Analyse und die Art, wie Informationen verarbeitet werden.",
+            "micro_note": "Merkur zeigt, wie Erfahrung zu Gedanke, Wort und Austausch wird."
+          },
+          "it": {
+            "title": "Pensiero e comunicazione",
+            "summary": "Mercurio rappresenta percezione, pensiero, linguaggio, apprendimento, scambio, analisi e il modo in cui le informazioni vengono elaborate.",
+            "micro_note": "Mercurio mostra come l'esperienza diventa pensiero, parola e scambio."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 4,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Attraction et valeur",
+            "summary": "Vénus représente l'attraction, le plaisir, l'affection, l'harmonie, les valeurs, la beauté et la manière de donner et recevoir l'appréciation.",
+            "micro_note": "Vénus décrit ce qui paraît désirable, précieux et harmonieux."
+          },
+          "es": {
+            "title": "Atracción y valor",
+            "summary": "Venus representa la atracción, el placer, el afecto, la armonía, los valores, la belleza y la forma de dar y recibir aprecio.",
+            "micro_note": "Venus describe lo que se siente deseable, valioso y armonioso."
+          },
+          "de": {
+            "title": "Anziehung und Wert",
+            "summary": "Venus repräsentiert Anziehung, Freude, Zuneigung, Harmonie, Werte, Schönheit und die Art, Wertschätzung zu geben und zu empfangen.",
+            "micro_note": "Venus beschreibt, was begehrenswert, wertvoll und harmonisch erscheint."
+          },
+          "it": {
+            "title": "Attrazione e valore",
+            "summary": "Venere rappresenta attrazione, piacere, affetto, armonia, valori, bellezza e il modo in cui si dà e si riceve apprezzamento.",
+            "micro_note": "Venere descrive ciò che appare desiderabile, prezioso e armonioso."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 5,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Action et désir",
+            "summary": "Mars représente l'action, l'affirmation, le désir, le courage, la colère, la libido, la compétition et la manière dont l'énergie est dirigée vers des objectifs.",
+            "micro_note": "Mars montre comment l'énergie devient action."
+          },
+          "es": {
+            "title": "Acción y deseo",
+            "summary": "Marte representa la acción, la afirmación, el deseo, el coraje, la ira, la libido, la competencia y la forma en que la energía se dirige hacia objetivos.",
+            "micro_note": "Marte muestra cómo la energía se convierte en acción."
+          },
+          "de": {
+            "title": "Handlung und Begehren",
+            "summary": "Mars repräsentiert Handlung, Durchsetzung, Begehren, Mut, Wut, Libido, Wettbewerb und die Art, wie Energie auf Ziele gerichtet wird.",
+            "micro_note": "Mars zeigt, wie Energie zu Handlung wird."
+          },
+          "it": {
+            "title": "Azione e desiderio",
+            "summary": "Marte rappresenta azione, affermazione, desiderio, coraggio, rabbia, libido, competizione e il modo in cui l'energia viene diretta verso gli obiettivi.",
+            "micro_note": "Marte mostra come l'energia diventa azione."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 6,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Expansion et sens",
+            "summary": "Jupiter représente l'expansion, la confiance, la croyance, la sagesse, la croissance, l'opportunité, la générosité et la recherche de sens.",
+            "micro_note": "Jupiter amplifie ; que cela aide dépend du contexte."
+          },
+          "es": {
+            "title": "Expansión y sentido",
+            "summary": "Júpiter representa expansión, confianza, creencia, sabiduría, crecimiento, oportunidad, generosidad y búsqueda de sentido.",
+            "micro_note": "Júpiter expande; que eso ayude depende del contexto."
+          },
+          "de": {
+            "title": "Expansion und Sinn",
+            "summary": "Jupiter repräsentiert Expansion, Vertrauen, Glauben, Weisheit, Wachstum, Gelegenheit, Großzügigkeit und die Suche nach Sinn.",
+            "micro_note": "Jupiter erweitert; ob das hilft, hängt vom Kontext ab."
+          },
+          "it": {
+            "title": "Espansione e significato",
+            "summary": "Giove rappresenta espansione, fiducia, credo, saggezza, crescita, opportunità, generosità e ricerca di significato.",
+            "micro_note": "Giove espande; che questo aiuti dipende dal contesto."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 7,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Structure et responsabilité",
+            "summary": "Saturne représente la structure, le temps, la discipline, les limites, la responsabilité, la maturité, la peur et le processus de consolidation.",
+            "micro_note": "Saturne restreint afin de former et de faire mûrir."
+          },
+          "es": {
+            "title": "Estructura y responsabilidad",
+            "summary": "Saturno representa estructura, tiempo, disciplina, límites, responsabilidad, madurez, miedo y el proceso de consolidación.",
+            "micro_note": "Saturno restringe para dar forma y madurar."
+          },
+          "de": {
+            "title": "Struktur und Verantwortung",
+            "summary": "Saturn repräsentiert Struktur, Zeit, Disziplin, Grenzen, Verantwortung, Reife, Angst und den Prozess der Konsolidierung.",
+            "micro_note": "Saturn begrenzt, um Form und Reife zu ermöglichen."
+          },
+          "it": {
+            "title": "Struttura e responsabilità",
+            "summary": "Saturno rappresenta struttura, tempo, disciplina, limiti, responsabilità, maturità, paura e processo di consolidamento.",
+            "micro_note": "Saturno limita per dare forma e maturare."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 8,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Rupture et libération",
+            "summary": "Uranus représente la rupture, l'éveil, l'indépendance, la rébellion, l'originalité, l'innovation et le changement soudain.",
+            "micro_note": "Uranus rompt la continuité pour révéler de nouvelles possibilités."
+          },
+          "es": {
+            "title": "Ruptura y liberación",
+            "summary": "Urano representa ruptura, despertar, independencia, rebelión, originalidad, innovación y cambio repentino.",
+            "micro_note": "Urano rompe la continuidad para revelar nuevas posibilidades."
+          },
+          "de": {
+            "title": "Störung und Befreiung",
+            "summary": "Uranus repräsentiert Störung, Erwachen, Unabhängigkeit, Rebellion, Originalität, Innovation und plötzliche Veränderung.",
+            "micro_note": "Uranus bricht Kontinuität auf, um neue Möglichkeiten sichtbar zu machen."
+          },
+          "it": {
+            "title": "Rottura e liberazione",
+            "summary": "Urano rappresenta rottura, risveglio, indipendenza, ribellione, originalità, innovazione e cambiamento improvviso.",
+            "micro_note": "Urano rompe la continuità per rivelare nuove possibilità."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 9,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Rêve et dissolution",
+            "summary": "Neptune représente l'imagination, la spiritualité, la compassion, les rêves, l'idéalisation, la confusion, la dissolution et la transcendance.",
+            "micro_note": "Neptune ouvre l'invisible, mais peut brouiller la réalité."
+          },
+          "es": {
+            "title": "Sueño y disolución",
+            "summary": "Neptuno representa imaginación, espiritualidad, compasión, sueños, idealización, confusión, disolución y trascendencia.",
+            "micro_note": "Neptuno abre lo invisible, pero puede difuminar la realidad."
+          },
+          "de": {
+            "title": "Traum und Auflösung",
+            "summary": "Neptun repräsentiert Vorstellungskraft, Spiritualität, Mitgefühl, Träume, Idealisierung, Verwirrung, Auflösung und Transzendenz.",
+            "micro_note": "Neptun öffnet das Unsichtbare, kann aber die Realität verwischen."
+          },
+          "it": {
+            "title": "Sogno e dissoluzione",
+            "summary": "Nettuno rappresenta immaginazione, spiritualità, compassione, sogni, idealizzazione, confusione, dissoluzione e trascendenza.",
+            "micro_note": "Nettuno apre l'invisibile, ma può sfocare la realtà."
+          }
+        }
+      },
+      {
+        "reference_version_ids": [
+          1,
+          2
+        ],
+        "planet_id": 10,
+        "astral_system_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Transformation et pouvoir",
+            "summary": "Pluton représente la transformation, la profondeur, la crise, le pouvoir, l'ombre, la compulsion, la régénération et les processus de mort et renaissance.",
+            "micro_note": "Pluton révèle ce qui doit mourir, se transformer ou être repris."
+          },
+          "es": {
+            "title": "Transformación y poder",
+            "summary": "Plutón representa transformación, profundidad, crisis, poder, sombra, compulsión, regeneración y procesos de muerte y renacimiento.",
+            "micro_note": "Plutón revela lo que debe morir, transformarse o recuperarse."
+          },
+          "de": {
+            "title": "Transformation und Macht",
+            "summary": "Pluto repräsentiert Transformation, Tiefe, Krise, Macht, Schatten, Zwang, Regeneration und Prozesse von Tod und Wiedergeburt.",
+            "micro_note": "Pluto zeigt, was sterben, sich verwandeln oder zurückgewonnen werden muss."
+          },
+          "it": {
+            "title": "Trasformazione e potere",
+            "summary": "Plutone rappresenta trasformazione, profondità, crisi, potere, ombra, compulsione, rigenerazione e processi di morte e rinascita.",
+            "micro_note": "Plutone rivela ciò che deve morire, trasformarsi o essere recuperato."
+          }
+        }
+      }
+    ]
+  }
+}

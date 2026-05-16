@@ -69,7 +69,9 @@ filterwarnings = [
 ]
 markers = [
   "golden: SwissEph precision tests with frozen reference values (requires pyswisseph)",
+  "integration: DB/API integration tests excluded from fast local runs",
   "regression: regression tests (deselect with -m 'not regression')",
+  "slow: DB migration, subprocess, full regression, or quality-gate tests excluded from fast local runs",
   "evaluation: marks tests as part of the evaluation matrix (Story 66.16)",
 ]
 

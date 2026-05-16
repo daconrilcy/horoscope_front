@@ -73,7 +73,7 @@ Historique :
 - Créée initialement sous `aspects` par `20260218_0001_create_reference_tables.py`.
 - Déversionnée par `20260512_0086_deversion_astrology_structures.py`.
 - Renommée en `astral_aspects` par `20260514_0099_rename_astral_reference_tables.py`.
-- Refactorée par `20260514_0102_normalize_astral_aspects.py` : suppression de `default_orb_deg`, ajout de `family`, passage de `angle` en `Float`, seed des 20 aspects depuis `docs/db_seeder/astrology/aspects.json`.
+- Refactorée par `20260514_0102_normalize_astral_aspects.py` : suppression de `default_orb_deg`, ajout de `family`, passage de `angle` en `Float`, seed des 20 aspects depuis `docs/db_seeder/astrology/astral_aspects.json`.
 
 Colonnes principales :
 
@@ -92,7 +92,7 @@ Contraintes :
 - Plus de `reference_version_id`.
 - Plus de `default_orb_deg` : l'orbe par défaut dépend maintenant de `astral_aspect_definitions`.
 
-Aspects seedés depuis `docs/db_seeder/astrology/aspects.json` :
+Aspects seedés depuis `docs/db_seeder/astrology/astral_aspects.json` :
 
 | Code | Nom SQL | Angle | Famille |
 | --- | --- | ---: | --- |
@@ -637,7 +637,7 @@ Point d'attention :
 - `backend/migrations/versions/20260514_0102_normalize_astral_aspects.py`
 - `backend/migrations/versions/20260514_0104_add_astral_aspect_orb_rules.py`
 - `backend/migrations/versions/20260514_0105_add_astral_system_inheritance.py`
-- `docs/db_seeder/astrology/aspects.json`
+- `docs/db_seeder/astrology/astral_aspects.json`
 - `docs/db_seeder/astrology/astral_aspect_families.json`
 - `docs/db_seeder/astrology/astral_aspect_profiles.json`
 - `docs/db_seeder/astrology/astral_aspect_definitions.json`

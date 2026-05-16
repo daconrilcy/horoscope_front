@@ -18,28 +18,24 @@ def load_aspect_family_names() -> tuple[str, ...]:
     source_path = astrology_research_path("astral_aspect_families.json")
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    families = raw.get("family") if isinstance(raw, dict) else None
-    if not isinstance(families, list) or not families:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise ValueError("aspect families source must contain a non-empty family list")
-    return tuple(str(value) for value in families)
+    return tuple(str(row["name"]) for row in rows)
 
 
 def load_aspect_rows() -> tuple[dict[str, Any], ...]:
     """Charge les aspects stables depuis la source JSON canonique."""
-    source_path = astrology_research_path("aspects.json")
-    with source_path.open(encoding="utf-8") as stream:
-        raw = json.load(stream)
-    if not isinstance(raw, list) or not raw:
-        raise ValueError("aspects source must be a non-empty list")
-    return tuple(dict(row) for row in raw)
+    return _load_data_rows("astral_aspects.json", "aspects")
 
 
 def load_structural_reference_rows(section: str) -> tuple[dict[str, Any], ...]:
     """Charge une section du catalogue structurel astrologique."""
-    source_path = astrology_research_path("structural_reference_catalog.json")
+    source_path = astrology_research_path("astral_structural_reference_catalog.json")
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    rows = raw.get(section) if isinstance(raw, dict) else None
+    data = raw.get("data") if isinstance(raw, dict) else None
+    rows = data.get(section) if isinstance(data, dict) else None
     if not isinstance(rows, list) or not rows:
         raise ValueError(f"structural reference section must be non-empty: {section}")
     return tuple(dict(row) for row in rows)
@@ -60,10 +56,10 @@ def load_astral_system_names() -> tuple[str, ...]:
     source_path = astrology_research_path("astral_systems.json")
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    systems = raw.get("name") if isinstance(raw, dict) else None
-    if not isinstance(systems, list) or not systems:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise ValueError("astral systems source must contain a non-empty name list")
-    return tuple(str(value) for value in systems)
+    return tuple(str(row["name"]) for row in rows)
 
 
 def load_language_rows() -> tuple[dict[str, Any], ...]:

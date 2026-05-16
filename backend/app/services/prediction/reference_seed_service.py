@@ -125,48 +125,57 @@ def _astro_research_path(file_name: str) -> Path:
 
 def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
     """Charge les mots-clés des signes depuis la source documentaire canonique."""
-    keywords_path = _astro_research_path("signs_keywords.json")
+    keywords_path = _astro_research_path("astral_sign_keywords.json")
     with keywords_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    if not isinstance(raw, dict):
-        raise ValueError("signs keywords source must be an object")
-    return raw
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("signs keywords source must contain a non-empty data list")
+    return {
+        str(row["code"]): {
+            "keywords": [str(value) for value in row["keywords_json"]],
+            "shadow_keywords": [str(value) for value in row["shadow_keywords_json"]],
+        }
+        for row in rows
+    }
 
 
 def _load_planet_sign_dignities() -> list[dict[str, object]]:
     """Charge les dignités planétaires depuis la source documentaire canonique."""
-    source_path = _astro_research_path("planet_sign_diginities.json")
+    source_path = _astro_research_path("astral_planet_sign_dignities.json")
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    if not isinstance(raw, list) or not raw:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise ValueError("planet sign dignities source must be a non-empty list")
-    return raw
+    return rows
 
 
 def _load_aspect_families() -> list[str]:
     """Charge les familles d'aspects depuis la source documentaire canonique."""
     with _astro_research_path("astral_aspect_families.json").open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    families = raw.get("family") if isinstance(raw, dict) else None
-    if not isinstance(families, list) or not families:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise ValueError("aspect families source must contain a non-empty family list")
-    return [str(value) for value in families]
+    return [str(row["name"]) for row in rows]
 
 
 def _load_aspects() -> list[dict[str, object]]:
     """Charge les aspects astrologiques depuis la source documentaire canonique."""
-    with _astro_research_path("aspects.json").open(encoding="utf-8") as stream:
+    with _astro_research_path("astral_aspects.json").open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    if not isinstance(raw, list) or not raw:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise ValueError("aspects source must be a non-empty list")
-    return raw
+    return rows
 
 
 def _load_aspect_profiles() -> list[dict[str, object]]:
     """Charge les profils prédictifs d'aspects depuis la source documentaire."""
     with _astro_research_path("astral_aspect_profiles.json").open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    profiles = raw.get("astral_aspect_profiles", {}).get("seed") if isinstance(raw, dict) else None
+    profiles = raw.get("data") if isinstance(raw, dict) else None
     if not isinstance(profiles, list) or not profiles:
         raise ValueError("aspect profiles source must contain a non-empty seed list")
     return profiles
@@ -192,7 +201,7 @@ def _load_aspect_definition_groups() -> list[dict[str, object]]:
     """Charge les définitions d'aspects par système depuis la source documentaire."""
     with _astro_research_path("astral_aspect_definitions.json").open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    groups = raw.get("astral_aspect_definitions", {}).get("seed") if isinstance(raw, dict) else None
+    groups = raw.get("data") if isinstance(raw, dict) else None
     if not isinstance(groups, list) or not groups:
         raise ValueError("aspect definitions source must contain a non-empty seed list")
     return groups
@@ -202,7 +211,7 @@ def _load_aspect_orb_rule_groups() -> list[dict[str, object]]:
     """Charge les règles de surcharge d'orbes depuis la source documentaire."""
     with _astro_research_path("astral_aspect_orb_rules.json").open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    groups = raw.get("seed") if isinstance(raw, dict) else None
+    groups = raw.get("data") if isinstance(raw, dict) else None
     if not isinstance(groups, list) or not groups:
         raise ValueError("aspect orb rules source must contain a non-empty seed list")
     return groups

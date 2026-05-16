@@ -224,11 +224,15 @@ class TestCacheService:
 
     def test_uses_memory_fallback_on_redis_connection_error(self) -> None:
         """Should fallback to memory when Redis connection fails."""
-        cache = CacheService(
-            redis_url="redis://nonexistent:6379",
-            ttl_seconds=3600,
-            enabled=True,
-        )
+        mock_redis = MagicMock()
+        mock_redis.ping.side_effect = ConnectionError("redis unavailable")
+
+        with patch("redis.from_url", return_value=mock_redis):
+            cache = CacheService(
+                redis_url="redis://localhost:6379",
+                ttl_seconds=3600,
+                enabled=True,
+            )
 
         assert cache._use_memory is True
 

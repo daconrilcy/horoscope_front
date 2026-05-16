@@ -1,0 +1,348 @@
+{
+  "name": "astral_sign_translations",
+  "structure": {
+    "id": "integer",
+    "astral_sign_id": "integer foreign key astral_signs.id",
+    "astral_sign_code": "string reference astral_signs.code",
+    "locale": "string",
+    "translated_name": "string"
+  },
+  "data": [
+    {
+      "id": 1,
+      "astral_sign_id": 1,
+      "astral_sign_code": "aries",
+      "locale": "fr",
+      "translated_name": "Bélier"
+    },
+    {
+      "id": 2,
+      "astral_sign_id": 1,
+      "astral_sign_code": "aries",
+      "locale": "es",
+      "translated_name": "Aries"
+    },
+    {
+      "id": 3,
+      "astral_sign_id": 1,
+      "astral_sign_code": "aries",
+      "locale": "de",
+      "translated_name": "Widder"
+    },
+    {
+      "id": 4,
+      "astral_sign_id": 1,
+      "astral_sign_code": "aries",
+      "locale": "it",
+      "translated_name": "Ariete"
+    },
+    {
+      "id": 5,
+      "astral_sign_id": 2,
+      "astral_sign_code": "taurus",
+      "locale": "fr",
+      "translated_name": "Taureau"
+    },
+    {
+      "id": 6,
+      "astral_sign_id": 2,
+      "astral_sign_code": "taurus",
+      "locale": "es",
+      "translated_name": "Tauro"
+    },
+    {
+      "id": 7,
+      "astral_sign_id": 2,
+      "astral_sign_code": "taurus",
+      "locale": "de",
+      "translated_name": "Stier"
+    },
+    {
+      "id": 8,
+      "astral_sign_id": 2,
+      "astral_sign_code": "taurus",
+      "locale": "it",
+      "translated_name": "Toro"
+    },
+    {
+      "id": 9,
+      "astral_sign_id": 3,
+      "astral_sign_code": "gemini",
+      "locale": "fr",
+      "translated_name": "Gémeaux"
+    },
+    {
+      "id": 10,
+      "astral_sign_id": 3,
+      "astral_sign_code": "gemini",
+      "locale": "es",
+      "translated_name": "Géminis"
+    },
+    {
+      "id": 11,
+      "astral_sign_id": 3,
+      "astral_sign_code": "gemini",
+      "locale": "de",
+      "translated_name": "Zwillinge"
+    },
+    {
+      "id": 12,
+      "astral_sign_id": 3,
+      "astral_sign_code": "gemini",
+      "locale": "it",
+      "translated_name": "Gemelli"
+    },
+    {
+      "id": 13,
+      "astral_sign_id": 4,
+      "astral_sign_code": "cancer",
+      "locale": "fr",
+      "translated_name": "Cancer"
+    },
+    {
+      "id": 14,
+      "astral_sign_id": 4,
+      "astral_sign_code": "cancer",
+      "locale": "es",
+      "translated_name": "Cáncer"
+    },
+    {
+      "id": 15,
+      "astral_sign_id": 4,
+      "astral_sign_code": "cancer",
+      "locale": "de",
+      "translated_name": "Krebs"
+    },
+    {
+      "id": 16,
+      "astral_sign_id": 4,
+      "astral_sign_code": "cancer",
+      "locale": "it",
+      "translated_name": "Cancro"
+    },
+    {
+      "id": 17,
+      "astral_sign_id": 5,
+      "astral_sign_code": "leo",
+      "locale": "fr",
+      "translated_name": "Lion"
+    },
+    {
+      "id": 18,
+      "astral_sign_id": 5,
+      "astral_sign_code": "leo",
+      "locale": "es",
+      "translated_name": "Leo"
+    },
+    {
+      "id": 19,
+      "astral_sign_id": 5,
+      "astral_sign_code": "leo",
+      "locale": "de",
+      "translated_name": "Löwe"
+    },
+    {
+      "id": 20,
+      "astral_sign_id": 5,
+      "astral_sign_code": "leo",
+      "locale": "it",
+      "translated_name": "Leone"
+    },
+    {
+      "id": 21,
+      "astral_sign_id": 6,
+      "astral_sign_code": "virgo",
+      "locale": "fr",
+      "translated_name": "Vierge"
+    },
+    {
+      "id": 22,
+      "astral_sign_id": 6,
+      "astral_sign_code": "virgo",
+      "locale": "es",
+      "translated_name": "Virgo"
+    },
+    {
+      "id": 23,
+      "astral_sign_id": 6,
+      "astral_sign_code": "virgo",
+      "locale": "de",
+      "translated_name": "Jungfrau"
+    },
+    {
+      "id": 24,
+      "astral_sign_id": 6,
+      "astral_sign_code": "virgo",
+      "locale": "it",
+      "translated_name": "Vergine"
+    },
+    {
+      "id": 25,
+      "astral_sign_id": 7,
+      "astral_sign_code": "libra",
+      "locale": "fr",
+      "translated_name": "Balance"
+    },
+    {
+      "id": 26,
+      "astral_sign_id": 7,
+      "astral_sign_code": "libra",
+      "locale": "es",
+      "translated_name": "Libra"
+    },
+    {
+      "id": 27,
+      "astral_sign_id": 7,
+      "astral_sign_code": "libra",
+      "locale": "de",
+      "translated_name": "Waage"
+    },
+    {
+      "id": 28,
+      "astral_sign_id": 7,
+      "astral_sign_code": "libra",
+      "locale": "it",
+      "translated_name": "Bilancia"
+    },
+    {
+      "id": 29,
+      "astral_sign_id": 8,
+      "astral_sign_code": "scorpio",
+      "locale": "fr",
+      "translated_name": "Scorpion"
+    },
+    {
+      "id": 30,
+      "astral_sign_id": 8,
+      "astral_sign_code": "scorpio",
+      "locale": "es",
+      "translated_name": "Escorpio"
+    },
+    {
+      "id": 31,
+      "astral_sign_id": 8,
+      "astral_sign_code": "scorpio",
+      "locale": "de",
+      "translated_name": "Skorpion"
+    },
+    {
+      "id": 32,
+      "astral_sign_id": 8,
+      "astral_sign_code": "scorpio",
+      "locale": "it",
+      "translated_name": "Scorpione"
+    },
+    {
+      "id": 33,
+      "astral_sign_id": 9,
+      "astral_sign_code": "sagittarius",
+      "locale": "fr",
+      "translated_name": "Sagittaire"
+    },
+    {
+      "id": 34,
+      "astral_sign_id": 9,
+      "astral_sign_code": "sagittarius",
+      "locale": "es",
+      "translated_name": "Sagitario"
+    },
+    {
+      "id": 35,
+      "astral_sign_id": 9,
+      "astral_sign_code": "sagittarius",
+      "locale": "de",
+      "translated_name": "Schütze"
+    },
+    {
+      "id": 36,
+      "astral_sign_id": 9,
+      "astral_sign_code": "sagittarius",
+      "locale": "it",
+      "translated_name": "Sagittario"
+    },
+    {
+      "id": 37,
+      "astral_sign_id": 10,
+      "astral_sign_code": "capricorn",
+      "locale": "fr",
+      "translated_name": "Capricorne"
+    },
+    {
+      "id": 38,
+      "astral_sign_id": 10,
+      "astral_sign_code": "capricorn",
+      "locale": "es",
+      "translated_name": "Capricornio"
+    },
+    {
+      "id": 39,
+      "astral_sign_id": 10,
+      "astral_sign_code": "capricorn",
+      "locale": "de",
+      "translated_name": "Steinbock"
+    },
+    {
+      "id": 40,
+      "astral_sign_id": 10,
+      "astral_sign_code": "capricorn",
+      "locale": "it",
+      "translated_name": "Capricorno"
+    },
+    {
+      "id": 41,
+      "astral_sign_id": 11,
+      "astral_sign_code": "aquarius",
+      "locale": "fr",
+      "translated_name": "Verseau"
+    },
+    {
+      "id": 42,
+      "astral_sign_id": 11,
+      "astral_sign_code": "aquarius",
+      "locale": "es",
+      "translated_name": "Acuario"
+    },
+    {
+      "id": 43,
+      "astral_sign_id": 11,
+      "astral_sign_code": "aquarius",
+      "locale": "de",
+      "translated_name": "Wassermann"
+    },
+    {
+      "id": 44,
+      "astral_sign_id": 11,
+      "astral_sign_code": "aquarius",
+      "locale": "it",
+      "translated_name": "Acquario"
+    },
+    {
+      "id": 45,
+      "astral_sign_id": 12,
+      "astral_sign_code": "pisces",
+      "locale": "fr",
+      "translated_name": "Poissons"
+    },
+    {
+      "id": 46,
+      "astral_sign_id": 12,
+      "astral_sign_code": "pisces",
+      "locale": "es",
+      "translated_name": "Piscis"
+    },
+    {
+      "id": 47,
+      "astral_sign_id": 12,
+      "astral_sign_code": "pisces",
+      "locale": "de",
+      "translated_name": "Fische"
+    },
+    {
+      "id": 48,
+      "astral_sign_id": 12,
+      "astral_sign_code": "pisces",
+      "locale": "it",
+      "translated_name": "Pesci"
+    }
+  ]
+}

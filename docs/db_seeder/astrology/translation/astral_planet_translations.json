@@ -1,0 +1,292 @@
+{
+  "name": "astral_planet_translations",
+  "structure": {
+    "id": "integer",
+    "astral_planet_id": "integer foreign key astral_planets.id",
+    "astral_planet_code": "string reference astral_planets.code",
+    "locale": "string",
+    "translated_name": "string"
+  },
+  "data": [
+    {
+      "id": 1,
+      "astral_planet_id": 1,
+      "astral_planet_code": "sun",
+      "locale": "fr",
+      "translated_name": "Soleil"
+    },
+    {
+      "id": 2,
+      "astral_planet_id": 1,
+      "astral_planet_code": "sun",
+      "locale": "es",
+      "translated_name": "Sol"
+    },
+    {
+      "id": 3,
+      "astral_planet_id": 1,
+      "astral_planet_code": "sun",
+      "locale": "de",
+      "translated_name": "Sonne"
+    },
+    {
+      "id": 4,
+      "astral_planet_id": 1,
+      "astral_planet_code": "sun",
+      "locale": "it",
+      "translated_name": "Sole"
+    },
+    {
+      "id": 5,
+      "astral_planet_id": 2,
+      "astral_planet_code": "moon",
+      "locale": "fr",
+      "translated_name": "Lune"
+    },
+    {
+      "id": 6,
+      "astral_planet_id": 2,
+      "astral_planet_code": "moon",
+      "locale": "es",
+      "translated_name": "Luna"
+    },
+    {
+      "id": 7,
+      "astral_planet_id": 2,
+      "astral_planet_code": "moon",
+      "locale": "de",
+      "translated_name": "Mond"
+    },
+    {
+      "id": 8,
+      "astral_planet_id": 2,
+      "astral_planet_code": "moon",
+      "locale": "it",
+      "translated_name": "Luna"
+    },
+    {
+      "id": 9,
+      "astral_planet_id": 3,
+      "astral_planet_code": "mercury",
+      "locale": "fr",
+      "translated_name": "Mercure"
+    },
+    {
+      "id": 10,
+      "astral_planet_id": 3,
+      "astral_planet_code": "mercury",
+      "locale": "es",
+      "translated_name": "Mercurio"
+    },
+    {
+      "id": 11,
+      "astral_planet_id": 3,
+      "astral_planet_code": "mercury",
+      "locale": "de",
+      "translated_name": "Merkur"
+    },
+    {
+      "id": 12,
+      "astral_planet_id": 3,
+      "astral_planet_code": "mercury",
+      "locale": "it",
+      "translated_name": "Mercurio"
+    },
+    {
+      "id": 13,
+      "astral_planet_id": 4,
+      "astral_planet_code": "venus",
+      "locale": "fr",
+      "translated_name": "Vénus"
+    },
+    {
+      "id": 14,
+      "astral_planet_id": 4,
+      "astral_planet_code": "venus",
+      "locale": "es",
+      "translated_name": "Venus"
+    },
+    {
+      "id": 15,
+      "astral_planet_id": 4,
+      "astral_planet_code": "venus",
+      "locale": "de",
+      "translated_name": "Venus"
+    },
+    {
+      "id": 16,
+      "astral_planet_id": 4,
+      "astral_planet_code": "venus",
+      "locale": "it",
+      "translated_name": "Venere"
+    },
+    {
+      "id": 17,
+      "astral_planet_id": 5,
+      "astral_planet_code": "mars",
+      "locale": "fr",
+      "translated_name": "Mars"
+    },
+    {
+      "id": 18,
+      "astral_planet_id": 5,
+      "astral_planet_code": "mars",
+      "locale": "es",
+      "translated_name": "Marte"
+    },
+    {
+      "id": 19,
+      "astral_planet_id": 5,
+      "astral_planet_code": "mars",
+      "locale": "de",
+      "translated_name": "Mars"
+    },
+    {
+      "id": 20,
+      "astral_planet_id": 5,
+      "astral_planet_code": "mars",
+      "locale": "it",
+      "translated_name": "Marte"
+    },
+    {
+      "id": 21,
+      "astral_planet_id": 6,
+      "astral_planet_code": "jupiter",
+      "locale": "fr",
+      "translated_name": "Jupiter"
+    },
+    {
+      "id": 22,
+      "astral_planet_id": 6,
+      "astral_planet_code": "jupiter",
+      "locale": "es",
+      "translated_name": "Júpiter"
+    },
+    {
+      "id": 23,
+      "astral_planet_id": 6,
+      "astral_planet_code": "jupiter",
+      "locale": "de",
+      "translated_name": "Jupiter"
+    },
+    {
+      "id": 24,
+      "astral_planet_id": 6,
+      "astral_planet_code": "jupiter",
+      "locale": "it",
+      "translated_name": "Giove"
+    },
+    {
+      "id": 25,
+      "astral_planet_id": 7,
+      "astral_planet_code": "saturn",
+      "locale": "fr",
+      "translated_name": "Saturne"
+    },
+    {
+      "id": 26,
+      "astral_planet_id": 7,
+      "astral_planet_code": "saturn",
+      "locale": "es",
+      "translated_name": "Saturno"
+    },
+    {
+      "id": 27,
+      "astral_planet_id": 7,
+      "astral_planet_code": "saturn",
+      "locale": "de",
+      "translated_name": "Saturn"
+    },
+    {
+      "id": 28,
+      "astral_planet_id": 7,
+      "astral_planet_code": "saturn",
+      "locale": "it",
+      "translated_name": "Saturno"
+    },
+    {
+      "id": 29,
+      "astral_planet_id": 8,
+      "astral_planet_code": "uranus",
+      "locale": "fr",
+      "translated_name": "Uranus"
+    },
+    {
+      "id": 30,
+      "astral_planet_id": 8,
+      "astral_planet_code": "uranus",
+      "locale": "es",
+      "translated_name": "Urano"
+    },
+    {
+      "id": 31,
+      "astral_planet_id": 8,
+      "astral_planet_code": "uranus",
+      "locale": "de",
+      "translated_name": "Uranus"
+    },
+    {
+      "id": 32,
+      "astral_planet_id": 8,
+      "astral_planet_code": "uranus",
+      "locale": "it",
+      "translated_name": "Urano"
+    },
+    {
+      "id": 33,
+      "astral_planet_id": 9,
+      "astral_planet_code": "neptune",
+      "locale": "fr",
+      "translated_name": "Neptune"
+    },
+    {
+      "id": 34,
+      "astral_planet_id": 9,
+      "astral_planet_code": "neptune",
+      "locale": "es",
+      "translated_name": "Neptuno"
+    },
+    {
+      "id": 35,
+      "astral_planet_id": 9,
+      "astral_planet_code": "neptune",
+      "locale": "de",
+      "translated_name": "Neptun"
+    },
+    {
+      "id": 36,
+      "astral_planet_id": 9,
+      "astral_planet_code": "neptune",
+      "locale": "it",
+      "translated_name": "Nettuno"
+    },
+    {
+      "id": 37,
+      "astral_planet_id": 10,
+      "astral_planet_code": "pluto",
+      "locale": "fr",
+      "translated_name": "Pluton"
+    },
+    {
+      "id": 38,
+      "astral_planet_id": 10,
+      "astral_planet_code": "pluto",
+      "locale": "es",
+      "translated_name": "Plutón"
+    },
+    {
+      "id": 39,
+      "astral_planet_id": 10,
+      "astral_planet_code": "pluto",
+      "locale": "de",
+      "translated_name": "Pluto"
+    },
+    {
+      "id": 40,
+      "astral_planet_id": 10,
+      "astral_planet_code": "pluto",
+      "locale": "it",
+      "translated_name": "Plutone"
+    }
+  ]
+}

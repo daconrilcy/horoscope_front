@@ -6,7 +6,7 @@ La couche `astral_house_interpretation_profiles` existe désormais dans le modè
 
 Références actuelles :
 
-- vocabulaire maisons : `house_interpretation_vocabulary.json`
+- vocabulaire maisons : `astral_house_interpretation_profiles.json`
 - documentation maisons : `tables-maisons-et-roles.md`
 - documentation planètes : `tables-planetes-et-roles.md`
 
@@ -917,4 +917,3 @@ interpretation profiles
 → vocabulaire maîtrisé
 
 narr
-

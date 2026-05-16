@@ -31,20 +31,21 @@ def _family_names() -> tuple[str, ...]:
     source_path = _research_path("astral_aspect_families.json")
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    families = raw.get("family") if isinstance(raw, dict) else None
-    if not isinstance(families, list) or not families:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise ValueError("aspect families source must contain a non-empty family list")
-    return tuple(str(value) for value in families)
+    return tuple(str(row["name"]) for row in rows)
 
 
 def _aspect_family_by_code() -> dict[str, str]:
     """Retourne le rattachement canonique code aspect -> famille."""
-    source_path = _research_path("aspects.json")
+    source_path = _research_path("astral_aspects.json")
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
-    if not isinstance(raw, list) or not raw:
+    rows = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(rows, list) or not rows:
         raise ValueError("aspects source must be a non-empty list")
-    return {str(row["code"]): str(row["family"]) for row in raw}
+    return {str(row["code"]): str(row["family"]) for row in rows}
 
 
 def _research_path(file_name: str) -> Path:

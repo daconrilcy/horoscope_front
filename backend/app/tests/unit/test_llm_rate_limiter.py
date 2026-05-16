@@ -106,11 +106,15 @@ class TestRateLimiter:
 
     def test_uses_memory_fallback_on_redis_connection_error(self) -> None:
         """Should fallback to memory when Redis connection fails."""
-        limiter = RateLimiter(
-            redis_url="redis://nonexistent:6379",
-            limit_per_min=2,
-            enabled=True,
-        )
+        mock_redis = MagicMock()
+        mock_redis.ping.side_effect = ConnectionError("redis unavailable")
+
+        with patch("redis.from_url", return_value=mock_redis):
+            limiter = RateLimiter(
+                redis_url="redis://localhost:6379",
+                limit_per_min=2,
+                enabled=True,
+            )
 
         assert limiter._use_memory is True
         result = limiter.check_rate_limit("user1")

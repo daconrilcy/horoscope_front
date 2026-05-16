@@ -1,20 +1,21 @@
 {
-    "structure": {
-        "id": "integer",
-        "name": "string"
+  "name": "astral_house_modalities",
+  "structure": {
+    "id": "integer",
+    "name": "string"
+  },
+  "data": [
+    {
+      "id": 1,
+      "name": "angular"
     },
-    "data": [
-        {
-            "id": 1,
-            "name": "angular"
-        },
-        {
-            "id": 2,
-            "name": "succedent"
-        },
-        {
-            "id": 3,
-            "name": "cadent"
-        }
-    ]
+    {
+      "id": 2,
+      "name": "succedent"
+    },
+    {
+      "id": 3,
+      "name": "cadent"
+    }
+  ]
 }

@@ -1,0 +1,297 @@
+{
+  "name": "astral_house_interpretation_profile_translations",
+  "structure": {
+    "source_table": "astral_house_interpretation_profiles",
+    "translation_table": "astral_house_interpretation_profile_translations",
+    "source_reference": {
+      "reference_version_id": "integer, reference house_interpretation_profiles.reference_version_id",
+      "house_id": "integer, reference astral_houses.id",
+      "tradition": "string"
+    },
+    "translations": {
+      "locale": "string, one of fr/es/de/it",
+      "title": "string",
+      "summary": "text"
+    }
+  },
+  "data": {
+    "profiles": [
+      {
+        "reference_version_id": 1,
+        "house_id": 1,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Soi et identité",
+            "summary": "La première maison décrit l'identité, la présence physique, le comportement instinctif, la vitalité et la manière d'entrer dans la vie."
+          },
+          "es": {
+            "title": "Yo e identidad",
+            "summary": "La primera casa describe la identidad, la presencia física, el comportamiento instintivo, la vitalidad y la forma en que una persona entra en la vida."
+          },
+          "de": {
+            "title": "Selbst und Identität",
+            "summary": "Das erste Haus beschreibt Identität, körperliche Präsenz, instinktives Verhalten, Vitalität und die Art, wie ein Mensch ins Leben tritt."
+          },
+          "it": {
+            "title": "Io e identità",
+            "summary": "La prima casa descrive identità, presenza fisica, comportamento istintivo, vitalità e il modo in cui una persona entra nella vita."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 2,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Ressources et valeurs",
+            "summary": "La deuxième maison décrit l'argent, les possessions, les ressources personnelles, l'estime de soi, la stabilité et les valeurs qui créent la sécurité intérieure."
+          },
+          "es": {
+            "title": "Recursos y valores",
+            "summary": "La segunda casa describe dinero, posesiones, recursos personales, autoestima, estabilidad y los valores que crean seguridad interior."
+          },
+          "de": {
+            "title": "Ressourcen und Werte",
+            "summary": "Das zweite Haus beschreibt Geld, Besitz, persönliche Ressourcen, Selbstwert, Stabilität und die Werte, die innere Sicherheit schaffen."
+          },
+          "it": {
+            "title": "Risorse e valori",
+            "summary": "La seconda casa descrive denaro, beni, risorse personali, autostima, stabilità e valori che creano sicurezza interiore."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 3,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Communication et apprentissage",
+            "summary": "La troisième maison décrit la communication, les premiers apprentissages, la fratrie, l'environnement proche, la curiosité, le langage et l'activité mentale quotidienne."
+          },
+          "es": {
+            "title": "Comunicación y aprendizaje",
+            "summary": "La tercera casa describe comunicación, aprendizaje temprano, hermanos, entorno cercano, curiosidad, lenguaje y actividad mental cotidiana."
+          },
+          "de": {
+            "title": "Kommunikation und Lernen",
+            "summary": "Das dritte Haus beschreibt Kommunikation, frühes Lernen, Geschwister, nahe Umgebung, Neugier, Sprache und alltägliche geistige Aktivität."
+          },
+          "it": {
+            "title": "Comunicazione e apprendimento",
+            "summary": "La terza casa descrive comunicazione, primi apprendimenti, fratelli, ambiente vicino, curiosità, linguaggio e attività mentale quotidiana."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 4,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Foyer et racines",
+            "summary": "La quatrième maison décrit le foyer, les racines familiales, l'ascendance, les fondations émotionnelles, la vie privée et la base intérieure depuis laquelle la vie se développe."
+          },
+          "es": {
+            "title": "Hogar y raíces",
+            "summary": "La cuarta casa describe hogar, raíces familiares, ascendencia, fundamentos emocionales, vida privada y la base interior desde la que se desarrolla la vida."
+          },
+          "de": {
+            "title": "Zuhause und Wurzeln",
+            "summary": "Das vierte Haus beschreibt Zuhause, familiäre Wurzeln, Abstammung, emotionale Grundlagen, Privatleben und die innere Basis, aus der sich das Leben entwickelt."
+          },
+          "it": {
+            "title": "Casa e radici",
+            "summary": "La quarta casa descrive casa, radici familiari, ascendenza, fondamenti emotivi, vita privata e base interiore da cui la vita si sviluppa."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 5,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Créativité et plaisir",
+            "summary": "La cinquième maison décrit la créativité, le plaisir, la romance, les enfants, le jeu, la joie, le talent et le désir de s'exprimer librement."
+          },
+          "es": {
+            "title": "Creatividad y placer",
+            "summary": "La quinta casa describe creatividad, placer, romance, hijos, juego, alegría, talento y deseo de expresarse libremente."
+          },
+          "de": {
+            "title": "Kreativität und Freude",
+            "summary": "Das fünfte Haus beschreibt Kreativität, Freude, Romantik, Kinder, Spiel, Lebenslust, Talent und den Wunsch, sich frei auszudrücken."
+          },
+          "it": {
+            "title": "Creatività e piacere",
+            "summary": "La quinta casa descrive creatività, piacere, romanticismo, figli, gioco, gioia, talento e desiderio di esprimersi liberamente."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 6,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Travail, santé et pratique quotidienne",
+            "summary": "La sixième maison décrit le travail quotidien, les routines, le service, les habitudes de santé, la discipline, l'amélioration pratique et la gestion de la vie de tous les jours."
+          },
+          "es": {
+            "title": "Trabajo, salud y práctica diaria",
+            "summary": "La sexta casa describe trabajo diario, rutinas, servicio, hábitos de salud, disciplina, mejora práctica y gestión de la vida cotidiana."
+          },
+          "de": {
+            "title": "Arbeit, Gesundheit und Alltagspraxis",
+            "summary": "Das sechste Haus beschreibt tägliche Arbeit, Routinen, Dienst, Gesundheitsgewohnheiten, Disziplin, praktische Verbesserung und die Bewältigung des Alltags."
+          },
+          "it": {
+            "title": "Lavoro, salute e pratica quotidiana",
+            "summary": "La sesta casa descrive lavoro quotidiano, routine, servizio, abitudini di salute, disciplina, miglioramento pratico e gestione della vita di ogni giorno."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 7,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Partenariats et accords",
+            "summary": "La septième maison décrit les relations engagées, le mariage, les contrats, les alliances, les adversaires déclarés et la manière de rencontrer l'autre."
+          },
+          "es": {
+            "title": "Asociaciones y acuerdos",
+            "summary": "La séptima casa describe relaciones comprometidas, matrimonio, contratos, alianzas, oponentes abiertos y la forma de encontrarse con el otro."
+          },
+          "de": {
+            "title": "Partnerschaften und Vereinbarungen",
+            "summary": "Das siebte Haus beschreibt verbindliche Beziehungen, Ehe, Verträge, Allianzen, offene Gegner und die Art, dem Anderen zu begegnen."
+          },
+          "it": {
+            "title": "Partnership e accordi",
+            "summary": "La settima casa descrive relazioni impegnate, matrimonio, contratti, alleanze, oppositori dichiarati e il modo di incontrare l'altro."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 8,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Transformation et ressources partagées",
+            "summary": "La huitième maison décrit l'intimité, la transformation, les ressources partagées, la crise, l'héritage, la profondeur psychologique et les processus de perte et de renouvellement."
+          },
+          "es": {
+            "title": "Transformación y recursos compartidos",
+            "summary": "La octava casa describe intimidad, transformación, recursos compartidos, crisis, herencia, profundidad psicológica y procesos de pérdida y renovación."
+          },
+          "de": {
+            "title": "Transformation und gemeinsame Ressourcen",
+            "summary": "Das achte Haus beschreibt Intimität, Transformation, gemeinsame Ressourcen, Krise, Erbe, psychologische Tiefe und Prozesse von Verlust und Erneuerung."
+          },
+          "it": {
+            "title": "Trasformazione e risorse condivise",
+            "summary": "L'ottava casa descrive intimità, trasformazione, risorse condivise, crisi, eredità, profondità psicologica e processi di perdita e rinnovamento."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 9,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Croyances et expansion",
+            "summary": "La neuvième maison décrit les croyances, la philosophie, l'enseignement supérieur, les voyages lointains, la loi, la spiritualité et la recherche de sens."
+          },
+          "es": {
+            "title": "Creencias y expansión",
+            "summary": "La novena casa describe creencias, filosofía, educación superior, viajes de larga distancia, ley, espiritualidad y búsqueda de sentido."
+          },
+          "de": {
+            "title": "Überzeugungen und Expansion",
+            "summary": "Das neunte Haus beschreibt Überzeugungen, Philosophie, höhere Bildung, Fernreisen, Recht, Spiritualität und die Suche nach Sinn."
+          },
+          "it": {
+            "title": "Credenze ed espansione",
+            "summary": "La nona casa descrive credenze, filosofia, istruzione superiore, lunghi viaggi, legge, spiritualità e ricerca di significato."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 10,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Carrière et rôle public",
+            "summary": "La dixième maison décrit l'ambition, la réputation, la vocation, l'autorité, l'image publique et la contribution visible au monde."
+          },
+          "es": {
+            "title": "Carrera y rol público",
+            "summary": "La décima casa describe ambición, reputación, vocación, autoridad, imagen pública y contribución visible al mundo."
+          },
+          "de": {
+            "title": "Karriere und öffentliche Rolle",
+            "summary": "Das zehnte Haus beschreibt Ehrgeiz, Ruf, Berufung, Autorität, öffentliches Bild und den sichtbaren Beitrag zur Welt."
+          },
+          "it": {
+            "title": "Carriera e ruolo pubblico",
+            "summary": "La decima casa descrive ambizione, reputazione, vocazione, autorità, immagine pubblica e contributo visibile al mondo."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 11,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Réseaux et vision d'avenir",
+            "summary": "La onzième maison décrit les amitiés, les réseaux, les groupes, les communautés, les idéaux collectifs, les objectifs futurs et la capacité à participer à quelque chose de plus grand."
+          },
+          "es": {
+            "title": "Redes y visión de futuro",
+            "summary": "La undécima casa describe amistades, redes, grupos, comunidades, ideales colectivos, metas futuras y la capacidad de participar en algo más grande."
+          },
+          "de": {
+            "title": "Netzwerke und Zukunftsvision",
+            "summary": "Das elfte Haus beschreibt Freundschaften, Netzwerke, Gruppen, Gemeinschaften, kollektive Ideale, Zukunftsziele und die Fähigkeit, an etwas Größerem teilzunehmen."
+          },
+          "it": {
+            "title": "Reti e visione futura",
+            "summary": "L'undicesima casa descrive amicizie, reti, gruppi, comunità, ideali collettivi, obiettivi futuri e capacità di partecipare a qualcosa di più grande."
+          }
+        }
+      },
+      {
+        "reference_version_id": 1,
+        "house_id": 12,
+        "tradition": "modern",
+        "translations": {
+          "fr": {
+            "title": "Inconscient et transcendance",
+            "summary": "La douzième maison décrit l'inconscient, la solitude, les rêves, les schémas cachés, la retraite spirituelle, la compassion, le lâcher-prise et ce qui dépasse le contrôle ordinaire."
+          },
+          "es": {
+            "title": "Inconsciente y trascendencia",
+            "summary": "La duodécima casa describe el inconsciente, la soledad, los sueños, patrones ocultos, retiro espiritual, compasión, liberación y lo que está más allá del control ordinario."
+          },
+          "de": {
+            "title": "Unbewusstes und Transzendenz",
+            "summary": "Das zwölfte Haus beschreibt das Unbewusste, Einsamkeit, Träume, verborgene Muster, spirituellen Rückzug, Mitgefühl, Loslassen und das, was jenseits gewöhnlicher Kontrolle liegt."
+          },
+          "it": {
+            "title": "Inconscio e trascendenza",
+            "summary": "La dodicesima casa descrive inconscio, solitudine, sogni, schemi nascosti, ritiro spirituale, compassione, rilascio e ciò che va oltre il controllo ordinario."
+          }
+        }
+      }
+    ]
+  }
+}
