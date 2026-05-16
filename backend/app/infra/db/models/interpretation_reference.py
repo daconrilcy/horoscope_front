@@ -26,7 +26,13 @@ class HouseInterpretationProfileModel(Base):
 
     __tablename__ = "astral_house_interpretation_profiles"
     __table_args__ = (
-        UniqueConstraint("reference_version_id", "house_id", "language", "astral_system_id"),
+        UniqueConstraint(
+            "reference_version_id",
+            "house_id",
+            "language_id",
+            "astral_system_id",
+            name="uq_astral_house_interpretation_profiles_scope",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -40,7 +46,11 @@ class HouseInterpretationProfileModel(Base):
         nullable=False,
         index=True,
     )
-    language: Mapped[str] = mapped_column(String(16), nullable=False)
+    language_id: Mapped[int] = mapped_column(
+        ForeignKey("languages.id"),
+        nullable=False,
+        index=True,
+    )
     astral_system_id: Mapped[int] = mapped_column(
         ForeignKey("astral_systems.id"),
         nullable=False,
@@ -66,6 +76,7 @@ class HouseInterpretationProfileModel(Base):
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     house: Mapped["HouseModel"] = relationship()
     astral_system: Mapped["AstralSystemModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
 
 
 class AstralAspectInterpretationProfileModel(Base):
@@ -73,7 +84,13 @@ class AstralAspectInterpretationProfileModel(Base):
 
     __tablename__ = "astral_aspect_interpretation_profiles"
     __table_args__ = (
-        UniqueConstraint("reference_version_id", "aspect_id", "astral_system_id", "language"),
+        UniqueConstraint(
+            "reference_version_id",
+            "aspect_id",
+            "astral_system_id",
+            "language_id",
+            name="uq_astral_aspect_interpretation_profiles_scope",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -92,7 +109,11 @@ class AstralAspectInterpretationProfileModel(Base):
         nullable=False,
         index=True,
     )
-    language: Mapped[str] = mapped_column(String(16), nullable=False)
+    language_id: Mapped[int] = mapped_column(
+        ForeignKey("languages.id"),
+        nullable=False,
+        index=True,
+    )
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     core_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -113,6 +134,7 @@ class AstralAspectInterpretationProfileModel(Base):
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     aspect: Mapped["AspectModel"] = relationship()
     astral_system: Mapped["AstralSystemModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
 
 
 class AstralPlanetInterpretationProfileModel(Base):

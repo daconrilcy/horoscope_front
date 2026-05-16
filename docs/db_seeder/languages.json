@@ -1,4 +1,5 @@
 {
+    "name": "languages",
     "structure": {
         "id": "integer",
         "code": "string",

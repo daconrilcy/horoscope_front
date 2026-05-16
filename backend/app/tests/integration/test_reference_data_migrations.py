@@ -655,7 +655,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "id",
         "reference_version_id",
         "house_id",
-        "language",
+        "language_id",
         "astral_system_id",
         "title",
         "summary",
@@ -683,7 +683,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert (
         "reference_version_id",
         "house_id",
-        "language",
+        "language_id",
         "astral_system_id",
     ) in house_interpretation_unique_columns
     house_interpretation_foreign_keys = {
@@ -695,6 +695,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     )
     assert house_interpretation_foreign_keys[("house_id",)] == "astral_houses"
     assert house_interpretation_foreign_keys[("astral_system_id",)] == "astral_systems"
+    assert house_interpretation_foreign_keys[("language_id",)] == "languages"
     aspect_interpretation_columns = {
         column["name"]
         for column in head_inspector.get_columns("astral_aspect_interpretation_profiles")
@@ -704,7 +705,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "reference_version_id",
         "aspect_id",
         "astral_system_id",
-        "language",
+        "language_id",
         "title",
         "summary",
         "core_keywords_json",
@@ -732,7 +733,7 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "reference_version_id",
         "aspect_id",
         "astral_system_id",
-        "language",
+        "language_id",
     ) in aspect_interpretation_unique_columns
     aspect_interpretation_foreign_keys = {
         tuple(foreign_key["constrained_columns"]): foreign_key["referred_table"]
@@ -743,6 +744,14 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     )
     assert aspect_interpretation_foreign_keys[("aspect_id",)] == "astral_aspects"
     assert aspect_interpretation_foreign_keys[("astral_system_id",)] == "astral_systems"
+    assert aspect_interpretation_foreign_keys[("language_id",)] == "languages"
+    user_columns = {column["name"] for column in head_inspector.get_columns("users")}
+    assert "default_language_id" in user_columns
+    user_foreign_keys = {
+        tuple(foreign_key["constrained_columns"]): foreign_key["referred_table"]
+        for foreign_key in head_inspector.get_foreign_keys("users")
+    }
+    assert user_foreign_keys[("default_language_id",)] == "languages"
     for table_name in (
         "prediction_categories",
         "astral_prediction_daily_planet_profiles",

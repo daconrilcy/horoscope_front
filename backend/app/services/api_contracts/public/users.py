@@ -133,6 +133,7 @@ class UserSettingsData(BaseModel):
 
     astrologer_profile: str
     default_astrologer_id: str | None = None
+    default_language_code: str | None = None
 
 
 class UserSettingsApiResponse(BaseModel):
@@ -147,3 +148,4 @@ class UserSettingsPatchRequest(BaseModel):
 
     astrologer_profile: str | None = None
     default_astrologer_id: str | None = None
+    default_language_code: str | None = None

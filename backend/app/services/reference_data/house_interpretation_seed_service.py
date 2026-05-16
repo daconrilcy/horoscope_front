@@ -13,6 +13,7 @@ from app.infra.db.models import (
     AstralSystemModel,
     HouseInterpretationProfileModel,
     HouseModel,
+    LanguageModel,
     ReferenceVersionModel,
 )
 
@@ -81,13 +82,16 @@ def sync_house_interpretation_profiles(db: Session, reference_version_id: int) -
     systems_by_name = {
         system.name: system.id for system in db.scalars(select(AstralSystemModel)).all()
     }
+    language_ids_by_code = {
+        language.code: language.id for language in db.scalars(select(LanguageModel)).all()
+    }
 
     for source_row in load_house_interpretation_profiles_source():
         house_number = int(source_row["house_id"])
         house_id = houses_by_number.get(house_number)
         if house_id is None:
             raise ValueError(f"unknown house number in interpretation source: {house_number}")
-        language = str(source_row.get("language") or DEFAULT_LANGUAGE)
+        language_id = _resolve_language_id(source_row, language_ids_by_code)
         system_name = str(source_row["tradition"])
         astral_system_id = systems_by_name.get(system_name)
         if astral_system_id is None:
@@ -96,7 +100,7 @@ def sync_house_interpretation_profiles(db: Session, reference_version_id: int) -
             select(HouseInterpretationProfileModel).where(
                 HouseInterpretationProfileModel.reference_version_id == reference_version_id,
                 HouseInterpretationProfileModel.house_id == house_id,
-                HouseInterpretationProfileModel.language == language,
+                HouseInterpretationProfileModel.language_id == language_id,
                 HouseInterpretationProfileModel.astral_system_id == astral_system_id,
             )
         )
@@ -114,7 +118,7 @@ def sync_house_interpretation_profiles(db: Session, reference_version_id: int) -
                 HouseInterpretationProfileModel(
                     reference_version_id=reference_version_id,
                     house_id=house_id,
-                    language=language,
+                    language_id=language_id,
                     astral_system_id=astral_system_id,
                     **values,
                 )
@@ -125,6 +129,18 @@ def sync_house_interpretation_profiles(db: Session, reference_version_id: int) -
         for field_name, value in values.items():
             setattr(profile, field_name, value)
     db.flush()
+
+
+def _resolve_language_id(source_row: dict[str, Any], language_ids_by_code: dict[str, int]) -> int:
+    """Résout la langue source depuis `language_id` ou l'ancien code `language`."""
+    raw_language_id = source_row.get("language_id")
+    if isinstance(raw_language_id, int) and raw_language_id > 0:
+        return raw_language_id
+    language_code = str(source_row.get("language") or DEFAULT_LANGUAGE)
+    language_id = language_ids_by_code.get(language_code)
+    if language_id is None:
+        raise ValueError(f"unknown language in house interpretation source: {language_code}")
+    return language_id
 
 
 __all__ = [

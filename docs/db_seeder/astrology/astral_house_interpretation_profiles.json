@@ -4,6 +4,7 @@
     "id": "integer",
     "reference_version_id": "integer",
     "house_id": "integer",
+    "language_id": "integer, FK -> languages.id",
     "tradition": "string",
     "title": "string",
     "summary": "string",
@@ -109,7 +110,8 @@
         "Describe how the native enters life and reacts instinctively.",
         "Link planets here to visibility, self-expression and embodiment."
       ],
-      "micro_note": "Where life begins as an embodied self."
+      "micro_note": "Where life begins as an embodied self.",
+      "language_id": 1
     },
     {
       "id": 2,
@@ -199,7 +201,8 @@
         "Interpret this house through resources, stability and personal value.",
         "Mention both financial and psychological security."
       ],
-      "micro_note": "What one owns, values and trusts."
+      "micro_note": "What one owns, values and trusts.",
+      "language_id": 1
     },
     {
       "id": 3,
@@ -291,7 +294,8 @@
         "Use this house to describe how the native thinks, speaks and learns.",
         "Mention siblings or local context only when relevant."
       ],
-      "micro_note": "How the mind connects with the nearby world."
+      "micro_note": "How the mind connects with the nearby world.",
+      "language_id": 1
     },
     {
       "id": 4,
@@ -380,7 +384,8 @@
         "Describe the emotional base and private world.",
         "Connect planets here to roots, memory and belonging."
       ],
-      "micro_note": "The private foundation beneath visible life."
+      "micro_note": "The private foundation beneath visible life.",
+      "language_id": 1
     },
     {
       "id": 5,
@@ -469,7 +474,8 @@
         "Use this house to interpret creative drive and pleasure.",
         "Mention romance, children or performance when context supports it."
       ],
-      "micro_note": "Where life becomes play, love and creation."
+      "micro_note": "Where life becomes play, love and creation.",
+      "language_id": 1
     },
     {
       "id": 6,
@@ -561,7 +567,8 @@
         "Interpret this house through work patterns, habits and health maintenance.",
         "Mention improvement without making it feel punitive."
       ],
-      "micro_note": "Where life is refined through practice."
+      "micro_note": "Where life is refined through practice.",
+      "language_id": 1
     },
     {
       "id": 7,
@@ -650,7 +657,8 @@
         "Describe how the native meets others through commitment and contrast.",
         "Mention open conflict as well as cooperation when relevant."
       ],
-      "micro_note": "Where the self meets the other."
+      "micro_note": "Where the self meets the other.",
+      "language_id": 1
     },
     {
       "id": 8,
@@ -742,7 +750,8 @@
         "Use this house for shared resources, intimacy and psychological transformation.",
         "Frame intensity as a potential path to renewal."
       ],
-      "micro_note": "Where life transforms through surrender and depth."
+      "micro_note": "Where life transforms through surrender and depth.",
+      "language_id": 1
     },
     {
       "id": 9,
@@ -833,7 +842,8 @@
         "Interpret this house through purpose, learning and broad horizons.",
         "Mention travel or education when context supports it."
       ],
-      "micro_note": "Where life searches for meaning."
+      "micro_note": "Where life searches for meaning.",
+      "language_id": 1
     },
     {
       "id": 10,
@@ -925,7 +935,8 @@
         "Interpret this house through vocation, visibility and social contribution.",
         "Mention reputation and authority when relevant."
       ],
-      "micro_note": "Where life becomes visible responsibility."
+      "micro_note": "Where life becomes visible responsibility.",
+      "language_id": 1
     },
     {
       "id": 11,
@@ -1013,7 +1024,8 @@
         "Use this house to describe social belonging and future-oriented goals.",
         "Mention groups and networks when planets activate this area."
       ],
-      "micro_note": "Where the individual joins the future."
+      "micro_note": "Where the individual joins the future.",
+      "language_id": 1
     },
     {
       "id": 12,
@@ -1104,7 +1116,8 @@
         "Use this house for dreams, unconscious patterns and spiritual withdrawal.",
         "Frame challenges as invitations to release and compassion."
       ],
-      "micro_note": "Where life dissolves, heals and returns to the invisible."
+      "micro_note": "Where life dissolves, heals and returns to the invisible.",
+      "language_id": 1
     }
   ]
 }

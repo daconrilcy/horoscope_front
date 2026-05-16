@@ -1,3 +1,5 @@
+"""Routes publiques de gestion du profil utilisateur et de ses préférences."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,6 +10,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -16,6 +19,7 @@ from app.api.errors import build_error_response
 from app.api.v1.constants import VALID_ASTROLOGER_PROFILES
 from app.core.request_id import resolve_request_id
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparationError
+from app.infra.db.models.reference import LanguageModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.infra.observability.metrics import increment_counter
@@ -538,10 +542,14 @@ def get_me_settings(
 
     profile = getattr(user, "astrologer_profile", "standard")
     default_astrologer_id = getattr(user, "default_astrologer_id", None)
+    default_language_code = (
+        user.default_language.code if user.default_language is not None else None
+    )
     return {
         "data": {
             "astrologer_profile": profile,
             "default_astrologer_id": default_astrologer_id,
+            "default_language_code": default_language_code,
         },
         "meta": {"request_id": request_id},
     }
@@ -596,12 +604,32 @@ def patch_me_settings(
     if "default_astrologer_id" in update_data:
         user.default_astrologer_id = update_data["default_astrologer_id"]
 
+    if "default_language_code" in update_data:
+        language_code = update_data["default_language_code"]
+        if language_code is None:
+            user.default_language_id = None
+        else:
+            language = db.scalar(select(LanguageModel).where(LanguageModel.code == language_code))
+            if language is None:
+                return build_error_response(
+                    status_code=422,
+                    request_id=request_id,
+                    code="invalid_default_language",
+                    message="language code is not supported",
+                    details={"language_code": language_code},
+                )
+            user.default_language_id = language.id
+
     db.commit()
+    db.refresh(user)
 
     return {
         "data": {
             "astrologer_profile": user.astrologer_profile,
             "default_astrologer_id": user.default_astrologer_id,
+            "default_language_code": (
+                user.default_language.code if user.default_language is not None else None
+            ),
         },
         "meta": {"request_id": request_id},
     }

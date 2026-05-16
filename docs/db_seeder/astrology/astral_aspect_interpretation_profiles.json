@@ -6,14 +6,14 @@
       "reference_version_id",
       "aspect_id",
       "astral_system_id",
-      "language"
+      "language_id"
     ],
     "columns": {
       "id": "integer",
       "reference_version_id": "foreign_key:astral_reference_versions.id",
       "aspect_id": "foreign_key:astral_aspects.id",
       "astral_system_id": "foreign_key:astral_systems.id",
-      "language": "string",
+      "language_id": "foreign_key:languages.id",
       "title": "string",
       "summary": "text",
       "core_keywords_json": "json_array",
@@ -36,7 +36,6 @@
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "conjunction",
       "title": "Fusion and Intensification",
       "summary": "A conjunction blends two planetary principles into a single intensified field. It amplifies the planets involved and can feel natural, powerful, excessive, or difficult to separate.",
@@ -121,12 +120,12 @@
         "Describe how the two planetary principles become difficult to separate.",
         "Avoid fixed good/bad language."
       ],
-      "micro_note": "The conjunction is contextual: it magnifies whatever it touches."
+      "micro_note": "The conjunction is contextual: it magnifies whatever it touches.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "sextile",
       "title": "Opportunity and Cooperation",
       "summary": "A sextile creates a supportive connection that opens possibilities. It is constructive and helpful, but usually requires conscious participation to become fully active.",
@@ -206,12 +205,12 @@
         "Mention that conscious engagement is needed.",
         "Use constructive and practical language."
       ],
-      "micro_note": "The sextile is a door; it still needs to be opened."
+      "micro_note": "The sextile is a door; it still needs to be opened.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "square",
       "title": "Friction and Activation",
       "summary": "A square creates tension between two planetary principles. It often manifests as pressure, conflict, urgency or frustration, but it also generates movement, effort and growth.",
@@ -295,12 +294,12 @@
         "Explain the challenge and the development opportunity.",
         "Use precise, active language."
       ],
-      "micro_note": "The square is difficult, but it is one of the strongest engines of growth."
+      "micro_note": "The square is difficult, but it is one of the strongest engines of growth.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "trine",
       "title": "Flow and Integration",
       "summary": "A trine indicates natural ease between two planetary principles. It supports talent, fluidity and integration, though it can become passive if not consciously used.",
@@ -382,12 +381,12 @@
         "Mention talent or ease.",
         "Add a note about conscious use."
       ],
-      "micro_note": "The trine shows what flows naturally, but flow still needs direction."
+      "micro_note": "The trine shows what flows naturally, but flow still needs direction.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "opposition",
       "title": "Polarity and Awareness",
       "summary": "An opposition places two planetary principles across from each other. It creates polarity, tension, projection and awareness through contrast, often requiring balance and integration.",
@@ -471,12 +470,12 @@
         "Explain projection and balance.",
         "Use language of dialogue and integration."
       ],
-      "micro_note": "The opposition reveals what must be balanced, owned and integrated."
+      "micro_note": "The opposition reveals what must be balanced, owned and integrated.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "semi_sextile",
       "title": "Subtle Adjustment",
       "summary": "A semi-sextile links adjacent principles that are close but not naturally aligned. It indicates small adaptations, emerging awareness and subtle developmental friction.",
@@ -549,12 +548,12 @@
         "Describe small adjustments.",
         "Mention subtle coordination."
       ],
-      "micro_note": "The semi-sextile is minor but useful for fine-tuning."
+      "micro_note": "The semi-sextile is minor but useful for fine-tuning.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "semi_square",
       "title": "Minor Friction",
       "summary": "A semi-square creates low-grade tension. It is less forceful than a square, but can produce irritation, restlessness and recurring pressure that asks for adjustment.",
@@ -628,12 +627,12 @@
         "Mention irritation and correction.",
         "Avoid dramatic language."
       ],
-      "micro_note": "The semi-square is small pressure that becomes useful when noticed early."
+      "micro_note": "The semi-square is small pressure that becomes useful when noticed early.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "quintile",
       "title": "Creative Patterning",
       "summary": "A quintile suggests creative intelligence, talent, design, craft and the ability to shape experience intentionally. It is subtle but highly expressive when cultivated.",
@@ -712,12 +711,12 @@
         "Mention talent, craft and intentional expression.",
         "Connect it to the planets involved."
       ],
-      "micro_note": "The quintile points to cultivated talent and creative order."
+      "micro_note": "The quintile points to cultivated talent and creative order.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "sesquiquadrate",
       "title": "Accumulated Tension",
       "summary": "A sesquiquadrate indicates indirect or accumulated tension. It can feel like repeated pressure, frustration or unresolved stress that pushes for correction.",
@@ -791,12 +790,12 @@
         "Mention repetition and accumulated pressure.",
         "Suggest practical correction."
       ],
-      "micro_note": "The sesquiquadrate shows pressure that has been building indirectly."
+      "micro_note": "The sesquiquadrate shows pressure that has been building indirectly.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "quincunx",
       "title": "Incongruent Adjustment",
       "summary": "A quincunx links planetary principles that do not naturally understand each other. It often requires adaptation, recalibration and practical adjustment without easy integration.",
@@ -879,12 +878,12 @@
         "Explain that the planets need recalibration.",
         "Use language of adaptation, not direct conflict."
       ],
-      "micro_note": "The quincunx is not a clean conflict; it is a mismatch that asks for adjustment."
+      "micro_note": "The quincunx is not a clean conflict; it is a mismatch that asks for adjustment.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "biquintile",
       "title": "Refined Creative Expression",
       "summary": "A biquintile is a subtle creative harmonic. It suggests refinement, symbolic intelligence, design ability and the capacity to shape talent into a distinctive form.",
@@ -961,12 +960,12 @@
         "Mention design, craft and symbolic intelligence.",
         "Avoid deterministic language."
       ],
-      "micro_note": "The biquintile refines the creative impulse of the quintile."
+      "micro_note": "The biquintile refines the creative impulse of the quintile.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "septile",
       "title": "Symbolic Compulsion",
       "summary": "A septile is an advanced symbolic aspect associated with inner necessity, unusual timing, subtle compulsion and experiences that feel meaningful or fated.",
@@ -1045,12 +1044,12 @@
         "Use careful, non-fatalistic language.",
         "Mention mystery and inner necessity."
       ],
-      "micro_note": "The septile should remain subtle and contextual in public interpretations."
+      "micro_note": "The septile should remain subtle and contextual in public interpretations.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "biseptile",
       "title": "Deep Symbolic Resonance",
       "summary": "A biseptile extends the septile family, indicating subtle symbolic pressure, unusual resonance and a sense of meaningful inner movement.",
@@ -1124,12 +1123,12 @@
         "Avoid fatalistic framing.",
         "Keep it secondary unless repeated."
       ],
-      "micro_note": "The biseptile is meaningful but should be handled with restraint."
+      "micro_note": "The biseptile is meaningful but should be handled with restraint.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "triseptile",
       "title": "Intensified Symbolic Pattern",
       "summary": "A triseptile belongs to the septile family and points to intensified symbolic patterning, subtle compulsion and inner movements that may feel charged with meaning.",
@@ -1204,12 +1203,12 @@
         "Keep the tone grounded.",
         "Avoid certainty claims."
       ],
-      "micro_note": "The triseptile is advanced and should not dominate a reading alone."
+      "micro_note": "The triseptile is advanced and should not dominate a reading alone.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "novile",
       "title": "Inner Completion",
       "summary": "A novile suggests inner integration, maturation and subtle spiritual development. It often points to a quiet process of completion rather than visible outer pressure.",
@@ -1285,12 +1284,12 @@
         "Mention maturation and completion.",
         "Use quiet, reflective language."
       ],
-      "micro_note": "The novile is subtle, inward and developmental."
+      "micro_note": "The novile is subtle, inward and developmental.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "binovile",
       "title": "Deepening Inner Integration",
       "summary": "A binovile extends the novile family, suggesting a deepening process of inner alignment, spiritual maturation and quiet synthesis.",
@@ -1364,12 +1363,12 @@
         "Use reflective language.",
         "Keep practical grounding."
       ],
-      "micro_note": "The binovile deepens the inner completion theme of the novile."
+      "micro_note": "The binovile deepens the inner completion theme of the novile.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "quadranovile",
       "title": "Culminating Inner Synthesis",
       "summary": "A quadranovile suggests a culminating phase of inner integration. It points to subtle completion, spiritual synthesis and the quiet consolidation of experience.",
@@ -1443,12 +1442,12 @@
         "Use mature, reflective language.",
         "Avoid overstatement."
       ],
-      "micro_note": "The quadranovile points to quiet culmination rather than obvious external action."
+      "micro_note": "The quadranovile points to quiet culmination rather than obvious external action.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "decile",
       "title": "Creative Ordering",
       "summary": "A decile is a subtle creative harmonic linked to order, proportion, intelligent design and the ability to structure talent into useful form.",
@@ -1525,12 +1524,12 @@
         "Mention design and skill.",
         "Use subtle harmonic language."
       ],
-      "micro_note": "The decile gives form and order to creative intelligence."
+      "micro_note": "The decile gives form and order to creative intelligence.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "tredecile",
       "title": "Specialized Creative Intelligence",
       "summary": "A tredecile suggests specialized creative intelligence, unusual skill and the ability to combine inspiration with structured expression.",
@@ -1604,12 +1603,12 @@
         "Mention originality and craft.",
         "Keep grounded."
       ],
-      "micro_note": "The tredecile is a subtle marker of distinctive creative skill."
+      "micro_note": "The tredecile is a subtle marker of distinctive creative skill.",
+      "language_id": 1
     },
     {
       "reference_version_id": 1,
       "astral_system_code": "modern",
-      "language": "en",
       "aspect_code": "quindecile",
       "title": "Intense Focus and Fixation",
       "summary": "A quindecile suggests intense focus, compulsion, obsession or deep concentration. It can create extraordinary persistence, but also fixation if unconscious.",
@@ -1688,7 +1687,8 @@
         "Balance constructive persistence with shadow risk.",
         "Use careful psychological language."
       ],
-      "micro_note": "The quindecile can become mastery or obsession depending on consciousness."
+      "micro_note": "The quindecile can become mastery or obsession depending on consciousness.",
+      "language_id": 1
     }
   ]
 }

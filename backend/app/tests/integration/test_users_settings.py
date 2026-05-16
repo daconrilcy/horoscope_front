@@ -1,3 +1,5 @@
+"""Tests d'intégration des préférences utilisateur exposées par l'API publique."""
+
 from pathlib import Path
 
 import pytest
@@ -6,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.infra.db.base import Base
+from app.infra.db.models.reference import LanguageModel
 from app.main import app
 from app.tests.helpers.db_session import (
     reset_app_test_db_session_factory,
@@ -31,6 +34,14 @@ def _isolated_database(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     )
     use_app_test_db_session_factory(test_session_local)
     Base.metadata.create_all(bind=test_engine)
+    with test_session_local() as db:
+        db.add_all(
+            [
+                LanguageModel(id=1, code="en", name="english"),
+                LanguageModel(id=2, code="fr", name="french"),
+            ]
+        )
+        db.commit()
     try:
         yield
     finally:
@@ -54,8 +65,10 @@ def test_get_me_settings_authenticated(auth_token: str):
     data = response.json()["data"]
     assert "astrologer_profile" in data
     assert "default_astrologer_id" in data
+    assert "default_language_code" in data
     assert data["astrologer_profile"] == "standard"
     assert data["default_astrologer_id"] is None
+    assert data["default_language_code"] is None
 
 
 def test_patch_me_settings_astrologer_profile(auth_token: str):
@@ -100,6 +113,29 @@ def test_patch_me_settings_default_astrologer_id(auth_token: str):
     )
     assert response.status_code == 200
     assert response.json()["data"]["default_astrologer_id"] is None
+
+
+def test_patch_me_settings_default_language_code(auth_token: str):
+    response = client.patch(
+        "/v1/users/me/settings",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"default_language_code": "fr"},
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["default_language_code"] == "fr"
+
+    response = client.get(
+        "/v1/users/me/settings", headers={"Authorization": f"Bearer {auth_token}"}
+    )
+    assert response.json()["data"]["default_language_code"] == "fr"
+
+    response = client.patch(
+        "/v1/users/me/settings",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={"default_language_code": "xx"},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_default_language"
 
 
 def test_patch_me_settings_invalid_profile(auth_token: str):

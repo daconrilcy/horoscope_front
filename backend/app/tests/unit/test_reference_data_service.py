@@ -185,7 +185,7 @@ def test_seed_reference_version_is_idempotent() -> None:
             .join(HouseModel, HouseInterpretationProfileModel.house_id == HouseModel.id)
             .where(
                 HouseInterpretationProfileModel.reference_version_id == version.id,
-                HouseInterpretationProfileModel.language == "en",
+                HouseInterpretationProfileModel.language.has(code="en"),
                 HouseModel.number == 10,
             )
             .join(

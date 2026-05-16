@@ -64,7 +64,7 @@ def load_astral_system_names() -> tuple[str, ...]:
 
 def load_language_rows() -> tuple[dict[str, Any], ...]:
     """Charge les langues supportees depuis la source documentaire canonique."""
-    source_path = Path(__file__).resolve().parents[5] / "docs" / "languages.json"
+    source_path = Path(__file__).resolve().parents[5] / "docs" / "db_seeder" / "languages.json"
     with source_path.open(encoding="utf-8") as stream:
         raw = json.load(stream)
     rows = raw.get("data") if isinstance(raw, dict) else None

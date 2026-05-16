@@ -244,7 +244,7 @@ def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
         "id",
         "reference_version_id",
         "house_id",
-        "language",
+        "language_id",
         "astral_system_id",
         "title",
         "summary",
@@ -268,13 +268,18 @@ def test_house_interpretation_profile_is_dedicated_editorial_reference_model():
         for constraint in HouseInterpretationProfileModel.__table__.constraints
         if isinstance(constraint, UniqueConstraint)
     }
-    assert ("reference_version_id", "house_id", "language", "astral_system_id") in constraints
+    assert ("reference_version_id", "house_id", "language_id", "astral_system_id") in constraints
     foreign_key_targets = {
         foreign_key.column.table.name
         for column in HouseInterpretationProfileModel.__table__.columns
         for foreign_key in column.foreign_keys
     }
-    assert foreign_key_targets == {"astral_reference_versions", "astral_houses", "astral_systems"}
+    assert foreign_key_targets == {
+        "astral_reference_versions",
+        "astral_houses",
+        "astral_systems",
+        "languages",
+    }
 
 
 def test_aspect_interpretation_profile_is_dedicated_editorial_reference_model():
@@ -285,7 +290,7 @@ def test_aspect_interpretation_profile_is_dedicated_editorial_reference_model():
         "reference_version_id",
         "aspect_id",
         "astral_system_id",
-        "language",
+        "language_id",
         "title",
         "summary",
         "core_keywords_json",
@@ -312,14 +317,19 @@ def test_aspect_interpretation_profile_is_dedicated_editorial_reference_model():
         "reference_version_id",
         "aspect_id",
         "astral_system_id",
-        "language",
+        "language_id",
     ) in constraints
     foreign_key_targets = {
         foreign_key.column.table.name
         for column in AstralAspectInterpretationProfileModel.__table__.columns
         for foreign_key in column.foreign_keys
     }
-    assert foreign_key_targets == {"astral_reference_versions", "astral_aspects", "astral_systems"}
+    assert foreign_key_targets == {
+        "astral_reference_versions",
+        "astral_aspects",
+        "astral_systems",
+        "languages",
+    }
 
 
 def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(
@@ -329,12 +339,13 @@ def test_house_interpretation_profile_update_is_blocked_when_version_is_locked(
     version = ReferenceVersionModel(version="locked-editorial", is_locked=True)
     house = HouseModel(number=10, name="Career")
     system = AstralSystemModel(name="modern")
-    db_session.add_all([version, house, system])
+    language = LanguageModel(code="en", name="english")
+    db_session.add_all([version, house, system, language])
     db_session.flush()
     profile = HouseInterpretationProfileModel(
         reference_version_id=version.id,
         house_id=house.id,
-        language="en",
+        language_id=language.id,
         astral_system_id=system.id,
         title="Career and Public Role",
         summary="Original editorial summary.",
@@ -359,13 +370,14 @@ def test_aspect_interpretation_profile_update_is_blocked_when_version_is_locked(
     db_session.flush()
     aspect = AspectModel(code="conjunction", name="Conjunction", angle=0.0, family=family.id)
     system = AstralSystemModel(name="modern")
-    db_session.add_all([version, aspect, system])
+    language = LanguageModel(code="en", name="english")
+    db_session.add_all([version, aspect, system, language])
     db_session.flush()
     profile = AstralAspectInterpretationProfileModel(
         reference_version_id=version.id,
         aspect_id=aspect.id,
         astral_system_id=system.id,
-        language="en",
+        language_id=language.id,
         title="Fusion",
         summary="Original editorial summary.",
     )

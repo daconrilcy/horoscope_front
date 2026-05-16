@@ -213,7 +213,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             select(HouseInterpretationProfileModel)
             .where(
                 HouseInterpretationProfileModel.reference_version_id == v2.id,
-                HouseInterpretationProfileModel.language == "en",
+                HouseInterpretationProfileModel.language.has(code="en"),
             )
             .join(HouseInterpretationProfileModel.house)
             .join(HouseInterpretationProfileModel.astral_system)
@@ -251,7 +251,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
             select(AstralAspectInterpretationProfileModel)
             .where(
                 AstralAspectInterpretationProfileModel.reference_version_id == v2.id,
-                AstralAspectInterpretationProfileModel.language == "en",
+                AstralAspectInterpretationProfileModel.language.has(code="en"),
             )
             .join(AstralAspectInterpretationProfileModel.aspect)
             .join(AstralAspectInterpretationProfileModel.astral_system)

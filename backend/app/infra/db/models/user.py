@@ -1,15 +1,23 @@
+"""Modèle SQLAlchemy du compte utilisateur et de ses préférences applicatives."""
+
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
 
+if TYPE_CHECKING:
+    from app.infra.db.models.reference import LanguageModel
+
 
 class UserModel(Base):
+    """Utilisateur applicatif et préférences globales associées au compte."""
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -18,6 +26,11 @@ class UserModel(Base):
     role: Mapped[str] = mapped_column(String(16), index=True)
     astrologer_profile: Mapped[str] = mapped_column(String(32), default="standard")
     default_astrologer_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    default_language_id: Mapped[int | None] = mapped_column(
+        ForeignKey("languages.id"),
+        nullable=True,
+        index=True,
+    )
     email_unsubscribed: Mapped[bool] = mapped_column(Boolean, default=False)
     is_suspended: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -28,3 +41,5 @@ class UserModel(Base):
         default=utc_now,
         onupdate=utc_now,
     )
+
+    default_language: Mapped["LanguageModel | None"] = relationship()

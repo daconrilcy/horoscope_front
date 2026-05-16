@@ -23,7 +23,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def _languages_path() -> Path:
     """Retourne le chemin de la source documentaire des langues."""
-    return Path(__file__).resolve().parents[3] / "docs" / "languages.json"
+    return Path(__file__).resolve().parents[3] / "docs" / "db_seeder" / "languages.json"
 
 
 def _load_language_rows() -> list[dict[str, object]]:
@@ -33,7 +33,7 @@ def _load_language_rows() -> list[dict[str, object]]:
 
     rows = raw.get("data") if isinstance(raw, dict) else None
     if not isinstance(rows, list) or not rows:
-        raise RuntimeError("docs/languages.json must contain a non-empty data list")
+        raise RuntimeError("docs/db_seeder/languages.json must contain a non-empty data list")
 
     parsed_rows: list[dict[str, object]] = []
     seen_ids: set[int] = set()

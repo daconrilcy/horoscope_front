@@ -13,6 +13,7 @@ from app.infra.db.models import (
     AspectModel,
     AstralAspectInterpretationProfileModel,
     AstralSystemModel,
+    LanguageModel,
     ReferenceVersionModel,
 )
 
@@ -22,7 +23,7 @@ SOURCE_UNIQUE_FIELDS = (
     "reference_version_id",
     "aspect_code",
     "astral_system_code",
-    "language",
+    "language_id",
 )
 JSON_FIELD_NAMES = (
     "core_keywords_json",
@@ -74,7 +75,10 @@ def load_aspect_interpretation_profiles_source() -> list[dict[str, Any]]:
 
 def _source_profile_key(source_row: dict[str, Any]) -> tuple[str, str, str, str]:
     """Construit la clé métier du profil source pour valider le JSON."""
-    return tuple(str(source_row.get(field_name) or "") for field_name in SOURCE_UNIQUE_FIELDS)
+    values = [str(source_row.get(field_name) or "") for field_name in SOURCE_UNIQUE_FIELDS]
+    if not values[-1] and source_row.get("language"):
+        values[-1] = str(source_row["language"])
+    return tuple(values)
 
 
 def _validate_unique_profile_keys(rows: list[dict[str, Any]]) -> None:
@@ -112,6 +116,9 @@ def sync_aspect_interpretation_profiles(db: Session, reference_version_id: int) 
     systems_by_name = {
         system.name: system.id for system in db.scalars(select(AstralSystemModel)).all()
     }
+    language_ids_by_code = {
+        language.code: language.id for language in db.scalars(select(LanguageModel)).all()
+    }
     if len(aspects_by_code) < EXPECTED_PROFILE_COUNT:
         raise ValueError("aspect interpretation seed requires the canonical astral aspects")
 
@@ -124,14 +131,14 @@ def sync_aspect_interpretation_profiles(db: Session, reference_version_id: int) 
         astral_system_id = systems_by_name.get(system_name)
         if astral_system_id is None:
             raise ValueError(f"unknown astral system in interpretation source: {system_name}")
-        language = str(source_row.get("language") or DEFAULT_LANGUAGE)
+        language_id = _resolve_language_id(source_row, language_ids_by_code)
 
         profile = db.scalar(
             select(AstralAspectInterpretationProfileModel).where(
                 AstralAspectInterpretationProfileModel.reference_version_id == reference_version_id,
                 AstralAspectInterpretationProfileModel.aspect_id == aspect_id,
                 AstralAspectInterpretationProfileModel.astral_system_id == astral_system_id,
-                AstralAspectInterpretationProfileModel.language == language,
+                AstralAspectInterpretationProfileModel.language_id == language_id,
             )
         )
         values = {
@@ -149,7 +156,7 @@ def sync_aspect_interpretation_profiles(db: Session, reference_version_id: int) 
                     reference_version_id=reference_version_id,
                     aspect_id=aspect_id,
                     astral_system_id=astral_system_id,
-                    language=language,
+                    language_id=language_id,
                     **values,
                 )
             )
@@ -159,6 +166,18 @@ def sync_aspect_interpretation_profiles(db: Session, reference_version_id: int) 
         for field_name, value in values.items():
             setattr(profile, field_name, value)
     db.flush()
+
+
+def _resolve_language_id(source_row: dict[str, Any], language_ids_by_code: dict[str, int]) -> int:
+    """Résout la langue source depuis `language_id` ou l'ancien code `language`."""
+    raw_language_id = source_row.get("language_id")
+    if isinstance(raw_language_id, int) and raw_language_id > 0:
+        return raw_language_id
+    language_code = str(source_row.get("language") or DEFAULT_LANGUAGE)
+    language_id = language_ids_by_code.get(language_code)
+    if language_id is None:
+        raise ValueError(f"unknown language in aspect interpretation source: {language_code}")
+    return language_id
 
 
 __all__ = [

@@ -89,7 +89,7 @@ def _language_ids_by_code(db: Session) -> dict[str, int]:
     """Construit le mapping code langue vers identifiant SQL."""
     rows = db.scalars(select(LanguageModel)).all()
     language_ids = {row.code: row.id for row in rows}
-    missing = {"fr", "es", "de", "it"} - language_ids.keys()
+    missing = {"en", "fr", "es", "de", "it"} - language_ids.keys()
     if missing:
         raise ValueError(f"missing languages for translations: {sorted(missing)}")
     return language_ids
@@ -165,7 +165,8 @@ def _sync_house_interpretation_translations(
             select(HouseInterpretationProfileModel).where(
                 HouseInterpretationProfileModel.reference_version_id == target_version_id,
                 HouseInterpretationProfileModel.house_id == _required_int(row, "house_id"),
-                HouseInterpretationProfileModel.language == DEFAULT_SOURCE_LANGUAGE,
+                HouseInterpretationProfileModel.language_id
+                == language_ids[DEFAULT_SOURCE_LANGUAGE],
             )
         )
         if source_profile is None:
@@ -200,7 +201,8 @@ def _sync_aspect_interpretation_translations(
             select(AstralAspectInterpretationProfileModel).where(
                 AstralAspectInterpretationProfileModel.reference_version_id == target_version_id,
                 AstralAspectInterpretationProfileModel.aspect_id == aspect_id,
-                AstralAspectInterpretationProfileModel.language == DEFAULT_SOURCE_LANGUAGE,
+                AstralAspectInterpretationProfileModel.language_id
+                == language_ids[DEFAULT_SOURCE_LANGUAGE],
             )
         )
         if source_profile is None:
