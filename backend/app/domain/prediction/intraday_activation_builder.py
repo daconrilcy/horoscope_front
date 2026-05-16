@@ -98,8 +98,9 @@ class IntradayActivationBuilder:
             return IntradayActivationBuildResult(timeline=timeline, diagnostics=diagnostics)
 
         detector = EventDetector(ctx, natal)
+        aspect_angles = detector.aspect_angles
         moon_specs = self._build_moon_specs(natal, detector)
-        moon_orb_series = self._build_moon_orb_series(steps, natal)
+        moon_orb_series = self._build_moon_orb_series(steps, natal, aspect_angles)
         secondary_events = self._collect_secondary_events(
             steps=steps,
             natal=natal,
@@ -115,7 +116,7 @@ class IntradayActivationBuilder:
 
             if moon_state is not None:
                 for target_code, target_house, event_type in moon_specs:
-                    for aspect_deg, aspect_name in EventDetector.ASPECTS_V1.items():
+                    for aspect_deg, aspect_name in aspect_angles:
                         key = (target_code, aspect_deg)
                         orb_series = moon_orb_series[key]
                         orb = orb_series[step_index]
@@ -230,8 +231,9 @@ class IntradayActivationBuilder:
         self,
         steps: list[StepAstroState],
         natal: NatalChart,
-    ) -> dict[tuple[str, int], list[float]]:
-        series: dict[tuple[str, int], list[float]] = {}
+        aspect_angles: tuple[tuple[float, str], ...],
+    ) -> dict[tuple[str, float], list[float]]:
+        series: dict[tuple[str, float], list[float]] = {}
         for step in steps:
             moon = step.planets.get("Moon")
             if moon is None:
@@ -240,7 +242,7 @@ class IntradayActivationBuilder:
                 diff = abs(moon.longitude - natal_lon) % 360
                 if diff > 180:
                     diff = 360 - diff
-                for aspect_deg in EventDetector.ASPECTS_V1:
+                for aspect_deg, _aspect_name in aspect_angles:
                     series.setdefault((target_code, aspect_deg), []).append(abs(diff - aspect_deg))
         return series
 

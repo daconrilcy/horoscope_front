@@ -135,3 +135,64 @@ def test_legacy_aspect_orb_shapes_are_not_used_by_runtime_sources() -> None:
                 if fragment in content:
                     hits.append(f"{path.relative_to(REPO_ROOT)}:{fragment}")
     assert hits == []
+
+
+def test_prediction_aspect_mappings_are_not_reintroduced() -> None:
+    """Bloque les mappings d'aspects daily concurrents du référentiel DB."""
+    forbidden_names = {"ASPECTS_V1", "ASPECTS"}
+    aspect_codes = {"conjunction", "sextile", "square", "trine", "opposition"}
+    aspect_angles = {0, 60, 90, 120, 180}
+    checked_roots = (
+        REPO_ROOT / "backend" / "app" / "domain" / "prediction",
+        REPO_ROOT / "backend" / "app" / "services" / "prediction",
+    )
+    hits: list[str] = []
+    for root in checked_roots:
+        for path in root.rglob("*.py"):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name) and target.id in forbidden_names:
+                            hits.append(f"{path.relative_to(REPO_ROOT)}:{target.id}")
+                elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                    if node.target.id in forbidden_names:
+                        hits.append(f"{path.relative_to(REPO_ROOT)}:{node.target.id}")
+                elif isinstance(node, ast.ClassDef):
+                    for statement in node.body:
+                        if isinstance(statement, ast.Assign):
+                            for target in statement.targets:
+                                if isinstance(target, ast.Name) and target.id in forbidden_names:
+                                    hits.append(f"{path.relative_to(REPO_ROOT)}:{target.id}")
+                        elif (
+                            isinstance(statement, ast.AnnAssign)
+                            and isinstance(statement.target, ast.Name)
+                            and statement.target.id in forbidden_names
+                        ):
+                            hits.append(f"{path.relative_to(REPO_ROOT)}:{statement.target.id}")
+                elif isinstance(node, ast.Dict):
+                    literal_keys = {
+                        item.value
+                        for item in node.keys
+                        if isinstance(item, ast.Constant) and isinstance(item.value, int)
+                    }
+                    literal_values = {
+                        str(item.value).lower()
+                        for item in node.values
+                        if isinstance(item, ast.Constant) and isinstance(item.value, str)
+                    }
+                    if (
+                        len(literal_keys & aspect_angles) >= 3
+                        and len(literal_values & aspect_codes) >= 3
+                    ):
+                        hits.append(f"{path.relative_to(REPO_ROOT)}:aspect-degree-dict")
+                elif isinstance(node, (ast.Set, ast.List, ast.Tuple)):
+                    literal_values = {
+                        str(item.value).lower()
+                        for item in node.elts
+                        if isinstance(item, ast.Constant)
+                    }
+                    if len(literal_values & aspect_codes) >= 3:
+                        hits.append(f"{path.relative_to(REPO_ROOT)}:aspect-code-literal-group")
+
+    assert hits == []

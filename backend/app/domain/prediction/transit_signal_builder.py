@@ -71,7 +71,8 @@ class TransitSignalBuilder:
         ]
         timeline: dict[str, dict[datetime, float]] = {theme: {} for theme in enabled_themes}
         routing_indexes = self._build_weighted_routing(enabled_themes, ctx)
-        orb_series = self._build_orb_series(steps, natal)
+        aspect_angles = detector.aspect_angles
+        orb_series = self._build_orb_series(steps, natal, aspect_angles)
         target_specs = [
             (
                 target_code,
@@ -89,7 +90,7 @@ class TransitSignalBuilder:
 
             for body_code, planet_state in step.planets.items():
                 for target_code, _natal_lon, target_house, event_type in target_specs:
-                    for aspect_deg, aspect_name in EventDetector.ASPECTS_V1.items():
+                    for aspect_deg, aspect_name in aspect_angles:
                         key = (body_code, target_code, aspect_deg)
                         orb = orb_series[key][step_index]
                         orb_max = orb_max_cache.setdefault(
@@ -186,15 +187,16 @@ class TransitSignalBuilder:
         self,
         steps: list[StepAstroState],
         natal: NatalChart,
-    ) -> dict[tuple[str, str, int], list[float]]:
-        series: dict[tuple[str, str, int], list[float]] = {}
+        aspect_angles: tuple[tuple[float, str], ...],
+    ) -> dict[tuple[str, str, float], list[float]]:
+        series: dict[tuple[str, str, float], list[float]] = {}
         for step in steps:
             for body_code, planet_state in step.planets.items():
                 for target_code, natal_lon in natal.planet_positions.items():
                     diff = abs(planet_state.longitude - natal_lon) % 360
                     if diff > 180:
                         diff = 360 - diff
-                    for aspect_deg in EventDetector.ASPECTS_V1:
+                    for aspect_deg, _aspect_name in aspect_angles:
                         series.setdefault((body_code, target_code, aspect_deg), []).append(
                             abs(diff - aspect_deg)
                         )

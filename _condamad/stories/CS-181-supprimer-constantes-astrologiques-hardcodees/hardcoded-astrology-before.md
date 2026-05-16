@@ -1,0 +1,15 @@
+# Hardcoded Astrology Before
+
+| Élément | Type | Classification | Consommateurs | Remplacement canonique | Décision | Preuve | Risque |
+|---|---|---|---|---|---|---|---|
+| `NatalCalculationService._legacy_payload_for_mock_db` | fallback runtime/test | historical-facade | tests mockés natal | `AstrologyRuntimeReferenceRepository.load()` + fixtures runtime complètes | delete | `calculation_service.py` reconstruisait `sign_rulerships`, `house_axes`, `aspect_orb_rules` | Référentiel DB-backed recréé localement. |
+| `sign_rulerships = {...}` dans service natal | mapping DB-backed | historical-facade | fallback mock DB | `DignityReferenceSet.sign_rulerships` | delete | scan initial: `backend/app/services/natal/calculation_service.py:165` | Maîtrises divergentes du référentiel. |
+| `payload["house_axes"] = [...]` dans service natal | fallback DB-backed | historical-facade | fallback mock DB | `AstrologyRuntimeReference.house_axes` | delete | scan initial: `backend/app/services/natal/calculation_service.py:182` | Axes maisons synthétiques. |
+| `payload["aspect_orb_rules"] = [...]` dans service natal | fallback DB-backed | historical-facade | fallback mock DB | `AspectOrbRuleRuntimeData` | delete | scan initial: `backend/app/services/natal/calculation_service.py:191` | Orbes reconstruits depuis aspects plats. |
+| `EventDetector.ASPECTS_V1` | mapping aspect DB-backed | historical-facade | EventDetector, transit, intraday, orchestrator | `AspectProfileData.angle/family_code` chargé depuis DB | replace-consumer | scan initial: `backend/app/domain/prediction/event_detector.py:44` + consommateurs | Aspect majeur dupliqué localement. |
+| `EnrichedAstroEventsBuilder.ASPECTS` | mapping aspect DB-backed | historical-facade | sky aspects, progressions | `major_aspect_angles()` | replace-consumer | scan initial: `backend/app/domain/prediction/enriched_astro_events_builder.py:23` | Aspect majeur dupliqué localement. |
+| fallback `orb_max=2.0` | fallback silencieux | historical-facade | EventDetector | `aspect_orb_rules`, paramètres ruleset ou profils planète/aspect | delete | scan initial: `backend/app/domain/prediction/event_detector.py:421` | Orbe implicite hors référentiel. |
+| `_STAR_DATA` | constante technique non DB-backed | canonical-active | fixed-star display/conjunctions | aucun référentiel DB actuel dans le scope | keep | `public_astro_vocabulary.py` | Doit rester classé, non wildcard. |
+| `_ASPECT_TONES` | constante éditoriale technique | canonical-active | rendu public prediction | aucun champ ton éditorial équivalent dans le scope CS-181 | keep | `public_astro_vocabulary.py` | Doit rester classé. |
+| `CHALDEAN_ORDER` / `DAY_RULERS` | constante algorithmique | canonical-active | heures planétaires | règle algorithmique interne, non table DB-backed existante | keep | `event_detector.py` | À ne pas confondre avec référentiel planètes. |
+| `ANGLE_TARGETS` / `LUMINARY_TARGETS` | classification runtime dérivée | canonical-active | taxonomie exact aspects | points d'angle et catalogue planètes runtime | keep | `event_detector.py` | Classification de routage, pas référentiel éditorial. |

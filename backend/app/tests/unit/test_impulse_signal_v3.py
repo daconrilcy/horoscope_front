@@ -6,6 +6,7 @@ from app.domain.prediction.context import LoadedPredictionContext
 from app.domain.prediction.impulse_signal_builder import ImpulseSignalBuilder
 from app.domain.prediction.schemas import AstroEvent, SamplePoint
 from app.infra.db.repositories.prediction_schemas import (
+    AspectOrbRuleData,
     AspectProfileData,
     CategoryData,
     EventTypeData,
@@ -16,6 +17,36 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetContext,
     RulesetData,
 )
+
+
+def _major_aspect_profile() -> AspectProfileData:
+    """Construit le profil d'aspect runtime requis par les tests."""
+    return AspectProfileData(
+        aspect_id=1,
+        code="conjunction",
+        intensity_weight=1.0,
+        default_valence="positive",
+        orb_multiplier=1.0,
+        phase_sensitive=True,
+        angle=0.0,
+        family_code="major",
+    )
+
+
+def _major_aspect_orb_rules() -> tuple[AspectOrbRuleData, ...]:
+    """Construit les règles d'orbes runtime minimales utilisées par les tests."""
+    return (
+        AspectOrbRuleData(
+            aspect_code="conjunction",
+            system_code="modern",
+            calculation_context="any",
+            source_body_type="any",
+            target_body_type="any",
+            orb_deg=5.0,
+            priority=1,
+            is_enabled=True,
+        ),
+    )
 
 
 def _loaded_context() -> LoadedPredictionContext:
@@ -41,18 +72,10 @@ def _loaded_context() -> LoadedPredictionContext:
         planet_category_weights=(PlanetCategoryWeightData(1, "Sun", 1, "work", 1.0, "primary"),),
         house_category_weights=(HouseCategoryWeightData(10, 10, 1, "work", 1.0, "primary"),),
         sign_rulerships={},
-        aspect_profiles={
-            "conjunction": AspectProfileData(
-                aspect_id=1,
-                code="conjunction",
-                intensity_weight=1.0,
-                default_valence="positive",
-                orb_multiplier=1.0,
-                phase_sensitive=True,
-            ),
-        },
+        aspect_profiles={"conjunction": _major_aspect_profile()},
         astro_points={},
         point_category_weights=(),
+        aspect_orb_rules=_major_aspect_orb_rules(),
     )
     ruleset_context = RulesetContext(
         ruleset=RulesetData(

@@ -22,7 +22,9 @@ from app.domain.astrology.runtime import (
     HouseRuntimeData,
     HouseStrengthRuntimeData,
 )
+from app.domain.astrology.zodiac import ordered_sign_codes
 from app.domain.prediction.aggregator import TemporalAggregator, V3ThemeAggregator
+from app.domain.prediction.aspect_reference import aspect_orbs_by_code, major_aspect_angles
 from app.domain.prediction.astro_calculator import AstroCalculator
 from app.domain.prediction.block_generator import BlockGenerator
 from app.domain.prediction.calibrator import PercentileCalibrator
@@ -62,22 +64,8 @@ from app.domain.prediction.transit_signal_builder import TransitSignalBuilder
 from app.domain.prediction.turning_point_detector import TurningPoint, TurningPointDetector
 from app.infra.db.repositories.prediction_schemas import RulesetContext
 
-_ZODIAC_SIGNS = (
-    "aries",
-    "taurus",
-    "gemini",
-    "cancer",
-    "leo",
-    "virgo",
-    "libra",
-    "scorpio",
-    "sagittarius",
-    "capricorn",
-    "aquarius",
-    "pisces",
-)
-
 _PLANET_NAME_MAP = {item.code: item.name for item in load_default_planet_catalog()}
+_ZODIAC_SIGNS = ordered_sign_codes()
 
 
 class EngineOrchestrator:
@@ -235,6 +223,7 @@ class EngineOrchestrator:
                 local_date=engine_input.local_date,
                 birth_date=engine_input.birth_date,
                 timezone_name=engine_input.timezone,
+                loaded_context=loaded_context,
             )
             detected_events.extend(enriched_events)
 
@@ -1254,20 +1243,26 @@ class EngineOrchestrator:
         aspects: list[AstroEvent] = []
         codes = list(positions.keys())
         aspect_profiles = loaded_context.prediction_context.aspect_profiles
+        aspect_angles = major_aspect_angles(loaded_context.prediction_context)
+        aspect_orbs = aspect_orbs_by_code(
+            loaded_context,
+            calculation_context="natal",
+            aspect_codes=tuple(name for _deg, name in aspect_angles),
+        )
 
         for i, code1 in enumerate(codes):
             for code2 in codes[i + 1 :]:
                 lon1 = positions[code1]
                 lon2 = positions[code2]
 
-                for deg, name in EventDetector.ASPECTS_V1.items():
+                for deg, name in aspect_angles:
                     diff = abs(lon1 - lon2) % 360
                     if diff > 180:
                         diff = 360 - diff
                     orb = abs(diff - deg)
 
                     aspect_profile = self._lookup_mapping_value(aspect_profiles, name)
-                    orb_max = 5.0
+                    orb_max = aspect_orbs[name]
                     base_weight = 1.0
                     default_valence = None
                     if aspect_profile is not None:

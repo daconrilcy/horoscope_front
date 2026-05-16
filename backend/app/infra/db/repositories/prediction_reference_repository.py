@@ -21,6 +21,7 @@ from app.infra.db.models.prediction_reference import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAspectFamilyModel,
     AstralAstrologicalRoleModel,
     AstralDignityTypeModel,
     AstralPlanetDefinitionModel,
@@ -371,13 +372,18 @@ class PredictionReferenceRepository:
 
     def get_aspect_profiles(self, reference_version_id: int) -> dict[str, AspectProfileData]:
         rows = self.db.execute(
-            select(AspectModel, AspectProfileModel)
+            select(
+                AspectModel,
+                AspectProfileModel,
+                AstralAspectFamilyModel.name.label("family"),
+            )
             .join(AspectProfileModel, AspectModel.id == AspectProfileModel.aspect_id)
+            .join(AstralAspectFamilyModel, AspectModel.family == AstralAspectFamilyModel.id)
             .where(AspectProfileModel.reference_version_id == reference_version_id)
         ).all()
 
         result = {}
-        for aspect_row, profile_row in rows:
+        for aspect_row, profile_row, family in rows:
             result[aspect_row.code] = AspectProfileData(
                 aspect_id=aspect_row.id,
                 code=aspect_row.code,
@@ -390,6 +396,8 @@ class PredictionReferenceRepository:
                 phase_sensitive=profile_row.phase_sensitive,
                 phase_behavior=self._parse_json_object(profile_row.phase_behavior_json),
                 strength_thresholds=self._parse_json_object(profile_row.strength_thresholds_json),
+                angle=float(aspect_row.angle),
+                family_code=str(family),
             )
         return result
 

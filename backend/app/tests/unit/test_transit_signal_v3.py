@@ -44,6 +44,9 @@ def mock_context():
     conj_profile.default_valence = "positive"
     conj_profile.orb_multiplier = 1.0
     conj_profile.phase_sensitive = True
+    conj_profile.code = "conjunction"
+    conj_profile.angle = 0.0
+    conj_profile.family_code = "major"
     ctx.prediction_context.aspect_profiles = {"conjunction": conj_profile}
     ctx.ruleset_context.parameters = {}
 

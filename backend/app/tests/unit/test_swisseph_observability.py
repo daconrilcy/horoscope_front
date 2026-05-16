@@ -40,6 +40,7 @@ from app.infra.observability.metrics import (
     get_duration_values_by_prefix_in_window,
     get_duration_values_in_window,
 )
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 
 # ---------------------------------------------------------------------------
 # Constantes de référence
@@ -320,13 +321,6 @@ def _run_failing_natal_calc(
 
     service_module = importlib.import_module(NatalCalculationService.__module__)
 
-    reference_data = {
-        "version": "test-v1",
-        "planets": [{"code": "sun"}],
-        "signs": [{"code": "aries"}],
-        "houses": [{"number": 1, "cusp_longitude": 0.0}],
-        "aspects": [{"code": "conjunction", "angle": 0.0}],
-    }
     birth_input = BirthInput(
         birth_date="1990-01-01",
         birth_time="12:00",
@@ -343,9 +337,9 @@ def _run_failing_natal_calc(
 
     with (
         patch.object(
-            service_module.ReferenceDataService,
-            "get_active_reference_data",
-            return_value=reference_data,
+            service_module.NatalCalculationService,
+            "_load_runtime_reference",
+            return_value=complete_reference(),
         ),
         patch.object(service_module, "settings") as mock_settings,
         patch.object(

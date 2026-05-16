@@ -55,14 +55,24 @@ def test_v3_layers_performance_benchmark():
         p: SimpleNamespace(weight_intraday=1.0, typical_polarity="positive", orb_active_deg=4.0)
         for p in planets_list
     }
+    aspect_angles = {
+        "conjunction": 0.0,
+        "sextile": 60.0,
+        "square": 90.0,
+        "trine": 120.0,
+        "opposition": 180.0,
+    }
     ctx.prediction_context.aspect_profiles = {
         a: SimpleNamespace(
+            code=a,
+            angle=angle,
+            family_code="major",
             intensity_weight=1.0,
             default_valence="positive",
             orb_multiplier=1.0,
             phase_sensitive=True,
         )
-        for a in ["conjunction", "sextile", "square", "trine", "opposition"]
+        for a, angle in aspect_angles.items()
     }
     ctx.ruleset_context.parameters = {}
     exact_type = SimpleNamespace(base_weight=1.0, priority=90)

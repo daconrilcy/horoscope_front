@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.exceptions import PredictionContextError
 from app.domain.prediction.schemas import NatalChart
 
 
@@ -179,16 +180,25 @@ class NatalSensitivityCalculator:
                 continue
 
             aspect_profile = self._lookup_mapping_value(pc.aspect_profiles, aspect.aspect or "")
-            orb_max = 5.0
-            intensity = 1.0
-            valence = self._aspect_valence(aspect.aspect or "", None)
-            if aspect_profile is not None:
-                orb_max *= float(getattr(aspect_profile, "orb_multiplier", 1.0) or 1.0)
-                intensity = float(getattr(aspect_profile, "intensity_weight", 1.0) or 1.0)
-                valence = self._aspect_valence(
-                    aspect.aspect or "",
-                    getattr(aspect_profile, "default_valence", None),
+            if aspect_profile is None:
+                raise PredictionContextError(
+                    f"Missing aspect profile for natal sensitivity: {aspect.aspect!r}"
                 )
+            default_valence = getattr(aspect_profile, "default_valence", None)
+            if default_valence is None:
+                raise PredictionContextError(
+                    f"Missing aspect valence for natal sensitivity: {aspect.aspect!r}"
+                )
+            base_orb = (
+                aspect.metadata.get("orb_max") if isinstance(aspect.metadata, Mapping) else None
+            )
+            if not isinstance(base_orb, (int, float)):
+                raise PredictionContextError(
+                    f"Missing natal aspect orb for sensitivity: {aspect.aspect!r}"
+                )
+            orb_max = float(base_orb) * float(getattr(aspect_profile, "orb_multiplier", 1.0) or 1.0)
+            intensity = float(getattr(aspect_profile, "intensity_weight", 1.0) or 1.0)
+            valence = self._aspect_valence(default_valence)
 
             orb_weight = max(0.0, 1.0 - (aspect.orb_deg / orb_max))
             weighted_total += involvement * intensity * valence * orb_weight
@@ -445,7 +455,7 @@ class NatalSensitivityCalculator:
             return 0.7
         return 0.0
 
-    def _aspect_valence(self, aspect_name: str, default_valence: str | None) -> float:
+    def _aspect_valence(self, default_valence: str) -> float:
         normalized_valence = self._normalize_code(default_valence or "")
         if normalized_valence == "positive":
             return 1.0
@@ -453,10 +463,8 @@ class NatalSensitivityCalculator:
             return -1.0
         if normalized_valence == "neutral":
             return 0.0
-
-        normalized_aspect = self._normalize_code(aspect_name)
-        if normalized_aspect in {"trine", "sextile", "conjunction"}:
+        if normalized_valence in {"amplifying", "harmonious", "supportive", "flowing"}:
             return 1.0
-        if normalized_aspect in {"square", "opposition"}:
+        if normalized_valence in {"challenging", "friction", "tense", "restrictive"}:
             return -1.0
         return 0.0

@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.domain.prediction.aspect_reference import major_aspect_angles
 from app.domain.prediction.event_detector import EventDetector
+from app.domain.prediction.exceptions import PredictionContextError
 from app.domain.prediction.schemas import NatalChart, PlanetState, StepAstroState
 from app.domain.prediction.temporal_sampler import DayGrid
 from app.domain.prediction.turning_point_detector import TurningPointDetector
@@ -40,6 +42,16 @@ def _orb_rule(
     )
 
 
+def _aspect_profile(code: str, angle: float) -> MagicMock:
+    """Construit un profil d'aspect runtime minimal pour les tests."""
+    profile = MagicMock()
+    profile.code = code
+    profile.angle = angle
+    profile.family_code = "major"
+    profile.orb_multiplier = 1.0
+    return profile
+
+
 @pytest.fixture
 def mock_ctx():
     ctx = MagicMock()
@@ -53,8 +65,8 @@ def mock_ctx():
 
     # Mock aspect profiles for orb_multiplier
     aspect_profiles = {
-        "conjunction": MagicMock(orb_multiplier=1.0),
-        "square": MagicMock(orb_multiplier=1.0),
+        "conjunction": _aspect_profile("conjunction", 0.0),
+        "square": _aspect_profile("square", 90.0),
     }
     ctx.prediction_context.aspect_profiles = aspect_profiles
     ctx.prediction_context.aspect_orb_rules = (_orb_rule(), _orb_rule("square"))
@@ -76,8 +88,8 @@ def mock_ctx_with_event_types():
         "Asc": MagicMock(orb_active_deg=2.0),
     }
     ctx.prediction_context.aspect_profiles = {
-        "conjunction": MagicMock(orb_multiplier=1.0),
-        "square": MagicMock(orb_multiplier=1.0),
+        "conjunction": _aspect_profile("conjunction", 0.0),
+        "square": _aspect_profile("square", 90.0),
     }
     ctx.prediction_context.aspect_orb_rules = (_orb_rule(), _orb_rule("square"))
     ctx.ruleset_context.event_types = {
@@ -282,7 +294,7 @@ def test_non_v1_target_ignored(mock_ctx):
 
 def test_minor_aspect_ignored(mock_ctx, natal_chart):
     detector = EventDetector(mock_ctx, natal_chart)
-    # 150 degrees (Quincunx) is not in ASPECTS_V1
+    # 150 degrees (Quincunx) is not exposed by the loaded major aspect profiles.
     steps = [
         create_step(2460000.0, {"Sun": 150.0}),
     ]
@@ -295,6 +307,16 @@ def test_minor_aspect_ignored(mock_ctx, natal_chart):
         if e.event_type in EventDetector.EXACT_EVENT_TYPES | {"aspect_enter_orb", "aspect_exit_orb"}
     ]
     assert len(aspect_events) == 0
+
+
+def test_major_aspect_angles_rejects_unclassified_profile() -> None:
+    """Un profil sans famille canonique ne doit pas redevenir un aspect implicite."""
+    profile = _aspect_profile("conjunction", 0.0)
+    profile.family_code = ""
+    context = SimpleNamespace(aspect_profiles={"conjunction": profile})
+
+    with pytest.raises(PredictionContextError):
+        major_aspect_angles(context)
 
 
 def test_events_sorted_by_time(mock_ctx, natal_chart):
@@ -469,7 +491,7 @@ def test_discriminate_exact_code_angle():
     """Aspect exact vers Asc ou MC → aspect_exact_to_angle."""
     ctx = MagicMock()
     ctx.prediction_context.planet_profiles = {}
-    ctx.prediction_context.aspect_profiles = {}
+    ctx.prediction_context.aspect_profiles = {"conjunction": _aspect_profile("conjunction", 0.0)}
     ctx.ruleset_context.event_types = {}
     chart = NatalChart(planet_positions={}, planet_houses={}, house_sign_rulers={})
     detector = EventDetector(ctx, chart)
@@ -482,7 +504,7 @@ def test_discriminate_exact_code_luminary():
     """Aspect exact vers Sun ou Moon → aspect_exact_to_luminary."""
     ctx = MagicMock()
     ctx.prediction_context.planet_profiles = {}
-    ctx.prediction_context.aspect_profiles = {}
+    ctx.prediction_context.aspect_profiles = {"conjunction": _aspect_profile("conjunction", 0.0)}
     ctx.ruleset_context.event_types = {}
     chart = NatalChart(planet_positions={}, planet_houses={}, house_sign_rulers={})
     detector = EventDetector(ctx, chart)
@@ -495,7 +517,7 @@ def test_discriminate_exact_code_personal():
     """Aspect exact vers toute autre cible → aspect_exact_to_personal."""
     ctx = MagicMock()
     ctx.prediction_context.planet_profiles = {}
-    ctx.prediction_context.aspect_profiles = {}
+    ctx.prediction_context.aspect_profiles = {"conjunction": _aspect_profile("conjunction", 0.0)}
     ctx.ruleset_context.event_types = {}
     chart = NatalChart(planet_positions={}, planet_houses={}, house_sign_rulers={})
     detector = EventDetector(ctx, chart)

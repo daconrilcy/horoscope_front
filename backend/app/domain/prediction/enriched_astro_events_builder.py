@@ -8,6 +8,8 @@ from datetime import date, datetime
 import swisseph as swe
 
 from app.domain.astrology.planet_catalog import planet_runtime_codes, planet_swe_ids_by_runtime_code
+from app.domain.prediction.aspect_reference import aspect_orbs_by_code, major_aspect_angles
+from app.domain.prediction.context import LoadedPredictionContext
 from app.domain.prediction.public_astro_vocabulary import (
     fixed_star_display_name,
     fixed_star_longitudes,
@@ -19,14 +21,6 @@ logger = logging.getLogger(__name__)
 _FLG_SWIEPH_SPEED = swe.FLG_SWIEPH | swe.FLG_SPEED
 
 SWE_BODY_IDS = dict(planet_swe_ids_by_runtime_code())
-
-ASPECTS = {
-    0: "conjunction",
-    60: "sextile",
-    90: "square",
-    120: "trine",
-    180: "opposition",
-}
 
 
 class EnrichedAstroEventsBuilder:
@@ -42,14 +36,26 @@ class EnrichedAstroEventsBuilder:
         local_date: date,
         birth_date: datetime,
         timezone_name: str,
+        loaded_context: LoadedPredictionContext,
     ) -> list[AstroEvent]:
         events: list[AstroEvent] = []
 
         if not astro_states:
             return events
+        aspect_angles = major_aspect_angles(loaded_context.prediction_context)
+        sky_orbs = aspect_orbs_by_code(
+            loaded_context,
+            calculation_context="sky_to_sky",
+            aspect_codes=tuple(aspect_code for _angle, aspect_code in aspect_angles),
+        )
+        progression_orbs = aspect_orbs_by_code(
+            loaded_context,
+            calculation_context="progression_to_natal",
+            aspect_codes=tuple(aspect_code for _angle, aspect_code in aspect_angles),
+        )
 
         # 1. Sky-to-sky aspects
-        events.extend(self._compute_sky_aspects(astro_states))
+        events.extend(self._compute_sky_aspects(astro_states, aspect_angles, sky_orbs))
 
         # 2. Lunar Nodes
         events.extend(self._compute_node_events(astro_states, natal_chart, timezone_name))
@@ -60,14 +66,28 @@ class EnrichedAstroEventsBuilder:
         # 4. Secondary Progressions
         # Use first step local_time as reference to preserve timezone-awareness
         ref_dt = astro_states[0].local_time
-        events.extend(self._compute_progressions(natal_chart, local_date, birth_date, ref_dt))
+        events.extend(
+            self._compute_progressions(
+                natal_chart,
+                local_date,
+                birth_date,
+                ref_dt,
+                aspect_angles,
+                progression_orbs,
+            )
+        )
 
         # 5. Fixed Stars
         events.extend(self._compute_fixed_star_conjunctions(astro_states))
 
         return events
 
-    def _compute_sky_aspects(self, steps: list[StepAstroState]) -> list[AstroEvent]:
+    def _compute_sky_aspects(
+        self,
+        steps: list[StepAstroState],
+        aspect_angles: tuple[tuple[float, str], ...],
+        aspect_orbs: dict[str, float],
+    ) -> list[AstroEvent]:
         detected: list[AstroEvent] = []
         # Track best orbs for deduplication across the day
         best_orbs: dict[tuple[str, str, str], tuple[float, StepAstroState]] = {}
@@ -92,9 +112,9 @@ class EnrichedAstroEventsBuilder:
 
                     dist = self._angular_distance(p1.longitude, p2.longitude)
 
-                    for asp_deg, asp_code in ASPECTS.items():
+                    for asp_deg, asp_code in aspect_angles:
                         orb = abs(dist - asp_deg)
-                        if orb <= 1.5:
+                        if orb <= aspect_orbs[asp_code]:
                             key = tuple(sorted([p1_name.lower(), p2_name.lower()])) + (asp_code,)
                             if key not in best_orbs or orb < best_orbs[key][0]:
                                 best_orbs[key] = (orb, step)
@@ -267,6 +287,8 @@ class EnrichedAstroEventsBuilder:
         local_date: date,
         birth_date: datetime,
         ref_local_time: datetime,
+        aspect_angles: tuple[tuple[float, str], ...],
+        aspect_orbs: dict[str, float],
     ) -> list[AstroEvent]:
         events: list[AstroEvent] = []
         # Calculate progressed date: birth_jd + (age_in_days / 365.25)
@@ -295,9 +317,9 @@ class EnrichedAstroEventsBuilder:
             for natal_p, natal_lon in natal_chart.planet_positions.items():
                 dist = self._angular_distance(prog_lon, natal_lon)
                 # Check for major aspects (AC4: orbe <= 1°)
-                for asp_deg, asp_code in ASPECTS.items():
+                for asp_deg, asp_code in aspect_angles:
                     orb = abs(dist - asp_deg)
-                    if orb <= 1.0:
+                    if orb <= aspect_orbs[asp_code]:
                         events.append(
                             AstroEvent(
                                 event_type="progression_aspect",

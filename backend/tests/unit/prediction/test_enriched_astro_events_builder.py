@@ -5,6 +5,15 @@ import pytest
 from app.domain.prediction.enriched_astro_events_builder import EnrichedAstroEventsBuilder
 from app.domain.prediction.schemas import NatalChart, PlanetState, StepAstroState
 
+MAJOR_ASPECT_ANGLES = (
+    (0.0, "conjunction"),
+    (60.0, "sextile"),
+    (90.0, "square"),
+    (120.0, "trine"),
+    (180.0, "opposition"),
+)
+MAJOR_ASPECT_ORBS = {code: 1.5 for _angle, code in MAJOR_ASPECT_ANGLES}
+
 
 @pytest.fixture
 def builder():
@@ -40,7 +49,7 @@ def test_compute_sky_aspects(builder):
         house_system_effective="placidus",
     )
 
-    events = builder._compute_sky_aspects([state])
+    events = builder._compute_sky_aspects([state], MAJOR_ASPECT_ANGLES, MAJOR_ASPECT_ORBS)
     assert len(events) >= 1
     # Find the sun-moon sextile
     ev = next(e for e in events if e.body == "moon" and e.target == "sun")
@@ -87,7 +96,14 @@ def test_compute_progressions(builder):
     today = date(2026, 3, 19)
 
     ref_dt = datetime(2026, 3, 19, 0, 0)
-    events = builder._compute_progressions(natal, today, birth, ref_dt)
+    events = builder._compute_progressions(
+        natal,
+        today,
+        birth,
+        ref_dt,
+        MAJOR_ASPECT_ANGLES,
+        MAJOR_ASPECT_ORBS,
+    )
     assert isinstance(events, list)
 
 

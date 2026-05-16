@@ -139,6 +139,8 @@ class AspectProfileData:
     energy_type: str = "contextual"
     phase_behavior: Mapping[str, Any] | None = None
     strength_thresholds: Mapping[str, Any] | None = None
+    angle: float = 0.0
+    family_code: str = ""
 
 
 @dataclass(frozen=True)

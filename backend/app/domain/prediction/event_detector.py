@@ -10,7 +10,9 @@ from zoneinfo import ZoneInfo
 import swisseph as swe
 
 from app.domain.astrology.planet_catalog import planet_runtime_codes
+from app.domain.prediction.aspect_reference import major_aspect_angles
 from app.domain.prediction.context import LoadedPredictionContext
+from app.domain.prediction.exceptions import PredictionContextError
 from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 from app.domain.prediction.temporal_sampler import DayGrid
 
@@ -41,14 +43,6 @@ class EventDetector:
         - planetary_hour_change:    start of a new planetary hour
     """
 
-    ASPECTS_V1: dict[int, str] = {
-        0: "conjunction",
-        60: "sextile",
-        90: "square",
-        120: "trine",
-        180: "opposition",
-    }
-
     CHALDEAN_ORDER = ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"]
 
     V1_NATAL_TARGETS = {*planet_runtime_codes(), "Asc", "MC"}
@@ -67,8 +61,8 @@ class EventDetector:
     def __init__(self, ctx: LoadedPredictionContext, natal_chart: NatalChart):
         self.ctx = ctx
         self.natal_chart = natal_chart
+        self.aspect_angles = major_aspect_angles(ctx.prediction_context)
         self._orb_max_cache: dict[tuple[str, str, str | None], float] = {}
-        self._orb_fallback_warnings: set[tuple[str, str]] = set()
         # Filter natal positions for V1 targets
         self.natal_positions = {
             k: v for k, v in natal_chart.planet_positions.items() if k in self.V1_NATAL_TARGETS
@@ -123,7 +117,7 @@ class EventDetector:
         aspect_deg = next(
             (
                 aspect_value
-                for aspect_value, aspect_code in self.ASPECTS_V1.items()
+                for aspect_value, aspect_code in self.aspect_angles
                 if aspect_code == coarse_event.aspect
             ),
             None,
@@ -163,7 +157,7 @@ class EventDetector:
 
         # Track history for each (transit, target, aspect)
         # key -> list of orbs
-        history: dict[tuple[str, str, int], list[float]] = {}
+        history: dict[tuple[str, str, float], list[float]] = {}
 
         for i, step in enumerate(steps):
             for body_code, planet_state in step.planets.items():
@@ -173,7 +167,7 @@ class EventDetector:
                 for target_code, natal_lon in self.natal_positions.items():
                     target_house = self.natal_chart.planet_houses.get(target_code)
 
-                    for aspect_deg, aspect_code in self.ASPECTS_V1.items():
+                    for aspect_deg, aspect_code in self.aspect_angles:
                         key = (body_code, target_code, aspect_deg)
                         orb = self._orb(transit_lon, natal_lon, aspect_deg)
                         orb_max = self._orb_max(body_code, aspect_code, target_code)
@@ -377,7 +371,7 @@ class EventDetector:
         utc_dt = base_utc + timedelta(seconds=seconds, microseconds=microseconds)
         return utc_dt.astimezone(ZoneInfo(tz_name))
 
-    def _orb(self, transit_lon: float, natal_lon: float, aspect_deg: int) -> float:
+    def _orb(self, transit_lon: float, natal_lon: float, aspect_deg: float) -> float:
         """Orb in degrees (always positive)."""
         diff = abs(transit_lon - natal_lon) % 360
         if diff > 180:
@@ -414,16 +408,10 @@ class EventDetector:
             self._orb_max_cache[cache_key] = profile_orb_max
             return profile_orb_max
 
-        warning_key = (planet_code, aspect_code)
-        if warning_key not in self._orb_fallback_warnings:
-            self._orb_fallback_warnings.add(warning_key)
-            logger.debug(
-                "orb_max_fallback planet=%s aspect=%s default=2.0",
-                planet_code,
-                aspect_code,
-            )
-        self._orb_max_cache[cache_key] = 2.0
-        return 2.0
+        raise PredictionContextError(
+            "Missing aspect orb rule for "
+            f"planet={planet_code!r} aspect={aspect_code!r} target={target_code!r}"
+        )
 
     def _profile_orb_max(self, planet_code: str, aspect_code: str) -> float | None:
         """Calcule l'orbe actif depuis les profils planète/aspect du contexte."""
@@ -461,7 +449,7 @@ class EventDetector:
             if str(rule.aspect_code).lower() == aspect_code.lower()
             and self._aspect_system_matches(rule)
             and bool(getattr(rule, "is_enabled", True))
-            and str(rule.calculation_context).lower() in {"transit_to_natal", "any"}
+            and str(rule.calculation_context).lower() in {"transit_to_natal", "natal", "any"}
             and self._body_type_matches(str(rule.source_body_type), source_type)
             and self._body_type_matches(str(rule.target_body_type), target_type)
             and self._planet_code_matches(getattr(rule, "source_planet_code", None), planet_code)
@@ -541,6 +529,8 @@ class EventDetector:
         """Retourne la famille de corps attendue par les règles d'orbes."""
         if body_code in self.ANGLE_TARGETS:
             return "angle"
+        if body_code in self.LUMINARY_TARGETS:
+            return "luminary"
         profile = self._lookup_mapping_value(self.ctx.prediction_context.planet_profiles, body_code)
         class_code = str(getattr(profile, "class_code", "") or "").lower()
         if class_code in {"luminary", "planet"}:
@@ -573,7 +563,7 @@ class EventDetector:
 
     def _lookup_mapping_value(self, mapping: object, key: str) -> object | None:
         """Lit un mapping de fixture en acceptant les variantes de casse usuelles."""
-        if not isinstance(mapping, dict):
+        if not isinstance(mapping, Mapping):
             return None
         candidates = (key, key.lower(), key.upper(), key.title())
         for candidate in candidates:

@@ -236,7 +236,7 @@ def test_engine_output_has_calibration_metadata(db_session):
         latitude=0.0,
         longitude=0.0,
         reference_version="2.0.0",
-        ruleset_version="1.0.0",
+        ruleset_version="2.0.0",
     )
 
     loader = PredictionContextLoader()

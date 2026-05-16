@@ -20,6 +20,7 @@ from app.domain.prediction.schemas import (
 )
 from app.domain.prediction.temporal_sampler import DayGrid
 from app.infra.db.repositories.prediction_schemas import (
+    AspectOrbRuleData,
     AspectProfileData,
     CategoryData,
     EventTypeData,
@@ -32,6 +33,49 @@ from app.infra.db.repositories.prediction_schemas import (
     RulesetData,
 )
 from app.services.prediction.engine_orchestrator import DailyEngineMode, EngineOrchestrator
+
+
+def _major_aspect_profile(
+    *,
+    aspect_id: int = 1,
+    code: str = "conjunction",
+    angle: float = 0.0,
+    intensity_weight: float = 1.0,
+    default_valence: str = "positive",
+    orb_multiplier: float = 1.0,
+    phase_sensitive: bool = True,
+) -> AspectProfileData:
+    """Construit un profil d'aspect runtime complet pour les tests."""
+    return AspectProfileData(
+        aspect_id=aspect_id,
+        code=code,
+        intensity_weight=intensity_weight,
+        default_valence=default_valence,
+        orb_multiplier=orb_multiplier,
+        phase_sensitive=phase_sensitive,
+        angle=angle,
+        family_code="major",
+    )
+
+
+def _major_aspect_orb_rules(
+    *,
+    aspect_code: str = "conjunction",
+    orb_deg: float = 5.0,
+) -> tuple[AspectOrbRuleData, ...]:
+    """Construit les règles d'orbes runtime minimales pour les tests prediction."""
+    return (
+        AspectOrbRuleData(
+            aspect_code=aspect_code,
+            system_code="modern",
+            calculation_context="any",
+            source_body_type="any",
+            target_body_type="any",
+            orb_deg=orb_deg,
+            priority=1,
+            is_enabled=True,
+        ),
+    )
 
 
 def _build_loaded_context() -> LoadedPredictionContext:
@@ -116,9 +160,10 @@ def _build_loaded_context() -> LoadedPredictionContext:
             "aquarius": "saturn",
             "pisces": "jupiter",
         },
-        aspect_profiles={},
+        aspect_profiles={"conjunction": _major_aspect_profile()},
         astro_points={},
         point_category_weights=(),
+        aspect_orb_rules=_major_aspect_orb_rules(),
     )
     ruleset_context = RulesetContext(
         ruleset=RulesetData(
@@ -512,18 +557,10 @@ def test_run_integrates_prediction_scoring_pipeline_with_lowercase_reference_cod
                 ),
             ),
             sign_rulerships={"leo": "sun"},
-            aspect_profiles={
-                "conjunction": AspectProfileData(
-                    aspect_id=1,
-                    code="conjunction",
-                    intensity_weight=1.0,
-                    default_valence="positive",
-                    orb_multiplier=1.0,
-                    phase_sensitive=True,
-                ),
-            },
+            aspect_profiles={"conjunction": _major_aspect_profile()},
             astro_points={},
             point_category_weights=(),
+            aspect_orb_rules=_major_aspect_orb_rules(),
         ),
         ruleset_context=RulesetContext(
             ruleset=RulesetData(
@@ -690,15 +727,17 @@ def test_build_natal_chart_uses_contextual_aspect_profiles(base_input):
         prediction_context=replace(
             loaded_context.prediction_context,
             aspect_profiles={
-                "square": AspectProfileData(
+                "square": _major_aspect_profile(
                     aspect_id=2,
                     code="square",
+                    angle=90.0,
                     intensity_weight=1.8,
                     default_valence="negative",
                     orb_multiplier=0.5,
                     phase_sensitive=False,
                 )
             },
+            aspect_orb_rules=_major_aspect_orb_rules(aspect_code="square"),
         ),
     )
     orchestrator = EngineOrchestrator(prediction_context_loader=lambda *_: loaded_context)
@@ -825,18 +864,10 @@ def test_run_v3_exposes_transit_diagnostics_and_signal(base_input):
                 ),
             ),
             sign_rulerships={"leo": "sun"},
-            aspect_profiles={
-                "conjunction": AspectProfileData(
-                    aspect_id=1,
-                    code="conjunction",
-                    intensity_weight=1.0,
-                    default_valence="positive",
-                    orb_multiplier=1.0,
-                    phase_sensitive=True,
-                ),
-            },
+            aspect_profiles={"conjunction": _major_aspect_profile()},
             astro_points={},
             point_category_weights=(),
+            aspect_orb_rules=_major_aspect_orb_rules(),
         ),
         ruleset_context=RulesetContext(
             ruleset=RulesetData(
@@ -1019,9 +1050,10 @@ def test_run_v3_exposes_intraday_activation_diagnostics_and_secondary_runtime(ba
             ),
             house_category_weights=(),
             sign_rulerships={},
-            aspect_profiles={},
+            aspect_profiles={"conjunction": _major_aspect_profile()},
             astro_points={},
             point_category_weights=(),
+            aspect_orb_rules=_major_aspect_orb_rules(),
         ),
         ruleset_context=RulesetContext(
             ruleset=RulesetData(
@@ -1212,18 +1244,10 @@ def test_run_v3_exposes_impulse_diagnostics_and_keeps_moon_ingress_out_of_a_laye
                 ),
             ),
             sign_rulerships={},
-            aspect_profiles={
-                "conjunction": AspectProfileData(
-                    aspect_id=1,
-                    code="conjunction",
-                    intensity_weight=1.0,
-                    default_valence="positive",
-                    orb_multiplier=1.0,
-                    phase_sensitive=True,
-                ),
-            },
+            aspect_profiles={"conjunction": _major_aspect_profile()},
             astro_points={},
             point_category_weights=(),
+            aspect_orb_rules=_major_aspect_orb_rules(),
         ),
         ruleset_context=RulesetContext(
             ruleset=RulesetData(

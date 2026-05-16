@@ -338,6 +338,8 @@ class PredictionContextLoader:
             default_valence=profile.default_valence,
             orb_multiplier=profile.orb_multiplier,
             phase_sensitive=profile.phase_sensitive,
+            angle=profile.angle,
+            family_code=profile.family_code,
         )
 
     def _freeze_astro_point(self, point: AstroPointData) -> AstroPointData:
