@@ -31,14 +31,23 @@ from app.infra.db.models.reference import (
     AstralAspectFamilyModel,
     AstralAstrologicalRoleModel,
     AstralCalculationTypeModel,
+    AstralConstellationModel,
     AstralDignityTypeModel,
+    AstralFixedStarDefinitionModel,
+    AstralFixedStarKeywordModel,
+    AstralFixedStarModel,
+    AstralHemisphereModel,
     AstralHouseSystemModel,
     AstralObjectTypeModel,
     AstralPlanetDefinitionModel,
+    AstralReferenceEpochModel,
+    AstralReferenceSourceModel,
     AstralSignModel,
     AstralSpeedModel,
     AstralSystemModel,
     AstralTypicalPolarityModel,
+    AstralZodiacalReferenceSystemCategoryModel,
+    AstralZodiacalReferenceSystemModel,
     HouseModel,
     LanguageModel,
     PlanetModel,
@@ -106,6 +115,15 @@ def test_structural_astrology_models_are_not_versioned():
         AstroPointModel,
         AstralSystemModel,
         AstralHouseSystemModel,
+        AstralConstellationModel,
+        AstralHemisphereModel,
+        AstralZodiacalReferenceSystemCategoryModel,
+        AstralZodiacalReferenceSystemModel,
+        AstralReferenceEpochModel,
+        AstralReferenceSourceModel,
+        AstralFixedStarModel,
+        AstralFixedStarKeywordModel,
+        AstralFixedStarDefinitionModel,
         AstralPlanetSignDignityModel,
         AstralHouseAxisDefinitionModel,
         AstralAspectFamilyModel,
@@ -140,6 +158,195 @@ def test_reference_and_aspect_models_use_canonical_astral_table_names():
     assert ReferenceVersionModel.__tablename__ == "astral_reference_versions"
     assert AspectModel.__tablename__ == "astral_aspects"
     assert AstralAspectFamilyModel.__tablename__ == "astral_aspect_families"
+
+
+def test_constellation_model_uses_canonical_astral_table_name():
+    """Le modèle des constellations pointe vers le nom SQL canonique astral."""
+    assert AstralConstellationModel.__tablename__ == "astral_constellations"
+    columns = {column.key for column in inspect(AstralConstellationModel).columns}
+    assert columns == {
+        "id",
+        "key",
+        "display_name",
+        "latin_name",
+        "abbreviation",
+        "zodiacal",
+        "hemisphere_id",
+        "notes",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralConstellationModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("key",) in constraints
+    assert ("abbreviation",) in constraints
+    foreign_key_targets = {
+        foreign_key.column.table.name
+        for column in AstralConstellationModel.__table__.columns
+        for foreign_key in column.foreign_keys
+    }
+    assert foreign_key_targets == {"astral_hemispheres"}
+
+
+def test_hemisphere_model_uses_canonical_astral_table_name():
+    """Le modèle des hémisphères pointe vers le nom SQL canonique astral."""
+    assert AstralHemisphereModel.__tablename__ == "astral_hemispheres"
+    columns = {column.key for column in inspect(AstralHemisphereModel).columns}
+    assert columns == {"id", "key", "display_name", "description", "usage_note"}
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralHemisphereModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("key",) in constraints
+
+
+def test_zodiacal_reference_system_category_model_uses_canonical_table_name():
+    """Le modèle des catégories zodiacales pointe vers le nom SQL canonique."""
+    assert (
+        AstralZodiacalReferenceSystemCategoryModel.__tablename__
+        == "astral_zodiacal_reference_system_categories"
+    )
+    columns = {column.key for column in inspect(AstralZodiacalReferenceSystemCategoryModel).columns}
+    assert columns == {"id", "key", "display_name", "description", "usage_note"}
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralZodiacalReferenceSystemCategoryModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("key",) in constraints
+
+
+def test_zodiacal_reference_system_model_uses_canonical_table_name():
+    """Le modèle des systèmes zodiacaux pointe vers le nom SQL canonique."""
+    assert AstralZodiacalReferenceSystemModel.__tablename__ == ("astral_zodiacal_reference_systems")
+    columns = {column.key for column in inspect(AstralZodiacalReferenceSystemModel).columns}
+    assert columns == {
+        "id",
+        "key",
+        "display_name",
+        "category_id",
+        "description",
+        "requires_ayanamsha",
+        "usage_note",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralZodiacalReferenceSystemModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("key",) in constraints
+    foreign_key_targets = {
+        foreign_key.column.table.name
+        for column in AstralZodiacalReferenceSystemModel.__table__.columns
+        for foreign_key in column.foreign_keys
+    }
+    assert foreign_key_targets == {"astral_zodiacal_reference_system_categories"}
+
+
+def test_reference_epoch_model_uses_canonical_table_name():
+    """Le modèle des époques pointe vers le nom SQL canonique astral."""
+    assert AstralReferenceEpochModel.__tablename__ == "astral_reference_epochs"
+    columns = {column.key for column in inspect(AstralReferenceEpochModel).columns}
+    assert columns == {
+        "id",
+        "key",
+        "display_name",
+        "description",
+        "epoch_type",
+        "julian_year",
+        "iso_datetime",
+        "is_standard",
+        "usage_note",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralReferenceEpochModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("key",) in constraints
+
+
+def test_reference_source_model_uses_canonical_table_name():
+    """Le modèle des sources pointe vers le nom SQL canonique astral."""
+    assert AstralReferenceSourceModel.__tablename__ == "astral_reference_sources"
+    columns = {column.key for column in inspect(AstralReferenceSourceModel).columns}
+    assert columns == {
+        "id",
+        "key",
+        "display_name",
+        "category",
+        "publisher",
+        "website",
+        "is_canonical",
+        "usage_note",
+    }
+    constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralReferenceSourceModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("key",) in constraints
+
+
+def test_fixed_star_models_use_canonical_table_names():
+    """Les modèles d'étoiles fixes pointent vers les tables SQL canoniques."""
+    assert AstralFixedStarModel.__tablename__ == "astral_fixed_stars"
+    assert AstralFixedStarKeywordModel.__tablename__ == "astral_fixed_star_keywords"
+    assert AstralFixedStarDefinitionModel.__tablename__ == "astral_fixed_star_definitions"
+    assert {column.key for column in inspect(AstralFixedStarModel).columns} == {
+        "id",
+        "key",
+        "display_name",
+    }
+    assert {column.key for column in inspect(AstralFixedStarKeywordModel).columns} == {
+        "id",
+        "keywords_json",
+    }
+    assert {column.key for column in inspect(AstralFixedStarDefinitionModel).columns} == {
+        "id",
+        "fixed_star_id",
+        "constellation_id",
+        "zodiacal_reference_system_id",
+        "reference_epoch_id",
+        "ecliptic_longitude_deg",
+        "zodiac_sign_id",
+        "zodiac_degree",
+        "declination_deg",
+        "right_ascension_deg",
+        "visual_magnitude",
+        "astral_fixed_star_keywords_id",
+        "is_active",
+        "source_id",
+        "notes",
+    }
+    fixed_star_constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralFixedStarModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    definition_constraints = {
+        tuple(constraint.columns.keys())
+        for constraint in AstralFixedStarDefinitionModel.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    }
+    assert ("key",) in fixed_star_constraints
+    assert ("fixed_star_id",) in definition_constraints
+    foreign_key_targets = {
+        foreign_key.column.table.name
+        for column in AstralFixedStarDefinitionModel.__table__.columns
+        for foreign_key in column.foreign_keys
+    }
+    assert foreign_key_targets == {
+        "astral_fixed_stars",
+        "astral_constellations",
+        "astral_zodiacal_reference_systems",
+        "astral_reference_epochs",
+        "astral_signs",
+        "astral_fixed_star_keywords",
+        "astral_reference_sources",
+    }
 
 
 def test_prediction_aspect_and_planet_weight_tables_are_astral_namespaced():

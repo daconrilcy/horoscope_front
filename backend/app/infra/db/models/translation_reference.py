@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     )
     from app.infra.db.models.reference import (
         AspectModel,
+        AstralFixedStarKeywordModel,
         AstralSignModel,
         HouseModel,
         LanguageModel,
@@ -113,6 +114,31 @@ class AstralAspectTranslationModel(Base):
     translated_name: Mapped[str] = mapped_column(String(128), nullable=False)
 
     aspect: Mapped["AspectModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
+
+
+class AstralFixedStarKeywordTranslationModel(Base):
+    """Traduction localisée d'un groupe de mots-clés d'étoile fixe."""
+
+    __tablename__ = "astral_fixed_star_keyword_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "astral_fixed_star_keywords_id",
+            "language_id",
+            name="uq_astral_fixed_star_keyword_translations_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    astral_fixed_star_keywords_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_fixed_star_keywords.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
+    keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+    keywords: Mapped["AstralFixedStarKeywordModel"] = relationship()
     language: Mapped["LanguageModel"] = relationship()
 
 

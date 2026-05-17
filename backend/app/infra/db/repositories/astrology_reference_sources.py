@@ -51,6 +51,73 @@ def load_astral_sign_rows() -> tuple[dict[str, Any], ...]:
     return _load_data_rows("astral_signs.json", "astral signs")
 
 
+def load_astral_constellation_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les constellations canoniques depuis la table JSON dédiée."""
+    return _load_data_rows("astral_constellations.json", "astral constellations")
+
+
+def load_astral_hemisphere_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les hémisphères célestes depuis la table JSON dédiée."""
+    return _load_data_rows("astral_hemispheres.json", "astral hemispheres")
+
+
+def load_astral_zodiacal_reference_system_category_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les catégories de systèmes de référence zodiacaux."""
+    return _load_data_rows(
+        "astral_zodiacal_reference_system_categories.json",
+        "zodiacal reference system categories",
+    )
+
+
+def load_astral_zodiacal_reference_system_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les systèmes de référence zodiacaux depuis la table JSON dédiée."""
+    return _load_data_rows(
+        "astral_zodiacal_reference_systems.json",
+        "zodiacal reference systems",
+    )
+
+
+def load_astral_reference_epoch_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les époques de référence astronomiques depuis la table JSON dédiée."""
+    return _load_data_rows("astral_reference_epochs.json", "astral reference epochs")
+
+
+def load_astral_reference_source_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les sources de référence astrales depuis la table JSON dédiée."""
+    return _load_data_rows("astral_reference_sources.json", "astral reference sources")
+
+
+def load_astral_fixed_star_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les étoiles fixes canoniques depuis la table JSON dédiée."""
+    return _load_data_rows("astral_fixed_stars.json", "astral fixed stars")
+
+
+def load_astral_fixed_star_keyword_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les groupes de mots-clés des étoiles fixes."""
+    return _load_data_rows("astral_fixed_star_keywords.json", "astral fixed star keywords")
+
+
+def load_astral_fixed_star_definition_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les définitions astronomiques et astrologiques des étoiles fixes."""
+    return _load_data_rows("astral_fixed_star_definitions.json", "astral fixed star definitions")
+
+
+def load_astral_fixed_star_keyword_translation_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les traductions des mots-clés d'étoiles fixes."""
+    source_path = (
+        astrology_research_path("translation") / "astral_fixed_star_keyword_translations.json"
+    )
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    if not isinstance(raw, dict) or raw.get("name") != "astral_fixed_star_keyword_translations":
+        raise ValueError("astral fixed star keyword translations target an unexpected table")
+    data = raw.get("data")
+    rows = data.get("keywords") if isinstance(data, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("astral fixed star keyword translations must contain data.keywords rows")
+    return tuple(dict(row) for row in rows)
+
+
 def load_astral_system_names() -> tuple[str, ...]:
     """Charge les systemes astraux depuis le JSON documentaire canonique."""
     source_path = astrology_research_path("astral_systems.json")

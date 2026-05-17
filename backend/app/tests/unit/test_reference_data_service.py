@@ -20,11 +20,20 @@ from app.infra.db.models.reference import (
     AstralAspectFamilyModel,
     AstralAstrologicalRoleModel,
     AstralCalculationTypeModel,
+    AstralConstellationModel,
     AstralDignityTypeModel,
+    AstralFixedStarDefinitionModel,
+    AstralFixedStarKeywordModel,
+    AstralFixedStarModel,
+    AstralHemisphereModel,
     AstralHouseModalityModel,
     AstralObjectTypeModel,
+    AstralReferenceEpochModel,
+    AstralReferenceSourceModel,
     AstralSignModel,
     AstralSystemModel,
+    AstralZodiacalReferenceSystemCategoryModel,
+    AstralZodiacalReferenceSystemModel,
     HouseModel,
     LanguageModel,
     PlanetModel,
@@ -33,6 +42,7 @@ from app.infra.db.models.reference import (
 from app.infra.db.models.translation_reference import (
     AstralAspectInterpretationProfileTranslationModel,
     AstralAspectTranslationModel,
+    AstralFixedStarKeywordTranslationModel,
     AstralHouseInterpretationProfileTranslationModel,
     AstralHouseTranslationModel,
     AstralPlanetInterpretationProfileTranslationModel,
@@ -41,7 +51,16 @@ from app.infra.db.models.translation_reference import (
 )
 from app.infra.db.repositories.astrology_reference_sources import (
     astrology_research_path,
+    load_astral_constellation_rows,
+    load_astral_fixed_star_definition_rows,
+    load_astral_fixed_star_keyword_rows,
+    load_astral_fixed_star_rows,
+    load_astral_hemisphere_rows,
+    load_astral_reference_epoch_rows,
+    load_astral_reference_source_rows,
     load_astral_sign_rows,
+    load_astral_zodiacal_reference_system_category_rows,
+    load_astral_zodiacal_reference_system_rows,
 )
 from app.services.reference_data.translation_seed_service import sync_astral_translation_seed_data
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
@@ -73,6 +92,170 @@ def test_astral_sign_seed_source_matches_model_contract() -> None:
     assert [set(row) for row in payload["data"]] == [{"id", "code", "name"}] * 12
 
 
+def test_astral_constellation_seed_source_matches_model_contract() -> None:
+    """Le JSON dédié expose uniquement les champs persistés par AstralConstellationModel."""
+    source_path = astrology_research_path("astral_constellations.json")
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    expected_structure = {
+        "id": "integer",
+        "key": "string",
+        "display_name": "string",
+        "latin_name": "string",
+        "abbreviation": "string",
+        "zodiacal": "boolean",
+        "hemisphere_id": "integer|null",
+        "notes": "string|null",
+    }
+    expected_fields = set(expected_structure)
+
+    assert payload["name"] == AstralConstellationModel.__tablename__
+    assert payload["structure"] == expected_structure
+    assert [set(row) for row in payload["data"]] == [expected_fields] * 18
+
+
+def test_astral_hemisphere_seed_source_matches_model_contract() -> None:
+    """Le JSON dédié expose uniquement les champs persistés par AstralHemisphereModel."""
+    source_path = astrology_research_path("astral_hemispheres.json")
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    expected_structure = {
+        "id": "integer",
+        "key": "string",
+        "display_name": "string",
+        "description": "string",
+        "usage_note": "string|null",
+    }
+    expected_fields = set(expected_structure)
+
+    assert payload["name"] == AstralHemisphereModel.__tablename__
+    assert payload["structure"] == expected_structure
+    assert [set(row) for row in payload["data"]] == [expected_fields] * 3
+
+
+def test_zodiacal_reference_system_category_seed_source_matches_model_contract() -> None:
+    """Le JSON dédié expose uniquement les champs persistés par le modèle zodiacal."""
+    source_path = astrology_research_path("astral_zodiacal_reference_system_categories.json")
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    expected_structure = {
+        "id": "integer",
+        "key": "string",
+        "display_name": "string",
+        "description": "string",
+        "usage_note": "string|null",
+    }
+    expected_fields = set(expected_structure)
+
+    assert payload["name"] == AstralZodiacalReferenceSystemCategoryModel.__tablename__
+    assert payload["structure"] == expected_structure
+    assert [set(row) for row in payload["data"]] == [expected_fields] * 3
+
+
+def test_zodiacal_reference_system_seed_source_matches_model_contract() -> None:
+    """Le JSON dédié expose uniquement les champs persistés par le modèle système."""
+    source_path = astrology_research_path("astral_zodiacal_reference_systems.json")
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    expected_structure = {
+        "id": "integer",
+        "key": "string",
+        "display_name": "string",
+        "category_id": "integer",
+        "description": "string",
+        "requires_ayanamsha": "boolean",
+        "usage_note": "string|null",
+    }
+    expected_fields = set(expected_structure)
+
+    assert payload["name"] == AstralZodiacalReferenceSystemModel.__tablename__
+    assert payload["structure"] == expected_structure
+    assert [set(row) for row in payload["data"]] == [expected_fields] * 8
+
+
+def test_astral_reference_epoch_seed_source_matches_model_contract() -> None:
+    """Le JSON dédié expose uniquement les champs persistés par AstralReferenceEpochModel."""
+    source_path = astrology_research_path("astral_reference_epochs.json")
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    expected_structure = {
+        "id": "integer",
+        "key": "string",
+        "display_name": "string",
+        "description": "string",
+        "epoch_type": "string",
+        "julian_year": "float|null",
+        "iso_datetime": "string|null",
+        "is_standard": "boolean",
+        "usage_note": "string|null",
+    }
+    expected_fields = set(expected_structure)
+
+    assert payload["name"] == AstralReferenceEpochModel.__tablename__
+    assert payload["structure"] == expected_structure
+    assert [set(row) for row in payload["data"]] == [expected_fields] * 4
+
+
+def test_astral_reference_source_seed_source_matches_model_contract() -> None:
+    """Le JSON dédié expose uniquement les champs persistés par AstralReferenceSourceModel."""
+    source_path = astrology_research_path("astral_reference_sources.json")
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    expected_structure = {
+        "id": "integer",
+        "key": "string",
+        "display_name": "string",
+        "category": "string",
+        "publisher": "string|null",
+        "website": "string|null",
+        "is_canonical": "boolean",
+        "usage_note": "string|null",
+    }
+    expected_fields = set(expected_structure)
+
+    assert payload["name"] == AstralReferenceSourceModel.__tablename__
+    assert payload["structure"] == expected_structure
+    assert [set(row) for row in payload["data"]] == [expected_fields] * 9
+
+
+def test_astral_fixed_star_seed_sources_match_model_contracts() -> None:
+    """Les JSON d'étoiles fixes exposent uniquement les champs persistés."""
+    stars = json.loads(
+        astrology_research_path("astral_fixed_stars.json").read_text(encoding="utf-8")
+    )
+    keywords = json.loads(
+        astrology_research_path("astral_fixed_star_keywords.json").read_text(encoding="utf-8")
+    )
+    definitions = json.loads(
+        astrology_research_path("astral_fixed_star_definitions.json").read_text(encoding="utf-8")
+    )
+
+    star_structure = {"id": "integer", "key": "string", "display_name": "string"}
+    keyword_structure = {"id": "integer", "keywords_json": "json"}
+    definition_structure = {
+        "id": "integer",
+        "fixed_star_id": "integer",
+        "constellation_id": "integer",
+        "zodiacal_reference_system_id": "integer",
+        "reference_epoch_id": "integer",
+        "ecliptic_longitude_deg": "float",
+        "zodiac_sign_id": "integer",
+        "zodiac_degree": "float",
+        "declination_deg": "float|null",
+        "right_ascension_deg": "float|null",
+        "visual_magnitude": "float|null",
+        "astral_fixed_star_keywords_id": "integer",
+        "is_active": "boolean",
+        "source_id": "integer",
+        "notes": "string|null",
+    }
+
+    assert stars["name"] == AstralFixedStarModel.__tablename__
+    assert stars["structure"] == star_structure
+    assert [set(row) for row in stars["data"]] == [set(star_structure)] * 10
+    assert keywords["name"] == AstralFixedStarKeywordModel.__tablename__
+    assert keywords["structure"] == keyword_structure
+    assert [set(row) for row in keywords["data"]] == [set(keyword_structure)] * 10
+    assert definitions["name"] == AstralFixedStarDefinitionModel.__tablename__
+    assert definitions["structure"] == definition_structure
+    assert [set(row) for row in definitions["data"]] == [set(definition_structure)] * 10
+    assert all("astrological_keywords_json" not in row for row in definitions["data"])
+
+
 def test_seed_reference_version_is_idempotent() -> None:
     _cleanup_reference_tables()
     with open_app_test_db_session() as db:
@@ -99,6 +282,15 @@ def test_seed_reference_version_is_idempotent() -> None:
     signs = cast(list[dict[str, Any]], payload["signs"])
     aspects = cast(list[dict[str, Any]], payload["aspects"])
     expected_sign_rows = load_astral_sign_rows()
+    expected_constellation_rows = load_astral_constellation_rows()
+    expected_hemisphere_rows = load_astral_hemisphere_rows()
+    expected_zodiacal_category_rows = load_astral_zodiacal_reference_system_category_rows()
+    expected_zodiacal_system_rows = load_astral_zodiacal_reference_system_rows()
+    expected_epoch_rows = load_astral_reference_epoch_rows()
+    expected_source_rows = load_astral_reference_source_rows()
+    expected_fixed_star_rows = load_astral_fixed_star_rows()
+    expected_fixed_star_keyword_rows = load_astral_fixed_star_keyword_rows()
+    expected_fixed_star_definition_rows = load_astral_fixed_star_definition_rows()
     assert any(item["code"] == "sun" and item["name"] == "Sun" for item in planets)
     assert any(
         item["code"] == "pluto" and item["name"] == "Pluto" and item["swe_id"] == 9
@@ -174,6 +366,95 @@ def test_seed_reference_version_is_idempotent() -> None:
         assert db.scalar(select(func.count()).select_from(AstralCalculationTypeModel)) == 2
         assert db.scalar(select(func.count()).select_from(AstralHouseModalityModel)) == 3
         assert db.scalar(select(func.count()).select_from(AstralObjectTypeModel)) == 3
+        assert db.scalar(select(func.count()).select_from(AstralConstellationModel)) == len(
+            expected_constellation_rows
+        )
+        assert db.scalar(select(func.count()).select_from(AstralHemisphereModel)) == len(
+            expected_hemisphere_rows
+        )
+        assert db.scalar(
+            select(func.count()).select_from(AstralZodiacalReferenceSystemCategoryModel)
+        ) == len(expected_zodiacal_category_rows)
+        assert db.scalar(
+            select(func.count()).select_from(AstralZodiacalReferenceSystemModel)
+        ) == len(expected_zodiacal_system_rows)
+        assert db.scalar(select(func.count()).select_from(AstralReferenceEpochModel)) == len(
+            expected_epoch_rows
+        )
+        assert db.scalar(select(func.count()).select_from(AstralReferenceSourceModel)) == len(
+            expected_source_rows
+        )
+        assert db.scalar(select(func.count()).select_from(AstralFixedStarModel)) == len(
+            expected_fixed_star_rows
+        )
+        assert db.scalar(select(func.count()).select_from(AstralFixedStarKeywordModel)) == len(
+            expected_fixed_star_keyword_rows
+        )
+        assert db.scalar(select(func.count()).select_from(AstralFixedStarDefinitionModel)) == len(
+            expected_fixed_star_definition_rows
+        )
+        orion = db.scalar(
+            select(AstralConstellationModel).where(AstralConstellationModel.key == "orion")
+        )
+        assert orion is not None
+        assert orion.abbreviation == "Ori"
+        assert orion.zodiacal is False
+        assert orion.hemisphere_id == 3
+        assert orion.notes == "Contains Betelgeuse."
+        equatorial = db.scalar(
+            select(AstralHemisphereModel).where(AstralHemisphereModel.key == "equatorial")
+        )
+        assert equatorial is not None
+        assert equatorial.display_name == "Equatorial"
+        assert equatorial.usage_note == (
+            "Useful for constellations crossing or lying near the celestial equator."
+        )
+        observer_frame = db.scalar(
+            select(AstralZodiacalReferenceSystemCategoryModel).where(
+                AstralZodiacalReferenceSystemCategoryModel.key == "observer_frame"
+            )
+        )
+        assert observer_frame is not None
+        assert observer_frame.display_name == "Observer Frame"
+        sidereal = db.scalar(
+            select(AstralZodiacalReferenceSystemModel).where(
+                AstralZodiacalReferenceSystemModel.key == "sidereal"
+            )
+        )
+        assert sidereal is not None
+        assert sidereal.category_id == 1
+        assert sidereal.requires_ayanamsha is True
+        j2000 = db.scalar(
+            select(AstralReferenceEpochModel).where(AstralReferenceEpochModel.key == "j2000")
+        )
+        assert j2000 is not None
+        assert j2000.epoch_type == "julian_epoch"
+        assert j2000.julian_year == 2000.0
+        assert j2000.is_standard is True
+        swiss_ephemeris = db.scalar(
+            select(AstralReferenceSourceModel).where(
+                AstralReferenceSourceModel.key == "swiss_ephemeris"
+            )
+        )
+        assert swiss_ephemeris is not None
+        assert swiss_ephemeris.category == "astronomical_engine"
+        assert swiss_ephemeris.is_canonical is True
+        regulus = db.scalar(
+            select(AstralFixedStarDefinitionModel)
+            .join(AstralFixedStarDefinitionModel.fixed_star)
+            .where(AstralFixedStarModel.key == "regulus")
+        )
+        assert regulus is not None
+        assert regulus.constellation_id == 5
+        assert regulus.zodiac_sign_id == 6
+        assert regulus.astral_fixed_star_keywords_id == 1
+        assert json.loads(regulus.keywords.keywords_json) == [
+            "royalty",
+            "leadership",
+            "honor",
+            "success",
+            "power",
+        ]
         ascendant = db.scalar(
             select(AstralAnglePointModel).where(AstralAnglePointModel.code == "asc")
         )
@@ -211,6 +492,10 @@ def test_seed_reference_version_populates_translation_tables() -> None:
         assert db.scalar(select(func.count()).select_from(AstralPlanetTranslationModel)) == 40
         assert db.scalar(select(func.count()).select_from(AstralAspectTranslationModel)) == 80
         assert (
+            db.scalar(select(func.count()).select_from(AstralFixedStarKeywordTranslationModel))
+            == 40
+        )
+        assert (
             db.scalar(
                 select(func.count()).select_from(AstralHouseInterpretationProfileTranslationModel)
             )
@@ -238,6 +523,14 @@ def test_seed_reference_version_populates_translation_tables() -> None:
             )
         )
         assert aries_fr == "Bélier"
+        regulus_fr = db.scalar(
+            select(AstralFixedStarKeywordTranslationModel.keywords_json).where(
+                AstralFixedStarKeywordTranslationModel.astral_fixed_star_keywords_id == 1,
+                AstralFixedStarKeywordTranslationModel.language.has(code="fr"),
+            )
+        )
+        assert regulus_fr is not None
+        assert "royauté" in json.loads(regulus_fr)
 
 
 def test_translation_seed_populates_planet_interpretation_translations_when_sources_exist() -> None:

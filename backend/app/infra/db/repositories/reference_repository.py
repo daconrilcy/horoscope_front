@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, aliased
 
@@ -20,33 +22,53 @@ from app.infra.db.models.reference import (
     AstralAspectFamilyModel,
     AstralAstrologicalRoleModel,
     AstralCalculationTypeModel,
+    AstralConstellationModel,
     AstralDignityTypeModel,
+    AstralFixedStarDefinitionModel,
+    AstralFixedStarKeywordModel,
+    AstralFixedStarModel,
+    AstralHemisphereModel,
     AstralHouseModalityModel,
     AstralObjectTypeModel,
     AstralPlanetDefinitionModel,
+    AstralReferenceEpochModel,
+    AstralReferenceSourceModel,
     AstralSignModel,
     AstralSpeedModel,
     AstralSystemModel,
     AstralTypicalPolarityModel,
+    AstralZodiacalReferenceSystemCategoryModel,
+    AstralZodiacalReferenceSystemModel,
     HouseModel,
     LanguageModel,
     PlanetModel,
     ReferenceVersionModel,
 )
+from app.infra.db.models.translation_reference import AstralFixedStarKeywordTranslationModel
 from app.infra.db.repositories.astrology_reference_sources import (
     load_aspect_family_names,
     load_aspect_rows,
     load_astral_angle_point_rows,
     load_astral_astrological_role_rows,
     load_astral_calculation_type_rows,
+    load_astral_constellation_rows,
+    load_astral_fixed_star_definition_rows,
+    load_astral_fixed_star_keyword_rows,
+    load_astral_fixed_star_keyword_translation_rows,
+    load_astral_fixed_star_rows,
+    load_astral_hemisphere_rows,
     load_astral_house_modality_rows,
     load_astral_object_type_rows,
     load_astral_planet_definition_rows,
     load_astral_planet_rows,
+    load_astral_reference_epoch_rows,
+    load_astral_reference_source_rows,
     load_astral_sign_rows,
     load_astral_speed_rows,
     load_astral_system_names,
     load_astral_typical_polarity_rows,
+    load_astral_zodiacal_reference_system_category_rows,
+    load_astral_zodiacal_reference_system_rows,
     load_house_axis_definition_rows,
     load_house_axis_member_rows,
     load_language_rows,
@@ -111,6 +133,152 @@ class ReferenceRepository:
                 self.db.add(AstralSignModel(code=code, **payload))
             else:
                 sign.name = payload["name"]
+
+        for row in load_astral_hemisphere_rows():
+            key = str(row["key"])
+            hemisphere = self.db.scalar(
+                select(AstralHemisphereModel).where(AstralHemisphereModel.key == key)
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "description": str(row["description"]),
+                "usage_note": None if row.get("usage_note") is None else str(row["usage_note"]),
+            }
+            if hemisphere is None:
+                self.db.add(AstralHemisphereModel(key=key, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(hemisphere, field_name, value)
+        self.db.flush()
+
+        hemisphere_ids = {row.id for row in self.db.scalars(select(AstralHemisphereModel)).all()}
+        for row in load_astral_constellation_rows():
+            key = str(row["key"])
+            hemisphere_id = None if row.get("hemisphere_id") is None else int(row["hemisphere_id"])
+            if hemisphere_id is not None and hemisphere_id not in hemisphere_ids:
+                raise ValueError(f"unknown hemisphere id for constellation {key}: {hemisphere_id}")
+            constellation = self.db.scalar(
+                select(AstralConstellationModel).where(AstralConstellationModel.key == key)
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "latin_name": str(row["latin_name"]),
+                "abbreviation": str(row["abbreviation"]),
+                "zodiacal": bool(row["zodiacal"]),
+                "hemisphere_id": hemisphere_id,
+                "notes": None if row.get("notes") is None else str(row["notes"]),
+            }
+            if constellation is None:
+                self.db.add(AstralConstellationModel(key=key, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(constellation, field_name, value)
+
+        for row in load_astral_zodiacal_reference_system_category_rows():
+            key = str(row["key"])
+            category = self.db.scalar(
+                select(AstralZodiacalReferenceSystemCategoryModel).where(
+                    AstralZodiacalReferenceSystemCategoryModel.key == key
+                )
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "description": str(row["description"]),
+                "usage_note": None if row.get("usage_note") is None else str(row["usage_note"]),
+            }
+            if category is None:
+                self.db.add(AstralZodiacalReferenceSystemCategoryModel(key=key, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(category, field_name, value)
+        self.db.flush()
+
+        category_ids = {
+            row.id
+            for row in self.db.scalars(select(AstralZodiacalReferenceSystemCategoryModel)).all()
+        }
+        for row in load_astral_zodiacal_reference_system_rows():
+            key = str(row["key"])
+            category_id = int(row["category_id"])
+            if category_id not in category_ids:
+                raise ValueError(
+                    f"unknown zodiacal reference system category id for {key}: {category_id}"
+                )
+            system = self.db.scalar(
+                select(AstralZodiacalReferenceSystemModel).where(
+                    AstralZodiacalReferenceSystemModel.key == key
+                )
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "category_id": category_id,
+                "description": str(row["description"]),
+                "requires_ayanamsha": bool(row["requires_ayanamsha"]),
+                "usage_note": None if row.get("usage_note") is None else str(row["usage_note"]),
+            }
+            if system is None:
+                self.db.add(AstralZodiacalReferenceSystemModel(key=key, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(system, field_name, value)
+
+        for row in load_astral_reference_epoch_rows():
+            key = str(row["key"])
+            epoch = self.db.scalar(
+                select(AstralReferenceEpochModel).where(AstralReferenceEpochModel.key == key)
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "description": str(row["description"]),
+                "epoch_type": str(row["epoch_type"]),
+                "julian_year": None
+                if row.get("julian_year") is None
+                else float(row["julian_year"]),
+                "iso_datetime": None
+                if row.get("iso_datetime") is None
+                else str(row["iso_datetime"]),
+                "is_standard": bool(row["is_standard"]),
+                "usage_note": None if row.get("usage_note") is None else str(row["usage_note"]),
+            }
+            if epoch is None:
+                self.db.add(AstralReferenceEpochModel(key=key, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(epoch, field_name, value)
+
+        for row in load_astral_reference_source_rows():
+            key = str(row["key"])
+            source = self.db.scalar(
+                select(AstralReferenceSourceModel).where(AstralReferenceSourceModel.key == key)
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "category": str(row["category"]),
+                "publisher": None if row.get("publisher") is None else str(row["publisher"]),
+                "website": None if row.get("website") is None else str(row["website"]),
+                "is_canonical": bool(row["is_canonical"]),
+                "usage_note": None if row.get("usage_note") is None else str(row["usage_note"]),
+            }
+            if source is None:
+                self.db.add(AstralReferenceSourceModel(key=key, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(source, field_name, value)
+
+        self._seed_language_defaults()
+        self.seed_fixed_star_defaults()
 
         for row in load_structural_reference_rows("dignity_types"):
             code = str(row["code"])
@@ -306,14 +474,7 @@ class ReferenceRepository:
 
     def seed_house_axis_defaults(self) -> None:
         """Synchronise les axes de maisons structurels depuis les sources canoniques."""
-        for row in load_language_rows():
-            code = str(row["code"])
-            language = self.db.scalar(select(LanguageModel).where(LanguageModel.code == code))
-            if language is None:
-                self.db.add(LanguageModel(code=code, name=str(row["name"])))
-            else:
-                language.name = str(row["name"])
-        self.db.flush()
+        self._seed_language_defaults()
 
         source_system_names = load_astral_system_names()
         system_ids_by_source_id = {
@@ -383,6 +544,163 @@ class ReferenceRepository:
             else:
                 member.axis_id = axis_id
                 member.opposite_house_id = opposite_house_id
+
+    def _seed_language_defaults(self) -> None:
+        """Synchronise les langues avant les seeds localisés."""
+        for row in load_language_rows():
+            code = str(row["code"])
+            language = self.db.scalar(select(LanguageModel).where(LanguageModel.code == code))
+            if language is None:
+                self.db.add(LanguageModel(id=int(row["id"]), code=code, name=str(row["name"])))
+            else:
+                language.name = str(row["name"])
+        self.db.flush()
+
+    def seed_fixed_star_defaults(self) -> None:
+        """Synchronise les étoiles fixes et leurs définitions dans l'ordre canonique."""
+        for row in load_astral_fixed_star_rows():
+            key = str(row["key"])
+            fixed_star = self.db.scalar(
+                select(AstralFixedStarModel).where(AstralFixedStarModel.key == key)
+            )
+            payload = {"id": int(row["id"]), "display_name": str(row["display_name"])}
+            if fixed_star is None:
+                self.db.add(AstralFixedStarModel(key=key, **payload))
+            else:
+                fixed_star.display_name = payload["display_name"]
+        self.db.flush()
+
+        for row in load_astral_fixed_star_keyword_rows():
+            keyword_group = self.db.get(AstralFixedStarKeywordModel, int(row["id"]))
+            payload = {
+                "keywords_json": json.dumps(
+                    list(row["keywords_json"]),
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                )
+            }
+            if keyword_group is None:
+                self.db.add(AstralFixedStarKeywordModel(id=int(row["id"]), **payload))
+            else:
+                keyword_group.keywords_json = payload["keywords_json"]
+        self.db.flush()
+
+        self._seed_fixed_star_keyword_translations()
+        self._seed_fixed_star_definitions()
+
+    def _seed_fixed_star_keyword_translations(self) -> None:
+        """Synchronise les traductions des mots-clés d'étoiles fixes."""
+        language_ids = {row.code: row.id for row in self.db.scalars(select(LanguageModel)).all()}
+        keyword_ids = {row.id for row in self.db.scalars(select(AstralFixedStarKeywordModel)).all()}
+        for row in load_astral_fixed_star_keyword_translation_rows():
+            keyword_id = int(row["astral_fixed_star_keywords_id"])
+            if keyword_id not in keyword_ids:
+                raise ValueError(f"unknown fixed star keyword id: {keyword_id}")
+            translations = row.get("translations")
+            if not isinstance(translations, dict):
+                raise ValueError("fixed star keyword translation row must contain translations")
+            for locale, translated_values in translations.items():
+                language_id = language_ids.get(str(locale))
+                if language_id is None:
+                    raise ValueError(f"unknown fixed star keyword translation locale: {locale}")
+                if not isinstance(translated_values, dict):
+                    raise ValueError("fixed star keyword translation values must be objects")
+                model = self.db.scalar(
+                    select(AstralFixedStarKeywordTranslationModel).where(
+                        AstralFixedStarKeywordTranslationModel.astral_fixed_star_keywords_id
+                        == keyword_id,
+                        AstralFixedStarKeywordTranslationModel.language_id == language_id,
+                    )
+                )
+                keywords_json = json.dumps(
+                    list(translated_values["keywords_json"]),
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                )
+                if model is None:
+                    self.db.add(
+                        AstralFixedStarKeywordTranslationModel(
+                            astral_fixed_star_keywords_id=keyword_id,
+                            language_id=language_id,
+                            keywords_json=keywords_json,
+                        )
+                    )
+                else:
+                    model.keywords_json = keywords_json
+        self.db.flush()
+
+    def _seed_fixed_star_definitions(self) -> None:
+        """Synchronise les définitions des étoiles fixes après leurs dépendances."""
+        fixed_star_ids = {row.id for row in self.db.scalars(select(AstralFixedStarModel)).all()}
+        keyword_ids = {row.id for row in self.db.scalars(select(AstralFixedStarKeywordModel)).all()}
+        constellation_ids = {
+            row.id for row in self.db.scalars(select(AstralConstellationModel)).all()
+        }
+        zodiacal_reference_system_ids = {
+            row.id for row in self.db.scalars(select(AstralZodiacalReferenceSystemModel)).all()
+        }
+        reference_epoch_ids = {
+            row.id for row in self.db.scalars(select(AstralReferenceEpochModel)).all()
+        }
+        zodiac_sign_ids = {row.id for row in self.db.scalars(select(AstralSignModel)).all()}
+        source_ids = {row.id for row in self.db.scalars(select(AstralReferenceSourceModel)).all()}
+        for row in load_astral_fixed_star_definition_rows():
+            fixed_star_id = int(row["fixed_star_id"])
+            dependency_checks = {
+                "fixed star": (fixed_star_id, fixed_star_ids),
+                "constellation": (int(row["constellation_id"]), constellation_ids),
+                "zodiacal reference system": (
+                    int(row["zodiacal_reference_system_id"]),
+                    zodiacal_reference_system_ids,
+                ),
+                "reference epoch": (int(row["reference_epoch_id"]), reference_epoch_ids),
+                "zodiac sign": (int(row["zodiac_sign_id"]), zodiac_sign_ids),
+                "fixed star keywords": (
+                    int(row["astral_fixed_star_keywords_id"]),
+                    keyword_ids,
+                ),
+                "source": (int(row["source_id"]), source_ids),
+            }
+            for label, (dependency_id, known_ids) in dependency_checks.items():
+                if dependency_id not in known_ids:
+                    raise ValueError(f"unknown {label} id for fixed star {fixed_star_id}")
+            definition = self.db.scalar(
+                select(AstralFixedStarDefinitionModel).where(
+                    AstralFixedStarDefinitionModel.fixed_star_id == fixed_star_id
+                )
+            )
+            payload = {
+                "constellation_id": int(row["constellation_id"]),
+                "zodiacal_reference_system_id": int(row["zodiacal_reference_system_id"]),
+                "reference_epoch_id": int(row["reference_epoch_id"]),
+                "ecliptic_longitude_deg": float(row["ecliptic_longitude_deg"]),
+                "zodiac_sign_id": int(row["zodiac_sign_id"]),
+                "zodiac_degree": float(row["zodiac_degree"]),
+                "declination_deg": None
+                if row.get("declination_deg") is None
+                else float(row["declination_deg"]),
+                "right_ascension_deg": None
+                if row.get("right_ascension_deg") is None
+                else float(row["right_ascension_deg"]),
+                "visual_magnitude": None
+                if row.get("visual_magnitude") is None
+                else float(row["visual_magnitude"]),
+                "astral_fixed_star_keywords_id": int(row["astral_fixed_star_keywords_id"]),
+                "is_active": bool(row["is_active"]),
+                "source_id": int(row["source_id"]),
+                "notes": None if row.get("notes") is None else str(row["notes"]),
+            }
+            if definition is None:
+                self.db.add(
+                    AstralFixedStarDefinitionModel(
+                        id=int(row["id"]),
+                        fixed_star_id=fixed_star_id,
+                        **payload,
+                    )
+                )
+                continue
+            for field_name, value in payload.items():
+                setattr(definition, field_name, value)
 
     def get_reference_data(self, version: str) -> dict[str, object]:
         """Retourne le vocabulaire stable expose pour une version existante."""

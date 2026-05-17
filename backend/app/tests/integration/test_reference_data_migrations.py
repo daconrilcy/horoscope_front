@@ -197,6 +197,16 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_calculation_types",
         "astral_house_modalities",
         "astral_object_types",
+        "astral_constellations",
+        "astral_hemispheres",
+        "astral_zodiacal_reference_system_categories",
+        "astral_zodiacal_reference_systems",
+        "astral_reference_epochs",
+        "astral_reference_sources",
+        "astral_fixed_stars",
+        "astral_fixed_star_keywords",
+        "astral_fixed_star_keyword_translations",
+        "astral_fixed_star_definitions",
     ):
         assert table_name in head_tables
     assert "house_interpretation_profiles" not in head_tables
@@ -213,6 +223,136 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert "reference_version_id" not in columns
     planet_columns = {column["name"] for column in head_inspector.get_columns("astral_planets")}
     assert planet_columns == {"id", "code", "name", "swe_id"}
+    constellation_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_constellations")
+    }
+    assert constellation_columns == {
+        "id",
+        "key",
+        "display_name",
+        "latin_name",
+        "abbreviation",
+        "zodiacal",
+        "hemisphere_id",
+        "notes",
+    }
+    constellation_foreign_key_targets = {
+        foreign_key["referred_table"]
+        for foreign_key in head_inspector.get_foreign_keys("astral_constellations")
+        if "hemisphere_id" in foreign_key["constrained_columns"]
+    }
+    assert constellation_foreign_key_targets == {"astral_hemispheres"}
+    hemisphere_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_hemispheres")
+    }
+    assert hemisphere_columns == {"id", "key", "display_name", "description", "usage_note"}
+    zodiacal_category_columns = {
+        column["name"]
+        for column in head_inspector.get_columns("astral_zodiacal_reference_system_categories")
+    }
+    assert zodiacal_category_columns == {
+        "id",
+        "key",
+        "display_name",
+        "description",
+        "usage_note",
+    }
+    zodiacal_system_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_zodiacal_reference_systems")
+    }
+    assert zodiacal_system_columns == {
+        "id",
+        "key",
+        "display_name",
+        "category_id",
+        "description",
+        "requires_ayanamsha",
+        "usage_note",
+    }
+    zodiacal_system_foreign_key_targets = {
+        foreign_key["referred_table"]
+        for foreign_key in head_inspector.get_foreign_keys("astral_zodiacal_reference_systems")
+        if "category_id" in foreign_key["constrained_columns"]
+    }
+    assert zodiacal_system_foreign_key_targets == {"astral_zodiacal_reference_system_categories"}
+    reference_epoch_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_reference_epochs")
+    }
+    assert reference_epoch_columns == {
+        "id",
+        "key",
+        "display_name",
+        "description",
+        "epoch_type",
+        "julian_year",
+        "iso_datetime",
+        "is_standard",
+        "usage_note",
+    }
+    reference_source_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_reference_sources")
+    }
+    assert reference_source_columns == {
+        "id",
+        "key",
+        "display_name",
+        "category",
+        "publisher",
+        "website",
+        "is_canonical",
+        "usage_note",
+    }
+    fixed_star_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_fixed_stars")
+    }
+    assert fixed_star_columns == {"id", "key", "display_name"}
+    fixed_star_keyword_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_fixed_star_keywords")
+    }
+    assert fixed_star_keyword_columns == {"id", "keywords_json"}
+    fixed_star_keyword_translation_columns = {
+        column["name"]
+        for column in head_inspector.get_columns("astral_fixed_star_keyword_translations")
+    }
+    assert fixed_star_keyword_translation_columns == {
+        "id",
+        "astral_fixed_star_keywords_id",
+        "language_id",
+        "keywords_json",
+    }
+    fixed_star_definition_columns = {
+        column["name"] for column in head_inspector.get_columns("astral_fixed_star_definitions")
+    }
+    assert fixed_star_definition_columns == {
+        "id",
+        "fixed_star_id",
+        "constellation_id",
+        "zodiacal_reference_system_id",
+        "reference_epoch_id",
+        "ecliptic_longitude_deg",
+        "zodiac_sign_id",
+        "zodiac_degree",
+        "declination_deg",
+        "right_ascension_deg",
+        "visual_magnitude",
+        "astral_fixed_star_keywords_id",
+        "is_active",
+        "source_id",
+        "notes",
+    }
+    fixed_star_definition_foreign_key_targets = {
+        foreign_key["referred_table"]
+        for foreign_key in head_inspector.get_foreign_keys("astral_fixed_star_definitions")
+    }
+    assert fixed_star_definition_foreign_key_targets == {
+        "astral_fixed_stars",
+        "astral_constellations",
+        "astral_zodiacal_reference_systems",
+        "astral_reference_epochs",
+        "astral_signs",
+        "astral_fixed_star_keywords",
+        "astral_reference_sources",
+    }
     axis_definition_columns = {
         column["name"] for column in head_inspector.get_columns("astral_house_axis_definitions")
     }
@@ -447,6 +587,125 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         )
         assert (
             connection.execute(text("SELECT COUNT(*) FROM astral_object_types")).scalar_one() == 3
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_constellations")).scalar_one()
+            == 18
+        )
+        assert dict(
+            connection.execute(
+                text("SELECT key, abbreviation FROM astral_constellations WHERE zodiacal = 1")
+            ).all()
+        ) == {
+            "aries": "Ari",
+            "taurus": "Tau",
+            "gemini": "Gem",
+            "cancer": "Cnc",
+            "leo": "Leo",
+            "virgo": "Vir",
+            "libra": "Lib",
+            "scorpius": "Sco",
+            "sagittarius": "Sgr",
+            "capricornus": "Cap",
+            "aquarius": "Aqr",
+            "pisces": "Psc",
+        }
+        assert (
+            connection.execute(
+                text("SELECT hemisphere_id FROM astral_constellations WHERE key = 'orion'")
+            ).scalar_one()
+            == 3
+        )
+        assert dict(
+            connection.execute(text("SELECT key, display_name FROM astral_hemispheres")).all()
+        ) == {
+            "northern": "Northern",
+            "southern": "Southern",
+            "equatorial": "Equatorial",
+        }
+        assert dict(
+            connection.execute(
+                text("SELECT key, display_name FROM astral_zodiacal_reference_system_categories")
+            ).all()
+        ) == {
+            "zodiac": "Zodiac",
+            "observer_frame": "Observer Frame",
+            "coordinate_system": "Coordinate System",
+        }
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_zodiacal_reference_systems")
+            ).scalar_one()
+            == 8
+        )
+        assert dict(
+            connection.execute(
+                text("SELECT key, category_id FROM astral_zodiacal_reference_systems")
+            ).all()
+        ) == {
+            "tropical": 1,
+            "sidereal": 1,
+            "draconic": 1,
+            "geocentric": 2,
+            "heliocentric": 2,
+            "topocentric": 2,
+            "equatorial": 3,
+            "ecliptic": 3,
+        }
+        assert dict(
+            connection.execute(text("SELECT key, epoch_type FROM astral_reference_epochs")).all()
+        ) == {
+            "j2000": "julian_epoch",
+            "b1950": "besselian_epoch",
+            "j2050": "julian_epoch",
+            "of_date": "runtime_epoch",
+        }
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_reference_sources")).scalar_one()
+            == 9
+        )
+        assert dict(
+            connection.execute(
+                text(
+                    "SELECT key, is_canonical FROM astral_reference_sources WHERE is_canonical = 1"
+                )
+            ).all()
+        ) == {
+            "swiss_ephemeris": True,
+            "hipparcos": True,
+        }
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_fixed_stars")).scalar_one() == 10
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_fixed_star_keywords")).scalar_one()
+            == 10
+        )
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_fixed_star_keyword_translations")
+            ).scalar_one()
+            == 40
+        )
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_fixed_star_definitions")
+            ).scalar_one()
+            == 10
+        )
+        assert (
+            connection.execute(
+                text(
+                    """
+                    SELECT astral_fixed_stars.key
+                    FROM astral_fixed_star_definitions
+                    JOIN astral_fixed_stars
+                        ON astral_fixed_star_definitions.fixed_star_id = astral_fixed_stars.id
+                    WHERE astral_fixed_star_definitions.astral_fixed_star_keywords_id = 1
+                    """
+                )
+            ).scalar_one()
+            == "regulus"
         )
         assert dict(
             connection.execute(text("SELECT code, associated_house FROM astral_angle_points")).all()

@@ -1,0 +1,428 @@
+{
+  "name": "astral_fixed_star_keyword_translations",
+  "structure": {
+    "source_table": "astral_fixed_star_keywords",
+    "translation_table": "astral_fixed_star_keyword_translations",
+    "source_reference": {
+      "astral_fixed_star_keywords_id": "integer, reference astral_fixed_star_keywords.id"
+    },
+    "translations": {
+      "locale": "string, one of fr/es/de/it",
+      "keywords_json": "json"
+    }
+  },
+  "data": {
+    "keywords": [
+      {
+        "astral_fixed_star_keywords_id": 1,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "royauté",
+              "leadership",
+              "honneur",
+              "succès",
+              "pouvoir"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "realeza",
+              "liderazgo",
+              "honor",
+              "éxito",
+              "poder"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Königtum",
+              "Führung",
+              "Ehre",
+              "Erfolg",
+              "Macht"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "regalità",
+              "leadership",
+              "onore",
+              "successo",
+              "potere"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 2,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "intensité",
+              "crise",
+              "obsession",
+              "extrêmes",
+              "danger"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "intensidad",
+              "crisis",
+              "obsesión",
+              "extremos",
+              "peligro"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Intensität",
+              "Krise",
+              "Besessenheit",
+              "Extreme",
+              "Gefahr"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "intensità",
+              "crisi",
+              "ossessione",
+              "estremi",
+              "pericolo"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 3,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "talent",
+              "protection",
+              "art",
+              "intelligence",
+              "fortune"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "talento",
+              "protección",
+              "arte",
+              "inteligencia",
+              "fortuna"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Talent",
+              "Schutz",
+              "Kunst",
+              "Intelligenz",
+              "Glück"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "talento",
+              "protezione",
+              "arte",
+              "intelligenza",
+              "fortuna"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 4,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "guerrier",
+              "passion",
+              "intensité",
+              "combat",
+              "ambition"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "guerrero",
+              "pasión",
+              "intensidad",
+              "combate",
+              "ambición"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Krieger",
+              "Leidenschaft",
+              "Intensität",
+              "Kampf",
+              "Ehrgeiz"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "guerriero",
+              "passione",
+              "intensità",
+              "combattimento",
+              "ambizione"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 5,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "intégrité",
+              "honneur",
+              "succès",
+              "courage",
+              "vision"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "integridad",
+              "honor",
+              "éxito",
+              "coraje",
+              "visión"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Integrität",
+              "Ehre",
+              "Erfolg",
+              "Mut",
+              "Vision"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "integrità",
+              "onore",
+              "successo",
+              "coraggio",
+              "visione"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 6,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "renommée",
+              "brillance",
+              "visibilité",
+              "richesse",
+              "ambition"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "fama",
+              "brillo",
+              "visibilidad",
+              "riqueza",
+              "ambición"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Ruhm",
+              "Glanz",
+              "Sichtbarkeit",
+              "Reichtum",
+              "Ehrgeiz"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "fama",
+              "brillantezza",
+              "visibilità",
+              "ricchezza",
+              "ambizione"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 7,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "vision",
+              "spiritualité",
+              "idéalisme",
+              "créativité",
+              "mysticisme"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "visión",
+              "espiritualidad",
+              "idealismo",
+              "creatividad",
+              "misticismo"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Vision",
+              "Spiritualität",
+              "Idealismus",
+              "Kreativität",
+              "Mystik"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "visione",
+              "spiritualità",
+              "idealismo",
+              "creatività",
+              "misticismo"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 8,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "force",
+              "énergie_martiale",
+              "charisme",
+              "action",
+              "succès"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "fuerza",
+              "energía_marcial",
+              "carisma",
+              "acción",
+              "éxito"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Stärke",
+              "Kampfenergie",
+              "Charisma",
+              "Handlung",
+              "Erfolg"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "forza",
+              "energia_marziale",
+              "carisma",
+              "azione",
+              "successo"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 9,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "exploration",
+              "adaptation",
+              "mouvement",
+              "connaissance",
+              "curiosité"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "exploración",
+              "adaptación",
+              "movimiento",
+              "conocimiento",
+              "curiosidad"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Erkundung",
+              "Anpassung",
+              "Bewegung",
+              "Wissen",
+              "Neugier"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "esplorazione",
+              "adattamento",
+              "movimento",
+              "conoscenza",
+              "curiosità"
+            ]
+          }
+        }
+      },
+      {
+        "astral_fixed_star_keywords_id": 10,
+        "translations": {
+          "fr": {
+            "keywords_json": [
+              "art",
+              "musique",
+              "raffinement",
+              "beauté",
+              "intelligence"
+            ]
+          },
+          "es": {
+            "keywords_json": [
+              "arte",
+              "música",
+              "refinamiento",
+              "belleza",
+              "inteligencia"
+            ]
+          },
+          "de": {
+            "keywords_json": [
+              "Kunst",
+              "Musik",
+              "Verfeinerung",
+              "Schönheit",
+              "Intelligenz"
+            ]
+          },
+          "it": {
+            "keywords_json": [
+              "arte",
+              "musica",
+              "raffinatezza",
+              "bellezza",
+              "intelligenza"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

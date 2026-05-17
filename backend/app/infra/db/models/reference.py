@@ -55,6 +55,188 @@ class AstralSignModel(Base):
     name: Mapped[str] = mapped_column(String(64))
 
 
+class AstralConstellationModel(Base):
+    """Constellation astronomique stable utilisée comme vocabulaire astral."""
+
+    __tablename__ = "astral_constellations"
+    __table_args__ = (
+        UniqueConstraint("key"),
+        UniqueConstraint("abbreviation"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    latin_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    abbreviation: Mapped[str] = mapped_column(String(8), nullable=False, index=True)
+    zodiacal: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    hemisphere_id: Mapped[int | None] = mapped_column(
+        ForeignKey("astral_hemispheres.id"), nullable=True, index=True
+    )
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    hemisphere: Mapped["AstralHemisphereModel | None"] = relationship()
+
+
+class AstralHemisphereModel(Base):
+    """Hémisphère céleste stable utilisé comme métadonnée astronomique."""
+
+    __tablename__ = "astral_hemispheres"
+    __table_args__ = (UniqueConstraint("key"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    usage_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class AstralZodiacalReferenceSystemCategoryModel(Base):
+    """Catégorie stable des systèmes de référence zodiacaux."""
+
+    __tablename__ = "astral_zodiacal_reference_system_categories"
+    __table_args__ = (UniqueConstraint("key"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    usage_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class AstralZodiacalReferenceSystemModel(Base):
+    """Système de référence zodiacal stable utilisable par les calculs astraux."""
+
+    __tablename__ = "astral_zodiacal_reference_systems"
+    __table_args__ = (UniqueConstraint("key"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_zodiacal_reference_system_categories.id"), nullable=False, index=True
+    )
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    requires_ayanamsha: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    usage_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    category: Mapped["AstralZodiacalReferenceSystemCategoryModel"] = relationship()
+
+
+class AstralReferenceEpochModel(Base):
+    """Époque de référence stable pour les coordonnées astronomiques."""
+
+    __tablename__ = "astral_reference_epochs"
+    __table_args__ = (
+        UniqueConstraint("key"),
+        CheckConstraint(
+            "epoch_type IN ('julian_epoch', 'besselian_epoch', 'runtime_epoch')",
+            name="ck_astral_reference_epochs_epoch_type",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    epoch_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    julian_year: Mapped[float | None] = mapped_column(Float, nullable=True)
+    iso_datetime: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    is_standard: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    usage_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class AstralReferenceSourceModel(Base):
+    """Source documentaire ou technique d'un référentiel astral."""
+
+    __tablename__ = "astral_reference_sources"
+    __table_args__ = (
+        UniqueConstraint("key"),
+        CheckConstraint(
+            (
+                "category IN ('internal', 'astronomical_engine', 'astronomical_catalog', "
+                "'astronomical_reference', 'astrological_interpretation', "
+                "'historical_astrological_source', 'astrological_platform')"
+            ),
+            name="ck_astral_reference_sources_category",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    publisher: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    website: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_canonical: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    usage_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class AstralFixedStarModel(Base):
+    """Étoile fixe stable identifiée par son nom propre canonique."""
+
+    __tablename__ = "astral_fixed_stars"
+    __table_args__ = (UniqueConstraint("key"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+
+
+class AstralFixedStarKeywordModel(Base):
+    """Groupe stable de mots-clés interprétatifs pour une étoile fixe."""
+
+    __tablename__ = "astral_fixed_star_keywords"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AstralFixedStarDefinitionModel(Base):
+    """Définition astronomique et astrologique stable d'une étoile fixe."""
+
+    __tablename__ = "astral_fixed_star_definitions"
+    __table_args__ = (UniqueConstraint("fixed_star_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    fixed_star_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_fixed_stars.id"), nullable=False, index=True
+    )
+    constellation_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_constellations.id"), nullable=False, index=True
+    )
+    zodiacal_reference_system_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_zodiacal_reference_systems.id"), nullable=False, index=True
+    )
+    reference_epoch_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_epochs.id"), nullable=False, index=True
+    )
+    ecliptic_longitude_deg: Mapped[float] = mapped_column(Float, nullable=False)
+    zodiac_sign_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_signs.id"), nullable=False, index=True
+    )
+    zodiac_degree: Mapped[float] = mapped_column(Float, nullable=False)
+    declination_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    right_ascension_deg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    visual_magnitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    astral_fixed_star_keywords_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_fixed_star_keywords.id"), nullable=False, index=True
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    source_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_sources.id"), nullable=False, index=True
+    )
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    fixed_star: Mapped["AstralFixedStarModel"] = relationship()
+    constellation: Mapped["AstralConstellationModel"] = relationship()
+    zodiacal_reference_system: Mapped["AstralZodiacalReferenceSystemModel"] = relationship()
+    reference_epoch: Mapped["AstralReferenceEpochModel"] = relationship()
+    zodiac_sign: Mapped["AstralSignModel"] = relationship()
+    keywords: Mapped["AstralFixedStarKeywordModel"] = relationship()
+    source: Mapped["AstralReferenceSourceModel"] = relationship()
+
+
 class AstralElementModel(Base):
     """Taxonomie stable des éléments astrologiques."""
 
