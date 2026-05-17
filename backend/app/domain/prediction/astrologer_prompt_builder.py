@@ -8,9 +8,9 @@ from typing import Any
 from app.domain.astrology.natal_calculation import sign_from_longitude
 from app.domain.astrology.planet_catalog import planet_codes
 from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
-from app.domain.prediction.public_astro_vocabulary import (
+from app.domain.prediction.astro_label_formatter import (
+    AstroLabelFormatter,
     PredictionAstroLabels,
-    PublicAstroVocabulary,
 )
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class AstrologerPromptBuilder:
         variant_code: str | None = None,
     ) -> str:
         payload = self._resolve_payload(common_context)
-        astro_vocabulary = PublicAstroVocabulary(astro_labels)
+        astro_vocabulary = AstroLabelFormatter(astro_labels)
         natal_section = self._build_natal_section(payload, astro_vocabulary)
         date_str = payload.today_date
         events_str = self._format_astro_daily_events(astro_daily_events)
@@ -76,7 +76,7 @@ PARAMÈTRES UTILISATEUR :
         return common_context
 
     def _build_natal_section(
-        self, ctx: PromptCommonContext, astro_vocabulary: PublicAstroVocabulary
+        self, ctx: PromptCommonContext, astro_vocabulary: AstroLabelFormatter
     ) -> str:
         if ctx.natal_interpretation:
             natal_summary = " ".join(ctx.natal_interpretation.split())[:1400]
@@ -246,7 +246,7 @@ PARAMÈTRES UTILISATEUR :
         labels = [label_by_key.get(key, str(key)) for key in domain_keys]
         return ", ".join(labels)
 
-    def _format_sign_label(self, raw_sign: Any, astro_vocabulary: PublicAstroVocabulary) -> str:
+    def _format_sign_label(self, raw_sign: Any, astro_vocabulary: AstroLabelFormatter) -> str:
         if raw_sign is None:
             return "signe inconnu"
         return astro_vocabulary.sign(str(raw_sign))

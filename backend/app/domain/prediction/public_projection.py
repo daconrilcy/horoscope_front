@@ -9,16 +9,16 @@ from numbers import Real
 from typing import TYPE_CHECKING, Any
 
 from app.core.datetime_provider import datetime_provider
+from app.domain.prediction.astro_label_formatter import (
+    AstroLabelFormatter,
+    PredictionAstroLabels,
+)
 from app.domain.prediction.decision_window_builder import DecisionWindowBuilder
 from app.domain.prediction.editorial_template_engine import EditorialTemplateEngine
 from app.domain.prediction.public_astro_daily_events import (
     PUBLIC_ASTRO_ASPECT_EVENT_TYPES,
     PublicAstroDailyEventsPolicy,
     resolve_public_astro_events,
-)
-from app.domain.prediction.public_astro_vocabulary import (
-    PredictionAstroLabels,
-    PublicAstroVocabulary,
 )
 from app.domain.prediction.public_domain_taxonomy import (
     DISPLAY_ORDER,
@@ -27,6 +27,7 @@ from app.domain.prediction.public_domain_taxonomy import (
     map_internal_to_public,
 )
 from app.domain.prediction.public_label_catalog import (
+    FLUIDITY_REGIME,
     get_action_hint,
     get_best_window_why,
     get_climate_label,
@@ -77,9 +78,10 @@ class PublicPredictionAssembler:
         reference_version: str,
         ruleset_version: str,
         astro_labels: PredictionAstroLabels,
+        aspect_profiles: Any | None = None,
         variant_code: str | None = None,
     ) -> dict[str, Any]:
-        astro_vocabulary = PublicAstroVocabulary(astro_labels)
+        astro_vocabulary = AstroLabelFormatter(astro_labels)
         # AC1 Story 42.16: Resolve evidence pack
         evidence = self._resolve_evidence_pack(snapshot, engine_output)
 
@@ -177,6 +179,7 @@ class PublicPredictionAssembler:
             engine_output=engine_output,
             evidence=evidence,
             astro_vocabulary=astro_vocabulary,
+            aspect_profiles=aspect_profiles,
         )
 
         # New: Astro Daily Events (V4)
@@ -366,7 +369,8 @@ class PublicAstroFoundationPolicy:
         *,
         day_climate: dict[str, Any],
         domain_ranking: list[dict[str, Any]],
-        astro_vocabulary: PublicAstroVocabulary,
+        astro_vocabulary: AstroLabelFormatter,
+        aspect_profiles: Any | None = None,
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any] | None:
@@ -436,7 +440,7 @@ class PublicAstroFoundationPolicy:
                     "aspect_type": vocabulary.aspect(e.aspect),
                     "planet_a": vocabulary.planet(e.body),
                     "planet_b": vocabulary.planet(e.target) if e.target else None,
-                    "tonality": vocabulary.aspect_tone(e.aspect),
+                    "tonality": _resolve_aspect_tonality(e.aspect, aspect_profiles),
                     "effect_label": vocabulary.event_kind("aspect"),
                 }
             )
@@ -644,7 +648,7 @@ class PublicMainTurningPointPolicy:
 PERIOD_SLOTS = [
     {"key": "nuit", "hour_start": 22, "hour_end": 6, "default_regime": "récupération"},
     {"key": "matin", "hour_start": 6, "hour_end": 12, "default_regime": "mise_en_route"},
-    {"key": "apres_midi", "hour_start": 12, "hour_end": 18, "default_regime": "fluidité"},
+    {"key": "apres_midi", "hour_start": 12, "hour_end": 18, "default_regime": FLUIDITY_REGIME},
     {"key": "soiree", "hour_start": 18, "hour_end": 22, "default_regime": "recentrage"},
 ]
 
@@ -660,7 +664,7 @@ class PublicTimeWindowPolicy:
         snapshot: PersistedPredictionSnapshot,
         turning_points: list[dict[str, Any]],
         *,
-        astro_vocabulary: PublicAstroVocabulary,
+        astro_vocabulary: AstroLabelFormatter,
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> list[dict[str, Any]]:
@@ -737,7 +741,7 @@ class PublicTimeWindowPolicy:
             regime = self._resolve_regime(rep_start, rep_end, orientation, turning_points)
 
             # E. Default Fallback
-            if not slot_blocks and regime == "fluidité":
+            if not slot_blocks and regime == FLUIDITY_REGIME:
                 regime = slot["default_regime"]
 
             # F. Label & Action
@@ -795,16 +799,16 @@ class PublicTimeWindowPolicy:
             "rising": "progression",
             "falling": "retombée",
             "volatile": "prudence",
-            "stable": "fluidité",
+            "stable": FLUIDITY_REGIME,
         }
-        regime = ORIENTATION_TO_REGIME.get(orientation, "fluidité")
+        regime = ORIENTATION_TO_REGIME.get(orientation, FLUIDITY_REGIME)
 
         # Special cases based on time
-        if regime == "fluidité" and 6 <= hour_start <= 9:
+        if regime == FLUIDITY_REGIME and 6 <= hour_start <= 9:
             return "mise_en_route"
 
         hour_end = end.hour
-        if regime in ("fluidité", "retombée") and 21 <= hour_end <= 23:
+        if regime in (FLUIDITY_REGIME, "retombée") and 21 <= hour_end <= 23:
             return "recentrage"
 
         return regime
@@ -853,7 +857,7 @@ class PublicTimeWindowPolicy:
                 result.append(e)
         return result
 
-    def _format_event_text(self, e: Any, vocabulary: PublicAstroVocabulary) -> str | None:
+    def _format_event_text(self, e: Any, vocabulary: AstroLabelFormatter) -> str | None:
         ev_type = getattr(e, "event_type", None)
         body = getattr(e, "body", None)
         target = getattr(e, "target", None)
@@ -875,7 +879,7 @@ class PublicTimeWindowPolicy:
             time_str = f" ({dt.strftime('%H:%M')})" if dt else ""
             return f"{planet} → {sign}{time_str}"
         if ev_type == "fixed_star_conjunction" and body and target:
-            return f"{vocabulary.planet(body)} ☌ {vocabulary.star(target)}"
+            return f"{vocabulary.planet(body)} ☌ {_resolve_fixed_star_name(e)}"
         if ev_type == "node_conjunction" and body and target:
             return f"{vocabulary.planet(body)} ☌ {vocabulary.planet(target)}"
         if ev_type == "progression_aspect" and body and aspect and target:
@@ -2038,6 +2042,45 @@ def _resolve_core_engine_output(engine_output: Any | None) -> Any | None:
     if engine_output is None:
         return None
     return getattr(engine_output, "core", engine_output)
+
+
+def _resolve_aspect_tonality(aspect_code: str | None, aspect_profiles: Any | None) -> str:
+    """Résout la tonalité publique depuis `AspectProfileData.energy_type`."""
+    if not aspect_code:
+        raise ValueError("Aspect tonality cannot be resolved without an aspect code")
+    profile = _lookup_aspect_profile(aspect_code, aspect_profiles)
+    if profile is None:
+        raise ValueError(f"Aspect profile missing for '{aspect_code}'")
+    energy_type = str(getattr(profile, "energy_type", "") or "").strip()
+    if not energy_type:
+        raise ValueError(f"Aspect profile '{aspect_code}' has no energy_type")
+    return energy_type
+
+
+def _lookup_aspect_profile(aspect_code: str, aspect_profiles: Any | None) -> Any | None:
+    """Retrouve un profil d'aspect dans un mapping runtime ou un contexte complet."""
+    profiles = getattr(aspect_profiles, "aspect_profiles", aspect_profiles)
+    if profiles is None:
+        return None
+    normalized = str(aspect_code).strip().lower()
+    for candidate in (aspect_code, normalized, normalized.upper(), normalized.title()):
+        try:
+            if candidate in profiles:
+                return profiles[candidate]
+        except TypeError:
+            return None
+    return None
+
+
+def _resolve_fixed_star_name(event: Any) -> str:
+    """Lit le nom d'étoile déjà porté par l'événement enrichi."""
+    metadata = getattr(event, "metadata", None)
+    if isinstance(metadata, dict):
+        display_name = str(metadata.get("star_display_name") or "").strip()
+        if display_name:
+            return display_name
+    target = str(getattr(event, "target", "") or "").strip()
+    return target
 
 
 def _resolve_editorial_output(engine_output: Any | None) -> Any | None:

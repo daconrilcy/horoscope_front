@@ -1,6 +1,6 @@
 # Story CS-182 remplacer-vocabulaire-public-astro-par-referentiels-db: Remplacer le vocabulaire public astro par les référentiels DB
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -54,7 +54,8 @@ Cette story appartient à un seul domaine :
   - Les tonalités d'aspects peuvent devenir plus précises, mais doivent provenir des champs `AspectProfileData` et rester déterministes.
   - Un référentiel incomplet doit échouer explicitement; aucun fallback local ne doit masquer l'absence de ligne DB.
 - Deletion allowed: yes
-- Replacement allowed: no; les wrappers legacy, alias, shims et mappings locaux de remplacement sont interdits.
+- Replacement allowed: no
+  Les wrappers legacy, alias, shims et mappings locaux de remplacement sont interdits.
   La migration des consommateurs vers les contrats canoniques DB/runtime est obligatoire.
 - User decision required if: une donnée encore consommée par le thème astral daily n'a aucune source dans les tables seedées ou dans `PredictionContext.aspect_profiles`.
 
@@ -135,7 +136,7 @@ Règles :
 
 ## 4g. Batch Migration Plan
 
-| Batch | Ancienne surface | Surface canonique | Consommateurs modifiés | Tests adaptés | Preuve no-shim | Condition bloquante |
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
 |---|---|---|---|---|---|---|
 | B1 fixed star runtime | `_STAR_DATA` et helpers d'étoiles | Contrat DB fixed star | `EnrichedAstroEventsBuilder` | tests enriched events | scan étoiles zéro hit | aucune source DB active |
 | B2 aspect tone | `_ASPECT_TONES` | champ `AspectProfileData` | foundation policy | tests de projection | scan zéro hit | champ ambigu |
@@ -250,37 +251,37 @@ After implementation:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Capturer le baseline et définir le contrat runtime (AC: AC1, AC6)
-  - [ ] Créer `public-astro-vocabulary-before.md` avec les imports, symboles, consommateurs et remplacement canonique.
-  - [ ] Identifier si le contrat fixed star doit vivre dans `prediction_schemas.py` ou dans un contrat runtime existant; ne pas créer de dépendance domain -> infra.
+- [x] Task 1 - Capturer le baseline et définir le contrat runtime (AC: AC1, AC6)
+  - [x] Créer `public-astro-vocabulary-before.md` avec les imports, symboles, consommateurs et remplacement canonique.
+  - [x] Identifier si le contrat fixed star doit vivre dans `prediction_schemas.py` ou dans un contrat runtime existant; ne pas créer de dépendance domain -> infra.
 
-- [ ] Task 2 - Charger les étoiles fixes depuis l'infra DB (AC: AC1)
-  - [ ] Ajouter une méthode repository qui retourne les étoiles fixes actives
+- [x] Task 2 - Charger les étoiles fixes depuis l'infra DB (AC: AC1)
+  - [x] Ajouter une méthode repository qui retourne les étoiles fixes actives
     avec `key`, `display_name`, `ecliptic_longitude_deg`.
-  - [ ] Ajouter les mots-clés localisés seulement si un test de projection public
+  - [x] Ajouter les mots-clés localisés seulement si un test de projection public
     existant prouve leur consommation.
-  - [ ] Brancher le chargement dans le contexte utilisé par le moteur daily sans requête SQL directe dans `domain/prediction`.
-  - [ ] Tester le tri, le filtrage `is_active` et la correspondance avec les seeds.
+  - [x] Brancher le chargement dans le contexte utilisé par le moteur daily sans requête SQL directe dans `domain/prediction`.
+  - [x] Tester le tri, le filtrage `is_active` et la correspondance avec les seeds.
 
-- [ ] Task 3 - Migrer les consommateurs fixed star (AC: AC2, AC4)
-  - [ ] Remplacer les appels à `fixed_star_longitudes()` dans `EnrichedAstroEventsBuilder`.
-  - [ ] Remplacer `vocabulary.star()` dans `PublicAstroDailyEventsPolicy` et `PublicTimeWindowPolicy` par le nom déjà porté par l'événement ou par le contrat runtime.
-  - [ ] Supprimer les fonctions legacy si aucun consommateur ne reste.
+- [x] Task 3 - Migrer les consommateurs fixed star (AC: AC2, AC4)
+  - [x] Remplacer les appels à `fixed_star_longitudes()` dans `EnrichedAstroEventsBuilder`.
+  - [x] Remplacer `vocabulary.star()` dans `PublicAstroDailyEventsPolicy` et `PublicTimeWindowPolicy` par le nom déjà porté par l'événement ou par le contrat runtime.
+  - [x] Supprimer les fonctions legacy si aucun consommateur ne reste.
 
-- [ ] Task 4 - Migrer les tonalités d'aspects (AC: AC3)
-  - [ ] Choisir explicitement le champ source `AspectProfileData` pour la tonalité publique et documenter la règle dans le test.
-  - [ ] Remplacer `vocabulary.aspect_tone(e.aspect)` par une résolution depuis le contexte/profil d'aspect.
-  - [ ] Vérifier que les aspects absents échouent ou produisent une absence contrôlée, jamais un fallback `"nuance"` local.
+- [x] Task 4 - Migrer les tonalités d'aspects (AC: AC3)
+  - [x] Choisir explicitement le champ source `AspectProfileData` pour la tonalité publique et documenter la règle dans le test.
+  - [x] Remplacer `vocabulary.aspect_tone(e.aspect)` par une résolution depuis le contexte/profil d'aspect.
+  - [x] Vérifier que les aspects absents échouent ou produisent une absence contrôlée, jamais un fallback `"nuance"` local.
 
-- [ ] Task 5 - Supprimer l'adaptateur legacy et renforcer les tests (AC: AC4, AC5, AC7)
-  - [ ] Supprimer ou vider de toute donnée DB-backed `public_astro_vocabulary.py`.
-  - [ ] Adapter les helpers de tests pour injecter le nouveau contrat de labels/runtime facts.
-  - [ ] Mettre à jour les guards et scans négatifs.
+- [x] Task 5 - Supprimer l'adaptateur legacy et renforcer les tests (AC: AC4, AC5, AC7)
+  - [x] Supprimer ou vider de toute donnée DB-backed `public_astro_vocabulary.py`.
+  - [x] Adapter les helpers de tests pour injecter le nouveau contrat de labels/runtime facts.
+  - [x] Mettre à jour les guards et scans négatifs.
 
-- [ ] Task 6 - Capturer l'état final et valider (AC: AC5, AC6, AC7)
-  - [ ] Créer `public-astro-vocabulary-after.md` et `runtime-reference-evidence.md`.
-  - [ ] Exécuter lint, tests ciblés et scans du plan de validation.
-  - [ ] Documenter toute décision de blocage plutôt que d'ajouter un fallback.
+- [x] Task 6 - Capturer l'état final et valider (AC: AC5, AC6, AC7)
+  - [x] Créer `public-astro-vocabulary-after.md` et `runtime-reference-evidence.md`.
+  - [x] Exécuter lint, tests ciblés et scans du plan de validation.
+  - [x] Documenter toute décision de blocage plutôt que d'ajouter un fallback.
 
 ## 9. Mandatory Reuse / DRY Constraints
 
@@ -378,7 +379,7 @@ Interdit :
 
 ## 15. External Usage Blocker
 
-Si un item est classé `external-active`, il ne doit pas être supprimé. L'agent de dev doit s'arrêter ou enregistrer une décision utilisateur explicite avec la preuve externe et le risque de suppression.
+If an item is classified `external-active`, it must not be deleted. The dev agent must stop or record an explicit user decision with the external proof and deletion risk.
 
 ## 16. Generated Contract Check
 
@@ -405,7 +406,7 @@ Codex doit inspecter avant toute édition :
 
 ## 18. Expected Files to Modify
 
-Fichiers probables :
+Likely files:
 
 - `backend/app/infra/db/repositories/prediction_schemas.py` - ajouter un contrat typé fixed star si aucun contrat existant ne convient.
 - `backend/app/infra/db/repositories/prediction_reference_repository.py` - charger les étoiles fixes actives dans le contexte prediction ou un contrat adjacent.
@@ -416,7 +417,7 @@ Fichiers probables :
 - `backend/app/domain/prediction/public_astro_vocabulary.py` - supprimer ou réduire à un contrat sans données DB-backed.
 - `backend/app/tests/unit/test_astrology_localization_guardrails.py` - bloquer les symboles legacy.
 
-Tests probables :
+Likely tests:
 
 - `backend/tests/unit/prediction/test_enriched_astro_events_builder.py`
 - `backend/tests/unit/prediction/test_public_astro_daily_events.py`
@@ -428,7 +429,7 @@ Tests probables :
 - `backend/app/tests/unit/test_astrology_localization_guardrails.py`
 - `backend/app/tests/unit/test_astrology_reference_catalog_guard.py`
 
-Fichiers qui ne doivent pas changer :
+Files not expected to change:
 
 - `frontend/**` - domaine backend uniquement.
 - `backend/migrations/versions/**` - les tables existent déjà selon la demande utilisateur.
@@ -437,7 +438,7 @@ Fichiers qui ne doivent pas changer :
 
 ## 19. Dependency Policy
 
-- Nouvelles dépendances : aucune
+- New dependencies: none
 - Changements de dépendances autorisés uniquement s'ils sont listés ici avec justification.
 
 ## 20. Validation Plan

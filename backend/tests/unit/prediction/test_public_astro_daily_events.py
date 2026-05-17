@@ -4,7 +4,7 @@ import pytest
 
 from app.domain.prediction.public_astro_daily_events import PublicAstroDailyEventsPolicy
 from app.domain.prediction.schemas import AstroEvent, V3EvidencePack
-from app.tests.helpers.prediction_astro_labels import make_test_public_astro_vocabulary
+from app.tests.helpers.prediction_astro_labels import make_test_astro_label_formatter
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ def test_extract_aspects(policy):
     )
 
     result = policy.build(
-        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+        None, evidence=evidence, astro_vocabulary=make_test_astro_label_formatter()
     )
     assert "Venus Trigone Saturne" in result["aspects"]
     assert "Mercure Sextile Jupiter" in result["aspects"]
@@ -81,7 +81,7 @@ def test_extract_ingress(policy):
     )
 
     result = policy.build(
-        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+        None, evidence=evidence, astro_vocabulary=make_test_astro_label_formatter()
     )
     assert len(result["ingresses"]) == 1
     assert result["ingresses"][0]["text"] == "Lune entre en Lion"
@@ -99,7 +99,7 @@ def test_fallback_none(policy):
         metadata={"astro_events": []},
     )
     result = policy.build(
-        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+        None, evidence=evidence, astro_vocabulary=make_test_astro_label_formatter()
     )
     assert result is None
 
@@ -130,7 +130,7 @@ def test_multi_aspects_limit(policy):
         metadata={"astro_events": events},
     )
     result = policy.build(
-        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+        None, evidence=evidence, astro_vocabulary=make_test_astro_label_formatter()
     )
     assert len(result["aspects"]) == 4
 
@@ -173,7 +173,7 @@ def test_self_aspects_excluded(policy):
     result = policy.build(
         None,
         evidence=evidence,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
     )
     assert len(result["aspects"]) == 1
     assert "Lune Carre Lune" not in result["aspects"]
@@ -236,6 +236,7 @@ def test_extract_enriched_events(policy):
             orb_deg=0.3,
             priority=45,
             base_weight=1.0,
+            metadata={"star_display_name": "Regulus"},
         ),
     ]
 
@@ -250,7 +251,7 @@ def test_extract_enriched_events(policy):
     )
 
     result = policy.build(
-        None, evidence=evidence, astro_vocabulary=make_test_public_astro_vocabulary()
+        None, evidence=evidence, astro_vocabulary=make_test_astro_label_formatter()
     )
 
     assert "Retour Solaire (votre anniversaire astrologique)" in result["returns"]

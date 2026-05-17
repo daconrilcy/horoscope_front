@@ -58,6 +58,7 @@ from app.infra.db.repositories.prediction_reference_repository import (
 )
 from app.infra.db.repositories.prediction_schemas import (
     CategoryData,
+    FixedStarData,
     HousePredictionProfile,
     PlanetProfileData,
     PredictionContext,
@@ -991,6 +992,97 @@ def test_load_prediction_context(db_session: Session):
     assert prediction_profile.house_number == 1
     assert prediction_profile.keywords == ("self",)
     assert prediction_profile.micro_note == "Note produit maison 1"
+
+
+def test_get_fixed_stars_returns_active_db_reference_rows(db_session: Session) -> None:
+    """Les étoiles fixes runtime proviennent des définitions DB actives."""
+    repo = PredictionReferenceRepository(db_session)
+    sign = AstralSignModel(code="leo", name="Leo")
+    source = AstralReferenceSourceModel(
+        key="fixed-star-source",
+        display_name="Fixed Star Source",
+        category="internal",
+        is_canonical=True,
+    )
+    constellation = AstralConstellationModel(
+        key="leo",
+        display_name="Leo",
+        latin_name="Leo",
+        abbreviation="Leo",
+        zodiacal=True,
+    )
+    epoch = AstralReferenceEpochModel(
+        key="j2000",
+        display_name="J2000",
+        description="Julian epoch 2000",
+        epoch_type="julian_epoch",
+        julian_year=2000.0,
+        is_standard=True,
+    )
+    category = AstralZodiacalReferenceSystemCategoryModel(
+        key="tropical",
+        display_name="Tropical",
+        description="Tropical",
+    )
+    zodiacal_system = AstralZodiacalReferenceSystemModel(
+        key="tropical",
+        display_name="Tropical",
+        category=category,
+        description="Tropical",
+        requires_ayanamsha=False,
+    )
+    keywords = AstralFixedStarKeywordModel(keywords_json='["royalty"]')
+    regulus = AstralFixedStarModel(key="regulus", display_name="Regulus")
+    algol = AstralFixedStarModel(key="algol", display_name="Algol")
+    db_session.add_all(
+        [
+            sign,
+            source,
+            constellation,
+            epoch,
+            category,
+            zodiacal_system,
+            keywords,
+            regulus,
+            algol,
+        ]
+    )
+    db_session.flush()
+    db_session.add_all(
+        [
+            AstralFixedStarDefinitionModel(
+                fixed_star_id=regulus.id,
+                constellation_id=constellation.id,
+                zodiacal_reference_system_id=zodiacal_system.id,
+                reference_epoch_id=epoch.id,
+                ecliptic_longitude_deg=150.0,
+                zodiac_sign_id=sign.id,
+                zodiac_degree=0.0,
+                astral_fixed_star_keywords_id=keywords.id,
+                source_id=source.id,
+                is_active=True,
+            ),
+            AstralFixedStarDefinitionModel(
+                fixed_star_id=algol.id,
+                constellation_id=constellation.id,
+                zodiacal_reference_system_id=zodiacal_system.id,
+                reference_epoch_id=epoch.id,
+                ecliptic_longitude_deg=56.0,
+                zodiac_sign_id=sign.id,
+                zodiac_degree=26.0,
+                astral_fixed_star_keywords_id=keywords.id,
+                source_id=source.id,
+                is_active=False,
+            ),
+        ]
+    )
+    db_session.commit()
+
+    fixed_stars = repo.get_fixed_stars()
+
+    assert fixed_stars == (
+        FixedStarData(key="regulus", display_name="Regulus", ecliptic_longitude_deg=150.0),
+    )
 
 
 def test_category_weight_queries_filter_joined_categories_by_reference_version(db_session: Session):

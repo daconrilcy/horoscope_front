@@ -10,10 +10,6 @@ import swisseph as swe
 from app.domain.astrology.planet_catalog import planet_runtime_codes, planet_swe_ids_by_runtime_code
 from app.domain.prediction.aspect_reference import aspect_orbs_by_code, major_aspect_angles
 from app.domain.prediction.context import LoadedPredictionContext
-from app.domain.prediction.public_astro_vocabulary import (
-    fixed_star_display_name,
-    fixed_star_longitudes,
-)
 from app.domain.prediction.schemas import AstroEvent, NatalChart, StepAstroState
 
 logger = logging.getLogger(__name__)
@@ -24,10 +20,7 @@ SWE_BODY_IDS = dict(planet_swe_ids_by_runtime_code())
 
 
 class EnrichedAstroEventsBuilder:
-    """
-    Builds enriched astrological events (Story 60.15).
-    Includes aspects, nodes, returns, progressions and fixed stars.
-    """
+    """Construit les événements enrichis daily à partir du contexte runtime."""
 
     def build(
         self,
@@ -78,7 +71,12 @@ class EnrichedAstroEventsBuilder:
         )
 
         # 5. Fixed Stars
-        events.extend(self._compute_fixed_star_conjunctions(astro_states))
+        events.extend(
+            self._compute_fixed_star_conjunctions(
+                astro_states,
+                fixed_stars=getattr(loaded_context.prediction_context, "fixed_stars", ()),
+            )
+        )
 
         return events
 
@@ -338,13 +336,18 @@ class EnrichedAstroEventsBuilder:
 
         return events
 
-    def _compute_fixed_star_conjunctions(self, steps: list[StepAstroState]) -> list[AstroEvent]:
+    def _compute_fixed_star_conjunctions(
+        self, steps: list[StepAstroState], *, fixed_stars: tuple[object, ...]
+    ) -> list[AstroEvent]:
+        """Détecte les conjonctions aux étoiles fixes chargées depuis la DB."""
         events: list[AstroEvent] = []
         best_orbs: dict[tuple[str, str], tuple[float, StepAstroState]] = {}
 
         for step in steps:
             for p_name, p_state in step.planets.items():
-                for star_key, star_longitude in fixed_star_longitudes().items():
+                for star in fixed_stars:
+                    star_key = str(getattr(star, "key"))
+                    star_longitude = float(getattr(star, "ecliptic_longitude_deg"))
                     dist = self._angular_distance(p_state.longitude, star_longitude)
                     if dist <= 1.0:  # AC5 orb 1.0
                         key = (p_name.lower(), star_key)
@@ -363,7 +366,13 @@ class EnrichedAstroEventsBuilder:
                     orb_deg=orb,
                     priority=45,
                     base_weight=0.0,  # display-only, no signal contribution
-                    metadata={"star_display_name": fixed_star_display_name(star_key)},
+                    metadata={
+                        "star_display_name": next(
+                            str(getattr(star, "display_name"))
+                            for star in fixed_stars
+                            if str(getattr(star, "key")) == star_key
+                        )
+                    },
                 )
             )
 

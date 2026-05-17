@@ -93,22 +93,21 @@ def test_domain_prediction_does_not_reintroduce_local_astro_label_mappings() -> 
     assert violations == []
 
 
-def test_prediction_aspect_tone_mapping_stays_classified_metadata_only() -> None:
-    """La seule carte d'aspect restante est une metadata de tonalite classee."""
-    source_path = DOMAIN_PREDICTION_ROOT / "public_astro_vocabulary.py"
-    tree = ast.parse(source_path.read_text(encoding="utf-8"))
-    aspect_assignments: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and "ASPECT" in target.id:
-                    aspect_assignments.add(target.id)
-        if (
-            isinstance(node, ast.AnnAssign)
-            and isinstance(node.target, ast.Name)
-            and "ASPECT" in node.target.id
-        ):
-            aspect_assignments.add(node.target.id)
+def test_public_astro_legacy_vocabulary_is_removed_from_prediction_runtime() -> None:
+    """Le vocabulaire astro public legacy ne doit plus exister dans le runtime."""
+    forbidden_fragments = {
+        "PublicAstro" + "Vocabulary",
+        "public_astro_" + "vocabulary",
+        "_STAR" + "_DATA",
+        "_ASPECT" + "_TONES",
+        "fixed_star_" + "longitudes",
+        "fixed_star_" + "display_name",
+    }
+    violations: list[str] = []
+    for path in DOMAIN_PREDICTION_ROOT.rglob("*.py"):
+        content = path.read_text(encoding="utf-8")
+        for fragment in forbidden_fragments:
+            if fragment in content:
+                violations.append(f"{path.relative_to(BACKEND_ROOT)}::{fragment}")
 
-    assert aspect_assignments <= {"_ASPECT_TONES"}
-    assert "_ASPECT_TONES" in source_path.read_text(encoding="utf-8")
+    assert violations == []

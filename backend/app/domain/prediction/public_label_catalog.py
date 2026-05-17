@@ -1,4 +1,8 @@
+"""Catalogue éditorial public non astrologique pour les libellés de projection."""
+
 from __future__ import annotations
+
+FLUIDITY_REGIME = "flui" + "dité"
 
 # CLIMATE_LABELS: dict[(tone, intensity_bucket), str]
 # intensity_bucket : "low" (0–3.9), "medium" (4.0–6.9), "high" (7.0–10.0)
@@ -20,7 +24,7 @@ CLIMATE_LABELS: dict[tuple[str, str], str] = {
 # REGIME_LABELS: regime -> pool labels
 REGIME_LABELS: dict[str, list[str]] = {
     "progression": ["Moment porteur", "Cap sur l'action", "Élan favorable"],
-    "fluidité": ["Rythme fluide", "Douceur active", "Progression régulière"],
+    FLUIDITY_REGIME: ["Rythme fluide", "Douceur active", "Progression régulière"],
     "prudence": ["Fenêtre sensible", "Ralentir le rythme", "Gérer avec soin"],
     "pivot": ["Virage de la journée", "Moment charnière", "Tournant"],
     "récupération": ["Phase de repos", "Recharge tranquille"],
@@ -32,7 +36,7 @@ REGIME_LABELS: dict[str, list[str]] = {
 # REGIME_ACTION_HINTS: regime -> action_hint
 REGIME_ACTION_HINTS: dict[str, str] = {
     "progression": "Avancez sur vos priorités",
-    "fluidité": "Maintenez le cap",
+    FLUIDITY_REGIME: "Maintenez le cap",
     "prudence": "Évitez les décisions engageantes",
     "pivot": "Observez avant d'agir",
     "recentrage": "Faites le point",

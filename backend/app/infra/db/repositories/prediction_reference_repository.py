@@ -24,6 +24,8 @@ from app.infra.db.models.reference import (
     AstralAspectFamilyModel,
     AstralAstrologicalRoleModel,
     AstralDignityTypeModel,
+    AstralFixedStarDefinitionModel,
+    AstralFixedStarModel,
     AstralPlanetDefinitionModel,
     AstralSignModel,
     AstralSpeedModel,
@@ -37,6 +39,7 @@ from app.infra.db.repositories.prediction_schemas import (
     AspectProfileData,
     AstroPointData,
     CategoryData,
+    FixedStarData,
     HouseAstrologyProfile,
     HouseCategoryWeightData,
     HousePredictionProfile,
@@ -401,6 +404,26 @@ class PredictionReferenceRepository:
             )
         return result
 
+    def get_fixed_stars(self) -> tuple[FixedStarData, ...]:
+        """Charge les étoiles fixes actives depuis les tables de référence."""
+        rows = self.db.execute(
+            select(AstralFixedStarModel, AstralFixedStarDefinitionModel)
+            .join(
+                AstralFixedStarDefinitionModel,
+                AstralFixedStarModel.id == AstralFixedStarDefinitionModel.fixed_star_id,
+            )
+            .where(AstralFixedStarDefinitionModel.is_active.is_(True))
+            .order_by(AstralFixedStarModel.key)
+        ).all()
+        return tuple(
+            FixedStarData(
+                key=star.key,
+                display_name=star.display_name,
+                ecliptic_longitude_deg=float(definition.ecliptic_longitude_deg),
+            )
+            for star, definition in rows
+        )
+
     def get_astro_points(self, reference_version_id: int) -> dict[str, AstroPointData]:
         rows = (
             self.db.execute(
@@ -473,6 +496,7 @@ class PredictionReferenceRepository:
             aspect_system_inheritance=self.get_aspect_system_inheritance(),
             astro_points=self.get_astro_points(reference_version_id),
             point_category_weights=self.get_point_category_weights(reference_version_id),
+            fixed_stars=self.get_fixed_stars(),
         )
 
     def _parse_keywords(self, raw: str | None) -> tuple[str, ...]:

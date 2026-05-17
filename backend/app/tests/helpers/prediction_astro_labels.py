@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.domain.prediction.public_astro_vocabulary import PublicAstroVocabulary
+from app.domain.prediction.astro_label_formatter import AstroLabelFormatter
 
 
 class TestPredictionAstroLabels:
@@ -57,6 +57,6 @@ def make_test_prediction_astro_labels() -> TestPredictionAstroLabels:
     return TestPredictionAstroLabels()
 
 
-def make_test_public_astro_vocabulary() -> PublicAstroVocabulary:
-    """Construit l'adaptateur public injecte dans les politiques de projection."""
-    return PublicAstroVocabulary(make_test_prediction_astro_labels())
+def make_test_astro_label_formatter() -> AstroLabelFormatter:
+    """Construit le formateur public injecté dans les politiques de projection."""
+    return AstroLabelFormatter(make_test_prediction_astro_labels())

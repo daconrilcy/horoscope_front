@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -193,6 +194,38 @@ async def test_assembler_integration(cat_map, sample_snapshot):
     assert "summary" in result
     assert len(result["categories"]) == 2
     assert len(result["turning_points"]) >= 1
+
+
+@pytest.mark.asyncio
+async def test_assembler_propagates_aspect_profiles_to_astro_foundation(cat_map, sample_snapshot):
+    """L'assembleur transmet les profils d'aspects DB-backed à la fondation astro."""
+    engine_output = SimpleNamespace(
+        core=SimpleNamespace(
+            events=[
+                SimpleNamespace(
+                    event_type="aspect",
+                    body="mars",
+                    target="venus",
+                    aspect="square",
+                    priority=60,
+                    orb_deg=0.4,
+                )
+            ]
+        )
+    )
+
+    result = await PublicPredictionAssembler().assemble(
+        snapshot=sample_snapshot,
+        cat_id_to_code=cat_map,
+        engine_output=engine_output,
+        reference_version="2.0.0",
+        ruleset_version="2.0.0",
+        was_reused=False,
+        astro_labels=make_test_prediction_astro_labels(),
+        aspect_profiles={"square": SimpleNamespace(energy_type="friction_activation")},
+    )
+
+    assert result["astro_foundation"]["dominant_aspects"][0]["tonality"] == ("friction_activation")
 
 
 @pytest.mark.asyncio

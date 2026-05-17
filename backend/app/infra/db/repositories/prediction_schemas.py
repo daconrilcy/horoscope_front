@@ -16,6 +16,7 @@ __all__ = [
     "CalibrationData",
     "CategoryData",
     "EventTypeData",
+    "FixedStarData",
     "HouseAstrologyProfile",
     "HouseCategoryWeightData",
     "HousePredictionProfile",
@@ -184,6 +185,15 @@ class EventTypeData:
 
 
 @dataclass(frozen=True)
+class FixedStarData:
+    """Étoile fixe active exposée au moteur daily depuis le référentiel DB."""
+
+    key: str
+    display_name: str
+    ecliptic_longitude_deg: float
+
+
+@dataclass(frozen=True)
 class PredictionContext:
     categories: tuple[CategoryData, ...]
     planet_profiles: Mapping[str, PlanetProfileData]
@@ -197,6 +207,7 @@ class PredictionContext:
     point_category_weights: tuple[PointCategoryWeightData, ...]
     aspect_orb_rules: tuple[AspectOrbRuleData, ...] = ()
     aspect_system_inheritance: Mapping[str, str | None] | None = None
+    fixed_stars: tuple[FixedStarData, ...] = ()
 
 
 @dataclass(frozen=True)

@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from types import SimpleNamespace
 
 import pytest
 
@@ -105,6 +106,40 @@ def test_compute_progressions(builder):
         MAJOR_ASPECT_ORBS,
     )
     assert isinstance(events, list)
+
+
+def test_compute_fixed_star_conjunctions_uses_runtime_reference(builder):
+    """Les conjonctions fixed star lisent le contrat runtime injecté."""
+    p_moon = PlanetState(
+        code="moon",
+        longitude=150.2,
+        speed_lon=13.0,
+        is_retrograde=False,
+        sign_code=5,
+        natal_house_transited=5,
+    )
+    state = StepAstroState(
+        ut_jd=2461119.5,
+        local_time=datetime(2026, 3, 19, 12, 0),
+        ascendant_deg=0.0,
+        mc_deg=0.0,
+        house_cusps=[0.0] * 12,
+        planets={"Moon": p_moon},
+        house_system_effective="placidus",
+    )
+    stars = (
+        SimpleNamespace(
+            key="regulus",
+            display_name="Regulus",
+            ecliptic_longitude_deg=150.0,
+        ),
+    )
+
+    events = builder._compute_fixed_star_conjunctions([state], fixed_stars=stars)
+
+    assert len(events) == 1
+    assert events[0].target == "regulus"
+    assert events[0].metadata == {"star_display_name": "Regulus"}
 
 
 def test_angular_distance(builder):

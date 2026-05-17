@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 from app.domain.prediction.public_projection import PublicTimeWindowPolicy
-from app.tests.helpers.prediction_astro_labels import make_test_public_astro_vocabulary
+from app.tests.helpers.prediction_astro_labels import make_test_astro_label_formatter
 
 
 def test_time_window_resolve_regime_progression():
@@ -74,7 +74,7 @@ def test_time_window_build_four_periods():
         snapshot,
         [],
         evidence=evidence,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
     )
 
     assert len(result) == 4
@@ -98,7 +98,7 @@ def test_time_window_empty_blocks_defaults():
         [],
         evidence=None,
         engine_output=None,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
     )
     assert len(result) == 4
     # Default regime for Matin should be mise_en_route according to dev notes

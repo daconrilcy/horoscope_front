@@ -4,7 +4,13 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from app.domain.prediction.public_projection import PublicAstroFoundationPolicy
-from app.tests.helpers.prediction_astro_labels import make_test_public_astro_vocabulary
+from app.tests.helpers.prediction_astro_labels import make_test_astro_label_formatter
+
+ASPECT_PROFILES = {
+    "conjunction": SimpleNamespace(energy_type="fusion_intensification"),
+    "square": SimpleNamespace(energy_type="friction_activation"),
+    "trine": SimpleNamespace(energy_type="harmonious_flow"),
+}
 
 
 def test_astro_foundation_key_movements_limit():
@@ -30,7 +36,8 @@ def test_astro_foundation_key_movements_limit():
         day_climate=day_climate,
         domain_ranking=[],
         evidence=evidence,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
+        aspect_profiles=ASPECT_PROFILES,
     )
 
     assert len(result["key_movements"]) == 5
@@ -44,7 +51,7 @@ def test_astro_foundation_tonality():
     e.body = "mars"
     e.event_type = "aspect"
     e.priority = 60
-    e.aspect = "square"  # tonality: ajustement
+    e.aspect = "square"
     e.target = "venus"
     e.orb_deg = 1.0
 
@@ -57,10 +64,11 @@ def test_astro_foundation_tonality():
         day_climate=day_climate,
         domain_ranking=[],
         evidence=evidence,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
+        aspect_profiles=ASPECT_PROFILES,
     )
 
-    assert result["dominant_aspects"][0]["tonality"] == "ajustement"
+    assert result["dominant_aspects"][0]["tonality"] == "friction_activation"
 
 
 def test_astro_foundation_activated_houses():
@@ -83,7 +91,7 @@ def test_astro_foundation_activated_houses():
         day_climate=day_climate,
         domain_ranking=domain_ranking,
         evidence=evidence,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
     )
 
     assert result["activated_houses"][0]["house_number"] == 10
@@ -107,7 +115,8 @@ def test_astro_foundation_reads_detected_events_from_engine_output():
         day_climate={"label": "Stable"},
         domain_ranking=[],
         engine_output=engine_output,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
+        aspect_profiles=ASPECT_PROFILES,
     )
 
     assert result is not None
@@ -142,9 +151,10 @@ def test_astro_foundation_recognizes_all_exact_aspect_event_types():
         day_climate={"label": "Stable"},
         domain_ranking=[],
         engine_output=engine_output,
-        astro_vocabulary=make_test_public_astro_vocabulary(),
+        astro_vocabulary=make_test_astro_label_formatter(),
+        aspect_profiles=ASPECT_PROFILES,
     )
 
     assert [movement["event_type"] for movement in result["key_movements"]] == exact_types
     assert len(result["dominant_aspects"]) == len(exact_types)
-    assert {aspect["tonality"] for aspect in result["dominant_aspects"]} == {"fluidité"}
+    assert {aspect["tonality"] for aspect in result["dominant_aspects"]} == {"harmonious_flow"}

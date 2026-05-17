@@ -18,6 +18,7 @@ from app.infra.db.repositories.prediction_schemas import (
     CalibrationData,
     CategoryData,
     EventTypeData,
+    FixedStarData,
     HouseAstrologyProfile,
     HouseCategoryWeightData,
     HousePredictionProfile,
@@ -235,6 +236,7 @@ class PredictionContextLoader:
                 self._freeze_point_category_weight(weight)
                 for weight in pred_ctx.point_category_weights
             ),
+            fixed_stars=tuple(self._freeze_fixed_star(star) for star in pred_ctx.fixed_stars),
         )
 
     def _freeze_ruleset_context(self, ruleset_ctx: RulesetContext) -> RulesetContext:
@@ -336,8 +338,13 @@ class PredictionContextLoader:
             code=profile.code,
             intensity_weight=profile.intensity_weight,
             default_valence=profile.default_valence,
+            interpretive_valence=profile.interpretive_valence,
+            polarity_score=profile.polarity_score,
+            energy_type=profile.energy_type,
             orb_multiplier=profile.orb_multiplier,
             phase_sensitive=profile.phase_sensitive,
+            phase_behavior=profile.phase_behavior,
+            strength_thresholds=profile.strength_thresholds,
             angle=profile.angle,
             family_code=profile.family_code,
         )
@@ -359,6 +366,14 @@ class PredictionContextLoader:
             category_id=weight.category_id,
             category_code=weight.category_code,
             weight=weight.weight,
+        )
+
+    def _freeze_fixed_star(self, star: FixedStarData) -> FixedStarData:
+        """Fige une étoile fixe active issue du référentiel DB."""
+        return FixedStarData(
+            key=star.key,
+            display_name=star.display_name,
+            ecliptic_longitude_deg=star.ecliptic_longitude_deg,
         )
 
     def _freeze_ruleset(self, ruleset: RulesetData) -> RulesetData:

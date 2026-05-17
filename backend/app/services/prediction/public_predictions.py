@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.domain.prediction.persisted_snapshot import PersistedPredictionSnapshot
+from app.infra.db.models.reference import ReferenceVersionModel
+from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.services.llm_generation.horoscope_daily.narration_service import (
     generate_horoscope_narration_via_gateway,
 )
@@ -18,6 +20,18 @@ from app.services.prediction.types import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def load_public_projection_aspect_profiles(db: Session, reference_version: str) -> dict[str, Any]:
+    """Charge les profils d'aspects nécessaires à la projection publique."""
+    reference = (
+        db.query(ReferenceVersionModel)
+        .filter(ReferenceVersionModel.version == reference_version)
+        .one_or_none()
+    )
+    if reference is None:
+        raise ValueError(f"Reference version '{reference_version}' not found")
+    return PredictionReferenceRepository(db).get_aspect_profiles(reference.id)
 
 
 def _resolve_daily_prediction_service_error(

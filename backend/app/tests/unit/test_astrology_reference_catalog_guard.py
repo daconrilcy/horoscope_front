@@ -31,6 +31,8 @@ def _forbidden_symbols() -> set[str]:
         "HOUSE_SYSTEM_REFERENCE_" + "ROWS",
         "VALENCE_BY_" + "ASPECT",
         "ENERGY_BY_" + "ASPECT",
+        "_STAR" + "_DATA",
+        "_ASPECT" + "_TONES",
         "planet_" + "rows",
         "sign_" + "rows",
         "dignity_type_" + "rows",
@@ -47,6 +49,8 @@ def _forbidden_helpers() -> set[str]:
         "_get_swe_" + "module",
         "_profile_" + "list",
         "_require_" + "list",
+        "fixed_star_" + "longitudes",
+        "fixed_star_" + "display_name",
     }
 
 

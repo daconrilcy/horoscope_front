@@ -7,9 +7,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from app.domain.astrology.planet_catalog import planet_codes
-from app.domain.prediction.public_astro_vocabulary import (
-    PublicAstroVocabulary,
-)
+from app.domain.prediction.astro_label_formatter import AstroLabelFormatter
 
 if TYPE_CHECKING:
     from .persisted_snapshot import PersistedPredictionSnapshot
@@ -61,7 +59,7 @@ class PublicAstroDailyEventsPolicy:
         self,
         snapshot: PersistedPredictionSnapshot,
         *,
-        astro_vocabulary: PublicAstroVocabulary,
+        astro_vocabulary: AstroLabelFormatter,
         engine_output: Any | None = None,
         evidence: V3EvidencePack | None = None,
     ) -> dict[str, Any] | None:
@@ -164,7 +162,7 @@ class PublicAstroDailyEventsPolicy:
         return found
 
     def _extract_progressions(
-        self, events: list[Any], vocabulary: PublicAstroVocabulary
+        self, events: list[Any], vocabulary: AstroLabelFormatter
     ) -> list[str]:
         # AC9: Progressions Secondaires
         found = []
@@ -176,7 +174,7 @@ class PublicAstroDailyEventsPolicy:
                 found.append(f"{p_name} {asp_label} {target_name} (progression)")
         return found
 
-    def _extract_nodes(self, events: list[Any], vocabulary: PublicAstroVocabulary) -> list[str]:
+    def _extract_nodes(self, events: list[Any], vocabulary: AstroLabelFormatter) -> list[str]:
         # AC10: Nœuds Lunaires
         found = []
         for e in events:
@@ -187,9 +185,7 @@ class PublicAstroDailyEventsPolicy:
                 found.append(f"{p_name} {conjunction} {target_name}")
         return found
 
-    def _extract_sky_aspects(
-        self, events: list[Any], vocabulary: PublicAstroVocabulary
-    ) -> list[str]:
+    def _extract_sky_aspects(self, events: list[Any], vocabulary: AstroLabelFormatter) -> list[str]:
         # AC11: Aspects du Ciel (Sky-to-Sky)
         found = []
         for e in events:
@@ -200,17 +196,24 @@ class PublicAstroDailyEventsPolicy:
                 found.append(f"{p1} {asp} {p2}")
         return found
 
-    def _extract_fixed_stars(
-        self, events: list[Any], vocabulary: PublicAstroVocabulary
-    ) -> list[str]:
+    def _extract_fixed_stars(self, events: list[Any], vocabulary: AstroLabelFormatter) -> list[str]:
         # AC12: Étoiles Fixes
         found = []
         for e in events:
             if getattr(e, "event_type", None) == "fixed_star_conjunction":
                 p_name = vocabulary.planet(e.body)
-                star_name = vocabulary.star(e.target)
+                star_name = self._resolve_fixed_star_name(e)
                 found.append(f"{p_name} conjoint à l'étoile {star_name}")
         return found
+
+    def _resolve_fixed_star_name(self, event: Any) -> str:
+        """Lit le nom d'étoile déjà porté par l'événement enrichi."""
+        metadata = getattr(event, "metadata", None)
+        if isinstance(metadata, dict):
+            display_name = str(metadata.get("star_display_name") or "").strip()
+            if display_name:
+                return display_name
+        return str(getattr(event, "target", "") or "").strip()
 
     def _resolve_astro_events(
         self,
@@ -225,7 +228,7 @@ class PublicAstroDailyEventsPolicy:
         snapshot: PersistedPredictionSnapshot,
         events: list[Any],
         evidence: V3EvidencePack | None,
-        vocabulary: PublicAstroVocabulary,
+        vocabulary: AstroLabelFormatter,
     ) -> list[str] | None:
         targets = PUBLIC_POSITION_PLANET_CODES
         positions: dict[str, str] = {}
