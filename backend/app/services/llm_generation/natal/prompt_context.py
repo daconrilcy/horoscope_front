@@ -7,6 +7,7 @@ from app.services.llm_generation.shared.natal_context import (
     _detect_degraded_mode,
     _format_longitude,
     _longitude_to_sign,
+    build_astral_point_interpretation_context,
     build_chat_natal_hint,
     build_natal_chart_summary,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "_detect_degraded_mode",
     "_format_longitude",
     "_longitude_to_sign",
+    "build_astral_point_interpretation_context",
     "build_chat_natal_hint",
     "build_natal_chart_summary",
 ]

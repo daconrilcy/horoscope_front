@@ -117,3 +117,32 @@ def test_natal_result_exposes_points_collection_without_flat_point_fields() -> N
     assert "true_node" not in field_names
     assert "mean_node" not in field_names
     assert "lilith" not in field_names
+    assert "summary" not in field_names
+    assert "keywords" not in field_names
+    assert "micro_note" not in field_names
+    assert "prompt_hints" not in field_names
+
+
+def test_calculation_modules_do_not_import_astral_point_interpretation_services() -> None:
+    """Le calcul natal ne doit pas dépendre de l'éditorial des points astraux."""
+    forbidden = (
+        "AstralPointInterpretationProfileModel",
+        "AstralPointInterpretationKeywordModel",
+        "AstralPointInterpretationRepository",
+        "AstralPointInterpretationService",
+    )
+    paths = [
+        BACKEND_ROOT / "app/domain/astrology/natal_calculation.py",
+        BACKEND_ROOT / "app/domain/astrology/astral_point_calculation_resolver.py",
+        BACKEND_ROOT / "app/domain/astrology/ephemeris_provider.py",
+        *(BACKEND_ROOT / "app/domain/astrology/calculators").rglob("*.py"),
+    ]
+    hits: list[str] = []
+
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        for pattern in forbidden:
+            if pattern in text:
+                hits.append(f"{path}:{pattern}")
+
+    assert hits == []

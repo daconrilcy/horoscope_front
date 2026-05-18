@@ -23,6 +23,9 @@ from app.infra.db.models.reference import LanguageModel
 class AstralPointInterpretationRepository:
     """Charge les profils interprétatifs utilisables par les services natals."""
 
+    DEFAULT_LANGUAGE_CODE = "en"
+    DEFAULT_TRADITION = "modern_western"
+
     def __init__(self, db: Session) -> None:
         self.db = db
 
@@ -33,21 +36,54 @@ class AstralPointInterpretationRepository:
         language_code: str = "en",
         tradition: str = "modern_western",
     ) -> AstralPointInterpretationProfile | None:
-        """Charge le profil le plus précis pour une position de point astral."""
-        exact_profile = self._load_profile(
-            point_code=point_position.code,
+        """Charge le profil selon la cascade stricte exact, générique, défauts."""
+        for candidate in self._profile_candidates(
             variant_code=point_position.variant_code,
             language_code=language_code,
             tradition=tradition,
-        )
-        if exact_profile is not None:
-            return exact_profile
-        return self._load_profile(
-            point_code=point_position.code,
-            variant_code=None,
-            language_code=language_code,
-            tradition=tradition,
-        )
+        ):
+            profile = self._load_profile(
+                point_code=point_position.code,
+                variant_code=candidate["variant_code"],
+                language_code=candidate["language_code"],
+                tradition=candidate["tradition"],
+            )
+            if profile is not None:
+                return profile
+        return None
+
+    def _profile_candidates(
+        self,
+        *,
+        variant_code: str | None,
+        language_code: str,
+        tradition: str,
+    ) -> tuple[dict[str, str | None], ...]:
+        """Retourne les candidats de résolution sans dupliquer les couples."""
+        normalized_language = self._normalize_language_code(language_code)
+        candidates: list[dict[str, str | None]] = []
+        for candidate_tradition, candidate_language in (
+            (tradition, normalized_language),
+            (self.DEFAULT_TRADITION, normalized_language),
+            (tradition, self.DEFAULT_LANGUAGE_CODE),
+            (self.DEFAULT_TRADITION, self.DEFAULT_LANGUAGE_CODE),
+        ):
+            for candidate_variant in (variant_code, None):
+                candidate = {
+                    "variant_code": candidate_variant,
+                    "language_code": candidate_language,
+                    "tradition": candidate_tradition,
+                }
+                if candidate not in candidates:
+                    candidates.append(candidate)
+        return tuple(candidates)
+
+    def _normalize_language_code(self, language_code: str) -> str:
+        """Ramène une locale applicative vers le code langue stocké en DB."""
+        normalized = language_code.strip().lower().replace("_", "-")
+        if "-" in normalized:
+            return normalized.split("-", maxsplit=1)[0]
+        return normalized or self.DEFAULT_LANGUAGE_CODE
 
     def _load_profile(
         self,

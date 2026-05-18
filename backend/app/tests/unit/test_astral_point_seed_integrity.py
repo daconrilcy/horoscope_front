@@ -55,3 +55,34 @@ def test_astral_point_aliases_reference_existing_variants(db_session) -> None:
         alias.variant_code is None or (alias.astral_point_code, alias.variant_code) in variant_keys
         for alias in aliases
     )
+
+
+def test_astral_point_interpretation_profiles_reference_points_and_keyword_sets(
+    db_session,
+) -> None:
+    """Les profils éditoriaux référencent uniquement des points et keywords seedés."""
+    ReferenceDataService.seed_reference_version(db_session, version="1.0.0")
+
+    point_codes = {row.code for row in db_session.scalars(select(AstralPointModel)).all()}
+    keyword_ids = {
+        row.id for row in db_session.scalars(select(AstralPointInterpretationKeywordModel)).all()
+    }
+    profiles = db_session.scalars(select(AstralPointInterpretationProfileModel)).all()
+
+    assert profiles
+    assert all(profile.astral_point_code in point_codes for profile in profiles)
+    assert all(profile.keyword_set_id in keyword_ids for profile in profiles)
+
+
+def test_each_astral_point_has_generic_interpretation_profile(db_session) -> None:
+    """Chaque point astral seedé possède un profil générique sans variante."""
+    ReferenceDataService.seed_reference_version(db_session, version="1.0.0")
+
+    point_codes = {row.code for row in db_session.scalars(select(AstralPointModel)).all()}
+    generic_profile_codes = {
+        row.astral_point_code
+        for row in db_session.scalars(select(AstralPointInterpretationProfileModel)).all()
+        if row.variant_code is None
+    }
+
+    assert generic_profile_codes == point_codes

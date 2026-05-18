@@ -15,6 +15,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
+from app.domain.astrology.interpretation.astral_point_interpretation import (
+    AstralPointInterpretationService,
+)
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.prompting.schemas import (
@@ -32,6 +35,9 @@ from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
     UserNatalInterpretationModel,
 )
+from app.infra.db.repositories.astral_point_interpretation_repository import (
+    AstralPointInterpretationRepository,
+)
 from app.infra.observability.metrics import observe_duration
 from app.services.api_contracts.public.natal_interpretation import (
     InterpretationMeta,
@@ -45,7 +51,10 @@ from app.services.chart.json_builder import (
     build_enriched_evidence_catalog,
 )
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
-from app.services.llm_generation.natal.prompt_context import _detect_degraded_mode
+from app.services.llm_generation.natal.prompt_context import (
+    _detect_degraded_mode,
+    build_astral_point_interpretation_context,
+)
 from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
@@ -482,6 +491,16 @@ class NatalInterpretationService:
         )
         chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
         evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
+        interpreted_astral_points = ()
+        if natal_result.points:
+            interpreted_astral_points = AstralPointInterpretationService(
+                AstralPointInterpretationRepository(db)
+            ).build_context(
+                natal_result,
+                language_code=locale,
+            )
+        astral_point_context = build_astral_point_interpretation_context(interpreted_astral_points)
+        astro_context = json.dumps(astral_point_context, ensure_ascii=False)
 
         # 3. Use case selection
         if level == "complete" and variant_code == "free_short":
@@ -493,6 +512,7 @@ class NatalInterpretationService:
                 birth_profile=birth_profile,
                 chart_json_dict=chart_json_dict,
                 evidence_catalog=evidence_catalog,
+                astro_context=astro_context,
                 locale=locale,
                 request_id=request_id,
                 trace_id=trace_id,
@@ -542,7 +562,7 @@ class NatalInterpretationService:
             plan=user_plan,
             validation_strict=level == "complete",
             question=effective_question,
-            astro_context=None,  # Specific natal astro_context if any
+            astro_context=astro_context,
             module=module,
             variant_code=variant_code,
             user_id=user_id,
@@ -755,6 +775,7 @@ class NatalInterpretationService:
         birth_profile: UserBirthProfileData,
         chart_json_dict: dict,
         evidence_catalog: list,
+        astro_context: str,
         locale: str,
         request_id: str,
         trace_id: str,
@@ -787,7 +808,7 @@ class NatalInterpretationService:
             plan=user_plan,
             validation_strict=False,
             question=None,
-            astro_context=None,
+            astro_context=astro_context,
             module=None,
             variant_code="free_short",
             user_id=user_id,

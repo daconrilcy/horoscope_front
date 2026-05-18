@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.domain.astrology.natal_calculation import NatalAstralPointPosition
 from app.domain.llm.prompting.schemas import AstroResponseV1
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.services.api_contracts.public.natal_interpretation import (
@@ -467,6 +469,112 @@ class TestNatalInterpretationService:
             )
 
         assert mock_build_chart_json.call_args.args[2] == "no_time"
+
+    @pytest.mark.asyncio
+    async def test_interpret_sends_astral_point_interpretations_as_separate_context(self) -> None:
+        """Le prompt natal reçoit les points interprétés hors du payload natal brut."""
+        natal_result = _make_natal_result().model_copy(
+            update={
+                "points": [
+                    NatalAstralPointPosition(
+                        code="north_node",
+                        variant_code="true",
+                        longitude=123.45,
+                        sign="leo",
+                        degree_in_sign=3.45,
+                        house=8,
+                        is_physical_body=False,
+                    )
+                ]
+            }
+        )
+        birth_profile = _make_birth_profile()
+        db = MagicMock()
+        db.execute.return_value.scalars.return_value.all.return_value = []
+        db.get.return_value = None
+        captured_input = None
+
+        class FakeInterpretedPoint:
+            """Point interprété minimal pour vérifier le contexte transmis au LLM."""
+
+            def to_prompt_context(self) -> dict[str, object]:
+                """Retourne la forme sérialisée attendue par le contexte LLM."""
+                return {
+                    "code": "north_node",
+                    "variant_code": "true",
+                    "sign": "leo",
+                    "house": 8,
+                    "title": "North Node",
+                    "summary": "Direction of evolution.",
+                    "micro_note": None,
+                    "core_keywords": ["growth"],
+                    "shadow_keywords": ["fear of change"],
+                    "prompt_hints": ["learning"],
+                }
+
+        class FakeAstralPointInterpretationService:
+            """Service de test isolant l'appel LLM du repository SQLAlchemy."""
+
+            def __init__(self, repository) -> None:
+                self.repository = repository
+
+            def build_context(self, natal_result, *, language_code: str):
+                """Retourne un contexte stable sans lire la DB de test."""
+                assert language_code == "fr-FR"
+                assert natal_result.points[0].code == "north_node"
+                return (FakeInterpretedPoint(),)
+
+        async def fake_generate_natal_interpretation(natal_input, db=None):
+            nonlocal captured_input
+            captured_input = natal_input
+            return _make_gateway_result("natal_interpretation")
+
+        with (
+            patch(
+                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+                return_value={"planets": []},
+            ),
+            patch(
+                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+                return_value=[],
+            ),
+            patch(
+                "app.services.llm_generation.natal.interpretation_service."
+                "AstralPointInterpretationService",
+                FakeAstralPointInterpretationService,
+            ),
+            patch(
+                "app.services.entitlement.effective_entitlement_resolver_service."
+                "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
+                return_value=MagicMock(plan_code="premium"),
+            ),
+            patch.object(NatalInterpretationService, "_record_token_usage"),
+            patch(
+                "app.services.llm_generation.natal.interpretation_service."
+                "AIEngineAdapter.generate_natal_interpretation",
+                new=AsyncMock(side_effect=fake_generate_natal_interpretation),
+            ),
+        ):
+            await NatalInterpretationService.interpret(
+                db=db,
+                user_id=1,
+                chart_id="chart-123",
+                natal_result=natal_result,
+                birth_profile=birth_profile,
+                level="complete",
+                persona_id=None,
+                locale="fr-FR",
+                question=None,
+                request_id="req-astral-point-context",
+                trace_id="trace-astral-point-context",
+            )
+
+        assert captured_input is not None
+        astro_context = json.loads(captured_input.astro_context)
+        assert astro_context == {
+            "astral_point_interpretations": [FakeInterpretedPoint().to_prompt_context()]
+        }
+        assert "astral_point_interpretations" not in captured_input.natal_data
 
     @pytest.mark.asyncio
     async def test_interpret_chart_timeout_error(self) -> None:

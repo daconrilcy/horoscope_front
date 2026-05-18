@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.services.llm_generation.shared.natal_context import (
+    build_astral_point_interpretation_context,
     build_natal_chart_summary_with_defaults,
     build_user_natal_chart_summary_context,
     detect_degraded_natal_mode,
@@ -69,3 +70,26 @@ def test_build_user_natal_chart_summary_context_returns_none_when_chart_missing(
     )
 
     assert result is None
+
+
+def test_build_astral_point_interpretation_context_serializes_separate_section() -> None:
+    """Le contexte LLM expose les points interprétés dans une section dédiée."""
+    interpreted_point = SimpleNamespace(
+        to_prompt_context=lambda: {
+            "code": "north_node",
+            "variant_code": "true",
+            "sign": "leo",
+            "house": 8,
+            "title": "North Node",
+            "summary": "Direction of evolution.",
+            "micro_note": None,
+            "core_keywords": ["growth"],
+            "shadow_keywords": ["fear of change"],
+            "prompt_hints": ["learning"],
+        }
+    )
+
+    context = build_astral_point_interpretation_context((interpreted_point,))
+
+    assert set(context) == {"astral_point_interpretations"}
+    assert context["astral_point_interpretations"] == [interpreted_point.to_prompt_context()]

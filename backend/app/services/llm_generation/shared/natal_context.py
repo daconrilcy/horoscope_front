@@ -15,6 +15,9 @@ from app.services.user_profile.natal_chart_service import (
 )
 
 if TYPE_CHECKING:
+    from app.domain.astrology.interpretation.astral_point_interpretation import (
+        InterpretedAstralPoint,
+    )
     from app.domain.astrology.natal_calculation import NatalResult
 
 logger = logging.getLogger(__name__)
@@ -127,6 +130,17 @@ def build_natal_chart_summary(
     return "\n".join(lines)
 
 
+def build_astral_point_interpretation_context(
+    interpreted_points: tuple["InterpretedAstralPoint", ...],
+) -> dict[str, object]:
+    """Construit la section séparée des points astraux interprétés pour le LLM."""
+    return {
+        "astral_point_interpretations": [
+            interpreted_point.to_prompt_context() for interpreted_point in interpreted_points
+        ]
+    }
+
+
 def build_chat_natal_hint(
     natal_result: "NatalResult",
     degraded_mode: str | None = None,
@@ -222,6 +236,7 @@ __all__ = [
     "_format_longitude",
     "_longitude_to_sign",
     "build_chat_natal_hint",
+    "build_astral_point_interpretation_context",
     "build_natal_chart_summary",
     "build_natal_chart_summary_with_defaults",
     "build_user_natal_chart_summary_context",
