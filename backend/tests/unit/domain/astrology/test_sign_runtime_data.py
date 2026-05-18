@@ -18,6 +18,9 @@ def test_sign_runtime_contract_accepts_complete_shape() -> None:
         dominant=True,
         active_dignities=(),
         reasons=(SignDominanceReason.OCCUPANTS_PRESENT,),
+        element="fire",
+        modality="cardinal",
+        polarity="yang",
         synthesis_role="dominant_focus",
     )
 
@@ -35,4 +38,23 @@ def test_sign_runtime_contract_rejects_unbounded_weight() -> None:
             dominant=False,
             active_dignities=(),
             reasons=(),
+            element="fire",
+            modality="cardinal",
+            polarity="yang",
+        )
+
+
+def test_sign_runtime_contract_rejects_missing_profile() -> None:
+    """Le contrat refuse un profil de signe incomplet."""
+    with pytest.raises(ValueError, match="element"):
+        SignRuntimeData(
+            sign="aries",
+            occupants=(),
+            weight=0.0,
+            dominant=False,
+            active_dignities=(),
+            reasons=(),
+            element="",
+            modality="cardinal",
+            polarity="yang",
         )

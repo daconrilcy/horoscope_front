@@ -40,9 +40,18 @@ class SignReferenceData:
 
     code: str
     name: str
-    element: str | None = None
-    modality: str | None = None
-    polarity: str | None = None
+    element: str
+    modality: str
+    polarity: str
+
+    def __post_init__(self) -> None:
+        """Valide que le profil structurel est explicitement source."""
+        for field_name in ("code", "name", "element", "modality", "polarity"):
+            value = getattr(self, field_name)
+            if not value.strip():
+                raise ValueError(f"sign reference requires {field_name}")
+            if value.strip().lower() == "unknown":
+                raise ValueError(f"sign reference rejects unknown {field_name}")
 
 
 @dataclass(frozen=True, slots=True)

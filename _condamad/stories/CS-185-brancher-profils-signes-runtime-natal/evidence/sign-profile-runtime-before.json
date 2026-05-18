@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "signs": [
+    {
+      "code": "aries",
+      "name": "Aries",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "taurus",
+      "name": "Taurus",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "gemini",
+      "name": "Gemini",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "cancer",
+      "name": "Cancer",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "leo",
+      "name": "Leo",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "virgo",
+      "name": "Virgo",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "libra",
+      "name": "Libra",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "scorpio",
+      "name": "Scorpio",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "sagittarius",
+      "name": "Sagittarius",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "capricorn",
+      "name": "Capricorn",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "aquarius",
+      "name": "Aquarius",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    },
+    {
+      "code": "pisces",
+      "name": "Pisces",
+      "element": null,
+      "modality": null,
+      "polarity": null
+    }
+  ]
+}

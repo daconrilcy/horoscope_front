@@ -181,6 +181,16 @@ def _complete_sign_payload(raw_signs: object) -> list[dict[str, object]]:
         payload = dict(existing.get(code) or {})
         payload.setdefault("code", code)
         payload.setdefault("name", code.title())
+        missing_profile_fields = {
+            field_name
+            for field_name in ("element", "modality", "polarity")
+            if not str(payload.get(field_name) or "").strip()
+        }
+        if missing_profile_fields:
+            raise ValueError(
+                f"sign fixture {code} requires profile fields: "
+                + ",".join(sorted(missing_profile_fields))
+            )
         signs.append(payload)
     return signs
 
@@ -203,7 +213,92 @@ def complete_reference() -> AstrologyRuntimeReference:
         {
             "version": "test",
             "planets": [{"code": code, "name": code.title()} for code in planets],
-            "signs": [{"code": code, "name": code.title()} for code in _CANONICAL_SIGN_CODES],
+            "signs": [
+                {
+                    "code": "aries",
+                    "name": "Aries",
+                    "element": "fire",
+                    "modality": "cardinal",
+                    "polarity": "yang",
+                },
+                {
+                    "code": "taurus",
+                    "name": "Taurus",
+                    "element": "earth",
+                    "modality": "fixed",
+                    "polarity": "yin",
+                },
+                {
+                    "code": "gemini",
+                    "name": "Gemini",
+                    "element": "air",
+                    "modality": "mutable",
+                    "polarity": "yang",
+                },
+                {
+                    "code": "cancer",
+                    "name": "Cancer",
+                    "element": "water",
+                    "modality": "cardinal",
+                    "polarity": "yin",
+                },
+                {
+                    "code": "leo",
+                    "name": "Leo",
+                    "element": "fire",
+                    "modality": "fixed",
+                    "polarity": "yang",
+                },
+                {
+                    "code": "virgo",
+                    "name": "Virgo",
+                    "element": "earth",
+                    "modality": "mutable",
+                    "polarity": "yin",
+                },
+                {
+                    "code": "libra",
+                    "name": "Libra",
+                    "element": "air",
+                    "modality": "cardinal",
+                    "polarity": "yang",
+                },
+                {
+                    "code": "scorpio",
+                    "name": "Scorpio",
+                    "element": "water",
+                    "modality": "fixed",
+                    "polarity": "yin",
+                },
+                {
+                    "code": "sagittarius",
+                    "name": "Sagittarius",
+                    "element": "fire",
+                    "modality": "mutable",
+                    "polarity": "yang",
+                },
+                {
+                    "code": "capricorn",
+                    "name": "Capricorn",
+                    "element": "earth",
+                    "modality": "cardinal",
+                    "polarity": "yin",
+                },
+                {
+                    "code": "aquarius",
+                    "name": "Aquarius",
+                    "element": "air",
+                    "modality": "fixed",
+                    "polarity": "yang",
+                },
+                {
+                    "code": "pisces",
+                    "name": "Pisces",
+                    "element": "water",
+                    "modality": "mutable",
+                    "polarity": "yin",
+                },
+            ],
             "houses": [{"number": number, "name": f"House {number}"} for number in range(1, 13)],
             "house_axes": [
                 {

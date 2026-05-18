@@ -60,15 +60,21 @@ class SignRuntimeData:
     dominant: bool
     active_dignities: tuple[SignDignityRuntimeData, ...]
     reasons: tuple[SignDominanceReason, ...]
+    element: str
+    modality: str
+    polarity: str
     synthesis_role: str | None = None
-    element: str | None = None
-    modality: str | None = None
-    polarity: str | None = None
 
     def __post_init__(self) -> None:
         """Borne le poids et impose un code de signe canonique."""
         if not self.sign.strip():
             raise ValueError("sign runtime requires a sign code")
+        for field_name in ("element", "modality", "polarity"):
+            value = getattr(self, field_name)
+            if not value.strip():
+                raise ValueError(f"sign runtime requires {field_name}")
+            if value.strip().lower() == "unknown":
+                raise ValueError(f"sign runtime rejects unknown {field_name}")
         if not 0.0 <= self.weight <= 1.0:
             raise ValueError("sign runtime weight must be between 0 and 1")
         if self.dominant and not self.reasons:

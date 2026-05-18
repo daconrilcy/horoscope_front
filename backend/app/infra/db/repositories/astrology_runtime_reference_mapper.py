@@ -74,9 +74,9 @@ class AstrologyRuntimeReferenceMapper:
                     SignReferenceData(
                         code=str(item["code"]),
                         name=self._display_name(item),
-                        element=self._optional_str(item.get("element")),
-                        modality=self._optional_str(item.get("modality")),
-                        polarity=self._optional_str(item.get("polarity")),
+                        element=self._required_str(item, "element"),
+                        modality=self._required_str(item, "modality"),
+                        polarity=self._required_str(item, "polarity"),
                     )
                     for item in self._items(payload, "signs")
                 )
@@ -196,6 +196,14 @@ class AstrologyRuntimeReferenceMapper:
             return None
         text = str(value).strip()
         return text or None
+
+    def _required_str(self, item: Mapping[str, object], field_name: str) -> str:
+        """Exige un champ texte source par le payload infra."""
+        value = self._optional_str(item.get(field_name))
+        if value is None:
+            code = str(item.get("code") or "<unknown>")
+            raise ValueError(f"missing required sign profile field {field_name} for {code}")
+        return value
 
     def _optional_float(self, value: object) -> float | None:
         """Convertit une valeur optionnelle en flottant."""

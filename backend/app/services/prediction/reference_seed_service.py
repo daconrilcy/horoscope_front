@@ -700,7 +700,7 @@ def ensure_astral_aspect_reference_data(db: Session, reference_version_id: int) 
     _sync_astral_aspect_orb_rules(db, reference_version_id)
 
 
-def _ensure_astral_sign_profiles(db: Session) -> None:
+def ensure_astral_sign_profiles(db: Session) -> None:
     """Crée les profils structurels des douze signes à partir des taxonomies."""
     elements = _ensure_taxonomy(
         db,
@@ -983,7 +983,7 @@ def _ensure_legacy_reference_version_seeded(db: Session) -> ReferenceVersionMode
     db.flush()
     _ensure_astral_dignity_types(db)
     _ensure_astral_systems(db)
-    _ensure_astral_sign_profiles(db)
+    ensure_astral_sign_profiles(db)
     _ensure_astral_planet_sign_dignities(db)
     ensure_astral_aspect_reference_data(db, v1.id)
     sync_house_interpretation_profiles(db, v1.id)
@@ -1002,7 +1002,7 @@ def run_prediction_reference_seed(db: Session) -> None:
         _ensure_astral_dignity_types(db)
         _ensure_astral_systems(db)
         if db.scalar(select(func.count()).select_from(AstralSignModel)) > 0:
-            _ensure_astral_sign_profiles(db)
+            ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
             sync_house_interpretation_profiles(db, v2.id)
             sync_planet_interpretation_profiles(db, v2.id)
@@ -1145,7 +1145,7 @@ def run_prediction_reference_seed(db: Session) -> None:
                 repo = ReferenceRepository(db)
                 repo.seed_version_defaults()
             db.flush()
-            _ensure_astral_sign_profiles(db)
+            ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
             ensure_astral_aspect_reference_data(db, v2.id)
             sync_planet_interpretation_profiles(db, v2.id)
@@ -1189,7 +1189,7 @@ def run_prediction_reference_seed(db: Session) -> None:
         db.flush()
         _ensure_astral_dignity_types(db)
         _ensure_astral_systems(db)
-        _ensure_astral_sign_profiles(db)
+        ensure_astral_sign_profiles(db)
         _ensure_astral_planet_sign_dignities(db)
         ensure_astral_aspect_reference_data(db, v2.id)
 
@@ -1527,5 +1527,6 @@ __all__ = [
     "PredictionReferenceSeedAbortError",
     "ensure_astral_aspect_reference_data",
     "ensure_astral_planet_sign_dignities",
+    "ensure_astral_sign_profiles",
     "run_prediction_reference_seed",
 ]

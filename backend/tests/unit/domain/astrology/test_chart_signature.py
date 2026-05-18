@@ -29,6 +29,7 @@ def test_chart_signature_ranks_signs_planets_houses_and_profiles() -> None:
                 reasons=(SignDominanceReason.OCCUPANTS_PRESENT,),
                 element="fire",
                 modality="cardinal",
+                polarity="yang",
             ),
             SignRuntimeData(
                 sign="taurus",
@@ -39,6 +40,7 @@ def test_chart_signature_ranks_signs_planets_houses_and_profiles() -> None:
                 reasons=(),
                 element="earth",
                 modality="fixed",
+                polarity="yin",
             ),
         ],
         houses=[

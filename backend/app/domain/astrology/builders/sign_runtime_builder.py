@@ -122,8 +122,7 @@ def _dominance_reasons(
         reasons.append(SignDominanceReason.LUMINARY_PRESENT)
     if active_dignities:
         reasons.append(SignDominanceReason.ACTIVE_DIGNITY)
-    if sign.element is not None or sign.modality is not None or sign.polarity is not None:
-        reasons.append(SignDominanceReason.REFERENCE_PROFILE)
+    reasons.append(SignDominanceReason.REFERENCE_PROFILE)
     return tuple(reasons)
 
 

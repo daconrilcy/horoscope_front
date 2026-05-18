@@ -15,8 +15,13 @@ from app.infra.db.models.prediction_reference import AstralPlanetSignDignityMode
 from app.infra.db.models.reference import (
     AstralAnglePointModel,
     AstralAstrologicalRoleModel,
+    AstralElementModel,
     AstralHouseSystemModel,
+    AstralModalityModel,
     AstralPlanetDefinitionModel,
+    AstralPolarityModel,
+    AstralSignModel,
+    AstralSignProfileModel,
     AstralSystemModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -66,17 +71,25 @@ class AstrologyRuntimeReferenceRepository:
             )
 
         payload = ReferenceRepository(self.db).get_reference_data(version)
+        payload["signs"] = list(self._load_sign_profiles())
         prediction_repo = PredictionReferenceRepository(self.db)
-        runtime_reference = self.mapper.map_payload(
-            reference_version_id=version_model.id,
-            reference_version=version_model.version,
-            payload=payload,
-            dignities=self._load_dignities(),
-            sign_rulerships=prediction_repo.get_sign_rulerships(),
-            planet_definitions=self._load_planet_definitions(),
-            angle_points=self._load_angle_points(),
-            house_systems=self._load_house_systems(),
-        )
+        try:
+            runtime_reference = self.mapper.map_payload(
+                reference_version_id=version_model.id,
+                reference_version=version_model.version,
+                payload=payload,
+                dignities=self._load_dignities(),
+                sign_rulerships=prediction_repo.get_sign_rulerships(),
+                planet_definitions=self._load_planet_definitions(),
+                angle_points=self._load_angle_points(),
+                house_systems=self._load_house_systems(),
+            )
+        except ValueError as error:
+            raise AstrologyRuntimeReferenceError(
+                code="invalid_astrology_runtime_reference",
+                message="astrology runtime reference is invalid",
+                details={"field": "sign_profiles", "reason": str(error)},
+            ) from error
         self._validate(runtime_reference)
         return runtime_reference
 
@@ -100,6 +113,45 @@ class AstrologyRuntimeReferenceRepository:
         return {
             row.code: {"body_class": row.body_class, "is_luminary": row.is_luminary} for row in rows
         }
+
+    def _load_sign_profiles(self) -> tuple[dict[str, object], ...]:
+        """Charge les signes avec profils structurels sans modifier le payload public."""
+        rows = self.db.execute(
+            select(
+                AstralSignModel.code,
+                AstralSignModel.name,
+                AstralElementModel.code.label("element_code"),
+                AstralModalityModel.code.label("modality_code"),
+                AstralPolarityModel.code.label("polarity_code"),
+            )
+            .outerjoin(
+                AstralSignProfileModel,
+                AstralSignProfileModel.astral_sign_id == AstralSignModel.id,
+            )
+            .outerjoin(
+                AstralElementModel,
+                AstralSignProfileModel.astral_element_id == AstralElementModel.id,
+            )
+            .outerjoin(
+                AstralModalityModel,
+                AstralSignProfileModel.astral_modality_id == AstralModalityModel.id,
+            )
+            .outerjoin(
+                AstralPolarityModel,
+                AstralSignProfileModel.astral_polarity_id == AstralPolarityModel.id,
+            )
+            .order_by(AstralSignModel.id)
+        ).all()
+        return tuple(
+            {
+                "code": row.code,
+                "name": row.name,
+                "element": row.element_code,
+                "modality": row.modality_code,
+                "polarity": row.polarity_code,
+            }
+            for row in rows
+        )
 
     def _load_dignities(self) -> tuple[dict[str, object], ...]:
         """Charge les dignites planetaires canoniques."""
@@ -170,6 +222,7 @@ class AstrologyRuntimeReferenceRepository:
             ("aspects", aspect_codes),
             ("systems", system_codes),
         )
+        self._validate_sign_profiles(reference)
         missing_angles = self._REQUIRED_ANGLE_POINTS - {
             item.code for item in reference.angle_points.items
         }
@@ -221,6 +274,16 @@ class AstrologyRuntimeReferenceRepository:
         for axis in reference.house_axes:
             if axis.house_number not in house_numbers or axis.opposite_house not in house_numbers:
                 self._raise_integrity("house_axes", "orphan_house")
+
+    def _validate_sign_profiles(self, reference: AstrologyRuntimeReference) -> None:
+        """Verifie que chaque signe porte un profil structurel DB-backed."""
+        for sign in reference.signs.items:
+            for field_name in ("element", "modality", "polarity"):
+                value = getattr(sign, field_name)
+                if not value.strip():
+                    self._raise_integrity("sign_profiles", f"missing_{field_name}:{sign.code}")
+                if value.strip().lower() == "unknown":
+                    self._raise_integrity("sign_profiles", f"unknown_{field_name}:{sign.code}")
 
     def _reject_unknown_codes(self, *groups: tuple[str, set[str]]) -> None:
         """Refuse les sentinelles `unknown` dans les codes runtime canoniques."""

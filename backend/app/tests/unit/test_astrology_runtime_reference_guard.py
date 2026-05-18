@@ -16,6 +16,10 @@ FORBIDDEN_NATAL_FLOW_PATTERNS = (
     r"\bHOUSE_MEANINGS\b",
     r"\bUNKNOWN_SIGN\b",
     r"\bZODIAC_SIGNS\b",
+    r"\bELEMENT_BY_SIGN\b",
+    r"\bMODALITY_BY_SIGN\b",
+    r"\bPOLARITY_BY_SIGN\b",
+    r"\bSIGN_PROFILE_DATA\b",
     r"\bEXACT_ORB_DEG\b",
     r"\bTIGHT_RATIO\b",
     r"\bMODERATE_RATIO\b",
@@ -48,6 +52,14 @@ def test_natal_flow_does_not_use_legacy_reference_service_or_symbols() -> None:
                 hits.append(f"{path}:{pattern}")
 
     assert hits == []
+
+
+def test_runtime_sign_profile_fixtures_do_not_import_seed_mappings() -> None:
+    """Les fixtures runtime ne doivent pas masquer la source DB par un mapping seed."""
+    factory = BACKEND_ROOT / "tests/factories/astrology_runtime_reference_factory.py"
+    content = factory.read_text(encoding="utf-8")
+
+    assert "SIGN_PROFILE_DATA" not in content
 
 
 def test_build_natal_result_signature_uses_runtime_reference_not_dict() -> None:

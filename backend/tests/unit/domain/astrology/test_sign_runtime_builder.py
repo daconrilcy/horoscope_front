@@ -1,10 +1,7 @@
 """Tests du builder runtime des signes natals."""
 
-from dataclasses import replace
-
 from app.domain.astrology.builders.sign_runtime_builder import build_sign_runtime_data
 from app.domain.astrology.natal_calculation import PlanetPosition
-from app.domain.astrology.runtime.runtime_reference import SignReferenceSet
 from app.domain.astrology.runtime.sign_runtime_data import SignDominanceReason
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 from tests.factories.celestial_catalog_factory import make_celestial_catalog
@@ -51,19 +48,9 @@ def test_sign_runtime_builder_returns_twelve_ordered_signs() -> None:
 def test_sign_runtime_builder_uses_reference_profiles_when_available() -> None:
     """Les elements et modalites viennent du referentiel et non d'une constante locale."""
     reference = complete_reference()
-    profiled_signs = SignReferenceSet(
-        tuple(
-            replace(
-                sign,
-                element="fire" if sign.code == "aries" else None,
-                modality="cardinal" if sign.code == "aries" else None,
-            )
-            for sign in reference.signs.items
-        )
-    )
 
     runtime = build_sign_runtime_data(
-        signs=profiled_signs,
+        signs=reference.signs,
         planets=[
             PlanetPosition(
                 planet_code="sun",
@@ -78,4 +65,7 @@ def test_sign_runtime_builder_uses_reference_profiles_when_available() -> None:
 
     assert runtime[0].element == "fire"
     assert runtime[0].modality == "cardinal"
+    assert runtime[0].polarity == "yang"
+    assert runtime[1].element == "earth"
     assert SignDominanceReason.REFERENCE_PROFILE in runtime[0].reasons
+    assert SignDominanceReason.REFERENCE_PROFILE in runtime[1].reasons
