@@ -124,34 +124,68 @@ def split_discord_message(text: str, limit: int = 1900) -> list[str]:
     return chunks
 
 
-def build_condamad_help(alias: str | None = None) -> str:
-    """Construit l'aide Discord des raccourcis CONDAMAD disponibles."""
+def build_condamad_help_embed(alias: str | None = None) -> discord.Embed:
+    """Construit l'aide Discord sous forme d'embed lisible."""
 
     if alias:
         skill = CONDAMAD_SKILLS.get(alias)
         if not skill:
             available_aliases = ", ".join(sorted(CONDAMAD_SKILLS))
-            return (
-                f"⚠️ Raccourci CONDAMAD inconnu : `{alias}`.\n"
-                f"Disponibles : {available_aliases}"
+            embed = discord.Embed(
+                title="Raccourci CONDAMAD inconnu",
+                description=f"`{alias}` n'existe pas.",
+                color=discord.Color.red(),
             )
+            embed.add_field(
+                name="Raccourcis disponibles",
+                value=available_aliases,
+                inline=False,
+            )
+            embed.set_footer(
+                text="Utilise !condamad help pour afficher la liste complète."
+            )
+            return embed
 
-        return (
-            f"**{alias}** - {skill['label']}\n"
-            f"Skill : `{skill['skill']}`\n"
-            f"Usage : `{skill['usage']}`\n"
-            f"{skill['description']}"
+        embed = discord.Embed(
+            title=f"{alias} - {skill['label']}",
+            description=skill["description"],
+            color=discord.Color.blurple(),
+        )
+        embed.add_field(name="Commande", value=f"`{skill['usage']}`", inline=False)
+        embed.add_field(name="Skill Codex", value=f"`{skill['skill']}`", inline=False)
+        embed.set_footer(
+            text="Le bot injecte AGENTS.md et interdit commit/push sauf demande explicite."
+        )
+        return embed
+
+    embed = discord.Embed(
+        title="Raccourcis CONDAMAD",
+        description=(
+            "Utilise `!condamad <raccourci> <demande>` pour lancer Codex.\n"
+            "Utilise `!condamad help <raccourci>` pour le détail."
+        ),
+        color=discord.Color.green(),
+    )
+    for shortcut, skill in CONDAMAD_SKILLS.items():
+        embed.add_field(
+            name=f"{shortcut} - {skill['label']}",
+            value=f"`{skill['usage']}`\n{skill['description']}",
+            inline=False,
         )
 
-    lines = [
-        "**Raccourcis CONDAMAD disponibles**",
-        "`!condamad help <alias>` pour le détail d'un raccourci.",
-        "",
-    ]
-    for shortcut, skill in CONDAMAD_SKILLS.items():
-        lines.append(f"- `{shortcut}` : {skill['label']} - `{skill['usage']}`")
+    embed.set_footer(
+        text="Exemple: !condamad dev _condamad/stories/<story>/00-story.md"
+    )
+    return embed
 
-    return "\n".join(lines)
+
+async def send_condamad_help(
+    channel: discord.abc.Messageable,
+    alias: str | None = None,
+) -> None:
+    """Envoie l'aide CONDAMAD avec la mise en page native Discord."""
+
+    await channel.send(embed=build_condamad_help_embed(alias))
 
 
 def build_condamad_prompt(alias: str, request: str) -> str:
@@ -298,16 +332,15 @@ async def on_message(message):
 
         if alias in {"help", "list"}:
             help_alias = request.split(maxsplit=1)[0].lower() if request else None
-            for chunk in split_discord_message(build_condamad_help(help_alias)):
-                await message.channel.send(chunk)
+            await send_condamad_help(message.channel, help_alias)
             return
 
         if alias not in CONDAMAD_SKILLS:
-            await message.channel.send(build_condamad_help(alias))
+            await send_condamad_help(message.channel, alias)
             return
 
         if not request:
-            await message.channel.send(build_condamad_help(alias))
+            await send_condamad_help(message.channel, alias)
             return
 
         schedule_codex_job(message, build_condamad_prompt(alias, request))
