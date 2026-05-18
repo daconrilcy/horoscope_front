@@ -70,6 +70,26 @@ Tables touchees:
 - Tables `astral_*` via le calcul.
 - `chart_results` pour le resultat final.
 
+### Consommateurs transitoires non persistants
+
+Fichiers:
+
+- `backend/app/services/user_profile/astro_profile_service.py`
+- `backend/app/services/llm_generation/consultation_generation_service.py`
+
+Roles:
+
+- `UserAstroProfileService.get_for_user` tente d'abord de relire le dernier theme
+  persiste. S'il n'existe pas, il appelle `NatalCalculationService.calculate`
+  uniquement pour extraire le signe solaire et, si l'heure de naissance est
+  presente, le signe d'ascendant depuis la cuspide de maison 1. Ce calcul n'est
+  pas persiste dans `chart_results`.
+- `ConsultationGenerationService._calculate_other_person_natal_summary` calcule
+  un theme tiers transitoire pour les consultations relationnelles. Ce chemin
+  force `house_system="equal"`, active la derivation de fuseau horaire et utilise
+  le moteur simplifie si l'override interne est autorise. Le resultat sert a
+  produire un resume contextuel LLM, pas un `chart_result`.
+
 ## Preparation temps et donnees de naissance
 
 Fichiers:
@@ -91,7 +111,9 @@ Fonctions et classes:
 Calcul effectue:
 
 1. Le fuseau horaire est pris depuis `birth_timezone` ou derive depuis `birth_lat`/`birth_lon` si l'option runtime le permet.
-2. L'heure locale est parse en `datetime`.
+2. L'heure locale est parse en `datetime`. Si `birth_time` est absent sur les
+   chemins qui l'autorisent, le calcul utilise minuit local; les themes utilisateur
+   persistants exigent en revanche une heure de naissance.
 3. Les heures locales ambigues ou inexistantes lors des transitions DST sont refusees.
 4. Le temps local est converti en UTC.
 5. Le timestamp UTC flottant est transforme en jour julien:
@@ -191,6 +213,8 @@ Options resolues:
 - `house_system`: `placidus`, `equal`, `whole_sign`, `porphyry` selon configuration.
 - `altitude_m`: forcee a `0.0` si `frame=topocentric` et altitude absente.
 - `aspect_school`: par defaut via settings, utilise pour filtrer definitions et regles d'aspects.
+  Le service accepte ce parametre, mais le contrat public
+  `NatalCalculateRequest` ne l'expose pas actuellement.
 - `include_points_in_aspects`: `false` par defaut; quand `true`, les points astraux
   calcules sont ajoutes au pool aspectable.
 
@@ -223,19 +247,25 @@ Fonctions:
 
 Calcul effectue:
 
-1. Les planetes a calculer viennent de `runtime_reference.planets.items`.
-2. Chaque code planete est relie a un `swe_id`.
-3. `swe.calc_ut(jdut, swe_id, flags)` calcule longitude, latitude et vitesse.
-4. La longitude est normalisee dans `[0, 360)`.
-5. La retrogradation est deduite par:
+1. Les planetes attendues dans le resultat viennent de
+   `runtime_reference.planets.items`.
+2. Le provider SwissEph calcule les corps du catalogue canonique
+   `planet_catalog.py`, lui-meme aligne sur le seed `astral_planets.json`; le
+   champ `swe_id` charge dans le runtime reste trace et validation de reference,
+   mais le provider ne relit pas directement `runtime_reference.planets[*].swe_id`.
+3. `_build_swisseph_positions` filtre ensuite les positions calculees sur les
+   codes planetaires demandes par le runtime.
+4. `swe.calc_ut(jdut, swe_id, flags)` calcule longitude, latitude et vitesse.
+5. La longitude est normalisee dans `[0, 360)`.
+6. La retrogradation est deduite par:
 
    ```text
    is_retrograde = speed_longitude < 0
    ```
 
-6. En sidereal, `swe.set_sid_mode` est applique puis reinitialise apres calcul.
-7. En topocentric, `swe.set_topo(lon, lat, altitude)` est applique puis reinitialise.
-8. Le signe est recalcule depuis la longitude et l'ordre des `astral_signs`.
+7. En sidereal, `swe.set_sid_mode` est applique puis reinitialise apres calcul.
+8. En topocentric, `swe.set_topo(lon, lat, altitude)` est applique puis reinitialise.
+9. Le signe est recalcule depuis la longitude et l'ordre des `astral_signs`.
 
 Tables utilisees:
 
@@ -380,11 +410,14 @@ Champs produits:
 - `sign`
 - `degree_in_sign`
 - `house`
+- `calculation_source`
 - `is_physical_body`
 
 Garanties:
 
-- `NatalResult.points` est une liste normalisee.
+- `NatalResult.astral_points` est la sortie canonique serialisee. La propriete
+  Python `NatalResult.points` reste un alias de lecture, et la validation accepte
+  encore l'ancien champ `points` pour compatibilite.
 - Aucun champ plat `true_node`, `mean_node` ou `lilith` n'est ajoute au resultat.
 - Les keywords et profils editoriaux des points ne sont pas lus dans le calcul natal brut.
 
@@ -452,7 +485,7 @@ Fonctions:
 Calcul effectue:
 
 1. Les positions planetaires sont converties en `AspectBodyRuntimeData`.
-   Si `include_points_in_aspects=True`, les positions de `NatalResult.points`
+   Si `include_points_in_aspects=True`, les positions de `NatalResult.astral_points`
    sont converties de la meme maniere et ajoutees au pool aspectable.
 2. Les definitions d'aspects actives, majeures et compatibles avec `aspect_school` sont selectionnees.
 3. Pour chaque paire de corps, la distance angulaire minimale est calculee:
@@ -680,13 +713,15 @@ Le `NatalResult` contient:
 - options: `engine`, `zodiac`, `frame`, `house_system`, `ayanamsa`, `altitude_m`;
 - trace ephemerides: `ephemeris_path_version`, `ephemeris_path_hash`;
 - trace temps: `prepared_input`;
-- faits calcules: `planet_positions`, `points`, `houses`, `aspects`;
+- faits calcules: `planet_positions`, `astral_points`, `houses`, `aspects`;
 - enrichissements: `signs_runtime`, `house_rulers`, `chart_balance`.
 
-Depuis CS-187, `points` contient les points astraux natals calcules depuis le
-referentiel DB. Le contrat est additif et conserve le comportement historique:
-les aspects restent calcules uniquement entre planetes tant que
-`include_points_in_aspects=false`.
+Depuis CS-187, `astral_points` contient les points astraux natals calcules
+depuis le referentiel DB. Le contrat est additif et conserve le comportement
+historique: les aspects restent calcules uniquement entre planetes tant que
+`include_points_in_aspects=false`. `points` est conserve comme alias de lecture
+cote modele Python et comme alias d'entree pour relire d'anciens payloads, pas
+comme champ canonique serialise par `model_dump()`.
 
 ## Persistance
 
