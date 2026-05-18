@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime
+from typing import Mapping
 
 import swisseph as swe
 
@@ -75,6 +76,7 @@ class EnrichedAstroEventsBuilder:
             self._compute_fixed_star_conjunctions(
                 astro_states,
                 fixed_stars=getattr(loaded_context.prediction_context, "fixed_stars", ()),
+                parameters=loaded_context.ruleset_context.parameters,
             )
         )
 
@@ -337,24 +339,36 @@ class EnrichedAstroEventsBuilder:
         return events
 
     def _compute_fixed_star_conjunctions(
-        self, steps: list[StepAstroState], *, fixed_stars: tuple[object, ...]
+        self,
+        steps: list[StepAstroState],
+        *,
+        fixed_stars: tuple[object, ...],
+        parameters: Mapping[str, object],
     ) -> list[AstroEvent]:
         """Détecte les conjonctions aux étoiles fixes chargées depuis la DB."""
         events: list[AstroEvent] = []
-        best_orbs: dict[tuple[str, str], tuple[float, StepAstroState]] = {}
+        orb_max = self._float_parameter(parameters, "fixed_star_orb_deg")
+        base_weight = self._float_parameter(parameters, "fixed_star_base_weight")
+        max_visual_magnitude = self._float_parameter(parameters, "fixed_star_max_visual_magnitude")
+        if orb_max is None or orb_max <= 0 or base_weight is None or base_weight <= 0:
+            return events
+
+        best_orbs: dict[tuple[str, str], tuple[float, StepAstroState, object]] = {}
 
         for step in steps:
             for p_name, p_state in step.planets.items():
                 for star in fixed_stars:
                     star_key = str(getattr(star, "key"))
                     star_longitude = float(getattr(star, "ecliptic_longitude_deg"))
+                    if self._is_fixed_star_outside_magnitude(star, max_visual_magnitude):
+                        continue
                     dist = self._angular_distance(p_state.longitude, star_longitude)
-                    if dist <= 1.0:  # AC5 orb 1.0
+                    if dist <= orb_max:
                         key = (p_name.lower(), star_key)
                         if key not in best_orbs or dist < best_orbs[key][0]:
-                            best_orbs[key] = (dist, step)
+                            best_orbs[key] = (dist, step, star)
 
-        for (p_code, star_key), (orb, step) in best_orbs.items():
+        for (p_code, star_key), (orb, step, star) in best_orbs.items():
             events.append(
                 AstroEvent(
                     event_type="fixed_star_conjunction",
@@ -365,18 +379,42 @@ class EnrichedAstroEventsBuilder:
                     aspect="conjunction",
                     orb_deg=orb,
                     priority=45,
-                    base_weight=0.0,  # display-only, no signal contribution
+                    base_weight=base_weight,
                     metadata={
-                        "star_display_name": next(
-                            str(getattr(star, "display_name"))
-                            for star in fixed_stars
-                            if str(getattr(star, "key")) == star_key
-                        )
+                        "orb_max": orb_max,
+                        "star_key": star_key,
+                        "star_display_name": str(getattr(star, "display_name")),
+                        "visual_magnitude": getattr(star, "visual_magnitude", None),
+                        "fixed_star_source_category": getattr(star, "source_category", None),
+                        "fixed_star_source_key": getattr(star, "source_key", None),
+                        "fixed_star_keywords": list(getattr(star, "keywords", ())),
                     },
                 )
             )
 
         return events
+
+    def _float_parameter(self, parameters: Mapping[str, object], key: str) -> float | None:
+        """Lit un paramètre numérique de ruleset sans valeur de secours locale."""
+        raw_value = parameters.get(key)
+        if raw_value is None:
+            return None
+        try:
+            return float(raw_value)
+        except (TypeError, ValueError):
+            logger.warning("invalid fixed star ruleset parameter %s=%r", key, raw_value)
+            return None
+
+    def _is_fixed_star_outside_magnitude(
+        self, star: object, max_visual_magnitude: float | None
+    ) -> bool:
+        """Filtre les étoiles trop faibles quand le ruleset définit un seuil."""
+        if max_visual_magnitude is None:
+            return False
+        magnitude = getattr(star, "visual_magnitude", None)
+        if magnitude is None:
+            return False
+        return float(magnitude) > max_visual_magnitude
 
     def _angular_distance(self, lon_a: float, lon_b: float) -> float:
         diff = abs(lon_a - lon_b) % 360.0

@@ -1,3 +1,5 @@
+"""Tests du calcul des contributions bornées pour les événements prediction."""
+
 from datetime import datetime
 from types import SimpleNamespace
 
@@ -325,3 +327,24 @@ def test_non_aspect_event_does_not_require_orb_max(mock_ctx, caplog):
     assert calculator._f_orb(event, mock_ctx) == 1.0
     assert result["WORK"] == 0.0
     assert "orb_max not found" not in caplog.text
+
+
+def test_fixed_star_conjunction_contributes_with_runtime_metadata(mock_ctx):
+    """Une conjonction fixed star retenue contribue via poids, orbe et routage."""
+    calculator = ContributionCalculator()
+    event = AstroEvent(
+        event_type="fixed_star_conjunction",
+        ut_time=0,
+        local_time=datetime.now(),
+        body="Moon",
+        target="regulus",
+        aspect="conjunction",
+        orb_deg=0.2,
+        priority=45,
+        base_weight=0.6,
+        metadata={"orb_max": 1.0, "phase": "exact", "star_key": "regulus"},
+    )
+
+    results = calculator.compute(event, {"LOVE": 1.0}, {"LOVE": 0.7}, mock_ctx)
+
+    assert results["LOVE"] > 0.0

@@ -206,6 +206,10 @@ class FixedStarData:
     key: str
     display_name: str
     ecliptic_longitude_deg: float
+    visual_magnitude: float | None = None
+    keywords: tuple[str, ...] = ()
+    source_category: str | None = None
+    source_key: str | None = None
 
 
 @dataclass(frozen=True)

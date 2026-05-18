@@ -1,6 +1,6 @@
 # Story CS-189 brancher-etoiles-fixes-scoring-runtime: Brancher les étoiles fixes au scoring runtime daily
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

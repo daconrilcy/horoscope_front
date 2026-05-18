@@ -22,6 +22,9 @@ class DomainRouter:
         house_to_cat = self._build_house_index(ctx)
         planet_to_cat = self._build_planet_index(ctx)
 
+        if event.event_type == "fixed_star_conjunction":
+            return self._route_fixed_star_event(ctx, active_categories)
+
         house_vector = self._build_house_vector(event)
         planet_blend = self._compute_planet_blend(event.body, planet_to_cat, active_categories)
 
@@ -142,3 +145,27 @@ class DomainRouter:
         """
         cat_weights = planet_to_cat.get(planet_code.lower(), {}) if planet_code else {}
         return {cat: 0.50 + 0.50 * cat_weights.get(cat, 0.0) for cat in active_categories}
+
+    def _route_fixed_star_event(
+        self,
+        ctx: LoadedPredictionContext,
+        active_categories: list[str],
+    ) -> dict[str, float]:
+        """Route les étoiles fixes par pondération explicite du ruleset."""
+        raw_weights = getattr(ctx.ruleset_context, "parameters", {}).get(
+            "fixed_star_category_weights"
+        )
+        if not isinstance(raw_weights, dict):
+            return {cat: 0.0 for cat in active_categories}
+        return {
+            cat: self._coerce_category_weight(raw_weights.get(cat, raw_weights.get(cat.lower())))
+            for cat in active_categories
+        }
+
+    def _coerce_category_weight(self, raw_value: Any) -> float:
+        """Normalise une pondération de catégorie issue du JSON de ruleset."""
+        try:
+            weight = float(raw_value)
+        except (TypeError, ValueError):
+            return 0.0
+        return max(0.0, min(1.0, weight))

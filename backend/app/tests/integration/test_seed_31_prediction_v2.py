@@ -455,7 +455,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
                 .select_from(RulesetParameterModel)
                 .where(RulesetParameterModel.ruleset_id.in_([ruleset_v1.id, ruleset_v2.id]))
             )
-            == 16
+            == 24
         )
 
         # 4. Verify idempotence (already seeded and locked)
@@ -525,6 +525,67 @@ def test_seed_31_prediction_v2_idempotence_corrupted_fails(
         # 3. Running run_seed should raise SeedAbortError as per AC15 case 3
         with pytest.raises(SeedAbortError, match="LOCKED"):
             run_seed(session)
+
+    engine.dispose()
+
+
+def test_seed_31_prediction_v2_repairs_locked_fixed_star_ruleset_params(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
+    """Le seed ajoute les nouveaux paramètres fixed-star sur une V2 verrouillée ancienne."""
+    engine = _setup_engine(monkeypatch, tmp_path, "test-seed-v2-fixed-stars-repair.db")
+
+    fixed_star_param_keys = {
+        "fixed_star_orb_deg",
+        "fixed_star_max_visual_magnitude",
+        "fixed_star_base_weight",
+        "fixed_star_category_weights",
+    }
+
+    with Session(engine) as session:
+        ReferenceDataService.seed_reference_version(session, "1.0.0")
+        session.commit()
+        run_seed(session)
+        session.commit()
+
+        v2 = session.scalar(
+            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0")
+        )
+        assert v2 is not None
+        assert v2.is_locked is True
+        ruleset_ids = session.scalars(
+            select(PredictionRulesetModel.id).where(
+                PredictionRulesetModel.reference_version_id == v2.id
+            )
+        ).all()
+        assert len(ruleset_ids) == 2
+        session.query(RulesetParameterModel).filter(
+            RulesetParameterModel.ruleset_id.in_(ruleset_ids),
+            RulesetParameterModel.param_key.in_(fixed_star_param_keys),
+        ).delete(synchronize_session=False)
+        session.commit()
+
+        run_seed(session)
+        session.commit()
+
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(RulesetParameterModel)
+                .where(RulesetParameterModel.ruleset_id.in_(ruleset_ids))
+            )
+            == 24
+        )
+        for ruleset_id in ruleset_ids:
+            keys = set(
+                session.scalars(
+                    select(RulesetParameterModel.param_key).where(
+                        RulesetParameterModel.ruleset_id == ruleset_id,
+                        RulesetParameterModel.param_key.in_(fixed_star_param_keys),
+                    )
+                )
+            )
+            assert keys == fixed_star_param_keys
 
     engine.dispose()
 

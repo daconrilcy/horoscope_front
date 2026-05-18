@@ -1,3 +1,5 @@
+"""Tests du builder daily enrichi, dont les événements étoiles fixes runtime."""
+
 from datetime import date, datetime
 from types import SimpleNamespace
 
@@ -14,6 +16,11 @@ MAJOR_ASPECT_ANGLES = (
     (180.0, "opposition"),
 )
 MAJOR_ASPECT_ORBS = {code: 1.5 for _angle, code in MAJOR_ASPECT_ANGLES}
+fixed_star_parameters = {
+    "fixed_star_orb_deg": 1.0,
+    "fixed_star_max_visual_magnitude": 2.5,
+    "fixed_star_base_weight": 0.6,
+}
 
 
 @pytest.fixture
@@ -132,14 +139,124 @@ def test_compute_fixed_star_conjunctions_uses_runtime_reference(builder):
             key="regulus",
             display_name="Regulus",
             ecliptic_longitude_deg=150.0,
+            visual_magnitude=1.4,
+            keywords=("royalty",),
+            source_category="historical_astrological_source",
+            source_key="robson_fixed_stars",
         ),
     )
 
-    events = builder._compute_fixed_star_conjunctions([state], fixed_stars=stars)
+    events = builder._compute_fixed_star_conjunctions(
+        [state],
+        fixed_stars=stars,
+        parameters=fixed_star_parameters,
+    )
 
     assert len(events) == 1
     assert events[0].target == "regulus"
-    assert events[0].metadata == {"star_display_name": "Regulus"}
+    assert events[0].base_weight == pytest.approx(0.6)
+    assert events[0].metadata == {
+        "orb_max": 1.0,
+        "star_key": "regulus",
+        "star_display_name": "Regulus",
+        "visual_magnitude": 1.4,
+        "fixed_star_source_category": "historical_astrological_source",
+        "fixed_star_source_key": "robson_fixed_stars",
+        "fixed_star_keywords": ["royalty"],
+    }
+
+
+def test_compute_fixed_star_conjunctions_uses_ruleset_orb(builder):
+    """L'orbe fixed star vient du ruleset et filtre les étoiles hors seuil."""
+    p_moon = PlanetState(
+        code="moon",
+        longitude=150.8,
+        speed_lon=13.0,
+        is_retrograde=False,
+        sign_code=5,
+        natal_house_transited=5,
+    )
+    state = StepAstroState(
+        ut_jd=2461119.5,
+        local_time=datetime(2026, 3, 19, 12, 0),
+        ascendant_deg=0.0,
+        mc_deg=0.0,
+        house_cusps=[0.0] * 12,
+        planets={"Moon": p_moon},
+        house_system_effective="placidus",
+    )
+    stars = (
+        SimpleNamespace(
+            key="regulus",
+            display_name="Regulus",
+            ecliptic_longitude_deg=150.0,
+            visual_magnitude=1.4,
+        ),
+    )
+
+    narrow_events = builder._compute_fixed_star_conjunctions(
+        [state],
+        fixed_stars=stars,
+        parameters={**fixed_star_parameters, "fixed_star_orb_deg": 0.5},
+    )
+    wide_events = builder._compute_fixed_star_conjunctions(
+        [state],
+        fixed_stars=stars,
+        parameters={**fixed_star_parameters, "fixed_star_orb_deg": 1.0},
+    )
+
+    assert narrow_events == []
+    assert len(wide_events) == 1
+    assert wide_events[0].metadata["orb_max"] == 1.0
+
+
+def test_compute_fixed_star_conjunctions_filters_visual_magnitude(builder):
+    """Le seuil de magnitude ignore les étoiles trop faibles sans rejeter l'absence."""
+    p_moon = PlanetState(
+        code="moon",
+        longitude=150.0,
+        speed_lon=13.0,
+        is_retrograde=False,
+        sign_code=5,
+        natal_house_transited=5,
+    )
+    state = StepAstroState(
+        ut_jd=2461119.5,
+        local_time=datetime(2026, 3, 19, 12, 0),
+        ascendant_deg=0.0,
+        mc_deg=0.0,
+        house_cusps=[0.0] * 12,
+        planets={"Moon": p_moon},
+        house_system_effective="placidus",
+    )
+    stars = (
+        SimpleNamespace(
+            key="bright",
+            display_name="Bright",
+            ecliptic_longitude_deg=150.0,
+            visual_magnitude=2.0,
+        ),
+        SimpleNamespace(
+            key="unknown",
+            display_name="Unknown",
+            ecliptic_longitude_deg=150.0,
+            visual_magnitude=None,
+        ),
+        SimpleNamespace(
+            key="faint",
+            display_name="Faint",
+            ecliptic_longitude_deg=150.0,
+            visual_magnitude=3.5,
+        ),
+    )
+
+    events = builder._compute_fixed_star_conjunctions(
+        [state],
+        fixed_stars=stars,
+        parameters=fixed_star_parameters,
+    )
+
+    assert {event.target for event in events} == {"bright", "unknown"}
 
 
 def test_angular_distance(builder):

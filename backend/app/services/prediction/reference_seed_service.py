@@ -99,8 +99,19 @@ EXPECTED_COUNTS = {
     "house_category_weights": 24,
     "point_category_weights": 8,
     "ruleset_event_types": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
-    "ruleset_parameters": 16,  # 8 per ruleset (1.0.0 and 2.0.0)
+    "ruleset_parameters": 24,  # 12 per ruleset (1.0.0 and 2.0.0)
 }
+
+_FIXED_STAR_RULESET_PARAMETERS = (
+    ("fixed_star_orb_deg", "float", "1.0"),
+    ("fixed_star_max_visual_magnitude", "float", "2.5"),
+    ("fixed_star_base_weight", "float", "0.6"),
+    (
+        "fixed_star_category_weights",
+        "json",
+        '{"love": 0.7, "work": 0.6, "money": 0.4, "health": 0.5}',
+    ),
+)
 
 SIGN_PROFILE_DATA = [
     ("aries", "fire", "cardinal", "yang"),
@@ -999,6 +1010,7 @@ def _seed_ruleset_content(db: Session, ruleset_id: int):
         ("score_clamp_max", "float", "100.0"),
         ("top_turning_points_count", "int", "3"),
         ("normalization_method", "string", "percentile"),
+        *_FIXED_STAR_RULESET_PARAMETERS,
     ]
     for key, dtype, val in params_data:
         db.add(
@@ -1032,6 +1044,37 @@ def _ensure_legacy_reference_version_seeded(db: Session) -> ReferenceVersionMode
     return v1
 
 
+def _ensure_fixed_star_ruleset_parameters(db: Session, reference_version_id: int) -> bool:
+    """Répare les rulesets existants avec les paramètres fixed-star manquants."""
+    repaired = False
+    rulesets = db.scalars(
+        select(PredictionRulesetModel).where(
+            PredictionRulesetModel.reference_version_id == reference_version_id
+        )
+    ).all()
+    for ruleset in rulesets:
+        existing_keys = set(
+            db.scalars(
+                select(RulesetParameterModel.param_key).where(
+                    RulesetParameterModel.ruleset_id == ruleset.id
+                )
+            ).all()
+        )
+        for key, dtype, value in _FIXED_STAR_RULESET_PARAMETERS:
+            if key in existing_keys:
+                continue
+            db.add(
+                RulesetParameterModel(
+                    ruleset_id=ruleset.id,
+                    param_key=key,
+                    param_value=value,
+                    data_type=dtype,
+                )
+            )
+            repaired = True
+    return repaired
+
+
 def run_prediction_reference_seed(db: Session) -> None:
     """Crée ou répare le seed canonique de la référence 2.0.0 et de ses rulesets."""
     # 1. Vérification d idempotence.
@@ -1060,6 +1103,11 @@ def run_prediction_reference_seed(db: Session) -> None:
                 PredictionRulesetModel.version == "2.0.0",
             )
         )
+        if v2.is_locked and ruleset_v2 is not None:
+            repaired = _ensure_fixed_star_ruleset_parameters(db, v2.id)
+            if repaired:
+                db.flush()
+                actual = _check_counts(db, v2.id)
 
         all_ok = (
             all(actual.get(k, 0) == v for k, v in EXPECTED_COUNTS.items())

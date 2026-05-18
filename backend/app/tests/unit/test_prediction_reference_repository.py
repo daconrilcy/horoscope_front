@@ -1,3 +1,5 @@
+"""Tests des repositories de références prediction et de leurs contrats DB."""
+
 from __future__ import annotations
 
 import pytest
@@ -1097,6 +1099,7 @@ def test_get_fixed_stars_returns_active_db_reference_rows(db_session: Session) -
                 ecliptic_longitude_deg=150.0,
                 zodiac_sign_id=sign.id,
                 zodiac_degree=0.0,
+                visual_magnitude=1.4,
                 astral_fixed_star_keywords_id=keywords.id,
                 source_id=source.id,
                 is_active=True,
@@ -1120,7 +1123,15 @@ def test_get_fixed_stars_returns_active_db_reference_rows(db_session: Session) -
     fixed_stars = repo.get_fixed_stars()
 
     assert fixed_stars == (
-        FixedStarData(key="regulus", display_name="Regulus", ecliptic_longitude_deg=150.0),
+        FixedStarData(
+            key="regulus",
+            display_name="Regulus",
+            ecliptic_longitude_deg=150.0,
+            visual_magnitude=1.4,
+            keywords=("royalty",),
+            source_category="internal",
+            source_key="fixed-star-source",
+        ),
     )
 
 

@@ -27,8 +27,10 @@ from app.infra.db.models.reference import (
     AstralAstrologicalRoleModel,
     AstralDignityTypeModel,
     AstralFixedStarDefinitionModel,
+    AstralFixedStarKeywordModel,
     AstralFixedStarModel,
     AstralPlanetDefinitionModel,
+    AstralReferenceSourceModel,
     AstralSignModel,
     AstralSpeedModel,
     AstralSystemModel,
@@ -420,10 +422,24 @@ class PredictionReferenceRepository:
     def get_fixed_stars(self) -> tuple[FixedStarData, ...]:
         """Charge les étoiles fixes actives depuis les tables de référence."""
         rows = self.db.execute(
-            select(AstralFixedStarModel, AstralFixedStarDefinitionModel)
+            select(
+                AstralFixedStarModel,
+                AstralFixedStarDefinitionModel,
+                AstralFixedStarKeywordModel,
+                AstralReferenceSourceModel,
+            )
             .join(
                 AstralFixedStarDefinitionModel,
                 AstralFixedStarModel.id == AstralFixedStarDefinitionModel.fixed_star_id,
+            )
+            .join(
+                AstralFixedStarKeywordModel,
+                AstralFixedStarDefinitionModel.astral_fixed_star_keywords_id
+                == AstralFixedStarKeywordModel.id,
+            )
+            .join(
+                AstralReferenceSourceModel,
+                AstralFixedStarDefinitionModel.source_id == AstralReferenceSourceModel.id,
             )
             .where(AstralFixedStarDefinitionModel.is_active.is_(True))
             .order_by(AstralFixedStarModel.key)
@@ -433,8 +449,16 @@ class PredictionReferenceRepository:
                 key=star.key,
                 display_name=star.display_name,
                 ecliptic_longitude_deg=float(definition.ecliptic_longitude_deg),
+                visual_magnitude=(
+                    None
+                    if definition.visual_magnitude is None
+                    else float(definition.visual_magnitude)
+                ),
+                keywords=self._parse_keywords(keywords.keywords_json),
+                source_category=source.category,
+                source_key=source.key,
             )
-            for star, definition in rows
+            for star, definition, keywords, source in rows
         )
 
     def get_astro_points(self, reference_version_id: int) -> dict[str, AstroPointData]:

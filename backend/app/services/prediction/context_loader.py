@@ -394,6 +394,10 @@ class PredictionContextLoader:
             key=star.key,
             display_name=star.display_name,
             ecliptic_longitude_deg=star.ecliptic_longitude_deg,
+            visual_magnitude=star.visual_magnitude,
+            keywords=tuple(star.keywords),
+            source_category=star.source_category,
+            source_key=star.source_key,
         )
 
     def _freeze_ruleset(self, ruleset: RulesetData) -> RulesetData:

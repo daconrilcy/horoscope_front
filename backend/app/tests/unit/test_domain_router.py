@@ -1,3 +1,5 @@
+"""Tests du routage produit des événements prediction vers les catégories."""
+
 from datetime import datetime
 from types import SimpleNamespace
 
@@ -42,7 +44,10 @@ def mock_ctx() -> SimpleNamespace:
             _planet_weight("WORK", "Mars", 0.5),
         ),
     )
-    return SimpleNamespace(prediction_context=prediction_context)
+    ruleset_context = SimpleNamespace(
+        parameters={"fixed_star_category_weights": {"WORK": 0.75, "LOVE": 0.25}}
+    )
+    return SimpleNamespace(prediction_context=prediction_context, ruleset_context=ruleset_context)
 
 
 def test_house_vector_sum_1(mock_ctx):
@@ -240,3 +245,46 @@ def test_full_calculation_ac4(mock_ctx):
     results = router.route(event, mock_ctx)
     assert results["WORK"] == pytest.approx(0.6375)
     assert results["LOVE"] == 0.0
+
+
+def test_fixed_star_event_routes_with_explicit_ruleset_weights(mock_ctx):
+    """Les étoiles fixes n'utilisent pas le blend planète comme routage implicite."""
+    router = DomainRouter()
+    event = AstroEvent(
+        event_type="fixed_star_conjunction",
+        ut_time=0,
+        local_time=datetime.now(),
+        body="Moon",
+        target="regulus",
+        aspect="conjunction",
+        orb_deg=0.2,
+        priority=45,
+        base_weight=0.6,
+        metadata={"orb_max": 1.0, "star_key": "regulus"},
+    )
+
+    results = router.route(event, mock_ctx)
+
+    assert results == {"WORK": 0.75, "LOVE": 0.25}
+
+
+def test_fixed_star_event_without_ruleset_weights_is_not_routed(mock_ctx):
+    """Sans routage explicite, une étoile fixe ne crée pas de signal catégoriel."""
+    router = DomainRouter()
+    mock_ctx.ruleset_context.parameters = {}
+    event = AstroEvent(
+        event_type="fixed_star_conjunction",
+        ut_time=0,
+        local_time=datetime.now(),
+        body="Moon",
+        target="regulus",
+        aspect="conjunction",
+        orb_deg=0.2,
+        priority=45,
+        base_weight=0.6,
+        metadata={"orb_max": 1.0, "star_key": "regulus"},
+    )
+
+    results = router.route(event, mock_ctx)
+
+    assert results == {"WORK": 0.0, "LOVE": 0.0}
