@@ -24,7 +24,7 @@ from app.domain.astrology.runtime import (
 )
 from app.domain.astrology.zodiac import ordered_sign_codes
 from app.domain.prediction.aggregator import TemporalAggregator, V3ThemeAggregator
-from app.domain.prediction.aspect_reference import aspect_orbs_by_code, major_aspect_angles
+from app.domain.prediction.aspect_reference import aspect_orb_for_bodies, major_aspect_angles
 from app.domain.prediction.astro_calculator import AstroCalculator
 from app.domain.prediction.block_generator import BlockGenerator
 from app.domain.prediction.calibrator import PercentileCalibrator
@@ -1239,16 +1239,13 @@ class EngineOrchestrator:
         positions: dict[str, float],
         loaded_context: LoadedPredictionContext,
     ) -> list[AstroEvent]:
-        """Compute major aspects between natal planets/angles."""
+        """Calcule les aspects majeurs entre planètes et angles natals."""
         aspects: list[AstroEvent] = []
         codes = list(positions.keys())
         aspect_profiles = loaded_context.prediction_context.aspect_profiles
+        if not aspect_profiles:
+            return aspects
         aspect_angles = major_aspect_angles(loaded_context.prediction_context)
-        aspect_orbs = aspect_orbs_by_code(
-            loaded_context,
-            calculation_context="natal",
-            aspect_codes=tuple(name for _deg, name in aspect_angles),
-        )
 
         for i, code1 in enumerate(codes):
             for code2 in codes[i + 1 :]:
@@ -1262,7 +1259,13 @@ class EngineOrchestrator:
                     orb = abs(diff - deg)
 
                     aspect_profile = self._lookup_mapping_value(aspect_profiles, name)
-                    orb_max = aspect_orbs[name]
+                    orb_max = aspect_orb_for_bodies(
+                        loaded_context,
+                        calculation_context="natal",
+                        aspect_code=name,
+                        source_code=code1,
+                        target_code=code2,
+                    )
                     base_weight = 1.0
                     default_valence = None
                     if aspect_profile is not None:

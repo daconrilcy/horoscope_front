@@ -62,7 +62,6 @@ from app.infra.db.repositories.astrology_reference_sources import (
     load_astral_zodiacal_reference_system_category_rows,
     load_astral_zodiacal_reference_system_rows,
 )
-from app.services.reference_data.translation_seed_service import sync_astral_translation_seed_data
 from app.services.reference_data_service import ReferenceDataService, ReferenceDataServiceError
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
@@ -511,7 +510,7 @@ def test_seed_reference_version_populates_translation_tables() -> None:
             db.scalar(
                 select(func.count()).select_from(AstralPlanetInterpretationProfileTranslationModel)
             )
-            == 0
+            == 40
         )
 
         aries_fr = db.scalar(
@@ -533,37 +532,39 @@ def test_seed_reference_version_populates_translation_tables() -> None:
         assert "royauté" in json.loads(regulus_fr)
 
 
+def test_seed_reference_version_populates_planet_interpretation_profiles() -> None:
+    """Le seed de référence alimente les profils éditoriaux planétaires source."""
+    _cleanup_reference_tables()
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+
+    with open_app_test_db_session() as db:
+        rows = db.scalars(select(AstralPlanetInterpretationProfileModel)).all()
+        assert len(rows) == 10
+        sun_profile = db.scalar(
+            select(AstralPlanetInterpretationProfileModel)
+            .join(AstralPlanetInterpretationProfileModel.planet)
+            .join(AstralPlanetInterpretationProfileModel.astral_system)
+            .join(AstralPlanetInterpretationProfileModel.language)
+            .where(
+                PlanetModel.code == "sun",
+                AstralSystemModel.name == "modern",
+                LanguageModel.code == "en",
+            )
+        )
+        assert sun_profile is not None
+        assert sun_profile.title == "Identity and Vitality"
+        assert "identity" in json.loads(sun_profile.core_keywords_json or "[]")
+
+
 def test_translation_seed_populates_planet_interpretation_translations_when_sources_exist() -> None:
     """Les traductions éditoriales planétaires se rattachent aux profils source existants."""
     _cleanup_reference_tables()
     with open_app_test_db_session() as db:
         ReferenceDataService.seed_reference_version(db, version="1.0.0")
-        version = db.scalar(
-            select(ReferenceVersionModel).where(ReferenceVersionModel.version == "1.0.0")
-        )
-        sun = db.scalar(select(PlanetModel).where(PlanetModel.code == "sun"))
-        modern = db.scalar(select(AstralSystemModel).where(AstralSystemModel.name == "modern"))
-        english = db.scalar(select(LanguageModel).where(LanguageModel.code == "en"))
-        assert version is not None
-        assert sun is not None
-        assert modern is not None
-        assert english is not None
-        db.add(
-            AstralPlanetInterpretationProfileModel(
-                reference_version_id=version.id,
-                planet_id=sun.id,
-                astral_system_id=modern.id,
-                language_id=english.id,
-                title="Identity and Vitality",
-            )
-        )
-        db.flush()
-        sync_astral_translation_seed_data(db, version.id)
-        db.commit()
-
     with open_app_test_db_session() as db:
         rows = db.scalars(select(AstralPlanetInterpretationProfileTranslationModel)).all()
-        assert len(rows) == 4
+        assert len(rows) == 40
         assert {row.language.code for row in rows} == {"fr", "es", "de", "it"}
         assert (
             next(row for row in rows if row.language.code == "fr").title == "Identité et vitalité"

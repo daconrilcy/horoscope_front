@@ -73,6 +73,14 @@ def _isolated_daily_prediction_database(monkeypatch: pytest.MonkeyPatch, tmp_pat
         db.execute(delete(UserRefreshTokenModel))
         db.execute(delete(UserModel))
         db.execute(delete(ReferenceVersionModel))
+        db.add(
+            ReferenceVersionModel(
+                id=1,
+                version="test-daily-api-reference",
+                description="Reference minimale pour les snapshots de routeur",
+                is_locked=True,
+            )
+        )
         db.commit()
     try:
         yield

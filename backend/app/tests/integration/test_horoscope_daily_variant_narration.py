@@ -18,6 +18,7 @@ from app.infra.db.models.product_entitlements import (
     PlanCatalogModel,
     PlanFeatureBindingModel,
 )
+from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
@@ -33,6 +34,15 @@ def setup_catalog(db_session: Session):
     Base.metadata.drop_all(bind=app_test_engine())
     Base.metadata.create_all(bind=app_test_engine())
     BillingService.reset_subscription_status_cache()
+
+    db_session.add(
+        ReferenceVersionModel(
+            id=1,
+            version="test-narration-reference",
+            description="Reference minimale pour les snapshots narratifs",
+            is_locked=True,
+        )
+    )
 
     # Feature
     feature = FeatureCatalogModel(

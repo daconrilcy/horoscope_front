@@ -158,11 +158,15 @@ class ReferenceDataService:
         from app.services.reference_data.house_interpretation_seed_service import (
             sync_house_interpretation_profiles,
         )
+        from app.services.reference_data.planet_interpretation_seed_service import (
+            sync_planet_interpretation_profiles,
+        )
         from app.services.reference_data.translation_seed_service import (
             sync_astral_translation_seed_data,
         )
 
         sync_house_interpretation_profiles(db, model.id)
+        sync_planet_interpretation_profiles(db, model.id)
         sync_aspect_interpretation_profiles(db, model.id)
         sync_astral_translation_seed_data(db, model.id)
 

@@ -115,55 +115,55 @@
     "category_scores": {
       "energy": {
         "note_20": 9,
-        "raw_score": -0.0020002795068521716,
-        "normalized_score": -0.0020002795068521716,
-        "power": 0.0914413488846707,
-        "volatility": 0.013325166476470302,
+        "raw_score": -0.00200027952853913,
+        "normalized_score": -0.00200027952853913,
+        "power": 0.09144134987607452,
+        "volatility": 0.013325166620941279,
         "sort_order": 1,
         "is_provisional": true
       },
       "mood": {
         "note_20": 9,
-        "raw_score": -0.0018464118524789274,
-        "normalized_score": -0.0018464118524789274,
-        "power": 0.08440739897046526,
-        "volatility": 0.01230015367058797,
+        "raw_score": -0.001847969757783042,
+        "normalized_score": -0.001847969757783042,
+        "power": 0.08440739988560726,
+        "volatility": 0.012299675886393243,
         "sort_order": 2,
         "is_provisional": true
       },
       "health": {
         "note_20": 14,
-        "raw_score": 0.0,
-        "normalized_score": 0.0,
-        "power": 0.0,
-        "volatility": 0.0,
+        "raw_score": -1.3383999693142335e-06,
+        "normalized_score": -1.3383999693142335e-06,
+        "power": 6.11839985972221e-05,
+        "volatility": 8.91595516632613e-06,
         "sort_order": 3,
         "is_provisional": true
       },
       "work": {
         "note_20": 16,
-        "raw_score": 0.0057697478584232825,
-        "normalized_score": 0.0057697478584232825,
-        "power": 0.12627759220976573,
-        "volatility": 0.02022997521964035,
+        "raw_score": 0.0057993621131586974,
+        "normalized_score": 0.0057993621131586974,
+        "power": 0.12627759357886287,
+        "volatility": 0.020237782871837064,
         "sort_order": 4,
         "is_provisional": true
       },
       "career": {
         "note_20": 20,
-        "raw_score": 0.022526066622476335,
-        "normalized_score": 0.022526066622476335,
-        "power": 0.19259985702581917,
-        "volatility": 0.04036886942398721,
+        "raw_score": 0.022560045519775394,
+        "normalized_score": 0.022560045519775394,
+        "power": 0.19259985911397992,
+        "volatility": 0.040373140006835034,
         "sort_order": 5,
         "is_provisional": true
       },
       "money": {
         "note_20": 2,
-        "raw_score": -0.014042956717504204,
-        "normalized_score": -0.014042956717504204,
-        "power": 0.1467112498972994,
-        "volatility": 0.030096363588755386,
+        "raw_score": -0.013448543461844424,
+        "normalized_score": -0.013448543461844424,
+        "power": 0.146711249995892,
+        "volatility": 0.030180305284230127,
         "sort_order": 6,
         "is_provisional": true
       },
@@ -178,10 +178,10 @@
       },
       "sex_intimacy": {
         "note_20": 1,
-        "raw_score": -0.015906245288576377,
-        "normalized_score": -0.015906245288576377,
-        "power": 0.23813999983329753,
-        "volatility": 0.04077250744369642,
+        "raw_score": -0.015525092093058301,
+        "normalized_score": -0.015525092093058301,
+        "power": 0.23813999999333194,
+        "volatility": 0.04083868649108605,
         "sort_order": 8,
         "is_provisional": true
       },
@@ -196,10 +196,10 @@
       },
       "social_network": {
         "note_20": 5,
-        "raw_score": -0.006524443574694343,
-        "normalized_score": -0.006524443574694343,
-        "power": 0.294320999818128,
-        "volatility": 0.0428666869762221,
+        "raw_score": -0.006438377618159548,
+        "normalized_score": -0.006438377618159548,
+        "power": 0.29432583397300793,
+        "volatility": 0.042890232743206684,
         "sort_order": 10,
         "is_provisional": true
       },
@@ -214,16 +214,16 @@
       },
       "pleasure_creativity": {
         "note_20": 7,
-        "raw_score": -0.0037209216060203726,
-        "normalized_score": -0.0037209216060203726,
-        "power": 0.16785268426205924,
-        "volatility": 0.02444707811819943,
+        "raw_score": -0.00367547284200074,
+        "normalized_score": -0.00367547284200074,
+        "power": 0.16785544120387869,
+        "volatility": 0.024459393008672413,
         "sort_order": 12,
         "is_provisional": true
       }
     },
-    "detected_events_count": 54,
-    "turning_points_count": 14,
+    "detected_events_count": 50,
+    "turning_points_count": 12,
     "sample_count": 96,
     "is_provisional_calibration": true
   }

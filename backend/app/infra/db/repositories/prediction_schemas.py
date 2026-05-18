@@ -3,7 +3,7 @@
 Les profils maison y sont scindes entre attributs astrologiques et produit.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from app.domain.astrology.reference import HouseAstrologyProfile
@@ -11,6 +11,7 @@ from app.domain.prediction.context import CalibrationData
 
 __all__ = [
     "AspectProfileData",
+    "AnglePointData",
     "AspectOrbRuleData",
     "AstroPointData",
     "CalibrationData",
@@ -56,6 +57,7 @@ class PlanetProfileData:
     daily_emotional_impact_score: float = 1.0
     daily_conscious_activation_score: float = 1.0
     is_enabled: bool = True
+    is_planet: bool = True
     micro_note: str | None = None
     typical_polarity: str | None = None
     orb_active_deg: float | None = None
@@ -117,6 +119,18 @@ class AstroPointData:
 
 
 @dataclass(frozen=True)
+class AnglePointData:
+    """Point angulaire stable issu du référentiel astrologique canonique."""
+
+    point_id: int
+    code: str
+    short_label: str
+    full_name: str
+    axis: str
+    associated_house: int
+
+
+@dataclass(frozen=True)
 class PointCategoryWeightData:
     point_id: int
     point_code: str
@@ -142,6 +156,7 @@ class AspectProfileData:
     strength_thresholds: Mapping[str, Any] | None = None
     angle: float = 0.0
     family_code: str = ""
+    default_orb_deg: float | None = None
 
 
 @dataclass(frozen=True)
@@ -208,6 +223,7 @@ class PredictionContext:
     aspect_orb_rules: tuple[AspectOrbRuleData, ...] = ()
     aspect_system_inheritance: Mapping[str, str | None] | None = None
     fixed_stars: tuple[FixedStarData, ...] = ()
+    angle_points: Mapping[str, AnglePointData] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

@@ -59,7 +59,7 @@ from app.services.prediction.public_predictions import (
     _extract_llm_narrative_payload,
     _resolve_daily_prediction_service_error,
     enrich_public_prediction_with_horoscope_narration,
-    load_public_projection_aspect_profiles,
+    load_public_projection_aspect_profiles_by_id,
 )
 from app.services.prediction.types import ComputeMode, DailyPredictionServiceError
 from app.services.user_profile.birth_profile_service import (
@@ -365,7 +365,9 @@ async def run_horoscope_daily_generation(
             ruleset_version=settings.ruleset_version,
             variant_code=variant_code,
             astro_labels=astro_labels,
-            aspect_profiles=load_public_projection_aspect_profiles(db, reference_version),
+            aspect_profiles=load_public_projection_aspect_profiles_by_id(
+                db, snapshot.reference_version_id
+            ),
         )
         assembled = await enrich_public_prediction_with_horoscope_narration(
             assembled,

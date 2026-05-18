@@ -19,9 +19,6 @@ from app.domain.prediction.temporal_sampler import DayGrid
 logger = logging.getLogger(__name__)
 
 DEFAULT_ASPECT_SYSTEM = "modern"
-PLANET_BODY_TYPES = frozenset(
-    {"luminary", "personal_planet", "social_planet", "transpersonal_planet"}
-)
 
 
 class EventDetector:
@@ -408,10 +405,26 @@ class EventDetector:
             self._orb_max_cache[cache_key] = profile_orb_max
             return profile_orb_max
 
+        definition_orb_max = self._definition_orb_max(aspect_code)
+        if definition_orb_max is not None:
+            self._orb_max_cache[cache_key] = definition_orb_max
+            return definition_orb_max
+
         raise PredictionContextError(
             "Missing aspect orb rule for "
             f"planet={planet_code!r} aspect={aspect_code!r} target={target_code!r}"
         )
+
+    def _definition_orb_max(self, aspect_code: str) -> float | None:
+        """Résout l'orbe canonique de définition quand aucune règle ciblée ne matche."""
+        aspect_profile = self._lookup_mapping_value(
+            getattr(self.ctx.prediction_context, "aspect_profiles", {}),
+            aspect_code,
+        )
+        default_orb = getattr(aspect_profile, "default_orb_deg", None)
+        if isinstance(default_orb, (int, float)):
+            return float(default_orb)
+        return None
 
     def _profile_orb_max(self, planet_code: str, aspect_code: str) -> float | None:
         """Calcule l'orbe actif depuis les profils planète/aspect du contexte."""
@@ -441,8 +454,10 @@ class EventDetector:
             rules = ()
         if not rules:
             return None
-        source_type = self._body_type_for_code(planet_code)
-        target_type = "any" if target_code is None else self._body_type_for_code(target_code)
+        source_type, source_is_planet = self._body_reference_for_code(planet_code)
+        target_type, target_is_planet = (
+            ("any", False) if target_code is None else self._body_reference_for_code(target_code)
+        )
         candidates = [
             rule
             for rule in rules
@@ -450,8 +465,16 @@ class EventDetector:
             and self._aspect_system_matches(rule)
             and bool(getattr(rule, "is_enabled", True))
             and str(rule.calculation_context).lower() in {"transit_to_natal", "natal", "any"}
-            and self._body_type_matches(str(rule.source_body_type), source_type)
-            and self._body_type_matches(str(rule.target_body_type), target_type)
+            and self._body_type_matches(
+                str(rule.source_body_type),
+                source_type,
+                is_planet=source_is_planet,
+            )
+            and self._body_type_matches(
+                str(rule.target_body_type),
+                target_type,
+                is_planet=target_is_planet,
+            )
             and self._planet_code_matches(getattr(rule, "source_planet_code", None), planet_code)
             and self._planet_code_matches(getattr(rule, "target_planet_code", None), target_code)
         ]
@@ -525,27 +548,36 @@ class EventDetector:
                 score += 1
         return score
 
-    def _body_type_for_code(self, body_code: str) -> str:
-        """Retourne la famille de corps attendue par les règles d'orbes."""
-        if body_code in self.ANGLE_TARGETS:
-            return "angle"
-        if body_code in self.LUMINARY_TARGETS:
-            return "luminary"
-        profile = self._lookup_mapping_value(self.ctx.prediction_context.planet_profiles, body_code)
+    def _body_reference_for_code(self, body_code: str) -> tuple[str, bool]:
+        """Retourne la famille et le statut planète depuis le contexte DB-backed."""
+        profile = self._lookup_mapping_value(
+            self.ctx.prediction_context.planet_profiles,
+            body_code,
+        )
+        if profile is None:
+            angle_point = self._lookup_mapping_value(
+                getattr(self.ctx.prediction_context, "angle_points", {}),
+                body_code,
+            )
+            if angle_point is not None:
+                return ("angle", False)
+            return ("unknown", False)
         class_code = str(getattr(profile, "class_code", "") or "").lower()
         if class_code in {"luminary", "planet"}:
-            return class_code
+            return (class_code, bool(getattr(profile, "is_planet", True)))
         if class_code in {"personal", "social", "transpersonal"}:
-            return f"{class_code}_planet"
-        return "planet"
+            return (f"{class_code}_planet", bool(getattr(profile, "is_planet", True)))
+        return ("planet", bool(getattr(profile, "is_planet", True)))
 
-    def _body_type_matches(self, rule_type: str, actual_type: str) -> bool:
+    def _body_type_matches(self, rule_type: str, actual_type: str, *, is_planet: bool) -> bool:
         """Compare une famille de règle et une famille runtime."""
         normalized_rule = rule_type.lower()
         normalized_actual = actual_type.lower()
-        return normalized_rule in {"any", normalized_actual} or (
-            normalized_rule == "planet" and normalized_actual in PLANET_BODY_TYPES
-        )
+        if normalized_rule == "any":
+            return True
+        if normalized_rule == "planet":
+            return is_planet
+        return normalized_rule == normalized_actual
 
     def _planet_code_matches(self, rule_code: str | None, actual_code: str | None) -> bool:
         """Vérifie une contrainte optionnelle de planète source."""

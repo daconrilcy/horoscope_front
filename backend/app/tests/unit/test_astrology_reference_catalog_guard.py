@@ -31,6 +31,8 @@ def _forbidden_symbols() -> set[str]:
         "HOUSE_SYSTEM_REFERENCE_" + "ROWS",
         "VALENCE_BY_" + "ASPECT",
         "ENERGY_BY_" + "ASPECT",
+        "PLANET_" + "BODY_TYPES",
+        "ASTROLOGICAL_" + "ANGLE_POINT_CODES",
         "_STAR" + "_DATA",
         "_ASPECT" + "_TONES",
         "planet_" + "rows",
@@ -198,5 +200,35 @@ def test_prediction_aspect_mappings_are_not_reintroduced() -> None:
                     }
                     if len(literal_values & aspect_codes) >= 3:
                         hits.append(f"{path.relative_to(REPO_ROOT)}:aspect-code-literal-group")
+
+    assert hits == []
+
+
+def test_prediction_aspect_body_catalogues_are_not_reintroduced() -> None:
+    """Bloque les catalogues DB-backed de types planètes et points angulaires."""
+    forbidden_literal_groups = {
+        "planet-body-types": {
+            "luminary",
+            "personal_planet",
+            "social_planet",
+            "transpersonal_planet",
+        },
+        "angle-point-codes": {"asc", "dsc", "mc", "ic"},
+    }
+    checked_file = REPO_ROOT / "backend" / "app" / "domain" / "prediction" / "aspect_reference.py"
+    tree = ast.parse(checked_file.read_text(encoding="utf-8"), filename=str(checked_file))
+
+    hits: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Set, ast.List, ast.Tuple)):
+            continue
+        literal_values = {
+            str(item.value).lower()
+            for item in node.elts
+            if isinstance(item, ast.Constant) and isinstance(item.value, str)
+        }
+        for group_name, forbidden_values in forbidden_literal_groups.items():
+            if len(literal_values & forbidden_values) >= 2:
+                hits.append(f"{checked_file.relative_to(REPO_ROOT)}:{group_name}")
 
     assert hits == []

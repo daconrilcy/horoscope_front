@@ -6,7 +6,6 @@ from itertools import combinations, product
 
 from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
-    PLANET_BODY_TYPES,
     AspectBodyRuntimeData,
     AspectCalculationResult,
     AspectDefinitionRuntimeData,
@@ -55,7 +54,7 @@ def _body_matches(
     if expected_type == "any":
         return True
     if expected_type == "planet":
-        return body.body_type in PLANET_BODY_TYPES
+        return _is_planet_body_type(body.body_type)
     if expected_type == "point":
         return body.body_type in {"point", "angle"}
     return body.body_type == expected_type
@@ -107,9 +106,15 @@ def _rule_effective_priority(rule: AspectOrbRuleRuntimeData) -> int:
         return max(rule.priority, 900)
     if "luminary" in body_types:
         return min(max(rule.priority, 800), 899)
-    if body_types & {*PLANET_BODY_TYPES, "planet"}:
+    if any(_is_planet_body_type(body_type) for body_type in body_types):
         return max(rule.priority, 700)
     return rule.priority
+
+
+def _is_planet_body_type(body_type: str) -> bool:
+    """Reconnaît les classes planétaires issues du catalogue céleste runtime."""
+    normalized = body_type.strip().lower()
+    return normalized in {"planet", "luminary"} or normalized.endswith("_planet")
 
 
 def _system_chain(

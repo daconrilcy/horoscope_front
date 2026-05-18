@@ -8,10 +8,6 @@ from typing import Any
 
 from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 
-PLANET_BODY_TYPES = frozenset(
-    {"luminary", "personal_planet", "social_planet", "transpersonal_planet"}
-)
-
 
 def _required_text(value: object, field_name: str) -> str:
     """Normalise une valeur textuelle obligatoire."""

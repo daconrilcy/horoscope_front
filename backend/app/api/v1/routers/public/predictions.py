@@ -1,3 +1,5 @@
+"""Routeur public des prédictions daily et de leur projection API."""
+
 from __future__ import annotations
 
 import logging
@@ -36,7 +38,7 @@ from app.services.prediction.public_predictions import (
     _extract_llm_narrative_payload,
     _resolve_daily_prediction_service_error,
     enrich_public_prediction_with_horoscope_narration,
-    load_public_projection_aspect_profiles,
+    load_public_projection_aspect_profiles_by_id,
 )
 from app.services.prediction.types import (
     ComputeMode,
@@ -357,7 +359,9 @@ async def get_daily_prediction(
             ruleset_version=settings.ruleset_version,
             variant_code=variant_code,
             astro_labels=astro_labels,
-            aspect_profiles=load_public_projection_aspect_profiles(db, reference_version),
+            aspect_profiles=load_public_projection_aspect_profiles_by_id(
+                db, snapshot.reference_version_id
+            ),
         )
         request_id = resolve_request_id(request)
         trace_id = resolve_trace_id(request, fallback=request_id)

@@ -204,6 +204,11 @@ def test_internal_llm_qa_routes_run_canonical_flows(
         lambda self, reference_version_id: [],
     )
     monkeypatch.setattr(
+        qa_module,
+        "load_public_projection_aspect_profiles_by_id",
+        lambda db, reference_version_id: {},
+    )
+    monkeypatch.setattr(
         qa_module.PublicPredictionAssembler,
         "assemble",
         fake_assemble,

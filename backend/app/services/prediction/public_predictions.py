@@ -22,16 +22,14 @@ from app.services.prediction.types import (
 logger = logging.getLogger(__name__)
 
 
-def load_public_projection_aspect_profiles(db: Session, reference_version: str) -> dict[str, Any]:
-    """Charge les profils d'aspects nécessaires à la projection publique."""
-    reference = (
-        db.query(ReferenceVersionModel)
-        .filter(ReferenceVersionModel.version == reference_version)
-        .one_or_none()
-    )
+def load_public_projection_aspect_profiles_by_id(
+    db: Session, reference_version_id: int
+) -> dict[str, Any]:
+    """Charge les profils d'aspects publics pour la version persistée du snapshot."""
+    reference = db.get(ReferenceVersionModel, reference_version_id)
     if reference is None:
-        raise ValueError(f"Reference version '{reference_version}' not found")
-    return PredictionReferenceRepository(db).get_aspect_profiles(reference.id)
+        raise ValueError(f"Reference version id '{reference_version_id}' not found")
+    return PredictionReferenceRepository(db).get_aspect_profiles(reference_version_id)
 
 
 def _resolve_daily_prediction_service_error(

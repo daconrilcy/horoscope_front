@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, aliased
 
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
+    AstralAspectDefinitionModel,
     AstralAspectOrbRuleModel,
     AstralPlanetSignDignityModel,
     AstroPointModel,
@@ -21,6 +22,7 @@ from app.infra.db.models.prediction_reference import (
 )
 from app.infra.db.models.reference import (
     AspectModel,
+    AstralAnglePointModel,
     AstralAspectFamilyModel,
     AstralAstrologicalRoleModel,
     AstralDignityTypeModel,
@@ -35,6 +37,7 @@ from app.infra.db.models.reference import (
     PlanetModel,
 )
 from app.infra.db.repositories.prediction_schemas import (
+    AnglePointData,
     AspectOrbRuleData,
     AspectProfileData,
     AstroPointData,
@@ -139,6 +142,7 @@ class PredictionReferenceRepository:
                 daily_emotional_impact_score=profile_row.daily_emotional_impact_score,
                 daily_conscious_activation_score=profile_row.daily_conscious_activation_score,
                 is_enabled=profile_row.is_enabled,
+                is_planet=bool(definition_row.is_planet),
                 micro_note=profile_row.micro_note,
                 typical_polarity=polarity_row.name,
                 orb_active_deg=None,
@@ -379,14 +383,22 @@ class PredictionReferenceRepository:
                 AspectModel,
                 AspectProfileModel,
                 AstralAspectFamilyModel.name.label("family"),
+                AstralAspectDefinitionModel.default_orb_deg.label("default_orb_deg"),
             )
             .join(AspectProfileModel, AspectModel.id == AspectProfileModel.aspect_id)
             .join(AstralAspectFamilyModel, AspectModel.family == AstralAspectFamilyModel.id)
+            .outerjoin(AstralSystemModel, AstralSystemModel.name == "modern")
+            .outerjoin(
+                AstralAspectDefinitionModel,
+                (AstralAspectDefinitionModel.aspect_id == AspectModel.id)
+                & (AstralAspectDefinitionModel.reference_version_id == reference_version_id)
+                & (AstralAspectDefinitionModel.astral_system_id == AstralSystemModel.id),
+            )
             .where(AspectProfileModel.reference_version_id == reference_version_id)
         ).all()
 
         result = {}
-        for aspect_row, profile_row, family in rows:
+        for aspect_row, profile_row, family, default_orb_deg in rows:
             result[aspect_row.code] = AspectProfileData(
                 aspect_id=aspect_row.id,
                 code=aspect_row.code,
@@ -401,6 +413,7 @@ class PredictionReferenceRepository:
                 strength_thresholds=self._parse_json_object(profile_row.strength_thresholds_json),
                 angle=float(aspect_row.angle),
                 family_code=str(family),
+                default_orb_deg=(None if default_orb_deg is None else float(default_orb_deg)),
             )
         return result
 
@@ -441,6 +454,25 @@ class PredictionReferenceRepository:
                 code=row.code,
                 name=row.name,
                 point_type=row.point_type,
+            )
+            for row in rows
+        }
+
+    def get_angle_points(self) -> dict[str, AnglePointData]:
+        """Charge les points angulaires stables depuis le référentiel astrologique."""
+        rows = (
+            self.db.execute(select(AstralAnglePointModel).order_by(AstralAnglePointModel.code))
+            .scalars()
+            .all()
+        )
+        return {
+            row.code: AnglePointData(
+                point_id=row.id,
+                code=row.code,
+                short_label=row.short_label,
+                full_name=row.full_name,
+                axis=row.axis,
+                associated_house=row.associated_house,
             )
             for row in rows
         }
@@ -497,6 +529,7 @@ class PredictionReferenceRepository:
             astro_points=self.get_astro_points(reference_version_id),
             point_category_weights=self.get_point_category_weights(reference_version_id),
             fixed_stars=self.get_fixed_stars(),
+            angle_points=self.get_angle_points(),
         )
 
     def _parse_keywords(self, raw: str | None) -> tuple[str, ...]:

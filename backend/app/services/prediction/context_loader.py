@@ -13,6 +13,7 @@ from app.infra.db.models.reference import ReferenceVersionModel
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.repositories.prediction_ruleset_repository import PredictionRulesetRepository
 from app.infra.db.repositories.prediction_schemas import (
+    AnglePointData,
     AspectProfileData,
     AstroPointData,
     CalibrationData,
@@ -237,6 +238,12 @@ class PredictionContextLoader:
                 for weight in pred_ctx.point_category_weights
             ),
             fixed_stars=tuple(self._freeze_fixed_star(star) for star in pred_ctx.fixed_stars),
+            angle_points=MappingProxyType(
+                {
+                    code: self._freeze_angle_point(point)
+                    for code, point in pred_ctx.angle_points.items()
+                }
+            ),
         )
 
     def _freeze_ruleset_context(self, ruleset_ctx: RulesetContext) -> RulesetContext:
@@ -275,6 +282,7 @@ class PredictionContextLoader:
             daily_emotional_impact_score=profile.daily_emotional_impact_score,
             daily_conscious_activation_score=profile.daily_conscious_activation_score,
             is_enabled=profile.is_enabled,
+            is_planet=profile.is_planet,
             micro_note=profile.micro_note,
             typical_polarity=profile.typical_polarity,
             orb_active_deg=profile.orb_active_deg,
@@ -347,6 +355,7 @@ class PredictionContextLoader:
             strength_thresholds=profile.strength_thresholds,
             angle=profile.angle,
             family_code=profile.family_code,
+            default_orb_deg=profile.default_orb_deg,
         )
 
     def _freeze_astro_point(self, point: AstroPointData) -> AstroPointData:
@@ -355,6 +364,17 @@ class PredictionContextLoader:
             code=point.code,
             name=point.name,
             point_type=point.point_type,
+        )
+
+    def _freeze_angle_point(self, point: AnglePointData) -> AnglePointData:
+        """Fige un point angulaire stable chargé depuis `astral_angle_points`."""
+        return AnglePointData(
+            point_id=point.point_id,
+            code=point.code,
+            short_label=point.short_label,
+            full_name=point.full_name,
+            axis=point.axis,
+            associated_house=point.associated_house,
         )
 
     def _freeze_point_category_weight(

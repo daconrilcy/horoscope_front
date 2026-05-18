@@ -20,6 +20,8 @@ from app.infra.db.models import (
     AstralHouseInterpretationProfileTranslationModel,
     AstralInterpretiveValenceModel,
     AstralModalityModel,
+    AstralPlanetInterpretationProfileModel,
+    AstralPlanetInterpretationProfileTranslationModel,
     AstralPlanetSignDignityModel,
     AstralPolarityModel,
     AstralSignModel,
@@ -48,6 +50,9 @@ from app.services.reference_data.aspect_interpretation_seed_service import (
 from app.services.reference_data.house_interpretation_seed_service import (
     sync_house_interpretation_profiles,
 )
+from app.services.reference_data.planet_interpretation_seed_service import (
+    sync_planet_interpretation_profiles,
+)
 from app.services.reference_data.translation_seed_service import sync_astral_translation_seed_data
 
 
@@ -60,6 +65,7 @@ EXPECTED_COUNTS = {
     "planet_profiles": 10,
     "house_profiles": 12,
     "astral_house_interpretation_profiles": 12,
+    "astral_planet_interpretation_profiles": 10,
     "astral_aspect_interpretation_profiles": 20,
     "astral_aspect_profiles": 20,
     "astral_aspect_definitions": 80,
@@ -831,6 +837,11 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
         .select_from(HouseInterpretationProfileModel)
         .where(HouseInterpretationProfileModel.reference_version_id == reference_version_id)
     )
+    actual["astral_planet_interpretation_profiles"] = db.scalar(
+        select(func.count())
+        .select_from(AstralPlanetInterpretationProfileModel)
+        .where(AstralPlanetInterpretationProfileModel.reference_version_id == reference_version_id)
+    )
     actual["astral_aspect_interpretation_profiles"] = db.scalar(
         select(func.count())
         .select_from(AstralAspectInterpretationProfileModel)
@@ -976,6 +987,7 @@ def _ensure_legacy_reference_version_seeded(db: Session) -> ReferenceVersionMode
     _ensure_astral_planet_sign_dignities(db)
     ensure_astral_aspect_reference_data(db, v1.id)
     sync_house_interpretation_profiles(db, v1.id)
+    sync_planet_interpretation_profiles(db, v1.id)
     sync_aspect_interpretation_profiles(db, v1.id)
     sync_astral_translation_seed_data(db, v1.id)
     db.flush()
@@ -993,6 +1005,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             _ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
             sync_house_interpretation_profiles(db, v2.id)
+            sync_planet_interpretation_profiles(db, v2.id)
             ensure_astral_aspect_reference_data(db, v2.id)
             sync_aspect_interpretation_profiles(db, v2.id)
             sync_astral_translation_seed_data(db, v2.id)
@@ -1079,6 +1092,15 @@ def run_prediction_reference_seed(db: Session) -> None:
                 )
             )
             db.execute(
+                delete(AstralPlanetInterpretationProfileTranslationModel).where(
+                    AstralPlanetInterpretationProfileTranslationModel.source_profile_id.in_(
+                        select(AstralPlanetInterpretationProfileModel.id).where(
+                            AstralPlanetInterpretationProfileModel.reference_version_id == v2.id
+                        )
+                    )
+                )
+            )
+            db.execute(
                 delete(HouseInterpretationProfileModel).where(
                     HouseInterpretationProfileModel.reference_version_id == v2.id
                 )
@@ -1086,6 +1108,11 @@ def run_prediction_reference_seed(db: Session) -> None:
             db.execute(
                 delete(AstralAspectInterpretationProfileModel).where(
                     AstralAspectInterpretationProfileModel.reference_version_id == v2.id
+                )
+            )
+            db.execute(
+                delete(AstralPlanetInterpretationProfileModel).where(
+                    AstralPlanetInterpretationProfileModel.reference_version_id == v2.id
                 )
             )
             db.execute(
@@ -1121,6 +1148,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             _ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
             ensure_astral_aspect_reference_data(db, v2.id)
+            sync_planet_interpretation_profiles(db, v2.id)
             sync_aspect_interpretation_profiles(db, v2.id)
             sync_astral_translation_seed_data(db, v2.id)
         else:
@@ -1260,6 +1288,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             )
         )
     sync_house_interpretation_profiles(db, v2.id)
+    sync_planet_interpretation_profiles(db, v2.id)
 
     # 7. Alimentation des poids planète -> catégorie.
     print("Seeding planet category weights...")

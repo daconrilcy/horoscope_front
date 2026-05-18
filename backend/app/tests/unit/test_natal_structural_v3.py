@@ -59,6 +59,13 @@ def test_compute_v3_with_factors(mock_context):
     p_weight.category_code = "work"
     p_weight.weight = 1.0
     mock_context.prediction_context.planet_category_weights = [p_weight]
+    mock_context.prediction_context.aspect_profiles = {
+        "conjunction": MagicMock(
+            intensity_weight=1.0,
+            default_valence="positive",
+            orb_multiplier=1.0,
+        )
+    }
 
     # Mock aspects
     aspect = AstroEvent(
@@ -71,7 +78,7 @@ def test_compute_v3_with_factors(mock_context):
         orb_deg=0.0,
         priority=50,
         base_weight=1.0,
-        metadata={"is_natal": True},
+        metadata={"is_natal": True, "orb_max": 8.0},
     )
 
     natal = NatalChart(
@@ -290,7 +297,7 @@ def test_compute_v3_aspects_can_lower_structural_score(mock_context):
         orb_deg=0.0,
         priority=50,
         base_weight=1.0,
-        metadata={"is_natal": True},
+        metadata={"is_natal": True, "orb_max": 8.0},
     )
     natal = NatalChart(
         planet_positions={"Sun": 10.0, "Moon": 100.0},
