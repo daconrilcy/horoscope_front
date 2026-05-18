@@ -9,11 +9,12 @@
 
 ## Static checks
 
-- `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format <changed files>`
+- `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format .`
 - `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .`
 
-## Broader check
+## Vérification complète
 
 - `.\.venv\Scripts\Activate.ps1; Set-Location backend; pytest -q --long`
 
-Le broader check est coûteux; il sera lancé si les validations ciblées stabilisent la surface.
+La vérification complète est coûteuse; elle a été lancée après stabilisation des
+validations ciblées et son résultat est consigné dans `10-final-evidence.md`.

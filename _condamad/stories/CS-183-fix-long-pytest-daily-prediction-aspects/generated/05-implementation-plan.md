@@ -8,4 +8,6 @@
 
 ## No Legacy
 
-Aucun alias, shim ou chemin de compatibilité. Les absences de référence restent explicites pour les snapshots persistés; les doubles de tests sans référence ne déclenchent pas de recherche par version active.
+Aucun alias, shim ou chemin de compatibilité. Les absences de référence restent
+explicites pour les snapshots persistés; les doubles de tests sans référence ne
+déclenchent pas de recherche par version active.
