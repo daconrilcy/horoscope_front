@@ -492,7 +492,8 @@ class NatalInterpretationService:
         chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
         evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
         interpreted_astral_points = ()
-        if natal_result.points:
+        astral_points = getattr(natal_result, "astral_points", ())
+        if astral_points:
             interpreted_astral_points = AstralPointInterpretationService(
                 AstralPointInterpretationRepository(db)
             ).build_context(

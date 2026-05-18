@@ -1286,7 +1286,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260516_0126"
+    assert version == "20260518_0127"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

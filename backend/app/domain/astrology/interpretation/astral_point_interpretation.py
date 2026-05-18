@@ -145,7 +145,7 @@ class AstralPointInterpretationService:
     ) -> tuple[InterpretedAstralPoint, ...]:
         """Assemble les points interprétés sans modifier le résultat natal brut."""
         interpreted_points: list[InterpretedAstralPoint] = []
-        for point_position in natal_result.points:
+        for point_position in natal_result.astral_points:
             profile = self.profile_loader.load_profile_for_position(
                 point_position,
                 language_code=language_code,
