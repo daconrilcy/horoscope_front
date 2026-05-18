@@ -24,7 +24,10 @@ from app.domain.astrology.natal_preparation import (
     prepare_birth_data,
 )
 from app.infra.observability.metrics import get_counter_sum_in_window, reset_metrics
-from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
+from tests.factories.astrology_runtime_reference_factory import (
+    complete_sign_payloads,
+    runtime_reference_from_mapping,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -276,20 +279,7 @@ def test_build_natal_result_time_scale_tt_enabled(monkeypatch: pytest.MonkeyPatc
     ref_data = {
         "version": "1.0.0",
         "planets": [{"code": "sun", "name": "Sun"}],
-        "signs": [
-            {"code": "aries"},
-            {"code": "taurus"},
-            {"code": "gemini"},
-            {"code": "cancer"},
-            {"code": "leo"},
-            {"code": "virgo"},
-            {"code": "libra"},
-            {"code": "scorpio"},
-            {"code": "sagittarius"},
-            {"code": "capricorn"},
-            {"code": "aquarius"},
-            {"code": "pisces"},
-        ],
+        "signs": complete_sign_payloads(),
         "houses": [{"number": n} for n in range(1, 13)],
         "aspects": [
             {
@@ -358,20 +348,7 @@ def test_build_natal_result_time_scale_tt_disabled(monkeypatch: pytest.MonkeyPat
     ref_data = {
         "version": "1.0.0",
         "planets": [{"code": "sun", "name": "Sun"}],
-        "signs": [
-            {"code": "aries"},
-            {"code": "taurus"},
-            {"code": "gemini"},
-            {"code": "cancer"},
-            {"code": "leo"},
-            {"code": "virgo"},
-            {"code": "libra"},
-            {"code": "scorpio"},
-            {"code": "sagittarius"},
-            {"code": "capricorn"},
-            {"code": "aquarius"},
-            {"code": "pisces"},
-        ],
+        "signs": complete_sign_payloads(),
         "houses": [{"number": n} for n in range(1, 13)],
         "aspects": [
             {

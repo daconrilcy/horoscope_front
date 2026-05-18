@@ -6,7 +6,7 @@ des dictionnaires metier dans le domaine.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 from app.domain.astrology.runtime.runtime_reference import AstrologyRuntimeReference
 from app.infra.db.repositories.astrology_runtime_reference_mapper import (
@@ -27,6 +27,33 @@ _CANONICAL_SIGN_CODES = (
     "aquarius",
     "pisces",
 )
+
+_CANONICAL_SIGN_PROFILES = {
+    "aries": {"element": "fire", "modality": "cardinal", "polarity": "yang"},
+    "taurus": {"element": "earth", "modality": "fixed", "polarity": "yin"},
+    "gemini": {"element": "air", "modality": "mutable", "polarity": "yang"},
+    "cancer": {"element": "water", "modality": "cardinal", "polarity": "yin"},
+    "leo": {"element": "fire", "modality": "fixed", "polarity": "yang"},
+    "virgo": {"element": "earth", "modality": "mutable", "polarity": "yin"},
+    "libra": {"element": "air", "modality": "cardinal", "polarity": "yang"},
+    "scorpio": {"element": "water", "modality": "fixed", "polarity": "yin"},
+    "sagittarius": {"element": "fire", "modality": "mutable", "polarity": "yang"},
+    "capricorn": {"element": "earth", "modality": "cardinal", "polarity": "yin"},
+    "aquarius": {"element": "air", "modality": "fixed", "polarity": "yang"},
+    "pisces": {"element": "water", "modality": "mutable", "polarity": "yin"},
+}
+
+
+def complete_sign_payloads(codes: Iterable[str] = _CANONICAL_SIGN_CODES) -> list[dict[str, object]]:
+    """Construit des signes de fixture avec profils structurels explicites."""
+    signs: list[dict[str, object]] = []
+    for raw_code in codes:
+        code = raw_code.strip().lower()
+        profile = _CANONICAL_SIGN_PROFILES.get(code)
+        if profile is None:
+            raise ValueError(f"unknown sign fixture code: {raw_code}")
+        signs.append({"code": code, "name": code.title(), **profile})
+    return signs
 
 
 def runtime_reference_from_mapping(
@@ -213,92 +240,7 @@ def complete_reference() -> AstrologyRuntimeReference:
         {
             "version": "test",
             "planets": [{"code": code, "name": code.title()} for code in planets],
-            "signs": [
-                {
-                    "code": "aries",
-                    "name": "Aries",
-                    "element": "fire",
-                    "modality": "cardinal",
-                    "polarity": "yang",
-                },
-                {
-                    "code": "taurus",
-                    "name": "Taurus",
-                    "element": "earth",
-                    "modality": "fixed",
-                    "polarity": "yin",
-                },
-                {
-                    "code": "gemini",
-                    "name": "Gemini",
-                    "element": "air",
-                    "modality": "mutable",
-                    "polarity": "yang",
-                },
-                {
-                    "code": "cancer",
-                    "name": "Cancer",
-                    "element": "water",
-                    "modality": "cardinal",
-                    "polarity": "yin",
-                },
-                {
-                    "code": "leo",
-                    "name": "Leo",
-                    "element": "fire",
-                    "modality": "fixed",
-                    "polarity": "yang",
-                },
-                {
-                    "code": "virgo",
-                    "name": "Virgo",
-                    "element": "earth",
-                    "modality": "mutable",
-                    "polarity": "yin",
-                },
-                {
-                    "code": "libra",
-                    "name": "Libra",
-                    "element": "air",
-                    "modality": "cardinal",
-                    "polarity": "yang",
-                },
-                {
-                    "code": "scorpio",
-                    "name": "Scorpio",
-                    "element": "water",
-                    "modality": "fixed",
-                    "polarity": "yin",
-                },
-                {
-                    "code": "sagittarius",
-                    "name": "Sagittarius",
-                    "element": "fire",
-                    "modality": "mutable",
-                    "polarity": "yang",
-                },
-                {
-                    "code": "capricorn",
-                    "name": "Capricorn",
-                    "element": "earth",
-                    "modality": "cardinal",
-                    "polarity": "yin",
-                },
-                {
-                    "code": "aquarius",
-                    "name": "Aquarius",
-                    "element": "air",
-                    "modality": "fixed",
-                    "polarity": "yang",
-                },
-                {
-                    "code": "pisces",
-                    "name": "Pisces",
-                    "element": "water",
-                    "modality": "mutable",
-                    "polarity": "yin",
-                },
-            ],
+            "signs": complete_sign_payloads(),
             "houses": [{"number": number, "name": f"House {number}"} for number in range(1, 13)],
             "house_axes": [
                 {

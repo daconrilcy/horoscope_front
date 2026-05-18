@@ -30,7 +30,10 @@ from app.domain.astrology.ephemeris_provider import (
     calculate_planets,
 )
 from app.domain.astrology.zodiac import sign_from_longitude
-from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
+from tests.factories.astrology_runtime_reference_factory import (
+    complete_sign_payloads,
+    runtime_reference_from_mapping,
+)
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -81,7 +84,7 @@ def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, obj
     return {
         "version": "1.0.0",
         "planets": [{"code": c, "name": c.capitalize()} for c in codes],
-        "signs": [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}],
+        "signs": complete_sign_payloads(),
         "houses": [{"number": n, "name": f"House {n}"} for n in range(1, 13)],
         "aspects": [
             {

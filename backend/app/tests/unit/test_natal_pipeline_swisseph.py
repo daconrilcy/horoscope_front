@@ -21,7 +21,10 @@ from app.domain.astrology.natal_calculation import (
     build_natal_result,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
-from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
+from tests.factories.astrology_runtime_reference_factory import (
+    complete_sign_payloads,
+    runtime_reference_from_mapping,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -50,7 +53,7 @@ def _make_reference_data(
     """Build minimal reference data for tests."""
     codes = planet_codes or ["sun", "moon", "mercury"]
     planets = [{"code": c, "name": c.capitalize()} for c in codes]
-    signs = [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}]
+    signs = complete_sign_payloads()
     houses = [{"number": n, "name": f"House {n}"} for n in range(1, house_count + 1)]
     aspects = [
         {

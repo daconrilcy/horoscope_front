@@ -16,7 +16,10 @@ from app.domain.astrology.natal_calculation import (
     build_natal_result,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
-from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
+from tests.factories.astrology_runtime_reference_factory import (
+    complete_sign_payloads,
+    runtime_reference_from_mapping,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -86,7 +89,7 @@ def _make_reference_data(
     return {
         "version": "1.0.0",
         "planets": [{"code": "sun", "name": "Sun"}],
-        "signs": [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}],
+        "signs": complete_sign_payloads(),
         "houses": [{"number": n, "name": f"House {n}"} for n in range(1, 13)],
         "aspects": aspects if aspects is not None else default_aspects,
         "aspect_orb_rules": [],

@@ -18,7 +18,10 @@ import pytest
 
 from app.domain.astrology.natal_calculation import NatalResult, build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
-from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
+from tests.factories.astrology_runtime_reference_factory import (
+    complete_sign_payloads,
+    runtime_reference_from_mapping,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -43,7 +46,7 @@ COMPLETE_SIGN_RULERS = {
 def _make_reference_data(planet_codes: list[str] | None = None) -> dict[str, object]:
     codes = planet_codes or ["sun"]
     planets = [{"code": c, "name": c.capitalize()} for c in codes]
-    signs = [{"code": "aries", "name": "Aries"}, {"code": "taurus", "name": "Taurus"}]
+    signs = complete_sign_payloads()
     houses = [{"number": n, "name": f"House {n}"} for n in range(1, 13)]
     conjunction_payload = {
         "code": "conjunction",

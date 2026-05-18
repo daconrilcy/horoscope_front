@@ -14,7 +14,10 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
 )
-from tests.factories.astrology_runtime_reference_factory import runtime_reference_from_mapping
+from tests.factories.astrology_runtime_reference_factory import (
+    complete_sign_payloads,
+    runtime_reference_from_mapping,
+)
 from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
@@ -182,7 +185,7 @@ def test_build_natal_result_rejects_legacy_orb_fields(monkeypatch: pytest.Monkey
     reference = {
         "version": "1.0.0",
         "planets": [{"code": "sun", "name": "Sun"}, {"code": "mars", "name": "Mars"}],
-        "signs": [{"code": code, "name": code.title()} for code in ("aries", "cancer")],
+        "signs": complete_sign_payloads(),
         "houses": [{"number": n, "name": f"House {n}"} for n in range(1, 13)],
         "aspects": [
             {
