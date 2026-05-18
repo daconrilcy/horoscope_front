@@ -4,6 +4,12 @@ Date: 2026-05-18
 Perimetre: calcul backend du theme natal, depuis les donnees de naissance jusqu'au `NatalResult`.  
 Focus: calcul astronomique/astrologique structurel. Les couches d'interpretation, de narration LLM et d'affichage ne sont pas detaillees sauf lorsqu'elles touchent la persistance du resultat.
 
+Mise a jour CS-189: les etoiles fixes restent hors calcul du theme natal, mais
+elles ne sont plus seulement des donnees d'affichage cote prediction quotidienne.
+Le runtime daily charge maintenant les tables `astral_fixed_star_*` et leurs
+sources pour detecter, filtrer, router et scorer les conjonctions aux etoiles
+fixes.
+
 ## Vue d'ensemble
 
 Le calcul du theme natal est orchestre cote backend. Le frontend et les routes API ne calculent pas les positions: ils transmettent des donnees, recoivent un resultat et l'affichent.
@@ -748,6 +754,32 @@ Liste consolidee des tables `astral_` qui participent au calcul ou a la construc
 ## Tables `astral_` non utilisees dans le calcul
 
 Ces tables existent dans les modeles SQLAlchemy ou les sources de seed, mais ne sont pas lues par la chaine de calcul du `NatalResult` decrite ci-dessus. Elles peuvent servir au seed, a l'interpretation, a la traduction, a la prediction quotidienne, a l'affichage ou a des extensions futures.
+
+Depuis CS-189, les tables d'etoiles fixes ci-dessous restent non utilisees par
+le calcul natal, mais elles sont actives dans le runtime prediction daily:
+
+- `astral_fixed_stars`: identifiants canoniques et noms affichables des etoiles.
+- `astral_fixed_star_definitions`: longitude ecliptique, magnitude visuelle,
+  activation et rattachement a une source de reference.
+- `astral_fixed_star_keywords`: mots-cles transmis au contrat runtime fixed star.
+- `astral_reference_sources`: categorie et cle de source associees a la definition.
+
+Le flux daily correspondant ne recree pas de catalogue local. Il passe par
+`PredictionReferenceRepository.get_fixed_stars()`, puis par
+`PredictionContext.fixed_stars`. `EnrichedAstroEventsBuilder` lit l'orbe, le
+seuil de magnitude et le poids de base depuis les parametres de ruleset:
+
+- `fixed_star_orb_deg`
+- `fixed_star_max_visual_magnitude`
+- `fixed_star_base_weight`
+- `fixed_star_category_weights`
+
+Les evenements `fixed_star_conjunction` retenus portent notamment `orb_max`,
+`star_key`, `star_display_name`, `visual_magnitude`,
+`fixed_star_source_category`, `fixed_star_source_key` et
+`fixed_star_keywords`. Ils contribuent ensuite au scoring via les owners
+existants `DomainRouter` et `ContributionCalculator`; aucun calculateur
+specialise ou catalogue `_STAR_DATA` n'est autorise.
 
 - `astral_aspect_interpretation_profile_translations`
 - `astral_aspect_interpretation_profiles`
