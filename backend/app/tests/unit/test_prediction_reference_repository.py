@@ -155,7 +155,7 @@ def test_reference_repository_seeds_astral_point_catalog(db_session: Session) ->
     assert db_session.query(AstralPointFamilyModel).count() == 3
     assert db_session.query(AstralPointModel).count() == 5
     assert db_session.query(AstralPointCalculationVariantModel).count() == 10
-    assert db_session.query(AstralPointAliasModel).count() == 15
+    assert db_session.query(AstralPointAliasModel).count() == 17
     assert db_session.query(AstralPointInterpretationKeywordModel).count() == 5
     assert db_session.query(AstralPointInterpretationProfileModel).count() == 5
 

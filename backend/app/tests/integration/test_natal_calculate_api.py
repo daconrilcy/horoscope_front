@@ -104,6 +104,57 @@ def test_calculate_natal_success_and_repeatable(monkeypatch: pytest.MonkeyPatch)
     assert fetch_data["result"]["reference_version"] == "1.0.0"
 
 
+def test_calculate_natal_passes_include_points_in_aspects(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Le contrat API propage explicitement l'option des points dans les aspects."""
+    _cleanup_reference_tables()
+    _seed_reference_data()
+    captured: dict[str, object] = {}
+    prepared = BirthPreparedData(
+        birth_datetime_local="1990-06-15T10:30:00+02:00",
+        birth_datetime_utc="1990-06-15T08:30:00Z",
+        timestamp_utc=645438600,
+        julian_day=2448057.8541666665,
+        birth_timezone="Europe/Paris",
+    )
+
+    def _fake_calculate(*args: object, **kwargs: object) -> NatalResult:
+        captured.update(kwargs)
+        return NatalResult(
+            reference_version="1.0.0",
+            ruleset_version="1.0.0",
+            house_system="equal",
+            engine="simplified",
+            prepared_input=prepared,
+            planet_positions=[],
+            houses=[HouseResult(number=1, cusp_longitude=0.0)],
+            aspects=[],
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.public.astrology_engine.NatalCalculationService.calculate",
+        _fake_calculate,
+    )
+    monkeypatch.setattr(
+        "app.api.v1.routers.public.astrology_engine.ChartResultService.persist_trace",
+        lambda **kwargs: "chart-test",
+    )
+
+    response = client.post(
+        "/v1/astrology-engine/natal/calculate",
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "reference_version": "1.0.0",
+            "include_points_in_aspects": True,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert captured["include_points_in_aspects"] is True
+
+
 def test_calculate_natal_unknown_reference_version() -> None:
     _cleanup_reference_tables()
     _seed_reference_data()

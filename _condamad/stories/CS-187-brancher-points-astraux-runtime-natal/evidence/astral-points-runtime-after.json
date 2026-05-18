@@ -1,0 +1,275 @@
+{
+  "artifact_kind": "after_runtime_repository_load",
+  "source": "AstrologyRuntimeReferenceRepository(db).load(\"1.0.0\")",
+  "reference_version": "1.0.0",
+  "astral_points": {
+    "items": [
+      {
+        "code": "north_node",
+        "display_name": "North Node",
+        "family_code": "lunar_nodes",
+        "astronomical_type": "orbital_intersection",
+        "is_physical_body": false,
+        "default_variant_code": "true",
+        "variants": [
+          {
+            "variant_code": "mean",
+            "display_name": "Mean North Node",
+            "calculation_mode": "mean",
+            "engine_key": "SE_MEAN_NODE",
+            "is_default": false
+          },
+          {
+            "variant_code": "true",
+            "display_name": "True North Node",
+            "calculation_mode": "true",
+            "engine_key": "SE_TRUE_NODE",
+            "is_default": true
+          }
+        ],
+        "aliases": [
+          {
+            "alias": "North Node",
+            "language_code": "en",
+            "source": "modern_western_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": true
+          },
+          {
+            "alias": "Dragon's Head",
+            "language_code": "en",
+            "source": "traditional_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": false
+          },
+          {
+            "alias": "Rahu",
+            "language_code": "en",
+            "source": "vedic_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": false
+          },
+          {
+            "alias": "Mean North Node",
+            "language_code": "en",
+            "source": "swiss_ephemeris",
+            "variant_code": "mean",
+            "engine_key": "SE_MEAN_NODE",
+            "is_primary": false
+          },
+          {
+            "alias": "True North Node",
+            "language_code": "en",
+            "source": "swiss_ephemeris",
+            "variant_code": "true",
+            "engine_key": "SE_TRUE_NODE",
+            "is_primary": false
+          }
+        ]
+      },
+      {
+        "code": "south_node",
+        "display_name": "South Node",
+        "family_code": "lunar_nodes",
+        "astronomical_type": "orbital_intersection",
+        "is_physical_body": false,
+        "default_variant_code": "true",
+        "variants": [
+          {
+            "variant_code": "mean",
+            "display_name": "Mean South Node",
+            "calculation_mode": "mean_opposition",
+            "engine_key": null,
+            "is_default": false
+          },
+          {
+            "variant_code": "true",
+            "display_name": "True South Node",
+            "calculation_mode": "true_opposition",
+            "engine_key": null,
+            "is_default": true
+          }
+        ],
+        "aliases": [
+          {
+            "alias": "South Node",
+            "language_code": "en",
+            "source": "modern_western_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": true
+          },
+          {
+            "alias": "Dragon's Tail",
+            "language_code": "en",
+            "source": "traditional_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": false
+          },
+          {
+            "alias": "Ketu",
+            "language_code": "en",
+            "source": "vedic_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": false
+          }
+        ]
+      },
+      {
+        "code": "lunar_apogee",
+        "display_name": "Lunar Apogee",
+        "family_code": "lunar_apsides",
+        "astronomical_type": "apsis",
+        "is_physical_body": false,
+        "default_variant_code": "mean",
+        "variants": [
+          {
+            "variant_code": "mean",
+            "display_name": "Mean Lunar Apogee",
+            "calculation_mode": "mean_apogee",
+            "engine_key": "SE_MEAN_APOG",
+            "is_default": true
+          },
+          {
+            "variant_code": "true",
+            "display_name": "Osculating Lunar Apogee",
+            "calculation_mode": "osculating_apogee",
+            "engine_key": "SE_OSCU_APOG",
+            "is_default": false
+          }
+        ],
+        "aliases": [
+          {
+            "alias": "Lunar Apogee",
+            "language_code": "en",
+            "source": "astronomical_reference",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": true
+          },
+          {
+            "alias": "Mean Lunar Apogee",
+            "language_code": "en",
+            "source": "swiss_ephemeris",
+            "variant_code": "mean",
+            "engine_key": "SE_MEAN_APOG",
+            "is_primary": false
+          },
+          {
+            "alias": "Osculating Lunar Apogee",
+            "language_code": "en",
+            "source": "swiss_ephemeris",
+            "variant_code": "true",
+            "engine_key": "SE_OSCU_APOG",
+            "is_primary": false
+          }
+        ]
+      },
+      {
+        "code": "lunar_perigee",
+        "display_name": "Lunar Perigee",
+        "family_code": "lunar_apsides",
+        "astronomical_type": "apsis",
+        "is_physical_body": false,
+        "default_variant_code": "mean",
+        "variants": [
+          {
+            "variant_code": "mean",
+            "display_name": "Mean Lunar Perigee",
+            "calculation_mode": "mean_perigee",
+            "engine_key": null,
+            "is_default": true
+          },
+          {
+            "variant_code": "true",
+            "display_name": "Osculating Lunar Perigee",
+            "calculation_mode": "osculating_perigee",
+            "engine_key": null,
+            "is_default": false
+          }
+        ],
+        "aliases": [
+          {
+            "alias": "Lunar Perigee",
+            "language_code": "en",
+            "source": "astronomical_reference",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": true
+          }
+        ]
+      },
+      {
+        "code": "black_moon_lilith",
+        "display_name": "Black Moon Lilith",
+        "family_code": "lilith",
+        "astronomical_type": "derived_lunar_apogee",
+        "is_physical_body": false,
+        "default_variant_code": "mean",
+        "variants": [
+          {
+            "variant_code": "mean",
+            "display_name": "Mean Black Moon Lilith",
+            "calculation_mode": "mean_apogee",
+            "engine_key": "SE_MEAN_APOG",
+            "is_default": true
+          },
+          {
+            "variant_code": "true",
+            "display_name": "True Black Moon Lilith",
+            "calculation_mode": "osculating_apogee",
+            "engine_key": "SE_OSCU_APOG",
+            "is_default": false
+          }
+        ],
+        "aliases": [
+          {
+            "alias": "Black Moon Lilith",
+            "language_code": "en",
+            "source": "modern_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": true
+          },
+          {
+            "alias": "Lilith",
+            "language_code": "en",
+            "source": "modern_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": false
+          },
+          {
+            "alias": "Lune Noire",
+            "language_code": "fr",
+            "source": "modern_astrology",
+            "variant_code": null,
+            "engine_key": null,
+            "is_primary": false
+          },
+          {
+            "alias": "Mean Lilith",
+            "language_code": "en",
+            "source": "swiss_ephemeris",
+            "variant_code": "mean",
+            "engine_key": "SE_MEAN_APOG",
+            "is_primary": false
+          },
+          {
+            "alias": "Osculating Lilith",
+            "language_code": "en",
+            "source": "swiss_ephemeris",
+            "variant_code": "true",
+            "engine_key": "SE_OSCU_APOG",
+            "is_primary": false
+          }
+        ]
+      }
+    ]
+  }
+}

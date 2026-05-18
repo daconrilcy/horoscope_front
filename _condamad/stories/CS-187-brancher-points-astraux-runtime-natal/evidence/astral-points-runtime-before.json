@@ -1,0 +1,20 @@
+{
+  "artifact_kind": "before_runtime_repository_load",
+  "source": "HEAD worktree before CS-187 implementation: AstrologyRuntimeReferenceRepository(db).load(\"1.0.0\")",
+  "git_head": "989acc7a",
+  "reference_version": "1.0.0",
+  "runtime_reference_has_astral_points": false,
+  "runtime_reference_fields": [
+    "reference_version_id",
+    "reference_version",
+    "planets",
+    "signs",
+    "aspects",
+    "houses",
+    "house_axes",
+    "dignities",
+    "angle_points",
+    "house_systems",
+    "systems"
+  ]
+}

@@ -120,6 +120,26 @@
       "is_primary": true
     },
     {
+      "id": 16,
+      "astral_point_code": "lunar_apogee",
+      "variant_code": "mean",
+      "alias": "Mean Lunar Apogee",
+      "language": "en",
+      "source": "swiss_ephemeris",
+      "engine_key": "SE_MEAN_APOG",
+      "is_primary": false
+    },
+    {
+      "id": 17,
+      "astral_point_code": "lunar_apogee",
+      "variant_code": "true",
+      "alias": "Osculating Lunar Apogee",
+      "language": "en",
+      "source": "swiss_ephemeris",
+      "engine_key": "SE_OSCU_APOG",
+      "is_primary": false
+    },
+    {
       "id": 10,
       "astral_point_code": "lunar_perigee",
       "variant_code": null,

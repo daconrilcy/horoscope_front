@@ -15,6 +15,10 @@ from app.domain.astrology.runtime.runtime_reference import (
     AspectOrbRuleReferenceData,
     AspectReferenceData,
     AspectReferenceSet,
+    AstralPointAliasRuntime,
+    AstralPointReferenceSet,
+    AstralPointRuntime,
+    AstralPointVariantRuntime,
     AstrologyRuntimeReference,
     AstrologySystemReferenceData,
     AstrologySystemReferenceSet,
@@ -47,6 +51,7 @@ class AstrologyRuntimeReferenceMapper:
         sign_rulerships: Mapping[str, str],
         planet_definitions: Mapping[str, Mapping[str, object]],
         angle_points: Sequence[Mapping[str, object]],
+        astral_points: Sequence[Mapping[str, object]],
         house_systems: Sequence[Mapping[str, object]],
     ) -> AstrologyRuntimeReference:
         """Retourne la photographie runtime complete attendue par le domaine."""
@@ -160,6 +165,7 @@ class AstrologyRuntimeReferenceMapper:
                     for item in angle_points
                 )
             ),
+            astral_points=self._map_astral_points(astral_points),
             house_systems=HouseSystemReferenceSet(
                 tuple(
                     HouseSystemReferenceData(
@@ -183,10 +189,68 @@ class AstrologyRuntimeReferenceMapper:
             ),
         )
 
+    def _map_astral_points(
+        self,
+        rows: Sequence[Mapping[str, object]],
+    ) -> AstralPointReferenceSet:
+        """Convertit les points astraux DB en contrats runtime typés."""
+        items: list[AstralPointRuntime] = []
+        for item in rows:
+            variants = tuple(
+                AstralPointVariantRuntime(
+                    variant_code=str(variant["variant_code"]),
+                    display_name=str(variant["display_name"]),
+                    calculation_mode=str(variant["calculation_mode"]),
+                    engine_key=self._optional_str(variant.get("engine_key")),
+                    is_default=bool(variant["is_default"]),
+                )
+                for variant in self._nested_items(item, "variants")
+            )
+            aliases = tuple(
+                AstralPointAliasRuntime(
+                    alias=str(alias["alias"]),
+                    language_code=str(alias["language_code"]),
+                    source=str(alias["source"]),
+                    variant_code=self._optional_str(alias.get("variant_code")),
+                    engine_key=self._optional_str(alias.get("engine_key")),
+                    is_primary=bool(alias["is_primary"]),
+                )
+                for alias in self._nested_items(item, "aliases")
+            )
+            default_variants = tuple(
+                variant.variant_code for variant in variants if variant.is_default
+            )
+            if len(default_variants) > 1:
+                raise ValueError(f"multiple default variants for astral point {item['code']}")
+            items.append(
+                AstralPointRuntime(
+                    code=str(item["code"]),
+                    display_name=str(item["display_name"]),
+                    family_code=str(item["family_code"]),
+                    astronomical_type=str(item["astronomical_type"]),
+                    is_physical_body=bool(item["is_physical_body"]),
+                    default_variant_code=default_variants[0] if default_variants else None,
+                    variants=variants,
+                    aliases=aliases,
+                )
+            )
+        return AstralPointReferenceSet(tuple(items))
+
     def _items(self, payload: Mapping[str, object], key: str) -> tuple[Mapping[str, object], ...]:
         """Extrait une liste de mappings du payload infra."""
         raw = payload.get(key)
         if not isinstance(raw, list):
+            return ()
+        return tuple(item for item in raw if isinstance(item, Mapping))
+
+    def _nested_items(
+        self,
+        payload: Mapping[str, object],
+        key: str,
+    ) -> tuple[Mapping[str, object], ...]:
+        """Extrait une liste imbriquee de mappings deja confinée à l'infra."""
+        raw = payload.get(key)
+        if not isinstance(raw, (list, tuple)):
             return ()
         return tuple(item for item in raw if isinstance(item, Mapping))
 

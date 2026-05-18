@@ -150,6 +150,42 @@ def runtime_reference_from_mapping(
                 "associated_house": 4,
             },
         ),
+        astral_points=(
+            {
+                "code": "north_node",
+                "display_name": "North Node",
+                "family_code": "lunar_nodes",
+                "astronomical_type": "orbital_intersection",
+                "is_physical_body": False,
+                "variants": [
+                    {
+                        "variant_code": "true",
+                        "display_name": "True North Node",
+                        "calculation_mode": "true",
+                        "engine_key": "SE_TRUE_NODE",
+                        "is_default": True,
+                    }
+                ],
+                "aliases": [],
+            },
+            {
+                "code": "south_node",
+                "display_name": "South Node",
+                "family_code": "lunar_nodes",
+                "astronomical_type": "orbital_intersection",
+                "is_physical_body": False,
+                "variants": [
+                    {
+                        "variant_code": "true",
+                        "display_name": "True South Node",
+                        "calculation_mode": "true_opposition",
+                        "engine_key": None,
+                        "is_default": True,
+                    }
+                ],
+                "aliases": [],
+            },
+        ),
         house_systems=(
             {"code": "placidus", "name": "Placidus", "is_active": True},
             {"code": "whole_sign", "name": "Whole Sign", "is_active": True},
@@ -302,6 +338,7 @@ def missing_planet_definition() -> AstrologyRuntimeReference:
         house_axes=reference.house_axes,
         dignities=reference.dignities,
         angle_points=reference.angle_points,
+        astral_points=reference.astral_points,
         house_systems=reference.house_systems,
         systems=reference.systems,
     )
@@ -320,6 +357,7 @@ def missing_dignity() -> AstrologyRuntimeReference:
         house_axes=reference.house_axes,
         dignities=type(reference.dignities)(items=(), sign_rulerships={}),
         angle_points=reference.angle_points,
+        astral_points=reference.astral_points,
         house_systems=reference.house_systems,
         systems=reference.systems,
     )
@@ -352,6 +390,7 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         house_axes=reference.house_axes,
         dignities=reference.dignities,
         angle_points=reference.angle_points,
+        astral_points=reference.astral_points,
         house_systems=reference.house_systems,
         systems=reference.systems,
     )

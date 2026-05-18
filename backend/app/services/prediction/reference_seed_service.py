@@ -89,7 +89,7 @@ EXPECTED_COUNTS = {
     "astral_point_families": 3,
     "astral_points": 5,
     "astral_point_calculation_variants": 10,
-    "astral_point_aliases": 15,
+    "astral_point_aliases": 17,
     "astral_point_interpretation_keywords": 5,
     "astral_point_interpretation_profiles": 5,
     "astral_point_interpretation_keyword_translations": 5,

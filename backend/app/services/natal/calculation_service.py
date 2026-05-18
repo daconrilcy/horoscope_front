@@ -257,6 +257,7 @@ class NatalCalculationService:
         tt_enabled: bool = False,
         derive_enabled: bool = False,
         aspect_school: str | None = None,
+        include_points_in_aspects: bool = False,
     ) -> NatalResult:
         """
         Calcule un thème natal complet.
@@ -274,6 +275,7 @@ class NatalCalculationService:
             frame: Référentiel de calcul (``"geocentric"`` ou ``"topocentric"``).
             altitude_m: Altitude en mètres pour le cadre topocentrique.
             tt_enabled: Si True, calcule ΔT et JD TT pour la traçabilité audit (story 22.2).
+            include_points_in_aspects: Si True, inclut les points astraux dans les aspects.
 
         Returns:
             Résultat du calcul natal.
@@ -447,6 +449,7 @@ class NatalCalculationService:
                 derive_enabled=derive_enabled,
                 aspect_school=resolved_aspect_school,
                 aspect_rules_version=aspect_rules_version,
+                include_points_in_aspects=include_points_in_aspects,
             )
         except Exception as error:
             if not NatalCalculationService._is_swisseph_provider_error(error):

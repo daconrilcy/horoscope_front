@@ -36,6 +36,7 @@ class NatalCalculateRequest(BirthInput):
     house_system: str | None = None
     altitude_m: float | None = None
     tt_enabled: bool = False
+    include_points_in_aspects: bool = False
 
 
 class NatalCompareRequest(BirthInput):

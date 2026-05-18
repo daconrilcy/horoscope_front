@@ -169,3 +169,24 @@ def test_repository_integrity_rejects_orphan_aspect_rule() -> None:
         "field": "aspect_orb_rules",
         "reason": "orphan_aspect:nonexistent",
     }
+
+
+def test_repository_integrity_rejects_orphan_aspect_point_rule() -> None:
+    """L'integrite runtime refuse les regles d'orbe ciblant un point absent."""
+    repository = AstrologyRuntimeReferenceRepository(
+        db=None, mapper=AstrologyRuntimeReferenceMapper()
+    )  # type: ignore[arg-type]
+    reference = complete_reference()
+    rule = replace(reference.aspects.orb_rules[0], source_point_code="ghost_point")
+    invalid_reference = replace(
+        reference,
+        aspects=replace(reference.aspects, orb_rules=(rule,)),
+    )
+
+    with pytest.raises(AstrologyRuntimeReferenceError) as error:
+        repository._validate(invalid_reference)
+
+    assert error.value.details == {
+        "field": "aspect_orb_rules",
+        "reason": "orphan_source_point_code:ghost_point",
+    }

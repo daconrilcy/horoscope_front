@@ -153,6 +153,7 @@ def calculate_natal(
             request_id=request_id,
             tt_enabled=effective_tt_enabled,
             derive_enabled=settings.timezone_derived_enabled,
+            include_points_in_aspects=parsed_payload.include_points_in_aspects,
         )
         chart_id = ChartResultService.persist_trace(
             db=db,

@@ -11,6 +11,10 @@ from pydantic import BaseModel, Field, model_validator
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.angle_utils import contains_angle
+from app.domain.astrology.astral_point_calculation_resolver import (
+    AstralPointCalculationInstruction,
+    AstralPointCalculationResolver,
+)
 from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
 from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
 from app.domain.astrology.builders.sign_runtime_builder import build_sign_runtime_data
@@ -52,6 +56,18 @@ class PlanetPosition(BaseModel):
     house_number: int
     speed_longitude: float | None = None
     is_retrograde: bool | None = None
+
+
+class NatalAstralPointPosition(BaseModel):
+    """Position normalisée d'un point astral calculé depuis le runtime DB."""
+
+    code: str
+    variant_code: str | None = None
+    longitude: float
+    sign: str
+    degree_in_sign: float
+    house: int | None = None
+    is_physical_body: bool
 
 
 HouseResult = HouseRuntimeData
@@ -102,6 +118,7 @@ class NatalResult(BaseModel):
     signs_runtime: list[SignRuntimeData] = Field(default_factory=list)
     chart_balance: ChartBalanceRuntimeData | None = None
     house_rulers: list[HouseRulerResult] = Field(default_factory=list)
+    points: list[NatalAstralPointPosition] = Field(default_factory=list)
     aspects: list[AspectResult]
 
 
@@ -299,6 +316,120 @@ def _build_swisseph_houses(
     return houses_raw, house_data.house_system
 
 
+def _simplified_point_longitude(
+    julian_day: float, instruction: AstralPointCalculationInstruction
+) -> float:
+    """Produit une longitude déterministe pour les points en moteur simplifié."""
+    seed = sum(ord(char) for char in instruction.engine_key or instruction.calculation_mode)
+    return normalize_360((julian_day * 0.985647) + seed)
+
+
+def _engine_point_longitude(
+    julian_day: float,
+    engine: str,
+    instruction: AstralPointCalculationInstruction,
+    *,
+    zodiac: ZodiacType,
+    ayanamsa: str | None,
+    frame: FrameType,
+    lat: float | None,
+    lon: float | None,
+    altitude_m: float | None,
+) -> float:
+    """Calcule une longitude directe selon le moteur natal actif."""
+    if instruction.engine_key is None:
+        raise NatalCalculationError(
+            code="invalid_reference_data",
+            message="astral point reference data is invalid",
+            details={"field": "astral_points", "reason": "missing_engine_key"},
+        )
+    if engine == "swisseph":
+        from app.domain.astrology.ephemeris_provider import calculate_astral_point_longitude
+
+        return calculate_astral_point_longitude(
+            julian_day,
+            instruction.engine_key,
+            zodiac=zodiac,
+            ayanamsa=ayanamsa,
+            frame=frame,
+            lat=lat,
+            lon=lon,
+            altitude_m=altitude_m,
+        ).longitude
+    return _simplified_point_longitude(julian_day, instruction)
+
+
+def calculate_astral_points(
+    *,
+    julian_day: float,
+    runtime_reference: AstrologyRuntimeReference,
+    sign_codes: list[str],
+    houses_raw: list[dict[str, object]],
+    engine: str,
+    zodiac: ZodiacType = ZodiacType.TROPICAL,
+    ayanamsa: str | None = None,
+    frame: FrameType = FrameType.GEOCENTRIC,
+    birth_lat: float | None = None,
+    birth_lon: float | None = None,
+    altitude_m: float | None = None,
+) -> list[dict[str, object]]:
+    """Calcule les points astraux configurés et les normalise pour le résultat natal."""
+    resolver = AstralPointCalculationResolver()
+    points_by_key: dict[tuple[str, str], dict[str, object]] = {}
+    pending = list(runtime_reference.astral_points.items)
+    while pending:
+        progressed = False
+        for point in tuple(pending):
+            instruction = resolver.resolve(point)
+            key = (instruction.point_code, instruction.variant_code)
+            if instruction.is_derived:
+                source_key = (
+                    str(instruction.derived_from_point_code),
+                    str(instruction.derived_from_variant_code),
+                )
+                source = points_by_key.get(source_key)
+                if source is None:
+                    continue
+                longitude = normalize_360(
+                    float(source["longitude"]) + instruction.longitude_offset_deg
+                )
+            else:
+                longitude = normalize_360(
+                    _engine_point_longitude(
+                        julian_day,
+                        engine,
+                        instruction,
+                        zodiac=zodiac,
+                        ayanamsa=ayanamsa,
+                        frame=frame,
+                        lat=birth_lat,
+                        lon=birth_lon,
+                        altitude_m=altitude_m,
+                    )
+                )
+            sign_code = sign_from_longitude(longitude, sign_codes)
+            points_by_key[key] = {
+                "code": point.code,
+                "variant_code": instruction.variant_code,
+                "planet_code": point.code,
+                "longitude": round(longitude, 6),
+                "sign": sign_code,
+                "degree_in_sign": round(longitude % 30.0, 6),
+                "house": assign_house_number(longitude, houses_raw),
+                "is_physical_body": point.is_physical_body,
+            }
+            pending.remove(point)
+            progressed = True
+        if not progressed:
+            unresolved = ",".join(point.code for point in pending)
+            _raise_invalid_reference(
+                runtime_reference.reference_version,
+                "astral_points",
+                f"unresolved_derived_points:{unresolved}",
+            )
+    return list(points_by_key.values())
+
+
 def build_natal_result(
     birth_input: BirthInput,
     runtime_reference: AstrologyRuntimeReference,
@@ -318,6 +449,7 @@ def build_natal_result(
     derive_enabled: bool = False,
     aspect_school: str = "modern",
     aspect_rules_version: str = "1.0.0",
+    include_points_in_aspects: bool = False,
 ) -> NatalResult:
     aspect_school_code = str(getattr(aspect_school, "value", aspect_school)).strip().lower()
     if timeout_check is not None:
@@ -402,6 +534,22 @@ def build_natal_result(
         effective_house_system = HOUSE_SYSTEM_CODE
 
     _validate_house_cusps(version, houses_raw)
+    if timeout_check is not None:
+        timeout_check()
+
+    points_raw = calculate_astral_points(
+        julian_day=prepared.julian_day,
+        runtime_reference=runtime_reference,
+        sign_codes=sign_codes,
+        houses_raw=houses_raw,
+        engine=engine,
+        zodiac=zodiac,
+        ayanamsa=ayanamsa,
+        frame=frame,
+        birth_lat=birth_lat,
+        birth_lon=birth_lon,
+        altitude_m=altitude_m,
+    )
     if timeout_check is not None:
         timeout_check()
 
@@ -547,9 +695,15 @@ def build_natal_result(
         aspect_orb_rules.append(aspect_orb_rule)
 
     system_inheritance = _build_system_inheritance(version, runtime_reference.systems)
+    aspect_source_positions = [*positions_raw, *(points_raw if include_points_in_aspects else [])]
     aspect_positions = [
         build_aspect_body_from_position(position, celestial_catalog) for position in positions_raw
     ]
+    if include_points_in_aspects:
+        aspect_positions = [
+            build_aspect_body_from_position(position, celestial_catalog)
+            for position in aspect_source_positions
+        ]
 
     aspects_raw = calculate_major_aspects(
         aspect_positions,
@@ -564,12 +718,13 @@ def build_natal_result(
 
     # story 24-2 Observability: track aspects calculated and rejected by orb
     increment_counter(f"aspects_calculated_total_{aspect_school_code}", float(len(aspects_raw)))
-    _total_checks = math.comb(len(positions_raw), 2) * len(major_aspect_definitions)
+    _total_checks = math.comb(len(aspect_source_positions), 2) * len(major_aspect_definitions)
     _rejected = _total_checks - len(aspects_raw)
     if _rejected > 0:
         increment_counter("aspects_rejected_orb_total", float(_rejected))
 
     positions = [PlanetPosition.model_validate(item) for item in positions_raw]
+    points = [NatalAstralPointPosition.model_validate(item) for item in points_raw]
     cusp_houses = [
         HouseRuntimeData(
             number=int(item["number"]),
@@ -631,5 +786,6 @@ def build_natal_result(
         signs_runtime=signs_runtime,
         chart_balance=chart_balance,
         house_rulers=house_rulers,
+        points=points,
         aspects=aspects,
     )

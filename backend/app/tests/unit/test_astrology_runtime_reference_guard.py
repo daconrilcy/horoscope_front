@@ -20,6 +20,12 @@ FORBIDDEN_NATAL_FLOW_PATTERNS = (
     r"\bMODALITY_BY_SIGN\b",
     r"\bPOLARITY_BY_SIGN\b",
     r"\bSIGN_PROFILE_DATA\b",
+    r"\bASTRAL_POINTS\s*=",
+    r"\bPOINT_VARIANTS\s*=",
+    r"\bNODE_VARIANTS\s*=",
+    r"\bLILITH_VARIANTS\s*=",
+    r"\btrue_node\b",
+    r"\bmean_node\b",
     r"\bEXACT_ORB_DEG\b",
     r"\bTIGHT_RATIO\b",
     r"\bMODERATE_RATIO\b",
@@ -91,3 +97,23 @@ def test_astrology_domain_does_not_import_prediction_or_llm_runtime() -> None:
                 hits.append(f"{path}:{pattern}")
 
     assert hits == []
+
+
+def test_natal_result_exposes_points_collection_without_flat_point_fields() -> None:
+    """Le contrat natal conserve uniquement la collection `points[]` pour les points."""
+    tree = ast.parse(_source("app/domain/astrology/natal_calculation.py"))
+    natal_result = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ClassDef) and node.name == "NatalResult"
+    )
+    field_names = {
+        node.target.id
+        for node in natal_result.body
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+    }
+
+    assert "points" in field_names
+    assert "true_node" not in field_names
+    assert "mean_node" not in field_names
+    assert "lilith" not in field_names

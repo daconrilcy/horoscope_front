@@ -6,6 +6,8 @@ retourne un contrat domaine immutable complet pour le calcul natal.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,10 +21,14 @@ from app.infra.db.models.reference import (
     AstralHouseSystemModel,
     AstralModalityModel,
     AstralPlanetDefinitionModel,
+    AstralPointAliasModel,
+    AstralPointCalculationVariantModel,
+    AstralPointModel,
     AstralPolarityModel,
     AstralSignModel,
     AstralSignProfileModel,
     AstralSystemModel,
+    LanguageModel,
     PlanetModel,
     ReferenceVersionModel,
 )
@@ -82,6 +88,7 @@ class AstrologyRuntimeReferenceRepository:
                 sign_rulerships=prediction_repo.get_sign_rulerships(),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
+                astral_points=self._load_astral_points(),
                 house_systems=self._load_house_systems(),
             )
         except ValueError as error:
@@ -167,7 +174,7 @@ class AstrologyRuntimeReferenceRepository:
                 AstralPlanetSignDignityModel.astral_system_id == AstralSystemModel.id,
             )
         ).all()
-        result: list[dict[str, object]] = []
+        result: list[Mapping[str, object]] = []
         for dignity, planet_code, system in rows:
             result.append(
                 {
@@ -195,6 +202,67 @@ class AstrologyRuntimeReferenceRepository:
             for row in rows
         )
 
+    def _load_astral_points(self) -> tuple[dict[str, object], ...]:
+        """Charge les points astraux, variantes et aliases depuis les tables canoniques."""
+        point_rows = self.db.scalars(select(AstralPointModel).order_by(AstralPointModel.id)).all()
+        variant_rows = self.db.scalars(
+            select(AstralPointCalculationVariantModel).order_by(
+                AstralPointCalculationVariantModel.astral_point_code,
+                AstralPointCalculationVariantModel.id,
+            )
+        ).all()
+        alias_rows = self.db.execute(
+            select(AstralPointAliasModel, LanguageModel.code.label("language_code"))
+            .join(LanguageModel, AstralPointAliasModel.language_id == LanguageModel.id)
+            .order_by(
+                AstralPointAliasModel.astral_point_code,
+                AstralPointAliasModel.variant_code,
+                AstralPointAliasModel.id,
+            )
+        ).all()
+        engine_keys_by_variant = {
+            (alias.astral_point_code, alias.variant_code): alias.engine_key
+            for alias, _language_code in alias_rows
+            if alias.variant_code is not None and alias.engine_key is not None
+        }
+        variants_by_point: dict[str, list[Mapping[str, object]]] = {}
+        for variant in variant_rows:
+            variants_by_point.setdefault(variant.astral_point_code, []).append(
+                {
+                    "variant_code": variant.variant_code,
+                    "display_name": variant.display_name,
+                    "calculation_mode": variant.calculation_mode,
+                    "engine_key": engine_keys_by_variant.get(
+                        (variant.astral_point_code, variant.variant_code)
+                    ),
+                    "is_default": variant.is_default,
+                }
+            )
+        aliases_by_point: dict[str, list[Mapping[str, object]]] = {}
+        for alias, language_code in alias_rows:
+            aliases_by_point.setdefault(alias.astral_point_code, []).append(
+                {
+                    "alias": alias.alias,
+                    "language_code": language_code,
+                    "source": alias.source,
+                    "variant_code": alias.variant_code,
+                    "engine_key": alias.engine_key,
+                    "is_primary": alias.is_primary,
+                }
+            )
+        return tuple(
+            {
+                "code": row.code,
+                "display_name": row.display_name,
+                "family_code": row.point_family,
+                "astronomical_type": row.astronomical_type,
+                "is_physical_body": row.is_physical_body,
+                "variants": variants_by_point.get(row.code, []),
+                "aliases": aliases_by_point.get(row.code, []),
+            }
+            for row in point_rows
+        )
+
     def _load_house_systems(self) -> tuple[dict[str, object], ...]:
         """Charge les systemes de maisons actifs ou supportes."""
         rows = self.db.scalars(
@@ -213,6 +281,8 @@ class AstrologyRuntimeReferenceRepository:
         house_numbers = set(reference.houses.numbers)
         aspect_codes = {item.code for item in reference.aspects.items}
         system_codes = {item.code for item in reference.systems.items}
+        point_codes = {item.code for item in reference.astral_points.items}
+        angle_point_codes = {item.code for item in reference.angle_points.items}
         missing_planets = self._REQUIRED_PLANETS - set(reference.planets.codes)
         if missing_planets:
             self._raise_integrity("planets", f"missing:{','.join(sorted(missing_planets))}")
@@ -242,6 +312,13 @@ class AstrologyRuntimeReferenceRepository:
             )
         if not reference.aspects.items:
             self._raise_integrity("aspects", "missing")
+        if not reference.astral_points.items:
+            self._raise_integrity("astral_points", "missing")
+        for point in reference.astral_points.items:
+            if not point.variants:
+                self._raise_integrity("astral_points", f"missing_variant:{point.code}")
+            if point.default_variant_code is None:
+                self._raise_integrity("astral_points", f"missing_default_variant:{point.code}")
         if not reference.aspects.orb_rules:
             self._raise_integrity("aspect_orb_rules", "missing")
         for rule in reference.aspects.orb_rules:
@@ -254,6 +331,12 @@ class AstrologyRuntimeReferenceRepository:
                 ("target_planet_code", rule.target_planet_code),
             ):
                 if code is not None and code not in planet_codes:
+                    self._raise_integrity("aspect_orb_rules", f"orphan_{field}:{code}")
+            for field, code in (
+                ("source_point_code", rule.source_point_code),
+                ("target_point_code", rule.target_point_code),
+            ):
+                if code is not None and code not in point_codes and code not in angle_point_codes:
                     self._raise_integrity("aspect_orb_rules", f"orphan_{field}:{code}")
         if not reference.dignities.sign_rulerships:
             self._raise_integrity("sign_rulerships", "missing")

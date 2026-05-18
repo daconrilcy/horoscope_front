@@ -73,6 +73,14 @@ class EphemerisResult:
     ayanamsa_value: float | None = None  # Valeur numérique de l'ayanamsa au JDUT (sidéral)
 
 
+@dataclass(frozen=True)
+class AstralPointEphemerisData:
+    """Coordonnées moteur d'un point astral calculé par SwissEph."""
+
+    engine_key: str
+    longitude: float
+
+
 class EphemerisCalcError(Exception):
     """Levée quand swe.calc_ut échoue ou pyswisseph est indisponible."""
 
@@ -250,3 +258,70 @@ def calculate_planets(
         len(results),
     )
     return EphemerisResult(planets=results, ayanamsa_value=effective_ayanamsa_value)
+
+
+def calculate_astral_point_longitude(
+    jdut: float,
+    engine_key: str,
+    *,
+    zodiac: str = "tropical",
+    ayanamsa: str | None = None,
+    frame: str = "geocentric",
+    lat: float | None = None,
+    lon: float | None = None,
+    altitude_m: float | None = None,
+) -> AstralPointEphemerisData:
+    """Calcule la longitude d'un point astral à partir d'une clé moteur validée."""
+    try:
+        swe = load_swisseph()
+    except ImportError as exc:
+        raise EphemerisCalcError("pyswisseph module is not installed") from exc
+    swe_id = _resolve_swisseph_point_id(swe, engine_key)
+    if not isinstance(swe_id, int):
+        raise EphemerisCalcError(f"Unknown SwissEph astral point key: {engine_key}")
+    is_sidereal = zodiac == "sidereal"
+    is_topocentric = frame == "topocentric"
+    flg_swieph = getattr(swe, "FLG_SWIEPH", _FLG_SWIEPH)
+    flg_speed = getattr(swe, "FLG_SPEED", _FLG_SPEED)
+    flg_sidereal = getattr(swe, "FLG_SIDEREAL", _FLG_SIDEREAL)
+    flg_topocentric = getattr(swe, "FLG_TOPOCENTRIC", 32768)
+    sidm_reset = getattr(swe, "SIDM_FAGAN_BRADLEY", SIDM_RESET)
+    flags = flg_swieph | flg_speed
+    if is_sidereal:
+        flags |= flg_sidereal
+    if is_topocentric:
+        if lat is None or lon is None:
+            raise EphemerisCalcError("lat/lon are required for topocentric frame")
+        flags |= flg_topocentric
+    with SWISSEPH_LOCK:
+        if is_sidereal:
+            ayanamsa_id = _AYANAMSA_IDS.get(ayanamsa or "lahiri")
+            if ayanamsa_id is None:
+                raise EphemerisCalcError(f"Unknown ayanamsa: {ayanamsa}")
+            swe.set_sid_mode(ayanamsa_id)
+        if is_topocentric:
+            swe.set_topo(lon, lat, altitude_m or 0.0)
+        try:
+            xx, retflag = swe.calc_ut(jdut, swe_id, flags)
+        except Exception as exc:
+            raise EphemerisCalcError(
+                f"calc_ut failed for astral point {engine_key}: {type(exc).__name__}"
+            ) from exc
+        finally:
+            if is_sidereal:
+                swe.set_sid_mode(sidm_reset)
+            if is_topocentric:
+                swe.set_topo(0.0, 0.0, 0.0)
+    if retflag < 0:
+        raise EphemerisCalcError(f"calc_ut returned error flag for astral point {engine_key}")
+    return AstralPointEphemerisData(engine_key=engine_key, longitude=normalize_360(float(xx[0])))
+
+
+def _resolve_swisseph_point_id(swe: object, engine_key: str) -> int | None:
+    """Adapte les clés DB `SE_*` au nommage technique du module pyswisseph."""
+    direct = getattr(swe, engine_key, None)
+    if isinstance(direct, int):
+        return direct
+    normalized = engine_key.removeprefix("SE_")
+    fallback = getattr(swe, normalized, None)
+    return fallback if isinstance(fallback, int) else None

@@ -182,6 +182,55 @@ class AnglePointReferenceSet:
 
 
 @dataclass(frozen=True, slots=True)
+class AstralPointAliasRuntime:
+    """Alias ou clé moteur attaché à un point astral canonique."""
+
+    alias: str
+    language_code: str
+    source: str
+    variant_code: str | None = None
+    engine_key: str | None = None
+    is_primary: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class AstralPointVariantRuntime:
+    """Variante de calcul typée pour un point astral."""
+
+    variant_code: str
+    display_name: str
+    calculation_mode: str
+    engine_key: str | None
+    is_default: bool
+
+
+@dataclass(frozen=True, slots=True)
+class AstralPointRuntime:
+    """Point astral calculable issu des tables `astral_point_*`."""
+
+    code: str
+    display_name: str
+    family_code: str
+    astronomical_type: str
+    is_physical_body: bool
+    default_variant_code: str | None
+    variants: tuple[AstralPointVariantRuntime, ...]
+    aliases: tuple[AstralPointAliasRuntime, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class AstralPointReferenceSet:
+    """Collection immutable des points astraux disponibles au runtime natal."""
+
+    items: tuple[AstralPointRuntime, ...]
+
+    @property
+    def codes(self) -> tuple[str, ...]:
+        """Retourne les codes de points astraux dans l'ordre runtime."""
+        return tuple(item.code for item in self.items)
+
+
+@dataclass(frozen=True, slots=True)
 class HouseSystemReferenceData:
     """Systeme de maisons disponible pour le calcul."""
 
@@ -230,5 +279,6 @@ class AstrologyRuntimeReference:
     house_axes: tuple[HouseAxisReferenceData, ...]
     dignities: DignityReferenceSet
     angle_points: AnglePointReferenceSet
+    astral_points: AstralPointReferenceSet
     house_systems: HouseSystemReferenceSet
     systems: AstrologySystemReferenceSet
