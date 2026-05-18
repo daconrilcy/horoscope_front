@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, String, Text, UniqueConstraint, event
+from sqlalchemy import (
+    CheckConstraint,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    event,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
@@ -13,6 +22,8 @@ from app.infra.db.models.reference import _ensure_reference_version_is_mutable
 if TYPE_CHECKING:
     from app.infra.db.models.reference import (
         AspectModel,
+        AstralPointInterpretationKeywordModel,
+        AstralPointModel,
         AstralSystemModel,
         HouseModel,
         LanguageModel,
@@ -192,6 +203,47 @@ class AstralPlanetInterpretationProfileModel(Base):
     reference_version: Mapped["ReferenceVersionModel"] = relationship()
     planet: Mapped["PlanetModel"] = relationship()
     astral_system: Mapped["AstralSystemModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
+
+
+class AstralPointInterpretationProfileModel(Base):
+    """Profil éditorial stable pour interpréter un point astrologique calculé."""
+
+    __tablename__ = "astral_point_interpretation_profiles"
+    __table_args__ = (
+        UniqueConstraint(
+            "astral_point_code",
+            "variant_code",
+            "language_id",
+            "tradition",
+            name="uq_astral_point_interpretation_profiles_scope",
+        ),
+        ForeignKeyConstraint(["astral_point_code"], ["astral_points.code"]),
+        ForeignKeyConstraint(
+            ["astral_point_code", "variant_code"],
+            [
+                "astral_point_calculation_variants.astral_point_code",
+                "astral_point_calculation_variants.variant_code",
+            ],
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    astral_point_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    variant_code: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    keyword_set_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_point_interpretation_keywords.id"),
+        nullable=False,
+        index=True,
+    )
+    language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
+    tradition: Mapped[str] = mapped_column(String(64), nullable=False)
+    title: Mapped[str] = mapped_column(String(128), nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    astral_point: Mapped["AstralPointModel"] = relationship()
+    keyword_set: Mapped["AstralPointInterpretationKeywordModel"] = relationship()
     language: Mapped["LanguageModel"] = relationship()
 
 

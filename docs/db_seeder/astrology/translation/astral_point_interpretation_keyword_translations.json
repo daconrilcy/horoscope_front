@@ -1,0 +1,223 @@
+{
+  "name": "astral_point_interpretation_keyword_translations",
+  "structure": {
+    "source_table": "astral_point_interpretation_keywords",
+    "translation_table": "astral_point_interpretation_keyword_translations",
+    "source_reference": {
+      "keyword_set_id": "integer, reference astral_point_interpretation_keywords.id"
+    },
+    "translations": {
+      "locale": "string, one of fr/es/de/it",
+      "core_keywords_json": "json array<string>",
+      "shadow_keywords_json": "json array<string>",
+      "psychological_keywords_json": "json array<string>",
+      "spiritual_keywords_json": "json array<string>",
+      "relationship_keywords_json": "json array<string>",
+      "career_keywords_json": "json array<string>"
+    }
+  },
+  "data": {
+    "keywords": [
+      {
+        "keyword_set_id": 1,
+        "translations": {
+          "fr": {
+            "core_keywords_json": [
+              "evolution",
+              "croissance",
+              "direction",
+              "apprentissage",
+              "futur"
+            ],
+            "shadow_keywords_json": [
+              "inconfort",
+              "peur du changement",
+              "zone inconnue",
+              "idealisation du futur"
+            ],
+            "psychological_keywords_json": [
+              "developpement personnel",
+              "depassement des automatismes",
+              "nouvelle competence de vie"
+            ],
+            "spiritual_keywords_json": [
+              "appel interieur",
+              "axe karmique",
+              "orientation de l'ame"
+            ],
+            "relationship_keywords_json": [
+              "rencontres evolutives",
+              "apprentissage par l'autre",
+              "sortie des schemas connus"
+            ],
+            "career_keywords_json": [
+              "mission",
+              "orientation de long terme",
+              "zone de progression professionnelle"
+            ]
+          }
+        }
+      },
+      {
+        "keyword_set_id": 2,
+        "translations": {
+          "fr": {
+            "core_keywords_json": [
+              "heritage",
+              "habitude",
+              "memoire",
+              "talent acquis",
+              "passe"
+            ],
+            "shadow_keywords_json": [
+              "repetition",
+              "stagnation",
+              "attachement au connu",
+              "evitement du risque"
+            ],
+            "psychological_keywords_json": [
+              "automatismes",
+              "securite psychique",
+              "schemas anciens"
+            ],
+            "spiritual_keywords_json": [
+              "memoire karmique",
+              "bagage de l'ame",
+              "integration du passe"
+            ],
+            "relationship_keywords_json": [
+              "relations familieres",
+              "schemas relationnels repetes",
+              "confort affectif connu"
+            ],
+            "career_keywords_json": [
+              "competences naturelles",
+              "zone d'expertise acquise",
+              "risque de routine"
+            ]
+          }
+        }
+      },
+      {
+        "keyword_set_id": 3,
+        "translations": {
+          "fr": {
+            "core_keywords_json": [
+              "distance",
+              "eloignement",
+              "orbite lunaire",
+              "apogee",
+              "abstraction"
+            ],
+            "shadow_keywords_json": [
+              "froideur",
+              "dissociation",
+              "retrait excessif"
+            ],
+            "psychological_keywords_json": [
+              "mise a distance",
+              "observation",
+              "detachement emotionnel"
+            ],
+            "spiritual_keywords_json": [
+              "vide fertile",
+              "silence interieur",
+              "separation symbolique"
+            ],
+            "relationship_keywords_json": [
+              "besoin d'espace",
+              "distance relationnelle",
+              "autonomie affective"
+            ],
+            "career_keywords_json": [
+              "analyse",
+              "prise de recul",
+              "travail conceptuel"
+            ]
+          }
+        }
+      },
+      {
+        "keyword_set_id": 4,
+        "translations": {
+          "fr": {
+            "core_keywords_json": [
+              "proximite",
+              "intensite",
+              "incarnation",
+              "reaction",
+              "contact"
+            ],
+            "shadow_keywords_json": [
+              "hyperreactivite",
+              "fusion",
+              "debordement emotionnel"
+            ],
+            "psychological_keywords_json": [
+              "sensibilite immediate",
+              "besoin de contact",
+              "reponse instinctive"
+            ],
+            "spiritual_keywords_json": [
+              "presence",
+              "ancrage lunaire",
+              "ecoute du corps"
+            ],
+            "relationship_keywords_json": [
+              "proximite affective",
+              "attachement",
+              "besoin de reassurance"
+            ],
+            "career_keywords_json": [
+              "reactivite",
+              "soutien direct",
+              "presence operationnelle"
+            ]
+          }
+        }
+      },
+      {
+        "keyword_set_id": 5,
+        "translations": {
+          "fr": {
+            "core_keywords_json": [
+              "autonomie",
+              "instinct",
+              "ombre",
+              "refus",
+              "verite nue"
+            ],
+            "shadow_keywords_json": [
+              "rejet",
+              "honte",
+              "provocation",
+              "isolement",
+              "defense radicale"
+            ],
+            "psychological_keywords_json": [
+              "part non domestiquee",
+              "blessure d'exclusion",
+              "desir non conforme"
+            ],
+            "spiritual_keywords_json": [
+              "souverainete interieure",
+              "initiation par le vide",
+              "liberation des faux compromis"
+            ],
+            "relationship_keywords_json": [
+              "limites",
+              "attraction taboue",
+              "peur d'etre possede",
+              "besoin d'egalite radicale"
+            ],
+            "career_keywords_json": [
+              "independance",
+              "refus des roles imposes",
+              "puissance creative marginale"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

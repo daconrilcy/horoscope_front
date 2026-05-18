@@ -13,11 +13,13 @@ if TYPE_CHECKING:
     from app.infra.db.models.interpretation_reference import (
         AstralAspectInterpretationProfileModel,
         AstralPlanetInterpretationProfileModel,
+        AstralPointInterpretationProfileModel,
         HouseInterpretationProfileModel,
     )
     from app.infra.db.models.reference import (
         AspectModel,
         AstralFixedStarKeywordModel,
+        AstralPointInterpretationKeywordModel,
         AstralSignModel,
         HouseModel,
         LanguageModel,
@@ -142,6 +144,36 @@ class AstralFixedStarKeywordTranslationModel(Base):
     language: Mapped["LanguageModel"] = relationship()
 
 
+class AstralPointInterpretationKeywordTranslationModel(Base):
+    """Traduction localisée d'un groupe de mots-clés de point astrologique."""
+
+    __tablename__ = "astral_point_interpretation_keyword_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "keyword_set_id",
+            "language_id",
+            name="uq_astral_point_interpretation_keyword_translations_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    keyword_set_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_point_interpretation_keywords.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
+    core_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    shadow_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    psychological_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    spiritual_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    relationship_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    career_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+    keyword_set: Mapped["AstralPointInterpretationKeywordModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
+
+
 class AstralHouseInterpretationProfileTranslationModel(Base):
     """Traduction éditoriale d'un profil source de maison astrologique."""
 
@@ -220,4 +252,31 @@ class AstralAspectInterpretationProfileTranslationModel(Base):
     micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     source_profile: Mapped["AstralAspectInterpretationProfileModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
+
+
+class AstralPointInterpretationProfileTranslationModel(Base):
+    """Traduction éditoriale d'un profil source de point astrologique."""
+
+    __tablename__ = "astral_point_interpretation_profile_translations"
+    __table_args__ = (
+        UniqueConstraint(
+            "source_profile_id",
+            "language_id",
+            name="uq_astral_point_interpretation_profile_translations_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    source_profile_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_point_interpretation_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(128), nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    micro_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    source_profile: Mapped["AstralPointInterpretationProfileModel"] = relationship()
     language: Mapped["LanguageModel"] = relationship()

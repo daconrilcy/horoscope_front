@@ -19,6 +19,8 @@ from app.infra.db.models import (
     AstralPlanetInterpretationProfileModel,
     AstralPlanetInterpretationProfileTranslationModel,
     AstralPlanetTranslationModel,
+    AstralPointInterpretationProfileModel,
+    AstralPointInterpretationProfileTranslationModel,
     AstralSignTranslationModel,
     HouseInterpretationProfileModel,
     LanguageModel,
@@ -83,6 +85,8 @@ def sync_astral_translation_seed_data(
     _sync_house_interpretation_translations(db, language_ids, reference_version_id)
     _sync_aspect_interpretation_translations(db, language_ids, reference_version_id)
     _sync_planet_interpretation_translations(db, language_ids, reference_version_id)
+    _sync_point_interpretation_translations(db, language_ids)
+    db.flush()
 
 
 def _language_ids_by_code(db: Session) -> dict[str, int]:
@@ -265,6 +269,32 @@ def _sync_planet_interpretation_translations(
             )
 
 
+def _sync_point_interpretation_translations(
+    db: Session,
+    language_ids: dict[str, int],
+) -> None:
+    """Synchronise les traductions de profils éditoriaux de points astrologiques."""
+    payload = _load_payload(
+        "astral_point_interpretation_profile_translations.json",
+        "astral_point_interpretation_profile_translations",
+    )
+    rows = _profile_translation_rows(payload)
+    for row in rows:
+        source_profile = db.get(
+            AstralPointInterpretationProfileModel,
+            _required_int(row, "astral_point_interpretation_profile_id"),
+        )
+        if source_profile is None:
+            continue
+        _sync_profile_translation_map(
+            db,
+            language_ids,
+            row,
+            model_class=AstralPointInterpretationProfileTranslationModel,
+            source_profile_id=source_profile.id,
+        )
+
+
 def _profile_translation_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     """Extrait la liste `data.profiles` d'un seed de traduction éditoriale."""
     data = payload.get("data")
@@ -283,6 +313,7 @@ def _sync_profile_translation_map(
         AstralHouseInterpretationProfileTranslationModel
         | AstralPlanetInterpretationProfileTranslationModel
         | AstralAspectInterpretationProfileTranslationModel
+        | AstralPointInterpretationProfileTranslationModel
     ],
     source_profile_id: int,
 ) -> None:

@@ -118,6 +118,65 @@ def load_astral_fixed_star_keyword_translation_rows() -> tuple[dict[str, Any], .
     return tuple(dict(row) for row in rows)
 
 
+def load_astral_point_family_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les familles de points astrologiques calculés."""
+    return _load_data_rows("astral_point_families.json", "astral point families")
+
+
+def load_astral_point_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les points astrologiques calculés canoniques."""
+    return _load_data_rows("astral_points.json", "astral points")
+
+
+def load_astral_point_calculation_variant_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les variantes de calcul des points astrologiques."""
+    return _load_data_rows(
+        "astral_point_calculation_variants.json",
+        "astral point calculation variants",
+    )
+
+
+def load_astral_point_alias_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les alias et clés moteur des points astrologiques."""
+    return _load_data_rows("astral_point_aliases.json", "astral point aliases")
+
+
+def load_astral_point_interpretation_keyword_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les mots-clés interprétatifs des points astrologiques."""
+    return _load_data_rows(
+        "astral_point_interpretation_keywords.json",
+        "astral point interpretation keywords",
+    )
+
+
+def load_astral_point_interpretation_profile_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les profils éditoriaux des points astrologiques."""
+    return _load_data_rows(
+        "astral_point_interpretation_profiles.json",
+        "astral point interpretation profiles",
+    )
+
+
+def load_astral_point_interpretation_keyword_translation_rows() -> tuple[dict[str, Any], ...]:
+    """Charge les traductions des mots-clés des points astrologiques."""
+    source_path = (
+        astrology_research_path("translation")
+        / "astral_point_interpretation_keyword_translations.json"
+    )
+    with source_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    if (
+        not isinstance(raw, dict)
+        or raw.get("name") != "astral_point_interpretation_keyword_translations"
+    ):
+        raise ValueError("astral point keyword translations target an unexpected table")
+    data = raw.get("data")
+    rows = data.get("keywords") if isinstance(data, dict) else None
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("astral point keyword translations must contain data.keywords rows")
+    return tuple(dict(row) for row in rows)
+
+
 def load_astral_system_names() -> tuple[str, ...]:
     """Charge les systemes astraux depuis le JSON documentaire canonique."""
     source_path = astrology_research_path("astral_systems.json")

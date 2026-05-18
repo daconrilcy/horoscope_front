@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, aliased
 from app.infra.db.models.interpretation_reference import (
     AstralHouseAxisDefinitionModel,
     AstralHouseAxisMemberModel,
+    AstralPointInterpretationProfileModel,
 )
 from app.infra.db.models.prediction_reference import (
     AspectProfileModel,
@@ -31,6 +32,11 @@ from app.infra.db.models.reference import (
     AstralHouseModalityModel,
     AstralObjectTypeModel,
     AstralPlanetDefinitionModel,
+    AstralPointAliasModel,
+    AstralPointCalculationVariantModel,
+    AstralPointFamilyModel,
+    AstralPointInterpretationKeywordModel,
+    AstralPointModel,
     AstralReferenceEpochModel,
     AstralReferenceSourceModel,
     AstralSignModel,
@@ -44,7 +50,10 @@ from app.infra.db.models.reference import (
     PlanetModel,
     ReferenceVersionModel,
 )
-from app.infra.db.models.translation_reference import AstralFixedStarKeywordTranslationModel
+from app.infra.db.models.translation_reference import (
+    AstralFixedStarKeywordTranslationModel,
+    AstralPointInterpretationKeywordTranslationModel,
+)
 from app.infra.db.repositories.astrology_reference_sources import (
     load_aspect_family_names,
     load_aspect_rows,
@@ -61,6 +70,13 @@ from app.infra.db.repositories.astrology_reference_sources import (
     load_astral_object_type_rows,
     load_astral_planet_definition_rows,
     load_astral_planet_rows,
+    load_astral_point_alias_rows,
+    load_astral_point_calculation_variant_rows,
+    load_astral_point_family_rows,
+    load_astral_point_interpretation_keyword_rows,
+    load_astral_point_interpretation_keyword_translation_rows,
+    load_astral_point_interpretation_profile_rows,
+    load_astral_point_rows,
     load_astral_reference_epoch_rows,
     load_astral_reference_source_rows,
     load_astral_sign_rows,
@@ -279,6 +295,7 @@ class ReferenceRepository:
 
         self._seed_language_defaults()
         self.seed_fixed_star_defaults()
+        self.seed_astral_point_defaults()
 
         for row in load_structural_reference_rows("dignity_types"):
             code = str(row["code"])
@@ -701,6 +718,265 @@ class ReferenceRepository:
                 continue
             for field_name, value in payload.items():
                 setattr(definition, field_name, value)
+
+    def seed_astral_point_defaults(self) -> None:
+        """Synchronise les points astrologiques calculés et leurs profils stables."""
+        for row in load_astral_point_family_rows():
+            code = str(row["code"])
+            family = self.db.scalar(
+                select(AstralPointFamilyModel).where(AstralPointFamilyModel.code == code)
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "description": str(row["description"]),
+            }
+            if family is None:
+                self.db.add(AstralPointFamilyModel(code=code, **payload))
+            else:
+                family.display_name = payload["display_name"]
+                family.description = payload["description"]
+        self.db.flush()
+
+        family_codes = {row.code for row in self.db.scalars(select(AstralPointFamilyModel)).all()}
+        for row in load_astral_point_rows():
+            code = str(row["code"])
+            point_family = str(row["point_family"])
+            if point_family not in family_codes:
+                raise ValueError(f"unknown astral point family: {point_family}")
+            point = self.db.scalar(select(AstralPointModel).where(AstralPointModel.code == code))
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "point_family": point_family,
+                "astronomical_type": str(row["astronomical_type"]),
+                "is_physical_body": bool(row["is_physical_body"]),
+                "description": str(row["description"]),
+            }
+            if point is None:
+                self.db.add(AstralPointModel(code=code, **payload))
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(point, field_name, value)
+        self.db.flush()
+
+        self._seed_astral_point_calculation_variants()
+        self._seed_astral_point_aliases()
+        self._seed_astral_point_interpretation_keywords()
+        self._seed_astral_point_interpretation_profiles()
+        self._seed_astral_point_interpretation_keyword_translations()
+
+    def _seed_astral_point_calculation_variants(self) -> None:
+        """Synchronise les variantes de calcul des points astrologiques."""
+        point_codes = {row.code for row in self.db.scalars(select(AstralPointModel)).all()}
+        for row in load_astral_point_calculation_variant_rows():
+            point_code = str(row["astral_point_code"])
+            variant_code = str(row["variant_code"])
+            if point_code not in point_codes:
+                raise ValueError(f"unknown astral point for variant: {point_code}")
+            variant = self.db.scalar(
+                select(AstralPointCalculationVariantModel).where(
+                    AstralPointCalculationVariantModel.astral_point_code == point_code,
+                    AstralPointCalculationVariantModel.variant_code == variant_code,
+                )
+            )
+            payload = {
+                "id": int(row["id"]),
+                "display_name": str(row["display_name"]),
+                "calculation_mode": str(row["calculation_mode"]),
+                "is_default": bool(row["is_default"]),
+                "description": str(row["description"]),
+            }
+            if variant is None:
+                self.db.add(
+                    AstralPointCalculationVariantModel(
+                        astral_point_code=point_code,
+                        variant_code=variant_code,
+                        **payload,
+                    )
+                )
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(variant, field_name, value)
+        self.db.flush()
+
+    def _seed_astral_point_aliases(self) -> None:
+        """Synchronise les alias et clés moteur des points astrologiques."""
+        language_ids = {row.code: row.id for row in self.db.scalars(select(LanguageModel)).all()}
+        variant_keys = {
+            (row.astral_point_code, row.variant_code)
+            for row in self.db.scalars(select(AstralPointCalculationVariantModel)).all()
+        }
+        for row in load_astral_point_alias_rows():
+            point_code = str(row["astral_point_code"])
+            variant_code = None if row.get("variant_code") is None else str(row["variant_code"])
+            if variant_code is not None and (point_code, variant_code) not in variant_keys:
+                raise ValueError(f"unknown astral point variant: {point_code}/{variant_code}")
+            language_id = language_ids.get(str(row["language"]))
+            if language_id is None:
+                raise ValueError(f"unknown astral point alias language: {row['language']}")
+            alias = str(row["alias"])
+            source = str(row["source"])
+            model = self.db.scalar(
+                select(AstralPointAliasModel).where(
+                    AstralPointAliasModel.astral_point_code == point_code,
+                    AstralPointAliasModel.variant_code == variant_code,
+                    AstralPointAliasModel.alias == alias,
+                    AstralPointAliasModel.language_id == language_id,
+                    AstralPointAliasModel.source == source,
+                )
+            )
+            payload = {
+                "id": int(row["id"]),
+                "engine_key": None if row.get("engine_key") is None else str(row["engine_key"]),
+                "is_primary": bool(row["is_primary"]),
+            }
+            if model is None:
+                self.db.add(
+                    AstralPointAliasModel(
+                        astral_point_code=point_code,
+                        variant_code=variant_code,
+                        alias=alias,
+                        language_id=language_id,
+                        source=source,
+                        **payload,
+                    )
+                )
+            else:
+                model.engine_key = payload["engine_key"]
+                model.is_primary = payload["is_primary"]
+        self.db.flush()
+
+    def _seed_astral_point_interpretation_keywords(self) -> None:
+        """Synchronise les groupes de mots-clés des points astrologiques."""
+        keyword_fields = (
+            "core_keywords_json",
+            "shadow_keywords_json",
+            "psychological_keywords_json",
+            "spiritual_keywords_json",
+            "relationship_keywords_json",
+            "career_keywords_json",
+        )
+        for row in load_astral_point_interpretation_keyword_rows():
+            keyword_set = self.db.get(AstralPointInterpretationKeywordModel, int(row["id"]))
+            payload = {
+                field_name: json.dumps(
+                    list(row[field_name]),
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                )
+                for field_name in keyword_fields
+            }
+            if keyword_set is None:
+                self.db.add(AstralPointInterpretationKeywordModel(id=int(row["id"]), **payload))
+            else:
+                for field_name, value in payload.items():
+                    setattr(keyword_set, field_name, value)
+        self.db.flush()
+
+    def _seed_astral_point_interpretation_profiles(self) -> None:
+        """Synchronise les profils éditoriaux des points astrologiques."""
+        language_ids = {row.code: row.id for row in self.db.scalars(select(LanguageModel)).all()}
+        keyword_ids = {
+            row.id for row in self.db.scalars(select(AstralPointInterpretationKeywordModel)).all()
+        }
+        for row in load_astral_point_interpretation_profile_rows():
+            point_code = str(row["astral_point_code"])
+            variant_code = None if row.get("variant_code") is None else str(row["variant_code"])
+            language_id = language_ids.get(str(row["locale"]))
+            if language_id is None:
+                raise ValueError(f"unknown astral point profile locale: {row['locale']}")
+            keyword_set_id = int(row["keyword_set_id"])
+            if keyword_set_id not in keyword_ids:
+                raise ValueError(f"unknown astral point keyword set: {keyword_set_id}")
+            tradition = str(row["tradition"])
+            profile = self.db.scalar(
+                select(AstralPointInterpretationProfileModel).where(
+                    AstralPointInterpretationProfileModel.astral_point_code == point_code,
+                    AstralPointInterpretationProfileModel.variant_code == variant_code,
+                    AstralPointInterpretationProfileModel.language_id == language_id,
+                    AstralPointInterpretationProfileModel.tradition == tradition,
+                )
+            )
+            payload = {
+                "id": int(row["id"]),
+                "keyword_set_id": keyword_set_id,
+                "title": str(row["title"]),
+                "summary": None if row.get("summary") is None else str(row["summary"]),
+                "micro_note": None if row.get("micro_note") is None else str(row["micro_note"]),
+            }
+            if profile is None:
+                self.db.add(
+                    AstralPointInterpretationProfileModel(
+                        astral_point_code=point_code,
+                        variant_code=variant_code,
+                        language_id=language_id,
+                        tradition=tradition,
+                        **payload,
+                    )
+                )
+            else:
+                for field_name, value in payload.items():
+                    if field_name != "id":
+                        setattr(profile, field_name, value)
+        self.db.flush()
+
+    def _seed_astral_point_interpretation_keyword_translations(self) -> None:
+        """Synchronise les traductions des mots-clés de points astrologiques."""
+        language_ids = {row.code: row.id for row in self.db.scalars(select(LanguageModel)).all()}
+        keyword_ids = {
+            row.id for row in self.db.scalars(select(AstralPointInterpretationKeywordModel)).all()
+        }
+        keyword_fields = (
+            "core_keywords_json",
+            "shadow_keywords_json",
+            "psychological_keywords_json",
+            "spiritual_keywords_json",
+            "relationship_keywords_json",
+            "career_keywords_json",
+        )
+        for row in load_astral_point_interpretation_keyword_translation_rows():
+            keyword_set_id = int(row["keyword_set_id"])
+            if keyword_set_id not in keyword_ids:
+                raise ValueError(f"unknown astral point keyword set: {keyword_set_id}")
+            translations = row.get("translations")
+            if not isinstance(translations, dict):
+                raise ValueError("astral point keyword translation row must contain translations")
+            for locale, translated_values in translations.items():
+                language_id = language_ids.get(str(locale))
+                if language_id is None:
+                    raise ValueError(f"unknown astral point keyword translation locale: {locale}")
+                if not isinstance(translated_values, dict):
+                    raise ValueError("astral point keyword translation values must be objects")
+                model = self.db.scalar(
+                    select(AstralPointInterpretationKeywordTranslationModel).where(
+                        AstralPointInterpretationKeywordTranslationModel.keyword_set_id
+                        == keyword_set_id,
+                        AstralPointInterpretationKeywordTranslationModel.language_id == language_id,
+                    )
+                )
+                payload = {
+                    field_name: json.dumps(
+                        list(translated_values[field_name]),
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                    )
+                    for field_name in keyword_fields
+                }
+                if model is None:
+                    self.db.add(
+                        AstralPointInterpretationKeywordTranslationModel(
+                            keyword_set_id=keyword_set_id,
+                            language_id=language_id,
+                            **payload,
+                        )
+                    )
+                else:
+                    for field_name, value in payload.items():
+                        setattr(model, field_name, value)
+        self.db.flush()
 
     def get_reference_data(self, version: str) -> dict[str, object]:
         """Retourne le vocabulaire stable expose pour une version existante."""

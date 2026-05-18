@@ -1,0 +1,76 @@
+{
+  "name": "astral_point_interpretation_profile_translations",
+  "structure": {
+    "source_table": "astral_point_interpretation_profiles",
+    "translation_table": "astral_point_interpretation_profile_translations",
+    "source_reference": {
+      "astral_point_interpretation_profile_id": "integer, reference astral_point_interpretation_profiles.id",
+      "keyword_set_id": "integer, reference astral_point_interpretation_keywords.id"
+    },
+    "translations": {
+      "locale": "string, one of fr/es/de/it; source profile locale is en",
+      "title": "string",
+      "summary": "text",
+      "micro_note": "text"
+    }
+  },
+  "data": {
+    "profiles": [
+      {
+        "astral_point_interpretation_profile_id": 1,
+        "keyword_set_id": 1,
+        "translations": {
+          "fr": {
+            "title": "Noeud Nord",
+            "summary": "Direction d'evolution, apprentissage, potentiel de croissance et chemin d'incarnation.",
+            "micro_note": "Le Noeud Nord indique une trajectoire de croissance plus qu'un trait deja acquis."
+          }
+        }
+      },
+      {
+        "astral_point_interpretation_profile_id": 2,
+        "keyword_set_id": 2,
+        "translations": {
+          "fr": {
+            "title": "Noeud Sud",
+            "summary": "Heritage, reflexes acquis, zone de familiarite et ressources deja disponibles mais parfois surutilisees.",
+            "micro_note": "Le Noeud Sud decrit un point d'appui connu qui doit rester au service de l'evolution."
+          }
+        }
+      },
+      {
+        "astral_point_interpretation_profile_id": 3,
+        "keyword_set_id": 3,
+        "translations": {
+          "fr": {
+            "title": "Apogee Lunaire",
+            "summary": "Point orbital de distance maximale de la Lune, utilise comme base astronomique de certaines lectures de Lilith.",
+            "micro_note": "L'apogee lunaire est d'abord une donnee orbitale calculee."
+          }
+        }
+      },
+      {
+        "astral_point_interpretation_profile_id": 4,
+        "keyword_set_id": 4,
+        "translations": {
+          "fr": {
+            "title": "Perigee Lunaire",
+            "summary": "Point orbital de proximite maximale de la Lune, symboliquement associe a l'intensification de la presence lunaire.",
+            "micro_note": "Le perigee lunaire complete l'axe des apsides avec une symbolique de proximite."
+          }
+        }
+      },
+      {
+        "astral_point_interpretation_profile_id": 5,
+        "keyword_set_id": 5,
+        "translations": {
+          "fr": {
+            "title": "Lune Noire",
+            "summary": "Point symbolique derive de l'apogee lunaire, associe a l'autonomie radicale, au refus de la soumission et aux zones psychiques non negociees.",
+            "micro_note": "La Lune Noire est un point calcule et symbolique, pas un corps physique."
+          }
+        }
+      }
+    ]
+  }
+}

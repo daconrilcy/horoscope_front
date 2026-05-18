@@ -23,6 +23,14 @@ from app.infra.db.models import (
     AstralPlanetInterpretationProfileModel,
     AstralPlanetInterpretationProfileTranslationModel,
     AstralPlanetSignDignityModel,
+    AstralPointAliasModel,
+    AstralPointCalculationVariantModel,
+    AstralPointFamilyModel,
+    AstralPointInterpretationKeywordModel,
+    AstralPointInterpretationKeywordTranslationModel,
+    AstralPointInterpretationProfileModel,
+    AstralPointInterpretationProfileTranslationModel,
+    AstralPointModel,
     AstralPolarityModel,
     AstralSignModel,
     AstralSignProfileModel,
@@ -78,6 +86,14 @@ EXPECTED_COUNTS = {
     "astral_modalities": 3,
     "astral_polarities": 2,
     "astral_planet_sign_dignities": 50,
+    "astral_point_families": 3,
+    "astral_points": 5,
+    "astral_point_calculation_variants": 10,
+    "astral_point_aliases": 15,
+    "astral_point_interpretation_keywords": 5,
+    "astral_point_interpretation_profiles": 5,
+    "astral_point_interpretation_keyword_translations": 5,
+    "astral_point_interpretation_profile_translations": 5,
     "astral_sign_profiles": 12,
     "astral_planet_category_weights": 85,
     "house_category_weights": 24,
@@ -878,6 +894,28 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     actual["astral_planet_sign_dignities"] = db.scalar(
         select(func.count()).select_from(AstralPlanetSignDignityModel)
     )
+    actual["astral_point_families"] = db.scalar(
+        select(func.count()).select_from(AstralPointFamilyModel)
+    )
+    actual["astral_points"] = db.scalar(select(func.count()).select_from(AstralPointModel))
+    actual["astral_point_calculation_variants"] = db.scalar(
+        select(func.count()).select_from(AstralPointCalculationVariantModel)
+    )
+    actual["astral_point_aliases"] = db.scalar(
+        select(func.count()).select_from(AstralPointAliasModel)
+    )
+    actual["astral_point_interpretation_keywords"] = db.scalar(
+        select(func.count()).select_from(AstralPointInterpretationKeywordModel)
+    )
+    actual["astral_point_interpretation_profiles"] = db.scalar(
+        select(func.count()).select_from(AstralPointInterpretationProfileModel)
+    )
+    actual["astral_point_interpretation_keyword_translations"] = db.scalar(
+        select(func.count()).select_from(AstralPointInterpretationKeywordTranslationModel)
+    )
+    actual["astral_point_interpretation_profile_translations"] = db.scalar(
+        select(func.count()).select_from(AstralPointInterpretationProfileTranslationModel)
+    )
     actual["astral_sign_profiles"] = db.scalar(
         select(func.count()).select_from(AstralSignProfileModel)
     )
@@ -999,6 +1037,9 @@ def run_prediction_reference_seed(db: Session) -> None:
     # 1. Vérification d idempotence.
     v2 = db.scalar(select(ReferenceVersionModel).where(ReferenceVersionModel.version == "2.0.0"))
     if v2 is not None:
+        repo = ReferenceRepository(db)
+        repo.seed_version_defaults()
+        db.flush()
         _ensure_astral_dignity_types(db)
         _ensure_astral_systems(db)
         if db.scalar(select(func.count()).select_from(AstralSignModel)) > 0:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import CheckConstraint, String, Text, UniqueConstraint, inspect
+from sqlalchemy import CheckConstraint, String, Text, UniqueConstraint, inspect, select
 from sqlalchemy.orm import Session
 
 from app.infra.db.base import Base
@@ -9,6 +9,7 @@ from app.infra.db.models.interpretation_reference import (
     AstralAspectInterpretationProfileModel,
     AstralHouseAxisDefinitionModel,
     AstralHouseAxisMemberModel,
+    AstralPointInterpretationProfileModel,
     HouseInterpretationProfileModel,
 )
 from app.infra.db.models.prediction_reference import (
@@ -40,6 +41,11 @@ from app.infra.db.models.reference import (
     AstralHouseSystemModel,
     AstralObjectTypeModel,
     AstralPlanetDefinitionModel,
+    AstralPointAliasModel,
+    AstralPointCalculationVariantModel,
+    AstralPointFamilyModel,
+    AstralPointInterpretationKeywordModel,
+    AstralPointModel,
     AstralReferenceEpochModel,
     AstralReferenceSourceModel,
     AstralSignModel,
@@ -128,11 +134,44 @@ def test_structural_astrology_models_are_not_versioned():
         AstralPlanetSignDignityModel,
         AstralHouseAxisDefinitionModel,
         AstralAspectFamilyModel,
+        AstralPointFamilyModel,
+        AstralPointModel,
+        AstralPointCalculationVariantModel,
+        AstralPointAliasModel,
+        AstralPointInterpretationKeywordModel,
+        AstralPointInterpretationProfileModel,
     )
 
     for model in structural_models:
         columns = {column.key for column in inspect(model).columns}
         assert "reference_version_id" not in columns
+
+
+def test_reference_repository_seeds_astral_point_catalog(db_session: Session) -> None:
+    """Le seed global alimente les points calculés et leurs variantes sans ambiguïté."""
+    ReferenceRepository(db_session).seed_version_defaults()
+    db_session.flush()
+
+    assert db_session.query(AstralPointFamilyModel).count() == 3
+    assert db_session.query(AstralPointModel).count() == 5
+    assert db_session.query(AstralPointCalculationVariantModel).count() == 10
+    assert db_session.query(AstralPointAliasModel).count() == 15
+    assert db_session.query(AstralPointInterpretationKeywordModel).count() == 5
+    assert db_session.query(AstralPointInterpretationProfileModel).count() == 5
+
+    true_variants = db_session.scalars(
+        select(AstralPointCalculationVariantModel).where(
+            AstralPointCalculationVariantModel.variant_code == "true"
+        )
+    ).all()
+
+    assert {variant.astral_point_code for variant in true_variants} == {
+        "black_moon_lilith",
+        "lunar_apogee",
+        "lunar_perigee",
+        "north_node",
+        "south_node",
+    }
 
 
 def test_astral_system_model_supports_nullable_self_inheritance():

@@ -11,6 +11,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     String,
     Text,
@@ -235,6 +236,112 @@ class AstralFixedStarDefinitionModel(Base):
     zodiac_sign: Mapped["AstralSignModel"] = relationship()
     keywords: Mapped["AstralFixedStarKeywordModel"] = relationship()
     source: Mapped["AstralReferenceSourceModel"] = relationship()
+
+
+class AstralPointFamilyModel(Base):
+    """Famille stable de points astrologiques calculés."""
+
+    __tablename__ = "astral_point_families"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AstralPointModel(Base):
+    """Point astrologique calculé canonique, distinct des variantes de calcul."""
+
+    __tablename__ = "astral_points"
+    __table_args__ = (
+        UniqueConstraint("code"),
+        ForeignKeyConstraint(["point_family"], ["astral_point_families.code"]),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    point_family: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    astronomical_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_physical_body: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+    family: Mapped["AstralPointFamilyModel"] = relationship()
+
+
+class AstralPointCalculationVariantModel(Base):
+    """Variante de calcul d'un point astrologique canonique."""
+
+    __tablename__ = "astral_point_calculation_variants"
+    __table_args__ = (
+        UniqueConstraint(
+            "astral_point_code",
+            "variant_code",
+            name="uq_astral_point_calculation_variants_scope",
+        ),
+        ForeignKeyConstraint(["astral_point_code"], ["astral_points.code"]),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    astral_point_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    variant_code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    calculation_mode: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+    astral_point: Mapped["AstralPointModel"] = relationship()
+
+
+class AstralPointAliasModel(Base):
+    """Alias localisé ou clé moteur pour un point astrologique calculé."""
+
+    __tablename__ = "astral_point_aliases"
+    __table_args__ = (
+        UniqueConstraint(
+            "astral_point_code",
+            "variant_code",
+            "alias",
+            "language_id",
+            "source",
+            name="uq_astral_point_aliases_scope",
+        ),
+        ForeignKeyConstraint(["astral_point_code"], ["astral_points.code"]),
+        ForeignKeyConstraint(
+            ["astral_point_code", "variant_code"],
+            [
+                "astral_point_calculation_variants.astral_point_code",
+                "astral_point_calculation_variants.variant_code",
+            ],
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    astral_point_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    variant_code: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    alias: Mapped[str] = mapped_column(String(128), nullable=False)
+    language_id: Mapped[int] = mapped_column(ForeignKey("languages.id"), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(64), nullable=False)
+    engine_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    astral_point: Mapped["AstralPointModel"] = relationship()
+    language: Mapped["LanguageModel"] = relationship()
+
+
+class AstralPointInterpretationKeywordModel(Base):
+    """Groupe stable de mots-clés interprétatifs pour un point astrologique."""
+
+    __tablename__ = "astral_point_interpretation_keywords"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    core_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    shadow_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    psychological_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    spiritual_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    relationship_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
+    career_keywords_json: Mapped[str] = mapped_column(Text, nullable=False)
 
 
 class AstralElementModel(Base):
