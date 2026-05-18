@@ -1,18 +1,88 @@
 """Bot Discord permettant de relayer des demandes vers Codex depuis un salon."""
 
+import asyncio
 import os
 import subprocess
+import time
 from pathlib import Path
 
 import discord
 
 ENV_PATH = Path(__file__).with_name(".env")
+REPO_ROOT = Path(__file__).resolve().parent.parent
 CODEX_PATH = r"C:\Users\cyril\AppData\Roaming\npm\codex.cmd"
+CODEX_TIMEOUT_SECONDS = 3600
+CODEX_SANDBOX_MODE = "danger-full-access"
+CONDAMAD_COMMAND = "!condamad"
+CODEX_COMMAND = "!codex"
+CONDAMAD_SKILLS = {
+    "story": {
+        "skill": "$condamad-story-writer",
+        "label": "Créer une story",
+        "usage": "!condamad story <brief|audit|finding>",
+        "description": "Compile une demande en story CONDAMAD prête à implémenter.",
+    },
+    "dev": {
+        "skill": "$condamad-dev-story",
+        "label": "Implémenter une story",
+        "usage": "!condamad dev <story.md|capsule>",
+        "description": "Implémente exactement une story avec preuves, tests et garde-fous.",
+    },
+    "review": {
+        "skill": "$condamad-code-review",
+        "label": "Revue adversariale",
+        "usage": "!condamad review <story|diff|scope>",
+        "description": "Passe une story ou un diff en revue sans modifier le code.",
+    },
+    "fix": {
+        "skill": "$condamad-review-fix-story",
+        "label": "Revue puis correction",
+        "usage": "!condamad fix <story.md|capsule>",
+        "description": "Boucle review, correction et validation jusqu'à clôture.",
+    },
+    "full": {
+        "skill": "$condamad-dev-review-fix-story",
+        "label": "Dev complet",
+        "usage": "!condamad full <story.md|capsule>",
+        "description": "Orchestre implémentation, revue, corrections et clôture.",
+    },
+    "audit": {
+        "skill": "$condamad-domain-auditor",
+        "label": "Audit domaine",
+        "usage": "!condamad audit <domaine ou dossier>",
+        "description": "Produit un audit read-only avec constats et candidates stories.",
+    },
+    "front": {
+        "skill": "$condamad-frontend-dev",
+        "label": "Développement frontend",
+        "usage": "!condamad front <demande React>",
+        "description": "Traite les changements React, UI, hooks, styles et tests frontend.",
+    },
+    "ux": {
+        "skill": "$condamad-ux-ui-lead",
+        "label": "Audit ou plan UX/UI",
+        "usage": "!condamad ux <page ou objectif>",
+        "description": "Produit une analyse ou un plan UX/UI React sans modifier par défaut.",
+    },
+    "refactor": {
+        "skill": "$condamad-refactor-surgeon",
+        "label": "Refactor chirurgical",
+        "usage": "!condamad refactor <scope + type + invariant>",
+        "description": "Refactor borné, mono-domaine, sans changement de comportement.",
+    },
+    "guards": {
+        "skill": "$condamad-regression-guardrails",
+        "label": "Garde-fous",
+        "usage": "!condamad guards <demande>",
+        "description": "Gère le registre CONDAMAD des invariants anti-régression.",
+    },
+}
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
+running_codex_tasks: set[asyncio.Task[None]] = set()
 
 
 def get_env_value(key: str, env_path: Path) -> str:
@@ -54,6 +124,158 @@ def split_discord_message(text: str, limit: int = 1900) -> list[str]:
     return chunks
 
 
+def build_condamad_help(alias: str | None = None) -> str:
+    """Construit l'aide Discord des raccourcis CONDAMAD disponibles."""
+
+    if alias:
+        skill = CONDAMAD_SKILLS.get(alias)
+        if not skill:
+            available_aliases = ", ".join(sorted(CONDAMAD_SKILLS))
+            return (
+                f"⚠️ Raccourci CONDAMAD inconnu : `{alias}`.\n"
+                f"Disponibles : {available_aliases}"
+            )
+
+        return (
+            f"**{alias}** - {skill['label']}\n"
+            f"Skill : `{skill['skill']}`\n"
+            f"Usage : `{skill['usage']}`\n"
+            f"{skill['description']}"
+        )
+
+    lines = [
+        "**Raccourcis CONDAMAD disponibles**",
+        "`!condamad help <alias>` pour le détail d'un raccourci.",
+        "",
+    ]
+    for shortcut, skill in CONDAMAD_SKILLS.items():
+        lines.append(f"- `{shortcut}` : {skill['label']} - `{skill['usage']}`")
+
+    return "\n".join(lines)
+
+
+def build_condamad_prompt(alias: str, request: str) -> str:
+    """Transforme un raccourci CONDAMAD en prompt explicite pour Codex."""
+
+    skill = CONDAMAD_SKILLS[alias]
+    return (
+        f"Utilise le skill {skill['skill']}.\n"
+        "Respecte les instructions AGENTS.md du repository.\n"
+        "Ne commit pas et ne push pas sauf demande explicite.\n"
+        f"Demande utilisateur Discord:\n{request}"
+    )
+
+
+def format_elapsed_time(elapsed_seconds: float) -> str:
+    """Formate une durée d'exécution courte pour les notifications Discord."""
+
+    rounded_seconds = max(0, round(elapsed_seconds))
+    minutes, seconds = divmod(rounded_seconds, 60)
+
+    if minutes:
+        return f"{minutes} min {seconds:02d} s"
+
+    return f"{seconds} s"
+
+
+def run_codex_process(prompt: str) -> subprocess.CompletedProcess[str]:
+    """Lance Codex dans un processus isolé sans dépendre de l'event loop Discord."""
+
+    return subprocess.run(
+        [
+            CODEX_PATH,
+            "--ask-for-approval",
+            "never",
+            "--sandbox",
+            CODEX_SANDBOX_MODE,
+            "--cd",
+            str(REPO_ROOT),
+            "exec",
+            "--skip-git-repo-check",
+            prompt,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=CODEX_TIMEOUT_SECONDS,
+        encoding="utf-8",
+        errors="replace",
+        cwd=REPO_ROOT,
+    )
+
+
+async def notify_codex_job_finished(
+    channel: discord.abc.Messageable,
+    requester_mention: str,
+    status: str,
+    elapsed_seconds: float,
+) -> None:
+    """Signale dans Discord qu'un agent Codex a terminé son travail."""
+
+    elapsed_time = format_elapsed_time(elapsed_seconds)
+    await channel.send(
+        f"🔔 Agent Codex terminé pour {requester_mention} : {status} en {elapsed_time}.",
+        allowed_mentions=discord.AllowedMentions(users=True),
+    )
+
+
+async def run_codex_job(message, prompt: str) -> None:
+    """Exécute Codex et publie le résultat dans le salon Discord."""
+
+    await message.channel.send("⏳ Codex travaille...")
+    started_at = time.monotonic()
+    status = "erreur Python"
+
+    try:
+        result = await asyncio.to_thread(run_codex_process, prompt)
+
+        output = result.stdout.strip()
+        error = result.stderr.strip()
+
+        if result.returncode != 0:
+            status = "échec"
+            await message.channel.send(
+                f"❌ Codex a retourné une erreur :\n```{error[:1800]}```"
+            )
+            return
+
+        if not output:
+            output = "⚠️ Codex n'a rien retourné."
+
+        status = "succès"
+        await notify_codex_job_finished(
+            message.channel,
+            message.author.mention,
+            status,
+            time.monotonic() - started_at,
+        )
+
+        for chunk in split_discord_message(output):
+            await message.channel.send(chunk)
+
+    except subprocess.TimeoutExpired:
+        status = "timeout"
+        await message.channel.send("⏱️ Codex a dépassé le temps limite.")
+    except Exception as e:
+        status = "erreur Python"
+        await message.channel.send(f"❌ Erreur Python : `{e}`")
+    finally:
+        if status != "succès":
+            await notify_codex_job_finished(
+                message.channel,
+                message.author.mention,
+                status,
+                time.monotonic() - started_at,
+            )
+
+
+def schedule_codex_job(message, prompt: str) -> None:
+    """Planifie un job Codex sans bloquer les événements Discord."""
+
+    task = asyncio.create_task(run_codex_job(message, prompt))
+    running_codex_tasks.add(task)
+    task.add_done_callback(running_codex_tasks.discard)
+
+
 @client.event
 async def on_ready():
     """Confirme la connexion du bot dans la console locale."""
@@ -68,55 +290,39 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if not message.content.startswith("!codex"):
-        return
+    if message.content.startswith(CONDAMAD_COMMAND):
+        command = message.content.replace(CONDAMAD_COMMAND, "", 1).strip()
+        command_parts = command.split(maxsplit=1)
+        alias = command_parts[0].lower() if command_parts else "help"
+        request = command_parts[1].strip() if len(command_parts) > 1 else ""
 
-    prompt = message.content.replace("!codex", "", 1).strip()
-
-    if not prompt:
-        await message.channel.send("⚠️ Ajoute une demande après `!codex`.")
-        return
-
-    await message.channel.send("⏳ Codex travaille...")
-
-    try:
-        result = subprocess.run(
-            [
-                CODEX_PATH,
-                "--ask-for-approval",
-                "never",
-                "--sandbox",
-                "workspace-write",
-                "exec",
-                "--skip-git-repo-check",
-                prompt,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=180,
-            encoding="utf-8",
-            errors="replace",
-        )
-
-        output = result.stdout.strip()
-        error = result.stderr.strip()
-
-        if result.returncode != 0:
-            await message.channel.send(
-                f"❌ Codex a retourné une erreur :\n```{error[:1800]}```"
-            )
+        if alias in {"help", "list"}:
+            help_alias = request.split(maxsplit=1)[0].lower() if request else None
+            for chunk in split_discord_message(build_condamad_help(help_alias)):
+                await message.channel.send(chunk)
             return
 
-        if not output:
-            output = "⚠️ Codex n'a rien retourné."
+        if alias not in CONDAMAD_SKILLS:
+            await message.channel.send(build_condamad_help(alias))
+            return
 
-        for chunk in split_discord_message(output):
-            await message.channel.send(chunk)
+        if not request:
+            await message.channel.send(build_condamad_help(alias))
+            return
 
-    except subprocess.TimeoutExpired:
-        await message.channel.send("⏱️ Codex a dépassé le temps limite.")
-    except Exception as e:
-        await message.channel.send(f"❌ Erreur Python : `{e}`")
+        schedule_codex_job(message, build_condamad_prompt(alias, request))
+        return
+
+    if not message.content.startswith(CODEX_COMMAND):
+        return
+
+    prompt = message.content.replace(CODEX_COMMAND, "", 1).strip()
+
+    if not prompt:
+        await message.channel.send(f"⚠️ Ajoute une demande après `{CODEX_COMMAND}`.")
+        return
+
+    schedule_codex_job(message, prompt)
 
 
 token = get_env_value("DISCORD_BOT_TOKEN", ENV_PATH)
