@@ -100,7 +100,7 @@ def test_astrology_domain_does_not_import_prediction_or_llm_runtime() -> None:
 
 
 def test_natal_result_exposes_points_collection_without_flat_point_fields() -> None:
-    """Le contrat natal conserve uniquement la collection `points[]` pour les points."""
+    """Le contrat natal conserve uniquement la collection `astral_points[]`."""
     tree = ast.parse(_source("app/domain/astrology/natal_calculation.py"))
     natal_result = next(
         node
@@ -127,17 +127,29 @@ def test_natal_result_exposes_points_collection_without_flat_point_fields() -> N
 def test_calculation_modules_do_not_import_astral_point_interpretation_services() -> None:
     """Le calcul natal ne doit pas dépendre de l'éditorial des points astraux."""
     forbidden = (
+        "astral_point_interpretation_profiles",
+        "astral_point_interpretation_keywords",
         "AstralPointInterpretationProfileModel",
         "AstralPointInterpretationKeywordModel",
         "AstralPointInterpretationRepository",
         "AstralPointInterpretationService",
+        "InterpretationService",
+        "PromptContext",
     )
+    roots = [
+        BACKEND_ROOT / "app/domain/astrology/calculation",
+        BACKEND_ROOT / "app/domain/astrology/calculators",
+        BACKEND_ROOT / "app/infra/ephemeris",
+        BACKEND_ROOT / "app/services/natal",
+    ]
     paths = [
         BACKEND_ROOT / "app/domain/astrology/natal_calculation.py",
         BACKEND_ROOT / "app/domain/astrology/astral_point_calculation_resolver.py",
         BACKEND_ROOT / "app/domain/astrology/ephemeris_provider.py",
-        *(BACKEND_ROOT / "app/domain/astrology/calculators").rglob("*.py"),
     ]
+    for root in roots:
+        if root.exists():
+            paths.extend(root.rglob("*.py"))
     hits: list[str] = []
 
     for path in paths:

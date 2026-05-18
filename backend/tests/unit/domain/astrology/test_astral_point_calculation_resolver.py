@@ -85,6 +85,73 @@ def test_resolver_returns_derived_instruction_for_lunar_perigee() -> None:
     assert instruction.longitude_offset_deg == 180.0
 
 
+@pytest.mark.parametrize(
+    ("point_code", "variant_code", "calculation_mode", "engine_key"),
+    (
+        ("north_node", "mean", "mean", "SE_MEAN_NODE"),
+        ("north_node", "true", "true", "SE_TRUE_NODE"),
+        ("lunar_apogee", "mean", "mean_apogee", "SE_MEAN_APOG"),
+        ("lunar_apogee", "true", "osculating_apogee", "SE_OSCU_APOG"),
+        ("black_moon_lilith", "mean", "mean_apogee", "SE_MEAN_APOG"),
+        ("black_moon_lilith", "true", "osculating_apogee", "SE_OSCU_APOG"),
+    ),
+)
+def test_resolver_maps_direct_variants_to_expected_engine_sources(
+    point_code: str,
+    variant_code: str,
+    calculation_mode: str,
+    engine_key: str,
+) -> None:
+    """Les variantes directes restent branchées sur la source SwissEph attendue."""
+    instruction = AstralPointCalculationResolver().resolve(
+        _runtime_point(
+            code=point_code,
+            variant_code=variant_code,
+            calculation_mode=calculation_mode,
+            engine_key=engine_key,
+        )
+    )
+
+    assert instruction.point_code == point_code
+    assert instruction.variant_code == variant_code
+    assert instruction.engine_key == engine_key
+    assert instruction.calculation_mode == calculation_mode
+    assert not instruction.is_derived
+
+
+@pytest.mark.parametrize(
+    ("point_code", "variant_code", "calculation_mode", "source_code", "source_variant"),
+    (
+        ("south_node", "mean", "mean_opposition", "north_node", "mean"),
+        ("south_node", "true", "true_opposition", "north_node", "true"),
+        ("lunar_perigee", "mean", "mean_perigee", "lunar_apogee", "mean"),
+        ("lunar_perigee", "true", "osculating_perigee", "lunar_apogee", "true"),
+    ),
+)
+def test_resolver_maps_derived_variants_to_expected_oppositions(
+    point_code: str,
+    variant_code: str,
+    calculation_mode: str,
+    source_code: str,
+    source_variant: str,
+) -> None:
+    """Les points dérivés restent opposés à leur source canonique."""
+    instruction = AstralPointCalculationResolver().resolve(
+        _runtime_point(
+            code=point_code,
+            variant_code=variant_code,
+            calculation_mode=calculation_mode,
+        )
+    )
+
+    assert instruction.point_code == point_code
+    assert instruction.variant_code == variant_code
+    assert instruction.engine_key is None
+    assert instruction.derived_from_point_code == source_code
+    assert instruction.derived_from_variant_code == source_variant
+    assert instruction.longitude_offset_deg == 180.0
+
+
 def test_resolver_rejects_unknown_variant() -> None:
     """Aucune variante inconnue ne déclenche un fallback silencieux."""
     with pytest.raises(ValueError, match="unknown astral point variant"):

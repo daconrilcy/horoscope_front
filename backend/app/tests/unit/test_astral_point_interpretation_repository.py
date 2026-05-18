@@ -112,6 +112,37 @@ def test_repository_prefers_requested_tradition_with_default_language(db_session
     assert profile.title == "North Node Traditional"
 
 
+def test_repository_prefers_exact_variant_profile_before_generic_profile(db_session) -> None:
+    """Un profil varianté exact prime sur le profil générique du même point."""
+    ReferenceDataService.seed_reference_version(db_session, version="1.0.0")
+    english = db_session.scalars(select(LanguageModel).where(LanguageModel.code == "en")).one()
+    keyword_set = db_session.scalars(select(AstralPointInterpretationKeywordModel)).first()
+    assert keyword_set is not None
+    db_session.add(
+        AstralPointInterpretationProfileModel(
+            astral_point_code="north_node",
+            variant_code="true",
+            keyword_set_id=keyword_set.id,
+            language_id=english.id,
+            tradition="modern_western",
+            title="True North Node Exact",
+            summary="Exact variant profile.",
+            micro_note=None,
+        )
+    )
+    db_session.flush()
+
+    profile = AstralPointInterpretationRepository(db_session).load_profile_for_position(
+        _north_node_position(),
+        language_code="en",
+        tradition="modern_western",
+    )
+
+    assert profile is not None
+    assert profile.variant_code == "true"
+    assert profile.title == "True North Node Exact"
+
+
 def test_repository_returns_none_when_no_profile_exists_for_point(db_session) -> None:
     """Une absence de profil reste contrôlée au lieu de produire un texte inventé."""
     ReferenceDataService.seed_reference_version(db_session, version="1.0.0")
