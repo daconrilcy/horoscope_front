@@ -12,7 +12,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.domain.astrology.planet_catalog import planet_codes
-from app.domain.astrology.runtime.runtime_reference import AstrologyRuntimeReference
+from app.domain.astrology.runtime.runtime_reference import (
+    AstralPointReferenceSet,
+    AstrologyRuntimeReference,
+)
 from app.infra.db.models.prediction_reference import AstralPlanetSignDignityModel
 from app.infra.db.models.reference import (
     AstralAnglePointModel,
@@ -88,7 +91,7 @@ class AstrologyRuntimeReferenceRepository:
                 sign_rulerships=prediction_repo.get_sign_rulerships(),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
-                astral_points=self._load_astral_points(),
+                astral_points=self._load_astral_point_payload(),
                 house_systems=self._load_house_systems(),
             )
         except ValueError as error:
@@ -99,6 +102,17 @@ class AstrologyRuntimeReferenceRepository:
             ) from error
         self._validate(runtime_reference)
         return runtime_reference
+
+    def load_astral_points(self) -> AstralPointReferenceSet:
+        """Charge uniquement les points astraux sous forme de contrats runtime typés."""
+        try:
+            return self.mapper.map_astral_points(self._load_astral_point_payload())
+        except ValueError as error:
+            raise AstrologyRuntimeReferenceError(
+                code="invalid_astral_points_runtime_reference",
+                message="astral point runtime reference is invalid",
+                details={"field": "astral_points", "reason": str(error)},
+            ) from error
 
     def _load_planet_definitions(self) -> dict[str, dict[str, object]]:
         """Charge les definitions structurelles des planetes."""
@@ -202,7 +216,7 @@ class AstrologyRuntimeReferenceRepository:
             for row in rows
         )
 
-    def _load_astral_points(self) -> tuple[dict[str, object], ...]:
+    def _load_astral_point_payload(self) -> tuple[dict[str, object], ...]:
         """Charge les points astraux, variantes et aliases depuis les tables canoniques."""
         point_rows = self.db.scalars(select(AstralPointModel).order_by(AstralPointModel.id)).all()
         variant_rows = self.db.scalars(

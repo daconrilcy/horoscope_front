@@ -165,7 +165,7 @@ class AstrologyRuntimeReferenceMapper:
                     for item in angle_points
                 )
             ),
-            astral_points=self._map_astral_points(astral_points),
+            astral_points=self.map_astral_points(astral_points),
             house_systems=HouseSystemReferenceSet(
                 tuple(
                     HouseSystemReferenceData(
@@ -189,7 +189,7 @@ class AstrologyRuntimeReferenceMapper:
             ),
         )
 
-    def _map_astral_points(
+    def map_astral_points(
         self,
         rows: Sequence[Mapping[str, object]],
     ) -> AstralPointReferenceSet:

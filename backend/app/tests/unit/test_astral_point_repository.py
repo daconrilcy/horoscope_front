@@ -32,3 +32,14 @@ def test_repository_loads_astral_points_as_immutable_contracts(db_session) -> No
     assert by_code["black_moon_lilith"].variants[0].engine_key == "SE_MEAN_APOG"
     with pytest.raises(FrozenInstanceError):
         by_code["north_node"].display_name = "Changed"
+
+
+def test_repository_loads_astral_points_directly_as_typed_contracts(db_session) -> None:
+    """Le chargement dédié des points astraux ne sort pas de dict brut."""
+    ReferenceDataService.seed_reference_version(db_session, version="1.0.0")
+
+    astral_points = AstrologyRuntimeReferenceRepository(db_session).load_astral_points()
+
+    assert all(isinstance(point, AstralPointRuntime) for point in astral_points.items)
+    assert not any(isinstance(point, dict) for point in astral_points.items)
+    assert "lunar_perigee" in {point.code for point in astral_points.items}
