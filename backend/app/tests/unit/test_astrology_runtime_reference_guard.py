@@ -113,7 +113,8 @@ def test_natal_result_exposes_points_collection_without_flat_point_fields() -> N
         if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
     }
 
-    assert "points" in field_names
+    assert "astral_points" in field_names
+    assert "points" not in field_names
     assert "true_node" not in field_names
     assert "mean_node" not in field_names
     assert "lilith" not in field_names

@@ -26,6 +26,7 @@ def _north_node_position() -> NatalAstralPointPosition:
         sign="leo",
         degree_in_sign=3.45,
         house=8,
+        calculation_source="test:north_node",
         is_physical_body=False,
     )
 
@@ -121,6 +122,7 @@ def test_repository_returns_none_when_no_profile_exists_for_point(db_session) ->
         sign="aries",
         degree_in_sign=12.0,
         house=None,
+        calculation_source="test:unsupported_point",
         is_physical_body=False,
     )
 
@@ -145,6 +147,7 @@ def test_enricher_rejects_profile_for_another_point(db_session) -> None:
         sign="aquarius",
         degree_in_sign=3.45,
         house=2,
+        calculation_source="test:south_node",
         is_physical_body=False,
     )
 

@@ -71,6 +71,7 @@ def test_points_can_produce_real_aspect_when_enabled(monkeypatch) -> None:
                 "sign": "aries",
                 "degree_in_sign": 10.0,
                 "house": 1,
+                "calculation_source": "test:north_node",
                 "is_physical_body": False,
             }
         ]

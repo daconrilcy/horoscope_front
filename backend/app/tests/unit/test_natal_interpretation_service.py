@@ -475,7 +475,7 @@ class TestNatalInterpretationService:
         """Le prompt natal reçoit les points interprétés hors du payload natal brut."""
         natal_result = _make_natal_result().model_copy(
             update={
-                "points": [
+                "astral_points": [
                     NatalAstralPointPosition(
                         code="north_node",
                         variant_code="true",
@@ -483,6 +483,7 @@ class TestNatalInterpretationService:
                         sign="leo",
                         degree_in_sign=3.45,
                         house=8,
+                        calculation_source="test:north_node",
                         is_physical_body=False,
                     )
                 ]

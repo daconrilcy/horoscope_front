@@ -65,9 +65,9 @@ def _natal_result_with_points():
 
 
 def test_service_builds_interpreted_points_without_mutating_natal_result() -> None:
-    """Le service assemble le contexte séparé sans modifier `NatalResult.points[]`."""
+    """Le service assemble le contexte séparé sans modifier `NatalResult.astral_points[]`."""
     natal_result = _natal_result_with_points()
-    before_points = natal_result.model_dump()["points"]
+    before_points = natal_result.model_dump()["astral_points"]
     loader = FakeAstralPointProfileLoader()
 
     context = AstralPointInterpretationService(loader).build_context(
@@ -86,7 +86,7 @@ def test_service_builds_interpreted_points_without_mutating_natal_result() -> No
     assert interpreted.house == source_position.house
     assert interpreted.core_keywords == ("growth",)
     assert interpreted.prompt_hints == ("learning", "calling")
-    assert natal_result.model_dump()["points"] == before_points
+    assert natal_result.model_dump()["astral_points"] == before_points
 
 
 def test_service_rejects_specific_profile_variant_mismatch() -> None:
@@ -116,7 +116,7 @@ def test_service_rejects_specific_profile_variant_mismatch() -> None:
 
     try:
         AstralPointInterpretationService(loader).build_context(
-            natal_result.model_copy(update={"points": [north_node]})
+            natal_result.model_copy(update={"astral_points": [north_node]})
         )
     except ValueError as error:
         assert "variant does not match position" in str(error)

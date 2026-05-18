@@ -6,7 +6,7 @@ import math
 from collections.abc import Callable
 from math import isfinite
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
@@ -67,6 +67,7 @@ class NatalAstralPointPosition(BaseModel):
     sign: str
     degree_in_sign: float
     house: int | None = None
+    calculation_source: str
     is_physical_body: bool
 
 
@@ -118,8 +119,16 @@ class NatalResult(BaseModel):
     signs_runtime: list[SignRuntimeData] = Field(default_factory=list)
     chart_balance: ChartBalanceRuntimeData | None = None
     house_rulers: list[HouseRulerResult] = Field(default_factory=list)
-    points: list[NatalAstralPointPosition] = Field(default_factory=list)
+    astral_points: list[NatalAstralPointPosition] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("astral_points", "points"),
+    )
     aspects: list[AspectResult]
+
+    @property
+    def points(self) -> list[NatalAstralPointPosition]:
+        """Expose l'ancien accès en lecture sans changer la sortie canonique."""
+        return self.astral_points
 
 
 def _build_aspect_result(
@@ -359,6 +368,19 @@ def _engine_point_longitude(
     return _simplified_point_longitude(julian_day, instruction)
 
 
+def _calculation_source(engine: str, instruction: AstralPointCalculationInstruction) -> str:
+    """Décrit la source technique d'une longitude calculée directement."""
+    if engine == "swisseph" and instruction.engine_key is not None:
+        return f"swiss_ephemeris:{instruction.engine_key}"
+    engine_key = instruction.engine_key or instruction.calculation_mode
+    return f"{engine}:{engine_key}"
+
+
+def opposite_longitude(longitude: float) -> float:
+    """Retourne la longitude opposée normalisée sur le zodiaque."""
+    return normalize_360(longitude + 180.0)
+
+
 def calculate_astral_points(
     *,
     julian_day: float,
@@ -390,8 +412,11 @@ def calculate_astral_points(
                 source = points_by_key.get(source_key)
                 if source is None:
                     continue
-                longitude = normalize_360(
-                    float(source["longitude"]) + instruction.longitude_offset_deg
+                longitude = opposite_longitude(float(source["longitude"]))
+                calculation_source = (
+                    "derived:"
+                    f"{instruction.derived_from_point_code}/{instruction.derived_from_variant_code}"
+                    f"+{instruction.longitude_offset_deg:g}"
                 )
             else:
                 longitude = normalize_360(
@@ -407,6 +432,7 @@ def calculate_astral_points(
                         altitude_m=altitude_m,
                     )
                 )
+                calculation_source = _calculation_source(engine, instruction)
             sign_code = sign_from_longitude(longitude, sign_codes)
             points_by_key[key] = {
                 "code": point.code,
@@ -416,6 +442,7 @@ def calculate_astral_points(
                 "sign": sign_code,
                 "degree_in_sign": round(longitude % 30.0, 6),
                 "house": assign_house_number(longitude, houses_raw),
+                "calculation_source": calculation_source,
                 "is_physical_body": point.is_physical_body,
             }
             pending.remove(point)
@@ -786,6 +813,6 @@ def build_natal_result(
         signs_runtime=signs_runtime,
         chart_balance=chart_balance,
         house_rulers=house_rulers,
-        points=points,
+        astral_points=points,
         aspects=aspects,
     )
