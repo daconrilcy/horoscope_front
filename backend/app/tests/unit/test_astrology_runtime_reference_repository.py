@@ -93,6 +93,29 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     }
     assert len(reference.houses.items) == 12
     assert set(reference.dignities.sign_rulerships) == set(reference.signs.codes)
+    assert reference.dignity_reference.default_score_profile == "traditional_standard"
+    assert {item.code for item in reference.dignity_reference.essential_types} >= {
+        "domicile",
+        "exaltation",
+        "detriment",
+        "fall",
+        "triplicity",
+        "term",
+        "face",
+        "peregrine",
+    }
+    assert {item.code for item in reference.dignity_reference.accidental_types} >= {
+        "angular_house",
+        "retrograde",
+        "cazimi",
+        "planetary_joy",
+    }
+    assert reference.dignity_reference.term_systems
+    assert reference.dignity_reference.decan_systems
+    assert len(reference.dignity_reference.essential_rules) == 38
+    assert len(reference.dignity_reference.term_bounds) == 60
+    assert len(reference.dignity_reference.face_decans) == 36
+    assert reference.dignity_reference.accidental_rules
     assert {item.code for item in reference.angle_points.items} >= {"asc", "dsc", "mc", "ic"}
     assert reference.aspects.items
     assert reference.aspects.orb_rules

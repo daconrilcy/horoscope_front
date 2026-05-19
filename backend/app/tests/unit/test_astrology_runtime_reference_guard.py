@@ -159,3 +159,32 @@ def test_calculation_modules_do_not_import_astral_point_interpretation_services(
                 hits.append(f"{path}:{pattern}")
 
     assert hits == []
+
+
+def test_dignity_calculators_do_not_cross_runtime_boundaries() -> None:
+    """Les calculateurs de dignites restent purs et sans scoring local."""
+    dignity_root = BACKEND_ROOT / "app/domain/astrology/dignities"
+    forbidden_patterns = (
+        "Session",
+        "select(",
+        "from app.infra",
+        "from app.services",
+        "from app.api",
+        "DIGNITY_SCORES",
+        "DOMICILE_SCORE",
+        "ACCIDENTAL_DIGNITY_SCORES",
+        "AIEngineAdapter",
+        "OpenAI",
+        "chat.completions",
+        "prompt",
+        "interpretation",
+        "micro_note",
+    )
+    hits: list[str] = []
+    for path in dignity_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for pattern in forbidden_patterns:
+            if pattern in text:
+                hits.append(f"{path}:{pattern}")
+
+    assert hits == []

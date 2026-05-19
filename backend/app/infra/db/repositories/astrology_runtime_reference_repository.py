@@ -16,11 +16,35 @@ from app.domain.astrology.runtime.runtime_reference import (
     AstralPointReferenceSet,
     AstrologyRuntimeReference,
 )
+from app.infra.db.models.dignity_reference import (
+    AstralAccidentalDignityConditionSchemaModel,
+    AstralAccidentalDignityRuleModel,
+    AstralAccidentalDignityScoreWeightModel,
+    AstralAccidentalDignityTypeModel,
+    AstralConditionOperatorModel,
+    AstralDecanSystemCodeModel,
+    AstralEssentialDignityRuleModel,
+    AstralEssentialDignityScoreWeightModel,
+    AstralEssentialDignityTypeModel,
+    AstralFaceDecanModel,
+    AstralHeliacalConditionModel,
+    AstralHorizonPositionModel,
+    AstralPlanetMotionStateModel,
+    AstralPlanetNatureModel,
+    AstralRulerAssignmentsRoleModel,
+    AstralSectModel,
+    AstralSignGenderModel,
+    AstralSpeedRelationModel,
+    AstralTermBoundModel,
+    AstralTermSystemCodeModel,
+    AstralTriplicityRulerAssignmentModel,
+)
 from app.infra.db.models.prediction_reference import AstralPlanetSignDignityModel
 from app.infra.db.models.reference import (
     AstralAnglePointModel,
     AstralAstrologicalRoleModel,
     AstralElementModel,
+    AstralHouseModalityModel,
     AstralHouseSystemModel,
     AstralModalityModel,
     AstralPlanetDefinitionModel,
@@ -31,6 +55,7 @@ from app.infra.db.models.reference import (
     AstralSignModel,
     AstralSignProfileModel,
     AstralSystemModel,
+    HouseModel,
     LanguageModel,
     PlanetModel,
     ReferenceVersionModel,
@@ -38,6 +63,7 @@ from app.infra.db.models.reference import (
 from app.infra.db.repositories.astrology_runtime_reference_mapper import (
     AstrologyRuntimeReferenceMapper,
 )
+from app.infra.db.repositories.dignity_reference_repository import DignityReferenceRepository
 from app.infra.db.repositories.prediction_reference_repository import PredictionReferenceRepository
 from app.infra.db.repositories.reference_repository import ReferenceRepository
 
@@ -89,6 +115,7 @@ class AstrologyRuntimeReferenceRepository:
                 payload=payload,
                 dignities=self._load_dignities(),
                 sign_rulerships=prediction_repo.get_sign_rulerships(),
+                dignity_reference=self._load_dignity_reference(version_model.id),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
                 astral_points=self._load_astral_point_payload(),
@@ -201,6 +228,320 @@ class AstrologyRuntimeReferenceRepository:
                 }
             )
         return tuple(result)
+
+    def _load_dignity_reference(self, reference_version_id: int) -> dict[str, object]:
+        """Charge les referentiels avances de dignites sous forme normalisee."""
+        return {
+            "essential_types": self._load_dignity_types(AstralEssentialDignityTypeModel),
+            "accidental_types": self._load_dignity_types(AstralAccidentalDignityTypeModel),
+            "term_systems": self._load_dignity_systems(AstralTermSystemCodeModel),
+            "decan_systems": self._load_dignity_systems(AstralDecanSystemCodeModel),
+            "score_profiles": self._load_dignity_score_profiles(),
+            "essential_weights": self._load_dignity_score_weights(
+                AstralEssentialDignityScoreWeightModel,
+                AstralEssentialDignityTypeModel,
+                "essential_dignity_types_id",
+            ),
+            "accidental_weights": self._load_dignity_score_weights(
+                AstralAccidentalDignityScoreWeightModel,
+                AstralAccidentalDignityTypeModel,
+                "accidental_dignity_type_id",
+            ),
+            "essential_rules": self._load_essential_dignity_rules(reference_version_id),
+            "triplicity_rulers": self._load_triplicity_rulers(reference_version_id),
+            "term_bounds": self._load_term_bounds(reference_version_id),
+            "face_decans": self._load_face_decans(reference_version_id),
+            "accidental_rules": self._load_accidental_dignity_rules(reference_version_id),
+        }
+
+    def _load_dignity_types(
+        self,
+        model: type[AstralEssentialDignityTypeModel] | type[AstralAccidentalDignityTypeModel],
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les types de dignites exposes au runtime."""
+        rows = self.db.scalars(select(model).order_by(model.sort_order)).all()
+        return tuple(
+            {
+                "code": row.code,
+                "label": row.label,
+                "description": row.description,
+                "sort_order": row.sort_order,
+            }
+            for row in rows
+        )
+
+    def _load_dignity_systems(
+        self,
+        model: type[AstralTermSystemCodeModel] | type[AstralDecanSystemCodeModel],
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les systemes de termes et de decans exposes au runtime."""
+        rows = self.db.scalars(select(model).order_by(model.sort_order)).all()
+        return tuple(
+            {
+                "code": row.code,
+                "label": row.label,
+                "description": row.description,
+                "sort_order": row.sort_order,
+            }
+            for row in rows
+        )
+
+    def _load_dignity_score_profiles(self) -> tuple[dict[str, object], ...]:
+        """Charge les profils de scoring et leur tradition."""
+        return tuple(
+            {
+                "code": profile.code,
+                "tradition": profile.astral_system.name,
+                "is_default": profile.is_default,
+            }
+            for profile in DignityReferenceRepository(self.db).list_score_profiles()
+        )
+
+    def _load_dignity_score_weights(
+        self,
+        model: type[AstralEssentialDignityScoreWeightModel]
+        | type[AstralAccidentalDignityScoreWeightModel],
+        type_model: type[AstralEssentialDignityTypeModel] | type[AstralAccidentalDignityTypeModel],
+        type_fk_name: str,
+    ) -> dict[str, tuple[dict[str, object], ...]]:
+        """Charge les poids de dignites groupes par profil de scoring."""
+        repository = DignityReferenceRepository(self.db)
+        grouped: dict[str, list[dict[str, object]]] = {}
+        for profile in repository.list_score_profiles():
+            rows = (
+                repository.list_essential_score_weights(profile.code)
+                if type_fk_name == "essential_dignity_types_id"
+                else repository.list_accidental_score_weights(profile.code)
+            )
+            grouped[profile.code] = [
+                {
+                    "dignity_type_code": row.dignity_type_code,
+                    "score_value": row.score_value,
+                    "functional_weight": row.functional_weight,
+                    "expression_weight": row.expression_weight,
+                    "intensity_weight": row.intensity_weight,
+                }
+                for row in rows
+            ]
+        return {profile: tuple(weights) for profile, weights in grouped.items()}
+
+    def _load_essential_dignity_rules(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les regles essentielles planetaire-signe."""
+        rows = self.db.execute(
+            select(
+                PlanetModel.code.label("planet_code"),
+                AstralSignModel.code.label("sign_code"),
+                AstralEssentialDignityTypeModel.code.label("dignity_type_code"),
+                AstralEssentialDignityRuleModel.degree_start,
+                AstralEssentialDignityRuleModel.degree_end,
+                AstralSystemModel.name.label("system_code"),
+            )
+            .select_from(AstralEssentialDignityRuleModel)
+            .join(PlanetModel, AstralEssentialDignityRuleModel.planet_id == PlanetModel.id)
+            .join(AstralSignModel, AstralEssentialDignityRuleModel.sign_id == AstralSignModel.id)
+            .join(
+                AstralEssentialDignityTypeModel,
+                AstralEssentialDignityRuleModel.essential_dignity_types_id
+                == AstralEssentialDignityTypeModel.id,
+            )
+            .join(
+                AstralSystemModel,
+                AstralEssentialDignityRuleModel.astral_system_id == AstralSystemModel.id,
+            )
+            .where(AstralEssentialDignityRuleModel.reference_version_id == reference_version_id)
+            .order_by(AstralEssentialDignityTypeModel.sort_order)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_triplicity_rulers(self, reference_version_id: int) -> tuple[dict[str, object], ...]:
+        """Charge les maitres de triplicite par element et secte."""
+        rows = self.db.execute(
+            select(
+                AstralElementModel.code.label("element_code"),
+                AstralSectModel.code.label("sect_code"),
+                PlanetModel.code.label("planet_code"),
+                AstralRulerAssignmentsRoleModel.code.label("role_code"),
+                AstralSystemModel.name.label("system_code"),
+            )
+            .select_from(AstralTriplicityRulerAssignmentModel)
+            .join(
+                AstralElementModel,
+                AstralTriplicityRulerAssignmentModel.element_id == AstralElementModel.id,
+            )
+            .join(
+                AstralSectModel, AstralTriplicityRulerAssignmentModel.sect_id == AstralSectModel.id
+            )
+            .join(PlanetModel, AstralTriplicityRulerAssignmentModel.planet_id == PlanetModel.id)
+            .join(
+                AstralRulerAssignmentsRoleModel,
+                AstralTriplicityRulerAssignmentModel.role_id == AstralRulerAssignmentsRoleModel.id,
+            )
+            .join(
+                AstralSystemModel,
+                AstralTriplicityRulerAssignmentModel.astral_system_id == AstralSystemModel.id,
+            )
+            .where(
+                AstralTriplicityRulerAssignmentModel.reference_version_id == reference_version_id
+            )
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_term_bounds(self, reference_version_id: int) -> tuple[dict[str, object], ...]:
+        """Charge les bornes de termes par signe."""
+        rows = self.db.execute(
+            select(
+                AstralTermSystemCodeModel.code.label("term_system_code"),
+                AstralSignModel.code.label("sign_code"),
+                PlanetModel.code.label("planet_code"),
+                AstralTermBoundModel.degree_start,
+                AstralTermBoundModel.degree_end,
+                AstralTermBoundModel.order_index,
+            )
+            .select_from(AstralTermBoundModel)
+            .join(
+                AstralTermSystemCodeModel,
+                AstralTermBoundModel.term_system_id == AstralTermSystemCodeModel.id,
+            )
+            .join(AstralSignModel, AstralTermBoundModel.sign_id == AstralSignModel.id)
+            .join(PlanetModel, AstralTermBoundModel.planet_id == PlanetModel.id)
+            .where(AstralTermBoundModel.reference_version_id == reference_version_id)
+            .order_by(AstralSignModel.id, AstralTermBoundModel.order_index)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_face_decans(self, reference_version_id: int) -> tuple[dict[str, object], ...]:
+        """Charge les faces et decans par signe."""
+        rows = self.db.execute(
+            select(
+                AstralDecanSystemCodeModel.code.label("decan_system_code"),
+                AstralSignModel.code.label("sign_code"),
+                PlanetModel.code.label("planet_code"),
+                AstralFaceDecanModel.decan_index,
+                AstralFaceDecanModel.degree_start,
+                AstralFaceDecanModel.degree_end,
+            )
+            .select_from(AstralFaceDecanModel)
+            .join(
+                AstralDecanSystemCodeModel,
+                AstralFaceDecanModel.decan_system_id == AstralDecanSystemCodeModel.id,
+            )
+            .join(AstralSignModel, AstralFaceDecanModel.sign_id == AstralSignModel.id)
+            .join(PlanetModel, AstralFaceDecanModel.planet_id == PlanetModel.id)
+            .where(AstralFaceDecanModel.reference_version_id == reference_version_id)
+            .order_by(AstralSignModel.id, AstralFaceDecanModel.decan_index)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_accidental_dignity_rules(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les regles accidentelles avec conditions normalisees."""
+        rows = self.db.execute(
+            select(
+                AstralAccidentalDignityRuleModel,
+                AstralAccidentalDignityTypeModel.code.label("dignity_type_code"),
+                PlanetModel.code.label("planet_code"),
+                AstralAccidentalDignityConditionSchemaModel.code.label("condition_schema_code"),
+                AstralSystemModel.name.label("system_code"),
+            )
+            .select_from(AstralAccidentalDignityRuleModel)
+            .join(
+                AstralAccidentalDignityTypeModel,
+                AstralAccidentalDignityRuleModel.accidental_dignity_type_id
+                == AstralAccidentalDignityTypeModel.id,
+            )
+            .outerjoin(PlanetModel, AstralAccidentalDignityRuleModel.planet_id == PlanetModel.id)
+            .join(
+                AstralAccidentalDignityConditionSchemaModel,
+                AstralAccidentalDignityRuleModel.condition_schema_id
+                == AstralAccidentalDignityConditionSchemaModel.id,
+            )
+            .join(
+                AstralSystemModel,
+                AstralAccidentalDignityRuleModel.astral_system_id == AstralSystemModel.id,
+            )
+            .where(AstralAccidentalDignityRuleModel.reference_version_id == reference_version_id)
+            .order_by(AstralAccidentalDignityTypeModel.sort_order)
+        ).all()
+        id_maps = self._dignity_condition_id_maps()
+        return tuple(
+            {
+                "dignity_type_code": dignity_type_code,
+                "planet_code": planet_code,
+                "condition_schema_code": condition_schema_code,
+                "conditions": self._normalize_condition_json(rule.condition_json, id_maps),
+                "system_code": system_code,
+            }
+            for rule, dignity_type_code, planet_code, condition_schema_code, system_code in rows
+        )
+
+    def _dignity_condition_id_maps(self) -> dict[str, dict[int, str | int]]:
+        """Construit les correspondances d'ids DB vers codes stables de condition."""
+        return {
+            "planet_id": {row.id: row.code for row in self.db.scalars(select(PlanetModel)).all()},
+            "relative_planet_id": {
+                row.id: row.code for row in self.db.scalars(select(PlanetModel)).all()
+            },
+            "house_id": {row.id: row.number for row in self.db.scalars(select(HouseModel)).all()},
+            "house_modality_id": {
+                row.id: row.name for row in self.db.scalars(select(AstralHouseModalityModel)).all()
+            },
+            "motion_state_id": {
+                row.id: row.code
+                for row in self.db.scalars(select(AstralPlanetMotionStateModel)).all()
+            },
+            "speed_relation_id": {
+                row.id: row.code for row in self.db.scalars(select(AstralSpeedRelationModel)).all()
+            },
+            "heliacal_condition_id": {
+                row.id: row.code
+                for row in self.db.scalars(select(AstralHeliacalConditionModel)).all()
+            },
+            "horizon_position_id": {
+                row.id: row.code
+                for row in self.db.scalars(select(AstralHorizonPositionModel)).all()
+            },
+            "chart_sect_id": {
+                row.id: row.code for row in self.db.scalars(select(AstralSectModel)).all()
+            },
+            "sign_gender_id": {
+                row.id: row.code for row in self.db.scalars(select(AstralSignGenderModel)).all()
+            },
+            "aspect_from_planet_nature_id": {
+                row.id: row.code for row in self.db.scalars(select(AstralPlanetNatureModel)).all()
+            },
+            "bounding_planet_nature_id": {
+                row.id: row.code for row in self.db.scalars(select(AstralPlanetNatureModel)).all()
+            },
+            "condition_operator_id": {
+                row.id: row.code
+                for row in self.db.scalars(select(AstralConditionOperatorModel)).all()
+            },
+        }
+
+    def _normalize_condition_json(
+        self,
+        condition_json: Mapping[str, object],
+        id_maps: dict[str, dict[int, str | int]],
+    ) -> tuple[dict[str, object], ...]:
+        """Remplace les ids techniques par des codes ou numeros runtime."""
+        conditions: list[dict[str, object]] = []
+        for key, value in condition_json.items():
+            normalized_key = key
+            normalized_value: object = value
+            if key in id_maps and isinstance(value, int):
+                normalized_key = key.removesuffix("_id") + "_code"
+                normalized_value = id_maps[key].get(value, value)
+            elif key.endswith("_ids") and isinstance(value, list):
+                singular = f"{key[:-1]}"
+                id_map = id_maps.get(singular)
+                if id_map is not None:
+                    normalized_key = key[:-4] + "_codes"
+                    normalized_value = [id_map.get(int(item), int(item)) for item in value]
+            conditions.append({"key": normalized_key, "value": normalized_value})
+        return tuple(conditions)
 
     def _load_angle_points(self) -> tuple[dict[str, object], ...]:
         """Charge les points d'angle structurels."""
@@ -354,6 +695,7 @@ class AstrologyRuntimeReferenceRepository:
                     self._raise_integrity("aspect_orb_rules", f"orphan_{field}:{code}")
         if not reference.dignities.sign_rulerships:
             self._raise_integrity("sign_rulerships", "missing")
+        self._validate_dignity_reference(reference)
         if len(reference.dignities.sign_rulerships) != 12:
             self._raise_integrity("sign_rulerships", "expected_12")
         for sign_code, planet_code in reference.dignities.sign_rulerships.items():
@@ -381,6 +723,37 @@ class AstrologyRuntimeReferenceRepository:
                     self._raise_integrity("sign_profiles", f"missing_{field_name}:{sign.code}")
                 if value.strip().lower() == "unknown":
                     self._raise_integrity("sign_profiles", f"unknown_{field_name}:{sign.code}")
+
+    def _validate_dignity_reference(self, reference: AstrologyRuntimeReference) -> None:
+        """Verifie que le referentiel avance des dignites est calculable."""
+        dignity_reference = reference.dignity_reference
+        for field, rows in (
+            ("essential_types", dignity_reference.essential_types),
+            ("accidental_types", dignity_reference.accidental_types),
+            ("term_systems", dignity_reference.term_systems),
+            ("decan_systems", dignity_reference.decan_systems),
+        ):
+            if not rows:
+                self._raise_integrity("dignity_reference", f"missing_{field}")
+        if not dignity_reference.score_profiles:
+            self._raise_integrity("dignity_reference", "missing_score_profiles")
+        try:
+            default_profile = dignity_reference.default_score_profile
+        except ValueError:
+            self._raise_integrity("dignity_reference", "missing_default_score_profile")
+        if not dignity_reference.essential_weights.get(default_profile):
+            self._raise_integrity("dignity_reference", "missing_essential_weights")
+        if not dignity_reference.accidental_weights.get(default_profile):
+            self._raise_integrity("dignity_reference", "missing_accidental_weights")
+        for field, rows in (
+            ("essential_rules", dignity_reference.essential_rules),
+            ("triplicity_rulers", dignity_reference.triplicity_rulers),
+            ("term_bounds", dignity_reference.term_bounds),
+            ("face_decans", dignity_reference.face_decans),
+            ("accidental_rules", dignity_reference.accidental_rules),
+        ):
+            if not rows:
+                self._raise_integrity("dignity_reference", f"missing_{field}")
 
     def _reject_unknown_codes(self, *groups: tuple[str, set[str]]) -> None:
         """Refuse les sentinelles `unknown` dans les codes runtime canoniques."""

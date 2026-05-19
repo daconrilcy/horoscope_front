@@ -10,6 +10,7 @@ from collections.abc import Mapping, Sequence
 
 from app.domain.astrology.planet_catalog import planet_swe_ids_by_code
 from app.domain.astrology.runtime.runtime_reference import (
+    AccidentalDignityRuleReferenceData,
     AnglePointReferenceData,
     AnglePointReferenceSet,
     AspectOrbRuleReferenceData,
@@ -22,17 +23,27 @@ from app.domain.astrology.runtime.runtime_reference import (
     AstrologyRuntimeReference,
     AstrologySystemReferenceData,
     AstrologySystemReferenceSet,
+    DignityConditionValue,
     DignityReferenceData,
     DignityReferenceSet,
+    DignityScoreProfileReferenceData,
+    DignityScoreWeightReferenceData,
+    DignitySystemReferenceData,
+    DignityTypeReferenceData,
+    EssentialDignityRuleReferenceData,
+    FaceDecanReferenceData,
     HouseAxisReferenceData,
     HouseReferenceData,
     HouseReferenceSet,
     HouseSystemReferenceData,
     HouseSystemReferenceSet,
+    PlanetDignityReferenceSet,
     PlanetReferenceData,
     PlanetReferenceSet,
     SignReferenceData,
     SignReferenceSet,
+    TermBoundReferenceData,
+    TriplicityRulerReferenceData,
 )
 
 
@@ -49,6 +60,7 @@ class AstrologyRuntimeReferenceMapper:
         payload: Mapping[str, object],
         dignities: Sequence[Mapping[str, object]],
         sign_rulerships: Mapping[str, str],
+        dignity_reference: Mapping[str, object],
         planet_definitions: Mapping[str, Mapping[str, object]],
         angle_points: Sequence[Mapping[str, object]],
         astral_points: Sequence[Mapping[str, object]],
@@ -153,6 +165,7 @@ class AstrologyRuntimeReferenceMapper:
                 ),
                 sign_rulerships={str(key): str(value) for key, value in sign_rulerships.items()},
             ),
+            dignity_reference=self.map_dignity_reference(dignity_reference or {}),
             angle_points=AnglePointReferenceSet(
                 tuple(
                     AnglePointReferenceData(
@@ -186,6 +199,87 @@ class AstrologyRuntimeReferenceMapper:
                     )
                     for item in self._items(payload, "astral_systems")
                 )
+            ),
+        )
+
+    def map_dignity_reference(
+        self,
+        payload: Mapping[str, object],
+    ) -> PlanetDignityReferenceSet:
+        """Convertit le referentiel avance des dignites en contrats immutables."""
+        return PlanetDignityReferenceSet(
+            essential_types=self._map_dignity_types(payload, "essential_types"),
+            accidental_types=self._map_dignity_types(payload, "accidental_types"),
+            term_systems=self._map_dignity_systems(payload, "term_systems"),
+            decan_systems=self._map_dignity_systems(payload, "decan_systems"),
+            score_profiles=tuple(
+                DignityScoreProfileReferenceData(
+                    code=str(item["code"]),
+                    tradition=str(item["tradition"]),
+                    is_default=bool(item["is_default"]),
+                )
+                for item in self._items(payload, "score_profiles")
+            ),
+            essential_weights=self._map_weight_groups(payload, "essential_weights"),
+            accidental_weights=self._map_weight_groups(payload, "accidental_weights"),
+            essential_rules=tuple(
+                EssentialDignityRuleReferenceData(
+                    planet_code=str(item["planet_code"]),
+                    sign_code=str(item["sign_code"]),
+                    dignity_type_code=str(item["dignity_type_code"]),
+                    degree_start=float(item["degree_start"]),
+                    degree_end=float(item["degree_end"]),
+                    system_code=str(item["system_code"]),
+                )
+                for item in self._items(payload, "essential_rules")
+            ),
+            triplicity_rulers=tuple(
+                TriplicityRulerReferenceData(
+                    element_code=str(item["element_code"]),
+                    sect_code=str(item["sect_code"]),
+                    planet_code=str(item["planet_code"]),
+                    role_code=str(item["role_code"]),
+                    system_code=str(item["system_code"]),
+                )
+                for item in self._items(payload, "triplicity_rulers")
+            ),
+            term_bounds=tuple(
+                TermBoundReferenceData(
+                    term_system_code=str(item["term_system_code"]),
+                    sign_code=str(item["sign_code"]),
+                    planet_code=str(item["planet_code"]),
+                    degree_start=float(item["degree_start"]),
+                    degree_end=float(item["degree_end"]),
+                    order_index=int(item["order_index"]),
+                )
+                for item in self._items(payload, "term_bounds")
+            ),
+            face_decans=tuple(
+                FaceDecanReferenceData(
+                    decan_system_code=str(item["decan_system_code"]),
+                    sign_code=str(item["sign_code"]),
+                    planet_code=str(item["planet_code"]),
+                    decan_index=int(item["decan_index"]),
+                    degree_start=float(item["degree_start"]),
+                    degree_end=float(item["degree_end"]),
+                )
+                for item in self._items(payload, "face_decans")
+            ),
+            accidental_rules=tuple(
+                AccidentalDignityRuleReferenceData(
+                    dignity_type_code=str(item["dignity_type_code"]),
+                    planet_code=self._optional_str(item.get("planet_code")),
+                    condition_schema_code=str(item["condition_schema_code"]),
+                    conditions=tuple(
+                        DignityConditionValue(
+                            key=str(condition["key"]),
+                            value=self._condition_value(condition.get("value")),
+                        )
+                        for condition in self._nested_items(item, "conditions")
+                    ),
+                    system_code=str(item["system_code"]),
+                )
+                for item in self._items(payload, "accidental_rules")
             ),
         )
 
@@ -239,7 +333,7 @@ class AstrologyRuntimeReferenceMapper:
     def _items(self, payload: Mapping[str, object], key: str) -> tuple[Mapping[str, object], ...]:
         """Extrait une liste de mappings du payload infra."""
         raw = payload.get(key)
-        if not isinstance(raw, list):
+        if not isinstance(raw, (list, tuple)):
             return ()
         return tuple(item for item in raw if isinstance(item, Mapping))
 
@@ -253,6 +347,72 @@ class AstrologyRuntimeReferenceMapper:
         if not isinstance(raw, (list, tuple)):
             return ()
         return tuple(item for item in raw if isinstance(item, Mapping))
+
+    def _map_weight_groups(
+        self,
+        payload: Mapping[str, object],
+        key: str,
+    ) -> dict[str, tuple[DignityScoreWeightReferenceData, ...]]:
+        """Convertit les poids groupes par profil de scoring."""
+        raw = payload.get(key)
+        if not isinstance(raw, Mapping):
+            return {}
+        groups: dict[str, tuple[DignityScoreWeightReferenceData, ...]] = {}
+        for profile_code, rows in raw.items():
+            if not isinstance(rows, (list, tuple)):
+                continue
+            groups[str(profile_code)] = tuple(
+                DignityScoreWeightReferenceData(
+                    dignity_type_code=str(item["dignity_type_code"]),
+                    score_value=float(item["score_value"]),
+                    functional_weight=float(item["functional_weight"]),
+                    expression_weight=float(item["expression_weight"]),
+                    intensity_weight=float(item["intensity_weight"]),
+                )
+                for item in rows
+                if isinstance(item, Mapping)
+            )
+        return groups
+
+    def _map_dignity_types(
+        self,
+        payload: Mapping[str, object],
+        key: str,
+    ) -> tuple[DignityTypeReferenceData, ...]:
+        """Convertit les types de dignites en contrats runtime."""
+        return tuple(
+            DignityTypeReferenceData(
+                code=str(item["code"]),
+                label=str(item["label"]),
+                description=str(item["description"]),
+                sort_order=int(item["sort_order"]),
+            )
+            for item in self._items(payload, key)
+        )
+
+    def _map_dignity_systems(
+        self,
+        payload: Mapping[str, object],
+        key: str,
+    ) -> tuple[DignitySystemReferenceData, ...]:
+        """Convertit les systemes de termes et decans en contrats runtime."""
+        return tuple(
+            DignitySystemReferenceData(
+                code=str(item["code"]),
+                label=str(item["label"]),
+                description=self._optional_str(item.get("description")),
+                sort_order=int(item["sort_order"]),
+            )
+            for item in self._items(payload, key)
+        )
+
+    def _condition_value(self, value: object) -> str | int | float | tuple[str | int | float, ...]:
+        """Normalise une valeur de condition en scalaire ou tuple immutable."""
+        if isinstance(value, (str, int, float)):
+            return value
+        if isinstance(value, (list, tuple)):
+            return tuple(item for item in value if isinstance(item, (str, int, float)))
+        return str(value)
 
     def _optional_str(self, value: object) -> str | None:
         """Convertit une valeur optionnelle en chaine normalisee."""

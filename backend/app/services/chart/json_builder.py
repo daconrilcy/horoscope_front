@@ -223,6 +223,60 @@ def _serialize_dominance(item: Any) -> dict[str, Any]:
     return payload
 
 
+def _serialize_dignity_match(match: Any) -> dict[str, Any]:
+    """Projette un match de dignite factuel."""
+    payload = {
+        "type": match.dignity_type_code,
+        "score": match.score_value,
+        "source": match.source,
+        "reason": match.reason,
+    }
+    if hasattr(match, "sign_code"):
+        payload["sign"] = match.sign_code
+        payload["degree_start"] = match.degree_start
+        payload["degree_end"] = match.degree_end
+    if hasattr(match, "condition"):
+        payload["condition"] = match.condition
+    return payload
+
+
+def _serialize_dignities(dignities: Any) -> dict[str, Any]:
+    """Projette les resultats de dignites par code planete."""
+    planets: dict[str, Any] = {}
+    score_profile = ""
+    tradition = ""
+    reference_version = ""
+    sect = ""
+    if not isinstance(dignities, (list, tuple)):
+        dignities = []
+    for result in dignities:
+        score_profile = result.score_profile
+        tradition = result.tradition
+        reference_version = result.reference_version
+        sect = result.sect
+        planets[result.planet_code] = {
+            "essential_score": result.essential_score,
+            "accidental_score": result.accidental_score,
+            "total_score": result.total_score,
+            "functional_strength_score": result.functional_strength_score,
+            "expression_quality_score": result.expression_quality_score,
+            "intensity_score": result.intensity_score,
+            "essential_breakdown": [
+                _serialize_dignity_match(match) for match in result.essential_breakdown
+            ],
+            "accidental_breakdown": [
+                _serialize_dignity_match(match) for match in result.accidental_breakdown
+            ],
+        }
+    return {
+        "score_profile": score_profile,
+        "tradition": tradition,
+        "reference_version": reference_version,
+        "sect": sect,
+        "planets": planets,
+    }
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -340,6 +394,7 @@ def build_chart_json(
         "house_rulers": house_rulers,
         "aspects": aspects,
         "angles": angles,
+        "dignities": _serialize_dignities(getattr(natal_result, "dignities", [])),
     }
     if chart_balance is not None:
         payload["chart_balance"] = chart_balance

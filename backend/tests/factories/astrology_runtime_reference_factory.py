@@ -108,6 +108,7 @@ def runtime_reference_from_mapping(
             for sign, planet in sign_rulerships.items()
         ),
         sign_rulerships={str(sign): str(planet) for sign, planet in sign_rulerships.items()},
+        dignity_reference=_default_dignity_reference(),
         planet_definitions={
             "sun": {"body_class": "luminary", "is_luminary": True},
             "moon": {"body_class": "luminary", "is_luminary": True},
@@ -193,6 +194,393 @@ def runtime_reference_from_mapping(
             {"code": "porphyry", "name": "Porphyry", "is_active": True},
         ),
     )
+
+
+def _default_dignity_reference() -> dict[str, object]:
+    """Crée un referentiel de dignites minimal pour les fixtures runtime."""
+    return {
+        "essential_types": [
+            {
+                "code": "domicile",
+                "label": "Domicile",
+                "description": "Planete en domicile.",
+                "sort_order": 1,
+            },
+            {
+                "code": "exaltation",
+                "label": "Exaltation",
+                "description": "Planete en exaltation.",
+                "sort_order": 2,
+            },
+            {
+                "code": "detriment",
+                "label": "Detriment",
+                "description": "Planete en exil.",
+                "sort_order": 3,
+            },
+            {
+                "code": "fall",
+                "label": "Fall",
+                "description": "Planete en chute.",
+                "sort_order": 4,
+            },
+            {
+                "code": "triplicity",
+                "label": "Triplicity",
+                "description": "Planete maitresse de triplicite.",
+                "sort_order": 5,
+            },
+            {
+                "code": "term",
+                "label": "Term",
+                "description": "Planete maitresse de terme.",
+                "sort_order": 6,
+            },
+            {
+                "code": "face",
+                "label": "Face",
+                "description": "Planete maitresse de face.",
+                "sort_order": 7,
+            },
+            {
+                "code": "peregrine",
+                "label": "Peregrine",
+                "description": "Planete sans dignite essentielle positive.",
+                "sort_order": 8,
+            },
+        ],
+        "accidental_types": [
+            {
+                "code": code,
+                "label": code.replace("_", " ").title(),
+                "description": f"Type accidentel {code}.",
+                "sort_order": index,
+            }
+            for index, code in enumerate(
+                (
+                    "angular_house",
+                    "succedent_house",
+                    "cadent_house",
+                    "planetary_joy",
+                    "direct_motion",
+                    "retrograde",
+                    "cazimi",
+                    "combust",
+                    "under_sunbeams",
+                    "above_horizon",
+                    "below_horizon",
+                ),
+                start=1,
+            )
+        ],
+        "term_systems": [
+            {
+                "code": "egyptian",
+                "label": "Egyptian",
+                "description": "Termes egyptiens.",
+                "sort_order": 1,
+            }
+        ],
+        "decan_systems": [
+            {
+                "code": "chaldean",
+                "label": "Chaldean",
+                "description": "Decans chaldeens.",
+                "sort_order": 1,
+            }
+        ],
+        "score_profiles": [
+            {"code": "traditional_standard", "tradition": "traditional", "is_default": True}
+        ],
+        "essential_weights": {
+            "traditional_standard": [
+                {
+                    "dignity_type_code": "domicile",
+                    "score_value": 5,
+                    "functional_weight": 1,
+                    "expression_weight": 0.7,
+                    "intensity_weight": 0.6,
+                },
+                {
+                    "dignity_type_code": "exaltation",
+                    "score_value": 4,
+                    "functional_weight": 0.8,
+                    "expression_weight": 0.7,
+                    "intensity_weight": 0.5,
+                },
+                {
+                    "dignity_type_code": "detriment",
+                    "score_value": -5,
+                    "functional_weight": -0.8,
+                    "expression_weight": -0.7,
+                    "intensity_weight": 0.5,
+                },
+                {
+                    "dignity_type_code": "fall",
+                    "score_value": -4,
+                    "functional_weight": -0.7,
+                    "expression_weight": -0.6,
+                    "intensity_weight": 0.4,
+                },
+                {
+                    "dignity_type_code": "triplicity",
+                    "score_value": 3,
+                    "functional_weight": 0.6,
+                    "expression_weight": 0.7,
+                    "intensity_weight": 0.3,
+                },
+                {
+                    "dignity_type_code": "term",
+                    "score_value": 2,
+                    "functional_weight": 0.4,
+                    "expression_weight": 0.5,
+                    "intensity_weight": 0.2,
+                },
+                {
+                    "dignity_type_code": "face",
+                    "score_value": 1,
+                    "functional_weight": 0.2,
+                    "expression_weight": 0.4,
+                    "intensity_weight": 0.1,
+                },
+                {
+                    "dignity_type_code": "peregrine",
+                    "score_value": -5,
+                    "functional_weight": -0.6,
+                    "expression_weight": -0.5,
+                    "intensity_weight": 0.2,
+                },
+            ]
+        },
+        "accidental_weights": {
+            "traditional_standard": [
+                {
+                    "dignity_type_code": "angular_house",
+                    "score_value": 4,
+                    "functional_weight": 0.9,
+                    "expression_weight": 0.8,
+                    "intensity_weight": 0.9,
+                },
+                {
+                    "dignity_type_code": "succedent_house",
+                    "score_value": 2,
+                    "functional_weight": 0.5,
+                    "expression_weight": 0.5,
+                    "intensity_weight": 0.4,
+                },
+                {
+                    "dignity_type_code": "cadent_house",
+                    "score_value": -2,
+                    "functional_weight": -0.4,
+                    "expression_weight": -0.4,
+                    "intensity_weight": -0.2,
+                },
+                {
+                    "dignity_type_code": "direct_motion",
+                    "score_value": 1,
+                    "functional_weight": 0.3,
+                    "expression_weight": 0.3,
+                    "intensity_weight": 0.2,
+                },
+                {
+                    "dignity_type_code": "retrograde",
+                    "score_value": -2,
+                    "functional_weight": -0.4,
+                    "expression_weight": -0.5,
+                    "intensity_weight": 0.5,
+                },
+                {
+                    "dignity_type_code": "cazimi",
+                    "score_value": 5,
+                    "functional_weight": 1,
+                    "expression_weight": 0.9,
+                    "intensity_weight": 1,
+                },
+                {
+                    "dignity_type_code": "combust",
+                    "score_value": -5,
+                    "functional_weight": -0.9,
+                    "expression_weight": -0.8,
+                    "intensity_weight": 0.8,
+                },
+                {
+                    "dignity_type_code": "under_sunbeams",
+                    "score_value": -4,
+                    "functional_weight": -0.7,
+                    "expression_weight": -0.7,
+                    "intensity_weight": 0.5,
+                },
+                {
+                    "dignity_type_code": "planetary_joy",
+                    "score_value": 3,
+                    "functional_weight": 0.6,
+                    "expression_weight": 0.7,
+                    "intensity_weight": 0.4,
+                },
+            ]
+        },
+        "essential_rules": [
+            {
+                "planet_code": "sun",
+                "sign_code": "leo",
+                "dignity_type_code": "domicile",
+                "degree_start": 0,
+                "degree_end": 30,
+                "system_code": "traditional",
+            },
+            {
+                "planet_code": "sun",
+                "sign_code": "aries",
+                "dignity_type_code": "exaltation",
+                "degree_start": 0,
+                "degree_end": 30,
+                "system_code": "traditional",
+            },
+            {
+                "planet_code": "sun",
+                "sign_code": "aquarius",
+                "dignity_type_code": "detriment",
+                "degree_start": 0,
+                "degree_end": 30,
+                "system_code": "traditional",
+            },
+            {
+                "planet_code": "sun",
+                "sign_code": "libra",
+                "dignity_type_code": "fall",
+                "degree_start": 0,
+                "degree_end": 30,
+                "system_code": "traditional",
+            },
+        ],
+        "triplicity_rulers": [
+            {
+                "element_code": "fire",
+                "sect_code": "day",
+                "planet_code": "jupiter",
+                "role_code": "principal",
+                "system_code": "traditional",
+            },
+            {
+                "element_code": "fire",
+                "sect_code": "all",
+                "planet_code": "saturn",
+                "role_code": "participating",
+                "system_code": "traditional",
+            },
+        ],
+        "term_bounds": [
+            {
+                "term_system_code": "egyptian",
+                "sign_code": "aries",
+                "planet_code": "jupiter",
+                "degree_start": 0,
+                "degree_end": 6,
+                "order_index": 1,
+            }
+        ],
+        "face_decans": [
+            {
+                "decan_system_code": "chaldean",
+                "sign_code": "aries",
+                "planet_code": "mars",
+                "decan_index": 1,
+                "degree_start": 0,
+                "degree_end": 10,
+            }
+        ],
+        "accidental_rules": [
+            {
+                "dignity_type_code": "angular_house",
+                "planet_code": None,
+                "condition_schema_code": "house_modality",
+                "conditions": [{"key": "house_codes", "value": [1, 4, 7, 10]}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "succedent_house",
+                "planet_code": None,
+                "condition_schema_code": "house_modality",
+                "conditions": [{"key": "house_codes", "value": [2, 5, 8, 11]}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "cadent_house",
+                "planet_code": None,
+                "condition_schema_code": "house_modality",
+                "conditions": [{"key": "house_codes", "value": [3, 6, 9, 12]}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "direct_motion",
+                "planet_code": None,
+                "condition_schema_code": "motion_state",
+                "conditions": [{"key": "motion_state_code", "value": "direct"}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "retrograde",
+                "planet_code": None,
+                "condition_schema_code": "motion_state",
+                "conditions": [{"key": "motion_state_code", "value": "retrograde"}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "planetary_joy",
+                "planet_code": "moon",
+                "condition_schema_code": "planetary_joy_house",
+                "conditions": [{"key": "house_code", "value": 3}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "cazimi",
+                "planet_code": None,
+                "condition_schema_code": "solar_distance",
+                "conditions": [
+                    {"key": "relative_planet_code", "value": "sun"},
+                    {"key": "angular_distance_min_deg", "value": 0},
+                    {"key": "angular_distance_max_deg", "value": 0.283},
+                ],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "combust",
+                "planet_code": None,
+                "condition_schema_code": "solar_distance",
+                "conditions": [
+                    {"key": "relative_planet_code", "value": "sun"},
+                    {"key": "angular_distance_min_deg", "value": 0.283},
+                    {"key": "angular_distance_max_deg", "value": 8.5},
+                ],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "under_sunbeams",
+                "planet_code": None,
+                "condition_schema_code": "solar_distance",
+                "conditions": [
+                    {"key": "relative_planet_code", "value": "sun"},
+                    {"key": "angular_distance_min_deg", "value": 8.5},
+                    {"key": "angular_distance_max_deg", "value": 17},
+                ],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "above_horizon",
+                "planet_code": None,
+                "condition_schema_code": "horizon_position",
+                "conditions": [{"key": "house_codes", "value": [7, 8, 9, 10, 11, 12]}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "below_horizon",
+                "planet_code": None,
+                "condition_schema_code": "horizon_position",
+                "conditions": [{"key": "house_codes", "value": [1, 2, 3, 4, 5, 6]}],
+                "system_code": "traditional",
+            },
+        ],
+    }
 
 
 def _default_aspect_orb_rules(payload: Mapping[str, object]) -> tuple[dict[str, object], ...]:
@@ -337,6 +725,7 @@ def missing_planet_definition() -> AstrologyRuntimeReference:
         houses=reference.houses,
         house_axes=reference.house_axes,
         dignities=reference.dignities,
+        dignity_reference=reference.dignity_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -356,6 +745,7 @@ def missing_dignity() -> AstrologyRuntimeReference:
         houses=reference.houses,
         house_axes=reference.house_axes,
         dignities=type(reference.dignities)(items=(), sign_rulerships={}),
+        dignity_reference=reference.dignity_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -389,6 +779,7 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         houses=reference.houses,
         house_axes=reference.house_axes,
         dignities=reference.dignities,
+        dignity_reference=reference.dignity_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,

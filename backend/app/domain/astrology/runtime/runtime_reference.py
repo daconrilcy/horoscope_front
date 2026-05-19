@@ -164,6 +164,161 @@ class DignityReferenceSet:
 
 
 @dataclass(frozen=True, slots=True)
+class DignityScoreProfileReferenceData:
+    """Profil de scoring de dignites disponible au runtime."""
+
+    code: str
+    tradition: str
+    is_default: bool
+
+
+@dataclass(frozen=True, slots=True)
+class DignityTypeReferenceData:
+    """Type de dignite canonique disponible dans le referentiel runtime."""
+
+    code: str
+    label: str
+    description: str
+    sort_order: int
+
+
+@dataclass(frozen=True, slots=True)
+class DignitySystemReferenceData:
+    """Systeme de termes, faces ou decans disponible au runtime."""
+
+    code: str
+    label: str
+    description: str | None
+    sort_order: int
+
+
+@dataclass(frozen=True, slots=True)
+class DignityScoreWeightReferenceData:
+    """Poids factuel applique a un type de dignite par profil."""
+
+    dignity_type_code: str
+    score_value: float
+    functional_weight: float
+    expression_weight: float
+    intensity_weight: float
+
+
+@dataclass(frozen=True, slots=True)
+class EssentialDignityRuleReferenceData:
+    """Regle essentielle reliant une planete, un signe et une plage de degres."""
+
+    planet_code: str
+    sign_code: str
+    dignity_type_code: str
+    degree_start: float
+    degree_end: float
+    system_code: str
+
+
+@dataclass(frozen=True, slots=True)
+class TriplicityRulerReferenceData:
+    """Attribution de maitre de triplicite par element, secte et role."""
+
+    element_code: str
+    sect_code: str
+    planet_code: str
+    role_code: str
+    system_code: str
+
+
+@dataclass(frozen=True, slots=True)
+class TermBoundReferenceData:
+    """Borne de terme pour un signe et un systeme de termes."""
+
+    term_system_code: str
+    sign_code: str
+    planet_code: str
+    degree_start: float
+    degree_end: float
+    order_index: int
+
+
+@dataclass(frozen=True, slots=True)
+class FaceDecanReferenceData:
+    """Face ou decan pour un signe et une tranche de degres."""
+
+    decan_system_code: str
+    sign_code: str
+    planet_code: str
+    decan_index: int
+    degree_start: float
+    degree_end: float
+
+
+@dataclass(frozen=True, slots=True)
+class DignityConditionValue:
+    """Valeur de condition accidentelle normalisee sans dictionnaire libre."""
+
+    key: str
+    value: str | int | float | tuple[str | int | float, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class AccidentalDignityRuleReferenceData:
+    """Regle accidentelle normalisee depuis la DB pour le calcul pur."""
+
+    dignity_type_code: str
+    planet_code: str | None
+    condition_schema_code: str
+    conditions: tuple[DignityConditionValue, ...]
+    system_code: str
+
+
+@dataclass(frozen=True, slots=True)
+class PlanetDignityReferenceSet:
+    """Referentiel avance de dignites planetaires consomme par les calculateurs."""
+
+    essential_types: tuple[DignityTypeReferenceData, ...]
+    accidental_types: tuple[DignityTypeReferenceData, ...]
+    term_systems: tuple[DignitySystemReferenceData, ...]
+    decan_systems: tuple[DignitySystemReferenceData, ...]
+    score_profiles: tuple[DignityScoreProfileReferenceData, ...]
+    essential_weights: Mapping[str, tuple[DignityScoreWeightReferenceData, ...]]
+    accidental_weights: Mapping[str, tuple[DignityScoreWeightReferenceData, ...]]
+    essential_rules: tuple[EssentialDignityRuleReferenceData, ...]
+    triplicity_rulers: tuple[TriplicityRulerReferenceData, ...]
+    term_bounds: tuple[TermBoundReferenceData, ...]
+    face_decans: tuple[FaceDecanReferenceData, ...]
+    accidental_rules: tuple[AccidentalDignityRuleReferenceData, ...]
+
+    def __post_init__(self) -> None:
+        """Fige les index de poids pour eviter toute mutation par les calculateurs."""
+        object.__setattr__(
+            self,
+            "essential_weights",
+            MappingProxyType(
+                {
+                    str(profile): tuple(weights)
+                    for profile, weights in self.essential_weights.items()
+                }
+            ),
+        )
+        object.__setattr__(
+            self,
+            "accidental_weights",
+            MappingProxyType(
+                {
+                    str(profile): tuple(weights)
+                    for profile, weights in self.accidental_weights.items()
+                }
+            ),
+        )
+
+    @property
+    def default_score_profile(self) -> str:
+        """Retourne le profil par defaut declare par le referentiel."""
+        for profile in self.score_profiles:
+            if profile.is_default:
+                return profile.code
+        raise ValueError("dignity reference requires a default score profile")
+
+
+@dataclass(frozen=True, slots=True)
 class AnglePointReferenceData:
     """Point d'angle structurel du theme."""
 
@@ -278,6 +433,7 @@ class AstrologyRuntimeReference:
     houses: HouseReferenceSet
     house_axes: tuple[HouseAxisReferenceData, ...]
     dignities: DignityReferenceSet
+    dignity_reference: PlanetDignityReferenceSet
     angle_points: AnglePointReferenceSet
     astral_points: AstralPointReferenceSet
     house_systems: HouseSystemReferenceSet

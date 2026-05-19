@@ -1,0 +1,1677 @@
+{
+  "angles": {
+    "ASC": null,
+    "DSC": null,
+    "IC": null,
+    "MC": null
+  },
+  "aspects": [
+    {
+      "angle": 0.0,
+      "applying": null,
+      "aspect_code": "conjunction",
+      "energy_type": "fusion_intensification",
+      "family": "major",
+      "interpretive_valence": "amplifying",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.28,
+      "orb": 6.71,
+      "orb_max": 8.0,
+      "orb_used": 6.71,
+      "phase_type": null,
+      "planet_a": "mercury",
+      "planet_b": "pluto",
+      "strength_level": "low",
+      "type": "conjunction"
+    },
+    {
+      "angle": 0.0,
+      "applying": null,
+      "aspect_code": "conjunction",
+      "energy_type": "fusion_intensification",
+      "family": "major",
+      "interpretive_valence": "amplifying",
+      "is_exact": false,
+      "is_tight": true,
+      "normalized_strength": 1.0,
+      "orb": 0.58,
+      "orb_max": 10.0,
+      "orb_used": 0.58,
+      "phase_type": null,
+      "planet_a": "moon",
+      "planet_b": "neptune",
+      "strength_level": "dominant",
+      "type": "conjunction"
+    },
+    {
+      "angle": 180.0,
+      "applying": null,
+      "aspect_code": "opposition",
+      "energy_type": "polarity_awareness",
+      "family": "major",
+      "interpretive_valence": "polarizing",
+      "is_exact": false,
+      "is_tight": true,
+      "normalized_strength": 1.0,
+      "orb": 0.79,
+      "orb_max": 8.0,
+      "orb_used": 0.79,
+      "phase_type": null,
+      "planet_a": "jupiter",
+      "planet_b": "mercury",
+      "strength_level": "dominant",
+      "type": "opposition"
+    },
+    {
+      "angle": 180.0,
+      "applying": null,
+      "aspect_code": "opposition",
+      "energy_type": "polarity_awareness",
+      "family": "major",
+      "interpretive_valence": "polarizing",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.18,
+      "orb": 7.5,
+      "orb_max": 8.0,
+      "orb_used": 7.5,
+      "phase_type": null,
+      "planet_a": "jupiter",
+      "planet_b": "pluto",
+      "strength_level": "low",
+      "type": "opposition"
+    },
+    {
+      "angle": 180.0,
+      "applying": null,
+      "aspect_code": "opposition",
+      "energy_type": "polarity_awareness",
+      "family": "major",
+      "interpretive_valence": "polarizing",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.18,
+      "orb": 7.5,
+      "orb_max": 8.0,
+      "orb_used": 7.5,
+      "phase_type": null,
+      "planet_a": "mars",
+      "planet_b": "saturn",
+      "strength_level": "low",
+      "type": "opposition"
+    },
+    {
+      "angle": 180.0,
+      "applying": null,
+      "aspect_code": "opposition",
+      "energy_type": "polarity_awareness",
+      "family": "major",
+      "interpretive_valence": "polarizing",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.39,
+      "orb": 8.08,
+      "orb_max": 10.0,
+      "orb_used": 8.08,
+      "phase_type": null,
+      "planet_a": "moon",
+      "planet_b": "venus",
+      "strength_level": "moderate",
+      "type": "opposition"
+    },
+    {
+      "angle": 180.0,
+      "applying": null,
+      "aspect_code": "opposition",
+      "energy_type": "polarity_awareness",
+      "family": "major",
+      "interpretive_valence": "polarizing",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.18,
+      "orb": 7.5,
+      "orb_max": 8.0,
+      "orb_used": 7.5,
+      "phase_type": null,
+      "planet_a": "neptune",
+      "planet_b": "venus",
+      "strength_level": "low",
+      "type": "opposition"
+    },
+    {
+      "angle": 60.0,
+      "applying": null,
+      "aspect_code": "sextile",
+      "energy_type": "cooperative_opportunity",
+      "family": "major",
+      "interpretive_valence": "supportive",
+      "is_exact": true,
+      "is_tight": true,
+      "normalized_strength": 1.0,
+      "orb": 0.0,
+      "orb_max": 4.0,
+      "orb_used": 0.0,
+      "phase_type": null,
+      "planet_a": "jupiter",
+      "planet_b": "uranus",
+      "strength_level": "dominant",
+      "type": "sextile"
+    },
+    {
+      "angle": 60.0,
+      "applying": null,
+      "aspect_code": "sextile",
+      "energy_type": "cooperative_opportunity",
+      "family": "major",
+      "interpretive_valence": "supportive",
+      "is_exact": true,
+      "is_tight": true,
+      "normalized_strength": 1.0,
+      "orb": 0.0,
+      "orb_max": 4.0,
+      "orb_used": 0.0,
+      "phase_type": null,
+      "planet_a": "mars",
+      "planet_b": "venus",
+      "strength_level": "dominant",
+      "type": "sextile"
+    },
+    {
+      "angle": 60.0,
+      "applying": null,
+      "aspect_code": "sextile",
+      "energy_type": "cooperative_opportunity",
+      "family": "major",
+      "interpretive_valence": "supportive",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.74,
+      "orb": 2.32,
+      "orb_max": 5.0,
+      "orb_used": 2.32,
+      "phase_type": null,
+      "planet_a": "mercury",
+      "planet_b": "sun",
+      "strength_level": "strong",
+      "type": "sextile"
+    },
+    {
+      "angle": 60.0,
+      "applying": null,
+      "aspect_code": "sextile",
+      "energy_type": "cooperative_opportunity",
+      "family": "major",
+      "interpretive_valence": "supportive",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.32,
+      "orb": 4.39,
+      "orb_max": 5.0,
+      "orb_used": 4.39,
+      "phase_type": null,
+      "planet_a": "pluto",
+      "planet_b": "sun",
+      "strength_level": "low",
+      "type": "sextile"
+    },
+    {
+      "angle": 60.0,
+      "applying": null,
+      "aspect_code": "sextile",
+      "energy_type": "cooperative_opportunity",
+      "family": "major",
+      "interpretive_valence": "supportive",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.58,
+      "orb": 3.11,
+      "orb_max": 5.0,
+      "orb_used": 3.11,
+      "phase_type": null,
+      "planet_a": "sun",
+      "planet_b": "uranus",
+      "strength_level": "moderate",
+      "type": "sextile"
+    },
+    {
+      "angle": 90.0,
+      "applying": null,
+      "aspect_code": "square",
+      "energy_type": "friction_activation",
+      "family": "major",
+      "interpretive_valence": "dynamic_challenging",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.74,
+      "orb": 3.69,
+      "orb_max": 8.0,
+      "orb_used": 3.69,
+      "phase_type": null,
+      "planet_a": "moon",
+      "planet_b": "sun",
+      "strength_level": "strong",
+      "type": "square"
+    },
+    {
+      "angle": 90.0,
+      "applying": null,
+      "aspect_code": "square",
+      "energy_type": "friction_activation",
+      "family": "major",
+      "interpretive_valence": "dynamic_challenging",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.81,
+      "orb": 3.11,
+      "orb_max": 8.0,
+      "orb_used": 3.11,
+      "phase_type": null,
+      "planet_a": "neptune",
+      "planet_b": "sun",
+      "strength_level": "strong",
+      "type": "square"
+    },
+    {
+      "angle": 90.0,
+      "applying": null,
+      "aspect_code": "square",
+      "energy_type": "friction_activation",
+      "family": "major",
+      "interpretive_valence": "dynamic_challenging",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.65,
+      "orb": 4.39,
+      "orb_max": 8.0,
+      "orb_used": 4.39,
+      "phase_type": null,
+      "planet_a": "sun",
+      "planet_b": "venus",
+      "strength_level": "strong",
+      "type": "square"
+    },
+    {
+      "angle": 120.0,
+      "applying": null,
+      "aspect_code": "trine",
+      "energy_type": "harmonious_flow",
+      "family": "major",
+      "interpretive_valence": "harmonious",
+      "is_exact": false,
+      "is_tight": false,
+      "normalized_strength": 0.81,
+      "orb": 3.11,
+      "orb_max": 8.0,
+      "orb_used": 3.11,
+      "phase_type": null,
+      "planet_a": "jupiter",
+      "planet_b": "sun",
+      "strength_level": "strong",
+      "type": "trine"
+    },
+    {
+      "angle": 120.0,
+      "applying": null,
+      "aspect_code": "trine",
+      "energy_type": "harmonious_flow",
+      "family": "major",
+      "interpretive_valence": "harmonious",
+      "is_exact": false,
+      "is_tight": true,
+      "normalized_strength": 1.0,
+      "orb": 0.79,
+      "orb_max": 6.0,
+      "orb_used": 0.79,
+      "phase_type": null,
+      "planet_a": "mercury",
+      "planet_b": "uranus",
+      "strength_level": "dominant",
+      "type": "trine"
+    }
+  ],
+  "chart_balance": {
+    "chart_signature": {
+      "primary_element": "water",
+      "primary_house": 1,
+      "primary_modality": "mutable",
+      "primary_planet": "moon",
+      "primary_sign": "gemini"
+    },
+    "dominant_aspects": [
+      {
+        "code": "conjunction",
+        "rank": 1,
+        "score": 1.0,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "opposition",
+        "rank": 2,
+        "score": 1.0,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "sextile",
+        "rank": 3,
+        "score": 1.0,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "sextile",
+        "rank": 4,
+        "score": 1.0,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "trine",
+        "rank": 5,
+        "score": 1.0,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "square",
+        "rank": 6,
+        "score": 0.97,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "trine",
+        "rank": 7,
+        "score": 0.97,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "sextile",
+        "rank": 8,
+        "score": 0.9,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "square",
+        "rank": 9,
+        "score": 0.9,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "square",
+        "rank": 10,
+        "score": 0.81,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "sextile",
+        "rank": 11,
+        "score": 0.74,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "opposition",
+        "rank": 12,
+        "score": 0.55,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "sextile",
+        "rank": 13,
+        "score": 0.48,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "conjunction",
+        "rank": 14,
+        "score": 0.36,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "opposition",
+        "rank": 15,
+        "score": 0.26,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "opposition",
+        "rank": 16,
+        "score": 0.26,
+        "source": "dominant_aspect"
+      },
+      {
+        "code": "opposition",
+        "rank": 17,
+        "score": 0.26,
+        "source": "dominant_aspect"
+      }
+    ],
+    "dominant_houses": [
+      {
+        "code": "1",
+        "rank": 1,
+        "score": 0.62,
+        "source": "house_strength"
+      },
+      {
+        "code": "11",
+        "rank": 2,
+        "score": 0.52,
+        "source": "house_strength"
+      },
+      {
+        "code": "2",
+        "rank": 3,
+        "score": 0.52,
+        "source": "house_strength"
+      },
+      {
+        "code": "8",
+        "rank": 4,
+        "score": 0.41,
+        "source": "house_strength"
+      },
+      {
+        "code": "4",
+        "rank": 5,
+        "score": 0.4,
+        "source": "house_strength"
+      },
+      {
+        "code": "7",
+        "rank": 6,
+        "score": 0.4,
+        "source": "house_strength"
+      },
+      {
+        "code": "10",
+        "rank": 7,
+        "score": 0.38,
+        "source": "house_strength"
+      },
+      {
+        "code": "5",
+        "rank": 8,
+        "score": 0.27,
+        "source": "house_strength"
+      },
+      {
+        "code": "12",
+        "rank": 9,
+        "score": 0.25,
+        "source": "house_strength"
+      },
+      {
+        "code": "6",
+        "rank": 10,
+        "score": 0.15,
+        "source": "house_strength"
+      },
+      {
+        "code": "3",
+        "rank": 11,
+        "score": 0.05,
+        "source": "house_strength"
+      },
+      {
+        "code": "9",
+        "rank": 12,
+        "score": 0.05,
+        "source": "house_strength"
+      }
+    ],
+    "dominant_planets": [
+      {
+        "code": "moon",
+        "rank": 1,
+        "score": 1.0,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "neptune",
+        "rank": 2,
+        "score": 1.0,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "saturn",
+        "rank": 3,
+        "score": 1.0,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "sun",
+        "rank": 4,
+        "score": 1.0,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "mercury",
+        "rank": 5,
+        "score": 0.6923,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "pluto",
+        "rank": 6,
+        "score": 0.6923,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "mars",
+        "rank": 7,
+        "score": 0.5769,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "uranus",
+        "rank": 8,
+        "score": 0.5308,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "venus",
+        "rank": 9,
+        "score": 0.5308,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "jupiter",
+        "rank": 10,
+        "score": 0.3462,
+        "source": "sign_runtime"
+      }
+    ],
+    "dominant_signs": [
+      {
+        "code": "gemini",
+        "rank": 1,
+        "score": 0.65,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "pisces",
+        "rank": 2,
+        "score": 0.65,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "aries",
+        "rank": 3,
+        "score": 0.45,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "scorpio",
+        "rank": 4,
+        "score": 0.275,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "leo",
+        "rank": 5,
+        "score": 0.265,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "virgo",
+        "rank": 6,
+        "score": 0.265,
+        "source": "sign_runtime"
+      },
+      {
+        "code": "libra",
+        "rank": 7,
+        "score": 0.225,
+        "source": "sign_runtime"
+      }
+    ],
+    "elements": [
+      {
+        "code": "water",
+        "rank": 1,
+        "score": 1.0
+      },
+      {
+        "code": "air",
+        "rank": 2,
+        "score": 0.9459
+      },
+      {
+        "code": "fire",
+        "rank": 3,
+        "score": 0.773
+      },
+      {
+        "code": "earth",
+        "rank": 4,
+        "score": 0.2865
+      }
+    ],
+    "modalities": [
+      {
+        "code": "mutable",
+        "rank": 1,
+        "score": 1.0
+      },
+      {
+        "code": "cardinal",
+        "rank": 2,
+        "score": 0.4313
+      },
+      {
+        "code": "fixed",
+        "rank": 3,
+        "score": 0.345
+      }
+    ],
+    "version": "1"
+  },
+  "chart_signature": {
+    "primary_element": "water",
+    "primary_house": 1,
+    "primary_modality": "mutable",
+    "primary_planet": "moon",
+    "primary_sign": "gemini"
+  },
+  "dignities": {
+    "planets": {
+      "jupiter": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=cadent;house_codes=(3, 6, 9, 12)",
+            "score": -2.0,
+            "source": "house_modality_membership",
+            "type": "cadent_house",
+            "reason": "jupiter matches cadent_house: house_modality_code=cadent;house_codes=(3, 6, 9, 12)"
+          }
+        ],
+        "accidental_score": -2.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": 3.0,
+            "sign": "libra",
+            "source": "triplicity",
+            "type": "triplicity",
+            "reason": "jupiter in libra: triplicity"
+          },
+          {
+            "degree_end": 21.0,
+            "degree_start": 14.0,
+            "score": 2.0,
+            "sign": "libra",
+            "source": "term_bound",
+            "type": "term",
+            "reason": "jupiter in libra: term"
+          },
+          {
+            "degree_end": 30.0,
+            "degree_start": 20.0,
+            "score": 1.0,
+            "sign": "libra",
+            "source": "face_decan",
+            "type": "face",
+            "reason": "jupiter in libra: face"
+          }
+        ],
+        "essential_score": 6.0,
+        "expression_quality_score": 1.2000000000000002,
+        "functional_strength_score": 0.7999999999999999,
+        "intensity_score": 0.39999999999999997,
+        "total_score": 4.0
+      },
+      "mars": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=angular;house_codes=(1, 4, 7, 10)",
+            "score": 4.0,
+            "source": "house_modality_membership",
+            "type": "angular_house",
+            "reason": "mars matches angular_house: house_modality_code=angular;house_codes=(1, 4, 7, 10)"
+          }
+        ],
+        "accidental_score": 4.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30.0,
+            "degree_start": 0.0,
+            "score": 5.0,
+            "sign": "scorpio",
+            "source": "essential_rule",
+            "type": "domicile",
+            "reason": "mars in scorpio: domicile"
+          },
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": 3.0,
+            "sign": "scorpio",
+            "source": "triplicity",
+            "type": "triplicity",
+            "reason": "mars in scorpio: triplicity"
+          }
+        ],
+        "essential_score": 8.0,
+        "expression_quality_score": 2.2,
+        "functional_strength_score": 2.5,
+        "intensity_score": 1.7999999999999998,
+        "total_score": 12.0
+      },
+      "mercury": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=cadent;house_codes=(3, 6, 9, 12)",
+            "score": -2.0,
+            "source": "house_modality_membership",
+            "type": "cadent_house",
+            "reason": "mercury matches cadent_house: house_modality_code=cadent;house_codes=(3, 6, 9, 12)"
+          }
+        ],
+        "accidental_score": -2.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": -5.0,
+            "sign": "aries",
+            "source": "no_essential_match",
+            "type": "peregrine",
+            "reason": "mercury in aries: peregrine"
+          }
+        ],
+        "essential_score": -5.0,
+        "expression_quality_score": -0.9,
+        "functional_strength_score": -1.0,
+        "intensity_score": 0.0,
+        "total_score": -7.0
+      },
+      "moon": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=succedent;house_codes=(2, 5, 8, 11)",
+            "score": 2.0,
+            "source": "house_modality_membership",
+            "type": "succedent_house",
+            "reason": "moon matches succedent_house: house_modality_code=succedent;house_codes=(2, 5, 8, 11)"
+          }
+        ],
+        "accidental_score": 2.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": 3.0,
+            "sign": "pisces",
+            "source": "triplicity",
+            "type": "triplicity",
+            "reason": "moon in pisces: triplicity"
+          }
+        ],
+        "essential_score": 3.0,
+        "expression_quality_score": 1.2,
+        "functional_strength_score": 1.1,
+        "intensity_score": 0.7,
+        "total_score": 5.0
+      },
+      "neptune": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=succedent;house_codes=(2, 5, 8, 11)",
+            "score": 2.0,
+            "source": "house_modality_membership",
+            "type": "succedent_house",
+            "reason": "neptune matches succedent_house: house_modality_code=succedent;house_codes=(2, 5, 8, 11)"
+          }
+        ],
+        "accidental_score": 2.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": -5.0,
+            "sign": "pisces",
+            "source": "no_essential_match",
+            "type": "peregrine",
+            "reason": "neptune in pisces: peregrine"
+          }
+        ],
+        "essential_score": -5.0,
+        "expression_quality_score": 0.0,
+        "functional_strength_score": -0.09999999999999998,
+        "intensity_score": 0.6000000000000001,
+        "total_score": -3.0
+      },
+      "pluto": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=cadent;house_codes=(3, 6, 9, 12)",
+            "score": -2.0,
+            "source": "house_modality_membership",
+            "type": "cadent_house",
+            "reason": "pluto matches cadent_house: house_modality_code=cadent;house_codes=(3, 6, 9, 12)"
+          }
+        ],
+        "accidental_score": -2.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": -5.0,
+            "sign": "aries",
+            "source": "no_essential_match",
+            "type": "peregrine",
+            "reason": "pluto in aries: peregrine"
+          }
+        ],
+        "essential_score": -5.0,
+        "expression_quality_score": -0.9,
+        "functional_strength_score": -1.0,
+        "intensity_score": 0.0,
+        "total_score": -7.0
+      },
+      "saturn": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=succedent;house_codes=(2, 5, 8, 11)",
+            "score": 2.0,
+            "source": "house_modality_membership",
+            "type": "succedent_house",
+            "reason": "saturn matches succedent_house: house_modality_code=succedent;house_codes=(2, 5, 8, 11)"
+          }
+        ],
+        "accidental_score": 2.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": -5.0,
+            "sign": "gemini",
+            "source": "no_essential_match",
+            "type": "peregrine",
+            "reason": "saturn in gemini: peregrine"
+          }
+        ],
+        "essential_score": -5.0,
+        "expression_quality_score": 0.0,
+        "functional_strength_score": -0.09999999999999998,
+        "intensity_score": 0.6000000000000001,
+        "total_score": -3.0
+      },
+      "sun": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=succedent;house_codes=(2, 5, 8, 11)",
+            "score": 2.0,
+            "source": "house_modality_membership",
+            "type": "succedent_house",
+            "reason": "sun matches succedent_house: house_modality_code=succedent;house_codes=(2, 5, 8, 11)"
+          }
+        ],
+        "accidental_score": 2.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30.0,
+            "degree_start": 20.0,
+            "score": 1.0,
+            "sign": "gemini",
+            "source": "face_decan",
+            "type": "face",
+            "reason": "sun in gemini: face"
+          }
+        ],
+        "essential_score": 1.0,
+        "expression_quality_score": 0.9,
+        "functional_strength_score": 0.7,
+        "intensity_score": 0.5,
+        "total_score": 3.0
+      },
+      "uranus": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=angular;house_codes=(1, 4, 7, 10)",
+            "score": 4.0,
+            "source": "house_modality_membership",
+            "type": "angular_house",
+            "reason": "uranus matches angular_house: house_modality_code=angular;house_codes=(1, 4, 7, 10)"
+          }
+        ],
+        "accidental_score": 4.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30,
+            "degree_start": 0,
+            "score": -5.0,
+            "sign": "leo",
+            "source": "no_essential_match",
+            "type": "peregrine",
+            "reason": "uranus in leo: peregrine"
+          }
+        ],
+        "essential_score": -5.0,
+        "expression_quality_score": 0.30000000000000004,
+        "functional_strength_score": 0.30000000000000004,
+        "intensity_score": 1.1,
+        "total_score": -1.0
+      },
+      "venus": {
+        "accidental_breakdown": [
+          {
+            "condition": "house_modality_code=succedent;house_codes=(2, 5, 8, 11)",
+            "score": 2.0,
+            "source": "house_modality_membership",
+            "type": "succedent_house",
+            "reason": "venus matches succedent_house: house_modality_code=succedent;house_codes=(2, 5, 8, 11)"
+          },
+          {
+            "condition": "house_code=5",
+            "score": 3.0,
+            "source": "planetary_joy_house",
+            "type": "planetary_joy",
+            "reason": "venus matches planetary_joy: house_code=5"
+          }
+        ],
+        "accidental_score": 5.0,
+        "essential_breakdown": [
+          {
+            "degree_end": 30.0,
+            "degree_start": 0.0,
+            "score": -4.0,
+            "sign": "virgo",
+            "source": "essential_rule",
+            "type": "fall",
+            "reason": "venus in virgo: fall"
+          }
+        ],
+        "essential_score": -4.0,
+        "expression_quality_score": 0.5,
+        "functional_strength_score": 0.19999999999999996,
+        "intensity_score": 1.2000000000000002,
+        "total_score": 1.0
+      }
+    },
+    "reference_version": "1.0.0",
+    "score_profile": "traditional_standard",
+    "sect": "night",
+    "tradition": "traditional"
+  },
+  "house_rulers": [
+    {
+      "cusp_sign": "aries",
+      "cusp_sign_label": "aries",
+      "house_number": 1,
+      "ruler_planet": "mars",
+      "ruler_planet_house": 7,
+      "ruler_planet_sign": "scorpio",
+      "ruler_planet_sign_label": "scorpio"
+    },
+    {
+      "cusp_sign": "taurus",
+      "cusp_sign_label": "taurus",
+      "house_number": 2,
+      "ruler_planet": "venus",
+      "ruler_planet_house": 5,
+      "ruler_planet_sign": "virgo",
+      "ruler_planet_sign_label": "virgo"
+    },
+    {
+      "cusp_sign": "gemini",
+      "cusp_sign_label": "gemini",
+      "house_number": 3,
+      "ruler_planet": "mercury",
+      "ruler_planet_house": 12,
+      "ruler_planet_sign": "aries",
+      "ruler_planet_sign_label": "aries"
+    },
+    {
+      "cusp_sign": "cancer",
+      "cusp_sign_label": "cancer",
+      "house_number": 4,
+      "ruler_planet": "moon",
+      "ruler_planet_house": 11,
+      "ruler_planet_sign": "pisces",
+      "ruler_planet_sign_label": "pisces"
+    },
+    {
+      "cusp_sign": "leo",
+      "cusp_sign_label": "leo",
+      "house_number": 5,
+      "ruler_planet": "sun",
+      "ruler_planet_house": 2,
+      "ruler_planet_sign": "gemini",
+      "ruler_planet_sign_label": "gemini"
+    },
+    {
+      "cusp_sign": "virgo",
+      "cusp_sign_label": "virgo",
+      "house_number": 6,
+      "ruler_planet": "mercury",
+      "ruler_planet_house": 12,
+      "ruler_planet_sign": "aries",
+      "ruler_planet_sign_label": "aries"
+    },
+    {
+      "cusp_sign": "libra",
+      "cusp_sign_label": "libra",
+      "house_number": 7,
+      "ruler_planet": "venus",
+      "ruler_planet_house": 5,
+      "ruler_planet_sign": "virgo",
+      "ruler_planet_sign_label": "virgo"
+    },
+    {
+      "cusp_sign": "scorpio",
+      "cusp_sign_label": "scorpio",
+      "house_number": 8,
+      "ruler_planet": "mars",
+      "ruler_planet_house": 7,
+      "ruler_planet_sign": "scorpio",
+      "ruler_planet_sign_label": "scorpio"
+    },
+    {
+      "cusp_sign": "sagittarius",
+      "cusp_sign_label": "sagittarius",
+      "house_number": 9,
+      "ruler_planet": "jupiter",
+      "ruler_planet_house": 6,
+      "ruler_planet_sign": "libra",
+      "ruler_planet_sign_label": "libra"
+    },
+    {
+      "cusp_sign": "capricorn",
+      "cusp_sign_label": "capricorn",
+      "house_number": 10,
+      "ruler_planet": "saturn",
+      "ruler_planet_house": 2,
+      "ruler_planet_sign": "gemini",
+      "ruler_planet_sign_label": "gemini"
+    },
+    {
+      "cusp_sign": "aquarius",
+      "cusp_sign_label": "aquarius",
+      "house_number": 11,
+      "ruler_planet": "saturn",
+      "ruler_planet_house": 2,
+      "ruler_planet_sign": "gemini",
+      "ruler_planet_sign_label": "gemini"
+    },
+    {
+      "cusp_sign": "pisces",
+      "cusp_sign_label": "pisces",
+      "house_number": 12,
+      "ruler_planet": "jupiter",
+      "ruler_planet_house": 6,
+      "ruler_planet_sign": "libra",
+      "ruler_planet_sign_label": "libra"
+    }
+  ],
+  "houses": [
+    {
+      "axis": {
+        "opposite_house": 7,
+        "theme": "self_relationship"
+      },
+      "contained_signs": [
+        "aries",
+        "taurus"
+      ],
+      "cusp_longitude": 28.93,
+      "cusp_sign": "aries",
+      "cusp_sign_label": "aries",
+      "intercepted_signs": [],
+      "number": 1,
+      "occupants": [],
+      "ruler": {
+        "house": 7,
+        "planet": "mars",
+        "sign": "scorpio"
+      },
+      "sign": "aries",
+      "strength": {
+        "dominant": true,
+        "level": "dominant",
+        "reasons": [
+          "baseline_house",
+          "angular_house",
+          "ruler_in_angular_house",
+          "ruler_in_own_sign",
+          "asc_angle_proximity"
+        ],
+        "score": 0.62
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 8,
+        "theme": "resources_sharing"
+      },
+      "contained_signs": [
+        "taurus",
+        "gemini"
+      ],
+      "cusp_longitude": 58.93,
+      "cusp_sign": "taurus",
+      "cusp_sign_label": "taurus",
+      "intercepted_signs": [],
+      "number": 2,
+      "occupants": [
+        {
+          "is_dominant": false,
+          "longitude": 65.88,
+          "planet": "saturn",
+          "sign": "gemini"
+        },
+        {
+          "is_dominant": true,
+          "longitude": 83.99,
+          "planet": "sun",
+          "sign": "gemini"
+        }
+      ],
+      "ruler": {
+        "house": 5,
+        "planet": "venus",
+        "sign": "virgo"
+      },
+      "sign": "taurus",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "succedent_house",
+          "occupants_present",
+          "luminary_present"
+        ],
+        "score": 0.52
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 9,
+        "theme": "local_distant"
+      },
+      "contained_signs": [
+        "gemini",
+        "cancer"
+      ],
+      "cusp_longitude": 88.93,
+      "cusp_sign": "gemini",
+      "cusp_sign_label": "gemini",
+      "intercepted_signs": [],
+      "number": 3,
+      "occupants": [],
+      "ruler": {
+        "house": 12,
+        "planet": "mercury",
+        "sign": "aries"
+      },
+      "sign": "gemini",
+      "strength": {
+        "dominant": false,
+        "level": "low",
+        "reasons": [
+          "baseline_house",
+          "cadent_house"
+        ],
+        "score": 0.05
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 10,
+        "theme": "private_public"
+      },
+      "contained_signs": [
+        "cancer",
+        "leo"
+      ],
+      "cusp_longitude": 118.93,
+      "cusp_sign": "cancer",
+      "cusp_sign_label": "cancer",
+      "intercepted_signs": [],
+      "number": 4,
+      "occupants": [
+        {
+          "is_dominant": false,
+          "longitude": 140.88,
+          "planet": "uranus",
+          "sign": "leo"
+        }
+      ],
+      "ruler": {
+        "house": 11,
+        "planet": "moon",
+        "sign": "pisces"
+      },
+      "sign": "cancer",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "angular_house",
+          "occupants_present"
+        ],
+        "score": 0.4
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 11,
+        "theme": "creation_collective"
+      },
+      "contained_signs": [
+        "leo",
+        "virgo"
+      ],
+      "cusp_longitude": 148.93,
+      "cusp_sign": "leo",
+      "cusp_sign_label": "leo",
+      "intercepted_signs": [],
+      "number": 5,
+      "occupants": [
+        {
+          "is_dominant": false,
+          "longitude": 178.38,
+          "planet": "venus",
+          "sign": "virgo"
+        }
+      ],
+      "ruler": {
+        "house": 2,
+        "planet": "sun",
+        "sign": "gemini"
+      },
+      "sign": "leo",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "succedent_house",
+          "occupants_present"
+        ],
+        "score": 0.27
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 12,
+        "theme": "control_surrender"
+      },
+      "contained_signs": [
+        "virgo",
+        "libra"
+      ],
+      "cusp_longitude": 178.93,
+      "cusp_sign": "virgo",
+      "cusp_sign_label": "virgo",
+      "intercepted_signs": [],
+      "number": 6,
+      "occupants": [
+        {
+          "is_dominant": false,
+          "longitude": 200.88,
+          "planet": "jupiter",
+          "sign": "libra"
+        }
+      ],
+      "ruler": {
+        "house": 12,
+        "planet": "mercury",
+        "sign": "aries"
+      },
+      "sign": "virgo",
+      "strength": {
+        "dominant": false,
+        "level": "low",
+        "reasons": [
+          "baseline_house",
+          "cadent_house",
+          "occupants_present"
+        ],
+        "score": 0.15
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 1,
+        "theme": "self_relationship"
+      },
+      "contained_signs": [
+        "libra",
+        "scorpio"
+      ],
+      "cusp_longitude": 208.93,
+      "cusp_sign": "libra",
+      "cusp_sign_label": "libra",
+      "intercepted_signs": [],
+      "number": 7,
+      "occupants": [
+        {
+          "is_dominant": false,
+          "longitude": 238.38,
+          "planet": "mars",
+          "sign": "scorpio"
+        }
+      ],
+      "ruler": {
+        "house": 5,
+        "planet": "venus",
+        "sign": "virgo"
+      },
+      "sign": "libra",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "angular_house",
+          "occupants_present"
+        ],
+        "score": 0.4
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 2,
+        "theme": "resources_sharing"
+      },
+      "contained_signs": [
+        "scorpio",
+        "sagittarius"
+      ],
+      "cusp_longitude": 238.93,
+      "cusp_sign": "scorpio",
+      "cusp_sign_label": "scorpio",
+      "intercepted_signs": [],
+      "number": 8,
+      "occupants": [],
+      "ruler": {
+        "house": 7,
+        "planet": "mars",
+        "sign": "scorpio"
+      },
+      "sign": "scorpio",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "succedent_house",
+          "ruler_in_angular_house",
+          "ruler_in_own_sign"
+        ],
+        "score": 0.41
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 3,
+        "theme": "local_distant"
+      },
+      "contained_signs": [
+        "sagittarius",
+        "capricorn"
+      ],
+      "cusp_longitude": 268.93,
+      "cusp_sign": "sagittarius",
+      "cusp_sign_label": "sagittarius",
+      "intercepted_signs": [],
+      "number": 9,
+      "occupants": [],
+      "ruler": {
+        "house": 6,
+        "planet": "jupiter",
+        "sign": "libra"
+      },
+      "sign": "sagittarius",
+      "strength": {
+        "dominant": false,
+        "level": "low",
+        "reasons": [
+          "baseline_house",
+          "cadent_house"
+        ],
+        "score": 0.05
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 4,
+        "theme": "private_public"
+      },
+      "contained_signs": [
+        "capricorn",
+        "aquarius"
+      ],
+      "cusp_longitude": 298.93,
+      "cusp_sign": "capricorn",
+      "cusp_sign_label": "capricorn",
+      "intercepted_signs": [],
+      "number": 10,
+      "occupants": [],
+      "ruler": {
+        "house": 2,
+        "planet": "saturn",
+        "sign": "gemini"
+      },
+      "sign": "capricorn",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "angular_house",
+          "mc_angle_proximity"
+        ],
+        "score": 0.38
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 5,
+        "theme": "creation_collective"
+      },
+      "contained_signs": [
+        "aquarius",
+        "pisces"
+      ],
+      "cusp_longitude": 328.93,
+      "cusp_sign": "aquarius",
+      "cusp_sign_label": "aquarius",
+      "intercepted_signs": [],
+      "number": 11,
+      "occupants": [
+        {
+          "is_dominant": true,
+          "longitude": 350.3,
+          "planet": "moon",
+          "sign": "pisces"
+        },
+        {
+          "is_dominant": false,
+          "longitude": 350.88,
+          "planet": "neptune",
+          "sign": "pisces"
+        }
+      ],
+      "ruler": {
+        "house": 2,
+        "planet": "saturn",
+        "sign": "gemini"
+      },
+      "sign": "aquarius",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "succedent_house",
+          "occupants_present",
+          "luminary_present"
+        ],
+        "score": 0.52
+      }
+    },
+    {
+      "axis": {
+        "opposite_house": 6,
+        "theme": "control_surrender"
+      },
+      "contained_signs": [
+        "pisces",
+        "aries"
+      ],
+      "cusp_longitude": 358.93,
+      "cusp_sign": "pisces",
+      "cusp_sign_label": "pisces",
+      "intercepted_signs": [],
+      "number": 12,
+      "occupants": [
+        {
+          "is_dominant": false,
+          "longitude": 21.67,
+          "planet": "mercury",
+          "sign": "aries"
+        },
+        {
+          "is_dominant": false,
+          "longitude": 28.38,
+          "planet": "pluto",
+          "sign": "aries"
+        }
+      ],
+      "ruler": {
+        "house": 6,
+        "planet": "jupiter",
+        "sign": "libra"
+      },
+      "sign": "pisces",
+      "strength": {
+        "dominant": false,
+        "level": "moderate",
+        "reasons": [
+          "baseline_house",
+          "cadent_house",
+          "occupants_present"
+        ],
+        "score": 0.25
+      }
+    }
+  ],
+  "meta": {
+    "aspects_applying_available": false,
+    "birth_date": "1990-06-15",
+    "birth_place": null,
+    "birth_time": "10:30",
+    "birth_timezone": "Europe/Paris",
+    "chart_json_version": "1",
+    "degraded_mode": "no_location",
+    "engine": "simplified",
+    "house_system": "equal",
+    "reference_version": "1.0.0",
+    "ruleset_version": "1.0.0",
+    "zodiac": "tropical"
+  },
+  "planets": [
+    {
+      "code": "jupiter",
+      "house": 6,
+      "is_retrograde": null,
+      "longitude": 200.88,
+      "longitude_in_sign": 20.88,
+      "sign": "libra",
+      "sign_label": "libra",
+      "speed": null
+    },
+    {
+      "code": "mars",
+      "house": 7,
+      "is_retrograde": null,
+      "longitude": 238.38,
+      "longitude_in_sign": 28.38,
+      "sign": "scorpio",
+      "sign_label": "scorpio",
+      "speed": null
+    },
+    {
+      "code": "mercury",
+      "house": 12,
+      "is_retrograde": null,
+      "longitude": 21.67,
+      "longitude_in_sign": 21.67,
+      "sign": "aries",
+      "sign_label": "aries",
+      "speed": null
+    },
+    {
+      "code": "moon",
+      "house": 11,
+      "is_retrograde": null,
+      "longitude": 350.3,
+      "longitude_in_sign": 20.3,
+      "sign": "pisces",
+      "sign_label": "pisces",
+      "speed": null
+    },
+    {
+      "code": "neptune",
+      "house": 11,
+      "is_retrograde": null,
+      "longitude": 350.88,
+      "longitude_in_sign": 20.88,
+      "sign": "pisces",
+      "sign_label": "pisces",
+      "speed": null
+    },
+    {
+      "code": "pluto",
+      "house": 12,
+      "is_retrograde": null,
+      "longitude": 28.38,
+      "longitude_in_sign": 28.38,
+      "sign": "aries",
+      "sign_label": "aries",
+      "speed": null
+    },
+    {
+      "code": "saturn",
+      "house": 2,
+      "is_retrograde": null,
+      "longitude": 65.88,
+      "longitude_in_sign": 5.88,
+      "sign": "gemini",
+      "sign_label": "gemini",
+      "speed": null
+    },
+    {
+      "code": "sun",
+      "house": 2,
+      "is_retrograde": null,
+      "longitude": 83.99,
+      "longitude_in_sign": 23.99,
+      "sign": "gemini",
+      "sign_label": "gemini",
+      "speed": null
+    },
+    {
+      "code": "uranus",
+      "house": 4,
+      "is_retrograde": null,
+      "longitude": 140.88,
+      "longitude_in_sign": 20.88,
+      "sign": "leo",
+      "sign_label": "leo",
+      "speed": null
+    },
+    {
+      "code": "venus",
+      "house": 5,
+      "is_retrograde": null,
+      "longitude": 178.38,
+      "longitude_in_sign": 28.38,
+      "sign": "virgo",
+      "sign_label": "virgo",
+      "speed": null
+    }
+  ]
+}

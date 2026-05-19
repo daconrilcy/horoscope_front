@@ -4,6 +4,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.domain.astrology.dignities.contracts import (
+    AccidentalDignityMatch,
+    EssentialDignityMatch,
+    PlanetDignityResult,
+)
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.interpretation.house_strength_contracts import (
     HouseStrengthLevel,
@@ -116,6 +121,41 @@ def mock_natal_result():
     )
 
     result.aspects = [a1]
+    result.dignities = [
+        PlanetDignityResult(
+            planet_code="sun",
+            score_profile="traditional_standard",
+            tradition="traditional",
+            reference_version="v1.2",
+            sect="day",
+            essential_score=5,
+            accidental_score=4,
+            total_score=9,
+            functional_strength_score=1.9,
+            expression_quality_score=1.5,
+            intensity_score=1.5,
+            essential_breakdown=(
+                EssentialDignityMatch(
+                    dignity_type_code="domicile",
+                    score_value=5,
+                    source="essential_rule",
+                    reason="sun in taurus: domicile",
+                    sign_code="taurus",
+                    degree_start=0,
+                    degree_end=30,
+                ),
+            ),
+            accidental_breakdown=(
+                AccidentalDignityMatch(
+                    dignity_type_code="angular_house",
+                    score_value=4,
+                    source="house_modality",
+                    reason="sun matches angular_house: house_codes=(1, 4, 7, 10)",
+                    condition="house_codes=(1, 4, 7, 10)",
+                ),
+            ),
+        )
+    ]
 
     return result
 
@@ -183,6 +223,13 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert chart["aspects"][0]["energy_type"] == "harmonious_flow"
     assert chart["aspects"][0]["applying"] is None
     assert chart["meta"]["aspects_applying_available"] is False
+    assert chart["dignities"]["score_profile"] == "traditional_standard"
+    assert chart["dignities"]["planets"]["sun"]["total_score"] == 9
+    assert chart["dignities"]["planets"]["sun"]["essential_breakdown"][0]["type"] == "domicile"
+    assert (
+        chart["dignities"]["planets"]["sun"]["essential_breakdown"][0]["reason"]
+        == "sun in taurus: domicile"
+    )
 
     # Angles
     assert chart["angles"]["ASC"]["sign"] == "capricorn"

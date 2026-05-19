@@ -26,6 +26,10 @@ from app.domain.astrology.calculators import (
 from app.domain.astrology.calculators.aspects import build_aspect_body_from_position
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
 from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
+from app.domain.astrology.dignities.contracts import PlanetDignityInput, PlanetDignityResult
+from app.domain.astrology.dignities.planet_dignity_scoring_service import (
+    PlanetDignityScoringService,
+)
 from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResolutionError,
     HouseRulerResolver,
@@ -123,6 +127,7 @@ class NatalResult(BaseModel):
         default_factory=list,
         validation_alias=AliasChoices("astral_points", "points"),
     )
+    dignities: list[PlanetDignityResult] = Field(default_factory=list)
     aspects: list[AspectResult]
 
     @property
@@ -751,6 +756,23 @@ def build_natal_result(
         increment_counter("aspects_rejected_orb_total", float(_rejected))
 
     positions = [PlanetPosition.model_validate(item) for item in positions_raw]
+    dignity_inputs = tuple(
+        PlanetDignityInput(
+            planet_code=position.planet_code,
+            longitude=position.longitude,
+            sign_code=position.sign_code,
+            house_number=position.house_number,
+            speed_longitude=position.speed_longitude,
+            is_retrograde=position.is_retrograde,
+        )
+        for position in positions
+    )
+    dignities = list(
+        PlanetDignityScoringService().calculate(
+            dignity_inputs,
+            runtime_reference,
+        )
+    )
     points = [NatalAstralPointPosition.model_validate(item) for item in points_raw]
     cusp_houses = [
         HouseRuntimeData(
@@ -814,5 +836,6 @@ def build_natal_result(
         chart_balance=chart_balance,
         house_rulers=house_rulers,
         astral_points=points,
+        dignities=dignities,
         aspects=aspects,
     )
