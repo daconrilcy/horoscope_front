@@ -378,6 +378,54 @@ def _serialize_condition_signals(signal_sets: Any) -> dict[str, Any]:
     }
 
 
+def _serialize_planet_dominance(dominance: Any) -> dict[str, Any] | None:
+    """Projette la dominance planetaire deja calculee par le domaine."""
+    if dominance is None:
+        return None
+    return {
+        "score_profile": dominance.score_profile,
+        "reference_version": dominance.reference_version,
+        "factor_types": [
+            {
+                "code": factor.code,
+                "label": factor.label,
+                "category": factor.category,
+                "description": factor.description,
+                "default_weight": factor.default_weight,
+                "sort_order": factor.sort_order,
+                "is_active": factor.is_active,
+            }
+            for factor in dominance.factor_types
+        ],
+        "planets": [
+            {
+                "planet_code": planet.planet_code,
+                "rank": planet.rank,
+                "dominance_score": planet.dominance_score,
+                "normalized_score": planet.normalized_score,
+                "factors": [
+                    {
+                        "factor_code": factor.factor_code,
+                        "raw_value": factor.raw_value,
+                        "weight": factor.weight,
+                        "weighted_value": factor.weighted_value,
+                        "evidence": list(factor.evidence),
+                    }
+                    for factor in planet.factors
+                ],
+            }
+            for planet in dominance.planets
+        ],
+        "summary": {
+            "primary_planet": dominance.summary.primary_planet,
+            "chart_ruler": dominance.summary.chart_ruler,
+            "most_visible_planet": dominance.summary.most_visible_planet,
+            "most_functional_planet": dominance.summary.most_functional_planet,
+            "angular_dominant_planet": dominance.summary.angular_dominant_planet,
+        },
+    }
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -488,6 +536,11 @@ def build_chart_json(
                 angles[angle_key]["sign_label"] = labels.sign_label(angles[angle_key]["sign"])
 
     chart_balance = _serialize_chart_balance(getattr(natal_result, "chart_balance", None))
+    planet_dominance = None
+    if not is_no_time:
+        planet_dominance = _serialize_planet_dominance(
+            getattr(natal_result, "planet_dominance", None)
+        )
     payload = {
         "meta": meta,
         "planets": planets,
@@ -502,6 +555,7 @@ def build_chart_json(
         "planet_condition_signals": _serialize_condition_signals(
             getattr(natal_result, "condition_signals", [])
         ),
+        "planet_dominance": planet_dominance,
     }
     if chart_balance is not None:
         payload["chart_balance"] = chart_balance

@@ -256,3 +256,65 @@ def test_condition_signals_are_projected_from_natal_result_only() -> None:
 
     assert comparisons == []
     assert "PlanetConditionSignalBuilder" not in "".join(calls)
+
+
+def test_planet_dominance_domain_does_not_cross_runtime_boundaries() -> None:
+    """Le moteur de dominance reste pur et sans poids locaux."""
+    dominance_root = BACKEND_ROOT / "app/domain/astrology/dominance"
+    forbidden_patterns = (
+        "Session",
+        "select(",
+        "from app.infra",
+        "from app.services",
+        "from app.api",
+        "from app.domain.prediction",
+        "from app.services.prediction",
+        "DOMINANCE_" + "FACTORS",
+        "DOMINANCE_" + "WEIGHTS",
+        "CHART_RULER_" + "WEIGHT",
+        "ANGULARITY_" + "WEIGHT",
+        "SIGN_" + "RULERS",
+        "PLANET_" + "RULERS",
+        "AIEngineAdapter",
+        "OpenAI",
+        "chat.completions",
+        "prompt",
+        "narration",
+        "micro_note",
+    )
+    hits: list[str] = []
+    for path in dominance_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for pattern in forbidden_patterns:
+            if pattern in text:
+                hits.append(f"{path}:{pattern}")
+
+    assert hits == []
+
+
+def test_planet_dominance_is_projected_from_natal_result_only() -> None:
+    """Le serialiseur public ne recalcule pas la dominance planetaire."""
+    tree = ast.parse(_source("app/services/chart/json_builder.py"))
+    serializer = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_serialize_planet_dominance"
+    )
+    calls = [
+        ast.unparse(node.func)
+        for node in ast.walk(serializer)
+        if isinstance(node, ast.Call) and not isinstance(node.func, ast.Name)
+    ]
+
+    assert "PlanetDominanceEngine" not in "".join(calls)
+
+
+def test_chart_signature_planets_remain_structural_balance_not_canonical_dominance() -> None:
+    """La balance conserve son ancien rang structurel sans remplacer CS-194."""
+    chart_signature_source = _source("app/domain/astrology/interpretation/chart_signature.py")
+    natal_source = _source("app/domain/astrology/natal_calculation.py")
+
+    assert "PlanetDominanceEngine" not in chart_signature_source
+    assert '"sign_runtime"' in chart_signature_source
+    assert "dominant_planets=dominant_planets" in chart_signature_source
+    assert "planet_dominance=planet_dominance" in natal_source

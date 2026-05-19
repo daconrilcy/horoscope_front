@@ -40,6 +40,8 @@ from app.domain.astrology.dignities.contracts import PlanetDignityInput, PlanetD
 from app.domain.astrology.dignities.planet_dignity_scoring_service import (
     PlanetDignityScoringService,
 )
+from app.domain.astrology.dominance.contracts import PlanetDominanceResult
+from app.domain.astrology.dominance.planet_dominance_engine import PlanetDominanceEngine
 from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResolutionError,
     HouseRulerResolver,
@@ -140,6 +142,7 @@ class NatalResult(BaseModel):
     dignities: list[PlanetDignityResult] = Field(default_factory=list)
     condition_profiles: list[PlanetConditionProfile] = Field(default_factory=list)
     condition_signals: list[PlanetConditionSignalSet] = Field(default_factory=list)
+    planet_dominance: PlanetDominanceResult | None = None
     aspects: list[AspectResult]
 
     @property
@@ -832,6 +835,15 @@ def build_natal_result(
             aspect.aspect_runtime for aspect in aspects if aspect.aspect_runtime is not None
         ),
     )
+    planet_dominance = PlanetDominanceEngine().calculate(
+        runtime_reference=runtime_reference,
+        planet_positions=positions,
+        houses=houses,
+        house_rulers=house_rulers,
+        condition_profiles=condition_profiles,
+        aspects=aspects,
+        chart_balance=chart_balance,
+    )
 
     return NatalResult(
         reference_version=version,
@@ -857,5 +869,6 @@ def build_natal_result(
         dignities=dignities,
         condition_profiles=condition_profiles,
         condition_signals=condition_signals,
+        planet_dominance=planet_dominance,
         aspects=aspects,
     )

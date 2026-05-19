@@ -1,0 +1,77 @@
+{
+  "table": "astral_dominance_factor_types",
+  "data": [
+    {
+      "code": "chart_ruler",
+      "label": "Chart ruler",
+      "category": "rulership",
+      "default_weight": 1.2,
+      "sort_order": 10,
+      "is_active": true,
+      "description": "Poids du maitre de l'ascendant ou du theme selon les maitrises runtime."
+    },
+    {
+      "code": "angularity",
+      "label": "Angularity",
+      "category": "placement",
+      "default_weight": 1.1,
+      "sort_order": 20,
+      "is_active": true,
+      "description": "Proximite factuelle aux angles et maisons angulaires deja calculees."
+    },
+    {
+      "code": "condition_strength",
+      "label": "Condition strength",
+      "category": "condition",
+      "default_weight": 1.0,
+      "sort_order": 30,
+      "is_active": true,
+      "description": "Force fonctionnelle issue de PlanetConditionProfile."
+    },
+    {
+      "code": "visibility",
+      "label": "Visibility",
+      "category": "condition",
+      "default_weight": 0.9,
+      "sort_order": 40,
+      "is_active": true,
+      "description": "Visibilite issue de PlanetConditionProfile."
+    },
+    {
+      "code": "most_elevated",
+      "label": "Most elevated",
+      "category": "placement",
+      "default_weight": 0.8,
+      "sort_order": 50,
+      "is_active": true,
+      "description": "Contribution de la planete la plus elevee ou proche du MC dans les faits natals."
+    },
+    {
+      "code": "luminary_emphasis",
+      "label": "Luminary emphasis",
+      "category": "luminary",
+      "default_weight": 0.8,
+      "sort_order": 60,
+      "is_active": true,
+      "description": "Accent factuel Soleil/Lune sans interpretation psychologique."
+    },
+    {
+      "code": "house_rulership_load",
+      "label": "House rulership load",
+      "category": "rulership",
+      "default_weight": 0.75,
+      "sort_order": 70,
+      "is_active": true,
+      "description": "Charge de maitrises de maisons depuis NatalResult.house_rulers."
+    },
+    {
+      "code": "aspect_centrality",
+      "label": "Aspect centrality",
+      "category": "aspects",
+      "default_weight": 0.7,
+      "sort_order": 80,
+      "is_active": true,
+      "description": "Centralite issue des aspects natals ou de chart_balance.dominant_aspects."
+    }
+  ]
+}

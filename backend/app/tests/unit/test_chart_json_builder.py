@@ -16,6 +16,13 @@ from app.domain.astrology.dignities.contracts import (
     EssentialDignityMatch,
     PlanetDignityResult,
 )
+from app.domain.astrology.dominance.contracts import (
+    PlanetDominanceFactorContribution,
+    PlanetDominanceFactorType,
+    PlanetDominancePlanetResult,
+    PlanetDominanceResult,
+    PlanetDominanceSummary,
+)
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.interpretation.house_strength_contracts import (
     HouseStrengthLevel,
@@ -238,6 +245,45 @@ def mock_natal_result():
             ),
         )
     ]
+    result.planet_dominance = PlanetDominanceResult(
+        score_profile="planet_dominance_v1",
+        reference_version="v1.2",
+        factor_types=(
+            PlanetDominanceFactorType(
+                code="chart_ruler",
+                label="Chart ruler",
+                category="rulership",
+                description="Chart ruler factor.",
+                default_weight=1.2,
+                sort_order=10,
+                is_active=True,
+            ),
+        ),
+        planets=(
+            PlanetDominancePlanetResult(
+                planet_code="sun",
+                rank=1,
+                dominance_score=0.75,
+                normalized_score=0.75,
+                factors=(
+                    PlanetDominanceFactorContribution(
+                        factor_code="chart_ruler",
+                        raw_value=1.0,
+                        weight=1.2,
+                        weighted_value=1.2,
+                        evidence=("house_1_ruler:sun",),
+                    ),
+                ),
+            ),
+        ),
+        summary=PlanetDominanceSummary(
+            primary_planet="sun",
+            chart_ruler="sun",
+            most_visible_planet="sun",
+            most_functional_planet="sun",
+            angular_dominant_planet="sun",
+        ),
+    )
 
     return result
 
@@ -364,6 +410,19 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
             "prompt_hint": "visibility_emphasized",
         }
     ]
+    assert chart["planet_dominance"]["score_profile"] == "planet_dominance_v1"
+    assert chart["planet_dominance"]["factor_types"][0]["code"] == "chart_ruler"
+    dominance_sun = chart["planet_dominance"]["planets"][0]
+    assert dominance_sun["planet_code"] == "sun"
+    assert dominance_sun["rank"] == 1
+    assert dominance_sun["factors"][0] == {
+        "factor_code": "chart_ruler",
+        "raw_value": 1.0,
+        "weight": 1.2,
+        "weighted_value": 1.2,
+        "evidence": ["house_1_ruler:sun"],
+    }
+    assert chart["planet_dominance"]["summary"]["primary_planet"] == "sun"
 
     # Angles
     assert chart["angles"]["ASC"]["sign"] == "capricorn"
@@ -503,6 +562,7 @@ def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
     # Angles should be None
     assert chart["angles"]["ASC"] is None
     assert chart["angles"]["MC"] is None
+    assert chart["planet_dominance"] is None
 
 
 def test_build_chart_json_no_location(mock_natal_result, mock_birth_profile):
@@ -527,6 +587,7 @@ def test_build_chart_json_no_location_no_time(mock_natal_result, mock_birth_prof
     assert chart["meta"]["birth_place"] is None
     assert len(chart["houses"]) == 0
     assert chart["angles"]["ASC"] is None
+    assert chart["planet_dominance"] is None
 
 
 def test_build_evidence_catalog_priority():

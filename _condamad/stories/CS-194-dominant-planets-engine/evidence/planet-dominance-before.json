@@ -1,0 +1,167 @@
+{
+  "captured_at": "2026-05-19",
+  "fixture_id": "chart_json_builder_full_payload_cs194_baseline",
+  "scope": "public chart JSON before CS-194",
+  "chart_json": {
+    "meta": {
+      "birth_date": "1985-04-15",
+      "birth_time": "14:30",
+      "birth_place": "Paris, France",
+      "birth_timezone": "Europe/Paris",
+      "degraded_mode": null,
+      "engine": "swisseph",
+      "zodiac": "tropical",
+      "house_system": "placidus",
+      "reference_version": "v1.2",
+      "ruleset_version": "1.0.0",
+      "chart_json_version": "1",
+      "aspects_applying_available": false
+    },
+    "planets": [
+      {
+        "code": "sun",
+        "sign": "taurus",
+        "sign_label": "taurus",
+        "longitude": 35.4,
+        "longitude_in_sign": 5.4,
+        "house": 10,
+        "is_retrograde": false,
+        "speed": 0.98
+      },
+      {
+        "code": "mercury",
+        "sign": "aries",
+        "sign_label": "aries",
+        "longitude": 15.2,
+        "longitude_in_sign": 15.2,
+        "house": 9,
+        "is_retrograde": true,
+        "speed": -0.5
+      }
+    ],
+    "houses": [
+      {
+        "number": 1,
+        "cusp_longitude": 284.5,
+        "cusp_sign": "capricorn",
+        "cusp_sign_label": "capricorn",
+        "sign": "capricorn",
+        "contained_signs": [],
+        "intercepted_signs": [],
+        "ruler": {
+          "planet": "saturn",
+          "sign": "aries",
+          "house": 9
+        },
+        "occupants": [],
+        "axis": null,
+        "strength": null
+      }
+    ],
+    "house_rulers": [
+      {
+        "house_number": 1,
+        "cusp_sign": "capricorn",
+        "cusp_sign_label": "capricorn",
+        "ruler_planet": "saturn",
+        "ruler_planet_sign": "aries",
+        "ruler_planet_sign_label": "aries",
+        "ruler_planet_house": 9
+      }
+    ],
+    "aspects": [
+      {
+        "type": "trine",
+        "aspect_code": "trine",
+        "planet_a": "sun",
+        "planet_b": "moon",
+        "orb": 0.3,
+        "orb_used": 0.3,
+        "orb_max": 6.0,
+        "family": "major",
+        "strength_level": "dominant",
+        "normalized_strength": 1.0,
+        "is_exact": true,
+        "is_tight": true,
+        "interpretive_valence": "harmonious",
+        "energy_type": "harmonious_flow",
+        "applying": null
+      }
+    ],
+    "angles": {
+      "ASC": {
+        "longitude": 284.5,
+        "sign": "capricorn",
+        "sign_label": "capricorn"
+      },
+      "MC": {
+        "longitude": 194.2,
+        "sign": "libra",
+        "sign_label": "libra"
+      },
+      "DSC": {
+        "longitude": 104.5,
+        "sign": "cancer",
+        "sign_label": "cancer"
+      },
+      "IC": {
+        "longitude": 14.2,
+        "sign": "aries",
+        "sign_label": "aries"
+      }
+    },
+    "dignities": {
+      "score_profile": "traditional_standard",
+      "planets": {
+        "sun": {
+          "planet_code": "sun",
+          "total_score": 9
+        }
+      }
+    },
+    "planet_condition_profiles": {
+      "score_profile": "traditional_standard",
+      "planets": {
+        "sun": {
+          "planet_code": "sun",
+          "visibility": 1.0,
+          "ranking_score": 5.7,
+          "condition_level": "strong"
+        }
+      }
+    },
+    "planet_condition_signals": {
+      "score_profile": "traditional_standard",
+      "planets": {
+        "sun": {
+          "planet_code": "sun",
+          "signals": [
+            {
+              "code": "visibility_high",
+              "axis": "visibility",
+              "level": "high",
+              "axis_value": 1.0
+            }
+          ]
+        }
+      }
+    },
+    "chart_balance": {
+      "dominant_planets": [
+        {
+          "code": "sun",
+          "score": 1.0,
+          "rank": 1,
+          "source": "sign_runtime"
+        }
+      ]
+    },
+    "chart_signature": {
+      "primary_planet": "sun"
+    }
+  },
+  "absent_paths": [
+    "chart_json.planet_dominance",
+    "NatalResult.planet_dominance"
+  ]
+}

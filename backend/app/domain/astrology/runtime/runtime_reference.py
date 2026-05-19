@@ -225,6 +225,30 @@ class PlanetConditionSignalProfileReferenceData:
 
 
 @dataclass(frozen=True, slots=True)
+class DominanceFactorTypeReferenceData:
+    """Type runtime d'un facteur de dominance planetaire."""
+
+    code: str
+    label: str
+    category: str
+    default_weight: float
+    sort_order: int
+    is_active: bool
+    description: str
+    reference_version: str
+
+    def __post_init__(self) -> None:
+        """Valide le contrat minimal d'un facteur charge depuis le runtime."""
+        for field_name in ("code", "label", "category", "description", "reference_version"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"dominance factor requires {field_name}")
+        if self.default_weight < 0.0:
+            raise ValueError("dominance factor default_weight must be positive")
+        if self.sort_order < 1:
+            raise ValueError("dominance factor sort_order must be positive")
+
+
+@dataclass(frozen=True, slots=True)
 class EssentialDignityRuleReferenceData:
     """Regle essentielle reliant une planete, un signe et une plage de degres."""
 
@@ -456,6 +480,7 @@ class AstrologyRuntimeReference:
     dignities: DignityReferenceSet
     dignity_reference: PlanetDignityReferenceSet
     condition_signal_profiles: tuple[PlanetConditionSignalProfileReferenceData, ...]
+    dominance_factor_types: tuple[DominanceFactorTypeReferenceData, ...]
     angle_points: AnglePointReferenceSet
     astral_points: AstralPointReferenceSet
     house_systems: HouseSystemReferenceSet

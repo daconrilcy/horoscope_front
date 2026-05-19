@@ -30,6 +30,7 @@ from app.domain.astrology.runtime.runtime_reference import (
     DignityScoreWeightReferenceData,
     DignitySystemReferenceData,
     DignityTypeReferenceData,
+    DominanceFactorTypeReferenceData,
     EssentialDignityRuleReferenceData,
     FaceDecanReferenceData,
     HouseAxisReferenceData,
@@ -63,6 +64,7 @@ class AstrologyRuntimeReferenceMapper:
         sign_rulerships: Mapping[str, str],
         dignity_reference: Mapping[str, object],
         condition_signal_profiles: Sequence[Mapping[str, object]],
+        dominance_factor_types: Sequence[Mapping[str, object]],
         planet_definitions: Mapping[str, Mapping[str, object]],
         angle_points: Sequence[Mapping[str, object]],
         astral_points: Sequence[Mapping[str, object]],
@@ -182,6 +184,19 @@ class AstrologyRuntimeReferenceMapper:
                     reference_version=str(item["reference_version"]),
                 )
                 for item in condition_signal_profiles
+            ),
+            dominance_factor_types=tuple(
+                DominanceFactorTypeReferenceData(
+                    code=str(item["code"]),
+                    label=str(item["label"]),
+                    category=str(item["category"]),
+                    default_weight=float(item["default_weight"]),
+                    sort_order=int(item["sort_order"]),
+                    is_active=bool(item["is_active"]),
+                    description=str(item["description"]),
+                    reference_version=str(item["reference_version"]),
+                )
+                for item in dominance_factor_types
             ),
             angle_points=AnglePointReferenceSet(
                 tuple(

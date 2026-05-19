@@ -8,7 +8,10 @@ from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
-from app.infra.db.models.dignity_reference import AstralPlanetConditionSignalProfileModel
+from app.infra.db.models.dignity_reference import (
+    AstralDominanceFactorTypeModel,
+    AstralPlanetConditionSignalProfileModel,
+)
 from app.infra.db.models.reference import (
     AspectModel,
     AstralSignModel,
@@ -154,6 +157,17 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert condition_signal.signal_code == "functional_strength_high"
     assert condition_signal.interpretation_use == "prioritize_condition_axis"
     assert condition_signal.prompt_hint == "functional_strength_positive"
+    assert [item.code for item in reference.dominance_factor_types] == [
+        "chart_ruler",
+        "angularity",
+        "condition_strength",
+        "visibility",
+        "most_elevated",
+        "luminary_emphasis",
+        "house_rulership_load",
+        "aspect_centrality",
+    ]
+    assert reference.dominance_factor_types[0].default_weight == 1.2
     first_weight = reference.dignity_reference.essential_weights["traditional_standard"][0]
     assert first_weight.condition_visibility == 0.0
     assert first_weight.condition_stability == 0.0
@@ -202,6 +216,26 @@ def test_repository_integrity_rejects_unknown_condition_signal_axis() -> None:
     }
 
 
+def test_repository_integrity_rejects_missing_dominance_factor() -> None:
+    """L'integrite runtime exige les facteurs de dominance contractuels."""
+    repository = AstrologyRuntimeReferenceRepository(
+        db=None, mapper=AstrologyRuntimeReferenceMapper()
+    )  # type: ignore[arg-type]
+    reference = complete_reference()
+    reference = replace(
+        reference,
+        dominance_factor_types=reference.dominance_factor_types[1:],
+    )
+
+    with pytest.raises(AstrologyRuntimeReferenceError) as error:
+        repository._validate(reference)
+
+    assert error.value.details == {
+        "field": "dominance_factor_types",
+        "reason": "missing:chart_ruler;extra:",
+    }
+
+
 def test_repository_loads_condition_signal_profiles_from_db() -> None:
     """Le repository charge les plages de signaux depuis la table versionnee."""
     _cleanup_reference_tables()
@@ -217,6 +251,111 @@ def test_repository_loads_condition_signal_profiles_from_db() -> None:
     assert rows
     assert rows[0].condition_axis == "functional_strength"
     assert rows[0].signal_code == "functional_strength_high"
+
+
+def test_repository_loads_dominance_factor_types_from_db() -> None:
+    """Le repository charge les facteurs de dominance depuis la table versionnee."""
+    _cleanup_reference_tables()
+
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        rows = db.scalars(
+            select(AstralDominanceFactorTypeModel).order_by(
+                AstralDominanceFactorTypeModel.sort_order
+            )
+        ).all()
+
+    assert [
+        {
+            "code": row.code,
+            "label": row.label,
+            "category": row.category,
+            "default_weight": row.default_weight,
+            "sort_order": row.sort_order,
+            "is_active": row.is_active,
+            "description": row.description,
+        }
+        for row in rows
+    ] == [
+        {
+            "code": "chart_ruler",
+            "label": "Chart ruler",
+            "category": "rulership",
+            "default_weight": 1.2,
+            "sort_order": 10,
+            "is_active": True,
+            "description": (
+                "Poids du maitre de l'ascendant ou du theme selon les maitrises runtime."
+            ),
+        },
+        {
+            "code": "angularity",
+            "label": "Angularity",
+            "category": "placement",
+            "default_weight": 1.1,
+            "sort_order": 20,
+            "is_active": True,
+            "description": "Proximite factuelle aux angles et maisons angulaires deja calculees.",
+        },
+        {
+            "code": "condition_strength",
+            "label": "Condition strength",
+            "category": "condition",
+            "default_weight": 1.0,
+            "sort_order": 30,
+            "is_active": True,
+            "description": "Force fonctionnelle issue de PlanetConditionProfile.",
+        },
+        {
+            "code": "visibility",
+            "label": "Visibility",
+            "category": "condition",
+            "default_weight": 0.9,
+            "sort_order": 40,
+            "is_active": True,
+            "description": "Visibilite issue de PlanetConditionProfile.",
+        },
+        {
+            "code": "most_elevated",
+            "label": "Most elevated",
+            "category": "placement",
+            "default_weight": 0.8,
+            "sort_order": 50,
+            "is_active": True,
+            "description": (
+                "Contribution de la planete la plus elevee ou proche du MC dans les faits natals."
+            ),
+        },
+        {
+            "code": "luminary_emphasis",
+            "label": "Luminary emphasis",
+            "category": "luminary",
+            "default_weight": 0.8,
+            "sort_order": 60,
+            "is_active": True,
+            "description": "Accent factuel Soleil/Lune sans interpretation psychologique.",
+        },
+        {
+            "code": "house_rulership_load",
+            "label": "House rulership load",
+            "category": "rulership",
+            "default_weight": 0.75,
+            "sort_order": 70,
+            "is_active": True,
+            "description": "Charge de maitrises de maisons depuis NatalResult.house_rulers.",
+        },
+        {
+            "code": "aspect_centrality",
+            "label": "Aspect centrality",
+            "category": "aspects",
+            "default_weight": 0.7,
+            "sort_order": 80,
+            "is_active": True,
+            "description": (
+                "Centralite issue des aspects natals ou de chart_balance.dominant_aspects."
+            ),
+        },
+    ]
 
 
 def test_public_reference_payload_keeps_sign_contract_unchanged() -> None:

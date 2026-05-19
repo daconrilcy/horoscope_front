@@ -614,6 +614,35 @@ class AstralPlanetConditionSignalProfileModel(Base):
     )
 
 
+class AstralDominanceFactorTypeModel(Base):
+    """Type de facteur factuel utilise par le moteur de dominance planetaire."""
+
+    __tablename__ = "astral_dominance_factor_types"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "code",
+            name="uq_astral_dominance_factor_types_scope",
+        ),
+        CheckConstraint(
+            "default_weight >= 0",
+            name="ck_astral_dominance_factor_types_weight",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(128), nullable=False)
+    category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    default_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
+
+
 class AstralChartPlanetDignityResultModel(Base):
     """Résultat runtime/audit du calcul de dignité d'une planète."""
 

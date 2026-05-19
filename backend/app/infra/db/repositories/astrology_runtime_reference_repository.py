@@ -23,6 +23,7 @@ from app.infra.db.models.dignity_reference import (
     AstralAccidentalDignityTypeModel,
     AstralConditionOperatorModel,
     AstralDecanSystemCodeModel,
+    AstralDominanceFactorTypeModel,
     AstralEssentialDignityRuleModel,
     AstralEssentialDignityScoreWeightModel,
     AstralEssentialDignityTypeModel,
@@ -96,6 +97,18 @@ class AstrologyRuntimeReferenceRepository:
             "constraint",
         }
     )
+    _REQUIRED_FACTOR_CODES = frozenset(
+        {
+            "chart_ruler",
+            "angularity",
+            "condition_strength",
+            "visibility",
+            "most_elevated",
+            "luminary_emphasis",
+            "house_rulership_load",
+            "aspect_centrality",
+        }
+    )
 
     def __init__(
         self,
@@ -129,6 +142,7 @@ class AstrologyRuntimeReferenceRepository:
                 sign_rulerships=prediction_repo.get_sign_rulerships(),
                 dignity_reference=self._load_dignity_reference(version_model.id),
                 condition_signal_profiles=self._load_condition_signal_profiles(version_model.id),
+                dominance_factor_types=self._load_dominance_factor_types(version_model.id),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
                 astral_points=self._load_astral_point_payload(),
@@ -297,6 +311,31 @@ class AstrologyRuntimeReferenceRepository:
                 AstralPlanetConditionSignalProfileModel.condition_axis,
                 AstralPlanetConditionSignalProfileModel.signal_code,
             )
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_dominance_factor_types(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les types de facteurs de dominance actifs et versionnes."""
+        rows = self.db.execute(
+            select(
+                AstralDominanceFactorTypeModel.code,
+                AstralDominanceFactorTypeModel.label,
+                AstralDominanceFactorTypeModel.category,
+                AstralDominanceFactorTypeModel.default_weight,
+                AstralDominanceFactorTypeModel.sort_order,
+                AstralDominanceFactorTypeModel.is_active,
+                AstralDominanceFactorTypeModel.description,
+                ReferenceVersionModel.version.label("reference_version"),
+            )
+            .join(
+                ReferenceVersionModel,
+                AstralDominanceFactorTypeModel.reference_version_id == ReferenceVersionModel.id,
+            )
+            .where(AstralDominanceFactorTypeModel.reference_version_id == reference_version_id)
+            .where(AstralDominanceFactorTypeModel.is_active.is_(True))
+            .order_by(AstralDominanceFactorTypeModel.sort_order)
         ).all()
         return tuple(dict(row._mapping) for row in rows)
 
@@ -755,6 +794,15 @@ class AstrologyRuntimeReferenceRepository:
                     "condition_signal_profiles",
                     f"unknown_axis:{signal_profile.condition_axis}",
                 )
+        dominance_factor_codes = {item.code for item in reference.dominance_factor_types}
+        if dominance_factor_codes != self._REQUIRED_FACTOR_CODES:
+            missing = self._REQUIRED_FACTOR_CODES - dominance_factor_codes
+            extra = dominance_factor_codes - self._REQUIRED_FACTOR_CODES
+            reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
+            self._raise_integrity("dominance_factor_types", reason)
+        sort_orders = [item.sort_order for item in reference.dominance_factor_types]
+        if sort_orders != sorted(sort_orders) or len(sort_orders) != len(set(sort_orders)):
+            self._raise_integrity("dominance_factor_types", "invalid_sort_order")
         if len(reference.dignities.sign_rulerships) != 12:
             self._raise_integrity("sign_rulerships", "expected_12")
         for sign_code, planet_code in reference.dignities.sign_rulerships.items():

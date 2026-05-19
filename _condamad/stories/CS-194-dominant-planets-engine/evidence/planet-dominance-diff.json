@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-05-19",
+  "fixture_id": "chart_json_builder_full_payload_cs194_diff",
+  "comparison": "planet-dominance-before.json -> planet-dominance-after.json",
+  "added_paths": [
+    "chart_json.planet_dominance",
+    "NatalResult.planet_dominance"
+  ],
+  "removed_paths": [],
+  "changed_existing_paths": [],
+  "unchanged_existing_top_level_paths": [
+    "chart_json.meta",
+    "chart_json.planets",
+    "chart_json.houses",
+    "chart_json.house_rulers",
+    "chart_json.aspects",
+    "chart_json.angles",
+    "chart_json.dignities",
+    "chart_json.planet_condition_profiles",
+    "chart_json.planet_condition_signals",
+    "chart_json.chart_balance",
+    "chart_json.chart_signature"
+  ],
+  "validation_tests": [
+    "backend/app/tests/unit/test_chart_json_builder.py::test_build_chart_json_full",
+    "backend/app/tests/unit/test_chart_result_service.py"
+  ]
+}

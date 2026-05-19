@@ -29,7 +29,7 @@ def test_natal_result_rejects_untyped_planet_payloads() -> None:
 
 
 def test_natal_result_exposes_condition_collections() -> None:
-    """Le contrat natal expose profils et signaux sans casser les dignites."""
+    """Le contrat natal expose condition et dominance sans casser les dignites."""
     prepared = BirthPreparedData(
         birth_datetime_local="1990-06-15T10:30:00+02:00",
         birth_datetime_utc="1990-06-15T08:30:00Z",
@@ -51,3 +51,4 @@ def test_natal_result_exposes_condition_collections() -> None:
     assert result.dignities == []
     assert result.condition_profiles == []
     assert result.condition_signals == []
+    assert result.planet_dominance is None

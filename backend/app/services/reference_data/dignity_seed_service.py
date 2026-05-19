@@ -23,6 +23,7 @@ from app.infra.db.models import (
     AstralDiginityScoreProfileModel,
     AstralDignityFunctionalEffectModel,
     AstralDignityIntensityEffectModel,
+    AstralDominanceFactorTypeModel,
     AstralElementModel,
     AstralEssentialDignityCategoryModel,
     AstralEssentialDignityExpressionTendencyModel,
@@ -296,6 +297,29 @@ def _sync_condition_signal_profiles(db: Session, reference_version_id: int) -> N
     )
 
 
+def _sync_dominance_factor_types(db: Session, reference_version_id: int) -> None:
+    """Synchronise les facteurs de dominance planetaires versionnes."""
+    rows = []
+    for row in _load_rows("astral_dominance_factor_types.json"):
+        rows.append(
+            {
+                "code": row["code"],
+                "label": row["label"],
+                "category": row["category"],
+                "default_weight": row["default_weight"],
+                "sort_order": row["sort_order"],
+                "is_active": row["is_active"],
+                "description": row["description"],
+            }
+        )
+    _replace_versioned_rows(
+        db,
+        AstralDominanceFactorTypeModel,
+        reference_version_id,
+        rows,
+    )
+
+
 def _sync_accidental_rules(
     db: Session,
     reference_version_id: int,
@@ -330,5 +354,6 @@ def sync_astral_dignity_seed_data(db: Session, reference_version_id: int) -> Non
     _sync_boundaries_and_rules(db, reference_version_id, maps)
     _sync_score_weights(db)
     _sync_condition_signal_profiles(db, reference_version_id)
+    _sync_dominance_factor_types(db, reference_version_id)
     _sync_accidental_rules(db, reference_version_id, maps)
     db.flush()
