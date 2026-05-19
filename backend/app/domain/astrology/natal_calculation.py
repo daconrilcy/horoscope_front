@@ -10,6 +10,10 @@ from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
+from app.domain.astrology.advanced_conditions import (
+    AdvancedConditionEngine,
+    AdvancedPlanetaryCondition,
+)
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.astral_point_calculation_resolver import (
     AstralPointCalculationInstruction,
@@ -142,6 +146,7 @@ class NatalResult(BaseModel):
     dignities: list[PlanetDignityResult] = Field(default_factory=list)
     condition_profiles: list[PlanetConditionProfile] = Field(default_factory=list)
     condition_signals: list[PlanetConditionSignalSet] = Field(default_factory=list)
+    advanced_conditions: list[AdvancedPlanetaryCondition] = Field(default_factory=list)
     dominant_planets: DominantPlanetsResult | None = None
     aspects: list[AspectResult]
 
@@ -791,9 +796,6 @@ def build_natal_result(
     condition_profiles = list(
         PlanetConditionProfileService().calculate(tuple(dignities), runtime_reference)
     )
-    condition_signals = list(
-        PlanetConditionSignalBuilder().build(tuple(condition_profiles), runtime_reference)
-    )
     points = [NatalAstralPointPosition.model_validate(item) for item in points_raw]
     cusp_houses = [
         HouseRuntimeData(
@@ -828,6 +830,17 @@ def build_natal_result(
         celestial_catalog=celestial_catalog,
     )
     aspects = [_build_aspect_result(item, celestial_catalog) for item in aspects_raw]
+    advanced_conditions, enriched_condition_profiles = AdvancedConditionEngine().calculate(
+        runtime_reference=runtime_reference,
+        planet_positions=tuple(positions),
+        aspects=tuple(aspects),
+        dignities=tuple(dignities),
+        condition_profiles=tuple(condition_profiles),
+    )
+    condition_profiles = list(enriched_condition_profiles)
+    condition_signals = list(
+        PlanetConditionSignalBuilder().build(tuple(condition_profiles), runtime_reference)
+    )
     chart_balance = ChartSignatureCalculator().calculate(
         signs=signs_runtime,
         houses=houses,
@@ -841,6 +854,7 @@ def build_natal_result(
         houses=houses,
         house_rulers=house_rulers,
         condition_profiles=condition_profiles,
+        advanced_conditions=tuple(advanced_conditions),
         aspects=aspects,
     )
 
@@ -868,6 +882,7 @@ def build_natal_result(
         dignities=dignities,
         condition_profiles=condition_profiles,
         condition_signals=condition_signals,
+        advanced_conditions=list(advanced_conditions),
         dominant_planets=dominant_planets,
         aspects=aspects,
     )

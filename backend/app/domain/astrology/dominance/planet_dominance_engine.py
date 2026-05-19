@@ -37,6 +37,7 @@ class PlanetDominanceEngine:
         house_rulers: Sequence[HouseRulerResult],
         condition_profiles: Sequence[PlanetConditionProfile],
         aspects: Sequence[Any],
+        advanced_conditions: Sequence[Any] = (),
     ) -> DominantPlanetsResult:
         """Produit un classement pondere par le profil actif du runtime."""
         dominance_reference = runtime_reference.dominance_reference
@@ -60,6 +61,7 @@ class PlanetDominanceEngine:
                     houses=houses,
                     house_rulers=house_rulers,
                     condition_profiles=condition_profiles,
+                    advanced_conditions=advanced_conditions,
                     aspects=aspects,
                     luminary_codes=luminary_codes,
                 )
@@ -99,6 +101,7 @@ class PlanetDominanceEngine:
         houses: Sequence[HouseRuntimeData],
         house_rulers: Sequence[HouseRulerResult],
         condition_profiles: Sequence[PlanetConditionProfile],
+        advanced_conditions: Sequence[Any],
         aspects: Sequence[Any],
         luminary_codes: frozenset[str],
     ) -> PlanetDominanceFactor:
@@ -119,6 +122,7 @@ class PlanetDominanceEngine:
             houses,
             house_rulers,
             condition_profiles,
+            advanced_conditions,
             aspects,
             luminary_codes,
         )
@@ -141,6 +145,7 @@ class PlanetDominanceEngine:
         _houses: Sequence[HouseRuntimeData],
         house_rulers: Sequence[HouseRulerResult],
         _profiles: Sequence[PlanetConditionProfile],
+        _advanced_conditions: Sequence[Any],
         _aspects: Sequence[Any],
         _luminary_codes: frozenset[str],
     ) -> tuple[float, str]:
@@ -157,6 +162,7 @@ class PlanetDominanceEngine:
         houses: Sequence[HouseRuntimeData],
         _house_rulers: Sequence[HouseRulerResult],
         _profiles: Sequence[PlanetConditionProfile],
+        _advanced_conditions: Sequence[Any],
         _aspects: Sequence[Any],
         _luminary_codes: frozenset[str],
     ) -> tuple[float, str]:
@@ -181,6 +187,7 @@ class PlanetDominanceEngine:
         _houses: Sequence[HouseRuntimeData],
         _house_rulers: Sequence[HouseRulerResult],
         profiles: Sequence[PlanetConditionProfile],
+        advanced_conditions: Sequence[Any],
         _aspects: Sequence[Any],
         _luminary_codes: frozenset[str],
     ) -> tuple[float, str]:
@@ -188,9 +195,17 @@ class PlanetDominanceEngine:
         max_strength = max((max(item.functional_strength, 0.0) for item in profiles), default=0.0)
         if profile is None or max_strength <= 0.0:
             return 0.0, f"{planet_code} has no condition strength profile."
+        advanced_weight = sum(
+            float(getattr(condition, "ranking_weight", 0.0))
+            for condition in advanced_conditions
+            if getattr(condition, "source_planet_code", None) == planet_code
+        )
         return (
-            profile.functional_strength / max_strength,
-            f"{planet_code} functional strength is {profile.functional_strength:.6g}.",
+            (profile.functional_strength + advanced_weight) / max_strength,
+            (
+                f"{planet_code} functional strength is {profile.functional_strength:.6g}; "
+                f"advanced ranking weight is {advanced_weight:.6g}."
+            ),
         )
 
     def _visibility_value(
@@ -201,6 +216,7 @@ class PlanetDominanceEngine:
         _houses: Sequence[HouseRuntimeData],
         _house_rulers: Sequence[HouseRulerResult],
         profiles: Sequence[PlanetConditionProfile],
+        _advanced_conditions: Sequence[Any],
         _aspects: Sequence[Any],
         _luminary_codes: frozenset[str],
     ) -> tuple[float, str]:
@@ -221,6 +237,7 @@ class PlanetDominanceEngine:
         houses: Sequence[HouseRuntimeData],
         _house_rulers: Sequence[HouseRulerResult],
         _profiles: Sequence[PlanetConditionProfile],
+        _advanced_conditions: Sequence[Any],
         _aspects: Sequence[Any],
         _luminary_codes: frozenset[str],
     ) -> tuple[float, str]:
@@ -243,6 +260,7 @@ class PlanetDominanceEngine:
         _houses: Sequence[HouseRuntimeData],
         _house_rulers: Sequence[HouseRulerResult],
         _profiles: Sequence[PlanetConditionProfile],
+        _advanced_conditions: Sequence[Any],
         _aspects: Sequence[Any],
         luminary_codes: frozenset[str],
     ) -> tuple[float, str]:
@@ -259,6 +277,7 @@ class PlanetDominanceEngine:
         _houses: Sequence[HouseRuntimeData],
         house_rulers: Sequence[HouseRulerResult],
         _profiles: Sequence[PlanetConditionProfile],
+        _advanced_conditions: Sequence[Any],
         _aspects: Sequence[Any],
         _luminary_codes: frozenset[str],
     ) -> tuple[float, str]:
@@ -277,6 +296,7 @@ class PlanetDominanceEngine:
         _houses: Sequence[HouseRuntimeData],
         _house_rulers: Sequence[HouseRulerResult],
         _profiles: Sequence[PlanetConditionProfile],
+        _advanced_conditions: Sequence[Any],
         aspects: Sequence[Any],
         _luminary_codes: frozenset[str],
     ) -> tuple[float, str]:

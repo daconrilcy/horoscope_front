@@ -37,7 +37,11 @@ def test_accidental_dignity_calculator_detects_house_rule_from_runtime() -> None
         tradition="traditional",
     )
 
-    assert {match.dignity_type_code for match in matches} == {"angular_house", "direct_motion"}
+    assert {match.dignity_type_code for match in matches} == {
+        "angular_house",
+        "direct_motion",
+        "swift_motion",
+    }
     angular_match = next(match for match in matches if match.dignity_type_code == "angular_house")
     assert angular_match.score_value == 4
 
@@ -66,11 +70,13 @@ def test_accidental_dignity_calculator_detects_house_modalities_motion_and_joy()
     assert {match.dignity_type_code for match in direct_matches} == {
         "succedent_house",
         "direct_motion",
+        "swift_motion",
     }
     assert {match.dignity_type_code for match in retro_matches} == {
         "cadent_house",
         "retrograde",
         "planetary_joy",
+        "slow_motion",
     }
 
 
@@ -121,3 +127,32 @@ def test_accidental_dignity_calculator_prioritizes_exclusive_solar_conditions() 
             if match.dignity_type_code in {"cazimi", "combust", "under_sunbeams"}
         ]
         assert solar_matches == [expected]
+
+
+def test_accidental_dignity_calculator_detects_advanced_runtime_sources() -> None:
+    """Les sources CS-195 sont detectees dans le calcul accidentel reel."""
+    reference = complete_reference()
+    sun = PlanetDignityInput("sun", 10, "aries", 10, 0.01, False)
+    venus = PlanetDignityInput("venus", 250, "taurus", 5, 0.02, False)
+
+    sun_matches = AccidentalDignityCalculator().calculate(
+        sun,
+        all_planets=(sun, venus),
+        dignity_reference=reference.dignity_reference,
+        score_profile="traditional_standard",
+        tradition="traditional",
+        sect="day",
+        signs=reference.signs,
+    )
+    venus_matches = AccidentalDignityCalculator().calculate(
+        venus,
+        all_planets=(sun, venus),
+        dignity_reference=reference.dignity_reference,
+        score_profile="traditional_standard",
+        tradition="traditional",
+        sect="day",
+        signs=reference.signs,
+    )
+
+    assert {"stationary", "hayz"} <= {match.dignity_type_code for match in sun_matches}
+    assert {"slow_motion", "occidental"} <= {match.dignity_type_code for match in venus_matches}

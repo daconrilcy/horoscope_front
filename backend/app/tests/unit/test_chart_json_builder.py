@@ -4,6 +4,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.domain.astrology.advanced_conditions.contracts import (
+    AdvancedPlanetaryCondition,
+    PlanetConditionAxisImpact,
+)
 from app.domain.astrology.condition.contracts import (
     PlanetConditionBreakdownItem,
     PlanetConditionExplanationFact,
@@ -243,6 +247,28 @@ def mock_natal_result():
             ),
         )
     ]
+    result.advanced_conditions = [
+        AdvancedPlanetaryCondition(
+            condition_code="hayz",
+            condition_type_code="hayz",
+            source_planet_code="sun",
+            target_planet_code=None,
+            score_profile="traditional_advanced_v1",
+            reference_version="v1",
+            score_impact=1.5,
+            ranking_weight=1.1,
+            axes_impact=PlanetConditionAxisImpact(
+                functional_strength_delta=0.3,
+                visibility_delta=0.2,
+                stability_delta=0.4,
+                intensity_delta=0.1,
+                coherence_delta=0.3,
+                support_delta=0.2,
+                constraint_delta=0.0,
+            ),
+            reason="sun matches accidental dignity hayz.",
+        )
+    ]
     result.dominant_planets = DominantPlanetsResult(
         score_profile_code="natal_standard_v1",
         tradition_code="modern",
@@ -397,6 +423,28 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         }
     ]
     assert chart["dominant_planets"]["score_profile"] == "natal_standard_v1"
+    assert chart["advanced_conditions"] == [
+        {
+            "condition_code": "hayz",
+            "condition_type_code": "hayz",
+            "source_planet_code": "sun",
+            "target_planet_code": None,
+            "score_profile": "traditional_advanced_v1",
+            "reference_version": "v1",
+            "score_impact": 1.5,
+            "ranking_weight": 1.1,
+            "axes_impact": {
+                "functional_strength": 0.3,
+                "visibility": 0.2,
+                "stability": 0.4,
+                "intensity": 0.1,
+                "coherence": 0.3,
+                "support": 0.2,
+                "constraint": 0.0,
+            },
+            "reason": "sun matches accidental dignity hayz.",
+        }
+    ]
     assert chart["dominant_planets"]["chart_ruler"] == "sun"
     assert chart["dominant_planets"]["most_elevated_planet"] == "sun"
     assert chart["dominant_planets"]["top_planet"] == "sun"

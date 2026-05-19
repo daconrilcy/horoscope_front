@@ -51,7 +51,7 @@ def test_reference_seed_populates_astral_dignity_tables() -> None:
         )
         assert (
             db.scalar(select(func.count()).select_from(AstralAccidentalDignityScoreWeightModel))
-            == 9
+            == 22
         )
         assert set(db.scalars(select(AstralTermBoundModel.reference_version_id)).all()) == {
             version_id
@@ -77,7 +77,7 @@ def test_dignity_repository_reads_weights_and_upserts_runtime_result() -> None:
         repository = DignityReferenceRepository(db)
         assert len(repository.list_score_profiles()) == 5
         assert len(repository.list_essential_score_weights("traditional_standard")) == 8
-        assert len(repository.list_accidental_score_weights("traditional_standard")) == 9
+        assert len(repository.list_accidental_score_weights("traditional_standard")) == 22
 
         payload = ChartPlanetDignityResultInput(
             chart_result_id=chart_result.id,

@@ -321,6 +321,7 @@ class AstralPlanetNatureModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     label: Mapped[str] = mapped_column(String(128), nullable=False)
+    planet_codes_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
 
@@ -698,6 +699,89 @@ class AstralDominanceScoreWeightModel(Base):
     min_value: Mapped[float] = mapped_column(Float, nullable=False)
     max_value: Mapped[float] = mapped_column(Float, nullable=False)
     normalization_method: Mapped[str] = mapped_column(String(64), nullable=False)
+    notes: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AstralAdvancedConditionTypeModel(Base):
+    """Type parent factuel d'une condition planetaire avancee."""
+
+    __tablename__ = "astral_advanced_condition_types"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "code",
+            name="uq_astral_advanced_condition_types_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(128), nullable=False)
+    category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    functional_effect: Mapped[str] = mapped_column(String(64), nullable=False)
+    expression_effect: Mapped[str] = mapped_column(String(64), nullable=False)
+    intensity_effect: Mapped[str] = mapped_column(String(64), nullable=False)
+    visibility_effect: Mapped[str] = mapped_column(String(64), nullable=False)
+    default_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
+
+
+class AstralAdvancedConditionScoreProfileModel(Base):
+    """Profil de scoring versionne des conditions planetaires avancees."""
+
+    __tablename__ = "astral_advanced_condition_score_profiles"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "code",
+            name="uq_astral_advanced_condition_score_profiles_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(128), nullable=False)
+    tradition_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    reference_version_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
+
+
+class AstralAdvancedConditionWeightModel(Base):
+    """Ponderation d'un type de condition avancee pour un profil."""
+
+    __tablename__ = "astral_advanced_condition_weights"
+    __table_args__ = (
+        UniqueConstraint(
+            "score_profile_id",
+            "condition_type_id",
+            name="uq_astral_advanced_condition_weights_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    score_profile_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_advanced_condition_score_profiles.id"), nullable=False, index=True
+    )
+    condition_type_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_advanced_condition_types.id"), nullable=False, index=True
+    )
+    functional_strength_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    visibility_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    stability_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    intensity_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    coherence_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    support_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    constraint_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    ranking_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    uses_default_weight: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     notes: Mapped[str] = mapped_column(Text, nullable=False)
 
 

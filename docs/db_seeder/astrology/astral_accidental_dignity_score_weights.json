@@ -90,6 +90,123 @@
       "expression_weight": 0.7,
       "intensity_weight": 0.4,
       "notes": "Expression facilitée dans la maison de joie."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 9,
+      "score_value": 1,
+      "functional_weight": 0.2,
+      "expression_weight": 0.2,
+      "intensity_weight": 0.3,
+      "notes": "Mouvement plus rapide que la moyenne."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 10,
+      "score_value": -1,
+      "functional_weight": -0.2,
+      "expression_weight": -0.2,
+      "intensity_weight": 0.1,
+      "notes": "Mouvement plus lent que la moyenne."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 14,
+      "score_value": 1,
+      "functional_weight": 0.1,
+      "expression_weight": 0.1,
+      "intensity_weight": 0.1,
+      "notes": "Planète dégagée des rayons du Soleil."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 15,
+      "score_value": 1,
+      "functional_weight": 0.1,
+      "expression_weight": 0.1,
+      "intensity_weight": 0.1,
+      "notes": "Orientation orientale au Soleil."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 16,
+      "score_value": 1,
+      "functional_weight": 0.1,
+      "expression_weight": 0.1,
+      "intensity_weight": 0.1,
+      "notes": "Orientation occidentale au Soleil."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 19,
+      "score_value": 1,
+      "functional_weight": 0.2,
+      "expression_weight": 0.2,
+      "intensity_weight": 0.1,
+      "notes": "Planète cohérente avec la secte."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 20,
+      "score_value": -1,
+      "functional_weight": -0.2,
+      "expression_weight": -0.2,
+      "intensity_weight": 0.1,
+      "notes": "Planète hors secte."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 21,
+      "score_value": 1,
+      "functional_weight": 0.2,
+      "expression_weight": 0.2,
+      "intensity_weight": 0.2,
+      "notes": "Aspect de soutien par une bénéfique."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 22,
+      "score_value": -1,
+      "functional_weight": -0.2,
+      "expression_weight": -0.2,
+      "intensity_weight": 0.2,
+      "notes": "Aspect contraignant par une maléfique."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 23,
+      "score_value": 1,
+      "functional_weight": 0.2,
+      "expression_weight": 0.2,
+      "intensity_weight": 0.2,
+      "notes": "Encadrement par des bénéfiques."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 24,
+      "score_value": -1,
+      "functional_weight": -0.2,
+      "expression_weight": -0.2,
+      "intensity_weight": 0.2,
+      "notes": "Encadrement par des maléfiques."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 37,
+      "score_value": 2,
+      "functional_weight": 0.3,
+      "expression_weight": 0.1,
+      "intensity_weight": 0.5,
+      "notes": "Station de mouvement planetaire."
+    },
+    {
+      "score_profile_id": 1,
+      "accidental_dignity_type_id": 38,
+      "score_value": 2,
+      "functional_weight": 0.4,
+      "expression_weight": 0.3,
+      "intensity_weight": 0.2,
+      "notes": "Cohérence complète de hayz."
     }
   ]
 }

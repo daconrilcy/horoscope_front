@@ -11,6 +11,10 @@ from collections.abc import Mapping, Sequence
 from app.domain.astrology.planet_catalog import planet_swe_ids_by_code
 from app.domain.astrology.runtime.runtime_reference import (
     AccidentalDignityRuleReferenceData,
+    AdvancedConditionReferenceSet,
+    AdvancedConditionScoreProfileReferenceData,
+    AdvancedConditionTypeReferenceData,
+    AdvancedConditionWeightReferenceData,
     AnglePointReferenceData,
     AnglePointReferenceSet,
     AspectOrbRuleReferenceData,
@@ -43,6 +47,8 @@ from app.domain.astrology.runtime.runtime_reference import (
     HouseSystemReferenceSet,
     PlanetConditionSignalProfileReferenceData,
     PlanetDignityReferenceSet,
+    PlanetNatureReferenceData,
+    PlanetNatureReferenceSet,
     PlanetReferenceData,
     PlanetReferenceSet,
     SignReferenceData,
@@ -70,6 +76,10 @@ class AstrologyRuntimeReferenceMapper:
         dominance_factor_types: Sequence[Mapping[str, object]],
         dominance_score_profiles: Sequence[Mapping[str, object]],
         dominance_score_weights: Sequence[Mapping[str, object]],
+        advanced_condition_types: Sequence[Mapping[str, object]],
+        advanced_condition_score_profiles: Sequence[Mapping[str, object]],
+        advanced_condition_weights: Sequence[Mapping[str, object]],
+        planet_natures: Sequence[Mapping[str, object]],
         planet_definitions: Mapping[str, Mapping[str, object]],
         angle_points: Sequence[Mapping[str, object]],
         astral_points: Sequence[Mapping[str, object]],
@@ -93,6 +103,19 @@ class AstrologyRuntimeReferenceMapper:
                         ),
                     )
                     for item in self._items(payload, "planets")
+                )
+            ),
+            planet_natures=PlanetNatureReferenceSet(
+                tuple(
+                    PlanetNatureReferenceData(
+                        code=str(item["code"]),
+                        label=str(item["label"]),
+                        planet_codes=tuple(
+                            str(code) for code in item.get("planet_codes", ()) if str(code).strip()
+                        ),
+                        sort_order=int(item["sort_order"]),
+                    )
+                    for item in planet_natures
                 )
             ),
             signs=SignReferenceSet(
@@ -239,6 +262,52 @@ class AstrologyRuntimeReferenceMapper:
                         notes=str(item["notes"]),
                     )
                     for item in dominance_score_weights
+                ),
+            ),
+            advanced_condition_reference=AdvancedConditionReferenceSet(
+                condition_types=tuple(
+                    AdvancedConditionTypeReferenceData(
+                        code=str(item["code"]),
+                        label=str(item["label"]),
+                        category=str(item["category"]),
+                        functional_effect=str(item["functional_effect"]),
+                        expression_effect=str(item["expression_effect"]),
+                        intensity_effect=str(item["intensity_effect"]),
+                        visibility_effect=str(item["visibility_effect"]),
+                        default_weight=float(item["default_weight"]),
+                        sort_order=int(item["sort_order"]),
+                        is_active=bool(item["is_active"]),
+                        reference_version=str(item["reference_version"]),
+                    )
+                    for item in advanced_condition_types
+                ),
+                score_profiles=tuple(
+                    AdvancedConditionScoreProfileReferenceData(
+                        code=str(item["code"]),
+                        label=str(item["label"]),
+                        tradition_code=str(item["tradition_code"]),
+                        description=str(item["description"]),
+                        reference_version_code=str(item["reference_version_code"]),
+                        is_active=bool(item["is_active"]),
+                    )
+                    for item in advanced_condition_score_profiles
+                ),
+                score_weights=tuple(
+                    AdvancedConditionWeightReferenceData(
+                        score_profile_code=str(item["score_profile_code"]),
+                        condition_type_code=str(item["condition_type_code"]),
+                        functional_strength_weight=float(item["functional_strength_weight"]),
+                        condition_visibility=float(item["visibility_weight"]),
+                        stability_weight=float(item["stability_weight"]),
+                        intensity_weight=float(item["intensity_weight"]),
+                        coherence_weight=float(item["coherence_weight"]),
+                        support_weight=float(item["support_weight"]),
+                        constraint_weight=float(item["constraint_weight"]),
+                        ranking_weight=float(item["ranking_weight"]),
+                        uses_default_weight=bool(item["uses_default_weight"]),
+                        notes=str(item["notes"]),
+                    )
+                    for item in advanced_condition_weights
                 ),
             ),
             angle_points=AnglePointReferenceSet(

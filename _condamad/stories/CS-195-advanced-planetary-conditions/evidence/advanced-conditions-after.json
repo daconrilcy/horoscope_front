@@ -1,0 +1,102 @@
+{
+  "fixture": {
+    "birth_date": "1990-06-15",
+    "birth_time": "10:30",
+    "birth_place": "Paris",
+    "house_system": "equal"
+  },
+  "reference_version": "test",
+  "ruleset_version": "test",
+  "existing_top_level_fields_sample": [
+    "reference_version",
+    "ruleset_version",
+    "house_system",
+    "engine",
+    "zodiac",
+    "frame",
+    "ayanamsa",
+    "altitude_m",
+    "ephemeris_path_version",
+    "ephemeris_path_hash",
+    "time_scale",
+    "aspect_school"
+  ],
+  "planet_positions_count": 10,
+  "houses_count": 12,
+  "aspects_count": 2,
+  "condition_profiles_count": 10,
+  "dominant_planets_count": 7,
+  "advanced_conditions_count": 22,
+  "advanced_conditions_sample": [
+    {
+      "condition_code": "heliacal_setting",
+      "condition_type_code": "heliacal_setting",
+      "source_planet_code": "jupiter",
+      "target_planet_code": "sun",
+      "score_profile": "traditional_advanced_v1",
+      "reference_version": "v1",
+      "score_impact": -1.6,
+      "ranking_weight": -0.8,
+      "axes_impact": {
+        "functional_strength_delta": -0.8,
+        "visibility_delta": 0.0,
+        "stability_delta": 0.0,
+        "intensity_delta": 0.0,
+        "coherence_delta": 0.0,
+        "support_delta": 0.0,
+        "constraint_delta": 0.8
+      },
+      "reason": "jupiter has inferred solar phase heliacal_setting."
+    },
+    {
+      "condition_code": "mutual_reception_by_domicile",
+      "condition_type_code": "mutual_reception",
+      "source_planet_code": "jupiter",
+      "target_planet_code": "mars",
+      "score_profile": "traditional_advanced_v1",
+      "reference_version": "v1",
+      "score_impact": 2.4,
+      "ranking_weight": 1.2,
+      "axes_impact": {
+        "functional_strength_delta": 1.2,
+        "visibility_delta": 0.0,
+        "stability_delta": 0.0,
+        "intensity_delta": 0.0,
+        "coherence_delta": 0.0,
+        "support_delta": 1.2,
+        "constraint_delta": 0.0
+      },
+      "reason": "jupiter and mars exchange domicile."
+    },
+    {
+      "condition_code": "bonification",
+      "condition_type_code": "bonification",
+      "source_planet_code": "mercury",
+      "target_planet_code": "jupiter",
+      "score_profile": "traditional_advanced_v1",
+      "reference_version": "v1",
+      "score_impact": 2.0,
+      "ranking_weight": 1.0,
+      "axes_impact": {
+        "functional_strength_delta": 1.0,
+        "visibility_delta": 0.0,
+        "stability_delta": 0.0,
+        "intensity_delta": 0.0,
+        "coherence_delta": 0.0,
+        "support_delta": 1.0,
+        "constraint_delta": 0.0
+      },
+      "reason": "mercury receives bonification from jupiter."
+    }
+  ],
+  "diff_summary": {
+    "unchanged_counts": [
+      "planet_positions_count",
+      "houses_count",
+      "aspects_count",
+      "condition_profiles_count",
+      "dominant_planets_count"
+    ],
+    "authorized_addition": "advanced_conditions"
+  }
+}

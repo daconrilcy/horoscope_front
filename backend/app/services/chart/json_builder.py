@@ -413,6 +413,35 @@ def _serialize_dominant_planets(dominant_planets: Any) -> dict[str, Any] | None:
     }
 
 
+def _serialize_advanced_conditions(advanced_conditions: Any) -> list[dict[str, Any]]:
+    """Projette les conditions avancees deja calculees par le domaine."""
+    if not isinstance(advanced_conditions, (list, tuple)):
+        advanced_conditions = []
+    return [
+        {
+            "condition_code": condition.condition_code,
+            "condition_type_code": condition.condition_type_code,
+            "source_planet_code": condition.source_planet_code,
+            "target_planet_code": condition.target_planet_code,
+            "score_profile": condition.score_profile,
+            "reference_version": condition.reference_version,
+            "score_impact": condition.score_impact,
+            "ranking_weight": condition.ranking_weight,
+            "axes_impact": {
+                "functional_strength": condition.axes_impact.functional_strength_delta,
+                "visibility": condition.axes_impact.visibility_delta,
+                "stability": condition.axes_impact.stability_delta,
+                "intensity": condition.axes_impact.intensity_delta,
+                "coherence": condition.axes_impact.coherence_delta,
+                "support": condition.axes_impact.support_delta,
+                "constraint": condition.axes_impact.constraint_delta,
+            },
+            "reason": condition.reason,
+        }
+        for condition in advanced_conditions
+    ]
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -541,6 +570,9 @@ def build_chart_json(
         ),
         "planet_condition_signals": _serialize_condition_signals(
             getattr(natal_result, "condition_signals", [])
+        ),
+        "advanced_conditions": _serialize_advanced_conditions(
+            getattr(natal_result, "advanced_conditions", [])
         ),
         "dominant_planets": dominant_planets,
     }

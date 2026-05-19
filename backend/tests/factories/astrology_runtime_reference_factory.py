@@ -113,6 +113,10 @@ def runtime_reference_from_mapping(
         dominance_factor_types=_default_dominance_factor_types(version),
         dominance_score_profiles=_default_dominance_score_profiles(),
         dominance_score_weights=_default_dominance_score_weights(),
+        advanced_condition_types=_default_advanced_condition_types(version),
+        advanced_condition_score_profiles=_default_advanced_condition_score_profiles(),
+        advanced_condition_weights=_default_advanced_condition_weights(),
+        planet_natures=_default_planet_natures(),
         planet_definitions={
             "sun": {"body_class": "luminary", "is_luminary": True},
             "moon": {"body_class": "luminary", "is_luminary": True},
@@ -426,6 +430,94 @@ def _default_dominance_score_weights() -> tuple[dict[str, object], ...]:
     )
 
 
+def _default_advanced_condition_types(reference_version: str) -> tuple[dict[str, object], ...]:
+    """Crée les types parents avances gouvernes pour les fixtures runtime."""
+    rows = (
+        ("mutual_reception", 1.2, 10),
+        ("hayz", 1.1, 20),
+        ("out_of_sect", -1.0, 30),
+        ("stationary", 1.0, 40),
+        ("besiegement", -1.3, 50),
+        ("bonification", 1.0, 60),
+        ("maltreatment", -1.2, 70),
+        ("fast_motion", 0.7, 80),
+        ("slow_motion", -0.6, 90),
+        ("heliacal_rising", 0.9, 100),
+        ("heliacal_setting", -0.8, 110),
+        ("oriental", 0.4, 120),
+        ("occidental", 0.4, 130),
+    )
+    return tuple(
+        {
+            "code": code,
+            "label": code.replace("_", " ").title(),
+            "category": "advanced",
+            "functional_effect": "contextual",
+            "expression_effect": "contextual",
+            "intensity_effect": "contextual",
+            "visibility_effect": "neutral",
+            "default_weight": weight,
+            "sort_order": sort_order,
+            "is_active": True,
+            "reference_version": reference_version,
+        }
+        for code, weight, sort_order in rows
+    )
+
+
+def _default_advanced_condition_score_profiles() -> tuple[dict[str, object], ...]:
+    """Crée le profil standard des conditions avancees pour les fixtures."""
+    return (
+        {
+            "code": "traditional_advanced_v1",
+            "label": "Traditional advanced planetary conditions v1",
+            "tradition_code": "traditional",
+            "description": "Profil standard des conditions avancees.",
+            "reference_version_code": "v1",
+            "is_active": True,
+        },
+    )
+
+
+def _default_advanced_condition_weights() -> tuple[dict[str, object], ...]:
+    """Crée les poids avances alignes sur les types de fixture."""
+    return tuple(
+        {
+            "score_profile_code": "traditional_advanced_v1",
+            "condition_type_code": item["code"],
+            "functional_strength_weight": float(item["default_weight"]),
+            "visibility_weight": 0.0,
+            "stability_weight": 0.0,
+            "intensity_weight": 0.0,
+            "coherence_weight": 0.0,
+            "support_weight": max(float(item["default_weight"]), 0.0),
+            "constraint_weight": abs(min(float(item["default_weight"]), 0.0)),
+            "ranking_weight": float(item["default_weight"]),
+            "uses_default_weight": False,
+            "notes": f"Poids fixture {item['code']}.",
+        }
+        for item in _default_advanced_condition_types("test")
+    )
+
+
+def _default_planet_natures() -> tuple[dict[str, object], ...]:
+    """Crée les natures planetaires traditionnelles depuis le runtime de fixture."""
+    return (
+        {
+            "code": "benefic",
+            "label": "Benefic",
+            "planet_codes": ("venus", "jupiter"),
+            "sort_order": 1,
+        },
+        {
+            "code": "malefic",
+            "label": "Malefic",
+            "planet_codes": ("mars", "saturn"),
+            "sort_order": 2,
+        },
+    )
+
+
 def _default_dignity_reference() -> dict[str, object]:
     """Crée un referentiel de dignites minimal pour les fixtures runtime."""
     return {
@@ -732,6 +824,30 @@ def _default_dignity_reference() -> dict[str, object]:
                     "support_weight": 0.0,
                     "constraint_weight": 0.0,
                 },
+                *[
+                    {
+                        "dignity_type_code": code,
+                        "score_value": score,
+                        "functional_weight": functional,
+                        "expression_weight": functional,
+                        "intensity_weight": 0.1,
+                        "visibility_weight": 0.0,
+                        "stability_weight": 0.0,
+                        "coherence_weight": 0.0,
+                        "support_weight": 0.0,
+                        "constraint_weight": 0.0,
+                    }
+                    for code, score, functional in (
+                        ("stationary", 2, 0.3),
+                        ("swift_motion", 1, 0.2),
+                        ("slow_motion", -1, -0.2),
+                        ("oriental", 1, 0.1),
+                        ("occidental", 1, 0.1),
+                        ("in_sect", 1, 0.2),
+                        ("out_of_sect", -1, -0.2),
+                        ("hayz", 2, 0.4),
+                    )
+                ],
             ]
         },
         "essential_rules": [
@@ -894,6 +1010,61 @@ def _default_dignity_reference() -> dict[str, object]:
                 "conditions": [{"key": "house_codes", "value": [1, 2, 3, 4, 5, 6]}],
                 "system_code": "traditional",
             },
+            {
+                "dignity_type_code": "stationary",
+                "planet_code": None,
+                "condition_schema_code": "planet_motion_state",
+                "conditions": [
+                    {"key": "motion_state_code", "value": "stationary"},
+                    {"key": "absolute_speed_max_deg_per_day", "value": 0.05},
+                ],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "swift_motion",
+                "planet_code": None,
+                "condition_schema_code": "mean_speed_relation",
+                "conditions": [{"key": "speed_relation_code", "value": "greater_than_mean"}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "slow_motion",
+                "planet_code": None,
+                "condition_schema_code": "mean_speed_relation",
+                "conditions": [{"key": "speed_relation_code", "value": "less_than_mean"}],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "oriental",
+                "planet_code": None,
+                "condition_schema_code": "heliacal_phase",
+                "conditions": [
+                    {"key": "relative_planet_code", "value": "sun"},
+                    {"key": "heliacal_condition_code", "value": "rising_before_sun"},
+                ],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "occidental",
+                "planet_code": None,
+                "condition_schema_code": "heliacal_phase",
+                "conditions": [
+                    {"key": "relative_planet_code", "value": "sun"},
+                    {"key": "heliacal_condition_code", "value": "setting_after_sun"},
+                ],
+                "system_code": "traditional",
+            },
+            {
+                "dignity_type_code": "hayz",
+                "planet_code": "sun",
+                "condition_schema_code": "hayz",
+                "conditions": [
+                    {"key": "chart_sect_code", "value": "day"},
+                    {"key": "horizon_position_code", "value": "above"},
+                    {"key": "sign_gender_code", "value": "masculine"},
+                ],
+                "system_code": "traditional",
+            },
         ],
     }
 
@@ -1035,6 +1206,7 @@ def missing_planet_definition() -> AstrologyRuntimeReference:
         reference_version_id=reference.reference_version_id,
         reference_version=reference.reference_version,
         planets=type(reference.planets)(items=reference.planets.items[1:]),
+        planet_natures=reference.planet_natures,
         signs=reference.signs,
         aspects=reference.aspects,
         houses=reference.houses,
@@ -1044,6 +1216,7 @@ def missing_planet_definition() -> AstrologyRuntimeReference:
         condition_signal_profiles=reference.condition_signal_profiles,
         dominance_factor_types=reference.dominance_factor_types,
         dominance_reference=reference.dominance_reference,
+        advanced_condition_reference=reference.advanced_condition_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -1058,6 +1231,7 @@ def missing_dignity() -> AstrologyRuntimeReference:
         reference_version_id=reference.reference_version_id,
         reference_version=reference.reference_version,
         planets=reference.planets,
+        planet_natures=reference.planet_natures,
         signs=reference.signs,
         aspects=reference.aspects,
         houses=reference.houses,
@@ -1067,6 +1241,7 @@ def missing_dignity() -> AstrologyRuntimeReference:
         condition_signal_profiles=reference.condition_signal_profiles,
         dominance_factor_types=reference.dominance_factor_types,
         dominance_reference=reference.dominance_reference,
+        advanced_condition_reference=reference.advanced_condition_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -1095,6 +1270,7 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         reference_version_id=reference.reference_version_id,
         reference_version=reference.reference_version,
         planets=reference.planets,
+        planet_natures=reference.planet_natures,
         signs=reference.signs,
         aspects=type(reference.aspects)(items=reference.aspects.items, orb_rules=(orphan_rule,)),
         houses=reference.houses,
@@ -1104,6 +1280,7 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         condition_signal_profiles=reference.condition_signal_profiles,
         dominance_factor_types=reference.dominance_factor_types,
         dominance_reference=reference.dominance_reference,
+        advanced_condition_reference=reference.advanced_condition_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,

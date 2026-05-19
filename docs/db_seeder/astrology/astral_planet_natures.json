@@ -4,10 +4,23 @@
     "id": "integer",
     "code": "string, unique, snake_case",
     "label": "string",
+    "planet_codes_json": "array<string>, planet codes attached to this nature",
     "sort_order": "integer"
   },
   "data": [
-    { "id": 1, "code": "benefic", "label": "Benefic", "sort_order": 1 },
-    { "id": 2, "code": "malefic", "label": "Malefic", "sort_order": 2 }
+    {
+      "id": 1,
+      "code": "benefic",
+      "label": "Benefic",
+      "planet_codes_json": ["venus", "jupiter"],
+      "sort_order": 1
+    },
+    {
+      "id": 2,
+      "code": "malefic",
+      "label": "Malefic",
+      "planet_codes_json": ["mars", "saturn"],
+      "sort_order": 2
+    }
   ]
 }

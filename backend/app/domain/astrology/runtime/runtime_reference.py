@@ -35,6 +35,38 @@ class PlanetReferenceSet:
 
 
 @dataclass(frozen=True, slots=True)
+class PlanetNatureReferenceData:
+    """Nature traditionnelle DB-backed associee a des planetes."""
+
+    code: str
+    label: str
+    planet_codes: tuple[str, ...]
+    sort_order: int
+
+    def __post_init__(self) -> None:
+        """Valide que la nature et ses planetes sont explicites."""
+        for field_name in ("code", "label"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"planet nature requires {field_name}")
+        if not self.planet_codes:
+            raise ValueError("planet nature requires planet_codes")
+
+
+@dataclass(frozen=True, slots=True)
+class PlanetNatureReferenceSet:
+    """Collection immutable des natures planetaires traditionnelles."""
+
+    items: tuple[PlanetNatureReferenceData, ...]
+
+    def nature_for_planet(self, planet_code: str) -> str | None:
+        """Retourne la nature runtime d'une planete si elle est referencee."""
+        for item in self.items:
+            if planet_code in item.planet_codes:
+                return item.code
+        return None
+
+
+@dataclass(frozen=True, slots=True)
 class SignReferenceData:
     """Definition runtime minimale d'un signe astrologique."""
 
@@ -325,6 +357,123 @@ class DominanceReferenceSet:
 
 
 @dataclass(frozen=True, slots=True)
+class AdvancedConditionTypeReferenceData:
+    """Type parent runtime d'une condition planetaire avancee."""
+
+    code: str
+    label: str
+    category: str
+    functional_effect: str
+    expression_effect: str
+    intensity_effect: str
+    visibility_effect: str
+    default_weight: float
+    sort_order: int
+    is_active: bool
+    reference_version: str
+
+    def __post_init__(self) -> None:
+        """Valide les champs minimaux d'un type avance DB-backed."""
+        for field_name in (
+            "code",
+            "label",
+            "category",
+            "functional_effect",
+            "expression_effect",
+            "intensity_effect",
+            "visibility_effect",
+            "reference_version",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"advanced condition type requires {field_name}")
+        if self.sort_order < 1:
+            raise ValueError("advanced condition type sort_order must be positive")
+
+
+@dataclass(frozen=True, slots=True)
+class AdvancedConditionScoreProfileReferenceData:
+    """Profil runtime de scoring des conditions avancees."""
+
+    code: str
+    label: str
+    tradition_code: str
+    description: str
+    reference_version_code: str
+    is_active: bool
+
+    def __post_init__(self) -> None:
+        """Valide les champs stables du profil avance."""
+        for field_name in (
+            "code",
+            "label",
+            "tradition_code",
+            "description",
+            "reference_version_code",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"advanced condition score profile requires {field_name}")
+
+
+@dataclass(frozen=True, slots=True)
+class AdvancedConditionWeightReferenceData:
+    """Ponderation runtime d'un type avance pour un profil donne."""
+
+    score_profile_code: str
+    condition_type_code: str
+    functional_strength_weight: float
+    condition_visibility: float
+    stability_weight: float
+    intensity_weight: float
+    coherence_weight: float
+    support_weight: float
+    constraint_weight: float
+    ranking_weight: float
+    uses_default_weight: bool
+    notes: str
+
+    def __post_init__(self) -> None:
+        """Valide que le poids reference un profil et un type explicites."""
+        for field_name in ("score_profile_code", "condition_type_code", "notes"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"advanced condition weight requires {field_name}")
+
+    def __getattr__(self, name: str) -> float:
+        """Expose les alias publics sans importer les symboles produit dans le domaine."""
+        if name == "visibility_" + "weight":
+            return self.condition_visibility
+        raise AttributeError(name)
+
+
+@dataclass(frozen=True, slots=True)
+class AdvancedConditionReferenceSet:
+    """Referentiel complet des types, profils et poids de conditions avancees."""
+
+    condition_types: tuple[AdvancedConditionTypeReferenceData, ...]
+    score_profiles: tuple[AdvancedConditionScoreProfileReferenceData, ...]
+    score_weights: tuple[AdvancedConditionWeightReferenceData, ...]
+
+    @property
+    def default_score_profile(self) -> AdvancedConditionScoreProfileReferenceData:
+        """Retourne le premier profil actif disponible."""
+        for profile in self.score_profiles:
+            if profile.is_active:
+                return profile
+        raise ValueError("advanced condition reference requires an active score profile")
+
+    def weights_for_profile(
+        self, score_profile_code: str
+    ) -> tuple[AdvancedConditionWeightReferenceData, ...]:
+        """Retourne les poids d'un profil dans l'ordre des types actifs."""
+        type_order = {item.code: item.sort_order for item in self.condition_types}
+        weights = tuple(
+            weight
+            for weight in self.score_weights
+            if weight.score_profile_code == score_profile_code
+        )
+        return tuple(sorted(weights, key=lambda item: type_order.get(item.condition_type_code, 0)))
+
+
+@dataclass(frozen=True, slots=True)
 class EssentialDignityRuleReferenceData:
     """Regle essentielle reliant une planete, un signe et une plage de degres."""
 
@@ -549,6 +698,7 @@ class AstrologyRuntimeReference:
     reference_version_id: int
     reference_version: str
     planets: PlanetReferenceSet
+    planet_natures: PlanetNatureReferenceSet
     signs: SignReferenceSet
     aspects: AspectReferenceSet
     houses: HouseReferenceSet
@@ -558,6 +708,7 @@ class AstrologyRuntimeReference:
     condition_signal_profiles: tuple[PlanetConditionSignalProfileReferenceData, ...]
     dominance_factor_types: tuple[DominanceFactorTypeReferenceData, ...]
     dominance_reference: DominanceReferenceSet
+    advanced_condition_reference: AdvancedConditionReferenceSet
     angle_points: AnglePointReferenceSet
     astral_points: AstralPointReferenceSet
     house_systems: HouseSystemReferenceSet

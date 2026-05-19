@@ -292,6 +292,83 @@ def test_planet_dominance_domain_does_not_cross_runtime_boundaries() -> None:
     assert hits == []
 
 
+def test_advanced_condition_domain_does_not_cross_runtime_boundaries() -> None:
+    """Le moteur avance reste pur et sans poids ou vocabulaires locaux."""
+    advanced_root = BACKEND_ROOT / "app/domain/astrology/advanced_conditions"
+    forbidden_patterns = (
+        "Session",
+        "select(",
+        "from app.infra",
+        "from app.services",
+        "from app.api",
+        "from app.domain.prediction",
+        "from app.services.prediction",
+        "ADVANCED_" + "CONDITION_TYPES",
+        "ADVANCED_" + "CONDITION_WEIGHTS",
+        "HAYZ_" + "RULES",
+        "MUTUAL_" + "RECEPTION_RULES",
+        "PLANET_" + "SPEED_THRESHOLDS",
+        "HELIACAL_" + "PHASES",
+        "BENEFIC_" + "PLANETS",
+        "MALEFIC_" + "PLANETS",
+        "AIEngineAdapter",
+        "OpenAI",
+        "chat.completions",
+        "prompt",
+        "narration",
+        "micro_note",
+    )
+    hits: list[str] = []
+    for path in advanced_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for pattern in forbidden_patterns:
+            if pattern in text:
+                hits.append(f"{path}:{pattern}")
+
+    assert hits == []
+
+
+def test_advanced_condition_domain_does_not_recreate_planet_nature_sets() -> None:
+    """Les natures benefique/malefique doivent venir du runtime DB-backed."""
+    advanced_root = BACKEND_ROOT / "app/domain/astrology/advanced_conditions"
+    forbidden_sets = {
+        frozenset({"venus", "jupiter"}),
+        frozenset({"mars", "saturn"}),
+    }
+    hits: list[str] = []
+    for path in advanced_root.rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.Set, ast.Tuple, ast.List)):
+                continue
+            values = {
+                element.value
+                for element in node.elts
+                if isinstance(element, ast.Constant) and isinstance(element.value, str)
+            }
+            if frozenset(values) in forbidden_sets:
+                hits.append(f"{path}:{sorted(values)}")
+
+    assert hits == []
+
+
+def test_advanced_conditions_are_projected_from_natal_result_only() -> None:
+    """Le serialiseur public ne recalcule pas les conditions avancees."""
+    tree = ast.parse(_source("app/services/chart/json_builder.py"))
+    serializer = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_serialize_advanced_conditions"
+    )
+    calls = [
+        ast.unparse(node.func)
+        for node in ast.walk(serializer)
+        if isinstance(node, ast.Call) and not isinstance(node.func, ast.Name)
+    ]
+
+    assert "AdvancedConditionEngine" not in "".join(calls)
+
+
 def test_dominant_planets_are_projected_from_natal_result_only() -> None:
     """Le serialiseur public ne recalcule pas les planetes dominantes."""
     tree = ast.parse(_source("app/services/chart/json_builder.py"))

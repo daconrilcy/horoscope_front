@@ -18,6 +18,9 @@ from app.infra.db.models import (
     AstralAccidentalDignityRuleModel,
     AstralAccidentalDignityScoreWeightModel,
     AstralAccidentalDignityTypeModel,
+    AstralAdvancedConditionScoreProfileModel,
+    AstralAdvancedConditionTypeModel,
+    AstralAdvancedConditionWeightModel,
     AstralConditionOperatorModel,
     AstralDecanSystemCodeModel,
     AstralDiginityScoreProfileModel,
@@ -186,6 +189,20 @@ def _reference_maps(db: Session) -> dict[str, dict[int, int]]:
             "astral_house_modalities.json",
             "name",
             "name",
+        ),
+        "aspect_from_planet_nature_id": _load_source_id_map(
+            db,
+            AstralPlanetNatureModel,
+            "astral_planet_natures.json",
+            "code",
+            "code",
+        ),
+        "bounding_planet_nature_id": _load_source_id_map(
+            db,
+            AstralPlanetNatureModel,
+            "astral_planet_natures.json",
+            "code",
+            "code",
         ),
     }
 
@@ -407,6 +424,118 @@ def _sync_dominance_score_weights(db: Session, reference_version_id: int) -> Non
     db.flush()
 
 
+def _clear_advanced_condition_scoring(db: Session, reference_version_id: int) -> None:
+    """Supprime les poids et profils avances avant remplacement versionne."""
+    profile_ids = [
+        int(row.id)
+        for row in db.scalars(
+            select(AstralAdvancedConditionScoreProfileModel).where(
+                AstralAdvancedConditionScoreProfileModel.reference_version_id
+                == reference_version_id
+            )
+        ).all()
+    ]
+    if profile_ids:
+        db.execute(
+            delete(AstralAdvancedConditionWeightModel).where(
+                AstralAdvancedConditionWeightModel.score_profile_id.in_(profile_ids)
+            )
+        )
+        db.execute(
+            delete(AstralAdvancedConditionScoreProfileModel).where(
+                AstralAdvancedConditionScoreProfileModel.id.in_(profile_ids)
+            )
+        )
+    db.execute(
+        delete(AstralAdvancedConditionTypeModel).where(
+            AstralAdvancedConditionTypeModel.reference_version_id == reference_version_id
+        )
+    )
+    db.flush()
+
+
+def _sync_advanced_condition_types(db: Session, reference_version_id: int) -> None:
+    """Synchronise les types parents de conditions avancees."""
+    rows = []
+    for row in _load_rows("astral_advanced_condition_types.json"):
+        rows.append(
+            {
+                "code": row["code"],
+                "label": row["label"],
+                "category": row["category"],
+                "functional_effect": row["functional_effect"],
+                "expression_effect": row["expression_effect"],
+                "intensity_effect": row["intensity_effect"],
+                "visibility_effect": row["visibility_effect"],
+                "default_weight": row["default_weight"],
+                "sort_order": row["sort_order"],
+                "is_active": row["is_active"],
+            }
+        )
+    _replace_versioned_rows(db, AstralAdvancedConditionTypeModel, reference_version_id, rows)
+
+
+def _sync_advanced_condition_score_profiles(db: Session, reference_version_id: int) -> None:
+    """Synchronise les profils de scoring des conditions avancees."""
+    rows = []
+    for row in _load_rows("astral_advanced_condition_score_profiles.json"):
+        rows.append(
+            {
+                "code": row["code"],
+                "label": row["label"],
+                "tradition_code": row["tradition_code"],
+                "description": row["description"],
+                "reference_version_code": row["reference_version_code"],
+                "is_active": row["is_active"],
+            }
+        )
+    _replace_versioned_rows(
+        db,
+        AstralAdvancedConditionScoreProfileModel,
+        reference_version_id,
+        rows,
+    )
+
+
+def _sync_advanced_condition_weights(db: Session, reference_version_id: int) -> None:
+    """Synchronise les poids de conditions avancees par profil et type."""
+    profile_ids = {
+        row.code: int(row.id)
+        for row in db.scalars(
+            select(AstralAdvancedConditionScoreProfileModel).where(
+                AstralAdvancedConditionScoreProfileModel.reference_version_id
+                == reference_version_id
+            )
+        ).all()
+    }
+    type_ids = {
+        row.code: int(row.id)
+        for row in db.scalars(
+            select(AstralAdvancedConditionTypeModel).where(
+                AstralAdvancedConditionTypeModel.reference_version_id == reference_version_id
+            )
+        ).all()
+    }
+    for row in _load_rows("astral_advanced_condition_weights.json"):
+        db.add(
+            AstralAdvancedConditionWeightModel(
+                score_profile_id=profile_ids[str(row["score_profile_code"])],
+                condition_type_id=type_ids[str(row["condition_type_code"])],
+                functional_strength_weight=row["functional_strength_weight"],
+                visibility_weight=row["visibility_weight"],
+                stability_weight=row["stability_weight"],
+                intensity_weight=row["intensity_weight"],
+                coherence_weight=row["coherence_weight"],
+                support_weight=row["support_weight"],
+                constraint_weight=row["constraint_weight"],
+                ranking_weight=row["ranking_weight"],
+                uses_default_weight=row["uses_default_weight"],
+                notes=row["notes"],
+            )
+        )
+    db.flush()
+
+
 def _sync_accidental_rules(
     db: Session,
     reference_version_id: int,
@@ -422,6 +551,8 @@ def _sync_accidental_rules(
             "house_id",
             "aspect_id",
             "house_modality_id",
+            "aspect_from_planet_nature_id",
+            "bounding_planet_nature_id",
         )
     }
     for row in _load_rows("astral_accidental_dignity_rules.json"):
@@ -445,5 +576,9 @@ def sync_astral_dignity_seed_data(db: Session, reference_version_id: int) -> Non
     _sync_dominance_factor_types(db, reference_version_id)
     _sync_dominance_score_profiles(db, reference_version_id)
     _sync_dominance_score_weights(db, reference_version_id)
+    _clear_advanced_condition_scoring(db, reference_version_id)
+    _sync_advanced_condition_types(db, reference_version_id)
+    _sync_advanced_condition_score_profiles(db, reference_version_id)
+    _sync_advanced_condition_weights(db, reference_version_id)
     _sync_accidental_rules(db, reference_version_id, maps)
     db.flush()

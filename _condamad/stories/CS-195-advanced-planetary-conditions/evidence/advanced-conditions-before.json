@@ -1,0 +1,31 @@
+{
+  "fixture": {
+    "birth_date": "1990-06-15",
+    "birth_time": "10:30",
+    "birth_place": "Paris",
+    "house_system": "equal"
+  },
+  "reference_version": "test",
+  "ruleset_version": "test",
+  "existing_top_level_fields_sample": [
+    "reference_version",
+    "ruleset_version",
+    "house_system",
+    "engine",
+    "zodiac",
+    "frame",
+    "ayanamsa",
+    "altitude_m",
+    "ephemeris_path_version",
+    "ephemeris_path_hash",
+    "time_scale",
+    "aspect_school"
+  ],
+  "planet_positions_count": 10,
+  "houses_count": 12,
+  "aspects_count": 2,
+  "condition_profiles_count": 10,
+  "dominant_planets_count": 7,
+  "advanced_conditions": "absent before CS-195",
+  "authorized_change": "CS-195 adds NatalResult.advanced_conditions and public JSON advanced_conditions"
+}

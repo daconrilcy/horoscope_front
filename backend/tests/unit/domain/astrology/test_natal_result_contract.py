@@ -3,8 +3,9 @@
 import pytest
 from pydantic import ValidationError
 
-from app.domain.astrology.natal_calculation import NatalResult
-from app.domain.astrology.natal_preparation import BirthPreparedData
+from app.domain.astrology.natal_calculation import NatalResult, build_natal_result
+from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 
 
 def test_natal_result_rejects_untyped_planet_payloads() -> None:
@@ -51,4 +52,31 @@ def test_natal_result_exposes_condition_collections() -> None:
     assert result.dignities == []
     assert result.condition_profiles == []
     assert result.condition_signals == []
+    assert result.advanced_conditions == []
     assert result.dominant_planets is None
+
+
+def test_natal_pipeline_emits_runtime_advanced_conditions() -> None:
+    """Le pipeline natal reel expose des conditions avancees sans fixtures synthetiques."""
+    result = build_natal_result(
+        birth_input=BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        ),
+        runtime_reference=complete_reference(),
+        ruleset_version="test",
+        house_system="equal",
+    )
+
+    emitted = {condition.condition_code for condition in result.advanced_conditions}
+
+    assert "heliacal_setting" in emitted
+    assert {"bonification", "maltreatment"} & emitted
+    assert result.condition_profiles
+    assert any(
+        item.dignity_family == "advanced"
+        for profile in result.condition_profiles
+        for item in profile.breakdown
+    )

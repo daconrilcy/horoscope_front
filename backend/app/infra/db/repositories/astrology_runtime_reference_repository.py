@@ -21,6 +21,9 @@ from app.infra.db.models.dignity_reference import (
     AstralAccidentalDignityRuleModel,
     AstralAccidentalDignityScoreWeightModel,
     AstralAccidentalDignityTypeModel,
+    AstralAdvancedConditionScoreProfileModel,
+    AstralAdvancedConditionTypeModel,
+    AstralAdvancedConditionWeightModel,
     AstralConditionOperatorModel,
     AstralDecanSystemCodeModel,
     AstralDominanceFactorTypeModel,
@@ -111,6 +114,23 @@ class AstrologyRuntimeReferenceRepository:
             "aspect_centrality",
         }
     )
+    _REQUIRED_ADVANCED_PARENT_CODES = frozenset(
+        {
+            "mutual_reception",
+            "hayz",
+            "out_of_sect",
+            "stationary",
+            "besiegement",
+            "bonification",
+            "maltreatment",
+            "fast_motion",
+            "slow_motion",
+            "heliacal_rising",
+            "heliacal_setting",
+            "oriental",
+            "occidental",
+        }
+    )
 
     def __init__(
         self,
@@ -147,6 +167,12 @@ class AstrologyRuntimeReferenceRepository:
                 dominance_factor_types=self._load_dominance_factor_types(version_model.id),
                 dominance_score_profiles=self._load_dominance_score_profiles(version_model.id),
                 dominance_score_weights=self._load_dominance_score_weights(version_model.id),
+                advanced_condition_types=self._load_advanced_condition_types(version_model.id),
+                advanced_condition_score_profiles=self._load_advanced_condition_score_profiles(
+                    version_model.id
+                ),
+                advanced_condition_weights=self._load_advanced_condition_weights(version_model.id),
+                planet_natures=self._load_planet_natures(),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
                 astral_points=self._load_astral_point_payload(),
@@ -192,6 +218,21 @@ class AstrologyRuntimeReferenceRepository:
         return {
             row.code: {"body_class": row.body_class, "is_luminary": row.is_luminary} for row in rows
         }
+
+    def _load_planet_natures(self) -> tuple[dict[str, object], ...]:
+        """Charge les natures planetaires traditionnelles DB-backed."""
+        rows = self.db.scalars(
+            select(AstralPlanetNatureModel).order_by(AstralPlanetNatureModel.sort_order)
+        ).all()
+        return tuple(
+            {
+                "code": row.code,
+                "label": row.label,
+                "planet_codes": tuple(row.planet_codes_json or ()),
+                "sort_order": row.sort_order,
+            }
+            for row in rows
+        )
 
     def _load_sign_profiles(self) -> tuple[dict[str, object], ...]:
         """Charge les signes avec profils structurels sans modifier le payload public."""
@@ -390,6 +431,97 @@ class AstrologyRuntimeReferenceRepository:
             .order_by(
                 AstralDominanceScoreProfileModel.code,
                 AstralDominanceFactorTypeModel.sort_order,
+            )
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_advanced_condition_types(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les types actifs de conditions avancees."""
+        rows = self.db.execute(
+            select(
+                AstralAdvancedConditionTypeModel.code,
+                AstralAdvancedConditionTypeModel.label,
+                AstralAdvancedConditionTypeModel.category,
+                AstralAdvancedConditionTypeModel.functional_effect,
+                AstralAdvancedConditionTypeModel.expression_effect,
+                AstralAdvancedConditionTypeModel.intensity_effect,
+                AstralAdvancedConditionTypeModel.visibility_effect,
+                AstralAdvancedConditionTypeModel.default_weight,
+                AstralAdvancedConditionTypeModel.sort_order,
+                AstralAdvancedConditionTypeModel.is_active,
+                ReferenceVersionModel.version.label("reference_version"),
+            )
+            .join(
+                ReferenceVersionModel,
+                AstralAdvancedConditionTypeModel.reference_version_id == ReferenceVersionModel.id,
+            )
+            .where(AstralAdvancedConditionTypeModel.reference_version_id == reference_version_id)
+            .where(AstralAdvancedConditionTypeModel.is_active.is_(True))
+            .order_by(AstralAdvancedConditionTypeModel.sort_order)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_advanced_condition_score_profiles(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les profils actifs de scoring avance."""
+        rows = self.db.execute(
+            select(
+                AstralAdvancedConditionScoreProfileModel.code,
+                AstralAdvancedConditionScoreProfileModel.label,
+                AstralAdvancedConditionScoreProfileModel.tradition_code,
+                AstralAdvancedConditionScoreProfileModel.description,
+                AstralAdvancedConditionScoreProfileModel.reference_version_code,
+                AstralAdvancedConditionScoreProfileModel.is_active,
+            )
+            .where(
+                AstralAdvancedConditionScoreProfileModel.reference_version_id
+                == reference_version_id
+            )
+            .where(AstralAdvancedConditionScoreProfileModel.is_active.is_(True))
+            .order_by(AstralAdvancedConditionScoreProfileModel.code)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_advanced_condition_weights(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les poids des conditions avancees par profil et type."""
+        rows = self.db.execute(
+            select(
+                AstralAdvancedConditionScoreProfileModel.code.label("score_profile_code"),
+                AstralAdvancedConditionTypeModel.code.label("condition_type_code"),
+                AstralAdvancedConditionWeightModel.functional_strength_weight,
+                AstralAdvancedConditionWeightModel.visibility_weight,
+                AstralAdvancedConditionWeightModel.stability_weight,
+                AstralAdvancedConditionWeightModel.intensity_weight,
+                AstralAdvancedConditionWeightModel.coherence_weight,
+                AstralAdvancedConditionWeightModel.support_weight,
+                AstralAdvancedConditionWeightModel.constraint_weight,
+                AstralAdvancedConditionWeightModel.ranking_weight,
+                AstralAdvancedConditionWeightModel.uses_default_weight,
+                AstralAdvancedConditionWeightModel.notes,
+            )
+            .join(
+                AstralAdvancedConditionScoreProfileModel,
+                AstralAdvancedConditionWeightModel.score_profile_id
+                == AstralAdvancedConditionScoreProfileModel.id,
+            )
+            .join(
+                AstralAdvancedConditionTypeModel,
+                AstralAdvancedConditionWeightModel.condition_type_id
+                == AstralAdvancedConditionTypeModel.id,
+            )
+            .where(
+                AstralAdvancedConditionScoreProfileModel.reference_version_id
+                == reference_version_id
+            )
+            .where(AstralAdvancedConditionTypeModel.reference_version_id == reference_version_id)
+            .order_by(
+                AstralAdvancedConditionScoreProfileModel.code,
+                AstralAdvancedConditionTypeModel.sort_order,
             )
         ).all()
         return tuple(dict(row._mapping) for row in rows)
@@ -887,6 +1019,7 @@ class AstrologyRuntimeReferenceRepository:
         for axis in reference.house_axes:
             if axis.house_number not in house_numbers or axis.opposite_house not in house_numbers:
                 self._raise_integrity("house_axes", "orphan_house")
+        self._validate_advanced_condition_reference(reference)
 
     def _validate_sign_profiles(self, reference: AstrologyRuntimeReference) -> None:
         """Verifie que chaque signe porte un profil structurel DB-backed."""
@@ -928,6 +1061,34 @@ class AstrologyRuntimeReferenceRepository:
         ):
             if not rows:
                 self._raise_integrity("dignity_reference", f"missing_{field}")
+
+    def _validate_advanced_condition_reference(self, reference: AstrologyRuntimeReference) -> None:
+        """Verifie que les referentiels avances couvrent le contrat V1."""
+        advanced = reference.advanced_condition_reference
+        condition_type_codes = {item.code for item in advanced.condition_types}
+        if condition_type_codes != self._REQUIRED_ADVANCED_PARENT_CODES:
+            missing = self._REQUIRED_ADVANCED_PARENT_CODES - condition_type_codes
+            extra = condition_type_codes - self._REQUIRED_ADVANCED_PARENT_CODES
+            reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
+            self._raise_integrity("advanced_condition_types", reason)
+        if not advanced.score_profiles:
+            self._raise_integrity("advanced_condition_score_profiles", "missing")
+        try:
+            default_profile = advanced.default_score_profile
+        except ValueError:
+            self._raise_integrity("advanced_condition_score_profiles", "missing_active")
+        if default_profile.code != "traditional_advanced_v1":
+            self._raise_integrity(
+                "advanced_condition_score_profiles",
+                "missing_traditional_advanced_v1",
+            )
+        weights = advanced.weights_for_profile(default_profile.code)
+        weight_type_codes = {item.condition_type_code for item in weights}
+        if weight_type_codes != self._REQUIRED_ADVANCED_PARENT_CODES:
+            missing = self._REQUIRED_ADVANCED_PARENT_CODES - weight_type_codes
+            extra = weight_type_codes - self._REQUIRED_ADVANCED_PARENT_CODES
+            reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
+            self._raise_integrity("advanced_condition_weights", reason)
 
     def _reject_unknown_codes(self, *groups: tuple[str, set[str]]) -> None:
         """Refuse les sentinelles `unknown` dans les codes runtime canoniques."""

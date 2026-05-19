@@ -79,6 +79,8 @@ class PlanetDignityScoringService:
             dignity_reference=runtime_reference.dignity_reference,
             score_profile=score_profile,
             tradition=tradition,
+            sect=sect,
+            signs=runtime_reference.signs,
         )
         essential_weights = self._weight_index(
             runtime_reference.dignity_reference.essential_weights[score_profile]

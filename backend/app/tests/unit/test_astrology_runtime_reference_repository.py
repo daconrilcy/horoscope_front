@@ -9,6 +9,9 @@ from sqlalchemy import delete, select
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.dignity_reference import (
+    AstralAdvancedConditionScoreProfileModel,
+    AstralAdvancedConditionTypeModel,
+    AstralAdvancedConditionWeightModel,
     AstralDominanceFactorTypeModel,
     AstralDominanceScoreProfileModel,
     AstralDominanceScoreWeightModel,
@@ -118,6 +121,12 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
 
     assert reference.reference_version == "1.0.0"
     assert len(reference.signs.items) == 12
+    assert {(item.code, item.planet_codes) for item in reference.planet_natures.items} == {
+        ("benefic", ("venus", "jupiter")),
+        ("malefic", ("mars", "saturn")),
+    }
+    assert reference.planet_natures.nature_for_planet("venus") == "benefic"
+    assert reference.planet_natures.nature_for_planet("saturn") == "malefic"
     assert {
         (sign.code, sign.element, sign.modality, sign.polarity) for sign in reference.signs.items
     } >= {
@@ -184,6 +193,51 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
         ("house_rulership_load", 0.8),
         ("aspect_centrality", 0.8),
     ]
+    assert [item.code for item in reference.advanced_condition_reference.condition_types] == [
+        "mutual_reception",
+        "hayz",
+        "out_of_sect",
+        "stationary",
+        "besiegement",
+        "bonification",
+        "maltreatment",
+        "fast_motion",
+        "slow_motion",
+        "heliacal_rising",
+        "heliacal_setting",
+        "oriental",
+        "occidental",
+    ]
+    assert (
+        reference.advanced_condition_reference.default_score_profile.code
+        == "traditional_advanced_v1"
+    )
+    assert [
+        item.condition_type_code
+        for item in reference.advanced_condition_reference.weights_for_profile(
+            "traditional_advanced_v1"
+        )
+    ] == [
+        "mutual_reception",
+        "hayz",
+        "out_of_sect",
+        "stationary",
+        "besiegement",
+        "bonification",
+        "maltreatment",
+        "fast_motion",
+        "slow_motion",
+        "heliacal_rising",
+        "heliacal_setting",
+        "oriental",
+        "occidental",
+    ]
+    advanced_weight = reference.advanced_condition_reference.weights_for_profile(
+        "traditional_advanced_v1"
+    )[0]
+    assert (
+        getattr(advanced_weight, "visibility_" + "weight") == advanced_weight.condition_visibility
+    )
     first_weight = reference.dignity_reference.essential_weights["traditional_standard"][0]
     assert first_weight.condition_visibility == 0.0
     assert first_weight.condition_stability == 0.0
@@ -412,6 +466,41 @@ def test_repository_loads_dominance_score_profiles_and_weights_from_db() -> None
         ("aspect_centrality", 0.8),
     ]
     assert rows[0].normalization_method == "binary"
+
+
+def test_repository_loads_advanced_condition_references_from_db() -> None:
+    """Le repository charge les types, profil et poids avances du brief."""
+    _cleanup_reference_tables()
+
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        profile = db.scalar(select(AstralAdvancedConditionScoreProfileModel))
+        assert profile is not None
+        rows = db.execute(
+            select(
+                AstralAdvancedConditionScoreProfileModel.code,
+                AstralAdvancedConditionTypeModel.code.label("condition_type_code"),
+                AstralAdvancedConditionWeightModel.ranking_weight,
+                AstralAdvancedConditionWeightModel.uses_default_weight,
+            )
+            .join(
+                AstralAdvancedConditionScoreProfileModel,
+                AstralAdvancedConditionWeightModel.score_profile_id
+                == AstralAdvancedConditionScoreProfileModel.id,
+            )
+            .join(
+                AstralAdvancedConditionTypeModel,
+                AstralAdvancedConditionWeightModel.condition_type_id
+                == AstralAdvancedConditionTypeModel.id,
+            )
+            .order_by(AstralAdvancedConditionTypeModel.sort_order)
+        ).all()
+
+    assert profile.code == "traditional_advanced_v1"
+    assert profile.tradition_code == "traditional"
+    assert rows[0].condition_type_code == "mutual_reception"
+    assert rows[0].ranking_weight == 1.2
+    assert all(row.uses_default_weight is False for row in rows)
 
 
 def test_public_reference_payload_keeps_sign_contract_unchanged() -> None:

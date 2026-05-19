@@ -25,10 +25,10 @@ rester factuel, deterministe, explicable, versionne et sans narration.
 - Required precondition before implementation:
   - `_condamad/stories/story-status.md` marks `CS-192`, `CS-193` and `CS-194` as `done`;
   - `backend/app/domain/astrology/natal_calculation.py::NatalResult` exposes
-    `condition_profiles`, `condition_signals` and `planet_dominance`;
+    `condition_profiles`, `condition_signals` and `dominant_planets`;
   - `backend/app/services/chart/json_builder.py` projects
     `planet_condition_profiles`, `planet_condition_signals` and
-    `planet_dominance` from `NatalResult`.
+    `dominant_planets` from `NatalResult`.
 - If any precondition is missing:
   - stop before editing application code;
   - record the blocker in
@@ -97,7 +97,7 @@ This story belongs to exactly one domain:
   - `PlanetDominanceEngine` peut prendre en compte les impacts avances via
     `ranking_weight`;
   - les champs existants `dignities`, `planet_condition_profiles`,
-    `planet_condition_signals`, `planet_dominance`, maisons, signes, aspects et
+    `planet_condition_signals`, `dominant_planets`, maisons, signes, aspects et
     points astraux ne doivent pas changer hors ajouts documentes;
   - aucune route, methode HTTP ou status code n'est ajoute.
 - Deletion allowed: no
@@ -111,7 +111,7 @@ This story belongs to exactly one domain:
   - prouver que les impacts d'axes viennent des poids runtime ou des valeurs
     par defaut des types, pas de constantes locales;
   - prouver que les calculateurs sont purs et sans dependance DB/API/services;
-  - prouver que le serializer projette `NatalResult.advanced_conditions` sans calcul.
+  - prouver que le serialiseur projette `NatalResult.advanced_conditions` sans calcul.
 
 ## 4a. Required Contracts
 
@@ -126,7 +126,7 @@ scope.
 | Allowlist Exception | no | aucune exception, alias, fallback ou shim n'est autorise. |
 | Contract Shape | yes | `AdvancedPlanetaryCondition`, `NatalResult.advanced_conditions` et le JSON `advanced_conditions` ont une forme explicite. |
 | Batch Migration | no | aucune migration par lots de consommateurs existants n'est effectuee. |
-| Reintroduction Guard | yes | les imports DB/API/services, seuils locaux, narration et recalculs serializer doivent etre bloques. |
+| Reintroduction Guard | yes | les imports DB/API/services, seuils locaux, narration et recalculs du serialiseur doivent etre bloques. |
 | Persistent Evidence | yes | les snapshots, rapports runtime et rapports de garde doivent rester dans le dossier de story. |
 
 ## 4b. Runtime Source of Truth
@@ -149,10 +149,10 @@ scope.
 
 ### 4b.1 Advanced Condition Type Seed Contract
 
-`astral_advanced_condition_types` must seed at least these active v1 rows for
-the default reference version. The dev agent may add rows only for mandatory V1
-conditions listed in this story, with the same structural columns and no
-narrative text.
+`astral_advanced_condition_types` must seed exactly these active parent v1 rows
+for the default reference version. Emitted subtypes listed below must map to
+these parent rows through `condition_type_code`; the dev agent must not add
+extra active type rows for subtypes unless the story is explicitly amended.
 
 | code | label | category | functional_effect | expression_effect | intensity_effect | visibility_effect | default_weight | sort_order | is_active |
 |---|---|---|---|---|---|---|---:|---:|---:|
@@ -160,7 +160,7 @@ narrative text.
 | `hayz` | Hayz | sect | supporting | stabilizing | moderate | moderate | 1.10 | 20 | true |
 | `out_of_sect` | Out of sect | sect | weakening | destabilizing | contextual | neutral | -1.00 | 30 | true |
 | `stationary` | Stationary | motion | intensifying | focusing | high | moderate | 1.00 | 40 | true |
-| `besieged` | Besieged | aspect_condition | constraining | pressured | high | neutral | -1.30 | 50 | true |
+| `besiegement` | Besiegement | aspect_condition | constraining | pressured | high | neutral | -1.30 | 50 | true |
 | `bonification` | Bonification | aspect_condition | supporting | stabilizing | moderate | neutral | 1.00 | 60 | true |
 | `maltreatment` | Maltreatment | aspect_condition | constraining | destabilizing | high | neutral | -1.20 | 70 | true |
 | `fast_motion` | Fast motion | motion | supporting | mobilizing | moderate | neutral | 0.70 | 80 | true |
@@ -190,10 +190,16 @@ Mandatory V1 condition codes emitted by the engine:
 
 Canonical mapping rule:
 
-- emitted subtype codes such as `stationary_direct` and
-  `mutual_reception_by_domicile` must reference a parent runtime type through a
-  deterministic field or mapping in the advanced condition contract; they must
-  not create hidden local type vocabularies.
+- emitted subtype codes such as `stationary_direct`,
+  `stationary_retrograde`, `mutual_reception_by_domicile` and
+  `mutual_reception_by_exaltation` must reference a parent runtime type through
+  the explicit `condition_type_code` field of `AdvancedPlanetaryCondition`; they
+  must not create hidden local type vocabularies.
+- emitted codes that already match an active runtime type, such as
+  `besiegement`, `bonification`, `maltreatment`, `fast_motion`,
+  `slow_motion`, `heliacal_rising`, `heliacal_setting`, `hayz`,
+  `out_of_sect`, `oriental` and `occidental`, must set
+  `condition_type_code` to the same value as `condition_code`.
 
 ### 4b.2 Advanced Condition Score Profile Seed Contract
 
@@ -205,10 +211,11 @@ Canonical mapping rule:
 
 ### 4b.3 Advanced Condition Weight Contract
 
-`astral_advanced_condition_weights` must expose one row per active condition
-type used by the default profile. Missing rows may use
+`astral_advanced_condition_weights` must expose one row per active parent
+condition type used by the default profile. Missing rows may use
 `astral_advanced_condition_types.default_weight` only when the runtime contract
-records the fallback explicitly as `uses_default_weight=true`.
+records that fallback explicitly as `uses_default_weight=true` on the mapped
+runtime weight.
 
 Required weight axes:
 
@@ -242,7 +249,7 @@ Required weight axes:
 | Contrats runtime des conditions avancees | `backend/app/domain/astrology/runtime/runtime_reference.py` | `backend/app/services/**` |
 | Calculateurs purs de conditions avancees | `backend/app/domain/astrology/advanced_conditions/**` | `backend/app/infra/**`, `backend/app/api/**`, `backend/app/services/**` |
 | Enrichissement des profils conditionnels | `backend/app/domain/astrology/condition/**` ou orchestrateur natal apres calcul avance | `backend/app/services/chart/**` |
-| Integration dominance via score deja calcule | `backend/app/domain/astrology/dominance/**` | `backend/app/services/chart/**`, serializer |
+| Integration dominance via score deja calcule | `backend/app/domain/astrology/dominance/**` | `backend/app/services/chart/**`, serialiseur |
 | Integration du resultat natal | `backend/app/domain/astrology/natal_calculation.py` | routeurs API |
 | Projection JSON publique | `backend/app/services/chart/json_builder.py` | calculateurs domaine |
 
@@ -339,7 +346,7 @@ Required forbidden examples:
 - imports ou symboles `AIEngineAdapter`, `OpenAI`, `prompt`, `narration`,
   `micro_note`, `app.domain.prediction`, `app.services.prediction`
 - calcul de `advanced_conditions` dans `json_builder.py`
-- calcul de dominance avancee dans le serializer au lieu de
+- calcul de dominance avancee dans le serialiseur au lieu de
   `PlanetDominanceEngine`
 
 Guard evidence:
@@ -347,7 +354,7 @@ Guard evidence:
 - Evidence profile: `reintroduction_guard`;
   `backend/app/tests/unit/test_astrology_runtime_reference_guard.py` ou un test
   de garde voisin verifie les imports, poids locaux, symboles interdits et
-  projection serializer.
+  projection du serialiseur.
 
 ## 4j. Source Finding Closure
 
@@ -368,10 +375,10 @@ The current codebase or audit indicates:
   et les facteurs de dominance, mais pas les referentiels de conditions avancees.
 - Evidence 4: `backend/app/domain/astrology/natal_calculation.py` -
   `NatalResult` integre deja `dignities`, `condition_profiles`,
-  `condition_signals` et `planet_dominance`.
+  `condition_signals` et `dominant_planets`.
 - Evidence 5: `backend/app/services/chart/json_builder.py` - le JSON public
   projette deja `planet_condition_profiles`, `planet_condition_signals` et
-  `planet_dominance` sans recalculer les moteurs.
+  `dominant_planets` sans recalculer les moteurs.
 - Evidence 6: `backend/app/infra/db/models/dignity_reference.py` - les
   referentiels existants `astral_accidental_dignity_condition_schemas`,
   `astral_condition_operators`, `astral_planet_motion_states`,
@@ -412,7 +419,7 @@ After implementation:
 - `PlanetConditionSignalBuilder` continue de produire les signaux depuis les
   profils conditionnels enrichis et les profils runtime de signaux.
 - `PlanetDominanceEngine` integre les conditions avancees via `ranking_weight`
-  dans le scoring, jamais dans le serializer.
+  dans le scoring, jamais dans le serialiseur.
 - `NatalResult.advanced_conditions` et le JSON public `advanced_conditions`
   exposent une liste structurelle, sans storytelling.
 
@@ -436,7 +443,7 @@ After implementation:
   - tests unitaires des calculateurs avances, tests runtime repository, tests
     payload, tests dominance integration, snapshot avant/apres, scan anti-import
     DB, scan anti-poids local, scan anti-LLM, scan anti-narration et scan
-    anti-recalcul serializer.
+    anti-recalcul serialiseur.
 - Allowed differences:
   - ajout des trois tables de referentiel avance, ajout du runtime associe,
     ajout de `advanced_conditions`, enrichissement des profils/signaux et
@@ -457,7 +464,7 @@ After implementation:
 | AC9 | Les conditions avancees enrichissent les profils sans remplacer l'existant. | pytest: `test_advanced_condition_engine.py`, `test_natal_result_contract.py`. |
 | AC10 | Les signaux consomment les profils enrichis sans recalcul avance. | pytest: `backend/tests/unit/domain/astrology/test_planet_condition_signal_builder.py`. |
 | AC11 | La dominance integre les conditions avancees via `ranking_weight`. | `pytest -q backend/tests/unit/domain/astrology/test_dominance_integration.py`. |
-| AC12 | Le JSON public expose `advanced_conditions` sans calcul serializer. | `pytest -q backend/app/tests/unit/test_chart_json_builder.py` + snapshot evidence. |
+| AC12 | Le JSON public expose `advanced_conditions` sans calcul serialiseur. | `pytest -q backend/app/tests/unit/test_chart_json_builder.py` + snapshot evidence. |
 | AC13 | La garde bloque les dependances interdites des calculateurs avances. | pytest: `backend/app/tests/unit/test_astrology_runtime_reference_guard.py`. |
 | AC14 | Les conditions explicitement reportees ne sont pas implementees ni exposees. | Le `rg` des techniques reportees dans le Validation Plan doit retourner zero hit. |
 | AC15 | Le contrat public reste stable hors ajouts autorises. | `ruff check .` + comparaison des snapshots evidence avant/apres. |
@@ -536,8 +543,9 @@ Forbidden unless explicitly approved:
 
 Specific forbidden symbols / paths:
 
-- `backend/app/domain/astrology/advanced_conditions/**` important `app.infra`,
-  `app.api`, `app.services`, `app.domain.prediction` ou `app.services.prediction`.
+- `backend/app/domain/astrology/advanced_conditions/**` qui importent
+  `app.infra`, `app.api`, `app.services`, `app.domain.prediction` ou
+  `app.services.prediction`.
 - `backend/app/domain/astrology/advanced_conditions/**` contenant `Session`,
   `select(`, `OpenAI`, `AIEngineAdapter`, le mot exact `prompt`, `narration`,
   `micro_note` ou texte editorial de restitution.
@@ -545,10 +553,11 @@ Specific forbidden symbols / paths:
   `MUTUAL_RECEPTION_RULES`, `PLANET_SPEED_THRESHOLDS`, `HELIACAL_PHASES`,
   `BENEFIC_PLANETS`, `MALEFIC_PLANETS` ou mapping equivalent non derive du runtime.
 - `translation_of_light`, `collection_of_light`, `planetary_war`, `antiscia`,
-  `contra_antiscia`, `primary_directions`, `zodiacal_releasing`, `firdaria`,
-  `annual_profections` dans l'implementation runtime.
+  `contra_antiscia`, `contra-antiscia`, `primary_directions`,
+  `primary directions`, `zodiacal_releasing`, `zodiacal releasing`, `firdaria`,
+  `annual_profections` ou `annual profections` dans l'implementation runtime.
 - Recalcul de `advanced_conditions`, `condition_signals` ou
-  `planet_dominance` dans `backend/app/services/chart/json_builder.py`.
+  `dominant_planets` dans `backend/app/services/chart/json_builder.py`.
 
 ## 11. Removal Classification Rules
 
@@ -564,9 +573,9 @@ Specific forbidden symbols / paths:
 |---|---|---|
 | Referentiels de conditions avancees | `backend/app/infra/db/models/**`, `backend/app/infra/db/repositories/**` | `backend/app/domain/**` |
 | Contrats runtime des conditions avancees | `backend/app/domain/astrology/runtime/runtime_reference.py` | `backend/app/services/**`, `backend/app/api/**` |
-| Detection et scoring des conditions avancees | `backend/app/domain/astrology/advanced_conditions/**` | serializers, prediction, prompts LLM |
-| Profil conditionnel enrichi | `backend/app/domain/astrology/condition/**` | serializer, API, UI |
-| Dominance planetaire impactee | `backend/app/domain/astrology/dominance/**` | serializer, API, UI |
+| Detection et scoring des conditions avancees | `backend/app/domain/astrology/advanced_conditions/**` | serialiseurs, prediction, prompts LLM |
+| Profil conditionnel enrichi | `backend/app/domain/astrology/condition/**` | serialiseur, API, UI |
+| Dominance planetaire impactee | `backend/app/domain/astrology/dominance/**` | serialiseur, API, UI |
 | Payload natal objectif | `backend/app/domain/astrology/natal_calculation.py` | routeurs API |
 | Projection JSON publique | `backend/app/services/chart/json_builder.py` | calculateurs domaine |
 
@@ -689,7 +698,7 @@ rg -n "OpenAI|AIEngineAdapter|chat\.completions|\bprompt\b|narration|micro_note"
   backend/app/domain/astrology/advanced_conditions -g "*.py"
 rg -n "ADVANCED_CONDITION_TYPES|ADVANCED_CONDITION_WEIGHTS|HAYZ_RULES|MUTUAL_RECEPTION_RULES|PLANET_SPEED_THRESHOLDS|HELIACAL_PHASES|BENEFIC_PLANETS|MALEFIC_PLANETS" `
   backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"
-rg -n "translation_of_light|collection_of_light|planetary_war|antiscia|contra_antiscia|primary_directions|zodiacal_releasing|firdaria|annual_profections" `
+rg -n "translation[_ ]of[_ ]light|collection[_ ]of[_ ]light|planetary[_ ]war|antiscia|contra[_ -]antiscia|primary[_ ]directions|zodiacal[_ ]releasing|firdaria|annual[_ ]profections" `
   backend/app/domain/astrology/advanced_conditions backend/app/services/chart/json_builder.py -g "*.py"
 rg -n "advanced_conditions|AdvancedCondition|AdvancedPlanetaryCondition" `
   backend/app/services/chart/json_builder.py `
