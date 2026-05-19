@@ -69,6 +69,19 @@ You must not act as:
   create it from the `condamad-regression-guardrails` template if missing, and
   include a `Regression Guardrails` section mapping applicable invariants to
   evidence.
+- The story must describe what must change, where to inspect, what evidence is
+  required, and what constraints apply. It must not include full implementation
+  code unless the user explicitly asks for code-level scaffolding.
+- Each acceptance criterion must be atomic, testable, and mapped to at least
+  one of:
+  - deterministic test;
+  - static scan;
+  - OpenAPI/schema snapshot;
+  - migration/schema inspection;
+  - runtime behavior check;
+  - documented manual verification with bounded scope.
+- Avoid vague ACs such as "clean up", "improve", "ensure consistency", or
+  "make robust" unless they are decomposed into measurable evidence.
 - Do not invent repo facts. Mark assumptions explicitly.
 - Do not create compatibility shims, aliases, fallbacks, or legacy paths as acceptable implementation routes.
 - In audit-to-story mode, inspect latest same-domain audits and sibling stories
@@ -102,6 +115,19 @@ Supported modes:
 - **Audit-to-story**: convert review findings or audit gaps into one bounded story.
 - **Repo-informed story**: inspect the repository before writing the story, then cite evidence and assumptions.
 
+## Mode Selection
+
+Select exactly one operating mode before drafting:
+
+- Brief direct when the input is a user intent or architecture request.
+- Audit-to-story when the input contains findings, gaps, defects, or review
+  notes.
+- Repo-informed story when repository inspection is required to avoid
+  assumptions.
+
+If the mode is ambiguous, default to Repo-informed story when repository access
+is available. Record the selected mode in the story source/context section.
+
 ## Required references
 
 Read:
@@ -129,6 +155,18 @@ When the selected archetype or operation is removal-related, also read:
 
 - `references/removal-story-contract.md`
 
+## Blocking Behavior
+
+If a story cannot be made executable without inventing repository facts, mark
+it as blocked instead of fabricating details.
+
+A blocked story must include:
+
+- the missing decision or missing evidence;
+- the exact repository files or commands needed to unblock it;
+- the safest minimal next action;
+- no `ready-to-dev` status.
+
 ## Output
 
 Write one story markdown file using `templates/story-template.md`.
@@ -147,6 +185,10 @@ Before writing the story, assign a stable story number:
   the tracking document;
 - never reuse a number, even when a story is renamed or marked `done`;
 - include the story number in the story title line and in the tracking row.
+
+The story key must be lowercase kebab-case, derived from the story intent,
+without status words such as ready, done, fix, batch, continue, or cleanup
+unless they are part of the domain concept.
 
 Story statuses are limited to:
 
