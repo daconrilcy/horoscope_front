@@ -1,6 +1,6 @@
 # Story CS-195 advanced-planetary-conditions: Ajouter les conditions planetaires avancees
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -18,6 +18,20 @@ rester factuel, deterministe, explicable, versionne et sans narration.
   conditionnels, CS-193 les signaux conditionnels et CS-194 la dominance; il
   manque maintenant les conditions avancees majeures qui modulent la condition
   reelle d'une planete sans produire d'interpretation.
+
+## 2b. Post-review correction note
+
+- Correction date: 2026-05-19.
+- Brief compliance review found three gaps after initial closure:
+  - aspect conditions had to be detected from configured aspects, runtime
+    planet natures and longitudinal enclosure, not only from synthetic
+    accidental dignity facts;
+  - heliacal phase conditions had to be derived from governed heliacal
+    accidental facts, not from a local half-circle heuristic;
+  - `astral_advanced_condition_types` had to keep the brief-level
+    `description` field for explainable reference data.
+- These corrections are now in scope for final CS-195 closure and are tracked
+  in `generated/11-code-review.md` and `generated/10-final-evidence.md`.
 
 ## 2a. Sequencing / Blocking Dependencies
 

@@ -718,6 +718,7 @@ class AstralAdvancedConditionTypeModel(Base):
     code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     label: Mapped[str] = mapped_column(String(128), nullable=False)
     category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
     functional_effect: Mapped[str] = mapped_column(String(64), nullable=False)
     expression_effect: Mapped[str] = mapped_column(String(64), nullable=False)
     intensity_effect: Mapped[str] = mapped_column(String(64), nullable=False)

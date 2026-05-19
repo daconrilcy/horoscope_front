@@ -463,6 +463,7 @@ def _sync_advanced_condition_types(db: Session, reference_version_id: int) -> No
                 "code": row["code"],
                 "label": row["label"],
                 "category": row["category"],
+                "description": row["description"],
                 "functional_effect": row["functional_effect"],
                 "expression_effect": row["expression_effect"],
                 "intensity_effect": row["intensity_effect"],

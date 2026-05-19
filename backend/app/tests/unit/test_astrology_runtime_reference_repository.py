@@ -209,6 +209,10 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
         "occidental",
     ]
     assert (
+        reference.advanced_condition_reference.condition_types[0].description
+        == "Deux planetes occupent les domiciles ou dignites l'une de l'autre."
+    )
+    assert (
         reference.advanced_condition_reference.default_score_profile.code
         == "traditional_advanced_v1"
     )
@@ -480,6 +484,7 @@ def test_repository_loads_advanced_condition_references_from_db() -> None:
             select(
                 AstralAdvancedConditionScoreProfileModel.code,
                 AstralAdvancedConditionTypeModel.code.label("condition_type_code"),
+                AstralAdvancedConditionTypeModel.description,
                 AstralAdvancedConditionWeightModel.ranking_weight,
                 AstralAdvancedConditionWeightModel.uses_default_weight,
             )
@@ -499,6 +504,9 @@ def test_repository_loads_advanced_condition_references_from_db() -> None:
     assert profile.code == "traditional_advanced_v1"
     assert profile.tradition_code == "traditional"
     assert rows[0].condition_type_code == "mutual_reception"
+    assert (
+        rows[0].description == "Deux planetes occupent les domiciles ou dignites l'une de l'autre."
+    )
     assert rows[0].ranking_weight == 1.2
     assert all(row.uses_default_weight is False for row in rows)
 

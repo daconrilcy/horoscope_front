@@ -270,6 +270,7 @@ class AstrologyRuntimeReferenceMapper:
                         code=str(item["code"]),
                         label=str(item["label"]),
                         category=str(item["category"]),
+                        description=str(item["description"]),
                         functional_effect=str(item["functional_effect"]),
                         expression_effect=str(item["expression_effect"]),
                         intensity_effect=str(item["intensity_effect"]),

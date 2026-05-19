@@ -12,13 +12,14 @@ def position(
     planet_code: str,
     sign_code: str,
     *,
+    longitude: float = 0.0,
     house_number: int = 1,
     is_retrograde: bool = False,
 ) -> PlanetPosition:
     """Construit une position planetaire minimale."""
     return PlanetPosition(
         planet_code=planet_code,
-        longitude=0.0,
+        longitude=longitude,
         sign_code=sign_code,
         house_number=house_number,
         speed_longitude=0.1,
@@ -79,16 +80,18 @@ def profile(planet_code: str) -> PlanetConditionProfile:
     )
 
 
-def aspect(planet_a: str, planet_b: str) -> AspectResult:
+def aspect(
+    planet_a: str, planet_b: str, *, orb_used: float = 1.0, orb_max: float = 8.0
+) -> AspectResult:
     """Construit un aspect majeur minimal."""
     return AspectResult(
         aspect_code="conjunction",
         planet_a=planet_a,
         planet_b=planet_b,
         angle=0.0,
-        orb=1.0,
-        orb_used=1.0,
-        orb_max=8.0,
+        orb=orb_used,
+        orb_used=orb_used,
+        orb_max=orb_max,
         family="major",
         is_major=True,
         is_minor=False,

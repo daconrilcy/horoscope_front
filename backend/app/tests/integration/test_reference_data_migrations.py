@@ -244,6 +244,9 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_dominance_factor_types",
         "astral_dominance_score_profiles",
         "astral_dominance_score_weights",
+        "astral_advanced_condition_types",
+        "astral_advanced_condition_score_profiles",
+        "astral_advanced_condition_weights",
     ):
         assert table_name in head_tables
     assert _columns(head_inspector, "astral_diginity_score_profiles") == {
@@ -433,6 +436,28 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "score_profile_id",
         "factor_type_id",
     ) in _unique_column_sets(head_inspector, "astral_dominance_score_weights")
+    assert _columns(head_inspector, "astral_advanced_condition_types") == {
+        "id",
+        "code",
+        "label",
+        "category",
+        "description",
+        "functional_effect",
+        "expression_effect",
+        "intensity_effect",
+        "visibility_effect",
+        "default_weight",
+        "sort_order",
+        "is_active",
+        "reference_version_id",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_advanced_condition_types") == {
+        ("reference_version_id",): "astral_reference_versions",
+    }
+    assert (
+        "reference_version_id",
+        "code",
+    ) in _unique_column_sets(head_inspector, "astral_advanced_condition_types")
     assert "house_interpretation_profiles" not in head_tables
     assert "astral_sign_rulerships" not in head_tables
     for table_name in (

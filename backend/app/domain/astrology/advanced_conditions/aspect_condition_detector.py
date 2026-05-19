@@ -57,6 +57,7 @@ class AspectConditionDetector:
             conditions.extend(
                 self._conditions_from_aspects(
                     position.planet_code,
+                    positions,
                     aspects,
                     runtime_reference,
                     emit_condition,
@@ -100,6 +101,7 @@ class AspectConditionDetector:
     def _conditions_from_aspects(
         self,
         planet_code: str,
+        positions: Sequence[Any],
         aspects: Sequence[Any],
         runtime_reference: AstrologyRuntimeReference,
         emit_condition,
@@ -107,7 +109,18 @@ class AspectConditionDetector:
     ) -> tuple[AdvancedPlanetaryCondition, ...]:
         """Produit les conditions aspectuelles directement depuis les aspects natals."""
         conditions: list[AdvancedPlanetaryCondition] = []
+        besiegement = self._besiegement_condition(
+            planet_code,
+            positions,
+            runtime_reference,
+            emit_condition,
+            condition_type_codes,
+        )
+        if besiegement is not None:
+            conditions.append(besiegement)
         for aspect in aspects:
+            if not self._aspect_is_configured(aspect):
+                continue
             partner = self._partner(planet_code, aspect)
             if partner is None:
                 continue
@@ -126,6 +139,45 @@ class AspectConditionDetector:
             )
         return tuple(conditions)
 
+    def _besiegement_condition(
+        self,
+        planet_code: str,
+        positions: Sequence[Any],
+        runtime_reference: AstrologyRuntimeReference,
+        emit_condition,
+        condition_type_codes: frozenset[str],
+    ) -> AdvancedPlanetaryCondition | None:
+        """Detecte l'encadrement longitudinal par deux malefiques runtime."""
+        if "besiegement" not in condition_type_codes:
+            return None
+        position = self._position(planet_code, positions)
+        if position is None:
+            return None
+        malefics = tuple(
+            item
+            for item in positions
+            if item.planet_code != planet_code
+            and runtime_reference.planet_natures.nature_for_planet(item.planet_code) == "malefic"
+        )
+        for first_index, first in enumerate(malefics):
+            for second in malefics[first_index + 1 :]:
+                if self._between_short_arc(
+                    position.longitude,
+                    first.longitude,
+                    second.longitude,
+                ):
+                    return emit_condition(
+                        condition_code="besiegement",
+                        condition_type_code="besiegement",
+                        source_planet_code=planet_code,
+                        target_planet_code=f"{first.planet_code},{second.planet_code}",
+                        reason=(
+                            f"{planet_code} is longitudinally enclosed by "
+                            f"{first.planet_code} and {second.planet_code}."
+                        ),
+                    )
+        return None
+
     def _partner(self, planet_code: str, aspect: Any) -> str | None:
         """Retourne l'autre planete d'un aspect si elle existe."""
         if aspect.planet_a == planet_code:
@@ -133,6 +185,31 @@ class AspectConditionDetector:
         if aspect.planet_b == planet_code:
             return aspect.planet_a
         return None
+
+    def _position(self, planet_code: str, positions: Sequence[Any]) -> Any | None:
+        """Retourne une position planetaire par code."""
+        for position in positions:
+            if position.planet_code == planet_code:
+                return position
+        return None
+
+    def _aspect_is_configured(self, aspect: Any) -> bool:
+        """Verifie que l'aspect a deja passe les orbes runtime configurees."""
+        orb_used = getattr(aspect, "orb_used", None)
+        orb_max = getattr(aspect, "orb_max", None)
+        if orb_used is None or orb_max is None:
+            return False
+        return float(orb_used) <= float(orb_max)
+
+    def _between_short_arc(self, target: float, first: float, second: float) -> bool:
+        """Indique si une longitude tombe entre deux bornes sur leur arc court."""
+        direct_arc = (second - first) % 360.0
+        if direct_arc == 0.0:
+            return False
+        if direct_arc <= 180.0:
+            return 0.0 < ((target - first) % 360.0) < direct_arc
+        reverse_arc = 360.0 - direct_arc
+        return 0.0 < ((target - second) % 360.0) < reverse_arc
 
     def _expected_partner_nature(self, dignity_type_code: str) -> str:
         """Derive la nature attendue depuis le code de dignite accidentelle."""

@@ -100,6 +100,16 @@ See `git status --short` for full list. Main implementation areas:
 | RG-122 local-map scan | repo root | PASS | 1 | Zero hits. |
 | RG-122 deferred-technique scan | repo root | PASS | 1 | Zero hits. |
 | `uvicorn app.main:app --host 127.0.0.1 --port 8019` then `GET /docs` | `backend` | PASS | 0 | Local API startup probe returned HTTP 200; process stopped. |
+| `pytest -q backend/tests/unit/domain/astrology/test_besiegement_detector.py backend/tests/unit/domain/astrology/test_heliacal_conditions.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/integration/test_reference_data_migrations.py` | repo root | PASS | 0 | Brief-compliance correction suite: 22 passed, 5 deselected. |
+| `pytest -q backend/tests/unit/domain/astrology/test_mutual_reception_calculator.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_besiegement_detector.py backend/tests/unit/domain/astrology/test_heliacal_conditions.py backend/tests/unit/domain/astrology/test_speed_classifier.py backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/tests/unit/domain/astrology/test_dominance_integration.py backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py backend/app/tests/integration/test_reference_data_migrations.py backend/app/tests/unit/test_dignity_reference_seed.py backend/tests/unit/domain/astrology/test_accidental_dignity_calculator.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py` | repo root | PASS | 0 | Final brief-compliance targeted validation: 78 passed, 5 deselected. |
+| `pytest -q` | repo root | PASS | 0 | Final full suite after brief corrections: 2727 passed, 1 skipped, 1177 deselected. |
+| `ruff format --check .` | repo root | PASS | 0 | 1460 files already formatted. |
+| `ruff check .` | repo root | PASS | 0 | All checks passed. |
+| `git diff --check` | repo root | PASS | 0 | Only line-ending warnings; no whitespace errors. |
+| RG-122 import scan | repo root | PASS | 1 | Zero hits. |
+| RG-122 narration scan | repo root | PASS | 1 | Zero hits. |
+| RG-122 deferred-technique scan | repo root | PASS | 1 | Zero hits. |
+| `uvicorn app.main:app --host 127.0.0.1 --port 8019` then `GET /docs` | `backend` | PASS | 0 | Local API startup probe returned HTTP 200; process stopped. |
 
 ## Review loop
 
@@ -111,6 +121,9 @@ See `git status --short` for full list. Main implementation areas:
   - Public runtime weight contract exposes `visibility_weight`.
   - Payload evidence now compares the same natal fixture before/after the authorized addition.
   - Aspect conditions no longer recreate benefic/malefic planet sets locally; they resolve natures from the DB-backed runtime `PlanetNatureReferenceSet`.
+  - Brief-compliance correction: aspect conditions now use configured natal aspects and longitudinal besiegement from runtime malefics instead of synthetic-only fixtures.
+  - Brief-compliance correction: heliacal phases now derive from governed heliacal accidental facts instead of a local longitude half-circle heuristic.
+  - Brief-compliance correction: `astral_advanced_condition_types.description` is persisted and loaded into the runtime contract.
 - Rejected findings: none.
 
 ## Commands skipped or blocked
@@ -122,6 +135,8 @@ See `git status --short` for full list. Main implementation areas:
 - `advanced_conditions/**` has no DB/API/service/prediction imports.
 - No forbidden advanced local map names remain.
 - Planet nature assignments are loaded from `astral_planet_natures.planet_codes_json` into the typed runtime and guarded against local set reintroduction.
+- Aspect conditions are detected from already configured aspects (`orb_used <= orb_max`) and runtime planet natures; besiegement uses longitudinal enclosure by runtime malefics.
+- Heliacal phase conditions are derived from runtime accidental heliacal facts (`oriental` / `occidental`) rather than local product rules.
 - No serializer-side `AdvancedConditionEngine` call exists.
 - No frontend files were changed.
 

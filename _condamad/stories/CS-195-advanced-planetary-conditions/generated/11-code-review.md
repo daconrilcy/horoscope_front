@@ -34,6 +34,49 @@
 
 ## Findings
 
+### CR-002 High - Aspect conditions were fixture-driven instead of brief-complete
+
+- Bucket: patch
+- Location:
+  `backend/app/domain/astrology/advanced_conditions/aspect_condition_detector.py`
+- Source layer: acceptance / edge / brief compliance
+- Evidence: initial coverage mapped synthetic accidental facts such as
+  `benefic_aspected` and `besieged_by_malefics`; it did not prove
+  configured-aspect bonification/maltreatment or longitudinal besiegement.
+- Impact: the implementation did not fully satisfy the initial brief's
+  requirements for aspects, orbes and encadrement by malefics.
+- Fix: accepted and implemented. The detector now emits bonification and
+  maltreatment only from configured aspects (`orb_used <= orb_max`) and runtime
+  planet natures; besiegement is detected from the short longitudinal arc
+  between runtime malefics.
+
+### CR-003 High - Heliacal phases used a local half-circle heuristic
+
+- Bucket: patch
+- Location:
+  `backend/app/domain/astrology/advanced_conditions/heliacal_condition_calculator.py`
+- Source layer: acceptance / no-legacy / brief compliance
+- Evidence: the calculator inferred `heliacal_rising` or `heliacal_setting`
+  directly from the planet/Sun longitude half-circle.
+- Impact: solar phase conditions were governed by local logic rather than the
+  existing `astral_heliacal_conditions`/accidental dignity runtime facts.
+- Fix: accepted and implemented. Heliacal phases now derive from governed
+  accidental heliacal facts (`oriental` / `occidental`) and no longer perform a
+  local longitude half-circle classification.
+
+### CR-004 Medium - Advanced condition types missed the brief description field
+
+- Bucket: patch
+- Location:
+  `backend/app/infra/db/models/dignity_reference.py`
+- Source layer: acceptance / contract shape
+- Evidence: `astral_advanced_condition_types` omitted `description` although
+  the initial brief included it in the table structure.
+- Impact: advanced condition reference data was less explainable than the
+  brief-level contract.
+- Fix: accepted and implemented. Migration `20260519_0135` adds the column,
+  seed JSON populates it, and the runtime contract exposes it.
+
 ### CR-001 High - Aspect conditions recreated benefic/malefic planet sets locally
 
 - Bucket: patch
@@ -66,6 +109,9 @@
 ## Validation audit
 
 - `pytest -q ...` targeted CS-195 suite: PASS, 77 passed, 5 deselected.
+- `pytest -q ...` brief-compliance correction suite: PASS, 22 passed, 5 deselected.
+- `pytest -q ...` final targeted CS-195 suite after corrections: PASS, 78 passed, 5 deselected.
+- `pytest -q`: PASS, 2727 passed, 1 skipped, 1177 deselected.
 - `pytest -q`: PASS, 2726 passed, 1 skipped, 1177 deselected.
 - `ruff format --check .`: PASS, 1459 files already formatted.
 - `ruff check .`: PASS, all checks passed.

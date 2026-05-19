@@ -444,6 +444,7 @@ class AstrologyRuntimeReferenceRepository:
                 AstralAdvancedConditionTypeModel.code,
                 AstralAdvancedConditionTypeModel.label,
                 AstralAdvancedConditionTypeModel.category,
+                AstralAdvancedConditionTypeModel.description,
                 AstralAdvancedConditionTypeModel.functional_effect,
                 AstralAdvancedConditionTypeModel.expression_effect,
                 AstralAdvancedConditionTypeModel.intensity_effect,

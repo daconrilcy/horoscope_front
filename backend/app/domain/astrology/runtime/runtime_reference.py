@@ -363,6 +363,7 @@ class AdvancedConditionTypeReferenceData:
     code: str
     label: str
     category: str
+    description: str
     functional_effect: str
     expression_effect: str
     intensity_effect: str
@@ -378,6 +379,7 @@ class AdvancedConditionTypeReferenceData:
             "code",
             "label",
             "category",
+            "description",
             "functional_effect",
             "expression_effect",
             "intensity_effect",
