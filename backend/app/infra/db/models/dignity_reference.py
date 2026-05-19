@@ -786,6 +786,92 @@ class AstralAdvancedConditionWeightModel(Base):
     notes: Mapped[str] = mapped_column(Text, nullable=False)
 
 
+class AstralInterpretationThemeModel(Base):
+    """Thème interprétatif versionné activable par les signaux."""
+
+    __tablename__ = "astral_interpretation_themes"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "code",
+            name="uq_astral_interpretation_themes_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(160), nullable=False)
+    category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
+
+
+class AstralInterpretationSignalTypeModel(Base):
+    """Type de signal interprétatif versionné."""
+
+    __tablename__ = "astral_interpretation_signal_types"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "code",
+            name="uq_astral_interpretation_signal_types_scope",
+        ),
+        CheckConstraint(
+            "priority_default_rank > 0",
+            name="ck_astral_interpretation_signal_types_priority_rank",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(160), nullable=False)
+    category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    theme_code: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    priority_default: Mapped[str] = mapped_column(String(32), nullable=False)
+    priority_default_rank: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
+
+
+class AstralInterpretationAdapterRuleModel(Base):
+    """Règle versionnée reliant un fait astrologique à un signal."""
+
+    __tablename__ = "astral_interpretation_adapter_rules"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "code",
+            name="uq_astral_interpretation_adapter_rules_scope",
+        ),
+        CheckConstraint(
+            "weight >= 0",
+            name="ck_astral_interpretation_adapter_rules_weight",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    source_code: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    condition_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    signal_code: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    priority_override: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    priority_override_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    reference_version_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
+
+
 class AstralChartPlanetDignityResultModel(Base):
     """Résultat runtime/audit du calcul de dignité d'une planète."""
 

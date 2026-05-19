@@ -45,6 +45,11 @@ from app.domain.astrology.runtime.runtime_reference import (
     HouseReferenceSet,
     HouseSystemReferenceData,
     HouseSystemReferenceSet,
+    InterpretationAdapterReferenceSet,
+    InterpretationAdapterRuleReferenceData,
+    InterpretationConditionValue,
+    InterpretationSignalTypeReferenceData,
+    InterpretationThemeReferenceData,
     PlanetConditionSignalProfileReferenceData,
     PlanetDignityReferenceSet,
     PlanetNatureReferenceData,
@@ -79,6 +84,9 @@ class AstrologyRuntimeReferenceMapper:
         advanced_condition_types: Sequence[Mapping[str, object]],
         advanced_condition_score_profiles: Sequence[Mapping[str, object]],
         advanced_condition_weights: Sequence[Mapping[str, object]],
+        interpretation_signal_types: Sequence[Mapping[str, object]],
+        interpretation_themes: Sequence[Mapping[str, object]],
+        interpretation_adapter_rules: Sequence[Mapping[str, object]],
         planet_natures: Sequence[Mapping[str, object]],
         planet_definitions: Mapping[str, Mapping[str, object]],
         angle_points: Sequence[Mapping[str, object]],
@@ -309,6 +317,59 @@ class AstrologyRuntimeReferenceMapper:
                         notes=str(item["notes"]),
                     )
                     for item in advanced_condition_weights
+                ),
+            ),
+            interpretation_adapter_reference=InterpretationAdapterReferenceSet(
+                signal_types=tuple(
+                    InterpretationSignalTypeReferenceData(
+                        code=str(item["code"]),
+                        label=str(item["label"]),
+                        category=str(item["category"]),
+                        theme_code=str(item["theme_code"]),
+                        description=str(item["description"]),
+                        priority_default=str(item["priority_default"]),
+                        priority_default_rank=int(item["priority_default_rank"]),
+                        is_active=bool(item["is_active"]),
+                        sort_order=int(item["sort_order"]),
+                        reference_version=str(item["reference_version"]),
+                    )
+                    for item in interpretation_signal_types
+                ),
+                themes=tuple(
+                    InterpretationThemeReferenceData(
+                        code=str(item["code"]),
+                        label=str(item["label"]),
+                        category=str(item["category"]),
+                        description=str(item["description"]),
+                        is_active=bool(item["is_active"]),
+                        reference_version=str(item["reference_version"]),
+                    )
+                    for item in interpretation_themes
+                ),
+                adapter_rules=tuple(
+                    InterpretationAdapterRuleReferenceData(
+                        code=str(item["code"]),
+                        source_type=str(item["source_type"]),
+                        source_code=str(item["source_code"]),
+                        conditions=tuple(
+                            InterpretationConditionValue(
+                                key=str(condition["key"]),
+                                value=self._condition_value(condition.get("value")),
+                            )
+                            for condition in self._nested_items(item, "conditions")
+                        ),
+                        signal_code=str(item["signal_code"]),
+                        priority_override=self._optional_str(item.get("priority_override")),
+                        priority_override_rank=(
+                            None
+                            if item.get("priority_override_rank") is None
+                            else int(item["priority_override_rank"])
+                        ),
+                        weight=float(item["weight"]),
+                        is_active=bool(item["is_active"]),
+                        reference_version_code=str(item["reference_version_code"]),
+                    )
+                    for item in interpretation_adapter_rules
                 ),
             ),
             angle_points=AnglePointReferenceSet(

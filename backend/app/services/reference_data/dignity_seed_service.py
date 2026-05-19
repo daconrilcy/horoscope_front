@@ -39,6 +39,9 @@ from app.infra.db.models import (
     AstralHeliacalConditionModel,
     AstralHorizonPositionModel,
     AstralHouseModalityModel,
+    AstralInterpretationAdapterRuleModel,
+    AstralInterpretationSignalTypeModel,
+    AstralInterpretationThemeModel,
     AstralPlanetConditionSignalProfileModel,
     AstralPlanetMotionStateModel,
     AstralPlanetNatureModel,
@@ -537,6 +540,74 @@ def _sync_advanced_condition_weights(db: Session, reference_version_id: int) -> 
     db.flush()
 
 
+def _clear_interpretation_adapter_reference(db: Session, reference_version_id: int) -> None:
+    """Supprime les lignes d'adaptation interpretative avant remplacement."""
+    for model in (
+        AstralInterpretationAdapterRuleModel,
+        AstralInterpretationSignalTypeModel,
+        AstralInterpretationThemeModel,
+    ):
+        db.execute(delete(model).where(model.reference_version_id == reference_version_id))
+    db.flush()
+
+
+def _sync_interpretation_signal_types(db: Session, reference_version_id: int) -> None:
+    """Synchronise les types de signaux interpretatifs versionnes."""
+    rows = []
+    for row in _load_rows("astral_interpretation_signal_types.json"):
+        rows.append(
+            {
+                "code": row["code"],
+                "label": row["label"],
+                "category": row["category"],
+                "theme_code": row["theme_code"],
+                "description": row["description"],
+                "priority_default": row["priority_default"],
+                "priority_default_rank": row["priority_default_rank"],
+                "is_active": row["is_active"],
+                "sort_order": row["sort_order"],
+            }
+        )
+    _replace_versioned_rows(db, AstralInterpretationSignalTypeModel, reference_version_id, rows)
+
+
+def _sync_interpretation_themes(db: Session, reference_version_id: int) -> None:
+    """Synchronise les themes interpretatifs versionnes."""
+    rows = []
+    for row in _load_rows("astral_interpretation_themes.json"):
+        rows.append(
+            {
+                "code": row["code"],
+                "label": row["label"],
+                "category": row["category"],
+                "description": row["description"],
+                "is_active": row["is_active"],
+            }
+        )
+    _replace_versioned_rows(db, AstralInterpretationThemeModel, reference_version_id, rows)
+
+
+def _sync_interpretation_adapter_rules(db: Session, reference_version_id: int) -> None:
+    """Synchronise les regles d'adaptation interpretative versionnees."""
+    rows = []
+    for row in _load_rows("astral_interpretation_adapter_rules.json"):
+        rows.append(
+            {
+                "code": row["code"],
+                "source_type": row["source_type"],
+                "source_code": row["source_code"],
+                "condition_json": row["condition_json"],
+                "signal_code": row["signal_code"],
+                "priority_override": row["priority_override"],
+                "priority_override_rank": row["priority_override_rank"],
+                "weight": row["weight"],
+                "is_active": row["is_active"],
+                "reference_version_code": row["reference_version_code"],
+            }
+        )
+    _replace_versioned_rows(db, AstralInterpretationAdapterRuleModel, reference_version_id, rows)
+
+
 def _sync_accidental_rules(
     db: Session,
     reference_version_id: int,
@@ -581,5 +652,9 @@ def sync_astral_dignity_seed_data(db: Session, reference_version_id: int) -> Non
     _sync_advanced_condition_types(db, reference_version_id)
     _sync_advanced_condition_score_profiles(db, reference_version_id)
     _sync_advanced_condition_weights(db, reference_version_id)
+    _clear_interpretation_adapter_reference(db, reference_version_id)
+    _sync_interpretation_themes(db, reference_version_id)
+    _sync_interpretation_signal_types(db, reference_version_id)
+    _sync_interpretation_adapter_rules(db, reference_version_id)
     _sync_accidental_rules(db, reference_version_id, maps)
     db.flush()

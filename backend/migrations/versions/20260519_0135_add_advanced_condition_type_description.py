@@ -35,6 +35,9 @@ def upgrade() -> None:
             TABLE,
             sa.Column("description", sa.Text(), nullable=False, server_default=""),
         )
+    if op.get_bind().dialect.name == "sqlite":
+        return
+    if _column_exists(TABLE, "description"):
         op.alter_column(TABLE, "description", server_default=None)
 
 

@@ -116,6 +116,9 @@ def runtime_reference_from_mapping(
         advanced_condition_types=_default_advanced_condition_types(version),
         advanced_condition_score_profiles=_default_advanced_condition_score_profiles(),
         advanced_condition_weights=_default_advanced_condition_weights(),
+        interpretation_signal_types=_default_interpretation_signal_types(version),
+        interpretation_themes=_default_interpretation_themes(version),
+        interpretation_adapter_rules=_default_interpretation_adapter_rules(),
         planet_natures=_default_planet_natures(),
         planet_definitions={
             "sun": {"body_class": "luminary", "is_luminary": True},
@@ -515,6 +518,152 @@ def _default_planet_natures() -> tuple[dict[str, object], ...]:
             "label": "Malefic",
             "planet_codes": ("mars", "saturn"),
             "sort_order": 2,
+        },
+    )
+
+
+def _default_interpretation_signal_types(reference_version: str) -> tuple[dict[str, object], ...]:
+    """Crée les types de signaux d'adaptation pour les fixtures runtime."""
+    return (
+        {
+            "code": "dominant_mars_signature",
+            "label": "Dominant Mars Signature",
+            "category": "planetary_signature",
+            "theme_code": "drive_assertion_action",
+            "description": "Dominance martienne structurante.",
+            "priority_default": "critical",
+            "priority_default_rank": 10,
+            "is_active": True,
+            "sort_order": 1,
+            "reference_version": reference_version,
+        },
+        {
+            "code": "high_externalization",
+            "label": "High Externalization",
+            "category": "expression_pattern",
+            "theme_code": "visibility_expression",
+            "description": "Signal de forte exteriorisation de l'energie planetaire.",
+            "priority_default": "high",
+            "priority_default_rank": 20,
+            "is_active": True,
+            "sort_order": 2,
+            "reference_version": reference_version,
+        },
+        {
+            "code": "constraint_on_action",
+            "label": "Constraint On Action",
+            "category": "tension_pattern",
+            "theme_code": "frustration_pressure",
+            "description": "Signal de contrainte ou de pression sur l'action.",
+            "priority_default": "medium",
+            "priority_default_rank": 30,
+            "is_active": True,
+            "sort_order": 3,
+            "reference_version": reference_version,
+        },
+        {
+            "code": "structural_endurance",
+            "label": "Structural Endurance",
+            "category": "planetary_signature",
+            "theme_code": "responsibility_structure",
+            "description": "Signal de persistance structurelle liee a Saturne.",
+            "priority_default": "high",
+            "priority_default_rank": 20,
+            "is_active": True,
+            "sort_order": 4,
+            "reference_version": reference_version,
+        },
+    )
+
+
+def _default_interpretation_themes(reference_version: str) -> tuple[dict[str, object], ...]:
+    """Crée les themes d'adaptation pour les fixtures runtime."""
+    return (
+        {
+            "code": "drive_assertion_action",
+            "label": "Drive / Assertion / Action",
+            "category": "behavioral",
+            "description": "Thematique liee a l'action, l'affirmation et l'impulsion.",
+            "is_active": True,
+            "reference_version": reference_version,
+        },
+        {
+            "code": "visibility_expression",
+            "label": "Visibility / Expression",
+            "category": "expression",
+            "description": "Thematique liee a l'expression visible et exterieure.",
+            "is_active": True,
+            "reference_version": reference_version,
+        },
+        {
+            "code": "frustration_pressure",
+            "label": "Frustration / Pressure",
+            "category": "tension",
+            "description": "Thematique de tension, pression ou limitation.",
+            "is_active": True,
+            "reference_version": reference_version,
+        },
+        {
+            "code": "responsibility_structure",
+            "label": "Responsibility / Structure",
+            "category": "functional",
+            "description": "Thematique de responsabilite, stabilite et structuration.",
+            "is_active": True,
+            "reference_version": reference_version,
+        },
+    )
+
+
+def _default_interpretation_adapter_rules() -> tuple[dict[str, object], ...]:
+    """Crée les règles d'adaptation pour les fixtures runtime."""
+    return (
+        {
+            "code": "dominant_mars_to_signature",
+            "source_type": "dominant_planet",
+            "source_code": "mars",
+            "conditions": [{"key": "dominance_level", "value": "dominant"}],
+            "signal_code": "dominant_mars_signature",
+            "priority_override": "critical",
+            "priority_override_rank": 10,
+            "weight": 1.0,
+            "is_active": True,
+            "reference_version_code": "v1",
+        },
+        {
+            "code": "high_visibility_to_externalization",
+            "source_type": "condition_axis",
+            "source_code": "visibility",
+            "conditions": [{"key": "min", "value": 0.7}],
+            "signal_code": "high_externalization",
+            "priority_override": "high",
+            "priority_override_rank": 20,
+            "weight": 0.8,
+            "is_active": True,
+            "reference_version_code": "v1",
+        },
+        {
+            "code": "constraint_to_action_pressure",
+            "source_type": "condition_axis",
+            "source_code": "constraint",
+            "conditions": [{"key": "min", "value": 0.6}],
+            "signal_code": "constraint_on_action",
+            "priority_override": "medium",
+            "priority_override_rank": 30,
+            "weight": 0.7,
+            "is_active": True,
+            "reference_version_code": "v1",
+        },
+        {
+            "code": "saturn_stability_to_endurance",
+            "source_type": "compound",
+            "source_code": "saturn_stability",
+            "conditions": [{"key": "min", "value": 0.7}],
+            "signal_code": "structural_endurance",
+            "priority_override": "high",
+            "priority_override_rank": 20,
+            "weight": 0.9,
+            "is_active": True,
+            "reference_version_code": "v1",
         },
     )
 
@@ -1218,6 +1367,7 @@ def missing_planet_definition() -> AstrologyRuntimeReference:
         dominance_factor_types=reference.dominance_factor_types,
         dominance_reference=reference.dominance_reference,
         advanced_condition_reference=reference.advanced_condition_reference,
+        interpretation_adapter_reference=reference.interpretation_adapter_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -1243,6 +1393,7 @@ def missing_dignity() -> AstrologyRuntimeReference:
         dominance_factor_types=reference.dominance_factor_types,
         dominance_reference=reference.dominance_reference,
         advanced_condition_reference=reference.advanced_condition_reference,
+        interpretation_adapter_reference=reference.interpretation_adapter_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -1282,6 +1433,7 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         dominance_factor_types=reference.dominance_factor_types,
         dominance_reference=reference.dominance_reference,
         advanced_condition_reference=reference.advanced_condition_reference,
+        interpretation_adapter_reference=reference.interpretation_adapter_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,

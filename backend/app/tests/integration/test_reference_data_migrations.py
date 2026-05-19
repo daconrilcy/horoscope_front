@@ -247,6 +247,9 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_advanced_condition_types",
         "astral_advanced_condition_score_profiles",
         "astral_advanced_condition_weights",
+        "astral_interpretation_signal_types",
+        "astral_interpretation_themes",
+        "astral_interpretation_adapter_rules",
     ):
         assert table_name in head_tables
     assert _columns(head_inspector, "astral_diginity_score_profiles") == {
@@ -458,6 +461,63 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "reference_version_id",
         "code",
     ) in _unique_column_sets(head_inspector, "astral_advanced_condition_types")
+    assert _columns(head_inspector, "astral_interpretation_signal_types") == {
+        "id",
+        "code",
+        "label",
+        "category",
+        "theme_code",
+        "description",
+        "priority_default",
+        "priority_default_rank",
+        "is_active",
+        "sort_order",
+        "reference_version_id",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_interpretation_signal_types") == {
+        ("reference_version_id",): "astral_reference_versions",
+    }
+    assert (
+        "reference_version_id",
+        "code",
+    ) in _unique_column_sets(head_inspector, "astral_interpretation_signal_types")
+    assert _columns(head_inspector, "astral_interpretation_themes") == {
+        "id",
+        "code",
+        "label",
+        "category",
+        "description",
+        "is_active",
+        "reference_version_id",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_interpretation_themes") == {
+        ("reference_version_id",): "astral_reference_versions",
+    }
+    assert (
+        "reference_version_id",
+        "code",
+    ) in _unique_column_sets(head_inspector, "astral_interpretation_themes")
+    assert _columns(head_inspector, "astral_interpretation_adapter_rules") == {
+        "id",
+        "code",
+        "source_type",
+        "source_code",
+        "condition_json",
+        "signal_code",
+        "priority_override",
+        "priority_override_rank",
+        "weight",
+        "is_active",
+        "reference_version_code",
+        "reference_version_id",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_interpretation_adapter_rules") == {
+        ("reference_version_id",): "astral_reference_versions",
+    }
+    assert (
+        "reference_version_id",
+        "code",
+    ) in _unique_column_sets(head_inspector, "astral_interpretation_adapter_rules")
     assert "house_interpretation_profiles" not in head_tables
     assert "astral_sign_rulerships" not in head_tables
     for table_name in (
@@ -1535,7 +1595,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260519_0133"
+    assert version == "20260519_0136"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

@@ -470,6 +470,121 @@ class AdvancedConditionReferenceSet:
 
 
 @dataclass(frozen=True, slots=True)
+class InterpretationConditionValue:
+    """Condition de règle d'adaptation normalisée depuis le référentiel."""
+
+    key: str
+    value: str | int | float | tuple[str | int | float, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class InterpretationSignalTypeReferenceData:
+    """Type de signal interprétatif disponible pour l'adaptation."""
+
+    code: str
+    label: str
+    category: str
+    theme_code: str
+    description: str
+    priority_default: str
+    priority_default_rank: int
+    is_active: bool
+    sort_order: int
+    reference_version: str
+
+    def __post_init__(self) -> None:
+        """Valide les champs stables du type de signal."""
+        for field_name in (
+            "code",
+            "label",
+            "category",
+            "theme_code",
+            "description",
+            "priority_default",
+            "reference_version",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"interpretation signal type requires {field_name}")
+        if self.priority_default_rank < 1:
+            raise ValueError("interpretation signal type priority rank must be positive")
+        if self.sort_order < 1:
+            raise ValueError("interpretation signal type sort_order must be positive")
+
+
+@dataclass(frozen=True, slots=True)
+class InterpretationThemeReferenceData:
+    """Thème activable par les signaux interprétatifs."""
+
+    code: str
+    label: str
+    category: str
+    description: str
+    is_active: bool
+    reference_version: str
+
+    def __post_init__(self) -> None:
+        """Valide le contrat minimal d'un thème."""
+        for field_name in ("code", "label", "category", "description", "reference_version"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"interpretation theme requires {field_name}")
+
+
+@dataclass(frozen=True, slots=True)
+class InterpretationAdapterRuleReferenceData:
+    """Règle versionnée reliant un fait astrologique à un signal."""
+
+    code: str
+    source_type: str
+    source_code: str
+    conditions: tuple[InterpretationConditionValue, ...]
+    signal_code: str
+    priority_override: str | None
+    priority_override_rank: int | None
+    weight: float
+    is_active: bool
+    reference_version_code: str
+
+    def __post_init__(self) -> None:
+        """Valide les champs stables d'une règle d'adaptation."""
+        for field_name in (
+            "code",
+            "source_type",
+            "source_code",
+            "signal_code",
+            "reference_version_code",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"interpretation adapter rule requires {field_name}")
+        if self.weight < 0.0:
+            raise ValueError("interpretation adapter rule weight must be positive")
+        if self.priority_override_rank is not None and self.priority_override_rank < 1:
+            raise ValueError("interpretation adapter rule priority rank must be positive")
+
+
+@dataclass(frozen=True, slots=True)
+class InterpretationAdapterReferenceSet:
+    """Référentiel complet des signaux, thèmes et règles d'adaptation."""
+
+    signal_types: tuple[InterpretationSignalTypeReferenceData, ...]
+    themes: tuple[InterpretationThemeReferenceData, ...]
+    adapter_rules: tuple[InterpretationAdapterRuleReferenceData, ...]
+
+    def signal_type(self, code: str) -> InterpretationSignalTypeReferenceData:
+        """Retourne le type de signal actif pour un code donné."""
+        for signal_type in self.signal_types:
+            if signal_type.code == code and signal_type.is_active:
+                return signal_type
+        raise ValueError(f"unknown interpretation signal type: {code}")
+
+    def theme(self, code: str) -> InterpretationThemeReferenceData:
+        """Retourne le thème actif pour un code donné."""
+        for theme in self.themes:
+            if theme.code == code and theme.is_active:
+                return theme
+        raise ValueError(f"unknown interpretation theme: {code}")
+
+
+@dataclass(frozen=True, slots=True)
 class EssentialDignityRuleReferenceData:
     """Regle essentielle reliant une planete, un signe et une plage de degres."""
 
@@ -705,6 +820,7 @@ class AstrologyRuntimeReference:
     dominance_factor_types: tuple[DominanceFactorTypeReferenceData, ...]
     dominance_reference: DominanceReferenceSet
     advanced_condition_reference: AdvancedConditionReferenceSet
+    interpretation_adapter_reference: InterpretationAdapterReferenceSet
     angle_points: AnglePointReferenceSet
     astral_points: AstralPointReferenceSet
     house_systems: HouseSystemReferenceSet

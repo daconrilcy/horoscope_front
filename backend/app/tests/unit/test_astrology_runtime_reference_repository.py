@@ -15,6 +15,9 @@ from app.infra.db.models.dignity_reference import (
     AstralDominanceFactorTypeModel,
     AstralDominanceScoreProfileModel,
     AstralDominanceScoreWeightModel,
+    AstralInterpretationAdapterRuleModel,
+    AstralInterpretationSignalTypeModel,
+    AstralInterpretationThemeModel,
     AstralPlanetConditionSignalProfileModel,
 )
 from app.infra.db.models.reference import (
@@ -240,6 +243,24 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
         "traditional_advanced_v1"
     )[0]
     assert advanced_weight.visibility_weight == 0.0
+    assert [item.code for item in reference.interpretation_adapter_reference.signal_types] == [
+        "dominant_mars_signature",
+        "high_externalization",
+        "constraint_on_action",
+        "structural_endurance",
+    ]
+    assert {item.code for item in reference.interpretation_adapter_reference.themes} == {
+        "drive_assertion_action",
+        "visibility_expression",
+        "frustration_pressure",
+        "responsibility_structure",
+    }
+    assert [item.code for item in reference.interpretation_adapter_reference.adapter_rules] == [
+        "dominant_mars_to_signature",
+        "high_visibility_to_externalization",
+        "saturn_stability_to_endurance",
+        "constraint_to_action_pressure",
+    ]
     first_weight = reference.dignity_reference.essential_weights["traditional_standard"][0]
     assert first_weight.condition_visibility == 0.0
     assert first_weight.condition_stability == 0.0
@@ -507,6 +528,247 @@ def test_repository_loads_advanced_condition_references_from_db() -> None:
     )
     assert rows[0].ranking_weight == 1.2
     assert all(row.uses_default_weight is False for row in rows)
+
+
+def test_repository_loads_interpretation_adapter_references_from_db() -> None:
+    """Le repository charge les signaux, themes et regles d'adaptation du brief."""
+    _cleanup_reference_tables()
+
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        signal_rows = db.scalars(
+            select(AstralInterpretationSignalTypeModel).order_by(
+                AstralInterpretationSignalTypeModel.sort_order
+            )
+        ).all()
+        theme_rows = db.scalars(
+            select(AstralInterpretationThemeModel).order_by(AstralInterpretationThemeModel.code)
+        ).all()
+        rule_rows = db.scalars(
+            select(AstralInterpretationAdapterRuleModel).order_by(
+                AstralInterpretationAdapterRuleModel.priority_override_rank,
+                AstralInterpretationAdapterRuleModel.code,
+            )
+        ).all()
+
+    assert [row.code for row in signal_rows] == [
+        "dominant_mars_signature",
+        "high_externalization",
+        "constraint_on_action",
+        "structural_endurance",
+    ]
+    assert [
+        {
+            "code": row.code,
+            "category": row.category,
+            "theme_code": row.theme_code,
+            "priority_default": row.priority_default,
+            "priority_default_rank": row.priority_default_rank,
+            "sort_order": row.sort_order,
+            "is_active": row.is_active,
+        }
+        for row in signal_rows
+    ] == [
+        {
+            "code": "dominant_mars_signature",
+            "category": "planetary_signature",
+            "theme_code": "drive_assertion_action",
+            "priority_default": "critical",
+            "priority_default_rank": 10,
+            "sort_order": 1,
+            "is_active": True,
+        },
+        {
+            "code": "high_externalization",
+            "category": "expression_pattern",
+            "theme_code": "visibility_expression",
+            "priority_default": "high",
+            "priority_default_rank": 20,
+            "sort_order": 2,
+            "is_active": True,
+        },
+        {
+            "code": "constraint_on_action",
+            "category": "tension_pattern",
+            "theme_code": "frustration_pressure",
+            "priority_default": "medium",
+            "priority_default_rank": 30,
+            "sort_order": 3,
+            "is_active": True,
+        },
+        {
+            "code": "structural_endurance",
+            "category": "planetary_signature",
+            "theme_code": "responsibility_structure",
+            "priority_default": "high",
+            "priority_default_rank": 20,
+            "sort_order": 4,
+            "is_active": True,
+        },
+    ]
+    assert [
+        {"code": row.code, "category": row.category, "is_active": row.is_active}
+        for row in theme_rows
+    ] == [
+        {"code": "drive_assertion_action", "category": "behavioral", "is_active": True},
+        {"code": "frustration_pressure", "category": "tension", "is_active": True},
+        {"code": "responsibility_structure", "category": "functional", "is_active": True},
+        {"code": "visibility_expression", "category": "expression", "is_active": True},
+    ]
+    assert [row.code for row in rule_rows] == [
+        "dominant_mars_to_signature",
+        "high_visibility_to_externalization",
+        "saturn_stability_to_endurance",
+        "constraint_to_action_pressure",
+    ]
+    assert [
+        {
+            "code": row.code,
+            "source_type": row.source_type,
+            "source_code": row.source_code,
+            "condition_json": row.condition_json,
+            "signal_code": row.signal_code,
+            "priority_override": row.priority_override,
+            "priority_override_rank": row.priority_override_rank,
+            "weight": row.weight,
+            "is_active": row.is_active,
+            "reference_version_code": row.reference_version_code,
+        }
+        for row in rule_rows
+    ] == [
+        {
+            "code": "dominant_mars_to_signature",
+            "source_type": "dominant_planet",
+            "source_code": "mars",
+            "condition_json": {"dominance_level": "dominant"},
+            "signal_code": "dominant_mars_signature",
+            "priority_override": "critical",
+            "priority_override_rank": 10,
+            "weight": 1.0,
+            "is_active": True,
+            "reference_version_code": "v1",
+        },
+        {
+            "code": "high_visibility_to_externalization",
+            "source_type": "condition_axis",
+            "source_code": "visibility",
+            "condition_json": {"min": 0.7},
+            "signal_code": "high_externalization",
+            "priority_override": "high",
+            "priority_override_rank": 20,
+            "weight": 0.8,
+            "is_active": True,
+            "reference_version_code": "v1",
+        },
+        {
+            "code": "saturn_stability_to_endurance",
+            "source_type": "compound",
+            "source_code": "saturn_stability",
+            "condition_json": {"min": 0.7},
+            "signal_code": "structural_endurance",
+            "priority_override": "high",
+            "priority_override_rank": 20,
+            "weight": 0.9,
+            "is_active": True,
+            "reference_version_code": "v1",
+        },
+        {
+            "code": "constraint_to_action_pressure",
+            "source_type": "condition_axis",
+            "source_code": "constraint",
+            "condition_json": {"min": 0.6},
+            "signal_code": "constraint_on_action",
+            "priority_override": "medium",
+            "priority_override_rank": 30,
+            "weight": 0.7,
+            "is_active": True,
+            "reference_version_code": "v1",
+        },
+    ]
+
+
+def test_repository_rejects_additional_active_interpretation_adapter_rows() -> None:
+    """Le contrat V1 bloque les extensions runtime non decidees."""
+    repository = AstrologyRuntimeReferenceRepository(
+        db=None, mapper=AstrologyRuntimeReferenceMapper()
+    )  # type: ignore[arg-type]
+    reference = complete_reference()
+    extra_theme = replace(
+        reference.interpretation_adapter_reference.themes[0],
+        code="initiative_focus",
+    )
+    extra_signal = replace(
+        reference.interpretation_adapter_reference.signal_types[0],
+        code="initiative_signature",
+        theme_code="initiative_focus",
+    )
+    extra_rule = replace(
+        reference.interpretation_adapter_reference.adapter_rules[0],
+        code="mars_to_initiative_signature",
+        signal_code="initiative_signature",
+    )
+    adapter_reference = replace(
+        reference.interpretation_adapter_reference,
+        themes=(*reference.interpretation_adapter_reference.themes, extra_theme),
+        signal_types=(*reference.interpretation_adapter_reference.signal_types, extra_signal),
+        adapter_rules=(*reference.interpretation_adapter_reference.adapter_rules, extra_rule),
+    )
+
+    with pytest.raises(AstrologyRuntimeReferenceError) as error:
+        repository._validate(replace(reference, interpretation_adapter_reference=adapter_reference))
+
+    assert error.value.details == {
+        "field": "interpretation_signal_types",
+        "reason": "missing:;extra:initiative_signature",
+    }
+
+
+def test_repository_rejects_unknown_interpretation_priority() -> None:
+    """Le contrat V1 limite les priorites aux valeurs gouvernees."""
+    repository = AstrologyRuntimeReferenceRepository(
+        db=None, mapper=AstrologyRuntimeReferenceMapper()
+    )  # type: ignore[arg-type]
+    reference = complete_reference()
+    invalid_signal = replace(
+        reference.interpretation_adapter_reference.signal_types[0],
+        priority_default="urgent",
+    )
+    adapter_reference = replace(
+        reference.interpretation_adapter_reference,
+        signal_types=(invalid_signal, *reference.interpretation_adapter_reference.signal_types[1:]),
+    )
+
+    with pytest.raises(AstrologyRuntimeReferenceError) as error:
+        repository._validate(replace(reference, interpretation_adapter_reference=adapter_reference))
+
+    assert error.value.details == {
+        "field": "interpretation_signal_types",
+        "reason": "unknown_priority:urgent",
+    }
+
+
+def test_repository_rejects_unknown_interpretation_rule_override_priority() -> None:
+    """Les overrides de regles utilisent le meme vocabulaire de priorite."""
+    repository = AstrologyRuntimeReferenceRepository(
+        db=None, mapper=AstrologyRuntimeReferenceMapper()
+    )  # type: ignore[arg-type]
+    reference = complete_reference()
+    invalid_rule = replace(
+        reference.interpretation_adapter_reference.adapter_rules[0],
+        priority_override="urgent",
+    )
+    adapter_reference = replace(
+        reference.interpretation_adapter_reference,
+        adapter_rules=(invalid_rule, *reference.interpretation_adapter_reference.adapter_rules[1:]),
+    )
+
+    with pytest.raises(AstrologyRuntimeReferenceError) as error:
+        repository._validate(replace(reference, interpretation_adapter_reference=adapter_reference))
+
+    assert error.value.details == {
+        "field": "interpretation_adapter_rules",
+        "reason": "unknown_priority:urgent",
+    }
 
 
 def test_public_reference_payload_keeps_sign_contract_unchanged() -> None:

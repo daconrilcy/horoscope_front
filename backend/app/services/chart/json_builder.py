@@ -442,6 +442,46 @@ def _serialize_advanced_conditions(advanced_conditions: Any) -> list[dict[str, A
     ]
 
 
+def _serialize_interpretation_adapter(adapter: Any) -> dict[str, Any] | None:
+    """Projette le resultat d'adaptation deja calcule par le domaine."""
+    if adapter is None:
+        return None
+    return {
+        "signals": [
+            {
+                "signal": signal.signal_code,
+                "theme": signal.theme_code,
+                "source_type": signal.source_type,
+                "source_code": signal.source_code,
+                "priority": signal.priority,
+                "priority_rank": signal.priority_rank,
+                "weight": signal.weight,
+                "semantic_category": signal.semantic_category,
+                "theme_category": signal.theme_category,
+                "explanation_fact": signal.explanation_fact,
+            }
+            for signal in adapter.signals
+        ],
+        "activated_themes": [
+            {
+                "theme": theme.theme_code,
+                "theme_category": theme.theme_category,
+                "activation_score": theme.activation_score,
+                "priority": theme.priority,
+                "priority_rank": theme.priority_rank,
+                "contributing_signals": list(theme.contributing_signals),
+            }
+            for theme in adapter.activated_themes
+        ],
+        "dominant_topics": list(adapter.dominant_topics),
+        "dominant_axes": list(adapter.dominant_axes),
+        "tension_patterns": list(adapter.tension_patterns),
+        "support_patterns": list(adapter.support_patterns),
+        "critical_patterns": list(adapter.critical_patterns),
+        "narrative_priorities": list(adapter.narrative_priorities),
+    }
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -575,6 +615,13 @@ def build_chart_json(
             getattr(natal_result, "advanced_conditions", [])
         ),
         "dominant_planets": dominant_planets,
+        "interpretation_adapter": (
+            None
+            if is_no_time
+            else _serialize_interpretation_adapter(
+                getattr(natal_result, "interpretation_adapter", None)
+            )
+        ),
     }
     if chart_balance is not None:
         payload["chart_balance"] = chart_balance

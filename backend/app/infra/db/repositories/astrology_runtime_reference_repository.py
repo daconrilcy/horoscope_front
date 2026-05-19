@@ -35,6 +35,9 @@ from app.infra.db.models.dignity_reference import (
     AstralFaceDecanModel,
     AstralHeliacalConditionModel,
     AstralHorizonPositionModel,
+    AstralInterpretationAdapterRuleModel,
+    AstralInterpretationSignalTypeModel,
+    AstralInterpretationThemeModel,
     AstralPlanetConditionSignalProfileModel,
     AstralPlanetMotionStateModel,
     AstralPlanetNatureModel,
@@ -131,6 +134,40 @@ class AstrologyRuntimeReferenceRepository:
             "occidental",
         }
     )
+    _REQUIRED_INTERPRETATION_SIGNAL_CODES = frozenset(
+        {
+            "dominant_mars_signature",
+            "high_externalization",
+            "constraint_on_action",
+            "structural_endurance",
+        }
+    )
+    _REQUIRED_INTERPRETATION_THEMES = frozenset(
+        {
+            "drive_assertion_action",
+            "visibility_expression",
+            "frustration_pressure",
+            "responsibility_structure",
+        }
+    )
+    _REQUIRED_INTERPRETATION_RULE_CODES = frozenset(
+        {
+            "dominant_mars_to_signature",
+            "high_visibility_to_externalization",
+            "constraint_to_action_pressure",
+            "saturn_stability_to_endurance",
+        }
+    )
+    _INTERPRETATION_SOURCE_TYPES = frozenset(
+        {
+            "dominant_planet",
+            "condition_axis",
+            "condition_signal",
+            "advanced_condition",
+            "compound",
+        }
+    )
+    _INTERPRETATION_PRIORITIES = frozenset({"critical", "high", "medium", "low", "background"})
 
     def __init__(
         self,
@@ -172,6 +209,13 @@ class AstrologyRuntimeReferenceRepository:
                     version_model.id
                 ),
                 advanced_condition_weights=self._load_advanced_condition_weights(version_model.id),
+                interpretation_signal_types=self._load_interpretation_signal_types(
+                    version_model.id
+                ),
+                interpretation_themes=self._load_interpretation_themes(version_model.id),
+                interpretation_adapter_rules=self._load_interpretation_adapter_rules(
+                    version_model.id
+                ),
                 planet_natures=self._load_planet_natures(),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
@@ -527,6 +571,91 @@ class AstrologyRuntimeReferenceRepository:
         ).all()
         return tuple(dict(row._mapping) for row in rows)
 
+    def _load_interpretation_signal_types(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les types actifs de signaux d'adaptation."""
+        rows = self.db.execute(
+            select(
+                AstralInterpretationSignalTypeModel.code,
+                AstralInterpretationSignalTypeModel.label,
+                AstralInterpretationSignalTypeModel.category,
+                AstralInterpretationSignalTypeModel.theme_code,
+                AstralInterpretationSignalTypeModel.description,
+                AstralInterpretationSignalTypeModel.priority_default,
+                AstralInterpretationSignalTypeModel.priority_default_rank,
+                AstralInterpretationSignalTypeModel.is_active,
+                AstralInterpretationSignalTypeModel.sort_order,
+                ReferenceVersionModel.version.label("reference_version"),
+            )
+            .join(
+                ReferenceVersionModel,
+                AstralInterpretationSignalTypeModel.reference_version_id
+                == ReferenceVersionModel.id,
+            )
+            .where(AstralInterpretationSignalTypeModel.reference_version_id == reference_version_id)
+            .where(AstralInterpretationSignalTypeModel.is_active.is_(True))
+            .order_by(AstralInterpretationSignalTypeModel.sort_order)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_interpretation_themes(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les thèmes actifs d'adaptation."""
+        rows = self.db.execute(
+            select(
+                AstralInterpretationThemeModel.code,
+                AstralInterpretationThemeModel.label,
+                AstralInterpretationThemeModel.category,
+                AstralInterpretationThemeModel.description,
+                AstralInterpretationThemeModel.is_active,
+                ReferenceVersionModel.version.label("reference_version"),
+            )
+            .join(
+                ReferenceVersionModel,
+                AstralInterpretationThemeModel.reference_version_id == ReferenceVersionModel.id,
+            )
+            .where(AstralInterpretationThemeModel.reference_version_id == reference_version_id)
+            .where(AstralInterpretationThemeModel.is_active.is_(True))
+            .order_by(AstralInterpretationThemeModel.code)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_interpretation_adapter_rules(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les règles actives d'adaptation depuis la DB."""
+        rows = self.db.execute(
+            select(
+                AstralInterpretationAdapterRuleModel.code,
+                AstralInterpretationAdapterRuleModel.source_type,
+                AstralInterpretationAdapterRuleModel.source_code,
+                AstralInterpretationAdapterRuleModel.condition_json,
+                AstralInterpretationAdapterRuleModel.signal_code,
+                AstralInterpretationAdapterRuleModel.priority_override,
+                AstralInterpretationAdapterRuleModel.priority_override_rank,
+                AstralInterpretationAdapterRuleModel.weight,
+                AstralInterpretationAdapterRuleModel.is_active,
+                AstralInterpretationAdapterRuleModel.reference_version_code,
+            )
+            .where(
+                AstralInterpretationAdapterRuleModel.reference_version_id == reference_version_id
+            )
+            .where(AstralInterpretationAdapterRuleModel.is_active.is_(True))
+            .order_by(
+                AstralInterpretationAdapterRuleModel.priority_override_rank,
+                AstralInterpretationAdapterRuleModel.code,
+            )
+        ).all()
+        return tuple(
+            {
+                **dict(row._mapping),
+                "conditions": self._normalize_simple_condition_json(row.condition_json or {}),
+            }
+            for row in rows
+        )
+
     def _load_dignity_types(
         self,
         model: type[AstralEssentialDignityTypeModel] | type[AstralAccidentalDignityTypeModel],
@@ -821,6 +950,17 @@ class AstrologyRuntimeReferenceRepository:
             conditions.append({"key": normalized_key, "value": normalized_value})
         return tuple(conditions)
 
+    def _normalize_simple_condition_json(
+        self,
+        condition_json: Mapping[str, object],
+    ) -> tuple[dict[str, object], ...]:
+        """Expose une condition JSON simple sous forme de paires immutables."""
+        return tuple(
+            {"key": str(key), "value": value}
+            for key, value in condition_json.items()
+            if isinstance(value, (str, int, float, list, tuple))
+        )
+
     def _load_angle_points(self) -> tuple[dict[str, object], ...]:
         """Charge les points d'angle structurels."""
         rows = self.db.scalars(select(AstralAnglePointModel).order_by(AstralAnglePointModel.code))
@@ -1021,6 +1161,7 @@ class AstrologyRuntimeReferenceRepository:
             if axis.house_number not in house_numbers or axis.opposite_house not in house_numbers:
                 self._raise_integrity("house_axes", "orphan_house")
         self._validate_advanced_condition_reference(reference)
+        self._validate_interpretation_adapter_reference(reference)
 
     def _validate_sign_profiles(self, reference: AstrologyRuntimeReference) -> None:
         """Verifie que chaque signe porte un profil structurel DB-backed."""
@@ -1090,6 +1231,60 @@ class AstrologyRuntimeReferenceRepository:
             extra = weight_type_codes - self._REQUIRED_ADVANCED_PARENT_CODES
             reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
             self._raise_integrity("advanced_condition_weights", reason)
+
+    def _validate_interpretation_adapter_reference(
+        self, reference: AstrologyRuntimeReference
+    ) -> None:
+        """Verifie que les referentiels d'adaptation couvrent le contrat V1."""
+        adapter = reference.interpretation_adapter_reference
+        signal_codes = {item.code for item in adapter.signal_types}
+        if signal_codes != self._REQUIRED_INTERPRETATION_SIGNAL_CODES:
+            missing = self._REQUIRED_INTERPRETATION_SIGNAL_CODES - signal_codes
+            extra = signal_codes - self._REQUIRED_INTERPRETATION_SIGNAL_CODES
+            reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
+            self._raise_integrity("interpretation_signal_types", reason)
+        theme_codes = {item.code for item in adapter.themes}
+        if theme_codes != self._REQUIRED_INTERPRETATION_THEMES:
+            missing = self._REQUIRED_INTERPRETATION_THEMES - theme_codes
+            extra = theme_codes - self._REQUIRED_INTERPRETATION_THEMES
+            reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
+            self._raise_integrity("interpretation_themes", reason)
+        rule_codes = {item.code for item in adapter.adapter_rules}
+        if rule_codes != self._REQUIRED_INTERPRETATION_RULE_CODES:
+            missing = self._REQUIRED_INTERPRETATION_RULE_CODES - rule_codes
+            extra = rule_codes - self._REQUIRED_INTERPRETATION_RULE_CODES
+            reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
+            self._raise_integrity("interpretation_adapter_rules", reason)
+        for signal_type in adapter.signal_types:
+            if signal_type.theme_code not in theme_codes:
+                self._raise_integrity(
+                    "interpretation_signal_types",
+                    f"orphan_theme:{signal_type.theme_code}",
+                )
+            if signal_type.priority_default not in self._INTERPRETATION_PRIORITIES:
+                self._raise_integrity(
+                    "interpretation_signal_types",
+                    f"unknown_priority:{signal_type.priority_default}",
+                )
+        for rule in adapter.adapter_rules:
+            if rule.source_type not in self._INTERPRETATION_SOURCE_TYPES:
+                self._raise_integrity(
+                    "interpretation_adapter_rules",
+                    f"unknown_source_type:{rule.source_type}",
+                )
+            if rule.signal_code not in signal_codes:
+                self._raise_integrity(
+                    "interpretation_adapter_rules",
+                    f"orphan_signal:{rule.signal_code}",
+                )
+            if (
+                rule.priority_override is not None
+                and rule.priority_override not in self._INTERPRETATION_PRIORITIES
+            ):
+                self._raise_integrity(
+                    "interpretation_adapter_rules",
+                    f"unknown_priority:{rule.priority_override}",
+                )
 
     def _reject_unknown_codes(self, *groups: tuple[str, set[str]]) -> None:
         """Refuse les sentinelles `unknown` dans les codes runtime canoniques."""

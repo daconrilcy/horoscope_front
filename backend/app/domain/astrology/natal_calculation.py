@@ -52,6 +52,10 @@ from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResult,
 )
 from app.domain.astrology.interpretation.chart_signature import ChartSignatureCalculator
+from app.domain.astrology.interpretation_adapters import (
+    InterpretationAdapterEngine,
+    InterpretationAdapterResult,
+)
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectDefinitionRuntimeData,
@@ -148,6 +152,7 @@ class NatalResult(BaseModel):
     condition_signals: list[PlanetConditionSignalSet] = Field(default_factory=list)
     advanced_conditions: list[AdvancedPlanetaryCondition] = Field(default_factory=list)
     dominant_planets: DominantPlanetsResult | None = None
+    interpretation_adapter: InterpretationAdapterResult | None = None
     aspects: list[AspectResult]
 
     @property
@@ -857,6 +862,16 @@ def build_natal_result(
         advanced_conditions=tuple(advanced_conditions),
         aspects=aspects,
     )
+    interpretation_adapter = InterpretationAdapterEngine().calculate(
+        runtime_reference=runtime_reference,
+        planet_positions=positions,
+        aspects=aspects,
+        dignities=dignities,
+        condition_profiles=condition_profiles,
+        condition_signals=condition_signals,
+        advanced_conditions=tuple(advanced_conditions),
+        dominant_planets=dominant_planets,
+    )
 
     return NatalResult(
         reference_version=version,
@@ -884,5 +899,6 @@ def build_natal_result(
         condition_signals=condition_signals,
         advanced_conditions=list(advanced_conditions),
         dominant_planets=dominant_planets,
+        interpretation_adapter=interpretation_adapter,
         aspects=aspects,
     )

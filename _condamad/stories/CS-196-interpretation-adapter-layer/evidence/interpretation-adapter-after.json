@@ -1,0 +1,102 @@
+{
+  "story": "CS-196",
+  "after": {
+    "interpretation_adapter": {
+      "signals": [
+        {
+          "signal": "dominant_mars_signature",
+          "theme": "drive_assertion_action",
+          "source_type": "dominant_planet",
+          "source_code": "mars",
+          "priority": "critical",
+          "priority_rank": 10,
+          "weight": 1.0,
+          "semantic_category": "planetary_signature",
+          "theme_category": "behavioral",
+          "explanation_fact": "dominant_planet:mars:rank=1:level=dominant"
+        },
+        {
+          "signal": "high_externalization",
+          "theme": "visibility_expression",
+          "source_type": "condition_axis",
+          "source_code": "visibility",
+          "priority": "high",
+          "priority_rank": 20,
+          "weight": 0.8,
+          "semantic_category": "expression_pattern",
+          "theme_category": "expression",
+          "explanation_fact": "condition_axis:visibility:planet=mars:value=0.790"
+        },
+        {
+          "signal": "constraint_on_action",
+          "theme": "frustration_pressure",
+          "source_type": "condition_axis",
+          "source_code": "constraint",
+          "priority": "medium",
+          "priority_rank": 30,
+          "weight": 0.7,
+          "semantic_category": "tension_pattern",
+          "theme_category": "tension",
+          "explanation_fact": "condition_axis:constraint:planet=mars:value=0.620"
+        }
+      ],
+      "activated_themes": [
+        {
+          "theme": "drive_assertion_action",
+          "theme_category": "behavioral",
+          "activation_score": 1.0,
+          "priority": "critical",
+          "priority_rank": 10,
+          "contributing_signals": [
+            "dominant_mars_signature"
+          ]
+        },
+        {
+          "theme": "visibility_expression",
+          "theme_category": "expression",
+          "activation_score": 0.8,
+          "priority": "high",
+          "priority_rank": 20,
+          "contributing_signals": [
+            "high_externalization"
+          ]
+        },
+        {
+          "theme": "frustration_pressure",
+          "theme_category": "tension",
+          "activation_score": 0.7,
+          "priority": "medium",
+          "priority_rank": 30,
+          "contributing_signals": [
+            "constraint_on_action"
+          ]
+        }
+      ],
+      "dominant_topics": [
+        "drive_assertion_action",
+        "visibility_expression",
+        "frustration_pressure"
+      ],
+      "dominant_axes": [
+        "behavioral",
+        "expression",
+        "tension"
+      ],
+      "tension_patterns": [
+        "constraint_on_action"
+      ],
+      "support_patterns": [],
+      "critical_patterns": [
+        "dominant_mars_signature"
+      ],
+      "narrative_priorities": [
+        "dominant_mars_signature",
+        "high_externalization",
+        "constraint_on_action",
+        "drive_assertion_action",
+        "visibility_expression",
+        "frustration_pressure"
+      ]
+    }
+  }
+}

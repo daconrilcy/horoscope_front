@@ -30,6 +30,11 @@ from app.domain.astrology.interpretation.house_strength_contracts import (
     HouseStrengthLevel,
     HouseStrengthReason,
 )
+from app.domain.astrology.interpretation_adapters.contracts import (
+    InterpretationAdapterResult,
+    InterpretationSignal,
+    InterpretationThemeActivation,
+)
 from app.domain.astrology.natal_calculation import AspectResult
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
@@ -296,6 +301,38 @@ def mock_natal_result():
         chart_ruler_code="sun",
         most_elevated_planet_code="sun",
     )
+    result.interpretation_adapter = InterpretationAdapterResult(
+        signals=(
+            InterpretationSignal(
+                signal_code="dominant_mars_signature",
+                theme_code="drive_assertion_action",
+                source_type="dominant_planet",
+                source_code="mars",
+                priority="critical",
+                priority_rank=10,
+                weight=1.0,
+                semantic_category="planetary_signature",
+                theme_category="behavioral",
+                explanation_fact="dominant_planet:mars:rank=1:level=dominant",
+            ),
+        ),
+        activated_themes=(
+            InterpretationThemeActivation(
+                theme_code="drive_assertion_action",
+                theme_category="behavioral",
+                activation_score=1.0,
+                priority="critical",
+                priority_rank=10,
+                contributing_signals=("dominant_mars_signature",),
+            ),
+        ),
+        dominant_topics=("drive_assertion_action",),
+        dominant_axes=("behavioral",),
+        tension_patterns=(),
+        support_patterns=(),
+        critical_patterns=("dominant_mars_signature",),
+        narrative_priorities=("dominant_mars_signature", "drive_assertion_action"),
+    )
 
     return result
 
@@ -462,6 +499,31 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         "reason": "sun rules the Ascendant sign.",
     }
     assert dominance_sun["explanation_facts"] == ["sun rules the Ascendant sign."]
+    assert chart["interpretation_adapter"]["signals"] == [
+        {
+            "signal": "dominant_mars_signature",
+            "theme": "drive_assertion_action",
+            "source_type": "dominant_planet",
+            "source_code": "mars",
+            "priority": "critical",
+            "priority_rank": 10,
+            "weight": 1.0,
+            "semantic_category": "planetary_signature",
+            "theme_category": "behavioral",
+            "explanation_fact": "dominant_planet:mars:rank=1:level=dominant",
+        }
+    ]
+    assert chart["interpretation_adapter"]["activated_themes"] == [
+        {
+            "theme": "drive_assertion_action",
+            "theme_category": "behavioral",
+            "activation_score": 1.0,
+            "priority": "critical",
+            "priority_rank": 10,
+            "contributing_signals": ["dominant_mars_signature"],
+        }
+    ]
+    assert chart["interpretation_adapter"]["critical_patterns"] == ["dominant_mars_signature"]
 
     # Angles
     assert chart["angles"]["ASC"]["sign"] == "capricorn"
@@ -602,6 +664,7 @@ def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
     assert chart["angles"]["ASC"] is None
     assert chart["angles"]["MC"] is None
     assert chart["dominant_planets"] is None
+    assert chart["interpretation_adapter"] is None
 
 
 def test_build_chart_json_no_location(mock_natal_result, mock_birth_profile):

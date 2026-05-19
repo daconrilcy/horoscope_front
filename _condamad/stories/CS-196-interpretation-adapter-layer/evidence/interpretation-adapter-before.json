@@ -1,0 +1,9 @@
+{
+  "story": "CS-196",
+  "before": {
+    "backend_domain_directory_exists": false,
+    "natal_result_field": "absent",
+    "public_json_key": "absent",
+    "runtime_reference_key": "absent"
+  }
+}

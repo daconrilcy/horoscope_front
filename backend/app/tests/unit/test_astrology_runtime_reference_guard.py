@@ -369,6 +369,59 @@ def test_advanced_conditions_are_projected_from_natal_result_only() -> None:
     assert "AdvancedConditionEngine" not in "".join(calls)
 
 
+def test_interpretation_adapter_domain_does_not_cross_runtime_boundaries() -> None:
+    """La couche d'adaptation reste pure et sans vocabulaire local non versionne."""
+    adapter_root = BACKEND_ROOT / "app/domain/astrology/interpretation_adapters"
+    forbidden_patterns = (
+        "Session",
+        "select(",
+        "from app.infra",
+        "from app.services",
+        "from app.api",
+        "from app.domain.prediction",
+        "from app.services.prediction",
+        "INTERPRETATION_" + "RULES",
+        "SIGNAL_" + "TYPES",
+        "THEME_" + "CODES",
+        "PRIORITY_" + "ORDER",
+        "ADAPTER_" + "RULES",
+        "AIEngineAdapter",
+        "OpenAI",
+        "chat.completions",
+        "prompt",
+        "narration",
+        "persona",
+        "horoscope",
+        "matching",
+        "micro_note",
+    )
+    hits: list[str] = []
+    for path in adapter_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for pattern in forbidden_patterns:
+            if pattern in text:
+                hits.append(f"{path}:{pattern}")
+
+    assert hits == []
+
+
+def test_interpretation_adapter_is_projected_from_natal_result_only() -> None:
+    """Le serialiseur public ne recalcule pas l'adaptation interpretative."""
+    tree = ast.parse(_source("app/services/chart/json_builder.py"))
+    serializer = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_serialize_interpretation_adapter"
+    )
+    calls = [
+        ast.unparse(node.func)
+        for node in ast.walk(serializer)
+        if isinstance(node, ast.Call) and not isinstance(node.func, ast.Name)
+    ]
+
+    assert "InterpretationAdapterEngine" not in "".join(calls)
+
+
 def test_dominant_planets_are_projected_from_natal_result_only() -> None:
     """Le serialiseur public ne recalcule pas les planetes dominantes."""
     tree = ast.parse(_source("app/services/chart/json_builder.py"))
