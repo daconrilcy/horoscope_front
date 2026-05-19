@@ -423,7 +423,7 @@ class AdvancedConditionWeightReferenceData:
     score_profile_code: str
     condition_type_code: str
     functional_strength_weight: float
-    condition_visibility: float
+    visibility_weight: float
     stability_weight: float
     intensity_weight: float
     coherence_weight: float
@@ -438,12 +438,6 @@ class AdvancedConditionWeightReferenceData:
         for field_name in ("score_profile_code", "condition_type_code", "notes"):
             if not str(getattr(self, field_name)).strip():
                 raise ValueError(f"advanced condition weight requires {field_name}")
-
-    def __getattr__(self, name: str) -> float:
-        """Expose les alias publics sans importer les symboles produit dans le domaine."""
-        if name == "visibility_" + "weight":
-            return self.condition_visibility
-        raise AttributeError(name)
 
 
 @dataclass(frozen=True, slots=True)

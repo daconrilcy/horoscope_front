@@ -182,7 +182,7 @@ class AdvancedConditionEngine:
             weight = weights[condition_type_code]
             axes = PlanetConditionAxisImpact(
                 functional_strength_delta=round(weight.functional_strength_weight, 6),
-                visibility_delta=round(weight.condition_visibility, 6),
+                visibility_delta=round(weight.visibility_weight, 6),
                 stability_delta=round(weight.stability_weight, 6),
                 intensity_delta=round(weight.intensity_weight, 6),
                 coherence_delta=round(weight.coherence_weight, 6),
@@ -207,7 +207,7 @@ class AdvancedConditionEngine:
                 score_profile=score_profile,
                 reference_version=reference_version,
                 score_impact=score_impact,
-                ranking_weight=round(getattr(weight, "ranking_" + "weight"), 6),
+                ranking_weight=round(weight.ranking_weight, 6),
                 axes_impact=axes,
                 reason=reason,
             )

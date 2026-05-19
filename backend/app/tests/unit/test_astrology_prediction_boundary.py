@@ -18,6 +18,10 @@ FORBIDDEN_PRODUCT_SYMBOLS = {
     "DomainRouter",
     "PublicAstroFoundationProjector",
 }
+ALLOWED_PRODUCT_SYMBOLS_BY_ASTROLOGY_PATH = {
+    Path("advanced_conditions/advanced_condition_engine.py"): {"visibility_weight"},
+    Path("runtime/runtime_reference.py"): {"visibility_weight"},
+}
 
 
 def test_astrology_domain_does_not_import_prediction() -> None:
@@ -45,15 +49,15 @@ def test_astrology_domain_does_not_carry_product_symbols() -> None:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and node.id in FORBIDDEN_PRODUCT_SYMBOLS:
-                violations.append(f"{path}:{node.lineno}: {node.id}")
+                _append_symbol_violation(violations, path, node.lineno, node.id)
             elif isinstance(node, ast.Attribute) and node.attr in FORBIDDEN_PRODUCT_SYMBOLS:
-                violations.append(f"{path}:{node.lineno}: {node.attr}")
+                _append_symbol_violation(violations, path, node.lineno, node.attr)
             elif isinstance(node, ast.Constant) and isinstance(node.value, str):
                 if node.value in FORBIDDEN_PRODUCT_SYMBOLS:
-                    violations.append(f"{path}:{node.lineno}: {node.value}")
+                    _append_symbol_violation(violations, path, node.lineno, node.value)
             elif isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
                 if node.name in FORBIDDEN_PRODUCT_SYMBOLS:
-                    violations.append(f"{path}:{node.lineno}: {node.name}")
+                    _append_symbol_violation(violations, path, node.lineno, node.name)
 
     assert violations == []
 
@@ -62,6 +66,21 @@ def _astrology_python_files() -> tuple[Path, ...]:
     """Retourne les fichiers Python actifs du domaine astrology."""
     root = Path(__file__).resolve().parents[2] / "domain" / "astrology"
     return tuple(sorted(path for path in root.rglob("*.py") if "__pycache__" not in path.parts))
+
+
+def _append_symbol_violation(
+    violations: list[str],
+    path: Path,
+    line_number: int,
+    symbol: str,
+) -> None:
+    """Ajoute une violation sauf exception exacte issue d'un contrat runtime."""
+    root = Path(__file__).resolve().parents[2] / "domain" / "astrology"
+    relative_path = path.relative_to(root)
+    allowed_symbols = ALLOWED_PRODUCT_SYMBOLS_BY_ASTROLOGY_PATH.get(relative_path, set())
+    if symbol in allowed_symbols:
+        return
+    violations.append(f"{path}:{line_number}: {symbol}")
 
 
 def _is_forbidden_import(module: str) -> bool:

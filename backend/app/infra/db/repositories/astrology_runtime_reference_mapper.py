@@ -298,7 +298,7 @@ class AstrologyRuntimeReferenceMapper:
                         score_profile_code=str(item["score_profile_code"]),
                         condition_type_code=str(item["condition_type_code"]),
                         functional_strength_weight=float(item["functional_strength_weight"]),
-                        condition_visibility=float(item["visibility_weight"]),
+                        visibility_weight=float(item["visibility_weight"]),
                         stability_weight=float(item["stability_weight"]),
                         intensity_weight=float(item["intensity_weight"]),
                         coherence_weight=float(item["coherence_weight"]),

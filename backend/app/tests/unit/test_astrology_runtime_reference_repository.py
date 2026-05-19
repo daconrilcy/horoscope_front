@@ -239,9 +239,7 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     advanced_weight = reference.advanced_condition_reference.weights_for_profile(
         "traditional_advanced_v1"
     )[0]
-    assert (
-        getattr(advanced_weight, "visibility_" + "weight") == advanced_weight.condition_visibility
-    )
+    assert advanced_weight.visibility_weight == 0.0
     first_weight = reference.dignity_reference.essential_weights["traditional_standard"][0]
     assert first_weight.condition_visibility == 0.0
     assert first_weight.condition_stability == 0.0

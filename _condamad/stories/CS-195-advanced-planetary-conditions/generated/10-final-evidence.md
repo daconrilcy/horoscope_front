@@ -110,11 +110,22 @@ See `git status --short` for full list. Main implementation areas:
 | RG-122 narration scan | repo root | PASS | 1 | Zero hits. |
 | RG-122 deferred-technique scan | repo root | PASS | 1 | Zero hits. |
 | `uvicorn app.main:app --host 127.0.0.1 --port 8019` then `GET /docs` | `backend` | PASS | 0 | Local API startup probe returned HTTP 200; process stopped. |
+| `pytest -q backend/app/tests/unit/test_astrology_prediction_boundary.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/tests/unit/domain/astrology/test_advanced_condition_engine.py` | repo root | PASS | 0 | Review/fix iteration 3: 20 passed. |
+| `ruff format .` | repo root | PASS | 0 | 1460 files left unchanged. |
+| `ruff check .` | repo root | PASS | 0 | All checks passed. |
+| `pytest -q backend/tests/unit/domain/astrology/test_mutual_reception_calculator.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_besiegement_detector.py backend/tests/unit/domain/astrology/test_heliacal_conditions.py backend/tests/unit/domain/astrology/test_speed_classifier.py backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/tests/unit/domain/astrology/test_dominance_integration.py backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py backend/app/tests/integration/test_reference_data_migrations.py backend/app/tests/unit/test_dignity_reference_seed.py backend/tests/unit/domain/astrology/test_accidental_dignity_calculator.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/app/tests/unit/test_astrology_prediction_boundary.py` | repo root | PASS | 0 | Final post-review targeted validation: 80 passed, 5 deselected. |
+| `pytest -q` | repo root | PASS | 0 | Final full suite after review iteration 3: 2727 passed, 1 skipped, 1177 deselected. |
+| `git diff --check` | repo root | PASS | 0 | Only line-ending warnings; no whitespace errors. |
+| RG-122 import scan | repo root | PASS | 1 | Zero hits. |
+| RG-122 narration scan | repo root | PASS | 1 | Zero hits. |
+| RG-122 local-map scan | repo root | PASS | 1 | Zero hits. |
+| RG-122 deferred-technique scan | repo root | PASS | 1 | Zero hits. |
+| `uvicorn app.main:app --host 127.0.0.1 --port 8019` then `GET /docs` | `backend` | PASS | 0 | Local API startup probe returned HTTP 200; process stopped. |
 
 ## Review loop
 
 - Subagents used: no.
-- Iterations: 2 review/fix iterations, ending with a fresh CLEAN review.
+- Iterations: 3 review/fix iterations, ending with a fresh CLEAN review.
 - Fixed findings:
   - Real runtime pipeline now evaluates CS-195 accidental source schemas and weights.
   - Aspect relational targets now match the detected condition.
@@ -124,6 +135,7 @@ See `git status --short` for full list. Main implementation areas:
   - Brief-compliance correction: aspect conditions now use configured natal aspects and longitudinal besiegement from runtime malefics instead of synthetic-only fixtures.
   - Brief-compliance correction: heliacal phases now derive from governed heliacal accidental facts instead of a local longitude half-circle heuristic.
   - Brief-compliance correction: `astral_advanced_condition_types.description` is persisted and loaded into the runtime contract.
+  - Review iteration 3: `AdvancedConditionWeightReferenceData` now exposes the CS-195 `visibility_weight` axis explicitly instead of through a dynamic alias, and the astrology/prediction boundary guard allows that symbol only in the exact advanced runtime contract files.
 - Rejected findings: none.
 
 ## Commands skipped or blocked
@@ -148,7 +160,8 @@ See `git status --short` for full list. Main implementation areas:
 
 ## Final worktree status
 
-- Expected story changes plus pre-existing modified `00-story.md`.
+- Expected review-fix changes in backend astrology runtime/domain tests and
+  CS-195 evidence only.
 
 ## Remaining risks
 
