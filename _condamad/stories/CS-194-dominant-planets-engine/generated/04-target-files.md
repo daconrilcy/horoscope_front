@@ -17,7 +17,7 @@
 
 ## Must Search
 
-- `rg -n "planet_dominance|PlanetDominance|dominance_factor" backend`
+- `rg -n "dominant_planets|DominantPlanets|PlanetDominance|dominance_factor" backend`
 - `rg -n "SIGN_RULERS|PLANET_RULERS|DOMINANCE_FACTORS|DOMINANCE_WEIGHTS" backend/app backend/tests frontend/src`
 - `rg -n "Session|select\\(|from app\\.infra|from app\\.services|from app\\.api|from app\\.domain\\.prediction|from app\\.services\\.prediction" backend/app/domain/astrology/dominance -g "*.py"`
 

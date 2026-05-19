@@ -6,7 +6,7 @@
 
 - Factor vocabulary and weights: `astral_dominance_factor_types` loaded into `AstrologyRuntimeReference.dominance_factor_types`.
 - Domain computation: `backend/app/domain/astrology/dominance/PlanetDominanceEngine`.
-- Public serialization: `backend/app/services/chart/json_builder.py` projects `NatalResult.planet_dominance` only.
+- Public serialization: `backend/app/services/chart/json_builder.py` projects `NatalResult.dominant_planets` only.
 
 ## Forbidden
 

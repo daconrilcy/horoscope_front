@@ -25,7 +25,7 @@
 | Domain boundary | `rg -n "Session\|select\\(\|from app\\.infra\|from app\\.services\|from app\\.api\|from app\\.domain\\.prediction\|from app\\.services\\.prediction" backend/app/domain/astrology/dominance -g "*.py"` | repo root | yes | zero hits |
 | LLM/narrative boundary | `rg -n "OpenAI\|AIEngineAdapter\|chat\\.completions\|\\bprompt\\b\|narration\|micro_note" backend/app/domain/astrology/dominance -g "*.py"` | repo root | yes | zero hits |
 | Local dominance weights | `rg -n "DOMINANCE_FACTORS\|DOMINANCE_WEIGHTS\|CHART_RULER_WEIGHT\|ANGULARITY_WEIGHT\|SIGN_RULERS\|PLANET_RULERS" backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"` | repo root | yes | no active local weight map |
-| Projection-only serializer | `rg -n "planet_dominance\|PlanetDominance" backend/app/services/chart/json_builder.py backend/app/domain/astrology/natal_calculation.py backend/app/domain/astrology/dominance -g "*.py"` | repo root | yes | integration/projection sites only |
+| Projection-only serializer | `rg -n "dominant_planets\|DominantPlanets\|PlanetDominance" backend/app/services/chart/json_builder.py backend/app/domain/astrology/natal_calculation.py backend/app/domain/astrology/dominance -g "*.py"` | repo root | yes | integration/projection sites only |
 
 ## Quality Checks
 

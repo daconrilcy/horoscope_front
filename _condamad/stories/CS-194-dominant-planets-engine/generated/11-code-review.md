@@ -13,19 +13,19 @@
 
 - `_condamad/stories/CS-194-dominant-planets-engine/00-story.md`
 - `_condamad/stories/regression-guardrails.md`
-- Generated capsule files `03`, `04`, `07`, `10`
+- Generated capsule files `03`, `04`, `06`, `07`, `10`
 - Evidence files under `_condamad/stories/CS-194-dominant-planets-engine/evidence/`
-- Application diff for DB migration/model/seed, runtime reference, dominance domain,
-  natal integration, chart JSON projection and tests
-- Current worktree status and untracked CS-194 files
+- Application code for DB migration/model/seed, runtime reference, dominance
+  domain, natal integration, chart JSON projection and tests
+- Current worktree status, including unrelated CS-195 dirty files scoped out
 
 ## Diff summary
 
-CS-194 adds `astral_dominance_factor_types`, seeds its eight contractual rows,
-loads active factors through `AstrologyRuntimeReference`, adds immutable
-dominance contracts and `PlanetDominanceEngine`, populates
-`NatalResult.planet_dominance`, and projects `planet_dominance` through
-`build_chart_json`.
+CS-194 adds `astral_dominance_factor_types`,
+`astral_dominance_score_profiles` and `astral_dominance_score_weights`, loads
+them through `AstrologyRuntimeReference`, adds immutable dominance contracts
+and `PlanetDominanceEngine`, populates `NatalResult.dominant_planets`, and
+projects top-level JSON `dominant_planets` through `build_chart_json`.
 
 No frontend files, dependencies, routes or status codes were changed.
 
@@ -33,48 +33,46 @@ No frontend files, dependencies, routes or status codes were changed.
 
 No open findings.
 
-### Fixed after initial-brief audit
+### Fixed in this review/fix cycle
 
-1. `High` brief coverage: added `astral_dominance_score_profiles` and
-   `astral_dominance_score_weights`, plus runtime loading and integrity checks.
-2. `High` public contract: replaced the intermediate `planet_dominance` payload
-   with `NatalResult.dominant_planets` and top-level JSON `dominant_planets`.
-3. `Medium` domain contract: aligned contracts with `PlanetDominanceFactor`,
-   `PlanetDominanceResult` and `DominantPlanetsResult`.
-4. `Medium` scoring semantics: restored brief weights, `natal_standard_v1`,
-   dominance levels and explanation facts.
-5. `Medium` tests: added/updated coverage for missing condition profiles,
-   runtime scoring tables, serializer projection and idempotent seeding.
+#### CR-1 Medium - Capsule evidence used the retired public field name
 
-### Fixed during this review cycle
-
-1. `Low` evidence consistency: this review artifact previously claimed a
-   subagent-based review. It has been replaced with the current main-session
-   review evidence so the capsule matches the actual execution mode.
+- Bucket: patch
+- Location: `_condamad/stories/CS-194-dominant-planets-engine/generated/11-code-review.md`
+- Source layer: evidence / validation
+- Evidence: several CS-194 evidence files still claimed
+  `NatalResult.planet_dominance` and JSON `planet_dominance`, while the
+  post-review addendum and implementation use `NatalResult.dominant_planets`
+  and top-level `dominant_planets`.
+- Impact: a future review could approve the wrong public contract or miss a
+  serializer regression because the capsule contradicted the repository state.
+- Fix applied: normalized the story/evidence references to
+  `dominant_planets`, `_serialize_dominant_planets` and the current
+  `PlanetDominanceResult` contract.
 
 ## Acceptance audit
 
-- AC1: PASS. Migration, model, seed JSON, seed service and integration migration
-  tests cover the dominance factor table and the eight contractual rows.
+- AC1: PASS. Migration, model, seed JSON, seed service and tests cover the
+  dominance factor table and active rows.
 - AC2: PASS. Runtime repository exposes active dominance factors ordered by
-  `sort_order`.
+  `sort_order` and loads the scoring profile/weights.
 - AC3: PASS. Dominance contracts are frozen dataclasses.
-- AC4: PASS. `PlanetDominanceEngine` ranks by descending score, then
+- AC4: PASS. `PlanetDominanceEngine` ranks by descending `total_score`, then
   `planet_code`.
 - AC5: PASS. Each planet has a contribution breakdown for every active factor.
-- AC6: PASS. `chart_ruler` consumes resolved `house_rulers`; no local rulership
-  map was introduced in the dominance engine.
+- AC6: PASS. `chart_ruler` consumes resolved `house_rulers`; no local
+  rulership map was introduced in the dominance engine.
 - AC7: PASS. `condition_strength` and `visibility` consume
   `PlanetConditionProfile`.
 - AC8: PASS. `aspect_centrality` uses the canonical `DominantAspectEvaluator`.
-- AC9: PASS. `NatalResult` exposes `planet_dominance` without removing
+- AC9: PASS. `NatalResult` exposes `dominant_planets` without removing
   `chart_balance.dominant_planets`.
-- AC10: PASS. `json_builder.py` serializes `NatalResult.planet_dominance` and
+- AC10: PASS. `json_builder.py` serializes `NatalResult.dominant_planets` and
   does not instantiate the dominance engine.
 - AC11: PASS. `RG-121` and runtime guard tests block forbidden local weights,
   boundary imports and narrative/LLM symbols.
 - AC12: PASS. The authorized public payload difference is the added
-  `planet_dominance` field.
+  `dominant_planets` field.
 
 ## Validation audit
 
@@ -82,14 +80,14 @@ Commands run from repository root with `.\\.venv\\Scripts\\Activate.ps1` for
 Python tooling:
 
 - `pytest -q backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py`
-  -> PASS, 54 passed.
-- `pytest --long -q backend/app/tests/integration/test_reference_data_migrations.py`
-  -> PASS, 5 passed.
+  -> PASS, 56 passed.
 - `ruff format --check .` -> PASS, 1440 files already formatted.
 - `ruff check .` -> PASS, all checks passed.
 - `Set-Location backend; python -c "from app.main import app; print(app.title)"`
   -> PASS, `horoscope-backend`.
-- `git diff --check` -> PASS, CRLF warnings only.
+- `pytest -q` -> PASS, 2712 passed, 1 skipped, 1177 deselected.
+- `git diff --check` -> PASS, CRLF warnings only on pre-existing dirty
+  governance files.
 
 Targeted scans:
 
@@ -98,9 +96,9 @@ Targeted scans:
 - `rg -n "OpenAI|AIEngineAdapter|chat\\.completions|\\bprompt\\b|narration|micro_note" backend/app/domain/astrology/dominance -g "*.py"`
   -> PASS, zero hits.
 - `rg -n "DOMINANCE_FACTORS|DOMINANCE_WEIGHTS|CHART_RULER_WEIGHT|ANGULARITY_WEIGHT|SIGN_RULERS|PLANET_RULERS" backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"`
-  -> PASS_WITH_CLASSIFIED_HITS. No active dominance factor/weight map; remaining
-  hits are pre-existing test fixtures or guard literals outside the CS-194
-  dominance engine.
+  -> PASS_WITH_CLASSIFIED_HITS. No active dominance factor/weight map;
+  remaining hits are pre-existing test fixtures or guard literals outside the
+  CS-194 dominance engine.
 
 ## DRY / No Legacy audit
 

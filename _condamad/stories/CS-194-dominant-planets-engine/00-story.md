@@ -89,8 +89,8 @@ This story belongs to exactly one domain:
   couvre exactement ce flux.
 - Behavior change allowed: constrained
 - Behavior change constraints:
-  - `NatalResult` peut gagner `planet_dominance`;
-  - le JSON public peut gagner `planet_dominance`;
+  - `NatalResult` peut gagner `dominant_planets`;
+  - le JSON public peut gagner `dominant_planets`;
   - les champs existants `chart_balance.dominant_planets`, `dignities`,
     `planet_condition_profiles`, `planet_condition_signals`, maisons, signes,
     aspects et points astraux ne doivent pas changer;
@@ -119,7 +119,7 @@ scope.
 | Baseline Snapshot | yes | le payload natal et le JSON public gagnent un bloc; un avant/après est requis pour prouver la stabilité de l’existant. |
 | Ownership Routing | yes | la story touche infra DB, runtime domaine, moteur domaine, résultat natal et projection service. |
 | Allowlist Exception | no | aucune exception, alias, fallback ou shim n’est autorisé. |
-| Contract Shape | yes | les contrats `PlanetDominanceResult`, `NatalResult.planet_dominance` et `planet_dominance` ont une forme publique explicite. |
+| Contract Shape | yes | les contrats `PlanetDominanceResult`, `NatalResult.dominant_planets` et `dominant_planets` ont une forme publique explicite. |
 | Batch Migration | no | aucune migration par lots de consommateurs existants n’est effectuée. |
 | Reintroduction Guard | yes | les pondérations locales, la narration, les imports DB/API/services et les doublons de moteur doivent être bloqués. |
 | Persistent Evidence | yes | les snapshots, rapports runtime et rapports de garde doivent rester dans le dossier de story. |
@@ -141,23 +141,22 @@ the dev agent must not infer alternative weights from code or UI needs.
 
 | code | label | category | default_weight | sort_order | is_active | description |
 |---|---|---|---:|---:|---:|---|
-| `chart_ruler` | Chart ruler | rulership | 1.20 | 10 | true | Poids du maître de l'ascendant ou du thème selon les maîtrises runtime. |
-| `angularity` | Angularity | placement | 1.10 | 20 | true | Proximité factuelle aux angles et maisons angulaires déjà calculées. |
-| `condition_strength` | Condition strength | condition | 1.00 | 30 | true | Force fonctionnelle issue de `PlanetConditionProfile`. |
-| `visibility` | Visibility | condition | 0.90 | 40 | true | Visibilité issue de `PlanetConditionProfile`. |
-| `most_elevated` | Most elevated | placement | 0.80 | 50 | true | Contribution de la planète la plus élevée ou proche du MC dans les faits natals. |
-| `luminary_emphasis` | Luminary emphasis | luminary | 0.80 | 60 | true | Accent factuel Soleil/Lune sans interprétation psychologique. |
-| `house_rulership_load` | House rulership load | rulership | 0.75 | 70 | true | Charge de maîtrises de maisons depuis `NatalResult.house_rulers`. |
-| `aspect_centrality` | Aspect centrality | aspects | 0.70 | 80 | true | Centralité issue des aspects natals ou de `chart_balance.dominant_aspects`. |
+| `chart_ruler` | Chart ruler | rulership | 1.40 | 1 | true | Planete gouvernant le signe de l'Ascendant. |
+| `angularity` | Angularity | house_position | 1.30 | 2 | true | Planete situee en maison angulaire ou proche d'un angle. |
+| `condition_strength` | Condition strength | planet_condition | 1.20 | 3 | true | Force issue du PlanetConditionProfile. |
+| `visibility` | Visibility | planet_condition | 1.10 | 4 | true | Visibilite issue du PlanetConditionProfile. |
+| `most_elevated` | Most elevated planet | chart_position | 1.00 | 5 | true | Planete la plus proche du Milieu du Ciel ou la plus elevee selon le modele retenu. |
+| `luminary_emphasis` | Luminary emphasis | luminary | 0.90 | 6 | true | Poids specifique du Soleil et de la Lune dans la structure globale du theme. |
+| `house_rulership_load` | House rulership load | rulership | 0.80 | 7 | true | Nombre et importance des maisons gouvernees par une planete. |
+| `aspect_centrality` | Aspect centrality | aspects | 0.80 | 8 | true | Centralite d'une planete dans le reseau d'aspects. |
 
 Scoring rule:
 
 - each raw factor value is normalized between `0.0` and `1.0`;
-- each weighted value equals `raw_value * default_weight`;
-- `normalized_score` equals the sum of weighted values divided by the sum of
-  active weights;
-- `dominance_score` equals `normalized_score` in v1;
-- ranking is `dominance_score` descending, then `planet_code` ascending.
+- each weighted value equals `normalized_value * score_weight`;
+- `total_score` equals the sum of weighted values divided by the sum of active
+  score weights;
+- ranking is `total_score` descending, then `planet_code` ascending.
 
 ## 4c. Baseline / Before-After Rule
 
@@ -166,7 +165,7 @@ Scoring rule:
 - Comparison after implementation:
   - `_condamad/stories/CS-194-dominant-planets-engine/evidence/planet-dominance-after.json`
 - Expected invariant:
-  - tous les champs natals et chart JSON existants restent présents et inchangés; seul `planet_dominance` est ajouté au résultat natal et au JSON public.
+  - tous les champs natals et chart JSON existants restent présents et inchangés; seul `dominant_planets` est ajouté au résultat natal et au JSON public.
 
 ## 4d. Ownership Routing Rule
 
@@ -187,35 +186,27 @@ Scoring rule:
 ## 4f. Contract Shape
 
 - Contract type:
-  - DTO domaine et payload `NatalResult.planet_dominance` / `planet_dominance`.
+  - DTO domaine et payload `NatalResult.dominant_planets` / `dominant_planets`.
 - Fields:
   - `score_profile: string` profil de calcul de dominance.
+  - `tradition: string` tradition technique du profil.
   - `reference_version: string` version du référentiel.
-  - `factor_types: array` référentiel actif utilisé pour le calcul.
-  - `factor_types[].code: string` code stable du facteur.
-  - `factor_types[].label: string` libellé court.
-  - `factor_types[].category: string` catégorie technique.
-  - `factor_types[].description: string` description factuelle du facteur.
-  - `factor_types[].default_weight: number` poids runtime.
-  - `factor_types[].sort_order: integer` ordre runtime déterministe.
-  - `factor_types[].is_active: boolean` statut actif du facteur.
+  - `chart_ruler: string | null` maître d'Ascendant résolu.
+  - `most_elevated_planet: string | null` planète la plus élevée.
+  - `top_planet: string | null` première planète classée.
   - `planets: array` classement des planètes.
-  - `planets[].planet_code: string` code planète.
+  - `planets[].planet: string` code planète.
   - `planets[].rank: integer` rang stable.
-  - `planets[].dominance_score: number` score normalisé final.
-  - `planets[].normalized_score: number` score final entre `0.0` et `1.0`.
+  - `planets[].total_score: number` score final normalisé entre `0.0` et `1.0`.
+  - `planets[].dominance_level: string` niveau stable v1.
   - `planets[].factors: array` contributions par facteur.
-  - `planets[].factors[].factor_code: string` code issu du référentiel.
+  - `planets[].factors[].factor: string` code issu du référentiel.
   - `planets[].factors[].raw_value: number` valeur factuelle avant pondération.
+  - `planets[].factors[].normalized_value: number` valeur bornée et normalisée.
   - `planets[].factors[].weight: number` poids runtime appliqué.
-  - `planets[].factors[].weighted_value: number` contribution pondérée.
-  - `planets[].factors[].evidence: array` faits courts de provenance.
-  - `summary: object` synthèse non narrative.
-  - `summary.primary_planet: string | null`
-  - `summary.chart_ruler: string | null`
-  - `summary.most_visible_planet: string | null`
-  - `summary.most_functional_planet: string | null`
-  - `summary.angular_dominant_planet: string | null`
+  - `planets[].factors[].weighted_score: number` contribution pondérée.
+  - `planets[].factors[].reason: string` fait court de provenance.
+  - `planets[].explanation_facts: array` faits positifs non narratifs.
 - Required fields:
   - tous les champs listés ci-dessus sont requis, sauf les champs `summary.*` nullable.
 - Optional fields:
@@ -223,15 +214,15 @@ Scoring rule:
 - Status codes:
   - aucune route API nouvelle n’est créée et aucun status code n’est modifié.
 - Serialization names:
-  - `NatalResult.planet_dominance` reste `planet_dominance`.
-  - le JSON public expose `planet_dominance`.
+  - `NatalResult.dominant_planets` reste `dominant_planets`.
+  - le JSON public expose `dominant_planets`.
   - les codes de facteurs gardent les noms du brief: `chart_ruler`,
     `angularity`, `condition_strength`, `visibility`, `most_elevated`,
     `luminary_emphasis`, `house_rulership_load`, `aspect_centrality`.
 - Frontend type impact:
   - aucun fichier frontend n’est modifié dans cette story; le champ public est préparé pour consommation future.
 - Generated contract impact:
-  - OpenAPI ne doit changer que si le payload natal est déjà modélisé par schema généré; dans ce cas le snapshot doit documenter uniquement l’ajout `planet_dominance`.
+  - OpenAPI ne doit changer que si le payload natal est déjà modélisé par schema généré; dans ce cas le snapshot doit documenter uniquement l’ajout `dominant_planets`.
 
 ## 4g. Batch Migration Plan
 
@@ -245,7 +236,7 @@ The implementation must persist these evidence artifacts:
 | Artifact | Path | Purpose |
 |---|---|---|
 | Snapshot avant | `_condamad/stories/CS-194-dominant-planets-engine/evidence/planet-dominance-before.json` | État du payload avant ajout. |
-| Snapshot après | `_condamad/stories/CS-194-dominant-planets-engine/evidence/planet-dominance-after.json` | Ajout exact de `planet_dominance`. |
+| Snapshot après | `_condamad/stories/CS-194-dominant-planets-engine/evidence/planet-dominance-after.json` | Ajout exact de `dominant_planets`. |
 | Rapport runtime | `_condamad/stories/CS-194-dominant-planets-engine/evidence/dominance-runtime-reference.md` | Table, lignes actives, poids et ordre chargés. |
 | Rapport gardes | `_condamad/stories/CS-194-dominant-planets-engine/evidence/dominance-guard-evidence.md` | Scans anti-poids local, anti-DB, anti-LLM et anti-doublon. |
 
@@ -312,8 +303,8 @@ After implementation:
 - Le moteur calcule et explique au minimum les facteurs `chart_ruler`,
   `angularity`, `condition_strength`, `visibility`, `most_elevated`,
   `luminary_emphasis`, `house_rulership_load` et `aspect_centrality`.
-- `NatalResult.planet_dominance` expose les faits sans supprimer ni modifier `chart_balance.dominant_planets`.
-- `build_chart_json` expose `planet_dominance` comme projection stricte, sans recalculer de score.
+- `NatalResult.dominant_planets` expose les faits sans supprimer ni modifier `chart_balance.dominant_planets`.
+- `build_chart_json` expose `dominant_planets` comme projection stricte, sans recalculer de score.
 - Aucun prompt, texte psychologique, score prédictif, compatibilité relationnelle ou condition avancée CS-195 n’est introduit.
 
 ## 6a. Regression Guardrails
@@ -335,7 +326,7 @@ After implementation:
     payload, snapshot avant/après, scan anti-import DB, scan anti-poids local,
     scan anti-LLM et scan anti-prediction.
 - Allowed differences:
-  - ajout de la table `astral_dominance_factor_types`, ajout du runtime associé, ajout de `planet_dominance` dans `NatalResult` et dans le JSON public.
+  - ajout de la table `astral_dominance_factor_types`, ajout du runtime associé, ajout de `dominant_planets` dans `NatalResult` et dans le JSON public.
 
 ## 7. Acceptance Criteria
 
@@ -349,8 +340,8 @@ After implementation:
 | AC6 | `chart_ruler` provient des maîtrises runtime. | pytest: `backend/tests/unit/domain/astrology/test_planet_dominance_engine.py` + `rg SIGN_RULERS`. |
 | AC7 | `condition_strength` consomme `PlanetConditionProfile`. | pytest dominance engine + `rg PlanetConditionProfileService`. |
 | AC8 | `aspect_centrality` vient des faits d’aspects natals. | pytest: `backend/tests/unit/domain/astrology/test_planet_dominance_engine.py`. |
-| AC9 | `NatalResult` expose `planet_dominance` sans modifier `chart_balance.dominant_planets`. | `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py`. |
-| AC10 | `build_chart_json` expose `planet_dominance` sans recalcul dans le serialiseur. | `pytest -q backend/app/tests/unit/test_chart_json_builder.py` + snapshot. |
+| AC9 | `NatalResult` expose `dominant_planets` sans modifier `chart_balance.dominant_planets`. | `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py`. |
+| AC10 | `build_chart_json` expose `dominant_planets` sans recalcul dans le serialiseur. | `pytest -q backend/app/tests/unit/test_chart_json_builder.py` + snapshot. |
 | AC11 | La garde `RG-121` bloque les poids locaux. | `pytest -q backend/app/tests/unit/test_astrology_runtime_reference_guard.py`. |
 | AC12 | Le contrat public reste stable hors ajouts autorisés. | `ruff check .` + comparaison des snapshots evidence. |
 
@@ -369,9 +360,9 @@ After implementation:
   - [x] Subtask 2.4 - Exporter explicitement les surfaces publiques depuis `dominance/__init__.py`.
 
 - [x] Task 3 - Intégrer la dominance au résultat natal et au JSON public (AC: AC9, AC10)
-  - [x] Subtask 3.1 - Ajouter `planet_dominance` à `NatalResult`.
+  - [x] Subtask 3.1 - Ajouter `dominant_planets` à `NatalResult`.
   - [x] Subtask 3.2 - Construire la dominance après `condition_profiles`, `condition_signals` et les faits nécessaires dans `build_natal_result`.
-  - [x] Subtask 3.3 - Ajouter `_serialize_planet_dominance` dans `json_builder.py` comme projection stricte.
+  - [x] Subtask 3.3 - Ajouter `_serialize_dominant_planets` dans `json_builder.py` comme projection stricte.
 
 - [x] Task 4 - Ajouter tests, preuves et gardes (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12)
   - [x] Subtask 4.1 - Ajouter les tests unitaires du moteur dominance.
@@ -452,7 +443,7 @@ Specific forbidden symbols / paths:
 
 Required generated-contract evidence:
 
-- If OpenAPI includes the affected response schema, capture before/after and document that only `planet_dominance` is added.
+- If OpenAPI includes the affected response schema, capture before/after and document that only `dominant_planets` is added.
 - If OpenAPI does not model the dynamic chart JSON shape, record that fact in `_condamad/stories/CS-194-dominant-planets-engine/evidence/dominance-guard-evidence.md`.
 
 ## 17. Files to Inspect First
@@ -484,8 +475,8 @@ Likely files:
 - `backend/app/domain/astrology/dominance/contracts.py` - nouveau contrat domaine.
 - `backend/app/domain/astrology/dominance/planet_dominance_engine.py` - nouveau moteur pur.
 - `backend/app/domain/astrology/dominance/__init__.py` - exports explicites.
-- `backend/app/domain/astrology/natal_calculation.py` - intégrer `planet_dominance`.
-- `backend/app/services/chart/json_builder.py` - exposer `planet_dominance`.
+- `backend/app/domain/astrology/natal_calculation.py` - intégrer `dominant_planets`.
+- `backend/app/services/chart/json_builder.py` - exposer `dominant_planets`.
 
 Likely tests:
 
@@ -528,7 +519,7 @@ rg -n "Session|select\(|from app\.infra|from app\.services|from app\.api|from ap
 rg -n "OpenAI|AIEngineAdapter|chat\.completions|\bprompt\b|narration|micro_note" backend/app/domain/astrology/dominance -g "*.py"
 rg -n "DOMINANCE_FACTORS|DOMINANCE_WEIGHTS|CHART_RULER_WEIGHT|ANGULARITY_WEIGHT|SIGN_RULERS|PLANET_RULERS" `
   backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"
-rg -n "planet_dominance|PlanetDominance" `
+rg -n "dominant_planets|DominantPlanets|PlanetDominance" `
   backend/app/services/chart/json_builder.py `
   backend/app/domain/astrology/natal_calculation.py `
   backend/app/domain/astrology/dominance -g "*.py"
@@ -547,7 +538,7 @@ Expected scan result:
 - Risk: les facteurs ou poids sont codés localement.
   - Guardrail: AC1, AC2, AC5 et `RG-121` imposent la table DB/runtime.
 - Risk: le serialiseur public recalcule la dominance.
-  - Guardrail: AC10 exige une projection stricte depuis `NatalResult.planet_dominance`.
+  - Guardrail: AC10 exige une projection stricte depuis `NatalResult.dominant_planets`.
 - Risk: `ChartSignatureCalculator` et `PlanetDominanceEngine` divergent en deux moteurs concurrents non documentés.
   - Guardrail: AC4, AC8 et les tâches de réutilisation imposent une classification et une source canonique.
 - Risk: CS-193 n’est pas encore implémentée au moment du développement.
