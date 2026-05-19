@@ -55,6 +55,7 @@ from app.infra.db.repositories.house_system_reference import sync_house_system_s
 from app.services.reference_data.aspect_interpretation_seed_service import (
     sync_aspect_interpretation_profiles,
 )
+from app.services.reference_data.dignity_seed_service import sync_astral_dignity_seed_data
 from app.services.reference_data.house_interpretation_seed_service import (
     sync_house_interpretation_profiles,
 )
@@ -1237,6 +1238,7 @@ def run_prediction_reference_seed(db: Session) -> None:
             ensure_astral_sign_profiles(db)
             _ensure_astral_planet_sign_dignities(db)
             ensure_astral_aspect_reference_data(db, v2.id)
+            sync_astral_dignity_seed_data(db, v2.id)
             sync_planet_interpretation_profiles(db, v2.id)
             sync_aspect_interpretation_profiles(db, v2.id)
             sync_astral_translation_seed_data(db, v2.id)
@@ -1557,6 +1559,7 @@ def run_prediction_reference_seed(db: Session) -> None:
     # 10. Consolidation des dignités qui portent les maîtrises de signes.
     print("Seeding planet sign dignities...")
     _ensure_astral_planet_sign_dignities(db)
+    sync_astral_dignity_seed_data(db, v2.id)
 
     # 11. Alimentation des profils et définitions d aspects.
     print("Seeding aspect profiles...")

@@ -5,6 +5,7 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.engine.reflection import Inspector
 
 from app.core.config import settings
 
@@ -102,6 +103,27 @@ EXPECTED_TRANSLATION_TABLES = {
         "micro_note",
     },
 }
+
+
+def _columns(inspector: Inspector, table_name: str) -> set[str]:
+    """Retourne les noms de colonnes declares par la migration pour une table."""
+    return {column["name"] for column in inspector.get_columns(table_name)}
+
+
+def _foreign_key_targets(inspector: Inspector, table_name: str) -> dict[tuple[str, ...], str]:
+    """Indexe les tables ciblees par les cles etrangeres d'une table migree."""
+    return {
+        tuple(foreign_key["constrained_columns"]): foreign_key["referred_table"]
+        for foreign_key in inspector.get_foreign_keys(table_name)
+    }
+
+
+def _unique_column_sets(inspector: Inspector, table_name: str) -> set[tuple[str, ...]]:
+    """Retourne les contraintes uniques sous forme de tuples de colonnes."""
+    return {
+        tuple(constraint["column_names"])
+        for constraint in inspector.get_unique_constraints(table_name)
+    }
 
 
 def _alembic_config() -> Config:
@@ -207,8 +229,109 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_fixed_star_keywords",
         "astral_fixed_star_keyword_translations",
         "astral_fixed_star_definitions",
+        "astral_sources",
+        "astral_dignity_functional_effects",
+        "astral_dignity_intensity_effects",
+        "astral_essential_dignity_types",
+        "astral_accidental_dignity_types",
+        "astral_diginity_score_profiles",
+        "astral_term_bounds",
+        "astral_face_decans",
+        "astral_essential_dignity_rules",
+        "astral_accidental_dignity_rules",
+        "astral_chart_planet_dignity_results",
     ):
         assert table_name in head_tables
+    assert _columns(head_inspector, "astral_diginity_score_profiles") == {
+        "id",
+        "code",
+        "label",
+        "astral_system_id",
+        "profile_family_source_id",
+        "description",
+        "is_default",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_diginity_score_profiles") == {
+        ("astral_system_id",): "astral_systems",
+        ("profile_family_source_id",): "astral_sources",
+    }
+    assert ("code",) in _unique_column_sets(head_inspector, "astral_diginity_score_profiles")
+    assert _columns(head_inspector, "astral_essential_dignity_rules") == {
+        "id",
+        "planet_id",
+        "sign_id",
+        "essential_dignity_types_id",
+        "degree_start",
+        "degree_end",
+        "astral_system_id",
+        "reference_version_id",
+        "source_id",
+        "micro_note",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_essential_dignity_rules") == {
+        ("planet_id",): "astral_planets",
+        ("sign_id",): "astral_signs",
+        ("essential_dignity_types_id",): "astral_essential_dignity_types",
+        ("astral_system_id",): "astral_systems",
+        ("reference_version_id",): "astral_reference_versions",
+        ("source_id",): "astral_sources",
+    }
+    assert (
+        "reference_version_id",
+        "astral_system_id",
+        "planet_id",
+        "sign_id",
+        "essential_dignity_types_id",
+    ) in _unique_column_sets(head_inspector, "astral_essential_dignity_rules")
+    assert _columns(head_inspector, "astral_accidental_dignity_rules") == {
+        "id",
+        "accidental_dignity_type_id",
+        "planet_id",
+        "condition_schema_id",
+        "condition_json",
+        "astral_system_id",
+        "reference_version_id",
+        "micro_note",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_accidental_dignity_rules") == {
+        ("accidental_dignity_type_id",): "astral_accidental_dignity_types",
+        ("planet_id",): "astral_planets",
+        ("condition_schema_id",): "astral_accidental_dignity_condition_schemas",
+        ("astral_system_id",): "astral_systems",
+        ("reference_version_id",): "astral_reference_versions",
+    }
+    assert _columns(head_inspector, "astral_chart_planet_dignity_results") == {
+        "id",
+        "chart_result_id",
+        "planet_id",
+        "score_profile_id",
+        "astral_system_id",
+        "reference_version_id",
+        "essential_score",
+        "accidental_score",
+        "total_score",
+        "functional_strength_score",
+        "expression_quality_score",
+        "intensity_score",
+        "essential_breakdown_json",
+        "accidental_breakdown_json",
+        "condition_summary_json",
+        "calculation_context_json",
+        "created_at",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_chart_planet_dignity_results") == {
+        ("chart_result_id",): "chart_results",
+        ("planet_id",): "astral_planets",
+        ("score_profile_id",): "astral_diginity_score_profiles",
+        ("astral_system_id",): "astral_systems",
+        ("reference_version_id",): "astral_reference_versions",
+    }
+    assert (
+        "chart_result_id",
+        "planet_id",
+        "score_profile_id",
+        "reference_version_id",
+    ) in _unique_column_sets(head_inspector, "astral_chart_planet_dignity_results")
     assert "house_interpretation_profiles" not in head_tables
     assert "astral_sign_rulerships" not in head_tables
     for table_name in (
@@ -1286,7 +1409,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260518_0127"
+    assert version == "20260519_0129"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

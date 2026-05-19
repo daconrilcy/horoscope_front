@@ -150,10 +150,12 @@ class ReferenceDataService:
             ensure_astral_planet_sign_dignities,
             ensure_astral_sign_profiles,
         )
+        from app.services.reference_data.dignity_seed_service import sync_astral_dignity_seed_data
 
         ensure_astral_sign_profiles(db)
         ensure_astral_planet_sign_dignities(db)
         ensure_astral_aspect_reference_data(db, model.id)
+        sync_astral_dignity_seed_data(db, model.id)
         from app.services.reference_data.aspect_interpretation_seed_service import (
             sync_aspect_interpretation_profiles,
         )
