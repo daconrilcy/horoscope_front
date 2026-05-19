@@ -337,6 +337,47 @@ def _serialize_condition_profiles(profiles: Any) -> dict[str, Any]:
     }
 
 
+def _serialize_condition_signals(signal_sets: Any) -> dict[str, Any]:
+    """Projette les signaux conditionnels deja calcules par le domaine."""
+    planets: dict[str, Any] = {}
+    score_profile = ""
+    tradition = ""
+    reference_version = ""
+    if not isinstance(signal_sets, (list, tuple)):
+        signal_sets = []
+    for signal_set in signal_sets:
+        score_profile = signal_set.score_profile
+        tradition = signal_set.tradition
+        reference_version = signal_set.reference_version
+        planets[signal_set.planet_code] = {
+            "planet_code": signal_set.planet_code,
+            "score_profile": signal_set.score_profile,
+            "tradition": signal_set.tradition,
+            "reference_version": signal_set.reference_version,
+            "signals": [
+                {
+                    "code": signal.code,
+                    "label": signal.label,
+                    "axis": signal.axis,
+                    "level": signal.level,
+                    "level_min": signal.level_min,
+                    "level_max": signal.level_max,
+                    "axis_value": signal.axis_value,
+                    "interpretation_use": signal.interpretation_use,
+                    "priority_weight": signal.priority_weight,
+                    "prompt_hint": signal.prompt_hint,
+                }
+                for signal in signal_set.signals
+            ],
+        }
+    return {
+        "score_profile": score_profile,
+        "tradition": tradition,
+        "reference_version": reference_version,
+        "planets": planets,
+    }
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -457,6 +498,9 @@ def build_chart_json(
         "dignities": _serialize_dignities(getattr(natal_result, "dignities", [])),
         "planet_condition_profiles": _serialize_condition_profiles(
             getattr(natal_result, "condition_profiles", [])
+        ),
+        "planet_condition_signals": _serialize_condition_signals(
+            getattr(natal_result, "condition_signals", [])
         ),
     }
     if chart_balance is not None:

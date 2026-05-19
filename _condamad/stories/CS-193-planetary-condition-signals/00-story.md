@@ -1,6 +1,6 @@
 # Story CS-193 planetary-condition-signals: Construire les signaux interpretatifs types des conditions planetaires
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -311,27 +311,27 @@ After implementation:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Ajouter le referentiel DB/runtime des signaux (AC: AC1, AC2)
-  - [ ] Subtask 1.1 - Ajouter une migration Alembic pour `astral_planet_condition_signal_profiles`.
-  - [ ] Subtask 1.2 - Ajouter le modele SQLAlchemy infra avec contraintes de version, code et axe.
-  - [ ] Subtask 1.3 - Charger et mapper les lignes dans `AstrologyRuntimeReference`.
-  - [ ] Subtask 1.4 - Seeder un jeu minimal de signaux couvrant les axes CS-192.
+- [x] Task 1 - Ajouter le referentiel DB/runtime des signaux (AC: AC1, AC2)
+  - [x] Subtask 1.1 - Ajouter une migration Alembic pour `astral_planet_condition_signal_profiles`.
+  - [x] Subtask 1.2 - Ajouter le modele SQLAlchemy infra avec contraintes de version, code et axe.
+  - [x] Subtask 1.3 - Charger et mapper les lignes dans `AstrologyRuntimeReference`.
+  - [x] Subtask 1.4 - Seeder un jeu minimal de signaux couvrant les axes CS-192.
 
-- [ ] Task 2 - Creer les contrats et le builder domaine (AC: AC3, AC4, AC5, AC10)
-  - [ ] Subtask 2.1 - Ajouter `PlanetConditionSignal` dans `condition/contracts.py` ou un fichier voisin du meme package.
-  - [ ] Subtask 2.2 - Ajouter `PlanetConditionSignalBuilder` dans `backend/app/domain/astrology/condition/**`.
-  - [ ] Subtask 2.3 - Exporter explicitement les nouveaux contrats depuis `condition/__init__.py` si le package exporte deja ses surfaces.
+- [x] Task 2 - Creer les contrats et le builder domaine (AC: AC3, AC4, AC5, AC10)
+  - [x] Subtask 2.1 - Ajouter `PlanetConditionSignal` dans `condition/contracts.py` ou un fichier voisin du meme package.
+  - [x] Subtask 2.2 - Ajouter `PlanetConditionSignalBuilder` dans `backend/app/domain/astrology/condition/**`.
+  - [x] Subtask 2.3 - Exporter explicitement les nouveaux contrats depuis `condition/__init__.py` si le package exporte deja ses surfaces.
 
-- [ ] Task 3 - Integrer les signaux au resultat natal et au JSON public (AC: AC6, AC7)
-  - [ ] Subtask 3.1 - Ajouter `condition_signals` a `NatalResult`.
-  - [ ] Subtask 3.2 - Construire les signaux apres `condition_profiles` dans `build_natal_result`.
-  - [ ] Subtask 3.3 - Ajouter `_serialize_condition_signals` dans `json_builder.py` comme projection stricte.
+- [x] Task 3 - Integrer les signaux au resultat natal et au JSON public (AC: AC6, AC7)
+  - [x] Subtask 3.1 - Ajouter `condition_signals` a `NatalResult`.
+  - [x] Subtask 3.2 - Construire les signaux apres `condition_profiles` dans `build_natal_result`.
+  - [x] Subtask 3.3 - Ajouter `_serialize_condition_signals` dans `json_builder.py` comme projection stricte.
 
-- [ ] Task 4 - Ajouter tests, preuves et gardes (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10)
-  - [ ] Subtask 4.1 - Ajouter les tests unitaires du builder de signaux.
-  - [ ] Subtask 4.2 - Etendre les tests runtime reference, contrat natal, chart JSON et resultat chart.
-  - [ ] Subtask 4.3 - Mettre a jour la garde d'architecture condition avec seuils locaux interdits.
-  - [ ] Subtask 4.4 - Produire les artefacts evidence dans le dossier de story.
+- [x] Task 4 - Ajouter tests, preuves et gardes (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10)
+  - [x] Subtask 4.1 - Ajouter les tests unitaires du builder de signaux.
+  - [x] Subtask 4.2 - Etendre les tests runtime reference, contrat natal, chart JSON et resultat chart.
+  - [x] Subtask 4.3 - Mettre a jour la garde d'architecture condition avec seuils locaux interdits.
+  - [x] Subtask 4.4 - Produire les artefacts evidence dans le dossier de story.
 
 ## 9. Mandatory Reuse / DRY Constraints
 

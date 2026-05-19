@@ -209,6 +209,22 @@ class DignityScoreWeightReferenceData:
 
 
 @dataclass(frozen=True, slots=True)
+class PlanetConditionSignalProfileReferenceData:
+    """Profil runtime versionne d'un signal de condition planetaire."""
+
+    condition_axis: str
+    level_min: float
+    level_max: float
+    signal_code: str
+    signal_label: str
+    signal_level: str
+    interpretation_use: str
+    priority_weight: float
+    prompt_hint: str
+    reference_version: str
+
+
+@dataclass(frozen=True, slots=True)
 class EssentialDignityRuleReferenceData:
     """Regle essentielle reliant une planete, un signe et une plage de degres."""
 
@@ -439,6 +455,7 @@ class AstrologyRuntimeReference:
     house_axes: tuple[HouseAxisReferenceData, ...]
     dignities: DignityReferenceSet
     dignity_reference: PlanetDignityReferenceSet
+    condition_signal_profiles: tuple[PlanetConditionSignalProfileReferenceData, ...]
     angle_points: AnglePointReferenceSet
     astral_points: AstralPointReferenceSet
     house_systems: HouseSystemReferenceSet

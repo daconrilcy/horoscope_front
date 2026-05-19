@@ -164,7 +164,7 @@ class PlanetConditionProfileService:
         result: PlanetDignityResult,
         ranking_score: float,
     ) -> tuple[PlanetConditionExplanationFact, ...]:
-        """Expose des faits courts sans narration editoriale."""
+        """Expose des faits courts sans texte editorial."""
         return (
             PlanetConditionExplanationFact(
                 "essential_match_count",

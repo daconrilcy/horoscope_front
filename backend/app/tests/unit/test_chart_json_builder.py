@@ -8,6 +8,8 @@ from app.domain.astrology.condition.contracts import (
     PlanetConditionBreakdownItem,
     PlanetConditionExplanationFact,
     PlanetConditionProfile,
+    PlanetConditionSignal,
+    PlanetConditionSignalSet,
 )
 from app.domain.astrology.dignities.contracts import (
     AccidentalDignityMatch,
@@ -214,6 +216,28 @@ def mock_natal_result():
             ),
         )
     ]
+    result.condition_signals = [
+        PlanetConditionSignalSet(
+            planet_code="sun",
+            score_profile="traditional_standard",
+            tradition="traditional",
+            reference_version="v1.2",
+            signals=(
+                PlanetConditionSignal(
+                    code="visibility_high",
+                    label="Visibility high",
+                    axis="visibility",
+                    level="high",
+                    level_min=0.5,
+                    level_max=100.0,
+                    axis_value=1.0,
+                    interpretation_use="surface_condition_axis",
+                    priority_weight=30.0,
+                    prompt_hint="visibility_emphasized",
+                ),
+            ),
+        )
+    ]
 
     return result
 
@@ -323,6 +347,23 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         "fact_type": "accidental_match_count",
         "value": "1",
     }
+    assert chart["planet_condition_signals"]["score_profile"] == "traditional_standard"
+    signal_sun = chart["planet_condition_signals"]["planets"]["sun"]
+    assert signal_sun["planet_code"] == "sun"
+    assert signal_sun["signals"] == [
+        {
+            "code": "visibility_high",
+            "label": "Visibility high",
+            "axis": "visibility",
+            "level": "high",
+            "level_min": 0.5,
+            "level_max": 100.0,
+            "axis_value": 1.0,
+            "interpretation_use": "surface_condition_axis",
+            "priority_weight": 30.0,
+            "prompt_hint": "visibility_emphasized",
+        }
+    ]
 
     # Angles
     assert chart["angles"]["ASC"]["sign"] == "capricorn"

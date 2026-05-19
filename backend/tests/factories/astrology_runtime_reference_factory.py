@@ -109,6 +109,7 @@ def runtime_reference_from_mapping(
         ),
         sign_rulerships={str(sign): str(planet) for sign, planet in sign_rulerships.items()},
         dignity_reference=_default_dignity_reference(),
+        condition_signal_profiles=_default_condition_signal_profiles(version),
         planet_definitions={
             "sun": {"body_class": "luminary", "is_luminary": True},
             "moon": {"body_class": "luminary", "is_luminary": True},
@@ -193,6 +194,48 @@ def runtime_reference_from_mapping(
             {"code": "equal", "name": "Equal", "is_active": True},
             {"code": "porphyry", "name": "Porphyry", "is_active": True},
         ),
+    )
+
+
+def _default_condition_signal_profiles(reference_version: str) -> tuple[dict[str, object], ...]:
+    """Crée des profils de signaux conditionnels gouvernes pour les fixtures."""
+    return (
+        {
+            "condition_axis": "functional_strength",
+            "level_min": 1.0,
+            "level_max": 100.0,
+            "signal_code": "functional_strength_high",
+            "signal_label": "Functional strength high",
+            "signal_level": "high",
+            "interpretation_use": "prioritize_condition_axis",
+            "priority_weight": 10.0,
+            "prompt_hint": "functional_strength_positive",
+            "reference_version": reference_version,
+        },
+        {
+            "condition_axis": "visibility",
+            "level_min": 0.5,
+            "level_max": 100.0,
+            "signal_code": "visibility_high",
+            "signal_label": "Visibility high",
+            "signal_level": "high",
+            "interpretation_use": "surface_condition_axis",
+            "priority_weight": 30.0,
+            "prompt_hint": "visibility_emphasized",
+            "reference_version": reference_version,
+        },
+        {
+            "condition_axis": "constraint",
+            "level_min": 0.5,
+            "level_max": 100.0,
+            "signal_code": "constraint_high",
+            "signal_label": "Constraint high",
+            "signal_level": "high",
+            "interpretation_use": "temper_condition_axis",
+            "priority_weight": 80.0,
+            "prompt_hint": "constraint_present",
+            "reference_version": reference_version,
+        },
     )
 
 
@@ -811,6 +854,7 @@ def missing_planet_definition() -> AstrologyRuntimeReference:
         house_axes=reference.house_axes,
         dignities=reference.dignities,
         dignity_reference=reference.dignity_reference,
+        condition_signal_profiles=reference.condition_signal_profiles,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -831,6 +875,7 @@ def missing_dignity() -> AstrologyRuntimeReference:
         house_axes=reference.house_axes,
         dignities=type(reference.dignities)(items=(), sign_rulerships={}),
         dignity_reference=reference.dignity_reference,
+        condition_signal_profiles=reference.condition_signal_profiles,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,
@@ -865,6 +910,7 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         house_axes=reference.house_axes,
         dignities=reference.dignities,
         dignity_reference=reference.dignity_reference,
+        condition_signal_profiles=reference.condition_signal_profiles,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
         house_systems=reference.house_systems,

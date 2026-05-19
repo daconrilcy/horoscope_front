@@ -7,6 +7,7 @@ from datetime import datetime
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -578,6 +579,39 @@ class AstralAccidentalDignityScoreWeightModel(Base):
     support_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     constraint_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     notes: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class AstralPlanetConditionSignalProfileModel(Base):
+    """Profil referentiel versionne d'un signal de condition planetaire."""
+
+    __tablename__ = "astral_planet_condition_signal_profiles"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "condition_axis",
+            "signal_code",
+            "signal_level",
+            name="uq_astral_planet_condition_signal_profiles_scope",
+        ),
+        CheckConstraint(
+            "level_min <= level_max",
+            name="ck_astral_planet_condition_signal_profiles_range",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    condition_axis: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    level_min: Mapped[float] = mapped_column(Float, nullable=False)
+    level_max: Mapped[float] = mapped_column(Float, nullable=False)
+    signal_code: Mapped[str] = mapped_column(String(96), nullable=False, index=True)
+    signal_label: Mapped[str] = mapped_column(String(128), nullable=False)
+    signal_level: Mapped[str] = mapped_column(String(64), nullable=False)
+    interpretation_use: Mapped[str] = mapped_column(String(128), nullable=False)
+    priority_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    prompt_hint: Mapped[str] = mapped_column(String(160), nullable=False)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
 
 
 class AstralChartPlanetDignityResultModel(Base):

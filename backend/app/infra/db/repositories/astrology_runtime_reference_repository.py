@@ -29,6 +29,7 @@ from app.infra.db.models.dignity_reference import (
     AstralFaceDecanModel,
     AstralHeliacalConditionModel,
     AstralHorizonPositionModel,
+    AstralPlanetConditionSignalProfileModel,
     AstralPlanetMotionStateModel,
     AstralPlanetNatureModel,
     AstralRulerAssignmentsRoleModel,
@@ -84,6 +85,17 @@ class AstrologyRuntimeReferenceRepository:
     _REQUIRED_PLANETS = frozenset(planet_codes())
     _REQUIRED_ANGLE_POINTS = frozenset({"asc", "dsc", "mc", "ic"})
     _REQUIRED_HOUSE_SYSTEMS = frozenset({"placidus", "whole_sign", "equal", "porphyry"})
+    _CONDITION_SIGNAL_AXES = frozenset(
+        {
+            "functional_strength",
+            "intensity",
+            "visibility",
+            "stability",
+            "coherence",
+            "support",
+            "constraint",
+        }
+    )
 
     def __init__(
         self,
@@ -116,6 +128,7 @@ class AstrologyRuntimeReferenceRepository:
                 dignities=self._load_dignities(),
                 sign_rulerships=prediction_repo.get_sign_rulerships(),
                 dignity_reference=self._load_dignity_reference(version_model.id),
+                condition_signal_profiles=self._load_condition_signal_profiles(version_model.id),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
                 astral_points=self._load_astral_point_payload(),
@@ -253,6 +266,39 @@ class AstrologyRuntimeReferenceRepository:
             "face_decans": self._load_face_decans(reference_version_id),
             "accidental_rules": self._load_accidental_dignity_rules(reference_version_id),
         }
+
+    def _load_condition_signal_profiles(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les profils de signaux conditionnels versionnes."""
+        rows = self.db.execute(
+            select(
+                AstralPlanetConditionSignalProfileModel.condition_axis,
+                AstralPlanetConditionSignalProfileModel.level_min,
+                AstralPlanetConditionSignalProfileModel.level_max,
+                AstralPlanetConditionSignalProfileModel.signal_code,
+                AstralPlanetConditionSignalProfileModel.signal_label,
+                AstralPlanetConditionSignalProfileModel.signal_level,
+                AstralPlanetConditionSignalProfileModel.interpretation_use,
+                AstralPlanetConditionSignalProfileModel.priority_weight,
+                AstralPlanetConditionSignalProfileModel.prompt_hint,
+                ReferenceVersionModel.version.label("reference_version"),
+            )
+            .join(
+                ReferenceVersionModel,
+                AstralPlanetConditionSignalProfileModel.reference_version_id
+                == ReferenceVersionModel.id,
+            )
+            .where(
+                AstralPlanetConditionSignalProfileModel.reference_version_id == reference_version_id
+            )
+            .order_by(
+                AstralPlanetConditionSignalProfileModel.priority_weight,
+                AstralPlanetConditionSignalProfileModel.condition_axis,
+                AstralPlanetConditionSignalProfileModel.signal_code,
+            )
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
 
     def _load_dignity_types(
         self,
@@ -701,6 +747,14 @@ class AstrologyRuntimeReferenceRepository:
         if not reference.dignities.sign_rulerships:
             self._raise_integrity("sign_rulerships", "missing")
         self._validate_dignity_reference(reference)
+        if not reference.condition_signal_profiles:
+            self._raise_integrity("condition_signal_profiles", "missing")
+        for signal_profile in reference.condition_signal_profiles:
+            if signal_profile.condition_axis not in self._CONDITION_SIGNAL_AXES:
+                self._raise_integrity(
+                    "condition_signal_profiles",
+                    f"unknown_axis:{signal_profile.condition_axis}",
+                )
         if len(reference.dignities.sign_rulerships) != 12:
             self._raise_integrity("sign_rulerships", "expected_12")
         for sign_code, planet_code in reference.dignities.sign_rulerships.items():

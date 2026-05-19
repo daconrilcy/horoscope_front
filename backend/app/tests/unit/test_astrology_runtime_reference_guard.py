@@ -191,7 +191,7 @@ def test_dignity_calculators_do_not_cross_runtime_boundaries() -> None:
 
 
 def test_condition_profiles_do_not_cross_runtime_boundaries() -> None:
-    """Les profils conditionnels restent derives, purs et sans table dediee."""
+    """La couche condition reste derivee, pure et sans seuil local."""
     condition_root = BACKEND_ROOT / "app/domain/astrology/condition"
     forbidden_patterns = (
         "Session",
@@ -204,11 +204,15 @@ def test_condition_profiles_do_not_cross_runtime_boundaries() -> None:
         "VISIBILITY_" + "WEIGHTS",
         "CONDITION_" + "SCORES",
         "CONDITION_" + "LEVELS",
+        "SIGNAL_" + "THRESHOLDS",
+        "CONDITION_SIGNAL_" + "RULES",
+        "CONDITION_SIGNAL_" + "PROFILES",
+        "FUNCTIONAL_STRENGTH_" + "THRESHOLDS",
+        "VISIBILITY_SIGNAL_" + "LEVELS",
         "AIEngineAdapter",
         "OpenAI",
         "chat.completions",
-        "prompt",
-        "interpretation",
+        "narration",
         "micro_note",
     )
     hits: list[str] = []
@@ -233,3 +237,22 @@ def test_condition_profile_table_is_not_created() -> None:
                 hits.append(str(path))
 
     assert hits == []
+
+
+def test_condition_signals_are_projected_from_natal_result_only() -> None:
+    """Le serialiseur public ne recalcule pas les signaux conditionnels."""
+    tree = ast.parse(_source("app/services/chart/json_builder.py"))
+    serializer = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_serialize_condition_signals"
+    )
+    comparisons = [node for node in ast.walk(serializer) if isinstance(node, ast.Compare)]
+    calls = [
+        ast.unparse(node.func)
+        for node in ast.walk(serializer)
+        if isinstance(node, ast.Call) and not isinstance(node.func, ast.Name)
+    ]
+
+    assert comparisons == []
+    assert "PlanetConditionSignalBuilder" not in "".join(calls)

@@ -1,0 +1,17 @@
+# Configuration racine pour le lint global du monorepo.
+line-length = 100
+target-version = "py313"
+extend-exclude = [
+    ".agent",
+    ".agents",
+    ".claude",
+    ".codex-artifacts",
+    ".cursor",
+    ".discord",
+    ".gemini",
+    ".pytest_cache",
+    ".tmp-pytest",
+]
+
+[lint]
+select = ["E", "F", "I"]

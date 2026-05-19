@@ -8,6 +8,7 @@ from sqlalchemy import delete, select
 
 from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
+from app.infra.db.models.dignity_reference import AstralPlanetConditionSignalProfileModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstralSignModel,
@@ -145,6 +146,14 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert len(reference.dignity_reference.term_bounds) == 60
     assert len(reference.dignity_reference.face_decans) == 36
     assert reference.dignity_reference.accidental_rules
+    assert reference.condition_signal_profiles
+    condition_signal = reference.condition_signal_profiles[0]
+    assert condition_signal.condition_axis == "functional_strength"
+    assert condition_signal.level_min == 1.0
+    assert condition_signal.level_max == 100.0
+    assert condition_signal.signal_code == "functional_strength_high"
+    assert condition_signal.interpretation_use == "prioritize_condition_axis"
+    assert condition_signal.prompt_hint == "functional_strength_positive"
     first_weight = reference.dignity_reference.essential_weights["traditional_standard"][0]
     assert first_weight.condition_visibility == 0.0
     assert first_weight.condition_stability == 0.0
@@ -154,6 +163,60 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert {item.code for item in reference.angle_points.items} >= {"asc", "dsc", "mc", "ic"}
     assert reference.aspects.items
     assert reference.aspects.orb_rules
+
+
+def test_repository_integrity_rejects_missing_condition_signal_profiles() -> None:
+    """L'integrite runtime exige les profils de signaux conditionnels."""
+    repository = AstrologyRuntimeReferenceRepository(
+        db=None, mapper=AstrologyRuntimeReferenceMapper()
+    )  # type: ignore[arg-type]
+    reference = replace(complete_reference(), condition_signal_profiles=())
+
+    with pytest.raises(AstrologyRuntimeReferenceError) as error:
+        repository._validate(reference)
+
+    assert error.value.details == {
+        "field": "condition_signal_profiles",
+        "reason": "missing",
+    }
+
+
+def test_repository_integrity_rejects_unknown_condition_signal_axis() -> None:
+    """L'integrite runtime exige des axes portes par PlanetConditionProfile."""
+    repository = AstrologyRuntimeReferenceRepository(
+        db=None, mapper=AstrologyRuntimeReferenceMapper()
+    )  # type: ignore[arg-type]
+    reference = complete_reference()
+    invalid_signal_profile = replace(
+        reference.condition_signal_profiles[0],
+        condition_axis="expression_quality",
+    )
+    reference = replace(reference, condition_signal_profiles=(invalid_signal_profile,))
+
+    with pytest.raises(AstrologyRuntimeReferenceError) as error:
+        repository._validate(reference)
+
+    assert error.value.details == {
+        "field": "condition_signal_profiles",
+        "reason": "unknown_axis:expression_quality",
+    }
+
+
+def test_repository_loads_condition_signal_profiles_from_db() -> None:
+    """Le repository charge les plages de signaux depuis la table versionnee."""
+    _cleanup_reference_tables()
+
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        rows = db.scalars(
+            select(AstralPlanetConditionSignalProfileModel).order_by(
+                AstralPlanetConditionSignalProfileModel.priority_weight
+            )
+        ).all()
+
+    assert rows
+    assert rows[0].condition_axis == "functional_strength"
+    assert rows[0].signal_code == "functional_strength_high"
 
 
 def test_public_reference_payload_keeps_sign_contract_unchanged() -> None:

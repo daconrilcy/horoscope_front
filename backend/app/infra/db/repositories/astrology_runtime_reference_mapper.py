@@ -37,6 +37,7 @@ from app.domain.astrology.runtime.runtime_reference import (
     HouseReferenceSet,
     HouseSystemReferenceData,
     HouseSystemReferenceSet,
+    PlanetConditionSignalProfileReferenceData,
     PlanetDignityReferenceSet,
     PlanetReferenceData,
     PlanetReferenceSet,
@@ -61,6 +62,7 @@ class AstrologyRuntimeReferenceMapper:
         dignities: Sequence[Mapping[str, object]],
         sign_rulerships: Mapping[str, str],
         dignity_reference: Mapping[str, object],
+        condition_signal_profiles: Sequence[Mapping[str, object]],
         planet_definitions: Mapping[str, Mapping[str, object]],
         angle_points: Sequence[Mapping[str, object]],
         astral_points: Sequence[Mapping[str, object]],
@@ -166,6 +168,21 @@ class AstrologyRuntimeReferenceMapper:
                 sign_rulerships={str(key): str(value) for key, value in sign_rulerships.items()},
             ),
             dignity_reference=self.map_dignity_reference(dignity_reference or {}),
+            condition_signal_profiles=tuple(
+                PlanetConditionSignalProfileReferenceData(
+                    condition_axis=str(item["condition_axis"]),
+                    level_min=float(item["level_min"]),
+                    level_max=float(item["level_max"]),
+                    signal_code=str(item["signal_code"]),
+                    signal_label=str(item["signal_label"]),
+                    signal_level=str(item["signal_level"]),
+                    interpretation_use=str(item["interpretation_use"]),
+                    priority_weight=float(item["priority_weight"]),
+                    prompt_hint=str(item["prompt_hint"]),
+                    reference_version=str(item["reference_version"]),
+                )
+                for item in condition_signal_profiles
+            ),
             angle_points=AnglePointReferenceSet(
                 tuple(
                     AnglePointReferenceData(

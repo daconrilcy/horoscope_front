@@ -26,9 +26,15 @@ from app.domain.astrology.calculators import (
 from app.domain.astrology.calculators.aspects import build_aspect_body_from_position
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
 from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
-from app.domain.astrology.condition.contracts import PlanetConditionProfile
+from app.domain.astrology.condition.contracts import (
+    PlanetConditionProfile,
+    PlanetConditionSignalSet,
+)
 from app.domain.astrology.condition.planet_condition_profile_service import (
     PlanetConditionProfileService,
+)
+from app.domain.astrology.condition.planet_condition_signal_builder import (
+    PlanetConditionSignalBuilder,
 )
 from app.domain.astrology.dignities.contracts import PlanetDignityInput, PlanetDignityResult
 from app.domain.astrology.dignities.planet_dignity_scoring_service import (
@@ -133,6 +139,7 @@ class NatalResult(BaseModel):
     )
     dignities: list[PlanetDignityResult] = Field(default_factory=list)
     condition_profiles: list[PlanetConditionProfile] = Field(default_factory=list)
+    condition_signals: list[PlanetConditionSignalSet] = Field(default_factory=list)
     aspects: list[AspectResult]
 
     @property
@@ -781,6 +788,9 @@ def build_natal_result(
     condition_profiles = list(
         PlanetConditionProfileService().calculate(tuple(dignities), runtime_reference)
     )
+    condition_signals = list(
+        PlanetConditionSignalBuilder().build(tuple(condition_profiles), runtime_reference)
+    )
     points = [NatalAstralPointPosition.model_validate(item) for item in points_raw]
     cusp_houses = [
         HouseRuntimeData(
@@ -846,5 +856,6 @@ def build_natal_result(
         astral_points=points,
         dignities=dignities,
         condition_profiles=condition_profiles,
+        condition_signals=condition_signals,
         aspects=aspects,
     )

@@ -33,6 +33,7 @@ from app.infra.db.models import (
     AstralHeliacalConditionModel,
     AstralHorizonPositionModel,
     AstralHouseModalityModel,
+    AstralPlanetConditionSignalProfileModel,
     AstralPlanetMotionStateModel,
     AstralPlanetNatureModel,
     AstralRulerAssignmentsRoleModel,
@@ -270,6 +271,31 @@ def _sync_score_weights(db: Session) -> None:
     db.flush()
 
 
+def _sync_condition_signal_profiles(db: Session, reference_version_id: int) -> None:
+    """Synchronise les profils de signaux conditionnels versionnes."""
+    rows = []
+    for row in _load_rows("astral_planet_condition_signal_profiles.json"):
+        rows.append(
+            {
+                "condition_axis": row["condition_axis"],
+                "level_min": row["level_min"],
+                "level_max": row["level_max"],
+                "signal_code": row["signal_code"],
+                "signal_label": row["signal_label"],
+                "signal_level": row["signal_level"],
+                "interpretation_use": row["interpretation_use"],
+                "priority_weight": row["priority_weight"],
+                "prompt_hint": row["prompt_hint"],
+            }
+        )
+    _replace_versioned_rows(
+        db,
+        AstralPlanetConditionSignalProfileModel,
+        reference_version_id,
+        rows,
+    )
+
+
 def _sync_accidental_rules(
     db: Session,
     reference_version_id: int,
@@ -303,5 +329,6 @@ def sync_astral_dignity_seed_data(db: Session, reference_version_id: int) -> Non
     _sync_score_profiles(db, maps)
     _sync_boundaries_and_rules(db, reference_version_id, maps)
     _sync_score_weights(db)
+    _sync_condition_signal_profiles(db, reference_version_id)
     _sync_accidental_rules(db, reference_version_id, maps)
     db.flush()

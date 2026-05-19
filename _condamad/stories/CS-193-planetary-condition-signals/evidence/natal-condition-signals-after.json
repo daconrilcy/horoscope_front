@@ -1,0 +1,77 @@
+{
+  "source": "CS-193 implemented contract shape",
+  "contract_diff": {
+    "natal_result_added_fields": [
+      "condition_signals"
+    ],
+    "chart_json_added_fields": [
+      "planet_condition_signals"
+    ],
+    "removed_fields": [],
+    "changed_existing_sections": []
+  },
+  "stable_existing_sections_asserted_by_tests": [
+    "meta",
+    "planets",
+    "houses",
+    "house_rulers",
+    "aspects",
+    "angles",
+    "dignities",
+    "planet_condition_profiles"
+  ],
+  "condition_signals": [
+    {
+      "planet_code": "sun",
+      "score_profile": "traditional_standard",
+      "tradition": "traditional",
+      "reference_version": "v1.2",
+      "signals": [
+        {
+          "code": "visibility_high",
+          "label": "Visibility high",
+          "axis": "visibility",
+          "level": "high",
+          "level_min": 0.5,
+          "level_max": 100.0,
+          "axis_value": 1.0,
+          "interpretation_use": "surface_condition_axis",
+          "priority_weight": 30.0,
+          "prompt_hint": "visibility_emphasized"
+        }
+      ]
+    }
+  ],
+  "planet_condition_signals": {
+    "score_profile": "traditional_standard",
+    "tradition": "traditional",
+    "reference_version": "v1.2",
+    "planets": {
+      "sun": {
+        "planet_code": "sun",
+        "score_profile": "traditional_standard",
+        "tradition": "traditional",
+        "reference_version": "v1.2",
+        "signals": [
+          {
+            "code": "visibility_high",
+            "label": "Visibility high",
+            "axis": "visibility",
+            "level": "high",
+            "level_min": 0.5,
+            "level_max": 100.0,
+            "axis_value": 1.0,
+            "interpretation_use": "surface_condition_axis",
+            "priority_weight": 30.0,
+            "prompt_hint": "visibility_emphasized"
+          }
+        ]
+      }
+    }
+  },
+  "validation_evidence": [
+    "backend/app/tests/unit/test_chart_json_builder.py::test_build_chart_json_full asserts existing sections and the new planet_condition_signals section",
+    "backend/app/tests/unit/test_chart_result_service.py asserts result_payload condition_signals persistence",
+    "generated/03-acceptance-traceability.md maps AC7 and AC9 to passing validation"
+  ]
+}

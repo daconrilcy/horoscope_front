@@ -100,6 +100,7 @@ def test_persist_and_get_audit_record() -> None:
     assert stored_payload is not None
     assert stored_payload.result_payload["house_rulers"]
     assert stored_payload.result_payload["condition_profiles"]
+    assert stored_payload.result_payload["condition_signals"]
     first_house = stored_payload.result_payload["houses"][0]
     assert first_house["sign"] == first_house["cusp_sign"]
     assert "contained_signs" in first_house

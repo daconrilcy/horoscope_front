@@ -1,0 +1,41 @@
+{
+  "source": "CS-192 baseline contract shape before CS-193",
+  "natal_result_fields": [
+    "reference_version",
+    "ruleset_version",
+    "house_system",
+    "engine",
+    "zodiac",
+    "frame",
+    "prepared_input",
+    "planet_positions",
+    "houses",
+    "dignities",
+    "condition_profiles",
+    "aspects"
+  ],
+  "chart_json_fields": [
+    "meta",
+    "planets",
+    "houses",
+    "house_rulers",
+    "aspects",
+    "angles",
+    "dignities",
+    "planet_condition_profiles"
+  ],
+  "existing_public_sections": {
+    "meta": "present",
+    "planets": "present",
+    "houses": "present",
+    "house_rulers": "present",
+    "aspects": "present",
+    "angles": "present",
+    "dignities": "present",
+    "planet_condition_profiles": "present"
+  },
+  "absent_before_cs193": {
+    "condition_signals": true,
+    "planet_condition_signals": true
+  }
+}

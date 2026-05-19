@@ -51,3 +51,30 @@ class PlanetConditionProfile:
     condition_level: str
     breakdown: tuple[PlanetConditionBreakdownItem, ...]
     explanation_facts: tuple[PlanetConditionExplanationFact, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PlanetConditionSignal:
+    """Signal type derive d'un axe conditionnel et d'une plage runtime."""
+
+    code: str
+    label: str
+    axis: str
+    level: str
+    level_min: float
+    level_max: float
+    axis_value: float
+    interpretation_use: str
+    priority_weight: float
+    prompt_hint: str
+
+
+@dataclass(frozen=True, slots=True)
+class PlanetConditionSignalSet:
+    """Signaux gouvernes produits pour une planete."""
+
+    planet_code: str
+    score_profile: str
+    tradition: str
+    reference_version: str
+    signals: tuple[PlanetConditionSignal, ...]
