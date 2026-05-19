@@ -24,6 +24,8 @@ from app.infra.db.models.dignity_reference import (
     AstralConditionOperatorModel,
     AstralDecanSystemCodeModel,
     AstralDominanceFactorTypeModel,
+    AstralDominanceScoreProfileModel,
+    AstralDominanceScoreWeightModel,
     AstralEssentialDignityRuleModel,
     AstralEssentialDignityScoreWeightModel,
     AstralEssentialDignityTypeModel,
@@ -143,6 +145,8 @@ class AstrologyRuntimeReferenceRepository:
                 dignity_reference=self._load_dignity_reference(version_model.id),
                 condition_signal_profiles=self._load_condition_signal_profiles(version_model.id),
                 dominance_factor_types=self._load_dominance_factor_types(version_model.id),
+                dominance_score_profiles=self._load_dominance_score_profiles(version_model.id),
+                dominance_score_weights=self._load_dominance_score_weights(version_model.id),
                 planet_definitions=self._load_planet_definitions(),
                 angle_points=self._load_angle_points(),
                 astral_points=self._load_astral_point_payload(),
@@ -336,6 +340,57 @@ class AstrologyRuntimeReferenceRepository:
             .where(AstralDominanceFactorTypeModel.reference_version_id == reference_version_id)
             .where(AstralDominanceFactorTypeModel.is_active.is_(True))
             .order_by(AstralDominanceFactorTypeModel.sort_order)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_dominance_score_profiles(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les profils actifs de scoring de dominance."""
+        rows = self.db.execute(
+            select(
+                AstralDominanceScoreProfileModel.code,
+                AstralDominanceScoreProfileModel.label,
+                AstralDominanceScoreProfileModel.tradition_code,
+                AstralDominanceScoreProfileModel.description,
+                AstralDominanceScoreProfileModel.reference_version_code,
+                AstralDominanceScoreProfileModel.is_active,
+            )
+            .where(AstralDominanceScoreProfileModel.reference_version_id == reference_version_id)
+            .where(AstralDominanceScoreProfileModel.is_active.is_(True))
+            .order_by(AstralDominanceScoreProfileModel.code)
+        ).all()
+        return tuple(dict(row._mapping) for row in rows)
+
+    def _load_dominance_score_weights(
+        self, reference_version_id: int
+    ) -> tuple[dict[str, object], ...]:
+        """Charge les poids de dominance par profil et facteur."""
+        rows = self.db.execute(
+            select(
+                AstralDominanceScoreProfileModel.code.label("score_profile_code"),
+                AstralDominanceFactorTypeModel.code.label("factor_type_code"),
+                AstralDominanceScoreWeightModel.weight,
+                AstralDominanceScoreWeightModel.min_value,
+                AstralDominanceScoreWeightModel.max_value,
+                AstralDominanceScoreWeightModel.normalization_method,
+                AstralDominanceScoreWeightModel.notes,
+            )
+            .join(
+                AstralDominanceScoreProfileModel,
+                AstralDominanceScoreWeightModel.score_profile_id
+                == AstralDominanceScoreProfileModel.id,
+            )
+            .join(
+                AstralDominanceFactorTypeModel,
+                AstralDominanceScoreWeightModel.factor_type_id == AstralDominanceFactorTypeModel.id,
+            )
+            .where(AstralDominanceScoreProfileModel.reference_version_id == reference_version_id)
+            .where(AstralDominanceFactorTypeModel.reference_version_id == reference_version_id)
+            .order_by(
+                AstralDominanceScoreProfileModel.code,
+                AstralDominanceFactorTypeModel.sort_order,
+            )
         ).all()
         return tuple(dict(row._mapping) for row in rows)
 
@@ -803,6 +858,18 @@ class AstrologyRuntimeReferenceRepository:
         sort_orders = [item.sort_order for item in reference.dominance_factor_types]
         if sort_orders != sorted(sort_orders) or len(sort_orders) != len(set(sort_orders)):
             self._raise_integrity("dominance_factor_types", "invalid_sort_order")
+        if not reference.dominance_reference.score_profiles:
+            self._raise_integrity("dominance_score_profiles", "missing")
+        default_profile = reference.dominance_reference.default_score_profile
+        if default_profile.code != "natal_standard_v1":
+            self._raise_integrity("dominance_score_profiles", "missing_natal_standard_v1")
+        profile_weights = reference.dominance_reference.weights_for_profile(default_profile.code)
+        weight_factor_codes = {item.factor_type_code for item in profile_weights}
+        if weight_factor_codes != self._REQUIRED_FACTOR_CODES:
+            missing = self._REQUIRED_FACTOR_CODES - weight_factor_codes
+            extra = weight_factor_codes - self._REQUIRED_FACTOR_CODES
+            reason = f"missing:{','.join(sorted(missing))};extra:{','.join(sorted(extra))}"
+            self._raise_integrity("dominance_score_weights", reason)
         if len(reference.dignities.sign_rulerships) != 12:
             self._raise_integrity("sign_rulerships", "expected_12")
         for sign_code, planet_code in reference.dignities.sign_rulerships.items():

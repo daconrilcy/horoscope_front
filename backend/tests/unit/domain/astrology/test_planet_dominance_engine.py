@@ -7,7 +7,7 @@ from dataclasses import FrozenInstanceError
 import pytest
 
 from app.domain.astrology.condition.contracts import PlanetConditionProfile
-from app.domain.astrology.dominance.contracts import PlanetDominanceFactorContribution
+from app.domain.astrology.dominance.contracts import PlanetDominanceFactor
 from app.domain.astrology.dominance.planet_dominance_engine import PlanetDominanceEngine
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.natal_calculation import AspectResult, PlanetPosition
@@ -248,16 +248,17 @@ def _profiles_with_venus() -> tuple[PlanetConditionProfile, ...]:
 
 def test_planet_dominance_contracts_are_immutable() -> None:
     """Les contributions de dominance ne peuvent pas etre modifiees apres calcul."""
-    contribution = PlanetDominanceFactorContribution(
+    contribution = PlanetDominanceFactor(
         factor_code="chart_ruler",
         raw_value=1.0,
-        weight=1.2,
-        weighted_value=1.2,
-        evidence=("house_1_ruler:mars",),
+        normalized_value=1.0,
+        weight=1.4,
+        weighted_score=1.4,
+        reason="mars rules the Ascendant sign.",
     )
 
     with pytest.raises(FrozenInstanceError):
-        contribution.raw_value = 0.0
+        contribution.normalized_value = 0.0
 
 
 def test_planet_dominance_engine_ranks_by_score_then_planet_code() -> None:
@@ -269,10 +270,22 @@ def test_planet_dominance_engine_ranks_by_score_then_planet_code() -> None:
         house_rulers=_house_rulers(),
         condition_profiles=_profiles(),
         aspects=(_aspect(planet_a="sun", planet_b="mars", orb_used=1.0),),
-        chart_balance=None,
     )
 
-    assert [factor.code for factor in result.factor_types] == [
+    assert result.score_profile_code == "natal_standard_v1"
+    assert result.tradition_code == "modern"
+    assert result.reference_version_code == "v1"
+    assert [planet.planet_code for planet in result.planets] == ["sun", "mars"]
+    assert result.planets[0].rank == 1
+    assert result.planets[0].total_score >= result.planets[1].total_score
+    assert result.planets[0].dominance_level in {
+        "very_low",
+        "low",
+        "moderate",
+        "high",
+        "dominant",
+    }
+    assert {factor.factor_code for factor in result.planets[0].factors} == {
         "chart_ruler",
         "angularity",
         "condition_strength",
@@ -281,18 +294,10 @@ def test_planet_dominance_engine_ranks_by_score_then_planet_code() -> None:
         "luminary_emphasis",
         "house_rulership_load",
         "aspect_centrality",
-    ]
-    assert [planet.planet_code for planet in result.planets] == ["sun", "mars"]
-    assert result.planets[0].rank == 1
-    assert result.planets[0].dominance_score >= result.planets[1].dominance_score
-    assert {factor.factor_code for factor in result.planets[0].factors} == {
-        factor.code for factor in result.factor_types
     }
-    assert result.summary.primary_planet == "sun"
-    assert result.summary.chart_ruler == "mars"
-    assert result.summary.most_visible_planet == "sun"
-    assert result.summary.most_functional_planet == "sun"
-    assert result.summary.angular_dominant_planet == "mars"
+    assert result.top_planet_code == "sun"
+    assert result.chart_ruler_code == "mars"
+    assert result.most_elevated_planet_code == "sun"
 
 
 def test_planet_dominance_uses_runtime_rulership_and_condition_profiles() -> None:
@@ -304,7 +309,6 @@ def test_planet_dominance_uses_runtime_rulership_and_condition_profiles() -> Non
         house_rulers=_house_rulers(),
         condition_profiles=_profiles(),
         aspects=(),
-        chart_balance=None,
     )
     mars = next(planet for planet in result.planets if planet.planet_code == "mars")
     sun = next(planet for planet in result.planets if planet.planet_code == "sun")
@@ -314,9 +318,10 @@ def test_planet_dominance_uses_runtime_rulership_and_condition_profiles() -> Non
     sun_visibility = next(item for item in sun.factors if item.factor_code == "visibility")
 
     assert mars_chart_ruler.raw_value == 1.0
-    assert mars_chart_ruler.evidence == ("house_1_ruler:mars",)
-    assert sun_strength.raw_value == 1.0
-    assert sun_visibility.raw_value == 1.0
+    assert mars_chart_ruler.normalized_value == 1.0
+    assert mars_chart_ruler.reason == "mars rules the Ascendant sign."
+    assert sun_strength.normalized_value == 1.0
+    assert sun_visibility.normalized_value == 1.0
 
 
 def test_aspect_centrality_uses_dominant_aspect_runtime_scores() -> None:
@@ -331,7 +336,6 @@ def test_aspect_centrality_uses_dominant_aspect_runtime_scores() -> None:
             _aspect(planet_a="sun", planet_b="mars", orb_used=1.0),
             _aspect(planet_a="sun", planet_b="venus", orb_used=4.0),
         ),
-        chart_balance=None,
     )
 
     sun = next(planet for planet in result.planets if planet.planet_code == "sun")
@@ -339,14 +343,12 @@ def test_aspect_centrality_uses_dominant_aspect_runtime_scores() -> None:
     sun_aspects = next(item for item in sun.factors if item.factor_code == "aspect_centrality")
     mars_aspects = next(item for item in mars.factors if item.factor_code == "aspect_centrality")
 
-    assert sun_aspects.raw_value == 1.0
-    assert sun_aspects.weight == 0.7
-    assert sun_aspects.weighted_value == 0.7
-    assert mars_aspects.raw_value == pytest.approx(0.561798)
-    assert mars_aspects.weighted_value == pytest.approx(0.393259)
-    assert all(
-        item.startswith("dominant_aspect:conjunction:rank:") for item in sun_aspects.evidence
-    )
+    assert sun_aspects.normalized_value == 1.0
+    assert sun_aspects.weight == 0.8
+    assert sun_aspects.weighted_score == 0.8
+    assert mars_aspects.normalized_value == pytest.approx(0.561798)
+    assert mars_aspects.weighted_score == pytest.approx(0.449438)
+    assert sun_aspects.reason.startswith("sun aspect centrality score is")
 
 
 def test_aspect_centrality_ignores_non_ranked_point_participants() -> None:
@@ -361,7 +363,6 @@ def test_aspect_centrality_ignores_non_ranked_point_participants() -> None:
             _aspect(planet_a="north_node", planet_b="south_node", orb_used=0.1),
             _aspect(planet_a="sun", planet_b="mars", orb_used=4.0),
         ),
-        chart_balance=None,
     )
 
     sun = next(planet for planet in result.planets if planet.planet_code == "sun")
@@ -374,4 +375,25 @@ def test_aspect_centrality_ignores_non_ranked_point_participants() -> None:
     assert sun_aspects.raw_value == 1.0
     assert mars_aspects.raw_value == 1.0
     assert venus_aspects.raw_value == 0.0
-    assert venus_aspects.evidence == ("dominant_aspect:not_in_rank",)
+    assert venus_aspects.reason == "venus aspect centrality score is 0."
+
+
+def test_planet_dominance_handles_missing_condition_profile() -> None:
+    """Une planete sans profil conditionnel reste calculable avec score nul."""
+    result = PlanetDominanceEngine().calculate(
+        runtime_reference=complete_reference(),
+        planet_positions=_positions(),
+        houses=_houses(),
+        house_rulers=_house_rulers(),
+        condition_profiles=_profiles()[0:1],
+        aspects=(),
+    )
+
+    mars = next(planet for planet in result.planets if planet.planet_code == "mars")
+    mars_strength = next(item for item in mars.factors if item.factor_code == "condition_strength")
+    mars_visibility = next(item for item in mars.factors if item.factor_code == "visibility")
+
+    assert mars_strength.normalized_value == 0.0
+    assert mars_strength.reason == "mars has no condition strength profile."
+    assert mars_visibility.normalized_value == 0.0
+    assert mars_visibility.reason == "mars has no visibility profile."

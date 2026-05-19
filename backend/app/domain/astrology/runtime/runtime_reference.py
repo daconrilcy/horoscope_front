@@ -249,6 +249,82 @@ class DominanceFactorTypeReferenceData:
 
 
 @dataclass(frozen=True, slots=True)
+class DominanceScoreProfileReferenceData:
+    """Profil versionne de scoring des dominantes planetaires."""
+
+    code: str
+    label: str
+    tradition_code: str
+    description: str
+    reference_version_code: str
+    is_active: bool
+
+    def __post_init__(self) -> None:
+        """Valide les champs stables du profil de scoring."""
+        for field_name in (
+            "code",
+            "label",
+            "tradition_code",
+            "description",
+            "reference_version_code",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"dominance score profile requires {field_name}")
+
+
+@dataclass(frozen=True, slots=True)
+class DominanceScoreWeightReferenceData:
+    """Ponderation runtime d'un facteur pour un profil de dominance."""
+
+    score_profile_code: str
+    factor_type_code: str
+    weight: float
+    min_value: float
+    max_value: float
+    normalization_method: str
+    notes: str
+
+    def __post_init__(self) -> None:
+        """Valide les bornes et la ponderation d'un facteur."""
+        for field_name in ("score_profile_code", "factor_type_code", "normalization_method"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"dominance score weight requires {field_name}")
+        if self.weight < 0.0:
+            raise ValueError("dominance score weight must be positive")
+        if self.max_value <= self.min_value:
+            raise ValueError("dominance score weight max_value must exceed min_value")
+
+
+@dataclass(frozen=True, slots=True)
+class DominanceReferenceSet:
+    """Referentiel complet des facteurs et profils de dominance."""
+
+    factor_types: tuple[DominanceFactorTypeReferenceData, ...]
+    score_profiles: tuple[DominanceScoreProfileReferenceData, ...]
+    score_weights: tuple[DominanceScoreWeightReferenceData, ...]
+
+    @property
+    def default_score_profile(self) -> DominanceScoreProfileReferenceData:
+        """Retourne le profil actif par defaut pour la v1."""
+        for profile in self.score_profiles:
+            if profile.is_active:
+                return profile
+        raise ValueError("dominance reference requires an active score profile")
+
+    def weights_for_profile(
+        self, score_profile_code: str
+    ) -> tuple[DominanceScoreWeightReferenceData, ...]:
+        """Retourne les poids d'un profil dans l'ordre des facteurs actifs."""
+        factor_order = {factor.code: factor.sort_order for factor in self.factor_types}
+        weights = tuple(
+            weight
+            for weight in self.score_weights
+            if weight.score_profile_code == score_profile_code
+        )
+        return tuple(sorted(weights, key=lambda item: factor_order.get(item.factor_type_code, 0)))
+
+
+@dataclass(frozen=True, slots=True)
 class EssentialDignityRuleReferenceData:
     """Regle essentielle reliant une planete, un signe et une plage de degres."""
 
@@ -481,6 +557,7 @@ class AstrologyRuntimeReference:
     dignity_reference: PlanetDignityReferenceSet
     condition_signal_profiles: tuple[PlanetConditionSignalProfileReferenceData, ...]
     dominance_factor_types: tuple[DominanceFactorTypeReferenceData, ...]
+    dominance_reference: DominanceReferenceSet
     angle_points: AnglePointReferenceSet
     astral_points: AstralPointReferenceSet
     house_systems: HouseSystemReferenceSet

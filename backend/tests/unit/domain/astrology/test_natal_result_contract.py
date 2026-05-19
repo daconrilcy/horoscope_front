@@ -51,4 +51,4 @@ def test_natal_result_exposes_condition_collections() -> None:
     assert result.dignities == []
     assert result.condition_profiles == []
     assert result.condition_signals == []
-    assert result.planet_dominance is None
+    assert result.dominant_planets is None

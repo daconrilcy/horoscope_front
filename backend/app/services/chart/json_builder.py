@@ -378,51 +378,38 @@ def _serialize_condition_signals(signal_sets: Any) -> dict[str, Any]:
     }
 
 
-def _serialize_planet_dominance(dominance: Any) -> dict[str, Any] | None:
-    """Projette la dominance planetaire deja calculee par le domaine."""
-    if dominance is None:
+def _serialize_dominant_planets(dominant_planets: Any) -> dict[str, Any] | None:
+    """Projette les planetes dominantes deja calculees par le domaine."""
+    if dominant_planets is None:
         return None
     return {
-        "score_profile": dominance.score_profile,
-        "reference_version": dominance.reference_version,
-        "factor_types": [
-            {
-                "code": factor.code,
-                "label": factor.label,
-                "category": factor.category,
-                "description": factor.description,
-                "default_weight": factor.default_weight,
-                "sort_order": factor.sort_order,
-                "is_active": factor.is_active,
-            }
-            for factor in dominance.factor_types
-        ],
+        "score_profile": dominant_planets.score_profile_code,
+        "tradition": dominant_planets.tradition_code,
+        "reference_version": dominant_planets.reference_version_code,
+        "chart_ruler": dominant_planets.chart_ruler_code,
+        "most_elevated_planet": dominant_planets.most_elevated_planet_code,
+        "top_planet": dominant_planets.top_planet_code,
         "planets": [
             {
-                "planet_code": planet.planet_code,
+                "planet": planet.planet_code,
                 "rank": planet.rank,
-                "dominance_score": planet.dominance_score,
-                "normalized_score": planet.normalized_score,
+                "total_score": planet.total_score,
+                "dominance_level": planet.dominance_level,
                 "factors": [
                     {
-                        "factor_code": factor.factor_code,
+                        "factor": factor.factor_code,
                         "raw_value": factor.raw_value,
+                        "normalized_value": factor.normalized_value,
                         "weight": factor.weight,
-                        "weighted_value": factor.weighted_value,
-                        "evidence": list(factor.evidence),
+                        "weighted_score": factor.weighted_score,
+                        "reason": factor.reason,
                     }
                     for factor in planet.factors
                 ],
+                "explanation_facts": list(planet.explanation_facts),
             }
-            for planet in dominance.planets
+            for planet in dominant_planets.planets
         ],
-        "summary": {
-            "primary_planet": dominance.summary.primary_planet,
-            "chart_ruler": dominance.summary.chart_ruler,
-            "most_visible_planet": dominance.summary.most_visible_planet,
-            "most_functional_planet": dominance.summary.most_functional_planet,
-            "angular_dominant_planet": dominance.summary.angular_dominant_planet,
-        },
     }
 
 
@@ -536,10 +523,10 @@ def build_chart_json(
                 angles[angle_key]["sign_label"] = labels.sign_label(angles[angle_key]["sign"])
 
     chart_balance = _serialize_chart_balance(getattr(natal_result, "chart_balance", None))
-    planet_dominance = None
+    dominant_planets = None
     if not is_no_time:
-        planet_dominance = _serialize_planet_dominance(
-            getattr(natal_result, "planet_dominance", None)
+        dominant_planets = _serialize_dominant_planets(
+            getattr(natal_result, "dominant_planets", None)
         )
     payload = {
         "meta": meta,
@@ -555,7 +542,7 @@ def build_chart_json(
         "planet_condition_signals": _serialize_condition_signals(
             getattr(natal_result, "condition_signals", [])
         ),
-        "planet_dominance": planet_dominance,
+        "dominant_planets": dominant_planets,
     }
     if chart_balance is not None:
         payload["chart_balance"] = chart_balance

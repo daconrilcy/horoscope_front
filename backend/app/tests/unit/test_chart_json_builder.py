@@ -17,11 +17,9 @@ from app.domain.astrology.dignities.contracts import (
     PlanetDignityResult,
 )
 from app.domain.astrology.dominance.contracts import (
-    PlanetDominanceFactorContribution,
-    PlanetDominanceFactorType,
-    PlanetDominancePlanetResult,
+    DominantPlanetsResult,
+    PlanetDominanceFactor,
     PlanetDominanceResult,
-    PlanetDominanceSummary,
 )
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.interpretation.house_strength_contracts import (
@@ -245,44 +243,32 @@ def mock_natal_result():
             ),
         )
     ]
-    result.planet_dominance = PlanetDominanceResult(
-        score_profile="planet_dominance_v1",
-        reference_version="v1.2",
-        factor_types=(
-            PlanetDominanceFactorType(
-                code="chart_ruler",
-                label="Chart ruler",
-                category="rulership",
-                description="Chart ruler factor.",
-                default_weight=1.2,
-                sort_order=10,
-                is_active=True,
-            ),
-        ),
+    result.dominant_planets = DominantPlanetsResult(
+        score_profile_code="natal_standard_v1",
+        tradition_code="modern",
+        reference_version_code="v1",
         planets=(
-            PlanetDominancePlanetResult(
+            PlanetDominanceResult(
                 planet_code="sun",
+                total_score=0.75,
                 rank=1,
-                dominance_score=0.75,
-                normalized_score=0.75,
+                dominance_level="high",
                 factors=(
-                    PlanetDominanceFactorContribution(
+                    PlanetDominanceFactor(
                         factor_code="chart_ruler",
                         raw_value=1.0,
-                        weight=1.2,
-                        weighted_value=1.2,
-                        evidence=("house_1_ruler:sun",),
+                        normalized_value=1.0,
+                        weight=1.4,
+                        weighted_score=1.4,
+                        reason="sun rules the Ascendant sign.",
                     ),
                 ),
+                explanation_facts=("sun rules the Ascendant sign.",),
             ),
         ),
-        summary=PlanetDominanceSummary(
-            primary_planet="sun",
-            chart_ruler="sun",
-            most_visible_planet="sun",
-            most_functional_planet="sun",
-            angular_dominant_planet="sun",
-        ),
+        top_planet_code="sun",
+        chart_ruler_code="sun",
+        most_elevated_planet_code="sun",
     )
 
     return result
@@ -410,19 +396,24 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
             "prompt_hint": "visibility_emphasized",
         }
     ]
-    assert chart["planet_dominance"]["score_profile"] == "planet_dominance_v1"
-    assert chart["planet_dominance"]["factor_types"][0]["code"] == "chart_ruler"
-    dominance_sun = chart["planet_dominance"]["planets"][0]
-    assert dominance_sun["planet_code"] == "sun"
+    assert chart["dominant_planets"]["score_profile"] == "natal_standard_v1"
+    assert chart["dominant_planets"]["chart_ruler"] == "sun"
+    assert chart["dominant_planets"]["most_elevated_planet"] == "sun"
+    assert chart["dominant_planets"]["top_planet"] == "sun"
+    dominance_sun = chart["dominant_planets"]["planets"][0]
+    assert dominance_sun["planet"] == "sun"
     assert dominance_sun["rank"] == 1
+    assert dominance_sun["total_score"] == 0.75
+    assert dominance_sun["dominance_level"] == "high"
     assert dominance_sun["factors"][0] == {
-        "factor_code": "chart_ruler",
+        "factor": "chart_ruler",
         "raw_value": 1.0,
-        "weight": 1.2,
-        "weighted_value": 1.2,
-        "evidence": ["house_1_ruler:sun"],
+        "normalized_value": 1.0,
+        "weight": 1.4,
+        "weighted_score": 1.4,
+        "reason": "sun rules the Ascendant sign.",
     }
-    assert chart["planet_dominance"]["summary"]["primary_planet"] == "sun"
+    assert dominance_sun["explanation_facts"] == ["sun rules the Ascendant sign."]
 
     # Angles
     assert chart["angles"]["ASC"]["sign"] == "capricorn"
@@ -562,7 +553,7 @@ def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
     # Angles should be None
     assert chart["angles"]["ASC"] is None
     assert chart["angles"]["MC"] is None
-    assert chart["planet_dominance"] is None
+    assert chart["dominant_planets"] is None
 
 
 def test_build_chart_json_no_location(mock_natal_result, mock_birth_profile):
@@ -587,7 +578,7 @@ def test_build_chart_json_no_location_no_time(mock_natal_result, mock_birth_prof
     assert chart["meta"]["birth_place"] is None
     assert len(chart["houses"]) == 0
     assert chart["angles"]["ASC"] is None
-    assert chart["planet_dominance"] is None
+    assert chart["dominant_planets"] is None
 
 
 def test_build_evidence_catalog_priority():

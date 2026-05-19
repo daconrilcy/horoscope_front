@@ -33,6 +33,19 @@ No frontend files, dependencies, routes or status codes were changed.
 
 No open findings.
 
+### Fixed after initial-brief audit
+
+1. `High` brief coverage: added `astral_dominance_score_profiles` and
+   `astral_dominance_score_weights`, plus runtime loading and integrity checks.
+2. `High` public contract: replaced the intermediate `planet_dominance` payload
+   with `NatalResult.dominant_planets` and top-level JSON `dominant_planets`.
+3. `Medium` domain contract: aligned contracts with `PlanetDominanceFactor`,
+   `PlanetDominanceResult` and `DominantPlanetsResult`.
+4. `Medium` scoring semantics: restored brief weights, `natal_standard_v1`,
+   dominance levels and explanation facts.
+5. `Medium` tests: added/updated coverage for missing condition profiles,
+   runtime scoring tables, serializer projection and idempotent seeding.
+
 ### Fixed during this review cycle
 
 1. `Low` evidence consistency: this review artifact previously claimed a

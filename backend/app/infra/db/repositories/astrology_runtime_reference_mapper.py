@@ -31,6 +31,9 @@ from app.domain.astrology.runtime.runtime_reference import (
     DignitySystemReferenceData,
     DignityTypeReferenceData,
     DominanceFactorTypeReferenceData,
+    DominanceReferenceSet,
+    DominanceScoreProfileReferenceData,
+    DominanceScoreWeightReferenceData,
     EssentialDignityRuleReferenceData,
     FaceDecanReferenceData,
     HouseAxisReferenceData,
@@ -65,6 +68,8 @@ class AstrologyRuntimeReferenceMapper:
         dignity_reference: Mapping[str, object],
         condition_signal_profiles: Sequence[Mapping[str, object]],
         dominance_factor_types: Sequence[Mapping[str, object]],
+        dominance_score_profiles: Sequence[Mapping[str, object]],
+        dominance_score_weights: Sequence[Mapping[str, object]],
         planet_definitions: Mapping[str, Mapping[str, object]],
         angle_points: Sequence[Mapping[str, object]],
         astral_points: Sequence[Mapping[str, object]],
@@ -197,6 +202,44 @@ class AstrologyRuntimeReferenceMapper:
                     reference_version=str(item["reference_version"]),
                 )
                 for item in dominance_factor_types
+            ),
+            dominance_reference=DominanceReferenceSet(
+                factor_types=tuple(
+                    DominanceFactorTypeReferenceData(
+                        code=str(item["code"]),
+                        label=str(item["label"]),
+                        category=str(item["category"]),
+                        default_weight=float(item["default_weight"]),
+                        sort_order=int(item["sort_order"]),
+                        is_active=bool(item["is_active"]),
+                        description=str(item["description"]),
+                        reference_version=str(item["reference_version"]),
+                    )
+                    for item in dominance_factor_types
+                ),
+                score_profiles=tuple(
+                    DominanceScoreProfileReferenceData(
+                        code=str(item["code"]),
+                        label=str(item["label"]),
+                        tradition_code=str(item["tradition_code"]),
+                        description=str(item["description"]),
+                        reference_version_code=str(item["reference_version_code"]),
+                        is_active=bool(item["is_active"]),
+                    )
+                    for item in dominance_score_profiles
+                ),
+                score_weights=tuple(
+                    DominanceScoreWeightReferenceData(
+                        score_profile_code=str(item["score_profile_code"]),
+                        factor_type_code=str(item["factor_type_code"]),
+                        weight=float(item["weight"]),
+                        min_value=float(item["min_value"]),
+                        max_value=float(item["max_value"]),
+                        normalization_method=str(item["normalization_method"]),
+                        notes=str(item["notes"]),
+                    )
+                    for item in dominance_score_weights
+                ),
             ),
             angle_points=AnglePointReferenceSet(
                 tuple(

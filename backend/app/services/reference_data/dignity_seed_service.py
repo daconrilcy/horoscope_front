@@ -24,6 +24,8 @@ from app.infra.db.models import (
     AstralDignityFunctionalEffectModel,
     AstralDignityIntensityEffectModel,
     AstralDominanceFactorTypeModel,
+    AstralDominanceScoreProfileModel,
+    AstralDominanceScoreWeightModel,
     AstralElementModel,
     AstralEssentialDignityCategoryModel,
     AstralEssentialDignityExpressionTendencyModel,
@@ -320,6 +322,91 @@ def _sync_dominance_factor_types(db: Session, reference_version_id: int) -> None
     )
 
 
+def _clear_dominance_scoring(db: Session, reference_version_id: int) -> None:
+    """Supprime les poids et profils avant de remplacer les facteurs references."""
+    profile_ids = [
+        int(row.id)
+        for row in db.scalars(
+            select(AstralDominanceScoreProfileModel).where(
+                AstralDominanceScoreProfileModel.reference_version_id == reference_version_id
+            )
+        ).all()
+    ]
+    if not profile_ids:
+        return
+    db.execute(
+        delete(AstralDominanceScoreWeightModel).where(
+            AstralDominanceScoreWeightModel.score_profile_id.in_(profile_ids)
+        )
+    )
+    db.execute(
+        delete(AstralDominanceScoreProfileModel).where(
+            AstralDominanceScoreProfileModel.id.in_(profile_ids)
+        )
+    )
+    db.flush()
+
+
+def _sync_dominance_score_profiles(db: Session, reference_version_id: int) -> None:
+    """Synchronise les profils de scoring de dominance versionnes."""
+    rows = []
+    for row in _load_rows("astral_dominance_score_profiles.json"):
+        rows.append(
+            {
+                "code": row["code"],
+                "label": row["label"],
+                "tradition_code": row["tradition_code"],
+                "description": row["description"],
+                "reference_version_code": row["reference_version_code"],
+                "is_active": row["is_active"],
+            }
+        )
+    _replace_versioned_rows(
+        db,
+        AstralDominanceScoreProfileModel,
+        reference_version_id,
+        rows,
+    )
+
+
+def _sync_dominance_score_weights(db: Session, reference_version_id: int) -> None:
+    """Synchronise les poids de dominance par profil et facteur."""
+    profile_ids = {
+        row.code: int(row.id)
+        for row in db.scalars(
+            select(AstralDominanceScoreProfileModel).where(
+                AstralDominanceScoreProfileModel.reference_version_id == reference_version_id
+            )
+        ).all()
+    }
+    factor_ids = {
+        row.code: int(row.id)
+        for row in db.scalars(
+            select(AstralDominanceFactorTypeModel).where(
+                AstralDominanceFactorTypeModel.reference_version_id == reference_version_id
+            )
+        ).all()
+    }
+    db.execute(
+        delete(AstralDominanceScoreWeightModel).where(
+            AstralDominanceScoreWeightModel.score_profile_id.in_(profile_ids.values())
+        )
+    )
+    for row in _load_rows("astral_dominance_score_weights.json"):
+        db.add(
+            AstralDominanceScoreWeightModel(
+                score_profile_id=profile_ids[str(row["score_profile_code"])],
+                factor_type_id=factor_ids[str(row["factor_type_code"])],
+                weight=row["weight"],
+                min_value=row["min_value"],
+                max_value=row["max_value"],
+                normalization_method=row["normalization_method"],
+                notes=row["notes"],
+            )
+        )
+    db.flush()
+
+
 def _sync_accidental_rules(
     db: Session,
     reference_version_id: int,
@@ -354,6 +441,9 @@ def sync_astral_dignity_seed_data(db: Session, reference_version_id: int) -> Non
     _sync_boundaries_and_rules(db, reference_version_id, maps)
     _sync_score_weights(db)
     _sync_condition_signal_profiles(db, reference_version_id)
+    _clear_dominance_scoring(db, reference_version_id)
     _sync_dominance_factor_types(db, reference_version_id)
+    _sync_dominance_score_profiles(db, reference_version_id)
+    _sync_dominance_score_weights(db, reference_version_id)
     _sync_accidental_rules(db, reference_version_id, maps)
     db.flush()

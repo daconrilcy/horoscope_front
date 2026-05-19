@@ -10,6 +10,8 @@ from app.infra.db.base import Base
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.dignity_reference import (
     AstralDominanceFactorTypeModel,
+    AstralDominanceScoreProfileModel,
+    AstralDominanceScoreWeightModel,
     AstralPlanetConditionSignalProfileModel,
 )
 from app.infra.db.models.reference import (
@@ -167,7 +169,21 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
         "house_rulership_load",
         "aspect_centrality",
     ]
-    assert reference.dominance_factor_types[0].default_weight == 1.2
+    assert reference.dominance_factor_types[0].default_weight == 1.4
+    assert reference.dominance_reference.default_score_profile.code == "natal_standard_v1"
+    assert [
+        (item.factor_type_code, item.weight)
+        for item in reference.dominance_reference.weights_for_profile("natal_standard_v1")
+    ] == [
+        ("chart_ruler", 1.4),
+        ("angularity", 1.3),
+        ("condition_strength", 1.2),
+        ("visibility", 1.1),
+        ("most_elevated", 1.0),
+        ("luminary_emphasis", 0.9),
+        ("house_rulership_load", 0.8),
+        ("aspect_centrality", 0.8),
+    ]
     first_weight = reference.dignity_reference.essential_weights["traditional_standard"][0]
     assert first_weight.condition_visibility == 0.0
     assert first_weight.condition_stability == 0.0
@@ -281,81 +297,121 @@ def test_repository_loads_dominance_factor_types_from_db() -> None:
             "code": "chart_ruler",
             "label": "Chart ruler",
             "category": "rulership",
-            "default_weight": 1.2,
-            "sort_order": 10,
+            "default_weight": 1.4,
+            "sort_order": 1,
             "is_active": True,
-            "description": (
-                "Poids du maitre de l'ascendant ou du theme selon les maitrises runtime."
-            ),
+            "description": "Planete gouvernant le signe de l'Ascendant.",
         },
         {
             "code": "angularity",
             "label": "Angularity",
-            "category": "placement",
-            "default_weight": 1.1,
-            "sort_order": 20,
+            "category": "house_position",
+            "default_weight": 1.3,
+            "sort_order": 2,
             "is_active": True,
-            "description": "Proximite factuelle aux angles et maisons angulaires deja calculees.",
+            "description": "Planete situee en maison angulaire ou proche d'un angle.",
         },
         {
             "code": "condition_strength",
             "label": "Condition strength",
-            "category": "condition",
-            "default_weight": 1.0,
-            "sort_order": 30,
+            "category": "planet_condition",
+            "default_weight": 1.2,
+            "sort_order": 3,
             "is_active": True,
-            "description": "Force fonctionnelle issue de PlanetConditionProfile.",
+            "description": "Force issue du PlanetConditionProfile.",
         },
         {
             "code": "visibility",
             "label": "Visibility",
-            "category": "condition",
-            "default_weight": 0.9,
-            "sort_order": 40,
+            "category": "planet_condition",
+            "default_weight": 1.1,
+            "sort_order": 4,
             "is_active": True,
-            "description": "Visibilite issue de PlanetConditionProfile.",
+            "description": "Visibilite issue du PlanetConditionProfile.",
         },
         {
             "code": "most_elevated",
-            "label": "Most elevated",
-            "category": "placement",
-            "default_weight": 0.8,
-            "sort_order": 50,
+            "label": "Most elevated planet",
+            "category": "chart_position",
+            "default_weight": 1.0,
+            "sort_order": 5,
             "is_active": True,
             "description": (
-                "Contribution de la planete la plus elevee ou proche du MC dans les faits natals."
+                "Planete la plus proche du Milieu du Ciel ou la plus elevee selon le modele retenu."
             ),
         },
         {
             "code": "luminary_emphasis",
             "label": "Luminary emphasis",
             "category": "luminary",
-            "default_weight": 0.8,
-            "sort_order": 60,
+            "default_weight": 0.9,
+            "sort_order": 6,
             "is_active": True,
-            "description": "Accent factuel Soleil/Lune sans interpretation psychologique.",
+            "description": (
+                "Poids specifique du Soleil et de la Lune dans la structure globale du theme."
+            ),
         },
         {
             "code": "house_rulership_load",
             "label": "House rulership load",
             "category": "rulership",
-            "default_weight": 0.75,
-            "sort_order": 70,
+            "default_weight": 0.8,
+            "sort_order": 7,
             "is_active": True,
-            "description": "Charge de maitrises de maisons depuis NatalResult.house_rulers.",
+            "description": "Nombre et importance des maisons gouvernees par une planete.",
         },
         {
             "code": "aspect_centrality",
             "label": "Aspect centrality",
             "category": "aspects",
-            "default_weight": 0.7,
-            "sort_order": 80,
+            "default_weight": 0.8,
+            "sort_order": 8,
             "is_active": True,
-            "description": (
-                "Centralite issue des aspects natals ou de chart_balance.dominant_aspects."
-            ),
+            "description": "Centralite d'une planete dans le reseau d'aspects.",
         },
     ]
+
+
+def test_repository_loads_dominance_score_profiles_and_weights_from_db() -> None:
+    """Le repository charge le profil et les poids de dominance du brief."""
+    _cleanup_reference_tables()
+
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        profile = db.scalar(select(AstralDominanceScoreProfileModel))
+        assert profile is not None
+        rows = db.execute(
+            select(
+                AstralDominanceScoreProfileModel.code,
+                AstralDominanceFactorTypeModel.code.label("factor_type_code"),
+                AstralDominanceScoreWeightModel.weight,
+                AstralDominanceScoreWeightModel.normalization_method,
+            )
+            .join(
+                AstralDominanceScoreProfileModel,
+                AstralDominanceScoreWeightModel.score_profile_id
+                == AstralDominanceScoreProfileModel.id,
+            )
+            .join(
+                AstralDominanceFactorTypeModel,
+                AstralDominanceScoreWeightModel.factor_type_id == AstralDominanceFactorTypeModel.id,
+            )
+            .order_by(AstralDominanceFactorTypeModel.sort_order)
+        ).all()
+
+    assert profile.code == "natal_standard_v1"
+    assert profile.tradition_code == "modern"
+    assert [(row.factor_type_code, row.weight) for row in rows] == [
+        ("chart_ruler", 1.4),
+        ("angularity", 1.3),
+        ("condition_strength", 1.2),
+        ("visibility", 1.1),
+        ("most_elevated", 1.0),
+        ("luminary_emphasis", 0.9),
+        ("house_rulership_load", 0.8),
+        ("aspect_centrality", 0.8),
+    ]
+    assert rows[0].normalization_method == "binary"
 
 
 def test_public_reference_payload_keeps_sign_contract_unchanged() -> None:

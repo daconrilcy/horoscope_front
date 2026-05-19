@@ -242,6 +242,8 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_chart_planet_dignity_results",
         "astral_planet_condition_signal_profiles",
         "astral_dominance_factor_types",
+        "astral_dominance_score_profiles",
+        "astral_dominance_score_weights",
     ):
         assert table_name in head_tables
     assert _columns(head_inspector, "astral_diginity_score_profiles") == {
@@ -396,6 +398,41 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "reference_version_id",
         "code",
     ) in _unique_column_sets(head_inspector, "astral_dominance_factor_types")
+    assert _columns(head_inspector, "astral_dominance_score_profiles") == {
+        "id",
+        "code",
+        "label",
+        "tradition_code",
+        "description",
+        "reference_version_code",
+        "is_active",
+        "reference_version_id",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_dominance_score_profiles") == {
+        ("reference_version_id",): "astral_reference_versions",
+    }
+    assert (
+        "reference_version_id",
+        "code",
+    ) in _unique_column_sets(head_inspector, "astral_dominance_score_profiles")
+    assert _columns(head_inspector, "astral_dominance_score_weights") == {
+        "id",
+        "score_profile_id",
+        "factor_type_id",
+        "weight",
+        "min_value",
+        "max_value",
+        "normalization_method",
+        "notes",
+    }
+    assert _foreign_key_targets(head_inspector, "astral_dominance_score_weights") == {
+        ("score_profile_id",): "astral_dominance_score_profiles",
+        ("factor_type_id",): "astral_dominance_factor_types",
+    }
+    assert (
+        "score_profile_id",
+        "factor_type_id",
+    ) in _unique_column_sets(head_inspector, "astral_dominance_score_weights")
     assert "house_interpretation_profiles" not in head_tables
     assert "astral_sign_rulerships" not in head_tables
     for table_name in (
@@ -1473,7 +1510,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260519_0132"
+    assert version == "20260519_0133"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

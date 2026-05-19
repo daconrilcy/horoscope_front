@@ -643,6 +643,64 @@ class AstralDominanceFactorTypeModel(Base):
     )
 
 
+class AstralDominanceScoreProfileModel(Base):
+    """Profil de scoring versionne pour les dominantes planetaires."""
+
+    __tablename__ = "astral_dominance_score_profiles"
+    __table_args__ = (
+        UniqueConstraint(
+            "reference_version_id",
+            "code",
+            name="uq_astral_dominance_score_profiles_scope",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(128), nullable=False)
+    tradition_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    reference_version_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    reference_version_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_reference_versions.id"), nullable=False, index=True
+    )
+
+
+class AstralDominanceScoreWeightModel(Base):
+    """Ponderation d'un facteur de dominance pour un profil donne."""
+
+    __tablename__ = "astral_dominance_score_weights"
+    __table_args__ = (
+        UniqueConstraint(
+            "score_profile_id",
+            "factor_type_id",
+            name="uq_astral_dominance_score_weights_scope",
+        ),
+        CheckConstraint(
+            "weight >= 0",
+            name="ck_astral_dominance_score_weights_weight",
+        ),
+        CheckConstraint(
+            "max_value > min_value",
+            name="ck_astral_dominance_score_weights_range",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    score_profile_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_dominance_score_profiles.id"), nullable=False, index=True
+    )
+    factor_type_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_dominance_factor_types.id"), nullable=False, index=True
+    )
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    min_value: Mapped[float] = mapped_column(Float, nullable=False)
+    max_value: Mapped[float] = mapped_column(Float, nullable=False)
+    normalization_method: Mapped[str] = mapped_column(String(64), nullable=False)
+    notes: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 class AstralChartPlanetDignityResultModel(Base):
     """Résultat runtime/audit du calcul de dignité d'une planète."""
 

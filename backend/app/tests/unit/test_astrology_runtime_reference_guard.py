@@ -292,13 +292,13 @@ def test_planet_dominance_domain_does_not_cross_runtime_boundaries() -> None:
     assert hits == []
 
 
-def test_planet_dominance_is_projected_from_natal_result_only() -> None:
-    """Le serialiseur public ne recalcule pas la dominance planetaire."""
+def test_dominant_planets_are_projected_from_natal_result_only() -> None:
+    """Le serialiseur public ne recalcule pas les planetes dominantes."""
     tree = ast.parse(_source("app/services/chart/json_builder.py"))
     serializer = next(
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef) and node.name == "_serialize_planet_dominance"
+        if isinstance(node, ast.FunctionDef) and node.name == "_serialize_dominant_planets"
     )
     calls = [
         ast.unparse(node.func)
@@ -317,4 +317,4 @@ def test_chart_signature_planets_remain_structural_balance_not_canonical_dominan
     assert "PlanetDominanceEngine" not in chart_signature_source
     assert '"sign_runtime"' in chart_signature_source
     assert "dominant_planets=dominant_planets" in chart_signature_source
-    assert "planet_dominance=planet_dominance" in natal_source
+    assert "dominant_planets=dominant_planets" in natal_source

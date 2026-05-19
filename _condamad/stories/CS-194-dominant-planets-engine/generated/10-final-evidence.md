@@ -40,6 +40,10 @@
 
 ## Review fixes applied
 
+- Realigned the implementation with the initial CS-194 brief:
+  `dominant_planets`, `DominantPlanetsResult`, `natal_standard_v1`,
+  `astral_dominance_score_profiles`, `astral_dominance_score_weights` and
+  dominance levels are now implemented.
 - Replaced `generated/11-code-review.md` with the current main-session review
   evidence after detecting an execution-mode inconsistency in the previous
   review artifact.
@@ -87,6 +91,7 @@ All counted Python commands below were run after `.\\.venv\\Scripts\\Activate.ps
 | `pytest -q` | PASS | 2710 passed, 1 skipped, 1177 deselected. |
 | `git diff --check` | PASS | CRLF warnings only. |
 | `pytest -q` | PASS | 2710 passed, 1 skipped, 1177 deselected after the final review evidence correction. |
+| `pytest -q` | PASS | 2712 passed, 1 skipped, 1177 deselected after initial-brief realignment. |
 
 ## Targeted scans
 

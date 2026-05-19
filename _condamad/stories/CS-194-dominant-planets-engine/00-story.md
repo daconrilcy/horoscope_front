@@ -2,6 +2,22 @@
 
 Status: done
 
+## 0. Brief realignment addendum
+
+Correction post-review du 2026-05-19: l'implementation est realignee sur le
+brief initial `CS-194 — Dominant Planets Engine`.
+
+- Le contrat public canonique est `NatalResult.dominant_planets` et le JSON
+  top-level `dominant_planets`.
+- Les tables runtime de dominance sont:
+  `astral_dominance_factor_types`, `astral_dominance_score_profiles` et
+  `astral_dominance_score_weights`.
+- Le profil de scoring canonique est `natal_standard_v1`.
+- Les contrats domaine canoniques sont `PlanetDominanceFactor`,
+  `PlanetDominanceResult` et `DominantPlanetsResult`.
+- Les niveaux stables `very_low`, `low`, `moderate`, `high` et `dominant`
+  sont portes par le moteur v1.
+
 ## 1. Objective
 
 Créer un moteur backend factuel `PlanetDominanceEngine` qui classe les planètes
