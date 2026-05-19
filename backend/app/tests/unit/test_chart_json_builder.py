@@ -4,6 +4,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.domain.astrology.condition.contracts import (
+    PlanetConditionBreakdownItem,
+    PlanetConditionExplanationFact,
+    PlanetConditionProfile,
+)
 from app.domain.astrology.dignities.contracts import (
     AccidentalDignityMatch,
     EssentialDignityMatch,
@@ -156,6 +161,59 @@ def mock_natal_result():
             ),
         )
     ]
+    result.condition_profiles = [
+        PlanetConditionProfile(
+            planet_code="sun",
+            score_profile="traditional_standard",
+            tradition="traditional",
+            reference_version="v1.2",
+            sect="day",
+            functional_strength=1.9,
+            visibility=1.0,
+            stability=0.5,
+            intensity=1.5,
+            coherence=0.4,
+            support=0.7,
+            constraint=0.3,
+            ranking_score=5.7,
+            condition_level="strong",
+            breakdown=(
+                PlanetConditionBreakdownItem(
+                    dignity_family="essential",
+                    dignity_type_code="domicile",
+                    source="essential_rule",
+                    reason="sun in taurus: domicile",
+                    score_value=5,
+                    functional_strength=1.0,
+                    visibility=0.5,
+                    stability=0.4,
+                    intensity=0.6,
+                    coherence=0.3,
+                    support=0.6,
+                    constraint=0.1,
+                ),
+                PlanetConditionBreakdownItem(
+                    dignity_family="accidental",
+                    dignity_type_code="angular_house",
+                    source="house_modality",
+                    reason="sun matches angular_house: house_codes=(1, 4, 7, 10)",
+                    score_value=4,
+                    functional_strength=0.9,
+                    visibility=0.5,
+                    stability=0.1,
+                    intensity=0.9,
+                    coherence=0.1,
+                    support=0.1,
+                    constraint=0.2,
+                ),
+            ),
+            explanation_facts=(
+                PlanetConditionExplanationFact("essential_match_count", "1"),
+                PlanetConditionExplanationFact("accidental_match_count", "1"),
+                PlanetConditionExplanationFact("ranking_score", "5.7"),
+            ),
+        )
+    ]
 
     return result
 
@@ -230,6 +288,41 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         chart["dignities"]["planets"]["sun"]["essential_breakdown"][0]["reason"]
         == "sun in taurus: domicile"
     )
+    assert chart["planet_condition_profiles"]["score_profile"] == "traditional_standard"
+    condition_sun = chart["planet_condition_profiles"]["planets"]["sun"]
+    assert condition_sun["planet_code"] == "sun"
+    assert condition_sun["score_profile"] == "traditional_standard"
+    assert condition_sun["tradition"] == "traditional"
+    assert condition_sun["reference_version"] == "v1.2"
+    assert condition_sun["sect"] == "day"
+    assert condition_sun["visibility"] == 1.0
+    assert condition_sun["ranking_score"] == 5.7
+    assert condition_sun["condition_level"] == "strong"
+    assert condition_sun["breakdown"][0]["dignity_type_code"] == "domicile"
+    assert condition_sun["breakdown"][1]["dignity_type_code"] == "angular_house"
+    assert sum(item["visibility"] for item in condition_sun["breakdown"]) == pytest.approx(
+        condition_sun["visibility"]
+    )
+    assert sum(item["stability"] for item in condition_sun["breakdown"]) == pytest.approx(
+        condition_sun["stability"]
+    )
+    assert sum(item["coherence"] for item in condition_sun["breakdown"]) == pytest.approx(
+        condition_sun["coherence"]
+    )
+    assert sum(item["support"] for item in condition_sun["breakdown"]) == pytest.approx(
+        condition_sun["support"]
+    )
+    assert sum(item["constraint"] for item in condition_sun["breakdown"]) == pytest.approx(
+        condition_sun["constraint"]
+    )
+    assert condition_sun["explanation_facts"][0] == {
+        "fact_type": "essential_match_count",
+        "value": "1",
+    }
+    assert condition_sun["explanation_facts"][1] == {
+        "fact_type": "accidental_match_count",
+        "value": "1",
+    }
 
     # Angles
     assert chart["angles"]["ASC"]["sign"] == "capricorn"

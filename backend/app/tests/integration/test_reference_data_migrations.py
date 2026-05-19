@@ -300,6 +300,28 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         ("astral_system_id",): "astral_systems",
         ("reference_version_id",): "astral_reference_versions",
     }
+    expected_score_weight_columns = {
+        "id",
+        "score_profile_id",
+        "score_value",
+        "functional_weight",
+        "expression_weight",
+        "intensity_weight",
+        "visibility_weight",
+        "stability_weight",
+        "coherence_weight",
+        "support_weight",
+        "constraint_weight",
+        "notes",
+    }
+    assert _columns(head_inspector, "astral_essential_dignity_score_weights") == {
+        *expected_score_weight_columns,
+        "essential_dignity_types_id",
+    }
+    assert _columns(head_inspector, "astral_accidental_dignity_score_weights") == {
+        *expected_score_weight_columns,
+        "accidental_dignity_type_id",
+    }
     assert _columns(head_inspector, "astral_chart_planet_dignity_results") == {
         "id",
         "chart_result_id",
@@ -1409,7 +1431,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260519_0129"
+    assert version == "20260519_0130"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

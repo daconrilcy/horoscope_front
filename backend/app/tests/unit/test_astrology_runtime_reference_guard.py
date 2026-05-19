@@ -188,3 +188,48 @@ def test_dignity_calculators_do_not_cross_runtime_boundaries() -> None:
                 hits.append(f"{path}:{pattern}")
 
     assert hits == []
+
+
+def test_condition_profiles_do_not_cross_runtime_boundaries() -> None:
+    """Les profils conditionnels restent derives, purs et sans table dediee."""
+    condition_root = BACKEND_ROOT / "app/domain/astrology/condition"
+    forbidden_patterns = (
+        "Session",
+        "select(",
+        "from app.infra",
+        "from app.services",
+        "from app.api",
+        "from app.domain.prediction",
+        "from app.services.prediction",
+        "VISIBILITY_" + "WEIGHTS",
+        "CONDITION_" + "SCORES",
+        "CONDITION_" + "LEVELS",
+        "AIEngineAdapter",
+        "OpenAI",
+        "chat.completions",
+        "prompt",
+        "interpretation",
+        "micro_note",
+    )
+    hits: list[str] = []
+    for path in condition_root.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for pattern in forbidden_patterns:
+            if pattern in text:
+                hits.append(f"{path}:{pattern}")
+
+    assert hits == []
+
+
+def test_condition_profile_table_is_not_created() -> None:
+    """La v1 ne doit pas introduire de persistance dediee aux profils."""
+    roots = [BACKEND_ROOT / "app", BACKEND_ROOT / "migrations"]
+    hits: list[str] = []
+    forbidden_table = "astral_chart_planet_" + "condition_profiles"
+    for root in roots:
+        for path in root.rglob("*.py"):
+            text = path.read_text(encoding="utf-8")
+            if forbidden_table in text:
+                hits.append(str(path))
+
+    assert hits == []

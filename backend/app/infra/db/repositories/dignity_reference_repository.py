@@ -30,6 +30,11 @@ class DignityScoreWeightData:
     functional_weight: float
     expression_weight: float
     intensity_weight: float
+    visibility_weight: float
+    stability_weight: float
+    coherence_weight: float
+    support_weight: float
+    constraint_weight: float
     notes: str
 
 
@@ -94,6 +99,11 @@ class DignityReferenceRepository:
                 functional_weight=float(weight.functional_weight),
                 expression_weight=float(weight.expression_weight),
                 intensity_weight=float(weight.intensity_weight),
+                visibility_weight=float(weight.visibility_weight),
+                stability_weight=float(weight.stability_weight),
+                coherence_weight=float(weight.coherence_weight),
+                support_weight=float(weight.support_weight),
+                constraint_weight=float(weight.constraint_weight),
                 notes=weight.notes,
             )
             for weight, code in rows
@@ -125,6 +135,11 @@ class DignityReferenceRepository:
                 functional_weight=float(weight.functional_weight),
                 expression_weight=float(weight.expression_weight),
                 intensity_weight=float(weight.intensity_weight),
+                visibility_weight=float(weight.visibility_weight),
+                stability_weight=float(weight.stability_weight),
+                coherence_weight=float(weight.coherence_weight),
+                support_weight=float(weight.support_weight),
+                constraint_weight=float(weight.constraint_weight),
                 notes=weight.notes,
             )
             for weight, code in rows

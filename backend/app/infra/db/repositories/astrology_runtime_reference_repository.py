@@ -320,6 +320,11 @@ class AstrologyRuntimeReferenceRepository:
                     "functional_weight": row.functional_weight,
                     "expression_weight": row.expression_weight,
                     "intensity_weight": row.intensity_weight,
+                    "visibility_weight": row.visibility_weight,
+                    "stability_weight": row.stability_weight,
+                    "coherence_weight": row.coherence_weight,
+                    "support_weight": row.support_weight,
+                    "constraint_weight": row.constraint_weight,
                 }
                 for row in rows
             ]

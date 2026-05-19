@@ -368,6 +368,11 @@ class AstrologyRuntimeReferenceMapper:
                     functional_weight=float(item["functional_weight"]),
                     expression_weight=float(item["expression_weight"]),
                     intensity_weight=float(item["intensity_weight"]),
+                    condition_visibility=float(item["visibility_weight"]),
+                    condition_stability=float(item["stability_weight"]),
+                    condition_coherence=float(item["coherence_weight"]),
+                    condition_support=float(item["support_weight"]),
+                    condition_constraint=float(item["constraint_weight"]),
                 )
                 for item in rows
                 if isinstance(item, Mapping)

@@ -201,6 +201,11 @@ class DignityScoreWeightReferenceData:
     functional_weight: float
     expression_weight: float
     intensity_weight: float
+    condition_visibility: float
+    condition_stability: float
+    condition_coherence: float
+    condition_support: float
+    condition_constraint: float
 
 
 @dataclass(frozen=True, slots=True)

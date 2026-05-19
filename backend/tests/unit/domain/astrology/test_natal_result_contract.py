@@ -26,3 +26,27 @@ def test_natal_result_rejects_untyped_planet_payloads() -> None:
             houses=[],
             aspects=[],
         )
+
+
+def test_natal_result_exposes_condition_profiles_collection() -> None:
+    """Le contrat natal expose les profils conditionnels sans casser les dignites."""
+    prepared = BirthPreparedData(
+        birth_datetime_local="1990-06-15T10:30:00+02:00",
+        birth_datetime_utc="1990-06-15T08:30:00Z",
+        timestamp_utc=645438600,
+        julian_day=2448057.8541666665,
+        birth_timezone="Europe/Paris",
+    )
+
+    result = NatalResult(
+        reference_version="1.0.0",
+        ruleset_version="1.0.0",
+        house_system="placidus",
+        prepared_input=prepared,
+        planet_positions=[],
+        houses=[],
+        aspects=[],
+    )
+
+    assert result.dignities == []
+    assert result.condition_profiles == []

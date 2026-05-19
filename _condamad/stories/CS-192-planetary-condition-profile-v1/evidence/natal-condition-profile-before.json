@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "reference_version": "v1.2",
+    "ruleset_version": "1.0.0"
+  },
+  "planets": [
+    {
+      "code": "sun",
+      "sign": "taurus",
+      "longitude": 35.4,
+      "longitude_in_sign": 5.4,
+      "house": 10,
+      "is_retrograde": false,
+      "speed": 0.98
+    }
+  ],
+  "houses": [
+    {
+      "number": 10,
+      "cusp_longitude": 194.2,
+      "cusp_sign": "libra",
+      "cusp_sign_label": "libra",
+      "sign": "libra",
+      "contained_signs": [],
+      "intercepted_signs": [],
+      "ruler": {
+        "planet": "venus",
+        "sign": "taurus",
+        "house": 10
+      },
+      "occupants": [],
+      "axis": null,
+      "strength": null
+    }
+  ],
+  "house_rulers": [
+    {
+      "house_number": 10,
+      "cusp_sign": "libra",
+      "cusp_sign_label": "libra",
+      "ruler_planet": "venus",
+      "ruler_planet_sign": "taurus",
+      "ruler_planet_sign_label": "taurus",
+      "ruler_planet_house": 10
+    }
+  ],
+  "aspects": [
+    {
+      "type": "trine",
+      "aspect_code": "trine",
+      "planet_a": "sun",
+      "planet_b": "moon",
+      "orb": 0.3
+    }
+  ],
+  "angles": {
+    "ASC": {
+      "sign": "capricorn",
+      "sign_label": "capricorn"
+    },
+    "MC": {
+      "sign": "libra",
+      "sign_label": "libra"
+    },
+    "DSC": {
+      "sign": "cancer",
+      "sign_label": "cancer"
+    },
+    "IC": {
+      "sign": "aries",
+      "sign_label": "aries"
+    }
+  },
+  "chart_balance": {
+    "elements": {},
+    "modalities": {}
+  },
+  "dignities": {
+    "score_profile": "traditional_standard",
+    "tradition": "traditional",
+    "reference_version": "v1.2",
+    "sect": "day",
+    "planets": {
+      "sun": {
+        "essential_score": 5,
+        "accidental_score": 4,
+        "total_score": 9,
+        "functional_strength_score": 1.9,
+        "expression_quality_score": 1.5,
+        "intensity_score": 1.5,
+        "essential_breakdown": [
+          {
+            "type": "domicile",
+            "score": 5,
+            "source": "essential_rule",
+            "reason": "sun in taurus: domicile",
+            "sign": "taurus",
+            "degree_start": 0,
+            "degree_end": 30
+          }
+        ],
+        "accidental_breakdown": [
+          {
+            "type": "angular_house",
+            "score": 4,
+            "source": "house_modality",
+            "reason": "sun matches angular_house: house_codes=(1, 4, 7, 10)",
+            "condition": "house_codes=(1, 4, 7, 10)"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -60,6 +60,35 @@ def test_mapper_returns_immutable_runtime_reference() -> None:
     assert len(reference.houses.items) == 12
 
 
+def test_mapper_rejects_missing_condition_weight_axes() -> None:
+    """Le mapper ne doit pas neutraliser un axe conditionnel absent."""
+    mapper = AstrologyRuntimeReferenceMapper()
+
+    with pytest.raises(KeyError):
+        mapper.map_dignity_reference(
+            {
+                "score_profiles": [
+                    {
+                        "code": "traditional_standard",
+                        "tradition": "traditional",
+                        "is_default": True,
+                    }
+                ],
+                "essential_weights": {
+                    "traditional_standard": [
+                        {
+                            "dignity_type_code": "domicile",
+                            "score_value": 5,
+                            "functional_weight": 1,
+                            "expression_weight": 0.7,
+                            "intensity_weight": 0.6,
+                        }
+                    ]
+                },
+            }
+        )
+
+
 def test_repository_integrity_rejects_missing_dignities() -> None:
     """L'integrite runtime bloque les references incompletes."""
     repository = AstrologyRuntimeReferenceRepository(
@@ -116,6 +145,12 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert len(reference.dignity_reference.term_bounds) == 60
     assert len(reference.dignity_reference.face_decans) == 36
     assert reference.dignity_reference.accidental_rules
+    first_weight = reference.dignity_reference.essential_weights["traditional_standard"][0]
+    assert first_weight.condition_visibility == 0.0
+    assert first_weight.condition_stability == 0.0
+    assert first_weight.condition_coherence == 0.0
+    assert first_weight.condition_support == 0.0
+    assert first_weight.condition_constraint == 0.0
     assert {item.code for item in reference.angle_points.items} >= {"asc", "dsc", "mc", "ic"}
     assert reference.aspects.items
     assert reference.aspects.orb_rules

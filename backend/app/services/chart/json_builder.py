@@ -277,6 +277,66 @@ def _serialize_dignities(dignities: Any) -> dict[str, Any]:
     }
 
 
+def _serialize_condition_profiles(profiles: Any) -> dict[str, Any]:
+    """Projette les profils conditionnels deja calcules par le domaine."""
+    planets: dict[str, Any] = {}
+    score_profile = ""
+    tradition = ""
+    reference_version = ""
+    sect = ""
+    if not isinstance(profiles, (list, tuple)):
+        profiles = []
+    for profile in profiles:
+        score_profile = profile.score_profile
+        tradition = profile.tradition
+        reference_version = profile.reference_version
+        sect = profile.sect
+        planets[profile.planet_code] = {
+            "planet_code": profile.planet_code,
+            "score_profile": profile.score_profile,
+            "tradition": profile.tradition,
+            "reference_version": profile.reference_version,
+            "sect": profile.sect,
+            "functional_strength": profile.functional_strength,
+            "visibility": profile.visibility,
+            "stability": profile.stability,
+            "intensity": profile.intensity,
+            "coherence": profile.coherence,
+            "support": profile.support,
+            "constraint": profile.constraint,
+            "ranking_score": profile.ranking_score,
+            "condition_level": profile.condition_level,
+            "breakdown": [
+                {
+                    "dignity_family": item.dignity_family,
+                    "dignity_type_code": item.dignity_type_code,
+                    "source": item.source,
+                    "reason": item.reason,
+                    "score_value": item.score_value,
+                    "functional_strength": item.functional_strength,
+                    "visibility": item.visibility,
+                    "stability": item.stability,
+                    "intensity": item.intensity,
+                    "coherence": item.coherence,
+                    "support": item.support,
+                    "constraint": item.constraint,
+                }
+                for item in profile.breakdown
+            ],
+            "explanation_facts": [
+                {"fact_type": fact.fact_type, "value": fact.value}
+                for fact in profile.explanation_facts
+            ],
+        }
+    return {
+        "score_profile": score_profile,
+        "tradition": tradition,
+        "reference_version": reference_version,
+        "sect": sect,
+        "planets": planets,
+    }
+
+
 def build_chart_json(
     natal_result: NatalResult,
     birth_profile: UserBirthProfileData,
@@ -395,6 +455,9 @@ def build_chart_json(
         "aspects": aspects,
         "angles": angles,
         "dignities": _serialize_dignities(getattr(natal_result, "dignities", [])),
+        "planet_condition_profiles": _serialize_condition_profiles(
+            getattr(natal_result, "condition_profiles", [])
+        ),
     }
     if chart_balance is not None:
         payload["chart_balance"] = chart_balance

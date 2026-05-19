@@ -514,6 +514,11 @@ class AstralEssentialDignityScoreWeightModel(Base):
     functional_weight: Mapped[float] = mapped_column(Float, nullable=False)
     expression_weight: Mapped[float] = mapped_column(Float, nullable=False)
     intensity_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    visibility_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    stability_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    coherence_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    support_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    constraint_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     notes: Mapped[str] = mapped_column(Text, nullable=False)
 
 
@@ -567,6 +572,11 @@ class AstralAccidentalDignityScoreWeightModel(Base):
     functional_weight: Mapped[float] = mapped_column(Float, nullable=False)
     expression_weight: Mapped[float] = mapped_column(Float, nullable=False)
     intensity_weight: Mapped[float] = mapped_column(Float, nullable=False)
+    visibility_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    stability_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    coherence_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    support_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    constraint_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     notes: Mapped[str] = mapped_column(Text, nullable=False)
 
 
