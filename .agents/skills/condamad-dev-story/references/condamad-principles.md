@@ -83,7 +83,30 @@ Before adding a helper, service, facade, registry, mapper, or guard, search for 
 
 Duplication is allowed only when explicitly justified by different responsibilities, not because it is faster.
 
-### 6. No Legacy means no tolerated compatibility by inertia
+### 6. SOLID / KISS / YAGNI are design gates, not slogans
+
+Every CONDAMAD skill must enforce these engineering gates when writing,
+reviewing, auditing, refactoring, or planning code:
+
+- **SOLID**: keep responsibilities explicit and narrow; depend on stable
+  abstractions only when they already exist or clearly reduce coupling; do not
+  create catch-all classes, services, hooks, or modules.
+- **DRY**: reuse or converge existing behavior instead of creating another
+  active implementation, helper, contract, state path, or validation rule for
+  the same responsibility.
+- **KISS**: prefer the smallest clear design that satisfies the story,
+  finding, review fix, or UI plan; avoid speculative frameworks, layers,
+  indirection, and broad rewrites.
+- **YAGNI**: do not add extension points, options, feature flags,
+  configuration knobs, abstractions, or generic mechanisms unless the current
+  acceptance criteria or repository evidence require them now.
+
+When these principles conflict with a proposed implementation route, change the
+route before changing the story, review verdict, audit finding, or evidence.
+If an exception is explicitly required, document the reason, scope, validation,
+and removal or ownership condition in the relevant CONDAMAD artifact.
+
+### 7. No Legacy means no tolerated compatibility by inertia
 
 Do not preserve old behavior through wrappers, aliases, re-exports, compatibility imports, fallback branches, or transitional modules unless the story explicitly authorizes it.
 
@@ -91,31 +114,31 @@ When a canonical path exists, update consumers to the canonical path and remove 
 
 If removing a legacy path is unsafe within the story scope, record it as a blocker or residual risk. Do not silently keep it.
 
-### 7. Canonical path wins
+### 8. Canonical path wins
 
 There must be one nominal path per responsibility.
 
 If multiple modules, folders, services, registries, or models compete for the same responsibility, the implementation must converge toward the canonical path defined by repository rules, story context, or architecture docs.
 
-### 8. Fail explicitly rather than fallback silently
+### 9. Fail explicitly rather than fallback silently
 
 When canonical configuration, registry entries, execution profiles, routes, mappings, or dependencies are missing, prefer explicit errors over silent fallback.
 
 A fallback is acceptable only when the story says it is part of the nominal behavior and tests prove its boundaries.
 
-### 9. Preserve the user's worktree
+### 10. Preserve the user's worktree
 
 Before editing, inspect the current worktree state.
 
 Do not overwrite unrelated changes. Do not revert user changes unless explicitly asked. Do not use destructive Git commands unless the user explicitly instructs it.
 
-### 10. Small patches beat large rewrites
+### 11. Small patches beat large rewrites
 
 Prefer focused, reviewable changes.
 
 Do not perform broad rewrites, renames, or formatting-only changes unless they are required by the story or validation tooling.
 
-### 11. Tests are evidence, not decoration
+### 12. Tests are evidence, not decoration
 
 Add or update tests where behavior, architecture boundaries, imports, configuration, or structural contracts change.
 
@@ -123,7 +146,7 @@ For behavior changes, prefer test-first or characterization tests.
 
 For structural refactors, use import tests, architecture guard tests, negative search checks, and regression suites.
 
-### 12. Validation must be explicit
+### 13. Validation must be explicit
 
 Every completed story must list the exact commands run and their result.
 
@@ -133,7 +156,7 @@ If a command cannot be run, document:
 - why it was not run;
 - the risk created by not running it.
 
-### 13. Final evidence is required before completion
+### 14. Final evidence is required before completion
 
 Do not mark a story as complete or ready for review until `generated/10-final-evidence.md` is filled.
 
@@ -150,7 +173,7 @@ The final evidence must include:
 - remaining risks;
 - suggested reviewer focus.
 
-### 14. Subagents are read-only by default
+### 15. Subagents are read-only by default
 
 Subagents may be used for exploration, search, duplication analysis, legacy detection, or test discovery.
 
@@ -158,7 +181,7 @@ The main agent owns all writes.
 
 Do not allow multiple agents to edit the same repository concurrently unless the user explicitly requests a parallel worktree strategy.
 
-### 15. Prefer automation for repeatable checks
+### 16. Prefer automation for repeatable checks
 
 Use scripts for deterministic, repeated checks such as:
 

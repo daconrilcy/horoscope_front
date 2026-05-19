@@ -26,6 +26,9 @@ Canonical registry path:
 
 ## Non-negotiable rules
 
+- Apply `../condamad-dev-story/references/condamad-principles.md` when creating
+  or updating guardrails: invariants must protect SOLID, DRY, KISS, and YAGNI
+  outcomes with concrete, non-duplicated, current evidence.
 - Ensure the registry exists before writing, implementing, reviewing, auditing,
   or refactoring a CONDAMAD story.
 - If the registry is missing, create it from
@@ -102,4 +105,3 @@ This skill is mostly procedural. Validation is done by checking that:
 - the active story/capsule/review/audit/refactor artifact cites the registry;
 - applicable invariants are mapped to evidence;
 - new durable invariants are added with a concrete guard.
-

@@ -133,6 +133,7 @@ is available. Record the selected mode in the story source/context section.
 Read:
 
 - `workflow.md`
+- `../condamad-dev-story/references/condamad-principles.md`
 - `references/story-authoring-principles.md`
 - `references/story-output-contract.md`
 - `references/story-archetypes.md`

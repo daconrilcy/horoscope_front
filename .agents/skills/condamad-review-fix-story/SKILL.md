@@ -13,6 +13,9 @@ implementation fixes until the review has no remaining issues.
 This skill composes `../condamad-code-review/SKILL.md`; it does not replace its
 review doctrine. Load and apply `condamad-code-review` at every review
 iteration.
+Also apply `../condamad-dev-story/references/condamad-principles.md` at every
+fix iteration so accepted fixes satisfy SOLID, DRY, KISS, and YAGNI instead of
+only silencing the immediate review finding.
 
 For frontend fixes, also load and apply `../condamad-frontend-dev/SKILL.md`.
 Any accepted review finding whose fix touches `frontend/**`, frontend tests,

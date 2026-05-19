@@ -25,6 +25,7 @@ Follow the instructions in `./workflow.md`.
 Before reviewing, load:
 
 - `workflow.md`
+- `../condamad-dev-story/references/condamad-principles.md`
 - `references/review-doctrine.md`
 - `references/finding-taxonomy.md`
 - `references/codex-modern-review-guidance.md`
@@ -38,6 +39,9 @@ Before reviewing, load:
   exists.
 - Findings must be evidence-backed and include repository-relative file
   references when possible.
+- Treat SOLID, DRY, KISS, and YAGNI violations as review risks when they affect
+  maintainability, responsibility boundaries, duplication, or unnecessary
+  complexity.
 - Do not return `CLEAN` when required validation evidence is missing.
 - Do not treat skipped commands as passed.
 - Do not hide findings because the user asked for a "quick" review.

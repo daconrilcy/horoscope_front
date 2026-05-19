@@ -24,6 +24,7 @@ guardrails.
 
 Load these references before editing frontend files:
 
+- `../condamad-dev-story/references/condamad-principles.md`
 - `references/frontend-architecture.md`
 - `references/frontend-implementation-contract.md`
 - `references/frontend-validation-contract.md`
@@ -144,6 +145,11 @@ helper exists:
 Duplicate logic, hooks, schemas, API functions, state stores, page routes, or
 business components are forbidden unless the task explicitly justifies separate
 responsibilities.
+
+Apply SOLID, KISS, and YAGNI with the same force as DRY: keep component, hook,
+API, state, and style responsibilities narrow; prefer the smallest readable
+React design that satisfies the current task; do not add generic abstractions,
+configuration surfaces, or future-proof variants without present evidence.
 
 ## Pattern consistency
 

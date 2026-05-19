@@ -105,6 +105,11 @@ Read applicable repository instructions before analysis. If
 applicable guardrails before proposing changes. Treat guardrails as constraints,
 not suggestions.
 
+Also apply `../condamad-dev-story/references/condamad-principles.md` when
+turning UX/UI recommendations into React or styling work: plans must preserve
+SOLID responsibility boundaries, DRY reuse of existing primitives, KISS
+implementation paths, and YAGNI restraint against speculative UI systems.
+
 When the request targets an existing page, inspect directly relevant evidence
 first:
 

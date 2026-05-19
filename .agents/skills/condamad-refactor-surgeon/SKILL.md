@@ -51,6 +51,7 @@ This skill complements:
 Read:
 
 - `workflow.md`
+- `../condamad-dev-story/references/condamad-principles.md`
 - `references/refactor-taxonomy.md`
 - `references/refactor-contract.md`
 - `references/behavior-preservation-contract.md`

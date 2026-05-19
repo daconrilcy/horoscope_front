@@ -64,6 +64,7 @@ This skill does not fix code. It does not refactor. It does not generate final i
 Read the relevant references depending on the audit target:
 
 - `references/audit-principles.md`
+- `../condamad-dev-story/references/condamad-principles.md`
 - `references/audit-archetypes.md`
 - `references/finding-taxonomy.md`
 - `references/evidence-profiles.md`

@@ -37,6 +37,9 @@ orchestration loop:
 This skill composes existing CONDAMAD skills. Do not duplicate or weaken their
 rules. The only wrapper-specific override is that `condamad-review-fix-story`
 must not commit or push unless the current user request explicitly asks for it.
+Apply `../condamad-dev-story/references/condamad-principles.md` throughout the
+orchestration so SOLID, DRY, KISS, and YAGNI remain mandatory across
+implementation, review, fixes, validation, and closure evidence.
 
 ## Required inputs
 
