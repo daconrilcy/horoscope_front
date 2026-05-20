@@ -74,6 +74,12 @@ Apply instructions in this order:
 Do not weaken acceptance criteria, validation requirements, or review findings
 to make the workflow pass.
 
+When review findings, user corrections, validation failures, or repeated
+execution mistakes reveal reusable learning, run
+`../condamad-feedback-loop/SKILL.md` before final closure. Apply only accepted
+feedback, validate the resulting code/evidence/skill changes, and record any
+propagation to guardrails or related skills.
+
 ## Subagent authorization
 
 Use dedicated subagents for the review phase only when the current user request
