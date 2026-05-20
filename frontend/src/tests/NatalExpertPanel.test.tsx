@@ -1,3 +1,4 @@
+// Tests du panneau expert natal: verifie l'affichage strict des faits API sans derivation locale.
 import { render, screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
@@ -147,6 +148,48 @@ function buildExpertChart(): LatestNatalChart {
           evidence: ["beta is flagged by backend."],
         },
       ],
+      traditional_conditions: {
+        planets: {
+          alpha: {
+            hayz: {
+              is_hayz: true,
+              sect_match: true,
+              hemisphere_match: true,
+              sign_gender_match: true,
+              calculation_basis: "sect_hemisphere_sign_gender",
+              reference_system: "traditional",
+              evidence: ["alpha matches backend condition."],
+            },
+            rejoicing: {
+              is_rejoicing: false,
+              current_house: 10,
+              rejoicing_house: null,
+              calculation_basis: "planetary_joy_house",
+              reference_system: "traditional",
+              evidence: [],
+            },
+          },
+          beta: {
+            hayz: {
+              is_hayz: false,
+              sect_match: false,
+              hemisphere_match: null,
+              sign_gender_match: null,
+              calculation_basis: "sect_hemisphere_sign_gender",
+              reference_system: "traditional",
+              evidence: [],
+            },
+            rejoicing: {
+              is_rejoicing: true,
+              current_house: 6,
+              rejoicing_house: 6,
+              calculation_basis: "planetary_joy_house",
+              reference_system: "traditional",
+              evidence: ["beta rejoices."],
+            },
+          },
+        },
+      },
       dominant_planets: {
         top_planet_code: "alpha",
         chart_ruler_code: "gamma",
@@ -219,6 +262,11 @@ describe("NatalExpertPanel", () => {
     expect(within(advancedSection).getByText(/alpha \/ hayz/)).toBeInTheDocument()
     expect(within(advancedSection).getByText(/beta \/ out_of_sect/)).toBeInTheDocument()
 
+    const traditionalSection = screen.getByRole("region", { name: "Contrats traditionnels" })
+    expect(within(traditionalSection).getAllByText("hayz.is_hayz").length).toBeGreaterThan(0)
+    expect(within(traditionalSection).getAllByText("hayz.hemisphere_match").length).toBeGreaterThan(0)
+    expect(within(traditionalSection).getAllByText("rejoicing.rejoicing_house").length).toBeGreaterThan(0)
+
     expect(screen.getAllByText("essential_score").length).toBeGreaterThan(0)
     expect(screen.getAllByText("total_score").length).toBeGreaterThan(0)
     expect(screen.getByText("condition_level")).toBeInTheDocument()
@@ -256,6 +304,7 @@ describe("NatalExpertPanel", () => {
         planet_condition_profiles: {},
         planet_condition_signals: {},
         advanced_conditions: [],
+        traditional_conditions: null,
         dominant_planets: null,
         interpretation_adapter: null,
       },
@@ -276,6 +325,11 @@ describe("NatalExpertPanel", () => {
 
     rerender(<NatalExpertPanel chart={noTimeChart} />)
     expect(screen.getByText(/Mode sans heure fiable/i)).toBeInTheDocument()
+    expect(
+      within(screen.getByRole("region", { name: "Contrats traditionnels" })).getByText(
+        /Bloc absent ou vide dans le payload public/i,
+      ),
+    ).toBeInTheDocument()
   })
 
   it("rend les etats loading, error et absence de chart", () => {

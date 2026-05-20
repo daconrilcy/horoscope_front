@@ -119,6 +119,34 @@ export type AdvancedCondition = {
   evidence?: string[]
 }
 
+export type TraditionalHayzCondition = {
+  is_hayz: boolean
+  sect_match: boolean
+  hemisphere_match?: boolean | null
+  sign_gender_match?: boolean | null
+  calculation_basis: string
+  reference_system: string
+  evidence?: string[]
+}
+
+export type TraditionalRejoicingCondition = {
+  is_rejoicing: boolean
+  current_house?: number | null
+  rejoicing_house?: number | null
+  calculation_basis: string
+  reference_system: string
+  evidence?: string[]
+}
+
+export type TraditionalPlanetCondition = {
+  hayz: TraditionalHayzCondition
+  rejoicing: TraditionalRejoicingCondition
+}
+
+export type TraditionalConditionsPayload = {
+  planets?: Record<string, TraditionalPlanetCondition>
+}
+
 export type DominantPlanetFactor = {
   factor_code?: string
   raw_value?: number
@@ -202,6 +230,7 @@ type NatalResult = {
   planet_condition_profiles?: Record<string, PlanetConditionProfile>
   planet_condition_signals?: Record<string, PlanetConditionSignal[]>
   advanced_conditions?: AdvancedCondition[]
+  traditional_conditions?: TraditionalConditionsPayload | null
   dominant_planets?: DominantPlanetsResult | null
   interpretation_adapter?: InterpretationAdapterResult | null
 }

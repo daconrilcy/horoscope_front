@@ -13,6 +13,7 @@ import type {
   PlanetConditionProfile,
   PlanetConditionSignal,
   PlanetSectCondition,
+  TraditionalConditionsPayload,
 } from "../../api/natalChart"
 import { classNames } from "../../utils/classNames"
 import "./NatalExpertPanel.css"
@@ -96,6 +97,7 @@ function isExpertPayloadMissing(result: LatestNatalChart["result"] | undefined):
     result.planet_condition_profiles === undefined &&
     result.planet_condition_signals === undefined &&
     result.advanced_conditions === undefined &&
+    result.traditional_conditions === undefined &&
     result.dominant_planets === undefined &&
     result.interpretation_adapter === undefined
   )
@@ -257,6 +259,34 @@ function AdvancedConditionsBlock({ conditions }: { conditions?: AdvancedConditio
           </li>
         ))}
       </ul>
+    </SectionShell>
+  )
+}
+
+function TraditionalConditionsBlock({
+  conditions,
+}: {
+  conditions?: TraditionalConditionsPayload | null
+}) {
+  const planets = entriesByPlanet(conditions?.planets)
+  return (
+    <SectionShell title="Contrats traditionnels" isEmpty={planets.length === 0}>
+      <div className="natal-expert-card-grid">
+        {planets.map(([planetCode, condition]) => (
+          <article key={planetCode} className="natal-expert-data-card">
+            <h4>{planetCode}</h4>
+            <dl className="natal-expert-facts natal-expert-facts--compact">
+              <FactRow label="hayz.is_hayz" value={condition.hayz.is_hayz} />
+              <FactRow label="hayz.sect_match" value={condition.hayz.sect_match} />
+              <FactRow label="hayz.hemisphere_match" value={condition.hayz.hemisphere_match} />
+              <FactRow label="hayz.sign_gender_match" value={condition.hayz.sign_gender_match} />
+              <FactRow label="rejoicing.is_rejoicing" value={condition.rejoicing.is_rejoicing} />
+              <FactRow label="rejoicing.current_house" value={condition.rejoicing.current_house} />
+              <FactRow label="rejoicing.rejoicing_house" value={condition.rejoicing.rejoicing_house} />
+            </dl>
+          </article>
+        ))}
+      </div>
     </SectionShell>
   )
 }
@@ -521,6 +551,7 @@ export function NatalExpertPanel({ chart, isLoading = false, errorMessage = null
       <div className="natal-expert-panel__content">
         <ChartSectBlock dignities={result.dignities} />
         <PlanetSectBlock dignities={result.dignities} />
+        <TraditionalConditionsBlock conditions={result.traditional_conditions} />
         <AdvancedConditionsBlock conditions={result.advanced_conditions} />
         <DignityScoresBlock dignities={result.dignities} />
         <ProfilesBlock profiles={result.planet_condition_profiles} />

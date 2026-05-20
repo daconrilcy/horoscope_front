@@ -45,11 +45,12 @@ class HayzCalculator:
                         ),
                     )
                 )
-            if sect_condition.is_in_sect and self._non_sect_hayz_factors_match(
+            hayz_facts = self.non_sect_hayz_factors(
                 position,
                 dignity,
                 runtime_reference,
-            ):
+            )
+            if sect_condition.is_in_sect and all(hayz_facts.values()):
                 conditions.append(
                     emit_condition(
                         condition_code="hayz",
@@ -60,17 +61,27 @@ class HayzCalculator:
                             f"{position.planet_code} matches PlanetSectCondition and "
                             "non-sect hayz factors."
                         ),
+                        calculation_facts={
+                            "sect_match": True,
+                            **hayz_facts,
+                            "calculation_basis": "sect_hemisphere_sign_gender",
+                            "reference_system": dignity.tradition,
+                        },
                     )
                 )
         return tuple(conditions)
 
-    def _non_sect_hayz_factors_match(
+    def non_sect_hayz_factors(
         self,
         position: Any,
         dignity: PlanetDignityResult,
         runtime_reference: AstrologyRuntimeReference,
-    ) -> bool:
+    ) -> dict[str, bool]:
         """Evalue les facteurs hayz hors precondition de secte."""
+        facts = {
+            "hemisphere_match": False,
+            "sign_gender_match": False,
+        }
         for rule in runtime_reference.dignity_reference.accidental_rules:
             if rule.system_code != dignity.tradition:
                 continue
@@ -79,21 +90,29 @@ class HayzCalculator:
             if rule.planet_code is not None and rule.planet_code != position.planet_code:
                 continue
             conditions = {item.key: item.value for item in rule.conditions}
-            if "horizon_position_code" in conditions and not self._horizon_matches(
-                str(conditions["horizon_position_code"]),
-                position,
-                runtime_reference,
-                system_code=rule.system_code,
-            ):
-                continue
-            if "sign_gender_code" in conditions and not self._sign_gender_matches(
-                str(conditions["sign_gender_code"]),
-                position,
-                runtime_reference,
-            ):
-                continue
-            return True
-        return False
+            candidate_facts = {
+                "hemisphere_match": (
+                    "horizon_position_code" not in conditions
+                    or self._horizon_matches(
+                        str(conditions["horizon_position_code"]),
+                        position,
+                        runtime_reference,
+                        system_code=rule.system_code,
+                    )
+                ),
+                "sign_gender_match": (
+                    "sign_gender_code" not in conditions
+                    or self._sign_gender_matches(
+                        str(conditions["sign_gender_code"]),
+                        position,
+                        runtime_reference,
+                    )
+                ),
+            }
+            if all(candidate_facts.values()):
+                return candidate_facts
+            facts = candidate_facts
+        return facts
 
     def _horizon_matches(
         self,

@@ -183,6 +183,7 @@ class AdvancedConditionEngine:
             source_planet_code: str,
             target_planet_code: str | None,
             reason: str,
+            calculation_facts: dict[str, object] | None = None,
         ) -> AdvancedPlanetaryCondition:
             weight = weights[condition_type_code]
             axes = PlanetConditionAxisImpact(
@@ -215,6 +216,7 @@ class AdvancedConditionEngine:
                 ranking_weight=round(weight.ranking_weight, 6),
                 axes_impact=axes,
                 reason=reason,
+                calculation_facts=calculation_facts or {},
             )
 
         return emit_condition

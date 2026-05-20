@@ -13,6 +13,8 @@ from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
 from app.domain.astrology.advanced_conditions import (
     AdvancedConditionEngine,
     AdvancedPlanetaryCondition,
+    TraditionalConditionNormalizer,
+    TraditionalConditionsResult,
 )
 from app.domain.astrology.angle_utils import contains_angle
 from app.domain.astrology.astral_point_calculation_resolver import (
@@ -156,6 +158,7 @@ class NatalResult(BaseModel):
     condition_profiles: list[PlanetConditionProfile] = Field(default_factory=list)
     condition_signals: list[PlanetConditionSignalSet] = Field(default_factory=list)
     advanced_conditions: list[AdvancedPlanetaryCondition] = Field(default_factory=list)
+    traditional_conditions: TraditionalConditionsResult | None = None
     dominant_planets: DominantPlanetsResult | None = None
     interpretation_adapter: InterpretationAdapterResult | None = None
     aspects: list[AspectResult]
@@ -878,6 +881,12 @@ def build_natal_result(
         advanced_conditions=tuple(advanced_conditions),
         dominant_planets=dominant_planets,
     )
+    traditional_conditions = TraditionalConditionNormalizer().normalize(
+        dignities=dignities,
+        planet_positions=positions,
+        advanced_conditions=tuple(advanced_conditions),
+        runtime_reference=runtime_reference,
+    )
 
     return NatalResult(
         reference_version=version,
@@ -905,6 +914,7 @@ def build_natal_result(
         condition_profiles=condition_profiles,
         condition_signals=condition_signals,
         advanced_conditions=list(advanced_conditions),
+        traditional_conditions=traditional_conditions,
         dominant_planets=dominant_planets,
         interpretation_adapter=interpretation_adapter,
         aspects=aspects,

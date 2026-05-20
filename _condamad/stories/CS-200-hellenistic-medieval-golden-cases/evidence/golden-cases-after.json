@@ -7,7 +7,7 @@
     "full ephemeris traces",
     "localized labels unrelated to contracts"
   ],
-  "case_count": 12,
+  "case_count": 14,
   "cases": [
     {
       "assertions": [
@@ -656,6 +656,80 @@
         "dominant_planets",
         "interpretation_adapter",
         "json_builder"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.essential_breakdown.triplicity"
+      ],
+      "case_id": "G13",
+      "expected_summary": "fire triplicity day ruler",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "active_ruler": {
+          "chart_sect": "day",
+          "essential_breakdown": [
+            {
+              "code": "triplicity",
+              "score": 3.0,
+              "source": "triplicity"
+            }
+          ],
+          "essential_score": 3.0,
+          "planet_code": "jupiter"
+        },
+        "inactive_ruler": {
+          "chart_sect": "day",
+          "essential_breakdown": [
+            {
+              "code": "peregrine",
+              "score": -5.0,
+              "source": "no_positive_essential_match"
+            }
+          ],
+          "essential_score": -5.0,
+          "planet_code": "mars"
+        }
+      },
+      "targeted_contracts": [
+        "dignities.essential_breakdown.triplicity"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.essential_breakdown.triplicity"
+      ],
+      "case_id": "G14",
+      "expected_summary": "fire triplicity night ruler",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "active_ruler": {
+          "chart_sect": "night",
+          "essential_breakdown": [
+            {
+              "code": "triplicity",
+              "score": 3.0,
+              "source": "triplicity"
+            }
+          ],
+          "essential_score": 3.0,
+          "planet_code": "mars"
+        },
+        "inactive_ruler": {
+          "chart_sect": "night",
+          "essential_breakdown": [
+            {
+              "code": "peregrine",
+              "score": -5.0,
+              "source": "no_positive_essential_match"
+            }
+          ],
+          "essential_score": -5.0,
+          "planet_code": "jupiter"
+        }
+      },
+      "targeted_contracts": [
+        "dignities.essential_breakdown.triplicity"
       ]
     }
   ]

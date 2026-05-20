@@ -109,6 +109,25 @@ def test_g11_locks_essential_dignity_and_scores() -> None:
     assert observed["intensity_score"] > 0
 
 
+def test_g13_g14_lock_sect_aware_triplicity_rulers() -> None:
+    """G13/G14 prouvent le maitre de triplicite diurne puis nocturne."""
+    g13 = _case("G13")["observed_summary"]
+    g14 = _case("G14")["observed_summary"]
+
+    assert {"code": "triplicity", "score": 3, "source": "triplicity"} in g13["active_ruler"][
+        "essential_breakdown"
+    ]
+    assert not any(
+        item["code"] == "triplicity" for item in g13["inactive_ruler"]["essential_breakdown"]
+    )
+    assert {"code": "triplicity", "score": 3, "source": "triplicity"} in g14["active_ruler"][
+        "essential_breakdown"
+    ]
+    assert not any(
+        item["code"] == "triplicity" for item in g14["inactive_ruler"]["essential_breakdown"]
+    )
+
+
 def test_g12_locks_integrated_pipeline_and_public_json_projection() -> None:
     """G12 verrouille NatalResult, surfaces aval et projection JSON publique."""
     observed = _case("G12")["observed_summary"]

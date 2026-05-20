@@ -9,6 +9,9 @@ from app.domain.astrology.advanced_conditions.contracts import (
     AdvancedPlanetaryCondition,
     PlanetConditionAxisImpact,
 )
+from app.domain.astrology.advanced_conditions.traditional_condition_normalizer import (
+    TraditionalConditionNormalizer,
+)
 from app.domain.astrology.condition.contracts import (
     PlanetConditionBreakdownItem,
     PlanetConditionExplanationFact,
@@ -54,10 +57,12 @@ from app.domain.astrology.runtime.sign_runtime_data import (
 from app.services.chart.json_builder import (
     EVIDENCE_ID_PATTERN,
     _serialize_dignities,
+    _serialize_traditional_conditions,
     build_chart_json,
     build_evidence_catalog,
 )
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 
 
 @pytest.fixture
@@ -344,8 +349,21 @@ def mock_natal_result():
                 constraint_delta=0.0,
             ),
             reason="sun matches accidental dignity hayz.",
+            calculation_facts={
+                "sect_match": True,
+                "hemisphere_match": True,
+                "sign_gender_match": True,
+                "calculation_basis": "sect_hemisphere_sign_gender",
+                "reference_system": "traditional",
+            },
         )
     ]
+    result.traditional_conditions = TraditionalConditionNormalizer().normalize(
+        dignities=result.dignities,
+        planet_positions=result.planet_positions,
+        advanced_conditions=result.advanced_conditions,
+        runtime_reference=complete_reference(),
+    )
     result.dominant_planets = DominantPlanetsResult(
         score_profile_code="natal_standard_v1",
         tradition_code="modern",
@@ -596,6 +614,25 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
             "evidence": ["sun matches accidental dignity hayz."],
         }
     ]
+    assert chart["traditional_conditions"]["planets"]["sun"] == {
+        "hayz": {
+            "is_hayz": True,
+            "sect_match": True,
+            "hemisphere_match": True,
+            "sign_gender_match": True,
+            "calculation_basis": "sect_hemisphere_sign_gender",
+            "reference_system": "traditional",
+            "evidence": ["sun matches accidental dignity hayz."],
+        },
+        "rejoicing": {
+            "is_rejoicing": False,
+            "current_house": 10,
+            "rejoicing_house": None,
+            "calculation_basis": "planetary_joy_house",
+            "reference_system": "traditional",
+            "evidence": [],
+        },
+    }
     assert chart["dominant_planets"]["chart_ruler_code"] == "sun"
     assert chart["dominant_planets"]["most_elevated_planet_code"] == "sun"
     assert chart["dominant_planets"]["top_planet_code"] == "sun"
@@ -735,6 +772,67 @@ def test_serialize_dignities_rejects_inconsistent_planet_sect_flags() -> None:
         _serialize_dignities([result])
 
 
+def test_serialize_traditional_conditions_exposes_rejoicing_contract() -> None:
+    """La projection expose la joie planetaire depuis le breakdown deja calcule."""
+    chart_sect = ChartSectResult(
+        chart_sect="night",
+        sun_horizon_position="below_horizon",
+        sun_above_horizon=False,
+        calculation_basis="sun_house_horizon_rule",
+        reference_system="traditional",
+    )
+    dignity = PlanetDignityResult(
+        planet_code="moon",
+        score_profile="traditional_standard",
+        tradition="traditional",
+        reference_version="v1.2",
+        sect="night",
+        chart_sect=chart_sect,
+        sect_condition=PlanetSectCondition(
+            planet_code="moon",
+            chart_sect="night",
+            intrinsic_sect="nocturnal",
+            planet_sect_condition="in_sect",
+            is_in_sect=True,
+            is_out_of_sect=False,
+            calculation_basis="chart_sect_vs_planet_intrinsic_sect",
+            reference_system="traditional",
+        ),
+        essential_score=0,
+        accidental_score=3,
+        total_score=3,
+        functional_strength_score=0.6,
+        expression_quality_score=0.6,
+        intensity_score=0.1,
+        essential_breakdown=(),
+        accidental_breakdown=(
+            AccidentalDignityMatch(
+                dignity_type_code="planetary_joy",
+                score_value=3,
+                source="planetary_joy_house",
+                reason="moon matches planetary_joy: house_code=3",
+                condition="house_code=3",
+            ),
+        ),
+    )
+    traditional_conditions = TraditionalConditionNormalizer().normalize(
+        dignities=[dignity],
+        planet_positions=[SimpleNamespace(planet_code="moon", house_number=3)],
+        advanced_conditions=[],
+        runtime_reference=complete_reference(),
+    )
+    payload = _serialize_traditional_conditions(traditional_conditions)
+
+    assert payload["planets"]["moon"]["rejoicing"] == {
+        "is_rejoicing": True,
+        "current_house": 3,
+        "rejoicing_house": 3,
+        "calculation_basis": "planetary_joy_house",
+        "reference_system": "traditional",
+        "evidence": ["moon matches planetary_joy: house_code=3"],
+    }
+
+
 def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):
     rich_house = mock_natal_result.houses[0]
     rich_house.number = 1
@@ -867,6 +965,7 @@ def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
     assert chart["angles"]["MC"] is None
     assert chart["dominant_planets"] is None
     assert chart["interpretation_adapter"] is None
+    assert chart["traditional_conditions"] is None
     assert chart["astral_points"][0]["house"] is None
     assert chart["signs_runtime"][0]["occupants"][0]["house"] is None
 

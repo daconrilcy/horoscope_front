@@ -6,6 +6,7 @@ les calculateurs canoniques produire les contrats observes.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +33,10 @@ from app.domain.astrology.runtime.house_runtime_data import (
     HouseOccupantRuntimeData,
     HouseRuntimeData,
 )
-from app.domain.astrology.runtime.runtime_reference import AstrologyRuntimeReference
+from app.domain.astrology.runtime.runtime_reference import (
+    AstrologyRuntimeReference,
+    TriplicityRulerReferenceData,
+)
 from app.services.chart.json_builder import build_chart_json
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from tests.factories.astrology_runtime_reference_factory import (
@@ -72,6 +76,28 @@ def traditional_reference() -> AstrologyRuntimeReference:
     return complete_reference_with_planet_sect_rules()
 
 
+def sect_aware_triplicity_reference() -> AstrologyRuntimeReference:
+    """Ajoute des maitres de triplicite diurne/nocturne pour le meme element."""
+    reference = traditional_reference()
+    dignity_reference = reference.dignity_reference
+    triplicity_rulers = tuple(
+        ruler
+        for ruler in dignity_reference.triplicity_rulers
+        if not (ruler.element_code == "fire" and ruler.sect_code in {"day", "night"})
+    )
+    return replace(
+        reference,
+        dignity_reference=replace(
+            dignity_reference,
+            triplicity_rulers=(
+                *triplicity_rulers,
+                TriplicityRulerReferenceData("fire", "day", "jupiter", "principal", "traditional"),
+                TriplicityRulerReferenceData("fire", "night", "mars", "principal", "traditional"),
+            ),
+        ),
+    )
+
+
 def observed_chart_sect(sun_house_number: int) -> dict[str, Any]:
     """Calcule la secte chart-level depuis le calculateur canonique."""
     result = SectCalculator().calculate(
@@ -84,6 +110,14 @@ def observed_chart_sect(sun_house_number: int) -> dict[str, Any]:
 def dignity_results(planets: tuple[PlanetDignityInput, ...]) -> tuple[PlanetDignityResult, ...]:
     """Calcule les dignites avec le service canonique de scoring."""
     return PlanetDignityScoringService().calculate(planets, traditional_reference())
+
+
+def dignity_results_with_reference(
+    planets: tuple[PlanetDignityInput, ...],
+    reference: AstrologyRuntimeReference,
+) -> tuple[PlanetDignityResult, ...]:
+    """Calcule les dignites avec une reference explicite."""
+    return PlanetDignityScoringService().calculate(planets, reference)
 
 
 def dignity_by_code(
@@ -345,6 +379,17 @@ def golden_cases() -> list[dict[str, Any]]:
         dignity_results(joy_case), traditional_reference()
     )
     g11_result = dignity_by_code(essential_case, "sun")
+    triplicity_reference = sect_aware_triplicity_reference()
+    triplicity_day_case = (
+        planet("sun", 120.0, "leo", 10),
+        planet("jupiter", 125.0, "leo", 10),
+        planet("mars", 125.0, "leo", 10),
+    )
+    triplicity_night_case = (
+        planet("sun", 120.0, "leo", 2),
+        planet("jupiter", 125.0, "leo", 2),
+        planet("mars", 125.0, "leo", 2),
+    )
 
     return [
         _case("G1", "synthetic_domain", ("dignities.sect",), "day chart", observed_chart_sect(10)),
@@ -445,6 +490,34 @@ def golden_cases() -> list[dict[str, Any]]:
             "full pipeline and public JSON projection",
             integrated_pipeline_summary(),
         ),
+        _case(
+            "G13",
+            "synthetic_domain",
+            ("dignities.essential_breakdown.triplicity",),
+            "fire triplicity day ruler",
+            {
+                "active_ruler": _triplicity_summary(
+                    triplicity_day_case, "jupiter", triplicity_reference
+                ),
+                "inactive_ruler": _triplicity_summary(
+                    triplicity_day_case, "mars", triplicity_reference
+                ),
+            },
+        ),
+        _case(
+            "G14",
+            "synthetic_domain",
+            ("dignities.essential_breakdown.triplicity",),
+            "fire triplicity night ruler",
+            {
+                "active_ruler": _triplicity_summary(
+                    triplicity_night_case, "mars", triplicity_reference
+                ),
+                "inactive_ruler": _triplicity_summary(
+                    triplicity_night_case, "jupiter", triplicity_reference
+                ),
+            },
+        ),
     ]
 
 
@@ -510,6 +583,27 @@ def _breakdown_codes(items: tuple[Any, ...]) -> list[dict[str, Any]]:
             }
             for item in items
         ]
+    )
+
+
+def _triplicity_summary(
+    case_planets: tuple[PlanetDignityInput, ...],
+    planet_code: str,
+    reference: AstrologyRuntimeReference,
+) -> dict[str, Any]:
+    """Retourne le match de triplicite observe pour un cas sect-aware."""
+    result = next(
+        item
+        for item in dignity_results_with_reference(case_planets, reference)
+        if item.planet_code == planet_code
+    )
+    return normalize_golden_value(
+        {
+            "chart_sect": result.chart_sect.chart_sect,
+            "planet_code": result.planet_code,
+            "essential_breakdown": _breakdown_codes(result.essential_breakdown),
+            "essential_score": result.essential_score,
+        }
     )
 
 

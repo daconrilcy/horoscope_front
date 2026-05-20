@@ -571,6 +571,39 @@ def _serialize_advanced_conditions(advanced_conditions: Any) -> list[dict[str, A
     ]
 
 
+def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, Any] | None:
+    """Projette le contrat traditionnel deja normalise par le domaine."""
+    if traditional_conditions is None:
+        return None
+    planets = getattr(traditional_conditions, "planets", ())
+    if not isinstance(planets, (list, tuple)):
+        return {"planets": {}}
+    return {
+        "planets": {
+            planet.planet_code: {
+                "hayz": {
+                    "is_hayz": planet.hayz.is_hayz,
+                    "sect_match": planet.hayz.sect_match,
+                    "hemisphere_match": planet.hayz.hemisphere_match,
+                    "sign_gender_match": planet.hayz.sign_gender_match,
+                    "calculation_basis": planet.hayz.calculation_basis,
+                    "reference_system": planet.hayz.reference_system,
+                    "evidence": list(planet.hayz.evidence),
+                },
+                "rejoicing": {
+                    "is_rejoicing": planet.rejoicing.is_rejoicing,
+                    "current_house": planet.rejoicing.current_house,
+                    "rejoicing_house": planet.rejoicing.rejoicing_house,
+                    "calculation_basis": planet.rejoicing.calculation_basis,
+                    "reference_system": planet.rejoicing.reference_system,
+                    "evidence": list(planet.rejoicing.evidence),
+                },
+            }
+            for planet in planets
+        }
+    }
+
+
 def _serialize_interpretation_adapter(adapter: Any) -> dict[str, Any] | None:
     """Projette le resultat d'adaptation deja calcule par le domaine."""
     if adapter is None:
@@ -753,6 +786,13 @@ def build_chart_json(
         ),
         "advanced_conditions": _serialize_advanced_conditions(
             getattr(natal_result, "advanced_conditions", [])
+        ),
+        "traditional_conditions": (
+            None
+            if is_no_time
+            else _serialize_traditional_conditions(
+                getattr(natal_result, "traditional_conditions", None)
+            )
         ),
         "dominant_planets": dominant_planets,
         "interpretation_adapter": (

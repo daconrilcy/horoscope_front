@@ -1,0 +1,55 @@
+{
+  "traditional_conditions": {
+    "planets": {
+      "sun": {
+        "hayz": {
+          "is_hayz": true,
+          "sect_match": true,
+          "hemisphere_match": true,
+          "sign_gender_match": true,
+          "calculation_basis": "sect_hemisphere_sign_gender",
+          "reference_system": "traditional"
+        },
+        "rejoicing": {
+          "is_rejoicing": false,
+          "current_house": 10,
+          "rejoicing_house": null,
+          "calculation_basis": "planetary_joy_house",
+          "reference_system": "traditional"
+        }
+      },
+      "moon": {
+        "hayz": {
+          "is_hayz": false,
+          "sect_match": true,
+          "hemisphere_match": false,
+          "sign_gender_match": false,
+          "calculation_basis": "sect_hemisphere_sign_gender",
+          "reference_system": "traditional",
+          "evidence": [
+            "moon hayz factors: hemisphere_match=false;sign_gender_match=false"
+          ]
+        },
+        "rejoicing": {
+          "is_rejoicing": true,
+          "current_house": 3,
+          "rejoicing_house": 3,
+          "calculation_basis": "planetary_joy_house",
+          "reference_system": "traditional"
+        }
+      }
+    }
+  },
+  "non_rejoicing_runtime_joy_house_case": {
+    "planet_code": "moon",
+    "current_house": 4,
+    "rejoicing_house": 3,
+    "is_rejoicing": false
+  },
+  "runtime_joy_house_limit": "The current runtime fixture exposes a planetary_joy house for moon; planets without a runtime planetary_joy rule keep rejoicing_house null by contract.",
+  "triplicity_golden_cases": [
+    "G13 fire triplicity day ruler",
+    "G14 fire triplicity night ruler"
+  ],
+  "score_change": false
+}

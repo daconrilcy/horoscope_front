@@ -1,9 +1,12 @@
 """Tests du calculateur de dignites essentielles."""
 
+from dataclasses import replace
+
 from app.domain.astrology.dignities.contracts import PlanetDignityInput
 from app.domain.astrology.dignities.essential_dignity_calculator import (
     EssentialDignityCalculator,
 )
+from app.domain.astrology.runtime.runtime_reference import TriplicityRulerReferenceData
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
 
@@ -122,6 +125,32 @@ def test_essential_dignity_calculator_matches_participating_triplicity_all_sect(
     assert any(match.dignity_type_code == "triplicity" for match in matches)
 
 
+def test_essential_dignity_calculator_uses_day_triplicity_ruler_for_day_chart() -> None:
+    """La triplicite active le maitre diurne sans activer le maitre nocturne."""
+    reference = _reference_with_fire_day_and_night_triplicity()
+    day_ruler = PlanetDignityInput("jupiter", 125, "leo", 10, 1, False)
+    night_ruler = PlanetDignityInput("mars", 125, "leo", 10, 1, False)
+
+    day_matches = _essential_matches(day_ruler, reference, sect="day")
+    night_matches = _essential_matches(night_ruler, reference, sect="day")
+
+    assert "triplicity" in {match.dignity_type_code for match in day_matches}
+    assert "triplicity" not in {match.dignity_type_code for match in night_matches}
+
+
+def test_essential_dignity_calculator_uses_night_triplicity_ruler_for_night_chart() -> None:
+    """La triplicite active le maitre nocturne pour le meme element."""
+    reference = _reference_with_fire_day_and_night_triplicity()
+    day_ruler = PlanetDignityInput("jupiter", 125, "leo", 2, 1, False)
+    night_ruler = PlanetDignityInput("mars", 125, "leo", 2, 1, False)
+
+    day_matches = _essential_matches(day_ruler, reference, sect="night")
+    night_matches = _essential_matches(night_ruler, reference, sect="night")
+
+    assert "triplicity" not in {match.dignity_type_code for match in day_matches}
+    assert "triplicity" in {match.dignity_type_code for match in night_matches}
+
+
 def test_essential_dignity_calculator_matches_term_and_face() -> None:
     """Les bornes et faces proviennent du runtime et sont scorées."""
     reference = complete_reference()
@@ -147,3 +176,37 @@ def test_essential_dignity_calculator_matches_term_and_face() -> None:
 
     assert any(match.dignity_type_code == "term" for match in term_matches)
     assert any(match.dignity_type_code == "face" for match in face_matches)
+
+
+def _reference_with_fire_day_and_night_triplicity():
+    """Retourne une reference de test avec maitres diurne et nocturne du feu."""
+    reference = complete_reference()
+    dignity_reference = reference.dignity_reference
+    triplicity_rulers = tuple(
+        ruler
+        for ruler in dignity_reference.triplicity_rulers
+        if not (ruler.element_code == "fire" and ruler.sect_code in {"day", "night"})
+    )
+    return replace(
+        reference,
+        dignity_reference=replace(
+            dignity_reference,
+            triplicity_rulers=(
+                *triplicity_rulers,
+                TriplicityRulerReferenceData("fire", "day", "jupiter", "principal", "traditional"),
+                TriplicityRulerReferenceData("fire", "night", "mars", "principal", "traditional"),
+            ),
+        ),
+    )
+
+
+def _essential_matches(planet: PlanetDignityInput, reference, *, sect: str):
+    """Calcule les dignites essentielles d'une planete avec la fixture donnee."""
+    return EssentialDignityCalculator().calculate(
+        planet,
+        signs=reference.signs,
+        dignity_reference=reference.dignity_reference,
+        score_profile="traditional_standard",
+        sect=sect,
+        tradition="traditional",
+    )
