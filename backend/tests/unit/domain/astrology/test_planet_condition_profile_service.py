@@ -1,6 +1,7 @@
 """Tests du service de profils conditionnels planetaires."""
 
 from dataclasses import replace
+from pathlib import Path
 
 from app.domain.astrology.condition.contracts import (
     PlanetConditionBreakdownItem,
@@ -18,6 +19,8 @@ from app.domain.astrology.dignities.contracts import (
     PlanetSectCondition,
 )
 from tests.factories.astrology_runtime_reference_factory import complete_reference
+
+SERVICE_SOURCE = Path("backend/app/domain/astrology/condition/planet_condition_profile_service.py")
 
 
 def _result() -> PlanetDignityResult:
@@ -190,3 +193,12 @@ def test_condition_ranking_is_deterministic() -> None:
     second = service.calculate((_result(),), reference)
 
     assert first == second
+
+
+def test_condition_profiles_do_not_recalculate_sect() -> None:
+    """Le service de profils ne devient pas proprietaire de la secte."""
+    source = SERVICE_SOURCE.read_text(encoding="utf-8")
+
+    assert "SectCalculator" not in source
+    assert "PlanetSectConditionCalculator" not in source
+    assert "planet_sect_condition_calculator" not in source

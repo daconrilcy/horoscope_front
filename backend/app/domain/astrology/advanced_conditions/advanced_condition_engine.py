@@ -68,7 +68,12 @@ class AdvancedConditionEngine:
                 runtime_reference,
                 emit_condition,
             ),
-            *HayzCalculator().calculate(planet_positions, by_dignity, emit_condition),
+            *HayzCalculator().calculate(
+                planet_positions,
+                by_dignity,
+                runtime_reference,
+                emit_condition,
+            ),
             *PlanetSpeedClassifier().calculate(planet_positions, by_dignity, emit_condition),
             *HeliacalConditionCalculator().calculate(
                 planet_positions,

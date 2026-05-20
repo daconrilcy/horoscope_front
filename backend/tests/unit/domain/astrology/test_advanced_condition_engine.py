@@ -25,8 +25,16 @@ def test_advanced_condition_contracts_are_immutable() -> None:
 def test_advanced_condition_engine_enriches_profiles_without_replacing_them() -> None:
     """Le moteur ajoute breakdown et faits avances aux profils existants."""
     conditions, profiles = advanced_engine_result(
-        (position("sun", "leo"),),
-        (dignity("sun", "hayz"),),
+        (position("sun", "leo", house_number=10),),
+        (
+            dignity(
+                "sun",
+                "hayz",
+                intrinsic_sect="diurnal",
+                planet_sect_condition="in_sect",
+                is_in_sect=True,
+            ),
+        ),
     )
 
     assert len(conditions) == 1
@@ -36,3 +44,47 @@ def test_advanced_condition_engine_enriches_profiles_without_replacing_them() ->
     assert profile.breakdown[0].dignity_type_code == "hayz"
     assert profile.explanation_facts[0].fact_type == "advanced_condition"
     assert profile.ranking_score > 1.0
+
+
+def test_out_of_sect_advanced_condition_uses_planet_sect_condition() -> None:
+    """La condition hors-secte ne depend plus du breakdown accidentel."""
+    conditions, _profiles = advanced_engine_result(
+        (position("mars", "aries"),),
+        (
+            dignity(
+                "mars",
+                intrinsic_sect="nocturnal",
+                planet_sect_condition="out_of_sect",
+                is_out_of_sect=True,
+            ),
+        ),
+    )
+
+    assert [item.condition_code for item in conditions] == ["out_of_sect"]
+    assert conditions[0].reason == "mars is out of sect according to PlanetSectCondition."
+
+
+def test_hayz_still_requires_non_sect_hayz_factors() -> None:
+    """Une planete en secte ne devient pas hayz sans les autres facteurs hayz."""
+    conditions, _profiles = advanced_engine_result(
+        (position("sun", "taurus"),),
+        (
+            dignity(
+                "sun",
+                intrinsic_sect="diurnal",
+                planet_sect_condition="in_sect",
+                is_in_sect=True,
+            ),
+        ),
+    )
+
+    assert conditions == ()
+
+
+def test_missing_planet_sect_condition_fails_explicitly() -> None:
+    """Les conditions avancees dependantes de la secte exigent le contrat CS-198."""
+    with pytest.raises(ValueError, match="PlanetSectCondition is required"):
+        advanced_engine_result(
+            (position("sun", "leo", house_number=10),),
+            (dignity("sun", "hayz", include_sect_condition=False),),
+        )

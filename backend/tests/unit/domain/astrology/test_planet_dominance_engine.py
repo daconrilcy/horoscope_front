@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+from pathlib import Path
 
 import pytest
 
@@ -16,6 +17,8 @@ from app.domain.astrology.runtime.house_runtime_data import (
     HouseRuntimeData,
 )
 from tests.factories.astrology_runtime_reference_factory import complete_reference
+
+ENGINE_SOURCE = Path("backend/app/domain/astrology/dominance/planet_dominance_engine.py")
 
 
 def _profiles() -> tuple[PlanetConditionProfile, ...]:
@@ -397,3 +400,12 @@ def test_planet_dominance_handles_missing_condition_profile() -> None:
     assert mars_strength.reason == "mars has no condition strength profile."
     assert mars_visibility.normalized_value == 0.0
     assert mars_visibility.reason == "mars has no visibility profile."
+
+
+def test_planet_dominance_does_not_recalculate_sect() -> None:
+    """Le moteur de dominance consomme des profils et conditions deja calcules."""
+    source = ENGINE_SOURCE.read_text(encoding="utf-8")
+
+    assert "SectCalculator" not in source
+    assert "PlanetSectConditionCalculator" not in source
+    assert "planet_sect_condition_calculator" not in source

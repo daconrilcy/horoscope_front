@@ -35,30 +35,41 @@ def position(
 def dignity(
     planet_code: str,
     *accidental_codes: str,
+    chart_sect: str = "day",
+    intrinsic_sect: str = "unknown",
+    planet_sect_condition: str = "unknown",
+    is_in_sect: bool = False,
+    is_out_of_sect: bool = False,
+    include_sect_condition: bool = True,
 ) -> PlanetDignityResult:
     """Construit un resultat de dignite avec matches accidentels choisis."""
+    sun_horizon_position = "above_horizon" if chart_sect == "day" else "below_horizon"
     return PlanetDignityResult(
         planet_code=planet_code,
         score_profile="traditional_standard",
         tradition="traditional",
         reference_version="test",
-        sect="day",
+        sect=chart_sect,
         chart_sect=ChartSectResult(
-            chart_sect="day",
-            sun_horizon_position="above_horizon",
-            sun_above_horizon=True,
+            chart_sect=chart_sect,
+            sun_horizon_position=sun_horizon_position,
+            sun_above_horizon=chart_sect == "day",
             calculation_basis="sun_house_horizon_rule",
             reference_system="traditional",
         ),
-        sect_condition=PlanetSectCondition(
-            planet_code=planet_code,
-            chart_sect="day",
-            intrinsic_sect="unknown",
-            planet_sect_condition="unknown",
-            is_in_sect=False,
-            is_out_of_sect=False,
-            calculation_basis="chart_sect_vs_planet_intrinsic_sect",
-            reference_system="runtime_accidental_sect_rules",
+        sect_condition=(
+            PlanetSectCondition(
+                planet_code=planet_code,
+                chart_sect=chart_sect,
+                intrinsic_sect=intrinsic_sect,
+                planet_sect_condition=planet_sect_condition,
+                is_in_sect=is_in_sect,
+                is_out_of_sect=is_out_of_sect,
+                calculation_basis="chart_sect_vs_planet_intrinsic_sect",
+                reference_system="runtime_accidental_sect_rules",
+            )
+            if include_sect_condition
+            else None
         ),
         essential_score=0.0,
         accidental_score=0.0,

@@ -9,11 +9,25 @@ from tests.unit.domain.astrology.advanced_condition_test_helpers import (
 )
 
 
-def test_hayz_and_out_of_sect_are_projected_from_accidental_dignities() -> None:
-    """Les conditions de secte viennent des resultats de dignites deja calcules."""
+def test_hayz_and_out_of_sect_are_projected_from_canonical_sect_facts() -> None:
+    """Les conditions avancees de secte consomment PlanetSectCondition."""
     conditions, _profiles = advanced_engine_result(
-        (position("sun", "leo"), position("mars", "aries")),
-        (dignity("sun", "hayz"), dignity("mars", "out_of_sect")),
+        (position("sun", "leo", house_number=10), position("mars", "aries")),
+        (
+            dignity(
+                "sun",
+                "hayz",
+                intrinsic_sect="diurnal",
+                planet_sect_condition="in_sect",
+                is_in_sect=True,
+            ),
+            dignity(
+                "mars",
+                intrinsic_sect="nocturnal",
+                planet_sect_condition="out_of_sect",
+                is_out_of_sect=True,
+            ),
+        ),
     )
 
     assert [(item.source_planet_code, item.condition_code) for item in conditions] == [
@@ -21,3 +35,21 @@ def test_hayz_and_out_of_sect_are_projected_from_accidental_dignities() -> None:
         ("sun", "hayz"),
     ]
     assert {item.condition_type_code for item in conditions} == {"hayz", "out_of_sect"}
+
+
+def test_hayz_requires_in_sect_even_when_hayz_breakdown_exists() -> None:
+    """Hayz ne se reduit pas aux anciens breakdowns accidentels."""
+    conditions, _profiles = advanced_engine_result(
+        (position("moon", "cancer"),),
+        (
+            dignity(
+                "moon",
+                "hayz",
+                intrinsic_sect="nocturnal",
+                planet_sect_condition="out_of_sect",
+                is_out_of_sect=True,
+            ),
+        ),
+    )
+
+    assert [item.condition_code for item in conditions] == ["out_of_sect"]

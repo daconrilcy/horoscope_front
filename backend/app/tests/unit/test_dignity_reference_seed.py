@@ -23,6 +23,8 @@ from app.infra.db.repositories.dignity_reference_repository import (
 from app.services.reference_data_service import ReferenceDataService
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
+_EXPECTED_ACCIDENTAL_DIGNITY_RULE_COUNT = 42
+
 
 def _reset_database() -> None:
     """Reconstruit une base isolée pour le seed de dignités."""
@@ -45,7 +47,10 @@ def test_reference_seed_populates_astral_dignity_tables() -> None:
         assert db.scalar(select(func.count()).select_from(AstralTermBoundModel)) == 60
         assert db.scalar(select(func.count()).select_from(AstralFaceDecanModel)) == 36
         assert db.scalar(select(func.count()).select_from(AstralEssentialDignityRuleModel)) == 38
-        assert db.scalar(select(func.count()).select_from(AstralAccidentalDignityRuleModel)) == 41
+        assert (
+            db.scalar(select(func.count()).select_from(AstralAccidentalDignityRuleModel))
+            == _EXPECTED_ACCIDENTAL_DIGNITY_RULE_COUNT
+        )
         assert (
             db.scalar(select(func.count()).select_from(AstralEssentialDignityScoreWeightModel)) == 8
         )

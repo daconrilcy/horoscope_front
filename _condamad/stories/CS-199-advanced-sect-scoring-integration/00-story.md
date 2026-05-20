@@ -1,6 +1,6 @@
 # Story CS-199 advanced-sect-scoring-integration: Integrer la condition de secte normalisee dans les scores avances
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

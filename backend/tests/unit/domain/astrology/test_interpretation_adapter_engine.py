@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from app.domain.astrology.condition.contracts import PlanetConditionProfile
 from app.domain.astrology.dominance.contracts import DominantPlanetsResult, PlanetDominanceResult
 from app.domain.astrology.interpretation_adapters import InterpretationAdapterEngine
 from tests.factories.astrology_runtime_reference_factory import complete_reference
+
+ENGINE_SOURCE = Path(
+    "backend/app/domain/astrology/interpretation_adapters/interpretation_adapter_engine.py"
+)
 
 
 def _profile(planet_code: str, *, visibility: float, constraint: float) -> PlanetConditionProfile:
@@ -76,3 +82,12 @@ def test_interpretation_adapter_engine_returns_complete_result() -> None:
         "frustration_pressure",
     )
     assert result.critical_patterns == ("dominant_mars_signature",)
+
+
+def test_interpretation_adapter_does_not_recalculate_sect() -> None:
+    """L'adaptateur consomme des faits semantiques sans doctrine de secte."""
+    source = ENGINE_SOURCE.read_text(encoding="utf-8")
+
+    assert "SectCalculator" not in source
+    assert "PlanetSectConditionCalculator" not in source
+    assert "planet_sect_condition_calculator" not in source
