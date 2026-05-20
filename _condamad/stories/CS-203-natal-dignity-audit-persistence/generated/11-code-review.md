@@ -107,3 +107,43 @@ None identified.
 ## Verdict
 
 CLEAN
+
+## Post-CS-204 Fresh Review
+
+- Review date: 2026-05-20.
+- Trigger: user asked why CS-204 was handled before explicitly confirming
+  CS-203 gaps.
+- Worktree context: CS-204 changes are present and dirty; they were reviewed
+  only for possible interference with CS-203 audit persistence.
+- Target remains: `CS-203-natal-dignity-audit-persistence`.
+
+### Findings
+
+No actionable CS-203 findings.
+
+### Verification
+
+- `ChartResultService.persist_trace` still writes dignity audit rows from
+  `NatalResult.dignities`.
+- `dignity_audit_mapper.py` still maps precomputed `PlanetDignityResult`,
+  `ChartSectResult` and `PlanetSectCondition` facts only.
+- `backend/app/services/chart` and `backend/app/infra/db/repositories` still
+  have no forbidden calculator or doctrine-constant hits for audit
+  persistence.
+- Public JSON changes from CS-204 do not make the audit table a public source
+  and do not change CS-203 persistence ownership.
+
+### Rerun Validation
+
+| Command | Result |
+|---|---|
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_chart_result_service.py` | PASS, 12 passed. |
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_chart_json_builder.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py` | PASS, 33 passed. |
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_natal_result_contract.py` | PASS, 12 passed. |
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_dignity_reference_seed.py` | PASS, 2 passed. |
+| Story validate/lint strict | PASS. |
+| RG-130 calculator and doctrine-constant scans | PASS, no hits. |
+
+### Verdict
+
+CLEAN

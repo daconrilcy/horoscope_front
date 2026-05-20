@@ -163,3 +163,32 @@ Reviewer validation rerun for closure:
 
 Review the audit mapper and service integration to confirm it consumes only
 precomputed dignity facts and never recalculates doctrinal data.
+
+## Post-CS-204 Revalidation
+
+- Revalidation date: 2026-05-20.
+- Reason: user asked to confirm CS-203 closure after the subsequent CS-204
+  worktree changes for `traditional_conditions` and triplicity golden cases.
+- Scope: CS-203 audit persistence only; CS-204 files were treated as
+  pre-existing unrelated dirty work for this pass.
+- Result: CLEAN, no new CS-203 implementation issue found.
+
+Commands rerun:
+
+| Command | Result | Evidence summary |
+|---|---|---|
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_chart_result_service.py` | PASS | 12 passed. |
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_chart_json_builder.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py` | PASS | 33 passed in the current worktree. |
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_natal_result_contract.py` | PASS | 12 passed. |
+| `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_dignity_reference_seed.py` | PASS | 2 passed. |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py _condamad/stories/CS-203-natal-dignity-audit-persistence/00-story.md` | PASS | Story validation PASS. |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py --strict _condamad/stories/CS-203-natal-dignity-audit-persistence/00-story.md` | PASS | Story lint PASS. |
+| `rg -n "SectCalculator\|PlanetSectConditionCalculator\|PlanetDignityScoringService\|EssentialDignityCalculator\|AccidentalDignityCalculator\|AdvancedConditionEngine\|PlanetConditionProfileService\|PlanetConditionSignalBuilder\|PlanetDominanceEngine\|InterpretationAdapterEngine" backend/app/services/chart backend/app/infra/db/repositories -g "*.py"` | PASS | No audit persistence hits. |
+| `rg -n "DIURNAL_PLANETS\|NOCTURNAL_PLANETS\|SECT_PLANETS\|DAY_SECT_PLANETS\|NIGHT_SECT_PLANETS\|ABOVE_HORIZON_HOUSES\|BELOW_HORIZON_HOUSES\|JOY_HOUSES\|PLANETARY_JOYS\|HAYZ_RULES" backend/app/services/chart backend/app/infra/db/repositories -g "*.py"` | PASS | No audit persistence hits. |
+
+Conclusion:
+
+- CS-203 remains closed.
+- The two brief-coverage gaps named by the user were not CS-203 audit
+  persistence defects; they were closed by CS-204/triplicity golden evidence.
+- No additional CS-203 code change was required in this pass.
