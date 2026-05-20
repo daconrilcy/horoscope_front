@@ -28,6 +28,154 @@ type AspectResult = {
   orb_used?: number | null
 }
 
+export type ChartSectResult = {
+  chart_sect: string
+  sun_horizon_position: string
+  sun_above_horizon: boolean
+  calculation_basis: string
+  reference_system: string
+}
+
+export type PlanetSectCondition = {
+  planet_code: string
+  chart_sect: string
+  intrinsic_sect: string
+  planet_sect_condition: string
+  is_in_sect: boolean
+  is_out_of_sect: boolean
+  calculation_basis: string
+  reference_system: string
+}
+
+export type DignityBreakdownItem = {
+  type?: string
+  dignity_type?: string
+  dignity_type_code?: string
+  source?: string
+  reason?: string
+  score_value?: number
+  score?: number
+  [key: string]: string | number | boolean | null | undefined
+}
+
+export type DignityPlanetPayload = {
+  sect_condition?: PlanetSectCondition | null
+  essential_score?: number
+  accidental_score?: number
+  total_score?: number
+  functional_strength_score?: number
+  expression_quality_score?: number
+  intensity_score?: number
+  essential_breakdown?: DignityBreakdownItem[]
+  accidental_breakdown?: DignityBreakdownItem[]
+}
+
+export type DignitiesPayload = {
+  score_profile?: string
+  tradition?: string
+  reference_version?: string
+  sect?: ChartSectResult | null
+  planets?: Record<string, DignityPlanetPayload>
+}
+
+export type PlanetConditionProfile = {
+  planet_code?: string
+  score_profile?: string
+  tradition?: string
+  reference_version?: string
+  sect?: string
+  functional_strength?: number
+  visibility?: number
+  stability?: number
+  intensity?: number
+  coherence?: number
+  support?: number
+  constraint?: number
+  ranking_score?: number
+  condition_level?: string
+  breakdown?: Array<Record<string, string | number | boolean | null>>
+  explanation_facts?: Array<Record<string, string | number | boolean | null>>
+}
+
+export type PlanetConditionSignal = {
+  code?: string
+  label?: string
+  axis?: string
+  level?: string
+  level_min?: number
+  level_max?: number
+  axis_value?: number
+  interpretation_use?: string
+  priority_weight?: number
+  prompt_hint?: string | null
+}
+
+export type AdvancedCondition = {
+  planet_code?: string
+  condition_code?: string
+  condition_type?: string
+  score_effect?: number
+  axis_weights?: Record<string, number>
+  evidence?: string[]
+}
+
+export type DominantPlanetFactor = {
+  factor_code?: string
+  raw_value?: number
+  normalized_value?: number
+  weight?: number
+  weighted_score?: number
+  reason?: string
+}
+
+export type DominantPlanet = {
+  planet_code?: string
+  score?: number
+  rank?: number
+  factors?: DominantPlanetFactor[]
+  explanation_facts?: string[]
+}
+
+export type DominantPlanetsResult = {
+  top_planet_code?: string | null
+  chart_ruler_code?: string | null
+  most_elevated_planet_code?: string | null
+  planets?: DominantPlanet[]
+}
+
+export type InterpretationAdapterSignal = {
+  signal?: string
+  theme?: string
+  source_type?: string
+  source_code?: string
+  priority?: string
+  priority_rank?: number
+  weight?: number
+  semantic_category?: string
+  theme_category?: string
+  explanation_fact?: string
+}
+
+export type InterpretationAdapterTheme = {
+  theme?: string
+  theme_category?: string
+  activation_score?: number
+  priority?: string
+  priority_rank?: number
+  contributing_signals?: string[]
+}
+
+export type InterpretationAdapterResult = {
+  signals?: InterpretationAdapterSignal[]
+  activated_themes?: InterpretationAdapterTheme[]
+  dominant_topics?: string[]
+  dominant_axes?: string[]
+  tension_patterns?: string[]
+  support_patterns?: string[]
+  critical_patterns?: string[]
+  narrative_priorities?: string[]
+}
+
 type NatalResult = {
   reference_version: string
   ruleset_version: string
@@ -50,6 +198,12 @@ type NatalResult = {
   planet_positions: PlanetPosition[]
   houses: HouseResult[]
   aspects: AspectResult[]
+  dignities?: DignitiesPayload
+  planet_condition_profiles?: Record<string, PlanetConditionProfile>
+  planet_condition_signals?: Record<string, PlanetConditionSignal[]>
+  advanced_conditions?: AdvancedCondition[]
+  dominant_planets?: DominantPlanetsResult | null
+  interpretation_adapter?: InterpretationAdapterResult | null
 }
 
 export type LatestNatalChart = {

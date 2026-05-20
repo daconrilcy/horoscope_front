@@ -97,6 +97,100 @@ const CHART_BASE = {
   },
 }
 
+function buildChartWithExpertPayload() {
+  return {
+    ...CHART_BASE,
+    result: {
+      ...CHART_BASE.result,
+      dignities: {
+        score_profile: "traditional_standard",
+        tradition: "traditional",
+        reference_version: "v1.2",
+        sect: {
+          chart_sect: "day",
+          sun_horizon_position: "above_horizon",
+          sun_above_horizon: true,
+          calculation_basis: "fixture_horizon_rule",
+          reference_system: "traditional",
+        },
+        planets: {
+          alpha: {
+            sect_condition: {
+              planet_code: "alpha",
+              chart_sect: "day",
+              intrinsic_sect: "custom",
+              planet_sect_condition: "in_sect",
+              is_in_sect: true,
+              is_out_of_sect: false,
+              calculation_basis: "fixture_explicit_flags",
+              reference_system: "traditional",
+            },
+            essential_score: 5,
+            accidental_score: 4,
+            total_score: 9,
+            functional_strength_score: 1.9,
+            expression_quality_score: 1.5,
+            intensity_score: 1.5,
+          },
+        },
+      },
+      planet_condition_profiles: {
+        alpha: {
+          planet_code: "alpha",
+          condition_level: "strong",
+          ranking_score: 5.7,
+          functional_strength: 1.9,
+          visibility: 1,
+          stability: 0.8,
+          intensity: 1.5,
+          coherence: 0.6,
+          support: 0.4,
+          constraint: 0,
+        },
+      },
+      planet_condition_signals: {
+        alpha: [
+          {
+            code: "visibility_high",
+            label: "Visibility high",
+            axis: "visibility",
+            level: "high",
+            axis_value: 1,
+            interpretation_use: "surface_condition_axis",
+            priority_weight: 30,
+          },
+        ],
+      },
+      advanced_conditions: [
+        {
+          planet_code: "alpha",
+          condition_code: "hayz",
+          condition_type: "hayz",
+          score_effect: 1.5,
+          axis_weights: { functional_strength: 0.3 },
+          evidence: ["backend advanced fact"],
+        },
+      ],
+      dominant_planets: {
+        top_planet_code: "alpha",
+        chart_ruler_code: "alpha",
+        most_elevated_planet_code: "alpha",
+        planets: [{ planet_code: "alpha", rank: 1, score: 0.75, factors: [] }],
+      },
+      interpretation_adapter: {
+        signals: [{ signal: "dominant_alpha_signature", theme: "drive_assertion_action" }],
+        activated_themes: [{ theme: "drive_assertion_action", activation_score: 1 }],
+        dominant_topics: ["drive"],
+        dominant_axes: ["action"],
+        tension_patterns: [],
+        support_patterns: [],
+        critical_patterns: ["dominant_alpha_signature"],
+        narrative_priorities: ["technical_priority_1"],
+      },
+    },
+  }
+}
+
 beforeEach(() => {
   vi.stubGlobal("navigator", { ...navigator, language: "fr-FR" })
   localStorage.clear()
@@ -461,6 +555,28 @@ describe("NatalChartPage", () => {
     expect(getByTextInPlanets(/Gémeaux/)).toBeInTheDocument()
     expect(getByTextInAspects(/Trigone/)).toBeInTheDocument()
     expect(getByTextInAspects(/Lune/)).toBeInTheDocument()
+  })
+
+  it("renders NatalExpertPanel from latestChart data on the natal page", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: buildChartWithExpertPayload(),
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>
+    )
+
+    const expertPanel = screen.getByRole("heading", { name: "Panneau expert natal" }).closest("article")
+    expect(expertPanel).not.toBeNull()
+    expect(within(expertPanel as HTMLElement).getByRole("region", { name: "Secte du theme" })).toHaveTextContent("day")
+    expect(within(expertPanel as HTMLElement).getByText("visibility_high")).toBeInTheDocument()
+    expect(within(expertPanel as HTMLElement).getByText(/alpha \/ hayz/)).toBeInTheDocument()
+    expect(within(expertPanel as HTMLElement).getByText("top_planet_code")).toBeInTheDocument()
+    expect(within(expertPanel as HTMLElement).getAllByText("dominant_alpha_signature").length).toBeGreaterThan(0)
   })
 
   it("affiche le degré dans le signe et l'intervalle de maison pour chaque planète", () => {

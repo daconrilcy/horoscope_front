@@ -14,6 +14,7 @@ import { useAccessTokenSnapshot } from "../utils/authToken"
 import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
 import { NatalChartGuide } from "../components/NatalChartGuide"
 import { NatalInterpretationSection } from "../features/natal-chart/NatalInterpretation"
+import { NatalExpertPanel } from "../features/natal-chart/NatalExpertPanel"
 import { getZodiacIcon } from "../components/zodiacSignIconMap"
 import "./NatalChartPage.css"
 import "../components/prediction/DailyPageHeader.css"
@@ -484,6 +485,8 @@ export function NatalChartPage() {
           </ul>
         )}
       </article>
+
+      <NatalExpertPanel chart={chart} />
 
       <NatalChartGuide lang={lang} missingBirthTime={missingBirthTime} />
       

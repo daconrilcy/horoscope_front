@@ -1,6 +1,6 @@
 # Story CS-202 natal-expert-panel: Afficher un panneau expert du theme natal depuis le JSON public
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

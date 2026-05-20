@@ -1,0 +1,223 @@
+{
+  "chart_id": "chart_cs202_sample",
+  "created_at": "2026-05-20T08:00:00Z",
+  "metadata": {
+    "reference_version": "runtime-2026-05-20",
+    "ruleset_version": "traditional-v1",
+    "engine": "swisseph",
+    "house_system": "whole_sign",
+    "degraded_mode": null
+  },
+  "astro_profile": {
+    "sun_sign_code": "ARIES",
+    "ascendant_sign_code": "LEO",
+    "missing_birth_time": false
+  },
+  "result": {
+    "reference_version": "runtime-2026-05-20",
+    "ruleset_version": "traditional-v1",
+    "prepared_input": {
+      "birth_datetime_local": "1990-04-15T10:30:00",
+      "birth_datetime_utc": "1990-04-15T08:30:00Z",
+      "timestamp_utc": 640000000,
+      "julian_day": 2447996.854,
+      "birth_timezone": "Europe/Paris",
+      "jd_ut": 2447996.854,
+      "timezone_used": "Europe/Paris"
+    },
+    "planet_positions": [
+      {
+        "planet_code": "SUN",
+        "longitude": 25.4,
+        "sign_code": "ARIES",
+        "house_number": 10
+      }
+    ],
+    "houses": [
+      {
+        "number": 1,
+        "cusp_longitude": 120.0
+      }
+    ],
+    "aspects": [],
+    "dignities": {
+      "sect": {
+        "chart_sect": "day",
+        "sun_horizon_position": "above_horizon",
+        "sun_above_horizon": true,
+        "calculation_basis": "house_position",
+        "reference_system": "whole_sign"
+      },
+      "planets": {
+        "SUN": {
+          "planet_code": "SUN",
+          "essential_score": 5,
+          "accidental_score": 3,
+          "total_score": 8,
+          "essential_breakdown": [
+            {
+              "code": "domicile",
+              "score": 5
+            }
+          ],
+          "accidental_breakdown": [
+            {
+              "code": "angular",
+              "score": 3
+            }
+          ],
+          "sect_condition": {
+            "planet_code": "SUN",
+            "chart_sect": "day",
+            "intrinsic_sect": "diurnal",
+            "planet_sect_condition": "in_sect",
+            "is_in_sect": true,
+            "is_out_of_sect": false,
+            "calculation_basis": "chart_sect_and_intrinsic_sect",
+            "reference_system": "traditional"
+          }
+        },
+        "MOON": {
+          "planet_code": "MOON",
+          "essential_score": -2,
+          "accidental_score": 1,
+          "total_score": -1,
+          "essential_breakdown": [],
+          "accidental_breakdown": [],
+          "sect_condition": {
+            "planet_code": "MOON",
+            "chart_sect": "day",
+            "intrinsic_sect": "nocturnal",
+            "planet_sect_condition": "out_of_sect",
+            "is_in_sect": false,
+            "is_out_of_sect": true,
+            "calculation_basis": "chart_sect_and_intrinsic_sect",
+            "reference_system": "traditional"
+          }
+        }
+      }
+    },
+    "planet_condition_profiles": {
+      "SUN": {
+        "planet_code": "SUN",
+        "functional_strength": 0.82,
+        "visibility": 0.9,
+        "stability": 0.7,
+        "intensity": 0.6,
+        "coherence": 0.75,
+        "support": 0.8,
+        "constraint": 0.2,
+        "ranking_score": 87,
+        "condition_level": "strong",
+        "breakdown": [],
+        "explanation_facts": []
+      }
+    },
+    "planet_condition_signals": {
+      "SUN": [
+        {
+          "code": "high_visibility",
+          "label": "Visibilite forte",
+          "axis": "visibility",
+          "level": "high",
+          "level_min": 0.75,
+          "level_max": 1.0,
+          "axis_value": 0.9,
+          "interpretation_use": "technical_priority",
+          "priority_weight": 8,
+          "prompt_hint": "internal_hint_not_displayed_as_advice"
+        }
+      ]
+    },
+    "advanced_conditions": [
+      {
+        "planet_code": "SUN",
+        "condition_code": "hayz",
+        "condition_type": "sect",
+        "is_active": true,
+          "score_effect": 2,
+          "axis_weights": {
+            "functional_strength": 0.2,
+            "visibility": 0.1,
+            "stability": 0.0,
+            "intensity": 0.0,
+            "coherence": 0.0,
+            "support": 0.1,
+            "constraint": 0.0
+          },
+        "details": {
+          "source": "backend"
+        }
+      },
+      {
+        "planet_code": "MOON",
+        "condition_code": "out_of_sect",
+        "condition_type": "sect",
+        "is_active": true,
+          "score_effect": -2,
+          "axis_weights": {
+            "functional_strength": -0.2,
+            "visibility": 0.0,
+            "stability": 0.0,
+            "intensity": 0.0,
+            "coherence": 0.0,
+            "support": 0.0,
+            "constraint": 0.3
+          },
+        "details": {
+          "source": "backend"
+        }
+      }
+    ],
+    "dominant_planets": {
+      "top_planet_code": "SUN",
+      "chart_ruler_code": "SUN",
+      "most_elevated_planet_code": "MARS",
+      "planets": [
+        {
+          "planet_code": "SUN",
+          "rank": 1,
+          "score": 92,
+          "factors": [
+            {
+          "factor_code": "angularity",
+          "raw_value": 1,
+          "normalized_value": 1,
+          "weight": 30,
+          "weighted_score": 30,
+          "reason": "backend fact"
+            }
+          ]
+        }
+      ]
+    },
+    "interpretation_adapter": {
+      "activated_themes": [
+        {
+          "theme": "identity",
+          "theme_category": "core",
+          "activation_score": 0.86,
+          "priority": "high",
+          "priority_rank": 1,
+          "contributing_signals": [
+            "solar_support"
+          ]
+        }
+      ],
+      "dominant_topics": [
+        "identity"
+      ],
+      "dominant_axes": [
+        "self_expression"
+      ],
+      "tension_patterns": [],
+      "support_patterns": [
+        "solar_support"
+      ],
+      "critical_patterns": [],
+      "narrative_priorities": [
+        "identity_priority"
+      ]
+    }
+  }
+}

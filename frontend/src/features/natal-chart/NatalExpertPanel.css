@@ -1,0 +1,203 @@
+/* Styles du panneau expert natal, branches sur les tokens visuels existants. */
+
+.natal-expert-panel {
+  margin-bottom: 32px;
+}
+
+.natal-expert-panel__header {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.natal-expert-panel__header h2 {
+  margin-bottom: 0;
+}
+
+.natal-expert-panel__header p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--premium-text-main);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-prose);
+}
+
+.natal-expert-panel__eyebrow {
+  color: var(--premium-text-meta);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: var(--letter-spacing-wide-md);
+  text-transform: uppercase;
+}
+
+.natal-expert-warning {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--premium-glass-surface-2);
+  color: var(--premium-text-main);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.natal-expert-panel__content {
+  display: grid;
+  gap: 18px;
+}
+
+.natal-expert-section {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 46%, transparent);
+}
+
+.dark .natal-expert-section {
+  background: var(--premium-glass-surface-2);
+}
+
+.natal-expert-section__header h3 {
+  margin: 0;
+  color: var(--premium-text-strong);
+  font-size: var(--font-size-md);
+  line-height: var(--type-label-line-height);
+}
+
+.natal-expert-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.natal-expert-facts--compact {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+
+.natal-expert-fact {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--premium-glass-surface-1);
+}
+
+.natal-expert-fact dt {
+  margin: 0 0 4px;
+  color: var(--premium-text-meta);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide-label);
+  text-transform: uppercase;
+}
+
+.natal-expert-fact dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--premium-text-strong);
+  font-size: var(--font-size-13);
+  line-height: var(--line-height-normal);
+}
+
+.natal-expert-sect-groups,
+.natal-expert-card-grid,
+.natal-expert-string-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.natal-expert-sect-group,
+.natal-expert-data-card,
+.natal-expert-string-list {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--premium-glass-surface-1);
+}
+
+.natal-expert-sect-group h4,
+.natal-expert-data-card h4,
+.natal-expert-string-list h4,
+.natal-expert-breakdown h5 {
+  margin: 0 0 10px;
+  color: var(--premium-text-strong);
+  font-size: var(--font-size-sm);
+  line-height: var(--type-label-line-height);
+}
+
+.natal-expert-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.natal-expert-list--grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.natal-expert-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--premium-glass-border-soft);
+  color: var(--premium-text-main);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.natal-expert-item:last-child {
+  border-bottom: none;
+}
+
+.natal-expert-item strong {
+  color: var(--premium-text-strong);
+}
+
+.natal-expert-item span {
+  overflow-wrap: anywhere;
+}
+
+.natal-expert-item--stacked {
+  display: grid;
+  align-items: start;
+}
+
+.natal-expert-breakdown {
+  margin-top: 12px;
+}
+
+.natal-expert-empty {
+  margin: 0;
+  color: var(--premium-text-muted);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.natal-expert-empty--compact {
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 768px) {
+  .natal-expert-section {
+    padding: 14px;
+  }
+
+  .natal-expert-facts,
+  .natal-expert-facts--compact,
+  .natal-expert-sect-groups,
+  .natal-expert-card-grid,
+  .natal-expert-string-grid,
+  .natal-expert-list--grid {
+    grid-template-columns: 1fr;
+  }
+}
