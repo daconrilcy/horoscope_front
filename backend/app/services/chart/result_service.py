@@ -13,11 +13,14 @@ import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
+from app.infra.db.repositories.dignity_reference_repository import DignityReferenceRepository
+from app.services.chart.dignity_audit_mapper import build_chart_planet_dignity_audit_input
 from app.services.chart.json_builder import serialize_legacy_house_rulers_from_houses
 from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 
@@ -132,7 +135,7 @@ class ChartResultService:
         )
         chart_id = str(uuid.uuid4())
 
-        repo.create(
+        chart_result = repo.create(
             user_id=user_id,
             chart_id=chart_id,
             reference_version=natal_result.reference_version,
@@ -140,6 +143,24 @@ class ChartResultService:
             input_hash=input_hash,
             result_payload=result_payload,
         )
+        dignity_repository = DignityReferenceRepository(db)
+        try:
+            for dignity in natal_result.dignities:
+                dignity_repository.upsert_chart_planet_dignity_result(
+                    build_chart_planet_dignity_audit_input(
+                        chart_result_id=chart_result.id,
+                        chart_id=chart_id,
+                        input_hash=input_hash,
+                        ruleset_version=natal_result.ruleset_version,
+                        dignity=dignity,
+                    )
+                )
+        except (SQLAlchemyError, ValueError) as exc:
+            raise ChartResultServiceError(
+                code="dignity_audit_persistence_failed",
+                message="dignity audit persistence failed",
+                details={"chart_id": chart_id},
+            ) from exc
         return chart_id
 
     @staticmethod

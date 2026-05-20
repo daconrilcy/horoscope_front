@@ -1,0 +1,45 @@
+{
+  "story": "CS-203-natal-dignity-audit-persistence",
+  "captured_at": "2026-05-20",
+  "schema": {
+    "table": "astral_chart_planet_dignity_results",
+    "model": "AstralChartPlanetDignityResultModel",
+    "repository": "DignityReferenceRepository",
+    "chart_result_link": "chart_result_id -> chart_results.id",
+    "unique_key": [
+      "chart_result_id",
+      "planet_id",
+      "score_profile_id",
+      "reference_version_id"
+    ],
+    "json_fields": [
+      "essential_breakdown_json",
+      "accidental_breakdown_json",
+      "condition_summary_json",
+      "calculation_context_json"
+    ]
+  },
+  "before_activation": {
+    "chart_result_service_called_audit_upsert": false,
+    "representative_chart_id": "4f7ba4ee-5226-4675-8b6c-253668ab4362",
+    "representative_chart_result_id": 1,
+    "dignity_planets_in_representative_payload": 1,
+    "linked_audit_rows_before_activation_for_chart_result": 0,
+    "audit_rows_created_by_persist_trace": 0,
+    "public_payload_source": "chart_results.result_payload",
+    "migration_required": false
+  },
+  "sensitive_birth_data_policy": {
+    "duplicated_in_audit_rows": false,
+    "forbidden_fields": [
+      "birth_date",
+      "birth_time",
+      "birth_place",
+      "birth_timezone",
+      "latitude",
+      "longitude",
+      "timezone",
+      "user_entered_place"
+    ]
+  }
+}

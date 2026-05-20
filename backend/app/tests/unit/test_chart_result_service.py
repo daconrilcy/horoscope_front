@@ -1,10 +1,17 @@
+from dataclasses import asdict
+
+import pytest
+from pytest import MonkeyPatch
 from sqlalchemy import delete, select
 
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.base import Base
+from app.infra.db.models import AstralChartPlanetDignityResultModel, PlanetModel
 from app.infra.db.models.chart_result import ChartResultModel
+from app.infra.db.repositories.dignity_reference_repository import DignityReferenceRepository
+from app.services.chart.dignity_audit_mapper import build_chart_planet_dignity_audit_input
 from app.services.chart.result_service import ChartResultService, ChartResultServiceError
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
@@ -240,6 +247,186 @@ def test_persist_and_get_audit_record() -> None:
     assert "occupants" in first_house
     assert "axis" in first_house
     assert "strength" in first_house
+
+
+def test_persist_trace_writes_dignity_audit_rows_from_precomputed_result() -> None:
+    """La persistance du theme ecrit une ligne d'audit par dignite calculee."""
+    _cleanup_chart_results()
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        chart_id = ChartResultService.persist_trace(db, payload, result)
+        chart_result = db.scalar(
+            select(ChartResultModel).where(ChartResultModel.chart_id == chart_id)
+        )
+        assert chart_result is not None
+        rows = db.execute(
+            select(AstralChartPlanetDignityResultModel, PlanetModel.code)
+            .join(PlanetModel, AstralChartPlanetDignityResultModel.planet_id == PlanetModel.id)
+            .where(AstralChartPlanetDignityResultModel.chart_result_id == chart_result.id)
+        ).all()
+
+    expected_by_planet = {dignity.planet_code: dignity for dignity in result.dignities}
+    assert len(rows) == len(expected_by_planet)
+    for row, planet_code in rows:
+        expected = expected_by_planet[planet_code]
+        assert row.essential_score == expected.essential_score
+        assert row.accidental_score == expected.accidental_score
+        assert row.total_score == expected.total_score
+        assert row.functional_strength_score == expected.functional_strength_score
+        assert row.expression_quality_score == expected.expression_quality_score
+        assert row.intensity_score == expected.intensity_score
+        assert row.essential_breakdown_json == [
+            asdict(item) for item in expected.essential_breakdown
+        ]
+        assert row.accidental_breakdown_json == [
+            asdict(item) for item in expected.accidental_breakdown
+        ]
+        assert row.condition_summary_json["chart_sect"] == asdict(expected.chart_sect)
+        assert row.condition_summary_json["sect_condition"] == asdict(expected.sect_condition)
+        assert row.calculation_context_json["source_field"] == "NatalResult.dignities"
+        assert "birth_date" not in row.calculation_context_json
+        assert "birth_time" not in row.calculation_context_json
+        assert "birth_place" not in row.calculation_context_json
+
+
+def test_persist_trace_does_not_fabricate_dignity_audit_rows_without_dignities() -> None:
+    """Un resultat sans dignites ne cree aucune ligne d'audit inventee."""
+    _cleanup_chart_results()
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    result = NatalResult(
+        reference_version="1.0.0",
+        ruleset_version="1.0.0",
+        house_system="equal",
+        prepared_input={
+            "birth_datetime_local": "1990-06-15T10:30:00+02:00",
+            "birth_datetime_utc": "1990-06-15T08:30:00+00:00",
+            "timestamp_utc": 645438600,
+            "julian_day": 2448057.8541666665,
+            "birth_timezone": "Europe/Paris",
+        },
+        planet_positions=[],
+        houses=[],
+        aspects=[],
+    )
+
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        chart_id = ChartResultService.persist_trace(db, payload, result)
+        chart_result = db.scalar(
+            select(ChartResultModel).where(ChartResultModel.chart_id == chart_id)
+        )
+        assert chart_result is not None
+        rows = db.scalars(
+            select(AstralChartPlanetDignityResultModel).where(
+                AstralChartPlanetDignityResultModel.chart_result_id == chart_result.id
+            )
+        ).all()
+
+    assert rows == []
+
+
+def test_persist_trace_propagates_dignity_audit_write_errors(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """Une erreur d'ecriture audit remonte sans fallback silencieux."""
+    _cleanup_chart_results()
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+
+    def _raise_audit_error(
+        _repository: DignityReferenceRepository,
+        _payload: object,
+    ) -> None:
+        raise ValueError("audit write failed")
+
+    monkeypatch.setattr(
+        DignityReferenceRepository,
+        "upsert_chart_planet_dignity_result",
+        _raise_audit_error,
+    )
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        with pytest.raises(ChartResultServiceError) as error_info:
+            ChartResultService.persist_trace(db, payload, result)
+        assert error_info.value.code == "dignity_audit_persistence_failed"
+        assert error_info.value.__cause__ is not None
+
+
+def test_dignity_audit_upsert_is_idempotent_for_same_chart_result() -> None:
+    """L'upsert d'audit conserve une ligne par cle fonctionnelle."""
+    _cleanup_chart_results()
+    payload = BirthInput(
+        birth_date="1990-06-15",
+        birth_time="10:30",
+        birth_place="Paris",
+        birth_timezone="Europe/Paris",
+    )
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        result = NatalCalculationService.calculate(db, payload, reference_version="1.0.0")
+        chart_id = ChartResultService.persist_trace(db, payload, result)
+        chart_result = db.scalar(
+            select(ChartResultModel).where(ChartResultModel.chart_id == chart_id)
+        )
+        assert chart_result is not None
+        repository = DignityReferenceRepository(db)
+        first = result.dignities[0]
+        existing = repository.get_chart_planet_dignity_result(
+            chart_result.id,
+            first.planet_code,
+            first.score_profile,
+            first.reference_version,
+        )
+        assert existing is not None
+        existing_id = existing.id
+        repository.upsert_chart_planet_dignity_result(
+            build_chart_planet_dignity_audit_input(
+                chart_result_id=chart_result.id,
+                chart_id=chart_id,
+                input_hash=chart_result.input_hash,
+                ruleset_version=chart_result.ruleset_version,
+                dignity=first,
+            )
+        )
+        rows = db.scalars(
+            select(AstralChartPlanetDignityResultModel).where(
+                AstralChartPlanetDignityResultModel.chart_result_id == chart_result.id,
+                AstralChartPlanetDignityResultModel.id == existing_id,
+            )
+        ).all()
+        all_rows = db.scalars(
+            select(AstralChartPlanetDignityResultModel).where(
+                AstralChartPlanetDignityResultModel.chart_result_id == chart_result.id
+            )
+        ).all()
+        same_planet = repository.get_chart_planet_dignity_result(
+            chart_result.id,
+            first.planet_code,
+            first.score_profile,
+            first.reference_version,
+        )
+
+    assert len(rows) == 1
+    assert len(all_rows) == len(result.dignities)
+    assert same_planet is not None
+    assert same_planet.id == existing_id
 
 
 def test_persist_trace_projects_legacy_house_rulers_from_runtime_houses() -> None:

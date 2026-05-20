@@ -1,0 +1,80 @@
+{
+  "story": "CS-203-natal-dignity-audit-persistence",
+  "captured_at": "2026-05-20",
+  "after_activation": {
+    "persist_trace_writes_audit_rows": true,
+    "representative_chart_id": "4f7ba4ee-5226-4675-8b6c-253668ab4362",
+    "representative_chart_result_id": 1,
+    "dignity_count": 1,
+    "public_payload_dignity_count": 1,
+    "linked_audit_rows_after_persist_trace": 1,
+    "linked_audit_rows_after_idempotence_rerun": 1,
+    "row_count_rule": "one row per NatalResult.dignities planet",
+    "source_field": "NatalResult.dignities",
+    "idempotence": "same chart_result_id + planet + score_profile + reference_version keeps one row",
+    "public_payload_unchanged": true,
+    "frontend_changed": false,
+    "api_changed": false,
+    "migration_changed": false,
+    "seed_changed": false
+  },
+  "validated_fields": [
+    "essential_score",
+    "accidental_score",
+    "total_score",
+    "functional_strength_score",
+    "expression_quality_score",
+    "intensity_score",
+    "essential_breakdown_json",
+    "accidental_breakdown_json",
+    "condition_summary_json.chart_sect",
+    "condition_summary_json.sect_condition",
+    "calculation_context_json.source_field"
+  ],
+  "representative_sample": {
+    "planet_code": "sun",
+    "scores": {
+      "row_essential_score": 5.0,
+      "expected_essential_score": 5.0,
+      "row_accidental_score": 3.0,
+      "expected_accidental_score": 3.0,
+      "row_total_score": 8.0,
+      "expected_total_score": 8.0
+    },
+    "breakdown_counts": {
+      "row_essential_breakdown_count": 1,
+      "expected_essential_breakdown_count": 1,
+      "row_accidental_breakdown_count": 1,
+      "expected_accidental_breakdown_count": 1
+    },
+    "chart_sect": {
+      "chart_sect": "day",
+      "sun_horizon_position": "above_horizon",
+      "sun_above_horizon": true,
+      "calculation_basis": "sun_house_horizon_rule",
+      "reference_system": "traditional"
+    },
+    "sect_condition": {
+      "planet_code": "sun",
+      "chart_sect": "day",
+      "intrinsic_sect": "diurnal",
+      "planet_sect_condition": "in_sect",
+      "is_in_sect": true,
+      "is_out_of_sect": false,
+      "calculation_basis": "runtime_planet_sect_reference",
+      "reference_system": "traditional"
+    }
+  },
+  "sensitive_birth_data_policy": {
+    "birth_date_in_calculation_context": false,
+    "birth_time_in_calculation_context": false,
+    "birth_place_in_calculation_context": false,
+    "forbidden_birth_keys_in_calculation_context": []
+  },
+  "validation": {
+    "service_tests": "12 passed",
+    "repository_tests": "2 passed",
+    "public_json_tests": "18 passed",
+    "golden_cases": "9 passed"
+  }
+}
