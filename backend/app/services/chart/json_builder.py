@@ -49,7 +49,7 @@ def _serialize_house_runtime(house: Any, labels: AstrologyLabels) -> dict[str, A
         "cusp_longitude": round(cusp_longitude, 2),
         "cusp_sign": cusp_sign,
         "cusp_sign_label": labels.sign_label(cusp_sign),
-        # TODO legacy compatibility field planned removal: use `cusp_sign`.
+        # Champ public historique conserve tant que le contrat de sortie l'expose.
         "sign": cusp_sign,
         "contained_signs": contained_signs,
         "intercepted_signs": intercepted_signs,
@@ -209,6 +209,66 @@ def _serialize_chart_balance(balance: Any) -> dict[str, Any] | None:
             else None
         ),
     }
+
+
+def _serialize_astral_points(
+    points: Any, *, neutralize_house: bool = False
+) -> list[dict[str, Any]]:
+    """Projette les points astraux deja calcules dans le resultat natal."""
+    if not isinstance(points, (list, tuple)):
+        points = []
+    return [
+        {
+            "code": point.code,
+            "variant_code": point.variant_code,
+            "longitude": round(float(point.longitude), 2),
+            "sign": point.sign,
+            "degree_in_sign": round(float(point.degree_in_sign), 2),
+            "house": None if neutralize_house else point.house,
+            "calculation_source": point.calculation_source,
+            "is_physical_body": point.is_physical_body,
+        }
+        for point in points
+    ]
+
+
+def _serialize_signs_runtime(signs: Any, *, neutralize_house: bool = False) -> list[dict[str, Any]]:
+    """Projette les faits runtime des signes sans reconstruire le zodiaque."""
+    if not isinstance(signs, (list, tuple)):
+        signs = []
+    return [
+        {
+            "sign": sign.sign,
+            "occupants": [
+                {
+                    "planet": occupant.planet,
+                    "longitude": round(float(occupant.longitude), 2),
+                    "house": None if neutralize_house else occupant.house,
+                }
+                for occupant in sign.occupants
+            ],
+            "weight": sign.weight,
+            "dominant": sign.dominant,
+            "active_dignities": [
+                {
+                    "planet": dignity.planet,
+                    "dignity_type": dignity.dignity_type,
+                    "system": dignity.system,
+                    "weight": dignity.weight,
+                    "is_primary": dignity.is_primary,
+                }
+                for dignity in sign.active_dignities
+            ],
+            "reasons": [
+                reason.value if hasattr(reason, "value") else str(reason) for reason in sign.reasons
+            ],
+            "element": sign.element,
+            "modality": sign.modality,
+            "polarity": sign.polarity,
+            "synthesis_role": sign.synthesis_role,
+        }
+        for sign in signs
+    ]
 
 
 def _serialize_rank(item: Any) -> dict[str, Any]:
@@ -388,17 +448,9 @@ def _serialize_dignities(dignities: Any, chart_sect: Any = None) -> dict[str, An
 def _serialize_condition_profiles(profiles: Any) -> dict[str, Any]:
     """Projette les profils conditionnels deja calcules par le domaine."""
     planets: dict[str, Any] = {}
-    score_profile = ""
-    tradition = ""
-    reference_version = ""
-    sect = ""
     if not isinstance(profiles, (list, tuple)):
         profiles = []
     for profile in profiles:
-        score_profile = profile.score_profile
-        tradition = profile.tradition
-        reference_version = profile.reference_version
-        sect = profile.sect
         planets[profile.planet_code] = {
             "planet_code": profile.planet_code,
             "score_profile": profile.score_profile,
@@ -436,27 +488,15 @@ def _serialize_condition_profiles(profiles: Any) -> dict[str, Any]:
                 for fact in profile.explanation_facts
             ],
         }
-    return {
-        "score_profile": score_profile,
-        "tradition": tradition,
-        "reference_version": reference_version,
-        "sect": sect,
-        "planets": planets,
-    }
+    return planets
 
 
 def _serialize_condition_signals(signal_sets: Any) -> dict[str, Any]:
     """Projette les signaux conditionnels deja calcules par le domaine."""
     planets: dict[str, Any] = {}
-    score_profile = ""
-    tradition = ""
-    reference_version = ""
     if not isinstance(signal_sets, (list, tuple)):
         signal_sets = []
     for signal_set in signal_sets:
-        score_profile = signal_set.score_profile
-        tradition = signal_set.tradition
-        reference_version = signal_set.reference_version
         planets[signal_set.planet_code] = {
             "planet_code": signal_set.planet_code,
             "score_profile": signal_set.score_profile,
@@ -478,12 +518,7 @@ def _serialize_condition_signals(signal_sets: Any) -> dict[str, Any]:
                 for signal in signal_set.signals
             ],
         }
-    return {
-        "score_profile": score_profile,
-        "tradition": tradition,
-        "reference_version": reference_version,
-        "planets": planets,
-    }
+    return planets
 
 
 def _serialize_dominant_planets(dominant_planets: Any) -> dict[str, Any] | None:
@@ -712,6 +747,14 @@ def build_chart_json(
         "house_rulers": house_rulers,
         "aspects": aspects,
         "angles": angles,
+        "astral_points": _serialize_astral_points(
+            getattr(natal_result, "astral_points", []),
+            neutralize_house=is_no_time,
+        ),
+        "signs_runtime": _serialize_signs_runtime(
+            getattr(natal_result, "signs_runtime", []),
+            neutralize_house=is_no_time,
+        ),
         "dignities": _serialize_dignities(
             getattr(natal_result, "dignities", []),
             getattr(natal_result, "dignity_sect", None),

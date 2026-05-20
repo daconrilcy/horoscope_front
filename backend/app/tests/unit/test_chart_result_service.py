@@ -129,6 +129,53 @@ def test_natal_result_accepts_pre_cs198_dignity_payload_without_sect_condition()
     assert result.dignities[0].sect_condition is None
 
 
+def test_get_audit_record_preserves_old_payload_gaps_without_backfill() -> None:
+    """Les anciens payloads relus ne sont pas modifies pour fabriquer les nouveaux blocs."""
+    _cleanup_chart_results()
+    chart_id = "old-public-json-gap"
+    old_payload = {
+        "reference_version": "1.0.0",
+        "ruleset_version": "1.0.0",
+        "house_system": "equal",
+        "prepared_input": {
+            "birth_datetime_local": "1990-06-15T10:30:00+02:00",
+            "birth_datetime_utc": "1990-06-15T08:30:00+00:00",
+            "timestamp_utc": 645438600,
+            "julian_day": 2448057.8541666665,
+            "birth_timezone": "Europe/Paris",
+        },
+        "planet_positions": [],
+        "houses": [],
+        "dignities": [],
+        "aspects": [],
+    }
+    with open_app_test_db_session() as db:
+        db.add(
+            ChartResultModel(
+                chart_id=chart_id,
+                reference_version="1.0.0",
+                ruleset_version="1.0.0",
+                input_hash="old-hash",
+                result_payload=old_payload,
+            )
+        )
+        db.commit()
+        record = ChartResultService.get_audit_record(db, chart_id)
+        stored_payload = db.scalar(
+            select(ChartResultModel.result_payload).where(ChartResultModel.chart_id == chart_id)
+        )
+
+    assert stored_payload is not None
+    assert "condition_signals" not in stored_payload
+    assert "dominant_planets" not in stored_payload
+    assert "interpretation_adapter" not in stored_payload
+    assert "dignity_sect" not in stored_payload
+    assert record.result.condition_signals == []
+    assert record.result.dominant_planets is None
+    assert record.result.interpretation_adapter is None
+    assert record.result.dignity_sect is None
+
+
 def test_persist_and_get_audit_record() -> None:
     _cleanup_chart_results()
     payload = BirthInput(

@@ -38,12 +38,18 @@ from app.domain.astrology.interpretation_adapters.contracts import (
     InterpretationSignal,
     InterpretationThemeActivation,
 )
-from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.astrology.natal_calculation import AspectResult, NatalAstralPointPosition
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
     HouseOccupantRuntimeData,
     HouseRulerRuntimeData,
     HouseStrengthRuntimeData,
+)
+from app.domain.astrology.runtime.sign_runtime_data import (
+    SignDignityRuntimeData,
+    SignDominanceReason,
+    SignOccupantRuntimeData,
+    SignRuntimeData,
 )
 from app.services.chart.json_builder import (
     EVIDENCE_ID_PATTERN,
@@ -126,6 +132,49 @@ def mock_natal_result():
             ruler_planet_sign="taurus",
             ruler_planet_house=10,
         ),
+    ]
+    result.astral_points = [
+        NatalAstralPointPosition(
+            code="lilith",
+            variant_code="mean",
+            longitude=118.75,
+            sign="cancer",
+            degree_in_sign=28.75,
+            house=7,
+            calculation_source="swiss_ephemeris:lilith",
+            is_physical_body=False,
+        )
+    ]
+    result.signs_runtime = [
+        SignRuntimeData(
+            sign="taurus",
+            occupants=(
+                SignOccupantRuntimeData(
+                    planet="sun",
+                    longitude=35.4,
+                    house=10,
+                ),
+            ),
+            weight=0.75,
+            dominant=True,
+            active_dignities=(
+                SignDignityRuntimeData(
+                    planet="sun",
+                    dignity_type="domicile",
+                    system="traditional",
+                    weight=5.0,
+                    is_primary=True,
+                ),
+            ),
+            reasons=(
+                SignDominanceReason.OCCUPANTS_PRESENT,
+                SignDominanceReason.ACTIVE_DIGNITY,
+            ),
+            element="earth",
+            modality="fixed",
+            polarity="yin",
+            synthesis_role="dominant_focus",
+        )
     ]
 
     # Aspects
@@ -423,6 +472,40 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert chart["aspects"][0]["energy_type"] == "harmonious_flow"
     assert chart["aspects"][0]["applying"] is None
     assert chart["meta"]["aspects_applying_available"] is False
+    assert chart["astral_points"] == [
+        {
+            "code": "lilith",
+            "variant_code": "mean",
+            "longitude": 118.75,
+            "sign": "cancer",
+            "degree_in_sign": 28.75,
+            "house": 7,
+            "calculation_source": "swiss_ephemeris:lilith",
+            "is_physical_body": False,
+        }
+    ]
+    assert chart["signs_runtime"] == [
+        {
+            "sign": "taurus",
+            "occupants": [{"planet": "sun", "longitude": 35.4, "house": 10}],
+            "weight": 0.75,
+            "dominant": True,
+            "active_dignities": [
+                {
+                    "planet": "sun",
+                    "dignity_type": "domicile",
+                    "system": "traditional",
+                    "weight": 5.0,
+                    "is_primary": True,
+                }
+            ],
+            "reasons": ["occupants_present", "active_dignity"],
+            "element": "earth",
+            "modality": "fixed",
+            "polarity": "yin",
+            "synthesis_role": "dominant_focus",
+        }
+    ]
     assert chart["dignities"]["score_profile"] == "traditional_standard"
     assert chart["dignities"]["sect"] == {
         "chart_sect": "day",
@@ -447,8 +530,7 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         chart["dignities"]["planets"]["sun"]["essential_breakdown"][0]["reason"]
         == "sun in taurus: domicile"
     )
-    assert chart["planet_condition_profiles"]["score_profile"] == "traditional_standard"
-    condition_sun = chart["planet_condition_profiles"]["planets"]["sun"]
+    condition_sun = chart["planet_condition_profiles"]["sun"]
     assert condition_sun["planet_code"] == "sun"
     assert condition_sun["score_profile"] == "traditional_standard"
     assert condition_sun["tradition"] == "traditional"
@@ -482,8 +564,7 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         "fact_type": "accidental_match_count",
         "value": "1",
     }
-    assert chart["planet_condition_signals"]["score_profile"] == "traditional_standard"
-    signal_sun = chart["planet_condition_signals"]["planets"]["sun"]
+    signal_sun = chart["planet_condition_signals"]["sun"]
     assert signal_sun["planet_code"] == "sun"
     assert signal_sun["signals"] == [
         {
@@ -794,6 +875,8 @@ def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
     assert chart["angles"]["MC"] is None
     assert chart["dominant_planets"] is None
     assert chart["interpretation_adapter"] is None
+    assert chart["astral_points"][0]["house"] is None
+    assert chart["signs_runtime"][0]["occupants"][0]["house"] is None
 
 
 def test_build_chart_json_no_location(mock_natal_result, mock_birth_profile):
@@ -819,6 +902,28 @@ def test_build_chart_json_no_location_no_time(mock_natal_result, mock_birth_prof
     assert len(chart["houses"]) == 0
     assert chart["angles"]["ASC"] is None
     assert chart["dominant_planets"] is None
+    assert chart["astral_points"][0]["house"] is None
+
+
+def test_build_chart_json_serializes_empty_advanced_blocks(mock_natal_result, mock_birth_profile):
+    """Les blocs avances calcules vides restent explicites sans valeurs fabriquees."""
+    mock_natal_result.condition_profiles = []
+    mock_natal_result.condition_signals = []
+    mock_natal_result.advanced_conditions = []
+    mock_natal_result.dominant_planets = None
+    mock_natal_result.interpretation_adapter = None
+    mock_natal_result.astral_points = []
+    mock_natal_result.signs_runtime = []
+
+    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+
+    assert chart["planet_condition_profiles"] == {}
+    assert chart["planet_condition_signals"] == {}
+    assert chart["advanced_conditions"] == []
+    assert chart["dominant_planets"] is None
+    assert chart["interpretation_adapter"] is None
+    assert chart["astral_points"] == []
+    assert chart["signs_runtime"] == []
 
 
 def test_build_evidence_catalog_priority():
