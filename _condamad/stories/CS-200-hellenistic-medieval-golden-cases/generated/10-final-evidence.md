@@ -35,7 +35,7 @@
 |---|---|---|---|---|
 | AC1 | G1/G2 in `test_traditional_golden_cases.py` and snapshot. | Golden pytest PASS. | PASS | Day/night chart sect locked. |
 | AC2 | G3-G6 runtime dignity cases. | Golden pytest PASS. | PASS | In-sect/out-of-sect locked. |
-| AC3 | G7/G8 advanced condition cases. | Golden pytest PASS. | PASS | Hayz requires non-sect factors. |
+| AC3 | G7/G8 advanced condition, profile and signal cases. | Golden pytest PASS. | PASS | Hayz requires non-sect factors and propagates to profile/signals only when complete. |
 | AC4 | G9 rejoicing case. | Golden pytest PASS. | PASS | `planetary_joy` profile contribution locked. |
 | AC5 | G10 Mercury case. | Golden pytest PASS. | PASS | Mercury common/variable runtime classification locked. |
 | AC6 | G11 essential dignity case. | Golden pytest PASS. | PASS | Sun domicile and score axes locked. |
@@ -78,6 +78,7 @@ None.
 - Added `backend/tests/unit/domain/astrology/test_traditional_golden_cases.py`.
 - Added test helpers under `backend/tests/unit/domain/astrology/fixtures/`.
 - Updated `backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py` to reuse the shared planet sect runtime fixture.
+- Expanded G7/G8 golden assertions and snapshot evidence for hayz profile/signals propagation.
 
 ## Commands run
 
@@ -86,6 +87,7 @@ None.
 | `.\\.venv\\Scripts\\Activate.ps1; ruff format .` | repo root | PASS | 0 | Final run: 1477 files left unchanged. |
 | `.\\.venv\\Scripts\\Activate.ps1; ruff check .` | repo root | PASS | 0 | All checks passed. |
 | `.\\.venv\\Scripts\\Activate.ps1; ruff check backend/tests/factories/astrology_runtime_reference_factory.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/fixtures/traditional_golden_cases.py` | repo root | PASS | 0 | Targeted lint for review fix passed after import-order correction. |
+| `.\\.venv\\Scripts\\Activate.ps1; ruff check backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/fixtures/traditional_golden_cases.py` | repo root | PASS | 0 | Targeted lint for G7/G8 follow-up fix passed. |
 | `.\\.venv\\Scripts\\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_traditional_golden_cases.py` | repo root | PASS | 0 | 9 passed. |
 | `.\\.venv\\Scripts\\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py` | repo root | PASS | 0 | 5 passed. |
 | `.\\.venv\\Scripts\\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py` | repo root | PASS | 0 | 4 passed. |
@@ -113,6 +115,7 @@ None.
 - No frontend, API, migration, seed, DB model, dependency or LLM file changed.
 - No local doctrine constants found.
 - Planet sect runtime fixture setup is centralized in `complete_reference_with_planet_sect_rules`; CS-200 and the existing dignity scoring tests reuse the same helper.
+- G7 now proves `hayz` reaches the enriched condition profile and governed condition signal output; G8 proves `in_sect` alone does not add the advanced `hayz` profile contribution.
 - `SectCalculator` / `PlanetSectConditionCalculator` were not imported into downstream condition, advanced, dominance, adapter or JSON builder modules.
 - Scan hits for `sect_code` / `chart_sect_code` are existing canonical runtime reference fields or explicit test fixture input keys, not public JSON aliases.
 - `prompt_hint` scan hits are existing CS-193 signal contract fields, not prompt/LLM dependencies.
@@ -122,25 +125,21 @@ None.
 - Scope review: expected additions are backend tests, story capsule files and story evidence.
 - Production diff: none.
 - Snapshot review finding fixed: G12 public JSON snapshot was reduced to contract fields instead of full downstream payloads.
+- Follow-up brief verification fixed: G7/G8 now prove hayz profile/signals propagation boundaries.
 
 ## Final worktree status
 
 Final `git status --short`:
 
 ```text
- M _condamad/stories/story-status.md
- M backend/tests/factories/astrology_runtime_reference_factory.py
- M backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/01-execution-brief.md
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/03-acceptance-traceability.md
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/04-target-files.md
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/06-validation-plan.md
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/07-no-legacy-dry-guardrails.md
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/10-final-evidence.md
-?? _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/11-code-review.md
-?? backend/tests/unit/domain/astrology/fixtures/
-?? backend/tests/unit/domain/astrology/test_traditional_golden_cases.py
+ M _condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/golden-cases-after.json
+ M _condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/golden-cases-index.md
+ M _condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/golden-cases-validation.md
+ M _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/03-acceptance-traceability.md
+ M _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/10-final-evidence.md
+ M _condamad/stories/CS-200-hellenistic-medieval-golden-cases/generated/11-code-review.md
+ M backend/tests/unit/domain/astrology/fixtures/traditional_golden_cases.py
+ M backend/tests/unit/domain/astrology/test_traditional_golden_cases.py
 ```
 
 ## Remaining risks
@@ -149,4 +148,4 @@ Aucun risque restant identifie.
 
 ## Suggested reviewer focus
 
-Review that the G12 curated projection is compact enough while still covering dominance, interpretation adapter and public JSON contracts.
+Review that G7/G8 lock hayz propagation without introducing a local doctrine engine, and that the G12 curated projection remains compact while covering dominance, interpretation adapter and public JSON contracts.

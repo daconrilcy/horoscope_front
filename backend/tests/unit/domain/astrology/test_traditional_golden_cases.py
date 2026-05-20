@@ -55,11 +55,23 @@ def test_g3_to_g6_lock_planet_sect_conditions_and_out_of_sect() -> None:
 
 def test_g7_g8_lock_hayz_complete_versus_in_sect_only() -> None:
     """G7 prouve hayz complet et G8 prouve qu'en-secte seul ne suffit pas."""
-    assert "hayz" in _case("G7")["observed_summary"]["condition_codes"]
+    g7 = _case("G7")["observed_summary"]
+    assert "hayz" in g7["condition_codes"]
+    assert "out_of_sect" not in g7["condition_codes"]
+    assert {
+        "code": "hayz",
+        "family": "advanced",
+        "score": 2.2,
+        "source": "hayz",
+    } in g7["profile_breakdown"]
+    assert "functional_strength_high" in g7["condition_signals"]
 
     g8 = _case("G8")["observed_summary"]
     assert g8["sect_condition"]["sect_condition"]["is_in_sect"] is True
     assert "hayz" not in g8["condition_codes"]
+    assert not any(
+        item["family"] == "advanced" and item["code"] == "hayz" for item in g8["profile_breakdown"]
+    )
 
 
 def test_g9_locks_planetary_rejoicing_profile_contribution() -> None:

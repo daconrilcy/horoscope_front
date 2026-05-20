@@ -10,6 +10,8 @@ Date: 2026-05-20
   LLM file was changed.
 - Review fix converged the duplicated test-local sect runtime fixture into
   `tests.factories.astrology_runtime_reference_factory.complete_reference_with_planet_sect_rules`.
+- Follow-up verification fix expanded G7/G8 so hayz is locked through advanced
+  conditions, condition profile breakdown and governed condition signals.
 - `golden-cases-before.json` is a valid marker for no prior golden suite.
 - `golden-cases-after.json` is the first curated runtime snapshot for G1-G12.
 
@@ -31,6 +33,7 @@ Date: 2026-05-20
 | `ruff format .` | PASS | 1477 files left unchanged on final run |
 | `ruff check .` | PASS | all checks passed |
 | `ruff check backend/tests/factories/astrology_runtime_reference_factory.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/fixtures/traditional_golden_cases.py` | PASS | all checks passed after import-order fix |
+| `ruff check backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/fixtures/traditional_golden_cases.py` | PASS | all checks passed after G7/G8 coverage fix |
 | `python -m json.tool .../golden-cases-before.json` | PASS | valid JSON |
 | `python -m json.tool .../golden-cases-after.json` | PASS | valid JSON |
 | `Test-Path .../golden-cases-index.md; ...before.json; ...after.json; ...validation.md` | PASS | all returned `True` |
@@ -57,3 +60,6 @@ Date: 2026-05-20
 - G12 public JSON evidence stores only contract fields, not full payloads.
 - G1-G12 now consume a single shared test runtime fixture for planet sect rules
   instead of duplicating that fixture table in each test module.
+- G7 snapshot includes `profile_breakdown` with advanced `hayz` and
+  `condition_signals`; G8 snapshot proves no advanced `hayz` profile
+  contribution remains when only the sect prerequisite is true.

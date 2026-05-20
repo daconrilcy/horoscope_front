@@ -74,13 +74,23 @@ Date: 2026-05-20
 - Suggested fix: update preflight and file list evidence to reflect the real closure session.
 - Resolution: fixed in final evidence.
 
+### CR-4 Medium - G7 did not lock hayz profile and signal propagation
+
+- Bucket: patch
+- Location: `backend/tests/unit/domain/astrology/test_traditional_golden_cases.py`
+- Source layer: acceptance
+- Evidence: the brief requires G7 to prove hayz reaches condition profiles and governed signals when runtime thresholds match; the prior test only asserted the advanced condition code.
+- Impact: a regression could preserve `advanced_conditions.hayz` while dropping the profile/signals propagation expected by CS-200.
+- Suggested fix: include G7 profile breakdown and condition signal evidence in the curated snapshot, assert advanced `hayz` profile contribution, and assert G8 does not gain that contribution when only `in_sect` is true.
+- Resolution: fixed in follow-up verification; targeted pytest, JSON validation and lint passed.
+
 ## Acceptance audit
 
 | AC | Status | Evidence |
 |---|---|---|
 | AC1 | PASS | G1/G2 assert day/night `dignities.sect` fields and snapshot entries exist. |
 | AC2 | PASS | G3-G6 assert `PlanetSectCondition` and `out_of_sect` propagation. |
-| AC3 | PASS | G7/G8 distinguish complete hayz from in-sect-only. |
+| AC3 | PASS | G7/G8 distinguish complete hayz from in-sect-only, including profile/signals propagation for G7 and no advanced hayz profile contribution for G8. |
 | AC4 | PASS | G9 asserts `planetary_joy` accidental and profile evidence. |
 | AC5 | PASS | G10 asserts Mercury common/variable runtime classification. |
 | AC6 | PASS | G11 asserts Sun domicile and score axes. |

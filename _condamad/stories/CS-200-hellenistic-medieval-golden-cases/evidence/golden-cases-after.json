@@ -1,4 +1,12 @@
 {
+  "snapshot": "CS-200 traditional golden cases",
+  "float_policy": "round floats to 6 decimals",
+  "volatile_fields_excluded": [
+    "database ids",
+    "timestamps",
+    "full ephemeris traces",
+    "localized labels unrelated to contracts"
+  ],
   "case_count": 12,
   "cases": [
     {
@@ -176,6 +184,59 @@
         "condition_codes": [
           "fast_motion",
           "hayz"
+        ],
+        "condition_signals": [
+          "functional_strength_high"
+        ],
+        "profile_breakdown": [
+          {
+            "code": "domicile",
+            "family": "essential",
+            "score": 5.0,
+            "source": "essential_rule"
+          },
+          {
+            "code": "angular_house",
+            "family": "accidental",
+            "score": 4.0,
+            "source": "house_modality"
+          },
+          {
+            "code": "direct_motion",
+            "family": "accidental",
+            "score": 1.0,
+            "source": "motion_state"
+          },
+          {
+            "code": "swift_motion",
+            "family": "accidental",
+            "score": 1.0,
+            "source": "mean_speed_relation"
+          },
+          {
+            "code": "hayz",
+            "family": "accidental",
+            "score": 2.0,
+            "source": "hayz"
+          },
+          {
+            "code": "in_sect",
+            "family": "accidental",
+            "score": 1.0,
+            "source": "sect_condition"
+          },
+          {
+            "code": "fast_motion",
+            "family": "advanced",
+            "score": 1.4,
+            "source": "fast_motion"
+          },
+          {
+            "code": "hayz",
+            "family": "advanced",
+            "score": 2.2,
+            "source": "hayz"
+          }
         ]
       },
       "targeted_contracts": [
@@ -193,6 +254,47 @@
       "observed_summary": {
         "condition_codes": [
           "fast_motion"
+        ],
+        "condition_signals": [
+          "functional_strength_high"
+        ],
+        "profile_breakdown": [
+          {
+            "code": "peregrine",
+            "family": "essential",
+            "score": -5.0,
+            "source": "no_positive_essential_match"
+          },
+          {
+            "code": "angular_house",
+            "family": "accidental",
+            "score": 4.0,
+            "source": "house_modality"
+          },
+          {
+            "code": "direct_motion",
+            "family": "accidental",
+            "score": 1.0,
+            "source": "motion_state"
+          },
+          {
+            "code": "swift_motion",
+            "family": "accidental",
+            "score": 1.0,
+            "source": "mean_speed_relation"
+          },
+          {
+            "code": "in_sect",
+            "family": "accidental",
+            "score": 1.0,
+            "source": "sect_condition"
+          },
+          {
+            "code": "fast_motion",
+            "family": "advanced",
+            "score": 1.4,
+            "source": "fast_motion"
+          }
         ],
         "sect_condition": {
           "accidental_score": 7.0,
@@ -264,32 +366,38 @@
           {
             "code": "peregrine",
             "family": "essential",
-            "score": -5.0
+            "score": -5.0,
+            "source": "no_positive_essential_match"
           },
           {
             "code": "cadent_house",
             "family": "accidental",
-            "score": -2.0
+            "score": -2.0,
+            "source": "house_modality"
           },
           {
             "code": "direct_motion",
             "family": "accidental",
-            "score": 1.0
+            "score": 1.0,
+            "source": "motion_state"
           },
           {
             "code": "planetary_joy",
             "family": "accidental",
-            "score": 3.0
+            "score": 3.0,
+            "source": "planetary_joy_house"
           },
           {
             "code": "swift_motion",
             "family": "accidental",
-            "score": 1.0
+            "score": 1.0,
+            "source": "mean_speed_relation"
           },
           {
             "code": "occidental",
             "family": "accidental",
-            "score": 1.0
+            "score": 1.0,
+            "source": "heliacal_phase"
           }
         ]
       },
@@ -550,13 +658,5 @@
         "json_builder"
       ]
     }
-  ],
-  "float_policy": "round floats to 6 decimals",
-  "snapshot": "CS-200 traditional golden cases",
-  "volatile_fields_excluded": [
-    "database ids",
-    "timestamps",
-    "full ephemeris traces",
-    "localized labels unrelated to contracts"
   ]
 }

@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | AC1 | G1/G2 prove day/night chart sect plus Sun horizon fields. | `test_traditional_golden_cases.py` and `golden-cases-after.json` cover G1/G2. | `pytest -q backend/tests/unit/domain/astrology/test_traditional_golden_cases.py` PASS. | PASS |
 | AC2 | G3-G6 prove in-sect/out-of-sect for diurnal/nocturnal planets. | Runtime-backed dignity cases assert `PlanetSectCondition` and `out_of_sect`. | Targeted pytest PASS; snapshot G3-G6 present. | PASS |
-| AC3 | G7/G8 prove hayz complete versus in-sect-only incomplete. | G7 asserts `hayz`; G8 asserts in-sect without `hayz`. | Targeted pytest PASS; snapshot G7/G8 present. | PASS |
+| AC3 | G7/G8 prove hayz complete versus in-sect-only incomplete. | G7 asserts `hayz`, advanced profile contribution and governed signal; G8 asserts in-sect without advanced `hayz` condition or profile contribution. | Targeted pytest PASS; snapshot G7/G8 present. | PASS |
 | AC4 | G9 proves planetary rejoicing remains stable. | G9 asserts `planetary_joy` accidental score and profile contribution. | Targeted pytest PASS; snapshot G9 present. | PASS |
 | AC5 | G10 proves explicit runtime-backed Mercury handling. | G10 asserts Mercury `common` / `variable_by_condition` from runtime rule input. | Targeted pytest PASS; index documents G10. | PASS |
 | AC6 | G11 proves at least one essential dignity remains stable. | G11 asserts Sun domicile and score axes. | Targeted pytest PASS; snapshot G11 present. | PASS |

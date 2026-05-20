@@ -333,8 +333,8 @@ def golden_cases() -> list[dict[str, Any]]:
     )
     essential_case = (planet("sun", 120.0, "leo", 10),)
 
-    g7_conditions, _g7_profiles = advanced_case(hayz_complete)
-    g8_conditions, _g8_profiles = advanced_case(hayz_incomplete)
+    g7_conditions, g7_profiles = advanced_case(hayz_complete)
+    g8_conditions, g8_profiles = advanced_case(hayz_incomplete)
     g9_result = dignity_by_code(joy_case, "moon")
     g9_profiles = PlanetConditionProfileService().calculate(
         dignity_results(joy_case), traditional_reference()
@@ -377,7 +377,11 @@ def golden_cases() -> list[dict[str, Any]]:
             "synthetic_domain",
             ("advanced_conditions.hayz",),
             "complete hayz",
-            {"condition_codes": [item.condition_code for item in g7_conditions]},
+            {
+                "condition_codes": [item.condition_code for item in g7_conditions],
+                "profile_breakdown": _profile_breakdown(g7_profiles, "sun"),
+                "condition_signals": _signal_codes(g7_profiles, "sun"),
+            },
         ),
         _case(
             "G8",
@@ -387,6 +391,8 @@ def golden_cases() -> list[dict[str, Any]]:
             {
                 "sect_condition": _sect_condition_summary(dignity_by_code(hayz_incomplete, "sun")),
                 "condition_codes": [item.condition_code for item in g8_conditions],
+                "profile_breakdown": _profile_breakdown(g8_profiles, "sun"),
+                "condition_signals": _signal_codes(g8_profiles, "sun"),
             },
         ),
         _case(
@@ -510,11 +516,19 @@ def _profile_breakdown(profiles: tuple[Any, ...], planet_code: str) -> list[dict
             {
                 "family": item.dignity_family,
                 "code": item.dignity_type_code,
+                "source": item.source,
                 "score": item.score_value,
             }
             for item in profile.breakdown
         ]
     )
+
+
+def _signal_codes(profiles: tuple[Any, ...], planet_code: str) -> list[str]:
+    """Retourne les signaux conditionnels gouvernes pour une planete."""
+    signal_sets = PlanetConditionSignalBuilder().build(profiles, traditional_reference())
+    signal_set = next(item for item in signal_sets if item.planet_code == planet_code)
+    return sorted(signal.code for signal in signal_set.signals)
 
 
 def snapshot_payload() -> dict[str, Any]:

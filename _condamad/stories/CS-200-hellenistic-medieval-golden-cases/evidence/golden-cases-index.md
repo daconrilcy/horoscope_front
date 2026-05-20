@@ -23,8 +23,8 @@ puis les calculateurs runtime canoniques produisent les sorties observees.
 | G4 | Synthetic domain | Lune nocturne dans theme nocturne via `PlanetDignityScoringService`. | `PlanetSectCondition` nocturne `in_sect`, flags coherents. |
 | G5 | Synthetic domain | Jupiter diurne dans theme nocturne via scoring puis `AdvancedConditionEngine`. | `PlanetSectCondition.out_of_sect` et condition avancee `out_of_sect`. |
 | G6 | Synthetic domain | Lune nocturne dans theme diurne via scoring puis `AdvancedConditionEngine`. | `PlanetSectCondition.out_of_sect` et condition avancee `out_of_sect`. |
-| G7 | Synthetic domain | Soleil en secte, au-dessus de l'horizon et signe yang via `AdvancedConditionEngine`. | Emission de `hayz` quand les facteurs hors-secte matchent. |
-| G8 | Synthetic domain | Soleil en secte mais signe non conforme au hayz. | `is_in_sect=true` sans condition avancee `hayz`. |
+| G7 | Synthetic domain | Soleil en secte, au-dessus de l'horizon et signe yang via `AdvancedConditionEngine`, profils et signaux conditionnels. | Emission de `hayz`, contribution de profil avancee `hayz` et signal conditionnel runtime quand les facteurs hors-secte matchent. |
+| G8 | Synthetic domain | Soleil en secte mais signe non conforme au hayz, profils et signaux conditionnels. | `is_in_sect=true` sans condition avancee `hayz` et sans contribution de profil avancee `hayz`. |
 | G9 | Synthetic domain | Lune en maison de joie depuis `AccidentalDignityCalculator` et `PlanetConditionProfileService`. | `planetary_joy`, score accidentel et contribution de profil restent stables. |
 | G10 | Synthetic domain | Mercure avec regle runtime `chart_sect_code=all`. | `intrinsic_sect=common`, `planet_sect_condition=variable_by_condition`, flags faux. |
 | G11 | Synthetic domain | Soleil en Lion via `EssentialDignityCalculator`. | `domicile`, `essential_score=5` et axes de scoring essentiels positifs. |
