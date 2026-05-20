@@ -11,6 +11,9 @@ notes, guardrail updates, or skill-change notes.
 - Source:
 - Date:
 - Target:
+- Pattern key:
+- Owner:
+- Reuse trigger:
 - Feedback:
 - Classification:
 - Decision:
@@ -26,6 +29,13 @@ notes, guardrail updates, or skill-change notes.
   artifact.
 - `Date`: local date in `YYYY-MM-DD` format when durable evidence is written.
 - `Target`: one story, skill, guardrail, code surface, or evidence file.
+- `Pattern key`: compact recurrence key, for example
+  `frontend/browser-validation/missing-real-browser-check` or
+  `review/evidence-gap/unverified-command`.
+- `Owner`: skill, guardrail, AGENTS.md file, story, or code surface responsible
+  for preventing recurrence.
+- `Reuse trigger`: future condition that should cause another skill to reuse
+  this learning.
 - `Feedback`: short factual summary, not a long transcript.
 - `Classification`: one primary category from `SKILL.md`.
 - `Decision`: accepted, rejected, deferred, or blocked with reason.

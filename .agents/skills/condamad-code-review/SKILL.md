@@ -51,6 +51,8 @@ Before reviewing, load:
   `_condamad/stories/story-status.md` after the verdict using the same registry
   contract as `condamad-story-writer`.
 - When review evidence reveals reusable process learning, repeated mistakes, or
-  a needed skill/guardrail adjustment, hand it off to
-  `../condamad-feedback-loop/SKILL.md` after the review verdict. Do not let the
-  feedback loop hide or downgrade review findings.
+  a needed skill/guardrail/AGENTS.md adjustment, invoke
+  `$condamad-feedback-loop` after the review verdict. If explicit skill
+  invocation is unavailable, read `../condamad-feedback-loop/SKILL.md` and
+  follow its workflow. Do not let the feedback loop hide or downgrade review
+  findings.

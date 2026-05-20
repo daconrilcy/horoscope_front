@@ -1,12 +1,11 @@
 ---
 name: condamad-feedback-loop
 description: >
-  Run a structured CONDAMAD feedback loop after a story, review, audit,
-  regression, failed validation, user correction, or skill execution. Use when
-  Codex must capture feedback, classify it, decide whether it changes code,
-  evidence, tests, guardrails, stories, or reusable skills, apply the smallest
-  coherent update, validate it, and propose integration into related skills
-  without weakening existing acceptance criteria.
+  Run a CONDAMAD feedback loop after a correction, failed validation, review
+  finding, regression, or repeated skill mistake that should become durable
+  learning. Capture, classify, apply the smallest validated fix, and propagate
+  accepted learning to evidence, tests, guardrails, AGENTS.md, or the owning
+  skill. Do not use for tiny contained edits.
 ---
 
 <!-- Skill CONDAMAD pour transformer les retours en apprentissages durables et reutilisables. -->
@@ -39,6 +38,26 @@ story evidence, guardrails, documentation, or a skill update.
 
 This skill composes existing CONDAMAD skills. It does not replace
 implementation, review, frontend, audit, or story-writing workflows.
+
+## When not to use
+
+Do not run this loop when:
+
+- the fix is a one-off typo or local edit with no recurrence risk;
+- the feedback is only a personal preference and does not affect correctness,
+  evidence, workflow, or reusable skill behavior;
+- the target spans unrelated stories, skills, or domains;
+- the required response is already fully covered by the owning skill and no
+  propagation is needed.
+
+## Recursion guard
+
+Run at most one feedback loop for a closure event. If feedback concerns this
+feedback-loop skill itself, update only this skill or its references, validate
+the change, record the result, and stop.
+
+Do not start a second feedback loop from the closure of the first one unless the
+user explicitly requests it.
 
 ## Required inputs
 
@@ -110,6 +129,7 @@ For each item, choose the smallest durable response:
 - evidence update when the implementation is already sufficient;
 - story recut or clarification when the scope is wrong;
 - skill update when the same mistake could recur across executions;
+- AGENTS.md update when the learning is a repository-wide operating rule;
 - no change with rationale when feedback is non-actionable or out of scope.
 
 Prefer updating an existing skill over creating a new one when the feedback
@@ -148,7 +168,9 @@ Run validation proportional to the change:
   tests, and browser checks required by the owning workflow;
 - Python commands in this repository: activate `.\.venv\Scripts\Activate.ps1`
   before running `python`, `pip`, `pytest`, `ruff`, or related tools;
-- skill changes: run the skill validation script on the changed skill folder;
+- skill changes: run the available skill validation script when present; if no
+  validator exists, verify required frontmatter, referenced paths, YAML syntax,
+  integration snippets, and absence of contradictory instructions;
 - evidence-only changes: verify referenced files, paths, dates, and commands
   are accurate.
 
@@ -161,6 +183,8 @@ After validation, decide whether the learning must be propagated:
 - update the current story evidence when the feedback affects story closure;
 - update `_condamad/stories/regression-guardrails.md` when it reveals a
   reusable regression pattern;
+- update `AGENTS.md` only when the learning is a durable repository operating
+  rule and not better owned by a narrower skill;
 - update the owning skill when the process should change next time;
 - update only the final response when the feedback is local and not reusable.
 
@@ -183,11 +207,17 @@ To integrate this loop into another skill, add a short handoff section instead
 of duplicating the full process:
 
 ```text
-When review findings, user corrections, validation failures, or repeated
-execution mistakes reveal reusable learning, run
-../condamad-feedback-loop/SKILL.md before closure. Apply only accepted feedback,
-validate the resulting code/evidence/skill changes, and record any propagation
-to guardrails or related skills.
+When review findings, user corrections, failed validations, regressions, or
+repeated execution mistakes reveal reusable learning, invoke
+$condamad-feedback-loop before closure. Apply only accepted feedback, validate
+the resulting code, evidence, guardrail, AGENTS.md, or skill changes, and record
+any propagation.
+
+Do not invoke the loop for one-off local edits that are fully resolved and have
+no reusable learning value.
+
+If explicit skill invocation is unavailable, read
+../condamad-feedback-loop/SKILL.md and follow its workflow.
 ```
 
 Use the loop at natural boundaries:

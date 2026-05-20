@@ -1,4 +1,7 @@
 interface:
   display_name: "CONDAMAD Feedback Loop"
-  short_description: "Capture and propagate CONDAMAD feedback."
-  default_prompt: "Use this skill to run a structured feedback loop after a story, review, audit, validation failure, user correction, or skill execution, then update durable evidence and propose validated propagation to related skills or guardrails."
+  short_description: "Propagate reusable CONDAMAD learning."
+  default_prompt: "Use $condamad-feedback-loop after a correction, failed validation, review finding, regression, or repeated execution mistake to classify feedback, apply the smallest validated fix, and propagate accepted learning."
+
+policy:
+  allow_implicit_invocation: false

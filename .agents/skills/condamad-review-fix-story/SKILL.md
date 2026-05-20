@@ -23,10 +23,13 @@ frontend styles, frontend build tooling, React behavior, Tailwind/shadcn UI,
 TanStack Query, Zustand, forms, routing, or Playwright flows must be fixed
 through the `condamad-frontend-dev` contract.
 
-When a review finding, failed validation, user correction, or repeated workflow
-mistake should improve future executions, load and apply
-`../condamad-feedback-loop/SKILL.md` before closure. Keep the loop scoped to the
-current story and propagate only accepted, validated feedback.
+When review findings, user corrections, failed validations, regressions, or
+repeated execution mistakes reveal reusable learning, invoke
+`$condamad-feedback-loop` before closure. Keep the loop scoped to the current
+story, apply only accepted feedback, validate the resulting code, evidence,
+guardrail, AGENTS.md, or skill changes, and record any propagation. If explicit
+skill invocation is unavailable, read `../condamad-feedback-loop/SKILL.md` and
+follow its workflow.
 
 ## Required inputs
 
