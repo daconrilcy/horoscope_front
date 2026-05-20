@@ -7,6 +7,7 @@ from app.domain.astrology.dignities.contracts import (
     AccidentalDignityMatch,
     ChartSectResult,
     PlanetDignityResult,
+    PlanetSectCondition,
 )
 from app.domain.astrology.natal_calculation import AspectResult, PlanetPosition
 from tests.factories.astrology_runtime_reference_factory import complete_reference
@@ -48,6 +49,16 @@ def dignity(
             sun_above_horizon=True,
             calculation_basis="sun_house_horizon_rule",
             reference_system="traditional",
+        ),
+        sect_condition=PlanetSectCondition(
+            planet_code=planet_code,
+            chart_sect="day",
+            intrinsic_sect="unknown",
+            planet_sect_condition="unknown",
+            is_in_sect=False,
+            is_out_of_sect=False,
+            calculation_basis="chart_sect_vs_planet_intrinsic_sect",
+            reference_system="runtime_accidental_sect_rules",
         ),
         essential_score=0.0,
         accidental_score=0.0,

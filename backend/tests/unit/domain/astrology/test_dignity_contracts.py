@@ -9,6 +9,7 @@ from app.domain.astrology.dignities.contracts import (
     EssentialDignityMatch,
     PlanetDignityInput,
     PlanetDignityResult,
+    PlanetSectCondition,
 )
 
 
@@ -36,6 +37,16 @@ def test_dignity_contracts_are_immutable_and_typed() -> None:
             calculation_basis="sun_house_horizon_rule",
             reference_system="traditional",
         ),
+        sect_condition=PlanetSectCondition(
+            planet_code="sun",
+            chart_sect="day",
+            intrinsic_sect="diurnal",
+            planet_sect_condition="in_sect",
+            is_in_sect=True,
+            is_out_of_sect=False,
+            calculation_basis="chart_sect_vs_planet_intrinsic_sect",
+            reference_system="traditional",
+        ),
         essential_score=5,
         accidental_score=0,
         total_score=5,
@@ -52,6 +63,7 @@ def test_dignity_contracts_are_immutable_and_typed() -> None:
     assert isinstance(result.essential_breakdown, tuple)
     assert not hasattr(result, "__dict__")
     assert result.chart_sect.chart_sect == result.sect
+    assert result.sect_condition.planet_sect_condition == "in_sect"
 
 
 def test_planet_dignity_input_exposes_degree_in_sign() -> None:
@@ -109,3 +121,68 @@ def test_chart_sect_result_rejects_invalid_contract(
     """Le contrat de secte refuse les valeurs hors domaine public."""
     with pytest.raises(ValueError, match=message):
         ChartSectResult(**payload)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (
+            {
+                "planet_code": "sun",
+                "chart_sect": "dawn",
+                "intrinsic_sect": "diurnal",
+                "planet_sect_condition": "in_sect",
+                "is_in_sect": True,
+                "is_out_of_sect": False,
+                "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+                "reference_system": "traditional",
+            },
+            "chart_sect must be day or night",
+        ),
+        (
+            {
+                "planet_code": "sun",
+                "chart_sect": "day",
+                "intrinsic_sect": "solar",
+                "planet_sect_condition": "in_sect",
+                "is_in_sect": True,
+                "is_out_of_sect": False,
+                "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+                "reference_system": "traditional",
+            },
+            "intrinsic_sect is invalid",
+        ),
+        (
+            {
+                "planet_code": "sun",
+                "chart_sect": "day",
+                "intrinsic_sect": "diurnal",
+                "planet_sect_condition": "in_sect",
+                "is_in_sect": True,
+                "is_out_of_sect": True,
+                "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+                "reference_system": "traditional",
+            },
+            "planet cannot be both in sect and out of sect",
+        ),
+        (
+            {
+                "planet_code": "sun",
+                "chart_sect": "day",
+                "intrinsic_sect": "diurnal",
+                "planet_sect_condition": "in_sect",
+                "is_in_sect": False,
+                "is_out_of_sect": False,
+                "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+                "reference_system": "traditional",
+            },
+            "planet_sect_condition and boolean flags are inconsistent",
+        ),
+    ],
+)
+def test_planet_sect_condition_rejects_invalid_contract(
+    payload: dict[str, object], message: str
+) -> None:
+    """La condition de secte planetaire refuse les valeurs hors contrat."""
+    with pytest.raises(ValueError, match=message):
+        PlanetSectCondition(**payload)  # type: ignore[arg-type]

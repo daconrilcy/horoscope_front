@@ -75,6 +75,60 @@ def test_persist_trace_requires_versions() -> None:
             raise AssertionError("Expected ChartResultServiceError")
 
 
+def test_natal_result_accepts_pre_cs198_dignity_payload_without_sect_condition() -> None:
+    """Les anciens payloads stockes restent lisibles sans alias public."""
+    payload = {
+        "reference_version": "1.0.0",
+        "ruleset_version": "1.0.0",
+        "house_system": "equal",
+        "prepared_input": {
+            "birth_datetime_local": "1990-06-15T10:30:00+02:00",
+            "birth_datetime_utc": "1990-06-15T08:30:00+00:00",
+            "timestamp_utc": 645438600,
+            "julian_day": 2448057.8541666665,
+            "birth_timezone": "Europe/Paris",
+        },
+        "planet_positions": [],
+        "houses": [],
+        "dignity_sect": {
+            "chart_sect": "day",
+            "sun_horizon_position": "above_horizon",
+            "sun_above_horizon": True,
+            "calculation_basis": "sun_house_horizon_rule",
+            "reference_system": "traditional",
+        },
+        "dignities": [
+            {
+                "planet_code": "sun",
+                "score_profile": "traditional_standard",
+                "tradition": "traditional",
+                "reference_version": "1.0.0",
+                "sect": "day",
+                "chart_sect": {
+                    "chart_sect": "day",
+                    "sun_horizon_position": "above_horizon",
+                    "sun_above_horizon": True,
+                    "calculation_basis": "sun_house_horizon_rule",
+                    "reference_system": "traditional",
+                },
+                "essential_score": 0,
+                "accidental_score": 0,
+                "total_score": 0,
+                "functional_strength_score": 0,
+                "expression_quality_score": 0,
+                "intensity_score": 0,
+                "essential_breakdown": [],
+                "accidental_breakdown": [],
+            }
+        ],
+        "aspects": [],
+    }
+
+    result = NatalResult.model_validate(payload)
+
+    assert result.dignities[0].sect_condition is None
+
+
 def test_persist_and_get_audit_record() -> None:
     _cleanup_chart_results()
     payload = BirthInput(
@@ -115,6 +169,19 @@ def test_persist_and_get_audit_record() -> None:
         stored_payload.result_payload["dignities"][0]["chart_sect"]
         == (stored_payload.result_payload["dignity_sect"])
     )
+    assert (
+        stored_payload.result_payload["dignities"][0]["sect_condition"]["chart_sect"]
+        == stored_payload.result_payload["dignity_sect"]["chart_sect"]
+    )
+    assert stored_payload.result_payload["dignities"][0]["sect_condition"][
+        "planet_sect_condition"
+    ] in {
+        "in_sect",
+        "out_of_sect",
+        "neutral_to_sect",
+        "variable_by_condition",
+        "unknown",
+    }
     assert stored_payload.result_payload["condition_signals"]
     assert stored_payload.result_payload["dominant_planets"]
     assert stored_payload.result_payload["dominant_planets"]["planets"]

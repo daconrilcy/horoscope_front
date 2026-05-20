@@ -1,0 +1,53 @@
+{
+  "dignities": {
+    "sect": {
+      "chart_sect": "day",
+      "sun_horizon_position": "above_horizon",
+      "sun_above_horizon": true,
+      "calculation_basis": "sun_house_horizon_rule",
+      "reference_system": "traditional"
+    },
+    "planets": {
+      "sun": {
+        "essential_score": 5,
+        "accidental_score": 4,
+        "total_score": 9,
+        "functional_strength_score": 1.9,
+        "expression_quality_score": 1.5,
+        "intensity_score": 1.5,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      },
+      "moon": {
+        "essential_score": 0,
+        "accidental_score": 0,
+        "total_score": 0,
+        "functional_strength_score": 0,
+        "expression_quality_score": 0,
+        "intensity_score": 0,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      },
+      "mercury": {
+        "essential_score": 0,
+        "accidental_score": 0,
+        "total_score": 0,
+        "functional_strength_score": 0,
+        "expression_quality_score": 0,
+        "intensity_score": 0,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      },
+      "uranus": {
+        "essential_score": 0,
+        "accidental_score": 0,
+        "total_score": 0,
+        "functional_strength_score": 0,
+        "expression_quality_score": 0,
+        "intensity_score": 0,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      }
+    }
+  }
+}

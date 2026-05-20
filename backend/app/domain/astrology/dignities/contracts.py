@@ -36,6 +36,56 @@ class ChartSectResult:
 
 
 @dataclass(frozen=True, slots=True)
+class PlanetSectCondition:
+    """Condition de secte d'une planete derivee du runtime et du theme."""
+
+    planet_code: str
+    chart_sect: str
+    intrinsic_sect: str
+    planet_sect_condition: str
+    is_in_sect: bool
+    is_out_of_sect: bool
+    calculation_basis: str
+    reference_system: str
+
+    def __post_init__(self) -> None:
+        """Valide les valeurs publiques de la condition de secte planetaire."""
+        if not self.planet_code.strip():
+            raise ValueError("planet_code is required")
+        if self.chart_sect not in {"day", "night"}:
+            raise ValueError("chart_sect must be day or night")
+        if self.intrinsic_sect not in {"diurnal", "nocturnal", "common", "neutral", "unknown"}:
+            raise ValueError("intrinsic_sect is invalid")
+        if self.planet_sect_condition not in {
+            "in_sect",
+            "out_of_sect",
+            "neutral_to_sect",
+            "variable_by_condition",
+            "unknown",
+        }:
+            raise ValueError("planet_sect_condition is invalid")
+        if not isinstance(self.is_in_sect, bool):
+            raise ValueError("is_in_sect must be a boolean")
+        if not isinstance(self.is_out_of_sect, bool):
+            raise ValueError("is_out_of_sect must be a boolean")
+        if self.is_in_sect and self.is_out_of_sect:
+            raise ValueError("planet cannot be both in sect and out of sect")
+        expected_booleans = {
+            "in_sect": (True, False),
+            "out_of_sect": (False, True),
+            "neutral_to_sect": (False, False),
+            "variable_by_condition": (False, False),
+            "unknown": (False, False),
+        }[self.planet_sect_condition]
+        if (self.is_in_sect, self.is_out_of_sect) != expected_booleans:
+            raise ValueError("planet_sect_condition and boolean flags are inconsistent")
+        if not self.calculation_basis.strip():
+            raise ValueError("calculation_basis is required")
+        if not self.reference_system.strip():
+            raise ValueError("reference_system is required")
+
+
+@dataclass(frozen=True, slots=True)
 class DignityWeight:
     """Poids de scoring applique a une dignite detectee."""
 
@@ -105,3 +155,4 @@ class PlanetDignityResult:
     intensity_score: float
     essential_breakdown: tuple[EssentialDignityMatch, ...]
     accidental_breakdown: tuple[AccidentalDignityMatch, ...]
+    sect_condition: PlanetSectCondition | None = None

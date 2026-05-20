@@ -1,6 +1,6 @@
 # Story CS-198 planet-sect-condition-normalization: Normaliser la condition de secte par planete
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

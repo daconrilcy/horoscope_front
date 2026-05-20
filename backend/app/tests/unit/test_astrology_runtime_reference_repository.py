@@ -163,6 +163,23 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert len(reference.dignity_reference.term_bounds) == 60
     assert len(reference.dignity_reference.face_decans) == 36
     assert reference.dignity_reference.accidental_rules
+    in_sect_rules = {
+        (
+            rule.planet_code,
+            next(item.value for item in rule.conditions if item.key == "chart_sect_code"),
+        )
+        for rule in reference.dignity_reference.accidental_rules
+        if rule.dignity_type_code == "in_sect"
+    }
+    assert in_sect_rules >= {
+        ("sun", "day"),
+        ("mercury", "all"),
+        ("jupiter", "day"),
+        ("saturn", "day"),
+        ("moon", "night"),
+        ("venus", "night"),
+        ("mars", "night"),
+    }
     assert reference.condition_signal_profiles
     condition_signal = reference.condition_signal_profiles[0]
     assert condition_signal.condition_axis == "functional_strength"

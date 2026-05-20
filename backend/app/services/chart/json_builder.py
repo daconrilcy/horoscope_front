@@ -282,6 +282,66 @@ def _serialize_chart_sect(chart_sect: Any) -> dict[str, Any] | None:
     }
 
 
+def _serialize_planet_sect_condition(sect_condition: Any) -> dict[str, Any]:
+    """Projette la condition de secte planetaire deja calculee."""
+    required_fields = (
+        "planet_code",
+        "chart_sect",
+        "intrinsic_sect",
+        "planet_sect_condition",
+        "is_in_sect",
+        "is_out_of_sect",
+        "calculation_basis",
+        "reference_system",
+    )
+    if sect_condition is None or any(
+        not hasattr(sect_condition, field) for field in required_fields
+    ):
+        raise ValueError("planet sect condition contract is incomplete")
+    payload = {field: getattr(sect_condition, field) for field in required_fields}
+    if payload["chart_sect"] not in {"day", "night"}:
+        raise ValueError("planet sect condition chart_sect is invalid")
+    if payload["intrinsic_sect"] not in {
+        "diurnal",
+        "nocturnal",
+        "common",
+        "neutral",
+        "unknown",
+    }:
+        raise ValueError("planet sect condition intrinsic_sect is invalid")
+    if payload["planet_sect_condition"] not in {
+        "in_sect",
+        "out_of_sect",
+        "neutral_to_sect",
+        "variable_by_condition",
+        "unknown",
+    }:
+        raise ValueError("planet sect condition value is invalid")
+    if not isinstance(payload["is_in_sect"], bool) or not isinstance(
+        payload["is_out_of_sect"], bool
+    ):
+        raise ValueError("planet sect condition booleans are invalid")
+    if payload["is_in_sect"] and payload["is_out_of_sect"]:
+        raise ValueError("planet sect condition booleans are inconsistent")
+    expected_booleans = {
+        "in_sect": (True, False),
+        "out_of_sect": (False, True),
+        "neutral_to_sect": (False, False),
+        "variable_by_condition": (False, False),
+        "unknown": (False, False),
+    }[payload["planet_sect_condition"]]
+    if (payload["is_in_sect"], payload["is_out_of_sect"]) != expected_booleans:
+        raise ValueError("planet sect condition flags are inconsistent")
+    if (
+        not isinstance(payload["calculation_basis"], str)
+        or not payload["calculation_basis"].strip()
+    ):
+        raise ValueError("planet sect condition calculation_basis is required")
+    if not isinstance(payload["reference_system"], str) or not payload["reference_system"].strip():
+        raise ValueError("planet sect condition reference_system is required")
+    return payload
+
+
 def _serialize_dignities(dignities: Any, chart_sect: Any = None) -> dict[str, Any]:
     """Projette les resultats de dignites par code planete."""
     planets: dict[str, Any] = {}
@@ -297,7 +357,12 @@ def _serialize_dignities(dignities: Any, chart_sect: Any = None) -> dict[str, An
         reference_version = result.reference_version
         if sect is None:
             sect = _serialize_chart_sect(getattr(result, "chart_sect", None))
+        if sect is None:
+            raise ValueError("dignity sect contract is required")
         planets[result.planet_code] = {
+            "sect_condition": _serialize_planet_sect_condition(
+                getattr(result, "sect_condition", None)
+            ),
             "essential_score": result.essential_score,
             "accidental_score": result.accidental_score,
             "total_score": result.total_score,
@@ -311,8 +376,6 @@ def _serialize_dignities(dignities: Any, chart_sect: Any = None) -> dict[str, An
                 _serialize_dignity_match(match) for match in result.accidental_breakdown
             ],
         }
-    if planets and sect is None:
-        raise ValueError("dignity sect contract is required")
     return {
         "score_profile": score_profile,
         "tradition": tradition,

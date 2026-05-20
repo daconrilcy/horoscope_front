@@ -1,0 +1,93 @@
+{
+  "dignities": {
+    "sect": {
+      "chart_sect": "day",
+      "sun_horizon_position": "above_horizon",
+      "sun_above_horizon": true,
+      "calculation_basis": "sun_house_horizon_rule",
+      "reference_system": "traditional"
+    },
+    "planets": {
+      "sun": {
+        "sect_condition": {
+          "planet_code": "sun",
+          "chart_sect": "day",
+          "intrinsic_sect": "diurnal",
+          "planet_sect_condition": "in_sect",
+          "is_in_sect": true,
+          "is_out_of_sect": false,
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "reference_system": "traditional"
+        },
+        "essential_score": 5,
+        "accidental_score": 4,
+        "total_score": 9,
+        "functional_strength_score": 1.9,
+        "expression_quality_score": 1.5,
+        "intensity_score": 1.5,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      },
+      "moon": {
+        "sect_condition": {
+          "planet_code": "moon",
+          "chart_sect": "day",
+          "intrinsic_sect": "nocturnal",
+          "planet_sect_condition": "out_of_sect",
+          "is_in_sect": false,
+          "is_out_of_sect": true,
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "reference_system": "traditional"
+        },
+        "essential_score": 0,
+        "accidental_score": 0,
+        "total_score": 0,
+        "functional_strength_score": 0,
+        "expression_quality_score": 0,
+        "intensity_score": 0,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      },
+      "mercury": {
+        "sect_condition": {
+          "planet_code": "mercury",
+          "chart_sect": "day",
+          "intrinsic_sect": "common",
+          "planet_sect_condition": "variable_by_condition",
+          "is_in_sect": false,
+          "is_out_of_sect": false,
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "reference_system": "traditional"
+        },
+        "essential_score": 0,
+        "accidental_score": 0,
+        "total_score": 0,
+        "functional_strength_score": 0,
+        "expression_quality_score": 0,
+        "intensity_score": 0,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      },
+      "uranus": {
+        "sect_condition": {
+          "planet_code": "uranus",
+          "chart_sect": "day",
+          "intrinsic_sect": "unknown",
+          "planet_sect_condition": "unknown",
+          "is_in_sect": false,
+          "is_out_of_sect": false,
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "reference_system": "runtime_accidental_sect_rules"
+        },
+        "essential_score": 0,
+        "accidental_score": 0,
+        "total_score": 0,
+        "functional_strength_score": 0,
+        "expression_quality_score": 0,
+        "intensity_score": 0,
+        "essential_breakdown": [],
+        "accidental_breakdown": []
+      }
+    }
+  }
+}

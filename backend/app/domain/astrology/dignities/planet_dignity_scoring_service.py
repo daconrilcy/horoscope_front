@@ -15,6 +15,9 @@ from app.domain.astrology.dignities.contracts import (
 from app.domain.astrology.dignities.essential_dignity_calculator import (
     EssentialDignityCalculator,
 )
+from app.domain.astrology.dignities.planet_sect_condition_calculator import (
+    PlanetSectConditionCalculator,
+)
 from app.domain.astrology.dignities.sect_calculator import SectCalculator
 from app.domain.astrology.runtime.runtime_reference import AstrologyRuntimeReference
 
@@ -27,10 +30,14 @@ class PlanetDignityScoringService:
         essential_calculator: EssentialDignityCalculator | None = None,
         accidental_calculator: AccidentalDignityCalculator | None = None,
         sect_calculator: SectCalculator | None = None,
+        planet_sect_condition_calculator: PlanetSectConditionCalculator | None = None,
     ) -> None:
         self.essential_calculator = essential_calculator or EssentialDignityCalculator()
         self.accidental_calculator = accidental_calculator or AccidentalDignityCalculator()
         self.sect_calculator = sect_calculator or SectCalculator()
+        self.planet_sect_condition_calculator = (
+            planet_sect_condition_calculator or PlanetSectConditionCalculator()
+        )
 
     def calculate(
         self,
@@ -97,6 +104,11 @@ class PlanetDignityScoringService:
             reference_version=runtime_reference.reference_version,
             sect=sect,
             chart_sect=chart_sect,
+            sect_condition=self.planet_sect_condition_calculator.calculate(
+                planet,
+                chart_sect=chart_sect,
+                dignity_reference=runtime_reference.dignity_reference,
+            ),
             essential_score=self._score(essential),
             accidental_score=self._score(accidental),
             total_score=self._score(essential) + self._score(accidental),

@@ -15,6 +15,7 @@ from app.domain.astrology.dignities.contracts import (
     ChartSectResult,
     EssentialDignityMatch,
     PlanetDignityResult,
+    PlanetSectCondition,
 )
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
@@ -32,6 +33,16 @@ def _result() -> PlanetDignityResult:
             sun_horizon_position="above_horizon",
             sun_above_horizon=True,
             calculation_basis="sun_house_horizon_rule",
+            reference_system="traditional",
+        ),
+        sect_condition=PlanetSectCondition(
+            planet_code="sun",
+            chart_sect="day",
+            intrinsic_sect="diurnal",
+            planet_sect_condition="in_sect",
+            is_in_sect=True,
+            is_out_of_sect=False,
+            calculation_basis="chart_sect_vs_planet_intrinsic_sect",
             reference_system="traditional",
         ),
         essential_score=5.0,

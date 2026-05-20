@@ -21,6 +21,7 @@ from app.domain.astrology.dignities.contracts import (
     ChartSectResult,
     EssentialDignityMatch,
     PlanetDignityResult,
+    PlanetSectCondition,
 )
 from app.domain.astrology.dominance.contracts import (
     DominantPlanetsResult,
@@ -161,6 +162,16 @@ def mock_natal_result():
             reference_version="v1.2",
             sect="day",
             chart_sect=chart_sect,
+            sect_condition=PlanetSectCondition(
+                planet_code="sun",
+                chart_sect="day",
+                intrinsic_sect="diurnal",
+                planet_sect_condition="in_sect",
+                is_in_sect=True,
+                is_out_of_sect=False,
+                calculation_basis="chart_sect_vs_planet_intrinsic_sect",
+                reference_system="traditional",
+            ),
             essential_score=5,
             accidental_score=4,
             total_score=9,
@@ -421,6 +432,16 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         "reference_system": "traditional",
     }
     assert chart["dignities"]["planets"]["sun"]["total_score"] == 9
+    assert chart["dignities"]["planets"]["sun"]["sect_condition"] == {
+        "planet_code": "sun",
+        "chart_sect": "day",
+        "intrinsic_sect": "diurnal",
+        "planet_sect_condition": "in_sect",
+        "is_in_sect": True,
+        "is_out_of_sect": False,
+        "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+        "reference_system": "traditional",
+    }
     assert chart["dignities"]["planets"]["sun"]["essential_breakdown"][0]["type"] == "domicile"
     assert (
         chart["dignities"]["planets"]["sun"]["essential_breakdown"][0]["reason"]
@@ -571,6 +592,74 @@ def test_serialize_dignities_requires_precomputed_chart_sect() -> None:
 
     with pytest.raises(ValueError, match="dignity sect contract is required"):
         _serialize_dignities([incomplete_result])
+
+
+def test_serialize_dignities_requires_precomputed_planet_sect_condition() -> None:
+    """La projection refuse de recalculer une condition de secte planetaire absente."""
+    chart_sect = ChartSectResult(
+        chart_sect="day",
+        sun_horizon_position="above_horizon",
+        sun_above_horizon=True,
+        calculation_basis="sun_house_horizon_rule",
+        reference_system="traditional",
+    )
+    incomplete_result = SimpleNamespace(
+        score_profile="traditional_standard",
+        tradition="traditional",
+        reference_version="v1",
+        planet_code="sun",
+        chart_sect=chart_sect,
+        essential_score=0,
+        accidental_score=0,
+        total_score=0,
+        functional_strength_score=0,
+        expression_quality_score=0,
+        intensity_score=0,
+        essential_breakdown=(),
+        accidental_breakdown=(),
+    )
+
+    with pytest.raises(ValueError, match="planet sect condition contract is incomplete"):
+        _serialize_dignities([incomplete_result])
+
+
+def test_serialize_dignities_rejects_inconsistent_planet_sect_flags() -> None:
+    """La projection verifie la coherence entre statut de secte et flags."""
+    chart_sect = ChartSectResult(
+        chart_sect="day",
+        sun_horizon_position="above_horizon",
+        sun_above_horizon=True,
+        calculation_basis="sun_house_horizon_rule",
+        reference_system="traditional",
+    )
+    result = SimpleNamespace(
+        score_profile="traditional_standard",
+        tradition="traditional",
+        reference_version="v1",
+        planet_code="sun",
+        chart_sect=chart_sect,
+        sect_condition=SimpleNamespace(
+            planet_code="sun",
+            chart_sect="day",
+            intrinsic_sect="diurnal",
+            planet_sect_condition="in_sect",
+            is_in_sect=False,
+            is_out_of_sect=False,
+            calculation_basis="chart_sect_vs_planet_intrinsic_sect",
+            reference_system="traditional",
+        ),
+        essential_score=0,
+        accidental_score=0,
+        total_score=0,
+        functional_strength_score=0,
+        expression_quality_score=0,
+        intensity_score=0,
+        essential_breakdown=(),
+        accidental_breakdown=(),
+    )
+
+    with pytest.raises(ValueError, match="planet sect condition flags are inconsistent"):
+        _serialize_dignities([result])
 
 
 def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):
