@@ -11,6 +11,15 @@
     "dominant_planets",
     "interpretation_adapter"
   ],
+  "required_case_coverage": [
+    { "requirement": "theme diurne avec planete diurne in_sect", "case": "day_diurnal_in_sect_hayz_complete" },
+    { "requirement": "theme diurne avec planete nocturne out_of_sect", "case": "day_nocturnal_out_of_sect" },
+    { "requirement": "theme nocturne avec planete nocturne in_sect", "case": "night_nocturnal_in_sect" },
+    { "requirement": "theme nocturne avec planete diurne out_of_sect", "case": "night_diurnal_out_of_sect" },
+    { "requirement": "hayz complet", "case": "day_diurnal_in_sect_hayz_complete" },
+    { "requirement": "hayz incomplet car condition de secte non conforme", "case": "hayz_incomplete_because_out_of_sect" },
+    { "requirement": "Mercure ou planete variable commune", "case": "mercury_common" }
+  ],
   "cases": [
     {
       "case": "day_diurnal_in_sect_hayz_complete",
@@ -160,6 +169,122 @@
             "breakdown": [],
             "ranking_score_delta_from_advanced": 0,
             "score_delta": 0
+          }
+        }
+      },
+      "planet_condition_signals": {
+        "planets": {
+          "moon": {
+            "source": "condition profile and runtime signal profiles",
+            "public_shape": "unchanged"
+          }
+        }
+      },
+      "dominant_planets": {
+        "source": "condition profiles plus advanced condition ranking weights",
+        "public_shape": "unchanged"
+      },
+      "interpretation_adapter": {
+        "source": "condition signals, advanced conditions and dominant planets",
+        "public_shape": "unchanged"
+      }
+    },
+    {
+      "case": "night_diurnal_out_of_sect",
+      "dignities": {
+        "sect": {
+          "chart_sect": "night",
+          "sun_horizon_position": "below_horizon",
+          "sun_above_horizon": false,
+          "calculation_basis": "sun_house_horizon_rule",
+          "reference_system": "traditional"
+        },
+        "planets": {
+          "sun": {
+            "sect_condition": {
+              "planet_code": "sun",
+              "chart_sect": "night",
+              "intrinsic_sect": "diurnal",
+              "planet_sect_condition": "out_of_sect",
+              "is_in_sect": false,
+              "is_out_of_sect": true,
+              "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+              "reference_system": "runtime_accidental_sect_rules"
+            }
+          }
+        }
+      },
+      "advanced_conditions": [
+        {
+          "condition_code": "out_of_sect",
+          "source": "PlanetSectCondition.is_out_of_sect",
+          "score_delta": 0
+        }
+      ],
+      "planet_condition_profiles": {
+        "planets": {
+          "sun": {
+            "breakdown": ["out_of_sect"],
+            "ranking_score_delta_from_advanced": -1.0,
+            "score_delta": 0
+          }
+        }
+      },
+      "planet_condition_signals": {
+        "planets": {
+          "sun": {
+            "source": "condition profile and runtime signal profiles",
+            "public_shape": "unchanged"
+          }
+        }
+      },
+      "dominant_planets": {
+        "source": "condition profiles plus advanced condition ranking weights",
+        "public_shape": "unchanged"
+      },
+      "interpretation_adapter": {
+        "source": "condition signals, advanced conditions and dominant planets",
+        "public_shape": "unchanged"
+      }
+    },
+    {
+      "case": "hayz_incomplete_because_out_of_sect",
+      "dignities": {
+        "sect": {
+          "chart_sect": "day",
+          "sun_horizon_position": "above_horizon",
+          "sun_above_horizon": true,
+          "calculation_basis": "sun_house_horizon_rule",
+          "reference_system": "traditional"
+        },
+        "planets": {
+          "moon": {
+            "sect_condition": {
+              "planet_code": "moon",
+              "chart_sect": "day",
+              "intrinsic_sect": "nocturnal",
+              "planet_sect_condition": "out_of_sect",
+              "is_in_sect": false,
+              "is_out_of_sect": true,
+              "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+              "reference_system": "runtime_accidental_sect_rules"
+            }
+          }
+        }
+      },
+      "advanced_conditions": [
+        {
+          "condition_code": "out_of_sect",
+          "source": "PlanetSectCondition.is_out_of_sect; hayz removed because PlanetSectCondition.is_in_sect is false",
+          "score_delta": "documented_correction"
+        }
+      ],
+      "planet_condition_profiles": {
+        "planets": {
+          "moon": {
+            "breakdown": ["out_of_sect"],
+            "ranking_score_delta_from_advanced": -1.0,
+            "score_delta": "hayz contribution removed as canonical sect precondition correction"
           }
         }
       },

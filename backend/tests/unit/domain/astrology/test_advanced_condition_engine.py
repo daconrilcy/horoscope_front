@@ -64,6 +64,24 @@ def test_out_of_sect_advanced_condition_uses_planet_sect_condition() -> None:
     assert conditions[0].reason == "mars is out of sect according to PlanetSectCondition."
 
 
+def test_night_chart_diurnal_planet_out_of_sect_uses_planet_sect_condition() -> None:
+    """Un theme nocturne avec planete diurne hors secte consomme le contrat CS-198."""
+    conditions, _profiles = advanced_engine_result(
+        (position("sun", "leo", house_number=4),),
+        (
+            dignity(
+                "sun",
+                chart_sect="night",
+                intrinsic_sect="diurnal",
+                planet_sect_condition="out_of_sect",
+                is_out_of_sect=True,
+            ),
+        ),
+    )
+
+    assert [item.condition_code for item in conditions] == ["out_of_sect"]
+
+
 def test_hayz_still_requires_non_sect_hayz_factors() -> None:
     """Une planete en secte ne devient pas hayz sans les autres facteurs hayz."""
     conditions, _profiles = advanced_engine_result(

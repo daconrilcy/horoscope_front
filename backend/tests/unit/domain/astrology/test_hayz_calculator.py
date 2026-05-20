@@ -37,8 +37,8 @@ def test_hayz_and_out_of_sect_are_projected_from_canonical_sect_facts() -> None:
     assert {item.condition_type_code for item in conditions} == {"hayz", "out_of_sect"}
 
 
-def test_hayz_requires_in_sect_even_when_hayz_breakdown_exists() -> None:
-    """Hayz ne se reduit pas aux anciens breakdowns accidentels."""
+def test_hayz_requires_in_sect_even_when_non_sect_factors_match() -> None:
+    """Hayz reste faux quand seule la precondition canonique de secte echoue."""
     conditions, _profiles = advanced_engine_result(
         (position("moon", "cancer"),),
         (

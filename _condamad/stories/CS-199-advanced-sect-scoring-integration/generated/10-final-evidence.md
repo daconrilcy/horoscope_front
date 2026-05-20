@@ -28,11 +28,11 @@
 | AC5 | Profile service unchanged at runtime; guard test blocks sect calculator imports. | `test_planet_condition_profile_service.py` passed; scans zero-hit for downstream calculators. | PASS | |
 | AC6 | Dominance runtime unchanged; guard test blocks sect calculator imports. | `test_planet_dominance_engine.py` passed; scans zero-hit for downstream calculators. | PASS | |
 | AC7 | Adapter runtime unchanged; guard test blocks sect calculator imports. | `test_interpretation_adapter_engine.py` passed; scans zero-hit for downstream calculators. | PASS | |
-| AC8 | Equivalent cases keep score deltas at zero in after snapshot. | JSON snapshots valid; targeted tests passed. | PASS | |
-| AC9 | `advanced-sect-validation.md` documents score delta. | Evidence records no score delta for equivalent paths. | PASS | |
+| AC8 | Equivalent cases keep score deltas at zero in after snapshot. | JSON snapshots valid; targeted tests passed. | PASS | Required day/night and hayz coverage is mapped in snapshots. |
+| AC9 | `advanced-sect-validation.md` documents score delta. | Evidence records no score delta for equivalent paths and documents the hayz correction case. | PASS | |
 | AC10 | No forbidden sect patterns introduced. | Scans recorded in `advanced-sect-validation.md`. | PASS | Existing runtime/test `sect_code` terms classified. |
 | AC11 | Public JSON shape unchanged. | `backend/app/tests/unit/test_chart_json_builder.py` passed. | PASS | `json_builder.py` not modified. |
-| AC12 | Evidence files complete. | Before/after snapshots and validation artifact present. | PASS | Snapshots include all required downstream sections. |
+| AC12 | Evidence files complete. | Before/after snapshots and validation artifact present. | PASS | Snapshots include all required downstream sections and required case coverage. |
 
 ## Files changed
 
@@ -68,7 +68,7 @@ None.
 |---|---|---|---:|---|
 | `.\.venv\Scripts\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_planet_condition_profile_service.py backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/tests/unit/domain/astrology/test_interpretation_adapter_engine.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_dignity_reference_seed.py::test_reference_seed_populates_astral_dignity_tables` | repo root | PASS | 0 | 50 passed |
 | `.\.venv\Scripts\Activate.ps1; ruff check --fix backend/app/tests/unit/test_dignity_reference_seed.py; ruff format .; ruff check .` | repo root | PASS | 0 | Import sorted, format stable, all checks passed. |
-| `.\.venv\Scripts\Activate.ps1; pytest -q` | repo root | PASS | 0 | 2765 passed, 1 skipped, 1177 deselected. |
+| `.\.venv\Scripts\Activate.ps1; pytest -q` | repo root | PASS | 0 | 2766 passed, 1 skipped, 1177 deselected. |
 | `.\.venv\Scripts\Activate.ps1; python -c "from app.main import app; print(app.title)"` | repo root | PASS | 0 | FastAPI app imports and reports `horoscope-backend`. |
 | Static `rg` guard scans listed in `evidence/advanced-sect-validation.md` | repo root | PASS | mixed | Zero-hit guards passed; existing runtime/test terminology classified. |
 

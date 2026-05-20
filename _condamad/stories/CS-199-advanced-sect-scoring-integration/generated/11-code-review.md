@@ -24,7 +24,7 @@
 - Hayz non-sect factors remain evaluated inside `advanced_conditions` through runtime accidental rules, with horizon rules constrained to the same runtime system.
 - Downstream condition profile, dominance and interpretation adapter tests include no-recalculation guards.
 - The stale seed-count validation blocker was corrected in `backend/app/tests/unit/test_dignity_reference_seed.py`.
-- Capsule evidence records before/after snapshots, scans, validation and final review.
+- Capsule evidence records before/after snapshots, required case coverage, scans, validation and final review.
 
 ## Findings
 
@@ -41,9 +41,9 @@
 
 - Bucket: patch
 - Source layer: story conformance and technical risk review
-- Evidence: before/after snapshots initially lacked `planet_condition_profiles`, `planet_condition_signals`, `dominant_planets` and `interpretation_adapter`.
+- Evidence: before/after snapshots initially lacked `planet_condition_profiles`, `planet_condition_signals`, `dominant_planets`, `interpretation_adapter` and later lacked explicit coverage for all brief-required cases.
 - Impact: AC12 and RG-119..RG-126 evidence was incomplete.
-- Fix applied: regenerated snapshot artifacts with all required sections and validated both JSON files.
+- Fix applied: regenerated snapshot artifacts with all required sections, added the missing night-diurnal out-of-sect and incomplete-hayz coverage, and validated both JSON files.
 - Status: RESOLVED.
 
 ### CR-3 Medium - Evidence was stale and used forbidden limited-pass wording
@@ -73,11 +73,11 @@
 - AC5: PASS. Condition profiles consume facts and do not import/recalculate sect.
 - AC6: PASS. Dominance consumes profiles/advanced conditions and does not import/recalculate sect.
 - AC7: PASS. Interpretation adapter consumes semantic facts and does not import/recalculate sect.
-- AC8: PASS. Equivalent score outputs remain stable in snapshots.
+- AC8: PASS. Equivalent score outputs remain stable in snapshots; the incomplete-hayz correction is explicitly documented.
 - AC9: PASS. Score deltas are documented.
 - AC10: PASS. Forbidden sect patterns remain absent or classified as runtime/test terminology.
 - AC11: PASS. Public JSON shape remains CS-197/CS-198 compatible.
-- AC12: PASS. Persistent evidence files are complete.
+- AC12: PASS. Persistent evidence files are complete, including required case coverage.
 
 ## Validation audit
 
@@ -100,7 +100,7 @@
 |---|---|
 | `.\.venv\Scripts\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_planet_condition_profile_service.py backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/tests/unit/domain/astrology/test_interpretation_adapter_engine.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_dignity_reference_seed.py::test_reference_seed_populates_astral_dignity_tables` | PASS, 50 passed |
 | `.\.venv\Scripts\Activate.ps1; ruff check --fix backend/app/tests/unit/test_dignity_reference_seed.py; ruff format .; ruff check .` | PASS |
-| `.\.venv\Scripts\Activate.ps1; pytest -q` | PASS, 2765 passed, 1 skipped, 1177 deselected |
+| `.\.venv\Scripts\Activate.ps1; pytest -q` | PASS, 2766 passed, 1 skipped, 1177 deselected |
 | `rg` guard scans listed in `evidence/advanced-sect-validation.md` | PASS or classified expected hits |
 
 ## Residual risks

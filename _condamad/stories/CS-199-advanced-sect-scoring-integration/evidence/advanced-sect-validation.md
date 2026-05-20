@@ -12,7 +12,7 @@
 - Les regles d'horizon consommees par hayz sont bornees au meme systeme runtime que la regle hayz retenue.
 - `PlanetSectCondition` manquant declenche une erreur explicite.
 - Public shape: `dignities.sect` et `dignities.planets[*].sect_condition` restent inchanges.
-- Score delta: aucun delta attendu ou observe sur les cas equivalents; seuls les chemins source-of-truth changent.
+- Score delta: aucun delta sur les cas equivalents; le cas `hayz_incomplete_because_out_of_sect` documente une correction attendue ou `hayz` est retire car `PlanetSectCondition.is_in_sect` est faux.
 
 ## Tests
 
@@ -20,7 +20,7 @@
 |---|---|---|
 | `.\.venv\Scripts\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_planet_condition_profile_service.py backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/tests/unit/domain/astrology/test_interpretation_adapter_engine.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_dignity_reference_seed.py::test_reference_seed_populates_astral_dignity_tables` | PASS | 50 passed |
 | `.\.venv\Scripts\Activate.ps1; ruff check --fix backend/app/tests/unit/test_dignity_reference_seed.py; ruff format .; ruff check .` | PASS | Import trie, format stable, all checks passed |
-| `.\.venv\Scripts\Activate.ps1; pytest -q` | PASS | 2765 passed, 1 skipped, 1177 deselected |
+| `.\.venv\Scripts\Activate.ps1; pytest -q` | PASS | 2766 passed, 1 skipped, 1177 deselected |
 | `.\.venv\Scripts\Activate.ps1; python -c "from app.main import app; print(app.title)"` | PASS | FastAPI app imports and reports `horoscope-backend` |
 
 ## Scans
@@ -38,5 +38,6 @@
 
 - `advanced-sect-scoring-before.json` and `advanced-sect-scoring-after.json` are valid JSON.
 - Both snapshots include `dignities.sect`, `dignities.planets[*].sect_condition`, `advanced_conditions`, `planet_condition_profiles`, `planet_condition_signals`, `dominant_planets` and `interpretation_adapter`.
-- No score delta for equivalent cases. The after snapshot records `score_delta: 0` for the relevant equivalent paths.
+- Both snapshots include the required case coverage matrix for day/diurnal, day/nocturnal, night/nocturnal, night/diurnal, complete hayz, incomplete hayz and Mercury/common planet coverage.
+- No score delta for equivalent cases. The after snapshot records `score_delta: 0` for equivalent paths and `documented_correction` for the hayz case where the canonical sect precondition fails.
 - The seed-count review blocker was resolved by aligning `backend/app/tests/unit/test_dignity_reference_seed.py` with the 42 accidental dignity rules present in the canonical seed data.
