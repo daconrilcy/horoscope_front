@@ -25,6 +25,7 @@ from app.infra.db.models import (
     AstralSignModel,
     AstralSignProfileModel,
     AstralSystemModel,
+    AstralTriplicityRulerAssignmentModel,
     AstroPointModel,
     HouseCategoryWeightModel,
     HouseInterpretationProfileModel,
@@ -463,6 +464,7 @@ def test_seed_31_prediction_v2_full_flow(monkeypatch: pytest.MonkeyPatch, tmp_pa
         run_seed(session)
 
         session.query(AstralSignProfileModel).delete()
+        session.query(AstralTriplicityRulerAssignmentModel).delete()
         session.query(AstralElementModel).delete()
         session.query(AstralModalityModel).delete()
         session.query(AstralPolarityModel).delete()

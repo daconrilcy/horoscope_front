@@ -19,6 +19,24 @@ from app.domain.prediction.schemas import (
 )
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.daily_prediction import DailyPredictionRunModel
+from app.infra.db.models.dignity_reference import (
+    AstralAccidentalDignityRuleModel,
+    AstralAdvancedConditionScoreProfileModel,
+    AstralAdvancedConditionTypeModel,
+    AstralAdvancedConditionWeightModel,
+    AstralChartPlanetDignityResultModel,
+    AstralDominanceFactorTypeModel,
+    AstralDominanceScoreProfileModel,
+    AstralDominanceScoreWeightModel,
+    AstralEssentialDignityRuleModel,
+    AstralFaceDecanModel,
+    AstralInterpretationAdapterRuleModel,
+    AstralInterpretationSignalTypeModel,
+    AstralInterpretationThemeModel,
+    AstralPlanetConditionSignalProfileModel,
+    AstralTermBoundModel,
+    AstralTriplicityRulerAssignmentModel,
+)
 from app.infra.db.models.interpretation_reference import (
     AstralAspectInterpretationProfileModel,
     AstralPlanetInterpretationProfileModel,
@@ -46,6 +64,11 @@ from app.infra.db.models.prediction_ruleset import (
 from app.infra.db.models.reference import (
     AstralSignProfileModel,
     ReferenceVersionModel,
+)
+from app.infra.db.models.translation_reference import (
+    AstralAspectInterpretationProfileTranslationModel,
+    AstralHouseInterpretationProfileTranslationModel,
+    AstralPlanetInterpretationProfileTranslationModel,
 )
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
@@ -153,7 +176,28 @@ def _build_mock_bundle(fixture_data: dict) -> PersistablePredictionBundle:
 
 
 def _reset_prediction_reference(db) -> None:
-    """Ensure the prediction reference used by the QA flow is fully re-seeded."""
+    """Supprime les référentiels versionnés avant le reseed QA complet."""
+    db.execute(delete(AstralChartPlanetDignityResultModel))
+
+    db.execute(delete(AstralInterpretationAdapterRuleModel))
+    db.execute(delete(AstralInterpretationSignalTypeModel))
+    db.execute(delete(AstralInterpretationThemeModel))
+
+    db.execute(delete(AstralAdvancedConditionWeightModel))
+    db.execute(delete(AstralAdvancedConditionScoreProfileModel))
+    db.execute(delete(AstralAdvancedConditionTypeModel))
+
+    db.execute(delete(AstralDominanceScoreWeightModel))
+    db.execute(delete(AstralDominanceScoreProfileModel))
+    db.execute(delete(AstralDominanceFactorTypeModel))
+
+    db.execute(delete(AstralPlanetConditionSignalProfileModel))
+    db.execute(delete(AstralAccidentalDignityRuleModel))
+    db.execute(delete(AstralTriplicityRulerAssignmentModel))
+    db.execute(delete(AstralEssentialDignityRuleModel))
+    db.execute(delete(AstralFaceDecanModel))
+    db.execute(delete(AstralTermBoundModel))
+
     db.execute(delete(CategoryCalibrationModel))
     db.execute(delete(RulesetParameterModel))
     db.execute(delete(RulesetEventTypeModel))
@@ -167,10 +211,13 @@ def _reset_prediction_reference(db) -> None:
     db.execute(delete(HouseProfileModel))
     db.execute(delete(AstralPlanetSignDignityModel))
     db.execute(delete(AspectProfileModel))
+    db.execute(delete(AstralAspectInterpretationProfileTranslationModel))
     db.execute(delete(AstralAspectInterpretationProfileModel))
     db.execute(delete(AstralAspectOrbRuleModel))
     db.execute(delete(AstralAspectDefinitionModel))
+    db.execute(delete(AstralHouseInterpretationProfileTranslationModel))
     db.execute(delete(HouseInterpretationProfileModel))
+    db.execute(delete(AstralPlanetInterpretationProfileTranslationModel))
     db.execute(delete(AstralPlanetInterpretationProfileModel))
     db.execute(delete(PredictionCategoryModel))
     db.execute(delete(AstralSignProfileModel))
@@ -207,6 +254,7 @@ def setup_db(monkeypatch: pytest.MonkeyPatch):
         db.execute(delete(DailyPredictionRunModel))
         db.execute(delete(UserPredictionBaselineModel))
         db.execute(delete(UserBirthProfileModel))
+        db.execute(delete(AstralChartPlanetDignityResultModel))
         db.execute(delete(ChartResultModel))
         db.execute(delete(UserModel))
         db.commit()
