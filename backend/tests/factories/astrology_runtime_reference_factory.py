@@ -7,8 +7,13 @@ des dictionnaires metier dans le domaine.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import replace
 
-from app.domain.astrology.runtime.runtime_reference import AstrologyRuntimeReference
+from app.domain.astrology.runtime.runtime_reference import (
+    AccidentalDignityRuleReferenceData,
+    AstrologyRuntimeReference,
+    DignityConditionValue,
+)
 from app.infra.db.repositories.astrology_runtime_reference_mapper import (
     AstrologyRuntimeReferenceMapper,
 )
@@ -1346,6 +1351,37 @@ def complete_reference() -> AstrologyRuntimeReference:
                 }
             ],
         }
+    )
+
+
+def complete_reference_with_planet_sect_rules() -> AstrologyRuntimeReference:
+    """Retourne une reference complete avec les regles de secte planetaires."""
+    reference = complete_reference()
+    dignity_reference = reference.dignity_reference
+    rules = tuple(
+        AccidentalDignityRuleReferenceData(
+            dignity_type_code="in_sect",
+            planet_code=planet_code,
+            condition_schema_code="sect_condition",
+            conditions=(DignityConditionValue("chart_sect_code", sect_code),),
+            system_code="traditional",
+        )
+        for planet_code, sect_code in (
+            ("sun", "day"),
+            ("jupiter", "day"),
+            ("saturn", "day"),
+            ("moon", "night"),
+            ("venus", "night"),
+            ("mars", "night"),
+            ("mercury", "all"),
+        )
+    )
+    return replace(
+        reference,
+        dignity_reference=replace(
+            dignity_reference,
+            accidental_rules=(*dignity_reference.accidental_rules, *rules),
+        ),
     )
 
 

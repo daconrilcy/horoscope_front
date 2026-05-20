@@ -1,0 +1,562 @@
+{
+  "case_count": 12,
+  "cases": [
+    {
+      "assertions": [
+        "dignities.sect"
+      ],
+      "case_id": "G1",
+      "expected_summary": "day chart",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "calculation_basis": "sun_house_horizon_rule",
+        "chart_sect": "day",
+        "reference_system": "traditional",
+        "sun_above_horizon": true,
+        "sun_horizon_position": "above_horizon"
+      },
+      "targeted_contracts": [
+        "dignities.sect"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.sect"
+      ],
+      "case_id": "G2",
+      "expected_summary": "night chart",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "calculation_basis": "sun_house_horizon_rule",
+        "chart_sect": "night",
+        "reference_system": "traditional",
+        "sun_above_horizon": false,
+        "sun_horizon_position": "below_horizon"
+      },
+      "targeted_contracts": [
+        "dignities.sect"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.planets[*].sect_condition"
+      ],
+      "case_id": "G3",
+      "expected_summary": "diurnal planet in day chart",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "accidental_score": 9.0,
+        "chart_sect": {
+          "calculation_basis": "sun_house_horizon_rule",
+          "chart_sect": "day",
+          "reference_system": "traditional",
+          "sun_above_horizon": true,
+          "sun_horizon_position": "above_horizon"
+        },
+        "essential_score": 5.0,
+        "planet_code": "sun",
+        "sect_condition": {
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "chart_sect": "day",
+          "intrinsic_sect": "diurnal",
+          "is_in_sect": true,
+          "is_out_of_sect": false,
+          "planet_code": "sun",
+          "planet_sect_condition": "in_sect",
+          "reference_system": "traditional"
+        },
+        "total_score": 14.0
+      },
+      "targeted_contracts": [
+        "dignities.planets[*].sect_condition"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.planets[*].sect_condition"
+      ],
+      "case_id": "G4",
+      "expected_summary": "nocturnal planet in night chart",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "accidental_score": 5.0,
+        "chart_sect": {
+          "calculation_basis": "sun_house_horizon_rule",
+          "chart_sect": "night",
+          "reference_system": "traditional",
+          "sun_above_horizon": false,
+          "sun_horizon_position": "below_horizon"
+        },
+        "essential_score": -5.0,
+        "planet_code": "moon",
+        "sect_condition": {
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "chart_sect": "night",
+          "intrinsic_sect": "nocturnal",
+          "is_in_sect": true,
+          "is_out_of_sect": false,
+          "planet_code": "moon",
+          "planet_sect_condition": "in_sect",
+          "reference_system": "traditional"
+        },
+        "total_score": 0.0
+      },
+      "targeted_contracts": [
+        "dignities.planets[*].sect_condition"
+      ]
+    },
+    {
+      "assertions": [
+        "advanced_conditions.out_of_sect",
+        "sect_condition"
+      ],
+      "case_id": "G5",
+      "expected_summary": "diurnal planet out of sect in night chart",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "condition_codes": [
+          "fast_motion",
+          "out_of_sect"
+        ],
+        "sect_condition": {
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "chart_sect": "night",
+          "intrinsic_sect": "diurnal",
+          "is_in_sect": false,
+          "is_out_of_sect": true,
+          "planet_code": "jupiter",
+          "planet_sect_condition": "out_of_sect",
+          "reference_system": "traditional"
+        }
+      },
+      "targeted_contracts": [
+        "sect_condition",
+        "advanced_conditions.out_of_sect"
+      ]
+    },
+    {
+      "assertions": [
+        "advanced_conditions.out_of_sect",
+        "sect_condition"
+      ],
+      "case_id": "G6",
+      "expected_summary": "nocturnal planet out of sect in day chart",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "condition_codes": [
+          "fast_motion",
+          "heliacal_setting",
+          "occidental",
+          "out_of_sect"
+        ],
+        "sect_condition": {
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "chart_sect": "day",
+          "intrinsic_sect": "nocturnal",
+          "is_in_sect": false,
+          "is_out_of_sect": true,
+          "planet_code": "moon",
+          "planet_sect_condition": "out_of_sect",
+          "reference_system": "traditional"
+        }
+      },
+      "targeted_contracts": [
+        "sect_condition",
+        "advanced_conditions.out_of_sect"
+      ]
+    },
+    {
+      "assertions": [
+        "advanced_conditions.hayz"
+      ],
+      "case_id": "G7",
+      "expected_summary": "complete hayz",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "condition_codes": [
+          "fast_motion",
+          "hayz"
+        ]
+      },
+      "targeted_contracts": [
+        "advanced_conditions.hayz"
+      ]
+    },
+    {
+      "assertions": [
+        "advanced_conditions.hayz",
+        "sect_condition"
+      ],
+      "case_id": "G8",
+      "expected_summary": "in-sect without non-sect hayz factors",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "condition_codes": [
+          "fast_motion"
+        ],
+        "sect_condition": {
+          "accidental_score": 7.0,
+          "chart_sect": {
+            "calculation_basis": "sun_house_horizon_rule",
+            "chart_sect": "day",
+            "reference_system": "traditional",
+            "sun_above_horizon": true,
+            "sun_horizon_position": "above_horizon"
+          },
+          "essential_score": -5.0,
+          "planet_code": "sun",
+          "sect_condition": {
+            "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+            "chart_sect": "day",
+            "intrinsic_sect": "diurnal",
+            "is_in_sect": true,
+            "is_out_of_sect": false,
+            "planet_code": "sun",
+            "planet_sect_condition": "in_sect",
+            "reference_system": "traditional"
+          },
+          "total_score": 2.0
+        }
+      },
+      "targeted_contracts": [
+        "sect_condition",
+        "advanced_conditions.hayz"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.accidental_breakdown",
+        "planet_condition_profiles"
+      ],
+      "case_id": "G9",
+      "expected_summary": "planetary rejoicing",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "accidental_breakdown": [
+          {
+            "code": "cadent_house",
+            "score": -2.0,
+            "source": "house_modality"
+          },
+          {
+            "code": "direct_motion",
+            "score": 1.0,
+            "source": "motion_state"
+          },
+          {
+            "code": "planetary_joy",
+            "score": 3.0,
+            "source": "planetary_joy_house"
+          },
+          {
+            "code": "swift_motion",
+            "score": 1.0,
+            "source": "mean_speed_relation"
+          },
+          {
+            "code": "occidental",
+            "score": 1.0,
+            "source": "heliacal_phase"
+          }
+        ],
+        "accidental_score": 4.0,
+        "profile_breakdown": [
+          {
+            "code": "peregrine",
+            "family": "essential",
+            "score": -5.0
+          },
+          {
+            "code": "cadent_house",
+            "family": "accidental",
+            "score": -2.0
+          },
+          {
+            "code": "direct_motion",
+            "family": "accidental",
+            "score": 1.0
+          },
+          {
+            "code": "planetary_joy",
+            "family": "accidental",
+            "score": 3.0
+          },
+          {
+            "code": "swift_motion",
+            "family": "accidental",
+            "score": 1.0
+          },
+          {
+            "code": "occidental",
+            "family": "accidental",
+            "score": 1.0
+          }
+        ]
+      },
+      "targeted_contracts": [
+        "dignities.accidental_breakdown",
+        "planet_condition_profiles"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.planets[*].sect_condition"
+      ],
+      "case_id": "G10",
+      "expected_summary": "runtime-backed Mercury classification",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "accidental_score": 7.0,
+        "chart_sect": {
+          "calculation_basis": "sun_house_horizon_rule",
+          "chart_sect": "day",
+          "reference_system": "traditional",
+          "sun_above_horizon": true,
+          "sun_horizon_position": "above_horizon"
+        },
+        "essential_score": -5.0,
+        "planet_code": "mercury",
+        "sect_condition": {
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "chart_sect": "day",
+          "intrinsic_sect": "common",
+          "is_in_sect": false,
+          "is_out_of_sect": false,
+          "planet_code": "mercury",
+          "planet_sect_condition": "variable_by_condition",
+          "reference_system": "traditional"
+        },
+        "total_score": 2.0
+      },
+      "targeted_contracts": [
+        "dignities.planets[*].sect_condition"
+      ]
+    },
+    {
+      "assertions": [
+        "dignities.essential_breakdown"
+      ],
+      "case_id": "G11",
+      "expected_summary": "essential dignity stability",
+      "fixture_type": "synthetic_domain",
+      "observed_summary": {
+        "essential_breakdown": [
+          {
+            "code": "domicile",
+            "score": 5.0,
+            "source": "essential_rule"
+          }
+        ],
+        "essential_score": 5.0,
+        "expression_quality_score": 2.6,
+        "functional_strength_score": 3.0,
+        "intensity_score": 2.0
+      },
+      "targeted_contracts": [
+        "dignities.essential_breakdown"
+      ]
+    },
+    {
+      "assertions": [
+        "NatalResult",
+        "dominant_planets",
+        "interpretation_adapter",
+        "json_builder",
+        "planet_condition_profiles",
+        "planet_condition_signals"
+      ],
+      "case_id": "G12",
+      "expected_summary": "full pipeline and public JSON projection",
+      "fixture_type": "integrated_natal",
+      "observed_summary": {
+        "advanced_condition_codes": [
+          "besiegement",
+          "heliacal_setting",
+          "mutual_reception_by_domicile",
+          "occidental",
+          "out_of_sect",
+          "heliacal_setting",
+          "mutual_reception_by_domicile",
+          "occidental",
+          "besiegement",
+          "bonification",
+          "heliacal_setting",
+          "occidental",
+          "heliacal_setting",
+          "maltreatment",
+          "occidental",
+          "heliacal_rising",
+          "oriental",
+          "heliacal_rising",
+          "oriental",
+          "heliacal_setting",
+          "occidental",
+          "out_of_sect",
+          "out_of_sect",
+          "heliacal_rising",
+          "oriental",
+          "heliacal_setting",
+          "occidental"
+        ],
+        "condition_profile_planets": [
+          "jupiter",
+          "mars",
+          "mercury"
+        ],
+        "condition_signal_planets": [
+          "jupiter",
+          "mars",
+          "mercury"
+        ],
+        "deterministic_downstream": {
+          "condition_profiles": [
+            "mars",
+            "sun"
+          ],
+          "condition_signals": {
+            "mars": [
+              "constraint_high"
+            ],
+            "sun": [
+              "functional_strength_high",
+              "constraint_high"
+            ]
+          },
+          "dominance": {
+            "chart_ruler": "mars",
+            "planets": [
+              "sun",
+              "mars"
+            ],
+            "top_planet": "sun"
+          },
+          "interpretation_adapter": {
+            "critical_patterns": [],
+            "dominant_topics": [
+              "frustration_pressure"
+            ],
+            "signals": [
+              "constraint_on_action"
+            ]
+          }
+        },
+        "dignity_sect": {
+          "calculation_basis": "sun_house_horizon_rule",
+          "chart_sect": "night",
+          "reference_system": "traditional",
+          "sun_above_horizon": false,
+          "sun_horizon_position": "below_horizon"
+        },
+        "dominant_planets": {
+          "chart_ruler": "mars",
+          "top_planet": "mars"
+        },
+        "engine": "simplified",
+        "first_planet": "sun",
+        "first_planet_sect_condition": {
+          "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+          "chart_sect": "night",
+          "intrinsic_sect": "diurnal",
+          "is_in_sect": false,
+          "is_out_of_sect": true,
+          "planet_code": "sun",
+          "planet_sect_condition": "out_of_sect",
+          "reference_system": "traditional"
+        },
+        "interpretation_adapter": {
+          "critical_patterns": [],
+          "signals": [
+            "constraint_on_action"
+          ]
+        },
+        "json_projection": {
+          "advanced_conditions": [
+            "besiegement",
+            "heliacal_setting",
+            "mutual_reception_by_domicile",
+            "occidental",
+            "out_of_sect",
+            "heliacal_setting",
+            "mutual_reception_by_domicile",
+            "occidental",
+            "besiegement",
+            "bonification",
+            "heliacal_setting",
+            "occidental",
+            "heliacal_setting",
+            "maltreatment",
+            "occidental",
+            "heliacal_rising",
+            "oriental",
+            "heliacal_rising",
+            "oriental",
+            "heliacal_setting",
+            "occidental",
+            "out_of_sect",
+            "out_of_sect",
+            "heliacal_rising",
+            "oriental",
+            "heliacal_setting",
+            "occidental"
+          ],
+          "dominant_planets": {
+            "chart_ruler": "mars",
+            "most_elevated_planet": "venus",
+            "planet_codes": [
+              "mars",
+              "moon",
+              "venus",
+              "neptune",
+              "sun",
+              "pluto",
+              "jupiter",
+              "mercury",
+              "saturn",
+              "uranus"
+            ],
+            "top_planet": "mars"
+          },
+          "first_planet_sect_condition": {
+            "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
+            "chart_sect": "night",
+            "intrinsic_sect": "diurnal",
+            "is_in_sect": false,
+            "is_out_of_sect": true,
+            "planet_code": "sun",
+            "planet_sect_condition": "out_of_sect",
+            "reference_system": "traditional"
+          },
+          "interpretation_adapter": {
+            "critical_patterns": [],
+            "signals": [
+              "constraint_on_action"
+            ]
+          },
+          "sect": {
+            "calculation_basis": "sun_house_horizon_rule",
+            "chart_sect": "night",
+            "reference_system": "traditional",
+            "sun_above_horizon": false,
+            "sun_horizon_position": "below_horizon"
+          }
+        }
+      },
+      "targeted_contracts": [
+        "NatalResult",
+        "planet_condition_profiles",
+        "planet_condition_signals",
+        "dominant_planets",
+        "interpretation_adapter",
+        "json_builder"
+      ]
+    }
+  ],
+  "float_policy": "round floats to 6 decimals",
+  "snapshot": "CS-200 traditional golden cases",
+  "volatile_fields_excluded": [
+    "database ids",
+    "timestamps",
+    "full ephemeris traces",
+    "localized labels unrelated to contracts"
+  ]
+}

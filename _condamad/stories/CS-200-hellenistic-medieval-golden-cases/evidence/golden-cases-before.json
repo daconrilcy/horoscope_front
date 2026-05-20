@@ -1,0 +1,7 @@
+{
+  "snapshot": "CS-200 traditional golden cases baseline",
+  "baseline_status": "no_prior_golden_suite",
+  "reason": "Aucune suite golden G1-G12 persistante n'existait avant cette story; le fichier after etablit le premier snapshot runtime curaté.",
+  "case_count": 0,
+  "cases": []
+}
