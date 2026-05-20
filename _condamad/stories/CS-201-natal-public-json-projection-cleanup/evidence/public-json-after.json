@@ -34,27 +34,55 @@
       }
     },
     "planet_condition_signals": {
-      "sun": {
-        "signals": [
-          {
-            "code": "visibility_high",
-            "axis": "visibility",
-            "level": "high"
-          }
-        ]
-      }
+      "sun": [
+        {
+          "code": "visibility_high",
+          "axis": "visibility",
+          "level": "high"
+        }
+      ]
     },
     "advanced_conditions": [
       {
+        "planet_code": "sun",
         "condition_code": "hayz",
-        "score_impact": 1.5,
-        "ranking_weight": 1.1
+        "condition_type": "hayz",
+        "score_effect": 1.5,
+        "axis_weights": {
+          "functional_strength": 0.3,
+          "visibility": 0.2,
+          "stability": 0.4,
+          "intensity": 0.1,
+          "coherence": 0.3,
+          "support": 0.2,
+          "constraint": 0.0
+        },
+        "evidence": [
+          "sun matches accidental dignity hayz."
+        ]
       }
     ],
     "dominant_planets": {
-      "top_planet": "sun",
-      "chart_ruler": "sun",
-      "most_elevated_planet": "sun"
+      "top_planet_code": "sun",
+      "chart_ruler_code": "sun",
+      "most_elevated_planet_code": "sun",
+      "planets": [
+        {
+          "planet_code": "sun",
+          "score": 0.75,
+          "rank": 1,
+          "factors": [
+            {
+              "factor_code": "chart_ruler",
+              "raw_value": 1.0,
+              "normalized_value": 1.0,
+              "weight": 1.4,
+              "weighted_score": 1.4,
+              "reason": "sun rules the Ascendant sign."
+            }
+          ]
+        }
+      ]
     },
     "interpretation_adapter": {
       "signals": [

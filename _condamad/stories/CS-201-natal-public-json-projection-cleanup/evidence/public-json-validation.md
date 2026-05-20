@@ -5,8 +5,11 @@
 - `dignities` remains projected from `NatalResult.dignities` and `NatalResult.dignity_sect`.
 - `dignities.sect` remains the CS-197 object.
 - `dignities.planets[*].sect_condition` remains the CS-198 object for new computed results.
-- `planet_condition_profiles` and `planet_condition_signals` are direct maps keyed by planet code and serialize as `{}` when source lists are empty.
+- `planet_condition_profiles` is a direct map keyed by planet code and serializes as `{}` when source lists are empty.
+- `planet_condition_signals` is a direct map keyed by planet code whose values are signal lists; it serializes as `{}` when source lists are empty.
+- `advanced_conditions` exposes public field names from the brief: `planet_code`, `condition_type`, `score_effect`, `axis_weights` and `evidence`.
 - `advanced_conditions` remains computed-empty as `[]`.
+- `dominant_planets` exposes public code fields: `top_planet_code`, `chart_ruler_code`, `most_elevated_planet_code` and `planets[*].planet_code`.
 - `dominant_planets` and `interpretation_adapter` remain `null` when missing or unavailable because of chart mode.
 - `astral_points`, `houses`, `angles`, `signs_runtime`, `house_rulers` and `chart_balance` are public structural blocks serialized from `NatalResult` facts.
 - `astral_points[*].house` and `signs_runtime[*].occupants[*].house` are neutralized to `null` in no-time mode.
@@ -20,9 +23,9 @@
 | `signs_runtime` | Added to public projection from `NatalResult.signs_runtime`. | Allowed CS-201 structural projection. |
 | `dignities` | No score or sect fact change. | no-change score; no-change astrology. |
 | `planet_condition_profiles` | Shape changed from metadata envelope to direct planet map; score/fact values unchanged. | no-change score; no-change astrology. |
-| `planet_condition_signals` | Shape changed from metadata envelope to direct planet map; signal facts unchanged. | no-change astrology. |
-| `advanced_conditions` | No condition or score-impact change. | no-change score; no-change astrology. |
-| `dominant_planets` | No dominance value change. | no-change score; no-change astrology. |
+| `planet_condition_signals` | Shape changed from metadata envelope to direct planet map of signal lists; signal facts unchanged. | no-change astrology; public shape alignment. |
+| `advanced_conditions` | Public field names aligned with the brief; condition values and score effect unchanged. | no-change score; no-change astrology; public shape alignment. |
+| `dominant_planets` | Public code/score field names aligned with the brief; dominance values unchanged. | no-change score; no-change astrology; public shape alignment. |
 | `interpretation_adapter` | No factual adapter value change. | no-change astrology. |
 | `houses`, `angles`, `house_rulers`, `chart_balance` | Existing behavior preserved. | no-change astrology. |
 

@@ -182,11 +182,13 @@ def integrated_pipeline_summary() -> dict[str, Any]:
                     item["condition_code"] for item in chart_json["advanced_conditions"]
                 ],
                 "dominant_planets": {
-                    "top_planet": chart_json["dominant_planets"]["top_planet"],
-                    "chart_ruler": chart_json["dominant_planets"]["chart_ruler"],
-                    "most_elevated_planet": chart_json["dominant_planets"]["most_elevated_planet"],
+                    "top_planet_code": chart_json["dominant_planets"]["top_planet_code"],
+                    "chart_ruler_code": chart_json["dominant_planets"]["chart_ruler_code"],
+                    "most_elevated_planet_code": chart_json["dominant_planets"][
+                        "most_elevated_planet_code"
+                    ],
                     "planet_codes": [
-                        item["planet"] for item in chart_json["dominant_planets"]["planets"]
+                        item["planet_code"] for item in chart_json["dominant_planets"]["planets"]
                     ],
                 },
                 "interpretation_adapter": {

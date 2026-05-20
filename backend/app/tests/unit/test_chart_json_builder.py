@@ -564,9 +564,7 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
         "fact_type": "accidental_match_count",
         "value": "1",
     }
-    signal_sun = chart["planet_condition_signals"]["sun"]
-    assert signal_sun["planet_code"] == "sun"
-    assert signal_sun["signals"] == [
+    assert chart["planet_condition_signals"]["sun"] == [
         {
             "code": "visibility_high",
             "label": "Visibility high",
@@ -580,18 +578,13 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
             "prompt_hint": "visibility_emphasized",
         }
     ]
-    assert chart["dominant_planets"]["score_profile"] == "natal_standard_v1"
     assert chart["advanced_conditions"] == [
         {
+            "planet_code": "sun",
             "condition_code": "hayz",
-            "condition_type_code": "hayz",
-            "source_planet_code": "sun",
-            "target_planet_code": None,
-            "score_profile": "traditional_advanced_v1",
-            "reference_version": "v1",
-            "score_impact": 1.5,
-            "ranking_weight": 1.1,
-            "axes_impact": {
+            "condition_type": "hayz",
+            "score_effect": 1.5,
+            "axis_weights": {
                 "functional_strength": 0.3,
                 "visibility": 0.2,
                 "stability": 0.4,
@@ -600,19 +593,18 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
                 "support": 0.2,
                 "constraint": 0.0,
             },
-            "reason": "sun matches accidental dignity hayz.",
+            "evidence": ["sun matches accidental dignity hayz."],
         }
     ]
-    assert chart["dominant_planets"]["chart_ruler"] == "sun"
-    assert chart["dominant_planets"]["most_elevated_planet"] == "sun"
-    assert chart["dominant_planets"]["top_planet"] == "sun"
+    assert chart["dominant_planets"]["chart_ruler_code"] == "sun"
+    assert chart["dominant_planets"]["most_elevated_planet_code"] == "sun"
+    assert chart["dominant_planets"]["top_planet_code"] == "sun"
     dominance_sun = chart["dominant_planets"]["planets"][0]
-    assert dominance_sun["planet"] == "sun"
+    assert dominance_sun["planet_code"] == "sun"
     assert dominance_sun["rank"] == 1
-    assert dominance_sun["total_score"] == 0.75
-    assert dominance_sun["dominance_level"] == "high"
+    assert dominance_sun["score"] == 0.75
     assert dominance_sun["factors"][0] == {
-        "factor": "chart_ruler",
+        "factor_code": "chart_ruler",
         "raw_value": 1.0,
         "normalized_value": 1.0,
         "weight": 1.4,

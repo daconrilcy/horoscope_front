@@ -4,7 +4,7 @@
 
 - Story: `CS-201-natal-public-json-projection-cleanup`
 - Capsule: `_condamad/stories/CS-201-natal-public-json-projection-cleanup`
-- Review iteration: 3
+- Review iteration: 4
 - Reviewer result: CLEAN
 
 ## Inputs Reviewed
@@ -23,9 +23,10 @@
 
 ## Diff Summary
 
-- `backend/app/services/chart/json_builder.py`: adds projection-only `astral_points` and `signs_runtime`; converges condition profile/signal public blocks to direct maps keyed by planet; keeps no-time neutralization.
-- `backend/app/tests/unit/test_chart_json_builder.py`: covers direct maps, empty advanced blocks and nested no-time neutralization.
+- `backend/app/services/chart/json_builder.py`: adds projection-only `astral_points` and `signs_runtime`; converges condition profiles, condition signals, advanced conditions and dominant planets to the public shapes from the initial brief; keeps no-time neutralization.
+- `backend/app/tests/unit/test_chart_json_builder.py`: covers direct maps, signal-list maps, public advanced/dominance field names, empty advanced blocks and nested no-time neutralization.
 - `backend/app/tests/unit/test_chart_result_service.py`: covers old persisted payload gaps without backfill.
+- `backend/tests/unit/domain/astrology/fixtures/traditional_golden_cases.py` and CS-200 golden evidence: align the locked public projection summary with the corrected dominant planet public field names.
 - CONDAMAD evidence and story status updated.
 
 ## Findings
@@ -37,6 +38,7 @@ No actionable findings found in the fresh review pass.
 | Finding | Source layers | Decision | Resolution |
 |---|---|---|---|
 | Public map contract was not implemented for `planet_condition_profiles` and `planet_condition_signals`. | Story conformance, source closure | Accepted | Serializers now return direct maps keyed by planet; empty computed maps return `{}`; tests and snapshots updated. |
+| Initial brief target shapes were not implemented for `planet_condition_signals`, `advanced_conditions` and `dominant_planets`. | User brief conformance, public payload stability | Accepted | `planet_condition_signals` now maps planet code to signal lists; `advanced_conditions` exposes `planet_code`, `condition_type`, `score_effect`, `axis_weights`, `evidence`; `dominant_planets` exposes `_code` fields and `planets[*].planet_code/score`. Tests, snapshots and validation evidence updated. |
 | Legacy alias scan evidence was broad/contradictory. | Story conformance, technical risk, source closure | Accepted | `public-json-validation.md` now records exact hit classification for each `sect_code` / `chart_sect_code` hit. |
 | Python validation environment was not evidenced. | Story conformance, technical risk | Accepted | Final evidence commands now include explicit `.\.venv\Scripts\Activate.ps1; ...` prefixes. |
 | Snapshot evidence contained prose placeholders. | Technical risk | Accepted | JSON snapshots now contain JSON values only; explanatory labels remain in markdown audit/validation. |
@@ -50,7 +52,7 @@ All AC1-AC14 have implementation and validation evidence in `generated/03-accept
 Key checks:
 
 - AC1/AC2: CS-197 sect and CS-198 planet sect condition object contracts remain asserted.
-- AC3: condition profiles/signals are direct maps and empty maps are `{}`.
+- AC3: condition profiles are direct maps, condition signals are direct maps of signal lists, advanced conditions and dominants use the public names from the initial brief, and empty maps are `{}`.
 - AC4/AC7: `astral_points` and `signs_runtime` are projected from `NatalResult`; nested `house` fields are neutralized in no-time mode.
 - AC8: old persisted payload gaps are not backfilled.
 - AC9/AC12: OpenAPI/app import still succeeds and no adjacent frontend/API/DB/migration/seed surfaces changed.

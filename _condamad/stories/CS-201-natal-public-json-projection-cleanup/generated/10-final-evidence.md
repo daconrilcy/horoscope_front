@@ -34,7 +34,7 @@
 |---|---|---|---|---|
 | AC1 | `backend/app/services/chart/json_builder.py` preserves CS-197 sect serialization. | Targeted projection tests passed. | PASS | |
 | AC2 | `json_builder.py` preserves CS-198 per-planet `sect_condition` serialization and rejects missing contracts. | Targeted projection tests passed. | PASS | |
-| AC3 | `planet_condition_profiles` and `planet_condition_signals` are direct maps keyed by planet code; empty computed maps are `{}`. | Targeted projection tests passed. | PASS | |
+| AC3 | `planet_condition_profiles` is a direct map keyed by planet code; `planet_condition_signals` is a direct map of signal lists; `advanced_conditions` and `dominant_planets` use the public field names from the initial brief; empty computed maps are `{}`. | Targeted projection tests passed. | PASS | |
 | AC4 | `astral_points` and `signs_runtime` are projected from `NatalResult`; no-time nested houses are neutralized. | Targeted projection tests passed. | PASS | |
 | AC5 | No forbidden engine imports in `json_builder.py`. | Projection forbidden scan returned zero hits. | PASS | |
 | AC6 | No public sect compatibility alias was added; exact scan hits are classified in `public-json-validation.md`. | Legacy alias scan hits classified as canonical runtime/reference fields, not public compatibility aliases. | PASS | |
@@ -51,13 +51,15 @@
 
 | File | Change type | Purpose | Related AC |
 |---|---|---|---|
-| `backend/app/services/chart/json_builder.py` | modified | Add projection-only serializers for `astral_points` and `signs_runtime`; converge condition profiles/signals to direct maps; remove TODO legacy wording without changing public field. | AC3, AC4, AC5, AC7 |
-| `backend/app/tests/unit/test_chart_json_builder.py` | modified | Assert direct condition maps, new structural blocks, no-time neutralization and empty advanced block conventions. | AC1, AC2, AC3, AC4, AC7 |
+| `backend/app/services/chart/json_builder.py` | modified | Add projection-only serializers for `astral_points` and `signs_runtime`; converge condition profiles/signals, advanced conditions and dominants to public brief shapes; remove TODO legacy wording without changing public field. | AC3, AC4, AC5, AC7 |
+| `backend/app/tests/unit/test_chart_json_builder.py` | modified | Assert direct condition maps, signal-list maps, public advanced/dominance field names, new structural blocks, no-time neutralization and empty advanced block conventions. | AC1, AC2, AC3, AC4, AC7 |
 | `backend/app/tests/unit/test_chart_result_service.py` | modified | Assert old stored payload gaps are not backfilled on audit read. | AC8 |
+| `backend/tests/unit/domain/astrology/fixtures/traditional_golden_cases.py` | modified | Align golden projection summary with public dominant planet field names from CS-201. | AC11 |
 | `_condamad/stories/CS-201-natal-public-json-projection-cleanup/evidence/public-json-before.json` | added | Baseline curated public JSON snapshot. | AC10, AC13, AC14 |
 | `_condamad/stories/CS-201-natal-public-json-projection-cleanup/evidence/public-json-projection-audit-before.md` | added | Before audit of field mapping and neutralization. | AC5, AC10 |
 | `_condamad/stories/CS-201-natal-public-json-projection-cleanup/evidence/public-json-after.json` | added | After curated public JSON snapshot. | AC10, AC13, AC14 |
 | `_condamad/stories/CS-201-natal-public-json-projection-cleanup/evidence/public-json-validation.md` | added | Validation summary, contract impact and scan classification. | AC9, AC10, AC13, AC14 |
+| `_condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/golden-cases-after.json` | modified | Align persistent golden evidence with the corrected public dominant planet projection names. | AC11 |
 | `_condamad/stories/CS-201-natal-public-json-projection-cleanup/generated/*` | added/modified | CONDAMAD capsule, final evidence and clean review result. | all |
 | `_condamad/stories/story-status.md` | modified | Set CS-201 to `done` after clean review. | all |
 

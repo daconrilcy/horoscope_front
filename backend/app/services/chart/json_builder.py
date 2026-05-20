@@ -497,27 +497,21 @@ def _serialize_condition_signals(signal_sets: Any) -> dict[str, Any]:
     if not isinstance(signal_sets, (list, tuple)):
         signal_sets = []
     for signal_set in signal_sets:
-        planets[signal_set.planet_code] = {
-            "planet_code": signal_set.planet_code,
-            "score_profile": signal_set.score_profile,
-            "tradition": signal_set.tradition,
-            "reference_version": signal_set.reference_version,
-            "signals": [
-                {
-                    "code": signal.code,
-                    "label": signal.label,
-                    "axis": signal.axis,
-                    "level": signal.level,
-                    "level_min": signal.level_min,
-                    "level_max": signal.level_max,
-                    "axis_value": signal.axis_value,
-                    "interpretation_use": signal.interpretation_use,
-                    "priority_weight": signal.priority_weight,
-                    "prompt_hint": signal.prompt_hint,
-                }
-                for signal in signal_set.signals
-            ],
-        }
+        planets[signal_set.planet_code] = [
+            {
+                "code": signal.code,
+                "label": signal.label,
+                "axis": signal.axis,
+                "level": signal.level,
+                "level_min": signal.level_min,
+                "level_max": signal.level_max,
+                "axis_value": signal.axis_value,
+                "interpretation_use": signal.interpretation_use,
+                "priority_weight": signal.priority_weight,
+                "prompt_hint": signal.prompt_hint,
+            }
+            for signal in signal_set.signals
+        ]
     return planets
 
 
@@ -526,21 +520,17 @@ def _serialize_dominant_planets(dominant_planets: Any) -> dict[str, Any] | None:
     if dominant_planets is None:
         return None
     return {
-        "score_profile": dominant_planets.score_profile_code,
-        "tradition": dominant_planets.tradition_code,
-        "reference_version": dominant_planets.reference_version_code,
-        "chart_ruler": dominant_planets.chart_ruler_code,
-        "most_elevated_planet": dominant_planets.most_elevated_planet_code,
-        "top_planet": dominant_planets.top_planet_code,
+        "top_planet_code": dominant_planets.top_planet_code,
+        "chart_ruler_code": dominant_planets.chart_ruler_code,
+        "most_elevated_planet_code": dominant_planets.most_elevated_planet_code,
         "planets": [
             {
-                "planet": planet.planet_code,
+                "planet_code": planet.planet_code,
+                "score": planet.total_score,
                 "rank": planet.rank,
-                "total_score": planet.total_score,
-                "dominance_level": planet.dominance_level,
                 "factors": [
                     {
-                        "factor": factor.factor_code,
+                        "factor_code": factor.factor_code,
                         "raw_value": factor.raw_value,
                         "normalized_value": factor.normalized_value,
                         "weight": factor.weight,
@@ -562,15 +552,11 @@ def _serialize_advanced_conditions(advanced_conditions: Any) -> list[dict[str, A
         advanced_conditions = []
     return [
         {
+            "planet_code": condition.source_planet_code,
             "condition_code": condition.condition_code,
-            "condition_type_code": condition.condition_type_code,
-            "source_planet_code": condition.source_planet_code,
-            "target_planet_code": condition.target_planet_code,
-            "score_profile": condition.score_profile,
-            "reference_version": condition.reference_version,
-            "score_impact": condition.score_impact,
-            "ranking_weight": condition.ranking_weight,
-            "axes_impact": {
+            "condition_type": condition.condition_type_code,
+            "score_effect": condition.score_impact,
+            "axis_weights": {
                 "functional_strength": condition.axes_impact.functional_strength_delta,
                 "visibility": condition.axes_impact.visibility_delta,
                 "stability": condition.axes_impact.stability_delta,
@@ -579,7 +565,7 @@ def _serialize_advanced_conditions(advanced_conditions: Any) -> list[dict[str, A
                 "support": condition.axes_impact.support_delta,
                 "constraint": condition.axes_impact.constraint_delta,
             },
-            "reason": condition.reason,
+            "evidence": [condition.reason] if condition.reason else [],
         }
         for condition in advanced_conditions
     ]

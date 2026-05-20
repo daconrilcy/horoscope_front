@@ -608,8 +608,8 @@
             "occidental"
           ],
           "dominant_planets": {
-            "chart_ruler": "mars",
-            "most_elevated_planet": "venus",
+            "chart_ruler_code": "mars",
+            "most_elevated_planet_code": "venus",
             "planet_codes": [
               "mars",
               "moon",
@@ -622,7 +622,7 @@
               "saturn",
               "uranus"
             ],
-            "top_planet": "mars"
+            "top_planet_code": "mars"
           },
           "first_planet_sect_condition": {
             "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
