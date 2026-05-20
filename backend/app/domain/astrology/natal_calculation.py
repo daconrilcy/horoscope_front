@@ -40,7 +40,11 @@ from app.domain.astrology.condition.planet_condition_profile_service import (
 from app.domain.astrology.condition.planet_condition_signal_builder import (
     PlanetConditionSignalBuilder,
 )
-from app.domain.astrology.dignities.contracts import PlanetDignityInput, PlanetDignityResult
+from app.domain.astrology.dignities.contracts import (
+    ChartSectResult,
+    PlanetDignityInput,
+    PlanetDignityResult,
+)
 from app.domain.astrology.dignities.planet_dignity_scoring_service import (
     PlanetDignityScoringService,
 )
@@ -147,6 +151,7 @@ class NatalResult(BaseModel):
         default_factory=list,
         validation_alias=AliasChoices("astral_points", "points"),
     )
+    dignity_sect: ChartSectResult | None = None
     dignities: list[PlanetDignityResult] = Field(default_factory=list)
     condition_profiles: list[PlanetConditionProfile] = Field(default_factory=list)
     condition_signals: list[PlanetConditionSignalSet] = Field(default_factory=list)
@@ -798,6 +803,7 @@ def build_natal_result(
             runtime_reference,
         )
     )
+    dignity_sect = dignities[0].chart_sect if dignities else None
     condition_profiles = list(
         PlanetConditionProfileService().calculate(tuple(dignities), runtime_reference)
     )
@@ -894,6 +900,7 @@ def build_natal_result(
         chart_balance=chart_balance,
         house_rulers=house_rulers,
         astral_points=points,
+        dignity_sect=dignity_sect,
         dignities=dignities,
         condition_profiles=condition_profiles,
         condition_signals=condition_signals,

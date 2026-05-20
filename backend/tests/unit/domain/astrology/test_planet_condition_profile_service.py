@@ -12,6 +12,7 @@ from app.domain.astrology.condition.planet_condition_profile_service import (
 )
 from app.domain.astrology.dignities.contracts import (
     AccidentalDignityMatch,
+    ChartSectResult,
     EssentialDignityMatch,
     PlanetDignityResult,
 )
@@ -26,6 +27,13 @@ def _result() -> PlanetDignityResult:
         tradition="traditional",
         reference_version="test",
         sect="day",
+        chart_sect=ChartSectResult(
+            chart_sect="day",
+            sun_horizon_position="above_horizon",
+            sun_above_horizon=True,
+            calculation_basis="sun_house_horizon_rule",
+            reference_system="traditional",
+        ),
         essential_score=5.0,
         accidental_score=4.0,
         total_score=9.0,

@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "case": "day",
+      "dignities": {
+        "sect": {
+          "chart_sect": "day",
+          "sun_horizon_position": "above_horizon",
+          "sun_above_horizon": true,
+          "calculation_basis": "sun_house_horizon_rule",
+          "reference_system": "traditional"
+        }
+      }
+    },
+    {
+      "case": "night",
+      "dignities": {
+        "sect": {
+          "chart_sect": "night",
+          "sun_horizon_position": "below_horizon",
+          "sun_above_horizon": false,
+          "calculation_basis": "sun_house_horizon_rule",
+          "reference_system": "traditional"
+        }
+      }
+    }
+  ]
+}

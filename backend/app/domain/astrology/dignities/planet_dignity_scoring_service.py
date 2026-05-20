@@ -7,6 +7,7 @@ from app.domain.astrology.dignities.accidental_dignity_calculator import (
 )
 from app.domain.astrology.dignities.contracts import (
     AccidentalDignityMatch,
+    ChartSectResult,
     EssentialDignityMatch,
     PlanetDignityInput,
     PlanetDignityResult,
@@ -41,7 +42,7 @@ class PlanetDignityScoringService:
         dignity_reference = runtime_reference.dignity_reference
         resolved_profile = score_profile or dignity_reference.default_score_profile
         tradition = self._tradition(dignity_reference.score_profiles, resolved_profile)
-        sect = self.sect_calculator.calculate(planets, dignity_reference)
+        chart_sect = self.sect_calculator.calculate(planets, dignity_reference)
         return tuple(
             self._calculate_planet(
                 planet,
@@ -49,7 +50,7 @@ class PlanetDignityScoringService:
                 runtime_reference=runtime_reference,
                 score_profile=resolved_profile,
                 tradition=tradition,
-                sect=sect,
+                chart_sect=chart_sect,
             )
             for planet in planets
         )
@@ -62,9 +63,10 @@ class PlanetDignityScoringService:
         runtime_reference: AstrologyRuntimeReference,
         score_profile: str,
         tradition: str,
-        sect: str,
+        chart_sect: ChartSectResult,
     ) -> PlanetDignityResult:
         """Calcule et agrege les dignites d'une planete."""
+        sect = chart_sect.chart_sect
         essential = self.essential_calculator.calculate(
             planet,
             signs=runtime_reference.signs,
@@ -94,6 +96,7 @@ class PlanetDignityScoringService:
             tradition=tradition,
             reference_version=runtime_reference.reference_version,
             sect=sect,
+            chart_sect=chart_sect,
             essential_score=self._score(essential),
             accidental_score=self._score(accidental),
             total_score=self._score(essential) + self._score(accidental),

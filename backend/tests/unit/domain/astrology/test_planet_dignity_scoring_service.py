@@ -21,6 +21,9 @@ def test_planet_dignity_scoring_service_aggregates_fact_scores() -> None:
     assert sun.score_profile == "traditional_standard"
     assert sun.tradition == "traditional"
     assert sun.sect == "day"
+    assert sun.chart_sect.chart_sect == "day"
+    assert sun.chart_sect.sun_horizon_position == "above_horizon"
+    assert all(result.chart_sect is sun.chart_sect for result in results)
     assert sun.essential_score == 5
     assert sun.accidental_score == 8
     assert sun.total_score == 13

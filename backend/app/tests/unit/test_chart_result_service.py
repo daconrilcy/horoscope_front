@@ -100,6 +100,21 @@ def test_persist_and_get_audit_record() -> None:
     assert stored_payload is not None
     assert stored_payload.result_payload["house_rulers"]
     assert stored_payload.result_payload["condition_profiles"]
+    assert stored_payload.result_payload["dignity_sect"]["chart_sect"] in {"day", "night"}
+    assert stored_payload.result_payload["dignity_sect"]["sun_horizon_position"] in {
+        "above_horizon",
+        "below_horizon",
+    }
+    assert isinstance(stored_payload.result_payload["dignity_sect"]["sun_above_horizon"], bool)
+    assert (
+        stored_payload.result_payload["dignity_sect"]["calculation_basis"]
+        == "sun_house_horizon_rule"
+    )
+    assert stored_payload.result_payload["dignity_sect"]["reference_system"] == "traditional"
+    assert (
+        stored_payload.result_payload["dignities"][0]["chart_sect"]
+        == (stored_payload.result_payload["dignity_sect"])
+    )
     assert stored_payload.result_payload["condition_signals"]
     assert stored_payload.result_payload["dominant_planets"]
     assert stored_payload.result_payload["dominant_planets"]["planets"]

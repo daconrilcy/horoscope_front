@@ -240,20 +240,63 @@ def _serialize_dignity_match(match: Any) -> dict[str, Any]:
     return payload
 
 
-def _serialize_dignities(dignities: Any) -> dict[str, Any]:
+def _serialize_chart_sect(chart_sect: Any) -> dict[str, Any] | None:
+    """Projette le contrat de secte deja calcule au niveau du theme."""
+    required_fields = (
+        "chart_sect",
+        "sun_horizon_position",
+        "sun_above_horizon",
+        "calculation_basis",
+        "reference_system",
+    )
+    if chart_sect is None:
+        return None
+    if any(not hasattr(chart_sect, field) for field in required_fields):
+        raise ValueError("dignity sect contract is incomplete")
+    chart_sect_value = getattr(chart_sect, "chart_sect")
+    horizon_position = getattr(chart_sect, "sun_horizon_position")
+    sun_above_horizon = getattr(chart_sect, "sun_above_horizon")
+    calculation_basis = getattr(chart_sect, "calculation_basis")
+    reference_system = getattr(chart_sect, "reference_system")
+    if chart_sect_value not in {"day", "night"}:
+        raise ValueError("dignity sect chart_sect is invalid")
+    if horizon_position not in {"above_horizon", "below_horizon"}:
+        raise ValueError("dignity sect sun_horizon_position is invalid")
+    if not isinstance(sun_above_horizon, bool):
+        raise ValueError("dignity sect sun_above_horizon is invalid")
+    if not isinstance(calculation_basis, str) or not calculation_basis.strip():
+        raise ValueError("dignity sect calculation_basis is required")
+    if not isinstance(reference_system, str) or not reference_system.strip():
+        raise ValueError("dignity sect reference_system is required")
+    if (chart_sect_value == "day") != sun_above_horizon:
+        raise ValueError("dignity sect sun_above_horizon is inconsistent")
+    expected_horizon = "above_horizon" if chart_sect_value == "day" else "below_horizon"
+    if horizon_position != expected_horizon:
+        raise ValueError("dignity sect sun_horizon_position is inconsistent")
+    return {
+        "chart_sect": chart_sect_value,
+        "sun_horizon_position": horizon_position,
+        "sun_above_horizon": sun_above_horizon,
+        "calculation_basis": calculation_basis,
+        "reference_system": reference_system,
+    }
+
+
+def _serialize_dignities(dignities: Any, chart_sect: Any = None) -> dict[str, Any]:
     """Projette les resultats de dignites par code planete."""
     planets: dict[str, Any] = {}
     score_profile = ""
     tradition = ""
     reference_version = ""
-    sect = ""
+    sect = _serialize_chart_sect(chart_sect)
     if not isinstance(dignities, (list, tuple)):
         dignities = []
     for result in dignities:
         score_profile = result.score_profile
         tradition = result.tradition
         reference_version = result.reference_version
-        sect = result.sect
+        if sect is None:
+            sect = _serialize_chart_sect(getattr(result, "chart_sect", None))
         planets[result.planet_code] = {
             "essential_score": result.essential_score,
             "accidental_score": result.accidental_score,
@@ -268,6 +311,8 @@ def _serialize_dignities(dignities: Any) -> dict[str, Any]:
                 _serialize_dignity_match(match) for match in result.accidental_breakdown
             ],
         }
+    if planets and sect is None:
+        raise ValueError("dignity sect contract is required")
     return {
         "score_profile": score_profile,
         "tradition": tradition,
@@ -604,7 +649,10 @@ def build_chart_json(
         "house_rulers": house_rulers,
         "aspects": aspects,
         "angles": angles,
-        "dignities": _serialize_dignities(getattr(natal_result, "dignities", [])),
+        "dignities": _serialize_dignities(
+            getattr(natal_result, "dignities", []),
+            getattr(natal_result, "dignity_sect", None),
+        ),
         "planet_condition_profiles": _serialize_condition_profiles(
             getattr(natal_result, "condition_profiles", [])
         ),

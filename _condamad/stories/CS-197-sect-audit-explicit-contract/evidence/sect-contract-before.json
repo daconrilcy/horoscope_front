@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "case": "day",
+      "dignities": {
+        "sect": "day"
+      }
+    },
+    {
+      "case": "night",
+      "dignities": {
+        "sect": "night"
+      }
+    }
+  ]
+}

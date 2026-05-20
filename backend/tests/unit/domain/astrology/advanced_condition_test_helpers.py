@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from app.domain.astrology.condition.contracts import PlanetConditionProfile
-from app.domain.astrology.dignities.contracts import AccidentalDignityMatch, PlanetDignityResult
+from app.domain.astrology.dignities.contracts import (
+    AccidentalDignityMatch,
+    ChartSectResult,
+    PlanetDignityResult,
+)
 from app.domain.astrology.natal_calculation import AspectResult, PlanetPosition
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
@@ -38,6 +42,13 @@ def dignity(
         tradition="traditional",
         reference_version="test",
         sect="day",
+        chart_sect=ChartSectResult(
+            chart_sect="day",
+            sun_horizon_position="above_horizon",
+            sun_above_horizon=True,
+            calculation_basis="sun_house_horizon_rule",
+            reference_system="traditional",
+        ),
         essential_score=0.0,
         accidental_score=0.0,
         total_score=0.0,

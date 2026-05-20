@@ -1,5 +1,6 @@
 """Tests de projection JSON publique du theme natal."""
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,6 +18,7 @@ from app.domain.astrology.condition.contracts import (
 )
 from app.domain.astrology.dignities.contracts import (
     AccidentalDignityMatch,
+    ChartSectResult,
     EssentialDignityMatch,
     PlanetDignityResult,
 )
@@ -44,6 +46,7 @@ from app.domain.astrology.runtime.house_runtime_data import (
 )
 from app.services.chart.json_builder import (
     EVIDENCE_ID_PATTERN,
+    _serialize_dignities,
     build_chart_json,
     build_evidence_catalog,
 )
@@ -142,6 +145,14 @@ def mock_natal_result():
     )
 
     result.aspects = [a1]
+    chart_sect = ChartSectResult(
+        chart_sect="day",
+        sun_horizon_position="above_horizon",
+        sun_above_horizon=True,
+        calculation_basis="sun_house_horizon_rule",
+        reference_system="traditional",
+    )
+    result.dignity_sect = chart_sect
     result.dignities = [
         PlanetDignityResult(
             planet_code="sun",
@@ -149,6 +160,7 @@ def mock_natal_result():
             tradition="traditional",
             reference_version="v1.2",
             sect="day",
+            chart_sect=chart_sect,
             essential_score=5,
             accidental_score=4,
             total_score=9,
@@ -401,6 +413,13 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert chart["aspects"][0]["applying"] is None
     assert chart["meta"]["aspects_applying_available"] is False
     assert chart["dignities"]["score_profile"] == "traditional_standard"
+    assert chart["dignities"]["sect"] == {
+        "chart_sect": "day",
+        "sun_horizon_position": "above_horizon",
+        "sun_above_horizon": True,
+        "calculation_basis": "sun_house_horizon_rule",
+        "reference_system": "traditional",
+    }
     assert chart["dignities"]["planets"]["sun"]["total_score"] == 9
     assert chart["dignities"]["planets"]["sun"]["essential_breakdown"][0]["type"] == "domicile"
     assert (
@@ -531,6 +550,27 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
     assert chart["angles"]["MC"]["sign"] == "libra"
     assert chart["angles"]["DSC"]["sign"] == "cancer"
     assert chart["angles"]["IC"]["sign"] == "aries"
+
+
+def test_serialize_dignities_requires_precomputed_chart_sect() -> None:
+    """La projection des dignites bloque un contrat de secte absent."""
+    incomplete_result = SimpleNamespace(
+        score_profile="traditional_standard",
+        tradition="traditional",
+        reference_version="v1",
+        planet_code="sun",
+        essential_score=0,
+        accidental_score=0,
+        total_score=0,
+        functional_strength_score=0,
+        expression_quality_score=0,
+        intensity_score=0,
+        essential_breakdown=(),
+        accidental_breakdown=(),
+    )
+
+    with pytest.raises(ValueError, match="dignity sect contract is required"):
+        _serialize_dignities([incomplete_result])
 
 
 def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):

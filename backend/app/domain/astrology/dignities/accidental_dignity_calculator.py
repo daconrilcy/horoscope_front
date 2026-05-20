@@ -39,7 +39,14 @@ class AccidentalDignityCalculator:
                 continue
             if rule.dignity_type_code not in weights:
                 continue
-            if self._rule_matches(rule, planet, all_planets, sect=sect, signs=signs):
+            if self._rule_matches(
+                rule,
+                planet,
+                all_planets,
+                dignity_reference=dignity_reference,
+                sect=sect,
+                signs=signs,
+            ):
                 matches.append(
                     AccidentalDignityMatch(
                         dignity_type_code=rule.dignity_type_code,
@@ -57,6 +64,7 @@ class AccidentalDignityCalculator:
         planet: PlanetDignityInput,
         all_planets: tuple[PlanetDignityInput, ...],
         *,
+        dignity_reference: PlanetDignityReferenceSet,
         sect: str | None,
         signs: SignReferenceSet | None,
     ) -> bool:
@@ -99,7 +107,9 @@ class AccidentalDignityCalculator:
         if "chart_sect_code" in conditions and "horizon_position_code" not in conditions:
             return sect is not None and str(conditions["chart_sect_code"]) == sect
         if "horizon_position_code" in conditions:
-            if not self._horizon_matches(str(conditions["horizon_position_code"]), planet):
+            if not self._horizon_matches(
+                str(conditions["horizon_position_code"]), planet, dignity_reference
+            ):
                 return False
             if "chart_sect_code" in conditions and conditions["chart_sect_code"] != sect:
                 return False
@@ -177,12 +187,21 @@ class AccidentalDignityCalculator:
             return 180.0 < forward_distance < 360.0
         return False
 
-    def _horizon_matches(self, horizon_code: str, planet: PlanetDignityInput) -> bool:
+    def _horizon_matches(
+        self,
+        horizon_code: str,
+        planet: PlanetDignityInput,
+        dignity_reference: PlanetDignityReferenceSet,
+    ) -> bool:
         """Verifie l'hemisphere depuis les maisons horizon runtime."""
-        if horizon_code == "above":
-            return planet.house_number in {7, 8, 9, 10, 11, 12}
-        if horizon_code == "below":
-            return planet.house_number in {1, 2, 3, 4, 5, 6}
+        dignity_type_code = f"{horizon_code}_horizon"
+        for rule in dignity_reference.accidental_rules:
+            if rule.dignity_type_code != dignity_type_code:
+                continue
+            for condition in rule.conditions:
+                if condition.key == "house_codes" and isinstance(condition.value, tuple):
+                    return planet.house_number in {int(value) for value in condition.value}
+            raise ValueError(f"missing house_codes for horizon dignity rule: {dignity_type_code}")
         return False
 
     def _sign_gender_matches(

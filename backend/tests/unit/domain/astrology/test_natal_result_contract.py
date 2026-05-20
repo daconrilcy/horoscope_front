@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.domain.astrology.dignities.contracts import ChartSectResult
 from app.domain.astrology.interpretation_adapters.contracts import InterpretationAdapterResult
 from app.domain.astrology.natal_calculation import NatalResult
 
@@ -12,7 +13,9 @@ def test_natal_result_exposes_interpretation_adapter_after_dominance() -> None:
 
     assert "dominant_planets" in fields
     assert "interpretation_adapter" in fields
+    assert "dignity_sect" in fields
     assert fields.index("interpretation_adapter") > fields.index("dominant_planets")
     assert NatalResult.model_fields["interpretation_adapter"].annotation == (
         InterpretationAdapterResult | None
     )
+    assert NatalResult.model_fields["dignity_sect"].annotation == (ChartSectResult | None)
