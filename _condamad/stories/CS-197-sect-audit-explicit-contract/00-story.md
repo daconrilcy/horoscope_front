@@ -1,13 +1,13 @@
-# Story CS-197 sect-audit-explicit-contract: Auditer la secte astrologique et exposer un contrat explicite
+# Story CS-197 sect-audit-explicit-contract: Auditer la secte natale et exposer un contrat explicite
 
 Status: ready-to-dev
 
 ## 1. Objective
 
-Faire de la secte astrologique natale un contrat complet, tracable et testable,
-au lieu d'un simple detail interne reduit a `"day"` ou `"night"`. La story doit
-auditer `SectCalculator`, formaliser le resultat de secte du theme sous forme
-de `ChartSectResult`, puis exposer ce contrat chart-level dans les donnees de
+Transformer la secte natale en contrat complet, tracable et testable, au lieu
+de la conserver comme simple detail interne reduit a `"day"` ou `"night"`. La
+story doit auditer `SectCalculator`, formaliser la secte du theme sous forme de
+`ChartSectResult`, puis exposer ce contrat de niveau theme dans les donnees de
 dignites de `NatalResult` et dans le JSON public `dignities.sect`, sans recalcul
 dans la couche de projection.
 
@@ -15,7 +15,7 @@ dans la couche de projection.
 
 - Source type: brief
 - Source reference: demande utilisateur du 2026-05-20, `CS-197 - Sect audit & explicit contract`.
-- Reason for change: le runtime actuel determine deja la secte depuis les
+- Reason for change: le runtime actuel determine deja la secte natale depuis les
   regles d'horizon, mais le resultat public ne documente ni la position du
   Soleil par rapport a l'horizon, ni la base de calcul, ni le systeme de
   reference utilise.
@@ -27,7 +27,7 @@ This story belongs to exactly one domain:
 - Domain: `backend/app/domain/astrology/dignities`
 - In scope:
   - auditer et renforcer `SectCalculator`;
-  - ajouter ou renforcer le contrat chart-level `ChartSectResult`;
+  - ajouter ou renforcer le contrat de niveau theme `ChartSectResult`;
   - exposer au minimum `chart_sect`, `sun_horizon_position`,
     `sun_above_horizon`, `calculation_basis` et `reference_system`;
   - propager un seul `ChartSectResult` via le scoring des dignites,
@@ -38,7 +38,7 @@ This story belongs to exactly one domain:
   - normaliser la condition de secte par planete, reservee a CS-198;
   - ajouter `PlanetSectCondition`, `planet_sect_condition` ou une exposition
     JSON par planete;
-  - changer les regles astrologiques de secte, triplicite, hayz ou
+  - changer les regles astrologiques de secte natale, triplicite, hayz ou
     out_of_sect;
   - modifier les tables de reference si les regles d'horizon existantes
     suffisent;
@@ -65,9 +65,9 @@ This story belongs to exactly one domain:
 - Behavior change allowed: constrained
 - Behavior change constraints:
   - `SectCalculator` retourne un objet de contrat au lieu d'une chaine brute;
-  - le resultat de dignites conserve un seul `ChartSectResult` calcule une fois
+  - l'agregat de dignites conserve un seul `ChartSectResult` calcule une fois
     pour le theme;
-  - le JSON public `dignities.sect` doit devenir le contrat chart-level
+  - le JSON public `dignities.sect` doit devenir le contrat de niveau theme
     `ChartSectResult` serialise, avec les champs minimaux demandes;
   - les scores, breakdowns, profils conditionnels, signaux, conditions
     avancees, dominantes et adaptateur interpretatif ne doivent pas changer hors
@@ -90,7 +90,7 @@ scope.
 | Baseline Snapshot | yes | le payload public `dignities.sect` change de forme; un avant/apres est requis. |
 | Ownership Routing | no | la story reste dans un domaine et ne deplace pas d'owner. |
 | Allowlist Exception | no | aucun fallback, alias ou exception n'est autorise. |
-| Contract Shape | yes | `ChartSectResult`, les donnees de dignites de `NatalResult` et le JSON public `dignities.sect` ont une forme chart-level explicite. |
+| Contract Shape | yes | `ChartSectResult`, les donnees de dignites de `NatalResult` et le JSON public `dignities.sect` ont une forme explicite de niveau theme. |
 | Batch Migration | no | aucune migration par lots de consommateurs n'est effectuee. |
 | Reintroduction Guard | yes | les constantes locales de maisons horizon et les projections qui recalculent la secte doivent etre bloquees. |
 | Persistent Evidence | yes | les audits, snapshots et resultats de validation doivent rester dans le dossier de story. |
@@ -117,7 +117,8 @@ scope.
   - `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/sect-contract-after.json`
 - Expected invariant:
   - les champs de dignites par planete et leurs scores restent stables; seul le
-    contrat chart-level de secte devient explicite et explique la base de calcul.
+    contrat de secte au niveau theme devient explicite et documente la base de
+    calcul.
 
 ## 4d. Ownership Routing Rule
 
@@ -135,23 +136,20 @@ scope.
   - DTO domaine et payload public `dignities.sect`.
 - Required domain contracts:
   - `ChartSectResult`
-- `ChartSectResult` required fields:
-  - `chart_sect: str` - allowed values exactly `day` or `night`;
-  - `sun_horizon_position: str` - allowed values exactly `above_horizon` or
-    `below_horizon`;
-  - `sun_above_horizon: bool`;
-  - `calculation_basis: str` - explicit non-empty basis such as
-    `sun_house_horizon_rule`;
-  - `reference_system: str` - explicit non-empty runtime reference identifier,
-    for example `traditional` when sourced from the dignity rule system.
 - Fields:
-  - `ChartSectResult.chart_sect`;
-  - `ChartSectResult.sun_horizon_position`;
-  - `ChartSectResult.sun_above_horizon`;
-  - `ChartSectResult.calculation_basis`;
-  - `ChartSectResult.reference_system`.
+  - `ChartSectResult.chart_sect: str` - allowed values exactly `day` or
+    `night`;
+  - `ChartSectResult.sun_horizon_position: str` - allowed values exactly
+    `above_horizon` or `below_horizon`;
+  - `ChartSectResult.sun_above_horizon: bool`;
+  - `ChartSectResult.calculation_basis: str` - explicit non-empty basis such as
+    `sun_house_horizon_rule`;
+  - `ChartSectResult.reference_system: str` - explicit non-empty runtime
+    reference identifier, for example `traditional` when sourced from the
+    dignity rule system.
 - Required fields:
-  - all fields listed above are required when `ChartSectResult` is emitted.
+  - all `ChartSectResult` fields listed above are required when the contract is
+    emitted.
 - Optional fields:
   - none for `ChartSectResult`.
 - Status codes:
@@ -164,7 +162,7 @@ scope.
     `dignities.sect` shape change.
   - no route path, HTTP method or status code is changed.
 - Serialization names:
-  - public JSON keeps the top-level path `dignities.sect`;
+  - public JSON keeps the existing path `dignities.sect`;
   - `dignities.sect` becomes the serialized `ChartSectResult` object;
   - no per-planet sect condition is added in this story.
 - Compatibility decision:
@@ -178,27 +176,20 @@ scope.
 
 ## 4h. Persistent Evidence Artifacts
 
-- Required evidence directory:
-  - `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/`
-- Required artifacts:
-  - `sect-contract-before.json` - minimal pre-change snapshot of
-    `dignities.sect`, one day case and one night case.
-  - `sect-contract-after.json` - matching post-change snapshot with the new
-    fields.
-  - `sect-contract-validation.md` - commands run, result summary, and any
-    bounded skipped command with reason.
+The implementation must persist these evidence artifacts under
+`_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/`:
 
 | Artifact | Path | Purpose |
 |---|---|---|
-| before snapshot | `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/sect-contract-before.json` | Capture the current `dignities.sect` shape before implementation. |
-| after snapshot | `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/sect-contract-after.json` | Prove the new explicit sect object and allowed JSON delta. |
-| validation summary | `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/sect-contract-validation.md` | Persist commands, scan results and allowed hits. |
+| before snapshot | `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/sect-contract-before.json` | Capture the current `dignities.sect` shape before implementation, for one day case and one night case. |
+| after snapshot | `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/sect-contract-after.json` | Prove the new explicit sect object and the allowed JSON delta. |
+| validation summary | `_condamad/stories/CS-197-sect-audit-explicit-contract/evidence/sect-contract-validation.md` | Persist commands, scan results, allowed hits and any bounded skipped command with reason. |
 
 ## 4i. Reintroduction Guard
 
 - Guard target:
-  - prevent local horizon mappings, silent fallback sect values and projection
-    layer recalculation.
+  - prevent local horizon mappings, silent fallback sect values and sect
+    recalculation in the projection layer.
 - Required guard evidence:
   - tests fail when `above_horizon` or `below_horizon` runtime rules are missing;
   - scan proves no new local tuple/list/set such as `(7, 8, 9, 10, 11, 12)` is
@@ -226,40 +217,41 @@ rg -n "sect_legacy|legacy_sect|sect_code|chart_sect_code" backend/app backend/te
 
 ## 5. Current State Evidence
 
-The current codebase or audit indicates:
+Le codebase actuel ou l'audit indique:
 
 - Evidence 1: `backend/app/domain/astrology/dignities/sect_calculator.py` -
-  `SectCalculator.calculate()` returns only `"day"` or `"night"` from
-  `above_horizon` / `below_horizon` runtime rules.
+  `SectCalculator.calculate()` retourne uniquement `"day"` ou `"night"` depuis
+  les regles runtime `above_horizon` / `below_horizon`.
 - Evidence 2: `backend/app/domain/astrology/dignities/contracts.py` -
-  `PlanetDignityResult` exposes `sect: str` but no structured chart sect
-  contract.
+  `PlanetDignityResult` expose `sect: str`, mais aucun contrat structure de
+  secte au niveau theme.
 - Evidence 3: `backend/app/domain/astrology/natal_calculation.py` -
-  `NatalResult.dignities` is a list of `PlanetDignityResult`, so no chart-level
-  sect object is currently attached to the dignity aggregate.
+  `NatalResult.dignities` est une liste de `PlanetDignityResult`; aucun objet
+  de secte au niveau theme n'est actuellement attache a l'agregat de dignites.
 - Evidence 4: `backend/app/services/chart/json_builder.py` -
-  `_serialize_dignities()` emits `dignities.sect` as a string copied from the
-  latest planet dignity result.
+  `_serialize_dignities()` emet `dignities.sect` comme une chaine copiee depuis
+  le dernier resultat de dignite planetaire.
 - Evidence 5: `backend/tests/unit/domain/astrology/test_sect_calculator.py` -
-  tests cover day, night and missing Sun, but do not assert an explainable
-  contract.
+  les tests couvrent jour, nuit et Soleil absent, mais n'assertent pas encore
+  de contrat explicable.
 - Evidence 6: `_condamad/stories/regression-guardrails.md` - invariants
-  consulted before story scope was finalized.
+  consultes avant la finalisation du scope de story.
 
 ## 6. Target State
 
-After implementation:
+Apres implementation:
 
-- `SectCalculator` exposes a deterministic, typed chart sect result sourced
-  from runtime horizon rules.
-- `ChartSectResult` carries the chart-level sect, Sun horizon position,
-  boolean horizon state, calculation basis and reference system.
-- `NatalResult` and `build_chart_json()` expose `dignities.sect` as the
-  serialized chart-level `ChartSectResult` object.
-- CS-197 prepares the chart-level contract that CS-198 can consume later for
-  per-planet sect condition normalization.
-- Missing Sun or missing horizon runtime rules remain hard failures, not
-  fallbacks.
+- `SectCalculator` expose un resultat de secte type et deterministe pour le
+  theme, source depuis les regles runtime d'horizon.
+- `ChartSectResult` porte la secte du theme, la position du Soleil par rapport
+  a l'horizon, l'etat booleen d'horizon, la base de calcul et le systeme de
+  reference.
+- `NatalResult` et `build_chart_json()` exposent `dignities.sect` comme l'objet
+  `ChartSectResult` serialise au niveau theme.
+- CS-197 prepare le contrat de niveau theme que CS-198 pourra consommer plus tard
+  pour normaliser la condition de secte par planete.
+- Soleil absent et regles runtime d'horizon absentes restent des echecs
+  explicites, pas des fallbacks.
 
 ## 6a. Regression Guardrails
 
@@ -296,52 +288,55 @@ After implementation:
 
 | AC | Requirement | Validation evidence required |
 |---|---|---|
-| AC1 | `SectCalculator` returns chart sect fields. | `pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py` |
-| AC2 | Missing Sun or horizon rules raise explicit errors. | `pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py` |
-| AC3 | Dignity results consume one shared chart-level `ChartSectResult`; no planet recalculates chart sect. | `pytest -q backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py` |
-| AC4 | `NatalResult` exposes explicit sect without removing fields. | `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py` |
-| AC5 | `build_chart_json()` serializes the precomputed `dignities.sect` object. | Evidence profile: projection test; `pytest -q backend/app/tests/unit/test_chart_json_builder.py`. |
-| AC6 | Chart result persistence stores the explicit sect contract. | Evidence profile: service test; `pytest -q backend/app/tests/unit/test_chart_result_service.py`. |
-| AC7 | No local horizon constants, per-planet sect condition contract or legacy sect alias is introduced. | Horizon constant scan plus `rg -n "PlanetSectCondition|planet_sect_condition" backend/app backend/tests -g "*.py"` plus `rg -n "sect_legacy|legacy_sect|sect_code|chart_sect_code" backend/app backend/tests -g "*.py"` |
-| AC8 | Before/after evidence documents the allowed JSON delta. | `rg -n "chart_sect|sun_horizon_position" _condamad/stories/CS-197-sect-audit-explicit-contract/evidence` |
+| AC1 | `SectCalculator` retourne les champs de secte au niveau theme. | `pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py` |
+| AC2 | Soleil absent ou regles horizon absentes levent des erreurs explicites. | `pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py` |
+| AC3 | Les resultats de dignites consomment un seul `ChartSectResult` partage; aucune planete ne recalcule la secte du theme. | `pytest -q backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py` |
+| AC4 | `NatalResult` expose la secte explicite sans supprimer de champs. | `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py` |
+| AC5 | `build_chart_json()` serialise l'objet pre-calcule `dignities.sect`. | Evidence profile: projection test; `pytest -q backend/app/tests/unit/test_chart_json_builder.py`. |
+| AC6 | La persistance du chart result stocke le contrat de secte explicite. | Evidence profile: service test; `pytest -q backend/app/tests/unit/test_chart_result_service.py`. |
+| AC7 | Aucune constante locale d'horizon, aucun contrat de condition de secte par planete et aucun alias legacy de secte n'est introduit. | Horizon constant scan plus `rg -n "PlanetSectCondition|planet_sect_condition" backend/app backend/tests -g "*.py"` plus `rg -n "sect_legacy|legacy_sect|sect_code|chart_sect_code" backend/app backend/tests -g "*.py"` |
+| AC8 | Les preuves avant/apres documentent le delta JSON autorise. | `rg -n "chart_sect|sun_horizon_position" _condamad/stories/CS-197-sect-audit-explicit-contract/evidence` |
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Capture baseline and audit current sect flow (AC: AC1, AC5, AC8)
-  - [ ] Subtask 1.1 - Create `evidence/sect-contract-before.json` with current
-    `dignities.sect` shape for one day case and one night case.
-  - [ ] Subtask 1.2 - Record which runtime rules currently feed
+- [ ] Task 1 - Capturer l'etat initial et auditer le flux de secte actuel (AC: AC1, AC5, AC8)
+  - [ ] Subtask 1.1 - Creer `evidence/sect-contract-before.json` avec la forme
+    actuelle de `dignities.sect` pour un cas jour et un cas nuit.
+  - [ ] Subtask 1.2 - Documenter quelles regles runtime alimentent actuellement
     `SectCalculator`.
 
-- [ ] Task 2 - Define explicit chart-level sect contract (AC: AC1, AC3, AC4)
-  - [ ] Subtask 2.1 - Add `ChartSectResult` in the canonical dignity contracts
-    module or a narrowly scoped sibling module.
-  - [ ] Subtask 2.2 - Ensure fields are typed, immutable where consistent with
-    existing dataclass contracts, and documented in French docstrings.
+- [ ] Task 2 - Definir le contrat explicite de secte au niveau theme (AC: AC1, AC3, AC4)
+  - [ ] Subtask 2.1 - Ajouter `ChartSectResult` dans le module canonique des
+    contrats de dignites ou dans un module voisin au scope etroit.
+  - [ ] Subtask 2.2 - Garantir des champs types, immuables quand c'est coherent
+    avec les contrats dataclass existants, et documentes par des docstrings en
+    francais.
 
-- [ ] Task 3 - Update calculation and orchestration (AC: AC1, AC2, AC3)
-  - [ ] Subtask 3.1 - Make `SectCalculator` return or expose the full chart
-    sect result from runtime rules.
-  - [ ] Subtask 3.2 - Pass the same chart sect result through
-    `PlanetDignityScoringService` without duplicate calculation or per-planet
-    sect recomputation.
-  - [ ] Subtask 3.3 - Preserve explicit errors for missing Sun and missing
-    runtime horizon rules.
+- [ ] Task 3 - Mettre a jour le calcul et l'orchestration (AC: AC1, AC2, AC3)
+  - [ ] Subtask 3.1 - Faire retourner ou exposer par `SectCalculator` le
+    resultat complet de secte du theme depuis les regles runtime.
+  - [ ] Subtask 3.2 - Faire transiter le meme resultat de secte du theme par
+    `PlanetDignityScoringService`, sans calcul duplique ni recomputation par
+    planete.
+  - [ ] Subtask 3.3 - Preserver les erreurs explicites pour Soleil absent et
+    regles runtime d'horizon absentes.
 
-- [ ] Task 4 - Expose the contract through natal and JSON outputs (AC: AC4, AC5, AC6)
-  - [ ] Subtask 4.1 - Attach the sect contract to the dignity result path in
-    `NatalResult`.
-  - [ ] Subtask 4.2 - Update `_serialize_dignities()` to project the existing
-    sect result without importing or instantiating `SectCalculator`.
-  - [ ] Subtask 4.3 - Update chart result service tests for the new persisted
-    payload shape.
+- [ ] Task 4 - Exposer le contrat dans les sorties natales et JSON (AC: AC4, AC5, AC6)
+  - [ ] Subtask 4.1 - Attacher le contrat de secte au chemin de resultat des
+    dignites dans `NatalResult`.
+  - [ ] Subtask 4.2 - Mettre a jour `_serialize_dignities()` pour projeter le
+    resultat de secte existant sans importer ni instancier `SectCalculator`.
+  - [ ] Subtask 4.3 - Mettre a jour les tests du chart result service pour la
+    nouvelle forme du payload persiste.
 
-- [ ] Task 5 - Add guards, tests and persistent evidence (AC: AC1, AC2, AC5, AC7, AC8)
-  - [ ] Subtask 5.1 - Extend day/night/negative sect tests.
-  - [ ] Subtask 5.2 - Extend contract and projection tests for the new shape.
-  - [ ] Subtask 5.3 - Save `sect-contract-after.json` and
+- [ ] Task 5 - Ajouter gardes, tests et preuves persistantes (AC: AC1, AC2, AC5, AC7, AC8)
+  - [ ] Subtask 5.1 - Etendre les tests de secte jour, nuit et cas negatifs.
+  - [ ] Subtask 5.2 - Etendre les tests de contrat et de projection pour la
+    nouvelle forme.
+  - [ ] Subtask 5.3 - Enregistrer `sect-contract-after.json` et
     `sect-contract-validation.md`.
-  - [ ] Subtask 5.4 - Run validation commands after activating `.venv`.
+  - [ ] Subtask 5.4 - Executer les commandes de validation apres activation de
+    `.venv`.
 
 ## 9. Mandatory Reuse / DRY Constraints
 
@@ -442,39 +437,41 @@ Codex must inspect before editing:
 
 Likely files:
 
-- `backend/app/domain/astrology/dignities/contracts.py` - add the chart-level
-  sect contract.
-- `backend/app/domain/astrology/dignities/sect_calculator.py` - produce the
-  explicit chart sect result.
+- `backend/app/domain/astrology/dignities/contracts.py` - ajouter le contrat de
+  secte au niveau theme.
+- `backend/app/domain/astrology/dignities/sect_calculator.py` - produire le
+  resultat explicite de secte du theme.
 - `backend/app/domain/astrology/dignities/planet_dignity_scoring_service.py` -
-  propagate one chart sect result through dignity scoring.
-- `backend/app/domain/astrology/natal_calculation.py` - expose the sect
-  contract through natal dignity data.
-- `backend/app/services/chart/json_builder.py` - serialize the contract without
-  recalculation.
+  propager un seul resultat de secte du theme dans le scoring des dignites.
+- `backend/app/domain/astrology/natal_calculation.py` - exposer le contrat de
+  secte dans les donnees natales de dignites.
+- `backend/app/services/chart/json_builder.py` - serialiser le contrat sans
+  recalcul.
 
 Likely tests:
 
-- `backend/tests/unit/domain/astrology/test_sect_calculator.py` - day/night and
-  negative contract cases.
+- `backend/tests/unit/domain/astrology/test_sect_calculator.py` - cas jour,
+  nuit et contrats negatifs.
 - `backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py`
-  - propagation into dignity results.
-- `backend/tests/unit/domain/astrology/test_dignity_contracts.py` - DTO shape.
-- `backend/tests/unit/domain/astrology/test_natal_result_contract.py` - natal
-  contract exposure.
-- `backend/app/tests/unit/test_chart_json_builder.py` - public JSON shape.
-- `backend/app/tests/unit/test_chart_result_service.py` - persisted payload.
+  - propagation dans les resultats de dignites.
+- `backend/tests/unit/domain/astrology/test_dignity_contracts.py` - forme du
+  DTO.
+- `backend/tests/unit/domain/astrology/test_natal_result_contract.py` -
+  exposition du contrat natal.
+- `backend/app/tests/unit/test_chart_json_builder.py` - forme du JSON public.
+- `backend/app/tests/unit/test_chart_result_service.py` - payload persiste.
 
 Files not expected to change:
 
-- `frontend/**` - no UI change in this story.
-- per-planet sect condition contracts or JSON fields - reserved for CS-198.
-- `backend/app/domain/astrology/condition/**` - condition profiles consume
-  dignity results and must not recalculate sect.
-- `backend/app/domain/astrology/advanced_conditions/**` - advanced conditions
-  must not become sect owner.
-- `backend/app/domain/astrology/interpretation_adapters/**` - adapter consumes
-  facts only.
+- `frontend/**` - aucun changement UI dans cette story.
+- contrats ou champs JSON de condition de secte par planete - reserves a
+  CS-198.
+- `backend/app/domain/astrology/condition/**` - les profils conditionnels
+  consomment les resultats de dignites et ne doivent pas recalculer la secte.
+- `backend/app/domain/astrology/advanced_conditions/**` - les conditions
+  avancees ne doivent pas devenir proprietaires de la secte.
+- `backend/app/domain/astrology/interpretation_adapters/**` - l'adaptateur
+  consomme uniquement des faits.
 
 ## 19. Dependency Policy
 
@@ -512,21 +509,24 @@ Allowed scan results must be recorded in
 
 ## 21. Regression Risks
 
-- Risk: `dignities.sect` changes shape and an existing consumer expects a
-  string.
-  - Guardrail: chart JSON test and before/after snapshot must make the change
-    explicit; string compatibility requires a new user decision before code changes.
-- Risk: local horizon constants replace runtime rules.
-  - Guardrail: `SectCalculator` negative tests and scans for local house lists.
-- Risk: JSON builder recalculates sect during projection.
-  - Guardrail: scan for `SectCalculator` in `json_builder.py` and projection
-    tests using precomputed data.
-- Risk: CS-197 expands into per-planet sect condition normalization.
-  - Guardrail: `PlanetSectCondition` and `planet_sect_condition` remain
-    forbidden in this story and are reserved for CS-198.
-- Risk: condition or interpretation layers become a second sect owner.
-  - Guardrail: forbidden import/recalculation scans and non-goals tied to
-    `RG-119`, `RG-122` and `RG-123`.
+- Risk: `dignities.sect` change de forme alors qu'un consommateur existant
+  attend une chaine.
+  - Guardrail: le test du chart JSON et le snapshot avant/apres doivent rendre
+    le changement explicite; une compatibilite string requiert une nouvelle
+    decision utilisateur avant modification du code.
+- Risk: des constantes locales d'horizon remplacent les regles runtime.
+  - Guardrail: tests negatifs de `SectCalculator` et scans des listes locales
+    de maisons.
+- Risk: le JSON builder recalcule la secte pendant la projection.
+  - Guardrail: scan de `SectCalculator` dans `json_builder.py` et tests de
+    projection avec donnees pre-calculees.
+- Risk: CS-197 derive vers la normalisation de condition de secte par planete.
+  - Guardrail: `PlanetSectCondition` et `planet_sect_condition` restent
+    interdits dans cette story et reserves a CS-198.
+- Risk: les couches condition ou interpretation deviennent un second owner de
+  secte.
+  - Guardrail: scans anti-import/recalcul et non-goals lies a `RG-119`,
+    `RG-122` et `RG-123`.
 
 ## 22. Dev Agent Instructions
 
