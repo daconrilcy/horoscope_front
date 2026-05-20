@@ -20,7 +20,10 @@ from app.domain.astrology.dignities.contracts import (
 )
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
-SERVICE_SOURCE = Path("backend/app/domain/astrology/condition/planet_condition_profile_service.py")
+PROJECT_ROOT = Path(__file__).resolve().parents[5]
+SERVICE_SOURCE = (
+    PROJECT_ROOT / "backend/app/domain/astrology/condition/planet_condition_profile_service.py"
+)
 
 
 def _result() -> PlanetDignityResult:

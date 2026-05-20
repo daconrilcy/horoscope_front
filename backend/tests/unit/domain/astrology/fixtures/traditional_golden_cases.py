@@ -6,6 +6,7 @@ les calculateurs canoniques produire les contrats observes.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from app.domain.astrology.advanced_conditions.advanced_condition_engine import (
@@ -39,8 +40,10 @@ from tests.factories.astrology_runtime_reference_factory import (
 )
 from tests.unit.domain.astrology.fixtures.golden_snapshot import normalize_golden_value
 
-story_evidence_path = (
-    "_condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/golden-cases-after.json"
+PROJECT_ROOT = Path(__file__).resolve().parents[6]
+story_evidence_path = str(
+    PROJECT_ROOT
+    / "_condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/golden-cases-after.json"
 )
 
 

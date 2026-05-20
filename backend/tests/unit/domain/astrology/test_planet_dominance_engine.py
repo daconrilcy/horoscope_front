@@ -18,7 +18,8 @@ from app.domain.astrology.runtime.house_runtime_data import (
 )
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
-ENGINE_SOURCE = Path("backend/app/domain/astrology/dominance/planet_dominance_engine.py")
+PROJECT_ROOT = Path(__file__).resolve().parents[5]
+ENGINE_SOURCE = PROJECT_ROOT / "backend/app/domain/astrology/dominance/planet_dominance_engine.py"
 
 
 def _profiles() -> tuple[PlanetConditionProfile, ...]:

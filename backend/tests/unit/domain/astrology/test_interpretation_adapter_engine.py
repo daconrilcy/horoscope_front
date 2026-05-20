@@ -9,8 +9,10 @@ from app.domain.astrology.dominance.contracts import DominantPlanetsResult, Plan
 from app.domain.astrology.interpretation_adapters import InterpretationAdapterEngine
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
-ENGINE_SOURCE = Path(
-    "backend/app/domain/astrology/interpretation_adapters/interpretation_adapter_engine.py"
+PROJECT_ROOT = Path(__file__).resolve().parents[5]
+ENGINE_SOURCE = (
+    PROJECT_ROOT
+    / "backend/app/domain/astrology/interpretation_adapters/interpretation_adapter_engine.py"
 )
 
 
