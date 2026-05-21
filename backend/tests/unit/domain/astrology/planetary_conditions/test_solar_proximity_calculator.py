@@ -81,9 +81,16 @@ def test_calculator_normalizes_longitudes_before_classification() -> None:
         planet_longitude_deg=721.0,
         sun_longitude_deg=-1.0,
     )
+    zero_wrapped = calculate_solar_proximity_condition(
+        planet_key="mercury",
+        planet_longitude_deg=360.0,
+        sun_longitude_deg=0.0,
+    )
 
     assert condition.sun_distance_deg == 2.0
     assert condition.condition_key is SolarProximityConditionKey.COMBUST
+    assert zero_wrapped.sun_distance_deg == 0.0
+    assert zero_wrapped.condition_key is SolarProximityConditionKey.CAZIMI
 
 
 def test_default_threshold_bounds_are_inclusive() -> None:
