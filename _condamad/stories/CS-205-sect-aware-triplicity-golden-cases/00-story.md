@@ -1,6 +1,6 @@
 # Story CS-205 sect-aware-triplicity-golden-cases: Verrouiller les cas golden de triplicité dépendante de la secte
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

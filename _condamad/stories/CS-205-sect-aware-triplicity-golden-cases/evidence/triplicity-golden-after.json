@@ -1,0 +1,234 @@
+{
+  "case_count": 6,
+  "cases": [
+    {
+      "case_id": "G1_day_triplicity",
+      "chart_sect": "day",
+      "element": "fire",
+      "expected_triplicity_role": "primary",
+      "observed": {
+        "active_triplicity": true,
+        "essential_breakdown": [
+          {
+            "reason": "sun in leo: domicile",
+            "score": 5.0,
+            "sign_code": "leo",
+            "source": "essential_rule",
+            "type_code": "domicile"
+          },
+          {
+            "reason": "sun rules fire triplicity for day sect",
+            "score": 3.0,
+            "sign_code": "leo",
+            "source": "triplicity",
+            "type_code": "triplicity"
+          }
+        ],
+        "essential_score": 8.0
+      },
+      "planet_code": "sun",
+      "runtime_assignment": {
+        "element_code": "fire",
+        "planet_code": "sun",
+        "role_code": "primary",
+        "sect_code": "day",
+        "system_code": "traditional"
+      },
+      "sign": "leo"
+    },
+    {
+      "case_id": "G2_night_triplicity",
+      "chart_sect": "night",
+      "element": "fire",
+      "expected_triplicity_role": "primary",
+      "observed": {
+        "active_triplicity": true,
+        "essential_breakdown": [
+          {
+            "reason": "jupiter rules fire triplicity for night sect",
+            "score": 3.0,
+            "sign_code": "leo",
+            "source": "triplicity",
+            "type_code": "triplicity"
+          }
+        ],
+        "essential_score": 3.0
+      },
+      "planet_code": "jupiter",
+      "runtime_assignment": {
+        "element_code": "fire",
+        "planet_code": "jupiter",
+        "role_code": "primary",
+        "sect_code": "night",
+        "system_code": "traditional"
+      },
+      "sign": "leo"
+    },
+    {
+      "case_id": "G3_same_element_different_sect",
+      "day": {
+        "chart_sect": "day",
+        "expected_triplicity_role": "primary",
+        "observed": {
+          "active_triplicity": true,
+          "essential_breakdown": [
+            {
+              "reason": "sun in leo: domicile",
+              "score": 5.0,
+              "sign_code": "leo",
+              "source": "essential_rule",
+              "type_code": "domicile"
+            },
+            {
+              "reason": "sun rules fire triplicity for day sect",
+              "score": 3.0,
+              "sign_code": "leo",
+              "source": "triplicity",
+              "type_code": "triplicity"
+            }
+          ],
+          "essential_score": 8.0
+        },
+        "planet_code": "sun"
+      },
+      "element": "fire",
+      "night": {
+        "chart_sect": "night",
+        "expected_triplicity_role": "primary",
+        "observed": {
+          "active_triplicity": true,
+          "essential_breakdown": [
+            {
+              "reason": "jupiter rules fire triplicity for night sect",
+              "score": 3.0,
+              "sign_code": "leo",
+              "source": "triplicity",
+              "type_code": "triplicity"
+            }
+          ],
+          "essential_score": 3.0
+        },
+        "planet_code": "jupiter"
+      },
+      "runtime_note": "day and night rulers are distinct in seed-backed runtime",
+      "sign": "leo"
+    },
+    {
+      "case_id": "G4_participating_triplicity",
+      "chart_sect": "day",
+      "element": "fire",
+      "expected_triplicity_role": "participating",
+      "observed": {
+        "active_triplicity": true,
+        "essential_breakdown": [
+          {
+            "reason": "saturn rules fire triplicity for day sect",
+            "score": 3.0,
+            "sign_code": "leo",
+            "source": "triplicity",
+            "type_code": "triplicity"
+          }
+        ],
+        "essential_score": 3.0
+      },
+      "participant_applied": true,
+      "participant_note": "runtime role `all` is consumed by the essential calculator and the active profile scores triplicity",
+      "participant_supported": true,
+      "planet_code": "saturn",
+      "runtime_assignment": {
+        "element_code": "fire",
+        "planet_code": "saturn",
+        "role_code": "participating",
+        "sect_code": "all",
+        "system_code": "traditional"
+      },
+      "sign": "leo"
+    },
+    {
+      "case_id": "G5_non_ruler_no_triplicity",
+      "chart_sect": "day",
+      "element": "fire",
+      "expected_triplicity_role": "primary",
+      "observed": {
+        "active_triplicity": false,
+        "essential_breakdown": [
+          {
+            "reason": "jupiter has no positive essential dignity in leo",
+            "score": -5.0,
+            "sign_code": "leo",
+            "source": "no_positive_essential_match",
+            "type_code": "peregrine"
+          }
+        ],
+        "essential_score": -5.0
+      },
+      "planet_code": "jupiter",
+      "runtime_assignment": {
+        "element_code": "fire",
+        "planet_code": "jupiter",
+        "role_code": "primary",
+        "sect_code": "night",
+        "system_code": "traditional"
+      },
+      "sign": "leo"
+    },
+    {
+      "case_id": "G6_scoring_service_integration",
+      "chart_sect_source": "ChartSectResult.chart_sect",
+      "day": {
+        "chart_sect": "day",
+        "expected_triplicity_role": "primary",
+        "observed": {
+          "active_triplicity": true,
+          "essential_breakdown": [
+            {
+              "reason": "sun in leo: domicile",
+              "score": 5.0,
+              "sign_code": "leo",
+              "source": "essential_rule",
+              "type_code": "domicile"
+            },
+            {
+              "reason": "sun rules fire triplicity for day sect",
+              "score": 3.0,
+              "sign_code": "leo",
+              "source": "triplicity",
+              "type_code": "triplicity"
+            }
+          ],
+          "essential_score": 8.0
+        },
+        "planet_code": "sun"
+      },
+      "night": {
+        "chart_sect": "night",
+        "expected_triplicity_role": "primary",
+        "observed": {
+          "active_triplicity": true,
+          "essential_breakdown": [
+            {
+              "reason": "jupiter rules fire triplicity for night sect",
+              "score": 3.0,
+              "sign_code": "leo",
+              "source": "triplicity",
+              "type_code": "triplicity"
+            }
+          ],
+          "essential_score": 3.0
+        },
+        "planet_code": "jupiter"
+      },
+      "service_path": "PlanetDignityScoringService"
+    }
+  ],
+  "chart_sect_source": "ChartSectResult.chart_sect",
+  "float_policy": "round floats to 6 decimals",
+  "runtime_source": "AstrologyRuntimeReference.dignity_reference.triplicity_rulers",
+  "snapshot": "CS-205 sect-aware triplicity golden cases",
+  "volatile_fields_excluded": [
+    "database ids",
+    "timestamps",
+    "full natal payload",
+    "localized labels"
+  ]
+}
