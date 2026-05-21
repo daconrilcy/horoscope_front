@@ -1,6 +1,6 @@
 # Story CS-212 moon-phase-calculator: Calculer la phase lunaire natale
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

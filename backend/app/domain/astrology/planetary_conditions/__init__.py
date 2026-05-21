@@ -23,6 +23,9 @@ from app.domain.astrology.planetary_conditions.contracts import (
     SolarProximityThresholds,
     WaxingWaningState,
 )
+from app.domain.astrology.planetary_conditions.moon_phase_calculator import (
+    calculate_moon_phase_condition,
+)
 from app.domain.astrology.planetary_conditions.planetary_motion_calculator import (
     calculate_planetary_motion_condition,
     calculate_planetary_motion_conditions,
@@ -62,6 +65,7 @@ __all__ = (
     "SolarProximityThresholds",
     "WaxingWaningState",
     "DEFAULT_PLANETARY_MOTION_PROFILES",
+    "calculate_moon_phase_condition",
     "calculate_planetary_motion_condition",
     "calculate_planetary_motion_conditions",
     "calculate_solar_phase_relation",
