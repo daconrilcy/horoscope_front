@@ -2,5 +2,31 @@
   "traditional_conditions": null,
   "hayz_source": "advanced_conditions",
   "rejoicing_source": "dignities.planets[].accidental_breakdown",
-  "gap": "hayz and rejoicing were visible only through technical breakdowns, not through a stable explicit contract"
+  "gap": "hayz and rejoicing were visible only through technical breakdowns, not through a stable explicit contract",
+  "representative_cases": {
+    "hayz_true": {
+      "planet_code": "sun",
+      "source": "advanced_conditions",
+      "advanced_condition_code": "hayz"
+    },
+    "in_sect_not_hayz": {
+      "planet_code": "moon",
+      "sect_condition": "in_sect",
+      "advanced_condition_code": null
+    },
+    "rejoicing_true": {
+      "planet_code": "moon",
+      "source": "dignities.planets[].accidental_breakdown",
+      "dignity_type_code": "planetary_joy",
+      "condition": "house_code=3"
+    }
+  },
+  "existing_blocks": [
+    "dignities",
+    "dignities.sect",
+    "dignities.planets[].sect_condition",
+    "dignities.planets[].accidental_breakdown",
+    "advanced_conditions"
+  ],
+  "score_change": false
 }

@@ -268,7 +268,7 @@ function TraditionalConditionsBlock({
 }: {
   conditions?: TraditionalConditionsPayload | null
 }) {
-  const planets = entriesByPlanet(conditions?.planets)
+  const planets = entriesByPlanet(conditions ?? undefined)
   return (
     <SectionShell title="Contrats traditionnels" isEmpty={planets.length === 0}>
       <div className="natal-expert-card-grid">
@@ -280,6 +280,17 @@ function TraditionalConditionsBlock({
               <FactRow label="hayz.sect_match" value={condition.hayz.sect_match} />
               <FactRow label="hayz.hemisphere_match" value={condition.hayz.hemisphere_match} />
               <FactRow label="hayz.sign_gender_match" value={condition.hayz.sign_gender_match} />
+              <FactRow label="hayz.chart_sect" value={condition.hayz.chart_sect} />
+              <FactRow label="hayz.intrinsic_sect" value={condition.hayz.intrinsic_sect} />
+              <FactRow
+                label="hayz.planet_sect_condition"
+                value={condition.hayz.planet_sect_condition}
+              />
+              <FactRow
+                label="hayz.planet_horizon_position"
+                value={condition.hayz.planet_horizon_position}
+              />
+              <FactRow label="hayz.sign_gender" value={condition.hayz.sign_gender} />
               <FactRow label="rejoicing.is_rejoicing" value={condition.rejoicing.is_rejoicing} />
               <FactRow label="rejoicing.current_house" value={condition.rejoicing.current_house} />
               <FactRow label="rejoicing.rejoicing_house" value={condition.rejoicing.rejoicing_house} />

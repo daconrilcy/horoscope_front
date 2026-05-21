@@ -149,44 +149,58 @@ function buildExpertChart(): LatestNatalChart {
         },
       ],
       traditional_conditions: {
-        planets: {
-          alpha: {
-            hayz: {
-              is_hayz: true,
-              sect_match: true,
-              hemisphere_match: true,
-              sign_gender_match: true,
-              calculation_basis: "sect_hemisphere_sign_gender",
-              reference_system: "traditional",
-              evidence: ["alpha matches backend condition."],
-            },
-            rejoicing: {
-              is_rejoicing: false,
-              current_house: 10,
-              rejoicing_house: null,
-              calculation_basis: "planetary_joy_house",
-              reference_system: "traditional",
-              evidence: [],
-            },
+        alpha: {
+          planet_code: "alpha",
+          hayz: {
+            planet_code: "alpha",
+            is_hayz: true,
+            sect_match: true,
+            hemisphere_match: true,
+            sign_gender_match: true,
+            chart_sect: "day",
+            intrinsic_sect: "diurnal",
+            planet_sect_condition: "in_sect",
+            planet_horizon_position: "above_horizon",
+            sign_gender: "masculine",
+            calculation_basis: "sect_hemisphere_sign_gender",
+            reference_system: "traditional",
+            evidence: ["alpha matches backend condition."],
           },
-          beta: {
-            hayz: {
-              is_hayz: false,
-              sect_match: false,
-              hemisphere_match: null,
-              sign_gender_match: null,
-              calculation_basis: "sect_hemisphere_sign_gender",
-              reference_system: "traditional",
-              evidence: [],
-            },
-            rejoicing: {
-              is_rejoicing: true,
-              current_house: 6,
-              rejoicing_house: 6,
-              calculation_basis: "planetary_joy_house",
-              reference_system: "traditional",
-              evidence: ["beta rejoices."],
-            },
+          rejoicing: {
+            planet_code: "alpha",
+            is_rejoicing: false,
+            current_house: 10,
+            rejoicing_house: null,
+            calculation_basis: "planetary_joy_house",
+            reference_system: "traditional",
+            evidence: [],
+          },
+        },
+        beta: {
+          planet_code: "beta",
+          hayz: {
+            planet_code: "beta",
+            is_hayz: false,
+            sect_match: false,
+            hemisphere_match: null,
+            sign_gender_match: null,
+            chart_sect: "night",
+            intrinsic_sect: "diurnal",
+            planet_sect_condition: "out_of_sect",
+            planet_horizon_position: "unknown",
+            sign_gender: "unknown",
+            calculation_basis: "sect_hemisphere_sign_gender",
+            reference_system: "traditional",
+            evidence: [],
+          },
+          rejoicing: {
+            planet_code: "beta",
+            is_rejoicing: true,
+            current_house: 6,
+            rejoicing_house: 6,
+            calculation_basis: "planetary_joy_house",
+            reference_system: "traditional",
+            evidence: ["beta rejoices."],
           },
         },
       },
@@ -265,6 +279,10 @@ describe("NatalExpertPanel", () => {
     const traditionalSection = screen.getByRole("region", { name: "Contrats traditionnels" })
     expect(within(traditionalSection).getAllByText("hayz.is_hayz").length).toBeGreaterThan(0)
     expect(within(traditionalSection).getAllByText("hayz.hemisphere_match").length).toBeGreaterThan(0)
+    expect(within(traditionalSection).getAllByText("hayz.chart_sect").length).toBeGreaterThan(0)
+    expect(
+      within(traditionalSection).getAllByText("hayz.planet_horizon_position").length,
+    ).toBeGreaterThan(0)
     expect(within(traditionalSection).getAllByText("rejoicing.rejoicing_house").length).toBeGreaterThan(0)
 
     expect(screen.getAllByText("essential_score").length).toBeGreaterThan(0)

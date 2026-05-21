@@ -18,6 +18,79 @@ Date: 2026-05-20
 
 No open findings.
 
+## Fresh Review/Fix Loop
+
+Date: 2026-05-21
+
+Review inputs:
+
+- Story source, acceptance traceability, No Legacy guardrails, final evidence,
+  prior review evidence and `RG-131`.
+- Current diff for backend contracts, hayz facts, normalizer, JSON projection,
+  frontend API types, `NatalExpertPanel`, tests and story evidence.
+- Applicable frontend contract from `condamad-frontend-dev` because the panel
+  and manual API types are in scope.
+
+Findings: none.
+
+Validation:
+
+- `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_chart_json_builder.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_essential_dignity_calculator.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/test_traditional_condition_normalizer.py`:
+  PASS, 44 passed.
+- `.\.venv\Scripts\Activate.ps1; ruff format --check .; ruff check .`: PASS.
+- `npm --prefix frontend run test -- NatalExpertPanel`: PASS, 4 passed.
+- `npm --prefix frontend run lint`: PASS.
+- `npm --prefix frontend run build`: PASS.
+- Story validate/lint: PASS.
+- `git diff --check`: PASS, only CRLF normalization warnings.
+- Forbidden doctrine constants, projection/frontend calculator imports and
+  frontend derivation scans: PASS, zero hits.
+- Frontend and backend local startup probes: PASS, HTTP `200`.
+
+Verdict: CLEAN. No correction was required in this fresh loop.
+
+## Brief Alignment Review Loop
+
+Date: 2026-05-21
+
+Initial findings:
+
+- `HayzCondition` did not expose all fields required by the initial brief:
+  `planet_code`, `chart_sect`, `intrinsic_sect`,
+  `planet_sect_condition`, `planet_horizon_position` and `sign_gender`.
+- `RejoicingCondition` did not expose its standalone `planet_code`.
+- Public JSON used `traditional_conditions.planets[planet_code]`; the initial
+  brief target requires `traditional_conditions[planet_code]`.
+- Baseline evidence was too terse for the initial before/after rule.
+
+Corrections:
+
+- Extended backend contracts, normalizer, JSON serializer, frontend API types
+  and `NatalExpertPanel` tests/display to the full brief shape.
+- Hardened the normalizer so partial legacy/internal `calculation_facts` are
+  completed from runtime component facts without overriding already calculated
+  hayz booleans.
+- Kept hayz/rejoicing sourced from `AdvancedConditionEngine`,
+  `PlanetSectCondition`, `ChartSectResult`, runtime horizon/sign facts and
+  `accidental_breakdown`; no projection/frontend recalculation was introduced.
+- Expanded before audit/snapshot and after evidence to document the detailed
+  contract shape.
+
+Validation:
+
+- `.\.venv\Scripts\Activate.ps1; ruff format --check .; ruff check .; pytest -q backend/app/tests/unit/test_chart_json_builder.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_essential_dignity_calculator.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/test_traditional_condition_normalizer.py`:
+  PASS, 44 passed.
+- `npm --prefix frontend run lint; npm --prefix frontend run build; npm --prefix frontend run test -- NatalExpertPanel`:
+  PASS, 4 frontend tests passed.
+- Story validate/lint: PASS.
+- `git diff --check`: PASS, only CRLF normalization warnings.
+- Forbidden doctrine/calculator/frontend derivation scans: PASS, zero hits.
+- Follow-up targeted validation after hardening partial `calculation_facts`:
+  `ruff format --check`, `ruff check`, backend focused tests and
+  `NatalExpertPanel` PASS.
+
+Verdict: CLEAN.
+
 ## Fresh Review Loop
 
 Date: 2026-05-20

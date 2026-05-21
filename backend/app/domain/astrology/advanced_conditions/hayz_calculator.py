@@ -45,12 +45,17 @@ class HayzCalculator:
                         ),
                     )
                 )
-            hayz_facts = self.non_sect_hayz_factors(
+            hayz_facts = self.hayz_component_facts(
                 position,
                 dignity,
                 runtime_reference,
             )
-            if sect_condition.is_in_sect and all(hayz_facts.values()):
+            if sect_condition.is_in_sect and all(
+                (
+                    hayz_facts["hemisphere_match"],
+                    hayz_facts["sign_gender_match"],
+                )
+            ):
                 conditions.append(
                     emit_condition(
                         condition_code="hayz",
@@ -78,9 +83,28 @@ class HayzCalculator:
         runtime_reference: AstrologyRuntimeReference,
     ) -> dict[str, bool]:
         """Evalue les facteurs hayz hors precondition de secte."""
-        facts = {
+        component_facts = self.hayz_component_facts(position, dignity, runtime_reference)
+        return {
+            "hemisphere_match": bool(component_facts["hemisphere_match"]),
+            "sign_gender_match": bool(component_facts["sign_gender_match"]),
+        }
+
+    def hayz_component_facts(
+        self,
+        position: Any,
+        dignity: PlanetDignityResult,
+        runtime_reference: AstrologyRuntimeReference,
+    ) -> dict[str, object]:
+        """Retourne les composants explicatifs hayz sans recalculer la secte."""
+        facts: dict[str, object] = {
             "hemisphere_match": False,
             "sign_gender_match": False,
+            "planet_horizon_position": self._planet_horizon_position(
+                position,
+                runtime_reference,
+                system_code=dignity.tradition,
+            ),
+            "sign_gender": self._sign_gender(position, runtime_reference),
         }
         for rule in runtime_reference.dignity_reference.accidental_rules:
             if rule.system_code != dignity.tradition:
@@ -90,7 +114,8 @@ class HayzCalculator:
             if rule.planet_code is not None and rule.planet_code != position.planet_code:
                 continue
             conditions = {item.key: item.value for item in rule.conditions}
-            candidate_facts = {
+            candidate_facts: dict[str, object] = {
+                **facts,
                 "hemisphere_match": (
                     "horizon_position_code" not in conditions
                     or self._horizon_matches(
@@ -109,7 +134,9 @@ class HayzCalculator:
                     )
                 ),
             }
-            if all(candidate_facts.values()):
+            if bool(candidate_facts["hemisphere_match"]) and bool(
+                candidate_facts["sign_gender_match"]
+            ):
                 return candidate_facts
             facts = candidate_facts
         return facts
@@ -148,3 +175,33 @@ class HayzCalculator:
             expected_polarity is not None
             and polarity_by_sign.get(position.sign_code) == expected_polarity
         )
+
+    def _planet_horizon_position(
+        self,
+        position: Any,
+        runtime_reference: AstrologyRuntimeReference,
+        *,
+        system_code: str,
+    ) -> str:
+        """Resolve l'hemisphere de la planete depuis les regles runtime d'horizon."""
+        for horizon_code in ("above", "below"):
+            if self._horizon_matches(
+                horizon_code,
+                position,
+                runtime_reference,
+                system_code=system_code,
+            ):
+                return f"{horizon_code}_horizon"
+        return "unknown"
+
+    def _sign_gender(self, position: Any, runtime_reference: AstrologyRuntimeReference) -> str:
+        """Traduit la polarite runtime du signe en genre traditionnel public."""
+        sign_code = getattr(position, "sign_code", None)
+        if sign_code is None:
+            return "unknown"
+        polarity_by_sign = {item.code: item.polarity for item in runtime_reference.signs.items}
+        return {
+            "yang": "masculine",
+            "yin": "feminine",
+            "neutral": "neutral",
+        }.get(str(polarity_by_sign.get(sign_code, "")), "unknown")

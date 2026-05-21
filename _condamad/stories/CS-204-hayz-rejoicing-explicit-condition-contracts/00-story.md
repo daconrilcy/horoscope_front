@@ -217,15 +217,22 @@ Brief-level contract requirements not represented as CONDAMAD contract names:
   - `RejoicingCondition`;
   - `TraditionalPlanetCondition`;
   - `TraditionalConditionsResult`;
-  - public JSON `traditional_conditions.planets` map keyed by `planet_code`.
+  - public JSON `traditional_conditions` map keyed by `planet_code`.
 - Required fields:
+  - `HayzCondition.planet_code: str`;
   - `HayzCondition.is_hayz: bool`;
   - `HayzCondition.sect_match: bool`;
   - `HayzCondition.hemisphere_match: bool | None`;
   - `HayzCondition.sign_gender_match: bool | None`;
+  - `HayzCondition.chart_sect: str`;
+  - `HayzCondition.intrinsic_sect: str`;
+  - `HayzCondition.planet_sect_condition: str`;
+  - `HayzCondition.planet_horizon_position: str`;
+  - `HayzCondition.sign_gender: str`;
   - `HayzCondition.calculation_basis: str`;
   - `HayzCondition.reference_system: str`;
   - `HayzCondition.evidence: tuple of str`;
+  - `RejoicingCondition.planet_code: str`;
   - `RejoicingCondition.is_rejoicing: bool`;
   - `RejoicingCondition.current_house: int | None`;
   - `RejoicingCondition.rejoicing_house: int | None`;
@@ -249,6 +256,12 @@ Brief-level contract requirements not represented as CONDAMAD contract names:
     source and the blocker/behavior is documented and tested.
 - Allowed values:
   - booleans stay booleans and unknown component facts stay `null`;
+  - `chart_sect`: `day` or `night`;
+  - `intrinsic_sect`: `diurnal`, `nocturnal`, `common`, `neutral` or `unknown`;
+  - `planet_sect_condition`: `in_sect`, `out_of_sect`,
+    `neutral_to_sect`, `variable_by_condition` or `unknown`;
+  - `planet_horizon_position`: `above_horizon`, `below_horizon` or `unknown`;
+  - `sign_gender`: `masculine`, `feminine`, `neutral` or `unknown`;
   - `calculation_basis`: stable technical string, expected
     `sect_hemisphere_sign_gender` for hayz and `planetary_joy_house` for
     rejoicing;
@@ -279,6 +292,14 @@ Brief-level contract requirements not represented as CONDAMAD contract names:
   hayz selon les faits/runtime existants.
 - `sign_gender_match`: indique si le genre ou la polarite du signe correspond a
   la regle runtime hayz.
+- `chart_sect`: recopie controlee du contrat chart-level.
+- `intrinsic_sect`: recopie controlee de la condition de secte planetaire.
+- `planet_sect_condition`: recopie controlee de la condition de secte
+  planetaire.
+- `planet_horizon_position`: hemisphere resolu depuis les regles runtime
+  d'horizon, ou `unknown`.
+- `sign_gender`: genre traditionnel derive de la polarite runtime du signe, ou
+  `unknown`.
 - `calculation_basis`: valeur technique stable, par exemple
   `sect_hemisphere_sign_gender`.
 - `reference_system`: systeme runtime utilise.
@@ -297,21 +318,28 @@ Brief-level contract requirements not represented as CONDAMAD contract names:
 
 Public JSON target:
 
-```json
-{
-  "traditional_conditions": {
-    "planets": {
+  ```json
+  {
+    "traditional_conditions": {
       "mars": {
+        "planet_code": "mars",
         "hayz": {
+          "planet_code": "mars",
           "is_hayz": true,
           "sect_match": true,
           "hemisphere_match": true,
           "sign_gender_match": true,
+          "chart_sect": "night",
+          "intrinsic_sect": "nocturnal",
+          "planet_sect_condition": "in_sect",
+          "planet_horizon_position": "below_horizon",
+          "sign_gender": "feminine",
           "calculation_basis": "sect_hemisphere_sign_gender",
           "reference_system": "traditional",
           "evidence": []
         },
         "rejoicing": {
+          "planet_code": "mars",
           "is_rejoicing": false,
           "current_house": 4,
           "rejoicing_house": 6,
@@ -319,28 +347,8 @@ Public JSON target:
           "reference_system": "traditional",
           "evidence": []
         }
-      },
-      "moon": {
-        "hayz": {
-          "is_hayz": true,
-          "sect_match": true,
-          "hemisphere_match": null,
-          "sign_gender_match": null,
-          "calculation_basis": "sect_hemisphere_sign_gender",
-          "reference_system": "traditional",
-          "evidence": []
-        },
-        "rejoicing": {
-          "is_rejoicing": true,
-          "current_house": 3,
-          "rejoicing_house": 3,
-          "calculation_basis": "planetary_joy_house",
-          "reference_system": "traditional",
-          "evidence": []
-        }
       }
     }
-  }
 }
 ```
 
@@ -364,14 +372,14 @@ New block:
 
 Rules:
 
-- `traditional_conditions.planets[*].hayz` must be consistent with
+- `traditional_conditions[*].hayz` must be consistent with
   `advanced_conditions` hayz.
-- `traditional_conditions.planets[*].rejoicing` must be consistent with
+- `traditional_conditions[*].rejoicing` must be consistent with
   accidental dignity rejoicing.
 - If `advanced_conditions` has hayz for a planet,
-  `traditional_conditions.planets[planet].hayz.is_hayz` must be `true`.
+  `traditional_conditions[planet].hayz.is_hayz` must be `true`.
 - If `accidental_breakdown` has rejoicing for a planet,
-  `traditional_conditions.planets[planet].rejoicing.is_rejoicing` must be
+  `traditional_conditions[planet].rejoicing.is_rejoicing` must be
   `true`.
 - The new block is a normalized contract, not a new scoring source.
 

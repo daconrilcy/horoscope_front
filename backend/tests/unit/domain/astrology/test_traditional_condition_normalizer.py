@@ -49,6 +49,8 @@ def test_traditional_condition_normalizer_projects_calculated_hayz_and_rejoicing
         calculation_facts={
             "hemisphere_match": True,
             "sign_gender_match": True,
+            "planet_horizon_position": "below_horizon",
+            "sign_gender": "feminine",
             "calculation_basis": "sect_hemisphere_sign_gender",
             "reference_system": "traditional",
         },
@@ -66,7 +68,14 @@ def test_traditional_condition_normalizer_projects_calculated_hayz_and_rejoicing
     assert planet.hayz.sect_match is True
     assert planet.hayz.hemisphere_match is True
     assert planet.hayz.sign_gender_match is True
+    assert planet.hayz.planet_code == "moon"
+    assert planet.hayz.chart_sect == "night"
+    assert planet.hayz.intrinsic_sect == "nocturnal"
+    assert planet.hayz.planet_sect_condition == "in_sect"
+    assert planet.hayz.planet_horizon_position == "below_horizon"
+    assert planet.hayz.sign_gender == "feminine"
     assert planet.rejoicing.is_rejoicing is True
+    assert planet.rejoicing.planet_code == "moon"
     assert planet.rejoicing.current_house == 3
     assert planet.rejoicing.rejoicing_house == 3
 
@@ -125,6 +134,11 @@ def test_traditional_condition_normalizer_explains_in_sect_non_hayz_components()
     assert planet.hayz.sect_match is True
     assert planet.hayz.hemisphere_match is True
     assert planet.hayz.sign_gender_match is False
+    assert planet.hayz.chart_sect == "night"
+    assert planet.hayz.intrinsic_sect == "nocturnal"
+    assert planet.hayz.planet_sect_condition == "in_sect"
+    assert planet.hayz.planet_horizon_position == "above_horizon"
+    assert planet.hayz.sign_gender == "feminine"
     assert planet.hayz.evidence == (
         "sun hayz factors: hemisphere_match=true;sign_gender_match=false",
     )

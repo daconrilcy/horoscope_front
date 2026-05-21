@@ -120,16 +120,23 @@ export type AdvancedCondition = {
 }
 
 export type TraditionalHayzCondition = {
+  planet_code: string
   is_hayz: boolean
   sect_match: boolean
   hemisphere_match?: boolean | null
   sign_gender_match?: boolean | null
+  chart_sect: string
+  intrinsic_sect: string
+  planet_sect_condition: string
+  planet_horizon_position: string
+  sign_gender: string
   calculation_basis: string
   reference_system: string
   evidence?: string[]
 }
 
 export type TraditionalRejoicingCondition = {
+  planet_code: string
   is_rejoicing: boolean
   current_house?: number | null
   rejoicing_house?: number | null
@@ -139,13 +146,12 @@ export type TraditionalRejoicingCondition = {
 }
 
 export type TraditionalPlanetCondition = {
+  planet_code: string
   hayz: TraditionalHayzCondition
   rejoicing: TraditionalRejoicingCondition
 }
 
-export type TraditionalConditionsPayload = {
-  planets?: Record<string, TraditionalPlanetCondition>
-}
+export type TraditionalConditionsPayload = Record<string, TraditionalPlanetCondition>
 
 export type DominantPlanetFactor = {
   factor_code?: string

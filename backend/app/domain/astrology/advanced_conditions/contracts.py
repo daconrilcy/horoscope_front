@@ -39,10 +39,16 @@ class AdvancedPlanetaryCondition:
 class HayzCondition:
     """Contrat explicite de hayz expose depuis les faits traditionnels calcules."""
 
+    planet_code: str
     is_hayz: bool
     sect_match: bool
     hemisphere_match: bool | None
     sign_gender_match: bool | None
+    chart_sect: str
+    intrinsic_sect: str
+    planet_sect_condition: str
+    planet_horizon_position: str
+    sign_gender: str
     calculation_basis: str
     reference_system: str
     evidence: tuple[str, ...] = ()
@@ -52,6 +58,7 @@ class HayzCondition:
 class RejoicingCondition:
     """Contrat explicite de joie planetaire expose depuis les dignites calculees."""
 
+    planet_code: str
     is_rejoicing: bool
     current_house: int | None
     rejoicing_house: int | None

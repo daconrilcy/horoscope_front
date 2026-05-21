@@ -1,42 +1,56 @@
 {
   "traditional_conditions": {
-    "planets": {
-      "sun": {
-        "hayz": {
-          "is_hayz": true,
-          "sect_match": true,
-          "hemisphere_match": true,
-          "sign_gender_match": true,
-          "calculation_basis": "sect_hemisphere_sign_gender",
-          "reference_system": "traditional"
-        },
-        "rejoicing": {
-          "is_rejoicing": false,
-          "current_house": 10,
-          "rejoicing_house": null,
-          "calculation_basis": "planetary_joy_house",
-          "reference_system": "traditional"
-        }
+    "sun": {
+      "planet_code": "sun",
+      "hayz": {
+        "planet_code": "sun",
+        "is_hayz": true,
+        "sect_match": true,
+        "hemisphere_match": true,
+        "sign_gender_match": true,
+        "chart_sect": "day",
+        "intrinsic_sect": "diurnal",
+        "planet_sect_condition": "in_sect",
+        "planet_horizon_position": "above_horizon",
+        "sign_gender": "masculine",
+        "calculation_basis": "sect_hemisphere_sign_gender",
+        "reference_system": "traditional"
       },
-      "moon": {
-        "hayz": {
-          "is_hayz": false,
-          "sect_match": true,
-          "hemisphere_match": false,
-          "sign_gender_match": false,
-          "calculation_basis": "sect_hemisphere_sign_gender",
-          "reference_system": "traditional",
-          "evidence": [
-            "moon hayz factors: hemisphere_match=false;sign_gender_match=false"
-          ]
-        },
-        "rejoicing": {
-          "is_rejoicing": true,
-          "current_house": 3,
-          "rejoicing_house": 3,
-          "calculation_basis": "planetary_joy_house",
-          "reference_system": "traditional"
-        }
+      "rejoicing": {
+        "planet_code": "sun",
+        "is_rejoicing": false,
+        "current_house": 10,
+        "rejoicing_house": null,
+        "calculation_basis": "planetary_joy_house",
+        "reference_system": "traditional"
+      }
+    },
+    "moon": {
+      "planet_code": "moon",
+      "hayz": {
+        "planet_code": "moon",
+        "is_hayz": false,
+        "sect_match": true,
+        "hemisphere_match": false,
+        "sign_gender_match": false,
+        "chart_sect": "night",
+        "intrinsic_sect": "nocturnal",
+        "planet_sect_condition": "in_sect",
+        "planet_horizon_position": "above_horizon",
+        "sign_gender": "feminine",
+        "calculation_basis": "sect_hemisphere_sign_gender",
+        "reference_system": "traditional",
+        "evidence": [
+          "moon hayz factors: hemisphere_match=false;sign_gender_match=false"
+        ]
+      },
+      "rejoicing": {
+        "planet_code": "moon",
+        "is_rejoicing": true,
+        "current_house": 3,
+        "rejoicing_house": 3,
+        "calculation_basis": "planetary_joy_house",
+        "reference_system": "traditional"
       }
     }
   },

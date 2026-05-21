@@ -51,6 +51,8 @@ def test_hayz_and_out_of_sect_are_projected_from_canonical_sect_facts() -> None:
         "sect_match": True,
         "hemisphere_match": True,
         "sign_gender_match": True,
+        "planet_horizon_position": "above_horizon",
+        "sign_gender": "masculine",
         "calculation_basis": "sect_hemisphere_sign_gender",
         "reference_system": "traditional",
     }

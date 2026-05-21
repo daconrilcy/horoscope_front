@@ -8,6 +8,12 @@ Date: 2026-05-20
 
 - `traditional_conditions` is normalized in the astrology domain from existing
   dignity, sect, advanced-condition and accidental-breakdown facts.
+- The public shape now follows the initial brief:
+  `traditional_conditions[planet_code]` with nested `planet_code` on hayz and
+  rejoicing contracts.
+- Hayz contracts include the explicit source facts requested in the brief:
+  `chart_sect`, `intrinsic_sect`, `planet_sect_condition`,
+  `planet_horizon_position` and `sign_gender`.
 - Public JSON and frontend remain projection/display surfaces.
 - G13/G14 close the sect-aware triplicity golden-case gap identified in the
   base brief review.
@@ -70,6 +76,17 @@ Result:
   `ruff format --check .`, `ruff check .`, story validate/lint, targeted
   backend tests, `NatalExpertPanel`, frontend lint/build, `git diff --check`,
   scoped forbidden scans, frontend startup and backend startup all PASS.
+- Brief-alignment correction validation on 2026-05-21:
+  targeted backend tests for the normalizer, JSON builder and hayz calculator
+  PASS, 26 passed; `NatalExpertPanel` PASS, 4 passed.
+- Final brief-alignment validation on 2026-05-21:
+  `ruff format --check .`, `ruff check .`, targeted backend suite, frontend
+  lint/build/test, story validate/lint, forbidden scans and `git diff --check`
+  all PASS; targeted backend suite reported 44 passed and frontend
+  `NatalExpertPanel` reported 4 passed.
+- Follow-up hardening validation on 2026-05-21:
+  focused normalizer/JSON/hayz backend tests PASS, 26 passed; focused Ruff
+  checks PASS; `NatalExpertPanel` PASS, 4 passed.
 
 Guard scans:
 

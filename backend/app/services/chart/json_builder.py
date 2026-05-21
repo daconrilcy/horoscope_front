@@ -577,30 +577,36 @@ def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, 
         return None
     planets = getattr(traditional_conditions, "planets", ())
     if not isinstance(planets, (list, tuple)):
-        return {"planets": {}}
+        return {}
     return {
-        "planets": {
-            planet.planet_code: {
-                "hayz": {
-                    "is_hayz": planet.hayz.is_hayz,
-                    "sect_match": planet.hayz.sect_match,
-                    "hemisphere_match": planet.hayz.hemisphere_match,
-                    "sign_gender_match": planet.hayz.sign_gender_match,
-                    "calculation_basis": planet.hayz.calculation_basis,
-                    "reference_system": planet.hayz.reference_system,
-                    "evidence": list(planet.hayz.evidence),
-                },
-                "rejoicing": {
-                    "is_rejoicing": planet.rejoicing.is_rejoicing,
-                    "current_house": planet.rejoicing.current_house,
-                    "rejoicing_house": planet.rejoicing.rejoicing_house,
-                    "calculation_basis": planet.rejoicing.calculation_basis,
-                    "reference_system": planet.rejoicing.reference_system,
-                    "evidence": list(planet.rejoicing.evidence),
-                },
-            }
-            for planet in planets
+        planet.planet_code: {
+            "planet_code": planet.planet_code,
+            "hayz": {
+                "planet_code": planet.hayz.planet_code,
+                "is_hayz": planet.hayz.is_hayz,
+                "sect_match": planet.hayz.sect_match,
+                "hemisphere_match": planet.hayz.hemisphere_match,
+                "sign_gender_match": planet.hayz.sign_gender_match,
+                "chart_sect": planet.hayz.chart_sect,
+                "intrinsic_sect": planet.hayz.intrinsic_sect,
+                "planet_sect_condition": planet.hayz.planet_sect_condition,
+                "planet_horizon_position": planet.hayz.planet_horizon_position,
+                "sign_gender": planet.hayz.sign_gender,
+                "calculation_basis": planet.hayz.calculation_basis,
+                "reference_system": planet.hayz.reference_system,
+                "evidence": list(planet.hayz.evidence),
+            },
+            "rejoicing": {
+                "planet_code": planet.rejoicing.planet_code,
+                "is_rejoicing": planet.rejoicing.is_rejoicing,
+                "current_house": planet.rejoicing.current_house,
+                "rejoicing_house": planet.rejoicing.rejoicing_house,
+                "calculation_basis": planet.rejoicing.calculation_basis,
+                "reference_system": planet.rejoicing.reference_system,
+                "evidence": list(planet.rejoicing.evidence),
+            },
         }
+        for planet in planets
     }
 
 

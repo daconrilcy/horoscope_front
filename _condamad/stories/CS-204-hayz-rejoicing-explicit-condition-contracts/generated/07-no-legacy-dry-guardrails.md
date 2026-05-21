@@ -23,5 +23,9 @@
 
 ## Decision
 
-Le bloc `traditional_conditions` est additif, normalise cote domaine depuis les
-faits deja calcules, puis uniquement projete/affiche en aval.
+Le bloc `traditional_conditions` est additif, indexe directement par
+`planet_code`, normalise cote domaine depuis les faits deja calcules, puis
+uniquement projete/affiche en aval. Les champs explicatifs de hayz
+(`chart_sect`, `intrinsic_sect`, `planet_sect_condition`,
+`planet_horizon_position`, `sign_gender`) proviennent des contrats canoniques
+et du runtime, pas de constantes locales.

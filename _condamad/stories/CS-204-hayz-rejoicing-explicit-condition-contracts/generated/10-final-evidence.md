@@ -9,6 +9,9 @@ Date: 2026-05-20
 
 - Added explicit domain contracts for `HayzCondition`, `RejoicingCondition`,
   `TraditionalPlanetCondition` and `TraditionalConditionsResult`.
+- Aligned the public contract with the initial brief: `traditional_conditions`
+  is keyed directly by `planet_code`, and hayz/rejoicing subcontracts repeat
+  `planet_code` for standalone traceability.
 - Added `TraditionalConditionNormalizer` as the canonical owner for the
   `traditional_conditions` payload.
 - Added `AdvancedPlanetaryCondition.calculation_facts` so hayz exposes
@@ -20,10 +23,13 @@ Date: 2026-05-20
   `calculation_facts` from public `advanced_conditions` JSON/frontend types.
 - Added false-case hayz evidence so in-sect non-hayz planets expose explicit
   component booleans instead of silent `null`.
+- Added explicit hayz explanation fields: `chart_sect`, `intrinsic_sect`,
+  `planet_sect_condition`, `planet_horizon_position` and `sign_gender`.
 - Attached `traditional_conditions` to `NatalResult` and serialized it from
   `json_builder.py` without recalculating doctrine in the projection layer.
 - Updated frontend manual API types and `NatalExpertPanel` to render
-  `Contrats traditionnels` from explicit backend fields only.
+  `Contrats traditionnels` from explicit backend fields only, including the
+  extra hayz explanation fields.
 - Added G13/G14 golden cases to lock sect-aware triplicity day/night rulers for
   the same fire element.
 
@@ -50,6 +56,22 @@ Date: 2026-05-20
   PASS.
 - `.\.venv\Scripts\Activate.ps1; python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py _condamad/stories/CS-204-hayz-rejoicing-explicit-condition-contracts/00-story.md`:
   PASS.
+- 2026-05-21 brief-alignment pass:
+  `.\.venv\Scripts\Activate.ps1; ruff format --check .; ruff check .; pytest -q backend/app/tests/unit/test_chart_json_builder.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_essential_dignity_calculator.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/test_traditional_condition_normalizer.py`:
+  PASS, 44 passed.
+- 2026-05-21 frontend brief-alignment pass:
+  `npm --prefix frontend run lint; npm --prefix frontend run build; npm --prefix frontend run test -- NatalExpertPanel`:
+  PASS, 4 panel tests passed.
+- 2026-05-21 story validate/lint, forbidden scans and `git diff --check`: PASS.
+- 2026-05-21 fresh review/fix loop:
+  `.\.venv\Scripts\Activate.ps1; pytest -q backend/app/tests/unit/test_chart_json_builder.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_essential_dignity_calculator.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/test_traditional_condition_normalizer.py`:
+  PASS, 44 passed.
+- 2026-05-21 fresh frontend validation:
+  `npm --prefix frontend run test -- NatalExpertPanel`, `npm --prefix frontend run lint`
+  and `npm --prefix frontend run build`: PASS.
+- 2026-05-21 fresh local startup:
+  frontend dev server on `127.0.0.1:5199` and backend docs on
+  `127.0.0.1:8011/docs`: PASS via HTTP `200`; processes stopped after probes.
 
 Guard scans are recorded in `evidence/hayz-rejoicing-validation.md`.
 

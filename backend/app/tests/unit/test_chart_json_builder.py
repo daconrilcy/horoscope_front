@@ -353,6 +353,8 @@ def mock_natal_result():
                 "sect_match": True,
                 "hemisphere_match": True,
                 "sign_gender_match": True,
+                "planet_horizon_position": "above_horizon",
+                "sign_gender": "masculine",
                 "calculation_basis": "sect_hemisphere_sign_gender",
                 "reference_system": "traditional",
             },
@@ -614,17 +616,25 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
             "evidence": ["sun matches accidental dignity hayz."],
         }
     ]
-    assert chart["traditional_conditions"]["planets"]["sun"] == {
+    assert chart["traditional_conditions"]["sun"] == {
+        "planet_code": "sun",
         "hayz": {
+            "planet_code": "sun",
             "is_hayz": True,
             "sect_match": True,
             "hemisphere_match": True,
             "sign_gender_match": True,
+            "chart_sect": "day",
+            "intrinsic_sect": "diurnal",
+            "planet_sect_condition": "in_sect",
+            "planet_horizon_position": "above_horizon",
+            "sign_gender": "masculine",
             "calculation_basis": "sect_hemisphere_sign_gender",
             "reference_system": "traditional",
             "evidence": ["sun matches accidental dignity hayz."],
         },
         "rejoicing": {
+            "planet_code": "sun",
             "is_rejoicing": False,
             "current_house": 10,
             "rejoicing_house": None,
@@ -823,7 +833,8 @@ def test_serialize_traditional_conditions_exposes_rejoicing_contract() -> None:
     )
     payload = _serialize_traditional_conditions(traditional_conditions)
 
-    assert payload["planets"]["moon"]["rejoicing"] == {
+    assert payload["moon"]["rejoicing"] == {
+        "planet_code": "moon",
         "is_rejoicing": True,
         "current_house": 3,
         "rejoicing_house": 3,

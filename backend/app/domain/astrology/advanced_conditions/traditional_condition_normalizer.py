@@ -49,20 +49,31 @@ class TraditionalConditionNormalizer:
                 tradition=dignity.tradition,
             )
             position = position_by_planet.get(planet_code)
-            if not hayz_facts and position is not None:
-                hayz_facts = HayzCalculator().non_sect_hayz_factors(
-                    position,
-                    dignity,
-                    runtime_reference,
-                )
+            if position is not None:
+                hayz_facts = {
+                    **HayzCalculator().hayz_component_facts(
+                        position,
+                        dignity,
+                        runtime_reference,
+                    ),
+                    **hayz_facts,
+                }
             planets.append(
                 TraditionalPlanetCondition(
                     planet_code=planet_code,
                     hayz=HayzCondition(
+                        planet_code=planet_code,
                         is_hayz=hayz_condition is not None,
                         sect_match=bool(sect_condition.is_in_sect),
                         hemisphere_match=_optional_bool(hayz_facts.get("hemisphere_match")),
                         sign_gender_match=_optional_bool(hayz_facts.get("sign_gender_match")),
+                        chart_sect=sect_condition.chart_sect,
+                        intrinsic_sect=sect_condition.intrinsic_sect,
+                        planet_sect_condition=sect_condition.planet_sect_condition,
+                        planet_horizon_position=str(
+                            hayz_facts.get("planet_horizon_position", "unknown")
+                        ),
+                        sign_gender=str(hayz_facts.get("sign_gender", "unknown")),
                         calculation_basis=str(
                             hayz_facts.get(
                                 "calculation_basis",
@@ -77,6 +88,7 @@ class TraditionalConditionNormalizer:
                         ),
                     ),
                     rejoicing=RejoicingCondition(
+                        planet_code=planet_code,
                         is_rejoicing=joy_match is not None,
                         current_house=getattr(position, "house_number", None),
                         rejoicing_house=rejoicing_house
