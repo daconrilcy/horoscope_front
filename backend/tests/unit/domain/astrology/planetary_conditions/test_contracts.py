@@ -1,6 +1,7 @@
 """Tests des contrats purs de conditions planetaires avancees."""
 
 from dataclasses import FrozenInstanceError, fields, is_dataclass
+from math import inf, nan
 from types import MappingProxyType
 from typing import Any, get_args, get_origin, get_type_hints
 
@@ -17,6 +18,7 @@ from app.domain.astrology.planetary_conditions import (
     PlanetaryConditionSignal,
     PlanetaryMotionCondition,
     PlanetaryMotionDirection,
+    PlanetaryMotionProfile,
     PlanetarySolarPhaseRelation,
     PlanetarySpeedState,
     PlanetVisibilityCondition,
@@ -33,6 +35,7 @@ PUBLIC_CONTRACTS = (
     SolarProximityCondition,
     PlanetarySolarPhaseRelation,
     PlanetaryMotionCondition,
+    PlanetaryMotionProfile,
     PlanetVisibilityCondition,
     MoonPhaseCondition,
     PlanetaryConditionSignal,
@@ -147,6 +150,69 @@ def test_solar_proximity_thresholds_expose_defaults_and_validate_order() -> None
             combust_max_distance_deg=8.5,
             under_beams_max_distance_deg=15.0,
         )
+
+
+def test_planetary_motion_profile_exposes_defaults_and_validates_thresholds() -> None:
+    """Le profil de mouvement reste immuable et valide ses seuils configurables."""
+    profile = PlanetaryMotionProfile(
+        planet_key="mars",
+        mean_speed_deg_per_day=0.524,
+        stationary_threshold_abs=0.0262,
+    )
+
+    assert profile.planet_key == "mars"
+    assert profile.mean_speed_deg_per_day == 0.524
+    assert profile.stationary_threshold_abs == 0.0262
+    assert profile.very_slow_ratio_threshold == 0.4
+    assert profile.slow_ratio_threshold == 0.8
+    assert profile.fast_ratio_threshold == 1.2
+    assert profile.very_fast_ratio_threshold == 1.6
+    with pytest.raises(FrozenInstanceError):
+        profile.mean_speed_deg_per_day = 0.1  # type: ignore[misc]
+    with pytest.raises(ValueError, match="stationary threshold"):
+        PlanetaryMotionProfile(
+            planet_key="mars",
+            mean_speed_deg_per_day=0.524,
+            stationary_threshold_abs=-0.1,
+        )
+    with pytest.raises(ValueError, match="mean speed must be finite"):
+        PlanetaryMotionProfile(
+            planet_key="mars",
+            mean_speed_deg_per_day=nan,
+            stationary_threshold_abs=0.0262,
+        )
+    with pytest.raises(ValueError, match="stationary threshold must be finite"):
+        PlanetaryMotionProfile(
+            planet_key="mars",
+            mean_speed_deg_per_day=0.524,
+            stationary_threshold_abs=inf,
+        )
+    with pytest.raises(ValueError, match="speed ratio thresholds must be finite"):
+        PlanetaryMotionProfile(
+            planet_key="mars",
+            mean_speed_deg_per_day=0.524,
+            stationary_threshold_abs=0.0262,
+            very_slow_ratio_threshold=nan,
+        )
+    with pytest.raises(ValueError, match="0 <= very_slow <= slow <= fast <= very_fast"):
+        PlanetaryMotionProfile(
+            planet_key="mars",
+            mean_speed_deg_per_day=0.524,
+            stationary_threshold_abs=0.0262,
+            very_slow_ratio_threshold=0.9,
+            slow_ratio_threshold=0.8,
+        )
+
+
+def test_planetary_motion_profile_allows_invalid_mean_speed_for_unknown_state() -> None:
+    """Une vitesse moyenne invalide reste un fait exploitable par le calculateur."""
+    profile = PlanetaryMotionProfile(
+        planet_key="test",
+        mean_speed_deg_per_day=0.0,
+        stationary_threshold_abs=0.0,
+    )
+
+    assert profile.mean_speed_deg_per_day == 0.0
 
 
 def test_contracts_can_be_instantiated_with_required_fields() -> None:

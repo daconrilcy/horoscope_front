@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from math import isfinite
 from types import MappingProxyType
 from typing import Mapping
 
@@ -64,6 +65,46 @@ class PlanetarySpeedState(StrEnum):
     NORMAL = "normal"
     FAST = "fast"
     VERY_FAST = "very_fast"
+
+
+@dataclass(frozen=True, slots=True)
+class PlanetaryMotionProfile:
+    """Seuils factuels utilises pour classer le mouvement d'une planete."""
+
+    planet_key: str
+    mean_speed_deg_per_day: float
+    stationary_threshold_abs: float
+    very_slow_ratio_threshold: float = 0.4
+    slow_ratio_threshold: float = 0.8
+    fast_ratio_threshold: float = 1.2
+    very_fast_ratio_threshold: float = 1.6
+
+    def __post_init__(self) -> None:
+        """Valide les seuils de classification sans imposer la vitesse moyenne."""
+        if not isfinite(self.mean_speed_deg_per_day):
+            raise ValueError("mean speed must be finite")
+        if not isfinite(self.stationary_threshold_abs):
+            raise ValueError("stationary threshold must be finite")
+        if self.stationary_threshold_abs < 0:
+            raise ValueError("stationary threshold must be greater than or equal to zero")
+        ratio_thresholds = (
+            self.very_slow_ratio_threshold,
+            self.slow_ratio_threshold,
+            self.fast_ratio_threshold,
+            self.very_fast_ratio_threshold,
+        )
+        if any(not isfinite(threshold) for threshold in ratio_thresholds):
+            raise ValueError("speed ratio thresholds must be finite")
+        if not (
+            0
+            <= self.very_slow_ratio_threshold
+            <= self.slow_ratio_threshold
+            <= self.fast_ratio_threshold
+            <= self.very_fast_ratio_threshold
+        ):
+            raise ValueError(
+                "speed ratio thresholds must satisfy 0 <= very_slow <= slow <= fast <= very_fast"
+            )
 
 
 class PlanetVisibilityKey(StrEnum):
