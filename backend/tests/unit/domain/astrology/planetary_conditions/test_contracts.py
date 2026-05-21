@@ -24,6 +24,7 @@ from app.domain.astrology.planetary_conditions import (
     PlanetVisibilityCondition,
     PlanetVisibilityKey,
     SolarPhaseRelationKey,
+    SolarPhaseRelationThresholds,
     SolarProximityCondition,
     SolarProximityConditionKey,
     SolarProximityThresholds,
@@ -32,6 +33,7 @@ from app.domain.astrology.planetary_conditions import (
 
 PUBLIC_CONTRACTS = (
     SolarProximityThresholds,
+    SolarPhaseRelationThresholds,
     SolarProximityCondition,
     PlanetarySolarPhaseRelation,
     PlanetaryMotionCondition,
@@ -150,6 +152,23 @@ def test_solar_proximity_thresholds_expose_defaults_and_validate_order() -> None
             combust_max_distance_deg=8.5,
             under_beams_max_distance_deg=15.0,
         )
+
+
+def test_solar_phase_relation_thresholds_expose_default_and_validate_bounds() -> None:
+    """La tolerance de relation solaire reste bornee et immuable."""
+    thresholds = SolarPhaseRelationThresholds()
+
+    assert thresholds.conjunction_tolerance_deg == 0.5
+    with pytest.raises(FrozenInstanceError):
+        thresholds.conjunction_tolerance_deg = 1.0  # type: ignore[misc]
+    with pytest.raises(ValueError, match="greater than or equal to zero"):
+        SolarPhaseRelationThresholds(conjunction_tolerance_deg=-0.1)
+    with pytest.raises(ValueError, match="must be finite"):
+        SolarPhaseRelationThresholds(conjunction_tolerance_deg=nan)
+    with pytest.raises(ValueError, match="less than 180"):
+        SolarPhaseRelationThresholds(conjunction_tolerance_deg=180.0)
+    with pytest.raises(ValueError, match="less than 180"):
+        SolarPhaseRelationThresholds(conjunction_tolerance_deg=180.1)
 
 
 def test_planetary_motion_profile_exposes_defaults_and_validates_thresholds() -> None:

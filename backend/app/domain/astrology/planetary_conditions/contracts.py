@@ -175,6 +175,22 @@ class SolarProximityThresholds:
 
 
 @dataclass(frozen=True, slots=True)
+class SolarPhaseRelationThresholds:
+    """Seuil de conjonction utilise pour la relation solaire geometrique."""
+
+    conjunction_tolerance_deg: float = 0.5
+
+    def __post_init__(self) -> None:
+        """Valide la tolerance sans autoriser une absorption du demi-cercle."""
+        if not isfinite(self.conjunction_tolerance_deg):
+            raise ValueError("conjunction tolerance must be finite")
+        if self.conjunction_tolerance_deg < 0:
+            raise ValueError("conjunction tolerance must be greater than or equal to zero")
+        if self.conjunction_tolerance_deg >= 180.0:
+            raise ValueError("conjunction tolerance must be less than 180")
+
+
+@dataclass(frozen=True, slots=True)
 class SolarProximityCondition:
     """Contrat factuel de proximite entre une planete et le Soleil."""
 

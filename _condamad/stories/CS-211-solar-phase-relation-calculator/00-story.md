@@ -1,6 +1,6 @@
 # Story CS-211 solar-phase-relation-calculator: Calculer la relation solaire oriental occidental
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -432,65 +432,65 @@ After implementation:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Capturer la baseline et confirmer l'ownership (AC: AC1, AC3, AC16, AC17, AC18, AC19, AC20)
-  - [ ] Subtask 1.1 - Inspecter `contracts.py`, `__init__.py`,
+- [x] Task 1 - Capturer la baseline et confirmer l'ownership (AC: AC1, AC3, AC16, AC17, AC18, AC19, AC20)
+  - [x] Subtask 1.1 - Inspecter `contracts.py`, `__init__.py`,
     `solar_proximity_calculator.py`, `planetary_motion_calculator.py`,
     `test_contracts.py`, CS-208, CS-209, CS-210 et
     `regression-guardrails.md`.
-  - [ ] Subtask 1.2 - Verifier l'absence preexistante de
+  - [x] Subtask 1.2 - Verifier l'absence preexistante de
     `solar_phase_relation_calculator.py`.
-  - [ ] Subtask 1.3 - Documenter dans l'evidence l'etat attendu de `RG-135`,
+  - [x] Subtask 1.3 - Documenter dans l'evidence l'etat attendu de `RG-135`,
     `RG-136`, `RG-137` et `RG-138`.
 
-- [ ] Task 2 - Ajouter le contrat de seuil (AC: AC3, AC4, AC16, AC17, AC18)
-  - [ ] Subtask 2.1 - Ajouter `SolarPhaseRelationThresholds` dans
+- [x] Task 2 - Ajouter le contrat de seuil (AC: AC3, AC4, AC16, AC17, AC18)
+  - [x] Subtask 2.1 - Ajouter `SolarPhaseRelationThresholds` dans
     `contracts.py` si absent.
-  - [ ] Subtask 2.2 - Utiliser `dataclass(frozen=True, slots=True)`.
-  - [ ] Subtask 2.3 - Valider que la tolerance est finie, positive ou nulle, et
+  - [x] Subtask 2.2 - Utiliser `dataclass(frozen=True, slots=True)`.
+  - [x] Subtask 2.3 - Valider que la tolerance est finie, positive ou nulle, et
     inferieure ou egale a `180.0`.
-  - [ ] Subtask 2.4 - Exporter le contrat depuis `__init__.py`.
+  - [x] Subtask 2.4 - Exporter le contrat depuis `__init__.py`.
 
-- [ ] Task 3 - Creer le calculateur de relation solaire pur (AC: AC1, AC2, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15, AC16, AC17, AC18, AC19)
-  - [ ] Subtask 3.1 - Creer `solar_phase_relation_calculator.py`.
-  - [ ] Subtask 3.2 - Implementer `_normalize_longitude_deg(value: float)`.
-  - [ ] Subtask 3.3 - Implementer l'angle relatif `(planet - sun) % 360.0`.
-  - [ ] Subtask 3.4 - Implementer la tolerance de conjonction autour de `0/360`.
-  - [ ] Subtask 3.5 - Implementer la convention d'opposition exacte occidentale
+- [x] Task 3 - Creer le calculateur de relation solaire pur (AC: AC1, AC2, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15, AC16, AC17, AC18, AC19)
+  - [x] Subtask 3.1 - Creer `solar_phase_relation_calculator.py`.
+  - [x] Subtask 3.2 - Implementer `_normalize_longitude_deg(value: float)`.
+  - [x] Subtask 3.3 - Implementer l'angle relatif `(planet - sun) % 360.0`.
+  - [x] Subtask 3.4 - Implementer la tolerance de conjonction autour de `0/360`.
+  - [x] Subtask 3.5 - Implementer la convention d'opposition exacte occidentale
     et la documenter.
-  - [ ] Subtask 3.6 - Implementer le cas `planet_key == "sun"`.
-  - [ ] Subtask 3.7 - Implementer la fonction batch si elle est retenue dans le
+  - [x] Subtask 3.6 - Implementer le cas `planet_key == "sun"`.
+  - [x] Subtask 3.7 - Implementer la fonction batch si elle est retenue dans le
     meme module pur.
-  - [ ] Subtask 3.8 - Exporter les fonctions publiques depuis `__init__.py`.
+  - [x] Subtask 3.8 - Exporter les fonctions publiques depuis `__init__.py`.
 
-- [ ] Task 4 - Ajouter les tests unitaires (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15)
-  - [ ] Subtask 4.1 - Creer
+- [x] Task 4 - Ajouter les tests unitaires (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15)
+  - [x] Subtask 4.1 - Creer
     `backend/tests/unit/domain/astrology/planetary_conditions/test_solar_phase_relation_calculator.py`.
-  - [ ] Subtask 4.2 - Tester occidental, oriental, conjonction exacte et
+  - [x] Subtask 4.2 - Tester occidental, oriental, conjonction exacte et
     tolerance par defaut.
-  - [ ] Subtask 4.3 - Tester opposition exacte `180.0` comme occidentale.
-  - [ ] Subtask 4.4 - Tester passage `359/0` et normalisation `361`, `-1`,
+  - [x] Subtask 4.3 - Tester opposition exacte `180.0` comme occidentale.
+  - [x] Subtask 4.4 - Tester passage `359/0` et normalisation `361`, `-1`,
     `720`.
-  - [ ] Subtask 4.5 - Tester le Soleil.
-  - [ ] Subtask 4.6 - Tester seuil personnalise et seuil invalide.
-  - [ ] Subtask 4.7 - Tester la fonction batch si elle est implementee.
-  - [ ] Subtask 4.8 - Etendre `test_contracts.py` pour
+  - [x] Subtask 4.5 - Tester le Soleil.
+  - [x] Subtask 4.6 - Tester seuil personnalise et seuil invalide.
+  - [x] Subtask 4.7 - Tester la fonction batch si elle est implementee.
+  - [x] Subtask 4.8 - Etendre `test_contracts.py` pour
     `SolarPhaseRelationThresholds` si le contrat est ajoute.
 
-- [ ] Task 5 - Ajouter et prouver les gardes anti-drift (AC: AC16, AC17, AC18, AC19, AC20)
-  - [ ] Subtask 5.1 - Verifier que `RG-135` protege toujours les contrats purs.
-  - [ ] Subtask 5.2 - Verifier que `RG-136` reste borne a la proximite solaire.
-  - [ ] Subtask 5.3 - Verifier que `RG-137` reste borne au mouvement
+- [x] Task 5 - Ajouter et prouver les gardes anti-drift (AC: AC16, AC17, AC18, AC19, AC20)
+  - [x] Subtask 5.1 - Verifier que `RG-135` protege toujours les contrats purs.
+  - [x] Subtask 5.2 - Verifier que `RG-136` reste borne a la proximite solaire.
+  - [x] Subtask 5.3 - Verifier que `RG-137` reste borne au mouvement
     planetaire.
-  - [ ] Subtask 5.4 - Verifier ou mettre a jour `RG-138` pour le calculateur de
+  - [x] Subtask 5.4 - Verifier ou mettre a jour `RG-138` pour le calculateur de
     relation solaire pur.
-  - [ ] Subtask 5.5 - Executer les scans imports interdits, scoring,
+  - [x] Subtask 5.5 - Executer les scans imports interdits, scoring,
     interpretation, visibilite avancee et surfaces adjacentes.
 
-- [ ] Task 6 - Valider la story (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15, AC16, AC17, AC18, AC19, AC20, AC21)
-  - [ ] Subtask 6.1 - Activer `.venv` avant toute commande Python.
-  - [ ] Subtask 6.2 - Executer le test cible.
-  - [ ] Subtask 6.3 - Executer `ruff format .`, `ruff check .` et `pytest -q`.
-  - [ ] Subtask 6.4 - Documenter les resultats dans `evidence/validation.md`.
+- [x] Task 6 - Valider la story (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15, AC16, AC17, AC18, AC19, AC20, AC21)
+  - [x] Subtask 6.1 - Activer `.venv` avant toute commande Python.
+  - [x] Subtask 6.2 - Executer le test cible.
+  - [x] Subtask 6.3 - Executer `ruff format .`, `ruff check .` et `pytest -q`.
+  - [x] Subtask 6.4 - Documenter les resultats dans `evidence/validation.md`.
 
 ## 9. Mandatory Reuse / DRY Constraints
 
