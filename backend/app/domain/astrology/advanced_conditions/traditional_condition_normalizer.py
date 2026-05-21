@@ -8,6 +8,7 @@ from app.domain.astrology.advanced_conditions.contracts import (
     AdvancedPlanetaryCondition,
     HayzCondition,
     RejoicingCondition,
+    SectNatureMitigationCondition,
     TraditionalConditionsResult,
     TraditionalPlanetCondition,
 )
@@ -41,6 +42,10 @@ class TraditionalConditionNormalizer:
                 raise ValueError("planet sect condition contract is required")
             planet_code = dignity.planet_code
             hayz_condition = advanced_by_planet.get((planet_code, "hayz"))
+            sect_nature_mitigation = _sect_nature_mitigation_from_condition(
+                advanced_conditions,
+                planet_code=planet_code,
+            )
             hayz_facts = dict(getattr(hayz_condition, "calculation_facts", {}) or {})
             joy_match = _first_match_by_type(dignity.accidental_breakdown, "planetary_joy")
             rejoicing_house = _joy_house_from_runtime(
@@ -102,6 +107,7 @@ class TraditionalConditionNormalizer:
                             else ()
                         ),
                     ),
+                    sect_nature_mitigation=sect_nature_mitigation,
                 )
             )
         return TraditionalConditionsResult(planets=tuple(planets))
@@ -171,6 +177,41 @@ def _condition_int(match: Any | None, key: str) -> int | None:
         if separator and name == key:
             return int(raw_value)
     return None
+
+
+def _sect_nature_mitigation_from_condition(
+    advanced_conditions: list[AdvancedPlanetaryCondition] | tuple[AdvancedPlanetaryCondition, ...],
+    *,
+    planet_code: str,
+) -> SectNatureMitigationCondition | None:
+    """Reconstruit le contrat CS-206 depuis une condition avancee pre-calculee."""
+    condition = next(
+        (
+            item
+            for item in advanced_conditions
+            if item.source_planet_code == planet_code
+            and item.condition_type_code == "sect_nature_mitigation"
+        ),
+        None,
+    )
+    if condition is None:
+        return None
+    facts = dict(condition.calculation_facts or {})
+    return SectNatureMitigationCondition(
+        planet_code=str(facts["planet_code"]),
+        planet_nature=str(facts["planet_nature"]),
+        chart_sect=str(facts["chart_sect"]),
+        intrinsic_sect=str(facts["intrinsic_sect"]),
+        planet_sect_condition=str(facts["planet_sect_condition"]),
+        is_in_sect=bool(facts["is_in_sect"]),
+        is_out_of_sect=bool(facts["is_out_of_sect"]),
+        mitigation_state=str(facts["mitigation_state"]),
+        condition_code=str(facts["condition_code"]),
+        condition_family=str(facts["condition_family"]),
+        calculation_basis=str(facts["calculation_basis"]),
+        reference_system=str(facts["reference_system"]),
+        evidence=tuple(str(item) for item in facts.get("evidence", ())),
+    )
 
 
 def _optional_bool(value: object) -> bool | None:

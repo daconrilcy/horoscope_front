@@ -23,6 +23,9 @@ from app.domain.astrology.advanced_conditions.mutual_reception_calculator import
 from app.domain.astrology.advanced_conditions.planet_speed_classifier import (
     PlanetSpeedClassifier,
 )
+from app.domain.astrology.advanced_conditions.sect_nature_mitigation_detector import (
+    SectNatureMitigationDetector,
+)
 from app.domain.astrology.condition.contracts import (
     PlanetConditionBreakdownItem,
     PlanetConditionExplanationFact,
@@ -87,6 +90,12 @@ class AdvancedConditionEngine:
                 by_dignity,
                 runtime_reference,
                 emit_condition,
+                condition_type_codes=condition_type_codes,
+            ),
+            *SectNatureMitigationDetector().calculate(
+                dignities=dignities,
+                runtime_reference=runtime_reference,
+                emit_condition=emit_condition,
                 condition_type_codes=condition_type_codes,
             ),
         )

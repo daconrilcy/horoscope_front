@@ -132,6 +132,7 @@ class AstrologyRuntimeReferenceRepository:
             "heliacal_setting",
             "oriental",
             "occidental",
+            "sect_nature_mitigation",
         }
     )
     _REQUIRED_INTERPRETATION_SIGNAL_CODES = frozenset(

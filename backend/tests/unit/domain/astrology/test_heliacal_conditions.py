@@ -19,10 +19,13 @@ def test_heliacal_and_orientation_conditions_are_projected() -> None:
         ),
     )
 
-    assert {item.condition_code for item in conditions} == {
+    solar_conditions = tuple(
+        item for item in conditions if item.condition_type_code != "sect_nature_mitigation"
+    )
+    assert {item.condition_code for item in solar_conditions} == {
         "oriental",
         "heliacal_rising",
         "occidental",
         "heliacal_setting",
     }
-    assert all(item.target_planet_code == "sun" for item in conditions)
+    assert all(item.target_planet_code == "sun" for item in solar_conditions)

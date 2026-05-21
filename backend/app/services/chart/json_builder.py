@@ -17,6 +17,16 @@ if TYPE_CHECKING:
 EVIDENCE_ID_PATTERN = re.compile(r"^[A-Z0-9_\.:-]{3,80}$")
 _CATALOG_PLANET_PREFIXES = tuple(f"{code.upper()}_" for code in planet_codes())
 _LUMINARY_EVIDENCE_PREFIXES = (*_CATALOG_PLANET_PREFIXES[:2], "ASC_", "MC_", "IC_", "DSC_")
+_SECT_NATURE_MITIGATION_CONDITION_CODES = frozenset(
+    {
+        "malefic_mitigated_by_sect",
+        "malefic_aggravated_out_of_sect",
+        "benefic_supported_by_sect",
+        "benefic_weakened_out_of_sect",
+        "sect_nature_neutral",
+        "sect_nature_unknown",
+    }
+)
 
 
 def _longitude_to_sign(longitude: float) -> str:
@@ -445,12 +455,22 @@ def _serialize_dignities(dignities: Any, chart_sect: Any = None) -> dict[str, An
     }
 
 
-def _serialize_condition_profiles(profiles: Any) -> dict[str, Any]:
+def _serialize_condition_profiles(
+    profiles: Any, *, neutralize_sect_dependent: bool = False
+) -> dict[str, Any]:
     """Projette les profils conditionnels deja calcules par le domaine."""
     planets: dict[str, Any] = {}
     if not isinstance(profiles, (list, tuple)):
         profiles = []
     for profile in profiles:
+        breakdown = _time_safe_condition_profile_breakdown(
+            getattr(profile, "breakdown", ()),
+            neutralize_sect_dependent=neutralize_sect_dependent,
+        )
+        explanation_facts = _time_safe_condition_profile_facts(
+            getattr(profile, "explanation_facts", ()),
+            neutralize_sect_dependent=neutralize_sect_dependent,
+        )
         planets[profile.planet_code] = {
             "planet_code": profile.planet_code,
             "score_profile": profile.score_profile,
@@ -481,14 +501,44 @@ def _serialize_condition_profiles(profiles: Any) -> dict[str, Any]:
                     "support": item.support,
                     "constraint": item.constraint,
                 }
-                for item in profile.breakdown
+                for item in breakdown
             ],
             "explanation_facts": [
-                {"fact_type": fact.fact_type, "value": fact.value}
-                for fact in profile.explanation_facts
+                {"fact_type": fact.fact_type, "value": fact.value} for fact in explanation_facts
             ],
         }
     return planets
+
+
+def _time_safe_condition_profile_breakdown(
+    breakdown: Any, *, neutralize_sect_dependent: bool = False
+) -> tuple[Any, ...]:
+    """Retire les contributions CS-206 quand le payload public masque la secte."""
+    if not isinstance(breakdown, (list, tuple)):
+        return ()
+    if not neutralize_sect_dependent:
+        return tuple(breakdown)
+    return tuple(
+        item
+        for item in breakdown
+        if getattr(item, "source", None) != "sect_nature_mitigation"
+        and getattr(item, "dignity_type_code", None) not in _SECT_NATURE_MITIGATION_CONDITION_CODES
+    )
+
+
+def _time_safe_condition_profile_facts(
+    explanation_facts: Any, *, neutralize_sect_dependent: bool = False
+) -> tuple[Any, ...]:
+    """Retire les faits courts CS-206 quand le payload public masque la secte."""
+    if not isinstance(explanation_facts, (list, tuple)):
+        return ()
+    if not neutralize_sect_dependent:
+        return tuple(explanation_facts)
+    return tuple(
+        fact
+        for fact in explanation_facts
+        if getattr(fact, "value", None) not in _SECT_NATURE_MITIGATION_CONDITION_CODES
+    )
 
 
 def _serialize_condition_signals(signal_sets: Any) -> dict[str, Any]:
@@ -571,6 +621,19 @@ def _serialize_advanced_conditions(advanced_conditions: Any) -> list[dict[str, A
     ]
 
 
+def _time_safe_advanced_conditions(
+    advanced_conditions: Any, *, neutralize_sect_dependent: bool = False
+) -> Any:
+    """Retire les faits avances dependants de l'heure quand le mode no-time l'exige."""
+    if not neutralize_sect_dependent or not isinstance(advanced_conditions, (list, tuple)):
+        return advanced_conditions
+    return [
+        condition
+        for condition in advanced_conditions
+        if getattr(condition, "condition_type_code", None) != "sect_nature_mitigation"
+    ]
+
+
 def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, Any] | None:
     """Projette le contrat traditionnel deja normalise par le domaine."""
     if traditional_conditions is None:
@@ -578,8 +641,9 @@ def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, 
     planets = getattr(traditional_conditions, "planets", ())
     if not isinstance(planets, (list, tuple)):
         return {}
-    return {
-        planet.planet_code: {
+    result: dict[str, Any] = {}
+    for planet in planets:
+        payload = {
             "planet_code": planet.planet_code,
             "hayz": {
                 "planet_code": planet.hayz.planet_code,
@@ -606,8 +670,25 @@ def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, 
                 "evidence": list(planet.rejoicing.evidence),
             },
         }
-        for planet in planets
-    }
+        mitigation = getattr(planet, "sect_nature_mitigation", None)
+        if mitigation is not None:
+            payload["sect_nature_mitigation"] = {
+                "planet_code": mitigation.planet_code,
+                "planet_nature": mitigation.planet_nature,
+                "chart_sect": mitigation.chart_sect,
+                "intrinsic_sect": mitigation.intrinsic_sect,
+                "planet_sect_condition": mitigation.planet_sect_condition,
+                "is_in_sect": mitigation.is_in_sect,
+                "is_out_of_sect": mitigation.is_out_of_sect,
+                "mitigation_state": mitigation.mitigation_state,
+                "condition_code": mitigation.condition_code,
+                "condition_family": mitigation.condition_family,
+                "calculation_basis": mitigation.calculation_basis,
+                "reference_system": mitigation.reference_system,
+                "evidence": list(mitigation.evidence),
+            }
+        result[planet.planet_code] = payload
+    return result
 
 
 def _serialize_interpretation_adapter(adapter: Any) -> dict[str, Any] | None:
@@ -785,13 +866,17 @@ def build_chart_json(
             getattr(natal_result, "dignity_sect", None),
         ),
         "planet_condition_profiles": _serialize_condition_profiles(
-            getattr(natal_result, "condition_profiles", [])
+            getattr(natal_result, "condition_profiles", []),
+            neutralize_sect_dependent=is_no_time,
         ),
         "planet_condition_signals": _serialize_condition_signals(
             getattr(natal_result, "condition_signals", [])
         ),
         "advanced_conditions": _serialize_advanced_conditions(
-            getattr(natal_result, "advanced_conditions", [])
+            _time_safe_advanced_conditions(
+                getattr(natal_result, "advanced_conditions", []),
+                neutralize_sect_dependent=is_no_time,
+            )
         ),
         "traditional_conditions": (
             None

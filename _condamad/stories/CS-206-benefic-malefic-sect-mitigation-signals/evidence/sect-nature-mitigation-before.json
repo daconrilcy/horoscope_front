@@ -1,0 +1,10 @@
+{
+  "snapshot": "CS-206 sect nature mitigation before",
+  "status": "absent_before_story",
+  "advanced_condition_codes": [],
+  "traditional_conditions": {},
+  "score_invariants": {
+    "dignity_scores_changed": false,
+    "reason": "No sect_nature_mitigation fact existed before CS-206."
+  }
+}

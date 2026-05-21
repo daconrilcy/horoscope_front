@@ -41,11 +41,12 @@ def test_hayz_and_out_of_sect_are_projected_from_canonical_sect_facts() -> None:
         ),
     )
 
-    assert [(item.source_planet_code, item.condition_code) for item in conditions] == [
+    condition_pairs = {(item.source_planet_code, item.condition_code) for item in conditions}
+    assert {
         ("mars", "out_of_sect"),
         ("sun", "hayz"),
-    ]
-    assert {item.condition_type_code for item in conditions} == {"hayz", "out_of_sect"}
+    } <= condition_pairs
+    assert {"hayz", "out_of_sect"} <= {item.condition_type_code for item in conditions}
     hayz = next(item for item in conditions if item.condition_code == "hayz")
     assert hayz.calculation_facts == {
         "sect_match": True,
@@ -73,7 +74,8 @@ def test_hayz_requires_in_sect_even_when_non_sect_factors_match() -> None:
         ),
     )
 
-    assert [item.condition_code for item in conditions] == ["out_of_sect"]
+    assert "out_of_sect" in {item.condition_code for item in conditions}
+    assert "hayz" not in {item.condition_code for item in conditions}
 
 
 def test_hayz_evaluates_later_runtime_rule_when_first_candidate_fails() -> None:

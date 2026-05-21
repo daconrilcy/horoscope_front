@@ -24,10 +24,15 @@ def test_speed_classifier_emits_stationary_fast_and_slow_conditions() -> None:
         ),
     )
 
-    assert {item.condition_code for item in conditions} == {
+    motion_conditions = tuple(
+        item for item in conditions if item.condition_type_code != "sect_nature_mitigation"
+    )
+    assert {item.condition_code for item in motion_conditions} == {
         "fast_motion",
         "slow_motion",
         "stationary_retrograde",
     }
-    stationary = next(item for item in conditions if item.condition_code == "stationary_retrograde")
+    stationary = next(
+        item for item in motion_conditions if item.condition_code == "stationary_retrograde"
+    )
     assert stationary.condition_type_code == "stationary"

@@ -8,6 +8,7 @@ from app.domain.astrology.advanced_conditions.contracts import (
     HayzCondition,
     PlanetConditionAxisImpact,
     RejoicingCondition,
+    SectNatureMitigationCondition,
     TraditionalConditionsResult,
     TraditionalPlanetCondition,
 )
@@ -21,6 +22,7 @@ __all__ = [
     "HayzCondition",
     "PlanetConditionAxisImpact",
     "RejoicingCondition",
+    "SectNatureMitigationCondition",
     "TraditionalConditionNormalizer",
     "TraditionalConditionsResult",
     "TraditionalPlanetCondition",

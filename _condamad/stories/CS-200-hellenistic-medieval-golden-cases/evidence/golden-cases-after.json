@@ -123,6 +123,7 @@
       "fixture_type": "synthetic_domain",
       "observed_summary": {
         "condition_codes": [
+          "benefic_weakened_out_of_sect",
           "fast_motion",
           "out_of_sect"
         ],
@@ -155,7 +156,8 @@
           "fast_motion",
           "heliacal_setting",
           "occidental",
-          "out_of_sect"
+          "out_of_sect",
+          "sect_nature_unknown"
         ],
         "sect_condition": {
           "calculation_basis": "chart_sect_vs_planet_intrinsic_sect",
@@ -183,7 +185,8 @@
       "observed_summary": {
         "condition_codes": [
           "fast_motion",
-          "hayz"
+          "hayz",
+          "sect_nature_unknown"
         ],
         "condition_signals": [
           "functional_strength_high"
@@ -236,6 +239,12 @@
             "family": "advanced",
             "score": 2.2,
             "source": "hayz"
+          },
+          {
+            "code": "sect_nature_unknown",
+            "family": "advanced",
+            "score": 0.0,
+            "source": "sect_nature_mitigation"
           }
         ]
       },
@@ -253,7 +262,8 @@
       "fixture_type": "synthetic_domain",
       "observed_summary": {
         "condition_codes": [
-          "fast_motion"
+          "fast_motion",
+          "sect_nature_unknown"
         ],
         "condition_signals": [
           "functional_strength_high"
@@ -294,6 +304,12 @@
             "family": "advanced",
             "score": 1.4,
             "source": "fast_motion"
+          },
+          {
+            "code": "sect_nature_unknown",
+            "family": "advanced",
+            "score": 0.0,
+            "source": "sect_nature_mitigation"
           }
         ],
         "sect_condition": {
@@ -478,31 +494,41 @@
       "fixture_type": "integrated_natal",
       "observed_summary": {
         "advanced_condition_codes": [
+          "benefic_weakened_out_of_sect",
           "besiegement",
           "heliacal_setting",
           "mutual_reception_by_domicile",
           "occidental",
           "out_of_sect",
           "heliacal_setting",
+          "malefic_mitigated_by_sect",
           "mutual_reception_by_domicile",
           "occidental",
           "besiegement",
           "bonification",
           "heliacal_setting",
           "occidental",
+          "sect_nature_unknown",
           "heliacal_setting",
           "maltreatment",
           "occidental",
+          "sect_nature_unknown",
           "heliacal_rising",
           "oriental",
+          "sect_nature_unknown",
           "heliacal_rising",
           "oriental",
+          "sect_nature_unknown",
           "heliacal_setting",
+          "malefic_aggravated_out_of_sect",
           "occidental",
           "out_of_sect",
           "out_of_sect",
+          "sect_nature_unknown",
           "heliacal_rising",
           "oriental",
+          "sect_nature_unknown",
+          "benefic_supported_by_sect",
           "heliacal_setting",
           "occidental"
         ],
@@ -579,31 +605,41 @@
         },
         "json_projection": {
           "advanced_conditions": [
+            "benefic_weakened_out_of_sect",
             "besiegement",
             "heliacal_setting",
             "mutual_reception_by_domicile",
             "occidental",
             "out_of_sect",
             "heliacal_setting",
+            "malefic_mitigated_by_sect",
             "mutual_reception_by_domicile",
             "occidental",
             "besiegement",
             "bonification",
             "heliacal_setting",
             "occidental",
+            "sect_nature_unknown",
             "heliacal_setting",
             "maltreatment",
             "occidental",
+            "sect_nature_unknown",
             "heliacal_rising",
             "oriental",
+            "sect_nature_unknown",
             "heliacal_rising",
             "oriental",
+            "sect_nature_unknown",
             "heliacal_setting",
+            "malefic_aggravated_out_of_sect",
             "occidental",
             "out_of_sect",
             "out_of_sect",
+            "sect_nature_unknown",
             "heliacal_rising",
             "oriental",
+            "sect_nature_unknown",
+            "benefic_supported_by_sect",
             "heliacal_setting",
             "occidental"
           ],

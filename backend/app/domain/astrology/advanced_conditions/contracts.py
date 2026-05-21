@@ -68,12 +68,84 @@ class RejoicingCondition:
 
 
 @dataclass(frozen=True, slots=True)
+class SectNatureMitigationCondition:
+    """Contrat explicite de modulation benefique/malefique par la secte."""
+
+    planet_code: str
+    planet_nature: str
+    chart_sect: str
+    intrinsic_sect: str
+    planet_sect_condition: str
+    is_in_sect: bool
+    is_out_of_sect: bool
+    mitigation_state: str
+    condition_code: str
+    condition_family: str
+    calculation_basis: str
+    reference_system: str
+    evidence: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Valide la forme publique stricte du contrat CS-206."""
+        if not self.planet_code.strip():
+            raise ValueError("planet_code is required")
+        if self.planet_nature not in {
+            "benefic",
+            "malefic",
+            "mixed",
+            "neutral",
+            "luminary",
+            "unknown",
+        }:
+            raise ValueError("planet_nature is invalid")
+        if self.chart_sect not in {"day", "night"}:
+            raise ValueError("chart_sect must be day or night")
+        if self.intrinsic_sect not in {"diurnal", "nocturnal", "common", "neutral", "unknown"}:
+            raise ValueError("intrinsic_sect is invalid")
+        if self.planet_sect_condition not in {
+            "in_sect",
+            "out_of_sect",
+            "neutral_to_sect",
+            "variable_by_condition",
+            "unknown",
+        }:
+            raise ValueError("planet_sect_condition is invalid")
+        if not isinstance(self.is_in_sect, bool) or not isinstance(self.is_out_of_sect, bool):
+            raise ValueError("sect flags must be booleans")
+        if self.mitigation_state not in {
+            "mitigated",
+            "aggravated",
+            "supported",
+            "weakened",
+            "neutral",
+            "unknown",
+        }:
+            raise ValueError("mitigation_state is invalid")
+        if self.condition_family != "sect_nature_mitigation":
+            raise ValueError("condition_family must be sect_nature_mitigation")
+        if self.condition_code not in {
+            "malefic_mitigated_by_sect",
+            "malefic_aggravated_out_of_sect",
+            "benefic_supported_by_sect",
+            "benefic_weakened_out_of_sect",
+            "sect_nature_neutral",
+            "sect_nature_unknown",
+        }:
+            raise ValueError("condition_code is invalid")
+        if not self.calculation_basis.strip():
+            raise ValueError("calculation_basis is required")
+        if not self.reference_system.strip():
+            raise ValueError("reference_system is required")
+
+
+@dataclass(frozen=True, slots=True)
 class TraditionalPlanetCondition:
     """Contrats traditionnels publics pour une planete."""
 
     planet_code: str
     hayz: HayzCondition
     rejoicing: RejoicingCondition
+    sect_nature_mitigation: SectNatureMitigationCondition | None = None
 
 
 @dataclass(frozen=True, slots=True)

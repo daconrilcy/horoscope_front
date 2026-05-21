@@ -80,6 +80,61 @@ def test_traditional_condition_normalizer_projects_calculated_hayz_and_rejoicing
     assert planet.rejoicing.rejoicing_house == 3
 
 
+def test_traditional_condition_normalizer_attaches_sect_nature_mitigation() -> None:
+    """Le bloc traditionnel expose les faits CS-206 deja calcules."""
+    dignity = _dignity(
+        planet_code="mars",
+        sect_condition=PlanetSectCondition(
+            planet_code="mars",
+            chart_sect="night",
+            intrinsic_sect="nocturnal",
+            planet_sect_condition="in_sect",
+            is_in_sect=True,
+            is_out_of_sect=False,
+            calculation_basis="chart_sect_vs_planet_intrinsic_sect",
+            reference_system="traditional",
+        ),
+        accidental_breakdown=(),
+    )
+    mitigation = AdvancedPlanetaryCondition(
+        condition_code="malefic_mitigated_by_sect",
+        condition_type_code="sect_nature_mitigation",
+        source_planet_code="mars",
+        target_planet_code=None,
+        score_profile="traditional_advanced_v1",
+        reference_version="v1",
+        score_impact=0.2,
+        ranking_weight=0.2,
+        axes_impact=_axis_impact(),
+        reason="mars has runtime nature malefic and sect condition in_sect.",
+        calculation_facts={
+            "planet_code": "mars",
+            "planet_nature": "malefic",
+            "chart_sect": "night",
+            "intrinsic_sect": "nocturnal",
+            "planet_sect_condition": "in_sect",
+            "is_in_sect": True,
+            "is_out_of_sect": False,
+            "mitigation_state": "mitigated",
+            "condition_code": "malefic_mitigated_by_sect",
+            "condition_family": "sect_nature_mitigation",
+            "calculation_basis": "runtime_planet_nature_plus_planet_sect_condition",
+            "reference_system": "traditional",
+            "evidence": ("runtime",),
+        },
+    )
+
+    result = TraditionalConditionNormalizer().normalize(
+        dignities=[dignity],
+        planet_positions=[SimpleNamespace(planet_code="mars", house_number=1)],
+        advanced_conditions=[mitigation],
+        runtime_reference=complete_reference(),
+    )
+
+    assert result.planets[0].sect_nature_mitigation is not None
+    assert result.planets[0].sect_nature_mitigation.condition_code == ("malefic_mitigated_by_sect")
+
+
 def test_traditional_condition_normalizer_requires_planet_sect_contract() -> None:
     """La normalisation refuse un resultat de dignite sans condition de secte."""
     dignity = _dignity(planet_code="sun", sect_condition=None, accidental_breakdown=())

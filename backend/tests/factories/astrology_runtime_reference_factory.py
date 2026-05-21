@@ -454,6 +454,7 @@ def _default_advanced_condition_types(reference_version: str) -> tuple[dict[str,
         ("heliacal_setting", -0.8, 110),
         ("oriental", 0.4, 120),
         ("occidental", 0.4, 130),
+        ("sect_nature_mitigation", 0.0, 140),
     )
     return tuple(
         {

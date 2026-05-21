@@ -1,0 +1,114 @@
+{
+  "snapshot": "CS-206 sect nature mitigation after",
+  "runtime_reference": "AstrologyRuntimeReference.planet_natures",
+  "condition_type": "sect_nature_mitigation",
+  "cases": [
+    {
+      "case": "malefic_in_sect",
+      "planet_code": "mars",
+      "runtime_nature": "malefic",
+      "condition_code": "malefic_mitigated_by_sect",
+      "mitigation_state": "mitigated",
+      "calculation_basis": "runtime_planet_nature_plus_planet_sect_condition",
+      "score_effect": 0.0,
+      "ranking_weight": 0.0,
+      "profile_breakdown_codes": [
+        "malefic_mitigated_by_sect"
+      ],
+      "score_invariants": {
+        "essential_score": 0.0,
+        "accidental_score": 0.0,
+        "total_score": 0.0,
+        "functional_strength_score": 0.0,
+        "expression_quality_score": 0.0,
+        "intensity_score": 0.0
+      }
+    },
+    {
+      "case": "malefic_out_of_sect",
+      "planet_code": "mars",
+      "runtime_nature": "malefic",
+      "condition_code": "malefic_aggravated_out_of_sect",
+      "mitigation_state": "aggravated",
+      "calculation_basis": "runtime_planet_nature_plus_planet_sect_condition",
+      "score_effect": 0.0,
+      "ranking_weight": 0.0,
+      "profile_breakdown_codes": [
+        "malefic_aggravated_out_of_sect",
+        "out_of_sect"
+      ],
+      "score_invariants": {
+        "essential_score": 0.0,
+        "accidental_score": 0.0,
+        "total_score": 0.0,
+        "functional_strength_score": 0.0,
+        "expression_quality_score": 0.0,
+        "intensity_score": 0.0
+      }
+    },
+    {
+      "case": "benefic_in_sect",
+      "planet_code": "jupiter",
+      "runtime_nature": "benefic",
+      "condition_code": "benefic_supported_by_sect",
+      "mitigation_state": "supported",
+      "calculation_basis": "runtime_planet_nature_plus_planet_sect_condition",
+      "score_effect": 0.0,
+      "ranking_weight": 0.0,
+      "profile_breakdown_codes": [
+        "benefic_supported_by_sect"
+      ],
+      "score_invariants": {
+        "essential_score": 0.0,
+        "accidental_score": 0.0,
+        "total_score": 0.0,
+        "functional_strength_score": 0.0,
+        "expression_quality_score": 0.0,
+        "intensity_score": 0.0
+      }
+    },
+    {
+      "case": "benefic_out_of_sect",
+      "planet_code": "jupiter",
+      "runtime_nature": "benefic",
+      "condition_code": "benefic_weakened_out_of_sect",
+      "mitigation_state": "weakened",
+      "calculation_basis": "runtime_planet_nature_plus_planet_sect_condition",
+      "score_effect": 0.0,
+      "ranking_weight": 0.0,
+      "profile_breakdown_codes": [
+        "benefic_weakened_out_of_sect",
+        "out_of_sect"
+      ],
+      "score_invariants": {
+        "essential_score": 0.0,
+        "accidental_score": 0.0,
+        "total_score": 0.0,
+        "functional_strength_score": 0.0,
+        "expression_quality_score": 0.0,
+        "intensity_score": 0.0
+      }
+    },
+    {
+      "case": "unknown_runtime_nature",
+      "planet_code": "uranus",
+      "runtime_nature": null,
+      "condition_code": "sect_nature_unknown",
+      "mitigation_state": "unknown",
+      "calculation_basis": "runtime_planet_nature_plus_planet_sect_condition",
+      "score_effect": 0.0,
+      "ranking_weight": 0.0,
+      "profile_breakdown_codes": [
+        "sect_nature_unknown"
+      ],
+      "score_invariants": {
+        "essential_score": 0.0,
+        "accidental_score": 0.0,
+        "total_score": 0.0,
+        "functional_strength_score": 0.0,
+        "expression_quality_score": 0.0,
+        "intensity_score": 0.0
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 """Tests de projection JSON publique du theme natal."""
 
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -8,6 +9,7 @@ import pytest
 from app.domain.astrology.advanced_conditions.contracts import (
     AdvancedPlanetaryCondition,
     PlanetConditionAxisImpact,
+    SectNatureMitigationCondition,
 )
 from app.domain.astrology.advanced_conditions.traditional_condition_normalizer import (
     TraditionalConditionNormalizer,
@@ -56,8 +58,10 @@ from app.domain.astrology.runtime.sign_runtime_data import (
 )
 from app.services.chart.json_builder import (
     EVIDENCE_ID_PATTERN,
+    _serialize_advanced_conditions,
     _serialize_dignities,
     _serialize_traditional_conditions,
+    _time_safe_advanced_conditions,
     build_chart_json,
     build_evidence_catalog,
 )
@@ -844,6 +848,111 @@ def test_serialize_traditional_conditions_exposes_rejoicing_contract() -> None:
     }
 
 
+def test_serialize_traditional_conditions_exposes_sect_nature_mitigation_contract() -> None:
+    """La projection JSON expose les faits CS-206 sans les recalculer."""
+    traditional_conditions = SimpleNamespace(
+        planets=(
+            SimpleNamespace(
+                planet_code="mars",
+                hayz=SimpleNamespace(
+                    planet_code="mars",
+                    is_hayz=False,
+                    sect_match=True,
+                    hemisphere_match=None,
+                    sign_gender_match=None,
+                    chart_sect="night",
+                    intrinsic_sect="nocturnal",
+                    planet_sect_condition="in_sect",
+                    planet_horizon_position="unknown",
+                    sign_gender="unknown",
+                    calculation_basis="sect_hemisphere_sign_gender",
+                    reference_system="traditional",
+                    evidence=(),
+                ),
+                rejoicing=SimpleNamespace(
+                    planet_code="mars",
+                    is_rejoicing=False,
+                    current_house=1,
+                    rejoicing_house=None,
+                    calculation_basis="planetary_joy_house",
+                    reference_system="traditional",
+                    evidence=(),
+                ),
+                sect_nature_mitigation=SectNatureMitigationCondition(
+                    planet_code="mars",
+                    planet_nature="malefic",
+                    chart_sect="night",
+                    intrinsic_sect="nocturnal",
+                    planet_sect_condition="in_sect",
+                    is_in_sect=True,
+                    is_out_of_sect=False,
+                    mitigation_state="mitigated",
+                    condition_code="malefic_mitigated_by_sect",
+                    condition_family="sect_nature_mitigation",
+                    calculation_basis="runtime_planet_nature_plus_planet_sect_condition",
+                    reference_system="traditional",
+                    evidence=("runtime",),
+                ),
+            ),
+        )
+    )
+
+    payload = _serialize_traditional_conditions(traditional_conditions)
+
+    assert payload["mars"]["sect_nature_mitigation"] == {
+        "planet_code": "mars",
+        "planet_nature": "malefic",
+        "chart_sect": "night",
+        "intrinsic_sect": "nocturnal",
+        "planet_sect_condition": "in_sect",
+        "is_in_sect": True,
+        "is_out_of_sect": False,
+        "mitigation_state": "mitigated",
+        "condition_code": "malefic_mitigated_by_sect",
+        "condition_family": "sect_nature_mitigation",
+        "calculation_basis": "runtime_planet_nature_plus_planet_sect_condition",
+        "reference_system": "traditional",
+        "evidence": ["runtime"],
+    }
+
+
+def test_no_time_mode_removes_sect_nature_mitigation_from_advanced_conditions() -> None:
+    """Le mode sans heure ne doit pas exposer les faits CS-206 dependants de la secte."""
+    mitigation = AdvancedPlanetaryCondition(
+        condition_code="malefic_mitigated_by_sect",
+        condition_type_code="sect_nature_mitigation",
+        source_planet_code="mars",
+        target_planet_code=None,
+        score_profile="traditional_advanced_v1",
+        reference_version="v1",
+        score_impact=0.0,
+        ranking_weight=0.0,
+        axes_impact=PlanetConditionAxisImpact(0, 0, 0, 0, 0, 0, 0),
+        reason="mars has runtime nature malefic and sect condition in_sect.",
+    )
+    hayz = AdvancedPlanetaryCondition(
+        condition_code="hayz",
+        condition_type_code="hayz",
+        source_planet_code="sun",
+        target_planet_code=None,
+        score_profile="traditional_advanced_v1",
+        reference_version="v1",
+        score_impact=1.0,
+        ranking_weight=1.0,
+        axes_impact=PlanetConditionAxisImpact(0, 0, 0, 0, 0, 0, 0),
+        reason="sun matches hayz.",
+    )
+
+    result = _serialize_advanced_conditions(
+        _time_safe_advanced_conditions(
+            [mitigation, hayz],
+            neutralize_sect_dependent=True,
+        )
+    )
+
+    assert [item["condition_code"] for item in result] == ["hayz"]
+
+
 def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):
     rich_house = mock_natal_result.houses[0]
     rich_house.number = 1
@@ -958,10 +1067,67 @@ def test_house_rulers_legacy_payload_ignores_stale_result_when_runtime_ruler_mis
 
 def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
     mock_birth_profile.birth_time = None
+    mock_natal_result.advanced_conditions.append(
+        AdvancedPlanetaryCondition(
+            condition_code="malefic_mitigated_by_sect",
+            condition_type_code="sect_nature_mitigation",
+            source_planet_code="mars",
+            target_planet_code=None,
+            score_profile="traditional_advanced_v1",
+            reference_version="v1",
+            score_impact=0.0,
+            ranking_weight=0.0,
+            axes_impact=PlanetConditionAxisImpact(0, 0, 0, 0, 0, 0, 0),
+            reason="mars has runtime nature malefic and sect condition in_sect.",
+        )
+    )
+    profile = mock_natal_result.condition_profiles[0]
+    mock_natal_result.condition_profiles = [
+        replace(
+            profile,
+            breakdown=(
+                *profile.breakdown,
+                PlanetConditionBreakdownItem(
+                    dignity_family="advanced",
+                    dignity_type_code="malefic_mitigated_by_sect",
+                    source="sect_nature_mitigation",
+                    reason="mars has runtime nature malefic and sect condition in_sect.",
+                    score_value=0.0,
+                    functional_strength=0.0,
+                    visibility=0.0,
+                    stability=0.0,
+                    intensity=0.0,
+                    coherence=0.0,
+                    support=0.0,
+                    constraint=0.0,
+                ),
+            ),
+            explanation_facts=(
+                *profile.explanation_facts,
+                PlanetConditionExplanationFact(
+                    "advanced_condition",
+                    "malefic_mitigated_by_sect",
+                ),
+            ),
+        )
+    ]
+
     chart = build_chart_json(mock_natal_result, mock_birth_profile)
 
     assert chart["meta"]["degraded_mode"] == "no_time"
     assert chart["meta"]["birth_time"] is None
+    assert all(
+        item["condition_type"] != "sect_nature_mitigation" for item in chart["advanced_conditions"]
+    )
+    profile_payload = chart["planet_condition_profiles"]["sun"]
+    assert all(
+        item["dignity_type_code"] != "malefic_mitigated_by_sect"
+        for item in profile_payload["breakdown"]
+    )
+    assert all(
+        fact["value"] != "malefic_mitigated_by_sect"
+        for fact in profile_payload["explanation_facts"]
+    )
 
     # Planets should have house as None
     for p in chart["planets"]:

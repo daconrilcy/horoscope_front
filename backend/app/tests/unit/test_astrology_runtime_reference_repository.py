@@ -227,6 +227,7 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
         "heliacal_setting",
         "oriental",
         "occidental",
+        "sect_nature_mitigation",
     ]
     assert (
         reference.advanced_condition_reference.condition_types[0].description
@@ -255,6 +256,7 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
         "heliacal_setting",
         "oriental",
         "occidental",
+        "sect_nature_mitigation",
     ]
     advanced_weight = reference.advanced_condition_reference.weights_for_profile(
         "traditional_advanced_v1"
