@@ -18,7 +18,12 @@ from app.domain.astrology.planetary_conditions.contracts import (
     SolarPhaseRelationKey,
     SolarProximityCondition,
     SolarProximityConditionKey,
+    SolarProximityThresholds,
     WaxingWaningState,
+)
+from app.domain.astrology.planetary_conditions.solar_proximity_calculator import (
+    calculate_solar_proximity_condition,
+    calculate_solar_proximity_conditions,
 )
 
 __all__ = (
@@ -39,5 +44,8 @@ __all__ = (
     "SolarPhaseRelationKey",
     "SolarProximityCondition",
     "SolarProximityConditionKey",
+    "SolarProximityThresholds",
     "WaxingWaningState",
+    "calculate_solar_proximity_condition",
+    "calculate_solar_proximity_conditions",
 )

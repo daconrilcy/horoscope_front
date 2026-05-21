@@ -24,10 +24,12 @@ from app.domain.astrology.planetary_conditions import (
     SolarPhaseRelationKey,
     SolarProximityCondition,
     SolarProximityConditionKey,
+    SolarProximityThresholds,
     WaxingWaningState,
 )
 
 PUBLIC_CONTRACTS = (
+    SolarProximityThresholds,
     SolarProximityCondition,
     PlanetarySolarPhaseRelation,
     PlanetaryMotionCondition,
@@ -128,6 +130,23 @@ def test_all_public_contracts_are_importable_frozen_and_slotted() -> None:
     with pytest.raises(FrozenInstanceError):
         proximity.planet_key = "mars"  # type: ignore[misc]
     assert not hasattr(proximity, "__dict__")
+
+
+def test_solar_proximity_thresholds_expose_defaults_and_validate_order() -> None:
+    """Les seuils solaires restent explicites, immuables et ordonnes."""
+    thresholds = SolarProximityThresholds()
+
+    assert thresholds.cazimi_max_distance_deg == 17.0 / 60.0
+    assert thresholds.combust_max_distance_deg == 8.5
+    assert thresholds.under_beams_max_distance_deg == 15.0
+    with pytest.raises(FrozenInstanceError):
+        thresholds.combust_max_distance_deg = 7.0  # type: ignore[misc]
+    with pytest.raises(ValueError, match="0 <= cazimi <= combust <= under_beams"):
+        SolarProximityThresholds(
+            cazimi_max_distance_deg=9.0,
+            combust_max_distance_deg=8.5,
+            under_beams_max_distance_deg=15.0,
+        )
 
 
 def test_contracts_can_be_instantiated_with_required_fields() -> None:

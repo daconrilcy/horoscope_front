@@ -113,6 +113,27 @@ class PlanetaryConditionFamily(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class SolarProximityThresholds:
+    """Seuils angulaires utilises pour classer la proximite solaire."""
+
+    cazimi_max_distance_deg: float = 17.0 / 60.0
+    combust_max_distance_deg: float = 8.5
+    under_beams_max_distance_deg: float = 15.0
+
+    def __post_init__(self) -> None:
+        """Valide l'ordre strictement canonique des seuils solaires."""
+        if not (
+            0
+            <= self.cazimi_max_distance_deg
+            <= self.combust_max_distance_deg
+            <= self.under_beams_max_distance_deg
+        ):
+            raise ValueError(
+                "solar proximity thresholds must satisfy 0 <= cazimi <= combust <= under_beams"
+            )
+
+
+@dataclass(frozen=True, slots=True)
 class SolarProximityCondition:
     """Contrat factuel de proximite entre une planete et le Soleil."""
 
