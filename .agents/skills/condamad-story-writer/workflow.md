@@ -203,6 +203,43 @@ Check:
 
 If yes, tighten the story before writing final output.
 
+## Step 6c - Source-Alignment Review
+
+After the rédaction review and adversarial story review, verify that the story
+still answers the stakes of the original source.
+
+Restate the source in bounded terms:
+
+- original brief, audit finding, review finding, architecture decision, or
+  issue;
+- source stakes: user impact, technical risk, closure expectation, forbidden
+  regression, or unresolved decision;
+- expected closure shape: full closure, bounded phase, explicit blocker, or
+  non-domain deferral.
+
+Check the final story against that restated source:
+
+- objective maps to the source problem, not to a nearby cleanup;
+- target state resolves the source stakes without broadening the domain;
+- ACs cover each source stake with deterministic or explicitly bounded
+  evidence;
+- tasks map to ACs that answer the source, not only to formatting or structure;
+- non-goals do not exclude a required source concern;
+- regression guardrails cover the source regression risk when applicable;
+- validation commands prove the expected closure shape;
+- assumptions and blockers are visible when the source cannot be fully answered.
+
+For audit-to-story inputs, compare the closure ledger against the source audit
+one final time. The story must not silently downgrade an expected full closure
+into a partial phase, `PASS with limitation`, compatibility path, allowlist, or
+future cleanup.
+
+If any source stake is missing, vague, or deferred without an explicit decision,
+revise the story and rerun Steps 5, 6, 6b, and 6c before writing final output.
+
+Record the review result in the story source/context or current-state evidence
+section as source-alignment evidence.
+
 ## Step 7 - Write Final Story
 
 Persist the final story at the requested path or at:

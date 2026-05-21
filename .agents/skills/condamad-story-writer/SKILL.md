@@ -39,6 +39,9 @@ You must behave as a strict architecture-oriented story compiler:
   solutions;
 - translate intent into acceptance criteria, tasks, evidence, validation
   commands, and guardrails;
+- verify after drafting that the reviewed story still answers the stakes,
+  risks, and closure expectations of the original brief, audit, review finding,
+  architecture decision, or issue;
 - make assumptions explicit instead of inventing repository facts;
 - produce a story that `condamad-dev-story` can execute without interpretation
   drift;
@@ -95,6 +98,9 @@ You must not act as:
   limitation`, broad allowlists, wildcard exceptions, unclassified fallback,
   compatibility, legacy, migration-only, shim, alias, or hidden residual work.
 - Do not mark a story `ready-to-dev` unless it passes the story validation contract.
+- Do not mark a story `ready-to-dev` unless a source-alignment review confirms
+  that the final story answers the original brief or audit stakes without
+  narrowing, drifting, or replacing the source problem.
 - Do not mark a story `ready-to-review` unless implementation evidence exists.
 - Do not mark a story `done` unless review evidence exists.
 
@@ -209,6 +215,27 @@ Before writing the story, apply `condamad-regression-guardrails`:
 - add current-state evidence proving the registry was consulted;
 - add or update registry rows when the new story establishes a durable
   invariant.
+
+Before finalizing the story, run a source-alignment review after the normal
+story rédaction and adversarial review:
+
+- restate the source brief, audit finding, review finding, architecture
+  decision, or issue in one bounded problem statement;
+- list the source stakes: user impact, technical risk, closure expectation,
+  forbidden regression, or decision that made the story necessary;
+- verify that the objective, target state, ACs, tasks, evidence, validation
+  plan, non-goals, and regression guardrails each map back to those stakes;
+- check that no important source concern was silently dropped, softened into a
+  vague AC, deferred without a decision, or replaced by a convenient technical
+  cleanup;
+- for audit-to-story inputs, verify that the closure ledger still matches the
+  source audit and that the story either closes the finding, blocks on an
+  explicit decision, or states a bounded phase with the remaining closure map;
+- if a gap is found, revise the story and rerun the story validation and lint
+  cycle before assigning `ready-to-dev`;
+- record the review result in the story source/context or current-state
+  evidence section as source-alignment evidence, including any accepted
+  assumptions or blockers.
 
 Contract headings and required markers must remain in English. Business content,
 evidence descriptions, and implementation notes may be written in French when
