@@ -1,6 +1,6 @@
 # Story CS-207 traditional-advanced-final-audit-documentation: Auditer et documenter la chaine traditionnelle avancee
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -72,7 +72,7 @@ This story belongs to exactly one domain:
   - refactorer massivement l'architecture;
   - introduire des alias, shims, compatibilites ou fallbacks.
 - Explicit non-goals:
-  - ne pas changer les invariants `RG-124` a `RG-133`;
+  - ne pas changer les invariants `RG-124` a `RG-134`;
   - ne pas creer de nouveau moteur de calcul;
   - ne pas rendre `json_builder.py`, le frontend, la persistance d'audit, les
     profils, la dominance ou l'adaptateur interpretatif proprietaires de la
@@ -157,7 +157,7 @@ This story belongs to exactly one domain:
   - statut final JSON.
 - Secondary evidence:
   - `story-status.md` prouve CS-197 a CS-206 en `done`;
-  - `regression-guardrails.md` prouve les invariants `RG-124` a `RG-133`;
+  - `regression-guardrails.md` prouve les invariants `RG-124` a `RG-134`;
   - evidence historique des stories CS-197 a CS-206 quand elle est requise par
     la cartographie.
 - Static scans alone are not sufficient because:
