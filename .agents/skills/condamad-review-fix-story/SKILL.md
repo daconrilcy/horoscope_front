@@ -1,6 +1,6 @@
 ---
 name: condamad-review-fix-story
-description: "Orchestrate a CONDAMAD story closure loop: run condamad-code-review on one implemented story, detect every review issue, fix all issues, validate, then repeat review until no issues remain. Use when the user asks to review and correct a CONDAMAD story, close a story after review, make a story done, or run an automated Review to Fix to Review cycle before commit and push."
+description: "Orchestrate a CONDAMAD story closure loop: run condamad-code-review on one implemented story, detect every review issue, fix all issues, validate, then repeat review until no issues remain. Use when the user asks to review and correct a CONDAMAD story, close a story after review, make a story done, or run an automated Review to Fix to Review cycle before commit and push. Invoke condamad-feedback-loop before closure when review findings, user corrections, failed validations, regressions, or repeated execution mistakes reveal reusable learning that should update evidence, tests, guardrails, AGENTS.md, or an owning skill."
 ---
 
 # CONDAMAD Review Fix Story
@@ -25,11 +25,13 @@ through the `condamad-frontend-dev` contract.
 
 When review findings, user corrections, failed validations, regressions, or
 repeated execution mistakes reveal reusable learning, invoke
-`$condamad-feedback-loop` before closure. Keep the loop scoped to the current
-story, apply only accepted feedback, validate the resulting code, evidence,
-guardrail, AGENTS.md, or skill changes, and record any propagation. If explicit
-skill invocation is unavailable, read `../condamad-feedback-loop/SKILL.md` and
-follow its workflow.
+`$condamad-feedback-loop` before closure and record the routing decision in the
+review/fix evidence. Keep the loop scoped to the current story, apply only
+accepted feedback, validate the resulting code, evidence, guardrail, AGENTS.md,
+or skill changes, and record any propagation. Do not invoke the loop for
+one-off local edits that are fully resolved and have no reusable learning value.
+If explicit skill invocation is unavailable, read
+`../condamad-feedback-loop/SKILL.md` and follow its workflow.
 
 ## Required inputs
 
@@ -210,23 +212,27 @@ When a fresh review has no issues:
    - `generated/10-final-evidence.md` with final validation and remaining risk.
    - `generated/11-code-review.md` with the final clean review evidence.
    - frontend review-fix evidence when any frontend surface changed.
-2. Update `_condamad/stories/story-status.md`:
+2. Check whether the loop produced reusable learning:
+   - invoke `condamad-feedback-loop` for accepted reusable feedback;
+   - record `no-propagation` when every correction was local and fully
+     contained.
+3. Update `_condamad/stories/story-status.md`:
    - locate the row by story ID, story key, or `00-story.md` path;
    - set `Status` to `done`;
    - update `Last update` to the current local date in `YYYY-MM-DD` format;
    - preserve story ID, key, title, path, source, and table shape.
-3. Run final validation required by the story and repository.
-4. Review `git diff --stat` and `git diff` to confirm scope.
-5. Confirm audit-source closure status is closed, intentionally phased with
+4. Run final validation required by the story and repository.
+5. Review `git diff --stat` and `git diff` to confirm scope.
+6. Confirm audit-source closure status is closed, intentionally phased with
    remaining map, blocked by an explicit decision, or non-domain. Do not close a
    full-closure story with hidden residual in-domain work.
-6. Commit only the story closure changes with a concise message, for example:
+7. Commit only the story closure changes with a concise message, for example:
 
 ```text
 chore(condamad): close CS-013 review
 ```
 
-7. Push the current branch with a non-destructive push:
+8. Push the current branch with a non-destructive push:
 
 ```powershell
 git push

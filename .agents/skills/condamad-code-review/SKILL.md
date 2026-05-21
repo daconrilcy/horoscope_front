@@ -6,7 +6,10 @@ description: >
   BMAD story in review, a branch diff, staged changes, or uncommitted changes
   with Codex-native review discipline. Optimized for modern Codex-class models
   and GPT-5.4/5.5: repository grounded, evidence-first, adversarial, and
-  compatible with sessions where subagents are optional or unavailable.
+  compatible with sessions where subagents are optional or unavailable. Invoke
+  condamad-feedback-loop after the verdict when review evidence reveals
+  reusable process learning, repeated mistakes, regression guardrail gaps, or a
+  needed skill/AGENTS.md adjustment.
 ---
 
 <!-- Skill CONDAMAD de revue adversariale post-story, concu pour Codex. -->
@@ -52,7 +55,8 @@ Before reviewing, load:
   contract as `condamad-story-writer`.
 - When review evidence reveals reusable process learning, repeated mistakes, or
   a needed skill/guardrail/AGENTS.md adjustment, invoke
-  `$condamad-feedback-loop` after the review verdict. If explicit skill
+  `$condamad-feedback-loop` after the review verdict and record whether the
+  result was propagated or classified as no-propagation. If explicit skill
   invocation is unavailable, read `../condamad-feedback-loop/SKILL.md` and
   follow its workflow. Do not let the feedback loop hide or downgrade review
   findings.

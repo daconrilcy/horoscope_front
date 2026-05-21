@@ -9,7 +9,11 @@ description: >
   without automatic commit or push unless the user explicitly asks for it. Use
   when the user asks to develop a story with independent review, run dev then
   review/fix, finish a CONDAMAD story end-to-end, or use dedicated subagents for
-  story review after implementation.
+  story review after implementation. During closure, invoke
+  condamad-feedback-loop when review findings, user corrections, failed
+  validations, regressions, or repeated execution mistakes reveal reusable
+  learning that should update evidence, tests, guardrails, AGENTS.md, or an
+  owning skill.
 ---
 
 <!-- Skill orchestrateur CONDAMAD pour developper, revoir et corriger une story avec separation de contexte. -->
@@ -29,9 +33,12 @@ orchestration loop:
    closure loop.
 5. Use `../condamad-frontend-dev/SKILL.md` for every frontend implementation
    and frontend review-fix slice.
-6. Verify that the story is sufficient to close the finding or bounded phase it
+6. Invoke `../condamad-feedback-loop/SKILL.md` before closure when accepted
+   feedback reveals reusable learning that must be propagated to evidence,
+   tests, guardrails, AGENTS.md, or the owning skill.
+7. Verify that the story is sufficient to close the finding or bounded phase it
    claims to close before spending implementation time.
-7. Keep final triage, fixes, validation, and status synchronization in the main
+8. Keep final triage, fixes, validation, and status synchronization in the main
    Codex session.
 
 This skill composes existing CONDAMAD skills. Do not duplicate or weaken their
@@ -76,12 +83,12 @@ to make the workflow pass.
 
 When review findings, user corrections, failed validations, regressions, or
 repeated execution mistakes reveal reusable learning, invoke
-`$condamad-feedback-loop` before final closure. Apply only accepted feedback,
-validate the resulting code, evidence, guardrail, AGENTS.md, or skill changes,
-and record any propagation. Do not invoke the loop for one-off local edits that
-are fully resolved and have no reusable learning value. If explicit skill
-invocation is unavailable, read `../condamad-feedback-loop/SKILL.md` and follow
-its workflow.
+`$condamad-feedback-loop` before final closure and record the decision in the
+review or final evidence. Apply only accepted feedback, validate the resulting
+code, evidence, guardrail, AGENTS.md, or skill changes, and record any
+propagation. Do not invoke the loop for one-off local edits that are fully
+resolved and have no reusable learning value. If explicit skill invocation is
+unavailable, read `../condamad-feedback-loop/SKILL.md` and follow its workflow.
 
 ## Subagent authorization
 
@@ -352,6 +359,9 @@ Before accepting a clean result, perform a final source-finding closure check:
   migration-only, No Legacy exception, or TODO was introduced to pass tests;
 - all changed frontend surfaces have exact guard coverage or a documented reason
   why existing guards already cover them.
+- reusable learning from review findings, user corrections, failed validations,
+  regressions, or repeated execution mistakes has either been routed through
+  `condamad-feedback-loop` or explicitly classified as local/no-propagation.
 
 Stop only for a real blocker: missing story, unreadable required instructions,
 unsafe destructive change, conflicting acceptance criteria, repeated validation

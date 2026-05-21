@@ -5,8 +5,12 @@ description: >
   execution method. Use when the user asks to implement, develop, continue, or
   fix a single story with CONDAMAD; when converting a BMAD story into a Codex
   execution capsule; or when implementing architecture/refactor stories that
-  require DRY, No Legacy, tests, validation, and final evidence. Do not use for
-  pure story writing, roadmap planning, review-only analysis, or broad multi-story epics.
+  require DRY, No Legacy, tests, validation, and final evidence. Invoke
+  condamad-feedback-loop before closure when failed validation, user correction,
+  regression evidence, or repeated execution mistakes reveal reusable learning
+  that should update evidence, tests, guardrails, AGENTS.md, or an owning skill.
+  Do not use for pure story writing, roadmap planning, review-only analysis, or
+  broad multi-story epics.
 ---
 
 # CONDAMAD Dev Story
@@ -41,6 +45,8 @@ Before implementing a story, read these references from this skill:
 - `references/validation-contract.md`
 - `references/no-legacy-contract.md`
 - `../condamad-regression-guardrails/SKILL.md`
+- `../condamad-feedback-loop/SKILL.md` when failed validation, user correction,
+  regression evidence, or repeated execution mistakes reveal reusable learning.
 - `../condamad-frontend-dev/SKILL.md` when the story touches `frontend/`,
   frontend tests, frontend styles, frontend build tooling, or user-facing React
   behavior.
@@ -53,6 +59,9 @@ These references are normative for CONDAMAD execution. If they conflict with thi
 - `no-legacy-contract.md` wins for No Legacy interpretation.
 - `condamad-regression-guardrails` wins for the shared inter-story invariant
   registry workflow.
+- `condamad-feedback-loop` wins for classifying accepted feedback and deciding
+  whether to propagate learning to evidence, tests, guardrails, AGENTS.md, or
+  an owning skill.
 - `condamad-frontend-dev` wins for frontend implementation discipline,
   frontend validation, frontend static guards, and frontend regression
   guardrail handling.
@@ -461,6 +470,8 @@ Update:
 - `_condamad/stories/story-status.md`.
 - `_condamad/stories/regression-guardrails.md` when this implementation creates
   a new durable invariant or changes an existing guard.
+- code, evidence, guardrails, AGENTS.md, or the owning skill through
+  `condamad-feedback-loop` when accepted feedback reveals reusable learning.
 
 Record:
 
@@ -473,6 +484,8 @@ Record:
 - frontend subagent result and evidence when a frontend slice existed;
 - remaining risks.
 - source finding closure status when the story came from an audit.
+- feedback-loop routing decision: propagated through `condamad-feedback-loop`,
+  deferred with rationale, or `no-propagation` for fully contained local fixes.
 
 Synchronize the canonical story registry:
 
