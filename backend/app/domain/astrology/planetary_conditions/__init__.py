@@ -16,6 +16,7 @@ from app.domain.astrology.planetary_conditions.contracts import (
     PlanetarySpeedState,
     PlanetVisibilityCondition,
     PlanetVisibilityKey,
+    PlanetVisibilityThresholds,
     SolarPhaseRelationKey,
     SolarPhaseRelationThresholds,
     SolarProximityCondition,
@@ -32,6 +33,10 @@ from app.domain.astrology.planetary_conditions.planetary_motion_calculator impor
 )
 from app.domain.astrology.planetary_conditions.planetary_motion_profiles import (
     DEFAULT_PLANETARY_MOTION_PROFILES,
+)
+from app.domain.astrology.planetary_conditions.planetary_visibility_calculator import (
+    calculate_planet_visibility_condition,
+    calculate_planet_visibility_conditions,
 )
 from app.domain.astrology.planetary_conditions.solar_phase_relation_calculator import (
     calculate_solar_phase_relation,
@@ -63,11 +68,14 @@ __all__ = (
     "SolarProximityCondition",
     "SolarProximityConditionKey",
     "SolarProximityThresholds",
+    "PlanetVisibilityThresholds",
     "WaxingWaningState",
     "DEFAULT_PLANETARY_MOTION_PROFILES",
     "calculate_moon_phase_condition",
     "calculate_planetary_motion_condition",
     "calculate_planetary_motion_conditions",
+    "calculate_planet_visibility_condition",
+    "calculate_planet_visibility_conditions",
     "calculate_solar_phase_relation",
     "calculate_solar_phase_relations",
     "calculate_solar_proximity_condition",

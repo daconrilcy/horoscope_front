@@ -112,6 +112,7 @@ class PlanetVisibilityKey(StrEnum):
 
     UNKNOWN = "unknown"
     VISIBLE = "visible"
+    CONJUNCT_SOLAR = "conjunct_solar"
     INVISIBLE = "invisible"
     UNDER_BEAMS = "under_beams"
     EMERGING = "emerging"
@@ -188,6 +189,35 @@ class SolarPhaseRelationThresholds:
             raise ValueError("conjunction tolerance must be greater than or equal to zero")
         if self.conjunction_tolerance_deg >= 180.0:
             raise ValueError("conjunction tolerance must be less than 180")
+
+
+@dataclass(frozen=True, slots=True)
+class PlanetVisibilityThresholds:
+    """Seuils angulaires de composition de la visibilite planetaire."""
+
+    conjunction_tolerance_deg: float = 0.5
+    under_beams_limit_deg: float = 15.0
+    emerging_limit_deg: float = 18.0
+
+    def __post_init__(self) -> None:
+        """Valide des seuils finis, positifs et ordonnes."""
+        thresholds = (
+            self.conjunction_tolerance_deg,
+            self.under_beams_limit_deg,
+            self.emerging_limit_deg,
+        )
+        if any(not isfinite(threshold) for threshold in thresholds):
+            raise ValueError("planet visibility thresholds must be finite")
+        if not (
+            0
+            <= self.conjunction_tolerance_deg
+            <= self.under_beams_limit_deg
+            <= self.emerging_limit_deg
+        ):
+            raise ValueError(
+                "planet visibility thresholds must satisfy "
+                "0 <= conjunction <= under_beams <= emerging"
+            )
 
 
 @dataclass(frozen=True, slots=True)

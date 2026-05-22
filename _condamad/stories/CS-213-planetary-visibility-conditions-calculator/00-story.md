@@ -1,6 +1,6 @@
 # Story CS-213 planetary-visibility-conditions-calculator: Calculer les conditions de visibilite planetaire
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

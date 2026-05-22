@@ -23,6 +23,7 @@ from app.domain.astrology.planetary_conditions import (
     PlanetarySpeedState,
     PlanetVisibilityCondition,
     PlanetVisibilityKey,
+    PlanetVisibilityThresholds,
     SolarPhaseRelationKey,
     SolarPhaseRelationThresholds,
     SolarProximityCondition,
@@ -38,6 +39,7 @@ PUBLIC_CONTRACTS = (
     PlanetarySolarPhaseRelation,
     PlanetaryMotionCondition,
     PlanetaryMotionProfile,
+    PlanetVisibilityThresholds,
     PlanetVisibilityCondition,
     MoonPhaseCondition,
     PlanetaryConditionSignal,
@@ -91,6 +93,7 @@ def test_public_enums_expose_stable_snake_case_values() -> None:
     assert [item.value for item in PlanetVisibilityKey] == [
         "unknown",
         "visible",
+        "conjunct_solar",
         "invisible",
         "under_beams",
         "emerging",
@@ -169,6 +172,25 @@ def test_solar_phase_relation_thresholds_expose_default_and_validate_bounds() ->
         SolarPhaseRelationThresholds(conjunction_tolerance_deg=180.0)
     with pytest.raises(ValueError, match="less than 180"):
         SolarPhaseRelationThresholds(conjunction_tolerance_deg=180.1)
+
+
+def test_planet_visibility_thresholds_expose_defaults_and_validate_order() -> None:
+    """Les seuils de visibilite restent finis, immuables et ordonnes."""
+    thresholds = PlanetVisibilityThresholds()
+
+    assert thresholds.conjunction_tolerance_deg == 0.5
+    assert thresholds.under_beams_limit_deg == 15.0
+    assert thresholds.emerging_limit_deg == 18.0
+    with pytest.raises(FrozenInstanceError):
+        thresholds.emerging_limit_deg = 20.0  # type: ignore[misc]
+    with pytest.raises(ValueError, match="must be finite"):
+        PlanetVisibilityThresholds(conjunction_tolerance_deg=nan)
+    with pytest.raises(ValueError, match="0 <= conjunction <= under_beams <= emerging"):
+        PlanetVisibilityThresholds(
+            conjunction_tolerance_deg=0.5,
+            under_beams_limit_deg=19.0,
+            emerging_limit_deg=18.0,
+        )
 
 
 def test_planetary_motion_profile_exposes_defaults_and_validates_thresholds() -> None:
