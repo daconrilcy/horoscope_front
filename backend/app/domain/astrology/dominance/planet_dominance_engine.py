@@ -32,7 +32,7 @@ class PlanetDominanceEngine:
         self,
         *,
         runtime_reference: AstrologyRuntimeReference,
-        planet_positions: Sequence[Any],
+        chart_object_positions: Sequence[Any],
         houses: Sequence[HouseRuntimeData],
         house_rulers: Sequence[HouseRulerResult],
         condition_profiles: Sequence[PlanetConditionProfile],
@@ -47,7 +47,7 @@ class PlanetDominanceEngine:
         if total_weight <= 0.0:
             raise ValueError("dominance score weights require a positive total weight")
 
-        planet_codes = tuple(position.planet_code for position in planet_positions)
+        planet_codes = tuple(position.planet_code for position in chart_object_positions)
         luminary_codes = frozenset(
             planet.code for planet in runtime_reference.planets.items if planet.is_luminary
         )
@@ -57,7 +57,7 @@ class PlanetDominanceEngine:
                 self._factor(
                     weight=weight,
                     planet_code=planet_code,
-                    planet_positions=planet_positions,
+                    chart_object_positions=chart_object_positions,
                     houses=houses,
                     house_rulers=house_rulers,
                     condition_profiles=condition_profiles,
@@ -89,7 +89,7 @@ class PlanetDominanceEngine:
             planets=planets,
             top_planet_code=planets[0].planet_code if planets else None,
             chart_ruler_code=self._chart_ruler(house_rulers),
-            most_elevated_planet_code=self._most_elevated_planet(planet_positions, houses),
+            most_elevated_planet_code=self._most_elevated_planet(chart_object_positions, houses),
         )
 
     def _factor(
@@ -97,7 +97,7 @@ class PlanetDominanceEngine:
         *,
         weight: DominanceScoreWeightReferenceData,
         planet_code: str,
-        planet_positions: Sequence[Any],
+        chart_object_positions: Sequence[Any],
         houses: Sequence[HouseRuntimeData],
         house_rulers: Sequence[HouseRulerResult],
         condition_profiles: Sequence[PlanetConditionProfile],
@@ -117,8 +117,8 @@ class PlanetDominanceEngine:
             "aspect_centrality": self._aspect_centrality_value,
         }[weight.factor_type_code](
             planet_code,
-            frozenset(position.planet_code for position in planet_positions),
-            planet_positions,
+            frozenset(position.planet_code for position in chart_object_positions),
+            chart_object_positions,
             houses,
             house_rulers,
             condition_profiles,

@@ -196,6 +196,7 @@ def test_contract_declares_required_enums_and_fields() -> None:
         "motion",
         "visibility",
         "dignity",
+        "dominance",
         "planetary_conditions",
         "fixed_star",
         "house_position",
@@ -233,11 +234,13 @@ def test_objects_are_filterable_by_capabilities() -> None:
         item.code for item in objects if item.capabilities.supports_house_position
     }
     dignity_codes = {item.code for item in objects if item.capabilities.supports_dignities}
+    dominance_codes = {item.code for item in objects if item.capabilities.supports_dominance}
     motion_codes = {item.code for item in objects if item.capabilities.supports_motion}
 
     assert {"sun", "mars", "north_node", "asc", "mc"} <= aspect_codes
     assert {"sun", "mars", "north_node", "house_1_cusp"} <= house_position_codes
-    assert dignity_codes == set()
+    assert dignity_codes == {"sun", "mars"}
+    assert dominance_codes == {"sun", "mars"}
     assert motion_codes == set()
     assert all(
         item.payloads.house_position is not None

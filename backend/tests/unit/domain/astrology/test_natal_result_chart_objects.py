@@ -100,6 +100,28 @@ def test_natal_chart_objects_expose_visibility_payloads_from_advanced_conditions
     assert by_code["house_1_cusp"].payloads.visibility is None
 
 
+def test_natal_chart_objects_expose_dignity_and_dominance_payloads() -> None:
+    """Le pipeline natal enrichit les objets eligibles apres les calculs historiques."""
+    result = _result()
+    by_code = {item.code: item for item in result.chart_objects}
+    dignity_by_code = {item.planet_code: item for item in result.dignities}
+    dominance_by_code = {item.planet_code: item for item in result.dominant_planets.planets}
+
+    assert by_code["sun"].capabilities.supports_dignities is True
+    assert by_code["sun"].payloads.dignity is not None
+    assert by_code["sun"].payloads.dignity.total_score == dignity_by_code["sun"].total_score
+    assert by_code["mars"].payloads.dominance is not None
+    assert (
+        by_code["mars"].payloads.dominance.contribution_score
+        == dominance_by_code["mars"].total_score
+    )
+    assert by_code["north_node"].capabilities.supports_dignities is False
+    assert by_code["north_node"].payloads.dignity is None
+    assert by_code["house_1_cusp"].capabilities.supports_dominance is False
+    assert by_code["house_1_cusp"].payloads.dominance is None
+    assert result.dominant_planets.top_planet_code is not None
+
+
 def test_natal_chart_objects_expose_motion_payloads_when_positions_have_speeds(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

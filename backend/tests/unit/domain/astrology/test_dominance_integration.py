@@ -34,7 +34,7 @@ def test_dominance_condition_strength_uses_advanced_ranking_weight() -> None:
 
     result = PlanetDominanceEngine().calculate(
         runtime_reference=complete_reference(),
-        planet_positions=_positions(),
+        chart_object_positions=_positions(),
         houses=_houses(),
         house_rulers=_house_rulers(),
         condition_profiles=_profiles(),

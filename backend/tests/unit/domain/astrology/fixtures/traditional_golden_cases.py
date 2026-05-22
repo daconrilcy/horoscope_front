@@ -308,7 +308,7 @@ def adapter_fixture_summary() -> dict[str, Any]:
     signals = PlanetConditionSignalBuilder().build(profiles, reference)
     dominance = PlanetDominanceEngine().calculate(
         runtime_reference=reference,
-        planet_positions=positions,
+        chart_object_positions=positions,
         houses=houses,
         house_rulers=house_rulers,
         condition_profiles=profiles,

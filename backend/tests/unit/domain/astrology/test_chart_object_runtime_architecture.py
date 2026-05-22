@@ -9,6 +9,8 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 NEW_MODULES = (
     REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py",
     REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py",
+    REPO_ROOT / "app/domain/astrology/dignities/chart_object_inputs.py",
+    REPO_ROOT / "app/domain/astrology/dominance/chart_object_inputs.py",
 )
 CHART_OBJECT_BUILDER = REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py"
 CHART_OBJECT_RUNTIME = REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py"
@@ -53,6 +55,16 @@ FORBIDDEN_CONDITION_CALCULATOR_CALLS = (
     "calculate_planet_visibility",
 )
 FORBIDDEN_LOCAL_THRESHOLDS = ("8.5", "17", "17.0", "0.2833", "0.01")
+CAPABILITY_INPUT_MODULES = (
+    REPO_ROOT / "app/domain/astrology/dignities/chart_object_inputs.py",
+    REPO_ROOT / "app/domain/astrology/dominance/chart_object_inputs.py",
+)
+FORBIDDEN_CAPABILITY_INPUT_NAMES = (
+    "object_type",
+    "ChartObjectType",
+    "TRADITIONAL_PLANETS",
+    "planet_positions",
+)
 
 
 def test_new_chart_object_modules_keep_domain_pure_dependencies() -> None:
@@ -123,6 +135,30 @@ def test_chart_object_mapping_does_not_define_magic_thresholds() -> None:
     )
 
 
+def test_dignity_and_dominance_inputs_do_not_use_type_or_collection_eligibility() -> None:
+    """Les projectors CS-220 restent pilotes par capacites et chart objects."""
+    offenders: list[str] = []
+    for module_path in CAPABILITY_INPUT_MODULES:
+        source = module_path.read_text(encoding="utf-8")
+        for forbidden_name in FORBIDDEN_CAPABILITY_INPUT_NAMES:
+            if forbidden_name in source:
+                offenders.append(f"{module_path}:{forbidden_name}")
+
+    assert offenders == []
+
+
+def test_dignity_and_dominance_inputs_do_not_branch_on_nominal_codes() -> None:
+    """Les modules CS-220 ne selectionnent pas par code planetaire nominal."""
+    offenders: list[str] = []
+    for module_path in CAPABILITY_INPUT_MODULES:
+        tree = ast.parse(module_path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Compare) and _compares_nominal_code(node):
+                offenders.append(f"{module_path}:{node.lineno}")
+
+    assert offenders == []
+
+
 def _branches_on_object_type(node: ast.AST) -> bool:
     """Detecte les comparaisons et match explicites sur `object_type`."""
     if isinstance(node, ast.Compare):
@@ -147,3 +183,20 @@ def _is_object_type_reference(node: ast.AST) -> bool:
 def _uses_forbidden_aspect_collection(node: ast.AST) -> bool:
     """Detecte les anciens noms de collections dans les modules d'aspects."""
     return isinstance(node, ast.Name) and node.id in FORBIDDEN_ASPECT_COLLECTION_NAMES
+
+
+def _compares_nominal_code(node: ast.Compare) -> bool:
+    """Detecte les comparaisons ou appartenances sur codes nominaux."""
+    compared_nodes = (node.left, *node.comparators)
+    return any(_is_code_reference(item) for item in compared_nodes) and any(
+        isinstance(operator, ast.Eq | ast.NotEq | ast.In | ast.NotIn) for operator in node.ops
+    )
+
+
+def _is_code_reference(node: ast.AST) -> bool:
+    """Reconnait les champs de code qui ne doivent pas piloter l'eligibilite."""
+    if isinstance(node, ast.Name):
+        return node.id in {"code", "planet_code"}
+    if isinstance(node, ast.Attribute):
+        return node.attr in {"code", "planet_code"}
+    return False

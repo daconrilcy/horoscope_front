@@ -49,13 +49,22 @@ from app.domain.astrology.condition.planet_condition_profile_service import (
 from app.domain.astrology.condition.planet_condition_signal_builder import (
     PlanetConditionSignalBuilder,
 )
+from app.domain.astrology.dignities.chart_object_inputs import (
+    DignityChartObjectSelector,
+    DignityInputProjector,
+    DignityPayloadEnricher,
+)
 from app.domain.astrology.dignities.contracts import (
     ChartSectResult,
-    PlanetDignityInput,
     PlanetDignityResult,
 )
 from app.domain.astrology.dignities.planet_dignity_scoring_service import (
     PlanetDignityScoringService,
+)
+from app.domain.astrology.dominance.chart_object_inputs import (
+    DominanceChartObjectSelector,
+    DominanceInputProjector,
+    DominancePayloadEnricher,
 )
 from app.domain.astrology.dominance.contracts import DominantPlanetsResult
 from app.domain.astrology.dominance.planet_dominance_engine import PlanetDominanceEngine
@@ -83,7 +92,11 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectOrbRuleRuntimeData,
 )
 from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
-from app.domain.astrology.runtime.chart_object_runtime_data import ChartObjectRuntimeData
+from app.domain.astrology.runtime.chart_object_runtime_data import (
+    ChartObjectRuntimeData,
+    validate_dignity_payloads,
+    validate_dominance_payloads,
+)
 from app.domain.astrology.runtime.chart_signature_runtime_data import ChartBalanceRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData, HouseRuntimeData
 from app.domain.astrology.runtime.runtime_reference import (
@@ -863,16 +876,8 @@ def build_natal_result(
         )
         for planet_key, bundle in advanced_planetary_conditions.conditions_by_planet.items()
     }
-    dignity_inputs = tuple(
-        PlanetDignityInput(
-            planet_code=position.planet_code,
-            longitude=position.longitude,
-            sign_code=position.sign_code,
-            house_number=position.house_number,
-            speed_longitude=position.speed_longitude,
-            is_retrograde=position.is_retrograde,
-        )
-        for position in positions
+    dignity_inputs = DignityInputProjector().project_many(
+        DignityChartObjectSelector().choose(chart_objects)
     )
     dignities = list(
         PlanetDignityScoringService().calculate(
@@ -881,6 +886,8 @@ def build_natal_result(
             advanced_planetary_conditions=advanced_planetary_conditions,
         )
     )
+    chart_objects = list(DignityPayloadEnricher().enrich(chart_objects, dignities))
+    validate_dignity_payloads(tuple(chart_objects))
     dignity_sect = dignities[0].chart_sect if dignities else None
     condition_profiles = list(
         PlanetConditionProfileService().calculate(tuple(dignities), runtime_reference)
@@ -910,15 +917,20 @@ def build_natal_result(
             aspect.aspect_runtime for aspect in aspects if aspect.aspect_runtime is not None
         ),
     )
+    dominance_inputs = DominanceInputProjector().project_many(
+        DominanceChartObjectSelector().choose(chart_objects)
+    )
     dominant_planets = PlanetDominanceEngine().calculate(
         runtime_reference=runtime_reference,
-        planet_positions=positions,
+        chart_object_positions=dominance_inputs,
         houses=houses,
         house_rulers=house_rulers,
         condition_profiles=condition_profiles,
         advanced_conditions=tuple(advanced_conditions),
         aspects=aspects,
     )
+    chart_objects = list(DominancePayloadEnricher().enrich(chart_objects, dominant_planets.planets))
+    validate_dominance_payloads(tuple(chart_objects))
     interpretation_adapter = InterpretationAdapterEngine().calculate(
         runtime_reference=runtime_reference,
         planet_positions=positions,

@@ -139,10 +139,74 @@ class ChartObjectVisibilityPayload:
 
 
 @dataclass(frozen=True, slots=True)
-class ChartObjectDignityPayload:
-    """Emplacement reserve aux faits de dignite deja calcules."""
+class DignityBreakdownItem:
+    """Item factuel projete depuis un detail de dignite calcule."""
 
-    dignity_codes: tuple[str, ...]
+    dignity_type_code: str
+    score_value: float
+    source: str
+
+    def __post_init__(self) -> None:
+        """Valide les identifiants minimaux du detail calcule."""
+        if not self.dignity_type_code.strip():
+            raise ValueError("dignity breakdown item requires a dignity type code")
+        if not self.source.strip():
+            raise ValueError("dignity breakdown item requires a source")
+
+
+@dataclass(frozen=True, slots=True)
+class DignityRuntimePayload:
+    """Projection calculatoire des scores de dignite d'un objet."""
+
+    essential_score: float
+    accidental_score: float
+    total_score: float
+    source: str
+    functional_strength_score: float | None = None
+    expression_quality_score: float | None = None
+    intensity_score: float | None = None
+    essential_breakdown: tuple[DignityBreakdownItem, ...] = ()
+    accidental_breakdown: tuple[DignityBreakdownItem, ...] = ()
+    condition_codes: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Valide que le payload expose une provenance calculatoire."""
+        if not self.source.strip():
+            raise ValueError("dignity payload requires a source")
+
+
+@dataclass(frozen=True, slots=True)
+class DominanceBreakdownItem:
+    """Item factuel projete depuis un facteur de dominance calcule."""
+
+    factor_code: str
+    raw_value: float
+    normalized_value: float
+    weight: float
+    weighted_score: float
+
+    def __post_init__(self) -> None:
+        """Valide les identifiants minimaux du facteur projete."""
+        if not self.factor_code.strip():
+            raise ValueError("dominance breakdown item requires a factor code")
+
+
+@dataclass(frozen=True, slots=True)
+class DominanceRuntimePayload:
+    """Contribution calculatoire d'un objet au classement de dominance."""
+
+    contribution_score: float
+    source: str
+    rank: int | None = None
+    contribution_breakdown: tuple[DominanceBreakdownItem, ...] = ()
+    factors: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Valide que la contribution porte une provenance explicite."""
+        if not self.source.strip():
+            raise ValueError("dominance payload requires a source")
+        if self.rank is not None and self.rank < 1:
+            raise ValueError("dominance payload rank must be positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,7 +271,8 @@ class ChartObjectPayloads:
 
     motion: ChartObjectMotionPayload | None = None
     visibility: ChartObjectVisibilityPayload | None = None
-    dignity: ChartObjectDignityPayload | None = None
+    dignity: DignityRuntimePayload | None = None
+    dominance: DominanceRuntimePayload | None = None
     planetary_conditions: ChartObjectPlanetaryConditionsPayload | None = None
     fixed_star: ChartObjectFixedStarPayload | None = None
     house_position: ChartObjectHousePositionPayload | None = None
@@ -247,7 +312,6 @@ def _validate_required_payloads(
     required_payloads = (
         (capabilities.supports_motion, payloads.motion, "motion"),
         (capabilities.supports_visibility, payloads.visibility, "visibility"),
-        (capabilities.supports_dignities, payloads.dignity, "dignity"),
         (capabilities.supports_house_position, payloads.house_position, "house_position"),
         (capabilities.supports_fixed_star_conjunction, payloads.fixed_star, "fixed_star"),
     )
@@ -256,3 +320,61 @@ def _validate_required_payloads(
             raise ValueError(f"chart object capability requires {payload_name} payload")
         if not is_required and payload is not None:
             raise ValueError(f"chart object payload requires {payload_name} capability")
+    validate_dignity_payload_compatibility(capabilities, payloads)
+    validate_dominance_payload_compatibility(capabilities, payloads)
+
+
+def validate_dignity_payload_compatibility(
+    capabilities: ChartObjectCapabilities,
+    payloads: ChartObjectPayloads,
+) -> None:
+    """Refuse un payload dignity rattache a un objet non eligible."""
+    if not capabilities.supports_dignities and payloads.dignity is not None:
+        raise ValueError("chart object payload requires dignity capability")
+
+
+def validate_dominance_payload_compatibility(
+    capabilities: ChartObjectCapabilities,
+    payloads: ChartObjectPayloads,
+) -> None:
+    """Refuse un payload dominance rattache a un objet non eligible."""
+    if not capabilities.supports_dominance and payloads.dominance is not None:
+        raise ValueError("chart object payload requires dominance capability")
+
+
+def validate_dignity_payloads(objects: tuple[ChartObjectRuntimeData, ...]) -> None:
+    """Valide la phase apres enrichissement des payloads de dignite."""
+    _validate_phase_payloads(
+        objects,
+        capability_name="supports_dignities",
+        payload_name="dignity",
+    )
+
+
+def validate_dominance_payloads(objects: tuple[ChartObjectRuntimeData, ...]) -> None:
+    """Valide la phase apres enrichissement des payloads de dominance."""
+    _validate_phase_payloads(
+        objects,
+        capability_name="supports_dominance",
+        payload_name="dominance",
+    )
+
+
+def _validate_phase_payloads(
+    objects: tuple[ChartObjectRuntimeData, ...],
+    *,
+    capability_name: str,
+    payload_name: str,
+) -> None:
+    """Controle qu'une phase d'enrichissement a renseigne ses objets eligibles."""
+    for chart_object in objects:
+        is_capable = bool(getattr(chart_object.capabilities, capability_name))
+        payload = getattr(chart_object.payloads, payload_name)
+        if is_capable and payload is None:
+            raise ValueError(
+                f"chart object capability requires {payload_name} payload: {chart_object.code}"
+            )
+        if not is_capable and payload is not None:
+            raise ValueError(
+                f"chart object payload requires {payload_name} capability: {chart_object.code}"
+            )

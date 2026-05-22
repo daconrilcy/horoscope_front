@@ -269,7 +269,7 @@ def test_planet_dominance_engine_ranks_by_score_then_planet_code() -> None:
     """Le moteur classe les planetes par score decroissant puis code stable."""
     result = PlanetDominanceEngine().calculate(
         runtime_reference=complete_reference(),
-        planet_positions=_positions(),
+        chart_object_positions=_positions(),
         houses=_houses(),
         house_rulers=_house_rulers(),
         condition_profiles=_profiles(),
@@ -308,7 +308,7 @@ def test_planet_dominance_uses_runtime_rulership_and_condition_profiles() -> Non
     """Les facteurs critiques proviennent des faits runtime et conditionnels."""
     result = PlanetDominanceEngine().calculate(
         runtime_reference=complete_reference(),
-        planet_positions=_positions(),
+        chart_object_positions=_positions(),
         houses=_houses(),
         house_rulers=_house_rulers(),
         condition_profiles=_profiles(),
@@ -332,7 +332,7 @@ def test_aspect_centrality_uses_dominant_aspect_runtime_scores() -> None:
     """La centralite d'aspects reutilise le classement canonique des aspects dominants."""
     result = PlanetDominanceEngine().calculate(
         runtime_reference=complete_reference(),
-        planet_positions=_positions(),
+        chart_object_positions=_positions(),
         houses=_houses(),
         house_rulers=_house_rulers(),
         condition_profiles=_profiles(),
@@ -359,7 +359,7 @@ def test_aspect_centrality_ignores_non_ranked_point_participants() -> None:
     """Les aspects de points astraux ne normalisent pas les scores des planetes."""
     result = PlanetDominanceEngine().calculate(
         runtime_reference=complete_reference(),
-        planet_positions=_positions_with_venus(),
+        chart_object_positions=_positions_with_venus(),
         houses=_houses(),
         house_rulers=_house_rulers(),
         condition_profiles=_profiles_with_venus(),
@@ -386,7 +386,7 @@ def test_planet_dominance_handles_missing_condition_profile() -> None:
     """Une planete sans profil conditionnel reste calculable avec score nul."""
     result = PlanetDominanceEngine().calculate(
         runtime_reference=complete_reference(),
-        planet_positions=_positions(),
+        chart_object_positions=_positions(),
         houses=_houses(),
         house_rulers=_house_rulers(),
         condition_profiles=_profiles()[0:1],

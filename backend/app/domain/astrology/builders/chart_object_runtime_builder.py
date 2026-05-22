@@ -133,6 +133,7 @@ def _build_planet_objects(
                 ),
                 capabilities=ChartObjectCapabilities(
                     supports_aspects=True,
+                    supports_dignities=True,
                     supports_house_position=True,
                     supports_motion=motion_payload is not None,
                     supports_visibility=visibility_payload is not None,
@@ -320,7 +321,6 @@ def _build_angle_objects(
                     supports_aspects=include_angles_in_aspects,
                     supports_house_position=True,
                     supports_interpretation=True,
-                    supports_dominance=True,
                 ),
                 classifications=("angle",),
                 payloads=ChartObjectPayloads(
