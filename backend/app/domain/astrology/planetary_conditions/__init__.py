@@ -1,5 +1,8 @@
 """Exports publics des contrats de conditions planetaires avancees."""
 
+from app.domain.astrology.planetary_conditions.advanced_planetary_conditions_runtime import (
+    calculate_advanced_planetary_conditions,
+)
 from app.domain.astrology.planetary_conditions.contracts import (
     AdvancedPlanetaryConditionsResult,
     ConditionConfidence,
@@ -38,6 +41,10 @@ from app.domain.astrology.planetary_conditions.planetary_visibility_calculator i
     calculate_planet_visibility_condition,
     calculate_planet_visibility_conditions,
 )
+from app.domain.astrology.planetary_conditions.signal_factory import (
+    build_global_moon_phase_signals,
+    build_planetary_condition_signals,
+)
 from app.domain.astrology.planetary_conditions.solar_phase_relation_calculator import (
     calculate_solar_phase_relation,
     calculate_solar_phase_relations,
@@ -71,6 +78,9 @@ __all__ = (
     "PlanetVisibilityThresholds",
     "WaxingWaningState",
     "DEFAULT_PLANETARY_MOTION_PROFILES",
+    "build_global_moon_phase_signals",
+    "build_planetary_condition_signals",
+    "calculate_advanced_planetary_conditions",
     "calculate_moon_phase_condition",
     "calculate_planetary_motion_condition",
     "calculate_planetary_motion_conditions",

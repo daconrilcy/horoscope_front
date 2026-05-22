@@ -7,6 +7,7 @@ from collections.abc import Callable
 from math import isfinite
 
 from pydantic import AliasChoices, BaseModel, Field, model_validator
+from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import AspectSchoolType, FrameType, HouseSystemType, ZodiacType
 from app.core.constants import MAX_ORB_DEG, MIN_ORB_DEG
@@ -63,6 +64,10 @@ from app.domain.astrology.interpretation_adapters import (
     InterpretationAdapterResult,
 )
 from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData, prepare_birth_data
+from app.domain.astrology.planetary_conditions import (
+    AdvancedPlanetaryConditionsResult,
+    calculate_advanced_planetary_conditions,
+)
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
@@ -158,6 +163,10 @@ class NatalResult(BaseModel):
     condition_profiles: list[PlanetConditionProfile] = Field(default_factory=list)
     condition_signals: list[PlanetConditionSignalSet] = Field(default_factory=list)
     advanced_conditions: list[AdvancedPlanetaryCondition] = Field(default_factory=list)
+    advanced_planetary_conditions: SkipJsonSchema[AdvancedPlanetaryConditionsResult | None] = Field(
+        default=None,
+        exclude=True,
+    )
     traditional_conditions: TraditionalConditionsResult | None = None
     dominant_planets: DominantPlanetsResult | None = None
     interpretation_adapter: InterpretationAdapterResult | None = None
@@ -789,6 +798,14 @@ def build_natal_result(
         increment_counter("aspects_rejected_orb_total", float(_rejected))
 
     positions = [PlanetPosition.model_validate(item) for item in positions_raw]
+    advanced_planetary_conditions = calculate_advanced_planetary_conditions(
+        planetary_positions={position.planet_code: position for position in positions},
+        planetary_speeds_deg_per_day={
+            position.planet_code: position.speed_longitude
+            for position in positions
+            if position.speed_longitude is not None
+        },
+    )
     dignity_inputs = tuple(
         PlanetDignityInput(
             planet_code=position.planet_code,
@@ -914,6 +931,7 @@ def build_natal_result(
         condition_profiles=condition_profiles,
         condition_signals=condition_signals,
         advanced_conditions=list(advanced_conditions),
+        advanced_planetary_conditions=advanced_planetary_conditions,
         traditional_conditions=traditional_conditions,
         dominant_planets=dominant_planets,
         interpretation_adapter=interpretation_adapter,
