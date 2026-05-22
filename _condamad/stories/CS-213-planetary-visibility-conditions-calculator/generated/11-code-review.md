@@ -5,8 +5,8 @@
 - Story: `CS-213-planetary-visibility-conditions-calculator`
 - Capsule: `_condamad/stories/CS-213-planetary-visibility-conditions-calculator`
 - Verdict: CLEAN
-- Review/fix iterations: 2
-- Subagents used: no. The current review/fix pass was performed directly in the main session.
+- Review/fix iterations: 3
+- Subagents used: no. The current post-closure review/fix pass was performed directly in the main session.
 
 ## Inputs reviewed
 
@@ -14,7 +14,7 @@
 - `_condamad/stories/regression-guardrails.md` (`RG-135` to `RG-140`)
 - `_condamad/stories/CS-213-planetary-visibility-conditions-calculator/00-story.md`
 - Generated capsule files `03`, `06`, `07`, `10`
-- Git diff and `git status --short --untracked-files=all`
+- Git commit `e7dfa1ee` and `git status --short --untracked-files=all`
 - Changed backend files and tests
 - Validation outputs recorded in `evidence/validation.md`
 
@@ -34,6 +34,7 @@
 | Technical Risk Review | Findings fixed | Explicit untracked-file evidence and Sun reason contract from the previous pass. |
 | Source Finding Closure Review | Findings fixed | Sun reason and governance status from the previous pass. |
 | Main CONDAMAD review | CLEAN after evidence correction | No remaining actionable code findings. |
+| Post-closure implementation review | CLEAN | No new issue found in code, tests, capsule evidence, guardrails or validation. |
 
 ## Findings
 
@@ -77,6 +78,16 @@
 - Fix: review evidence now records direct main-session review, current review/fix iteration count, and closure requiring the final commit/push gate.
 - Status: fixed.
 
+### Post-Closure Review Result
+
+- Bucket: dismiss
+- Location: `backend/app/domain/astrology/planetary_conditions/planetary_visibility_calculator.py`
+- Source layer: acceptance / validation / no-legacy / edge
+- Evidence: fresh review on 2026-05-22 found no new actionable issue after inspecting commit `e7dfa1ee`, rerunning targeted tests, forbidden scans, adjacent diff, backend lint/tests, capsule validation and local app import.
+- Impact: none.
+- Suggested fix: none.
+- Status: clean.
+
 ## Acceptance audit
 
 - AC1-AC4: PASS. Contracts, enum, exports and calculator exist in canonical package.
@@ -99,6 +110,11 @@ Commands passed after review fixes:
 - Final closure quality block: `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format .; ruff check .; pytest -q` - 1497 files unchanged; lint passed; 2913 passed, 1 skipped, 1177 deselected.
 - Final closure story/capsule validation - PASS.
 - Final local app import - printed `horoscope-backend`.
+- Post-closure targeted tests: `.\.venv\Scripts\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/planetary_conditions/test_planetary_visibility_calculator.py backend/tests/unit/domain/astrology/planetary_conditions/test_contracts.py` - 26 passed.
+- Post-closure forbidden scans and adjacent diff - zero hits for forbidden surfaces; adjacent diff empty.
+- Post-closure quality block: `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check .; ruff check .; pytest -q` - 1497 files already formatted; lint passed; 2913 passed, 1 skipped, 1177 deselected.
+- Post-closure capsule validation - PASS.
+- Post-closure local app import - printed `horoscope-backend`.
 
 ## DRY / No Legacy audit
 
@@ -114,6 +130,7 @@ Commands passed after review fixes:
 - `git diff --check`
 - Required `rg` scans from the validation plan
 - Targeted tests and full backend quality block after fixes
+- Post-closure targeted tests, forbidden scans, adjacent diff, full backend quality block, capsule validation and local app import
 
 ## Residual risks
 

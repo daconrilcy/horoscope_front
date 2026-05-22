@@ -9,7 +9,7 @@
 - Capsule path: `_condamad/stories/CS-213-planetary-visibility-conditions-calculator`
 - Source finding closure: not applicable, story is brief-sourced.
 - Review verdict: CLEAN
-- Review/fix iterations: 2
+- Review/fix iterations: 3
 - Feedback loop decision: `no-propagation`, corrections were local execution/evidence/story-contract issues already resolved and do not require reusable guardrail propagation.
 
 ## Preflight
@@ -80,6 +80,10 @@
 | Final closure quality block: `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format .; ruff check .; pytest -q` | repo root | PASS | 0 | 1497 files unchanged; lint passed; 2913 passed, 1 skipped, 1177 deselected. |
 | Final closure story/capsule validation block | repo root | PASS | 0 | CONDAMAD story validation PASS; strict lint PASS; capsule validation PASS. |
 | Final local app import: `.\.venv\Scripts\Activate.ps1; Set-Location backend; python -c "from app.main import app; print(app.title)"` | repo root | PASS | 0 | Printed `horoscope-backend`. |
+| Post-closure targeted review tests: `.\.venv\Scripts\Activate.ps1; pytest -q backend/tests/unit/domain/astrology/planetary_conditions/test_planetary_visibility_calculator.py backend/tests/unit/domain/astrology/planetary_conditions/test_contracts.py` | repo root | PASS | 0 | 26 passed. |
+| Post-closure quality block: `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check .; ruff check .; pytest -q` | repo root | PASS | 0 | 1497 files already formatted; lint passed; 2913 passed, 1 skipped, 1177 deselected. |
+| Post-closure capsule validation: `.\.venv\Scripts\Activate.ps1; python -B .agents/skills/condamad-dev-story/scripts/condamad_validate.py _condamad/stories/CS-213-planetary-visibility-conditions-calculator` | repo root | PASS | 0 | CONDAMAD validation PASS. |
+| Post-closure local app import: `.\.venv\Scripts\Activate.ps1; Set-Location backend; python -c "from app.main import app; print(app.title)"` | repo root | PASS | 0 | Printed `horoscope-backend`. |
 
 ## Commands skipped or blocked
 
@@ -141,3 +145,4 @@ Expected story files only:
 | Story/header governance status inconsistent. | Updated `00-story.md` and registry status. | Story validate/lint passed after status change. |
 | Final evidence overstated `git diff --stat` with untracked files. | Reworded diff evidence and listed `git status --short --untracked-files=all`. | Review artifact records CLEAN. |
 | Review artifact claimed subagent delegation and closure without commit/push. | Updated `generated/11-code-review.md` to match the current direct review and closure gate. | Current review scans, targeted tests and `git diff --check` passed. |
+| Post-closure implementation review found no new issue. | Updated review/final evidence to record the fresh clean pass. | Targeted tests, forbidden scans, adjacent diff, full backend quality block, capsule validation and local app import passed. |

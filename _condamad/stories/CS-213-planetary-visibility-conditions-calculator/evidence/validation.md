@@ -30,6 +30,11 @@
 | Final closure quality block: `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format .; ruff check .; pytest -q` | PASS | 1497 files unchanged; lint passed; 2913 passed, 1 skipped, 1177 deselected. |
 | Final closure story/capsule validation | PASS | CONDAMAD story validation PASS; strict lint PASS; capsule validation PASS. |
 | Final local app import: `.\.venv\Scripts\Activate.ps1; Set-Location backend; python -c "from app.main import app; print(app.title)"` | PASS | Printed `horoscope-backend`. |
+| Post-closure targeted review tests | PASS | 26 passed in 0.40s. |
+| Post-closure forbidden scans and adjacent diff | PASS | Forbidden dependency, scoring/text/observation, free `Any`, adjacent public-symbol scans returned zero hits; adjacent diff empty. |
+| Post-closure quality block: `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check .; ruff check .; pytest -q` | PASS | 1497 files already formatted; lint passed; 2913 passed, 1 skipped, 1177 deselected. |
+| Post-closure capsule validation | PASS | CONDAMAD validation PASS. |
+| Post-closure local app import | PASS | Printed `horoscope-backend`. |
 
 ## RG-140 evidence
 
@@ -43,3 +48,4 @@
 - Governance status: aligned `00-story.md` and story registry to the lifecycle status.
 - Final worktree evidence: refreshed in `generated/10-final-evidence.md` and `generated/11-code-review.md` with `git status --short --untracked-files=all`.
 - Review artifact governance: refreshed `generated/11-code-review.md` to remove the incorrect subagent claim and align the closure gate with the required commit/push workflow.
+- Post-closure implementation review: no new issue found; evidence refreshed with the latest clean validation pass.
