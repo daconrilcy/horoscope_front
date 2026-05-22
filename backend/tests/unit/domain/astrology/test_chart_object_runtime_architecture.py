@@ -9,10 +9,14 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 NEW_MODULES = (
     REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py",
     REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py",
+    REPO_ROOT / "app/domain/astrology/builders/chart_object_house_runtime_enricher.py",
     REPO_ROOT / "app/domain/astrology/dignities/chart_object_inputs.py",
     REPO_ROOT / "app/domain/astrology/dominance/chart_object_inputs.py",
 )
 CHART_OBJECT_BUILDER = REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py"
+CHART_OBJECT_HOUSE_ENRICHER = (
+    REPO_ROOT / "app/domain/astrology/builders/chart_object_house_runtime_enricher.py"
+)
 CHART_OBJECT_RUNTIME = REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py"
 CALCULATOR_ROOTS = (
     REPO_ROOT / "app/domain/astrology/calculators",
@@ -64,6 +68,14 @@ FORBIDDEN_CAPABILITY_INPUT_NAMES = (
     "ChartObjectType",
     "TRADITIONAL_PLANETS",
     "planet_positions",
+)
+FORBIDDEN_RULERSHIP_BUILDERS = (
+    "HouseRulershipPayloadBuilder",
+    "MarsRulershipPayloadBuilder",
+)
+FORBIDDEN_RULERSHIP_TABLE_NAMES = (
+    "SIGN_RULERS",
+    "TRADITIONAL_SIGN_RULERS",
 )
 
 
@@ -157,6 +169,22 @@ def test_dignity_and_dominance_inputs_do_not_branch_on_nominal_codes() -> None:
                 offenders.append(f"{module_path}:{node.lineno}")
 
     assert offenders == []
+
+
+def test_house_rulership_enricher_reuses_runtime_sources_without_local_tables() -> None:
+    """La projection rulership ne cree pas de second resolver ou table de rulers."""
+    source = CHART_OBJECT_HOUSE_ENRICHER.read_text(encoding="utf-8")
+
+    assert "HouseRulerResolver" not in source
+    assert not any(builder_name in source for builder_name in FORBIDDEN_RULERSHIP_BUILDERS)
+    assert not any(table_name in source for table_name in FORBIDDEN_RULERSHIP_TABLE_NAMES)
+
+
+def test_house_rulership_enricher_does_not_branch_on_object_type() -> None:
+    """La projection house/rulership reste pilotee par les capacites."""
+    tree = ast.parse(CHART_OBJECT_HOUSE_ENRICHER.read_text(encoding="utf-8"))
+
+    assert not any(_branches_on_object_type(node) for node in ast.walk(tree))
 
 
 def _branches_on_object_type(node: ast.AST) -> bool:

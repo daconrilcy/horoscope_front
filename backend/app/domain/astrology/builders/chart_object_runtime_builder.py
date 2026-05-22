@@ -28,6 +28,7 @@ from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectVisibilityPayload,
     ZodiacPositionRuntimeData,
 )
+from app.domain.astrology.runtime.house_runtime_data import resolve_house_kind
 
 
 class PlanetChartObjectSource(Protocol):
@@ -70,6 +71,21 @@ _ANGLE_HOUSES = (
     ("mc", "Midheaven", 10),
     ("ic", "Imum Coeli", 4),
 )
+
+
+def build_house_position_payload(
+    *,
+    house_number: int,
+    house_cusp_longitude: float | None = None,
+) -> ChartObjectHousePositionPayload:
+    """Construit le payload house position depuis le helper canonique."""
+    return ChartObjectHousePositionPayload(
+        house_number=house_number,
+        house_modality=resolve_house_kind(house_number),
+        house_cusp_code=f"house_{house_number}_cusp",
+        house_cusp_longitude=house_cusp_longitude,
+        source="houses.runtime",
+    )
 
 
 def build_chart_object_runtime_data(
@@ -139,10 +155,11 @@ def _build_planet_objects(
                     supports_visibility=visibility_payload is not None,
                     supports_interpretation=True,
                     supports_dominance=True,
+                    supports_rulership=True,
                 ),
                 classifications=("luminary",) if is_luminary else ("planet",),
                 payloads=ChartObjectPayloads(
-                    house_position=ChartObjectHousePositionPayload(
+                    house_position=build_house_position_payload(
                         house_number=position.house_number,
                     ),
                     motion=motion_payload,
@@ -283,7 +300,7 @@ def _build_astral_point_objects(
                 classifications=_astral_point_classifications(point),
                 payloads=ChartObjectPayloads(
                     house_position=(
-                        ChartObjectHousePositionPayload(house_number=point.house)
+                        build_house_position_payload(house_number=point.house)
                         if point.house is not None
                         else None
                     ),
@@ -328,8 +345,9 @@ def _build_angle_objects(
                         angle_code=angle_code,
                         associated_house=house_number,
                     ),
-                    house_position=ChartObjectHousePositionPayload(
+                    house_position=build_house_position_payload(
                         house_number=house_number,
+                        house_cusp_longitude=house.cusp_longitude,
                     ),
                 ),
             )
@@ -356,8 +374,9 @@ def _build_house_cusp_objects(
             capabilities=ChartObjectCapabilities(supports_house_position=True),
             classifications=("house_cusp",),
             payloads=ChartObjectPayloads(
-                house_position=ChartObjectHousePositionPayload(
+                house_position=build_house_position_payload(
                     house_number=house.number,
+                    house_cusp_longitude=house.cusp_longitude,
                 ),
                 house_cusp=ChartObjectHouseCuspPayload(
                     house_number=house.number,

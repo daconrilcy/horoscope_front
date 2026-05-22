@@ -23,6 +23,9 @@ from app.domain.astrology.astral_point_calculation_resolver import (
     AstralPointCalculationResolver,
 )
 from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
+from app.domain.astrology.builders.chart_object_house_runtime_enricher import (
+    RulershipPayloadEnricher,
+)
 from app.domain.astrology.builders.chart_object_runtime_builder import (
     build_chart_object_runtime_data,
 )
@@ -96,6 +99,7 @@ from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectRuntimeData,
     validate_dignity_payloads,
     validate_dominance_payloads,
+    validate_rulership_payloads,
 )
 from app.domain.astrology.runtime.chart_signature_runtime_data import ChartBalanceRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData, HouseRuntimeData
@@ -845,6 +849,14 @@ def build_natal_result(
             include_angles_in_aspects=False,
         )
     )
+    chart_objects = list(
+        RulershipPayloadEnricher().enrich(
+            chart_objects,
+            house_rulers,
+            sign_rulerships,
+        )
+    )
+    validate_rulership_payloads(tuple(chart_objects))
     aspectable_chart_objects = AspectChartObjectSelector().select(chart_objects)
     aspect_positions = list(
         AspectBodyProjector(celestial_catalog).project_many(aspectable_chart_objects)

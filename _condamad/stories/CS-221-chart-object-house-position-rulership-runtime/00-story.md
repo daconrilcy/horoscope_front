@@ -1,6 +1,6 @@
 # Story CS-221 chart-object-house-position-rulership-runtime: Rattacher maisons et maitrises au runtime chart objects
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

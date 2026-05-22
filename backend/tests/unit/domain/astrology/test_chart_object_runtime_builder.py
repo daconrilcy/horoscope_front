@@ -190,6 +190,7 @@ def test_contract_declares_required_enums_and_fields() -> None:
         "supports_motion",
         "supports_interpretation",
         "supports_dominance",
+        "supports_rulership",
         "supports_fixed_star_conjunction",
     }
     assert set(ChartObjectPayloads.__dataclass_fields__) >= {
@@ -200,6 +201,7 @@ def test_contract_declares_required_enums_and_fields() -> None:
         "planetary_conditions",
         "fixed_star",
         "house_position",
+        "rulership",
         "house_cusp",
         "angle",
     }
@@ -218,6 +220,7 @@ def test_builder_projects_planets_luminaries_points_angles_and_cusps() -> None:
     assert by_code["asc"].payloads.angle.associated_house == 1
     assert by_code["asc"].payloads.house_position is not None
     assert by_code["asc"].payloads.house_position.house_number == 1
+    assert by_code["asc"].payloads.house_position.house_modality == "angular"
     assert by_code["mc"].payloads.angle is not None
     assert by_code["mc"].payloads.angle.associated_house == 10
     assert by_code["house_12_cusp"].object_type == ChartObjectType.HOUSE_CUSP
@@ -241,6 +244,10 @@ def test_objects_are_filterable_by_capabilities() -> None:
     assert {"sun", "mars", "north_node", "house_1_cusp"} <= house_position_codes
     assert dignity_codes == {"sun", "mars"}
     assert dominance_codes == {"sun", "mars"}
+    assert {item.code for item in objects if item.capabilities.supports_rulership} == {
+        "sun",
+        "mars",
+    }
     assert motion_codes == set()
     assert all(
         item.payloads.house_position is not None

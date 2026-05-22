@@ -47,6 +47,10 @@ def test_build_natal_result_populates_chart_objects_without_replacing_collection
     assert result.planet_positions
     assert result.astral_points
     assert len(result.houses) == 12
+    assert result.house_rulers
+    assert result.dignities
+    assert result.dominant_planets.planets
+    assert result.chart_objects
     assert set(by_code) >= {"sun", "moon", "north_node", "south_node", "asc", "mc"}
     assert by_code["sun"].object_type == ChartObjectType.LUMINARY
     assert by_code["moon"].object_type == ChartObjectType.LUMINARY
@@ -120,6 +124,33 @@ def test_natal_chart_objects_expose_dignity_and_dominance_payloads() -> None:
     assert by_code["house_1_cusp"].capabilities.supports_dominance is False
     assert by_code["house_1_cusp"].payloads.dominance is None
     assert result.dominant_planets.top_planet_code is not None
+
+
+def test_natal_chart_objects_expose_house_position_and_rulership_payloads() -> None:
+    """Le pipeline natal enrichit les objets internes avec maisons et maitrises."""
+    result = _result()
+    by_code = {item.code: item for item in result.chart_objects}
+    rules_by_code = {
+        item.ruler_planet: tuple(
+            ruler.house_number
+            for ruler in result.house_rulers
+            if ruler.ruler_planet == item.ruler_planet
+        )
+        for item in result.house_rulers
+    }
+
+    assert by_code["sun"].payloads.house_position is not None
+    assert by_code["sun"].payloads.house_position.house_modality in {
+        "angular",
+        "succedent",
+        "cadent",
+    }
+    assert by_code["sun"].payloads.rulership is not None
+    assert by_code["sun"].payloads.rulership.rules_houses == rules_by_code["sun"]
+    assert by_code["sun"].payloads.rulership.dispositor_code is not None
+    assert by_code["moon"].payloads.rulership is not None
+    assert by_code["north_node"].payloads.rulership is None
+    assert by_code["house_1_cusp"].payloads.rulership is None
 
 
 def test_natal_chart_objects_expose_motion_payloads_when_positions_have_speeds(

@@ -78,6 +78,7 @@ class ChartObjectCapabilities:
     supports_motion: bool = False
     supports_interpretation: bool = False
     supports_dominance: bool = False
+    supports_rulership: bool = False
     supports_fixed_star_conjunction: bool = False
 
 
@@ -228,11 +229,52 @@ class ChartObjectHousePositionPayload:
     """Faits de position en maison portes par un objet du theme."""
 
     house_number: int
+    house_modality: str
+    source: str
+    house_cusp_code: str | None = None
+    house_cusp_longitude: float | None = None
 
     def __post_init__(self) -> None:
         """Valide la maison occupee ou associee par l'objet."""
         if not 1 <= self.house_number <= 12:
             raise ValueError("house position payload requires a house number in [1, 12]")
+        if self.house_modality not in {"angular", "succedent", "cadent"}:
+            raise ValueError("house position payload requires a known house modality")
+        if not self.source.strip():
+            raise ValueError("house position payload requires a source")
+
+
+@dataclass(frozen=True, slots=True)
+class RulershipRuntimePayload:
+    """Projection calculatoire des maitrises rattachees a un objet."""
+
+    rules_houses: tuple[int, ...]
+    is_house_ruler: bool
+    is_ascendant_ruler: bool
+    is_midheaven_ruler: bool
+    source: str
+    dispositor_code: str | None = None
+    rules_signs: tuple[str, ...] = ()
+    rulership_sources: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Valide les faits de maitrise projetes sans texte symbolique."""
+        if any(not 1 <= house_number <= 12 for house_number in self.rules_houses):
+            raise ValueError("rulership payload requires house numbers in [1, 12]")
+        if self.is_house_ruler != bool(self.rules_houses):
+            raise ValueError("rulership payload house ruler flag must match rules_houses")
+        if self.is_ascendant_ruler and 1 not in self.rules_houses:
+            raise ValueError("ascendant ruler payload must rule house 1")
+        if self.is_midheaven_ruler and 10 not in self.rules_houses:
+            raise ValueError("midheaven ruler payload must rule house 10")
+        if self.dispositor_code is not None and not self.dispositor_code.strip():
+            raise ValueError("rulership payload rejects an empty dispositor code")
+        if any(not sign_code.strip() for sign_code in self.rules_signs):
+            raise ValueError("rulership payload rejects an empty ruled sign")
+        if any(not source.strip() for source in self.rulership_sources):
+            raise ValueError("rulership payload rejects an empty rulership source")
+        if not self.source.strip():
+            raise ValueError("rulership payload requires a source")
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,6 +318,7 @@ class ChartObjectPayloads:
     planetary_conditions: ChartObjectPlanetaryConditionsPayload | None = None
     fixed_star: ChartObjectFixedStarPayload | None = None
     house_position: ChartObjectHousePositionPayload | None = None
+    rulership: RulershipRuntimePayload | None = None
     house_cusp: ChartObjectHouseCuspPayload | None = None
     angle: ChartObjectAnglePayload | None = None
 
@@ -322,6 +365,7 @@ def _validate_required_payloads(
             raise ValueError(f"chart object payload requires {payload_name} capability")
     validate_dignity_payload_compatibility(capabilities, payloads)
     validate_dominance_payload_compatibility(capabilities, payloads)
+    validate_rulership_payload_compatibility(capabilities, payloads)
 
 
 def validate_dignity_payload_compatibility(
@@ -342,6 +386,15 @@ def validate_dominance_payload_compatibility(
         raise ValueError("chart object payload requires dominance capability")
 
 
+def validate_rulership_payload_compatibility(
+    capabilities: ChartObjectCapabilities,
+    payloads: ChartObjectPayloads,
+) -> None:
+    """Refuse un payload rulership rattache a un objet non eligible."""
+    if not capabilities.supports_rulership and payloads.rulership is not None:
+        raise ValueError("chart object payload requires rulership capability")
+
+
 def validate_dignity_payloads(objects: tuple[ChartObjectRuntimeData, ...]) -> None:
     """Valide la phase apres enrichissement des payloads de dignite."""
     _validate_phase_payloads(
@@ -357,6 +410,15 @@ def validate_dominance_payloads(objects: tuple[ChartObjectRuntimeData, ...]) -> 
         objects,
         capability_name="supports_dominance",
         payload_name="dominance",
+    )
+
+
+def validate_rulership_payloads(objects: tuple[ChartObjectRuntimeData, ...]) -> None:
+    """Valide la phase apres enrichissement des payloads de maitrise."""
+    _validate_phase_payloads(
+        objects,
+        capability_name="supports_rulership",
+        payload_name="rulership",
     )
 
 
