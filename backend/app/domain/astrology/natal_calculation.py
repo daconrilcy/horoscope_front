@@ -23,6 +23,9 @@ from app.domain.astrology.astral_point_calculation_resolver import (
     AstralPointCalculationResolver,
 )
 from app.domain.astrology.builders.aspect_runtime_builder import build_aspect_runtime_data
+from app.domain.astrology.builders.chart_object_runtime_builder import (
+    build_chart_object_runtime_data,
+)
 from app.domain.astrology.builders.house_runtime_builder import build_house_runtime_data
 from app.domain.astrology.builders.sign_runtime_builder import build_sign_runtime_data
 from app.domain.astrology.calculators import (
@@ -77,6 +80,7 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectOrbRuleRuntimeData,
 )
 from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
+from app.domain.astrology.runtime.chart_object_runtime_data import ChartObjectRuntimeData
 from app.domain.astrology.runtime.chart_signature_runtime_data import ChartBalanceRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import HouseAxisRuntimeData, HouseRuntimeData
 from app.domain.astrology.runtime.runtime_reference import (
@@ -169,6 +173,10 @@ class NatalResult(BaseModel):
     advanced_conditions: list[AdvancedPlanetaryCondition] = Field(default_factory=list)
     advanced_planetary_conditions: SkipJsonSchema[AdvancedPlanetaryConditionsResult | None] = Field(
         default=None,
+        exclude=True,
+    )
+    chart_objects: SkipJsonSchema[list[ChartObjectRuntimeData]] = Field(
+        default_factory=list,
         exclude=True,
     )
     interpretation_profiles_by_planet: SkipJsonSchema[
@@ -869,6 +877,13 @@ def build_natal_result(
         celestial_catalog=celestial_catalog,
         sign_codes=sign_codes,
     )
+    chart_objects = list(
+        build_chart_object_runtime_data(
+            planet_positions=positions,
+            astral_points=points,
+            houses=houses,
+        )
+    )
     signs_runtime = build_sign_runtime_data(
         signs=runtime_reference.signs,
         planets=positions,
@@ -947,6 +962,7 @@ def build_natal_result(
         condition_signals=condition_signals,
         advanced_conditions=list(advanced_conditions),
         advanced_planetary_conditions=advanced_planetary_conditions,
+        chart_objects=chart_objects,
         interpretation_profiles_by_planet=interpretation_profiles_by_planet,
         traditional_conditions=traditional_conditions,
         dominant_planets=dominant_planets,

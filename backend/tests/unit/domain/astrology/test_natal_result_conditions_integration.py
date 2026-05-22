@@ -58,6 +58,7 @@ def test_build_natal_result_populates_advanced_planetary_conditions() -> None:
         for profile in profiles
     )
     assert "advanced_planetary_conditions" not in result.model_dump(mode="json")
+    assert "chart_objects" not in result.model_dump(mode="json")
     assert "interpretation_profiles_by_planet" not in result.model_dump(mode="json")
 
 
@@ -66,4 +67,5 @@ def test_advanced_planetary_conditions_stays_out_of_openapi_schema() -> None:
     schemas = app.openapi().get("components", {}).get("schemas", {})
 
     assert "advanced_planetary_conditions" not in str(schemas)
+    assert "chart_objects" not in str(schemas)
     assert "interpretation_profiles_by_planet" not in str(schemas)

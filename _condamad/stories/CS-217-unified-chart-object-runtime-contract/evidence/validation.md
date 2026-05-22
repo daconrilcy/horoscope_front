@@ -38,7 +38,7 @@ Final story-validation run after corrections:
 Notes:
 
 - All Python validation commands were run after activating `.venv`.
-- The implementation validation commands remain for the future dev-story run.
+- Implementation validation completed on 2026-05-22 in the dev-story run.
 
 ## Editorial Review Cycle
 
@@ -83,3 +83,63 @@ Review on 2026-05-22 against the initial CS-217 brief:
   - `condamad_story_validate.py --explain-contracts`: PASS.
   - `condamad_story_lint.py`: PASS.
   - `condamad_story_lint.py --strict`: PASS.
+
+## Implementation Validation
+
+All Python commands below were run from the repository root after activating
+`.\.venv\Scripts\Activate.ps1`.
+
+### Tests and Quality
+
+- `pytest -q backend/tests/unit/domain/astrology/test_chart_object_runtime_builder.py backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`:
+  PASS, 9 tests passed before review fixes.
+- `pytest -q backend/tests/unit/domain/astrology/test_natal_result_conditions_integration.py backend/tests/unit/domain/astrology/test_natal_result_contains_configured_points.py backend/tests/unit/domain/astrology/test_natal_result_contract.py`:
+  PASS, 8 tests passed before review fixes.
+- `ruff format backend`: PASS.
+- `ruff check backend`: initially failed on import ordering, then PASS after
+  `ruff check backend --fix`.
+- `pytest -q`: initially failed because the architecture test contained the
+  literal deprecated namespace guard string; corrected without weakening the
+  guard. Final rerun after review fixes: PASS, 2952 passed, 1 skipped, 1177
+  deselected.
+- Final targeted rerun after accepted review fixes:
+  `pytest -q backend/tests/unit/domain/astrology/test_chart_object_runtime_builder.py backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py backend/tests/unit/domain/astrology/test_natal_result_conditions_integration.py backend/tests/unit/domain/astrology/test_natal_result_contains_configured_points.py backend/tests/unit/domain/astrology/test_natal_result_contract.py`:
+  PASS, 18 tests passed.
+- Local app import check:
+  `.\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -c "from app.main import app; print(app.title)"`:
+  PASS, printed `horoscope-backend`.
+- Note: one attempted app import from `backend/` used the wrong relative venv
+  activation path and printed a PowerShell activation error before the import.
+  It is not counted as validation evidence; the command above is the corrected
+  venv-activated run.
+
+### Scans and Diff Evidence
+
+- Forbidden dependencies in the new runtime/builder modules: zero hits.
+- Forbidden public surfaces in the new runtime/builder modules: zero hits.
+- `calculability` in scoped runtime/builder/tests: zero hits.
+- Forbidden `object_type` branches in business calculators: zero hits.
+- `chart_objects|ChartObjectRuntimeData` in API/infra/services/frontend:
+  zero hits.
+- `Select-String "RG-144" _condamad/stories/regression-guardrails.md`: PASS.
+- Adjacent diff over planetary conditions, dignities, dominance, advanced
+  conditions, interpretation, interpretation adapters, `json_builder.py`, API,
+  infra, migrations and frontend: empty.
+
+### Review/Fix Loop
+
+- Independent review iteration 1 accepted two code findings:
+  - `supports_house_position` required a typed payload. Fixed by adding and
+    validating `ChartObjectHousePositionPayload`.
+  - `supports_motion=True` advertised absent motion facts in the simplified
+    engine. Fixed by making motion capability conditional and rejecting empty
+    motion payloads.
+- Evidence findings were resolved by updating generated traceability, final
+  evidence and code-review evidence.
+- Review closure on 2026-05-22 reran the targeted tests, Ruff, story
+  validate/lint commands, full `pytest -q` and app import check after activating
+  `.venv`; all passed. A stale evidence sentence saying no commit or push was
+  requested was removed because the requested `condamad-review-fix-story`
+  closure requires commit and push after a clean review.
+- Feedback-loop routing: no propagation. Findings were local CS-217 contract
+  corrections already covered by the new tests and `RG-144`.
