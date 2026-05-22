@@ -814,11 +814,20 @@ def build_natal_result(
         celestial_catalog=celestial_catalog,
         sign_codes=sign_codes,
     )
+    advanced_planetary_conditions = calculate_advanced_planetary_conditions(
+        planetary_positions={position.planet_code: position for position in positions},
+        planetary_speeds_deg_per_day={
+            position.planet_code: position.speed_longitude
+            for position in positions
+            if position.speed_longitude is not None
+        },
+    )
     chart_objects = list(
         build_chart_object_runtime_data(
             planet_positions=positions,
             astral_points=points,
             houses=houses,
+            advanced_planetary_conditions=advanced_planetary_conditions,
             include_astral_points_in_aspects=include_points_in_aspects,
             include_angles_in_aspects=False,
         )
@@ -847,14 +856,6 @@ def build_natal_result(
     if _rejected > 0:
         increment_counter("aspects_rejected_orb_total", float(_rejected))
 
-    advanced_planetary_conditions = calculate_advanced_planetary_conditions(
-        planetary_positions={position.planet_code: position for position in positions},
-        planetary_speeds_deg_per_day={
-            position.planet_code: position.speed_longitude
-            for position in positions
-            if position.speed_longitude is not None
-        },
-    )
     interpretation_profiles_by_planet = {
         planet_key: resolve_advanced_condition_profiles(
             bundle=bundle,

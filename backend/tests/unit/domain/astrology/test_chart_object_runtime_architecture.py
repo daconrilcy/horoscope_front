@@ -10,6 +10,8 @@ NEW_MODULES = (
     REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py",
     REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py",
 )
+CHART_OBJECT_BUILDER = REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py"
+CHART_OBJECT_RUNTIME = REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py"
 CALCULATOR_ROOTS = (
     REPO_ROOT / "app/domain/astrology/calculators",
     REPO_ROOT / "app/domain/astrology/dignities",
@@ -44,6 +46,13 @@ FORBIDDEN_IMPORT_PREFIXES = (
     "fastapi",
     "pydantic",
 )
+FORBIDDEN_CONDITION_CALCULATOR_CALLS = (
+    "calculate_solar_proximity",
+    "calculate_planetary_motion",
+    "calculate_solar_phase",
+    "calculate_planet_visibility",
+)
+FORBIDDEN_LOCAL_THRESHOLDS = ("8.5", "17", "17.0", "0.2833", "0.01")
 
 
 def test_new_chart_object_modules_keep_domain_pure_dependencies() -> None:
@@ -93,6 +102,25 @@ def test_aspect_engine_does_not_reintroduce_specialized_inputs() -> None:
                 offenders.append(f"{module_path}:builder:{builder_name}")
 
     assert offenders == []
+
+
+def test_chart_object_builder_does_not_call_condition_calculators() -> None:
+    """Le mapping chart-object consomme les conditions sans les recalculer."""
+    source = CHART_OBJECT_BUILDER.read_text(encoding="utf-8")
+
+    assert not any(call_name in source for call_name in FORBIDDEN_CONDITION_CALCULATOR_CALLS)
+
+
+def test_chart_object_mapping_does_not_define_magic_thresholds() -> None:
+    """Les seuils solaires ou motion restent dans les calculateurs canoniques."""
+    sources = (
+        CHART_OBJECT_BUILDER.read_text(encoding="utf-8"),
+        CHART_OBJECT_RUNTIME.read_text(encoding="utf-8"),
+    )
+
+    assert not any(
+        threshold in source for source in sources for threshold in FORBIDDEN_LOCAL_THRESHOLDS
+    )
 
 
 def _branches_on_object_type(node: ast.AST) -> bool:

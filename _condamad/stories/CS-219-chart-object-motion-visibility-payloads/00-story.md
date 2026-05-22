@@ -1,6 +1,6 @@
 # Story CS-219 chart-object-motion-visibility-payloads: Rattacher mouvement et visibilite aux chart objects
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

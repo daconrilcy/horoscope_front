@@ -6,6 +6,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from app.domain.astrology.planetary_conditions.contracts import (
+    ConditionConfidence,
+    PlanetaryMotionDirection,
+    PlanetarySpeedState,
+    PlanetVisibilityKey,
+    SolarPhaseRelationKey,
+    SolarProximityConditionKey,
+)
+
 
 class ChartObjectType(StrEnum):
     """Familles canoniques d'objets exploitables dans un theme."""
@@ -78,18 +87,55 @@ class ChartObjectMotionPayload:
 
     speed_longitude: float | None
     is_retrograde: bool | None
+    direction: PlanetaryMotionDirection
+    is_direct: bool | None
+    is_stationary: bool | None
+    speed_state: PlanetarySpeedState | None = None
+    absolute_speed_longitude: float | None = None
+    normalized_speed_ratio: float | None = None
+    source: str = "planetary_conditions.motion"
 
     def __post_init__(self) -> None:
         """Refuse un payload motion qui ne porte aucun fait de mouvement."""
-        if self.speed_longitude is None and self.is_retrograde is None:
+        if (
+            self.speed_longitude is None
+            and self.is_retrograde is None
+            and self.is_stationary is None
+            and self.direction is PlanetaryMotionDirection.UNKNOWN
+        ):
             raise ValueError("motion payload requires speed or retrograde status")
+        if self.direction is PlanetaryMotionDirection.DIRECT and self.is_direct is not True:
+            raise ValueError("direct motion payload requires is_direct=True")
+        if self.direction is PlanetaryMotionDirection.RETROGRADE and self.is_retrograde is not True:
+            raise ValueError("retrograde motion payload requires is_retrograde=True")
+        if self.direction is PlanetaryMotionDirection.STATIONARY and self.is_stationary is not True:
+            raise ValueError("stationary motion payload requires is_stationary=True")
+        if not self.source.strip():
+            raise ValueError("motion payload requires a source")
 
 
 @dataclass(frozen=True, slots=True)
 class ChartObjectVisibilityPayload:
-    """Emplacement reserve aux faits de visibilite deja calcules."""
+    """Faits de visibilite deja calcules et rattaches au runtime."""
 
-    status_code: str
+    visibility_key: PlanetVisibilityKey
+    is_visible: bool | None
+    confidence: ConditionConfidence
+    reason: str | None
+    solar_separation_deg: float | None = None
+    solar_proximity_key: SolarProximityConditionKey | None = None
+    solar_phase_relation_key: SolarPhaseRelationKey | None = None
+    is_cazimi: bool | None = None
+    is_combust: bool | None = None
+    is_under_beams: bool | None = None
+    is_oriental: bool | None = None
+    is_occidental: bool | None = None
+    source: str = "planetary_conditions"
+
+    def __post_init__(self) -> None:
+        """Valide que la visibilite annonce une source et une confiance."""
+        if not self.source.strip():
+            raise ValueError("visibility payload requires a source")
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,7 +243,7 @@ def _validate_required_payloads(
     capabilities: ChartObjectCapabilities,
     payloads: ChartObjectPayloads,
 ) -> None:
-    """Leve une erreur explicite quand une capacite annonce une donnee absente."""
+    """Leve une erreur explicite quand capacites et payloads divergent."""
     required_payloads = (
         (capabilities.supports_motion, payloads.motion, "motion"),
         (capabilities.supports_visibility, payloads.visibility, "visibility"),
@@ -208,3 +254,5 @@ def _validate_required_payloads(
     for is_required, payload, payload_name in required_payloads:
         if is_required and payload is None:
             raise ValueError(f"chart object capability requires {payload_name} payload")
+        if not is_required and payload is not None:
+            raise ValueError(f"chart object payload requires {payload_name} capability")

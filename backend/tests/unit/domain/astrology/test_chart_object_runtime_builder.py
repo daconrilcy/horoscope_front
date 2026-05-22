@@ -8,6 +8,21 @@ from app.domain.astrology.builders.chart_object_runtime_builder import (
     build_chart_object_runtime_data,
 )
 from app.domain.astrology.natal_calculation import NatalAstralPointPosition, PlanetPosition
+from app.domain.astrology.planetary_conditions.contracts import (
+    AdvancedPlanetaryConditionsResult,
+    ConditionConfidence,
+    ConditionSeverity,
+    PlanetaryConditionsBundle,
+    PlanetaryMotionCondition,
+    PlanetaryMotionDirection,
+    PlanetarySolarPhaseRelation,
+    PlanetarySpeedState,
+    PlanetVisibilityCondition,
+    PlanetVisibilityKey,
+    SolarPhaseRelationKey,
+    SolarProximityCondition,
+    SolarProximityConditionKey,
+)
 from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectCapabilities,
     ChartObjectPayloads,
@@ -72,6 +87,69 @@ def _houses() -> tuple[HouseRuntimeData, ...]:
     return tuple(
         HouseRuntimeData(number=number, cusp_longitude=float((number - 1) * 30))
         for number in range(1, 13)
+    )
+
+
+def _advanced_conditions() -> AdvancedPlanetaryConditionsResult:
+    """Construit les conditions avancees deja calculees pour la projection."""
+    return AdvancedPlanetaryConditionsResult(
+        conditions_by_planet={
+            "sun": PlanetaryConditionsBundle(
+                planet_key="sun",
+                motion=PlanetaryMotionCondition(
+                    planet_key="sun",
+                    speed_deg_per_day=0.95,
+                    absolute_speed_deg_per_day=0.95,
+                    direction=PlanetaryMotionDirection.DIRECT,
+                    speed_state=PlanetarySpeedState.NORMAL,
+                    is_retrograde=False,
+                    is_stationary=False,
+                    normalized_speed_ratio=1.0,
+                ),
+                visibility=PlanetVisibilityCondition(
+                    planet_key="sun",
+                    visibility_key=PlanetVisibilityKey.VISIBLE,
+                    is_visible=True,
+                    confidence=ConditionConfidence.HIGH,
+                    reason="sun_visible",
+                ),
+            ),
+            "mars": PlanetaryConditionsBundle(
+                planet_key="mars",
+                motion=PlanetaryMotionCondition(
+                    planet_key="mars",
+                    speed_deg_per_day=-0.2,
+                    absolute_speed_deg_per_day=0.2,
+                    direction=PlanetaryMotionDirection.RETROGRADE,
+                    speed_state=PlanetarySpeedState.SLOW,
+                    is_retrograde=True,
+                    is_stationary=False,
+                    normalized_speed_ratio=0.5,
+                ),
+                solar_proximity=SolarProximityCondition(
+                    planet_key="mars",
+                    condition_key=SolarProximityConditionKey.COMBUST,
+                    sun_distance_deg=6.0,
+                    orb_deg=8.5,
+                    severity=ConditionSeverity.MAJOR,
+                    is_active=True,
+                ),
+                solar_phase_relation=PlanetarySolarPhaseRelation(
+                    planet_key="mars",
+                    relation_key=SolarPhaseRelationKey.OCCIDENTAL,
+                    angular_distance_deg=6.0,
+                    is_oriental=False,
+                    is_occidental=True,
+                ),
+                visibility=PlanetVisibilityCondition(
+                    planet_key="mars",
+                    visibility_key=PlanetVisibilityKey.INVISIBLE,
+                    is_visible=False,
+                    confidence=ConditionConfidence.HIGH,
+                    reason="combust",
+                ),
+            ),
+        }
     )
 
 
@@ -160,12 +238,37 @@ def test_objects_are_filterable_by_capabilities() -> None:
     assert {"sun", "mars", "north_node", "asc", "mc"} <= aspect_codes
     assert {"sun", "mars", "north_node", "house_1_cusp"} <= house_position_codes
     assert dignity_codes == set()
-    assert motion_codes == {"sun", "mars"}
+    assert motion_codes == set()
     assert all(
         item.payloads.house_position is not None
         for item in objects
         if item.capabilities.supports_house_position
     )
+
+
+def test_builder_maps_advanced_motion_and_visibility_payloads() -> None:
+    """La projection rattache les conditions avancees deja calculees aux planetes."""
+    objects = build_chart_object_runtime_data(
+        planet_positions=_planet_positions(),
+        astral_points=_astral_points(),
+        houses=_houses(),
+        advanced_planetary_conditions=_advanced_conditions(),
+    )
+    by_code = {item.code: item for item in objects}
+
+    assert by_code["mars"].capabilities.supports_motion is True
+    assert by_code["mars"].payloads.motion is not None
+    assert by_code["mars"].payloads.motion.direction is PlanetaryMotionDirection.RETROGRADE
+    assert by_code["mars"].capabilities.supports_visibility is True
+    assert by_code["mars"].payloads.visibility is not None
+    assert by_code["mars"].payloads.visibility.visibility_key is PlanetVisibilityKey.INVISIBLE
+    assert by_code["mars"].payloads.visibility.is_combust is True
+    assert by_code["sun"].payloads.visibility is not None
+    assert by_code["sun"].payloads.visibility.is_cazimi is None
+    assert by_code["north_node"].capabilities.supports_motion is False
+    assert by_code["north_node"].payloads.motion is None
+    assert by_code["asc"].capabilities.supports_visibility is False
+    assert by_code["asc"].payloads.visibility is None
 
 
 def test_declared_payload_capability_requires_payload() -> None:
@@ -183,6 +286,22 @@ def test_declared_payload_capability_requires_payload() -> None:
                 source_key="broken",
             ),
             capabilities=ChartObjectCapabilities(supports_motion=True),
+            classifications=("planet",),
+            payloads=ChartObjectPayloads(),
+        )
+    with pytest.raises(ValueError, match="visibility payload"):
+        ChartObjectRuntimeData(
+            code="broken",
+            object_type=ChartObjectType.PLANET,
+            display_name="Broken",
+            longitude=None,
+            latitude=None,
+            zodiac_position=None,
+            source=ChartObjectSourceRuntimeData(
+                source_type=ChartObjectSourceType.EPHEMERIS,
+                source_key="broken",
+            ),
+            capabilities=ChartObjectCapabilities(supports_visibility=True),
             classifications=("planet",),
             payloads=ChartObjectPayloads(),
         )

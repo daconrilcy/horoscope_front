@@ -6,6 +6,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
+from app.domain.astrology.planetary_conditions.contracts import (
+    AdvancedPlanetaryConditionsResult,
+    PlanetaryConditionsBundle,
+    PlanetaryMotionCondition,
+    PlanetaryMotionDirection,
+    SolarPhaseRelationKey,
+    SolarProximityConditionKey,
+)
 from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectAnglePayload,
     ChartObjectCapabilities,
@@ -17,6 +25,7 @@ from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectSourceRuntimeData,
     ChartObjectSourceType,
     ChartObjectType,
+    ChartObjectVisibilityPayload,
     ZodiacPositionRuntimeData,
 )
 
@@ -68,13 +77,17 @@ def build_chart_object_runtime_data(
     planet_positions: Sequence[PlanetChartObjectSource],
     astral_points: Sequence[AstralPointChartObjectSource],
     houses: Sequence[HouseChartObjectSource],
+    advanced_planetary_conditions: AdvancedPlanetaryConditionsResult | None = None,
     include_astral_points_in_aspects: bool = True,
     include_angles_in_aspects: bool = True,
 ) -> tuple[ChartObjectRuntimeData, ...]:
     """Projette les collections natales historiques en objets runtime unifies."""
     ordered_houses = tuple(sorted(houses, key=lambda item: item.number))
     return (
-        *_build_planet_objects(planet_positions),
+        *_build_planet_objects(
+            planet_positions,
+            advanced_planetary_conditions=advanced_planetary_conditions,
+        ),
         *_build_astral_point_objects(
             astral_points,
             include_astral_points_in_aspects=include_astral_points_in_aspects,
@@ -89,13 +102,20 @@ def build_chart_object_runtime_data(
 
 def _build_planet_objects(
     planet_positions: Sequence[PlanetChartObjectSource],
+    *,
+    advanced_planetary_conditions: AdvancedPlanetaryConditionsResult | None,
 ) -> tuple[ChartObjectRuntimeData, ...]:
     """Projette les planetes et luminaires depuis leurs positions existantes."""
     objects: list[ChartObjectRuntimeData] = []
     for position in planet_positions:
         planet_code = _normalize_code(position.planet_code)
         is_luminary = planet_code in _LUMINARY_CODES
-        motion_payload = _build_motion_payload(position)
+        condition_bundle = _condition_bundle_for(
+            advanced_planetary_conditions,
+            planet_code=planet_code,
+        )
+        motion_payload = _build_motion_payload(position, condition_bundle)
+        visibility_payload = _build_visibility_payload(condition_bundle)
         objects.append(
             ChartObjectRuntimeData(
                 code=planet_code,
@@ -115,6 +135,7 @@ def _build_planet_objects(
                     supports_aspects=True,
                     supports_house_position=True,
                     supports_motion=motion_payload is not None,
+                    supports_visibility=visibility_payload is not None,
                     supports_interpretation=True,
                     supports_dominance=True,
                 ),
@@ -124,6 +145,7 @@ def _build_planet_objects(
                         house_number=position.house_number,
                     ),
                     motion=motion_payload,
+                    visibility=visibility_payload,
                 ),
             )
         )
@@ -132,14 +154,95 @@ def _build_planet_objects(
 
 def _build_motion_payload(
     position: PlanetChartObjectSource,
+    condition_bundle: PlanetaryConditionsBundle | None,
 ) -> ChartObjectMotionPayload | None:
     """Retourne les faits de mouvement seulement quand ils existent."""
-    if position.speed_longitude is None and position.is_retrograde is None:
-        return None
+    del position
+    if condition_bundle is not None and condition_bundle.motion is not None:
+        return _build_motion_payload_from_condition(condition_bundle.motion)
+    return None
+
+
+def _build_motion_payload_from_condition(
+    condition: PlanetaryMotionCondition,
+) -> ChartObjectMotionPayload:
+    """Mappe le contrat motion canonique sans reclassifier la vitesse."""
     return ChartObjectMotionPayload(
-        speed_longitude=position.speed_longitude,
-        is_retrograde=position.is_retrograde,
+        speed_longitude=condition.speed_deg_per_day,
+        is_retrograde=condition.is_retrograde,
+        direction=condition.direction,
+        is_direct=condition.direction is PlanetaryMotionDirection.DIRECT,
+        is_stationary=condition.is_stationary,
+        speed_state=condition.speed_state,
+        absolute_speed_longitude=condition.absolute_speed_deg_per_day,
+        normalized_speed_ratio=condition.normalized_speed_ratio,
+        source="planetary_conditions.motion",
     )
+
+
+def _build_visibility_payload(
+    condition_bundle: PlanetaryConditionsBundle | None,
+) -> ChartObjectVisibilityPayload | None:
+    """Mappe les faits solaires deja calcules vers le payload runtime."""
+    if condition_bundle is None or condition_bundle.visibility is None:
+        return None
+
+    visibility = condition_bundle.visibility
+    solar_proximity = condition_bundle.solar_proximity
+    solar_phase_relation = condition_bundle.solar_phase_relation
+    if solar_proximity is None or solar_phase_relation is None:
+        return ChartObjectVisibilityPayload(
+            visibility_key=visibility.visibility_key,
+            is_visible=visibility.is_visible,
+            confidence=visibility.confidence,
+            reason=visibility.reason,
+        )
+
+    solar_proximity_key: SolarProximityConditionKey | None = solar_proximity.condition_key
+    solar_phase_relation_key: SolarPhaseRelationKey | None = solar_phase_relation.relation_key
+    solar_separation_deg: float | None = solar_proximity.sun_distance_deg
+    is_cazimi: bool | None = solar_proximity.condition_key is SolarProximityConditionKey.CAZIMI
+    is_combust: bool | None = solar_proximity.condition_key is SolarProximityConditionKey.COMBUST
+    is_under_beams: bool | None = (
+        solar_proximity.condition_key is SolarProximityConditionKey.UNDER_BEAMS
+    )
+    is_oriental = solar_phase_relation.is_oriental
+    is_occidental = solar_phase_relation.is_occidental
+    if condition_bundle.planet_key == "sun":
+        solar_proximity_key = None
+        solar_phase_relation_key = None
+        solar_separation_deg = None
+        is_cazimi = None
+        is_combust = None
+        is_under_beams = None
+        is_oriental = None
+        is_occidental = None
+
+    return ChartObjectVisibilityPayload(
+        visibility_key=visibility.visibility_key,
+        is_visible=visibility.is_visible,
+        confidence=visibility.confidence,
+        reason=visibility.reason,
+        solar_separation_deg=solar_separation_deg,
+        solar_proximity_key=solar_proximity_key,
+        solar_phase_relation_key=solar_phase_relation_key,
+        is_cazimi=is_cazimi,
+        is_combust=is_combust,
+        is_under_beams=is_under_beams,
+        is_oriental=is_oriental,
+        is_occidental=is_occidental,
+    )
+
+
+def _condition_bundle_for(
+    advanced_planetary_conditions: AdvancedPlanetaryConditionsResult | None,
+    *,
+    planet_code: str,
+) -> PlanetaryConditionsBundle | None:
+    """Retourne le bundle avance deja calcule pour une planete."""
+    if advanced_planetary_conditions is None:
+        return None
+    return advanced_planetary_conditions.conditions_by_planet.get(planet_code)
 
 
 def _build_astral_point_objects(

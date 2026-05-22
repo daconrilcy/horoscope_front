@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
+from app.domain.astrology import natal_calculation
 from app.domain.astrology.natal_calculation import NatalResult, build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput
+from app.domain.astrology.planetary_conditions.contracts import (
+    PlanetaryMotionDirection,
+    PlanetVisibilityKey,
+)
 from app.domain.astrology.runtime.chart_object_runtime_data import ChartObjectType
 from app.main import app
 from tests.factories.astrology_runtime_reference_factory import complete_reference
@@ -71,6 +78,71 @@ def test_simplified_engine_does_not_advertise_missing_motion_payloads() -> None:
     assert planets
     assert all(not item.capabilities.supports_motion for item in planets)
     assert all(item.payloads.motion is None for item in planets)
+
+
+def test_natal_chart_objects_expose_visibility_payloads_from_advanced_conditions() -> None:
+    """Les objets planetaires exposent la visibilite issue des conditions avancees."""
+    result = _result()
+    by_code = {item.code: item for item in result.chart_objects}
+
+    assert result.advanced_planetary_conditions is not None
+    assert by_code["sun"].capabilities.supports_visibility is True
+    assert by_code["sun"].payloads.visibility is not None
+    assert by_code["sun"].payloads.visibility.visibility_key is PlanetVisibilityKey.VISIBLE
+    assert by_code["sun"].payloads.visibility.is_cazimi is None
+    assert by_code["sun"].payloads.visibility.is_oriental is None
+    assert by_code["sun"].payloads.visibility.is_occidental is None
+    assert by_code["moon"].capabilities.supports_visibility is True
+    assert by_code["moon"].payloads.visibility is not None
+    assert by_code["north_node"].capabilities.supports_visibility is False
+    assert by_code["north_node"].payloads.visibility is None
+    assert by_code["house_1_cusp"].capabilities.supports_visibility is False
+    assert by_code["house_1_cusp"].payloads.visibility is None
+
+
+def test_natal_chart_objects_expose_motion_payloads_when_positions_have_speeds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Le pipeline natal rattache la motion quand des vitesses fiables existent."""
+
+    def _positions_with_speeds(
+        julian_day: float,
+        planet_codes: list[str],
+        sign_codes: list[str],
+    ) -> list[dict[str, object]]:
+        """Produit des positions test avec vitesses existantes sans ephemeride externe."""
+        del julian_day
+        positions = []
+        for index, planet_code in enumerate(planet_codes):
+            longitude = float((index * 31) % 360)
+            positions.append(
+                {
+                    "planet_code": planet_code,
+                    "longitude": longitude,
+                    "sign_code": sign_codes[int(longitude // 30) % len(sign_codes)],
+                    "speed_longitude": -0.2 if planet_code == "mars" else 1.0,
+                    "is_retrograde": planet_code == "mars",
+                }
+            )
+        return positions
+
+    monkeypatch.setattr(
+        natal_calculation,
+        "calculate_planet_positions",
+        _positions_with_speeds,
+    )
+
+    result = _result()
+    by_code = {item.code: item for item in result.chart_objects}
+
+    assert by_code["sun"].capabilities.supports_motion is True
+    assert by_code["sun"].payloads.motion is not None
+    assert by_code["sun"].payloads.motion.direction is PlanetaryMotionDirection.DIRECT
+    assert by_code["mars"].capabilities.supports_motion is True
+    assert by_code["mars"].payloads.motion is not None
+    assert by_code["mars"].payloads.motion.direction is PlanetaryMotionDirection.RETROGRADE
+    assert by_code["north_node"].capabilities.supports_motion is False
+    assert by_code["north_node"].payloads.motion is None
 
 
 def test_chart_objects_stay_out_of_public_dump_and_openapi_schema() -> None:
