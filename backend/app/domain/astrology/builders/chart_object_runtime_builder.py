@@ -68,13 +68,21 @@ def build_chart_object_runtime_data(
     planet_positions: Sequence[PlanetChartObjectSource],
     astral_points: Sequence[AstralPointChartObjectSource],
     houses: Sequence[HouseChartObjectSource],
+    include_astral_points_in_aspects: bool = True,
+    include_angles_in_aspects: bool = True,
 ) -> tuple[ChartObjectRuntimeData, ...]:
     """Projette les collections natales historiques en objets runtime unifies."""
     ordered_houses = tuple(sorted(houses, key=lambda item: item.number))
     return (
         *_build_planet_objects(planet_positions),
-        *_build_astral_point_objects(astral_points),
-        *_build_angle_objects(ordered_houses),
+        *_build_astral_point_objects(
+            astral_points,
+            include_astral_points_in_aspects=include_astral_points_in_aspects,
+        ),
+        *_build_angle_objects(
+            ordered_houses,
+            include_angles_in_aspects=include_angles_in_aspects,
+        ),
         *_build_house_cusp_objects(ordered_houses),
     )
 
@@ -136,6 +144,8 @@ def _build_motion_payload(
 
 def _build_astral_point_objects(
     astral_points: Sequence[AstralPointChartObjectSource],
+    *,
+    include_astral_points_in_aspects: bool,
 ) -> tuple[ChartObjectRuntimeData, ...]:
     """Projette les points astraux calcules sans recalcul astronomique."""
     objects: list[ChartObjectRuntimeData] = []
@@ -162,7 +172,7 @@ def _build_astral_point_objects(
                     source_key=point.calculation_source,
                 ),
                 capabilities=ChartObjectCapabilities(
-                    supports_aspects=True,
+                    supports_aspects=include_astral_points_in_aspects,
                     supports_house_position=point.house is not None,
                     supports_interpretation=True,
                 ),
@@ -181,6 +191,8 @@ def _build_astral_point_objects(
 
 def _build_angle_objects(
     houses: Sequence[HouseChartObjectSource],
+    *,
+    include_angles_in_aspects: bool,
 ) -> tuple[ChartObjectRuntimeData, ...]:
     """Projette les angles structurels depuis les cuspides de maisons."""
     houses_by_number = {house.number: house for house in houses}
@@ -202,7 +214,7 @@ def _build_angle_objects(
                     source_key=f"house:{house_number}",
                 ),
                 capabilities=ChartObjectCapabilities(
-                    supports_aspects=True,
+                    supports_aspects=include_angles_in_aspects,
                     supports_house_position=True,
                     supports_interpretation=True,
                     supports_dominance=True,

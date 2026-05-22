@@ -44,6 +44,8 @@ def test_build_natal_result_populates_chart_objects_without_replacing_collection
     assert by_code["sun"].object_type == ChartObjectType.LUMINARY
     assert by_code["moon"].object_type == ChartObjectType.LUMINARY
     assert by_code["north_node"].object_type == ChartObjectType.ASTRAL_POINT
+    assert by_code["north_node"].capabilities.supports_aspects is False
+    assert by_code["asc"].capabilities.supports_aspects is False
     assert by_code["house_1_cusp"].object_type == ChartObjectType.HOUSE_CUSP
     assert (
         len(

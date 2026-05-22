@@ -33,7 +33,10 @@ from app.domain.astrology.calculators import (
     calculate_major_aspects,
     calculate_planet_positions,
 )
-from app.domain.astrology.calculators.aspects import build_aspect_body_from_position
+from app.domain.astrology.calculators.aspect_inputs import (
+    AspectBodyProjector,
+    AspectChartObjectSelector,
+)
 from app.domain.astrology.calculators.houses import HOUSE_SYSTEM_CODE, assign_house_number
 from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 from app.domain.astrology.condition.contracts import (
@@ -783,16 +786,48 @@ def build_natal_result(
                 _raise_invalid_reference(version, "aspect_orb_rules", "invalid_orb_deg")
         aspect_orb_rules.append(aspect_orb_rule)
 
-    system_inheritance = _build_system_inheritance(version, runtime_reference.systems)
-    aspect_source_positions = [*positions_raw, *(points_raw if include_points_in_aspects else [])]
-    aspect_positions = [
-        build_aspect_body_from_position(position, celestial_catalog) for position in positions_raw
+    positions = [PlanetPosition.model_validate(item) for item in positions_raw]
+    points = [NatalAstralPointPosition.model_validate(item) for item in points_raw]
+    cusp_houses = [
+        HouseRuntimeData(
+            number=int(item["number"]),
+            cusp_longitude=float(item["cusp_longitude"]),
+        )
+        for item in houses_raw
     ]
-    if include_points_in_aspects:
-        aspect_positions = [
-            build_aspect_body_from_position(position, celestial_catalog)
-            for position in aspect_source_positions
-        ]
+    sign_rulerships = _extract_sign_rulerships(runtime_reference)
+    house_axes = _extract_house_axes(version, runtime_reference)
+    try:
+        house_rulers = HouseRulerResolver(sign_rulerships, sign_codes=sign_codes).resolve(
+            cusp_houses,
+            positions,
+        )
+    except HouseRulerResolutionError:
+        _raise_invalid_reference(version, "sign_rulerships", "missing_or_incomplete")
+    houses = build_house_runtime_data(
+        houses=cusp_houses,
+        planets=positions,
+        house_rulers=house_rulers,
+        house_system=effective_house_system,
+        sign_rulerships=sign_rulerships,
+        house_axes=house_axes,
+        celestial_catalog=celestial_catalog,
+        sign_codes=sign_codes,
+    )
+    chart_objects = list(
+        build_chart_object_runtime_data(
+            planet_positions=positions,
+            astral_points=points,
+            houses=houses,
+            include_astral_points_in_aspects=include_points_in_aspects,
+            include_angles_in_aspects=False,
+        )
+    )
+    aspectable_chart_objects = AspectChartObjectSelector().select(chart_objects)
+    aspect_positions = list(
+        AspectBodyProjector(celestial_catalog).project_many(aspectable_chart_objects)
+    )
+    system_inheritance = _build_system_inheritance(version, runtime_reference.systems)
 
     aspects_raw = calculate_major_aspects(
         aspect_positions,
@@ -807,12 +842,11 @@ def build_natal_result(
 
     # story 24-2 Observability: track aspects calculated and rejected by orb
     increment_counter(f"aspects_calculated_total_{aspect_school_code}", float(len(aspects_raw)))
-    _total_checks = math.comb(len(aspect_source_positions), 2) * len(major_aspect_definitions)
+    _total_checks = math.comb(len(aspect_positions), 2) * len(major_aspect_definitions)
     _rejected = _total_checks - len(aspects_raw)
     if _rejected > 0:
         increment_counter("aspects_rejected_orb_total", float(_rejected))
 
-    positions = [PlanetPosition.model_validate(item) for item in positions_raw]
     advanced_planetary_conditions = calculate_advanced_planetary_conditions(
         planetary_positions={position.planet_code: position for position in positions},
         planetary_speeds_deg_per_day={
@@ -849,40 +883,6 @@ def build_natal_result(
     dignity_sect = dignities[0].chart_sect if dignities else None
     condition_profiles = list(
         PlanetConditionProfileService().calculate(tuple(dignities), runtime_reference)
-    )
-    points = [NatalAstralPointPosition.model_validate(item) for item in points_raw]
-    cusp_houses = [
-        HouseRuntimeData(
-            number=int(item["number"]),
-            cusp_longitude=float(item["cusp_longitude"]),
-        )
-        for item in houses_raw
-    ]
-    sign_rulerships = _extract_sign_rulerships(runtime_reference)
-    house_axes = _extract_house_axes(version, runtime_reference)
-    try:
-        house_rulers = HouseRulerResolver(sign_rulerships, sign_codes=sign_codes).resolve(
-            cusp_houses,
-            positions,
-        )
-    except HouseRulerResolutionError:
-        _raise_invalid_reference(version, "sign_rulerships", "missing_or_incomplete")
-    houses = build_house_runtime_data(
-        houses=cusp_houses,
-        planets=positions,
-        house_rulers=house_rulers,
-        house_system=effective_house_system,
-        sign_rulerships=sign_rulerships,
-        house_axes=house_axes,
-        celestial_catalog=celestial_catalog,
-        sign_codes=sign_codes,
-    )
-    chart_objects = list(
-        build_chart_object_runtime_data(
-            planet_positions=positions,
-            astral_points=points,
-            houses=houses,
-        )
     )
     signs_runtime = build_sign_runtime_data(
         signs=runtime_reference.signs,

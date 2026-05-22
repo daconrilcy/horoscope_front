@@ -19,6 +19,22 @@ CALCULATOR_ROOTS = (
     REPO_ROOT / "app/domain/astrology/interpretation",
     REPO_ROOT / "app/domain/astrology/interpretation_adapters",
 )
+ASPECT_ENGINE_MODULES = (
+    REPO_ROOT / "app/domain/astrology/calculators/aspects.py",
+    REPO_ROOT / "app/domain/astrology/calculators/aspect_inputs.py",
+)
+FORBIDDEN_ASPECT_BUILDERS = (
+    "PlanetAspectBodyBuilder",
+    "AngleAspectBodyBuilder",
+    "AstralPointAspectBodyBuilder",
+    "FixedStarAspectBodyBuilder",
+)
+FORBIDDEN_ASPECT_COLLECTION_NAMES = (
+    "planet_positions",
+    "astral_points",
+    "angles",
+    "fixed_stars",
+)
 FORBIDDEN_IMPORT_PREFIXES = (
     "app.api",
     "app.infra",
@@ -63,6 +79,22 @@ def test_business_calculators_do_not_branch_on_chart_object_type() -> None:
     assert offenders == []
 
 
+def test_aspect_engine_does_not_reintroduce_specialized_inputs() -> None:
+    """Le moteur d'aspects ne revient pas aux collections ou builders specialises."""
+    offenders: list[str] = []
+    for module_path in ASPECT_ENGINE_MODULES:
+        tree = ast.parse(module_path.read_text(encoding="utf-8"))
+        source = module_path.read_text(encoding="utf-8")
+        for node in ast.walk(tree):
+            if _uses_forbidden_aspect_collection(node):
+                offenders.append(f"{module_path}:{getattr(node, 'lineno', '?')}")
+        for builder_name in FORBIDDEN_ASPECT_BUILDERS:
+            if builder_name in source:
+                offenders.append(f"{module_path}:builder:{builder_name}")
+
+    assert offenders == []
+
+
 def _branches_on_object_type(node: ast.AST) -> bool:
     """Detecte les comparaisons et match explicites sur `object_type`."""
     if isinstance(node, ast.Compare):
@@ -82,3 +114,8 @@ def _is_object_type_reference(node: ast.AST) -> bool:
         or isinstance(node, ast.Attribute)
         and node.attr == "object_type"
     )
+
+
+def _uses_forbidden_aspect_collection(node: ast.AST) -> bool:
+    """Detecte les anciens noms de collections dans les modules d'aspects."""
+    return isinstance(node, ast.Name) and node.id in FORBIDDEN_ASPECT_COLLECTION_NAMES
