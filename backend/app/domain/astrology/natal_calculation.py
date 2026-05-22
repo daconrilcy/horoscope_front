@@ -821,6 +821,7 @@ def build_natal_result(
         PlanetDignityScoringService().calculate(
             dignity_inputs,
             runtime_reference,
+            advanced_planetary_conditions=advanced_planetary_conditions,
         )
     )
     dignity_sect = dignities[0].chart_sect if dignities else None

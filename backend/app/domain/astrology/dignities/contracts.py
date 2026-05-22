@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+from pydantic.json_schema import SkipJsonSchema
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +123,17 @@ class AccidentalDignityMatch:
 
 
 @dataclass(frozen=True, slots=True)
+class AccidentalDignityModifier:
+    """Modificateur factuel ajoute au score accidentel."""
+
+    key: str
+    category: str
+    score_delta: float
+    reason: str
+    source: str
+
+
+@dataclass(frozen=True, slots=True)
 class PlanetDignityInput:
     """Donnees natales objectives necessaires au calcul d'une planete."""
 
@@ -155,4 +168,7 @@ class PlanetDignityResult:
     intensity_score: float
     essential_breakdown: tuple[EssentialDignityMatch, ...]
     accidental_breakdown: tuple[AccidentalDignityMatch, ...]
+    advanced_condition_modifiers: SkipJsonSchema[tuple[AccidentalDignityModifier, ...]] = field(
+        default=(), metadata={"exclude": True}
+    )
     sect_condition: PlanetSectCondition | None = None
