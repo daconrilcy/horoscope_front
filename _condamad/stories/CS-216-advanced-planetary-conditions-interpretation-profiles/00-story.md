@@ -1,6 +1,6 @@
 # Story CS-216 advanced-planetary-conditions-interpretation-profiles: Structurer les profils interpretatifs des conditions planetaires avancees
 
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -528,73 +528,73 @@ After implementation:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1 - Capturer le baseline et confirmer les owners (AC: AC1, AC12, AC13, AC14, AC16, AC17)
-  - [ ] Subtask 1.1 - Inspecter les fichiers listes en section 18.
-  - [ ] Subtask 1.2 - Documenter le baseline dans `evidence/validation.md`.
-  - [ ] Subtask 1.3 - Confirmer que le nouveau sous-package
+- [x] Task 1 - Capturer le baseline et confirmer les owners (AC: AC1, AC12, AC13, AC14, AC16, AC17)
+  - [x] Subtask 1.1 - Inspecter les fichiers listes en section 18.
+  - [x] Subtask 1.2 - Documenter le baseline dans `evidence/validation.md`.
+  - [x] Subtask 1.3 - Confirmer que le nouveau sous-package
     `interpretation/advanced_conditions` est absent avant creation.
 
-- [ ] Task 2 - Creer les contrats interpretatifs (AC: AC1, AC13, AC14, AC15)
-  - [ ] Subtask 2.1 - Creer `contracts.py` avec commentaire global en francais.
-  - [ ] Subtask 2.2 - Ajouter `InterpretationPolarity`,
+- [x] Task 2 - Creer les contrats interpretatifs (AC: AC1, AC13, AC14, AC15)
+  - [x] Subtask 2.1 - Creer `contracts.py` avec commentaire global en francais.
+  - [x] Subtask 2.2 - Ajouter `InterpretationPolarity`,
     `InterpretationIntensity` et `AdvancedConditionInterpretationProfile`.
-  - [ ] Subtask 2.3 - Figer les tuples fournis et valider les cles essentielles
+  - [x] Subtask 2.3 - Figer les tuples fournis et valider les cles essentielles
     sans accepter de mapping libre type `Any`.
-  - [ ] Subtask 2.4 - Verifier que la polarite est une propriete de profil et
+  - [x] Subtask 2.4 - Verifier que la polarite est une propriete de profil et
     non un filtre runtime.
 
-- [ ] Task 3 - Creer le catalogue canonique (AC: AC2, AC4, AC5, AC9, AC10, AC11, AC15)
-  - [ ] Subtask 3.1 - Creer `advanced_condition_profile_catalog.py`.
-  - [ ] Subtask 3.2 - Ajouter les profils globaux minimaux requis.
-  - [ ] Subtask 3.3 - Ajouter au moins `Mercury combust` comme profil
+- [x] Task 3 - Creer le catalogue canonique (AC: AC2, AC4, AC5, AC9, AC10, AC11, AC15)
+  - [x] Subtask 3.1 - Creer `advanced_condition_profile_catalog.py`.
+  - [x] Subtask 3.2 - Ajouter les profils globaux minimaux requis.
+  - [x] Subtask 3.3 - Ajouter au moins `Mercury combust` comme profil
     specifique planete.
-  - [ ] Subtask 3.4 - Ajouter au moins un profil `medieval` ou
+  - [x] Subtask 3.4 - Ajouter au moins un profil `medieval` ou
     `hellenistic` pour prouver la resolution tradition.
-  - [ ] Subtask 3.5 - Utiliser des polarites explicites sur les profils du
+  - [x] Subtask 3.5 - Utiliser des polarites explicites sur les profils du
     catalogue.
-  - [ ] Subtask 3.6 - Garder toutes les entrees sous forme de fragments courts,
+  - [x] Subtask 3.6 - Garder toutes les entrees sous forme de fragments courts,
     sans paragraphes narratifs.
 
-- [ ] Task 4 - Implementer le runtime pur de resolution (AC: AC3, AC4, AC5, AC6, AC7, AC8, AC11, AC13, AC14, AC15, AC16)
-  - [ ] Subtask 4.1 - Creer `profile_runtime.py`.
-  - [ ] Subtask 4.2 - Implementer `_build_condition_profiles`.
-  - [ ] Subtask 4.3 - Implementer `_resolve_planet_specific_profiles`.
-  - [ ] Subtask 4.4 - Implementer `_resolve_tradition_profiles`.
-  - [ ] Subtask 4.5 - Implementer `_resolve_generic_profiles`.
-  - [ ] Subtask 4.6 - Garantir la priorite de resolution et la tolerance aux
+- [x] Task 4 - Implementer le runtime pur de resolution (AC: AC3, AC4, AC5, AC6, AC7, AC8, AC11, AC13, AC14, AC15, AC16)
+  - [x] Subtask 4.1 - Creer `profile_runtime.py`.
+  - [x] Subtask 4.2 - Implementer `_build_condition_profiles`.
+  - [x] Subtask 4.3 - Implementer `_resolve_planet_specific_profiles`.
+  - [x] Subtask 4.4 - Implementer `_resolve_tradition_profiles`.
+  - [x] Subtask 4.5 - Implementer `_resolve_generic_profiles`.
+  - [x] Subtask 4.6 - Garantir la priorite de resolution et la tolerance aux
     conditions absentes.
-  - [ ] Subtask 4.7 - Exporter explicitement les symboles publics depuis
+  - [x] Subtask 4.7 - Exporter explicitement les symboles publics depuis
     `__init__.py`.
 
-- [ ] Task 5 - Integrer au runtime natal (AC: AC12, AC13, AC14, AC16)
-  - [ ] Subtask 5.1 - Ajouter le champ interne
+- [x] Task 5 - Integrer au runtime natal (AC: AC12, AC13, AC14, AC16)
+  - [x] Subtask 5.1 - Ajouter le champ interne
     `interpretation_profiles_by_planet` a `NatalResult`.
-  - [ ] Subtask 5.2 - Appeler `resolve_advanced_condition_profiles` depuis le
+  - [x] Subtask 5.2 - Appeler `resolve_advanced_condition_profiles` depuis le
     pipeline natal apres calcul des conditions avancees.
-  - [ ] Subtask 5.3 - Ne pas coder de logique detaillee de conditions dans
+  - [x] Subtask 5.3 - Ne pas coder de logique detaillee de conditions dans
     `natal_calculation.py`; la resolution reste dans `profile_runtime.py`.
-  - [ ] Subtask 5.4 - Exclure le champ du schema public si la convention du
+  - [x] Subtask 5.4 - Exclure le champ du schema public si la convention du
     runtime natal l'exige.
 
-- [ ] Task 6 - Ajouter les tests (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC15)
-  - [ ] Subtask 6.1 - Creer
+- [x] Task 6 - Ajouter les tests (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC15)
+  - [x] Subtask 6.1 - Creer
     `backend/tests/unit/domain/astrology/interpretation/advanced_conditions/test_profile_runtime.py`.
-  - [ ] Subtask 6.2 - Couvrir generic profiles, planet profiles, tradition
+  - [x] Subtask 6.2 - Couvrir generic profiles, planet profiles, tradition
     profiles, polarity fields, generic resolution, multiple profiles, missing
     profiles, combust, retrograde, stationary, visibility, solar phase, moon
     phases et deduplication `under_beams`.
-  - [ ] Subtask 6.3 - Ajouter ou etendre un test `NatalResult` pour le champ
+  - [x] Subtask 6.3 - Ajouter ou etendre un test `NatalResult` pour le champ
     interne si le runtime natal est modifie.
-  - [ ] Subtask 6.4 - Ajouter une assertion anti-texte final sur les fragments
+  - [x] Subtask 6.4 - Ajouter une assertion anti-texte final sur les fragments
     du catalogue.
 
-- [ ] Task 7 - Ajouter les guardrails anti-drift et valider (AC: AC13, AC14, AC15, AC16, AC17, AC18)
-  - [ ] Subtask 7.1 - Verifier `RG-143` dans
+- [x] Task 7 - Ajouter les guardrails anti-drift et valider (AC: AC13, AC14, AC15, AC16, AC17, AC18)
+  - [x] Subtask 7.1 - Verifier `RG-143` dans
     `_condamad/stories/regression-guardrails.md`.
-  - [ ] Subtask 7.2 - Executer les scans interdits du Validation Plan.
-  - [ ] Subtask 7.3 - Executer les tests cibles, `ruff format backend`,
+  - [x] Subtask 7.2 - Executer les scans interdits du Validation Plan.
+  - [x] Subtask 7.3 - Executer les tests cibles, `ruff format backend`,
     `ruff check backend` et `pytest -q` sous venv.
-  - [ ] Subtask 7.4 - Documenter commandes, resultats et risques residuels dans
+  - [x] Subtask 7.4 - Documenter commandes, resultats et risques residuels dans
     `evidence/validation.md`.
 
 ## 9. Mandatory Reuse / DRY Constraints

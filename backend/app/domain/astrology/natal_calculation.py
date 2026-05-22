@@ -58,6 +58,10 @@ from app.domain.astrology.house_ruler_resolver import (
     HouseRulerResolver,
     HouseRulerResult,
 )
+from app.domain.astrology.interpretation.advanced_conditions import (
+    AdvancedConditionInterpretationProfile,
+    resolve_advanced_condition_profiles,
+)
 from app.domain.astrology.interpretation.chart_signature import ChartSignatureCalculator
 from app.domain.astrology.interpretation_adapters import (
     InterpretationAdapterEngine,
@@ -167,6 +171,9 @@ class NatalResult(BaseModel):
         default=None,
         exclude=True,
     )
+    interpretation_profiles_by_planet: SkipJsonSchema[
+        dict[str, tuple[AdvancedConditionInterpretationProfile, ...]]
+    ] = Field(default_factory=dict, exclude=True)
     traditional_conditions: TraditionalConditionsResult | None = None
     dominant_planets: DominantPlanetsResult | None = None
     interpretation_adapter: InterpretationAdapterResult | None = None
@@ -806,6 +813,13 @@ def build_natal_result(
             if position.speed_longitude is not None
         },
     )
+    interpretation_profiles_by_planet = {
+        planet_key: resolve_advanced_condition_profiles(
+            bundle=bundle,
+            moon_phase=advanced_planetary_conditions.moon_phase,
+        )
+        for planet_key, bundle in advanced_planetary_conditions.conditions_by_planet.items()
+    }
     dignity_inputs = tuple(
         PlanetDignityInput(
             planet_code=position.planet_code,
@@ -933,6 +947,7 @@ def build_natal_result(
         condition_signals=condition_signals,
         advanced_conditions=list(advanced_conditions),
         advanced_planetary_conditions=advanced_planetary_conditions,
+        interpretation_profiles_by_planet=interpretation_profiles_by_planet,
         traditional_conditions=traditional_conditions,
         dominant_planets=dominant_planets,
         interpretation_adapter=interpretation_adapter,

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from app.domain.astrology.interpretation.advanced_conditions import (
+    AdvancedConditionInterpretationProfile,
+)
 from app.domain.astrology.natal_calculation import NatalResult, build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput
 from app.domain.astrology.planetary_conditions import AdvancedPlanetaryConditionsResult
@@ -16,6 +19,14 @@ def test_natal_result_exposes_optional_advanced_planetary_conditions_field() -> 
     assert field.annotation == (AdvancedPlanetaryConditionsResult | None)
     assert field.default is None
     assert "advanced_planetary_conditions" not in NatalResult.model_json_schema()["properties"]
+
+
+def test_natal_result_exposes_internal_interpretation_profiles_field() -> None:
+    """Le contrat natal expose les profils symboliques sans schema public."""
+    field = NatalResult.model_fields["interpretation_profiles_by_planet"]
+
+    assert field.default_factory is not None
+    assert "interpretation_profiles_by_planet" not in NatalResult.model_json_schema()["properties"]
 
 
 def test_build_natal_result_populates_advanced_planetary_conditions() -> None:
@@ -39,7 +50,15 @@ def test_build_natal_result_populates_advanced_planetary_conditions() -> None:
     assert advanced.conditions_by_planet["moon"].planet_key == "moon"
     assert advanced.moon_phase is not None
     assert isinstance(advanced, AdvancedPlanetaryConditionsResult)
+    assert set(result.interpretation_profiles_by_planet) >= {"sun", "moon"}
+    assert any(result.interpretation_profiles_by_planet.values())
+    assert all(
+        isinstance(profile, AdvancedConditionInterpretationProfile)
+        for profiles in result.interpretation_profiles_by_planet.values()
+        for profile in profiles
+    )
     assert "advanced_planetary_conditions" not in result.model_dump(mode="json")
+    assert "interpretation_profiles_by_planet" not in result.model_dump(mode="json")
 
 
 def test_advanced_planetary_conditions_stays_out_of_openapi_schema() -> None:
@@ -47,3 +66,4 @@ def test_advanced_planetary_conditions_stays_out_of_openapi_schema() -> None:
     schemas = app.openapi().get("components", {}).get("schemas", {})
 
     assert "advanced_planetary_conditions" not in str(schemas)
+    assert "interpretation_profiles_by_planet" not in str(schemas)
