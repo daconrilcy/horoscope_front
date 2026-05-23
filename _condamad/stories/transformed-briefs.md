@@ -23,3 +23,4 @@
 | cs-242 | `_story_briefs\cs-242-audit-calculation-graph-readiness-audit.md` | `_condamad\stories\cs-242-audit-calculation-graph-readiness\00-story.md` |
 | cs-243 | `_story_briefs\cs-243-audit-calculation-interpretation-boundary-audit.md` | `_condamad\stories\cs-243-audit-calculation-interpretation-boundary\00-story.md` |
 | cs-244 | `_story_briefs\cs-244-audit-product-data-needs-audit.md` | `_condamad\stories\cs-244-audit-product-data-needs\00-story.md` |
+| cs-245 | `_story_briefs\cs-245-archi-canonical-astrology-runtime-transition.md` | `_condamad\stories\cs-245-canonical-astrology-runtime-transition\00-story.md` |
