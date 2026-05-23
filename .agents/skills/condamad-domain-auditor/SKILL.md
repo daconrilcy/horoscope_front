@@ -1,6 +1,6 @@
 ---
 name: condamad-domain-auditor
-version: 1
+version: 2
 description: >
   Audit the current implementation of one bounded application domain or layer
   and generate an evidence-backed CONDAMAD domain audit report. Use when the
@@ -27,7 +27,11 @@ This skill does not fix code. It does not refactor. It does not generate final i
 - Stay read-only by default.
 - Do not modify application code.
 - Do not format, migrate, delete, or rewrite files.
-- Only write audit artifacts under `_condamad/audits/**`, except creating or
+- When no explicit output location is provided by the user, story brief, or
+  governing task contract, write audit artifacts under `_condamad/audits/**`.
+  If an explicit audit deliverable path is provided, write only the requested
+  audit artifact(s) there and keep any optional CONDAMAD companion report under
+  `_condamad/audits/**`. The only other default write exception is creating or
   updating `_condamad/stories/regression-guardrails.md` through
   `condamad-regression-guardrails`.
 - Every finding must include evidence.
@@ -62,22 +66,28 @@ This skill does not fix code. It does not refactor. It does not generate final i
 
 ## Required references
 
-Read the relevant references depending on the audit target:
+Load references progressively. Start with the minimal routing set:
 
 - `references/audit-principles.md`
-- `../condamad-dev-story/references/condamad-principles.md`
 - `references/audit-archetypes.md`
+- `references/report-output-contract.md`
+- `workflow.md` for the full operational workflow.
+
+After selecting the audit archetype, load only the references needed for that
+archetype and the current diagnostic:
+
 - `references/finding-taxonomy.md`
 - `references/evidence-profiles.md`
-- `references/report-output-contract.md`
 - `references/story-candidate-contract.md`
-- plus the domain-specific contract matching the selected archetype.
-- `../condamad-regression-guardrails/SKILL.md`
-- `workflow.md` for the full operational workflow.
+- the domain-specific contract matching the selected archetype.
+- `../condamad-dev-story/references/condamad-principles.md` when No Legacy,
+  DRY, closure, or implementation-story candidate rules are involved.
+- `../condamad-regression-guardrails/SKILL.md` only before creating or updating
+  guardrails.
 
 ## Output
 
-Create an audit folder:
+When no explicit output location is provided, create an audit folder:
 
 `_condamad/audits/<domain-key>/<YYYY-MM-DD-HHMM>/`
 
@@ -164,25 +174,35 @@ Follow `workflow.md`.
 
 ## Validation
 
-Run from the skill directory:
+Run validation from the repository root after verifying and activating the
+virtual environment:
 
-```bash
-python -S -B scripts/condamad_domain_audit_validate.py <audit_folder>
-python -S -B scripts/condamad_domain_audit_validate.py <audit_folder> --explain-audit
-python -S -B scripts/condamad_domain_audit_lint.py <audit_folder>
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py <audit_folder>
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py <audit_folder>
 ```
 
-Run from repository root:
+Run `condamad_domain_audit_validate.py <audit_folder> --explain-audit` only
+when validation fails, a human-readable diagnostic is needed, or the current
+request explicitly asks for the expanded audit explanation.
 
-```bash
-python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py <audit_folder>
-python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py <audit_folder> --explain-audit
-python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py <audit_folder>
+If operating from the skill directory, still activate the repository virtual
+environment before running Python:
+
+```powershell
+if (-not (Test-Path -LiteralPath ..\..\..\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. ..\..\..\.venv\Scripts\Activate.ps1
+python -S -B scripts/condamad_domain_audit_validate.py <audit_folder>
+python -S -B scripts/condamad_domain_audit_lint.py <audit_folder>
 ```
 
 For direct self-test diagnostics:
 
-```bash
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
 python -S -B -m unittest discover -s .agents/skills/condamad-domain-auditor/scripts/self_tests -p "*selftest.py" -v
 ```
 
@@ -190,7 +210,9 @@ python -S -B -m unittest discover -s .agents/skills/condamad-domain-auditor/scri
 
 Official package self-validation command from the repository root:
 
-```bash
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
 python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_self_validate.py
 ```
 
@@ -198,13 +220,17 @@ The direct `unittest discover` command remains useful for diagnostics when the w
 
 Wrapper smoke test to run before packaging or releasing the skill:
 
-```bash
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
 python -S -B .agents/skills/condamad-domain-auditor/scripts/self_tests/condamad_domain_audit_wrapper_smoke.py
 ```
 
 For strict lint:
 
-```bash
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
 python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py <audit_folder> --strict
 ```
 

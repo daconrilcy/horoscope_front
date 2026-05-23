@@ -18,11 +18,25 @@
 - dependency install, update, or lockfile rewrite
 - destructive git commands
 - application code edits
-- report writes outside `_condamad/audits/**`
+- report writes outside `_condamad/audits/**` unless the user, story brief, or
+  governing task contract explicitly names another audit deliverable path
 - runtime commands that format, migrate, generate, install, update, delete, rewrite, or mutate application state
 
 ## Python execution in this repository
 
-Follow the repository rule: activate `.\.venv\Scripts\Activate.ps1` before any Python command.
+Follow the repository rule: verify `.\.venv\Scripts\Activate.ps1` exists and
+activate it before any Python command.
 
-If `.venv` is missing or dependencies are unavailable, do not install dependencies automatically. Record the skipped command, reason, and residual risk in `01-evidence-log.md`. Only create or install environment dependencies if the user explicitly authorizes it.
+Use this PowerShell prelude before validation, diagnostics, targeted tests, or
+read-only Python evidence scripts:
+
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
+```
+
+Never run `python`, `pip`, `pytest`, `ruff`, or Python-based tools without this
+activation. If `.venv` is missing or dependencies are unavailable, stop before
+the Python command and record the skipped command, reason, and residual risk in
+`01-evidence-log.md`. Only create or install environment dependencies if the
+user explicitly authorizes it.
