@@ -139,6 +139,10 @@ class AstrologyRuntimeReferenceMapper:
                         element=self._required_str(item, "element"),
                         modality=self._required_str(item, "modality"),
                         polarity=self._required_str(item, "polarity"),
+                        seasonal_quadrant=self._required_str(item, "seasonal_quadrant"),
+                        fertility=self._required_str(item, "fertility"),
+                        voice=self._required_str(item, "voice"),
+                        form=self._required_str(item, "form"),
                     )
                     for item in self._items(payload, "signs")
                 )

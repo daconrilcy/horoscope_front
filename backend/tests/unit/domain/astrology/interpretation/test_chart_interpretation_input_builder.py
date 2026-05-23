@@ -14,6 +14,11 @@ from app.domain.astrology.interpretation.chart_interpretation_input_builder impo
 )
 from app.domain.astrology.natal_calculation import AspectResult
 from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
+from app.domain.astrology.runtime.chart_signature_runtime_data import (
+    BalanceScoreRuntimeData,
+    ChartBalanceRuntimeData,
+    ChartSignatureRuntimeData,
+)
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 
@@ -24,6 +29,7 @@ class _NatalSource:
     chart_objects: tuple[object, ...]
     aspects: tuple[object, ...]
     dominant_planets: DominantPlanetsResult
+    chart_balance: ChartBalanceRuntimeData | None = None
     advanced_condition_facts: tuple[AdvancedPlanetaryCondition, ...] = ()
 
 
@@ -90,6 +96,60 @@ def test_builder_constructs_sections_from_chart_objects() -> None:
     assert [item.code for item in result.dominance] == ["mars"]
     assert [item.condition_code for item in result.advanced_condition_facts] == ["hayz"]
     assert result.metadata.object_count == 1
+
+
+def test_builder_projects_enriched_sign_profiles_from_chart_balance() -> None:
+    """Le builder lit les profils de signes depuis la balance du theme."""
+    source = _NatalSource(
+        chart_objects=(),
+        aspects=(),
+        dominant_planets=DominantPlanetsResult(
+            score_profile_code="fixture.profile",
+            tradition_code="fixture",
+            reference_version_code="v1",
+            planets=(),
+            top_planet_code=None,
+            chart_ruler_code=None,
+            most_elevated_planet_code=None,
+        ),
+        chart_balance=ChartBalanceRuntimeData(
+            elements=(BalanceScoreRuntimeData(code="earth", score=1.0, rank=1),),
+            modalities=(BalanceScoreRuntimeData(code="fixed", score=1.0, rank=1),),
+            polarities=(BalanceScoreRuntimeData(code="yin", score=1.0, rank=1),),
+            seasonal_quadrants=(BalanceScoreRuntimeData(code="spring", score=1.0, rank=1),),
+            fertility=(BalanceScoreRuntimeData(code="semi_fruitful", score=1.0, rank=1),),
+            voices=(BalanceScoreRuntimeData(code="semi_vocal", score=1.0, rank=1),),
+            forms=(BalanceScoreRuntimeData(code="bestial", score=1.0, rank=1),),
+            dominant_signs=(),
+            dominant_planets=(),
+            dominant_houses=(),
+            dominant_aspects=(),
+            synthesis=ChartSignatureRuntimeData(
+                primary_element=None,
+                primary_modality=None,
+                primary_polarity="yin",
+                primary_seasonal_quadrant="spring",
+                primary_fertility="semi_fruitful",
+                primary_voice="semi_vocal",
+                primary_form="bestial",
+                primary_sign=None,
+                primary_planet=None,
+                primary_house=None,
+            ),
+        ),
+    )
+
+    result = ChartInterpretationInputBuilder().build(source)
+
+    assert result.sign_profile_balances is not None
+    assert result.sign_profile_balances.elements[0].code == "earth"
+    assert result.sign_profile_balances.modalities[0].code == "fixed"
+    assert result.sign_profile_balances.polarities[0].code == "yin"
+    assert result.sign_profile_balances.polarities[0].source == "chart_balance"
+    assert result.sign_profile_balances.seasonal_quadrants[0].code == "spring"
+    assert result.sign_profile_balances.fertility[0].code == "semi_fruitful"
+    assert result.sign_profile_balances.voices[0].code == "semi_vocal"
+    assert result.sign_profile_balances.forms[0].code == "bestial"
 
 
 def test_builder_marks_aspects_sourced_from_interpretive_hints() -> None:

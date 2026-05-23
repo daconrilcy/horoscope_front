@@ -32,8 +32,12 @@ from app.infra.db.models import (
     AstralPointInterpretationProfileTranslationModel,
     AstralPointModel,
     AstralPolarityModel,
+    AstralSignFertilityClassModel,
+    AstralSignFormClassModel,
     AstralSignModel,
     AstralSignProfileModel,
+    AstralSignSeasonalQuadrantModel,
+    AstralSignVoiceClassModel,
     AstralSystemModel,
     AstroPointModel,
     HouseCategoryWeightModel,
@@ -86,6 +90,10 @@ EXPECTED_COUNTS = {
     "astral_elements": 4,
     "astral_modalities": 3,
     "astral_polarities": 2,
+    "astral_sign_seasonal_quadrants": 4,
+    "astral_sign_fertility_classes": 3,
+    "astral_sign_voice_classes": 3,
+    "astral_sign_form_classes": 4,
     "astral_planet_sign_dignities": 50,
     "astral_point_families": 3,
     "astral_points": 5,
@@ -176,6 +184,53 @@ def _load_sign_keywords() -> dict[str, dict[str, list[str]]]:
         }
         for row in rows
     }
+
+
+def _load_structural_catalog() -> dict[str, object]:
+    """Charge le catalogue structurel astral depuis la source canonique."""
+    catalog_path = _astro_research_path("astral_structural_reference_catalog.json")
+    with catalog_path.open(encoding="utf-8") as stream:
+        raw = json.load(stream)
+    data = raw.get("data") if isinstance(raw, dict) else None
+    if not isinstance(data, dict):
+        raise ValueError("structural reference catalog must contain a data object")
+    return data
+
+
+def _load_sign_structural_profiles() -> list[dict[str, str]]:
+    """Charge les profils structurels des signes depuis le catalogue canonique."""
+    rows = _load_structural_catalog().get("signs")
+    if not isinstance(rows, list) or len(rows) != 12:
+        raise ValueError("structural reference catalog must contain twelve sign rows")
+    required_fields = {
+        "code",
+        "element",
+        "modality",
+        "polarity",
+        "seasonal_quadrant",
+        "fertility",
+        "voice",
+        "form",
+    }
+    profiles: list[dict[str, str]] = []
+    for row in rows:
+        if not isinstance(row, dict) or not required_fields <= set(row):
+            raise ValueError("each sign structural row must expose all required profile fields")
+        profiles.append({field_name: str(row[field_name]) for field_name in required_fields})
+    return profiles
+
+
+def _load_structural_taxonomy_rows(catalog_key: str) -> list[tuple[str, str]]:
+    """Charge une taxonomie de signes depuis le catalogue structurel."""
+    rows = _load_structural_catalog().get(catalog_key)
+    if not isinstance(rows, list) or not rows:
+        raise ValueError(f"structural reference catalog must contain {catalog_key}")
+    taxonomy_rows = []
+    for row in rows:
+        if not isinstance(row, dict) or "code" not in row or "name" not in row:
+            raise ValueError(f"{catalog_key} rows must expose code and name")
+        taxonomy_rows.append((str(row["code"]), str(row["name"])))
+    return taxonomy_rows
 
 
 def _load_planet_sign_dignities() -> list[dict[str, object]]:
@@ -347,7 +402,14 @@ def _required_keyword_list(
 def _ensure_taxonomy(
     db: Session,
     model: type[
-        AstralDignityTypeModel | AstralElementModel | AstralModalityModel | AstralPolarityModel
+        AstralDignityTypeModel
+        | AstralElementModel
+        | AstralModalityModel
+        | AstralPolarityModel
+        | AstralSignSeasonalQuadrantModel
+        | AstralSignFertilityClassModel
+        | AstralSignVoiceClassModel
+        | AstralSignFormClassModel
     ],
     rows: list[tuple[str, str]],
 ) -> dict[str, int]:
@@ -745,10 +807,34 @@ def ensure_astral_sign_profiles(db: Session) -> None:
         AstralPolarityModel,
         [("yang", "Yang"), ("yin", "Yin")],
     )
+    seasonal_quadrants = _ensure_taxonomy(
+        db,
+        AstralSignSeasonalQuadrantModel,
+        _load_structural_taxonomy_rows("sign_seasonal_quadrants"),
+    )
+    fertility_classes = _ensure_taxonomy(
+        db,
+        AstralSignFertilityClassModel,
+        _load_structural_taxonomy_rows("sign_fertility_classes"),
+    )
+    voice_classes = _ensure_taxonomy(
+        db,
+        AstralSignVoiceClassModel,
+        _load_structural_taxonomy_rows("sign_voice_classes"),
+    )
+    form_classes = _ensure_taxonomy(
+        db,
+        AstralSignFormClassModel,
+        _load_structural_taxonomy_rows("sign_form_classes"),
+    )
     signs = {sign.code: sign.id for sign in db.scalars(select(AstralSignModel)).all()}
     keywords_by_sign = _load_sign_keywords()
 
-    for sign_code, element_code, modality_code, polarity_code in SIGN_PROFILE_DATA:
+    for source_row in _load_sign_structural_profiles():
+        sign_code = source_row["code"]
+        element_code = source_row["element"]
+        modality_code = source_row["modality"]
+        polarity_code = source_row["polarity"]
         keywords_json = json.dumps(
             _required_keyword_list(keywords_by_sign, sign_code, "keywords"),
             ensure_ascii=False,
@@ -769,6 +855,10 @@ def ensure_astral_sign_profiles(db: Session) -> None:
                     astral_element_id=elements[element_code],
                     astral_modality_id=modalities[modality_code],
                     astral_polarity_id=polarities[polarity_code],
+                    seasonal_quadrant_id=seasonal_quadrants[source_row["seasonal_quadrant"]],
+                    fertility_class_id=fertility_classes[source_row["fertility"]],
+                    voice_class_id=voice_classes[source_row["voice"]],
+                    form_class_id=form_classes[source_row["form"]],
                     keywords_json=keywords_json,
                     shadow_keywords_json=shadow_keywords_json,
                 )
@@ -777,6 +867,10 @@ def ensure_astral_sign_profiles(db: Session) -> None:
         profile.astral_element_id = elements[element_code]
         profile.astral_modality_id = modalities[modality_code]
         profile.astral_polarity_id = polarities[polarity_code]
+        profile.seasonal_quadrant_id = seasonal_quadrants[source_row["seasonal_quadrant"]]
+        profile.fertility_class_id = fertility_classes[source_row["fertility"]]
+        profile.voice_class_id = voice_classes[source_row["voice"]]
+        profile.form_class_id = form_classes[source_row["form"]]
         profile.keywords_json = keywords_json
         profile.shadow_keywords_json = shadow_keywords_json
     db.flush()
@@ -903,6 +997,18 @@ def _check_counts(db: Session, reference_version_id: int) -> dict[str, int]:
     actual["astral_elements"] = db.scalar(select(func.count()).select_from(AstralElementModel))
     actual["astral_modalities"] = db.scalar(select(func.count()).select_from(AstralModalityModel))
     actual["astral_polarities"] = db.scalar(select(func.count()).select_from(AstralPolarityModel))
+    actual["astral_sign_seasonal_quadrants"] = db.scalar(
+        select(func.count()).select_from(AstralSignSeasonalQuadrantModel)
+    )
+    actual["astral_sign_fertility_classes"] = db.scalar(
+        select(func.count()).select_from(AstralSignFertilityClassModel)
+    )
+    actual["astral_sign_voice_classes"] = db.scalar(
+        select(func.count()).select_from(AstralSignVoiceClassModel)
+    )
+    actual["astral_sign_form_classes"] = db.scalar(
+        select(func.count()).select_from(AstralSignFormClassModel)
+    )
     actual["astral_planet_sign_dignities"] = db.scalar(
         select(func.count()).select_from(AstralPlanetSignDignityModel)
     )

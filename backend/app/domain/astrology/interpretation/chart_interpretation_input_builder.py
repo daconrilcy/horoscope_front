@@ -13,6 +13,7 @@ from app.domain.astrology.interpretation.chart_interpretation_input_contracts im
     ChartInterpretationInputRuntimeData,
     ChartInterpretationMetadataRuntimeData,
     DominanceInterpretationRuntimeData,
+    SignProfileBalancesInterpretationRuntimeData,
 )
 from app.domain.astrology.interpretation.chart_object_interpretation_projector import (
     ChartObjectInterpretationProjector,
@@ -61,6 +62,9 @@ class ChartInterpretationInputBuilder:
             tuple(getattr(natal_result, "advanced_condition_facts", ()))
         )
         source_codes = tuple(dict.fromkeys(code for item in objects for code in item.source_codes))
+        sign_profile_balances = _project_sign_profile_balances(
+            getattr(natal_result, "chart_balance", None)
+        )
         return ChartInterpretationInputRuntimeData(
             chart_id=chart_id,
             chart_type="natal",
@@ -71,6 +75,7 @@ class ChartInterpretationInputBuilder:
             house_positions=tuple(item for item in house_positions if item is not None),
             rulerships=rulerships,
             dominance=dominance,
+            sign_profile_balances=sign_profile_balances,
             advanced_condition_facts=advanced_condition_facts,
             fixed_star_contacts=fixed_star_contacts,
             metadata=ChartInterpretationMetadataRuntimeData(
@@ -137,6 +142,38 @@ def _project_advanced_condition_facts(
             ranking_weight=condition.ranking_weight,
         )
         for condition in conditions
+    )
+
+
+def _project_balance_family(
+    items: tuple[Any, ...],
+) -> tuple[DominanceInterpretationRuntimeData, ...]:
+    """Projette une famille de balance sans recalculer les profils par signe."""
+    return tuple(
+        DominanceInterpretationRuntimeData(
+            code=item.code,
+            score=item.score,
+            source="chart_balance",
+            rank=item.rank,
+        )
+        for item in items
+    )
+
+
+def _project_sign_profile_balances(
+    chart_balance: Any,
+) -> SignProfileBalancesInterpretationRuntimeData | None:
+    """Lit les profils enrichis depuis la balance canonique du theme."""
+    if chart_balance is None:
+        return None
+    return SignProfileBalancesInterpretationRuntimeData(
+        elements=_project_balance_family(tuple(chart_balance.elements)),
+        modalities=_project_balance_family(tuple(chart_balance.modalities)),
+        polarities=_project_balance_family(tuple(chart_balance.polarities)),
+        seasonal_quadrants=_project_balance_family(tuple(chart_balance.seasonal_quadrants)),
+        fertility=_project_balance_family(tuple(chart_balance.fertility)),
+        voices=_project_balance_family(tuple(chart_balance.voices)),
+        forms=_project_balance_family(tuple(chart_balance.forms)),
     )
 
 

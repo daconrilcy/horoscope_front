@@ -131,12 +131,31 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert reference.planet_natures.nature_for_planet("venus") == "benefic"
     assert reference.planet_natures.nature_for_planet("saturn") == "malefic"
     assert {
-        (sign.code, sign.element, sign.modality, sign.polarity) for sign in reference.signs.items
+        (
+            sign.code,
+            sign.element,
+            sign.modality,
+            sign.polarity,
+            sign.seasonal_quadrant,
+            sign.fertility,
+            sign.voice,
+            sign.form,
+        )
+        for sign in reference.signs.items
     } >= {
-        ("aries", "fire", "cardinal", "yang"),
-        ("taurus", "earth", "fixed", "yin"),
-        ("libra", "air", "cardinal", "yang"),
-        ("pisces", "water", "mutable", "yin"),
+        ("aries", "fire", "cardinal", "yang", "spring", "barren", "semi_vocal", "bestial"),
+        (
+            "taurus",
+            "earth",
+            "fixed",
+            "yin",
+            "spring",
+            "semi_fruitful",
+            "semi_vocal",
+            "bestial",
+        ),
+        ("libra", "air", "cardinal", "yang", "autumn", "semi_fruitful", "vocal", "humane"),
+        ("pisces", "water", "mutable", "yin", "winter", "fruitful", "mute", "double_bodied"),
     }
     assert len(reference.houses.items) == 12
     assert set(reference.dignities.sign_rulerships) == set(reference.signs.codes)

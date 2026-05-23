@@ -21,11 +21,16 @@ def test_sign_runtime_contract_accepts_complete_shape() -> None:
         element="fire",
         modality="cardinal",
         polarity="yang",
+        seasonal_quadrant="spring",
+        fertility="barren",
+        voice="semi_vocal",
+        form="bestial",
         synthesis_role="dominant_focus",
     )
 
     assert runtime.sign == "aries"
     assert runtime.dominant is True
+    assert runtime.seasonal_quadrant == "spring"
 
 
 def test_sign_runtime_contract_rejects_unbounded_weight() -> None:
@@ -41,6 +46,10 @@ def test_sign_runtime_contract_rejects_unbounded_weight() -> None:
             element="fire",
             modality="cardinal",
             polarity="yang",
+            seasonal_quadrant="spring",
+            fertility="barren",
+            voice="semi_vocal",
+            form="bestial",
         )
 
 
@@ -57,4 +66,8 @@ def test_sign_runtime_contract_rejects_missing_profile() -> None:
             element="",
             modality="cardinal",
             polarity="yang",
+            seasonal_quadrant="spring",
+            fertility="barren",
+            voice="semi_vocal",
+            form="bestial",
         )

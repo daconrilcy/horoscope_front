@@ -52,6 +52,11 @@ class ChartSignatureRuntimeData:
 
     primary_element: str | None
     primary_modality: str | None
+    primary_polarity: str | None
+    primary_seasonal_quadrant: str | None
+    primary_fertility: str | None
+    primary_voice: str | None
+    primary_form: str | None
     primary_sign: str | None
     primary_planet: str | None
     primary_house: int | None
@@ -63,6 +68,11 @@ class ChartBalanceRuntimeData:
 
     elements: tuple[BalanceScoreRuntimeData, ...]
     modalities: tuple[BalanceScoreRuntimeData, ...]
+    polarities: tuple[BalanceScoreRuntimeData, ...]
+    seasonal_quadrants: tuple[BalanceScoreRuntimeData, ...]
+    fertility: tuple[BalanceScoreRuntimeData, ...]
+    voices: tuple[BalanceScoreRuntimeData, ...]
+    forms: tuple[BalanceScoreRuntimeData, ...]
     dominant_signs: tuple[DominanceRankRuntimeData, ...]
     dominant_planets: tuple[DominanceRankRuntimeData, ...]
     dominant_houses: tuple[DominanceRankRuntimeData, ...]

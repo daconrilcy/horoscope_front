@@ -1,0 +1,6 @@
+role: "CONDAMAD Dev Review Fix Orchestrator"
+
+interface:
+  display_name: "CONDAMAD Dev Review Fix Story"
+  short_description: "Develop, independently review, fix, and close one story"
+  default_prompt: "Use $condamad-dev-review-fix-story to implement, independently review, fix, and close this CONDAMAD story: story path"

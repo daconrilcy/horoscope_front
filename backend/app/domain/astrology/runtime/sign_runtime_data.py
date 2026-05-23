@@ -63,13 +63,25 @@ class SignRuntimeData:
     element: str
     modality: str
     polarity: str
+    seasonal_quadrant: str
+    fertility: str
+    voice: str
+    form: str
     synthesis_role: str | None = None
 
     def __post_init__(self) -> None:
         """Borne le poids et impose un code de signe canonique."""
         if not self.sign.strip():
             raise ValueError("sign runtime requires a sign code")
-        for field_name in ("element", "modality", "polarity"):
+        for field_name in (
+            "element",
+            "modality",
+            "polarity",
+            "seasonal_quadrant",
+            "fertility",
+            "voice",
+            "form",
+        ):
             value = getattr(self, field_name)
             if not value.strip():
                 raise ValueError(f"sign runtime requires {field_name}")

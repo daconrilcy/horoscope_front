@@ -1,0 +1,16 @@
+Validation evidence for CS-234:
+
+- `.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-234-enrichir-profils-structurels-signes-db\00-story.md` - PASS.
+- `.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-234-enrichir-profils-structurels-signes-db\00-story.md` - PASS.
+- `.venv\Scripts\Activate.ps1; cd backend; ruff check app\infra\db\models\reference.py app\infra\db\models\__init__.py app\services\prediction\reference_seed_service.py migrations\versions\20260523_0137_enrich_astral_sign_profiles.py app\tests\integration\test_reference_data_migrations.py app\tests\unit\test_prediction_reference_repository.py` - PASS.
+- `.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q app\tests\integration\test_reference_data_migrations.py app\tests\unit\test_prediction_reference_repository.py` - PASS: 32 passed, 5 deselected.
+- `rg -n "\b(seasonal_quadrant|fertility|voice|humane|bestial|fruitful|barren|mute)\b" backend\app\domain\astrology backend\app\services\natal -g "*.py"` - PASS: no matches; exit 1 expected for absence scan.
+- Brief raw scan without word boundaries - REVIEWED.
+  Command: `rg -n "seasonal_quadrant|fertility|voice|humane|bestial|fruitful|barren|mute" backend\app\domain\astrology backend\app\services\natal -g "*.py"`.
+  Result: one pre-existing non-mapping match, `advanced_condition_profile_catalog.py:123` with `muted signal`.
+- `rg -n "sect|gender" docs\"recherches astro" docs\db_seeder\astrology` - PASS for source decision evidence; existing sect/gender ownership found outside `astral_sign_profiles`.
+- `.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q` - FAIL outside CS-234: 3137 passed, 1 skipped, 1182 deselected, 1 unrelated failure in `app/tests/unit/test_aspect_ruleset_schema.py::TestAspectRulesetSchemaValidation::test_aspect_missing_default_orb_deg_raises`.
+
+App start:
+
+- Not run as a persistent local server because this story is a backend DB schema/seed story with no route, frontend or runtime API surface.

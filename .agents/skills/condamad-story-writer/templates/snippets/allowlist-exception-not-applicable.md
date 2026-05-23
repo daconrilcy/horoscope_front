@@ -1,0 +1,2 @@
+- Allowlist register: not applicable
+- Reason: no allowlist is required for this story.

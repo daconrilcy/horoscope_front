@@ -80,10 +80,24 @@ class SignReferenceData:
     element: str
     modality: str
     polarity: str
+    seasonal_quadrant: str
+    fertility: str
+    voice: str
+    form: str
 
     def __post_init__(self) -> None:
         """Valide que le profil structurel est explicitement source."""
-        for field_name in ("code", "name", "element", "modality", "polarity"):
+        for field_name in (
+            "code",
+            "name",
+            "element",
+            "modality",
+            "polarity",
+            "seasonal_quadrant",
+            "fertility",
+            "voice",
+            "form",
+        ):
             value = getattr(self, field_name)
             if not value.strip():
                 raise ValueError(f"sign reference requires {field_name}")

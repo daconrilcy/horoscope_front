@@ -1,8 +1,0 @@
-
-$ python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-226-natal-calculation-graph-definition\00-story.md
-CONDAMAD story validation: PASS
-validate: exit Some(0)
-
-$ python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-226-natal-calculation-graph-definition\00-story.md
-CONDAMAD story lint: PASS
-lint-strict: exit Some(0)

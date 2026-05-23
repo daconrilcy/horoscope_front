@@ -66,6 +66,11 @@ def test_sign_runtime_builder_uses_reference_profiles_when_available() -> None:
     assert runtime[0].element == "fire"
     assert runtime[0].modality == "cardinal"
     assert runtime[0].polarity == "yang"
+    assert runtime[0].seasonal_quadrant == "spring"
+    assert runtime[0].fertility == "barren"
+    assert runtime[0].voice == "semi_vocal"
+    assert runtime[0].form == "bestial"
     assert runtime[1].element == "earth"
+    assert runtime[1].fertility == "semi_fruitful"
     assert SignDominanceReason.REFERENCE_PROFILE in runtime[0].reasons
     assert SignDominanceReason.REFERENCE_PROFILE in runtime[1].reasons

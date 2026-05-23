@@ -3,6 +3,10 @@
   "structure": {
     "planets": "json_array",
     "signs": "json_array",
+    "sign_seasonal_quadrants": "json_array",
+    "sign_fertility_classes": "json_array",
+    "sign_voice_classes": "json_array",
+    "sign_form_classes": "json_array",
     "dignity_types": "json_array",
     "houses": "json_array"
   },
@@ -52,51 +56,199 @@
     "signs": [
       {
         "code": "aries",
-        "name": "Aries"
+        "name": "Aries",
+        "element": "fire",
+        "modality": "cardinal",
+        "polarity": "yang",
+        "seasonal_quadrant": "spring",
+        "fertility": "barren",
+        "voice": "semi_vocal",
+        "form": "bestial"
       },
       {
         "code": "taurus",
-        "name": "Taurus"
+        "name": "Taurus",
+        "element": "earth",
+        "modality": "fixed",
+        "polarity": "yin",
+        "seasonal_quadrant": "spring",
+        "fertility": "semi_fruitful",
+        "voice": "semi_vocal",
+        "form": "bestial"
       },
       {
         "code": "gemini",
-        "name": "Gemini"
+        "name": "Gemini",
+        "element": "air",
+        "modality": "mutable",
+        "polarity": "yang",
+        "seasonal_quadrant": "spring",
+        "fertility": "barren",
+        "voice": "vocal",
+        "form": "double_bodied"
       },
       {
         "code": "cancer",
-        "name": "Cancer"
+        "name": "Cancer",
+        "element": "water",
+        "modality": "cardinal",
+        "polarity": "yin",
+        "seasonal_quadrant": "summer",
+        "fertility": "fruitful",
+        "voice": "mute",
+        "form": "bestial"
       },
       {
         "code": "leo",
-        "name": "Leo"
+        "name": "Leo",
+        "element": "fire",
+        "modality": "fixed",
+        "polarity": "yang",
+        "seasonal_quadrant": "summer",
+        "fertility": "barren",
+        "voice": "semi_vocal",
+        "form": "bestial"
       },
       {
         "code": "virgo",
-        "name": "Virgo"
+        "name": "Virgo",
+        "element": "earth",
+        "modality": "mutable",
+        "polarity": "yin",
+        "seasonal_quadrant": "summer",
+        "fertility": "barren",
+        "voice": "vocal",
+        "form": "humane"
       },
       {
         "code": "libra",
-        "name": "Libra"
+        "name": "Libra",
+        "element": "air",
+        "modality": "cardinal",
+        "polarity": "yang",
+        "seasonal_quadrant": "autumn",
+        "fertility": "semi_fruitful",
+        "voice": "vocal",
+        "form": "humane"
       },
       {
         "code": "scorpio",
-        "name": "Scorpio"
+        "name": "Scorpio",
+        "element": "water",
+        "modality": "fixed",
+        "polarity": "yin",
+        "seasonal_quadrant": "autumn",
+        "fertility": "fruitful",
+        "voice": "mute",
+        "form": "bestial"
       },
       {
         "code": "sagittarius",
-        "name": "Sagittarius"
+        "name": "Sagittarius",
+        "element": "fire",
+        "modality": "mutable",
+        "polarity": "yang",
+        "seasonal_quadrant": "autumn",
+        "fertility": "barren",
+        "voice": "semi_vocal",
+        "form": "hybrid"
       },
       {
         "code": "capricorn",
-        "name": "Capricorn"
+        "name": "Capricorn",
+        "element": "earth",
+        "modality": "cardinal",
+        "polarity": "yin",
+        "seasonal_quadrant": "winter",
+        "fertility": "semi_fruitful",
+        "voice": "semi_vocal",
+        "form": "hybrid"
       },
       {
         "code": "aquarius",
-        "name": "Aquarius"
+        "name": "Aquarius",
+        "element": "air",
+        "modality": "fixed",
+        "polarity": "yang",
+        "seasonal_quadrant": "winter",
+        "fertility": "barren",
+        "voice": "vocal",
+        "form": "humane"
       },
       {
         "code": "pisces",
-        "name": "Pisces"
+        "name": "Pisces",
+        "element": "water",
+        "modality": "mutable",
+        "polarity": "yin",
+        "seasonal_quadrant": "winter",
+        "fertility": "fruitful",
+        "voice": "mute",
+        "form": "double_bodied"
+      }
+    ],
+    "sign_seasonal_quadrants": [
+      {
+        "code": "spring",
+        "name": "Spring"
+      },
+      {
+        "code": "summer",
+        "name": "Summer"
+      },
+      {
+        "code": "autumn",
+        "name": "Autumn"
+      },
+      {
+        "code": "winter",
+        "name": "Winter"
+      }
+    ],
+    "sign_fertility_classes": [
+      {
+        "code": "fruitful",
+        "name": "Fruitful"
+      },
+      {
+        "code": "semi_fruitful",
+        "name": "Semi-fruitful"
+      },
+      {
+        "code": "barren",
+        "name": "Barren"
+      }
+    ],
+    "sign_voice_classes": [
+      {
+        "code": "vocal",
+        "name": "Vocal"
+      },
+      {
+        "code": "semi_vocal",
+        "name": "Semi-vocal"
+      },
+      {
+        "code": "mute",
+        "name": "Mute"
+      }
+    ],
+    "sign_form_classes": [
+      {
+        "code": "humane",
+        "name": "Humane"
+      },
+      {
+        "code": "bestial",
+        "name": "Bestial"
+      },
+      {
+        "code": "double_bodied",
+        "name": "Double-bodied"
+      },
+      {
+        "code": "hybrid",
+        "name": "Hybrid"
       }
     ],
     "dignity_types": [

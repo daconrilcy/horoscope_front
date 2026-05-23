@@ -377,6 +377,50 @@ class AstralPolarityModel(Base):
     name: Mapped[str] = mapped_column(String(32), nullable=False)
 
 
+class AstralSignSeasonalQuadrantModel(Base):
+    """Quadrant saisonnier canonique associe aux signes zodiacaux."""
+
+    __tablename__ = "astral_sign_seasonal_quadrants"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
+class AstralSignFertilityClassModel(Base):
+    """Classe de fertilite traditionnelle associee aux signes zodiacaux."""
+
+    __tablename__ = "astral_sign_fertility_classes"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
+class AstralSignVoiceClassModel(Base):
+    """Classe de voix traditionnelle associee aux signes zodiacaux."""
+
+    __tablename__ = "astral_sign_voice_classes"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
+class AstralSignFormClassModel(Base):
+    """Classe de forme traditionnelle associee aux signes zodiacaux."""
+
+    __tablename__ = "astral_sign_form_classes"
+    __table_args__ = (UniqueConstraint("code"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
 class AstralTypicalPolarityModel(Base):
     """Polarité usuelle utilisée par les profils interprétatifs planétaires."""
 
@@ -607,6 +651,18 @@ class AstralSignProfileModel(Base):
     astral_polarity_id: Mapped[int] = mapped_column(
         ForeignKey("astral_polarities.id"), nullable=False, index=True
     )
+    seasonal_quadrant_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_sign_seasonal_quadrants.id"), nullable=False, index=True
+    )
+    fertility_class_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_sign_fertility_classes.id"), nullable=False, index=True
+    )
+    voice_class_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_sign_voice_classes.id"), nullable=False, index=True
+    )
+    form_class_id: Mapped[int] = mapped_column(
+        ForeignKey("astral_sign_form_classes.id"), nullable=False, index=True
+    )
     keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     shadow_keywords_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -614,6 +670,10 @@ class AstralSignProfileModel(Base):
     element: Mapped["AstralElementModel"] = relationship()
     modality: Mapped["AstralModalityModel"] = relationship()
     polarity: Mapped["AstralPolarityModel"] = relationship()
+    seasonal_quadrant: Mapped["AstralSignSeasonalQuadrantModel"] = relationship()
+    fertility_class: Mapped["AstralSignFertilityClassModel"] = relationship()
+    voice_class: Mapped["AstralSignVoiceClassModel"] = relationship()
+    form_class: Mapped["AstralSignFormClassModel"] = relationship()
 
 
 class HouseModel(Base):

@@ -1,0 +1,13 @@
+Sect / gender source decision for CS-234:
+
+- Source scan command: `rg -n "sect|gender" docs\"recherches astro" docs\db_seeder\astrology`.
+- Existing source material already contains sect ownership in dignity references:
+  - `docs/db_seeder/astrology/astral_sect.json`
+  - `docs/db_seeder/astrology/astral_accidental_dignity_rules.json`
+  - `docs/db_seeder/astrology/astral_triplicity_ruler_assignments.json`
+- Existing source material already contains sign gender taxonomy ownership:
+  - `docs/db_seeder/astrology/astral_sign_genders.json`
+  - `backend/app/infra/db/models/dignity_reference.py::AstralSignGenderModel`
+  - `backend/app/services/reference_data/dignity_seed_service.py`
+- Decision: do not add sect or gender references to `astral_sign_profiles` in this DB story.
+- Rationale: sect is chart/planet-condition driven and gender-compatible sign handling is already owned by dignity reference seed data; duplicating it in sign profiles would introduce a second active source.

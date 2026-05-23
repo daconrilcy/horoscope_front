@@ -1,0 +1,10 @@
+Baseline before CS-234 implementation:
+
+- `astral_sign_profiles` had these structural references:
+  - `astral_sign_id`
+  - `astral_element_id`
+  - `astral_modality_id`
+  - `astral_polarity_id`
+- `keywords_json` and `shadow_keywords_json` existed as editorial text fields.
+- No dedicated seasonal quadrant, fertility, voice or form taxonomy tables existed in the sign profile model.
+- Old `signs` and `sign_rulerships` tables were already forbidden at Alembic head by integration tests.

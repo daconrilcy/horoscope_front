@@ -19,6 +19,12 @@ FORBIDDEN_NATAL_FLOW_PATTERNS = (
     r"\bELEMENT_BY_SIGN\b",
     r"\bMODALITY_BY_SIGN\b",
     r"\bPOLARITY_BY_SIGN\b",
+    r"\bSEASONAL_QUADRANT_BY_SIGN\b",
+    r"\bFERTILITY_BY_SIGN\b",
+    r"\bVOICE_BY_SIGN\b",
+    r"\bFORM_BY_SIGN\b",
+    r"\bHUMANE_BY_SIGN\b",
+    r"\bBESTIAL_BY_SIGN\b",
     r"\bSIGN_PROFILE_DATA\b",
     r"\bASTRAL_POINTS\s*=",
     r"\bPOINT_VARIANTS\s*=",
@@ -437,6 +443,28 @@ def test_dominant_planets_are_projected_from_natal_result_only() -> None:
     ]
 
     assert "PlanetDominanceEngine" not in "".join(calls)
+
+
+def test_chart_balance_projection_does_not_map_sign_profile_codes() -> None:
+    """Le serialiseur public projette les profils calcules sans mapping local."""
+    tree = ast.parse(_source("app/services/chart/json_builder.py"))
+    serializer = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_serialize_chart_balance"
+    )
+    source = ast.unparse(serializer)
+
+    assert "SignRuntimeData" not in source
+    assert "signs_runtime" not in source
+    for forbidden in (
+        "FERTILITY_BY_SIGN",
+        "VOICE_BY_SIGN",
+        "FORM_BY_SIGN",
+        "SEASONAL_QUADRANT_BY_SIGN",
+        "POLARITY_BY_SIGN",
+    ):
+        assert forbidden not in source
 
 
 def test_chart_signature_planets_remain_structural_balance_not_canonical_dominance() -> None:

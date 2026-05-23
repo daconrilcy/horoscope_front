@@ -34,18 +34,114 @@ _CANONICAL_SIGN_CODES = (
 )
 
 _CANONICAL_SIGN_PROFILES = {
-    "aries": {"element": "fire", "modality": "cardinal", "polarity": "yang"},
-    "taurus": {"element": "earth", "modality": "fixed", "polarity": "yin"},
-    "gemini": {"element": "air", "modality": "mutable", "polarity": "yang"},
-    "cancer": {"element": "water", "modality": "cardinal", "polarity": "yin"},
-    "leo": {"element": "fire", "modality": "fixed", "polarity": "yang"},
-    "virgo": {"element": "earth", "modality": "mutable", "polarity": "yin"},
-    "libra": {"element": "air", "modality": "cardinal", "polarity": "yang"},
-    "scorpio": {"element": "water", "modality": "fixed", "polarity": "yin"},
-    "sagittarius": {"element": "fire", "modality": "mutable", "polarity": "yang"},
-    "capricorn": {"element": "earth", "modality": "cardinal", "polarity": "yin"},
-    "aquarius": {"element": "air", "modality": "fixed", "polarity": "yang"},
-    "pisces": {"element": "water", "modality": "mutable", "polarity": "yin"},
+    "aries": {
+        "element": "fire",
+        "modality": "cardinal",
+        "polarity": "yang",
+        "seasonal_quadrant": "spring",
+        "fertility": "barren",
+        "voice": "semi_vocal",
+        "form": "bestial",
+    },
+    "taurus": {
+        "element": "earth",
+        "modality": "fixed",
+        "polarity": "yin",
+        "seasonal_quadrant": "spring",
+        "fertility": "semi_fruitful",
+        "voice": "semi_vocal",
+        "form": "bestial",
+    },
+    "gemini": {
+        "element": "air",
+        "modality": "mutable",
+        "polarity": "yang",
+        "seasonal_quadrant": "spring",
+        "fertility": "barren",
+        "voice": "vocal",
+        "form": "double_bodied",
+    },
+    "cancer": {
+        "element": "water",
+        "modality": "cardinal",
+        "polarity": "yin",
+        "seasonal_quadrant": "summer",
+        "fertility": "fruitful",
+        "voice": "mute",
+        "form": "bestial",
+    },
+    "leo": {
+        "element": "fire",
+        "modality": "fixed",
+        "polarity": "yang",
+        "seasonal_quadrant": "summer",
+        "fertility": "barren",
+        "voice": "semi_vocal",
+        "form": "bestial",
+    },
+    "virgo": {
+        "element": "earth",
+        "modality": "mutable",
+        "polarity": "yin",
+        "seasonal_quadrant": "summer",
+        "fertility": "barren",
+        "voice": "vocal",
+        "form": "humane",
+    },
+    "libra": {
+        "element": "air",
+        "modality": "cardinal",
+        "polarity": "yang",
+        "seasonal_quadrant": "autumn",
+        "fertility": "semi_fruitful",
+        "voice": "vocal",
+        "form": "humane",
+    },
+    "scorpio": {
+        "element": "water",
+        "modality": "fixed",
+        "polarity": "yin",
+        "seasonal_quadrant": "autumn",
+        "fertility": "fruitful",
+        "voice": "mute",
+        "form": "bestial",
+    },
+    "sagittarius": {
+        "element": "fire",
+        "modality": "mutable",
+        "polarity": "yang",
+        "seasonal_quadrant": "autumn",
+        "fertility": "barren",
+        "voice": "semi_vocal",
+        "form": "hybrid",
+    },
+    "capricorn": {
+        "element": "earth",
+        "modality": "cardinal",
+        "polarity": "yin",
+        "seasonal_quadrant": "winter",
+        "fertility": "semi_fruitful",
+        "voice": "semi_vocal",
+        "form": "hybrid",
+    },
+    "aquarius": {
+        "element": "air",
+        "modality": "fixed",
+        "polarity": "yang",
+        "seasonal_quadrant": "winter",
+        "fertility": "barren",
+        "voice": "vocal",
+        "form": "humane",
+    },
+    "pisces": {
+        "element": "water",
+        "modality": "mutable",
+        "polarity": "yin",
+        "seasonal_quadrant": "winter",
+        "fertility": "fruitful",
+        "voice": "mute",
+        "form": "double_bodied",
+    },
 }
 
 
@@ -1276,7 +1372,15 @@ def _complete_sign_payload(raw_signs: object) -> list[dict[str, object]]:
         payload.setdefault("name", code.title())
         missing_profile_fields = {
             field_name
-            for field_name in ("element", "modality", "polarity")
+            for field_name in (
+                "element",
+                "modality",
+                "polarity",
+                "seasonal_quadrant",
+                "fertility",
+                "voice",
+                "form",
+            )
             if not str(payload.get(field_name) or "").strip()
         }
         if missing_profile_fields:

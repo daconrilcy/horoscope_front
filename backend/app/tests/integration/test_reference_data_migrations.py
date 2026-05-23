@@ -10,18 +10,18 @@ from sqlalchemy.engine.reflection import Inspector
 from app.core.config import settings
 
 EXPECTED_SIGN_PROFILE_MAPPING = {
-    "aries": ("fire", "cardinal", "yang"),
-    "taurus": ("earth", "fixed", "yin"),
-    "gemini": ("air", "mutable", "yang"),
-    "cancer": ("water", "cardinal", "yin"),
-    "leo": ("fire", "fixed", "yang"),
-    "virgo": ("earth", "mutable", "yin"),
-    "libra": ("air", "cardinal", "yang"),
-    "scorpio": ("water", "fixed", "yin"),
-    "sagittarius": ("fire", "mutable", "yang"),
-    "capricorn": ("earth", "cardinal", "yin"),
-    "aquarius": ("air", "fixed", "yang"),
-    "pisces": ("water", "mutable", "yin"),
+    "aries": ("fire", "cardinal", "yang", "spring", "barren", "semi_vocal", "bestial"),
+    "taurus": ("earth", "fixed", "yin", "spring", "semi_fruitful", "semi_vocal", "bestial"),
+    "gemini": ("air", "mutable", "yang", "spring", "barren", "vocal", "double_bodied"),
+    "cancer": ("water", "cardinal", "yin", "summer", "fruitful", "mute", "bestial"),
+    "leo": ("fire", "fixed", "yang", "summer", "barren", "semi_vocal", "bestial"),
+    "virgo": ("earth", "mutable", "yin", "summer", "barren", "vocal", "humane"),
+    "libra": ("air", "cardinal", "yang", "autumn", "semi_fruitful", "vocal", "humane"),
+    "scorpio": ("water", "fixed", "yin", "autumn", "fruitful", "mute", "bestial"),
+    "sagittarius": ("fire", "mutable", "yang", "autumn", "barren", "semi_vocal", "hybrid"),
+    "capricorn": ("earth", "cardinal", "yin", "winter", "semi_fruitful", "semi_vocal", "hybrid"),
+    "aquarius": ("air", "fixed", "yang", "winter", "barren", "vocal", "humane"),
+    "pisces": ("water", "mutable", "yin", "winter", "fruitful", "mute", "double_bodied"),
 }
 
 EXPECTED_TRADITIONAL_RULERSHIPS = {
@@ -200,6 +200,10 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_elements",
         "astral_modalities",
         "astral_polarities",
+        "astral_sign_seasonal_quadrants",
+        "astral_sign_fertility_classes",
+        "astral_sign_voice_classes",
+        "astral_sign_form_classes",
         "astral_dignity_type",
         "astral_planet_sign_dignities",
         "astral_sign_profiles",
@@ -719,6 +723,10 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         "astral_element_id",
         "astral_modality_id",
         "astral_polarity_id",
+        "seasonal_quadrant_id",
+        "fertility_class_id",
+        "voice_class_id",
+        "form_class_id",
         "keywords_json",
         "shadow_keywords_json",
     }
@@ -728,6 +736,15 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
     assert ("astral_element_id",) not in unique_columns
     assert ("astral_modality_id",) not in unique_columns
     assert ("astral_polarity_id",) not in unique_columns
+    assert ("seasonal_quadrant_id",) not in unique_columns
+    assert ("fertility_class_id",) not in unique_columns
+    assert ("voice_class_id",) not in unique_columns
+    assert ("form_class_id",) not in unique_columns
+    profile_foreign_keys = _foreign_key_targets(head_inspector, "astral_sign_profiles")
+    assert profile_foreign_keys[("seasonal_quadrant_id",)] == ("astral_sign_seasonal_quadrants")
+    assert profile_foreign_keys[("fertility_class_id",)] == "astral_sign_fertility_classes"
+    assert profile_foreign_keys[("voice_class_id",)] == "astral_sign_voice_classes"
+    assert profile_foreign_keys[("form_class_id",)] == "astral_sign_form_classes"
     system_columns = {column["name"] for column in head_inspector.get_columns("astral_systems")}
     assert system_columns == {"id", "name", "inherits_from_system_id"}
     system_foreign_keys = {
@@ -769,6 +786,26 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
         assert connection.execute(text("SELECT COUNT(*) FROM astral_systems")).scalar_one() == 4
         assert connection.execute(text("SELECT COUNT(*) FROM astral_modalities")).scalar_one() == 3
         assert connection.execute(text("SELECT COUNT(*) FROM astral_polarities")).scalar_one() == 2
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_sign_seasonal_quadrants")
+            ).scalar_one()
+            == 4
+        )
+        assert (
+            connection.execute(
+                text("SELECT COUNT(*) FROM astral_sign_fertility_classes")
+            ).scalar_one()
+            == 3
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_sign_voice_classes")).scalar_one()
+            == 3
+        )
+        assert (
+            connection.execute(text("SELECT COUNT(*) FROM astral_sign_form_classes")).scalar_one()
+            == 4
+        )
         assert (
             connection.execute(text("SELECT COUNT(*) FROM astral_dignity_type")).scalar_one() == 4
         )
@@ -1153,6 +1190,10 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
                     astral_elements.code AS element_code,
                     astral_modalities.code AS modality_code,
                     astral_polarities.code AS polarity_code,
+                    astral_sign_seasonal_quadrants.code AS seasonal_quadrant_code,
+                    astral_sign_fertility_classes.code AS fertility_code,
+                    astral_sign_voice_classes.code AS voice_code,
+                    astral_sign_form_classes.code AS form_code,
                     astral_sign_profiles.keywords_json AS keywords_json,
                     astral_sign_profiles.shadow_keywords_json AS shadow_keywords_json
                 FROM astral_sign_profiles
@@ -1164,11 +1205,28 @@ def test_reference_migrations_upgrade_and_downgrade(monkeypatch: object, tmp_pat
                     ON astral_sign_profiles.astral_modality_id = astral_modalities.id
                 JOIN astral_polarities
                     ON astral_sign_profiles.astral_polarity_id = astral_polarities.id
+                JOIN astral_sign_seasonal_quadrants
+                    ON astral_sign_profiles.seasonal_quadrant_id =
+                        astral_sign_seasonal_quadrants.id
+                JOIN astral_sign_fertility_classes
+                    ON astral_sign_profiles.fertility_class_id = astral_sign_fertility_classes.id
+                JOIN astral_sign_voice_classes
+                    ON astral_sign_profiles.voice_class_id = astral_sign_voice_classes.id
+                JOIN astral_sign_form_classes
+                    ON astral_sign_profiles.form_class_id = astral_sign_form_classes.id
                 """
             )
         ).all()
         assert {
-            row.sign_code: (row.element_code, row.modality_code, row.polarity_code)
+            row.sign_code: (
+                row.element_code,
+                row.modality_code,
+                row.polarity_code,
+                row.seasonal_quadrant_code,
+                row.fertility_code,
+                row.voice_code,
+                row.form_code,
+            )
             for row in profile_rows
         } == EXPECTED_SIGN_PROFILE_MAPPING
         assert all(row.keywords_json and row.shadow_keywords_json for row in profile_rows)
@@ -1595,7 +1653,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260519_0136"
+    assert version == "20260523_0137"
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

@@ -80,6 +80,10 @@ def build_sign_runtime_data(
                 element=sign.element,
                 modality=sign.modality,
                 polarity=sign.polarity,
+                seasonal_quadrant=sign.seasonal_quadrant,
+                fertility=sign.fertility,
+                voice=sign.voice,
+                form=sign.form,
             )
         )
     return runtime_signs

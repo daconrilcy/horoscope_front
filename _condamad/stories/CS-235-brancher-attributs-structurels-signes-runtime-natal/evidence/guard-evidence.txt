@@ -1,0 +1,17 @@
+Guard evidence:
+
+- `backend/app/tests/unit/test_astrology_runtime_reference_guard.py` now forbids:
+  - `SEASONAL_QUADRANT_BY_SIGN`
+  - `FERTILITY_BY_SIGN`
+  - `VOICE_BY_SIGN`
+  - `FORM_BY_SIGN`
+  - `HUMANE_BY_SIGN`
+  - `BESTIAL_BY_SIGN`
+
+Negative scan:
+
+Command from `backend/`:
+
+`rg -n "SEASONAL_QUADRANT_BY_SIGN|FERTILITY_BY_SIGN|VOICE_BY_SIGN|FORM_BY_SIGN|HUMANE_BY_SIGN|BESTIAL_BY_SIGN" app\domain\astrology app\services\natal -g "*.py"`
+
+Result: PASS, exit code 1 means no matches.

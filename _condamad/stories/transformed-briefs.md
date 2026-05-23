@@ -12,3 +12,6 @@
 | cs-231 | `_story_briefs\cs-231-runtime-boundary-guardrails-structural-vs-interpretive.md` | `_condamad\stories\cs-231-runtime-boundary-guardrails-structural-vs-interpretive\00-story.md` |
 | cs-232 | `_story_briefs\cs-232-remove-legacy-runtime-surfaces-and-aspect-compatibility-aliases.md` | `_condamad\stories\cs-232-remove-legacy-runtime-surfaces-and-aspect-compatibility-aliases\00-story.md` |
 | cs-233 | `_story_briefs\cs-233-remove-aspect-reference-legacy-bridges.md` | `_condamad\stories\cs-233-remove-aspect-reference-legacy-bridges\00-story.md` |
+| cs-234 | `_story_briefs\cs-234-enrichir-profils-structurels-signes-db.md` | `_condamad\stories\cs-234-enrichir-profils-structurels-signes-db\00-story.md` |
+| cs-235 | `_story_briefs\cs-235-brancher-attributs-structurels-signes-runtime-natal.md` | `_condamad\stories\cs-235-brancher-attributs-structurels-signes-runtime-natal\00-story.md` |
+| cs-236 | `_story_briefs\cs-236-exploiter-profils-signes-enrichis-signatures-interpretation.md` | `_condamad\stories\cs-236-exploiter-profils-signes-enrichis-signatures-interpretation\00-story.md` |

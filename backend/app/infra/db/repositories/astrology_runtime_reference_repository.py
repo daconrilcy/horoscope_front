@@ -62,8 +62,12 @@ from app.infra.db.models.reference import (
     AstralPointCalculationVariantModel,
     AstralPointModel,
     AstralPolarityModel,
+    AstralSignFertilityClassModel,
+    AstralSignFormClassModel,
     AstralSignModel,
     AstralSignProfileModel,
+    AstralSignSeasonalQuadrantModel,
+    AstralSignVoiceClassModel,
     AstralSystemModel,
     HouseModel,
     LanguageModel,
@@ -288,6 +292,10 @@ class AstrologyRuntimeReferenceRepository:
                 AstralElementModel.code.label("element_code"),
                 AstralModalityModel.code.label("modality_code"),
                 AstralPolarityModel.code.label("polarity_code"),
+                AstralSignSeasonalQuadrantModel.code.label("seasonal_quadrant_code"),
+                AstralSignFertilityClassModel.code.label("fertility_code"),
+                AstralSignVoiceClassModel.code.label("voice_code"),
+                AstralSignFormClassModel.code.label("form_code"),
             )
             .outerjoin(
                 AstralSignProfileModel,
@@ -305,6 +313,22 @@ class AstrologyRuntimeReferenceRepository:
                 AstralPolarityModel,
                 AstralSignProfileModel.astral_polarity_id == AstralPolarityModel.id,
             )
+            .outerjoin(
+                AstralSignSeasonalQuadrantModel,
+                AstralSignProfileModel.seasonal_quadrant_id == AstralSignSeasonalQuadrantModel.id,
+            )
+            .outerjoin(
+                AstralSignFertilityClassModel,
+                AstralSignProfileModel.fertility_class_id == AstralSignFertilityClassModel.id,
+            )
+            .outerjoin(
+                AstralSignVoiceClassModel,
+                AstralSignProfileModel.voice_class_id == AstralSignVoiceClassModel.id,
+            )
+            .outerjoin(
+                AstralSignFormClassModel,
+                AstralSignProfileModel.form_class_id == AstralSignFormClassModel.id,
+            )
             .order_by(AstralSignModel.id)
         ).all()
         return tuple(
@@ -314,6 +338,10 @@ class AstrologyRuntimeReferenceRepository:
                 "element": row.element_code,
                 "modality": row.modality_code,
                 "polarity": row.polarity_code,
+                "seasonal_quadrant": row.seasonal_quadrant_code,
+                "fertility": row.fertility_code,
+                "voice": row.voice_code,
+                "form": row.form_code,
             }
             for row in rows
         )
@@ -1169,7 +1197,15 @@ class AstrologyRuntimeReferenceRepository:
     def _validate_sign_profiles(self, reference: AstrologyRuntimeReference) -> None:
         """Verifie que chaque signe porte un profil structurel DB-backed."""
         for sign in reference.signs.items:
-            for field_name in ("element", "modality", "polarity"):
+            for field_name in (
+                "element",
+                "modality",
+                "polarity",
+                "seasonal_quadrant",
+                "fertility",
+                "voice",
+                "form",
+            ):
                 value = getattr(sign, field_name)
                 if not value.strip():
                     self._raise_integrity("sign_profiles", f"missing_{field_name}:{sign.code}")

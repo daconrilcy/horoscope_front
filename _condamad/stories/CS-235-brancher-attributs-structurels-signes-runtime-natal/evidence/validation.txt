@@ -1,0 +1,17 @@
+Validation summary for CS-235, 2026-05-23:
+
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-235-brancher-attributs-structurels-signes-runtime-natal` - PASS.
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-235-brancher-attributs-structurels-signes-runtime-natal\00-story.md` - PASS.
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-235-brancher-attributs-structurels-signes-runtime-natal\00-story.md` - PASS.
+- `.\.venv\Scripts\Activate.ps1; cd backend; ruff format <changed python files>` - PASS.
+- `.\.venv\Scripts\Activate.ps1; cd backend; ruff format --check .` - PASS, 1569 files already formatted.
+- `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q app\tests\unit\test_astrology_runtime_reference_repository.py tests\unit\domain\astrology\test_sign_runtime_builder.py app\tests\unit\test_chart_json_builder.py app\tests\unit\test_astrology_runtime_reference_guard.py tests\unit\domain\astrology\test_sign_runtime_data.py tests\unit\domain\astrology\test_chart_signature.py` - PASS, 66 passed in 5.05s.
+- `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q app\tests\unit\test_astrology_runtime_reference_repository.py tests\unit\domain\astrology\test_sign_runtime_builder.py app\tests\unit\test_chart_json_builder.py app\tests\unit\test_astrology_runtime_reference_guard.py tests\unit\domain\astrology\test_sign_runtime_data.py tests\unit\domain\astrology\test_chart_signature.py` - PASS, 66 passed in 5.03s.
+- `.\.venv\Scripts\Activate.ps1; cd backend; ruff check .` - PASS, All checks passed.
+- `rg -n "SEASONAL_QUADRANT_BY_SIGN|FERTILITY_BY_SIGN|VOICE_BY_SIGN|FORM_BY_SIGN|HUMANE_BY_SIGN|BESTIAL_BY_SIGN" app\domain\astrology app\services\natal -g "*.py"` from `backend/` - PASS, no matches.
+- `.\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert hasattr(app, 'routes'); assert callable(app.openapi)"` - PASS.
+
+Not run:
+
+- Full backend `python -B -m pytest -q`: targeted story checks passed; unrelated backend surfaces remain outside this validation.
+- Frontend checks: frontend out of scope and unchanged.

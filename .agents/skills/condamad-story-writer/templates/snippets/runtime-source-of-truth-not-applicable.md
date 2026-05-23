@@ -1,0 +1,2 @@
+- Runtime source of truth: not applicable
+- Reason: no runtime route, config, generated contract, persistence, or architecture rule is affected.

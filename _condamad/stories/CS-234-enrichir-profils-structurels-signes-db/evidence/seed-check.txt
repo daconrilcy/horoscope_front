@@ -1,0 +1,14 @@
+Seed verification for CS-234:
+
+- Seasonal quadrant codes: `spring`, `summer`, `autumn`, `winter`.
+- Fertility codes: `fruitful`, `semi_fruitful`, `barren`.
+- Voice codes: `vocal`, `semi_vocal`, `mute`.
+- Form codes: `humane`, `bestial`, `double_bodied`, `hybrid`.
+- The twelve sign rows in `astral_structural_reference_catalog.json` define one value for each structural attribute.
+- `ensure_astral_sign_profiles` loads the structural fields from `astral_structural_reference_catalog.json`.
+- Integration tests assert:
+  - four seasonal quadrant rows;
+  - three fertility rows;
+  - three voice rows;
+  - four form rows;
+  - twelve joined sign profiles matching the expected structural matrix.

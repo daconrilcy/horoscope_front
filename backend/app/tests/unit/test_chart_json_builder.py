@@ -45,6 +45,11 @@ from app.domain.astrology.interpretation_adapters.contracts import (
 )
 from app.domain.astrology.natal_calculation import AspectResult, NatalAstralPointPosition
 from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
+from app.domain.astrology.runtime.chart_signature_runtime_data import (
+    BalanceScoreRuntimeData,
+    ChartBalanceRuntimeData,
+    ChartSignatureRuntimeData,
+)
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
     HouseOccupantRuntimeData,
@@ -183,6 +188,10 @@ def mock_natal_result():
             element="earth",
             modality="fixed",
             polarity="yin",
+            seasonal_quadrant="spring",
+            fertility="semi_fruitful",
+            voice="semi_vocal",
+            form="bestial",
             synthesis_role="dominant_focus",
         )
     ]
@@ -532,6 +541,10 @@ def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
             "element": "earth",
             "modality": "fixed",
             "polarity": "yin",
+            "seasonal_quadrant": "spring",
+            "fertility": "semi_fruitful",
+            "voice": "semi_vocal",
+            "form": "bestial",
             "synthesis_role": "dominant_focus",
         }
     ]
@@ -851,6 +864,53 @@ def test_serialize_traditional_conditions_exposes_rejoicing_contract() -> None:
         "reference_system": "traditional",
         "evidence": ["moon matches planetary_joy: house_code=3"],
     }
+
+
+def test_build_chart_json_projects_enriched_profiles_from_chart_balance(
+    mock_natal_result,
+    mock_birth_profile,
+):
+    """Le JSON public expose les profils enrichis deja calcules."""
+    mock_natal_result.chart_balance = ChartBalanceRuntimeData(
+        elements=(BalanceScoreRuntimeData(code="earth", score=1.0, rank=1),),
+        modalities=(BalanceScoreRuntimeData(code="fixed", score=1.0, rank=1),),
+        polarities=(BalanceScoreRuntimeData(code="yin", score=1.0, rank=1),),
+        seasonal_quadrants=(BalanceScoreRuntimeData(code="spring", score=1.0, rank=1),),
+        fertility=(BalanceScoreRuntimeData(code="semi_fruitful", score=1.0, rank=1),),
+        voices=(BalanceScoreRuntimeData(code="semi_vocal", score=1.0, rank=1),),
+        forms=(BalanceScoreRuntimeData(code="bestial", score=1.0, rank=1),),
+        dominant_signs=(),
+        dominant_planets=(),
+        dominant_houses=(),
+        dominant_aspects=(),
+        synthesis=ChartSignatureRuntimeData(
+            primary_element="earth",
+            primary_modality="fixed",
+            primary_polarity="yin",
+            primary_seasonal_quadrant="spring",
+            primary_fertility="semi_fruitful",
+            primary_voice="semi_vocal",
+            primary_form="bestial",
+            primary_sign=None,
+            primary_planet=None,
+            primary_house=None,
+        ),
+    )
+
+    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+
+    assert chart["chart_balance"]["polarities"] == [{"code": "yin", "score": 1.0, "rank": 1}]
+    assert chart["chart_balance"]["seasonal_quadrants"] == [
+        {"code": "spring", "score": 1.0, "rank": 1}
+    ]
+    assert chart["chart_balance"]["fertility"][0]["code"] == "semi_fruitful"
+    assert chart["chart_balance"]["voices"][0]["code"] == "semi_vocal"
+    assert chart["chart_balance"]["forms"][0]["code"] == "bestial"
+    assert chart["chart_signature"]["primary_polarity"] == "yin"
+    assert chart["chart_signature"]["primary_seasonal_quadrant"] == "spring"
+    assert chart["chart_signature"]["primary_fertility"] == "semi_fruitful"
+    assert chart["chart_signature"]["primary_voice"] == "semi_vocal"
+    assert chart["chart_signature"]["primary_form"] == "bestial"
 
 
 def test_serialize_traditional_conditions_exposes_sect_nature_mitigation_contract() -> None:

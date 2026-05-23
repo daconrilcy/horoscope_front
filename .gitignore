@@ -37,6 +37,9 @@ frontend/.env
 # Cross-tool drift reports
 artifacts/cross-tool/
 
+# Local CONDAMAD execution logs
+_condamad/codex-runs/
+
 # Local pytest temp artifacts
 .pytest_cache/
 .tmp-pytest/

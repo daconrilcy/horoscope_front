@@ -38,6 +38,11 @@ class ChartSignatureCalculator:
         """Retourne la balance globale avec tie-break par score puis code."""
         elements = _rank_balance(_weighted_profile(signs, "element"))
         modalities = _rank_balance(_weighted_profile(signs, "modality"))
+        polarities = _rank_balance(_weighted_profile(signs, "polarity"))
+        seasonal_quadrants = _rank_balance(_weighted_profile(signs, "seasonal_quadrant"))
+        fertility = _rank_balance(_weighted_profile(signs, "fertility"))
+        voices = _rank_balance(_weighted_profile(signs, "voice"))
+        forms = _rank_balance(_weighted_profile(signs, "form"))
         dominant_signs = _rank_dominance(
             ((item.sign, item.weight, "sign_runtime") for item in signs if item.weight > 0.0)
         )
@@ -62,6 +67,11 @@ class ChartSignatureCalculator:
         return ChartBalanceRuntimeData(
             elements=elements,
             modalities=modalities,
+            polarities=polarities,
+            seasonal_quadrants=seasonal_quadrants,
+            fertility=fertility,
+            voices=voices,
+            forms=forms,
             dominant_signs=dominant_signs,
             dominant_planets=dominant_planets,
             dominant_houses=dominant_houses,
@@ -69,6 +79,13 @@ class ChartSignatureCalculator:
             synthesis=ChartSignatureRuntimeData(
                 primary_element=elements[0].code if elements else None,
                 primary_modality=modalities[0].code if modalities else None,
+                primary_polarity=polarities[0].code if polarities else None,
+                primary_seasonal_quadrant=(
+                    seasonal_quadrants[0].code if seasonal_quadrants else None
+                ),
+                primary_fertility=fertility[0].code if fertility else None,
+                primary_voice=voices[0].code if voices else None,
+                primary_form=forms[0].code if forms else None,
                 primary_sign=dominant_signs[0].code if dominant_signs else None,
                 primary_planet=dominant_planets[0].code if dominant_planets else None,
                 primary_house=int(dominant_houses[0].code) if dominant_houses else None,
@@ -83,6 +100,8 @@ def _weighted_profile(
     """Agrege les poids par profil de signe deja source dans le referentiel."""
     counter: Counter[str] = Counter()
     for sign in signs:
+        if sign.weight <= 0.0:
+            continue
         code = getattr(sign, field_name)
         if isinstance(code, str) and code.strip():
             counter[code] += sign.weight

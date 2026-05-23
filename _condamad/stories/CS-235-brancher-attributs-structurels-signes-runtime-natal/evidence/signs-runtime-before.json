@@ -1,0 +1,18 @@
+{
+  "note": "Baseline contract before CS-235 implementation, reconstructed from the pre-change runtime shape.",
+  "signs_runtime_sample": [
+    {
+      "sign": "taurus",
+      "element": "earth",
+      "modality": "fixed",
+      "polarity": "yin",
+      "synthesis_role": "dominant_focus"
+    }
+  ],
+  "missing_before_cs235": [
+    "seasonal_quadrant",
+    "fertility",
+    "voice",
+    "form"
+  ]
+}

@@ -217,6 +217,19 @@ class ChartInterpretationMetadataRuntimeData:
 
 
 @dataclass(frozen=True, slots=True)
+class SignProfileBalancesInterpretationRuntimeData:
+    """Profils structurels de signes deja agreges au niveau du theme."""
+
+    elements: tuple[DominanceInterpretationRuntimeData, ...]
+    modalities: tuple[DominanceInterpretationRuntimeData, ...]
+    polarities: tuple[DominanceInterpretationRuntimeData, ...]
+    seasonal_quadrants: tuple[DominanceInterpretationRuntimeData, ...]
+    fertility: tuple[DominanceInterpretationRuntimeData, ...]
+    voices: tuple[DominanceInterpretationRuntimeData, ...]
+    forms: tuple[DominanceInterpretationRuntimeData, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class ChartInterpretationInputRuntimeData:
     """Entree unique construite depuis les objets runtime du theme natal."""
 
@@ -230,6 +243,7 @@ class ChartInterpretationInputRuntimeData:
     rulerships: tuple[RulershipInterpretationRuntimeData, ...]
     dominance: tuple[DominanceInterpretationRuntimeData, ...]
     fixed_star_contacts: tuple[FixedStarContactInterpretationRuntimeData, ...]
+    sign_profile_balances: SignProfileBalancesInterpretationRuntimeData | None = None
     advanced_condition_facts: tuple[AdvancedConditionInterpretationRuntimeData, ...] = ()
     metadata: ChartInterpretationMetadataRuntimeData = field(
         default_factory=lambda: ChartInterpretationMetadataRuntimeData(

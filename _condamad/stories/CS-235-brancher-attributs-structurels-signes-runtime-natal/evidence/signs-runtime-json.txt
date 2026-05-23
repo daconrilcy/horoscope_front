@@ -1,0 +1,13 @@
+Public JSON proof:
+
+`backend/app/services/chart/json_builder.py` now emits the additive fields below inside each `chart["signs_runtime"]` item:
+
+- `seasonal_quadrant`
+- `fertility`
+- `voice`
+- `form`
+
+Validation:
+
+- `python -B -m pytest -q app\tests\unit\test_chart_json_builder.py ...` PASS.
+- `test_build_chart_json_full` asserts sample Taurus payload includes `spring`, `semi_fruitful`, `semi_vocal`, `bestial`.

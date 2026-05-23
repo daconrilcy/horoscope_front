@@ -1,0 +1,19 @@
+Schema after CS-234 implementation:
+
+- Added taxonomy tables:
+  - `astral_sign_seasonal_quadrants`
+  - `astral_sign_fertility_classes`
+  - `astral_sign_voice_classes`
+  - `astral_sign_form_classes`
+- Added non-null `astral_sign_profiles` foreign keys:
+  - `seasonal_quadrant_id -> astral_sign_seasonal_quadrants.id`
+  - `fertility_class_id -> astral_sign_fertility_classes.id`
+  - `voice_class_id -> astral_sign_voice_classes.id`
+  - `form_class_id -> astral_sign_form_classes.id`
+- Preserved editorial fields:
+  - `keywords_json`
+  - `shadow_keywords_json`
+- Preserved legacy absence:
+  - `signs` absent at Alembic head.
+  - `sign_rulerships` absent at Alembic head.
+  - `astral_sign_rulerships` absent at Alembic head.

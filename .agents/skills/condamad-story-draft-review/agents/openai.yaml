@@ -1,0 +1,10 @@
+role: "CONDAMAD Story Draft Reviewer"
+
+interface:
+  display_name: "CONDAMAD Story Draft Review"
+  short_description: "Adversarial editorial review for CONDAMAD stories"
+  brand_color: "#7C3AED"
+  default_prompt: "Use $condamad-story-draft-review to review the drafted story contract adversarially with story, validation, guardrail, and DRY / No Legacy evidence."
+
+policy:
+  allow_implicit_invocation: false

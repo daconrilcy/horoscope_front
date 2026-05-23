@@ -1,0 +1,72 @@
+<!-- Etape de normalisation, dedoublonnage et preuve des constats. -->
+
+# Step 3 - Triage and Evidence
+
+## Objective
+
+Turn raw adversarial observations into a short list of actionable findings.
+
+## Actions
+
+1. Normalize findings using the taxonomy in
+   `references/finding-taxonomy.md`.
+2. Deduplicate overlapping findings.
+3. Verify each remaining finding against story/capsule evidence.
+4. Assign one severity: Critical, High, Medium, or Low.
+5. Assign one bucket: `patch`, `decision_needed`, `defer`, or `dismiss`.
+6. Drop dismissed findings from final output, but keep a dismissal count.
+7. For deferred findings, explain why they are outside current story scope.
+8. For `decision_needed`, state the exact decision required.
+9. For `patch`, state the smallest credible fix.
+10. Determine final verdict:
+    - `BLOCKING` for Critical issue, High AC failure, security/data risk,
+      active forbidden story path, false validation claim, or missing
+      validation evidence required by the story contract;
+    - `CHANGES_REQUESTED` for material patch findings;
+    - `ACCEPTABLE_WITH_LIMITATIONS` when no required patch remains, but optional
+      or full-regression validation could not be run and residual risk is
+      documented;
+    - `CLEAN` only when no actionable issue remains and False CLEAN Prevention
+      conditions do not apply.
+
+For audit-sourced stories, include source-finding closure in triage. If the
+story claims full closure but leaves known in-domain residual work or uses broad
+exceptions/limitations to pass, classify the issue as `patch` or
+`decision_needed`; do not downgrade it to `defer`.
+
+## Evidence Requirements
+
+Every non-dismissed finding must include:
+
+- file and line when possible;
+- evidence from story text, validator output, strict lint, scoped guardrail
+  rows, or source brief;
+- impact on implementation readiness or reviewability;
+- suggested fix or decision required.
+
+If exact line numbers are unavailable, cite the narrowest function/class/file
+and say why a precise line was not available.
+
+## Persisted Review
+
+If a CONDAMAD capsule exists, write or update
+`generated/11-code-review.md` with:
+
+- review target;
+- inputs reviewed;
+- findings;
+- commands run by reviewer;
+- verdict;
+- residual risks.
+- source finding closure status for audit-sourced stories.
+
+Replace the full file on each review run. Do not append multiple contradictory
+reviews to the same artifact.
+
+If the reviewed story is tracked in `_condamad/stories/story-status.md`, update
+the matching registry row after writing the review artifact:
+
+- `done` for an accepted review verdict with required evidence complete;
+- `ready-to-review` for `BLOCKING` or `CHANGES_REQUESTED`.
+
+Do not modify application implementation files in this step.

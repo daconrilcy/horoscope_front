@@ -50,7 +50,12 @@ from app.infra.db.models.reference import (
     AstralPointModel,
     AstralReferenceEpochModel,
     AstralReferenceSourceModel,
+    AstralSignFertilityClassModel,
+    AstralSignFormClassModel,
     AstralSignModel,
+    AstralSignProfileModel,
+    AstralSignSeasonalQuadrantModel,
+    AstralSignVoiceClassModel,
     AstralSpeedModel,
     AstralSystemModel,
     AstralTypicalPolarityModel,
@@ -142,6 +147,11 @@ def test_structural_astrology_models_are_not_versioned():
         AstralPointAliasModel,
         AstralPointInterpretationKeywordModel,
         AstralPointInterpretationProfileModel,
+        AstralSignProfileModel,
+        AstralSignSeasonalQuadrantModel,
+        AstralSignFertilityClassModel,
+        AstralSignVoiceClassModel,
+        AstralSignFormClassModel,
     )
 
     for model in structural_models:
@@ -173,6 +183,34 @@ def test_reference_repository_seeds_astral_point_catalog(db_session: Session) ->
         "lunar_perigee",
         "north_node",
         "south_node",
+    }
+
+
+def test_sign_profile_model_exposes_structural_classification_references() -> None:
+    """Les profils de signes pointent vers les taxonomies structurelles canoniques."""
+    columns = {column.key for column in inspect(AstralSignProfileModel).columns}
+    assert {
+        "seasonal_quadrant_id",
+        "fertility_class_id",
+        "voice_class_id",
+        "form_class_id",
+    } <= columns
+    foreign_key_targets = {
+        column.key: next(iter(column.foreign_keys)).column.table.name
+        for column in AstralSignProfileModel.__table__.columns
+        if column.key
+        in {
+            "seasonal_quadrant_id",
+            "fertility_class_id",
+            "voice_class_id",
+            "form_class_id",
+        }
+    }
+    assert foreign_key_targets == {
+        "seasonal_quadrant_id": "astral_sign_seasonal_quadrants",
+        "fertility_class_id": "astral_sign_fertility_classes",
+        "voice_class_id": "astral_sign_voice_classes",
+        "form_class_id": "astral_sign_form_classes",
     }
 
 
