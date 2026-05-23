@@ -13,10 +13,15 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
 )
 
 
-def _angular_distance(angle_a: float, angle_b: float) -> float:
+def angular_distance_deg(angle_a: float, angle_b: float) -> float:
     """Retourne la plus petite distance angulaire entre deux longitudes."""
     diff = abs(angle_a - angle_b) % 360.0
     return min(diff, 360.0 - diff)
+
+
+def _angular_distance(angle_a: float, angle_b: float) -> float:
+    """Conserve le point d'appel interne historique du calculateur d'aspects."""
+    return angular_distance_deg(angle_a, angle_b)
 
 
 def build_aspect_body_from_position(

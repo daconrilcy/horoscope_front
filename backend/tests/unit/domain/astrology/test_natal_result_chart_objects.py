@@ -153,6 +153,47 @@ def test_natal_chart_objects_expose_house_position_and_rulership_payloads() -> N
     assert by_code["house_1_cusp"].payloads.rulership is None
 
 
+def test_natal_chart_objects_expose_fixed_star_runtime_contacts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Le pipeline natal calcule les contacts fixed star depuis chart_objects."""
+
+    def _positions_near_regulus(
+        julian_day: float,
+        planet_codes: list[str],
+        sign_codes: list[str],
+    ) -> list[dict[str, object]]:
+        """Produit des positions dont Mars conjoint Regulus."""
+        del julian_day
+        positions = []
+        for index, planet_code in enumerate(planet_codes):
+            longitude = 150.42 if planet_code == "mars" else float((index * 31) % 360)
+            positions.append(
+                {
+                    "planet_code": planet_code,
+                    "longitude": longitude,
+                    "sign_code": sign_codes[int(longitude // 30) % len(sign_codes)],
+                }
+            )
+        return positions
+
+    monkeypatch.setattr(
+        natal_calculation,
+        "calculate_planet_positions",
+        _positions_near_regulus,
+    )
+
+    result = _result()
+    by_code = {item.code: item for item in result.chart_objects}
+
+    assert by_code["regulus"].payloads.fixed_star is not None
+    assert by_code["regulus"].capabilities.supports_fixed_star_conjunction is False
+    assert by_code["mars"].capabilities.supports_fixed_star_conjunction is True
+    assert by_code["mars"].payloads.fixed_star_conjunctions
+    assert by_code["mars"].payloads.fixed_star_conjunctions[0].fixed_star_code == "regulus"
+    assert by_code["mars"].payloads.fixed_star_conjunctions[0].orb_deg == 0.42
+
+
 def test_natal_chart_objects_expose_motion_payloads_when_positions_have_speeds(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

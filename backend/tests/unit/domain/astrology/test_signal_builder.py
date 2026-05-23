@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from app.domain.astrology.advanced_conditions.contracts import (
-    AdvancedPlanetaryCondition,
-    PlanetConditionAxisImpact,
-)
 from app.domain.astrology.condition.contracts import (
     PlanetConditionProfile,
     PlanetConditionSignal,
     PlanetConditionSignalSet,
 )
 from app.domain.astrology.dominance.contracts import DominantPlanetsResult, PlanetDominanceResult
+from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
+    AdvancedConditionInterpretationRuntimeData,
+    ChartInterpretationInputRuntimeData,
+    DominanceInterpretationRuntimeData,
+)
 from app.domain.astrology.interpretation_adapters.signal_builder import SignalBuilder
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
@@ -68,19 +69,51 @@ def _dominant(*, planet_code: str, level: str = "dominant") -> DominantPlanetsRe
     )
 
 
+def _interpretation_input(
+    *,
+    planet_code: str | None = None,
+    level: str = "dominant",
+    advanced_condition_facts: tuple[AdvancedConditionInterpretationRuntimeData, ...] = (),
+) -> ChartInterpretationInputRuntimeData:
+    """Construit un input interpretatif minimal pour les tests de signaux."""
+    dominance = ()
+    if planet_code is not None:
+        dominance = (
+            DominanceInterpretationRuntimeData(
+                code=planet_code,
+                score=1.0,
+                source="natal_standard_v1",
+                rank=1,
+                dominance_level=level,
+            ),
+        )
+    return ChartInterpretationInputRuntimeData(
+        chart_id=None,
+        chart_type="natal",
+        locale=None,
+        objects=(),
+        aspects=(),
+        dignities=(),
+        house_positions=(),
+        rulerships=(),
+        dominance=dominance,
+        fixed_star_contacts=(),
+        advanced_condition_facts=advanced_condition_facts,
+    )
+
+
 def test_signal_builder_maps_dominance_and_condition_axes_from_runtime_rules() -> None:
     """Les règles runtime produisent des signaux techniques deterministes."""
     reference = complete_reference()
 
     signals = SignalBuilder().build(
         adapter_reference=reference.interpretation_adapter_reference,
+        interpretation_input=_interpretation_input(planet_code="mars"),
         condition_profiles=(
             _profile("mars", visibility=0.79, constraint=0.62),
             _profile("venus", visibility=0.71, constraint=0.2),
         ),
         condition_signals=(),
-        advanced_conditions=(),
-        dominant_planets=_dominant(planet_code="mars"),
     )
 
     assert [signal.signal_code for signal in signals] == [
@@ -108,10 +141,9 @@ def test_signal_builder_uses_runtime_priority_default_when_rule_has_no_override(
 
     signals = SignalBuilder().build(
         adapter_reference=adapter_reference,
+        interpretation_input=_interpretation_input(),
         condition_profiles=(_profile("mars", visibility=0.8),),
         condition_signals=(),
-        advanced_conditions=(),
-        dominant_planets=None,
     )
 
     assert signals[0].priority == "high"
@@ -124,10 +156,9 @@ def test_signal_builder_supports_saturn_stability_compound_rule() -> None:
 
     signals = SignalBuilder().build(
         adapter_reference=reference.interpretation_adapter_reference,
+        interpretation_input=_interpretation_input(planet_code="saturn"),
         condition_profiles=(_profile("saturn", stability=0.74),),
         condition_signals=(),
-        advanced_conditions=(),
-        dominant_planets=_dominant(planet_code="saturn"),
     )
 
     assert [signal.signal_code for signal in signals] == ["structural_endurance"]
@@ -154,10 +185,9 @@ def test_signal_builder_supports_runtime_compound_source_code() -> None:
 
     signals = SignalBuilder().build(
         adapter_reference=adapter_reference,
+        interpretation_input=_interpretation_input(planet_code="mars"),
         condition_profiles=(_profile("mars", visibility=0.8),),
         condition_signals=(),
-        advanced_conditions=(),
-        dominant_planets=_dominant(planet_code="mars"),
     )
 
     assert [signal.signal_code for signal in signals] == ["structural_endurance"]
@@ -179,6 +209,7 @@ def test_signal_builder_supports_runtime_condition_signal_rules() -> None:
 
     signals = SignalBuilder().build(
         adapter_reference=adapter_reference,
+        interpretation_input=_interpretation_input(),
         condition_profiles=(),
         condition_signals=(
             PlanetConditionSignalSet(
@@ -202,8 +233,6 @@ def test_signal_builder_supports_runtime_condition_signal_rules() -> None:
                 ),
             ),
         ),
-        advanced_conditions=(),
-        dominant_planets=None,
     )
 
     assert [signal.signal_code for signal in signals] == ["high_externalization"]
@@ -227,31 +256,22 @@ def test_signal_builder_supports_runtime_advanced_condition_rules() -> None:
 
     signals = SignalBuilder().build(
         adapter_reference=adapter_reference,
+        interpretation_input=_interpretation_input(
+            advanced_condition_facts=(
+                AdvancedConditionInterpretationRuntimeData(
+                    condition_code="hayz",
+                    condition_type_code="hayz",
+                    source_planet_code="mars",
+                    target_planet_code=None,
+                    score_profile="traditional_advanced_v1",
+                    reference_version="v1",
+                    score_impact=1.0,
+                    ranking_weight=1.1,
+                ),
+            )
+        ),
         condition_profiles=(),
         condition_signals=(),
-        advanced_conditions=(
-            AdvancedPlanetaryCondition(
-                condition_code="hayz",
-                condition_type_code="hayz",
-                source_planet_code="mars",
-                target_planet_code=None,
-                score_profile="traditional_advanced_v1",
-                reference_version="v1",
-                score_impact=1.0,
-                ranking_weight=1.1,
-                axes_impact=PlanetConditionAxisImpact(
-                    functional_strength_delta=0.0,
-                    visibility_delta=0.0,
-                    stability_delta=0.0,
-                    intensity_delta=0.0,
-                    coherence_delta=0.0,
-                    support_delta=0.0,
-                    constraint_delta=0.0,
-                ),
-                reason="mars matches hayz.",
-            ),
-        ),
-        dominant_planets=None,
     )
 
     assert [signal.signal_code for signal in signals] == ["constraint_on_action"]

@@ -26,6 +26,11 @@ from app.domain.astrology.dignities.planet_dignity_scoring_service import (
 from app.domain.astrology.dignities.sect_calculator import SectCalculator
 from app.domain.astrology.dominance.planet_dominance_engine import PlanetDominanceEngine
 from app.domain.astrology.house_ruler_resolver import HouseRulerResult
+from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
+    AdvancedConditionInterpretationRuntimeData,
+    ChartInterpretationInputRuntimeData,
+    DominanceInterpretationRuntimeData,
+)
 from app.domain.astrology.interpretation_adapters import InterpretationAdapterEngine
 from app.domain.astrology.natal_calculation import AspectResult, PlanetPosition, build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput
@@ -315,15 +320,46 @@ def adapter_fixture_summary() -> dict[str, Any]:
         advanced_conditions=advanced_conditions,
         aspects=aspects,
     )
+    interpretation_input = ChartInterpretationInputRuntimeData(
+        chart_id=None,
+        chart_type="natal",
+        locale=None,
+        objects=(),
+        aspects=(),
+        dignities=(),
+        house_positions=(),
+        rulerships=(),
+        dominance=tuple(
+            DominanceInterpretationRuntimeData(
+                code=item.planet_code,
+                score=item.total_score,
+                source=dominance.score_profile_code,
+                rank=item.rank,
+                dominance_level=item.dominance_level,
+                factors=tuple(factor.factor_code for factor in item.factors),
+            )
+            for item in dominance.planets
+        ),
+        fixed_star_contacts=(),
+        advanced_condition_facts=tuple(
+            AdvancedConditionInterpretationRuntimeData(
+                condition_code=condition.condition_code,
+                condition_type_code=condition.condition_type_code,
+                source_planet_code=condition.source_planet_code,
+                target_planet_code=condition.target_planet_code,
+                score_profile=condition.score_profile,
+                reference_version=condition.reference_version,
+                score_impact=condition.score_impact,
+                ranking_weight=condition.ranking_weight,
+            )
+            for condition in advanced_conditions
+        ),
+    )
     adapter = InterpretationAdapterEngine().calculate(
         runtime_reference=reference,
-        planet_positions=positions,
-        aspects=aspects,
-        dignities=dignities,
+        interpretation_input=interpretation_input,
         condition_profiles=profiles,
         condition_signals=signals,
-        advanced_conditions=advanced_conditions,
-        dominant_planets=dominance,
     )
     return normalize_golden_value(
         {

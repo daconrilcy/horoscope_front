@@ -85,6 +85,7 @@ def test_removed_catalog_symbols_are_not_defined_in_active_python() -> None:
     hits: list[str] = []
     for path in _python_files():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        _attach_ast_parents(tree)
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 if node.name in forbidden_names:
@@ -93,10 +94,27 @@ def test_removed_catalog_symbols_are_not_defined_in_active_python() -> None:
                 for target in node.targets:
                     if isinstance(target, ast.Name) and target.id in forbidden_names:
                         hits.append(f"{path.relative_to(REPO_ROOT)}:{target.id}")
-            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            elif (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.target, ast.Name)
+                and not _is_dataclass_field(node)
+            ):
                 if node.target.id in forbidden_names:
                     hits.append(f"{path.relative_to(REPO_ROOT)}:{node.target.id}")
     assert hits == []
+
+
+def _is_dataclass_field(node: ast.AnnAssign) -> bool:
+    """Ignore les champs de contrat qui peuvent partager un nom metier legitime."""
+    parent = getattr(node, "parent", None)
+    return isinstance(parent, ast.ClassDef)
+
+
+def _attach_ast_parents(tree: ast.AST) -> None:
+    """Ajoute le parent AST necessaire aux gardes de definitions."""
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            setattr(child, "parent", parent)
 
 
 def test_runtime_helper_owners_are_unique() -> None:

@@ -9,6 +9,7 @@ garde `backend/app/tests/unit/test_backend_test_topology.py`.
 | Racine | Proprietaire | Responsabilite | Statut |
 |---|---|---|---|
 | `app/tests` | Backend application tests | Tests applicatifs backend collectes par defaut, incluant les sous-racines unit, integration et regression. | Canonique |
+| `tests/architecture` | Backend architecture guards | Gardes d'architecture transverses collectees par defaut. | Support documente |
 | `tests/evaluation` | LLM evaluation tests | Suite d'evaluation des prompts et sorties LLM. | Support documente |
 | `tests/integration` | Backend transverse integration tests | Suite d'integration backend transverse hors package applicatif. | Support documente |
 | `tests/llm_orchestration` | LLM orchestration tests | Suite LLM orchestration et guards historiques associes. | Support documente |

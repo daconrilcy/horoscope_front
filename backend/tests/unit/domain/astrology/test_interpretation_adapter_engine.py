@@ -6,6 +6,10 @@ from pathlib import Path
 
 from app.domain.astrology.condition.contracts import PlanetConditionProfile
 from app.domain.astrology.dominance.contracts import DominantPlanetsResult, PlanetDominanceResult
+from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
+    ChartInterpretationInputRuntimeData,
+    DominanceInterpretationRuntimeData,
+)
 from app.domain.astrology.interpretation_adapters import InterpretationAdapterEngine
 from tests.factories.astrology_runtime_reference_factory import complete_reference
 
@@ -60,17 +64,37 @@ def _dominant(planet_code: str) -> DominantPlanetsResult:
     )
 
 
+def _interpretation_input(planet_code: str) -> ChartInterpretationInputRuntimeData:
+    """Construit un input interpretatif minimal pour les tests d'adaptateur."""
+    return ChartInterpretationInputRuntimeData(
+        chart_id=None,
+        chart_type="natal",
+        locale=None,
+        objects=(),
+        aspects=(),
+        dignities=(),
+        house_positions=(),
+        rulerships=(),
+        dominance=(
+            DominanceInterpretationRuntimeData(
+                code=planet_code,
+                score=1.0,
+                source="natal_standard_v1",
+                rank=1,
+                dominance_level="dominant",
+            ),
+        ),
+        fixed_star_contacts=(),
+    )
+
+
 def test_interpretation_adapter_engine_returns_complete_result() -> None:
     """Le moteur assemble signaux, themes et listes de priorite."""
     result = InterpretationAdapterEngine().calculate(
         runtime_reference=complete_reference(),
-        planet_positions=(),
-        aspects=(),
-        dignities=(),
+        interpretation_input=_interpretation_input("mars"),
         condition_profiles=(_profile("mars", visibility=0.79, constraint=0.62),),
         condition_signals=(),
-        advanced_conditions=(),
-        dominant_planets=_dominant("mars"),
     )
 
     assert [signal.signal_code for signal in result.signals] == [

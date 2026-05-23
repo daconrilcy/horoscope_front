@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from app.domain.astrology.advanced_conditions import AdvancedPlanetaryCondition
 from app.domain.astrology.condition.contracts import (
     PlanetConditionProfile,
     PlanetConditionSignalSet,
 )
-from app.domain.astrology.dominance.contracts import DominantPlanetsResult
+from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
+    AdvancedConditionInterpretationRuntimeData,
+    ChartInterpretationInputRuntimeData,
+    DominanceInterpretationRuntimeData,
+)
 from app.domain.astrology.interpretation_adapters.contracts import InterpretationSignal
 from app.domain.astrology.interpretation_adapters.priority_ranker import PriorityRanker
 from app.domain.astrology.runtime.runtime_reference import (
@@ -29,15 +32,15 @@ class SignalBuilder:
         self,
         *,
         adapter_reference: InterpretationAdapterReferenceSet,
+        interpretation_input: ChartInterpretationInputRuntimeData,
         condition_profiles: Iterable[PlanetConditionProfile],
         condition_signals: Iterable[PlanetConditionSignalSet],
-        advanced_conditions: Iterable[AdvancedPlanetaryCondition],
-        dominant_planets: DominantPlanetsResult | None,
     ) -> tuple[InterpretationSignal, ...]:
         """Retourne les signaux applicables aux faits calcules."""
         profiles = tuple(condition_profiles)
         signal_sets = tuple(condition_signals)
-        advanced = tuple(advanced_conditions)
+        dominance = interpretation_input.dominance
+        advanced_facts = interpretation_input.advanced_condition_facts
         signals: list[InterpretationSignal] = []
         for rule in adapter_reference.adapter_rules:
             if not rule.is_active:
@@ -46,8 +49,8 @@ class SignalBuilder:
                 rule=rule,
                 condition_profiles=profiles,
                 condition_signals=signal_sets,
-                advanced_conditions=advanced,
-                dominant_planets=dominant_planets,
+                advanced_condition_facts=advanced_facts,
+                dominance=dominance,
             )
             if fact is None:
                 continue
@@ -77,39 +80,38 @@ class SignalBuilder:
         rule: InterpretationAdapterRuleReferenceData,
         condition_profiles: tuple[PlanetConditionProfile, ...],
         condition_signals: tuple[PlanetConditionSignalSet, ...],
-        advanced_conditions: tuple[AdvancedPlanetaryCondition, ...],
-        dominant_planets: DominantPlanetsResult | None,
+        advanced_condition_facts: tuple[AdvancedConditionInterpretationRuntimeData, ...],
+        dominance: tuple[DominanceInterpretationRuntimeData, ...],
     ) -> str | None:
         """Retourne le fait source retenu pour une règle applicable."""
         if rule.source_type == "dominant_planet":
-            return self._match_dominant_planet(rule, dominant_planets)
+            return self._match_dominant_planet(rule, dominance)
         if rule.source_type == "condition_axis":
             return self._match_condition_axis(rule, condition_profiles)
         if rule.source_type == "condition_signal":
             return self._match_condition_signal(rule, condition_signals)
         if rule.source_type == "advanced_condition":
-            return self._match_advanced_condition(rule, advanced_conditions)
+            return self._match_advanced_condition(rule, advanced_condition_facts)
         if rule.source_type == "compound":
-            return self._match_compound(rule, condition_profiles, dominant_planets)
+            return self._match_compound(rule, condition_profiles, dominance)
         return None
 
     def _match_dominant_planet(
         self,
         rule: InterpretationAdapterRuleReferenceData,
-        dominant_planets: DominantPlanetsResult | None,
+        dominance: tuple[DominanceInterpretationRuntimeData, ...],
     ) -> str | None:
         """Verifie une dominance planetaire calculee."""
-        if dominant_planets is None:
+        if not dominance:
             return None
         expected_level = self._condition(rule.conditions, "dominance_level")
-        for planet in dominant_planets.planets:
-            if planet.planet_code != rule.source_code:
+        for planet in dominance:
+            if planet.code != rule.source_code:
                 continue
             if expected_level is not None and planet.dominance_level != expected_level:
                 return None
             return (
-                f"dominant_planet:{planet.planet_code}:rank={planet.rank}:"
-                f"level={planet.dominance_level}"
+                f"dominant_planet:{planet.code}:rank={planet.rank}:level={planet.dominance_level}"
             )
         return None
 
@@ -150,10 +152,10 @@ class SignalBuilder:
     def _match_advanced_condition(
         self,
         rule: InterpretationAdapterRuleReferenceData,
-        advanced_conditions: tuple[AdvancedPlanetaryCondition, ...],
+        advanced_condition_facts: tuple[AdvancedConditionInterpretationRuntimeData, ...],
     ) -> str | None:
         """Verifie la presence d'une condition avancee deja produite."""
-        for condition in advanced_conditions:
+        for condition in advanced_condition_facts:
             if rule.source_code not in (condition.condition_code, condition.condition_type_code):
                 continue
             return (
@@ -166,7 +168,7 @@ class SignalBuilder:
         self,
         rule: InterpretationAdapterRuleReferenceData,
         condition_profiles: tuple[PlanetConditionProfile, ...],
-        dominant_planets: DominantPlanetsResult | None,
+        dominance: tuple[DominanceInterpretationRuntimeData, ...],
     ) -> str | None:
         """Verifie une combinaison de dominance et d'axe conditionnel."""
         planet_code, axis_code = self._compound_parts(rule.source_code)
@@ -185,7 +187,7 @@ class SignalBuilder:
             is_active=rule.is_active,
             reference_version_code=rule.reference_version_code,
         )
-        if self._match_dominant_planet(dominance_rule, dominant_planets) is None:
+        if self._match_dominant_planet(dominance_rule, dominance) is None:
             return None
         threshold = self._float_condition(rule.conditions, "min")
         for profile in condition_profiles:

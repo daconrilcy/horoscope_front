@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from app.domain.astrology.advanced_conditions import AdvancedPlanetaryCondition
 from app.domain.astrology.condition.contracts import (
     PlanetConditionProfile,
     PlanetConditionSignalSet,
 )
-from app.domain.astrology.dominance.contracts import DominantPlanetsResult
+from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
+    ChartInterpretationInputRuntimeData,
+)
 from app.domain.astrology.interpretation_adapters.contracts import InterpretationAdapterResult
 from app.domain.astrology.interpretation_adapters.priority_ranker import PriorityRanker
 from app.domain.astrology.interpretation_adapters.signal_builder import SignalBuilder
@@ -33,23 +34,15 @@ class InterpretationAdapterEngine:
         self,
         *,
         runtime_reference: AstrologyRuntimeReference,
-        planet_positions: Iterable[object],
-        aspects: Iterable[object],
-        dignities: Iterable[object],
+        interpretation_input: ChartInterpretationInputRuntimeData,
         condition_profiles: Iterable[PlanetConditionProfile],
         condition_signals: Iterable[PlanetConditionSignalSet],
-        advanced_conditions: Iterable[AdvancedPlanetaryCondition],
-        dominant_planets: DominantPlanetsResult | None,
     ) -> InterpretationAdapterResult:
         """Produit un resultat d'adaptation deterministe depuis le runtime."""
-        tuple(planet_positions)
-        tuple(aspects)
-        tuple(dignities)
         signals = self.signal_builder.build(
             adapter_reference=runtime_reference.interpretation_adapter_reference,
+            interpretation_input=interpretation_input,
             condition_profiles=condition_profiles,
             condition_signals=condition_signals,
-            advanced_conditions=advanced_conditions,
-            dominant_planets=dominant_planets,
         )
         return self.theme_aggregator.aggregate(signals)
