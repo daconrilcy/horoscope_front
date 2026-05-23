@@ -171,7 +171,7 @@ class AstrologyRuntimeReferenceMapper:
                         name=self._display_name(item),
                         angle=float(item["angle"]),
                         family=str(item.get("family", "major")),
-                        default_orb_deg=self._required_float(item, "default_orb_deg"),
+                        default_orb_deg=self._optional_float(item.get("default_orb_deg")),
                         is_enabled=bool(item.get("is_enabled", True)),
                         is_major=bool(item.get("is_major", True)),
                         is_minor=bool(item.get("is_minor", False)),

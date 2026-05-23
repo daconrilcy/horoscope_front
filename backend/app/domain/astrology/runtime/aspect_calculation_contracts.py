@@ -45,7 +45,7 @@ class AspectStructuralDefinitionRuntimeData:
     name: str
     angle: float
     family: str
-    default_orb_deg: float
+    default_orb_deg: float | None
     is_enabled: bool
     is_major: bool
     is_minor: bool

@@ -11,13 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.domain.astrology.natal_calculation import (
-    AspectResult,
-    HouseResult,
-    NatalResult,
-    PlanetPosition,
-)
-from app.domain.astrology.natal_preparation import BirthPreparedData
+from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.llm.runtime.contracts import (
     GatewayConfigError,
     GatewayMeta,
@@ -31,51 +25,12 @@ from app.services.user_profile.natal_chart_service import (
     UserNatalChartMetadata,
     UserNatalChartReadData,
 )
+from app.tests.helpers.natal_result_factory import make_natal_result
 
 
 def _make_natal_result() -> NatalResult:
     """Crée un NatalResult de test."""
-    return NatalResult(
-        reference_version="v1.0",
-        ruleset_version="r1.0",
-        house_system="placidus",
-        prepared_input=BirthPreparedData(
-            birth_datetime_local="1990-06-15T14:30:00+02:00",
-            birth_datetime_utc="1990-06-15T12:30:00+00:00",
-            timestamp_utc=645364200,
-            julian_day=2448073.02,
-            birth_timezone="Europe/Paris",
-        ),
-        planet_positions=[
-            PlanetPosition(planet_code="sun", longitude=84.5, sign_code="gemini", house_number=10),
-            PlanetPosition(
-                planet_code="moon", longitude=112.3, sign_code="cancer", house_number=11
-            ),
-        ],
-        houses=[
-            HouseResult(number=1, cusp_longitude=195.5),
-            HouseResult(number=10, cusp_longitude=105.3),
-            HouseResult(number=7, cusp_longitude=15.5),
-            HouseResult(number=4, cusp_longitude=285.2),
-        ],
-        aspects=[
-            AspectResult(
-                aspect_code="conjunction",
-                planet_a="sun",
-                planet_b="moon",
-                angle=0.0,
-                orb=2.0,
-                orb_used=2.0,
-                orb_max=8.0,
-                family="major",
-                is_major=True,
-                is_minor=False,
-                default_valence="contextual",
-                interpretive_valence="amplifying",
-                energy_type="fusion_intensification",
-            ),
-        ],
-    )
+    return make_natal_result()
 
 
 def _make_chart_read_data() -> UserNatalChartReadData:
