@@ -30,3 +30,4 @@
 | cs-249 | `_story_briefs\cs-249-chart-object-capability-taxonomy-matrix.md` | `_condamad\stories\cs-249-chart-object-capability-taxonomy-matrix\00-story.md` |
 | cs-250 | `_story_briefs\cs-250-astronomical-proof-before-public-temporal-runtime.md` | `_condamad\stories\cs-250-astronomical-proof-before-public-temporal-runtime\00-story.md` |
 | cs-251 | `_story_briefs\cs-251-official-product-primitives-public-projection-roadmap.md` | `_condamad\stories\cs-251-official-product-primitives-public-projection-roadmap\00-story.md` |
+| cs-252 | `_story_briefs\cs-252-astrology-doctrine-school-governance-model.md` | `_condamad\stories\cs-252-astrology-doctrine-school-governance-model\00-story.md` |
