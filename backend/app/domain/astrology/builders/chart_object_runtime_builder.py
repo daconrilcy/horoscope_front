@@ -26,6 +26,7 @@ from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectSourceType,
     ChartObjectType,
     ChartObjectVisibilityPayload,
+    FixedStarRuntimePayload,
     ZodiacPositionRuntimeData,
 )
 from app.domain.astrology.runtime.house_runtime_data import resolve_house_kind
@@ -64,6 +65,20 @@ class HouseChartObjectSource(Protocol):
     house_kind: str | None
 
 
+class FixedStarChartObjectSource(Protocol):
+    """Contrat minimal d'une etoile fixe documentaire runtime."""
+
+    code: str
+    display_name: str
+    longitude: float
+    reference_system: str
+    source_code: str
+    constellation_code: str | None
+    magnitude: float | None
+    reference_epoch: str | None
+    categories: tuple[str, ...]
+
+
 _LUMINARY_CODES = frozenset({"sun", "moon"})
 _ANGLE_HOUSES = (
     ("asc", "Ascendant", 1),
@@ -93,6 +108,7 @@ def build_chart_object_runtime_data(
     planet_positions: Sequence[PlanetChartObjectSource],
     astral_points: Sequence[AstralPointChartObjectSource],
     houses: Sequence[HouseChartObjectSource],
+    fixed_stars: Sequence[FixedStarChartObjectSource] = (),
     advanced_planetary_conditions: AdvancedPlanetaryConditionsResult | None = None,
     include_astral_points_in_aspects: bool = True,
     include_angles_in_aspects: bool = True,
@@ -113,6 +129,7 @@ def build_chart_object_runtime_data(
             include_angles_in_aspects=include_angles_in_aspects,
         ),
         *_build_house_cusp_objects(ordered_houses),
+        *_build_fixed_star_objects(fixed_stars),
     )
 
 
@@ -151,6 +168,7 @@ def _build_planet_objects(
                     supports_aspects=True,
                     supports_dignities=True,
                     supports_house_position=True,
+                    supports_fixed_star_conjunction=True,
                     supports_motion=motion_payload is not None,
                     supports_visibility=visibility_payload is not None,
                     supports_interpretation=True,
@@ -388,6 +406,48 @@ def _build_house_cusp_objects(
         )
         for house in houses
     )
+
+
+def _build_fixed_star_objects(
+    fixed_stars: Sequence[FixedStarChartObjectSource],
+) -> tuple[ChartObjectRuntimeData, ...]:
+    """Projette les etoiles fixes documentaires en objets runtime."""
+    objects: list[ChartObjectRuntimeData] = []
+    seen_codes: set[str] = set()
+    for star in sorted(fixed_stars, key=lambda item: item.code.strip().lower()):
+        code = _normalize_code(star.code)
+        if code in seen_codes:
+            raise ValueError(f"duplicate fixed star chart object code: {code}")
+        seen_codes.add(code)
+        objects.append(
+            ChartObjectRuntimeData(
+                code=code,
+                object_type=ChartObjectType.FIXED_STAR,
+                display_name=star.display_name,
+                longitude=star.longitude,
+                latitude=None,
+                zodiac_position=None,
+                source=ChartObjectSourceRuntimeData(
+                    source_type=ChartObjectSourceType.CATALOG,
+                    source_key=star.source_code,
+                ),
+                capabilities=ChartObjectCapabilities(),
+                classifications=("fixed_star",),
+                payloads=ChartObjectPayloads(
+                    fixed_star=FixedStarRuntimePayload(
+                        catalog_code=code,
+                        display_name=star.display_name,
+                        reference_system=star.reference_system,
+                        source_code=star.source_code,
+                        constellation_code=star.constellation_code,
+                        magnitude=star.magnitude,
+                        reference_epoch=star.reference_epoch,
+                        categories=tuple(star.categories),
+                    ),
+                ),
+            )
+        )
+    return tuple(objects)
 
 
 def _house_zodiac_position(house: HouseChartObjectSource) -> ZodiacPositionRuntimeData | None:

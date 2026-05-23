@@ -767,6 +767,39 @@ class AstralPointReferenceSet:
 
 
 @dataclass(frozen=True, slots=True)
+class FixedStarReferenceData:
+    """Definition documentaire d'une etoile fixe disponible au runtime."""
+
+    code: str
+    display_name: str
+    longitude: float
+    reference_system: str
+    source_code: str
+    constellation_code: str | None = None
+    magnitude: float | None = None
+    reference_epoch: str | None = None
+    categories: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Valide les champs minimaux consommes par le runtime natal."""
+        for field_name in ("code", "display_name", "reference_system", "source_code"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"fixed star reference requires {field_name}")
+
+
+@dataclass(frozen=True, slots=True)
+class FixedStarReferenceSet:
+    """Collection immutable des etoiles fixes disponibles au runtime."""
+
+    items: tuple[FixedStarReferenceData, ...] = ()
+
+    @property
+    def codes(self) -> tuple[str, ...]:
+        """Retourne les codes d'etoiles fixes dans l'ordre runtime."""
+        return tuple(item.code for item in self.items)
+
+
+@dataclass(frozen=True, slots=True)
 class HouseSystemReferenceData:
     """Systeme de maisons disponible pour le calcul."""
 
@@ -823,5 +856,6 @@ class AstrologyRuntimeReference:
     interpretation_adapter_reference: InterpretationAdapterReferenceSet
     angle_points: AnglePointReferenceSet
     astral_points: AstralPointReferenceSet
+    fixed_stars: FixedStarReferenceSet
     house_systems: HouseSystemReferenceSet
     systems: AstrologySystemReferenceSet

@@ -10,6 +10,10 @@ NEW_MODULES = (
     REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py",
     REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py",
     REPO_ROOT / "app/domain/astrology/builders/chart_object_house_runtime_enricher.py",
+    REPO_ROOT / "app/domain/astrology/fixed_stars/contracts.py",
+    REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_conjunction_calculator.py",
+    REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_selectors.py",
+    REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_enricher.py",
     REPO_ROOT / "app/domain/astrology/dignities/chart_object_inputs.py",
     REPO_ROOT / "app/domain/astrology/dominance/chart_object_inputs.py",
 )
@@ -20,6 +24,7 @@ CHART_OBJECT_HOUSE_ENRICHER = (
 CHART_OBJECT_RUNTIME = REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py"
 CALCULATOR_ROOTS = (
     REPO_ROOT / "app/domain/astrology/calculators",
+    REPO_ROOT / "app/domain/astrology/fixed_stars",
     REPO_ROOT / "app/domain/astrology/dignities",
     REPO_ROOT / "app/domain/astrology/dominance",
     REPO_ROOT / "app/domain/astrology/advanced_conditions",
@@ -76,6 +81,15 @@ FORBIDDEN_RULERSHIP_BUILDERS = (
 FORBIDDEN_RULERSHIP_TABLE_NAMES = (
     "SIGN_RULERS",
     "TRADITIONAL_SIGN_RULERS",
+)
+FIXED_STAR_MODULES = (
+    REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_conjunction_calculator.py",
+    REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_selectors.py",
+    REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_enricher.py",
+)
+FORBIDDEN_FIXED_STAR_BUILDERS = (
+    "FixedStar" + "ConjunctionBuilder",
+    "PlanetFixedStar" + "ConjunctionBuilder",
 )
 
 
@@ -185,6 +199,30 @@ def test_house_rulership_enricher_does_not_branch_on_object_type() -> None:
     tree = ast.parse(CHART_OBJECT_HOUSE_ENRICHER.read_text(encoding="utf-8"))
 
     assert not any(_branches_on_object_type(node) for node in ast.walk(tree))
+
+
+def test_fixed_star_runtime_consumers_do_not_branch_on_object_type() -> None:
+    """Les consommateurs fixed star utilisent payloads et capacites."""
+    offenders: list[str] = []
+    for module_path in FIXED_STAR_MODULES:
+        tree = ast.parse(module_path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if _branches_on_object_type(node):
+                offenders.append(f"{module_path}:{getattr(node, 'lineno', '?')}")
+
+    assert offenders == []
+
+
+def test_fixed_star_runtime_does_not_reintroduce_parallel_builders() -> None:
+    """Le flux fixed star ne cree pas de moteur parallele actif."""
+    offenders: list[str] = []
+    for module_path in FIXED_STAR_MODULES:
+        source = module_path.read_text(encoding="utf-8")
+        for builder_name in FORBIDDEN_FIXED_STAR_BUILDERS:
+            if builder_name in source:
+                offenders.append(f"{module_path}:{builder_name}")
+
+    assert offenders == []
 
 
 def _branches_on_object_type(node: ast.AST) -> bool:

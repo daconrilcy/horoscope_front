@@ -40,6 +40,8 @@ from app.domain.astrology.runtime.runtime_reference import (
     DominanceScoreWeightReferenceData,
     EssentialDignityRuleReferenceData,
     FaceDecanReferenceData,
+    FixedStarReferenceData,
+    FixedStarReferenceSet,
     HouseAxisReferenceData,
     HouseReferenceData,
     HouseReferenceSet,
@@ -385,6 +387,7 @@ class AstrologyRuntimeReferenceMapper:
                 )
             ),
             astral_points=self.map_astral_points(astral_points),
+            fixed_stars=self.map_fixed_stars(self._items(payload, "fixed_stars")),
             house_systems=HouseSystemReferenceSet(
                 tuple(
                     HouseSystemReferenceData(
@@ -535,6 +538,32 @@ class AstrologyRuntimeReferenceMapper:
                 )
             )
         return AstralPointReferenceSet(tuple(items))
+
+    def map_fixed_stars(
+        self,
+        rows: Sequence[Mapping[str, object]],
+    ) -> FixedStarReferenceSet:
+        """Convertit les etoiles fixes en contrats runtime typés."""
+        return FixedStarReferenceSet(
+            tuple(
+                FixedStarReferenceData(
+                    code=str(item["code"]),
+                    display_name=self._display_name(item),
+                    longitude=float(item["longitude"]),
+                    reference_system=str(item.get("reference_system", "catalog")),
+                    source_code=str(item.get("source_code", "runtime_reference")),
+                    constellation_code=self._optional_str(item.get("constellation_code")),
+                    magnitude=self._optional_float(item.get("magnitude")),
+                    reference_epoch=self._optional_str(item.get("reference_epoch")),
+                    categories=tuple(
+                        str(category)
+                        for category in item.get("categories", ())
+                        if str(category).strip()
+                    ),
+                )
+                for item in rows
+            )
+        )
 
     def _items(self, payload: Mapping[str, object], key: str) -> tuple[Mapping[str, object], ...]:
         """Extrait une liste de mappings du payload infra."""

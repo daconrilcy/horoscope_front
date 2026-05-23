@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.domain.astrology.dignities.contracts import ChartSectResult
 from app.domain.astrology.interpretation_adapters.contracts import InterpretationAdapterResult
 from app.domain.astrology.natal_calculation import NatalResult
+from app.main import app
 
 
 def test_natal_result_exposes_interpretation_adapter_after_dominance() -> None:
@@ -19,3 +20,12 @@ def test_natal_result_exposes_interpretation_adapter_after_dominance() -> None:
         InterpretationAdapterResult | None
     )
     assert NatalResult.model_fields["dignity_sect"].annotation == (ChartSectResult | None)
+
+
+def test_public_schema_excludes_fixed_star_runtime_payloads() -> None:
+    """Les nouveaux payloads chart-object restent hors schema public."""
+    schemas = app.openapi().get("components", {}).get("schemas", {})
+    serialized_schemas = str(schemas)
+
+    assert "FixedStarRuntimePayload" not in serialized_schemas
+    assert "FixedStarConjunctionRuntimePayload" not in serialized_schemas

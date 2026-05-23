@@ -32,6 +32,7 @@ from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectType,
 )
 from app.domain.astrology.runtime.house_runtime_data import HouseRuntimeData
+from app.domain.astrology.runtime.runtime_reference import FixedStarReferenceData
 
 
 def _planet_positions() -> tuple[PlanetPosition, ...]:
@@ -200,6 +201,7 @@ def test_contract_declares_required_enums_and_fields() -> None:
         "dominance",
         "planetary_conditions",
         "fixed_star",
+        "fixed_star_conjunctions",
         "house_position",
         "rulership",
         "house_cusp",
@@ -279,6 +281,56 @@ def test_builder_maps_advanced_motion_and_visibility_payloads() -> None:
     assert by_code["north_node"].payloads.motion is None
     assert by_code["asc"].capabilities.supports_visibility is False
     assert by_code["asc"].payloads.visibility is None
+
+
+def test_builder_projects_fixed_star_chart_objects() -> None:
+    """La projection rattache les etoiles fixes au runtime chart-object."""
+    objects = build_chart_object_runtime_data(
+        planet_positions=_planet_positions(),
+        astral_points=_astral_points(),
+        houses=_houses(),
+        fixed_stars=(
+            FixedStarReferenceData(
+                code="regulus",
+                display_name="Regulus",
+                longitude=150.0,
+                reference_system="tropical_catalog",
+                source_code="runtime_reference",
+                constellation_code="leo",
+                magnitude=1.35,
+                reference_epoch="J2000",
+                categories=("royal",),
+            ),
+        ),
+    )
+    by_code = {item.code: item for item in objects}
+
+    assert by_code["regulus"].object_type == ChartObjectType.FIXED_STAR
+    assert by_code["regulus"].source.source_type == ChartObjectSourceType.CATALOG
+    assert by_code["regulus"].payloads.fixed_star is not None
+    assert by_code["regulus"].payloads.fixed_star.catalog_code == "regulus"
+
+
+def test_builder_fixed_star_capabilities_are_documentary_only() -> None:
+    """Les etoiles fixes ne sont pas cibles des conjonctions CS-222."""
+    objects = build_chart_object_runtime_data(
+        planet_positions=_planet_positions(),
+        astral_points=_astral_points(),
+        houses=_houses(),
+        fixed_stars=(
+            FixedStarReferenceData(
+                code="regulus",
+                display_name="Regulus",
+                longitude=150.0,
+                reference_system="tropical_catalog",
+                source_code="runtime_reference",
+            ),
+        ),
+    )
+    star = {item.code: item for item in objects}["regulus"]
+
+    assert star.capabilities == ChartObjectCapabilities()
+    assert star.payloads.fixed_star_conjunctions == ()
 
 
 def test_declared_payload_capability_requires_payload() -> None:

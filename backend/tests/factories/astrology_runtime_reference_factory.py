@@ -1351,6 +1351,19 @@ def complete_reference() -> AstrologyRuntimeReference:
                     "is_enabled": True,
                 }
             ],
+            "fixed_stars": [
+                {
+                    "code": "regulus",
+                    "display_name": "Regulus",
+                    "longitude": 150.0,
+                    "reference_system": "tropical_catalog",
+                    "source_code": "runtime_reference",
+                    "constellation_code": "leo",
+                    "magnitude": 1.35,
+                    "reference_epoch": "J2000",
+                    "categories": ["royal"],
+                }
+            ],
         }
     )
 
@@ -1407,6 +1420,7 @@ def missing_planet_definition() -> AstrologyRuntimeReference:
         interpretation_adapter_reference=reference.interpretation_adapter_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
+        fixed_stars=reference.fixed_stars,
         house_systems=reference.house_systems,
         systems=reference.systems,
     )
@@ -1433,6 +1447,7 @@ def missing_dignity() -> AstrologyRuntimeReference:
         interpretation_adapter_reference=reference.interpretation_adapter_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
+        fixed_stars=reference.fixed_stars,
         house_systems=reference.house_systems,
         systems=reference.systems,
     )
@@ -1473,6 +1488,7 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         interpretation_adapter_reference=reference.interpretation_adapter_reference,
         angle_points=reference.angle_points,
         astral_points=reference.astral_points,
+        fixed_stars=reference.fixed_stars,
         house_systems=reference.house_systems,
         systems=reference.systems,
     )

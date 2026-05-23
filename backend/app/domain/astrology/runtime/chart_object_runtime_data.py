@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from math import isfinite
 
 from app.domain.astrology.planetary_conditions.contracts import (
     ConditionConfidence,
@@ -218,10 +219,68 @@ class ChartObjectPlanetaryConditionsPayload:
 
 
 @dataclass(frozen=True, slots=True)
-class ChartObjectFixedStarPayload:
-    """Emplacement reserve aux donnees d'etoile fixe."""
+class FixedStarRuntimePayload:
+    """Donnees documentaires minimales d'une etoile fixe runtime."""
 
     catalog_code: str
+    display_name: str
+    reference_system: str
+    source_code: str
+    constellation_code: str | None = None
+    magnitude: float | None = None
+    reference_epoch: str | None = None
+    categories: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Valide les champs stables d'une etoile fixe sans texte libre."""
+        for field_name in ("catalog_code", "display_name", "reference_system", "source_code"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"fixed star payload requires {field_name}")
+        if self.magnitude is not None and not isfinite(self.magnitude):
+            raise ValueError("fixed star payload magnitude must be finite")
+        if any(not category.strip() for category in self.categories):
+            raise ValueError("fixed star payload rejects empty categories")
+
+
+@dataclass(frozen=True, slots=True)
+class FixedStarConjunctionRuntimePayload:
+    """Contact calculatoire entre une etoile fixe et un objet cible."""
+
+    fixed_star_code: str
+    fixed_star_display_name: str
+    target_code: str
+    target_display_name: str
+    fixed_star_longitude_deg: float
+    target_longitude_deg: float
+    orb_deg: float
+    max_orb_deg: float
+    rule_code: str
+    source: str
+
+    def __post_init__(self) -> None:
+        """Valide la provenance et les valeurs numeriques du contact."""
+        for field_name in (
+            "fixed_star_code",
+            "fixed_star_display_name",
+            "target_code",
+            "target_display_name",
+            "rule_code",
+            "source",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"fixed star conjunction payload requires {field_name}")
+        for field_name in (
+            "fixed_star_longitude_deg",
+            "target_longitude_deg",
+            "orb_deg",
+            "max_orb_deg",
+        ):
+            if not isfinite(float(getattr(self, field_name))):
+                raise ValueError(f"fixed star conjunction payload requires finite {field_name}")
+        if self.orb_deg < 0.0:
+            raise ValueError("fixed star conjunction payload orb must be positive")
+        if self.max_orb_deg < 0.0:
+            raise ValueError("fixed star conjunction payload max orb must be positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -316,7 +375,8 @@ class ChartObjectPayloads:
     dignity: DignityRuntimePayload | None = None
     dominance: DominanceRuntimePayload | None = None
     planetary_conditions: ChartObjectPlanetaryConditionsPayload | None = None
-    fixed_star: ChartObjectFixedStarPayload | None = None
+    fixed_star: FixedStarRuntimePayload | None = None
+    fixed_star_conjunctions: tuple[FixedStarConjunctionRuntimePayload, ...] = ()
     house_position: ChartObjectHousePositionPayload | None = None
     rulership: RulershipRuntimePayload | None = None
     house_cusp: ChartObjectHouseCuspPayload | None = None
@@ -356,7 +416,6 @@ def _validate_required_payloads(
         (capabilities.supports_motion, payloads.motion, "motion"),
         (capabilities.supports_visibility, payloads.visibility, "visibility"),
         (capabilities.supports_house_position, payloads.house_position, "house_position"),
-        (capabilities.supports_fixed_star_conjunction, payloads.fixed_star, "fixed_star"),
     )
     for is_required, payload, payload_name in required_payloads:
         if is_required and payload is None:
@@ -366,6 +425,7 @@ def _validate_required_payloads(
     validate_dignity_payload_compatibility(capabilities, payloads)
     validate_dominance_payload_compatibility(capabilities, payloads)
     validate_rulership_payload_compatibility(capabilities, payloads)
+    validate_fixed_star_conjunction_payload_compatibility(capabilities, payloads)
 
 
 def validate_dignity_payload_compatibility(
@@ -393,6 +453,15 @@ def validate_rulership_payload_compatibility(
     """Refuse un payload rulership rattache a un objet non eligible."""
     if not capabilities.supports_rulership and payloads.rulership is not None:
         raise ValueError("chart object payload requires rulership capability")
+
+
+def validate_fixed_star_conjunction_payload_compatibility(
+    capabilities: ChartObjectCapabilities,
+    payloads: ChartObjectPayloads,
+) -> None:
+    """Refuse les contacts fixed star sur un objet non eligible."""
+    if not capabilities.supports_fixed_star_conjunction and payloads.fixed_star_conjunctions:
+        raise ValueError("chart object payload requires fixed star conjunction capability")
 
 
 def validate_dignity_payloads(objects: tuple[ChartObjectRuntimeData, ...]) -> None:
