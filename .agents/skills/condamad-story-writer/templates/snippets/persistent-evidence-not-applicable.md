@@ -1,2 +1,0 @@
-- Persistent evidence artifacts: not applicable
-- Reason: no audit, snapshot, baseline, diff, mapping, allowlist, or exception register is required.

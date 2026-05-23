@@ -1,7 +1,0 @@
-interface:
-  display_name: "CONDAMAD Feedback Loop"
-  short_description: "Propagate reusable CONDAMAD learning."
-  default_prompt: "Use $condamad-feedback-loop after a correction, failed validation, review finding, regression, or repeated execution mistake to classify feedback, apply the smallest validated fix, and propagate accepted learning."
-
-policy:
-  allow_implicit_invocation: false

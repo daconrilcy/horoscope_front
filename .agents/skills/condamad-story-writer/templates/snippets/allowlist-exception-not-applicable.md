@@ -1,2 +1,0 @@
-- Allowlist / exception register: not applicable
-- Reason: no exception is allowed by this story.

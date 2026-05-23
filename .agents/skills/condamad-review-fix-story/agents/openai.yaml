@@ -1,4 +1,0 @@
-interface:
-  display_name: "CONDAMAD Review Fix Story"
-  short_description: "Review, fix, repeat until story is clean"
-  default_prompt: "Use $condamad-review-fix-story to review and fix this CONDAMAD story until no issues remain: story path"

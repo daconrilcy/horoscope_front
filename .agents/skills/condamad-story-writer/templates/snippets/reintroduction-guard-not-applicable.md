@@ -1,2 +1,0 @@
-- Reintroduction guard: not applicable
-- Reason: no removed, forbidden, or converged-away legacy surface can be reintroduced by this story.

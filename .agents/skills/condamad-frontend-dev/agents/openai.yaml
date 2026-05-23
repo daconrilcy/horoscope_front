@@ -1,8 +1,0 @@
-interface:
-  display_name: "CONDAMAD Frontend Dev"
-  short_description: "React frontend development with CONDAMAD discipline"
-  brand_color: "#0F766E"
-  default_prompt: "$condamad-frontend-dev Implement the requested frontend change end-to-end with Vite, React, strict TypeScript, Tailwind, shadcn/ui, TanStack Query, tests, and validation evidence."
-
-policy:
-  allow_implicit_invocation: true
