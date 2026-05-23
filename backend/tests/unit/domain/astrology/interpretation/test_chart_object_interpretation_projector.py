@@ -8,7 +8,7 @@ from app.domain.astrology.interpretation.chart_object_interpretation_projector i
     ChartObjectInterpretationProjector,
 )
 from app.domain.astrology.runtime.chart_object_runtime_data import ZodiacPositionRuntimeData
-from tests.unit.domain.astrology.interpretation.test_support import interpretable_chart_object
+from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 
 def test_projector_requires_zodiac_position() -> None:

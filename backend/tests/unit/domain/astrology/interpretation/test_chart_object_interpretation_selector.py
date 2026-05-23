@@ -7,7 +7,7 @@ import pytest
 from app.domain.astrology.interpretation.chart_object_interpretation_selector import (
     ChartObjectInterpretationSelector,
 )
-from tests.unit.domain.astrology.interpretation.test_support import interpretable_chart_object
+from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 
 def test_selector_excludes_non_interpretable_objects() -> None:

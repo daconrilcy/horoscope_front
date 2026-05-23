@@ -12,7 +12,7 @@ from app.domain.astrology.dominance.contracts import DominantPlanetsResult, Plan
 from app.domain.astrology.interpretation.chart_interpretation_input_builder import (
     ChartInterpretationInputBuilder,
 )
-from tests.unit.domain.astrology.interpretation.test_support import interpretable_chart_object
+from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 
 @dataclass(frozen=True, slots=True)
