@@ -8,8 +8,8 @@ from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatal
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectBodyRuntimeData,
     AspectCalculationResult,
-    AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
 )
 
 
@@ -152,8 +152,8 @@ def _system_chain(
 def _definition_for_system(
     aspect_code: str,
     system_code: str,
-    aspect_definitions: list[AspectDefinitionRuntimeData],
-) -> AspectDefinitionRuntimeData | None:
+    aspect_definitions: list[AspectStructuralDefinitionRuntimeData],
+) -> AspectStructuralDefinitionRuntimeData | None:
     """Retourne la définition active correspondant au système demandé."""
     normalized_aspect_code = aspect_code.strip().lower()
     normalized_system_code = system_code.strip().lower()
@@ -174,7 +174,7 @@ def resolve_orb(
     context: str,
     source_body: AspectBodyRuntimeData,
     target_body: AspectBodyRuntimeData,
-    aspect_definitions: list[AspectDefinitionRuntimeData],
+    aspect_definitions: list[AspectStructuralDefinitionRuntimeData],
     orb_rules: list[AspectOrbRuleRuntimeData],
     system_inheritance: dict[str, str | None],
 ) -> float | None:
@@ -212,7 +212,7 @@ def resolve_orb(
 
 
 def _calculation_result(
-    definition: AspectDefinitionRuntimeData,
+    definition: AspectStructuralDefinitionRuntimeData,
     left: AspectBodyRuntimeData,
     right: AspectBodyRuntimeData,
     orb: float,
@@ -240,15 +240,12 @@ def _calculation_result(
         family=definition.family,
         is_major=definition.is_major,
         is_minor=definition.is_minor,
-        default_valence=definition.default_valence,
-        interpretive_valence=definition.interpretive_valence,
-        energy_type=definition.energy_type,
     )
 
 
 def calculate_major_aspects(
     positions: list[AspectBodyRuntimeData],
-    aspect_definitions: list[AspectDefinitionRuntimeData],
+    aspect_definitions: list[AspectStructuralDefinitionRuntimeData],
     orb_rules: list[AspectOrbRuleRuntimeData],
     system_inheritance: dict[str, str | None],
     system_code: str = "modern",
@@ -294,7 +291,7 @@ def calculate_major_aspects(
 def calculate_interchart_aspects(
     source_positions: list[AspectBodyRuntimeData],
     target_positions: list[AspectBodyRuntimeData],
-    aspect_definitions: list[AspectDefinitionRuntimeData],
+    aspect_definitions: list[AspectStructuralDefinitionRuntimeData],
     orb_rules: list[AspectOrbRuleRuntimeData],
     system_inheritance: dict[str, str | None],
     system_code: str = "modern",

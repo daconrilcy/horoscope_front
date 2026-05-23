@@ -9,18 +9,29 @@ from app.domain.astrology.natal_calculation import (
     PlanetPosition,
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
+from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
+
+
+def _aspect_hints(
+    aspect_code: str,
+    *,
+    default_valence: str = "contextual",
+    interpretive_valence: str = "amplifying",
+    energy_type: str = "fusion_intensification",
+) -> AspectInterpretiveHintsRuntimeData:
+    """Construit les hints interpretatifs explicites requis par la projection publique."""
+    return AspectInterpretiveHintsRuntimeData(
+        aspect_code=aspect_code,
+        default_valence=default_valence,
+        interpretive_valence=interpretive_valence,
+        energy_type=energy_type,
+        source_codes=(f"aspect:{aspect_code}", f"aspect_profile:{aspect_code}"),
+    )
 
 
 def make_natal_result() -> NatalResult:
     """Crée un résultat natal stable pour les tests de services."""
-    aspect_meta = {
-        "family": "major",
-        "is_major": True,
-        "is_minor": False,
-        "default_valence": "contextual",
-        "interpretive_valence": "amplifying",
-        "energy_type": "fusion_intensification",
-    }
+    aspect_meta = {"family": "major", "is_major": True, "is_minor": False}
     return NatalResult(
         reference_version="v1.0",
         ruleset_version="r1.0",
@@ -58,6 +69,7 @@ def make_natal_result() -> NatalResult:
                 orb=7.6,
                 orb_used=7.6,
                 orb_max=8.0,
+                aspect_interpretive_hints=_aspect_hints("conjunction"),
                 **aspect_meta,
             ),
             AspectResult(
@@ -68,7 +80,11 @@ def make_natal_result() -> NatalResult:
                 orb=4.0,
                 orb_used=4.0,
                 orb_max=6.0,
-                **{**aspect_meta, "interpretive_valence": "dynamic_challenging"},
+                aspect_interpretive_hints=_aspect_hints(
+                    "square",
+                    interpretive_valence="dynamic_challenging",
+                ),
+                **aspect_meta,
             ),
             AspectResult(
                 aspect_code="trine",
@@ -78,11 +94,12 @@ def make_natal_result() -> NatalResult:
                 orb=0.5,
                 orb_used=0.5,
                 orb_max=6.0,
-                **{
-                    **aspect_meta,
-                    "default_valence": "positive",
-                    "interpretive_valence": "harmonious",
-                },
+                aspect_interpretive_hints=_aspect_hints(
+                    "trine",
+                    default_valence="positive",
+                    interpretive_valence="harmonious",
+                ),
+                **aspect_meta,
             ),
             AspectResult(
                 aspect_code="opposition",
@@ -92,7 +109,11 @@ def make_natal_result() -> NatalResult:
                 orb=2.7,
                 orb_used=2.7,
                 orb_max=8.0,
-                **{**aspect_meta, "interpretive_valence": "polarizing"},
+                aspect_interpretive_hints=_aspect_hints(
+                    "opposition",
+                    interpretive_valence="polarizing",
+                ),
+                **aspect_meta,
             ),
             AspectResult(
                 aspect_code="sextile",
@@ -102,11 +123,12 @@ def make_natal_result() -> NatalResult:
                 orb=1.3,
                 orb_used=1.3,
                 orb_max=4.0,
-                **{
-                    **aspect_meta,
-                    "default_valence": "positive",
-                    "interpretive_valence": "supportive",
-                },
+                aspect_interpretive_hints=_aspect_hints(
+                    "sextile",
+                    default_valence="positive",
+                    interpretive_valence="supportive",
+                ),
+                **aspect_meta,
             ),
         ],
     )

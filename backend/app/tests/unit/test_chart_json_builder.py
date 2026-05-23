@@ -44,6 +44,7 @@ from app.domain.astrology.interpretation_adapters.contracts import (
     InterpretationThemeActivation,
 )
 from app.domain.astrology.natal_calculation import AspectResult, NatalAstralPointPosition
+from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
 from app.domain.astrology.runtime.house_runtime_data import (
     HouseAxisRuntimeData,
     HouseOccupantRuntimeData,
@@ -198,9 +199,13 @@ def mock_natal_result():
         family="major",
         is_major=True,
         is_minor=False,
-        default_valence="positive",
-        interpretive_valence="harmonious",
-        energy_type="harmonious_flow",
+        aspect_interpretive_hints=AspectInterpretiveHintsRuntimeData(
+            aspect_code="trine",
+            default_valence="positive",
+            interpretive_valence="harmonious",
+            energy_type="harmonious_flow",
+            source_codes=("aspect:trine", "aspect_profile:trine"),
+        ),
     )
 
     result.aspects = [a1]
@@ -1289,6 +1294,17 @@ def test_build_chart_json_uses_resolved_sign_labels(mock_natal_result, mock_birt
     assert chart["house_rulers"][0]["ruler_planet_sign_label"] == "Aries"
     assert chart["angles"]["ASC"]["sign"] == "capricorn"
     assert chart["angles"]["ASC"]["sign_label"] == "Capricorn"
+
+
+def test_build_chart_json_requires_aspect_interpretive_hints(
+    mock_natal_result,
+    mock_birth_profile,
+):
+    """La projection publique refuse un aspect publie sans hints interpretatifs."""
+    mock_natal_result.aspects[0].aspect_interpretive_hints = None
+
+    with pytest.raises(ValueError, match="aspect_interpretive_hints"):
+        build_chart_json(mock_natal_result, mock_birth_profile)
 
 
 def test_evidence_catalog_uses_chart_sign_labels() -> None:

@@ -8,25 +8,26 @@ from app.domain.astrology.calculators.aspects import (
 )
 from app.domain.astrology.natal_calculation import AspectResult
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
-    AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
 )
 from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
-def _definition(code: str = "square", angle: float = 90.0) -> AspectDefinitionRuntimeData:
+def _definition(
+    code: str = "square",
+    angle: float = 90.0,
+) -> AspectStructuralDefinitionRuntimeData:
     """Construit une définition d'aspect majeure typée."""
-    return AspectDefinitionRuntimeData(
+    return AspectStructuralDefinitionRuntimeData(
         code=code,
+        name=code.title(),
         angle=angle,
         family="major",
         default_orb_deg=6.0,
         is_enabled=True,
         is_major=True,
         is_minor=False,
-        default_valence="negative",
-        interpretive_valence="dynamic_challenging",
-        energy_type="friction_activation",
     )
 
 
@@ -76,27 +77,23 @@ def test_calculate_major_aspects_uses_typed_orb_rules() -> None:
             "family": "major",
             "is_major": True,
             "is_minor": False,
-            "default_valence": "negative",
-            "interpretive_valence": "dynamic_challenging",
-            "energy_type": "friction_activation",
         }
     ]
 
 
 def test_calculate_major_aspects_rejects_legacy_definition_fields() -> None:
     """Les anciens champs d'orbes ne sont plus acceptés à la frontière."""
-    with pytest.raises(ValueError, match="legacy aspect orb fields"):
-        AspectDefinitionRuntimeData.from_mapping(
-            {
-                "code": "square",
-                "angle": 90.0,
-                "family": "major",
-                "default_orb_deg": 6.0,
-                "default_valence": "negative",
-                "interpretive_valence": "dynamic_challenging",
-                "energy_type": "friction_activation",
-                "orb_luminaries": 8.0,
-            }
+    with pytest.raises(TypeError):
+        AspectStructuralDefinitionRuntimeData(
+            code="square",
+            name="Square",
+            angle=90.0,
+            family="major",
+            default_orb_deg=6.0,
+            is_enabled=True,
+            is_major=True,
+            is_minor=False,
+            orb_luminaries=8.0,
         )
 
 
@@ -122,9 +119,6 @@ def test_aspect_result_requires_resolved_orb_and_reference_metadata() -> None:
         family="major",
         is_major=True,
         is_minor=False,
-        default_valence="negative",
-        interpretive_valence="dynamic_challenging",
-        energy_type="friction_activation",
     )
     payload = aspect.model_dump()
     assert payload["orb_used"] == 3.5

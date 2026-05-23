@@ -87,6 +87,7 @@ def _project_aspects(aspects: tuple[Any, ...]) -> tuple[AspectInterpretationRunt
     for aspect_result in aspects:
         runtime = getattr(aspect_result, "aspect_runtime", None)
         if runtime is not None:
+            hints = getattr(aspect_result, "aspect_interpretive_hints", None)
             projected.append(
                 AspectInterpretationRuntimeData(
                     code=runtime.aspect.code,
@@ -100,7 +101,7 @@ def _project_aspects(aspects: tuple[Any, ...]) -> tuple[AspectInterpretationRunt
                     orb_max=runtime.orb.max,
                     strength_level=runtime.orb.strength_level,
                     is_major=runtime.metadata.is_major,
-                    source="aspect_runtime",
+                    source="aspect_interpretive_hints" if hints is not None else "aspect_runtime",
                 )
             )
             continue

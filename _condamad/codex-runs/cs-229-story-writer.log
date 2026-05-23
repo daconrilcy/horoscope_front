@@ -1,0 +1,2679 @@
+OpenAI Codex v0.128.0 (research preview)
+--------
+workdir: C:\dev\horoscope_front
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 019e540b-aecd-7883-9200-46464496e6cc
+--------
+user
+En utilisant le skill [$condamad-story-writer](C:\dev\horoscope_front\.agents\skills\condamad-story-writer\SKILL.md), redige la story a partir du brief C:\dev\horoscope_front\_story_briefs\cs-229-aspect-runtime-structural-interpretive-contracts.md.
+
+Contraintes d'execution pour cette session non interactive:
+- Lis d'abord le cheatsheet court: C:\dev\horoscope_front\.agents\skills\condamad-story-writer\references\writer-contract-cheatsheet.md.
+- Active le Fast Story Writer Mode du skill.
+- Applique le cheatsheet comme source prioritaire pour eviter les lectures larges et les boucles de validation.
+- Ne lis les references larges que si le cheatsheet ne suffit pas, si la story est une suppression, ou si une validation demande un contrat manquant precis.
+- Pour une story API simple, utilise les Compact API Contract Blocks du cheatsheet au lieu d'ouvrir tous les contrats transverses.
+- Pour une story API simple, n'ouvre pas `templates/story-template.md`; le cheatsheet suffit et le template complet coute trop cher.
+- Pour `GET /health`, utilise le squelette exact du cheatsheet: tous les headings obligatoires, Operation Contract exact, Required Contracts table complete, Reintroduction Guard, Persistent Evidence Artifacts, Batch Migration Plan, et taches au format `(AC: AC1)`.
+- Ne lis pas les sources `condamad_story_validate.py` ou `condamad_story_lint.py` avant la premiere validation; utilise le cheatsheet et les diagnostics imprimes.
+- La story doit commencer par le titre puis une ligne exacte `Status: ready-to-dev` avant toute autre section.
+- La section `Dependency Policy` doit contenir `New dependencies: none.` et une ligne `Justification: no dependency changes are authorized.`
+- Ecris directement les fichiers attendus dans `_condamad/stories`.
+- Mets a jour `_condamad/stories/story-status.md`.
+- N'enrichis pas `_condamad/stories/regression-guardrails.md` pendant une generation normale; si un invariant manque, note `Registry gap` dans la story.
+- Traite `regression-guardrails.md` comme un catalogue global: construis un scope vector et ne selectionne que les guardrails locales.
+- Utilise `python -B .agents\skills\condamad-story-writer\scripts\resolve_guardrails.py` si disponible; ne recopie jamais le registre complet.
+- Ne liste pas les guardrails frontend, DB, auth, i18n, style, build ou migration hors scope; cite au maximum 3 exemples non applicables utiles.
+- Ne recopie jamais dans ta reponse le contenu complet des gros fichiers lus.
+- Ne jamais afficher le diff complet des fichiers ecrits; affiche uniquement les chemins modifies et les erreurs de validation.
+- Pour `regression-guardrails.md`, lis uniquement les IDs resolus par le scope ou fais une recherche ciblee par IDs.
+- N'utilise pas d'inventaire large. Interdit: `rg --files` sans exclusions depuis la racine.
+- Si un inventaire backend est necessaire, fais d'abord `Test-Path backend`; n'appelle `rg --files backend` que si le dossier existe.
+- Pour les autres inventaires, utilise `_condamad` et `.agents` avec exclusions `target`, `node_modules`, `.venv`, `__pycache__`.
+- Ne scanne jamais `target`, `node_modules`, `.venv`, `__pycache__` ou les outputs de build.
+- Si le brief cible `backend` ou `frontend` mais que les racines attendues n'existent pas, ne bloque pas uniquement pour cette raison.
+- Ajoute une alerte `Repository structure alert:` et precise que l'implementation devra creer les repertoires/fichiers manquants.
+- Ne lance pas les self-tests du skill; ils sont reserves aux modifications du skill lui-meme.
+- Pour cette generation de story, les validations autorisees sont uniquement:
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py <story>`
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict <story>`
+- Pour une story API, nomme explicitement `app.openapi()`, `app.routes`, `pytest`/`TestClient` dans les preuves AC des le premier jet.
+- Pour une story backend-domain `Primary archetype: custom`, ajoute des le premier jet `Additional validation rules:` dans `Operation Contract`.
+- Si un AC contient `runtime`, mets dans sa cellule Evidence un token runtime concret: chemin complet `pytest -q backend/tests/...` et/ou `AST guard`, `app.routes`, `app.openapi()`, loaded config, DB schema ou generated manifest selon le scope.
+- Garde les lignes markdown sous 180 caracteres, surtout les tables AC.
+- Evite les mots `exception`, `exceptions` et `except` hors sections allowlist dediees; utilise `allowed delta`, `unchanged`, ou `only allowed surface delta`.
+- Evite les formulations de lint strict: `if needed`, `where relevant`, `as applicable`, `if absent`, `if present`, `as needed`, `when needed`.
+- Ecris la story en une seule passe, valide, puis effectue au maximum une passe de correction sauf blocage distinct.
+- Si tu modifies la story ou le tracker apres un echec de validation, relance les deux validations avant de declarer `ready-to-dev`.
+- Si `condamad_story_lint.py --strict` remonte plusieurs diagnostics, corrige toute la liste dans la meme passe: lignes trop longues, placeholders, AC composes et autres bloqueurs.
+- Si tu ne peux pas relancer apres la derniere correction, indique que la story n'est pas prouvee verte et ne revendique pas un succes valide.
+- Garde les messages console courts: progression, fichiers ecrits, validations lancees, erreurs bloquantes.
+- Si une validation echoue, corrige si possible; sinon consigne l'erreur exacte dans la story et termine avec un statut explicite.
+- Ne boucle pas sur les memes lectures ou validations: deux tentatives maximum par commande.
+- Termine la session des que la story, le tracker et les validations applicables sont traites.
+codex
+J’utilise le skill local `condamad-story-writer` avec son cheatsheet en priorité, puis je lirai le brief et les fichiers de suivi strictement nécessaires. Je vais garder les validations limitées aux deux commandes autorisées et éviter les inventaires larges.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw .agents\\skills\\condamad-story-writer\\SKILL.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw _story_briefs\\cs-229-aspect-runtime-structural-interpretive-contracts.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw .agents\\skills\\condamad-story-writer\\references\\writer-contract-cheatsheet.md" in C:\dev\horoscope_front
+ succeeded in 272ms:
+# CS-229 — Aspect Runtime Structural / Interpretive Contracts
+
+## Résumé
+
+CS-229 formalise la séparation entre runtime structurel et runtime interprétatif pour les aspects astrologiques.
+
+Aujourd’hui, `AspectRuntimeData` mélange des faits calculatoires :
+
+```text
+identité
+participants
+orbe
+force technique
+modifiers factuels
+```
+
+avec des indices semi-interprétatifs :
+
+```text
+default_valence
+interpretive_valence
+energy_type
+interpretive_weight
+```
+
+Cette story ne migre pas encore tous les consommateurs. Elle crée d’abord les contrats cibles et la doctrine d’architecture qui permettront aux stories suivantes de déplacer les champs interprétatifs hors du runtime structurel.
+
+La cible est :
+
+```text
+AspectStructuralRuntimeData
+→ faits géométriques, calculatoires et structurels
+
+AspectInterpretiveRuntimeData / AspectInterpretiveHints
+→ valence, energy type, axes sémantiques, poids interprétatifs
+```
+
+---
+
+## Contexte
+
+Les stories CS-217 à CS-228 ont convergé vers un runtime astrologique plus canonique :
+
+```text
+NatalResult.chart_objects
+aspects runtime
+dignities runtime
+dominance runtime
+fixed stars runtime
+chart interpretation input
+calculation graph
+```
+
+Cette convergence a déjà réduit le risque de surfaces parallèles. Mais le runtime d’aspects reste hybride.
+
+Exemples actuels :
+
+```python
+AspectRuntimeData(
+    aspect=...,
+    participants=...,
+    orb=...,
+    strength=...,
+    interpretation=AspectInterpretationRuntimeData(
+        default_valence="positive",
+        interpretive_valence="harmonious",
+        energy_type="harmonious_flow",
+    ),
+    modifiers=(...),
+)
+```
+
+Le bloc `interpretation` n’est pas narratif, mais il n’est déjà plus purement structurel. Il encode une première lecture du fait astrologique.
+
+---
+
+## Problème à résoudre
+
+Sans frontière formelle, le code peut évoluer vers :
+
+```text
+aspect calculator
+→ valence
+→ energy_type
+→ prompt hint
+→ poids interprétatif
+→ rendu produit
+```
+
+dans la même surface runtime.
+
+Risques :
+
+- confusion entre fait astrologique et pré-interprétation ;
+- difficulté à prouver qu’un calculateur reste déterministe et structurel ;
+- duplication future entre `AspectRuntimeData`, `ChartInterpretationInputRuntimeData` et les profils éditoriaux ;
+- propagation de champs comme `positive`, `negative`, `harmonious`, `challenging` dans des couches qui ne devraient pas les connaître ;
+- impossibilité de nettoyer proprement les surfaces legacy d’aspects.
+
+CS-229 doit définir les contrats et les règles avant la migration.
+
+---
+
+## Objectifs
+
+### Objectif fonctionnel
+
+Créer des contrats explicites pour distinguer :
+
+```text
+runtime structurel
+runtime interprétatif
+projection publique legacy
+```
+
+### Objectif architectural
+
+Installer la règle suivante :
+
+```text
+Un calculateur structurel ne produit que des faits structurels.
+Les indices interprétatifs sont produits par un adapter ou resolver dédié,
+à partir du runtime structurel et du référentiel interprétatif.
+```
+
+---
+
+## Périmètre inclus
+
+CS-229 couvre :
+
+1. La définition de la terminologie officielle : structural runtime, interpretive runtime, public projection, legacy projection.
+2. La création ou préparation de contrats dédiés aux aspects structurels.
+3. La création ou préparation de contrats dédiés aux hints interprétatifs d’aspects.
+4. La documentation du statut des champs `default_valence`, `interpretive_valence`, `energy_type` et `interpretive_weight`.
+5. La clarification du statut du référentiel d’aspects : définition structurelle vs profil interprétatif.
+6. La clarification du rôle de `AspectStrengthRuntimeData`.
+7. La clarification du rôle de la dominance d’aspect.
+8. La clarification du rôle des modifiers factuels.
+9. La clarification du statut des consommateurs prediction qui utilisent déjà `default_valence` et `energy_type`.
+10. Les tests unitaires de validation des nouveaux contrats.
+11. Une documentation d’architecture courte.
+
+---
+
+## Hors périmètre
+
+CS-229 ne doit pas :
+
+- supprimer immédiatement `AspectRuntimeData.interpretation` ;
+- casser le JSON public natal ;
+- modifier la doctrine astrologique ;
+- modifier les valeurs des profils d’aspects ;
+- modifier les prompts ;
+- modifier le frontend ;
+- supprimer les tables DB de valence ;
+- changer les scores de prédiction ;
+- migrer tous les consommateurs d’un coup.
+
+---
+
+## Contrats attendus
+
+### Référentiel d’aspects
+
+Le référentiel doit être explicitement séparé en deux vues, même si les données restent temporairement chargées depuis les mêmes tables.
+
+Vue structurelle :
+
+```python
+AspectStructuralDefinitionRuntimeData
+```
+
+Champs autorisés :
+
+```python
+code
+name
+angle
+family
+is_enabled
+is_major
+is_minor
+default_orb_deg
+system_code
+legacy_orb_fields
+```
+
+Vue interprétative :
+
+```python
+AspectInterpretiveProfileRuntimeData
+```
+
+Champs possibles :
+
+```python
+aspect_code
+system_code
+default_valence
+interpretive_valence
+energy_type
+semantic_axes
+growth_axes
+shadow_axes
+relationship_axes
+source_profile_code
+reference_version
+```
+
+Règle :
+
+```text
+Un calculateur structurel ne reçoit que la vue structurelle.
+Un resolver interprétatif reçoit la vue interprétative.
+```
+
+### Runtime structurel d’aspect
+
+Créer ou préparer un contrat structurel.
+
+Nom recommandé :
+
+```python
+AspectStructuralRuntimeData
+```
+
+Champs attendus :
+
+```python
+aspect: AspectIdentityRuntimeData
+participants: AspectParticipantsRuntimeData
+orb: AspectOrbRuntimeData
+metadata: AspectMetadataRuntimeData
+strength: AspectStrengthRuntimeData
+phase: AspectPhaseRuntimeData | None
+modifiers: tuple[AspectStructuralModifierRuntimeData, ...]
+```
+
+Règle :
+
+```text
+Aucun champ de valence, energy type, prompt, meaning, narrative ou theme éditorial.
+```
+
+### Hints interprétatifs d’aspect
+
+Créer ou préparer un contrat séparé.
+
+Nom recommandé :
+
+```python
+AspectInterpretiveHintsRuntimeData
+```
+
+Champs possibles :
+
+```python
+aspect_code: str
+default_valence: str
+interpretive_valence: str
+energy_type: str
+semantic_axes: tuple[str, ...]
+growth_axes: tuple[str, ...]
+shadow_axes: tuple[str, ...]
+relationship_axes: tuple[str, ...]
+interpretive_weight: float | None
+source_profile_code: str | None
+source_codes: tuple[str, ...]
+```
+
+Règle :
+
+```text
+Ces hints ne sont pas des textes narratifs.
+Ils restent des indices d’interprétation typés et sourcés.
+```
+
+### Modifier structurel
+
+Renommer ou borner le contrat existant pour éviter l’ambiguïté.
+
+Le modifier structurel peut porter :
+
+```python
+modifier_type
+source
+intensity
+reason
+applies_to
+```
+
+Il ne doit pas porter :
+
+```python
+interpretive_weight
+prompt_hint
+meaning
+narrative
+```
+
+Si un poids interprétatif est nécessaire, il doit vivre dans le contrat de hints interprétatifs.
+
+---
+
+## Documentation attendue
+
+Mettre à jour ou créer :
+
+```text
+docs/architecture/astrology-runtime-surfaces.md
+```
+
+Ajouter une section :
+
+```text
+Aspect runtime layers
+```
+
+Elle doit préciser :
+
+| Couche | Contenu | Owner | Consommateurs autorisés |
+|---|---|---|---|
+| Structural aspect runtime | géométrie, orbe, participants, force technique, modifiers factuels | astrology runtime | calculateurs, dominance, graph |
+| Interpretive aspect runtime | valence, energy type, axes, poids interprétatifs | interpretation adapter | prompts, interpretation input |
+| Public aspect projection | contrat API stable | chart json builder | front/API |
+| Legacy aspect projection | compatibilité historique | adapters allowlistés | transition uniquement |
+
+Ajouter aussi une note sur les consommateurs prediction :
+
+```text
+Le domaine prediction peut continuer à utiliser des valences ou energy types,
+mais via ses contrats de prediction ou via les hints interprétatifs,
+jamais via le runtime structurel d’aspects.
+```
+
+---
+
+## Tests attendus
+
+Ajouter ou préparer des tests qui prouvent :
+
+1. Le contrat structurel refuse les champs interprétatifs.
+2. Le contrat interprétatif accepte les hints sourcés.
+3. Les modifiers structurels ne portent pas de poids interprétatif.
+4. Le référentiel structurel d’aspects ne contient pas les champs de valence.
+5. Les termes interdits ne sont pas présents dans les modules structurels :
+
+```text
+default_valence
+interpretive_valence
+energy_type
+interpretive_weight
+meaning
+narrative
+prompt
+llm
+```
+
+6. La documentation liste explicitement les deux couches.
+
+---
+
+## Critères d’acceptation
+
+### AC1 — Doctrine explicite
+
+Une documentation d’architecture définit clairement :
+
+```text
+structural runtime
+interpretive runtime
+public projection
+legacy projection
+```
+
+### AC2 — Contrats séparés
+
+Les contrats dédiés existent ou sont préparés avec une nomenclature claire.
+
+### AC3 — Référentiel scindé par responsabilité
+
+Le brief ou le code distingue la définition structurelle d’aspect du profil interprétatif d’aspect.
+
+### AC4 — Aucun nouveau mélange
+
+Aucun nouveau champ interprétatif n’est ajouté à un contrat structurel.
+
+### AC5 — Modifiers bornés
+
+Les modifiers structurels ne contiennent plus de poids interprétatif, ou ce poids est explicitement marqué comme legacy à migrer en CS-230.
+
+### AC6 — Tests de frontière
+
+Des tests d’architecture empêchent le retour des champs interprétatifs dans les modules structurels ciblés.
+
+---
+
+## Validation recommandée
+
+PowerShell, après activation du venv :
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+cd backend
+ruff format .
+ruff check .
+pytest -q backend/tests/unit/domain/astrology/test_aspect_runtime_builder.py backend/tests/unit/domain/astrology/test_aspect_modifiers.py backend/tests/architecture/test_chart_interpretation_input_boundary.py
+```
+
+Ajouter les tests spécifiques créés par la story à cette commande ciblée.
+
+---
+
+## Risques et points d’attention
+
+Le principal risque est de renommer les contrats trop tôt et de casser beaucoup de consommateurs.
+
+Approche recommandée :
+
+```text
+1. créer les nouveaux contrats ;
+2. garder des alias temporaires si nécessaire ;
+3. migrer les consommateurs dans CS-230 ;
+4. supprimer les alias dans CS-231 ou CS-232.
+```
+
+Le second risque est de déplacer les champs sans déplacer la responsabilité. La migration n’est réussie que si les calculateurs structurels ne dépendent plus du référentiel interprétatif.
+
+Le troisième risque est d’oublier le domaine prediction. Les usages prediction de `default_valence` et `energy_type` sont légitimes, mais ils doivent être alimentés par un contrat prediction ou par les hints interprétatifs, pas par un runtime structurel hybride.
+
+
+2026-05-23T08:55:21.186236Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Raw .agents\skills\condamad-story-writer\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 292ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Raw .agents\skills\condamad-story-writer\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\SKILL.md' because it does not exist.[0m
+
+2026-05-23T08:55:21.209095Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Raw .agents\skills\condamad-story-writer\references\writ[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\references\writer-contract-cheatsheet.md' because it does not exist.[0m
+
+ exited 1 in 305ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Raw .agents\skills\condamad-story-writer\references\writ[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\references\writer-contract-cheatsheet.md' because it does not exist.[0m
+
+codex
+Le brief est lisible, mais le chemin de skill indiqué ne contient pas `SKILL.md` dans ce workspace. Je vérifie uniquement l’arborescence locale ciblée de `.agents` pour retrouver le skill ou confirmer le blocage.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-ChildItem -Path .agents -Recurse -Force -Directory -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch '"'\\\\(target|node_modules|\\.venv|__pycache__)("'$|'"\\\\)' } | Select-Object -ExpandProperty FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-ChildItem -Path _condamad -Force -ErrorAction SilentlyContinue | Select-Object Name,Mode,Length' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path _condamad\\stories -Force -ErrorAction SilentlyContinue | Select-Object Name,Mode,Length" in C:\dev\horoscope_front
+ succeeded in 260ms:
+
+[32;1mName      [0m[32;1m Mode [0m[32;1m Length[0m
+[32;1m----      [0m [32;1m---- [0m [32;1m------[0m
+audits     d---- 
+codex-runs d---- 
+stories    d---- 
+tmp        d---- 
+
+
+ succeeded in 285ms:
+C:\dev\horoscope_front\.agents\skills
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts
+
+ succeeded in 286ms:
+
+[32;1mName                                                                         [0m[32;1m Mode [0m[32;1m Length[0m
+[32;1m----                                                                         [0m [32;1m---- [0m [32;1m------[0m
+align-prompt-generation-story-validation-paths                                d---- 
+api-adapter-boundary-convergence                                              d---- 
+block-supported-family-prompt-fallbacks                                       d---- 
+centralize-api-http-errors                                                    d---- 
+classify-backend-ops-quality-tests                                            d---- 
+classify-converge-remaining-prompt-fallbacks                                  d---- 
+classify-critical-load-scenarios                                              d---- 
+classify-natal-cross-tool-dev-report                                          d---- 
+collect-retained-backend-tests                                                d---- 
+converge-admin-llm-observability-router                                       d---- 
+converge-api-v1-route-architecture                                            d---- 
+converge-backend-test-topology                                                d---- 
+converge-db-test-fixtures                                                     d---- 
+converge-horoscope-daily-narration-assembly                                   d---- 
+cover-both-backend-test-roots-in-cross-import-guard                           d---- 
+CS-001-harden-stripe-webhook-failure-retry-semantics                          d---- 
+CS-002-upgrade-stripe-api-version-with-webhook-contract-validation            d---- 
+CS-003-centralize-supported-stripe-webhook-event-ownership                    d---- 
+CS-004-move-admin-stripe-subscription-refresh-behind-billing-service-boundary d---- 
+CS-005-define-central-stripe-timeout-and-retry-policy                         d---- 
+CS-006-converger-namespace-racine-app-prediction                              d---- 
+CS-007-extraire-dependances-infra-hors-prediction                             d---- 
+CS-008-classer-reduire-compatibilites-legacy-prediction                       d---- 
+CS-009-separer-projection-publique-enrichissement-llm                         d---- 
+CS-010-corriger-resolution-evenements-astro-foundation                        d---- 
+CS-011-supprimer-partage-session-db-calcul-threade-prediction                 d---- 
+CS-012-ajouter-garde-anti-croissance-app-prediction                           d---- 
+CS-013-propager-ids-correlation-narration-horoscope                           d---- 
+CS-014-supprimer-physiquement-namespace-racine-app-prediction                 d---- 
+CS-015-migrer-moteur-pur-prediction-domain-prediction                         d---- 
+CS-016-reclasser-dto-persisted-prediction-hors-namespace-legacy               d---- 
+CS-017-decoupler-routeurs-api-namespace-app-prediction                        d---- 
+CS-018-remplacer-garde-anti-croissance-par-garde-extinction-prediction        d---- 
+CS-019-clarifier-frontiere-jobs-scripts-backend                               d---- 
+CS-020-classer-backend-docs-par-ownership-et-type-artifact                    d---- 
+CS-021-aligner-documentation-entitlement-canonique-runtime                    d---- 
+CS-022-uniformiser-gouvernance-docs-llm-source-truth                          d---- 
+CS-023-converger-emplacement-artefacts-calibration                            d---- 
+CS-024-repositionner-notes-llm-non-canoniques                                 d---- 
+CS-025-repositionner-note-historique-entitlement                              d---- 
+CS-026-canonicaliser-source-verite-tokens-design-frontend                     d---- 
+CS-027-centraliser-valeurs-visuelles-hardcodees-repetees                      d---- 
+CS-028-formaliser-hierarchie-typographique-frontend                           d---- 
+CS-029-encadrer-styles-inline-statiques-frontend                              d---- 
+CS-030-durcir-fallbacks-variables-css-frontend                                d---- 
+CS-031-classer-surfaces-css-legacy-frontend                                   d---- 
+CS-032-ajouter-guards-anti-drift-design-system                                d---- 
+CS-033-reduire-valeurs-visuelles-typographiques-hardcodees                    d---- 
+CS-034-convertir-styles-inline-statiques-allowlistes-css                      d---- 
+CS-035-reduire-fallbacks-css-allowlistes                                      d---- 
+CS-036-stabiliser-isolation-suite-vitest-help-page                            d---- 
+CS-037-reduire-dette-valeurs-visuelles-hardcodees-hors-lots-migres            d---- 
+CS-038-convertir-styles-inline-statiques-turning-points-list                  d---- 
+CS-039-reduire-fallbacks-css-composants-ui-partages                           d---- 
+CS-040-aligner-registre-markdown-allowlist-fallbacks-css                      d---- 
+CS-041-convertir-styles-inline-statiques-restants-css                         d---- 
+CS-042-reduire-fallbacks-css-allowlistes-surfaces-partagees                   d---- 
+CS-043-reduire-valeurs-visuelles-typographiques-hardcodees-par-clusters       d---- 
+CS-044-reduire-fallbacks-css-layout-shell-pages                               d---- 
+CS-045-convertir-styles-inline-surfaces-actives                               d---- 
+CS-046-migrer-cluster-visuel-typographique-prioritaire                        d---- 
+CS-047-realigner-guard-visual-smoke-typographie-tokenisee                     d---- 
+CS-048-reduire-lot-courant-fallbacks-css-design-system                        d---- 
+CS-049-reduire-exceptions-styles-inline-frontend                              d---- 
+CS-050-migrer-lot-prioritaire-valeurs-visuelles-hardcodees                    d---- 
+CS-051-retirer-surfaces-css-legacy-aliases-compatibility-restants             d---- 
+CS-052-reduire-cluster-restant-fallbacks-css-natal-chart                      d---- 
+CS-053-reduire-styles-inline-dynamiques-convertibles                          d---- 
+CS-054-migrer-prochain-cluster-valeurs-visuelles-hardcodees                   d---- 
+CS-055-retirer-selectors-legacy-chat-admin-aliases-compatibility              d---- 
+CS-056-reduire-fallbacks-css-restants-apres-refactor                          d---- 
+CS-057-reduire-styles-inline-dynamiques-convertibles                          d---- 
+CS-058-migrer-cluster-coherent-valeurs-visuelles-hardcodees                   d---- 
+CS-059-retirer-selectors-legacy-aliases-compatibility-restants                d---- 
+CS-060-reduire-derniers-fallbacks-css-tokens-premium                          d---- 
+CS-061-reduire-exceptions-styles-inline-encore-convertibles                   d---- 
+CS-062-migrer-cluster-coherent-valeurs-visuelles-hardcodees                   d---- 
+CS-063-retirer-selectors-legacy-admin-prompts-aliases-compatibility-restants  d---- 
+CS-064-retirer-dernier-fallback-css-migration-only                            d---- 
+CS-065-reduire-exceptions-styles-inline-restantes                             d---- 
+CS-066-migrer-cluster-coherent-valeurs-visuelles-hardcodees                   d---- 
+CS-067-retirer-selectors-legacy-admin-prompts-aliases-compatibility-restants  d---- 
+CS-068-converger-namespaces-compatibility-migration-tokens-frontend           d---- 
+CS-069-migrer-cluster-admin-settings-valeurs-visuelles-hardcodees             d---- 
+CS-070-retirer-vocabulaire-legacy-admin-prompts-runtime                       d---- 
+CS-071-retirer-alias-css-astrologer-card                                      d---- 
+CS-072-retirer-libelles-legacy-consultations                                  d---- 
+CS-073-migrer-cluster-help-page-valeurs-visuelles-hardcodees                  d---- 
+CS-074-isoler-helppage-tokens-settings-page-scoped                            d---- 
+CS-075-converger-namespaces-css-migration-only-restants                       d---- 
+CS-076-supprimer-compatibilites-runtime-frontend-restantes                    d---- 
+CS-077-supprimer-redirects-legacy-admin-frontend                              d---- 
+CS-078-migrer-cluster-prediction-valeurs-visuelles-hardcodees                 d---- 
+CS-079-migrer-cluster-composants-ui-valeurs-visuelles-hardcodees              d---- 
+CS-080-supprimer-compatibilites-runtime-frontend-restantes                    d---- 
+CS-081-migrer-cluster-chat-valeurs-visuelles-hardcodees                       d---- 
+CS-082-migrer-cluster-app-valeurs-visuelles-hardcodees                        d---- 
+CS-083-fermer-garde-no-legacy-vocabulaire-css-actif                           d---- 
+CS-084-migrer-cluster-settings-valeurs-visuelles-typographiques               d---- 
+CS-085-migrer-cluster-landing-valeurs-visuelles-typographiques                d---- 
+CS-086-migrer-cluster-admin-valeurs-visuelles-typographiques                  d---- 
+CS-087-converger-valeurs-visuelles-typographiques-app-css-restantes           d---- 
+CS-088-migrer-surface-subscriptions-helppage-tokens-help                      d---- 
+CS-089-converger-surfaces-premium-partagees-background-glass-daily-advice     d---- 
+CS-090-extraire-domaine-feature-admin-prompts                                 d---- 
+CS-091-centraliser-contrats-hooks-api-admin-pages                             d---- 
+CS-092-reduire-helpers-composants-dupliques-pages-react                       d---- 
+CS-093-converger-barrels-pages-exports-stale                                  d---- 
+CS-094-classer-converger-routes-alias-publiques                               d---- 
+CS-095-ajouter-guards-anti-drift-pages-frontend                               d---- 
+CS-096-decomposer-responsabilites-restantes-admin-prompts                     d---- 
+CS-097-centraliser-appels-api-admin-restants-hors-pages                       d---- 
+CS-098-classer-centraliser-helpers-formatage-pages                            d---- 
+CS-099-typer-pages-react-exclues-typescript                                   d---- 
+CS-100-fermer-sections-restantes-admin-prompts                                d---- 
+CS-101-decomposer-pages-volumineuses-allowlistees                             d---- 
+CS-102-centraliser-formatage-date-heure-pages                                 d---- 
+CS-103-converger-layout-maitre-frontend                                       d---- 
+CS-104-monter-landing-via-layout-principal                                    d---- 
+CS-105-rattacher-routes-auth-publiques-layout                                 d---- 
+CS-106-ajouter-guards-hierarchie-layout-frontend                              d---- 
+CS-107-classer-pages-layout-owner                                             d---- 
+CS-108-statuer-pages-publiques-candidates-layout                              d---- 
+CS-109-fermer-decisions-residuelles-pages-layout                              d---- 
+CS-110-corriger-garder-validite-css-primitives-layout                         d---- 
+CS-111-retirer-redecider-exception-inline-style-twocolumnlayout               d---- 
+CS-112-aligner-statut-source-cs109-cloture                                    d---- 
+CS-113-classer-converger-composants-consommateurs-api                         d---- 
+CS-114-supprimer-suppressions-typescript-composants                           d---- 
+CS-115-decomposer-natal-interpretation-owner                                  d---- 
+CS-116-classer-fermer-composants-non-consommes                                d---- 
+CS-117-migrer-containers-auth-api-vers-feature-auth                           d---- 
+CS-118-relocate-natal-interpretation-feature-owner                            d---- 
+CS-119-supprimer-composants-test-only-sans-ui-runtime                         d---- 
+CS-120-converger-containers-api-restants-components-vers-owners               d---- 
+CS-121-definir-primitives-css-generiques-app                                  d---- 
+CS-122-migrer-layouts-etats-actions-vers-primitives-css                       d---- 
+CS-123-migrer-cartes-listes-badges-modales-vers-primitives-css                d---- 
+CS-124-bloquer-selecteurs-et-variables-app-specifiques                        d---- 
+CS-125-fermer-taxonomie-variables-app-restantes                               d---- 
+CS-126-migrer-ou-garder-explicitement-precision-evidence                      d---- 
+CS-127-reduire-app-css-par-primitives-types-modulaires                        d---- 
+CS-128-restaurer-relief-visuel-astrologers                                    d---- 
+CS-129-ameliorer-ui-profil-astrologue                                         d---- 
+CS-130-uniformiser-largeur-corps-central-frontend                             d---- 
+CS-131-converger-transport-http-frontend-api                                  d---- 
+CS-132-centraliser-enveloppes-erreurs-api-frontend                            d---- 
+CS-133-structurer-modules-api-volumineux                                      d---- 
+CS-134-interdire-imports-api-barrel-internes                                  d---- 
+CS-135-clarifier-ownership-support-ops-persona                                d---- 
+CS-136-definir-politique-facade-api-publique                                  d---- 
+CS-137-converger-dark-mode-surfaces-frontend                                  d---- 
+CS-138-implementer-fond-dark-astral-avant-aube                                d---- 
+CS-139-refactoriser-ownership-css-landing                                     d---- 
+CS-140-aligner-themes-visuels-landing-light-dark                              d---- 
+CS-141-simplifier-hero-preview-landing                                        d---- 
+CS-142-extraire-proprietaire-seo-head-landing                                 d---- 
+CS-143-simplifier-complexite-visuelle-hero-landing                            d---- 
+CS-144-converger-contrat-visuel-landing-menu-mobile                           d---- 
+CS-145-ajouter-garde-complexite-visuelle-landing                              d---- 
+CS-146-corriger-responsive-accessibilite-landing                              d---- 
+CS-147-optimiser-conversion-mobile-landing                                    d---- 
+CS-148-corriger-catalogue-astrologers-responsive-conversion                   d---- 
+CS-149-optimiser-hierarchie-premium-catalogue-astrologers                     d---- 
+CS-150-clarifier-comparaison-tablette-catalogue-astrologers                   d---- 
+CS-151-corriger-libelle-guide-par-defaut-astrologers                          d---- 
+CS-152-normaliser-profils-signes-astraux                                      d---- 
+CS-155-isoler-reference-runtime-astrologie-maisons                            d---- 
+CS-156-extraire-interpretation-astrologique-maisons                           d---- 
+CS-157-scinder-profils-maison-astrologie-prediction                           d---- 
+CS-158-brancher-scoring-produit-sur-runtime-astrologique                      d---- 
+CS-159-ajouter-garde-frontiere-astrology-prediction                           d---- 
+CS-160-canonicaliser-contrats-interpretation-astrologique                     d---- 
+CS-161-ajouter-profils-interpretation-maisons                                 d---- 
+CS-162-heriter-regles-orbes-systemes-astrologiques                            d---- 
+CS-163-creer-runtime-canonique-force-aspects                                  d---- 
+CS-164-enrichir-aspect-result-projection-publique                             d---- 
+CS-165-construire-builder-interpretation-aspects                              d---- 
+CS-166-calculer-aspects-dominants-et-socle-synastrie                          d---- 
+CS-167-separer-semantique-et-editorial-aspects                                d---- 
+CS-168-canonicaliser-modifiers-et-poids-aspects                               d---- 
+CS-169-preparer-pattern-runtime-et-graphe-astrologique                        d---- 
+CS-170-ajouter-provenance-et-priorisation-semantique-aspects                  d---- 
+CS-171-converger-referentiels-astrologie-db-json                              d---- 
+CS-172-big-bang-reference-runtime-astrology                                   d---- 
+CS-173-localiser-interface-langue-utilisateur                                 d---- 
+CS-174-localiser-libelles-astrologiques-backend                               d---- 
+CS-175-creer-runtime-canonique-signes                                         d---- 
+CS-176-calculer-signature-balance-theme                                       d---- 
+CS-177-finaliser-i18n-astrologique-backend                                    d---- 
+CS-178-documenter-zodiaque-ayanamsa-runtime                                   d---- 
+CS-179-fermer-i18n-prediction-astrologique                                    d---- 
+CS-180-aligner-registre-modeles-db-infra                                      d---- 
+CS-181-supprimer-constantes-astrologiques-hardcodees                          d---- 
+CS-182-remplacer-vocabulaire-public-astro-par-referentiels-db                 d---- 
+CS-183-fix-long-pytest-daily-prediction-aspects                               d---- 
+CS-184-fix-planet-interpretation-seed-db-backed-body-catalog                  d---- 
+CS-185-brancher-profils-signes-runtime-natal                                  d---- 
+CS-186-fix-runtime-reference-sign-fixtures                                    d---- 
+CS-187-brancher-points-astraux-runtime-natal                                  d---- 
+CS-188-exploiter-profils-points-astraux-interpretation                        d---- 
+CS-189-brancher-etoiles-fixes-scoring-runtime                                 d---- 
+CS-190-seed-astral-dignity-reference-runtime                                  d---- 
+CS-191-advanced-planet-dignity-engine                                         d---- 
+CS-192-planetary-condition-profile-v1                                         d---- 
+CS-193-planetary-condition-signals                                            d---- 
+CS-194-dominant-planets-engine                                                d---- 
+CS-195-advanced-planetary-conditions                                          d---- 
+CS-196-interpretation-adapter-layer                                           d---- 
+CS-197-sect-audit-explicit-contract                                           d---- 
+CS-198-planet-sect-condition-normalization                                    d---- 
+CS-199-advanced-sect-scoring-integration                                      d---- 
+CS-200-hellenistic-medieval-golden-cases                                      d---- 
+CS-201-natal-public-json-projection-cleanup                                   d---- 
+CS-202-natal-expert-panel                                                     d---- 
+CS-203-natal-dignity-audit-persistence                                        d---- 
+CS-204-hayz-rejoicing-explicit-condition-contracts                            d---- 
+CS-205-sect-aware-triplicity-golden-cases                                     d---- 
+CS-206-benefic-malefic-sect-mitigation-signals                                d---- 
+CS-207-traditional-advanced-final-audit-documentation                         d---- 
+CS-208-advanced-planetary-conditions-contracts                                d---- 
+CS-209-solar-proximity-conditions-calculator                                  d---- 
+CS-210-planetary-motion-conditions-calculator                                 d---- 
+CS-211-solar-phase-relation-calculator                                        d---- 
+CS-212-moon-phase-calculator                                                  d---- 
+CS-213-planetary-visibility-conditions-calculator                             d---- 
+CS-214-integrate-advanced-planetary-conditions-natal-result                   d---- 
+CS-215-integrate-advanced-planetary-conditions-accidental-dignities           d---- 
+CS-216-advanced-planetary-conditions-interpretation-profiles                  d---- 
+CS-217-unified-chart-object-runtime-contract                                  d---- 
+CS-218-aspect-engine-chart-object-consumption                                 d---- 
+CS-219-chart-object-motion-visibility-payloads                                d---- 
+CS-220-dignity-dominance-capability-runtime                                   d---- 
+CS-221-chart-object-house-position-rulership-runtime                          d---- 
+CS-222-fixed-star-conjunction-runtime-from-chart-objects                      d---- 
+CS-223-chart-object-interpretation-input-adapter                              d---- 
+CS-224-legacy-runtime-surface-cleanup-guardrails                              d---- 
+CS-225-calculation-graph-runtime-contracts                                    d---- 
+CS-226-natal-calculation-graph-definition                                     d---- 
+CS-227-calculation-graph-runner-cache-provenance                              d---- 
+CS-228-migrate-natal-runtime-to-calculation-graph                             d---- 
+decide-public-email-unsubscribe-canonicalization                              d---- 
+deversionner-referentiels-astrologiques                                       d---- 
+formalize-consultation-guidance-prompt-ownership                              d---- 
+formalize-scripts-ownership                                                   d---- 
+guard-backend-pytest-test-roots                                               d---- 
+harden-api-adapter-boundary-guards                                            d---- 
+harden-local-dev-stack-script                                                 d---- 
+portable-llm-release-readiness                                                d---- 
+priorite-3-runtime-maisons-riches                                             d---- 
+reclassify-story-regression-guards                                            d---- 
+reduce-api-sql-boundary-debt-public-email                                     d---- 
+refactor-api-v1-routers                                                       d---- 
+remove-api-v1-router-logic                                                    d---- 
+remove-bash-stripe-dev-listener                                               d---- 
+remove-cross-test-module-imports                                              d---- 
+remove-historical-facade-routes                                               d---- 
+remove-llm-narrator-legacy-direct-openai                                      d---- 
+remove-root-route-removal-audit-validator                                     d---- 
+remplacer-house-axes-constante-par-db                                         d---- 
+rename-planet-profiles-table                                                  d---- 
+renommer-tables-maisons-astrales                                              d---- 
+replace-deprecated-llm-narrator-tests                                         d---- 
+replace-direct-sessionlocal-test-imports                                      d---- 
+replace-seed-validation-facade-test                                           d---- 
+stabilize-transit-performance-benchmark                                       d---- 
+supprimer-astro-characteristics                                               d---- 
+regression-guardrails.md                                                      -a--- 112293
+story-status.md                                                               -a--- 69639
+story-writing-review-2026-05-16.md                                            -a--- 1637
+transformed-briefs.md                                                         -a--- 1484
+
+
+codex
+Le répertoire du skill existe, mais il ne contient apparemment que `scripts`; les références demandées ne sont pas présentes à l’emplacement indiqué. Je vais utiliser les diagnostics des validateurs et les stories voisines CS-228/CS-224 comme structure minimale, sans lire de gros registres hors scope.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents\\skills\\condamad-story-writer -Recurse -Force -File | Where-Object { "'$_.FullName -notmatch '"'\\\\(target|node_modules|\\.venv|__pycache__)("'$|'"\\\\)' } | Select-Object -ExpandProperty FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path _condamad\\stories\\CS-228-migrate-natal-runtime-to-calculation-graph -Force | Select-Object Name,Mode,Length" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails -Force | Select-Object Name,Mode,Length" in C:\dev\horoscope_front
+ succeeded in 212ms:
+
+[32;1mName       [0m[32;1m Mode [0m[32;1m Length[0m
+[32;1m----       [0m [32;1m---- [0m [32;1m------[0m
+evidence    d---- 
+generated   d---- 
+00-story.md -a--- 37998
+
+
+ succeeded in 245ms:
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py
+
+ succeeded in 258ms:
+
+[32;1mName       [0m[32;1m Mode [0m[32;1m Length[0m
+[32;1m----       [0m [32;1m---- [0m [32;1m------[0m
+evidence    d---- 
+00-story.md -a--- 33040
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw _condamad\\stories\\CS-228-migrate-natal-runtime-to-calculation-graph\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Raw _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -Path _condamad\\stories\\story-status.md -Pattern 'CS-228|CS-229|CS-224' -Context 2,2" in C:\dev\horoscope_front
+ succeeded in 220ms:
+# Story CS-224 legacy-runtime-surface-cleanup-guardrails: Verrouiller les surfaces runtime legacy du theme natal
+Status: done
+
+## 1. Objective
+
+Faire de `NatalResult.chart_objects` la surface runtime canonique pour les nouveaux consommateurs du theme natal.
+Les collections historiques restent disponibles comme projections de compatibilite ou resultats chart-level, sans redevenir sources metier paralleles.
+
+## 2. Trigger / Source
+
+- Source type: architecture-guardrail.
+- Source reference: `_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md`.
+- Reason for change: CS-217 a cree `ChartObjectRuntimeData`; CS-218 a migre les aspects; CS-219 a rattache motion/visibility;
+  CS-220 a rattache dignity/dominance; CS-221 a rattache house/rulership; CS-222 a rattache fixed stars; CS-223 prepare l'input interpretation.
+- Selected story writer mode: Fast Story Writer Mode.
+- Skill availability note: `.agents/skills/condamad-story-writer/SKILL.md` et le cheatsheet demande ne sont pas presents; les scripts de validation existent.
+- Source-alignment review: la story consolide et documente les surfaces runtime; elle ne casse pas API/front, ne change pas la doctrine et ne migre pas un nouveau domaine.
+
+## 3. Domain Boundary
+
+Cette story appartient a un seul domaine:
+
+- Domain: `backend/app/domain/astrology`
+- In scope:
+  - inventorier les surfaces runtime du theme natal;
+  - documenter `chart_objects` comme source canonique interne;
+  - documenter `planet_positions`, `astral_points`, `houses`, `angles`, `dignity_results`, `advanced_conditions` et
+    `fixed_star_conjunctions` comme projections de compatibilite;
+  - documenter `aspects` et `dominance_result` comme resultats chart-level controles;
+  - ajouter ou renforcer les tests d'architecture anti-consommation directe des surfaces historiques;
+  - ajouter ou renforcer les tests anti-eligibilite par `object_type`;
+  - verifier la coherence entre projections historiques et `chart_objects`;
+  - supprimer ou consolider uniquement les builders/adapters manifestement morts avec preuve ciblee.
+- Out of scope:
+  - casser l'API publique ou les contrats front;
+  - supprimer brutalement une collection historique;
+  - modifier les scores, orbes, dignites, dominance, aspects, fixed star contacts ou doctrine astrologique;
+  - changer les prompts LLM, les routes FastAPI, la DB, les migrations ou le frontend;
+  - creer un projection builder monolithique sans duplication concrete a reduire.
+- Explicit non-goals:
+  - ne pas enrichir `_condamad/stories/regression-guardrails.md` pendant cette generation normale;
+  - ne pas ajouter de dossier de base sous `backend/`;
+  - ne pas utiliser les collections historiques comme source metier dans les nouveaux calculateurs;
+  - ne pas introduire de selection metier par `object_type`, code nominal ou famille planetaire.
+
+## 4. Operation Contract
+
+- Operation type: remove
+- Primary archetype: dead-code-removal
+- Archetype reason: la story classe les surfaces historiques et autorise le retrait borne de builders/adapters morts uniquement avec preuve de non-usage.
+- Behavior change allowed: constrained
+- Behavior change constraints:
+  - autorise: `chart_objects` devient la source canonique documentee pour nouveaux consommateurs;
+  - autorise: les surfaces historiques sont marquees comme projections de compatibilite ou resultats chart-level;
+  - autorise: des tests d'architecture bloquent les nouvelles lectures directes non autorisees;
+  - autorise: suppression de code mort uniquement avec preuve `rg`, test ou audit cible;
+  - interdit: changer volontairement schema public, OpenAPI, routes, DB, frontend, prompts ou sorties historiques.
+- Deletion allowed: yes
+- Replacement allowed: yes
+- User decision required if: une suppression touche une sortie publique, un contrat front/API, une doctrine astrologique, une dependance ou une migration DB.
+- Additional validation rules:
+  - les calculateurs nouveaux lisent `NatalResult.chart_objects` ou une projection explicitement construite depuis `chart_objects`;
+  - les usages directs de `planet_positions`, `astral_points`, `advanced_conditions`, `dignity_results` et `fixed_star_conjunctions` sont allowlistes;
+  - les usages par projection API, serializer public, fixture, debug snapshot ou bridge de migration sont nommes et bornes;
+  - les branches `object_type ==`, `.object_type ==` et `ChartObjectType.PLANET|ANGLE|FIXED_STAR` sont bloquees hors owners allowlistes;
+  - `app.routes`, `app.openapi()`, `pytest` et `TestClient` prouvent l'absence de delta public volontaire.
+
+## 4a. Required Contracts
+
+| Contract | Required | Reason |
+|---|---:|---|
+| Runtime Source of Truth | yes | `NatalResult.chart_objects` est la source canonique interne. |
+| Baseline Snapshot | yes | Les surfaces historiques et usages actuels doivent etre connus avant nettoyage. |
+| Ownership Routing | yes | Calculateurs, projection, API, tests et debug ont des proprietaires distincts. |
+| Allowlist Exception | yes | Tout usage legacy conserve doit etre nomme et justifie. |
+| Contract Shape | yes | `NatalResult` reste un contrat de transition avec projections publiques. |
+| Batch Migration | yes | Documentation, tests, scans et cleanup sont separes en lots controlables. |
+| Reintroduction Guard | yes | Les guards doivent bloquer les nouvelles sources paralleles. |
+| Persistent Evidence | yes | Baseline, scans, tests et preuve finale doivent etre conserves dans le dossier CS-224. |
+
+## 4b. Runtime Source of Truth
+
+- Primary source of truth:
+  - `NatalResult.chart_objects`;
+  - `ChartObjectRuntimeData.capabilities`;
+  - `ChartObjectRuntimeData.payloads`;
+  - resultats chart-level deja calcules lorsque la surface est globale, comme `aspects` et `dominance_result`.
+- Runtime/domain artifacts:
+  - `docs/architecture/astrology-runtime-surfaces.md`;
+  - tests d'inventaire documentaire;
+  - tests de coherence des projections historiques;
+  - tests d'architecture AST ou scans cibles;
+  - preuves `app.routes`, `app.openapi()` et `TestClient` sans delta public volontaire.
+- Secondary evidence:
+  - scans anti-legacy direct, anti-`object_type`, anti-builders specialises et anti-seuils magiques;
+  - `ruff format .`, `ruff check .` et `pytest -q` apres activation du venv.
+- Static scans alone are not sufficient because:
+  - ils ne prouvent ni la coherence runtime des projections, ni la conservation du contrat `NatalResult`, ni l'absence de delta OpenAPI.
+
+## 4c. Baseline / Before-After Rule
+
+- Baseline artifact before implementation:
+  - `Get-Content backend/app/domain/astrology/runtime/chart_object_runtime_data.py`;
+  - `Get-Content backend/app/domain/astrology/builders/chart_object_runtime_builder.py`;
+  - recherche ciblee des definitions de `NatalResult`;
+  - scans cibles sur `planet_positions`, `astral_points`, `houses`, `angles`, `dignity_results`, `advanced_conditions`, `fixed_star_conjunctions`;
+  - scans cibles sur `object_type ==`, `.object_type ==`, `ChartObjectType.PLANET`, `ChartObjectType.ANGLE` et `ChartObjectType.FIXED_STAR`;
+  - `Select-String "RG-144|RG-145|RG-146|RG-147|RG-148" _condamad/stories/regression-guardrails.md`.
+- Comparison after implementation:
+  - memes scans cibles apres implementation;
+  - tests CS-224 du Validation Plan;
+  - preuve `app.routes`;
+  - preuve `app.openapi()`;
+  - diff adjacent sur API, DB, migrations, frontend et providers LLM.
+- Expected invariant:
+  - `chart_objects` est documente comme source canonique;
+  - les surfaces historiques restent exposees mais non sources metier;
+  - les calculateurs nouveaux consomment les capacites et payloads;
+  - aucun endpoint public ne change volontairement.
+- Allowed differences:
+  - documentation d'architecture;
+  - tests d'architecture et de coherence;
+  - module de projection centralise uniquement si une duplication concrete est retiree;
+  - suppression de code mort prouvee;
+  - Registry gap: un invariant dedie CS-224 pourra etre ajoute ulterieurement hors generation normale.
+
+## 4d. Ownership Routing Rule
+
+| Responsibility type | Canonical owner | Forbidden destination |
+|---|---|---|
+| Source runtime interne | `NatalResult.chart_objects` | nouveaux calculateurs branches sur collections historiques |
+| Documentation surfaces | `docs/architecture/astrology-runtime-surfaces.md` | commentaires disperses uniquement |
+| Projections de compatibilite | projector ou builder central nomme | calculateurs metier |
+| Sorties API/front | serializers/adapters publics existants | domaine runtime canonique |
+| Guards architecture | `backend/tests/architecture` | tests unitaires opaques sans scan borne |
+
+## 4e. Allowlist / Exception Register
+
+| File | Symbol / Route / Import | Reason | Expiry or permanence decision |
+|---|---|---|---|
+| projection builders nommes | lectures historiques | Compatibilite API/front et transition. | Temporary; exit condition: approved removal story validates no public consumer. |
+| serializers API publics | projections historiques | Contrat public conserve. | Permanent tant que le contrat public existe. |
+| fixtures et debug snapshots | surfaces historiques | Non-regression et diagnostic. | Borne aux tests/debug. |
+
+Validation rule:
+
+- Toute lecture directe nouvelle de `planet_positions`, `astral_points`, `advanced_conditions`, `dignity_results` ou
+  `fixed_star_conjunctions` depuis un calculateur metier bloque l'implementation.
+
+## 4f. Contract Shape
+
+- Contract type:
+  - documentation markdown d'architecture;
+  - tests d'architecture deterministes;
+  - allowlists explicites avec chemins et raisons;
+  - aucune nouvelle API HTTP.
+- Fields:
+  - surface;
+  - status;
+  - target source;
+  - calculator access;
+  - owner;
+  - comment;
+  - removal classification;
+  - allowlist reason.
+- Required documented surfaces:
+  - `chart_objects`;
+  - `planet_positions`;
+  - `astral_points`;
+  - `houses`;
+  - `angles`;
+  - `aspects`;
+  - `dignity_results`;
+  - `dominance_result`;
+  - `advanced_conditions`;
+  - `fixed_star_conjunctions`.
+- Required fields:
+  - `surface`;
+  - `status`;
+  - `source cible`;
+  - `autorisee dans calculateurs`;
+  - `commentaire`;
+  - `owner`;
+  - `allowlist reason`.
+- Optional fields:
+  - `future removal story`;
+  - `debug snapshot`;
+  - `public API projection`;
+  - `migration bridge`;
+  - `non-usage proof`.
+- Required statuses:
+  - `canonical`;
+  - `compatibility projection`;
+  - `public API projection`;
+  - `chart-level result`;
+  - `legacy`;
+  - `deprecated` seulement si une decision de retrait est explicite.
+- Status codes:
+  - no HTTP endpoint, method or status code is changed.
+- Serialization names:
+  - no public JSON key is renamed or removed by CS-224.
+- Frontend type impact:
+  - none; no frontend contract changes are allowed.
+- Generated contract impact:
+  - none; `app.routes`, `app.openapi()` and `TestClient` must show no public delta.
+
+## 4g. Batch Migration Plan
+
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
+|---|---|---|---|---|---|---|
+| 1 | undocumented legacy fields | architecture doc | aucun runtime | doc inventory | doc test | surface manquante |
+| 2 | direct legacy reads | `chart_objects` or projector | calculateurs cibles | architecture | AST guard | public adapter touche |
+| 3 | duplicated mappers | projector central borne | mappers morts | unit + rg | non-usage proof | risque API/front |
+| 4 | manual review | deterministic guards | nouveaux developpements | architecture | zero new hit | guard trop fragile |
+
+Completion rule: chaque batch conserve `pytest -q`, `app.routes`, `app.openapi()` et les sorties historiques.
+
+## 4h. Reintroduction Guard
+
+- Guard target:
+  - empecher le retour de `planet_positions`, `astral_points`, `advanced_conditions`, `dignity_results` ou `fixed_star_conjunctions`
+    comme sources metier dans les calculateurs;
+  - empecher les branches d'eligibilite par `object_type`;
+  - empecher les nouveaux builders specialises par objet;
+  - empecher les seuils magiques locaux dans les calculateurs.
+- Forbidden examples:
+  - `natal_result.planet_positions` dans un nouveau calculateur;
+  - `natal_result.advanced_conditions` dans un nouvel adapter metier;
+  - `if obj.object_type == ChartObjectType.PLANET`;
+  - `ChartObjectType.ANGLE` pour router une logique metier;
+  - `PlanetRuntimeBuilder`, `AngleRuntimeBuilder`, `AstralPointRuntimeBuilder` ou `FixedStarRuntimeBuilder` nouveau sans preuve.
+- Required guard evidence:
+  - test AST ou scan cible borne a `backend/app/domain/astrology`;
+  - tests de coherence projection;
+  - preuves `app.routes`, `app.openapi()` et `TestClient`;
+  - preuve `pytest -q backend/tests/architecture/test_chart_runtime_surface_guardrails.py`.
+- Required architecture guard against reintroduction:
+  - architecture guard: forbidden symbols must not be reintroduced outside documented allowlists;
+  - interdire les lectures directes non allowlistees;
+  - interdire les selectors par `object_type` ou code nominal;
+  - interdire les builders specialises futurs sans decision documentee.
+- Deterministic source: forbidden symbols dans `backend/app/domain/astrology` et allowlist dans le test d'architecture.
+- Evidence profile: `reintroduction_guard`.
+- Command:
+  - `pytest -q backend/tests/architecture/test_chart_runtime_surface_guardrails.py`.
+
+## 4i. Persistent Evidence Artifacts
+
+| Artifact | Path | Purpose |
+|---|---|---|
+| Validation CS-224 | `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md` | Baseline, scans, tests et preuve finale. |
+| Review CS-224 | `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/generated/11-code-review.md` | Resultat de review apres implementation. |
+
+## 5. Current State Evidence
+
+Le codebase actuel indique:
+
+repository evidence assumption risk: le SKILL.md et le cheatsheet demandes sont absents, donc la story suit le brief et les diagnostics de validation.
+
+- Repository evidence assumption risk - le SKILL.md et le cheatsheet demandes sont absents, donc la story suit le brief et les diagnostics de validation.
+- Evidence 1: `_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md` - demande une consolidation, pas une suppression cassante.
+- Evidence 2: `_condamad/stories/regression-guardrails.md` - contient `RG-144` a `RG-148`, couvrant le runtime chart objects.
+- Evidence 3: `_condamad/stories/CS-223-chart-object-interpretation-input-adapter/00-story.md` - est `ready-to-dev`.
+- Evidence 4: `backend` - existe dans l'arborescence courante.
+- Evidence 5: `.agents/skills/condamad-story-writer/scripts/condamad_story_validate.py` - existe.
+- Evidence 6: `.agents/skills/condamad-story-writer/scripts/condamad_story_lint.py` - existe.
+- Evidence 7: `.agents/skills/condamad-story-writer/SKILL.md` - absent, donc la story suit le brief et les diagnostics.
+
+## 6. Target State
+
+After implementation:
+
+- `docs/architecture/astrology-runtime-surfaces.md` existe.
+- `chart_objects` est documente comme source canonique interne.
+- Les anciennes collections sont documentees comme projections de compatibilite ou resultats chart-level.
+- Les usages legacy conserves sont allowlistes avec raison et owner.
+- Les calculateurs nouveaux passent par `chart_objects`, capabilities ou projectors explicites.
+- Les tests d'architecture bloquent la consommation directe legacy non autorisee.
+- Les tests d'architecture bloquent la logique metier par `object_type`.
+- Les projections historiques restent coherentes avec `chart_objects`.
+- `NatalResult` conserve les surfaces publiques necessaires.
+- Les sorties publiques ne sont pas cassees.
+
+## 6a. Regression Guardrails
+
+- Guardrail source: `_condamad/stories/regression-guardrails.md`
+- Scope vector:
+  - backend domain astrology;
+  - natal runtime surfaces;
+  - chart objects runtime;
+  - projection compatibility;
+  - architecture tests;
+  - no frontend, DB, auth, i18n, style, build or migration scope.
+- Applicable guardrails:
+  - `RG-144`: `ChartObjectRuntimeData` reste le contrat runtime canonique et les calculateurs lisent les capacites.
+  - `RG-145`: le moteur d'aspects reste branche sur la frontiere chart objects.
+  - `RG-146`: motion/visibility restent des payloads runtime types sans recalcul ni seuil local.
+  - `RG-147`: dignity/dominance restent des payloads et resultats controles sans retour a `object_type`.
+  - `RG-148`: house/rulership restent des payloads runtime types sans resolver concurrent.
+- Non-applicable examples:
+  - frontend/style: aucune surface React ou CSS n'est dans le scope.
+  - DB/migrations: aucune persistance ou schema DB n'est dans le scope.
+  - auth/i18n: aucun comportement d'authentification ou localisation n'est dans le scope.
+- Registry gap: aucun `RG-149` dedie CS-224 n'est ajoute dans cette generation normale; l'evidence finale doit recommander son ajout ulterieur.
+
+## 7. Acceptance Criteria
+
+Alias de preuve:
+
+- `$arch`: `backend/tests/architecture`
+- `$astro`: `backend/tests/unit/domain/astrology`
+- `$int`: `backend/tests/integration/astrology`
+- `$doc`: `docs/architecture/astrology-runtime-surfaces.md`
+
+| AC | Requirement | Validation evidence required |
+|---|---|---|
+| AC1 | La documentation des surfaces runtime existe. | Evidence: `pytest -q $arch/test_chart_runtime_surface_documentation.py`; AST guard. |
+| AC2 | `chart_objects` est documente comme source canonique interne. | Evidence: `pytest -q $arch/test_chart_runtime_surface_documentation.py`; scan `rg`. |
+| AC3 | Les anciennes collections sont classees comme projections ou resultats chart-level. | Evidence: `pytest -q $arch/test_chart_runtime_surface_documentation.py`. |
+| AC4 | Les usages legacy conserves sont allowlistes. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; scan `rg`. |
+| AC5 | Les calculateurs migrés ne lisent plus directement les collections historiques. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; AST guard. |
+| AC6 | La logique metier par `object_type` est bloquee hors owners allowlistes. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; AST guard. |
+| AC7 | Les builders specialises futurs sont detectes. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; scan `rg`. |
+| AC8 | Les seuils magiques locaux restent bloques dans les calculateurs. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; scan `rg`. |
+| AC9 | `planet_positions` reste coherent avec les objets concernes de `chart_objects`. | Evidence: `pytest -q $astro/test_chart_runtime_surface_projections.py`; runtime pytest. |
+| AC10 | `dignity_results` reste coherent avec `payloads.dignity`. | Evidence: `pytest -q $astro/test_chart_runtime_surface_projections.py`; runtime pytest. |
+| AC11 | `fixed_star_conjunctions` reste coherent avec les payloads fixed star. | Evidence: `pytest -q $astro/test_chart_runtime_surface_projections.py`; runtime pytest. |
+| AC12 | `NatalResult` conserve les surfaces historiques necessaires. | Evidence: `pytest -q $astro/test_natal_result_contract.py`; `app.routes`; `app.openapi()`. |
+| AC13 | Les sorties publiques ne changent pas volontairement. | Evidence: `pytest -q $int/test_natal_public_contract_compatibility.py`; `TestClient`; `app.openapi()`. |
+| AC14 | Toute suppression est prouvee par non-usage. | Evidence: `rg` cible + tests; note dans `evidence/validation.md`. |
+| AC15 | Aucun changement de doctrine astrologique n'est introduit. | Evidence: golden tests existants; `pytest -q $astro/test_traditional_golden_cases.py`. |
+| AC16 | L'evidence finale CS-224 est persistee. | Evidence: from story dir, `rg -n "CS-224 Final Evidence" evidence/validation.md`. |
+
+## 8. Implementation Tasks
+
+- [ ] Task 1 - Capturer le baseline runtime et les usages legacy (AC: AC1, AC2, AC3, AC4, AC14, AC16)
+  - [ ] Subtask 1.1 - Executer les scans cibles listes en section 4c.
+  - [ ] Subtask 1.2 - Creer `evidence/validation.md` avec baseline et hypotheses.
+  - [ ] Subtask 1.3 - Classer chaque usage comme canonical, projection, public compatibility, chart-level result ou debug/test.
+
+- [ ] Task 2 - Documenter les surfaces runtime (AC: AC1, AC2, AC3, AC12)
+  - [ ] Subtask 2.1 - Creer `docs/architecture/astrology-runtime-surfaces.md`.
+  - [ ] Subtask 2.2 - Documenter toutes les surfaces requises par la section 4f.
+  - [ ] Subtask 2.3 - Ajouter le test d'inventaire documentaire.
+
+- [ ] Task 3 - Renforcer les guards d'architecture (AC: AC4, AC5, AC6, AC7, AC8)
+  - [ ] Subtask 3.1 - Ajouter l'allowlist exacte des usages legacy acceptes.
+  - [ ] Subtask 3.2 - Bloquer les nouvelles lectures directes des collections historiques.
+  - [ ] Subtask 3.3 - Bloquer les branches `object_type` hors owners allowlistes.
+  - [ ] Subtask 3.4 - Bloquer les builders specialises futurs non justifies.
+  - [ ] Subtask 3.5 - Bloquer les seuils magiques locaux couverts par le brief.
+
+- [ ] Task 4 - Verifier les projections historiques (AC: AC9, AC10, AC11, AC12)
+  - [ ] Subtask 4.1 - Ajouter un test runtime `planet_positions` versus `chart_objects`.
+  - [ ] Subtask 4.2 - Ajouter un test runtime `dignity_results` versus `payloads.dignity`.
+  - [ ] Subtask 4.3 - Ajouter un test runtime `fixed_star_conjunctions` versus payloads fixed star.
+  - [ ] Subtask 4.4 - Adapter les assertions aux surfaces reellement presentes sans masquer une divergence.
+
+- [ ] Task 5 - Nettoyer les duplications prouvees (AC: AC4, AC5, AC14)
+  - [ ] Subtask 5.1 - Identifier les builders, mappers ou adapters morts par scan cible.
+  - [ ] Subtask 5.2 - Supprimer ou consolider uniquement les elements prouvés sans usage.
+  - [ ] Subtask 5.3 - Consigner chaque retrait dans `evidence/validation.md`.
+
+- [ ] Task 6 - Finaliser validation et preuve publique (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15, AC16)
+  - [ ] Subtask 6.1 - Executer tests cibles et `pytest -q`.
+  - [ ] Subtask 6.2 - Executer `ruff format .` et `ruff check .`.
+  - [ ] Subtask 6.3 - Capturer `app.routes`, `app.openapi()` et un test `TestClient`.
+  - [ ] Subtask 6.4 - Persister `CS-224 Final Evidence`.
+
+## 9. Mandatory Reuse / DRY Constraints
+
+- Reuse:
+  - `ChartObjectRuntimeData`, `ChartObjectCapabilities` et `ChartObjectPayloads`;
+  - `NatalResult.chart_objects`;
+  - les payloads runtime motion, visibility, dignity, dominance, house_position, rulership et fixed_star_conjunctions;
+  - les projectors/builders existants si leur responsabilite est deja canonique;
+  - les tests CS-217 a CS-223 lorsque leur scope couvre deja la frontiere.
+- Do not recreate:
+  - un second graphe runtime hors `chart_objects`;
+  - un second calculateur d'aspects, dignity, dominance, houses, rulership, motion, visibility ou fixed stars;
+  - des builders specialises par planete, angle, point astral ou etoile fixe;
+  - une projection API publique concurrente.
+- Shared abstraction allowed only if:
+  - elle reduit une duplication concrete;
+  - elle reste bornee a la projection ou validation runtime;
+  - elle est couverte par tests.
+
+## 10. No Legacy / Forbidden Paths
+
+Forbidden unless explicitly approved:
+
+- compatibility wrappers non nommes
+- transitional aliases non bornes
+- legacy imports dans les calculateurs
+- duplicate active implementations
+- silent fallback behavior
+- root-level service when canonical namespace exists
+- preserving old path through re-export
+- broad allowlist
+- `PASS with limitation`
+
+Specific forbidden symbols / paths:
+
+- `natal_result.planet_positions` dans un nouveau calculateur;
+- `natal_result.astral_points` dans un nouveau calculateur;
+- `natal_result.advanced_conditions` dans un nouveau calculateur;
+- `natal_result.dignity_results` dans un nouveau calculateur;
+- `natal_result.fixed_star_conjunctions` dans un nouveau calculateur;
+- `if obj.object_type == ChartObjectType.PLANET`;
+- `if object_type == "planet"`;
+- `ChartObjectType.ANGLE` pour router une logique metier;
+- `ChartObjectType.FIXED_STAR` pour router une logique metier;
+- `Planet*Builder`, `Angle*Builder`, `AstralPoint*Builder`, `FixedStar*Builder` nouveaux sans decision documentee;
+- modification volontaire de `backend/app/api/**`, `backend/app/infra/**`, `backend/migrations/**` ou `frontend/src/**`.
+
+## 11. Removal Classification Rules
+
+La classification doit etre deterministe:
+
+- `canonical-active`: l'element est reference par le code de production first-party ou il est le proprietaire canonique.
+- `external-active`: l'element est reference par une API publique, le frontend, la documentation publique, un client ou une preuve d'audit.
+- `historical-facade`: l'element delegue a une implementation canonique uniquement pour preserver une ancienne surface.
+- `dead`: l'element n'a aucune reference dans le code de production, les tests, la documentation, les contrats generes et les surfaces externes connues.
+- `needs-user-decision`: une ambiguite persiste apres les scans obligatoires et doit bloquer la suppression.
+
+Matrice de decision de classification:
+
+| Classification | Decisions autorisees | Regle |
+|---|---|---|
+| `canonical-active` | `keep` | Ne doit pas etre supprime. |
+| `external-active` | `keep`, `needs-user-decision` | Ne doit pas etre supprime sans decision utilisateur explicite. |
+| `historical-facade` | `delete`, `replace-consumer`, `needs-user-decision` | Doit etre remplace ou supprime quand aucun blocage externe ne subsiste. |
+| `dead` | `delete` | Doit etre supprime. |
+| `needs-user-decision` | `needs-user-decision` | Doit bloquer l'implementation jusqu'a decision. |
+
+## 12. Removal Audit Format
+
+Chemin obligatoire de la table d'audit:
+
+- `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/runtime-surface-removal-audit.md`
+
+Table d'audit obligatoire:
+
+| Item | Type | Classification | Consumers | Canonical replacement | Decision | Proof | Risk |
+|---|---|---|---|---|---|---|---|
+
+Decisions autorisees: `keep`, `delete`, `replace-consumer`, `needs-user-decision`.
+
+Chaque element supprime doit avoir une preuve issue de scans de references de code et de tests cibles.
+
+## 13. Canonical Ownership
+
+| Responsibility | Canonical owner | Non-canonical surfaces |
+|---|---|---|
+| Source runtime interne | `NatalResult.chart_objects` | collections historiques |
+| Projection legacy | projector/builder nomme | calculateurs metier |
+| Aspects chart-level | moteur d'aspects chart objects | `planet_positions` direct |
+| Dignity/dominance payloads | enrichers chart objects et resultats globaux | `object_type` direct |
+| Documentation surfaces | `docs/architecture/astrology-runtime-surfaces.md` | notes dispersees |
+| Guards anti-retour | `backend/tests/architecture/test_chart_runtime_surface_guardrails.py` | revue manuelle seule |
+
+## 14. Delete-Only Rule
+
+Les elements classes `dead` doivent etre supprimes, pas repointes.
+They must be deleted, not repointed.
+
+Interdit:
+
+- rediriger vers une surface legacy;
+- preserver un wrapper;
+- ajouter un alias de compatibilite non documente;
+- garder un builder specialise mort actif;
+- preserver l'ancien chemin via un re-export;
+- remplacer la suppression par un comportement soft-disable.
+
+## 15. External Usage Blocker
+
+- External usage blocker: public API/front/LLM consumers must remain compatible.
+- If an item is `external-active`, it must not be deleted without a user decision.
+- Required proof:
+  - `app.routes`;
+  - `app.openapi()`;
+  - `TestClient` on the natal public path used by existing tests;
+  - no voluntary diff under `frontend/src`.
+
+## 16. Internal Usage Search
+
+- Required before implementation:
+  - rechercher les consommateurs actuels de `planet_positions`, `astral_points`, `houses`, `angles`, `aspects`, `dignity_results`,
+    `dominance_result`, `advanced_conditions`, `fixed_star_conjunctions` et `chart_objects`;
+  - identifier quels usages sont projections, API/front, fixtures, debug, migration bridge ou calculateurs.
+- Required after implementation:
+  - prouver dans `evidence/validation.md` que les nouveaux usages metier passent par `chart_objects` ou un projector explicite.
+
+## 17. Generated Contract Check
+
+- Generated contract check: required as no-public-delta proof.
+- Reason: CS-224 modifie une architecture interne et ne doit pas modifier route, OpenAPI, client genere, migration DB ou schema frontend.
+- Required evidence:
+  - `app.routes` inspecte par test ou script local;
+  - `app.openapi()` inspecte par test ou script local;
+  - `TestClient` sur un endpoint natal public couvert par les tests existants;
+  - `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py`.
+
+## 18. Files to Inspect First
+
+Codex must inspect before editing:
+
+- `backend/app/domain/astrology/runtime/chart_object_runtime_data.py`
+- `backend/app/domain/astrology/builders/chart_object_runtime_builder.py`
+- fichier qui declare `NatalResult`
+- fichiers qui construisent le resultat natal
+- fichiers qui exposent la projection JSON publique du theme natal
+- `backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py`
+- `backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`
+- `_condamad/stories/regression-guardrails.md`
+
+## 19. Expected Files to Modify
+
+Likely files:
+
+- `docs/architecture/astrology-runtime-surfaces.md` - inventaire et statut des surfaces.
+- `backend/tests/architecture/test_chart_runtime_surface_documentation.py` - test documentaire.
+- `backend/tests/architecture/test_chart_runtime_surface_guardrails.py` - tests AST/scans anti-retour.
+- `backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py` - coherence projections historiques.
+- `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md` - preuve finale.
+
+Possible files:
+
+- projector ou builder de compatibilite existant - centralisation bornee si duplication prouvee.
+- tests existants CS-217 a CS-223 - renforcement si le scope est deja couvert.
+
+Likely tests:
+
+- `backend/tests/architecture/test_chart_runtime_surface_documentation.py`
+- `backend/tests/architecture/test_chart_runtime_surface_guardrails.py`
+- `backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py`
+- `backend/tests/unit/domain/astrology/test_natal_result_contract.py`
+- `backend/tests/integration/astrology/test_natal_public_contract_compatibility.py`
+
+Files not expected to change:
+
+- `backend/app/api/**` - aucun endpoint modifie.
+- `backend/app/infra/**` et `backend/migrations/**` - aucune persistance ou DB.
+- `frontend/src/**` - aucune surface React.
+- `backend/app/domain/astrology/dignities/**` - aucun score ou doctrine ne doit changer.
+- `backend/app/domain/astrology/dominance/**` - aucun score ou classement ne doit changer.
+
+## 20. Dependency Policy
+
+- New dependencies: none.
+- Justification: no dependency changes are authorized.
+
+## 21. Validation Plan
+
+Run or justify why skipped. Toutes les commandes Python doivent etre lancees apres activation du venv depuis la racine du repo:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Tests cibles:
+
+```powershell
+pytest -q backend/tests/architecture/test_chart_runtime_surface_documentation.py
+pytest -q backend/tests/architecture/test_chart_runtime_surface_guardrails.py
+pytest -q backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py
+pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py
+pytest -q backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py
+pytest -q backend/tests/integration/astrology/test_natal_public_contract_compatibility.py
+```
+
+Controles qualite depuis `backend`:
+
+```powershell
+Push-Location backend
+ruff format .
+ruff check .
+pytest -q
+Pop-Location
+```
+
+Scans anti-regression depuis la racine:
+
+```powershell
+rg -n "natal_result\.planet_positions|natal_result\.astral_points|natal_result\.advanced_conditions|natal_result\.dignity_results" `
+  backend/app/domain/astrology -g "*.py"
+rg -n "natal_result\.fixed_star_conjunctions|natal_result\.houses|natal_result\.angles" backend/app/domain/astrology -g "*.py"
+rg -n "object_type ==|\.object_type ==|ChartObjectType\.PLANET|ChartObjectType\.ANGLE|ChartObjectType\.FIXED_STAR" `
+  backend/app/domain/astrology -g "*.py"
+rg -n "Planet.*Builder|Angle.*Builder|AstralPoint.*Builder|FixedStar.*Builder" backend/app/domain/astrology -g "*.py"
+rg -n "\b8\.5\b|\b17\b|\b0\.2833\b|\b0\.01\b" backend/app/domain/astrology -g "*.py"
+rg -n "CS-224 Final Evidence" _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md
+git diff -- backend/app/api backend/app/infra backend/migrations frontend/src
+```
+
+Runtime checks:
+
+```powershell
+pytest -q backend/tests/architecture/test_chart_runtime_surface_guardrails.py
+pytest -q backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py
+```
+
+Commandes de validation de la story:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+$story = "_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md"
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py $story
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict $story
+```
+
+Expected scan results:
+
+- direct legacy scan: zero nouveau hit hors allowlist documentee;
+- `object_type` scan: zero hit dans les nouveaux calculateurs, selectors, projectors et consumers;
+- specialized builder scan: zero nouveau builder hors decision documentee;
+- magic threshold scan: zero nouveau seuil local;
+- adjacent diff: empty unless blocker documented.
+
+Skipped-command rule:
+
+- Toute commande sautee doit etre consignee dans l'evidence finale avec la commande exacte, la raison, le risque et la preuve de remplacement.
+
+## 22. Regression Risks
+
+- Risk: un nouveau calculateur consomme `planet_positions` comme source primaire.
+  - Guardrail: AC4, AC5 et `RG-144`.
+- Risk: la selection revient a une logique par `object_type`.
+  - Guardrail: AC6, `RG-144`, `RG-145`, `RG-147` et `RG-148`.
+- Risk: les projections historiques divergent de `chart_objects`.
+  - Guardrail: AC9, AC10, AC11 et tests runtime.
+- Risk: une suppression casse l'API ou le front.
+  - Guardrail: AC12, AC13, `app.routes`, `app.openapi()` et `TestClient`.
+- Risk: le cleanup devient une refonte de doctrine.
+  - Guardrail: AC15 et golden tests existants.
+
+## 23. Dev Agent Instructions
+
+- Implement only CS-224.
+- Implement only this story.
+- Do not broaden the domain.
+- Do not introduce new dependencies.
+- Do not mark a task complete without validation evidence.
+- If an AC cannot be satisfied, stop and record the blocker.
+- Do not preserve legacy behavior for convenience.
+- Do not bypass constraints through wrapper, alias, fallback, re-export, broad allowlist, unresolved marker or hidden residual work.
+- Consume `chart_objects` through capabilities and payloads, not `object_type`.
+- Keep API, DB, migrations, prompts LLM and frontend out of scope.
+- Preserve public compatibility projections unless a separate approved removal story exists.
+- Use French top-of-file comments/docstrings for new or significantly modified Python files.
+- Run every Python command after activating `.venv`.
+- Do not accept `PASS with limitation`, broad allowlists, wildcard deltas, unclassified fallback, compatibility, legacy, migration-only,
+  shim, alias, unresolved markers or hidden residual in-domain work.
+
+## 24. CS-224 Final Evidence Template
+
+Create `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md` with:
+
+```markdown
+## CS-224 Final Evidence
+
+### Runtime surfaces
+- Documented canonical and legacy runtime surfaces.
+- chart_objects is the canonical internal source.
+- Legacy collections are retained as compatibility projections.
+
+### Cleanup
+- Removed or consolidated redundant builders/adapters where safe.
+- No public API/front-breaking removal.
+
+### Guardrails
+- Added architecture tests for direct legacy consumption.
+- Added architecture tests for object_type-driven logic.
+- Added guardrails against specialized builders.
+
+### Consistency
+- Historical projections remain coherent with chart_objects.
+- NatalResult compatibility is preserved.
+- app.routes, app.openapi() and TestClient show no public API delta.
+
+### Validation
+- ruff format .
+- ruff check .
+- pytest -q
+- targeted architecture and runtime projection tests
+
+### Allowlist
+- Listed all whitelisted legacy usages and reasons.
+- Registry gap for a future dedicated CS-224 guardrail is documented.
+```
+
+## 25. Story Generation Validation Notes
+
+- Story validation command attempted after venv activation:
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`
+- Story validation result:
+  - first run: FAIL with unsupported archetype, deletion marker, allowlist contract, contract shape, removal audit and guardrail diagnostics.
+  - second run: FAIL with current evidence marker, temporary allowlist exit condition and reintroduction guard wording diagnostics.
+  - final correction: replaced by the current validation results after this review cycle.
+  - current review cycle: PASS.
+- Strict lint command attempted after venv activation:
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`
+- Strict lint result:
+  - first run: FAIL with the same structural diagnostics as validation.
+  - second run: FAIL with current evidence marker, temporary allowlist exit condition and reintroduction guard wording diagnostics.
+  - final correction: replaced by the current strict lint results after this review cycle.
+  - current review cycle: PASS.
+
+## 26. References
+
+- Source brief: `_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md`.
+- Story tracker: `_condamad/stories/story-status.md`.
+- Guardrail registry: `_condamad/stories/regression-guardrails.md` (`RG-144`, `RG-145`, `RG-146`, `RG-147`, `RG-148`).
+- Previous story: `_condamad/stories/CS-223-chart-object-interpretation-input-adapter/00-story.md`.
+
+
+ succeeded in 236ms:
+# Story CS-228 migrate-natal-runtime-to-calculation-graph: Migrate Natal Runtime to Calculation Graph
+Status: done
+
+## 1. Objective
+
+Faire produire `build_natal_result` par `CalculationGraphRunner` et la definition `natal_chart_v1`, en conservant le contrat public actuel du theme natal.
+La story deplace l'orchestration metier vers le graphe sans changer l'API, le frontend, la DB, les scores ou la doctrine astrologique.
+
+## 2. Trigger / Source
+
+- Source type: architecture-runtime-migration.
+- Source reference: `_story_briefs/cs-228-migrate-natal-runtime-to-calculation-graph.md`.
+- Reason for change: CS-225 a CS-227 fournissent contrats, definition `natal_chart_v1` et runner; le pipeline natal doit maintenant les consommer.
+- Selected story writer mode: Fast Story Writer Mode.
+- Skill availability note: `.agents/skills/condamad-story-writer/SKILL.md`, le cheatsheet demande et `resolve_guardrails.py` ne sont pas presents.
+- Source-alignment review: la story migre l'orchestration backend-domain, sans nouvelle route, schema public, DB, frontend, persistance ou feature flag permanent.
+
+## References
+
+- `_story_briefs/cs-228-migrate-natal-runtime-to-calculation-graph.md`.
+- `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md`.
+- `_condamad/stories/CS-226-natal-calculation-graph-definition/00-story.md`.
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md`.
+- `_condamad/stories/regression-guardrails.md` avec recherche ciblee `RG-144|RG-145|RG-147|RG-148`.
+
+## 3. Domain Boundary
+
+Cette story appartient a un seul domaine:
+
+- Domain: `backend/app/domain/astrology`.
+- In scope:
+  - creer les adapters de nodes natals qui deleguent aux calculateurs existants;
+  - creer `build_natal_calculation_node_registry`;
+  - brancher `build_natal_result` sur `CalculationGraphRunner` et `natal_chart_v1`;
+  - creer ou isoler `NatalResultAssembler`;
+  - produire les outputs canoniques necessaires a `NatalResult`;
+  - conserver `chart_objects` comme source runtime canonique interne;
+  - conserver les projections historiques publiques et internes controlees;
+  - propager les erreurs de node avec le code de node;
+  - ajouter tests unitaires, integration et architecture;
+  - verifier l'absence de delta OpenAPI, DB et frontend.
+- Out of scope:
+  - changer les contrats API publics;
+  - changer le frontend;
+  - ajouter transits, synastrie, progressions, directions, returns ou profections;
+  - changer les scores, orbes, dignites, dominance, aspects, fixed stars ou doctrine astrologique;
+  - ajouter une persistance du graphe;
+  - parallelliser les calculs;
+  - introduire un feature flag permanent;
+  - ajouter une dependance externe.
+- Explicit non-goals:
+  - ne pas enrichir `_condamad/stories/regression-guardrails.md` pendant cette generation normale;
+  - ne pas ajouter de dossier de base sous `backend/`;
+  - ne pas dupliquer les calculateurs astrologiques dans les adapters de nodes;
+  - ne pas utiliser les projections legacy comme sources de verite calculatoires;
+  - ne pas exposer `chart_objects` dans le JSON public sans story API dediee.
+
+## 4. Operation Contract
+
+- Operation type: update
+- Primary archetype: custom
+- Archetype reason: la story remplace l'orchestration procedurale interne par une execution de graphe backend-domain avec compatibilite publique stable.
+- Behavior change allowed: constrained
+- Behavior change constraints:
+  - autorise: `build_natal_result` prepare les inputs, execute `natal_chart_v1` et assemble `NatalResult`;
+  - autorise: nouveaux adapters, registry natal et assembler sous le runtime ou service astrology;
+  - autorise: legacy path prive temporaire uniquement borne, documente et compare par tests;
+  - autorise: evidence de neutralite API via `app.routes`, `app.openapi()` et `TestClient`;
+  - interdit: changement API, DB, frontend, doctrine, scores, dependance externe ou feature flag permanent.
+- Deletion allowed: no
+- Replacement allowed: yes
+- User decision required if: l'implementation touche une route publique, une migration DB, le frontend, une dependance externe ou une suppression de champ public.
+- Additional validation rules:
+  - `build_natal_result` utilise `CalculationGraphRunner` avec la definition `natal_chart_v1`;
+  - les nodes natals sont resolus par `build_natal_calculation_node_registry`;
+  - les adapters lisent leurs inputs depuis `CalculationGraphContext` et retournent un output unique;
+  - les adapters appellent les calculateurs existants sans recopier leur logique;
+  - `NatalResultAssembler` lit les outputs canoniques et construit les projections historiques;
+  - `chart_objects` reste la source runtime canonique interne;
+  - les projections legacy restent sorties de compatibilite et ne deviennent pas sources calculatoires;
+  - les erreurs de node incluent le code de node dans un message stable;
+  - `build_natal_result` ne contient plus une longue sequence d'orchestration metier;
+  - `app.routes`, `app.openapi()`, `pytest` et `TestClient` prouvent l'absence de delta API volontaire.
+
+## 4a. Required Contracts
+
+| Contract | Required | Reason |
+|---|---:|---|
+| Runtime Source of Truth | yes | `natal_chart_v1` et `chart_objects` deviennent la source d'orchestration et de runtime interne. |
+| Baseline Snapshot | yes | Le pipeline procedural, CS-225, CS-226 et CS-227 doivent etre connus avant migration. |
+| Ownership Routing | yes | Adapters, registry, runner, assembler, projections et API ont des owners distincts. |
+| Allowlist Exception | yes | Un legacy path temporaire reste possible seulement avec comparaison et sortie planifiee. |
+| Contract Shape | yes | Registry, adapters, outputs canoniques, assembler et erreurs structurent la migration. |
+| Batch Migration | yes | Adapters, registry, branchement, assemblage, tests et preuves sont livres par lots. |
+| Reintroduction Guard | yes | Les scans bloquent orchestration procedurale, duplication de calculateurs et deltas publics. |
+| Persistent Evidence | yes | Tests, scans, comparaison et preuve OpenAPI doivent etre conserves dans le dossier CS-228. |
+
+## 4b. Runtime Source of Truth
+
+- Primary source of truth:
+  - `backend/app/domain/astrology/runtime/natal_calculation_graph.py`;
+  - `backend/app/domain/astrology/runtime/calculation_graph_runner.py`;
+  - `backend/app/domain/astrology/runtime/natal_calculation_nodes.py`;
+  - `backend/app/domain/astrology/runtime/natal_calculation_registry.py`;
+  - `backend/app/domain/astrology/runtime/natal_result_assembler.py`;
+  - `backend/app/domain/astrology/natal_calculation.py` comme facade mince.
+- Runtime/domain artifacts:
+  - adapters de nodes natals;
+  - registry explicite de calculateurs;
+  - execution `natal_chart_v1`;
+  - outputs canoniques;
+  - assembler `NatalResult`;
+  - projections historiques conservees;
+  - tests unitaires, integration et architecture.
+- Secondary evidence:
+  - `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`;
+  - `pytest -q backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py`;
+  - `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py`;
+  - `pytest -q backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`;
+  - `pytest -q backend/tests/integration/astrology`;
+  - `app.routes`, `app.openapi()` et `TestClient` sans delta public volontaire.
+- Static scans alone are not sufficient because:
+  - ils ne prouvent ni l'execution runtime de `natal_chart_v1`, ni la compatibilite `NatalResult`, ni la propagation controlee des erreurs de node.
+
+## 4c. Baseline / Before-After Rule
+
+- Baseline artifact before implementation:
+  - `Get-Content backend/app/domain/astrology/natal_calculation.py`;
+  - `Get-Content backend/app/domain/astrology/runtime/natal_calculation_graph.py`;
+  - `Get-Content backend/app/domain/astrology/runtime/calculation_graph_runner.py`;
+  - recherche ciblee `def build_natal_result|chart_objects =|FixedStarConjunctionCalculator|DignityPayloadEnricher|DominancePayloadEnricher`;
+  - recherche ciblee `CalculationGraphRunner|build_natal_calculation_graph_definition|CalculationNodeRegistry`;
+  - `Select-String "RG-144|RG-145|RG-147|RG-148" _condamad/stories/regression-guardrails.md`.
+- Comparison after implementation:
+  - memes recherches ciblees apres implementation;
+  - tests CS-228 du Validation Plan;
+  - preuve `app.routes`;
+  - preuve `app.openapi()`;
+  - diff adjacent sur API, DB, migrations et frontend;
+  - comparaison golden ou integration entre sorties publiques avant/apres.
+- Expected invariant:
+  - `build_natal_result` retourne toujours `NatalResult`;
+  - `chart_objects`, `houses` et `aspects` restent produits;
+  - les projections historiques restent disponibles;
+  - `chart_objects` reste absent du JSON public;
+  - aucun endpoint public ne change volontairement.
+- Allowed differences:
+  - nouveaux modules `natal_calculation_nodes.py`, `natal_calculation_registry.py` et `natal_result_assembler.py`;
+  - reduction de l'orchestration dans `natal_calculation.py`;
+  - tests et evidence CS-228;
+  - Registry gap: un invariant global dedie au branchement production de `natal_chart_v1` pourra etre ajoute ulterieurement.
+
+## 4d. Ownership Routing Rule
+
+| Responsibility type | Canonical owner | Forbidden destination |
+|---|---|---|
+| Orchestration du pipeline natal | `natal_chart_v1` + `CalculationGraphRunner` | sequence longue dans `build_natal_result` |
+| Resolution des nodes | `natal_calculation_registry.py` | import dynamique, global lookup, route API |
+| Adaptation des calculateurs | `natal_calculation_nodes.py` | duplication d'algorithmes metier |
+| Assemblage compatible | `natal_result_assembler.py` | adapters de nodes, API, frontend |
+| Facade publique domaine | `natal_calculation.py` | orchestration metier croissante |
+| Projection API publique | serializers/adapters existants | runtime interne du graphe |
+
+## 4e. Allowlist / Exception Register
+
+| File | Symbol / Route / Import | Reason | Expiry or permanence decision |
+|---|---|---|---|
+| `natal_calculation.py` | preparation inputs | Facade publique domaine conservee. | Permanent pour cette story. |
+| `natal_calculation.py` | legacy path prive temporaire | Comparaison de non-regression seulement. | Temporary; exit condition: CS-229 cleanup story or same PR removal. |
+| serializers et routes publics | projections historiques | Contrat public conserve sans exposition de `chart_objects`. | Permanent pour cette story. |
+| tests golden et snapshots | sorties historiques | Preuve de compatibilite. | Borne aux tests et evidence. |
+
+Validation rule:
+
+- Toute dependance calculatoire vers `planet_positions_projection`, `dignity_results_projection`, `advanced_conditions_projection` ou
+  `public_natal_result` bloque l'implementation CS-228.
+
+## 4f. Contract Shape
+
+- Contract type:
+  - adapters de nodes Python types;
+  - registry explicite `CalculationNodeRegistry`;
+  - runner `CalculationGraphRunner`;
+  - assembler `NatalResult`;
+  - aucune nouvelle API HTTP.
+- Required functions/classes:
+  - `build_natal_calculation_node_registry`;
+  - adapters de nodes pour preparation, positions, points astraux, maisons, signes, chart objects, aspects, rulerships, fixed stars, conditions, dignites, dominance et signature;
+  - `NatalResultAssembler`;
+  - facade `build_natal_result` amincie.
+Fields:
+
+- `graph_code`;
+- `node_code`;
+- `calculator`;
+- `input_keys`;
+- `output_key`;
+- `outputs`;
+- `chart_objects`;
+- `houses_runtime`;
+- `aspects_runtime`;
+- `dignities`;
+- `dominance`;
+- `chart_signature`;
+- `legacy_projection`;
+- `error_message`.
+
+Required fields:
+
+- `graph_code`;
+- `node_code`;
+- `calculator`;
+- `output_key`;
+- `outputs`;
+- `chart_objects`;
+- `houses_runtime`;
+- `aspects_runtime`;
+- `NatalResult`.
+
+Optional fields:
+
+- `legacy_projection`;
+- `temporary_legacy_comparison_path`;
+- `error_message` peut etre vide pour un node reussi.
+
+- Required output surfaces:
+  - `chart_objects`;
+  - `houses_runtime`;
+  - `aspects_runtime`;
+  - `house_positions`;
+  - `house_rulerships`;
+  - `fixed_star_conjunctions`;
+  - `advanced_conditions`;
+  - `dignities`;
+  - `dominance`;
+  - `chart_signature`;
+  - projections historiques necessaires a `NatalResult`.
+- Required behavior:
+  - chaque adapter consomme `CalculationGraphContext`;
+  - chaque adapter retourne un output unique;
+  - le registry mappe les calculator codes de CS-226 vers les adapters;
+  - l'assembler echoue avec un message stable lorsqu'un output obligatoire manque;
+  - une erreur de node est remontee avec `node_code`;
+  - le JSON public reste compatible.
+- Status codes:
+  - no HTTP endpoint, method or status code is changed.
+- Serialization names:
+  - no public JSON key is renamed or removed by CS-228.
+- Frontend type impact:
+  - none; no frontend contract changes are allowed.
+- Generated contract impact:
+  - none; `app.routes`, `app.openapi()` and `TestClient` must show no public delta.
+
+## 4g. Batch Migration Plan
+
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
+|---|---|---|---|---|---|---|
+| 1 | calculateurs appeles en ligne | adapters de nodes | tests factices | unit adapters | delegation proof | logique dupliquee |
+| 2 | resolution implicite | registry natal | runner | registry tests | no dynamic import | calculator inconnu |
+| 3 | ordre procedural | `natal_chart_v1` | `build_natal_result` | graph execution | runner evidence | ordre divergent |
+| 4 | assemblage disperse | `NatalResultAssembler` | service natal | contract tests | missing output error | projection manquante |
+| 5 | legacy path actif | graph path canonique | aucun public | comparison tests | bounded temporary path | divergence publique |
+| 6 | preuve manuelle API | `app.routes` et `app.openapi()` | aucun public | TestClient smoke | zero public delta | route/schema modifie |
+
+Completion rule: chaque batch conserve `pytest -q`, `app.routes`, `app.openapi()`, `chart_objects` interne et aucune modification frontend/DB.
+
+## 4h. Reintroduction Guard
+
+- Guard target:
+  - aucune longue sequence d'orchestration metier dans `build_natal_result`;
+  - aucun adapter de node ne recopie un calculateur existant;
+  - aucune resolution dynamique par `importlib.import_module`, `eval`, `globals()` ou lookup magique;
+  - aucune dependance calculatoire vers une projection compatibility ou public;
+  - aucun changement volontaire de `app.routes`, `app.openapi()` ou payload public;
+  - aucune exposition de `chart_objects` dans le JSON public;
+  - aucun changement DB, migration, frontend ou feature flag permanent.
+- Guard mechanism:
+  - tests unitaires des adapters et du registry;
+  - tests d'integration `build_natal_result`;
+  - tests de contrat `NatalResult` et JSON public;
+  - AST guard ou scans cibles sur orchestration procedurale, imports dynamiques et projections;
+  - `TestClient` smoke sur OpenAPI;
+  - scan cible `rg -n "natal_result\\.planet_positions|natal_result\\.dignity_results|natal_result\\.advanced_conditions"`
+    sur `backend/app/domain/astrology/runtime` et `backend/app/domain/astrology/natal_calculation.py`.
+- Guard owner:
+  - `backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`;
+  - `backend/tests/unit/domain/astrology/test_natal_result_contract.py`;
+  - `backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`;
+  - `backend/tests/integration/astrology`.
+- Guard evidence:
+  - chemin complet `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`;
+  - chemin complet `pytest -q backend/tests/integration/astrology`;
+  - token runtime `AST guard`, `app.routes`, `app.openapi()` et `TestClient`.
+
+## 4i. Persistent Evidence Artifacts
+
+| Artifact | Path | Purpose |
+|---|---|---|
+| Validation evidence | `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/validation.md` | Conserver tests, lint et resultats cibles CS-228. |
+| API neutrality evidence | `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/openapi-routes.md` | Conserver OpenAPI et routes. |
+| Graph migration proof | `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/natal-graph-migration.md` | Prouver graph et compatibilite. |
+
+## 5. Current State Evidence
+
+- CS-225 fournit les contrats `CalculationGraphDefinition`, nodes, inputs, statuts et validator.
+- CS-226 declare `natal_chart_v1` comme definition du pipeline natal.
+- CS-227 fournit `CalculationGraphRunner`, `CalculationGraphContext` et `CalculationNodeRegistry`.
+- Le brief indique que `build_natal_result` orchestre encore preparation, positions, maisons, signes, chart objects, aspects, dignites, dominance et projections.
+- Evidence 1: `_story_briefs/cs-228-migrate-natal-runtime-to-calculation-graph.md` - demande une migration progressive sans changement public.
+- Evidence 2: `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md` - contrats de graphe prets.
+- Evidence 3: `_condamad/stories/CS-226-natal-calculation-graph-definition/00-story.md` - definition `natal_chart_v1` prete.
+- Evidence 4: `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md` - runner et registry prets.
+- Evidence 5: `backend` existe dans l'arborescence courante.
+- Evidence 6: `.agents/skills/condamad-story-writer/scripts/condamad_story_validate.py` existe.
+- Evidence 7: `.agents/skills/condamad-story-writer/scripts/condamad_story_lint.py` existe.
+
+## 6. Target State
+
+- `build_natal_result` reste l'entree domaine mais devient mince.
+- Les inputs natals sont prepares puis injectes dans `CalculationGraphContext`.
+- `CalculationGraphRunner` execute `natal_chart_v1`.
+- `build_natal_calculation_node_registry` resout tous les calculator codes natals.
+- Les adapters de nodes deleguent aux calculateurs existants.
+- `NatalResultAssembler` produit un `NatalResult` complet.
+- `chart_objects` reste la source runtime canonique interne.
+- Les projections historiques restent disponibles.
+- Une erreur de node indique le code de node.
+- Les tests prouvent compatibilite publique, execution graph et absence de delta API/DB/frontend.
+
+## 6a. Regression Guardrails
+
+Scope vector:
+
+- backend-domain: yes;
+- runtime-contracts: yes;
+- astrology: yes;
+- API: no;
+- DB/migrations: no;
+- frontend/style/build/i18n/auth: no.
+
+Selected guardrails:
+
+| ID | Applicability | Story-local use |
+|---|---|---|
+| RG-144 | local | `ChartObjectRuntimeData` reste le contrat canonique; les nodes et l'assembler ne le remplacent pas par les collections historiques. |
+| RG-145 | local | Le moteur d'aspects reste consommateur des objets du theme et de leurs capabilities, pas des anciennes collections directes. |
+| RG-147 | local | Dignity et dominance restent des payloads et resultats controles; les adapters ne recalculent pas les scores. |
+| RG-148 | local | House position et rulership restent projetes depuis les resolvers/helpers existants, sans second resolver local. |
+
+Non-applicable examples:
+
+- DB/migration guardrails: hors scope, aucune table ni migration Alembic n'est modifiee.
+- Frontend/style/build guardrails: hors scope, aucun fichier React, CSS ou build n'est touche.
+- Auth/i18n guardrails: hors scope, aucune authentification ou localisation n'est modifiee.
+
+Registry gap:
+
+- Aucun guardrail global dedie a l'execution production de `natal_chart_v1` n'existe encore; ne pas enrichir le registre pendant cette generation normale.
+
+## 7. Acceptance Criteria
+
+| AC | Requirement | Evidence |
+|---|---|---|
+| AC1 | Graph runner execute `natal_chart_v1`. | `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`; AST. |
+| AC2 | Les nodes natals sont resolus par registry explicite. | `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`; registry assertions. |
+| AC3 | Les adapters deleguent aux calculateurs existants sans duplication. | `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`; AST. |
+| AC4 | `build_natal_result` retourne un `NatalResult` complet. | `pytest -q backend/tests/integration/astrology`; runtime assertions `chart_objects`, `houses`, `aspects`. |
+| AC5 | `chart_objects` reste source runtime canonique interne. | `pytest -q backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py`; AST guard. |
+| AC6 | Les projections historiques restent disponibles. | `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py`; runtime projection assertions. |
+| AC7 | Les projections legacy ne sont pas sources calculatoires. | `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`; scan projection. |
+| AC8 | Une erreur de node inclut le code de node. | `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`; node_code assertion. |
+| AC9 | `build_natal_result` ne contient plus une longue sequence procedurale. | `pytest -q backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`; AST. |
+| AC10 | Le graphe execute correspond a `natal_chart_v1`. | `pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`; graph_code assertion. |
+| AC11 | `chart_objects` reste absent du JSON public. | `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py`; `app.openapi()`; `TestClient`. |
+| AC12 | Aucun changement OpenAPI involontaire n'est introduit. | `pytest -q backend/tests/architecture/test_api_contract_neutrality.py`; `app.routes`; `app.openapi()`. |
+| AC13 | Aucun changement DB ou frontend n'est introduit. | `pytest -q backend/tests/integration/astrology`; AST guard; diff adjacent DB/frontend. |
+| AC14 | Les tests golden existants restent verts. | `pytest -q backend/tests`; targeted natal graph tests. |
+| AC15 | L'evidence finale CS-228 est persistee. | from story dir, `rg -n "CS-228 Final Evidence" evidence/validation.md`. |
+
+## 8. Implementation Tasks
+
+- [ ] Task: lire les contrats CS-225, la definition CS-226, le runner CS-227 et le service natal actuel. (AC: AC1, AC10)
+- [ ] Task: creer `natal_calculation_nodes.py` avec commentaire global et docstrings en francais. (AC: AC3)
+- [ ] Task: ajouter les adapters de nodes natals pour les calculateurs existants. (AC: AC3, AC4)
+- [ ] Task: creer `natal_calculation_registry.py` et `build_natal_calculation_node_registry`. (AC: AC2)
+- [ ] Task: creer ou isoler `NatalResultAssembler` avec commentaire global et docstrings en francais. (AC: AC4, AC6)
+- [ ] Task: brancher `build_natal_result` sur `CalculationGraphRunner` et `natal_chart_v1`. (AC: AC1, AC10)
+- [ ] Task: conserver les projections historiques dans l'assembler sans les utiliser comme sources calculatoires. (AC: AC6, AC7)
+- [ ] Task: propager les erreurs de node avec le code de node. (AC: AC8)
+- [ ] Task: reduire l'orchestration procedurale restante dans `build_natal_result`. (AC: AC9)
+- [ ] Task: ajouter les tests unitaires d'execution graph, registry, adapters et erreur de node. (AC: AC1, AC2, AC3, AC8, AC10)
+- [ ] Task: ajouter les tests d'integration du theme natal complet. (AC: AC4, AC14)
+- [ ] Task: renforcer les tests de contrat `NatalResult`, JSON public et `chart_objects`. (AC: AC5, AC6, AC11)
+- [ ] Task: ajouter ou renforcer l'AST guard anti-orchestration procedurale et anti-projections comme sources. (AC: AC7, AC9)
+- [ ] Task: ajouter les preuves `app.routes`, `app.openapi()` et `TestClient` de neutralite API. (AC: AC11, AC12)
+- [ ] Task: collecter l'evidence finale dans le dossier CS-228. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15)
+
+## 9. Mandatory Reuse / DRY Constraints
+
+- Reutiliser `CalculationGraphDefinition`, `CalculationGraphRunner`, `CalculationGraphContext` et `CalculationNodeRegistry`.
+- Reutiliser `build_natal_calculation_graph_definition` et `natal_chart_v1`.
+- Reutiliser les calculateurs existants pour positions, maisons, aspects, fixed stars, conditions, dignites, dominance et signature.
+- Reutiliser `ChartObjectRuntimeData`, capabilities et payloads.
+- Reutiliser les projections historiques existantes via un assembler ou projector borne.
+- Ne pas recreer une logique de calcul astrologique dans les adapters.
+- Ne pas creer une seconde definition du graphe natal.
+
+## 10. No Legacy / Forbidden Paths
+
+- Ne pas modifier le frontend.
+- Ne pas ajouter de migration Alembic.
+- Ne pas changer de route FastAPI, schema public, serializer public ou OpenAPI.
+- Ne pas ajouter de dependance externe de graph processing ou workflow.
+- Ne pas exposer `chart_objects` dans le JSON public.
+- Ne pas faire dependre un node calculatoire d'une projection compatibility/public.
+- Ne pas utiliser `importlib.import_module`, `eval`, `globals()` ou lookup magique.
+- Ne pas ajouter de legacy path public ou non borne.
+- Ne pas conserver deux chemins actifs sans comparaison, borne temporelle et story de fermeture.
+- Ne pas ajouter de fallback silencieux ou feature flag permanent.
+- Ne pas changer la doctrine astrologique, les scores, les orbes ou les golden cases.
+
+## 11. Generated Contract Check
+
+- Capture before:
+  - `app.routes`;
+  - `app.openapi()`;
+  - un smoke `TestClient` sur OpenAPI;
+  - un endpoint natal public couvert par les tests existants.
+- Capture after:
+  - memes preuves.
+- Expected result:
+  - aucun endpoint, method, status code, schema public ou cle JSON publique ne change volontairement.
+
+## 12. Files to Inspect First
+
+- `backend/app/domain/astrology/natal_calculation.py`.
+- `backend/app/domain/astrology/runtime/calculation_graph_contracts.py`.
+- `backend/app/domain/astrology/runtime/calculation_graph_runner.py`.
+- `backend/app/domain/astrology/runtime/natal_calculation_graph.py`.
+- `backend/app/domain/astrology/runtime/chart_object_runtime_data.py`.
+- `backend/app/domain/astrology/builders/chart_object_runtime_builder.py`.
+- `backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`.
+- `backend/tests/unit/domain/astrology/test_natal_calculation_graph_definition.py`.
+- `_condamad/stories/regression-guardrails.md` avec recherche ciblee `RG-144|RG-145|RG-147|RG-148`.
+
+## 13. Expected Files to Modify
+
+Likely files:
+
+- `backend/app/domain/astrology/natal_calculation.py`.
+- `backend/app/domain/astrology/runtime/natal_calculation_nodes.py`.
+- `backend/app/domain/astrology/runtime/natal_calculation_registry.py`.
+- `backend/app/domain/astrology/runtime/natal_result_assembler.py`.
+- `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/validation.md`.
+- `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/openapi-routes.md`.
+- `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/natal-graph-migration.md`.
+
+Likely tests:
+
+- `backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py`.
+- `backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py`.
+- `backend/tests/unit/domain/astrology/test_natal_result_contract.py`.
+- `backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`.
+- `backend/tests/integration/astrology/test_natal_calculation_graph_integration.py`.
+
+Files not expected to change:
+
+- `frontend/src`.
+- `backend/alembic`.
+- `backend/app/api`.
+- `backend/app/infra` hors lecture de configuration deja existante.
+
+## 14. Dependency Policy
+
+New dependencies: none.
+Justification: no dependency changes are authorized.
+- New dependencies: none.
+- Justification: no dependency changes are authorized.
+
+## 15. Validation Plan
+
+Run all Python commands from repository root after activating the venv:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+ruff format backend
+ruff check backend
+pytest -q backend/tests
+```
+
+Run targeted tests:
+
+```powershell
+pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py
+pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_definition.py
+pytest -q backend/tests/unit/domain/astrology/test_natal_calculation_graph_execution.py
+pytest -q backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py
+pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py
+pytest -q backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py
+pytest -q backend/tests/integration/astrology
+```
+
+Run anti-regression scans:
+
+```powershell
+rg -n "def build_natal_result|CalculationGraphRunner|natal_chart_v1" backend/app/domain/astrology backend/tests -g "*.py"
+rg -n "natal_result\.planet_positions|natal_result\.dignity_results|natal_result\.advanced_conditions" backend/app/domain/astrology -g "*.py"
+rg -n "importlib|eval\(|globals\(|networkx|igraph|graphlib|celery|prefect|airflow" backend/app/domain/astrology backend/tests -g "*.py"
+rg -n "chart_objects" backend/app/api frontend/src
+```
+
+Run API neutrality proof:
+
+```powershell
+pytest -q backend/tests/architecture/test_api_contract_neutrality.py
+```
+
+The dedicated API neutrality evidence must name `app.routes`, `app.openapi()` and `TestClient`.
+
+## 16. Regression Risks
+
+- Un adapter peut dupliquer un calculateur existant au lieu de deleguer.
+- Un output obligatoire peut manquer et produire un `NatalResult` partiel.
+- Une projection legacy peut redevenir source calculatoire.
+- Le JSON public peut exposer `chart_objects` par erreur.
+- Un legacy path temporaire peut rester actif sans borne de retrait.
+- La reduction de `build_natal_result` peut oublier une projection historique.
+
+## 17. Dev Agent Instructions
+
+- Commencer par lire les fichiers de `Files to Inspect First`.
+- Implement only CS-228.
+- Implement only this story.
+- Do not broaden the domain.
+- Do not introduce new dependencies.
+- Implementer le plus petit delta coherent.
+- Garder les commentaires globaux et docstrings en francais dans les nouveaux fichiers applicatifs.
+- Ne pas utiliser de style inline, CSS ou frontend: aucun fichier frontend n'est attendu.
+- Ne pas creer de `requirements.txt`.
+- Executer les validations apres activation du venv.
+- Do not mark a task complete without validation evidence.
+- If an AC cannot be satisfied, stop and record the blocker in story evidence.
+- Do not preserve legacy behavior through an unbounded fallback, shim or compatibility layer.
+- Conserver dans l'evidence les commandes lancees, les resultats de tests, les scans et la preuve `app.routes` / `app.openapi()`.
+
+## 18. CS-228 Final Evidence Template
+
+```markdown
+## CS-228 Final Evidence
+
+### Graph Execution
+- build_natal_result uses natal_chart_v1 through CalculationGraphRunner.
+- Natal node registry is explicit.
+- Node adapters reuse existing calculators.
+
+### Runtime Outputs
+- chart_objects remains canonical internal runtime.
+- Houses, aspects, dignities, dominance, fixed stars and signature are produced through graph outputs.
+- Legacy projections remain available.
+
+### Compatibility
+- No public API or OpenAPI delta.
+- chart_objects remains excluded from public JSON.
+- Existing golden and integration tests pass.
+
+### Guardrails
+- No new procedural orchestration sequence in build_natal_result.
+- No calculator depends on legacy projections as source of truth.
+- Node failures include node code.
+
+### Commands
+- ruff format .
+- ruff check .
+- pytest -q
+- targeted graph/natal tests
+```
+
+## 19. Story Generation Validation Notes
+
+- Story generated from `_story_briefs/cs-228-migrate-natal-runtime-to-calculation-graph.md`.
+- Fast Story Writer Mode applied.
+- The requested cheatsheet path was missing in this workspace, so the story uses the recent CS-225 to CS-227 structure and validator diagnostics.
+- `resolve_guardrails.py` is unavailable; guardrails were selected by targeted ID search only.
+- No regression guardrail registry update was made.
+- Story validation result after review fix cycle: PASS.
+- Strict lint result after review fix cycle: PASS.
+- Redaction review fixed path consistency, AC evidence concreteness and validation-plan command scope.
+
+## 20. References
+
+- Source brief: `_story_briefs/cs-228-migrate-natal-runtime-to-calculation-graph.md`.
+- Story tracker: `_condamad/stories/story-status.md`.
+- Guardrail registry: `_condamad/stories/regression-guardrails.md` (`RG-144`, `RG-145`, `RG-147`, `RG-148`).
+- Previous story: `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md`.
+
+## 21. Implementation Evidence
+
+- Status updated to `done` on 2026-05-23 after a fresh implementation review found no actionable issue.
+- Evidence files:
+  - `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/validation.md`;
+  - `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/openapi-routes.md`;
+  - `_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/evidence/natal-graph-migration.md`.
+- AC traceability is recorded in `evidence/validation.md`.
+- Final validations:
+  - `ruff check backend` -> OK;
+  - `python -B -m pytest -q backend/tests` -> `833 passed, 201 deselected`;
+  - `python -B -m pytest -q backend/tests/architecture/test_api_contract_neutrality.py` -> `2 passed`.
+
+
+ succeeded in 241ms:
+
+  _condamad\stories\story-status.md:228:| CS-222 | fixed-star-conjunction-runtime-from-chart-objects | Calculer les conjonctions d'etoiles fixes depuis chart objects | done | 
+`_condamad/stories/CS-222-fixed-star-conjunction-runtime-from-chart-objects/00-story.md` | `_story_briefs/cs-222-fixed-star-conjunction-runtime-from-chart-objects.md` | 
+2026-05-23 |
+  _condamad\stories\story-status.md:229:| CS-223 | chart-object-interpretation-input-adapter | Adapter l'entree d'interpretation depuis chart objects | done | 
+`_condamad/stories/CS-223-chart-object-interpretation-input-adapter/00-story.md` | `_story_briefs/cs-223-chart-object-interpretation-input-adapter.md` | 2026-05-23 |
+> _condamad\stories\story-status.md:230:| [7mCS-224 [0m[7m[0m| [0m[7m[0mlegacy-runtime-surface-cleanup-guardrails [0m[7m[0m| [0m[7m[0mVerrouiller [0m[7m[0mles [0m[7m[0msurfaces [0m[7m[0mruntime [0m[7m[0mlegacy [0m[7m[0mdu [0m[7m[0mtheme [0m[7m[0mnatal [0m[7m[0m| [0m[7m[0mdone [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md` [0m[7m[0m| [0m[7m[0m`_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\story-status.md:231:| [0m[7m[0mCS-225 [0m[7m[0m| [0m[7m[0mcalculation-graph-runtime-contracts [0m[7m[0m| [0m[7m[0mCreer [0m[7m[0mles [0m[7m[0mcontrats [0m[7m[0mruntime [0m[7m[0mdu [0m[7m[0mgraphe [0m[7m[0mde [0m[7m[0mcalcul [0m[7m[0m| [0m[7m[0mdone [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md` [0m[7m[0m| [0m[7m[0m`_story_briefs/cs-225-calculation-graph-runtime-contracts.md` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\story-status.md:232:| [0m[7m[0mCS-226 [0m[7m[0m| [0m[7m[0mnatal-calculation-graph-definition [0m[7m[0m| [0m[7m[0mDeclarer [0m[7m[0mle [0m[7m[0mgraphe [0m[7m[0mde [0m[7m[0mcalcul [0m[7m[0mnatal [0m[7m[0m| [0m[7m[0mdone [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/CS-226-natal-calculation-graph-definition/00-story.md` [0m[7m[0m| [0m[7m[0m`_story_briefs/cs-226-natal-calculation-graph-definition.md` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+  _condamad\stories\story-status.md:233:| CS-227 | calculation-graph-runner-cache-provenance | Executer un graphe de calcul avec cache et provenance | done | 
+`_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md` | `_story_briefs/cs-227-calculation-graph-runner-cache-provenance.md` | 2026-05-23 |
+> _condamad\stories\story-status.md:234:| [7mCS-228 [0m[7m[0m| [0m[7m[0mmigrate-natal-runtime-to-calculation-graph [0m[7m[0m| [0m[7m[0mMigrate [0m[7m[0mNatal [0m[7m[0mRuntime [0m[7m[0mto [0m[7m[0mCalculation [0m[7m[0mGraph [0m[7m[0m| [0m[7m[0mdone [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/CS-228-migrate-natal-runtime-to-calculation-graph/00-story.md` [0m[7m[0m| [0m[7m[0m`_story_briefs/cs-228-migrate-natal-runtime-to-calculation-graph.md` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\story-status.md:235:| [0m[7m[0mUSR-20260515-001 [0m[7m[0m| [0m[7m[0mremplacer-house-axes-constante-par-db [0m[7m[0m| [0m[7m[0mRemplacer [0m[7m[0mla [0m[7m[0mconstante [0m[7m[0mdes [0m[7m[0maxes [0m[7m[0mde [0m[7m[0mmaisons [0m[7m[0mpar [0m[7m[0mles [0m[7m[0mtables [0m[7m[0mDB [0m[7m[0m| [0m[7m[0mdone [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/remplacer-house-axes-constante-par-db/00-story.md` [0m[7m[0m| [0m[7m[0mDemande [0m[7m[0mutilisateur [0m[7m[0mdu [0m[7m[0m2026-05-15 [0m[7m[0m| [0m[7m[0m2026-05-15 [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\story-status.md:236:| [0m[7m[0mUSR-20260512-001 [0m[7m[0m| [0m[7m[0msupprimer-astro-characteristics [0m[7m[0m| [0m[7m[0mSupprimer [0m[7m[0mproprement [0m[7m[0mastro_characteristics [0m[7m[0m| [0m[7m[0mdone [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/supprimer-astro-characteristics/00-story.md` [0m[7m[0m| [0m[7m[0mDemande [0m[7m[0mutilisateur [0m[7m[0mdu [0m[7m[0m2026-05-12 [0m[7m[0m| [0m[7m[0m2026-05-12 [0m[7m[0m|[0m
+
+
+codex
+J’ai assez de structure pour rédiger une première version. Avant écriture, je récupère seulement les guardrails contenant “aspect” afin de construire le scope local sans recopier le registre global.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -Path _condamad\\stories\\regression-guardrails.md -Pattern 'aspect|Aspect|aspects|Aspects|RG-145' -Context 1,2" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path backend' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Test-Path .agents\\skills\\condamad-story-writer\\scripts\\resolve_guardrails.py" in C:\dev\horoscope_front
+ succeeded in 213ms:
+True
+
+ succeeded in 211ms:
+False
+
+ succeeded in 270ms:
+
+  _condamad\stories\regression-guardrails.md:72:| RG-029 | `CS-009-separer-projection-publique-enrichissement-llm` | Projection publique prediction | La projection publique 
+prediction doit rester deterministe et ne doit pas redevenir proprietaire du runtime LLM. | `pytest -q app/tests/unit/test_daily_prediction_guardrails.py 
+app/tests/unit/test_public_projection.py` + scan cible `rg -n "AIEngineAdapter|uuid\.uuid4\(|settings|Session" app/prediction/public_projection.py`. |
+> _condamad\stories\regression-guardrails.md:73:| RG-030 | `CS-010-corriger-resolution-evenements-astro-foundation` | `astro_foundation` public prediction | 
+`PublicAstroFoundationPolicy` doit lire les sources d'evenements canoniques `events` et `detected_events`, avec support des [7maspect[0ms [0m[7m[0m`aspect_exact_*`. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mtests/unit/prediction/test_public_astro_foundation.py` [0m[7m[0m+ [0m[7m[0mscan [0m[7m[0mcible [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"aspect_exact_to_angle|aspect_exact_to_luminary|aspect_exact_to_personal|detected_events" [0m
+[7m[0mapp/prediction`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:74:| [0m[7m[0mRG-031 [0m[7m[0m| [0m[7m[0m`CS-011-supprimer-partage-session-db-calcul-threade-prediction` [0m[7m[0m| [0m[7m[0mCalcul [0m[7m[0mthreade [0m[7m[0mprediction [0m[7m[0m| [0m[7m[0mLe [0m[7m[0mcalcul [0m[7m[0mprediction [0m
+[7m[0msous [0m[7m[0mtimeout [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mpartager [0m[7m[0mla [0m[7m[0msession [0m[7m[0mSQLAlchemy [0m[7m[0mappelante [0m[7m[0mavec [0m[7m[0mun [0m[7m[0mworker [0m[7m[0msurvivant. [0m[7m[0m| [0m[7m[0mNouveau [0m[7m[0mtest [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mapp/tests/unit/test_prediction_compute_runner.py` [0m[7m[0m+ [0m
+[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mapp/tests/unit/test_daily_prediction_service.py` [0m[7m[0m+ [0m[7m[0mscan [0m[7m[0mcible [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"non-thread-safe|thread-safe|session [0m[7m[0mworker|contexte [0m[7m[0mprecharge" [0m
+[7m[0mapp/services/prediction/compute_runner.py`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:75:| [0m[7m[0mRG-032 [0m[7m[0m| [0m[7m[0m`CS-012-ajouter-garde-anti-croissance-app-prediction` [0m[7m[0m| [0m[7m[0mCroissance [0m[7m[0mde [0m[7m[0m`backend/app/prediction` [0m[7m[0m| [0m[7m[0mAucun [0m[7m[0mnouveau [0m
+[7m[0mfichier [0m[7m[0mPython [0m[7m[0mou [0m[7m[0mimport [0m[7m[0minterdit [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mapparaitre [0m[7m[0msous [0m[7m[0m`backend/app/prediction` [0m[7m[0msans [0m[7m[0mclassification [0m[7m[0mexacte [0m[7m[0mdans [0m[7m[0ml'allowlist [0m[7m[0mprediction. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mapp/tests/unit/test_daily_prediction_guardrails.py` [0m[7m[0m+ [0m[7m[0martefact [0m[7m[0m`_condamad/stories/CS-012-ajouter-garde-anti-croissance-app-prediction/prediction-namespace-allowlist.md`. [0m[7m[0m|[0m
+  _condamad\stories\regression-guardrails.md:99:| RG-056 | `CS-079-migrer-cluster-composants-ui-valeurs-visuelles-hardcodees` | Cluster composants UI partages frontend | Les 
+literals visuels et typographiques migres des primitives UI partagees ne doivent pas revenir hors tokens, roles typographiques ou variables semantiques documentees. | `npm 
+run test -- design-system theme-tokens css-fallback legacy-style visual-smoke` + scans exacts des literals migres dans `frontend/src/components/ui`. |
+> _condamad\stories\regression-guardrails.md:100:| RG-057 | `CS-080-supprimer-compatibilites-runtime-frontend-restantes` | Compatibilites runtime frontend restantes | Les 
+cinq surfaces `E-009` ne doivent pas etre recreees comme mapper, fallback, alias, default export de compatibilite, parser legacy ou vocabulaire compatibility. | `npm run test 
+-- ConsultationMigration consultationStore TurningPointsEnriched DailyHoroscopePage design-system` + scan zero-hit `Deprecated:|backwards compatibility|backward 
+compatibility|legacy fallback|Legacy codes|[7maspect[0mLegacy|compatibility` [0m[7m[0mdans [0m[7m[0m`frontend/src`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:101:| [0m[7m[0mRG-058 [0m[7m[0m| [0m[7m[0m`CS-081-migrer-cluster-chat-valeurs-visuelles-hardcodees` [0m[7m[0m| [0m[7m[0mCluster [0m[7m[0mchat [0m[7m[0mde [0m[7m[0mvaleurs [0m[7m[0mvisuelles [0m[7m[0mfrontend [0m[7m[0m| [0m[7m[0mLes [0m
+[7m[0mliterals [0m[7m[0mvisuels [0m[7m[0met [0m[7m[0mtypographiques [0m[7m[0mmigres [0m[7m[0mdu [0m[7m[0mcluster [0m[7m[0mchat [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mpas [0m[7m[0mrevenir [0m[7m[0mhors [0m[7m[0mtokens, [0m[7m[0mroles [0m[7m[0mtypographiques [0m[7m[0mou [0m[7m[0mvariables [0m[7m[0msemantiques [0m[7m[0mdocumentees. [0m[7m[0m| [0m[7m[0m`npm [0m[7m[0mrun [0m[7m[0mtest [0m[7m[0m-- [0m
+[7m[0mdesign-system [0m[7m[0mtheme-tokens [0m[7m[0mcss-fallback [0m[7m[0minline-style [0m[7m[0mlegacy-style [0m[7m[0mvisual-smoke` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0mexacts [0m[7m[0mdes [0m[7m[0mliterals [0m[7m[0mmigres [0m[7m[0mdans [0m[7m[0m`frontend/src/pages/ChatPage.css` [0m[7m[0met [0m
+[7m[0m`frontend/src/features/chat/components`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:102:| [0m[7m[0mRG-059 [0m[7m[0m| [0m[7m[0m`CS-082-migrer-cluster-app-valeurs-visuelles-hardcodees` [0m[7m[0m| [0m[7m[0mCluster [0m[7m[0mApp [0m[7m[0mde [0m[7m[0mvaleurs [0m[7m[0mvisuelles [0m[7m[0mfrontend [0m[7m[0m| [0m[7m[0mLes [0m
+[7m[0mliterals [0m[7m[0mvisuels [0m[7m[0met [0m[7m[0mtypographiques [0m[7m[0mmigres [0m[7m[0mde [0m[7m[0m`frontend/src/App.css` [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mpas [0m[7m[0mrevenir [0m[7m[0mhors [0m[7m[0mtokens, [0m[7m[0mroles [0m[7m[0mtypographiques [0m[7m[0mou [0m[7m[0mvariables [0m[7m[0msemantiques [0m[7m[0mdocumentees. [0m[7m[0m| [0m[7m[0m`npm [0m[7m[0mrun [0m
+[7m[0mtest [0m[7m[0m-- [0m[7m[0mdesign-system [0m[7m[0mtheme-tokens [0m[7m[0mcss-fallback [0m[7m[0minline-style [0m[7m[0mlegacy-style [0m[7m[0mvisual-smoke` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0mexacts [0m[7m[0mdes [0m[7m[0mliterals [0m[7m[0mmigres [0m[7m[0mdans [0m[7m[0m`frontend/src/App.css`. [0m[7m[0m|[0m
+  _condamad\stories\regression-guardrails.md:134:| RG-091 | `supprimer-astro-characteristics` | Donnees de reference astrologiques backend | La table generique 
+`astro_characteristics` et le modele `AstroCharacteristicModel` ne doivent pas redevenir des surfaces runtime, payload public, seed, clone, shim ou source d'overrides 
+d'orbes. | `pytest app/tests/unit/test_reference_data_service.py app/tests/integration/test_reference_data_migrations.py -q` + scan cible `rg -n 
+'AstroCharacteristicModel|astro_characteristics|"characteristics"|\\[''characteristics''\\]' backend/app backend/tests` avec seuls hits de garde attendus. |
+> _condamad\stories\regression-guardrails.md:135:| RG-092 | `deversionner-referentiels-astrologiques` | Tables structurelles astrologiques backend | `astral_planets`, 
+`astral_signs`, `astral_houses`, `[7maspect[0ms` [0m[7m[0met [0m[7m[0m`astro_points` [0m[7m[0mrestent [0m[7m[0mdes [0m[7m[0mreferentiels [0m[7m[0mstables [0m[7m[0mnon [0m[7m[0mversionnes; [0m[7m[0m`reference_version_id` [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mredevenir [0m[7m[0mune [0m[7m[0mcolonne, [0m
+[7m[0mrelation, [0m[7m[0mfiltre [0m[7m[0mou [0m[7m[0mdimension [0m[7m[0md'unicite [0m[7m[0msur [0m[7m[0mces [0m[7m[0msurfaces. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0mapp/tests/unit/test_prediction_reference_repository.py [0m
+[7m[0mapp/tests/integration/test_reference_data_migrations.py [0m[7m[0m-q` [0m[7m[0m+ [0m[7m[0mscan [0m[7m[0mzero-hit [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"PlanetModel\\.reference_version_id|SignModel\\.reference_version_id|HouseModel\\.reference_[0m
+[7m[0mversion_id|AspectModel\\.reference_version_id|AstroPointModel\\.reference_version_id|PlanetModel\\(reference_version_id|SignModel\\(reference_version_id|HouseModel\\(reference[0m
+[7m[0m_version_id|AspectModel\\(reference_version_id|AstroPointModel\\(reference_version_id|clone_version_data|__tablename__ [0m[7m[0m= [0m[7m[0m\"houses\"|ForeignKey\\(\"houses\\.id\"\\)" [0m
+[7m[0mbackend/app [0m[7m[0mbackend/tests`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:136:| [0m[7m[0mRG-093 [0m[7m[0m| [0m[7m[0m`CS-152-normaliser-profils-signes-astraux` [0m[7m[0m| [0m[7m[0mProfils [0m[7m[0met [0m[7m[0mmaitrises [0m[7m[0mdes [0m[7m[0msignes [0m[7m[0mastraux [0m[7m[0mbackend [0m[7m[0m| [0m[7m[0mLes [0m[7m[0msignes [0m[7m[0mastraux [0m
+[7m[0mdoivent [0m[7m[0mrester [0m[7m[0mmodelises [0m[7m[0msous [0m[7m[0mles [0m[7m[0mtables [0m[7m[0mcanoniques [0m[7m[0m`astral_signs`, [0m[7m[0m`astral_sign_profiles` [0m[7m[0met [0m[7m[0m`astral_sign_rulerships`; [0m[7m[0mles [0m[7m[0manciens [0m[7m[0mnoms [0m[7m[0mactifs [0m[7m[0m`signs` [0m[7m[0met [0m[7m[0m`sign_rulerships`, [0m
+[7m[0mle [0m[7m[0mversioning [0m[7m[0mdes [0m[7m[0mmaitrises, [0m[7m[0met [0m[7m[0mles [0m[7m[0mcontraintes [0m[7m[0muniques [0m[7m[0msur [0m[7m[0melement/modalite/polarite [0m[7m[0mpartagees [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mpas [0m[7m[0mrevenir. [0m[7m[0m| [0m[7m[0m`pytest [0m
+[7m[0mapp/tests/unit/test_prediction_reference_repository.py [0m[7m[0mapp/tests/integration/test_reference_data_migrations.py [0m[7m[0mapp/tests/integration/test_seed_31_prediction_v2.py [0m[7m[0m-q` [0m[7m[0m+ [0m[7m[0mscan [0m
+[7m[0mcible [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"SignRulershipModel\\.reference_version_id|SignRulershipModel\\(reference_version_id|get_sign_rulerships\\(reference_version_id\\)|__tablename__ [0m[7m[0m= [0m
+[7m[0m\"signs\"|__tablename__ [0m[7m[0m= [0m[7m[0m\"sign_rulerships\"" [0m[7m[0mbackend/app [0m[7m[0mbackend/tests` [0m[7m[0met [0m[7m[0mtest [0m[7m[0mde [0m[7m[0mschema [0m[7m[0msur [0m[7m[0mles [0m[7m[0mcontraintes [0m[7m[0mde [0m[7m[0m`astral_sign_profiles`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:137:| [0m[7m[0mRG-094 [0m[7m[0m| [0m[7m[0m`priorite-3-runtime-maisons-riches` [0m[7m[0m| [0m[7m[0mProjection [0m[7m[0mpublique [0m[7m[0mdes [0m[7m[0mmaitres [0m[7m[0mde [0m[7m[0mmaisons [0m[7m[0m| [0m[7m[0m`houses[*].ruler` [0m[7m[0mreste [0m[7m[0mla [0m
+[7m[0msource [0m[7m[0mcanonique [0m[7m[0mruntime; [0m[7m[0m`house_rulers[]` [0m[7m[0mest [0m[7m[0muniquement [0m[7m[0mune [0m[7m[0mprojection [0m[7m[0mlegacy [0m[7m[0met [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mrelire [0m[7m[0m`NatalResult.house_rulers`, [0m[7m[0m`HouseRulerResolver`, [0m[7m[0m`sign_rulerships` [0m[7m[0mou [0m
+[7m[0mun [0m[7m[0mrepository [0m[7m[0mde [0m[7m[0mmaitrises [0m[7m[0mdans [0m[7m[0mle [0m[7m[0mserializer [0m[7m[0mou [0m[7m[0mla [0m[7m[0mpersistance. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0mapp/tests/unit/test_chart_json_builder.py [0m[7m[0mapp/tests/unit/test_chart_result_service.py [0m[7m[0m-q` [0m[7m[0m+ [0m[7m[0mscans [0m
+[7m[0mcibles [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"natal_result\\.house_rulers|HouseRulerResolver|sign_rulerships|get_sign_rulerships" [0m[7m[0mapp/services/chart [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"house_rulers" [0m[7m[0mapp/services/chart [0m
+[7m[0mapp/tests/unit/test_chart_json_builder.py [0m[7m[0mapp/tests/unit/test_chart_result_service.py`. [0m[7m[0m|[0m
+  _condamad\stories\regression-guardrails.md:139:| RG-096 | `CS-160-canonicaliser-contrats-interpretation-astrologique` | Contrat de force astrologique des maisons | Les 
+raisons de force maison doivent rester enumerees par `HouseStrengthReason`, l'echelle numerique doit rester documentee comme normalisee, et `domain/prediction` ne doit pas 
+consommer `strength.score` par seuil brut. | `pytest -q tests/unit/domain/astrology/test_house_strength.py` + scans `rg -n 
+"reasons\\s*=\\s*\\[|reasons\\.append\\(\"|HouseStrengthRuntimeData\\(" app/domain/astrology -g "*.py"` et `rg -n "strength\\.score\\s*[<>]=?" app/domain/prediction -g 
+"*.py"`. |
+> _condamad\stories\regression-guardrails.md:140:| RG-097 | `CS-162-heriter-regles-orbes-systemes-astrologiques` | Heritage des regles d'orbes par systeme astrologique | 
+`hellenistic` et `medieval` doivent heriter des regles d'orbes `traditional` via `astral_systems.inherits_from_system_id`; ils ne doivent pas stocker une copie physique 
+complete des regles `traditional`, sauf quelques overrides locaux explicites. | `pytest -q app/tests/unit/test_[7maspect[0m_orb_overrides.py [0m
+[7m[0mapp/tests/integration/test_seed_31_prediction_v2.py` [0m[7m[0m+ [0m[7m[0mscan [0m[7m[0mzero-hit [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"copy_rules_from" [0m[7m[0m"../docs/recherches [0m[7m[0mastro/astral_aspect_orb_rules.json"` [0m[7m[0mdepuis [0m[7m[0m`backend` [0m[7m[0m+ [0m
+[7m[0mpreuve [0m[7m[0mde [0m[7m[0mcomptage [0m[7m[0mpar [0m[7m[0msysteme. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:141:| RG-098 | `CS-163-creer-runtime-canonique-force-[7maspect[0ms` [0m[7m[0m| [0m[7m[0mRuntime [0m[7m[0mcanonique [0m[7m[0mdes [0m[7m[0maspects [0m[7m[0m| [0m[7m[0mLes [0m[7m[0mfaits [0m[7m[0mruntime [0m[7m[0md'aspect [0m
+[7m[0mdoivent [0m[7m[0metre [0m[7m[0mproduits [0m[7m[0mpar [0m[7m[0m`AspectRuntimeData` [0m[7m[0met [0m[7m[0m`AspectStrengthEvaluator`; [0m[7m[0mles [0m[7m[0mraisons [0m[7m[0mde [0m[7m[0mforce [0m[7m[0mrestent [0m[7m[0menumerees [0m[7m[0mpar [0m[7m[0m`AspectStrengthReason`, [0m[7m[0msans [0m[7m[0mstrings [0m[7m[0mlibres [0m[7m[0mni [0m
+[7m[0mdependance [0m[7m[0mvers [0m[7m[0mprediction. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/domain/astrology/test_aspect_strength.py [0m[7m[0mtests/unit/domain/astrology/test_aspect_runtime_builder.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"reasons\\.append\\(\"|AspectStrengthRuntimeData\\(.*reasons=\\[" [0m[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"app\\.domain\\.prediction|app\\.services\\.prediction" [0m
+[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:142:| RG-099 | `CS-164-enrichir-[7maspect[0m-result-projection-publique` [0m[7m[0m| [0m[7m[0mProjection [0m[7m[0mpublique [0m[7m[0mdes [0m[7m[0maspects [0m[7m[0mchart [0m[7m[0m| [0m[7m[0mLes [0m[7m[0mchamps [0m[7m[0menrichis [0m
+[7m[0md'aspects [0m[7m[0mpublics [0m[7m[0mdoivent [0m[7m[0mprovenir [0m[7m[0mdu [0m[7m[0mruntime [0m[7m[0mcanonique, [0m[7m[0msans [0m[7m[0mrecomposition [0m[7m[0mlocale [0m[7m[0mde [0m[7m[0mseuils [0m[7m[0mou [0m[7m[0mlookups [0m[7m[0mdisperses [0m[7m[0mdans [0m[7m[0m`services/chart`, [0m[7m[0met [0m[7m[0mles [0m[7m[0mchamps [0m[7m[0mhistoriques [0m[7m[0mrestent [0m
+[7m[0mpresents. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mapp/tests/unit/test_chart_json_builder.py [0m[7m[0mapp/tests/unit/test_chart_result_service.py` [0m[7m[0m+ [0m[7m[0msnapshot [0m[7m[0mpayload [0m[7m[0mbefore/after [0m[7m[0m+ [0m[7m[0mscan [0m[7m[0mcible [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"strength_level|interpretive_valence|energy_type" [0m[7m[0mapp/services/chart [0m[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:143:| RG-100 | `CS-165-construire-builder-interpretation-[7maspect[0ms` [0m[7m[0m| [0m[7m[0mInterpretation [0m[7m[0meditoriale [0m[7m[0mdes [0m[7m[0maspects [0m[7m[0m| [0m
+[7m[0m`AspectInterpretationBuilder` [0m[7m[0mreste [0m[7m[0ml'owner [0m[7m[0mdeterministe [0m[7m[0mde [0m[7m[0ml'assemblage [0m[7m[0mruntime [0m[7m[0m+ [0m[7m[0mprofils [0m[7m[0meditoriaux; [0m[7m[0mle [0m[7m[0mdomaine [0m[7m[0mastrology [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mappeler [0m[7m[0mde [0m[7m[0mLLM [0m[7m[0mni [0m[7m[0mproduire [0m[7m[0mde [0m[7m[0mfallback [0m
+[7m[0mtexte [0m[7m[0msilencieux. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/domain/astrology/test_aspect_interpretation_builder.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"OpenAI|AIEngineAdapter|chat\\.completions|llm" [0m
+[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"app\\.domain\\.prediction|app\\.services\\.prediction" [0m[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:144:| RG-101 | `CS-166-calculer-[7maspect[0ms-dominants-et-socle-synastrie` [0m[7m[0m| [0m[7m[0mAspects [0m[7m[0mdominants [0m[7m[0met [0m[7m[0msocle [0m[7m[0minter-chart [0m[7m[0m| [0m[7m[0mLes [0m[7m[0maspects [0m
+[7m[0mdominants [0m[7m[0met [0m[7m[0mle [0m[7m[0mcalcul [0m[7m[0minter-chart [0m[7m[0mreutilisent [0m[7m[0m`AspectRuntimeData` [0m[7m[0met [0m[7m[0mles [0m[7m[0mreferentiels [0m[7m[0m`astral_aspect_*` [0m[7m[0mexistants; [0m[7m[0maucune [0m[7m[0mtable, [0m[7m[0mJSON [0m[7m[0mou [0m[7m[0mlogique [0m[7m[0mproduit [0m[7m[0mdediee [0m[7m[0ma [0m[7m[0mla [0m
+[7m[0msynastrie [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mdupliquer [0m[7m[0mces [0m[7m[0mreferentiels. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/domain/astrology/test_dominant_aspects.py [0m[7m[0mtests/unit/domain/astrology/test_interchart_aspects.py` [0m[7m[0m+ [0m
+[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"DominantAspect|dominant_aspect" [0m[7m[0mapp/domain/prediction [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"synastry.*aspect|aspect.*synastry" [0m[7m[0mapp [0m[7m[0mdocs [0m[7m[0m-g [0m[7m[0m"*.py" [0m[7m[0m-g [0m[7m[0m"*.md"` [0m[7m[0mavec [0m
+[7m[0mclassification. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:145:| RG-102 | `CS-167-separer-semantique-et-editorial-[7maspect[0ms` [0m[7m[0m| [0m[7m[0mCouche [0m[7m[0msemantique [0m[7m[0mdes [0m[7m[0maspects [0m[7m[0m| [0m[7m[0m`AspectInterpretationFacts` [0m
+[7m[0mreste [0m[7m[0mla [0m[7m[0mcouche [0m[7m[0msemantique [0m[7m[0mpure [0m[7m[0mentre [0m[7m[0mruntime [0m[7m[0met [0m[7m[0mrenderer [0m[7m[0meditorial; [0m[7m[0melle [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mcontenir [0m[7m[0mde [0m[7m[0mnarration, [0m[7m[0md'appel [0m[7m[0mLLM, [0m[7m[0mde [0m[7m[0mpersona, [0m[7m[0mde [0m[7m[0mlangue [0m[7m[0mou [0m[7m[0mde [0m[7m[0mlogique [0m[7m[0mprediction. [0m[7m[0m| [0m
+[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/domain/astrology/test_aspect_interpretation_facts.py [0m[7m[0mtests/unit/domain/astrology/test_aspect_interpretation_builder.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"OpenAI|AIEngineAdapter|chat\\.completions|llm" [0m[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"app\\.domain\\.prediction|app\\.services\\.prediction" [0m[7m[0mapp/domain/astrology [0m[7m[0m-g [0m
+[7m[0m"*.py"`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:146:| RG-103 | `CS-168-canonicaliser-modifiers-et-poids-[7maspect[0ms` [0m[7m[0m| [0m[7m[0mModifiers [0m[7m[0met [0m[7m[0mpoids [0m[7m[0mdes [0m[7m[0maspects [0m[7m[0m| [0m[7m[0mLes [0m[7m[0mmodifiers [0m[7m[0md'aspects [0m
+[7m[0mdoivent [0m[7m[0mrester [0m[7m[0mportes [0m[7m[0mpar [0m[7m[0m`AspectModifierRuntimeData` [0m[7m[0met [0m[7m[0mles [0m[7m[0mconcepts [0m[7m[0m`strength`, [0m[7m[0m`dominance`, [0m[7m[0m`interpretive_weight` [0m[7m[0met [0m[7m[0m`prediction_weight` [0m[7m[0mrestent [0m[7m[0msepares [0m[7m[0mpar [0m[7m[0mowner. [0m[7m[0m| [0m
+[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/domain/astrology/test_aspect_modifiers.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"\\bweight\\b|prediction_weight" [0m[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"app\\.domain\\.prediction|app\\.services\\.prediction" [0m[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:147:| [0m[7m[0mRG-104 [0m[7m[0m| [0m[7m[0m`CS-169-preparer-pattern-runtime-et-graphe-astrologique` [0m[7m[0m| [0m[7m[0mPattern [0m[7m[0mruntime [0m[7m[0met [0m[7m[0mreadiness [0m[7m[0mgraphe [0m[7m[0mastrologique [0m[7m[0m| [0m[7m[0mLes [0m
+[7m[0mpatterns [0m[7m[0mastrologiques [0m[7m[0mdoivent [0m[7m[0mpasser [0m[7m[0mpar [0m[7m[0m`PatternRuntimeData` [0m[7m[0met [0m[7m[0mreferencer [0m[7m[0mles [0m[7m[0mruntime [0m[7m[0mexistants; [0m[7m[0maucun [0m[7m[0mdetector [0m[7m[0mT-square, [0m[7m[0mGrand [0m[7m[0mTrine, [0m[7m[0mYod, [0m[7m[0mKite [0m[7m[0mou [0m[7m[0mgraph [0m[7m[0mnode [0m[7m[0mne [0m[7m[0mdoit [0m
+[7m[0mapparaitre [0m[7m[0mdans [0m[7m[0mprediction, [0m[7m[0mLLM [0m[7m[0mou [0m[7m[0mAPI [0m[7m[0mcomme [0m[7m[0mimplementation [0m[7m[0mcanonique. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/domain/astrology/test_pattern_runtime_contract.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"t_square|grand_trine|yod|kite|mystic_rectangle" [0m[7m[0mapp [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"graph_nodes|graph_edges" [0m[7m[0mapp/domain/prediction [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:148:| RG-105 | `CS-170-ajouter-provenance-et-priorisation-semantique-[7maspect[0ms` [0m[7m[0m| [0m[7m[0mProvenance [0m[7m[0met [0m[7m[0mpriorisation [0m[7m[0msemantique [0m[7m[0mdes [0m[7m[0maspects [0m
+[7m[0m| [0m[7m[0mChaque [0m[7m[0mcandidat [0m[7m[0msemantique [0m[7m[0md'aspect [0m[7m[0mdoit [0m[7m[0mconserver [0m[7m[0mune [0m[7m[0m`SemanticProvenance`, [0m[7m[0mune [0m[7m[0m`confidence` [0m[7m[0met [0m[7m[0mles [0m[7m[0mcandidats [0m[7m[0mconcurrents [0m[7m[0mnon [0m[7m[0mselectionnes; [0m[7m[0mprediction [0m[7m[0mne [0m[7m[0mchoisit [0m[7m[0mpas [0m[7m[0mla [0m
+[7m[0msemantique. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/domain/astrology/test_aspect_semantic_provenance.py [0m[7m[0mtests/unit/domain/astrology/test_aspect_interpretation_facts.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"AspectSemanticCandidate|SemanticProvenance|semantic_candidate" [0m[7m[0mapp/domain/prediction [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"source_authority\\s*=\\s*[\"']unknown|semantic_axes.*without" [0m
+[7m[0mapp/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:149:| RG-106 | `CS-171-converger-referentiels-astrologie-db-json` | Referentiels et contrats astrology | Les calculateurs 
+astrology consomment des contrats types issus des sources DB/JSON canoniques; les anciens tuples, champs legacy d'orbes, constantes de familles/[7maspect[0ms/valences/energie [0m[7m[0met [0m
+[7m[0mfallbacks [0m[7m[0msilencieux [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mpas [0m[7m[0mrevenir. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mapp/tests/unit/test_astrology_reference_catalog_guard.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0mcibles [0m[7m[0msur [0m[7m[0m`DEFAULT_FALLBACK_ORB`, [0m[7m[0m`tuple[str, [0m
+[7m[0mfloat]`, [0m[7m[0m`orb_luminaries_override_deg`, [0m[7m[0m`orb_pair_overrides`, [0m[7m[0m`orb_luminaries`, [0m[7m[0m`orb_pairs`, [0m[7m[0m`orb_overrides`, [0m[7m[0m`MINOR_ASPECTS`, [0m[7m[0m`VALENCE_BY_ASPECT`, [0m[7m[0m`ENERGY_BY_ASPECT`, [0m
+[7m[0m`HOUSE_SYSTEM_REFERENCE_ROWS`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:150:| [0m[7m[0mRG-107 [0m[7m[0m| [0m[7m[0m`CS-172-big-bang-reference-runtime-astrology` [0m[7m[0m| [0m[7m[0mRuntime [0m[7m[0mreference [0m[7m[0mastrologique [0m[7m[0mbackend [0m[7m[0m| [0m[7m[0mAucune [0m[7m[0mdonnee [0m
+[7m[0mastrologique [0m[7m[0mmetier [0m[7m[0mnon [0m[7m[0mtypee [0m[7m[0mne [0m[7m[0mtraverse [0m[7m[0mles [0m[7m[0mfrontieres [0m[7m[0minfra/services/domain [0m[7m[0msous [0m[7m[0mforme [0m[7m[0mde [0m[7m[0m`dict`; [0m[7m[0mles [0m[7m[0mJSON [0m[7m[0mDB [0m[7m[0msont [0m[7m[0mconfines [0m[7m[0ma [0m[7m[0ml'infra, [0m[7m[0mparses [0m[7m[0mimmediatement, [0m[7m[0mvalides, [0m[7m[0mpuis [0m
+[7m[0mconvertis [0m[7m[0men [0m[7m[0mcontrats [0m[7m[0mimmutables. [0m[7m[0mLes [0m[7m[0mconstantes [0m[7m[0mmetier [0m[7m[0mDB-backed, [0m[7m[0msentinelles [0m[7m[0m`unknown`, [0m[7m[0mfallbacks [0m[7m[0mimplicites [0m[7m[0met [0m[7m[0mpayloads [0m[7m[0mreference [0m[7m[0mlibres [0m[7m[0msont [0m[7m[0minterdits [0m[7m[0mdans [0m[7m[0mle [0m[7m[0mflux [0m[7m[0mnatal. [0m
+[7m[0m| [0m[7m[0mTests [0m[7m[0md'architecture [0m[7m[0msur [0m[7m[0msignatures [0m[7m[0mpubliques [0m[7m[0m`domain/astrology`, [0m[7m[0mtests [0m[7m[0mrepository/service [0m[7m[0mnatal, [0m[7m[0mscans [0m[7m[0mnegatifs [0m[7m[0msur [0m[7m[0mconstantes/fallbacks/dicts [0m[7m[0mmetier, [0m[7m[0met [0m[7m[0mrapport [0m
+[7m[0md'integrite [0m[7m[0mruntime [0m[7m[0mpersiste [0m[7m[0mdans [0m[7m[0m`_condamad/stories/CS-172-big-bang-reference-runtime-astrology/evidence/runtime-reference-integrity.json`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:151:| [0m[7m[0mRG-108 [0m[7m[0m| [0m[7m[0m`regression-guardrails-maintenance` [0m[7m[0m| [0m[7m[0mReferentiels [0m[7m[0mDB-backed [0m[7m[0mbackend [0m[7m[0m| [0m[7m[0mQuand [0m[7m[0mune [0m[7m[0mtable [0m[7m[0mou [0m[7m[0mun [0m[7m[0mmodele [0m[7m[0mSQLAlchemy [0m
+[7m[0mcanonique [0m[7m[0mexiste [0m[7m[0mpour [0m[7m[0mun [0m[7m[0mvocabulaire [0m[7m[0mmetier, [0m[7m[0mle [0m[7m[0mcode [0m[7m[0mapplicatif [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mrecreer [0m[7m[0mce [0m[7m[0mvocabulaire [0m[7m[0msous [0m[7m[0mforme [0m[7m[0mde [0m[7m[0mconstante, [0m[7m[0mtuple, [0m[7m[0mliste, [0m[7m[0mmapping [0m[7m[0mou [0m[7m[0mfallback [0m[7m[0mlocal; [0m[7m[0mla [0m[7m[0mtable, [0m
+[7m[0mle [0m[7m[0mrepository [0m[7m[0mou [0m[7m[0mle [0m[7m[0mcontrat [0m[7m[0mruntime [0m[7m[0mderive [0m[7m[0mde [0m[7m[0mcette [0m[7m[0mtable [0m[7m[0mreste [0m[7m[0mla [0m[7m[0msource [0m[7m[0mde [0m[7m[0mverite. [0m[7m[0m| [0m[7m[0mPour [0m[7m[0mchaque [0m[7m[0mstory [0m[7m[0mtouchant [0m[7m[0mun [0m[7m[0mvocabulaire [0m[7m[0mmetier, [0m[7m[0maudit [0m[7m[0mtable/model/source [0m[7m[0mJSON [0m
+[7m[0mexistants [0m[7m[0m+ [0m[7m[0mscan [0m[7m[0mcible [0m[7m[0mdes [0m[7m[0mconstantes [0m[7m[0met [0m[7m[0mmappings [0m[7m[0mequivalents [0m[7m[0mdans [0m[7m[0m`backend/app` [0m[7m[0met [0m[7m[0m`backend/tests`; [0m[7m[0msi [0m[7m[0mune [0m[7m[0mconstante [0m[7m[0mtechnique [0m[7m[0mreste [0m[7m[0mnecessaire, [0m[7m[0melle [0m[7m[0mdoit [0m[7m[0metre [0m[7m[0mderivee [0m[7m[0md'un [0m
+[7m[0mrepository/contrat [0m[7m[0mruntime [0m[7m[0mou [0m[7m[0mjustifiee [0m[7m[0mexplicitement [0m[7m[0mcomme [0m[7m[0mnon [0m[7m[0mDB-backed. [0m[7m[0m|[0m
+  _condamad\stories\regression-guardrails.md:152:| RG-109 | `CS-174-localiser-libelles-astrologiques-backend` | Libelles de signes astrologiques localises backend | Les 
+libelles affichables des signes astrologiques doivent etre resolus depuis `languages` et `astral_sign_translations` via le resolver canonique; les surfaces ciblees ne doivent 
+pas recreer `SIGN_NAMES_FR`, une liste locale de signes pour affichage, un mapping `SIGN_LABELS` concurrent, ou un fallback de langue different par consommateur. 
+`backend/app/services/natal/pdf_export_service.py::SIGN_LABELS` reste hors perimetre de CS-174 et doit etre documente comme exception explicite. | `pytest -q 
+app/tests/unit/test_astrology_translation_resolver.py app/tests/unit/test_chart_json_builder.py app/tests/unit/test_natal_context_localization.py` + scans `rg -n 
+"SIGN_NAMES_FR|\\bSIGNS\\s*=\\s*\\[" app/services/chart app/services/natal/astro_context_builder.py app/services/llm_generation/shared/natal_context.py 
+app/services/llm_generation/natal/prompt_context.py app/domain/astrology` et `rg -n 
+"AstrologyTranslationResolver|astrology_translation_resolver|translated_name|LanguageModel" app/domain/astrology` depuis `backend`. |
+> _condamad\stories\regression-guardrails.md:153:| RG-110 | `CS-179-fermer-i18n-prediction-astrologique` | Libelles astrologiques publics prediction | Les projections et 
+prompts sous `backend/app/domain/prediction` ne doivent pas redevenir proprietaires de mappings FR pour signes, planetes, [7maspect[0ms, [0m[7m[0mmaisons [0m[7m[0mou [0m[7m[0meffets [0m[7m[0mDB-backed; [0m[7m[0mils [0m[7m[0mdoivent [0m
+[7m[0mconsommer [0m[7m[0mun [0m[7m[0mcontrat [0m[7m[0mderive [0m[7m[0mdu [0m[7m[0mresolver [0m[7m[0mcanonique [0m[7m[0mou [0m[7m[0mbloquer [0m[7m[0msur [0m[7m[0mdecision [0m[7m[0mutilisateur [0m[7m[0mquand [0m[7m[0maucun [0m[7m[0mowner [0m[7m[0mn'existe. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mapp/tests/unit/test_astrology_localization_guardrails.py [0m[7m[0mtests/unit/prediction/test_astrologer_prompt_builder.py [0m[7m[0mtests/unit/prediction/test_public_projection.py [0m
+[7m[0mtests/unit/prediction/test_public_astro_daily_events.py` [0m[7m[0m+ [0m[7m[0mscan [0m[7m[0mzero-hit [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"PLANET_NAMES_FR|SIGN_NAMES_FR|SIGN_LABELS_FR|PLANET_CODE_LABELS|ASPECT_LABELS|HOUSE_SIGNIFICAT[0m
+[7m[0mIONS|EFFECT_LABELS|get_planet_name_fr|get_sign_name_fr|get_aspect_label|get_effect_label" [0m[7m[0mapp/domain/prediction [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0mdepuis [0m[7m[0m`backend`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:154:| [0m[7m[0mRG-111 [0m[7m[0m| [0m[7m[0m`CS-180-aligner-registre-modeles-db-infra` [0m[7m[0m| [0m[7m[0mRegistre [0m[7m[0mdes [0m[7m[0mmodèles [0m[7m[0mSQLAlchemy [0m[7m[0minfra [0m[7m[0mDB [0m[7m[0m| [0m[7m[0mToute [0m[7m[0mtable [0m[7m[0mDB [0m[7m[0mapplicative [0m
+[7m[0mdoit [0m[7m[0mavoir [0m[7m[0mun [0m[7m[0mmodèle [0m[7m[0msous [0m[7m[0m`backend/app/infra/db/models/**` [0m[7m[0met [0m[7m[0mêtre [0m[7m[0mchargée [0m[7m[0mpar [0m[7m[0m`Base.metadata`; [0m[7m[0mseules [0m[7m[0mles [0m[7m[0mtables [0m[7m[0mtechniques [0m[7m[0mou [0m[7m[0mhistoriques [0m[7m[0mclassifiées [0m[7m[0mexactement [0m[7m[0mpeuvent [0m
+[7m[0mrester [0m[7m[0msans [0m[7m[0mmodèle [0m[7m[0mapplicatif. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mapp/tests/unit/test_db_model_registry_guard.py` [0m[7m[0m+ [0m[7m[0martefacts [0m
+[7m[0m`_condamad/stories/CS-180-aligner-registre-modeles-db-infra/db-model-registry-before.md`, [0m[7m[0m`db-model-registry-after.md` [0m[7m[0met [0m[7m[0m`db-table-exception-register.md`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:155:| RG-112 | `CS-181-supprimer-constantes-astrologiques-hardcodees` | Constantes métier astrologiques backend | Le code 
+applicatif backend ne doit pas recréer localement des référentiels astrologiques DB-backed ni conserver de fallback legacy pour maîtrises, axes de maisons, règles d'orbes, 
+[7maspect[0ms [0m[7m[0mmajeurs, [0m[7m[0mplanètes [0m[7m[0mou [0m[7m[0msystèmes; [0m[7m[0mtoute [0m[7m[0mconstante [0m[7m[0mastrologique [0m[7m[0mnon [0m[7m[0msupprimée [0m[7m[0mdoit [0m[7m[0mêtre [0m[7m[0mdérivée [0m[7m[0md'un [0m[7m[0mruntime [0m[7m[0mcanonique [0m[7m[0mou [0m[7m[0mclassée [0m[7m[0mdans [0m[7m[0mun [0m[7m[0mregistre [0m[7m[0md'exception [0m[7m[0mexact. [0m[7m[0m| [0m
+[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mapp/tests/unit/test_astrology_reference_catalog_guard.py [0m[7m[0mapp/tests/unit/test_astrology_runtime_reference_guard.py` [0m[7m[0m+ [0m[7m[0martefacts [0m
+[7m[0m`_condamad/stories/CS-181-supprimer-constantes-astrologiques-hardcodees/hardcoded-astrology-before.md`, [0m[7m[0m`hardcoded-astrology-after.md`, [0m[7m[0m`astrology-constant-exceptions.md` [0m[7m[0m+ [0m
+[7m[0mscans [0m[7m[0mciblés [0m[7m[0msur [0m[7m[0m`sign_rulerships`, [0m[7m[0m`aspect_orb_rules`, [0m[7m[0m`ASPECTS_V1`, [0m[7m[0m`ASPECTS [0m[7m[0m= [0m[7m[0m{`, [0m[7m[0m`_STAR_DATA`, [0m[7m[0m`_ASPECT_TONES`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:156:| RG-113 | `CS-182-remplacer-vocabulaire-public-astro-par-referentiels-db` | Vocabulaire public astro prediction | 
+`backend/app/domain/prediction` ne doit pas redevenir propriétaire de longitudes, noms ou tonalités DB-backed pour étoiles fixes et [7maspect[0ms; [0m[7m[0m`PublicAstroVocabulary`, [0m
+[7m[0m`_STAR_DATA`, [0m[7m[0m`_ASPECT_TONES`, [0m[7m[0m`fixed_star_longitudes` [0m[7m[0met [0m[7m[0m`fixed_star_display_name` [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mpas [0m[7m[0mrevenir [0m[7m[0mcomme [0m[7m[0mdépendances [0m[7m[0mruntime. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mapp/tests/unit/test_astrology_localization_guardrails.py [0m[7m[0mapp/tests/unit/test_astrology_reference_catalog_guard.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0mciblés [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"PublicAstroVocabulary|_STAR_DATA|_ASPECT_TONES|fixed_star_longitudes|fixed_star_display_name" [0m[7m[0mapp/domain/prediction [0m[7m[0mapp/tests [0m[7m[0mtests [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"\"nuance\"|\"fluidité\"|\"ajustement\"|\"intensification\"|\"adaptation\"" [0m[7m[0mapp/domain/prediction [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:157:| [0m[7m[0mRG-114 [0m[7m[0m| [0m[7m[0m`CS-185-brancher-profils-signes-runtime-natal` [0m[7m[0m| [0m[7m[0mProfils [0m[7m[0mstructurels [0m[7m[0mdes [0m[7m[0msignes [0m[7m[0mnatals [0m[7m[0m| [0m[7m[0mLes [0m[7m[0mattributs [0m[7m[0mruntime [0m[7m[0mdes [0m
+[7m[0msignes [0m[7m[0m`element`, [0m[7m[0m`modality`, [0m[7m[0m`polarity` [0m[7m[0met [0m[7m[0mtout [0m[7m[0mattribut [0m[7m[0mstructurel [0m[7m[0menrichi [0m[7m[0mdoivent [0m[7m[0mprovenir [0m[7m[0mde [0m[7m[0m`astral_sign_profiles` [0m[7m[0met [0m[7m[0mdes [0m[7m[0mtaxonomies [0m[7m[0mcanoniques [0m[7m[0massociees, [0m[7m[0mpas [0m[7m[0mde [0m
+[7m[0mmappings [0m[7m[0mlocaux, [0m[7m[0mconstantes, [0m[7m[0mfixtures [0m[7m[0mpartielles [0m[7m[0mou [0m[7m[0mfallbacks [0m[7m[0msilencieux [0m[7m[0mdans [0m[7m[0m`domain/astrology` [0m[7m[0mou [0m[7m[0m`services/natal`. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mapp/tests/unit/test_astrology_runtime_reference_repository.py [0m[7m[0mtests/unit/domain/astrology/test_sign_runtime_builder.py [0m[7m[0mtests/unit/domain/astrology/test_chart_signature.py` [0m[7m[0m+ [0m
+[7m[0mscans [0m[7m[0mciblés [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"ELEMENT_BY_SIGN|MODALITY_BY_SIGN|POLARITY_BY_SIGN|SIGN_PROFILE_DATA" [0m[7m[0mapp/domain/astrology [0m[7m[0mapp/services/natal [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0mpreuve [0m[7m[0mruntime [0m[7m[0mavant/apres [0m
+[7m[0mdans [0m[7m[0m`_condamad/stories/CS-185-brancher-profils-signes-runtime-natal/evidence/`. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:158:| RG-115 | `CS-187-brancher-points-astraux-runtime-natal` | Points astraux du runtime natal | Les points astraux natals, 
+leurs variantes de calcul, aliases, profils et keywords doivent provenir des tables `astral_point_*` et traverser le runtime sous contrats typés; le calcul natal expose 
+uniquement `NatalResult.points[]`, sans champs plats `true_node`, `mean_node` ou `lilith`, sans constantes locales de noeuds/Lilith/apogee et sans melange 
+calcul/interprétation. | `pytest -q app/tests/unit/test_astral_point_seed_integrity.py app/tests/unit/test_astral_point_repository.py 
+tests/unit/domain/astrology/test_astral_point_calculation_resolver.py tests/unit/domain/astrology/test_natal_result_contains_configured_points.py 
+tests/unit/domain/astrology/test_natal_[7maspect[0ms_include_points.py [0m[7m[0mapp/tests/unit/test_astrology_runtime_reference_guard.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0mciblés [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"ASTRAL_POINTS\\s*=|POINT_VARIANTS\\s*=|NODE_VARIANTS\\s*=|LILITH_VARIANTS\\s*=" [0m[7m[0mapp/domain/astrology [0m[7m[0mapp/services/natal [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"true_node|mean_node|\\blilith\\b" [0m[7m[0mapp/domain/astrology [0m[7m[0mapp/services/natal [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0mavec [0m[7m[0mseuls [0m[7m[0mhits [0m[7m[0mautorisés [0m[7m[0mdans [0m[7m[0mresolver, [0m[7m[0madapters, [0m[7m[0mseeds, [0m[7m[0mtests [0m[7m[0mou [0m[7m[0mdocs. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:159:| [0m[7m[0mRG-116 [0m[7m[0m| [0m[7m[0m`CS-188-exploiter-profils-points-astraux-interpretation` [0m[7m[0m| [0m[7m[0mInterprétation [0m[7m[0méditoriale [0m[7m[0mdes [0m[7m[0mpoints [0m[7m[0mastraux [0m[7m[0m| [0m[7m[0mLes [0m
+[7m[0mprofils [0m[7m[0met [0m[7m[0mkeywords [0m[7m[0mdes [0m[7m[0mpoints [0m[7m[0mastraux [0m[7m[0mdoivent [0m[7m[0mrester [0m[7m[0mconsommés [0m[7m[0maprès [0m[7m[0mle [0m[7m[0mcalcul [0m[7m[0mnatal [0m[7m[0mvia [0m[7m[0mune [0m[7m[0mvue [0m[7m[0m`astral_point_interpretations[]` [0m[7m[0mséparée; [0m[7m[0m`NatalResult.points[]` [0m[7m[0mreste [0m
+[7m[0mobjectif [0m[7m[0met [0m[7m[0mles [0m[7m[0mcalculateurs/adapters [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mjamais [0m[7m[0mimporter [0m[7m[0mles [0m[7m[0mmodèles, [0m[7m[0mrepositories [0m[7m[0mou [0m[7m[0mservices [0m[7m[0md'interprétation [0m[7m[0mdes [0m[7m[0mpoints. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mapp/tests/unit/test_astral_point_interpretation_repository.py [0m[7m[0mtests/unit/domain/astrology/test_astral_point_interpretation_service.py [0m
+[7m[0mapp/tests/unit/test_llm_generation_shared_natal_context.py [0m[7m[0mapp/tests/unit/test_astrology_runtime_reference_guard.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0mciblés [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"AstralPointInterpretationProfileModel|AstralPointInterpretationKeywordModel|AstralPointInterpretationRepository|AstralPointInterpretationService" [0m
+[7m[0mapp/domain/astrology/natal_calculation.py [0m[7m[0mapp/domain/astrology/calculators [0m[7m[0mapp/domain/astrology/astral_point_calculation_resolver.py [0m
+[7m[0mapp/domain/astrology/ephemeris_provider.py [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"summary|keywords|micro_note|prompt_hints" [0m[7m[0mapp/domain/astrology/natal_calculation.py [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:160:| [0m[7m[0mRG-117 [0m[7m[0m| [0m[7m[0m`CS-189-brancher-etoiles-fixes-scoring-runtime` [0m[7m[0m| [0m[7m[0mÉtoiles [0m[7m[0mfixes [0m[7m[0mdu [0m[7m[0mruntime [0m[7m[0mprediction [0m[7m[0mdaily [0m[7m[0m| [0m[7m[0mLes [0m[7m[0métoiles [0m[7m[0mfixes [0m
+[7m[0mdaily [0m[7m[0mdoivent [0m[7m[0mprovenir [0m[7m[0mdu [0m[7m[0mcontrat [0m[7m[0mDB-backed [0m[7m[0menrichi [0m[7m[0m(`FixedStarData`) [0m[7m[0mavec [0m[7m[0mlongitude, [0m[7m[0mmagnitude [0m[7m[0met [0m[7m[0mmétadonnées [0m[7m[0mutiles; [0m[7m[0mles [0m[7m[0mconjonctions [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mcontribuer [0m[7m[0mau [0m[7m[0mscoring [0m[7m[0mque [0m
+[7m[0mvia [0m[7m[0morbe, [0m[7m[0mmagnitude, [0m[7m[0mpoids [0m[7m[0met [0m[7m[0mroutage [0m[7m[0mruntime [0m[7m[0mtestés, [0m[7m[0msans [0m[7m[0mcatalogue [0m[7m[0mlocal [0m[7m[0m`_STAR_DATA`, [0m[7m[0m`fixed_star_longitudes`, [0m[7m[0m`fixed_star_display_name` [0m[7m[0mou [0m[7m[0morbe [0m[7m[0mhardcodée [0m[7m[0mdans [0m[7m[0mle [0m[7m[0mbuilder. [0m
+[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mtests/unit/prediction/test_enriched_astro_events_builder.py [0m[7m[0mapp/tests/unit/test_prediction_reference_repository.py [0m
+[7m[0mtests/unit/prediction/test_public_astro_daily_events.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0mciblés [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"_STAR_DATA|fixed_star_longitudes|fixed_star_display_name|FIXED_STAR_" [0m[7m[0mapp/domain/prediction [0m
+[7m[0mapp/tests [0m[7m[0mtests [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"dist [0m[7m[0m<= [0m[7m[0m1\\.0" [0m[7m[0mapp/domain/prediction/enriched_astro_events_builder.py` [0m[7m[0mdepuis [0m[7m[0m`backend`. [0m[7m[0m|[0m
+  _condamad\stories\regression-guardrails.md:186:| RG-143 | `CS-216-advanced-planetary-conditions-interpretation-profiles` | Profils symboliques pre-narratifs des conditions 
+planetaires avancees | `backend/app/domain/astrology/interpretation/advanced_conditions/contracts.py`, `advanced_condition_profile_catalog.py` et `profile_runtime.py` doivent 
+rester des surfaces pures qui convertissent `PlanetaryConditionsBundle` et `MoonPhaseCondition` en profils symboliques structures; elles ne doivent pas recalculer les 
+conditions CS-209 a CS-214, ne doivent pas produire de texte final utilisateur, scoring, prompt, LLM, API, DB, migration, projection JSON publique ou frontend, et le scoring 
+doit rester dans `dignities`. | `pytest -q backend/tests/unit/domain/astrology/interpretation/advanced_conditions/test_profile_runtime.py` + test d'integration natal du champ 
+interne si ajoute + tests CS-214/CS-215 + scans `rg -n "\\bscore\\b|score_delta|strength_modifier|dignity_score|prompt|LLM|OpenAI|AIEngineAdapter|from app\\.api|from 
+app\\.infra|from app\\.infrastructure|from app\\.services|sqlalchemy|fastapi|pydantic|FastAPI|SQLAlchemy|Session|repository|json_builder|frontend" 
+backend/app/domain/astrology/interpretation/advanced_conditions -g "*.py"`, `rg -n "You are|This means|Votre|Vous|Cela signifie" 
+backend/app/domain/astrology/interpretation/advanced_conditions -g "*.py"`, `rg -n "calculate_solar_proximity|calculate_planetary_motion|calculate_solar_phase|calculate_planet
+_visibility|calculate_moon_phase|sun_longitude|moon_longitude|ephemeris|SwissEph|swe" backend/app/domain/astrology/interpretation/advanced_conditions -g "*.py"` et diff 
+adjacent sur `planetary_conditions`, `dignities`, `json_builder.py`, API, infra, migrations et frontend. |
+> _condamad\stories\regression-guardrails.md:187:| RG-144 | `CS-217-unified-chart-object-runtime-contract` | Contrat runtime unifie des objets du theme natal | 
+`backend/app/domain/astrology/runtime/chart_object_runtime_data.py` doit rester le contrat canonique minimal des objets exploitables du theme, et 
+`backend/app/domain/astrology/builders/chart_object_runtime_builder.py` doit rester le seul owner de projection depuis les collections historiques; les calculateurs metier 
+doivent consommer `ChartObjectCapabilities` et non ajouter de nouvelles branches `object_type`, et `NatalResult.chart_objects` ne doit pas remplacer ni casser 
+`planet_positions`, `astral_points`, `houses`, angles, [7maspect[0ms, [0m[7m[0mdignites [0m[7m[0mou [0m[7m[0mchamps [0m[7m[0minternes [0m[7m[0mexistants. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_builder.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_natal_result_chart_objects.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"calculability" [0m[7m[0mbackend/app/domain/astrology/runtime [0m
+[7m[0mbackend/app/domain/astrology/builders [0m[7m[0mbackend/tests/unit/domain/astrology`, [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"if [0m[7m[0mobject_type [0m[7m[0m==|if [0m[7m[0m.*\\.object_type [0m[7m[0m==|match [0m[7m[0mobject_type|match [0m[7m[0m.*\\.object_type" [0m
+[7m[0mbackend/app/domain/astrology/calculators [0m[7m[0mbackend/app/domain/astrology/dignities [0m[7m[0mbackend/app/domain/astrology/dominance [0m[7m[0mbackend/app/domain/astrology/advanced_conditions [0m
+[7m[0mbackend/app/domain/astrology/planetary_conditions [0m[7m[0mbackend/app/domain/astrology/interpretation [0m[7m[0mbackend/app/domain/astrology/interpretation_adapters [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0mdiff [0m[7m[0madjacent [0m
+[7m[0msur [0m[7m[0m`planetary_conditions`, [0m[7m[0m`dignities`, [0m[7m[0m`dominance`, [0m[7m[0m`advanced_conditions`, [0m[7m[0m`interpretation`, [0m[7m[0m`json_builder.py`, [0m[7m[0mAPI, [0m[7m[0minfra, [0m[7m[0mmigrations [0m[7m[0met [0m[7m[0mfrontend. [0m[7m[0m|[0m
+> _condamad\stories\regression-guardrails.md:188:| [7mRG-145 [0m[7m[0m| [0m[7m[0m`CS-218-aspect-engine-chart-object-consumption` [0m[7m[0m| [0m[7m[0mFrontiere [0m[7m[0md'entree [0m[7m[0mdu [0m[7m[0mmoteur [0m[7m[0md'aspects [0m[7m[0mnatal [0m[7m[0m| [0m[7m[0mLe [0m[7m[0mmoteur [0m
+[7m[0md'aspects [0m[7m[0mnatal [0m[7m[0mdoit [0m[7m[0mconsommer [0m[7m[0mles [0m[7m[0mcandidats [0m[7m[0mdepuis [0m[7m[0m`NatalResult.chart_objects` [0m[7m[0m/ [0m[7m[0m`ChartObjectRuntimeData` [0m[7m[0mpar [0m[7m[0m`capabilities.supports_aspects`, [0m[7m[0mpuis [0m[7m[0mles [0m[7m[0mprojeter [0m[7m[0mvia [0m[7m[0mun [0m
+[7m[0mprojector [0m[7m[0munique [0m[7m[0mvers [0m[7m[0m`AspectBodyRuntimeData`; [0m[7m[0mil [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mredevenir [0m[7m[0mconsommateur [0m[7m[0mdirect [0m[7m[0mde [0m[7m[0m`planet_positions`, [0m[7m[0m`astral_points`, [0m[7m[0m`angles` [0m[7m[0mou [0m[7m[0m`fixed_stars`, [0m[7m[0mni [0m[7m[0majouter [0m[7m[0mde [0m
+[7m[0mbranches [0m[7m[0mmetier [0m[7m[0m`object_type` [0m[7m[0mdans [0m[7m[0mles [0m[7m[0mcalculateurs [0m[7m[0md'aspects. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_aspect_chart_object_inputs.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_natal_aspects_include_points.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"object_type [0m[7m[0m==|\\.object_type|ChartObjectType" [0m[7m[0mbackend/app/domain/astrology/calculators [0m[7m[0m-g [0m[7m[0m"*.py"`, [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"planet_positions|astral_points|angles|fixed_stars" [0m
+[7m[0mbackend/app/domain/astrology/calculators [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0mscan [0m[7m[0mdes [0m[7m[0mbuilders [0m[7m[0mspecialises [0m[7m[0minterdits [0m
+[7m[0m`PlanetAspectBodyBuilder|AngleAspectBodyBuilder|AstralPointAspectBodyBuilder|FixedStarAspectBodyBuilder`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:189:| [0m[7m[0mRG-146 [0m[7m[0m| [0m[7m[0m`CS-219-chart-object-motion-visibility-payloads` [0m[7m[0m| [0m[7m[0mPayloads [0m[7m[0mmotion [0m[7m[0met [0m[7m[0mvisibilite [0m[7m[0mdes [0m[7m[0mobjets [0m[7m[0mdu [0m[7m[0mtheme [0m[7m[0m| [0m
+[7m[0m`ChartObjectRuntimeData.payloads.motion` [0m[7m[0met [0m[7m[0m`payloads.visibility` [0m[7m[0mdoivent [0m[7m[0mrester [0m[7m[0mles [0m[7m[0msurfaces [0m[7m[0mruntime [0m[7m[0mtypes [0m[7m[0mpour [0m[7m[0mles [0m[7m[0mobjets [0m[7m[0mqui [0m[7m[0mdeclarent [0m[7m[0m`supports_motion` [0m[7m[0mou [0m
+[7m[0m`supports_visibility`; [0m[7m[0mle [0m[7m[0mbuilder [0m[7m[0mchart-object [0m[7m[0mmappe [0m[7m[0mles [0m[7m[0mconditions [0m[7m[0mexistantes [0m[7m[0mCS-209 [0m[7m[0ma [0m[7m[0mCS-214 [0m[7m[0msans [0m[7m[0mrecalculer [0m[7m[0mretrograde, [0m[7m[0mstation, [0m[7m[0mcazimi, [0m[7m[0mcombustion, [0m[7m[0munder [0m[7m[0mbeams, [0m[7m[0mrelation [0m
+[7m[0moriental/occidental [0m[7m[0mou [0m[7m[0mvisibilite, [0m[7m[0msans [0m[7m[0mseuils [0m[7m[0mmagiques [0m[7m[0mlocaux, [0m[7m[0met [0m[7m[0mles [0m[7m[0mobjets [0m[7m[0mnon [0m[7m[0mapplicables [0m[7m[0mne [0m[7m[0mportent [0m[7m[0mpas [0m[7m[0mde [0m[7m[0mpayload [0m[7m[0mincoherent. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_motion_visibility_payloads.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_builder.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_natal_result_chart_objects.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"combust|cazimi|under_beams|under [0m[7m[0mbeams|retrograde|stationary" [0m[7m[0mbackend/app/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`, [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"if [0m[7m[0m.*object_type|\\.object_type [0m[7m[0m==" [0m
+[7m[0mbackend/app/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`, [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"\\b8\\.5\\b|\\b17\\b|\\b0\\.2833\\b|\\b0\\.01\\b" [0m[7m[0mbackend/app/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0mevidence [0m
+[7m[0m`_condamad/stories/CS-219-chart-object-motion-visibility-payloads/evidence/validation.md`. [0m[7m[0m|[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\regression-guardrails.md:190:| [0m[7m[0mRG-147 [0m[7m[0m| [0m[7m[0m`CS-220-dignity-dominance-capability-runtime` [0m[7m[0m| [0m[7m[0mPayloads [0m[7m[0mdignity [0m[7m[0met [0m[7m[0mdominance [0m[7m[0mdes [0m[7m[0mobjets [0m[7m[0mdu [0m[7m[0mtheme [0m[7m[0m| [0m
+[7m[0m`ChartObjectRuntimeData.payloads.dignity` [0m[7m[0met [0m[7m[0m`payloads.dominance` [0m[7m[0mdoivent [0m[7m[0mrester [0m[7m[0mdes [0m[7m[0mprojections [0m[7m[0mcalculatoires [0m[7m[0mdes [0m[7m[0mresultats [0m[7m[0mhistoriques, [0m[7m[0mselectionnees [0m[7m[0mpar [0m
+[7m[0m`supports_dignities` [0m[7m[0met [0m[7m[0m`supports_dominance`; [0m[7m[0ml'eligibilite [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mrevenir [0m[7m[0ma [0m[7m[0m`object_type`, [0m[7m[0mles [0m[7m[0menrichers [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mpas [0m[7m[0mrecalculer [0m[7m[0mles [0m[7m[0mscores, [0m[7m[0met [0m
+[7m[0m`DominantPlanetsResult` [0m[7m[0mreste [0m[7m[0mle [0m[7m[0mclassement [0m[7m[0mchart-level. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_dignity_runtime.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_dominance_runtime.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_natal_result_chart_objects.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_traditional_golden_cases.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"object_type [0m[7m[0m==|\\.object_type [0m[7m[0m==|ChartObjectType\\.PLANET|ChartObjectType\\.LUMINARY" [0m[7m[0mbackend/app/domain/astrology/dignities [0m[7m[0mbackend/app/domain/astrology/dominance`, [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"planet_positions" [0m[7m[0mbackend/app/domain/astrology/dignities [0m[7m[0mbackend/app/domain/astrology/dominance`, [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"interpretation|narrative|prompt|llm|meaning|psychological" [0m
+[7m[0mbackend/app/domain/astrology/runtime [0m[7m[0mbackend/app/domain/astrology/dignities [0m[7m[0mbackend/app/domain/astrology/dominance` [0m[7m[0met [0m[7m[0mevidence [0m
+[7m[0m`_condamad/stories/CS-220-dignity-dominance-capability-runtime/evidence/validation.md`. [0m[7m[0m|[0m
+
+
+codex
+Mini-plan: 1) rédiger la story CS-229 en Fast Story Writer Mode, 2) créer le dossier et `00-story.md`, 3) ajouter l’entrée tracker, 4) lancer validation puis lint strict dans le venv, 5) corriger une seule passe si les diagnostics sont bloquants.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-229-aspect-runtime-structural-interpretive-contracts\00-story.md
+C:\dev\horoscope_front\_condamad\stories\story-status.md
+[orchestrator] omitted diff block (1262 lines)
+codex
+La story et le tracker sont écrits. Je lance maintenant uniquement les deux validations autorisées, après activation du venv comme demandé.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+2026-05-23T08:58:44.766686Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Contract Shape missing concrete marker: Required fields:
+- No Legacy section missing concept: compatibility
+- No Legacy section missing concept: fallback
+- Dev Agent Instructions missing guardrail: Do not preserve legacy behavior
+- Dependency Policy must include 'New dependencies:'
+
+ exited 1 in 348ms:
+CONDAMAD story lint: FAIL
+- Contract Shape missing concrete marker: Required fields:
+- No Legacy section missing concept: compatibility
+- No Legacy section missing concept: fallback
+- Dev Agent Instructions missing guardrail: Do not preserve legacy behavior
+- Dependency Policy must include 'New dependencies:'
+
+2026-05-23T08:58:44.790524Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story validation: FAIL
+- Contract Shape missing concrete marker: Required fields:
+- No Legacy section missing concept: compatibility
+- No Legacy section missing concept: fallback
+- Dev Agent Instructions missing guardrail: Do not preserve legacy behavior
+- Dependency Policy must include 'New dependencies:'
+
+ exited 1 in 381ms:
+CONDAMAD story validation: FAIL
+- Contract Shape missing concrete marker: Required fields:
+- No Legacy section missing concept: compatibility
+- No Legacy section missing concept: fallback
+- Dev Agent Instructions missing guardrail: Do not preserve legacy behavior
+- Dependency Policy must include 'New dependencies:'
+
+[orchestrator] omitted diff block (631 lines)
+codex
+Les deux validations échouent sur la même liste de marqueurs structuraux, pas sur le fond du brief. Je corrige ces marqueurs en une passe ciblée, puis je relancerai les deux commandes.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-229-aspect-runtime-structural-interpretive-contracts\00-story.md
+[orchestrator] omitted diff block (1300 lines)
+codex
+Les marqueurs requis ont été ajoutés sans élargir le périmètre. Je relance maintenant validation et lint strict, dernière tentative prévue sauf blocage distinct.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 339ms:
+CONDAMAD story validation: PASS
+
+2026-05-23T08:59:05.999827Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Line 166 exceeds 180 characters
+- Line 324 exceeds 180 characters
+- Line 390 exceeds 180 characters
+- Line 391 exceeds 180 characters
+- Line 397 exceeds 180 characters
+- Line 401 exceeds 180 characters
+- Line 402 exceeds 180 characters
+
+ exited 1 in 362ms:
+CONDAMAD story lint: FAIL
+- Line 166 exceeds 180 characters
+- Line 324 exceeds 180 characters
+- Line 390 exceeds 180 characters
+- Line 391 exceeds 180 characters
+- Line 397 exceeds 180 characters
+- Line 401 exceeds 180 characters
+- Line 402 exceeds 180 characters
+
+[orchestrator] omitted diff block (650 lines)
+codex
+La validation structurelle passe. Le lint strict reste bloqué uniquement sur des lignes trop longues; je les coupe sans changer le contenu métier, puis je relance les deux validations parce que la story aura changé.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md'; "'$lines=Get-Content $p; foreach($n in 166,324,390,391,397,401,402){ '"'{0}: {1}' -f "'$n,$lines[$n-1] }' in C:\dev\horoscope_front
+ succeeded in 231ms:
+166: | prediction consumers existants | valence ou energy type | Usage legitime via contrat prediction ou hints interpretatifs. | Temporary until consumers use explicit hints/profile path. |
+324: | Aspect boundary proof | `_condamad/stories/CS-229-aspect-runtime-structural-interpretive-contracts/evidence/aspect-runtime-boundary.md` | Prouver separation structurelle et interpretative. |
+390: | AC2 | Les contrats dedies structurels et interpretatifs existent ou sont prepares. | `pytest -q backend/tests/unit/domain/astrology/test_aspect_runtime_contracts.py`; AST guard. |
+391: | AC3 | Le referentiel distingue definition structurelle et profil interpretatif. | `pytest -q backend/tests/unit/domain/astrology/test_aspect_runtime_contracts.py`; repository assertions. |
+397: | AC9 | Les consumers prediction gardent valence via hints ou contrat prediction. | `pytest -q backend/tests/architecture/test_chart_interpretation_input_boundary.py`; scan cible. |
+401: | AC13 | Les sorties publiques d'aspects restent compatibles. | `pytest -q backend/tests/architecture/test_api_contract_neutrality.py`; `app.routes`; `app.openapi()`; `TestClient`. |
+402: | AC14 | Aucun changement DB, frontend, prompt ou migration n'est introduit. | diff adjacent DB/frontend/prompts; `pytest -q backend/tests/unit/domain/astrology/test_aspect_runtime_contracts.py`. |
+
+[orchestrator] omitted diff block (1953 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+2026-05-23T08:59:35.999502Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+CONDAMAD story lint: FAIL
+- AC14 has no concrete validation evidence
+- AC14 touches a runtime contract and must include runtime evidence
+
+ exited 1 in 335ms:
+CONDAMAD story lint: FAIL
+- AC14 has no concrete validation evidence
+- AC14 touches a runtime contract and must include runtime evidence
+
+2026-05-23T08:59:36.023805Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story validation: FAIL
+- AC14 has no concrete validation evidence
+- AC14 touches a runtime contract and must include runtime evidence
+
+ exited 1 in 362ms:
+CONDAMAD story validation: FAIL
+- AC14 has no concrete validation evidence
+- AC14 touches a runtime contract and must include runtime evidence
+
+[orchestrator] omitted diff block (650 lines)
+codex
+Le raccourcissement d’AC14 a retiré un marqueur runtime que le validateur exige. Je restaure une preuve concrète courte pour AC14 et relance, car le dernier changement a modifié la story.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-229-aspect-runtime-structural-interpretive-contracts\00-story.md
+[orchestrator] omitted diff block (1300 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+2026-05-23T08:59:49.790195Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Strict warning: AC2 is possibly compound; keep one invariant per AC
+- Strict warning: AC3 is possibly compound; keep one invariant per AC
+- Strict warning: AC7 is possibly compound; keep one invariant per AC
+- Strict warning: AC10 is possibly compound; keep one invariant per AC
+- Strict warning: AC12 is possibly compound; keep one invariant per AC
+- Strict warning: AC14 is possibly compound; keep one invariant per AC
+
+ exited 1 in 368ms:
+CONDAMAD story lint: FAIL
+- Strict warning: AC2 is possibly compound; keep one invariant per AC
+- Strict warning: AC3 is possibly compound; keep one invariant per AC
+- Strict warning: AC7 is possibly compound; keep one invariant per AC
+- Strict warning: AC10 is possibly compound; keep one invariant per AC
+- Strict warning: AC12 is possibly compound; keep one invariant per AC
+- Strict warning: AC14 is possibly compound; keep one invariant per AC
+
+ succeeded in 386ms:
+CONDAMAD story validation: PASS
+
+[orchestrator] omitted diff block (650 lines)
+codex
+La validation passe à nouveau; le lint strict signale seulement des AC composés. Je simplifie chaque AC signalé à un invariant unique, puis je relance les deux commandes.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-229-aspect-runtime-structural-interpretive-contracts\00-story.md
+[orchestrator] omitted diff block (1300 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 333ms:
+CONDAMAD story lint: PASS
+
+ succeeded in 364ms:
+CONDAMAD story validation: PASS
+
+[orchestrator] omitted diff block (650 lines)
+codex
+Les deux validations passent. Je mets à jour les notes de génération internes de la story pour refléter ce résultat, puis je relance une dernière fois car ce fichier change.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-229-aspect-runtime-structural-interpretive-contracts\00-story.md
+[orchestrator] omitted diff block (1300 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-229-aspect-runtime-structural-interpretive-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 317ms:
+CONDAMAD story lint: PASS
+
+ succeeded in 337ms:
+CONDAMAD story validation: PASS
+
+[orchestrator] omitted diff block (650 lines)
+codex
+Story CS-229 rédigée et tracker mis à jour.
+
+Fichiers modifiés :
+- `_condamad/stories/CS-229-aspect-runtime-structural-interpretive-contracts/00-story.md`
+- `_condamad/stories/story-status.md`
+
+Validations lancées après activation du venv :
+- `condamad_story_validate.py` : PASS
+- `condamad_story_lint.py --strict` : PASS
+
+Note : le `SKILL.md`, le cheatsheet demandé et `resolve_guardrails.py` sont absents dans ce workspace; la story le consigne et s’appuie sur le brief, les stories voisines et les diagnostics des validateurs.
+[orchestrator] omitted diff block (650 lines)
+tokens used
+142 171
+Story CS-229 rédigée et tracker mis à jour.
+
+Fichiers modifiés :
+- `_condamad/stories/CS-229-aspect-runtime-structural-interpretive-contracts/00-story.md`
+- `_condamad/stories/story-status.md`
+
+Validations lancées après activation du venv :
+- `condamad_story_validate.py` : PASS
+- `condamad_story_lint.py --strict` : PASS
+
+Note : le `SKILL.md`, le cheatsheet demandé et `resolve_guardrails.py` sont absents dans ce workspace; la story le consigne et s’appuie sur le brief, les stories voisines et les diagnostics des validateurs.
+[orchestrator] validation cycle budget exceeded but treated as advisory: 7/3

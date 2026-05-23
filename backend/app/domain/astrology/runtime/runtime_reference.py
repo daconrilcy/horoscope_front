@@ -10,6 +10,11 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Mapping
 
+from app.domain.astrology.runtime.aspect_calculation_contracts import (
+    AspectInterpretiveProfileRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
+)
+
 
 @dataclass(frozen=True, slots=True)
 class PlanetReferenceData:
@@ -139,9 +144,6 @@ class AspectReferenceData:
     is_major: bool
     is_minor: bool
     default_orb_deg: float | None
-    default_valence: str
-    interpretive_valence: str
-    energy_type: str
     legacy_orb_fields: tuple[str, ...] = ()
 
 
@@ -165,9 +167,10 @@ class AspectOrbRuleReferenceData:
 
 @dataclass(frozen=True, slots=True)
 class AspectReferenceSet:
-    """Collection immutable des aspects et regles d'orbes."""
+    """Collection immutable des vues d'aspects et regles d'orbes."""
 
-    items: tuple[AspectReferenceData, ...]
+    structural_definitions: tuple[AspectStructuralDefinitionRuntimeData, ...]
+    interpretive_profiles: tuple[AspectInterpretiveProfileRuntimeData, ...]
     orb_rules: tuple[AspectOrbRuleReferenceData, ...]
 
 
@@ -252,7 +255,7 @@ class PlanetConditionSignalProfileReferenceData:
     signal_level: str
     interpretation_use: str
     priority_weight: float
-    prompt_hint: str
+    signal_hint: str
     reference_version: str
 
 

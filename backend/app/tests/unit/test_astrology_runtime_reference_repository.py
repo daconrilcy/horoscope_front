@@ -187,7 +187,7 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert condition_signal.level_max == 100.0
     assert condition_signal.signal_code == "functional_strength_high"
     assert condition_signal.interpretation_use == "prioritize_condition_axis"
-    assert condition_signal.prompt_hint == "functional_strength_positive"
+    assert condition_signal.signal_hint == "functional_strength_positive"
     assert [item.code for item in reference.dominance_factor_types] == [
         "chart_ruler",
         "angularity",
@@ -287,7 +287,8 @@ def test_repository_loads_complete_runtime_reference_from_db() -> None:
     assert first_weight.condition_support == 0.0
     assert first_weight.condition_constraint == 0.0
     assert {item.code for item in reference.angle_points.items} >= {"asc", "dsc", "mc", "ic"}
-    assert reference.aspects.items
+    assert reference.aspects.structural_definitions
+    assert reference.aspects.interpretive_profiles
     assert reference.aspects.orb_rules
 
 

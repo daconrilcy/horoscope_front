@@ -50,7 +50,10 @@ from app.domain.astrology.natal_preparation import BirthInput, BirthPreparedData
 from app.domain.astrology.planetary_conditions import (
     AdvancedPlanetaryConditionsResult,
 )
-from app.domain.astrology.runtime.aspect_runtime_data import AspectRuntimeData
+from app.domain.astrology.runtime.aspect_runtime_data import (
+    AspectInterpretiveHintsRuntimeData,
+    AspectRuntimeData,
+)
 from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectRuntimeData,
 )
@@ -107,9 +110,10 @@ class AspectResult(BaseModel):
     family: str
     is_major: bool
     is_minor: bool
-    default_valence: str
-    interpretive_valence: str
-    energy_type: str
+    aspect_interpretive_hints: AspectInterpretiveHintsRuntimeData | None = Field(
+        default=None,
+        exclude=True,
+    )
     aspect_runtime: AspectRuntimeData | None = Field(default=None, exclude=True)
 
     @model_validator(mode="after")
@@ -175,9 +179,24 @@ class NatalResult(BaseModel):
 def _build_aspect_result(
     payload: dict[str, object],
     celestial_catalog: CelestialRuntimeCatalog,
+    interpretive_profiles: dict[str, object] | None = None,
 ) -> AspectResult:
     """Construit un resultat d'aspect avec le catalogue celeste de reference."""
     aspect = AspectResult.model_validate(payload)
+    profile = (
+        None if interpretive_profiles is None else interpretive_profiles.get(aspect.aspect_code)
+    )
+    if profile is not None:
+        from app.domain.astrology.builders.aspect_runtime_builder import (
+            build_aspect_structural_runtime_data,
+        )
+        from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintResolver
+
+        structural = build_aspect_structural_runtime_data(aspect, celestial_catalog)
+        aspect.aspect_interpretive_hints = AspectInterpretiveHintResolver().resolve(
+            structural,
+            profile,
+        )
     aspect.aspect_runtime = build_aspect_runtime_data(aspect, celestial_catalog)
     return aspect
 

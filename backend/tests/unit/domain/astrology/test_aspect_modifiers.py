@@ -8,6 +8,7 @@ from app.domain.astrology.runtime.aspect_modifiers import (
     AspectModifierRuntimeData,
     AspectModifierType,
     AspectRuntimeWeightTaxonomy,
+    AspectStructuralModifierRuntimeData,
 )
 from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
@@ -15,9 +16,6 @@ ASPECT_META = {
     "family": "major",
     "is_major": True,
     "is_minor": False,
-    "default_valence": "positive",
-    "interpretive_valence": "harmonious",
-    "energy_type": "harmonious_flow",
 }
 
 
@@ -73,10 +71,21 @@ def test_aspect_runtime_exposes_typed_modifiers() -> None:
 
 
 def test_weight_taxonomy_separates_owners() -> None:
-    """La taxonomie distingue force, dominance, interpretation et produit."""
+    """La taxonomie distingue force, dominance et ownership produit."""
     taxonomy = AspectRuntimeWeightTaxonomy()
 
     assert taxonomy.technical_strength.startswith("AspectStrengthEvaluator")
     assert taxonomy.structural_dominance.startswith("DominantAspectEvaluator")
-    assert taxonomy.interpretive_weight.startswith("AspectModifierRuntimeData")
+    assert not hasattr(taxonomy, "interpretive_hints")
     assert taxonomy.product_owner == "domain/prediction owns prediction weighting"
+
+
+def test_structural_modifier_does_not_accept_interpretive_weight() -> None:
+    """Un modifier structurel ne porte pas de poids interpretatif."""
+    with pytest.raises(TypeError, match="interpretive_weight"):
+        AspectStructuralModifierRuntimeData(
+            modifier_type=AspectModifierType.LUMINARY,
+            source="participants",
+            intensity=0.8,
+            interpretive_weight=0.5,
+        )

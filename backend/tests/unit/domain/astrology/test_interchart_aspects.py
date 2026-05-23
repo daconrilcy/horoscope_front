@@ -5,25 +5,23 @@ from app.domain.astrology.calculators.aspects import (
     calculate_interchart_aspects,
 )
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
-    AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
 )
 from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
-def _definition() -> AspectDefinitionRuntimeData:
+def _definition() -> AspectStructuralDefinitionRuntimeData:
     """Construit une définition typée de trigone."""
-    return AspectDefinitionRuntimeData(
+    return AspectStructuralDefinitionRuntimeData(
         code="trine",
+        name="Trine",
         angle=120.0,
         family="major",
         default_orb_deg=6.0,
         is_enabled=True,
         is_major=True,
         is_minor=False,
-        default_valence="positive",
-        interpretive_valence="harmonious",
-        energy_type="harmonious_flow",
     )
 
 
@@ -64,9 +62,6 @@ def test_interchart_aspects_reuse_existing_aspect_definitions() -> None:
             "family": "major",
             "is_major": True,
             "is_minor": False,
-            "default_valence": "positive",
-            "interpretive_valence": "harmonious",
-            "energy_type": "harmonious_flow",
         }
     ]
 
@@ -86,17 +81,15 @@ def test_interchart_aspects_apply_targeted_orb_rules_to_original_body_codes() ->
         )
     ]
     definitions = [
-        AspectDefinitionRuntimeData(
+        AspectStructuralDefinitionRuntimeData(
             code="trine",
+            name="Trine",
             angle=120.0,
             family="major",
             default_orb_deg=3.0,
             is_enabled=True,
             is_major=True,
             is_minor=False,
-            default_valence="positive",
-            interpretive_valence="harmonious",
-            energy_type="harmonious_flow",
         )
     ]
     orb_rules = [

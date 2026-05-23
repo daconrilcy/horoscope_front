@@ -34,7 +34,8 @@ def test_runtime_reference_collections_are_tuple_based() -> None:
     assert isinstance(reference.planets.items, tuple)
     assert isinstance(reference.signs.items, tuple)
     assert isinstance(reference.houses.items, tuple)
-    assert isinstance(reference.aspects.items, tuple)
+    assert isinstance(reference.aspects.structural_definitions, tuple)
+    assert isinstance(reference.aspects.interpretive_profiles, tuple)
     assert isinstance(reference.aspects.orb_rules, tuple)
 
     with pytest.raises(FrozenInstanceError):

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
+if TYPE_CHECKING:
+    from app.domain.astrology.celestial_runtime_catalog import CelestialRuntimeCatalog
 
 
 def _required_text(value: object, field_name: str) -> str:
@@ -37,56 +38,54 @@ def _optional_text(value: object, field_name: str) -> str | None:
 
 
 @dataclass(frozen=True, slots=True)
-class AspectDefinitionRuntimeData:
-    """Définition d'aspect issue du référentiel canonique."""
+class AspectStructuralDefinitionRuntimeData:
+    """Definition structurelle d'aspect consommee par les calculateurs."""
 
     code: str
+    name: str
     angle: float
     family: str
     default_orb_deg: float
     is_enabled: bool
     is_major: bool
     is_minor: bool
+    system_code: str = "modern"
+    legacy_orb_fields: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        """Valide les champs structurels minimaux du referentiel d'aspect."""
+        for field_name in ("code", "name", "family", "system_code"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"aspect structural definition requires {field_name}")
+
+
+@dataclass(frozen=True, slots=True)
+class AspectInterpretiveProfileRuntimeData:
+    """Profil interpretatif d'aspect separe de la definition structurelle."""
+
+    aspect_code: str
     default_valence: str
     interpretive_valence: str
     energy_type: str
+    semantic_axes: tuple[str, ...] = ()
+    growth_axes: tuple[str, ...] = ()
+    shadow_axes: tuple[str, ...] = ()
+    relationship_axes: tuple[str, ...] = ()
+    source_profile_code: str | None = None
+    reference_version: str | None = None
     system_code: str = "modern"
 
-    @classmethod
-    def from_mapping(cls, payload: dict[str, object]) -> AspectDefinitionRuntimeData:
-        """Valide et convertit un payload référentiel en contrat runtime."""
-        forbidden_fields = {
-            "orb_" + "luminaries_override_deg",
-            "orb_" + "pair_overrides",
-            "orb_" + "luminaries",
-            "orb_" + "pairs",
-            "orb_" + "overrides",
-        }
-        present_forbidden_fields = forbidden_fields & set(payload)
-        if present_forbidden_fields:
-            raise ValueError(
-                "legacy aspect orb fields are forbidden: "
-                + ", ".join(sorted(present_forbidden_fields))
-            )
-        family = _required_text(payload.get("family"), "family")
-        default_orb = _required_float(payload.get("default_orb_deg"), "default_orb_deg")
-        is_major = bool(payload.get("is_major", family == "major"))
-        is_minor = bool(payload.get("is_minor", family == "minor"))
-        return cls(
-            code=_required_text(payload.get("code"), "code"),
-            angle=_required_float(payload.get("angle"), "angle"),
-            family=family,
-            default_orb_deg=default_orb,
-            is_enabled=bool(payload.get("is_enabled", True)),
-            is_major=is_major,
-            is_minor=is_minor,
-            default_valence=_required_text(payload.get("default_valence"), "default_valence"),
-            interpretive_valence=_required_text(
-                payload.get("interpretive_valence"), "interpretive_valence"
-            ),
-            energy_type=_required_text(payload.get("energy_type"), "energy_type"),
-            system_code=_required_text(payload.get("system_code", "modern"), "system_code"),
+    def __post_init__(self) -> None:
+        """Valide les champs interpretatifs courts, sans texte narratif."""
+        required_values = (
+            self.aspect_code,
+            self.default_valence,
+            self.interpretive_valence,
+            self.energy_type,
+            self.system_code,
         )
+        if any(not value.strip() for value in required_values):
+            raise ValueError("aspect interpretive profile requires non-empty core values")
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,7 +179,7 @@ class AspectBodyRuntimeData:
 
 @dataclass(frozen=True, slots=True)
 class AspectCalculationResult:
-    """Résultat calculé avec métadonnées référentielles transportées."""
+    """Résultat structurel calcule sans metadonnees interpretatives."""
 
     aspect_code: str
     planet_a: str
@@ -192,14 +191,11 @@ class AspectCalculationResult:
     family: str
     is_major: bool
     is_minor: bool
-    default_valence: str
-    interpretive_valence: str
-    energy_type: str
     chart_a: str | None = None
     chart_b: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        """Projette le contrat vers le payload historique contrôlé."""
+        """Projette le contrat vers le payload structurel controle."""
         payload: dict[str, Any] = {
             "aspect_code": self.aspect_code,
             "planet_a": self.planet_a,
@@ -211,9 +207,6 @@ class AspectCalculationResult:
             "family": self.family,
             "is_major": self.is_major,
             "is_minor": self.is_minor,
-            "default_valence": self.default_valence,
-            "interpretive_valence": self.interpretive_valence,
-            "energy_type": self.energy_type,
         }
         if self.chart_a is not None:
             payload["chart_a"] = self.chart_a

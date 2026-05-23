@@ -12,6 +12,8 @@ from app.domain.astrology.dominance.contracts import DominantPlanetsResult, Plan
 from app.domain.astrology.interpretation.chart_interpretation_input_builder import (
     ChartInterpretationInputBuilder,
 )
+from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 
@@ -88,3 +90,43 @@ def test_builder_constructs_sections_from_chart_objects() -> None:
     assert [item.code for item in result.dominance] == ["mars"]
     assert [item.condition_code for item in result.advanced_condition_facts] == ["hayz"]
     assert result.metadata.object_count == 1
+
+
+def test_builder_marks_aspects_sourced_from_interpretive_hints() -> None:
+    """Les aspects interpretatifs signalent la source hints dediee quand elle existe."""
+    aspect = AspectResult(
+        aspect_code="trine",
+        planet_a="sun",
+        planet_b="moon",
+        angle=120.0,
+        orb=0.4,
+        orb_used=0.4,
+        orb_max=6.0,
+        family="major",
+        is_major=True,
+        is_minor=False,
+        aspect_interpretive_hints=AspectInterpretiveHintsRuntimeData(
+            aspect_code="trine",
+            default_valence="positive",
+            interpretive_valence="harmonious",
+            energy_type="harmonious_flow",
+            source_codes=("aspect:trine", "aspect_profile:trine"),
+        ),
+    )
+    source = _NatalSource(
+        chart_objects=(),
+        aspects=(aspect,),
+        dominant_planets=DominantPlanetsResult(
+            score_profile_code="fixture.profile",
+            tradition_code="fixture",
+            reference_version_code="v1",
+            planets=(),
+            top_planet_code=None,
+            chart_ruler_code=None,
+            most_elevated_planet_code=None,
+        ),
+    )
+
+    result = ChartInterpretationInputBuilder().build(source)
+
+    assert result.aspects[0].source == "aspect_interpretive_hints"

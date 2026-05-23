@@ -45,7 +45,7 @@ class PlanetConditionSignalBuilder:
                 axis_value=round(axis_value, 6),
                 interpretation_use=signal_profile.interpretation_use,
                 priority_weight=round(signal_profile.priority_weight, 6),
-                prompt_hint=signal_profile.prompt_hint,
+                prompt_hint=signal_profile.signal_hint,
             )
             for signal_profile in signal_profiles
             for axis_value in (self._axis_value(profile, signal_profile.condition_axis),)

@@ -49,7 +49,8 @@ from app.domain.astrology.runtime.sign_runtime_data import (
 
 __all__ = [
     "AspectIdentityRuntimeData",
-    "AspectInterpretationRuntimeData",
+    "AspectInterpretiveHintsRuntimeData",
+    "AspectInterpretiveHintResolver",
     "AspectMetadataRuntimeData",
     "AspectModifierRuntimeData",
     "AspectModifierType",
@@ -58,6 +59,9 @@ __all__ = [
     "AspectPhaseRuntimeData",
     "AspectRuntimeData",
     "AspectRuntimeWeightTaxonomy",
+    "AspectStructuralRuntimeData",
+    "AspectStructuralModifierRuntimeData",
+    "resolve_aspect_interpretive_hints",
     "AnglePointReferenceData",
     "AnglePointReferenceSet",
     "AspectOrbRuleReferenceData",
@@ -105,7 +109,8 @@ __all__ = [
 
 _LAZY_EXPORTS = {
     "AspectIdentityRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
-    "AspectInterpretationRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectInterpretiveHintsRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectInterpretiveHintResolver": "app.domain.astrology.runtime.aspect_runtime_data",
     "AspectMetadataRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
     "AspectModifierRuntimeData": "app.domain.astrology.runtime.aspect_modifiers",
     "AspectModifierType": "app.domain.astrology.runtime.aspect_modifiers",
@@ -114,6 +119,9 @@ _LAZY_EXPORTS = {
     "AspectPhaseRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
     "AspectRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
     "AspectRuntimeWeightTaxonomy": "app.domain.astrology.runtime.aspect_modifiers",
+    "AspectStructuralRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectStructuralModifierRuntimeData": "app.domain.astrology.runtime.aspect_modifiers",
+    "resolve_aspect_interpretive_hints": "app.domain.astrology.runtime.aspect_runtime_data",
     "AstrologicalGraphEdgeType": "app.domain.astrology.runtime.astrological_graph_contracts",
     "AstrologicalGraphNodeType": "app.domain.astrology.runtime.astrological_graph_contracts",
     "DominantAspectReason": "app.domain.astrology.runtime.dominant_aspect_runtime_data",

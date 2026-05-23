@@ -9,6 +9,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from app.domain.astrology.planet_catalog import planet_swe_ids_by_code
+from app.domain.astrology.runtime.aspect_calculation_contracts import (
+    AspectInterpretiveProfileRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
+)
 from app.domain.astrology.runtime.runtime_reference import (
     AccidentalDignityRuleReferenceData,
     AdvancedConditionReferenceSet,
@@ -18,7 +22,6 @@ from app.domain.astrology.runtime.runtime_reference import (
     AnglePointReferenceData,
     AnglePointReferenceSet,
     AspectOrbRuleReferenceData,
-    AspectReferenceData,
     AspectReferenceSet,
     AstralPointAliasRuntime,
     AstralPointReferenceSet,
@@ -158,20 +161,32 @@ class AstrologyRuntimeReferenceMapper:
                 for item in self._items(payload, "house_axes")
             ),
             aspects=AspectReferenceSet(
-                items=tuple(
-                    AspectReferenceData(
+                structural_definitions=tuple(
+                    AspectStructuralDefinitionRuntimeData(
                         code=str(item["code"]),
                         name=self._display_name(item),
                         angle=float(item["angle"]),
                         family=str(item.get("family", "major")),
+                        default_orb_deg=self._required_float(item, "default_orb_deg"),
                         is_enabled=bool(item.get("is_enabled", True)),
                         is_major=bool(item.get("is_major", True)),
                         is_minor=bool(item.get("is_minor", False)),
-                        default_orb_deg=self._optional_float(item.get("default_orb_deg")),
-                        default_valence=str(item.get("default_valence", "contextual")),
-                        interpretive_valence=str(item.get("interpretive_valence", "contextual")),
-                        energy_type=str(item.get("energy_type", "neutral")),
+                        system_code=str(item.get("system_code", "modern")),
                         legacy_orb_fields=self._legacy_orb_fields(item),
+                    )
+                    for item in self._items(payload, "aspects")
+                ),
+                interpretive_profiles=tuple(
+                    AspectInterpretiveProfileRuntimeData(
+                        aspect_code=str(item["code"]),
+                        default_valence=self._required_runtime_str(item, "default_valence"),
+                        interpretive_valence=self._required_runtime_str(
+                            item, "interpretive_valence"
+                        ),
+                        energy_type=self._required_runtime_str(item, "energy_type"),
+                        source_profile_code=self._display_name(item),
+                        reference_version=reference_version,
+                        system_code=str(item.get("system_code", "modern")),
                     )
                     for item in self._items(payload, "aspects")
                 ),
@@ -218,7 +233,7 @@ class AstrologyRuntimeReferenceMapper:
                     signal_level=str(item["signal_level"]),
                     interpretation_use=str(item["interpretation_use"]),
                     priority_weight=float(item["priority_weight"]),
-                    prompt_hint=str(item["prompt_hint"]),
+                    signal_hint=str(item["prompt_hint"]),
                     reference_version=str(item["reference_version"]),
                 )
                 for item in condition_signal_profiles
@@ -668,6 +683,22 @@ class AstrologyRuntimeReferenceMapper:
             code = str(item.get("code") or "<unknown>")
             raise ValueError(f"missing required sign profile field {field_name} for {code}")
         return value
+
+    def _required_runtime_str(self, item: Mapping[str, object], field_name: str) -> str:
+        """Exige un champ texte source pour un contrat runtime non signe."""
+        value = self._optional_str(item.get(field_name))
+        if value is None:
+            code = str(item.get("code") or "<unknown>")
+            raise ValueError(f"missing required runtime field {field_name} for {code}")
+        return value
+
+    def _required_float(self, item: Mapping[str, object], field_name: str) -> float:
+        """Exige un champ numerique source par le payload infra."""
+        value = item.get(field_name)
+        if value is None:
+            code = str(item.get("code") or "<unknown>")
+            raise ValueError(f"missing required runtime field {field_name} for {code}")
+        return float(value)
 
     def _optional_float(self, value: object) -> float | None:
         """Convertit une valeur optionnelle en flottant."""

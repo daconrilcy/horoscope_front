@@ -1476,7 +1476,11 @@ def invalid_orphan_aspect_rule() -> AstrologyRuntimeReference:
         planets=reference.planets,
         planet_natures=reference.planet_natures,
         signs=reference.signs,
-        aspects=type(reference.aspects)(items=reference.aspects.items, orb_rules=(orphan_rule,)),
+        aspects=type(reference.aspects)(
+            structural_definitions=reference.aspects.structural_definitions,
+            interpretive_profiles=reference.aspects.interpretive_profiles,
+            orb_rules=(orphan_rule,),
+        ),
         houses=reference.houses,
         house_axes=reference.house_axes,
         dignities=reference.dignities,

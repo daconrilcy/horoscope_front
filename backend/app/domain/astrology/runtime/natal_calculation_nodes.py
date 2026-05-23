@@ -84,8 +84,9 @@ from app.domain.astrology.planetary_conditions import (
     calculate_advanced_planetary_conditions,
 )
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
-    AspectDefinitionRuntimeData,
+    AspectInterpretiveProfileRuntimeData,
     AspectOrbRuleRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
 )
 from app.domain.astrology.runtime.calculation_graph_runner import CalculationGraphContext
 from app.domain.astrology.runtime.chart_object_runtime_data import (
@@ -344,7 +345,7 @@ def calculate_fixed_star_conjunctions_node(
 
 def calculate_major_aspects_node(context: CalculationGraphContext) -> list[AspectResult]:
     """Calcule les aspects depuis les chart objects enrichis fixed-star."""
-    aspect_definitions, aspect_orb_rules = _aspect_runtime_rules(context)
+    aspect_definitions, aspect_orb_rules, aspect_profiles = _aspect_runtime_rules(context)
     chart_objects = _chart_objects_after_fixed_stars(context)
     aspectable_chart_objects = AspectChartObjectSelector().select(chart_objects)
     aspect_positions = list(
@@ -371,7 +372,10 @@ def calculate_major_aspects_node(context: CalculationGraphContext) -> list[Aspec
     rejected = math.comb(len(aspect_positions), 2) * len(aspect_definitions) - len(aspects_raw)
     if rejected > 0:
         increment_counter("aspects_rejected_orb_total", float(rejected))
-    return [_build_aspect_result(item, _celestial_catalog(context)) for item in aspects_raw]
+    return [
+        _build_aspect_result(item, _celestial_catalog(context), aspect_profiles)
+        for item in aspects_raw
+    ]
 
 
 def calculate_dignities_node(context: CalculationGraphContext) -> NatalDignityOutput:
@@ -605,16 +609,28 @@ def _house_cusp(houses_raw: list[dict[str, object]], house_number: int) -> float
 
 def _aspect_runtime_rules(
     context: CalculationGraphContext,
-) -> tuple[list[AspectDefinitionRuntimeData], list[AspectOrbRuleRuntimeData]]:
-    """Construit les definitions d'aspects runtime depuis le referentiel."""
+) -> tuple[
+    list[AspectStructuralDefinitionRuntimeData],
+    list[AspectOrbRuleRuntimeData],
+    dict[str, AspectInterpretiveProfileRuntimeData],
+]:
+    """Construit les vues structurelles et interpretatives depuis le referentiel."""
     runtime_reference = _runtime_reference(context)
     aspect_school_code = _aspect_school_code(context)
-    aspect_definitions = [
-        _aspect_definition(context, item) for item in runtime_reference.aspects.items
-    ]
+    aspect_definitions = sorted(
+        (
+            _aspect_structural_definition(context, item)
+            for item in runtime_reference.aspects.structural_definitions
+        ),
+        key=lambda item: (item.angle, item.code),
+    )
     if not aspect_definitions:
         _raise_invalid_reference(_version(context), "aspects", "missing_code_or_angle")
-    aspect_definitions.sort(key=lambda item: (item.angle, item.code))
+    aspect_profiles = {
+        profile.aspect_code: profile
+        for profile in runtime_reference.aspects.interpretive_profiles
+        if profile.system_code == aspect_school_code
+    }
     major_aspect_definitions = [
         definition
         for definition in aspect_definitions
@@ -622,17 +638,30 @@ def _aspect_runtime_rules(
         and definition.is_major
         and definition.system_code == aspect_school_code
     ]
+    missing_profiles = [
+        definition.code
+        for definition in major_aspect_definitions
+        if definition.code not in aspect_profiles
+    ]
+    if missing_profiles:
+        _raise_invalid_reference(
+            _version(context),
+            "aspect_profiles",
+            f"missing_interpretive_profile:{','.join(sorted(missing_profiles))}",
+        )
     if not runtime_reference.aspects.orb_rules:
         _raise_invalid_reference(_version(context), "aspect_orb_rules", "missing_or_empty")
-    return major_aspect_definitions, [
-        _aspect_orb_rule(context, item) for item in runtime_reference.aspects.orb_rules
-    ]
+    return (
+        major_aspect_definitions,
+        [_aspect_orb_rule(context, item) for item in runtime_reference.aspects.orb_rules],
+        aspect_profiles,
+    )
 
 
-def _aspect_definition(
+def _aspect_structural_definition(
     context: CalculationGraphContext,
     item: object,
-) -> AspectDefinitionRuntimeData:
+) -> AspectStructuralDefinitionRuntimeData:
     """Valide une definition d'aspect issue du referentiel."""
     if item.legacy_orb_fields:
         raise NatalCalculationError(
@@ -645,28 +674,12 @@ def _aspect_definition(
                 "legacy_fields": ",".join(item.legacy_orb_fields),
             },
         )
-    try:
-        aspect_definition = AspectDefinitionRuntimeData(
-            code=item.code,
-            angle=item.angle,
-            family=item.family,
-            is_enabled=item.is_enabled,
-            is_major=item.is_major,
-            is_minor=item.is_minor,
-            default_orb_deg=item.default_orb_deg,
-            system_code=_aspect_school_code(context),
-            default_valence=item.default_valence,
-            interpretive_valence=item.interpretive_valence,
-            energy_type=item.energy_type,
-        )
-    except ValueError as error:
-        _raise_invalid_reference(_version(context), "aspects", str(error))
-    default_orb_value = aspect_definition.default_orb_deg
+    default_orb_value = item.default_orb_deg
     if default_orb_value is None:
         _raise_invalid_reference(_version(context), "aspects", "missing_default_orb_deg")
     if not (isfinite(default_orb_value) and MIN_ORB_DEG <= default_orb_value <= MAX_ORB_DEG):
         _raise_invalid_reference(_version(context), "aspects", "invalid_default_orb_deg")
-    return aspect_definition
+    return item
 
 
 def _aspect_orb_rule(context: CalculationGraphContext, item: object) -> AspectOrbRuleRuntimeData:

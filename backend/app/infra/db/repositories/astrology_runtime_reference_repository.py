@@ -1053,7 +1053,7 @@ class AstrologyRuntimeReferenceRepository:
         planet_codes = set(reference.planets.codes)
         sign_codes = set(reference.signs.codes)
         house_numbers = set(reference.houses.numbers)
-        aspect_codes = {item.code for item in reference.aspects.items}
+        aspect_codes = {item.code for item in reference.aspects.structural_definitions}
         system_codes = {item.code for item in reference.systems.items}
         point_codes = {item.code for item in reference.astral_points.items}
         angle_point_codes = {item.code for item in reference.angle_points.items}
@@ -1084,8 +1084,10 @@ class AstrologyRuntimeReferenceRepository:
                 "house_systems",
                 f"missing:{','.join(sorted(missing_house_systems))}",
             )
-        if not reference.aspects.items:
+        if not reference.aspects.structural_definitions:
             self._raise_integrity("aspects", "missing")
+        if not reference.aspects.interpretive_profiles:
+            self._raise_integrity("aspect_profiles", "missing")
         if not reference.astral_points.items:
             self._raise_integrity("astral_points", "missing")
         for point in reference.astral_points.items:

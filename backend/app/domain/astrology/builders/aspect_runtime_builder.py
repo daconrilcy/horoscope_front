@@ -18,11 +18,11 @@ from app.domain.astrology.runtime.aspect_modifiers import (
 )
 from app.domain.astrology.runtime.aspect_runtime_data import (
     AspectIdentityRuntimeData,
-    AspectInterpretationRuntimeData,
     AspectMetadataRuntimeData,
     AspectOrbRuntimeData,
     AspectParticipantsRuntimeData,
     AspectRuntimeData,
+    AspectStructuralRuntimeData,
 )
 
 
@@ -39,16 +39,13 @@ class AspectLike(Protocol):
     family: str
     is_major: bool
     is_minor: bool
-    default_valence: str
-    interpretive_valence: str
-    energy_type: str
 
 
-def build_aspect_runtime_data(
+def build_aspect_structural_runtime_data(
     aspect: AspectLike,
     celestial_catalog: CelestialRuntimeCatalog | None = None,
-) -> AspectRuntimeData:
-    """Construit le runtime enrichi depuis un aspect plat existant."""
+) -> AspectStructuralRuntimeData:
+    """Construit le runtime structurel depuis un aspect plat existant."""
     catalog = celestial_catalog or CelestialRuntimeCatalog.empty()
     code = aspect.aspect_code.strip().lower()
     orb_used = float(aspect.orb_used)
@@ -65,7 +62,7 @@ def build_aspect_runtime_data(
         is_minor=aspect.is_minor,
     )
     modifiers = _build_modifiers(strength.is_exact, strength.is_tight, participants, catalog)
-    return AspectRuntimeData(
+    return AspectStructuralRuntimeData(
         aspect=AspectIdentityRuntimeData(
             code=code,
             family=aspect.family.strip().lower(),
@@ -82,11 +79,6 @@ def build_aspect_runtime_data(
             strength_level=strength.level.value,
         ),
         phase=None,
-        interpretation=AspectInterpretationRuntimeData(
-            default_valence=aspect.default_valence,
-            interpretive_valence=aspect.interpretive_valence,
-            energy_type=aspect.energy_type,
-        ),
         metadata=AspectMetadataRuntimeData(
             is_major=aspect.is_major,
             is_exact=strength.is_exact,
@@ -94,6 +86,23 @@ def build_aspect_runtime_data(
         ),
         strength=strength,
         modifiers=modifiers,
+    )
+
+
+def build_aspect_runtime_data(
+    aspect: AspectLike,
+    celestial_catalog: CelestialRuntimeCatalog | None = None,
+) -> AspectRuntimeData:
+    """Construit la facade legacy bornee depuis le runtime structurel."""
+    structural = build_aspect_structural_runtime_data(aspect, celestial_catalog)
+    return AspectRuntimeData(
+        aspect=structural.aspect,
+        participants=structural.participants,
+        orb=structural.orb,
+        phase=structural.phase,
+        metadata=structural.metadata,
+        strength=structural.strength,
+        modifiers=tuple(structural.modifiers),
     )
 
 

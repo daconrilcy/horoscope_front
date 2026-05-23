@@ -11,8 +11,8 @@ from app.domain.astrology.calculators.aspects import (
 from app.domain.astrology.natal_calculation import NatalCalculationError, build_natal_result
 from app.domain.astrology.natal_preparation import BirthInput
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
-    AspectDefinitionRuntimeData,
     AspectOrbRuleRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
 )
 from tests.factories.astrology_runtime_reference_factory import (
     complete_sign_payloads,
@@ -21,19 +21,17 @@ from tests.factories.astrology_runtime_reference_factory import (
 from tests.factories.celestial_catalog_factory import make_celestial_catalog
 
 
-def _definition(system_code: str = "modern") -> AspectDefinitionRuntimeData:
+def _definition(system_code: str = "modern") -> AspectStructuralDefinitionRuntimeData:
     """Construit la définition majeure de square pour un système."""
-    return AspectDefinitionRuntimeData(
+    return AspectStructuralDefinitionRuntimeData(
         code="square",
+        name="Square",
         angle=90.0,
         family="major",
         default_orb_deg=6.0,
         is_enabled=True,
         is_major=True,
         is_minor=False,
-        default_valence="negative",
-        interpretive_valence="dynamic_challenging",
-        energy_type="friction_activation",
         system_code=system_code,
     )
 

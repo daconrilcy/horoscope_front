@@ -25,15 +25,14 @@ class AspectModifierType(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class AspectModifierRuntimeData:
-    """Modifier type qui documente sa source et son intensite locale."""
+class AspectStructuralModifierRuntimeData:
+    """Modifier structurel qui documente source, intensite et cible factuelle."""
 
     modifier_type: AspectModifierType
     source: str
     intensity: float
     reason: str | None = None
     applies_to: tuple[str, ...] = ()
-    interpretive_weight: float | None = None
 
     def __post_init__(self) -> None:
         """Borne les valeurs locales pour garder la taxonomie exploitable."""
@@ -41,8 +40,10 @@ class AspectModifierRuntimeData:
             raise ValueError("aspect modifier source is required")
         if not 0.0 <= self.intensity <= 1.0:
             raise ValueError("aspect modifier intensity must be between 0 and 1")
-        if self.interpretive_weight is not None and self.interpretive_weight < 0.0:
-            raise ValueError("aspect modifier interpretive_weight must be positive")
+
+
+class AspectModifierRuntimeData(AspectStructuralModifierRuntimeData):
+    """Nom historique borne au contrat structurel pendant la transition CS-229."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,5 +52,4 @@ class AspectRuntimeWeightTaxonomy:
 
     technical_strength: str = "AspectStrengthEvaluator.normalized_score"
     structural_dominance: str = "DominantAspectEvaluator.dominance_score"
-    interpretive_weight: str = "AspectModifierRuntimeData.interpretive_weight"
     product_owner: str = "domain/prediction owns prediction weighting"

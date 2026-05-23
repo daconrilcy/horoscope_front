@@ -176,22 +176,28 @@ def _serialize_aspect_runtime(aspect: Any) -> dict[str, Any]:
     runtime = getattr(aspect, "aspect_runtime", None)
     if runtime is None:
         runtime = build_aspect_runtime_data(aspect)
-    interpretation = getattr(runtime, "interpretation", None)
+    interpretive_valence, energy_type = _public_aspect_interpretive_fields(aspect)
     payload.update(
         {
             "family": runtime.aspect.family,
             "strength_level": runtime.strength.level.value,
             "normalized_strength": runtime.strength.normalized_score,
             "phase_type": runtime.phase.type if runtime.phase is not None else None,
-            "interpretive_valence": (
-                interpretation.interpretive_valence if interpretation is not None else None
-            ),
-            "energy_type": interpretation.energy_type if interpretation is not None else None,
+            "interpretive_valence": interpretive_valence,
+            "energy_type": energy_type,
             "is_exact": runtime.metadata.is_exact,
             "is_tight": runtime.metadata.is_tight,
         }
     )
     return payload
+
+
+def _public_aspect_interpretive_fields(aspect: Any) -> tuple[Any, Any]:
+    """Projette les champs publics depuis les hints interpretatifs obligatoires."""
+    hints = getattr(aspect, "aspect_interpretive_hints", None)
+    if hints is None:
+        raise ValueError("public aspect projection requires aspect_interpretive_hints")
+    return hints.interpretive_valence, hints.energy_type
 
 
 def _serialize_chart_balance(balance: Any) -> dict[str, Any] | None:

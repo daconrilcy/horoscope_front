@@ -56,7 +56,7 @@ def _signal_profile(
         signal_level="matched",
         interpretation_use=f"use_{axis}",
         priority_weight=priority_weight,
-        prompt_hint=f"{axis}_hint",
+        signal_hint=f"{axis}_hint",
         reference_version="test",
     )
 

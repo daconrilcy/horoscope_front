@@ -12,7 +12,7 @@ from app.domain.astrology.calculators.aspect_inputs import (
 )
 from app.domain.astrology.calculators.aspects import calculate_major_aspects
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
-    AspectDefinitionRuntimeData,
+    AspectStructuralDefinitionRuntimeData,
 )
 from app.domain.astrology.runtime.chart_object_runtime_data import (
     ChartObjectCapabilities,
@@ -50,19 +50,17 @@ def _chart_object(
     )
 
 
-def _square_definition() -> AspectDefinitionRuntimeData:
+def _square_definition() -> AspectStructuralDefinitionRuntimeData:
     """Retourne une definition d'aspect majeure stable pour les tests."""
-    return AspectDefinitionRuntimeData(
+    return AspectStructuralDefinitionRuntimeData(
         code="square",
+        name="Square",
         angle=90.0,
         family="major",
         default_orb_deg=8.0,
         is_enabled=True,
         is_major=True,
         is_minor=False,
-        default_valence="negative",
-        interpretive_valence="dynamic_challenging",
-        energy_type="friction_activation",
         system_code="modern",
     )
 
