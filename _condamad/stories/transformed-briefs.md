@@ -17,3 +17,4 @@
 | cs-236 | `_story_briefs\cs-236-exploiter-profils-signes-enrichis-signatures-interpretation.md` | `_condamad\stories\cs-236-exploiter-profils-signes-enrichis-signatures-interpretation\00-story.md` |
 | cs-237 | `_story_briefs\cs-237-audit-astrology-engine-feature-coverage-audit.md` | `_condamad\stories\cs-237-audit-astrology-engine-feature-coverage\00-story.md` |
 | cs-238 | `_story_briefs\cs-238-audit-runtime-surface-exposure-audit.md` | `_condamad\stories\cs-238-audit-runtime-surface-exposure\00-story.md` |
+| cs-239 | `_story_briefs\cs-239-audit-chart-object-capability-payload-audit.md` | `_condamad\stories\cs-239-audit-chart-object-capability-payload\00-story.md` |
