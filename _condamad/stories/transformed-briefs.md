@@ -28,3 +28,4 @@
 | cs-247 | `_story_briefs\cs-247-graph-manifest-node-io-schema-contract.md` | `_condamad\stories\cs-247-graph-manifest-node-io-schema-contract\00-story.md` |
 | cs-248 | `_story_briefs\cs-248-calculation-graph-execution-trace-contract.md` | `_condamad\stories\cs-248-calculation-graph-execution-trace-contract\00-story.md` |
 | cs-249 | `_story_briefs\cs-249-chart-object-capability-taxonomy-matrix.md` | `_condamad\stories\cs-249-chart-object-capability-taxonomy-matrix\00-story.md` |
+| cs-250 | `_story_briefs\cs-250-astronomical-proof-before-public-temporal-runtime.md` | `_condamad\stories\cs-250-astronomical-proof-before-public-temporal-runtime\00-story.md` |
