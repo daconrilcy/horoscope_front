@@ -15,3 +15,4 @@
 | cs-234 | `_story_briefs\cs-234-enrichir-profils-structurels-signes-db.md` | `_condamad\stories\cs-234-enrichir-profils-structurels-signes-db\00-story.md` |
 | cs-235 | `_story_briefs\cs-235-brancher-attributs-structurels-signes-runtime-natal.md` | `_condamad\stories\cs-235-brancher-attributs-structurels-signes-runtime-natal\00-story.md` |
 | cs-236 | `_story_briefs\cs-236-exploiter-profils-signes-enrichis-signatures-interpretation.md` | `_condamad\stories\cs-236-exploiter-profils-signes-enrichis-signatures-interpretation\00-story.md` |
+| cs-237 | `_story_briefs\cs-237-audit-astrology-engine-feature-coverage-audit.md` | `_condamad\stories\cs-237-audit-astrology-engine-feature-coverage\00-story.md` |
