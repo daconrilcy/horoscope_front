@@ -1,0 +1,2010 @@
+OpenAI Codex v0.128.0 (research preview)
+--------
+workdir: C:\dev\horoscope_front
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 019e5234-7d3b-72a2-9777-ff45c6a71d4b
+--------
+user
+En utilisant le skill [$condamad-review-fix-story](C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md), fais une revue de redaction de la story generee a partir du brief C:\dev\horoscope_front\_story_briefs\cs-224-legacy-runtime-surface-cleanup-guardrails.md.
+
+Objectif:
+- Trouve la story concernee via `_condamad/stories/story-status.md` en utilisant la colonne `Source` egale au brief.
+- Lance une review de redaction de la story.
+- Corrige directement les issues trouvees dans la story, le tracker, les guardrails ou les artefacts CONDAMAD concernes.
+- Relance la review apres correction.
+- Continue jusqu'a ce que la review ne trouve plus d'issue actionnable.
+
+Contraintes d'execution non interactive:
+- Ne modifie pas le code applicatif hors artefacts CONDAMAD de story/review.
+- Ne lis pas `_condamad/stories/regression-guardrails.md` en entier; utilise les IDs deja cites par la story/review ou une recherche ciblee par ID/surface.
+- Ne relis pas les fichiers complets des skills/validateurs sauf diagnostic inconnu impossible a comprendre depuis la sortie de commande.
+- Ne cherche pas les validateurs avec `rg --files`; utilise directement `.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py` et `.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py`.
+- Lis `AGENTS.md` seulement apres `Test-Path AGENTS.md`; si absent, note-le une seule fois sans erreur.
+- Ne lance pas `git status`, `git diff` ou `git show` si `.git` est absent; note une seule fois que ce dossier n'est pas un depot Git.
+- Si la story cible `backend` ou `frontend` mais que les racines attendues sont absentes, ne remplace pas `ready-to-dev` par `blocked` pour cette seule raison.
+- Dans ce cas, conserve ou ajoute `Repository structure alert:` et indique que l'implementation creera les repertoires/fichiers manquants si le scope reste confirme.
+- Ne transforme pas une alerte de structure repository en blocker tant que `condamad_story_validate.py` et `condamad_story_lint.py --strict` passent.
+- Ne recopie pas les gros fichiers dans ta reponse.
+- Si tu modifies une ligne de table Markdown, garde-la sous 160 caracteres avant validation.
+- Deux tentatives maximum pour une meme commande ou correction identique.
+- Si le blocage persiste, consigne-le dans le log et termine avec statut explicite.
+- Garde la sortie courte: cycle de review, issues corrigees, validations lancees, statut final.
+- Termine des que la story est clean selon la review de redaction.
+codex
+Je vais utiliser le skill demandé, puis travailler uniquement sur les artefacts CONDAMAD liés à la story. Je commence par vérifier les prérequis locaux et identifier la story depuis le tracker.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath C:\\dev\\horoscope_front\\.agents\\skills\\condamad-review-fix-story\\SKILL.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path AGENTS.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path .git' in C:\dev\horoscope_front
+ succeeded in 182ms:
+True
+
+ succeeded in 219ms:
+True
+
+2026-05-23T00:20:39.196538Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath C:\dev\horoscope_front\.agents\skills\condam[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 269ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath C:\dev\horoscope_front\.agents\skills\condam[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+codex
+Le fichier de skill indiqué n’existe pas à l’emplacement fourni. Je vais chercher uniquement dans `.agents\skills` pour voir s’il y a une variante de nom utilisable, puis appliquer le workflow le plus proche si le skill est absent.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content -LiteralPath AGENTS.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath .agents\\skills -Directory | Select-Object -ExpandProperty Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\story-status.md -Pattern 'cs-224-legacy-runtime-surface-cleanup-guardrails.md'" in C:\dev\horoscope_front
+ succeeded in 195ms:
+condamad-story-writer
+
+ succeeded in 230ms:
+Objectif: produire une application web maintenable, testée, sécurisée, et cohérente.
+Stack imposée:
+- Backend: Python 3.13
+- Frontend: React (obligatoire)
+- OS cible dev: Windows / PowerShell
+
+1) Règle absolue: environnement Python
+- Toute commande Python (tests, lint, run, scripts) DOIT être exécutée après activation du venv:
+  - PowerShell: .\.venv\Scripts\Activate.ps1
+- Si le venv n'existe pas, le créer en premier, puis l'activer, puis installer les dépendances.
+- Ne jamais exécuter "python", "pip", "pytest", "ruff", etc. hors venv.
+- Dépendances gérées via backend/pyproject.toml (PEP 621):
+  - Installation production: cd backend && pip install .
+  - Installation développement: cd backend && pip install -e ".[dev]"
+  - NE PAS créer de requirements.txt (le pyproject.toml est la source unique)
+
+2) Règles d'or de dev (non négociables)
+- DRY: pas de duplication. Si tu copies/colles, c'est que tu dois refactor.
+- SOLID / orienté objet quand pertinent (pas de classes "fourre-tout").
+- KISS: pas d'over-engineering.
+- Vérifier ton travail: tests + lint + exécution locale. Pas de "ça doit marcher".
+- Lisibilité > astuce. Noms explicites, petites fonctions, responsabilités claires.
+- Documentation minimale obligatoire: tout fichier applicatif nouveau ou significativement modifié doit contenir un commentaire global en français en haut du fichier et des docstrings en français pour les modules/classes/fonctions publiques ou non triviales.
+
+3) Workflow attendu à CHAQUE changement
+- Comprendre la demande, proposer un mini-plan (3–7 étapes max).
+- Modifier le code avec le plus petit delta cohérent.
+- Ajouter/mettre à jour les tests.
+- Exécuter localement: lint + tests (dans le venv).
+- Finir avec un récap: ce qui a été fait, comment tester, risques/limites.
+
+4) Architecture de référence (proposée, à respecter)
+Monorepo:
+- backend/
+- frontend/
+- shared/ (optionnel: contrats, types, OpenAPI, etc.)
+
+Backend (recommandé):
+- Framework API: FastAPI
+- Gestion des dépendances: pyproject.toml (PEP 621) - NE PAS créer de requirements.txt
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+- Structure:
+  backend/
+    app/
+      api/          (routers)
+      core/         (config, logging, sécurité)
+      domain/       (entités, règles métier)
+      services/     (use-cases)
+      infra/        (db, clients externes)
+      tests/
+    pyproject.toml  (source unique des dépendances Python)
+
+Frontend (React obligatoire):
+- Vite + React recommandé
+- Structure:
+  frontend/
+    src/
+      api/          (client HTTP + hooks)
+      components/
+      pages/
+      state/        (store si besoin)
+      utils/
+      tests/
+
+5) Qualité Python (recommandations fortes)
+- Typage: type hints partout sur le code applicatif.
+- Validation d'entrées/sorties: Pydantic.
+- Lint/format: Ruff (format + lint) recommandé.
+- Tests: Pytest.
+- Logging structuré, pas de prints.
+- Commentaires/docstrings: français obligatoire pour le commentaire global de fichier et les docstrings. Les commentaires doivent expliquer l'intention métier/technique, pas paraphraser le code.
+
+Commandes standard (exemples PowerShell, toujours après activation venv):
+- Lint/format:
+  - ruff format .
+  - ruff check .
+- Tests:
+  - pytest -q
+  - Les tests sous `backend/tests/` exécutent `ensure_configured_sqlite_file_matches_alembic_head` (fixture session autouse dans `backend/tests/conftest.py`, **pas** `pytest_sessionstart`, qui s’exécute avant la collecte des tests). La fonction migre chaque fichier SQLite pertinent (`session.engine` et `settings.database_url`) puis applique un `create_all` ORM uniquement sur une base « secondaire » (typiquement le fichier temporaire de `app/tests/conftest.py`), pas sur `horoscope.db`. Pour les tests d’intégration qui partagent la session avec `app/tests/`, utiliser `tests/integration/app_db.py` plutôt qu’un import statique de `SessionLocal`.
+
+6) Qualité Front (recommandations fortes)
+- React en TypeScript recommandé.
+- ESLint + Prettier.
+- Tests: Vitest + Testing Library (minimum sur les composants critiques).
+- Pas de logique métier "importante" dans les composants UI: extraire en hooks/services.
+
+7) Contrats API et intégration front/back
+- Le contrat d'API doit être explicite:
+  - OpenAPI généré côté backend (FastAPI le fait nativement).
+- Le front consomme via un client central (fetch/axios) + gestion d'erreurs uniforme.
+- Toujours gérer:
+  - loading / error / empty states
+  - timeouts côté client si pertinent
+
+8) Données, sécurité, et secrets
+- Jamais de secrets en dur. Utiliser variables d'environnement + fichier .env (non commité).
+- Valider et sanitizer les entrées.
+- CORS: restrictif par défaut (pas de "*") sauf besoin clair.
+- AuthN/AuthZ: ne pas improviser. Si demandé, proposer une implémentation standard (JWT/OAuth) + tests.
+
+9) DB / migrations (si base de données)
+- Utiliser un ORM standard (SQLAlchemy) + migrations (Alembic).
+- Pas de requêtes SQL "cachées" dans la couche UI.
+- Les accès DB passent par une couche infra/repo.
+
+10) Performance et robustesse
+- Éviter le travail bloquant dans les handlers (I/O lourde => background tasks/queue si requis).
+- Pagination sur endpoints listant des collections.
+- Timeout sur appels externes.
+- Gestion propre des exceptions + réponses d'erreur cohérentes.
+
+11) Git et discipline de commits
+- Petits commits, message clair.
+- Ne jamais créer de nouvelle branche Git sauf demande expresse de l'utilisateur.
+- Ne jamais commiter:
+  - .env
+  - .venv
+  - node_modules
+- Mettre à jour README si le mode d'exécution change.
+
+12) Ce que l'agent NE DOIT PAS faire
+- Ne pas inventer des dépendances "magiques" non nécessaires.
+- Ne pas changer la stack (React obligatoire, Python 3.13 côté back).
+- Ne pas introduire 3 façons différentes de faire la même chose.
+- Ne pas "corriger" du style sans raison (refactor massif uniquement si demandé ou si nécessaire).
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+
+13) Checklist de fin (obligatoire avant de conclure)
+- Le venv était activé pour toutes les commandes Python.
+- Lint/format OK.
+- Tests OK.
+- L'app démarre localement (ou instructions exactes pour le faire).
+- Pas de duplication introduite.
+- Les erreurs sont gérées (status codes, messages).
+
+14) Style
+- Aucun style inline : tout doit etre mis en oeuvre dans le fichier .css ou .scss approprie
+- utiliser et reutiliser les variables de couleurs, bordure, marge, etc. present dans les feuilles styles. Verifier leur presence avant de les re creer.
+
+15) Utilisateur test
+- tu peux utiliser l'utilisateur test : daconrilcy@hotmail.com password : admin123
+
+ succeeded in 253ms:
+
+_condamad\stories\story-status.md:230:| CS-224 | legacy-runtime-surface-cleanup-guardrails | Verrouiller les surfaces runtime legacy du theme natal 
+| ready-to-dev | `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md` | 
+`_story_briefs/[7mcs-224-legacy-runtime-surface-cleanup-guardrails.md[0m` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+
+
+codex
+Mini-plan: 1. identifier la story CS-224, 2. lancer les validateurs/review CONDAMAD disponibles, 3. corriger seulement les artefacts de story/review/guardrails nécessaires, 4. relancer jusqu’à absence d’issue actionnable, 5. résumer les validations et le statut. Le skill demandé est absent; seul `condamad-story-writer` est installé, donc je vais m’appuyer sur ses scripts directs comme demandé.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath .agents\\skills\\condamad-story-writer\\scripts | Select-Object -ExpandProperty Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails | Select-Object Name,Length" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 223ms:
+
+[32;1mName       [0m[32;1m Length[0m
+[32;1m----       [0m [32;1m------[0m
+00-story.md  38122
+
+
+ succeeded in 245ms:
+condamad_story_lint.py
+condamad_story_validate.py
+
+ succeeded in 287ms:
+# Story CS-224 legacy-runtime-surface-cleanup-guardrails: Verrouiller les surfaces runtime legacy du theme natal
+Status: ready-to-dev
+
+## 1. Objective
+
+Faire de `NatalResult.chart_objects` la surface runtime canonique pour les nouveaux consommateurs du theme natal.
+Les collections historiques restent disponibles comme projections de compatibilite ou resultats chart-level, sans redevenir sources metier paralleles.
+
+## 2. Trigger / Source
+
+- Source type: architecture-guardrail.
+- Source reference: `_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md`.
+- Reason for change: CS-217 a cree `ChartObjectRuntimeData`; CS-218 a migre les aspects; CS-219 a rattache motion/visibility;
+  CS-220 a rattache dignity/dominance; CS-221 a rattache house/rulership; CS-222 a rattache fixed stars; CS-223 prepare l'input interpretation.
+- Selected story writer mode: Fast Story Writer Mode.
+- Skill availability note: `.agents/skills/condamad-story-writer/SKILL.md` et le cheatsheet demande ne sont pas presents; les scripts de validation existent.
+- Source-alignment review: la story consolide et documente les surfaces runtime; elle ne casse pas API/front, ne change pas la doctrine et ne migre pas un nouveau domaine.
+
+## 3. Domain Boundary
+
+Cette story appartient a un seul domaine:
+
+- Domain: `backend/app/domain/astrology`
+- In scope:
+  - inventorier les surfaces runtime du theme natal;
+  - documenter `chart_objects` comme source canonique interne;
+  - documenter `planet_positions`, `astral_points`, `houses`, `angles`, `dignity_results`, `advanced_conditions` et
+    `fixed_star_conjunctions` comme projections de compatibilite;
+  - documenter `aspects` et `dominance_result` comme resultats chart-level controles;
+  - ajouter ou renforcer les tests d'architecture anti-consommation directe des surfaces historiques;
+  - ajouter ou renforcer les tests anti-eligibilite par `object_type`;
+  - verifier la coherence entre projections historiques et `chart_objects`;
+  - supprimer ou consolider uniquement les builders/adapters manifestement morts avec preuve ciblee.
+- Out of scope:
+  - casser l'API publique ou les contrats front;
+  - supprimer brutalement une collection historique;
+  - modifier les scores, orbes, dignites, dominance, aspects, fixed star contacts ou doctrine astrologique;
+  - changer les prompts LLM, les routes FastAPI, la DB, les migrations ou le frontend;
+  - creer un projection builder monolithique sans duplication concrete a reduire.
+- Explicit non-goals:
+  - ne pas enrichir `_condamad/stories/regression-guardrails.md` pendant cette generation normale;
+  - ne pas ajouter de dossier de base sous `backend/`;
+  - ne pas utiliser les collections historiques comme source metier dans les nouveaux calculateurs;
+  - ne pas introduire de selection metier par `object_type`, code nominal ou famille planetaire.
+
+## 4. Operation Contract
+
+- Operation type: remove
+- Primary archetype: dead-code-removal
+- Archetype reason: la story classe les surfaces historiques et autorise le retrait borne de builders/adapters morts uniquement avec preuve de non-usage.
+- Behavior change allowed: constrained
+- Behavior change constraints:
+  - autorise: `chart_objects` devient la source canonique documentee pour nouveaux consommateurs;
+  - autorise: les surfaces historiques sont marquees comme projections de compatibilite ou resultats chart-level;
+  - autorise: des tests d'architecture bloquent les nouvelles lectures directes non autorisees;
+  - autorise: suppression de code mort uniquement avec preuve `rg`, test ou audit cible;
+  - interdit: changer volontairement schema public, OpenAPI, routes, DB, frontend, prompts ou sorties historiques.
+- Deletion allowed: yes
+- Replacement allowed: yes
+- User decision required if: une suppression touche une sortie publique, un contrat front/API, une doctrine astrologique, une dependance ou une migration DB.
+- Additional validation rules:
+  - les calculateurs nouveaux lisent `NatalResult.chart_objects` ou une projection explicitement construite depuis `chart_objects`;
+  - les usages directs de `planet_positions`, `astral_points`, `advanced_conditions`, `dignity_results` et `fixed_star_conjunctions` sont allowlistes;
+  - les usages par projection API, serializer public, fixture, debug snapshot ou bridge de migration sont nommes et bornes;
+  - les branches `object_type ==`, `.object_type ==` et `ChartObjectType.PLANET|ANGLE|FIXED_STAR` sont bloquees hors owners allowlistes;
+  - `app.routes`, `app.openapi()`, `pytest` et `TestClient` prouvent l'absence de delta public volontaire.
+
+## 4a. Required Contracts
+
+| Contract | Required | Reason |
+|---|---:|---|
+| Runtime Source of Truth | yes | `NatalResult.chart_objects` est la source canonique interne. |
+| Baseline Snapshot | yes | Les surfaces historiques et usages actuels doivent etre connus avant nettoyage. |
+| Ownership Routing | yes | Calculateurs, projection, API, tests et debug ont des proprietaires distincts. |
+| Allowlist Exception | yes | Tout usage legacy conserve doit etre nomme et justifie. |
+| Contract Shape | yes | `NatalResult` reste un contrat de transition avec projections publiques. |
+| Batch Migration | yes | Documentation, tests, scans et cleanup sont separes en lots controlables. |
+| Reintroduction Guard | yes | Les guards doivent bloquer les nouvelles sources paralleles. |
+| Persistent Evidence | yes | Baseline, scans, tests et preuve finale doivent etre conserves dans le dossier CS-224. |
+
+## 4b. Runtime Source of Truth
+
+- Primary source of truth:
+  - `NatalResult.chart_objects`;
+  - `ChartObjectRuntimeData.capabilities`;
+  - `ChartObjectRuntimeData.payloads`;
+  - resultats chart-level deja calcules lorsque la surface est globale, comme `aspects` et `dominance_result`.
+- Runtime/domain artifacts:
+  - `docs/architecture/astrology-runtime-surfaces.md`;
+  - tests d'inventaire documentaire;
+  - tests de coherence des projections historiques;
+  - tests d'architecture AST ou scans cibles;
+  - preuves `app.routes`, `app.openapi()` et `TestClient` sans delta public volontaire.
+- Secondary evidence:
+  - scans anti-legacy direct, anti-`object_type`, anti-builders specialises et anti-seuils magiques;
+  - `ruff format .`, `ruff check .` et `pytest -q` apres activation du venv.
+- Static scans alone are not sufficient because:
+  - ils ne prouvent ni la coherence runtime des projections, ni la conservation du contrat `NatalResult`, ni l'absence de delta OpenAPI.
+
+## 4c. Baseline / Before-After Rule
+
+- Baseline artifact before implementation:
+  - `Get-Content backend/app/domain/astrology/runtime/chart_object_runtime_data.py`;
+  - `Get-Content backend/app/domain/astrology/builders/chart_object_runtime_builder.py`;
+  - recherche ciblee des definitions de `NatalResult`;
+  - scans cibles sur `planet_positions`, `astral_points`, `houses`, `angles`, `dignity_results`, `advanced_conditions`, `fixed_star_conjunctions`;
+  - scans cibles sur `object_type ==`, `.object_type ==`, `ChartObjectType.PLANET`, `ChartObjectType.ANGLE` et `ChartObjectType.FIXED_STAR`;
+  - `Select-String "RG-144|RG-145|RG-146|RG-147|RG-148" _condamad/stories/regression-guardrails.md`.
+- Comparison after implementation:
+  - memes scans cibles apres implementation;
+  - tests CS-224 du Validation Plan;
+  - preuve `app.routes`;
+  - preuve `app.openapi()`;
+  - diff adjacent sur API, DB, migrations, frontend et providers LLM.
+- Expected invariant:
+  - `chart_objects` est documente comme source canonique;
+  - les surfaces historiques restent exposees mais non sources metier;
+  - les calculateurs nouveaux consomment les capacites et payloads;
+  - aucun endpoint public ne change volontairement.
+- Allowed differences:
+  - documentation d'architecture;
+  - tests d'architecture et de coherence;
+  - module de projection centralise uniquement si une duplication concrete est retiree;
+  - suppression de code mort prouvee;
+  - Registry gap: un invariant dedie CS-224 pourra etre ajoute ulterieurement hors generation normale.
+
+## 4d. Ownership Routing Rule
+
+| Responsibility type | Canonical owner | Forbidden destination |
+|---|---|---|
+| Source runtime interne | `NatalResult.chart_objects` | nouveaux calculateurs branches sur collections historiques |
+| Documentation surfaces | `docs/architecture/astrology-runtime-surfaces.md` | commentaires disperses uniquement |
+| Projections de compatibilite | projector ou builder central nomme | calculateurs metier |
+| Sorties API/front | serializers/adapters publics existants | domaine runtime canonique |
+| Guards architecture | `backend/tests/architecture` | tests unitaires opaques sans scan borne |
+
+## 4e. Allowlist / Exception Register
+
+| File | Symbol / Route / Import | Reason | Expiry or permanence decision |
+|---|---|---|---|
+| projection builders nommes | lectures historiques | Compatibilite API/front et transition. | Temporary; exit condition: approved removal story validates no public consumer. |
+| serializers API publics | projections historiques | Contrat public conserve. | Permanent tant que le contrat public existe. |
+| fixtures et debug snapshots | surfaces historiques | Non-regression et diagnostic. | Borne aux tests/debug. |
+
+Validation rule:
+
+- Toute lecture directe nouvelle de `planet_positions`, `astral_points`, `advanced_conditions`, `dignity_results` ou
+  `fixed_star_conjunctions` depuis un calculateur metier bloque l'implementation.
+
+## 4f. Contract Shape
+
+- Contract type:
+  - documentation markdown d'architecture;
+  - tests d'architecture deterministes;
+  - allowlists explicites avec chemins et raisons;
+  - aucune nouvelle API HTTP.
+- Fields:
+  - surface;
+  - status;
+  - target source;
+  - calculator access;
+  - owner;
+  - comment;
+  - removal classification;
+  - allowlist reason.
+- Required documented surfaces:
+  - `chart_objects`;
+  - `planet_positions`;
+  - `astral_points`;
+  - `houses`;
+  - `angles`;
+  - `aspects`;
+  - `dignity_results`;
+  - `dominance_result`;
+  - `advanced_conditions`;
+  - `fixed_star_conjunctions`.
+- Required fields:
+  - `surface`;
+  - `status`;
+  - `source cible`;
+  - `autorisee dans calculateurs`;
+  - `commentaire`;
+  - `owner`;
+  - `allowlist reason`.
+- Optional fields:
+  - `future removal story`;
+  - `debug snapshot`;
+  - `public API projection`;
+  - `migration bridge`;
+  - `non-usage proof`.
+- Required statuses:
+  - `canonical`;
+  - `compatibility projection`;
+  - `public API projection`;
+  - `chart-level result`;
+  - `legacy`;
+  - `deprecated` seulement si une decision de retrait est explicite.
+- Status codes:
+  - no HTTP endpoint, method or status code is changed.
+- Serialization names:
+  - no public JSON key is renamed or removed by CS-224.
+- Frontend type impact:
+  - none; no frontend contract changes are allowed.
+- Generated contract impact:
+  - none; `app.routes`, `app.openapi()` and `TestClient` must show no public delta.
+
+## 4g. Batch Migration Plan
+
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
+|---|---|---|---|---|---|---|
+| 1 | undocumented legacy fields | architecture doc | aucun runtime | doc inventory | doc test | surface manquante |
+| 2 | direct legacy reads | `chart_objects` or projector | calculateurs cibles | architecture | AST guard | public adapter touche |
+| 3 | duplicated mappers | projector central borne | mappers morts | unit + rg | non-usage proof | risque API/front |
+| 4 | manual review | deterministic guards | nouveaux developpements | architecture | zero new hit | guard trop fragile |
+
+Completion rule: chaque batch conserve `pytest -q`, `app.routes`, `app.openapi()` et les sorties historiques.
+
+## 4h. Reintroduction Guard
+
+- Guard target:
+  - empecher le retour de `planet_positions`, `astral_points`, `advanced_conditions`, `dignity_results` ou `fixed_star_conjunctions`
+    comme sources metier dans les calculateurs;
+  - empecher les branches d'eligibilite par `object_type`;
+  - empecher les nouveaux builders specialises par objet;
+  - empecher les seuils magiques locaux dans les calculateurs.
+- Forbidden examples:
+  - `natal_result.planet_positions` dans un nouveau calculateur;
+  - `natal_result.advanced_conditions` dans un nouvel adapter metier;
+  - `if obj.object_type == ChartObjectType.PLANET`;
+  - `ChartObjectType.ANGLE` pour router une logique metier;
+  - `PlanetRuntimeBuilder`, `AngleRuntimeBuilder`, `AstralPointRuntimeBuilder` ou `FixedStarRuntimeBuilder` nouveau sans preuve.
+- Required guard evidence:
+  - test AST ou scan cible borne a `backend/app/domain/astrology`;
+  - tests de coherence projection;
+  - preuves `app.routes`, `app.openapi()` et `TestClient`;
+  - preuve `pytest -q backend/tests/architecture/...`.
+- Required architecture guard against reintroduction:
+  - interdire les lectures directes non allowlistees;
+  - interdire les selectors par `object_type` ou code nominal;
+  - interdire les builders specialises futurs sans decision documentee.
+- Deterministic source: forbidden symbols dans `backend/app/domain/astrology` et allowlist dans le test d'architecture.
+- Evidence profile: `reintroduction_guard`.
+- Command:
+  - `pytest -q backend/tests/architecture/test_chart_runtime_surface_guardrails.py`.
+
+## 4i. Persistent Evidence Artifacts
+
+| Artifact | Path | Purpose |
+|---|---|---|
+| Validation CS-224 | `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md` | Baseline, scans, tests et preuve finale. |
+| Review CS-224 | `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/generated/11-code-review.md` | Resultat de review apres implementation. |
+
+## 5. Current State Evidence
+
+Le codebase actuel indique:
+
+repository evidence assumption risk: le SKILL.md et le cheatsheet demandes sont absents, donc la story suit le brief et les diagnostics de validation.
+
+- Repository evidence assumption risk - le SKILL.md et le cheatsheet demandes sont absents, donc la story suit le brief et les diagnostics de validation.
+- Evidence 1: `_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md` demande une consolidation, pas une suppression cassante.
+- Evidence 2: `_condamad/stories/regression-guardrails.md` contient `RG-144` a `RG-148`, qui couvrent le runtime chart objects et ses payloads.
+- Evidence 3: `_condamad/stories/CS-223-chart-object-interpretation-input-adapter/00-story.md` est `ready-to-dev` et cadre l'input interpretation.
+- Evidence 4: le dossier `backend` existe dans l'arborescence courante.
+- Evidence 5: `.agents/skills/condamad-story-writer/scripts/condamad_story_validate.py` existe.
+- Evidence 6: `.agents/skills/condamad-story-writer/scripts/condamad_story_lint.py` existe.
+- Evidence 7: `.agents/skills/condamad-story-writer/SKILL.md` et le cheatsheet demande ne sont pas presents dans l'arborescence courante.
+
+## 6. Target State
+
+After implementation:
+
+- `docs/architecture/astrology-runtime-surfaces.md` existe.
+- `chart_objects` est documente comme source canonique interne.
+- Les anciennes collections sont documentees comme projections de compatibilite ou resultats chart-level.
+- Les usages legacy conserves sont allowlistes avec raison et owner.
+- Les calculateurs nouveaux passent par `chart_objects`, capabilities ou projectors explicites.
+- Les tests d'architecture bloquent la consommation directe legacy non autorisee.
+- Les tests d'architecture bloquent la logique metier par `object_type`.
+- Les projections historiques restent coherentes avec `chart_objects`.
+- `NatalResult` conserve les surfaces publiques necessaires.
+- Les sorties publiques ne sont pas cassees.
+
+## 6a. Regression Guardrails
+
+- Guardrail source: `_condamad/stories/regression-guardrails.md`
+- Scope vector:
+  - backend domain astrology;
+  - natal runtime surfaces;
+  - chart objects runtime;
+  - projection compatibility;
+  - architecture tests;
+  - no frontend, DB, auth, i18n, style, build or migration scope.
+- Applicable guardrails:
+  - `RG-144`: `ChartObjectRuntimeData` reste le contrat runtime canonique et les calculateurs lisent les capacites.
+  - `RG-145`: le moteur d'aspects reste branche sur la frontiere chart objects.
+  - `RG-146`: motion/visibility restent des payloads runtime types sans recalcul ni seuil local.
+  - `RG-147`: dignity/dominance restent des payloads et resultats controles sans retour a `object_type`.
+  - `RG-148`: house/rulership restent des payloads runtime types sans resolver concurrent.
+- Non-applicable examples:
+  - frontend/style: aucune surface React ou CSS n'est dans le scope.
+  - DB/migrations: aucune persistance ou schema DB n'est dans le scope.
+  - auth/i18n: aucun comportement d'authentification ou localisation n'est dans le scope.
+- Registry gap: aucun `RG-149` dedie CS-224 n'est ajoute dans cette generation normale; l'evidence finale doit recommander son ajout ulterieur.
+
+## 7. Acceptance Criteria
+
+Alias de preuve:
+
+- `$arch`: `backend/tests/architecture`
+- `$astro`: `backend/tests/unit/domain/astrology`
+- `$int`: `backend/tests/integration/astrology`
+- `$doc`: `docs/architecture/astrology-runtime-surfaces.md`
+
+| AC | Requirement | Validation evidence required |
+|---|---|---|
+| AC1 | La documentation des surfaces runtime existe. | Evidence: `pytest -q $arch/test_chart_runtime_surface_documentation.py`; AST guard. |
+| AC2 | `chart_objects` est documente comme source canonique interne. | Evidence: `pytest -q $arch/test_chart_runtime_surface_documentation.py`; scan `rg`. |
+| AC3 | Les anciennes collections sont classees comme projections ou resultats chart-level. | Evidence: `pytest -q $arch/test_chart_runtime_surface_documentation.py`. |
+| AC4 | Les usages legacy conserves sont allowlistes. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; scan `rg`. |
+| AC5 | Les calculateurs migrés ne lisent plus directement les collections historiques. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; AST guard. |
+| AC6 | La logique metier par `object_type` est bloquee hors owners allowlistes. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; AST guard. |
+| AC7 | Les builders specialises futurs sont detectes. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; scan `rg`. |
+| AC8 | Les seuils magiques locaux restent bloques dans les calculateurs. | Evidence: `pytest -q $arch/test_chart_runtime_surface_guardrails.py`; scan `rg`. |
+| AC9 | `planet_positions` reste coherent avec les objets concernes de `chart_objects`. | Evidence: `pytest -q $astro/test_chart_runtime_surface_projections.py`; runtime pytest. |
+| AC10 | `dignity_results` reste coherent avec `payloads.dignity`. | Evidence: `pytest -q $astro/test_chart_runtime_surface_projections.py`; runtime pytest. |
+| AC11 | `fixed_star_conjunctions` reste coherent avec les payloads fixed star. | Evidence: `pytest -q $astro/test_chart_runtime_surface_projections.py`; runtime pytest. |
+| AC12 | `NatalResult` conserve les surfaces historiques necessaires. | Evidence: `pytest -q $astro/test_natal_result_contract.py`; `app.routes`; `app.openapi()`. |
+| AC13 | Les sorties publiques ne changent pas volontairement. | Evidence: `pytest -q $int/test_natal_public_contract_compatibility.py`; `TestClient`; `app.openapi()`. |
+| AC14 | Toute suppression est prouvee par non-usage. | Evidence: `rg` cible + tests; note dans `evidence/validation.md`. |
+| AC15 | Aucun changement de doctrine astrologique n'est introduit. | Evidence: golden tests existants; `pytest -q $astro/test_traditional_golden_cases.py`. |
+| AC16 | L'evidence finale CS-224 est persistee. | Evidence: from story dir, `rg -n "CS-224 Final Evidence" evidence/validation.md`. |
+
+## 8. Implementation Tasks
+
+- [ ] Task 1 - Capturer le baseline runtime et les usages legacy (AC: AC1, AC2, AC3, AC4, AC14, AC16)
+  - [ ] Subtask 1.1 - Executer les scans cibles listes en section 4c.
+  - [ ] Subtask 1.2 - Creer `evidence/validation.md` avec baseline et hypotheses.
+  - [ ] Subtask 1.3 - Classer chaque usage comme canonical, projection, public compatibility, chart-level result ou debug/test.
+
+- [ ] Task 2 - Documenter les surfaces runtime (AC: AC1, AC2, AC3, AC12)
+  - [ ] Subtask 2.1 - Creer `docs/architecture/astrology-runtime-surfaces.md`.
+  - [ ] Subtask 2.2 - Documenter toutes les surfaces requises par la section 4f.
+  - [ ] Subtask 2.3 - Ajouter le test d'inventaire documentaire.
+
+- [ ] Task 3 - Renforcer les guards d'architecture (AC: AC4, AC5, AC6, AC7, AC8)
+  - [ ] Subtask 3.1 - Ajouter l'allowlist exacte des usages legacy acceptes.
+  - [ ] Subtask 3.2 - Bloquer les nouvelles lectures directes des collections historiques.
+  - [ ] Subtask 3.3 - Bloquer les branches `object_type` hors owners allowlistes.
+  - [ ] Subtask 3.4 - Bloquer les builders specialises futurs non justifies.
+  - [ ] Subtask 3.5 - Bloquer les seuils magiques locaux couverts par le brief.
+
+- [ ] Task 4 - Verifier les projections historiques (AC: AC9, AC10, AC11, AC12)
+  - [ ] Subtask 4.1 - Ajouter un test runtime `planet_positions` versus `chart_objects`.
+  - [ ] Subtask 4.2 - Ajouter un test runtime `dignity_results` versus `payloads.dignity`.
+  - [ ] Subtask 4.3 - Ajouter un test runtime `fixed_star_conjunctions` versus payloads fixed star.
+  - [ ] Subtask 4.4 - Adapter les assertions aux surfaces reellement presentes sans masquer une divergence.
+
+- [ ] Task 5 - Nettoyer les duplications prouvees (AC: AC4, AC5, AC14)
+  - [ ] Subtask 5.1 - Identifier les builders, mappers ou adapters morts par scan cible.
+  - [ ] Subtask 5.2 - Supprimer ou consolider uniquement les elements prouvés sans usage.
+  - [ ] Subtask 5.3 - Consigner chaque retrait dans `evidence/validation.md`.
+
+- [ ] Task 6 - Finaliser validation et preuve publique (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15, AC16)
+  - [ ] Subtask 6.1 - Executer tests cibles et `pytest -q`.
+  - [ ] Subtask 6.2 - Executer `ruff format .` et `ruff check .`.
+  - [ ] Subtask 6.3 - Capturer `app.routes`, `app.openapi()` et un test `TestClient`.
+  - [ ] Subtask 6.4 - Persister `CS-224 Final Evidence`.
+
+## 9. Mandatory Reuse / DRY Constraints
+
+- Reuse:
+  - `ChartObjectRuntimeData`, `ChartObjectCapabilities` et `ChartObjectPayloads`;
+  - `NatalResult.chart_objects`;
+  - les payloads runtime motion, visibility, dignity, dominance, house_position, rulership et fixed_star_conjunctions;
+  - les projectors/builders existants si leur responsabilite est deja canonique;
+  - les tests CS-217 a CS-223 lorsque leur scope couvre deja la frontiere.
+- Do not recreate:
+  - un second graphe runtime hors `chart_objects`;
+  - un second calculateur d'aspects, dignity, dominance, houses, rulership, motion, visibility ou fixed stars;
+  - des builders specialises par planete, angle, point astral ou etoile fixe;
+  - une projection API publique concurrente.
+- Shared abstraction allowed only if:
+  - elle reduit une duplication concrete;
+  - elle reste bornee a la projection ou validation runtime;
+  - elle est couverte par tests.
+
+## 10. No Legacy / Forbidden Paths
+
+Forbidden unless explicitly approved:
+
+- compatibility wrappers non nommes
+- transitional aliases non bornes
+- legacy imports dans les calculateurs
+- duplicate active implementations
+- silent fallback behavior
+- root-level service when canonical namespace exists
+- preserving old path through re-export
+- broad allowlist
+- `PASS with limitation`
+
+Specific forbidden symbols / paths:
+
+- `natal_result.planet_positions` dans un nouveau calculateur;
+- `natal_result.astral_points` dans un nouveau calculateur;
+- `natal_result.advanced_conditions` dans un nouveau calculateur;
+- `natal_result.dignity_results` dans un nouveau calculateur;
+- `natal_result.fixed_star_conjunctions` dans un nouveau calculateur;
+- `if obj.object_type == ChartObjectType.PLANET`;
+- `if object_type == "planet"`;
+- `ChartObjectType.ANGLE` pour router une logique metier;
+- `ChartObjectType.FIXED_STAR` pour router une logique metier;
+- `Planet*Builder`, `Angle*Builder`, `AstralPoint*Builder`, `FixedStar*Builder` nouveaux sans decision documentee;
+- modification volontaire de `backend/app/api/**`, `backend/app/infra/**`, `backend/migrations/**` ou `frontend/src/**`.
+
+## 11. Removal Classification Rules
+
+La classification doit etre deterministe:
+
+- `canonical-active`: l'element est reference par le code de production first-party ou il est le proprietaire canonique.
+- `external-active`: l'element est reference par une API publique, le frontend, la documentation publique, un client ou une preuve d'audit.
+- `historical-facade`: l'element delegue a une implementation canonique uniquement pour preserver une ancienne surface.
+- `dead`: l'element n'a aucune reference dans le code de production, les tests, la documentation, les contrats generes et les surfaces externes connues.
+- `needs-user-decision`: une ambiguite persiste apres les scans obligatoires et doit bloquer la suppression.
+
+Matrice de decision de classification:
+
+| Classification | Decisions autorisees | Regle |
+|---|---|---|
+| `canonical-active` | `keep` | Ne doit pas etre supprime. |
+| `external-active` | `keep`, `needs-user-decision` | Ne doit pas etre supprime sans decision utilisateur explicite. |
+| `historical-facade` | `delete`, `replace-consumer`, `needs-user-decision` | Doit etre remplace ou supprime quand aucun blocage externe ne subsiste. |
+| `dead` | `delete` | Doit etre supprime. |
+| `needs-user-decision` | `needs-user-decision` | Doit bloquer l'implementation jusqu'a decision. |
+
+## 12. Removal Audit Format
+
+Chemin obligatoire de la table d'audit:
+
+- `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/runtime-surface-removal-audit.md`
+
+Table d'audit obligatoire:
+
+| Item | Type | Classification | Consumers | Canonical replacement | Decision | Proof | Risk |
+|---|---|---|---|---|---|---|---|
+
+Decisions autorisees: `keep`, `delete`, `replace-consumer`, `needs-user-decision`.
+
+Chaque element supprime doit avoir une preuve issue de scans de references de code et de tests cibles.
+
+## 13. Canonical Ownership
+
+| Responsibility | Canonical owner | Non-canonical surfaces |
+|---|---|---|
+| Source runtime interne | `NatalResult.chart_objects` | collections historiques |
+| Projection legacy | projector/builder nomme | calculateurs metier |
+| Aspects chart-level | moteur d'aspects chart objects | `planet_positions` direct |
+| Dignity/dominance payloads | enrichers chart objects et resultats globaux | `object_type` direct |
+| Documentation surfaces | `docs/architecture/astrology-runtime-surfaces.md` | notes dispersees |
+| Guards anti-retour | `backend/tests/architecture/test_chart_runtime_surface_guardrails.py` | revue manuelle seule |
+
+## 14. Delete-Only Rule
+
+Les elements classes `dead` doivent etre supprimes, pas repointes.
+They must be deleted, not repointed.
+
+Interdit:
+
+- rediriger vers une surface legacy;
+- preserver un wrapper;
+- ajouter un alias de compatibilite non documente;
+- garder un builder specialise mort actif;
+- preserver l'ancien chemin via un re-export;
+- remplacer la suppression par un comportement soft-disable.
+
+## 15. External Usage Blocker
+
+- External usage blocker: public API/front/LLM consumers must remain compatible.
+- If an item is `external-active`, it must not be deleted without a user decision.
+- Required proof:
+  - `app.routes`;
+  - `app.openapi()`;
+  - `TestClient` on the natal public path used by existing tests;
+  - no voluntary diff under `frontend/src`.
+
+## 16. Internal Usage Search
+
+- Required before implementation:
+  - rechercher les consommateurs actuels de `planet_positions`, `astral_points`, `houses`, `angles`, `aspects`, `dignity_results`,
+    `dominance_result`, `advanced_conditions`, `fixed_star_conjunctions` et `chart_objects`;
+  - identifier quels usages sont projections, API/front, fixtures, debug, migration bridge ou calculateurs.
+- Required after implementation:
+  - prouver dans `evidence/validation.md` que les nouveaux usages metier passent par `chart_objects` ou un projector explicite.
+
+## 17. Generated Contract Check
+
+- Generated contract check: required as no-public-delta proof.
+- Reason: CS-224 modifie une architecture interne et ne doit pas modifier route, OpenAPI, client genere, migration DB ou schema frontend.
+- Required evidence:
+  - `app.routes` inspecte par test ou script local;
+  - `app.openapi()` inspecte par test ou script local;
+  - `TestClient` sur un endpoint natal public couvert par les tests existants;
+  - `pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py`.
+
+## 18. Files to Inspect First
+
+Codex must inspect before editing:
+
+- `backend/app/domain/astrology/runtime/chart_object_runtime_data.py`
+- `backend/app/domain/astrology/builders/chart_object_runtime_builder.py`
+- fichier qui declare `NatalResult`
+- fichiers qui construisent le resultat natal
+- fichiers qui exposent la projection JSON publique du theme natal
+- `backend/tests/unit/domain/astrology/test_natal_result_chart_objects.py`
+- `backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`
+- `_condamad/stories/regression-guardrails.md`
+
+## 19. Expected Files to Modify
+
+Likely files:
+
+- `docs/architecture/astrology-runtime-surfaces.md` - inventaire et statut des surfaces.
+- `backend/tests/architecture/test_chart_runtime_surface_documentation.py` - test documentaire.
+- `backend/tests/architecture/test_chart_runtime_surface_guardrails.py` - tests AST/scans anti-retour.
+- `backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py` - coherence projections historiques.
+- `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md` - preuve finale.
+
+Possible files:
+
+- projector ou builder de compatibilite existant - centralisation bornee si duplication prouvee.
+- tests existants CS-217 a CS-223 - renforcement si le scope est deja couvert.
+
+Likely tests:
+
+- `backend/tests/architecture/test_chart_runtime_surface_documentation.py`
+- `backend/tests/architecture/test_chart_runtime_surface_guardrails.py`
+- `backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py`
+- `backend/tests/unit/domain/astrology/test_natal_result_contract.py`
+- `backend/tests/integration/astrology/test_natal_public_contract_compatibility.py`
+
+Files not expected to change:
+
+- `backend/app/api/**` - aucun endpoint modifie.
+- `backend/app/infra/**` et `backend/migrations/**` - aucune persistance ou DB.
+- `frontend/src/**` - aucune surface React.
+- `backend/app/domain/astrology/dignities/**` - aucun score ou doctrine ne doit changer.
+- `backend/app/domain/astrology/dominance/**` - aucun score ou classement ne doit changer.
+
+## 20. Dependency Policy
+
+- New dependencies: none.
+- Justification: no dependency changes are authorized.
+
+## 21. Validation Plan
+
+Run or justify why skipped. Toutes les commandes Python doivent etre lancees apres activation du venv depuis la racine du repo:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Tests cibles:
+
+```powershell
+pytest -q backend/tests/architecture/test_chart_runtime_surface_documentation.py
+pytest -q backend/tests/architecture/test_chart_runtime_surface_guardrails.py
+pytest -q backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py
+pytest -q backend/tests/unit/domain/astrology/test_natal_result_contract.py
+pytest -q backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py
+pytest -q backend/tests/integration/astrology/test_natal_public_contract_compatibility.py
+```
+
+Controles qualite depuis `backend`:
+
+```powershell
+Push-Location backend
+ruff format .
+ruff check .
+pytest -q
+Pop-Location
+```
+
+Scans anti-regression depuis la racine:
+
+```powershell
+rg -n "natal_result\.planet_positions|natal_result\.astral_points|natal_result\.advanced_conditions|natal_result\.dignity_results" `
+  backend/app/domain/astrology -g "*.py"
+rg -n "natal_result\.fixed_star_conjunctions|natal_result\.houses|natal_result\.angles" backend/app/domain/astrology -g "*.py"
+rg -n "object_type ==|\.object_type ==|ChartObjectType\.PLANET|ChartObjectType\.ANGLE|ChartObjectType\.FIXED_STAR" `
+  backend/app/domain/astrology -g "*.py"
+rg -n "Planet.*Builder|Angle.*Builder|AstralPoint.*Builder|FixedStar.*Builder" backend/app/domain/astrology -g "*.py"
+rg -n "\b8\.5\b|\b17\b|\b0\.2833\b|\b0\.01\b" backend/app/domain/astrology -g "*.py"
+rg -n "CS-224 Final Evidence" _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md
+git diff -- backend/app/api backend/app/infra backend/migrations frontend/src
+```
+
+Runtime checks:
+
+```powershell
+pytest -q backend/tests/architecture/test_chart_runtime_surface_guardrails.py
+pytest -q backend/tests/unit/domain/astrology/test_chart_runtime_surface_projections.py
+```
+
+Commandes de validation de la story:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+$story = "_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md"
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py $story
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict $story
+```
+
+Expected scan results:
+
+- direct legacy scan: zero nouveau hit hors allowlist documentee;
+- `object_type` scan: zero hit dans les nouveaux calculateurs, selectors, projectors et consumers;
+- specialized builder scan: zero nouveau builder hors decision documentee;
+- magic threshold scan: zero nouveau seuil local;
+- adjacent diff: empty unless blocker documented.
+
+Skipped-command rule:
+
+- Toute commande sautee doit etre consignee dans l'evidence finale avec la commande exacte, la raison, le risque et la preuve de remplacement.
+
+## 22. Regression Risks
+
+- Risk: un nouveau calculateur consomme `planet_positions` comme source primaire.
+  - Guardrail: AC4, AC5 et `RG-144`.
+- Risk: la selection revient a une logique par `object_type`.
+  - Guardrail: AC6, `RG-144`, `RG-145`, `RG-147` et `RG-148`.
+- Risk: les projections historiques divergent de `chart_objects`.
+  - Guardrail: AC9, AC10, AC11 et tests runtime.
+- Risk: une suppression casse l'API ou le front.
+  - Guardrail: AC12, AC13, `app.routes`, `app.openapi()` et `TestClient`.
+- Risk: le cleanup devient une refonte de doctrine.
+  - Guardrail: AC15 et golden tests existants.
+
+## 23. Dev Agent Instructions
+
+- Implement only CS-224.
+- Implement only this story.
+- Do not broaden the domain.
+- Do not introduce new dependencies.
+- Do not mark a task complete without validation evidence.
+- If an AC cannot be satisfied, stop and record the blocker.
+- Do not preserve legacy behavior for convenience.
+- Do not bypass constraints through wrapper, alias, fallback, re-export, broad allowlist, unresolved marker or hidden residual work.
+- Consume `chart_objects` through capabilities and payloads, not `object_type`.
+- Keep API, DB, migrations, prompts LLM and frontend out of scope.
+- Preserve public compatibility projections unless a separate approved removal story exists.
+- Use French top-of-file comments/docstrings for new or significantly modified Python files.
+- Run every Python command after activating `.venv`.
+- Do not accept `PASS with limitation`, broad allowlists, wildcard deltas, unclassified fallback, compatibility, legacy, migration-only,
+  shim, alias, unresolved markers or hidden residual in-domain work.
+
+## 24. CS-224 Final Evidence Template
+
+Create `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/evidence/validation.md` with:
+
+```markdown
+## CS-224 Final Evidence
+
+### Runtime surfaces
+- Documented canonical and legacy runtime surfaces.
+- chart_objects is the canonical internal source.
+- Legacy collections are retained as compatibility projections.
+
+### Cleanup
+- Removed or consolidated redundant builders/adapters where safe.
+- No public API/front-breaking removal.
+
+### Guardrails
+- Added architecture tests for direct legacy consumption.
+- Added architecture tests for object_type-driven logic.
+- Added guardrails against specialized builders.
+
+### Consistency
+- Historical projections remain coherent with chart_objects.
+- NatalResult compatibility is preserved.
+- app.routes, app.openapi() and TestClient show no public API delta.
+
+### Validation
+- ruff format .
+- ruff check .
+- pytest -q
+- targeted architecture and runtime projection tests
+
+### Allowlist
+- Listed all whitelisted legacy usages and reasons.
+- Registry gap for a future dedicated CS-224 guardrail is documented.
+```
+
+## 25. Story Generation Validation Notes
+
+- Story validation command attempted after venv activation:
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`
+- Story validation result:
+  - first run: FAIL with unsupported archetype, deletion marker, allowlist contract, contract shape, removal audit and guardrail diagnostics.
+  - second run: FAIL with current evidence marker, temporary allowlist exit condition and reintroduction guard wording diagnostics.
+  - final correction: applied to the three remaining diagnostics, but not rerun because this session capped each validation command at two attempts.
+- Strict lint command attempted after venv activation:
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`
+- Strict lint result:
+  - first run: FAIL with the same structural diagnostics as validation.
+  - second run: FAIL with current evidence marker, temporary allowlist exit condition and reintroduction guard wording diagnostics.
+  - final correction: applied to the three remaining diagnostics, but not rerun because this session capped each validation command at two attempts.
+- Status note: story file and tracker are written as requested, but the final corrected story is not proven green by validation.
+
+## 26. References
+
+- Source brief: `_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md`.
+- Story tracker: `_condamad/stories/story-status.md`.
+- Guardrail registry: `_condamad/stories/regression-guardrails.md` (`RG-144`, `RG-145`, `RG-146`, `RG-147`, `RG-148`).
+- Previous story: `_condamad/stories/CS-223-chart-object-interpretation-input-adapter/00-story.md`.
+
+codex
+La story cible est `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`. Je vais lancer les deux validateurs avec activation du venv, puis comparer les points rédactionnels clés avec le brief source.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py "'$story' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict "'$story' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath _story_briefs\\cs-224-legacy-runtime-surface-cleanup-guardrails.md" in C:\dev\horoscope_front
+ succeeded in 278ms:
+# CS-224 — Legacy Runtime Surface Cleanup & Guardrails
+
+## Résumé
+
+CS-224 sécurise la fin de la migration vers `ChartObjectRuntimeData`.
+
+Après CS-217 à CS-223, le backend dispose d’un graphe de thème unifié consommé par les aspects, motion/visibility, dignités/dominance, conjonctions aux étoiles fixes et input interprétatif.
+
+CS-224 doit maintenant verrouiller l’architecture pour éviter que les anciennes surfaces redeviennent des sources de vérité parallèles.
+
+Cette story ne supprime pas brutalement les champs historiques exposés au front ou aux APIs. Elle les requalifie comme projections de compatibilité et ajoute des guardrails pour que les nouveaux développements passent par `chart_objects`.
+
+---
+
+## Contexte
+
+Les stories précédentes ont déplacé la source runtime vers :
+
+```python
+NatalResult.chart_objects
+```
+
+Mais le résultat natal conserve encore plusieurs collections historiques :
+
+```text
+planet_positions
+astral_points
+houses
+angles
+aspects
+dignity_results
+dominance_result
+advanced_conditions
+fixed_star_conjunctions
+```
+
+Ces collections peuvent rester nécessaires pour :
+
+- compatibilité front ;
+- compatibilité API ;
+- debug ;
+- comparaison de non-régression ;
+- transition progressive ;
+- sorties publiques existantes.
+
+Mais elles ne doivent plus être consommées comme sources primaires par les nouveaux calculateurs.
+
+---
+
+## Problème à résoudre
+
+Sans cleanup et guardrails, le code peut régresser vers :
+
+```text
+nouveau calculateur → planet_positions
+nouvel adapter → dignity_results
+nouveau prompt builder → advanced_conditions
+nouveau service → if object_type == "planet"
+```
+
+Cela recrée le problème initial :
+
+- duplication ;
+- branches conditionnelles ;
+- explosion de builders spécialisés ;
+- incohérence entre `chart_objects` et les anciennes collections ;
+- difficulté à maintenir le moteur ;
+- dette accrue à chaque nouvel objet astrologique.
+
+CS-224 doit empêcher cette régression.
+
+---
+
+## Objectifs
+
+### Objectif fonctionnel
+
+Faire de `chart_objects` la surface runtime canonique pour les nouveaux consommateurs.
+
+Les anciennes collections restent disponibles, mais elles sont documentées et traitées comme :
+
+```text
+legacy compatibility projections
+```
+
+ou :
+
+```text
+public API projections
+```
+
+et non comme sources métier.
+
+### Objectif architectural
+
+Installer trois niveaux clairs :
+
+```text
+1. Source canonique interne
+   NatalResult.chart_objects
+
+2. Projections de compatibilité
+   planet_positions, houses, angles, dignity_results, etc.
+
+3. Sorties API/front/LLM
+   contrats exposés ou adaptés, construits depuis les projections nécessaires
+```
+
+Les calculateurs doivent consommer le niveau 1. Les adaptateurs externes peuvent exposer le niveau 2 si la compatibilité l’exige.
+
+---
+
+## Périmètre inclus
+
+CS-224 couvre :
+
+1. L’inventaire des anciennes surfaces runtime.
+2. La documentation de leur statut : canonical, projection, legacy, deprecated, public compatibility, chart-level result.
+3. L’ajout ou le renforcement de tests d’architecture.
+4. La restriction des nouveaux calculateurs à `chart_objects`.
+5. La suppression ou consolidation des duplications évidentes de builders/mappers devenus inutiles.
+6. La création d’un module de projection centralisé si nécessaire.
+7. La stabilisation de `NatalResult` comme contrat de transition.
+8. La vérification que les sorties historiques restent cohérentes avec `chart_objects`.
+9. Les recherches `rg` anti-régression.
+10. La documentation de la trajectoire de suppression future.
+
+---
+
+## Hors périmètre
+
+CS-224 ne doit pas :
+
+- casser l’API publique ;
+- supprimer brutalement les champs utilisés par le front ;
+- modifier la doctrine astrologique ;
+- modifier les scores ;
+- réécrire les calculateurs déjà migrés ;
+- migrer un nouveau domaine fonctionnel majeur ;
+- faire une refonte de sérialisation HTTP ;
+- supprimer des tables DB ;
+- changer les prompts LLM.
+
+CS-224 est une story de consolidation, pas une nouvelle feature astrologique.
+
+---
+
+## Décisions d’architecture
+
+### `chart_objects` devient la surface canonique
+
+Règle :
+
+```text
+Tout nouveau calculateur astrologique doit consommer chart_objects ou une projection explicitement construite depuis chart_objects.
+```
+
+Autorisé :
+
+```python
+objects = chart_object_selector.select(natal_result.chart_objects)
+```
+
+Interdit hors projection/compatibilité :
+
+```python
+objects = natal_result.planet_positions
+```
+
+### Les anciennes collections deviennent des projections
+
+Les collections suivantes doivent être marquées/documentées comme projections ou surfaces de compatibilité :
+
+```text
+planet_positions
+astral_points
+houses
+angles
+dignity_results
+advanced_conditions
+fixed_star_conjunctions
+```
+
+Certaines sorties restent des résultats chart-level légitimes, par exemple :
+
+```text
+aspects
+dominance_result
+```
+
+mais leur production ou consommation future doit rester cohérente avec `chart_objects`.
+
+### Les exceptions doivent être explicites
+
+Une exception est acceptable uniquement si elle est documentée :
+
+```text
+legacy API serializer
+public compatibility adapter
+test fixture
+migration bridge
+debug snapshot
+```
+
+Toute exception doit être whitelistée dans les tests d’architecture.
+
+---
+
+## Inventaire attendu
+
+Créer un document ou une constante de gouvernance listant les surfaces runtime.
+
+Emplacement recommandé :
+
+```text
+docs/architecture/astrology-runtime-surfaces.md
+```
+
+Tableau attendu :
+
+| Surface | Statut | Source cible | Autorisée dans calculateurs | Commentaire |
+|---|---|---|---|---|
+| `chart_objects` | canonical | runtime builder | oui | Source interne cible |
+| `planet_positions` | compatibility projection | chart_objects / legacy bridge | non | Conservé API/front |
+| `astral_points` | compatibility projection | chart_objects / legacy bridge | non | Conservé API/front |
+| `houses` | compatibility projection | chart_objects / house runtime | non | Conservé API/front |
+| `angles` | compatibility projection | chart_objects / angle runtime | non | Conservé API/front |
+| `aspects` | calculated result | chart_objects | lecture contrôlée | Calculé depuis chart_objects |
+| `dignity_results` | compatibility projection | payloads.dignity | non | Conservé temporairement |
+| `dominance_result` | chart-level result | dominance calculator | lecture contrôlée | Résultat global |
+| `advanced_conditions` | compatibility projection | motion/visibility/condition payloads | non | À migrer en lecture |
+| `fixed_star_conjunctions` | compatibility projection | payloads.fixed_star_conjunctions | non | Si sortie historique existe |
+
+---
+
+## Composants techniques recommandés
+
+### `ChartRuntimeProjectionBuilder`
+
+Si plusieurs projections historiques doivent être maintenues, créer un composant centralisé :
+
+```python
+@dataclass(frozen=True, slots=True)
+class ChartRuntimeProjectionBuilder:
+    def build_planet_positions_projection(
+        self,
+        chart_objects: tuple[ChartObjectRuntimeData, ...],
+    ) -> tuple[PlanetPositionRuntimeData, ...]:
+        ...
+
+    def build_dignity_results_projection(
+        self,
+        chart_objects: tuple[ChartObjectRuntimeData, ...],
+    ) -> tuple[PlanetDignityResult, ...]:
+        ...
+```
+
+Attention : ce composant ne doit pas devenir un nouveau monolithe. Il est acceptable seulement s’il réduit les duplications existantes.
+
+### `ChartRuntimeSurfaceValidator`
+
+Créer ou renforcer un validateur :
+
+```python
+@dataclass(frozen=True, slots=True)
+class ChartRuntimeSurfaceValidator:
+    def validate(
+        self,
+        natal_result: NatalResult,
+    ) -> None:
+        ...
+```
+
+Responsabilités possibles :
+
+- vérifier que les objets historiques sont cohérents avec `chart_objects` ;
+- vérifier les codes présents ;
+- vérifier les scores projetés ;
+- vérifier les conjonctions aux étoiles fixes projetées ;
+- détecter les divergences évidentes.
+
+Ce validateur peut être utilisé en tests plutôt qu’en production si le coût runtime est trop élevé.
+
+### Tests d’architecture
+
+Ajouter ou renforcer des tests AST/regex pour interdire les consommations directes non autorisées :
+
+```text
+planet_positions
+astral_points
+advanced_conditions
+dignity_results
+fixed_star_conjunctions
+```
+
+Interdire également :
+
+```text
+if obj.object_type == ...
+if object_type == "planet"
+ChartObjectType.PLANET
+```
+
+hors whitelists explicites.
+
+---
+
+## Règles de nettoyage
+
+### Pas de suppression risquée
+
+Ne pas supprimer une surface historique si :
+
+- elle est exposée par une API ;
+- elle est utilisée par le front ;
+- elle est utilisée par l’admin ;
+- elle est utilisée par le pipeline LLM ;
+- elle sert de fixture de non-régression.
+
+La suppression doit faire l’objet d’une story dédiée avec preuve de non-usage.
+
+### Suppression autorisée
+
+Supprimer ou fusionner uniquement les éléments devenus manifestement redondants :
+
+- builders spécialisés non utilisés ;
+- adaptateurs morts ;
+- fonctions privées remplacées par selectors/projectors `chart_objects` ;
+- tests obsolètes qui valident une ancienne frontière devenue fausse.
+
+Chaque suppression doit être justifiée par une recherche `rg`, un test ou une preuve de non-usage.
+
+### Documentation obligatoire
+
+Toute surface legacy conservée doit avoir une raison explicite.
+
+Exemple :
+
+```text
+planet_positions is retained as a public compatibility projection for current API consumers.
+New domain calculators must not consume it directly.
+```
+
+---
+
+## Guardrails attendus
+
+### Interdire les nouvelles entrées spécialisées dans les calculateurs
+
+Patterns à surveiller :
+
+```text
+natal_result.planet_positions
+natal_result.astral_points
+natal_result.advanced_conditions
+natal_result.dignity_results
+```
+
+Exceptions possibles : projection builders, legacy adapters, serializers API, tests.
+
+### Interdire l’éligibilité par `object_type`
+
+Patterns à surveiller :
+
+```text
+object_type == "planet"
+object_type == "angle"
+object_type == "fixed_star"
+.object_type ==
+ChartObjectType.PLANET
+ChartObjectType.ANGLE
+ChartObjectType.FIXED_STAR
+```
+
+Exceptions possibles : `ChartObjectRuntimeBuilder`, projection builders, tests.
+
+### Interdire les builders spécialisés futurs
+
+Patterns à surveiller dans les nouveaux modules :
+
+```text
+Planet*Builder
+Angle*Builder
+AstralPoint*Builder
+FixedStar*Builder
+```
+
+Ces noms peuvent exister s’ils sont historiques, mais toute nouvelle création doit être justifiée. La cible est `ChartObject selector/projector/enricher`.
+
+### Interdire les seuils magiques
+
+Continuer à refuser les orbes, seuils de station, seuils de combustion ou seuils fixed stars codés en dur dans les calculateurs. Ils doivent venir de règles runtime, référentiels ou constantes nommées.
+
+---
+
+## Tests attendus
+
+### 1. Test d’inventaire documentaire
+
+Vérifier que la documentation des surfaces runtime existe et mentionne au minimum :
+
+```text
+chart_objects
+planet_positions
+astral_points
+houses
+angles
+aspects
+dignity_results
+dominance_result
+advanced_conditions
+fixed_star_conjunctions
+```
+
+### 2. Test de cohérence des projections historiques
+
+Sur un thème natal de test, vérifier que :
+
+```text
+planet_positions correspond aux objets chart_objects concernés.
+dignity_results correspond aux payloads.dignity.
+fixed_star_conjunctions correspond aux payloads.fixed_star_conjunctions si la sortie existe.
+```
+
+Adapter selon les surfaces réellement présentes.
+
+### 3. Test architecture : pas de consommation directe legacy
+
+Un test doit échouer si un nouveau calculateur consomme directement :
+
+```text
+planet_positions
+advanced_conditions
+dignity_results
+```
+
+hors whitelist.
+
+### 4. Test architecture : pas de logique `object_type`
+
+Un test doit échouer si un consommateur métier ajoute :
+
+```python
+if obj.object_type == ...
+```
+
+hors whitelist.
+
+### 5. Test architecture : pas de builders spécialisés
+
+Un test doit détecter les nouveaux builders spécialisés non autorisés.
+
+### 6. Test de compatibilité `NatalResult`
+
+Vérifier que le contrat de `NatalResult` expose toujours les anciennes collections nécessaires. Attendu : aucune rupture front/API involontaire.
+
+### 7. Test du flux canonique
+
+Créer un test d’intégration qui vérifie le flux cible :
+
+```text
+natal calculation
+→ chart_objects
+→ aspects/motion/dignity/dominance/fixed stars/interpretation input
+```
+
+sans consommation directe des anciennes surfaces dans les nouveaux composants.
+
+---
+
+## Critères d’acceptation
+
+La story est acceptée si :
+
+1. Une documentation des surfaces runtime existe.
+2. `chart_objects` est documenté comme source canonique interne.
+3. Les anciennes collections sont documentées comme projections ou résultats chart-level.
+4. Les calculateurs migrés ne consomment plus directement les anciennes collections.
+5. Les exceptions sont explicites et whitelistées.
+6. Les tests d’architecture empêchent la réintroduction de logique `object_type`.
+7. Les tests d’architecture empêchent la consommation directe legacy non autorisée.
+8. Les projections historiques restent cohérentes avec `chart_objects`.
+9. Les sorties publiques ne sont pas cassées.
+10. Les suppressions éventuelles sont justifiées par preuves.
+11. Aucun changement de doctrine astrologique n’est introduit.
+12. Les commandes de validation passent.
+
+---
+
+## Validation technique
+
+```powershell
+cd backend
+ruff format .
+ruff check .
+pytest -q
+```
+
+Tests ciblés :
+
+```powershell
+pytest backend/tests/domain/astrology/runtime -q
+pytest backend/tests/integration/astrology -q
+pytest backend/tests/architecture -q
+```
+
+Recherches anti-régression :
+
+```powershell
+rg "natal_result\.planet_positions|natal_result\.astral_points|natal_result\.advanced_conditions|natal_result\.dignity_results" backend/app/domain/astrology
+rg "object_type ==|\.object_type ==|ChartObjectType\.PLANET|ChartObjectType\.ANGLE|ChartObjectType\.FIXED_STAR" backend/app/domain/astrology
+rg "Planet.*Builder|Angle.*Builder|AstralPoint.*Builder|FixedStar.*Builder" backend/app/domain/astrology
+```
+
+Les résultats doivent être vides, limités aux whitelists ou documentés dans l’évidence finale.
+
+---
+
+## Évidence finale attendue
+
+```markdown
+## CS-224 Final Evidence
+
+### Runtime surfaces
+- Documented canonical and legacy runtime surfaces.
+- chart_objects is the canonical internal source.
+- Legacy collections are retained as compatibility projections.
+
+### Cleanup
+- Removed or consolidated redundant builders/adapters where safe.
+- No public API/front-breaking removal.
+
+### Guardrails
+- Added architecture tests for direct legacy consumption.
+- Added architecture tests for object_type-driven logic.
+- Added guardrails against specialized builders.
+
+### Consistency
+- Historical projections remain coherent with chart_objects.
+- NatalResult compatibility is preserved.
+
+### Validation
+- ruff format .
+- ruff check .
+- pytest -q
+
+### Exceptions
+- Listed all whitelisted legacy usages and reasons.
+```
+
+---
+
+## Risques à surveiller
+
+Le premier risque est de vouloir supprimer trop tôt. CS-224 doit consolider et verrouiller, pas casser l’existant.
+
+Le deuxième risque est de rendre les tests d’architecture trop stricts et de bloquer des zones historiques non encore migrées. La bonne approche est : strict pour les nouveaux composants, whitelist explicite pour le legacy, preuve de trajectoire pour le reste.
+
+Le troisième risque est de créer un énorme projection builder qui devient une nouvelle dette. Centraliser oui, mais seulement là où cela réduit réellement la duplication.
+
+Le quatrième risque est de confondre résultat chart-level et projection legacy. Par exemple, `dominance_result` peut rester un vrai résultat global ; il doit simplement être cohérent avec les payloads de contribution portés par les objets.
+
+---
+
+## Formulation courte pour Codex
+
+```markdown
+Implémente CS-224 — Legacy Runtime Surface Cleanup & Guardrails.
+
+Objectif:
+Consolider la migration vers ChartObjectRuntimeData en documentant chart_objects comme source canonique interne, en requalifiant les anciennes collections comme projections de compatibilité ou résultats chart-level, et en ajoutant des guardrails empêchant les nouveaux calculateurs de consommer directement planet_positions, advanced_conditions, dignity_results, etc.
+
+À faire:
+- Inventorier les surfaces runtime existantes.
+- Documenter leur statut: canonical, compatibility projection, chart-level result, legacy.
+- Ajouter/renforcer les tests d’architecture anti-consommation legacy.
+- Ajouter/renforcer les tests anti object_type-driven logic.
+- Vérifier la cohérence entre projections historiques et chart_objects.
+- Supprimer uniquement les builders/adapters manifestement morts et prouvés non utilisés.
+- Préserver l’API/front/LLM.
+- Produire une évidence finale avec whitelists et résultats de validation.
+
+Interdictions:
+- Pas de suppression publique cassante.
+- Pas de changement de doctrine astrologique.
+- Pas de refonte API.
+- Pas de nouveau calculateur branché sur les collections historiques.
+- Pas de branche métier if object_type == ...
+
+Validation:
+- ruff format .
+- ruff check .
+- pytest -q
+- rg anti-régression sur usages legacy, object_type et builders spécialisés.
+```
+
+2026-05-23T00:21:00.623414Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Current State Evidence must include at least one evidence item or an explicit repository evidence assumption risk
+- Reintroduction Guard must require an architecture guard against reintroduction
+
+ exited 1 in 368ms:
+CONDAMAD story lint: FAIL
+- Current State Evidence must include at least one evidence item or an explicit repository evidence assumption risk
+- Reintroduction Guard must require an architecture guard against reintroduction
+
+2026-05-23T00:21:00.646562Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story validation: FAIL
+- Current State Evidence must include at least one evidence item or an explicit repository evidence assumption risk
+- Reintroduction Guard must require an architecture guard against reintroduction
+
+ exited 1 in 392ms:
+CONDAMAD story validation: FAIL
+- Current State Evidence must include at least one evidence item or an explicit repository evidence assumption risk
+- Reintroduction Guard must require an architecture guard against reintroduction
+
+codex
+Les deux validateurs échouent sur les mêmes deux diagnostics. Je vais faire une lecture ciblée des règles qui produisent exactement ces messages, puis corriger la formulation minimale dans la story.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py -Pattern 'Current State Evidence must|Reintroduction Guard must' -Context 4,8" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py -Pattern 'Current State Evidence must|Reintroduction Guard must' -Context 4,8" in C:\dev\horoscope_front
+ succeeded in 205ms:
+ succeeded in 241ms:
+
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:672:    )
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:673:    if has_evidence or has_unavailable_evidence:
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:674:        return []
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:675:    return [
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:676:        "[7mCurrent [0m[7mState [0m[7mEvidence [0m[7mmust [0m[7m[0minclude [0m[7m[0mat [0m[7m[0mleast [0m[7m[0mone [0m[7m[0mevidence [0m
+[7m[0mitem [0m[7m[0mor [0m[7m[0man [0m[7m[0mexplicit [0m[7m[0mrepository [0m[7m[0mevidence [0m[7m[0massumption [0m[7m[0mrisk"[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:677:    ][0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:678:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:679:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:680:def validate_domain_boundary(text: str) -> list[str]:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:681:    """Controle le domaine unique et les non-goals."""[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:682:    errors: list[str] = [][0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:683:    section = get_section(text, "Domain Boundary")[0m
+[7m [0m[7m [0m[7m[0m.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:684: [0m[7m [0m[7m [0m[7m [0m[7m[0mdomain_count [0m[7m[0m= [0m[7m[0mlen(re.findall(r"^\s*-\s*Domain:\s*\S+", [0m[7m[0msection, [0m
+[7m[0mre.M))[0m
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1111:    if "not applicable" in lowered:
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1112:        return ["Removal story cannot mark Reintroduction Guard not 
+applicable"]
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1113:    if "architecture guard" not in lowered or "reintroduced" not in 
+lowered:
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1114:        return [
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1115:            "[7mReintroduction [0m[7mGuard [0m[7mmust [0m[7m[0mrequire [0m[7m[0man [0m[7m[0marchitecture [0m[7m[0mguard [0m
+[7m[0magainst [0m[7m[0mreintroduction"[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1116:        ][0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1117:    deterministic_sources = [[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1118:        "registered router prefixes",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1119:        "importable python modules",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1120:        "frontend route table",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1121:        "generated openapi paths",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1122:        "forbidden symbols",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1123:    ][0m
+  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1124:    if not any(source in lowered for source in deterministic_sources):
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1125:        return ["[7mReintroduction [0m[7mGuard [0m[7mmust [0m[7m[0mname [0m[7m[0mat [0m[7m[0mleast [0m[7m[0mone [0m
+[7m[0mdeterministic [0m[7m[0msource"][0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1126:    if not has_executable_guard_evidence(section):[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1127:        return [[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1128:            "[7mReintroduction [0m[7mGuard [0m[7mmust [0m[7m[0minclude [0m[7m[0ma [0m[7m[0mconcrete [0m[7m[0mcommand, [0m
+[7m[0mtest [0m[7m[0mpath, [0m[7m[0mor [0m[7m[0mreintroduction_guard [0m[7m[0mevidence [0m[7m[0mprofile [0m[7m[0mwith [0m[7m[0mcommand/test"[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1129:        ][0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1130:    return [][0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1131:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1132:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1133:def has_executable_guard_evidence(section: str) -> bool:[0m
+[7m [0m[7m [0m[7m[0m.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1134: [0m[7m [0m[7m [0m[7m [0m[7m[0m"""Indique [0m[7m[0msi [0m[7m[0mun [0m[7m[0mguard [0m[7m[0mest [0m[7m[0mprouve [0m[7m[0mpar [0m[7m[0mune [0m[7m[0mcommande, [0m[7m[0mun [0m[7m[0mtest [0m[7m[0mou [0m[7m[0mun [0m
+[7m[0mprofil [0m[7m[0mexecutable."""[0m
+[7m [0m[7m [0m[7m[0m.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1135: [0m[7m [0m[7m [0m[7m [0m[7m[0mhas_command [0m[7m[0m= [0m[7m[0many(re.search(pattern, [0m[7m[0msection) [0m[7m[0mfor [0m[7m[0mpattern [0m[7m[0min [0m
+[7m[0mCOMMAND_PATTERNS)[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1136:    has_test_path = bool(TEST_PATH_RE.search(section))[0m
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py | Select-Object -Skip 650 -First 25" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py | Select-Object -Skip 1095 -First 22" in C:\dev\horoscope_front
+ succeeded in 245ms:
+        if not match:
+            errors.append(f"Task missing AC reference: {line}")
+            continue
+        referenced_ac_ids = {
+            ac_id.strip() for ac_id in match.group(1).split(",") if ac_id.strip()
+        }
+        unknown_ac_ids = sorted(referenced_ac_ids - existing_ac_ids)
+        for ac_id in unknown_ac_ids:
+            errors.append(f"Task references unknown AC: {ac_id} in {line}")
+    return errors
+
+
+def validate_current_state_evidence(text: str) -> list[str]:
+    """Verifie que l'etat actuel est appuye par preuve ou hypothese explicite."""
+    section = get_section(text, "Current State Evidence")
+    has_evidence = re.search(
+        r"^\s*-\s*Evidence\s+\d+:\s+`?[^`\n]+`?\s+-\s+\S+", section, re.M
+    )
+    has_unavailable_evidence = (
+        "Repository evidence: not available" in section
+        and "Assumption risk:" in section
+    )
+    if has_evidence or has_unavailable_evidence:
+        return []
+    return [
+
+ succeeded in 260ms:
+        return ["Removal story cannot mark External Usage Blocker not applicable"]
+    required = ["external-active", "must not be deleted", "user decision"]
+    return [
+        f"External Usage Blocker missing requirement: {fragment}"
+        for fragment in required
+        if fragment not in lowered
+    ]
+
+
+def validate_reintroduction_guard(text: str) -> list[str]:
+    """Controle le garde-fou de reintroduction."""
+    section = get_section(text, "Reintroduction Guard")
+    if not section:
+        return []
+    lowered = section.casefold()
+    if "not applicable" in lowered:
+        return ["Removal story cannot mark Reintroduction Guard not applicable"]
+    if "architecture guard" not in lowered or "reintroduced" not in lowered:
+        return [
+            "Reintroduction Guard must require an architecture guard against reintroduction"
+        ]
+    deterministic_sources = [
+
+codex
+Je vais corriger deux formulations qui empêchent la validation: le format des preuves doit être `Evidence N: path - détail`, et le guard de réintroduction doit contenir explicitement les mots attendus par le validateur. J’en profite pour supprimer la note obsolète qui disait que la story n’était pas prouvée verte.
+2026-05-23T00:21:29.796217Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in C:\dev\horoscope_front\_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:
+- Required architecture guard against reintroduction:
+  - interdire les lectures directes non allowlistees;
+  - interdire les selectors par `object_type` ou code nominal;
+  - interdire les builders specialises futurs sans decision documentee.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails\\00-story.md -Pattern 'Evidence 1:|Required architecture guard|final correction|Status note' -Context 0,4" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails\\00-story.md -Pattern 'architecture guard against reintroduction' -Context 2,5" in C:\dev\horoscope_front
+ succeeded in 245ms:
+
+> _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:237:- [7mRequired architecture guard[0m against reintroduction:[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:238:  - interdire les lectures directes non allowlistees;[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:239:  - interdire les selectors par `object_type` ou code nominal;[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:240: [0m[7m [0m[7m[0m- [0m[7m[0minterdire [0m[7m[0mles [0m[7m[0mbuilders [0m[7m[0mspecialises [0m[7m[0mfuturs [0m[7m[0msans [0m[7m[0mdecision [0m
+[7m[0mdocumentee.[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:241:- [0m[7m[0mDeterministic [0m[7m[0msource: [0m[7m[0mforbidden [0m[7m[0msymbols [0m[7m[0mdans [0m
+[7m[0m`backend/app/domain/astrology` [0m[7m[0met [0m[7m[0mallowlist [0m[7m[0mdans [0m[7m[0mle [0m[7m[0mtest [0m[7m[0md'architecture.[0m
+> _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:260:- [7mEvidence [0m[7m1: [0m
+[7m[0m`_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md` [0m[7m[0mdemande [0m[7m[0mune [0m[7m[0mconsolidation, [0m[7m[0mpas [0m[7m[0mune [0m[7m[0msuppression [0m[7m[0mcassante.[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:261:- [0m[7m[0mEvidence [0m[7m[0m2: [0m[7m[0m`_condamad/stories/regression-guardrails.md` [0m
+[7m[0mcontient [0m[7m[0m`RG-144` [0m[7m[0ma [0m[7m[0m`RG-148`, [0m[7m[0mqui [0m[7m[0mcouvrent [0m[7m[0mle [0m[7m[0mruntime [0m[7m[0mchart [0m[7m[0mobjects [0m[7m[0met [0m[7m[0mses [0m[7m[0mpayloads.[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:262:- [0m[7m[0mEvidence [0m[7m[0m3: [0m
+[7m[0m`_condamad/stories/CS-223-chart-object-interpretation-input-adapter/00-story.md` [0m[7m[0mest [0m[7m[0m`ready-to-dev` [0m[7m[0met [0m[7m[0mcadre [0m[7m[0ml'input [0m[7m[0minterpretation.[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:263:- [0m[7m[0mEvidence [0m[7m[0m4: [0m[7m[0mle [0m[7m[0mdossier [0m[7m[0m`backend` [0m[7m[0mexiste [0m[7m[0mdans [0m[7m[0ml'arborescence [0m
+[7m[0mcourante.[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:264:- [0m[7m[0mEvidence [0m[7m[0m5: [0m
+[7m[0m`.agents/skills/condamad-story-writer/scripts/condamad_story_validate.py` [0m[7m[0mexiste.[0m
+> _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:699:  - [7mfinal [0m[7mcorrection[0m: [0m[7m[0mapplied [0m[7m[0mto [0m[7m[0mthe [0m[7m[0mthree [0m[7m[0mremaining [0m
+[7m[0mdiagnostics, [0m[7m[0mbut [0m[7m[0mnot [0m[7m[0mrerun [0m[7m[0mbecause [0m[7m[0mthis [0m[7m[0msession [0m[7m[0mcapped [0m[7m[0meach [0m[7m[0mvalidation [0m[7m[0mcommand [0m[7m[0mat [0m[7m[0mtwo [0m[7m[0mattempts.[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:700:- Strict lint command attempted after venv activation:[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:701: [0m[7m [0m[7m[0m- [0m[7m[0m`python [0m[7m[0m-B [0m
+[7m[0m.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py [0m[7m[0m--strict [0m
+[7m[0m_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:702:- Strict lint result:[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:703: [0m[7m [0m[7m[0m- [0m[7m[0mfirst [0m[7m[0mrun: [0m[7m[0mFAIL [0m[7m[0mwith [0m[7m[0mthe [0m[7m[0msame [0m[7m[0mstructural [0m[7m[0mdiagnostics [0m[7m[0mas [0m
+[7m[0mvalidation.[0m
+> _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:705:  - [7mfinal [0m[7mcorrection[0m: [0m[7m[0mapplied [0m[7m[0mto [0m[7m[0mthe [0m[7m[0mthree [0m[7m[0mremaining [0m
+[7m[0mdiagnostics, [0m[7m[0mbut [0m[7m[0mnot [0m[7m[0mrerun [0m[7m[0mbecause [0m[7m[0mthis [0m[7m[0msession [0m[7m[0mcapped [0m[7m[0meach [0m[7m[0mvalidation [0m[7m[0mcommand [0m[7m[0mat [0m[7m[0mtwo [0m[7m[0mattempts.[0m
+> _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:706:- [7mStatus [0m[7mnote[0m: [0m[7m[0mstory [0m[7m[0mfile [0m[7m[0mand [0m[7m[0mtracker [0m[7m[0mare [0m[7m[0mwritten [0m[7m[0mas [0m[7m[0mrequested, [0m
+[7m[0mbut [0m[7m[0mthe [0m[7m[0mfinal [0m[7m[0mcorrected [0m[7m[0mstory [0m[7m[0mis [0m[7m[0mnot [0m[7m[0mproven [0m[7m[0mgreen [0m[7m[0mby [0m[7m[0mvalidation.[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:707:[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:708:## 26. References[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:709:[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:710:- [0m[7m[0mSource [0m[7m[0mbrief: [0m
+[7m[0m`_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md`.[0m
+
+
+ succeeded in 245ms:
+
+  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:235:  - preuves `app.routes`, `app.openapi()` et `TestClient`;
+  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:236:  - preuve `pytest -q backend/tests/architecture/...`.
+> _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:237:- Required [7marchitecture guard against reintroduction[0m:[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:238:  - interdire les lectures directes non allowlistees;[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:239:  - interdire les selectors par `object_type` ou code nominal;[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:240: [0m[7m [0m[7m[0m- [0m[7m[0minterdire [0m[7m[0mles [0m[7m[0mbuilders [0m[7m[0mspecialises [0m[7m[0mfuturs [0m[7m[0msans [0m[7m[0mdecision [0m
+[7m[0mdocumentee.[0m
+[7m [0m[7m [0m[7m[0m_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:241:- [0m[7m[0mDeterministic [0m[7m[0msource: [0m[7m[0mforbidden [0m[7m[0msymbols [0m[7m[0mdans [0m
+[7m[0m`backend/app/domain/astrology` [0m[7m[0met [0m[7m[0mallowlist [0m[7m[0mdans [0m[7m[0mle [0m[7m[0mtest [0m[7m[0md'architecture.[0m
+[7m[0m  _condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:242:- Evidence profile: `reintroduction_guard`.[0m
+
+
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md
+[orchestrator] omitted diff block (102 lines)
+codex
+Les corrections rédactionnelles sont appliquées dans la story. Je relance maintenant la validation et le lint strict, toujours avec le venv activé.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py "'$story' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict "'$story' in C:\dev\horoscope_front
+2026-05-23T00:21:55.023356Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Story still contains template placeholders
+
+ exited 1 in 351ms:
+CONDAMAD story lint: FAIL
+- Story still contains template placeholders
+
+ succeeded in 379ms:
+CONDAMAD story validation: PASS
+
+[orchestrator] omitted diff block (51 lines)
+codex
+La validation passe; il reste une issue lint: placeholders de template. Je vais identifier la règle exacte et corriger les marqueurs résiduels sans toucher au code applicatif.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py -Pattern 'Story still contains template placeholders|template placeholders' -Context 6,10" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails\\00-story.md -Pattern 'TODO|TBD|FIXME|\\.{3}|<["'^>]+>|'"\\[.*\\]'" in C:\dev\horoscope_front
+ succeeded in 223ms:
+
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:236:  - preuve `pytest -q backend/tests/architecture/[7m...[0m`.
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:336:- [7m[ [0m[7m] [0m[7m[0mTask [0m[7m[0m1 [0m[7m[0m- [0m[7m[0mCapturer [0m[7m[0mle [0m[7m[0mbaseline [0m[7m[0mruntime [0m[7m[0met [0m[7m[0mles [0m[7m[0musages [0m[7m[0mlegacy [0m
+[7m[0m(AC: [0m[7m[0mAC1, [0m[7m[0mAC2, [0m[7m[0mAC3, [0m[7m[0mAC4, [0m[7m[0mAC14, [0m[7m[0mAC16)[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:337:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m1.1 [0m[7m[0m- [0m[7m[0mExecuter [0m[7m[0mles [0m[7m[0mscans [0m[7m[0mcibles [0m[7m[0mlistes [0m[7m[0men [0m[7m[0msection [0m
+[7m[0m4c.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:338:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m1.2 [0m[7m[0m- [0m[7m[0mCreer [0m[7m[0m`evidence/validation.md` [0m[7m[0mavec [0m
+[7m[0mbaseline [0m[7m[0met [0m[7m[0mhypotheses.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:339:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m1.3 [0m[7m[0m- [0m[7m[0mClasser [0m[7m[0mchaque [0m[7m[0musage [0m[7m[0mcomme [0m[7m[0mcanonical, [0m
+[7m[0mprojection, [0m[7m[0mpublic [0m[7m[0mcompatibility, [0m[7m[0mchart-level [0m[7m[0mresult [0m[7m[0mou [0m[7m[0mdebug/test.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:341:- [7m[ [0m[7m] [0m[7m[0mTask [0m[7m[0m2 [0m[7m[0m- [0m[7m[0mDocumenter [0m[7m[0mles [0m[7m[0msurfaces [0m[7m[0mruntime [0m[7m[0m(AC: [0m[7m[0mAC1, [0m[7m[0mAC2, [0m
+[7m[0mAC3, [0m[7m[0mAC12)[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:342:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m2.1 [0m[7m[0m- [0m[7m[0mCreer [0m
+[7m[0m`docs/architecture/astrology-runtime-surfaces.md`.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:343:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m2.2 [0m[7m[0m- [0m[7m[0mDocumenter [0m[7m[0mtoutes [0m[7m[0mles [0m[7m[0msurfaces [0m[7m[0mrequises [0m[7m[0mpar [0m
+[7m[0mla [0m[7m[0msection [0m[7m[0m4f.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:344:  - [7m[ ][0m Subtask 2.3 - Ajouter le test d'inventaire documentaire.
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:346:- [7m[ [0m[7m] [0m[7m[0mTask [0m[7m[0m3 [0m[7m[0m- [0m[7m[0mRenforcer [0m[7m[0mles [0m[7m[0mguards [0m[7m[0md'architecture [0m[7m[0m(AC: [0m[7m[0mAC4, [0m[7m[0mAC5, [0m
+[7m[0mAC6, [0m[7m[0mAC7, [0m[7m[0mAC8)[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:347:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m3.1 [0m[7m[0m- [0m[7m[0mAjouter [0m[7m[0ml'allowlist [0m[7m[0mexacte [0m[7m[0mdes [0m[7m[0musages [0m
+[7m[0mlegacy [0m[7m[0macceptes.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:348:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m3.2 [0m[7m[0m- [0m[7m[0mBloquer [0m[7m[0mles [0m[7m[0mnouvelles [0m[7m[0mlectures [0m[7m[0mdirectes [0m[7m[0mdes [0m
+[7m[0mcollections [0m[7m[0mhistoriques.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:349:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m3.3 [0m[7m[0m- [0m[7m[0mBloquer [0m[7m[0mles [0m[7m[0mbranches [0m[7m[0m`object_type` [0m[7m[0mhors [0m
+[7m[0mowners [0m[7m[0mallowlistes.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:350:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m3.4 [0m[7m[0m- [0m[7m[0mBloquer [0m[7m[0mles [0m[7m[0mbuilders [0m[7m[0mspecialises [0m[7m[0mfuturs [0m[7m[0mnon [0m
+[7m[0mjustifies.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:351:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m3.5 [0m[7m[0m- [0m[7m[0mBloquer [0m[7m[0mles [0m[7m[0mseuils [0m[7m[0mmagiques [0m[7m[0mlocaux [0m[7m[0mcouverts [0m
+[7m[0mpar [0m[7m[0mle [0m[7m[0mbrief.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:353:- [7m[ [0m[7m] [0m[7m[0mTask [0m[7m[0m4 [0m[7m[0m- [0m[7m[0mVerifier [0m[7m[0mles [0m[7m[0mprojections [0m[7m[0mhistoriques [0m[7m[0m(AC: [0m[7m[0mAC9, [0m
+[7m[0mAC10, [0m[7m[0mAC11, [0m[7m[0mAC12)[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:354:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m4.1 [0m[7m[0m- [0m[7m[0mAjouter [0m[7m[0mun [0m[7m[0mtest [0m[7m[0mruntime [0m[7m[0m`planet_positions` [0m
+[7m[0mversus [0m[7m[0m`chart_objects`.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:355:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m4.2 [0m[7m[0m- [0m[7m[0mAjouter [0m[7m[0mun [0m[7m[0mtest [0m[7m[0mruntime [0m[7m[0m`dignity_results` [0m
+[7m[0mversus [0m[7m[0m`payloads.dignity`.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:356:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m4.3 [0m[7m[0m- [0m[7m[0mAjouter [0m[7m[0mun [0m[7m[0mtest [0m[7m[0mruntime [0m
+[7m[0m`fixed_star_conjunctions` [0m[7m[0mversus [0m[7m[0mpayloads [0m[7m[0mfixed [0m[7m[0mstar.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:357:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m4.4 [0m[7m[0m- [0m[7m[0mAdapter [0m[7m[0mles [0m[7m[0massertions [0m[7m[0maux [0m[7m[0msurfaces [0m
+[7m[0mreellement [0m[7m[0mpresentes [0m[7m[0msans [0m[7m[0mmasquer [0m[7m[0mune [0m[7m[0mdivergence.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:359:- [7m[ [0m[7m] [0m[7m[0mTask [0m[7m[0m5 [0m[7m[0m- [0m[7m[0mNettoyer [0m[7m[0mles [0m[7m[0mduplications [0m[7m[0mprouvees [0m[7m[0m(AC: [0m[7m[0mAC4, [0m[7m[0mAC5, [0m
+[7m[0mAC14)[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:360:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m5.1 [0m[7m[0m- [0m[7m[0mIdentifier [0m[7m[0mles [0m[7m[0mbuilders, [0m[7m[0mmappers [0m[7m[0mou [0m
+[7m[0madapters [0m[7m[0mmorts [0m[7m[0mpar [0m[7m[0mscan [0m[7m[0mcible.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:361:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m5.2 [0m[7m[0m- [0m[7m[0mSupprimer [0m[7m[0mou [0m[7m[0mconsolider [0m[7m[0muniquement [0m[7m[0mles [0m
+[7m[0melements [0m[7m[0mprouvés [0m[7m[0msans [0m[7m[0musage.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:362:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m5.3 [0m[7m[0m- [0m[7m[0mConsigner [0m[7m[0mchaque [0m[7m[0mretrait [0m[7m[0mdans [0m
+[7m[0m`evidence/validation.md`.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:364:- [7m[ [0m[7m] [0m[7m[0mTask [0m[7m[0m6 [0m[7m[0m- [0m[7m[0mFinaliser [0m[7m[0mvalidation [0m[7m[0met [0m[7m[0mpreuve [0m[7m[0mpublique [0m[7m[0m(AC: [0m[7m[0mAC1, [0m
+[7m[0mAC2, [0m[7m[0mAC3, [0m[7m[0mAC4, [0m[7m[0mAC5, [0m[7m[0mAC6, [0m[7m[0mAC7, [0m[7m[0mAC8, [0m[7m[0mAC9, [0m[7m[0mAC10, [0m[7m[0mAC11, [0m[7m[0mAC12, [0m[7m[0mAC13, [0m[7m[0mAC14, [0m[7m[0mAC15, [0m[7m[0mAC16)[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:365:  - [7m[ ][0m Subtask 6.1 - Executer tests cibles et `pytest -q`.
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:366:  - [7m[ ][0m Subtask 6.2 - Executer `ruff format .` et `ruff check .`.
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:367:  - [7m[ [0m[7m] [0m[7m[0mSubtask [0m[7m[0m6.3 [0m[7m[0m- [0m[7m[0mCapturer [0m[7m[0m`app.routes`, [0m[7m[0m`app.openapi()` [0m[7m[0met [0m
+[7m[0mun [0m[7m[0mtest [0m[7m[0m`TestClient`.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:368:  - [7m[ ][0m Subtask 6.4 - Persister `CS-224 Final Evidence`.
+
+
+ succeeded in 247ms:
+
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:41:
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:42:    text = read_text(path)
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:43:    for index, line in enumerate(text.splitlines(), start=1):
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:44:        if len(line) > MAX_LINE_LENGTH:
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:45:            errors.append(f"Line {index} exceeds {MAX_LINE_LENGTH} 
+characters")
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:46:    if PLACEHOLDER_RE.search(text):
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:47:        errors.append("[7mStory still contains template placeholders[0m")[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:48:    for section in REQUIRED_SECTIONS:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:49:        if not get_section(text, section).strip():[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:50:            errors.append(f"Section is empty: {section}")[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:51:    return errors[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:52:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:53:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:54:def lint_warnings(path: Path) -> list[str]:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:55:    """Retourne les avertissements non bloquants anti-flou."""[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:56:    text = read_text(path)[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:57:    warnings: list[str] = [][0m
+
+
+[orchestrator] omitted diff block (51 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py -Pattern 'PLACEHOLDER_RE' -Context 2,2" in C:\dev\horoscope_front
+ succeeded in 265ms:
+
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:26:
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:27:MAX_LINE_LENGTH = 180
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:28:[7mPLACEHOLDER_RE[0m = re.compile(r"<[^>\n]+>|\.\.\.")[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:29:COMPOUND_AC_RE = re.compile(r"\b(and|et)\b|,\s+\w+", re.I)[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:30:VAGUE_OPTIONAL_RE = re.compile([0m
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:44:        if len(line) > MAX_LINE_LENGTH:
+  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:45:            errors.append(f"Line {index} exceeds {MAX_LINE_LENGTH} 
+characters")
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:46:    if [7mPLACEHOLDER_RE[0m.search(text):[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:47:        errors.append("Story still contains template placeholders")[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:48:    for section in REQUIRED_SECTIONS:[0m
+
+
+[orchestrator] omitted diff block (162 lines)
+codex
+Le placeholder résiduel était l’ellipse dans un chemin de test. Je l’ai remplacée par le test d’architecture explicite et je relance le cycle complet.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py "'$story' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict "'$story' in C:\dev\horoscope_front
+ succeeded in 345ms:
+CONDAMAD story lint: PASS
+
+ succeeded in 354ms:
+CONDAMAD story validation: PASS
+
+[orchestrator] omitted diff block (54 lines)
+codex
+Les deux validations passent. Je vois encore une note historique de validation qui peut induire en erreur; je la mets à jour pour refléter le cycle de review actuel et garder l’artefact cohérent.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md
+[orchestrator] omitted diff block (112 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py "'$story' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; "'$story = '"'_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md'; python -B .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict "'$story' in C:\dev\horoscope_front
+ succeeded in 363ms:
+CONDAMAD story lint: PASS
+
+ succeeded in 377ms:
+CONDAMAD story validation: PASS
+
+[orchestrator] omitted diff block (56 lines)
+codex
+Le dernier cycle est vert après mise à jour de la note de validation. Je fais une vérification ciblée du delta sur les artefacts CONDAMAD pour préparer le récapitulatif.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'git diff -- _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\story-status.md -Pattern 'CS-224|cs-224-legacy-runtime-surface-cleanup-guardrails.md'" in C:\dev\horoscope_front
+ succeeded in 207ms:
+
+_condamad\stories\story-status.md:230:| [7mCS-224 [0m[7m[0m| [0m[7m[0mlegacy-runtime-surface-cleanup-guardrails [0m[7m[0m| [0m[7m[0mVerrouiller [0m[7m[0mles [0m[7m[0msurfaces [0m[7m[0mruntime [0m[7m[0mlegacy [0m[7m[0mdu [0m[7m[0mtheme [0m[7m[0mnatal [0m
+[7m[0m| [0m[7m[0mready-to-dev [0m[7m[0m| [0m[7m[0m`_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md` [0m[7m[0m| [0m
+[7m[0m`_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+
+
+ succeeded in 238ms:
+[orchestrator] omitted diff block (56 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'git status --short -- _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails\\00-story.md -Pattern 'current review cycle|Evidence 1:|architecture guard: forbidden symbols|backend/tests/architecture/test_chart_runtime_surface_guardrails.py'" in C:\dev\horoscope_front
+ succeeded in 253ms:
+
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:236:  - preuve `pytest -q 
+[7mbackend/tests/architecture/test_chart_runtime_surface_guardrails.py[0m`.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:238:  - [7marchitecture [0m[7mguard: [0m[7mforbidden [0m[7msymbols [0m[7m[0mmust [0m[7m[0mnot [0m[7m[0mbe [0m
+[7m[0mreintroduced [0m[7m[0moutside [0m[7m[0mdocumented [0m[7m[0mallowlists;[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:245:  - `pytest -q 
+[7mbackend/tests/architecture/test_chart_runtime_surface_guardrails.py[0m`.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:261:- [7mEvidence [0m[7m1: [0m
+[7m[0m`_story_briefs/cs-224-legacy-runtime-surface-cleanup-guardrails.md` [0m[7m[0m- [0m[7m[0mdemande [0m[7m[0mune [0m[7m[0mconsolidation, [0m[7m[0mpas [0m[7m[0mune [0m[7m[0msuppression [0m[7m[0mcassante.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:460:| Guards anti-retour | 
+`[7mbackend/tests/architecture/test_chart_runtime_surface_guardrails.py[0m` [0m[7m[0m| [0m[7m[0mrevue [0m[7m[0mmanuelle [0m[7m[0mseule [0m[7m[0m|[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:524:- 
+`[7mbackend/tests/architecture/test_chart_runtime_surface_guardrails.py[0m` [0m[7m[0m- [0m[7m[0mtests [0m[7m[0mAST/scans [0m[7m[0manti-retour.[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:536:- 
+`[7mbackend/tests/architecture/test_chart_runtime_surface_guardrails.py[0m`[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:566:pytest -q 
+[7mbackend/tests/architecture/test_chart_runtime_surface_guardrails.py[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:600:pytest -q 
+[7mbackend/tests/architecture/test_chart_runtime_surface_guardrails.py[0m
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:701:  - [7mcurrent review cycle[0m: PASS.
+_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\00-story.md:708:  - [7mcurrent review cycle[0m: PASS.
+
+
+ succeeded in 264ms:
+?? _condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md
+
+[orchestrator] omitted diff block (56 lines)
+codex
+Revue de rédaction terminée pour `CS-224`.
+
+Cycle effectué:
+- Story trouvée via `_condamad/stories/story-status.md` avec la source demandée.
+- Skill demandé introuvable à `C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md`; fallback sur les validateurs CONDAMAD disponibles.
+- Corrections appliquées dans `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`:
+  - format des preuves `Current State Evidence`;
+  - formulation explicite du guard de réintroduction;
+  - remplacement d’un placeholder `...`;
+  - mise à jour des notes de validation obsolètes.
+
+Validations relancées avec venv activé:
+- `condamad_story_validate.py`: PASS
+- `condamad_story_lint.py --strict`: PASS
+
+Statut final: story clean selon les validateurs de rédaction disponibles. Aucun code applicatif modifié.
+[orchestrator] omitted diff block (56 lines)
+tokens used
+100 793
+Revue de rédaction terminée pour `CS-224`.
+
+Cycle effectué:
+- Story trouvée via `_condamad/stories/story-status.md` avec la source demandée.
+- Skill demandé introuvable à `C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md`; fallback sur les validateurs CONDAMAD disponibles.
+- Corrections appliquées dans `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md`:
+  - format des preuves `Current State Evidence`;
+  - formulation explicite du guard de réintroduction;
+  - remplacement d’un placeholder `...`;
+  - mise à jour des notes de validation obsolètes.
+
+Validations relancées avec venv activé:
+- `condamad_story_validate.py`: PASS
+- `condamad_story_lint.py --strict`: PASS
+
+Statut final: story clean selon les validateurs de rédaction disponibles. Aucun code applicatif modifié.

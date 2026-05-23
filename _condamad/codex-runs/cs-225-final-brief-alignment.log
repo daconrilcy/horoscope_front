@@ -1,0 +1,1468 @@
+OpenAI Codex v0.128.0 (research preview)
+--------
+workdir: C:\dev\horoscope_front
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 019e523f-b8f8-7d20-b499-7b9af2279945
+--------
+user
+En utilisant le skill [$condamad-review-fix-story](C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md), fais une passe finale d'alignement entre le brief initial C:\dev\horoscope_front\_story_briefs\cs-225-calculation-graph-runtime-contracts.md et la story generee.
+
+Objectif:
+- Retrouve la story via `_condamad/stories/story-status.md` en utilisant la colonne `Source` egale au brief.
+- Verifie que l'objectif, le scope, les AC, les non-goals, les risques et les validations repondent aux enjeux du brief initial.
+- Corrige directement les ecarts d'alignement necessaires.
+- Verifie apres correction qu'il ne reste plus d'ecart majeur avec le brief.
+
+Contraintes d'execution non interactive:
+- Cette passe est une review finale d'alignement au brief, pas une nouvelle redaction complete.
+- Ne modifie pas le code applicatif hors artefacts CONDAMAD de story/review.
+- Lis seulement le brief, la ligne tracker, la story et le review artifact existant si present; ne lis pas le registre complet.
+- Lis `AGENTS.md` seulement apres `Test-Path AGENTS.md`; si absent, note-le une seule fois sans erreur.
+- Ne lance pas `rg --files` depuis la racine pour retrouver les validateurs; ils sont dans `.agents\skills\condamad-story-writer\scripts`.
+- Si `generated/11-code-review.md` existe deja avec `CLEAN` et que la story passe validation/lint, ne reecris pas l'artefact seulement pour journaliser cette passe.
+- Ne lance pas `git status`, `git diff` ou `git show` si `.git` est absent; note une seule fois que ce dossier n'est pas un depot Git.
+- Si la story cible `backend` ou `frontend` mais que les racines attendues sont absentes, ne remplace pas `ready-to-dev` par `blocked` pour cette seule raison.
+- Dans ce cas, conserve ou ajoute `Repository structure alert:` et indique que l'implementation creera les repertoires/fichiers manquants si le scope reste confirme.
+- Ne transforme pas une alerte de structure repository en blocker tant que `condamad_story_validate.py` et `condamad_story_lint.py --strict` passent.
+- Ne recopie pas les gros fichiers dans ta reponse.
+- Ne relance les validations qu'une seule fois si aucune correction story/tracker n'est faite.
+- Deux tentatives maximum pour une meme commande ou correction identique.
+- Garde la sortie courte: ecarts trouves, corrections faites, statut final.
+- Termine des que la story est alignee avec le brief ou qu'un blocage explicite est consigne.
+codex
+Je vais appliquer le skill demandé et limiter la lecture aux artefacts autorisés: brief, tracker, story ciblée et review existante si elle existe. Ensuite je corrigerai uniquement les artefacts CONDAMAD nécessaires et je lancerai une validation courte.
+  → Lire le skill et vérifier AGENTS.md
+  • Identifier la story via le tracker
+  • Comparer brief, story et review existante
+  • Corriger les écarts CONDAMAD nécessaires
+  • Valider/linter une seule passe finale
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "if (Test-Path -LiteralPath 'AGENTS.md') { Get-Content -LiteralPath 'AGENTS.md' } else { 'AGENTS.md absent' }" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath 'C:\\dev\\horoscope_front\\.agents\\skills\\condamad-review-fix-story\\SKILL.md'" in C:\dev\horoscope_front
+ succeeded in 234ms:
+Objectif: produire une application web maintenable, testée, sécurisée, et cohérente.
+Stack imposée:
+- Backend: Python 3.13
+- Frontend: React (obligatoire)
+- OS cible dev: Windows / PowerShell
+
+1) Règle absolue: environnement Python
+- Toute commande Python (tests, lint, run, scripts) DOIT être exécutée après activation du venv:
+  - PowerShell: .\.venv\Scripts\Activate.ps1
+- Si le venv n'existe pas, le créer en premier, puis l'activer, puis installer les dépendances.
+- Ne jamais exécuter "python", "pip", "pytest", "ruff", etc. hors venv.
+- Dépendances gérées via backend/pyproject.toml (PEP 621):
+  - Installation production: cd backend && pip install .
+  - Installation développement: cd backend && pip install -e ".[dev]"
+  - NE PAS créer de requirements.txt (le pyproject.toml est la source unique)
+
+2) Règles d'or de dev (non négociables)
+- DRY: pas de duplication. Si tu copies/colles, c'est que tu dois refactor.
+- SOLID / orienté objet quand pertinent (pas de classes "fourre-tout").
+- KISS: pas d'over-engineering.
+- Vérifier ton travail: tests + lint + exécution locale. Pas de "ça doit marcher".
+- Lisibilité > astuce. Noms explicites, petites fonctions, responsabilités claires.
+- Documentation minimale obligatoire: tout fichier applicatif nouveau ou significativement modifié doit contenir un commentaire global en français en haut du fichier et des docstrings en français pour les modules/classes/fonctions publiques ou non triviales.
+
+3) Workflow attendu à CHAQUE changement
+- Comprendre la demande, proposer un mini-plan (3–7 étapes max).
+- Modifier le code avec le plus petit delta cohérent.
+- Ajouter/mettre à jour les tests.
+- Exécuter localement: lint + tests (dans le venv).
+- Finir avec un récap: ce qui a été fait, comment tester, risques/limites.
+
+4) Architecture de référence (proposée, à respecter)
+Monorepo:
+- backend/
+- frontend/
+- shared/ (optionnel: contrats, types, OpenAPI, etc.)
+
+Backend (recommandé):
+- Framework API: FastAPI
+- Gestion des dépendances: pyproject.toml (PEP 621) - NE PAS créer de requirements.txt
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+- Structure:
+  backend/
+    app/
+      api/          (routers)
+      core/         (config, logging, sécurité)
+      domain/       (entités, règles métier)
+      services/     (use-cases)
+      infra/        (db, clients externes)
+      tests/
+    pyproject.toml  (source unique des dépendances Python)
+
+Frontend (React obligatoire):
+- Vite + React recommandé
+- Structure:
+  frontend/
+    src/
+      api/          (client HTTP + hooks)
+      components/
+      pages/
+      state/        (store si besoin)
+      utils/
+      tests/
+
+5) Qualité Python (recommandations fortes)
+- Typage: type hints partout sur le code applicatif.
+- Validation d'entrées/sorties: Pydantic.
+- Lint/format: Ruff (format + lint) recommandé.
+- Tests: Pytest.
+- Logging structuré, pas de prints.
+- Commentaires/docstrings: français obligatoire pour le commentaire global de fichier et les docstrings. Les commentaires doivent expliquer l'intention métier/technique, pas paraphraser le code.
+
+Commandes standard (exemples PowerShell, toujours après activation venv):
+- Lint/format:
+  - ruff format .
+  - ruff check .
+- Tests:
+  - pytest -q
+  - Les tests sous `backend/tests/` exécutent `ensure_configured_sqlite_file_matches_alembic_head` (fixture session autouse dans `backend/tests/conftest.py`, **pas** `pytest_sessionstart`, qui s’exécute avant la collecte des tests). La fonction migre chaque fichier SQLite pertinent (`session.engine` et `settings.database_url`) puis applique un `create_all` ORM uniquement sur une base « secondaire » (typiquement le fichier temporaire de `app/tests/conftest.py`), pas sur `horoscope.db`. Pour les tests d’intégration qui partagent la session avec `app/tests/`, utiliser `tests/integration/app_db.py` plutôt qu’un import statique de `SessionLocal`.
+
+6) Qualité Front (recommandations fortes)
+- React en TypeScript recommandé.
+- ESLint + Prettier.
+- Tests: Vitest + Testing Library (minimum sur les composants critiques).
+- Pas de logique métier "importante" dans les composants UI: extraire en hooks/services.
+
+7) Contrats API et intégration front/back
+- Le contrat d'API doit être explicite:
+  - OpenAPI généré côté backend (FastAPI le fait nativement).
+- Le front consomme via un client central (fetch/axios) + gestion d'erreurs uniforme.
+- Toujours gérer:
+  - loading / error / empty states
+  - timeouts côté client si pertinent
+
+8) Données, sécurité, et secrets
+- Jamais de secrets en dur. Utiliser variables d'environnement + fichier .env (non commité).
+- Valider et sanitizer les entrées.
+- CORS: restrictif par défaut (pas de "*") sauf besoin clair.
+- AuthN/AuthZ: ne pas improviser. Si demandé, proposer une implémentation standard (JWT/OAuth) + tests.
+
+9) DB / migrations (si base de données)
+- Utiliser un ORM standard (SQLAlchemy) + migrations (Alembic).
+- Pas de requêtes SQL "cachées" dans la couche UI.
+- Les accès DB passent par une couche infra/repo.
+
+10) Performance et robustesse
+- Éviter le travail bloquant dans les handlers (I/O lourde => background tasks/queue si requis).
+- Pagination sur endpoints listant des collections.
+- Timeout sur appels externes.
+- Gestion propre des exceptions + réponses d'erreur cohérentes.
+
+11) Git et discipline de commits
+- Petits commits, message clair.
+- Ne jamais créer de nouvelle branche Git sauf demande expresse de l'utilisateur.
+- Ne jamais commiter:
+  - .env
+  - .venv
+  - node_modules
+- Mettre à jour README si le mode d'exécution change.
+
+12) Ce que l'agent NE DOIT PAS faire
+- Ne pas inventer des dépendances "magiques" non nécessaires.
+- Ne pas changer la stack (React obligatoire, Python 3.13 côté back).
+- Ne pas introduire 3 façons différentes de faire la même chose.
+- Ne pas "corriger" du style sans raison (refactor massif uniquement si demandé ou si nécessaire).
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+
+13) Checklist de fin (obligatoire avant de conclure)
+- Le venv était activé pour toutes les commandes Python.
+- Lint/format OK.
+- Tests OK.
+- L'app démarre localement (ou instructions exactes pour le faire).
+- Pas de duplication introduite.
+- Les erreurs sont gérées (status codes, messages).
+
+14) Style
+- Aucun style inline : tout doit etre mis en oeuvre dans le fichier .css ou .scss approprie
+- utiliser et reutiliser les variables de couleurs, bordure, marge, etc. present dans les feuilles styles. Verifier leur presence avant de les re creer.
+
+15) Utilisateur test
+- tu peux utiliser l'utilisateur test : daconrilcy@hotmail.com password : admin123
+
+2026-05-23T00:32:59.004589Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath 'C:\dev\horoscope_front\.agents\skills\conda[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 297ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath 'C:\dev\horoscope_front\.agents\skills\conda[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+codex
+Le fichier de skill indiqué n’existe pas à l’emplacement fourni. Je note ce blocage de skill et poursuis avec le meilleur équivalent: une revue ciblée des artefacts autorisés, sans lecture large du dépôt.
+Skill introuvable au chemin demandé; AGENTS.md présent et lu. Suite en fallback ciblé.
+  ✓ Lire le skill et vérifier AGENTS.md
+  → Identifier la story via le tracker
+  • Comparer brief, story et review existante
+  • Corriger les écarts CONDAMAD nécessaires
+  • Valider/linter une seule passe finale
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath '_condamad\\stories\\story-status.md' -Pattern 'cs-225-calculation-graph-runtime-contracts.md'" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath '_story_briefs\\cs-225-calculation-graph-runtime-contracts.md'" in C:\dev\horoscope_front
+ succeeded in 217ms:
+# CS-225 — Calculation Graph Runtime Contracts
+
+## Résumé
+
+CS-225 introduit le socle contractuel d’un graphe de calcul déclaratif pour le runtime astrologique.
+
+Le pipeline natal est aujourd’hui orchestré procéduralement dans `natal_calculation.py`. Cette approche reste acceptable pour un thème natal simple, mais elle devient fragile dès que le moteur doit supporter des dépendances croisées, des techniques temporelles, les transits, la synastrie, les profections, les directions, les progressions et les returns.
+
+La cible n’est pas encore de remplacer tout le pipeline. CS-225 doit seulement créer les contrats typés permettant de déclarer :
+
+```text
+node houses depends on jd, coords, house_system
+node house_rulers depends on houses, chart_objects
+node signature depends on signs_runtime, houses_runtime, aspects_runtime
+```
+
+Le graphe doit rendre les dépendances explicites, testables et inspectables avant toute migration large.
+
+---
+
+## Contexte
+
+Les stories CS-217 à CS-224 ont fait converger le runtime vers `NatalResult.chart_objects` et des payloads spécialisés : aspects, motion/visibility, dignités, dominance, maisons, rulerships et étoiles fixes.
+
+Il reste cependant un manque structurel : les dépendances entre calculs sont implicites dans l’ordre du code.
+
+Exemples actuels ou attendus :
+
+- les maisons dépendent du jour julien, des coordonnées et du système de maisons ;
+- les positions en maison dépendent des objets du thème et des maisons ;
+- les maîtrises dépendent des maisons, signes, référentiels et objets ;
+- les dignités dépendent des objets, signes, maisons, secte et conditions avancées ;
+- la dominance dépend des objets, aspects, dignités et maisons ;
+- la signature dépend des signes runtime, maisons runtime et aspects runtime ;
+- la synastrie dépend de deux graphes nataux plus des aspects inter-chart ;
+- les transits dépendent d’un thème natal, d’un thème courant et d’un instant de calcul.
+
+Sans représentation déclarative, chaque nouvelle technique risque d’ajouter une séquence procédurale ad hoc dans un service principal.
+
+---
+
+## Objectifs
+
+### Objectif fonctionnel
+
+Créer des contrats runtime pour décrire un graphe de calcul astrologique sans encore exécuter toute l’application via ce graphe.
+
+Exemple cible :
+
+```python
+CalculationGraphDefinition(
+    graph_code="natal_chart_v1",
+    nodes=(
+        CalculationNodeDefinition(
+            code="houses",
+            output_key="houses_runtime",
+            depends_on=("julian_day", "coordinates", "house_system"),
+            calculator="houses_runtime_builder",
+        ),
+        CalculationNodeDefinition(
+            code="house_rulers",
+            output_key="house_rulerships_runtime",
+            depends_on=("houses_runtime", "chart_objects"),
+            calculator="house_ruler_resolver",
+        ),
+    ),
+)
+```
+
+### Objectif architectural
+
+Installer une frontière claire :
+
+```text
+contrats de graphe déclaratif
+→ validation des dépendances
+→ exécution future par runner topologique
+```
+
+CS-225 ne doit pas créer un nouveau monolithe. Elle prépare les types et les validations minimales qui permettront aux stories suivantes de déclarer puis d’exécuter des graphes de calcul.
+
+---
+
+## Périmètre inclus
+
+CS-225 couvre :
+
+1. La création de contrats de graphe de calcul.
+2. La création de types pour les clés d’entrée, sorties et dépendances.
+3. La définition de statuts de node : déclaré, prêt, exécuté, échoué, ignoré.
+4. La validation des dépendances manquantes, cycles et doublons.
+5. La distinction entre dépendance obligatoire et dépendance optionnelle.
+6. La distinction entre donnée d’entrée, résultat calculé et projection de compatibilité.
+7. La compatibilité avec les contrats `ChartObjectRuntimeData` existants.
+8. Des tests unitaires des contrats et validations.
+9. Une documentation courte du modèle de graphe.
+
+---
+
+## Hors périmètre
+
+CS-225 ne doit pas :
+
+- migrer `build_natal_result` vers le graphe ;
+- exécuter un graphe complet en production ;
+- ajouter des transits, progressions, directions ou synastrie ;
+- changer l’API publique ;
+- modifier le frontend ;
+- ajouter une dépendance externe de graph processing ;
+- persister le graphe en base ;
+- remplacer les contrats `AstrologicalGraphNodeType` existants liés au graphe astrologique sémantique.
+
+Point important : le graphe de calcul n’est pas le graphe astrologique sémantique. Le premier orchestre des calculs, le second représente des relations astrologiques comme `occupies`, `rules`, `aspects`.
+
+---
+
+## Contrats attendus
+
+### `CalculationGraphDefinition`
+
+```python
+@dataclass(frozen=True, slots=True)
+class CalculationGraphDefinition:
+    graph_code: str
+    version: str
+    nodes: tuple[CalculationNodeDefinition, ...]
+    required_inputs: tuple[CalculationInputDefinition, ...] = ()
+```
+
+Responsabilités :
+
+- nommer un graphe stable ;
+- porter une version explicite ;
+- exposer les nodes dans un ordre déclaratif ;
+- permettre une validation indépendante de l’exécution.
+
+### `CalculationNodeDefinition`
+
+```python
+@dataclass(frozen=True, slots=True)
+class CalculationNodeDefinition:
+    code: str
+    output_key: str
+    depends_on: tuple[str, ...]
+    calculator: str
+    optional_depends_on: tuple[str, ...] = ()
+    tags: tuple[str, ...] = ()
+```
+
+Règles :
+
+- `code` est unique dans le graphe ;
+- `output_key` est unique dans le graphe ;
+- `depends_on` référence des inputs ou des outputs de nodes ;
+- `calculator` est un identifiant stable, pas une fonction importée dynamiquement dans CS-225.
+
+### `CalculationInputDefinition`
+
+```python
+@dataclass(frozen=True, slots=True)
+class CalculationInputDefinition:
+    key: str
+    value_type: str
+    required: bool = True
+```
+
+Exemples de clés :
+
+```text
+julian_day
+coordinates
+house_system
+runtime_reference
+zodiac_mode
+birth_chart
+target_datetime
+```
+
+### `CalculationGraphValidationResult`
+
+```python
+@dataclass(frozen=True, slots=True)
+class CalculationGraphValidationResult:
+    graph_code: str
+    is_valid: bool
+    errors: tuple[CalculationGraphValidationError, ...]
+```
+
+Les erreurs doivent être déterministes et explicites :
+
+```text
+Calculation node 'house_rulers' depends on unknown key 'houses'.
+Calculation graph 'natal_chart_v1' contains a cycle: houses -> signature -> houses.
+Calculation graph 'natal_chart_v1' declares duplicate output_key 'chart_objects'.
+```
+
+---
+
+## Composants techniques recommandés
+
+### `calculation_graph_contracts.py`
+
+Emplacement recommandé :
+
+```text
+backend/app/domain/astrology/runtime/calculation_graph_contracts.py
+```
+
+Ce module contient uniquement les dataclasses, enums et erreurs de contrat.
+
+### `calculation_graph_validator.py`
+
+Emplacement recommandé :
+
+```text
+backend/app/domain/astrology/runtime/calculation_graph_validator.py
+```
+
+Responsabilités :
+
+- vérifier les codes non vides ;
+- vérifier les doublons ;
+- vérifier les dépendances inconnues ;
+- détecter les cycles ;
+- produire un ordre topologique théorique sans exécuter les calculateurs.
+
+### Documentation
+
+Emplacement recommandé :
+
+```text
+docs/architecture/astrology-calculation-graph.md
+```
+
+Le document doit expliquer la différence entre :
+
+- calculation graph : orchestration technique des calculs ;
+- astrological graph : représentation métier des objets et relations astrologiques ;
+- `chart_objects` : surface runtime canonique des objets du thème.
+
+---
+
+## Tests attendus
+
+1. Un graphe minimal valide avec inputs `julian_day`, `coordinates`, `house_system` et node `houses`.
+2. Erreur sur node sans code.
+3. Erreur sur output dupliqué.
+4. Erreur sur dépendance inconnue.
+5. Erreur sur cycle direct.
+6. Erreur sur cycle indirect.
+7. Support des dépendances optionnelles sans erreur bloquante.
+8. Ordre topologique déterministe.
+9. Documentation présente et mentionnant calculation graph vs astrological graph.
+
+---
+
+## Critères d’acceptation
+
+La story est acceptée si :
+
+1. Les contrats de graphe de calcul existent.
+2. Les nodes déclarent explicitement leurs inputs, outputs et dépendances.
+3. Les validations détectent dépendances inconnues, doublons et cycles.
+4. Aucune exécution métier n’est introduite dans les contrats.
+5. Le graphe de calcul est clairement distingué du graphe astrologique sémantique.
+6. Aucun changement d’API, DB ou frontend n’est introduit.
+7. Les tests unitaires du validator passent.
+8. La documentation d’architecture existe.
+
+---
+
+## Validation technique
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+cd backend
+ruff format .
+ruff check .
+pytest -q
+```
+
+Tests ciblés :
+
+```powershell
+pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py
+pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py
+```
+
+Scans anti-régression :
+
+```powershell
+rg -n "networkx|igraph|graphlib" backend/app/domain/astrology backend/tests -g "*.py"
+rg -n "CalculationGraphDefinition|CalculationNodeDefinition" backend/app/domain/astrology/runtime backend/tests
+```
+
+La première recherche doit confirmer qu’aucune dépendance externe de graphe n’est introduite. `graphlib` standard library peut être accepté uniquement si explicitement justifié ; une implémentation simple locale est préférable au départ.
+
+---
+
+## Évidence finale attendue
+
+```markdown
+## CS-225 Final Evidence
+
+### Contracts
+- Added calculation graph contracts.
+- Added explicit node dependencies and output keys.
+- Calculation graph is distinct from astrological graph.
+
+### Validation
+- Unknown dependencies are rejected.
+- Duplicate nodes and outputs are rejected.
+- Cycles are rejected.
+- Topological order is deterministic.
+
+### Scope
+- No natal pipeline migration yet.
+- No API, DB or frontend changes.
+- No external graph dependency.
+
+### Commands
+- ruff format .
+- ruff check .
+- pytest -q
+- targeted calculation graph tests
+```
+
+---
+
+## Formulation courte pour Codex
+
+```markdown
+Implémente CS-225 — Calculation Graph Runtime Contracts.
+
+Objectif:
+Créer les contrats et validations d’un graphe de calcul déclaratif pour le runtime astrologique, sans migrer encore le pipeline natal.
+
+À faire:
+- Ajouter CalculationGraphDefinition, CalculationNodeDefinition, CalculationInputDefinition.
+- Ajouter un validator détectant doublons, dépendances inconnues et cycles.
+- Produire un ordre topologique déterministe.
+- Documenter la différence calculation graph / astrological graph / chart_objects.
+- Ajouter tests unitaires.
+
+Interdictions:
+- Pas de migration de build_natal_result.
+- Pas de changement API/front/DB.
+- Pas de dépendance externe de graphe.
+- Pas de calcul astrologique nouveau.
+
+Validation:
+- ruff format .
+- ruff check .
+- pytest -q
+- tests ciblés calculation graph.
+```
+
+ succeeded in 238ms:
+
+_condamad\stories\story-status.md:231:| CS-225 | calculation-graph-runtime-contracts | Creer les contrats runtime du graphe de calcul | ready-to-dev 
+| `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md` | `_story_briefs/[7mcs-225-calculation-graph-runtime-contracts.md[0m` [0m[7m[0m| [0m
+[7m[0m2026-05-23 [0m[7m[0m|[0m
+
+
+codex
+La story cible est identifiée par la colonne Source: `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md`. Je lis maintenant seulement cette story et l’artefact de review s’il existe.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath '_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "if (Test-Path -LiteralPath '_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\generated\\11-code-review.md') { Get-Content -LiteralPath '_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\generated\\11-code-review.md' } else { 'NO_REVIEW_ARTIFACT' }" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Test-Path -LiteralPath '.git'" in C:\dev\horoscope_front
+ succeeded in 202ms:
+NO_REVIEW_ARTIFACT
+
+ succeeded in 203ms:
+True
+
+ succeeded in 251ms:
+# Story CS-225 calculation-graph-runtime-contracts: Creer les contrats runtime du graphe de calcul
+Status: ready-to-dev
+
+## 1. Objective
+
+Creer les contrats types d'un graphe de calcul declaratif pour le runtime astrologique, sans migrer le pipeline natal vers ce graphe.
+La story rend les dependances entre calculs explicites, validables et inspectables avant l'ajout d'un runner topologique.
+
+## 2. Trigger / Source
+
+- Source type: architecture-runtime-contract.
+- Source reference: `_story_briefs/cs-225-calculation-graph-runtime-contracts.md`.
+- Reason for change: CS-217 a CS-224 ont stabilise `NatalResult.chart_objects` et les payloads runtime; les dependances de calcul restent implicites.
+- Selected story writer mode: Fast Story Writer Mode.
+- Skill availability note: `.agents/skills/condamad-story-writer/SKILL.md`, le cheatsheet demande et `resolve_guardrails.py` ne sont pas presents.
+- Source-alignment review: la story ajoute des contrats et validations purs, sans API, DB, frontend, migration du pipeline natal ou dependance externe de graph processing.
+
+## 3. Domain Boundary
+
+Cette story appartient a un seul domaine:
+
+- Domain: `backend/app/domain/astrology/runtime`.
+- In scope:
+  - creer `CalculationGraphDefinition`, `CalculationNodeDefinition`, `CalculationInputDefinition`;
+  - creer les statuts de node: declared, ready, executed, failed, skipped;
+  - creer `CalculationGraphValidationResult` et les erreurs deterministes du validator;
+  - verifier les codes vides, doublons de node, doublons d'`output_key`, dependances inconnues et cycles;
+  - distinguer dependances obligatoires et dependances optionnelles;
+  - produire un ordre topologique theorique stable sans executer les calculateurs;
+  - documenter calculation graph, astrological graph et `chart_objects`;
+  - ajouter les tests unitaires du validator et des contrats.
+- Out of scope:
+  - migrer `build_natal_result` vers le graphe;
+  - executer un graphe complet en production;
+  - ajouter transits, progressions, directions, synastrie ou returns;
+  - changer une route FastAPI, un schema public, OpenAPI, DB, migrations, frontend ou prompts;
+  - ajouter une dependance externe de graph processing;
+  - remplacer `AstrologicalGraphNodeType` ou le graphe astrologique semantique.
+- Explicit non-goals:
+  - ne pas enrichir `_condamad/stories/regression-guardrails.md` pendant cette generation normale;
+  - ne pas ajouter de dossier de base sous `backend/`;
+  - ne pas importer dynamiquement une fonction calculatrice depuis le contrat;
+  - ne pas introduire de calcul astrologique nouveau.
+
+## 4. Operation Contract
+
+- Operation type: create
+- Primary archetype: custom
+- Archetype reason: la story ajoute un socle de contrats backend-domain et un validator pur pour une orchestration future.
+- Behavior change allowed: constrained
+- Behavior change constraints:
+  - autorise: nouveaux modules de contrats et de validation sous le runtime astrologique;
+  - autorise: tests unitaires et documentation d'architecture dediee;
+  - autorise: ordre topologique theorique retourne par le validator;
+  - interdit: execution metier d'un graphe, changement API, DB, frontend, pipeline natal ou contrats publics.
+- Deletion allowed: no
+- Replacement allowed: no
+- User decision required if: l'implementation touche une route publique, une migration DB, le frontend, une dependance externe ou `build_natal_result`.
+- Additional validation rules:
+  - les contrats utilisent des dataclasses immuables et typees sans dependance FastAPI, SQLAlchemy, infra, settings, LLM ou frontend;
+  - `calculator` reste un identifiant stable sous forme de chaine, sans import dynamique ni appel de fonction;
+  - les dependances sont resolues seulement contre les inputs declares et les `output_key` de nodes;
+  - les dependances optionnelles inconnues ne bloquent pas la validite, mais restent inspectables;
+  - les cycles directs et indirects produisent des messages explicites et deterministes;
+  - `ChartObjectRuntimeData` reste compatible comme surface runtime consommee par futurs nodes, sans devenir obligatoire pour tous les graphes;
+  - `app.routes`, `app.openapi()`, `pytest` et `TestClient` prouvent l'absence de delta API volontaire.
+
+## 4a. Required Contracts
+
+| Contract | Required | Reason |
+|---|---:|---|
+| Runtime Source of Truth | yes | Le graphe de calcul decrit l'orchestration technique; `chart_objects` reste la surface canonique des objets du theme. |
+| Baseline Snapshot | yes | Les contrats runtime existants et le pipeline natal doivent etre connus avant ajout. |
+| Ownership Routing | yes | Contrats, validator, documentation et tests ont des proprietaires separes. |
+| Allowlist Exception | yes | Les seuls usages conserves hors graphe sont le pipeline procedural et les contrats semantiques existants. |
+| Contract Shape | yes | Les dataclasses et enums attendus sont le coeur de la story. |
+| Batch Migration | yes | Contrats, validator, documentation et tests sont livres en lots controlables. |
+| Reintroduction Guard | yes | Les scans bloquent les dependances externes de graph processing et les deltas API/DB/front. |
+| Persistent Evidence | yes | Tests, scans et preuve finale doivent etre conserves dans le dossier CS-225. |
+
+## 4b. Runtime Source of Truth
+
+- Primary source of truth:
+  - `backend/app/domain/astrology/runtime/calculation_graph_contracts.py`;
+  - `backend/app/domain/astrology/runtime/calculation_graph_validator.py`;
+  - `backend/app/domain/astrology/runtime/chart_object_runtime_data.py` pour compatibilite des futurs nodes;
+  - `docs/architecture/astrology-calculation-graph.md`.
+- Runtime/domain artifacts:
+  - dataclasses immuables de definition du graphe, nodes, inputs, resultats et erreurs;
+  - enum de statut de node;
+  - validator pur produisant validite, erreurs et ordre topologique theorique;
+  - tests unitaires sous `backend/tests/unit/domain/astrology/`.
+- Secondary evidence:
+  - `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;
+  - `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`;
+  - `app.routes`, `app.openapi()` et `TestClient` sans delta public volontaire;
+  - scans anti-dependance externe `networkx|igraph|graphlib`.
+- Static scans alone are not sufficient because:
+  - ils ne prouvent ni la detection de cycles, ni l'ordre topologique stable, ni la neutralite OpenAPI runtime.
+
+## 4c. Baseline / Before-After Rule
+
+- Baseline artifact before implementation:
+  - `Get-Content backend/app/domain/astrology/runtime/chart_object_runtime_data.py`;
+  - `Get-Content backend/app/domain/astrology/runtime/astrological_graph_contracts.py`;
+  - recherche ciblee de `build_natal_result` et de `NatalResult`;
+  - recherche ciblee de `CalculationGraphDefinition|CalculationNodeDefinition`;
+  - `Select-String "RG-144|RG-148" _condamad/stories/regression-guardrails.md`.
+- Comparison after implementation:
+  - memes recherches ciblees apres implementation;
+  - tests CS-225 du Validation Plan;
+  - preuve `app.routes`;
+  - preuve `app.openapi()`;
+  - diff adjacent sur API, DB, migrations, frontend et pipeline natal.
+- Expected invariant:
+  - le pipeline natal reste procedural;
+  - le graphe de calcul reste descriptif et non execute;
+  - le graphe astrologique semantique reste distinct;
+  - aucun endpoint public ne change volontairement.
+- Allowed differences:
+  - nouveaux modules de contrats et validator;
+  - documentation d'architecture;
+  - tests unitaires et guards cibles;
+  - Registry gap: un invariant dedie au graphe de calcul pourra etre ajoute ulterieurement hors generation normale.
+
+## 4d. Ownership Routing Rule
+
+| Responsibility type | Canonical owner | Forbidden destination |
+|---|---|---|
+| Contrats de graphe de calcul | `backend/app/domain/astrology/runtime/calculation_graph_contracts.py` | route API, service monolithique, frontend |
+| Validation declarative | `backend/app/domain/astrology/runtime/calculation_graph_validator.py` | `natal_calculation.py`, infra, DB |
+| Graphe astrologique semantique | `astrological_graph_contracts.py` existant | contrats de graphe de calcul |
+| Documentation architecture | `docs/architecture/astrology-calculation-graph.md` | commentaires disperses uniquement |
+| Tests unitaires | `backend/tests/unit/domain/astrology/` | tests API opaques pour logique pure |
+
+## 4e. Allowlist / Exception Register
+
+| File | Symbol / Route / Import | Reason | Expiry or permanence decision |
+|---|---|---|---|
+| `natal_calculation.py` | ordre procedural | Pipeline natal hors scope CS-225. | Temporary; exit condition: migration story approved. |
+| `astrological_graph_contracts.py` | graphe semantique astrologique | Contrat metier distinct du graphe de calcul. | Permanent. |
+| serializers et routes publics | contrats JSON existants | CS-225 ne change pas l'API publique. | Permanent pour cette story. |
+
+Validation rule:
+
+- Toute execution metier d'un node ou toute mutation du pipeline natal bloque l'implementation CS-225.
+
+## 4f. Contract Shape
+
+- Contract type:
+  - dataclasses Python immuables avec `frozen=True` et `slots=True`;
+  - enum de statut de node;
+  - validator pur retournant un resultat structure;
+  - aucune nouvelle API HTTP.
+- Required dataclasses:
+  - `CalculationGraphDefinition`;
+  - `CalculationNodeDefinition`;
+  - `CalculationInputDefinition`;
+  - `CalculationGraphValidationResult`;
+  - `CalculationGraphValidationError`.
+- Required enum:
+  - `CalculationNodeStatus`.
+- Fields:
+  - `graph_code`;
+  - `version`;
+  - `nodes`;
+  - `required_inputs`;
+  - `code`;
+  - `output_key`;
+  - `depends_on`;
+  - `optional_depends_on`;
+  - `calculator`;
+  - `tags`;
+  - `key`;
+  - `value_type`;
+  - `required`;
+  - `is_valid`;
+  - `errors`;
+  - `topological_order`.
+- Required fields:
+  - `graph_code`;
+  - `version`;
+  - `nodes`;
+  - `code`;
+  - `output_key`;
+  - `depends_on`;
+  - `calculator`;
+  - `key`;
+  - `value_type`;
+  - `is_valid`;
+  - `errors`.
+- Optional fields:
+  - `optional_depends_on`;
+  - `tags`;
+  - `topological_order` may be empty when validation fails before ordering.
+- Status codes:
+  - no HTTP endpoint, method or status code is changed.
+- Serialization names:
+  - no public JSON key is renamed or removed by CS-225.
+- Frontend type impact:
+  - none; no frontend contract changes are allowed.
+- Generated contract impact:
+  - none; `app.routes`, `app.openapi()` and `TestClient` must show no public delta.
+
+## 4g. Batch Migration Plan
+
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
+|---|---|---|---|---|---|---|
+| 1 | dependances implicites documentees dans le code | contrats dataclass | aucun runtime | contracts tests | import pur | dependance externe |
+| 2 | validation manuelle des dependances | validator pur | aucun runtime | validator tests | topological order | cycle non detecte |
+| 3 | distinction floue graphes | doc architecture | aucun runtime | doc presence test | doc mentions | confusion graphe semantique |
+| 4 | preuve manuelle API neutre | `app.routes` et `app.openapi()` | aucun public | TestClient smoke | zero public delta | route ou schema modifie |
+
+Completion rule: chaque batch conserve `pytest -q`, `app.routes`, `app.openapi()` et le pipeline natal procedural.
+
+## 4h. Reintroduction Guard
+
+- Guard target:
+  - aucun `networkx`, `igraph` ou dependance externe de graph processing dans `backend/app/domain/astrology`;
+  - `graphlib` standard library reste absent sauf justification explicite dans l'evidence finale;
+  - aucun import FastAPI, SQLAlchemy, infra, settings, LLM ou frontend dans les modules de contrats et validator;
+  - aucun changement volontaire de `app.routes`, `app.openapi()` ou payload public;
+  - aucune mutation de `build_natal_result` pour executer un graphe.
+- Guard mechanism:
+  - tests unitaires de contrats;
+  - tests unitaires de validator;
+  - AST guard ou scans cibles sur imports interdits;
+  - `TestClient` smoke sur OpenAPI;
+  - scan cible `rg -n "networkx|igraph|graphlib" backend/app/domain/astrology backend/tests -g "*.py"`.
+- Guard owner:
+  - `backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`;
+  - `backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;
+  - `backend/tests/architecture` seulement si un guard d'imports transverse est ajoute.
+- Guard evidence:
+  - chemins complets `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;
+  - chemins complets `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`;
+  - token runtime `AST guard`, `app.routes`, `app.openapi()` et `TestClient`.
+
+## 4i. Persistent Evidence Artifacts
+
+| Artifact | Path | Purpose |
+|---|---|---|
+| Validation evidence | `_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/validation.md` | Conserver tests, lint et resultats cibles CS-225. |
+| API neutrality evidence | `_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/openapi-routes.md` | Conserver `app.routes`, `app.openapi()` et TestClient. |
+| Dependency scan evidence | `_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/graph-dependency-scan.md` | Prouver zero dependance externe de graph. |
+
+## 5. Current State Evidence
+
+- Le runtime astrologique contient deja des contrats specialises sous `backend/app/domain/astrology/runtime`.
+- Le pipeline natal est encore orchestre proceduralement dans `natal_calculation.py`.
+- `NatalResult.chart_objects` est la surface runtime canonique recente pour les objets du theme.
+- Les dependances entre maisons, rulerships, aspects, dignites, dominance et signature ne sont pas encore decrites par un contrat commun.
+- Le graphe astrologique semantique existant ne doit pas etre confondu avec le graphe de calcul.
+- Evidence 1: `backend/app/domain/astrology/runtime` - contrats runtime existants constates par lecture ciblee du dossier.
+
+## 6. Target State
+
+- Les contrats `CalculationGraphDefinition`, `CalculationNodeDefinition` et `CalculationInputDefinition` existent.
+- Les nodes declarent `code`, `output_key`, `depends_on`, `optional_depends_on`, `calculator` et `tags`.
+- Le validator detecte doublons, dependances inconnues, cycles directs et cycles indirects.
+- Le validator produit un ordre topologique theorique deterministe.
+- Les dependances optionnelles sont representees sans erreur bloquante.
+- La documentation distingue calculation graph, astrological graph et `chart_objects`.
+- Aucun runtime metier n'est execute par le graphe dans CS-225.
+
+## 6a. Regression Guardrails
+
+Scope vector:
+
+- backend-domain: yes;
+- runtime-contracts: yes;
+- astrology: yes;
+- API: no;
+- DB/migrations: no;
+- frontend/style/build/i18n/auth: no.
+
+Selected guardrails:
+
+| ID | Applicability | Story-local use |
+|---|---|---|
+| RG-144 | local | `ChartObjectRuntimeData` reste le contrat canonique des objets exploitables; CS-225 ne le remplace pas. |
+| RG-148 | local | Les payloads house/rulership restent des surfaces runtime existantes; CS-225 declare seulement des dependances futures. |
+
+Non-applicable examples:
+
+- RG-145 aspect engine: hors scope, aucun moteur d'aspects n'est migre.
+- RG-147 dignity/dominance: hors scope, aucun scoring n'est recalcule.
+- Frontend/style guardrails: hors scope, aucun fichier frontend ou CSS n'est touche.
+
+Registry gap:
+
+- Aucun guardrail global dedie au graphe de calcul declaratif n'existe encore; ne pas enrichir le registre pendant cette generation normale.
+
+## 7. Acceptance Criteria
+
+| AC | Requirement | Evidence |
+|---|---|---|
+| AC1 | Les contrats de graphe existent dans le runtime astrology. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`. |
+| AC2 | Chaque node expose un contrat de calcul stable. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`. |
+| AC3 | Le validator rejette les graphes invalides. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`. |
+| AC4 | Pas de calcul metier ni execution de graphe. | `rg -n "importlib|__import__|build_natal_result" backend/app/domain/astrology/runtime -g "*.py"`. |
+| AC5 | Le graphe de calcul reste declaratif. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; doc cible. |
+| AC6 | Le contrat API public reste neutre. | `pytest -q backend/tests/architecture/test_api_contract_neutrality.py`; evidence OpenAPI/TestClient. |
+| AC7 | Les tests unitaires du validator passent avec ordre topologique deterministe. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`. |
+| AC8 | La doc d'architecture borne CS-225. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; doc cible. |
+
+## 8. Implementation Tasks
+
+- [ ] Task: creer `calculation_graph_contracts.py` avec commentaire global et docstrings en francais. (AC: AC1, AC2)
+- [ ] Task: ajouter `CalculationNodeStatus` avec les statuts declared, ready, executed, failed et skipped. (AC: AC1, AC2)
+- [ ] Task: creer `calculation_graph_validator.py` sans import API, DB, infra, settings, LLM ou frontend. (AC: AC3, AC4)
+- [ ] Task: implementer les validations de champs vides, doublons, dependances inconnues, cycles directs et indirects. (AC: AC3)
+- [ ] Task: produire un ordre topologique stable fonde sur les nodes declares et leurs `output_key`. (AC: AC3, AC7)
+- [ ] Task: ajouter les tests unitaires contracts et validator, dont dependances optionnelles et ordre deterministe. (AC: AC1, AC2, AC3, AC7)
+- [ ] Task: ajouter `docs/architecture/astrology-calculation-graph.md` et le test de presence documentaire. (AC: AC5, AC8)
+- [ ] Task: ajouter les guards anti-dependance externe et neutralite API via `app.routes`, `app.openapi()` et `TestClient`. (AC: AC4, AC6)
+- [ ] Task: collecter l'evidence finale dans le dossier CS-225. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8)
+
+## 9. Mandatory Reuse / DRY Constraints
+
+- Reutiliser les conventions de dataclasses immuables deja presentes dans `backend/app/domain/astrology/runtime`.
+- Reutiliser les helpers de tests et fixtures backend existants au lieu de creer une seconde topologie de test.
+- Ne pas dupliquer les definitions de `ChartObjectRuntimeData`, `AstrologicalGraphNodeType` ou des payloads existants.
+- Ne pas creer une seconde logique de calcul des maisons, aspects, dignites, dominance ou signature.
+
+## 10. No Legacy / Forbidden Paths
+
+- Ne pas modifier le frontend.
+- Ne pas ajouter de migration Alembic.
+- Ne pas changer de route FastAPI, schema public, serializer public ou OpenAPI.
+- Ne pas ajouter `networkx`, `igraph` ou dependance externe de graph processing.
+- Ne pas creer de runner de graphe en production.
+- Ne pas migrer `build_natal_result`.
+- Ne pas utiliser `calculator` comme import dynamique.
+- Ne pas ajouter de fallback runtime, shim legacy ou couche compatibility pour executer le graphe.
+
+## 11. Generated Contract Check
+
+- Capture before:
+  - `app.routes`;
+  - `app.openapi()`;
+  - un smoke `TestClient` sur OpenAPI.
+- Capture after:
+  - memes preuves.
+- Expected result:
+  - aucun endpoint, method, status code ou schema public ne change volontairement.
+
+## 12. Files to Inspect First
+
+- `backend/app/domain/astrology/runtime/chart_object_runtime_data.py`.
+- `backend/app/domain/astrology/runtime/astrological_graph_contracts.py`.
+- `backend/app/domain/astrology/services/natal_calculation.py`.
+- `backend/tests/unit/domain/astrology/`.
+- `_condamad/stories/regression-guardrails.md` avec recherche ciblee `RG-144|RG-148`.
+
+## 13. Expected Files to Modify
+
+Likely files:
+
+- `backend/app/domain/astrology/runtime/calculation_graph_contracts.py`.
+- `backend/app/domain/astrology/runtime/calculation_graph_validator.py`.
+- `docs/architecture/astrology-calculation-graph.md`.
+- `_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/validation.md`.
+
+Likely tests:
+
+- `backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`.
+- `backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`.
+
+Files not expected to change:
+
+- `frontend/src`.
+- `backend/alembic`.
+- `backend/app/api`.
+- `backend/app/domain/astrology/services/natal_calculation.py`.
+
+## 14. Dependency Policy
+
+- New dependencies: none.
+- Justification: no dependency changes are authorized.
+
+## 15. Validation Plan
+
+Run all Python commands after activating the venv:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+ruff format backend
+ruff check backend
+pytest -q backend/tests
+```
+
+Run targeted tests:
+
+```powershell
+pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py
+pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py
+```
+
+Run anti-regression scans:
+
+```powershell
+rg -n "networkx|igraph|graphlib" backend/app/domain/astrology backend/tests -g "*.py"
+rg -n "CalculationGraphDefinition|CalculationNodeDefinition" backend/app/domain/astrology/runtime backend/tests
+```
+
+Run API neutrality proof:
+
+```powershell
+pytest -q backend/tests/architecture/test_api_contract_neutrality.py
+```
+
+If the dedicated API neutrality test does not exist, add a focused TestClient test that records `app.routes` and `app.openapi()` for CS-225 evidence.
+
+## 16. Regression Risks
+
+- Un validator trop permissif peut laisser passer une dependance inconnue ou un cycle.
+- Un validator trop couple peut importer FastAPI, DB, settings ou services et casser la purete domaine.
+- Une confusion entre calculation graph et astrological graph peut detourner les contrats semantiques existants.
+- Une migration prematuree du pipeline natal peut introduire un changement runtime non demande.
+
+## 17. Dev Agent Instructions
+
+- Commencer par lire les fichiers de `Files to Inspect First`.
+- Implement only this story.
+- Do not broaden the domain.
+- Do not introduce new dependencies.
+- Implementer le plus petit delta coherent.
+- Garder les commentaires globaux et docstrings en francais dans les nouveaux fichiers applicatifs.
+- Ne pas utiliser de style inline, CSS ou frontend: aucun fichier frontend n'est attendu.
+- Ne pas creer de `requirements.txt`.
+- Executer les validations apres activation du venv.
+- Do not mark a task complete without validation evidence.
+- If an AC cannot be satisfied, stop and record the blocker in the story evidence.
+- Do not preserve legacy behavior by adding a fallback, shim or compatibility layer for graph execution.
+- Conserver dans l'evidence les commandes lancees, les resultats de tests, les scans et la preuve `app.routes` / `app.openapi()`.
+
+## 18. CS-225 Final Evidence Template
+
+```markdown
+## CS-225 Final Evidence
+
+### Contracts
+- Added calculation graph contracts.
+- Added explicit node dependencies and output keys.
+- Calculation graph is distinct from astrological graph.
+
+### Validation
+- Unknown dependencies are rejected.
+- Duplicate nodes and outputs are rejected.
+- Cycles are rejected.
+- Topological order is deterministic.
+
+### Scope
+- No natal pipeline migration yet.
+- No API, DB or frontend changes.
+- No external graph dependency.
+
+### Commands
+- ruff format .
+- ruff check .
+- pytest -q
+- pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py
+- pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py
+```
+
+## 19. Story Generation Validation Notes
+
+- Story generated from `_story_briefs/cs-225-calculation-graph-runtime-contracts.md`.
+- Fast Story Writer Mode applied.
+- The requested cheatsheet path was missing in this workspace, so the story uses the recent validated story structure and validator diagnostics.
+- `resolve_guardrails.py` is unavailable; guardrails were selected by targeted ID search only.
+- No regression guardrail registry update was made.
+- Final validator rerun note: a third validator execution was not launched after the final marker-only correction because this session limits each command to two attempts.
+
+## 20. References
+
+- `_story_briefs/cs-225-calculation-graph-runtime-contracts.md`.
+- `_condamad/stories/regression-guardrails.md` targeted IDs `RG-144|RG-148`.
+- `_condamad/stories/CS-224-legacy-runtime-surface-cleanup-guardrails/00-story.md` structure reference.
+
+codex
+La story couvre déjà l’objectif, le scope et les non-goals du brief. Je vois surtout un point à resserrer avant validation: la formulation sur les dépendances optionnelles doit rester clairement inspectable sans devenir un passe-droit ambigu pour les clés inconnues.
+  ✓ Lire le skill et vérifier AGENTS.md
+  ✓ Identifier la story via le tracker
+  → Comparer brief, story et review existante
+  • Corriger les écarts CONDAMAD nécessaires
+  • Valider/linter une seule passe finale
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath '.agents\\skills\\condamad-story-writer\\scripts' | Select-Object -ExpandProperty Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath '_condamad\\stories\\CS-225-calculation-graph-runtime-contracts'" in C:\dev\horoscope_front
+ succeeded in 226ms:
+
+    Directory: C:\dev\horoscope_front\_condamad\stories\CS-225-calculation-graph-runtime-contracts
+
+[32;1mMode   [0m[32;1m              LastWriteTime[0m [32;1;3m        Length[0m[32;1m Name[0m
+[32;1m----   [0m [32;1m             -------------[0m [32;1m        ------[0m [32;1m----[0m
+d----          23/05/2026    02:32                [44;1mgenerated[0m
+-a---          23/05/2026    02:32          24143 00-story.md
+
+
+ succeeded in 234ms:
+__pycache__
+condamad_story_lint.py
+condamad_story_validate.py
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath '.agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py' -TotalCount 80" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath '.agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py' -TotalCount 120" in C:\dev\horoscope_front
+ succeeded in 217ms:
+#!/usr/bin/env python3
+"""Valide le contrat d'une story CONDAMAD Story Writer.
+
+Le validateur refuse les stories trop interpretables: sections manquantes,
+criteres d'acceptation sans preuve, taches non reliees aux AC, domaine multiple
+ou formulations vagues.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+REQUIRED_SECTIONS = [
+    "Objective",
+    "Trigger / Source",
+    "Domain Boundary",
+    "Operation Contract",
+    "Required Contracts",
+    "Current State Evidence",
+    "Target State",
+    "Acceptance Criteria",
+    "Implementation Tasks",
+    "Mandatory Reuse / DRY Constraints",
+    "No Legacy / Forbidden Paths",
+    "Files to Inspect First",
+    "Expected Files to Modify",
+    "Dependency Policy",
+    "Validation Plan",
+    "Regression Risks",
+    "Dev Agent Instructions",
+    "References",
+]
+
+REMOVAL_REQUIRED_SECTIONS = [
+    "Removal Classification Rules",
+    "Removal Audit Format",
+    "Canonical Ownership",
+    "Delete-Only Rule",
+    "External Usage Blocker",
+    "Reintroduction Guard",
+    "Generated Contract Check",
+]
+
+SUPPORTED_ARCHETYPES = {
+    "api-route-removal",
+    "api-contract-change",
+    "api-error-contract-centralization",
+    "route-architecture-convergence",
+    "api-adapter-boundary-convergence",
+    "legacy-facade-removal",
+    "field-contract-removal",
+    "namespace-convergence",
+    "ownership-routing-refactor",
+    "module-move",
+    "large-file-split",
+    "dead-code-removal",
+    "frontend-route-removal",
+    "runtime-contract-preservation",
+    "batch-migration",
+    "architecture-guard-hardening",
+    "registry-catalog-refactor",
+    "test-guard-hardening",
+    "service-boundary-refactor",
+    "custom",
+}
+
+ALLOWED_STORY_STATUSES = {
+    "ready-to-dev",
+    "ready-to-review",
+    "done",
+}
+
+STORY_TITLE_RE = re.compile(r"^# Story\s+CS-\d{3}\s+\S+:\s+\S", re.M)
+
+KNOWN_CONTRACTS = (
+    "Runtime Source of Truth",
+
+ succeeded in 252ms:
+#!/usr/bin/env python3
+"""Linte une story CONDAMAD au-dela du contrat bloquant.
+
+Ce lint garde la story lisible pour Codex: pas de marqueurs de gabarit, pas de
+lignes demesurees et pas de sections vides.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+from condamad_story_validate import (
+    REQUIRED_SECTIONS,
+    RUNTIME_CONTRACT_TERMS_RE,
+    ac_table_columns,
+    find_ac_table,
+    get_section,
+    has_runtime_evidence,
+    marker_value,
+    read_text,
+    validate_story,
+)
+
+MAX_LINE_LENGTH = 180
+PLACEHOLDER_RE = re.compile(r"<[^>\n]+>|\.\.\.")
+COMPOUND_AC_RE = re.compile(r"\b(and|et)\b|,\s+\w+", re.I)
+VAGUE_OPTIONAL_RE = re.compile(
+    r"\b(if needed|where relevant|as applicable|si necessaire|si nécessaire)\b",
+    re.I,
+)
+
+
+def lint_story(path: Path) -> list[str]:
+    """Retourne les erreurs de lint detectees dans la story."""
+    errors = validate_story(path)
+    if errors:
+        return errors
+
+    text = read_text(path)
+    for index, line in enumerate(text.splitlines(), start=1):
+        if len(line) > MAX_LINE_LENGTH:
+            errors.append(f"Line {index} exceeds {MAX_LINE_LENGTH} characters")
+    if PLACEHOLDER_RE.search(text):
+        errors.append("Story still contains template placeholders")
+    for section in REQUIRED_SECTIONS:
+        if not get_section(text, section).strip():
+            errors.append(f"Section is empty: {section}")
+    return errors
+
+
+def lint_warnings(path: Path) -> list[str]:
+    """Retourne les avertissements non bloquants anti-flou."""
+    text = read_text(path)
+    warnings: list[str] = []
+    warnings.extend(warn_compound_acceptance_criteria(text))
+    warnings.extend(warn_runtime_evidence_only_rg(text))
+    warnings.extend(warn_vague_optional_language(text))
+    warnings.extend(warn_removal_ambiguity(text))
+    warnings.extend(warn_allowlist_without_expiry(text))
+    warnings.extend(warn_temporary_without_exit_condition(text))
+    warnings.extend(warn_validation_plan_path_drift(text))
+    warnings.extend(warn_generic_scans(text))
+    warnings.extend(warn_behavior_no_contract_change(text))
+    warnings.extend(warn_keep_in_no_legacy(text))
+    return warnings
+
+
+def warn_compound_acceptance_criteria(text: str) -> list[str]:
+    """Signale les AC qui semblent contenir plusieurs invariants."""
+    table = find_ac_table(get_section(text, "Acceptance Criteria"))
+    if table is None:
+        return []
+    ac_index, requirement_index, _ = ac_table_columns(table)
+    warnings: list[str] = []
+    for row in table.rows:
+        if len(row) <= max(ac_index, requirement_index):
+            continue
+        ac_id = row[ac_index].strip()
+        requirement = row[requirement_index].strip()
+        if COMPOUND_AC_RE.search(requirement):
+            warnings.append(f"{ac_id} is possibly compound; keep one invariant per AC")
+    return warnings
+
+
+def warn_runtime_evidence_only_rg(text: str) -> list[str]:
+    """Signale une preuve runtime limitee a rg."""
+    table = find_ac_table(get_section(text, "Acceptance Criteria"))
+    if table is None:
+        return []
+    ac_index, requirement_index, evidence_index = ac_table_columns(table)
+    warnings: list[str] = []
+    for row in table.rows:
+        if len(row) <= max(ac_index, requirement_index, evidence_index):
+            continue
+        requirement = row[requirement_index]
+        evidence = row[evidence_index]
+        if (
+            RUNTIME_CONTRACT_TERMS_RE.search(requirement)
+            and re.search(r"\brg\b", evidence)
+            and not has_runtime_evidence(evidence)
+        ):
+            warnings.append(
+                f"{row[ac_index].strip()} uses rg-only evidence for route/API/runtime behavior"
+            )
+    return warnings
+
+
+def warn_vague_optional_language(text: str) -> list[str]:
+    """Signale les formulations optionnelles qui diluent le contrat."""
+    return (
+        [
+            "Story contains optional vague language such as 'if needed', 'where relevant', or 'as applicable'"
+        ]
+        if VAGUE_OPTIONAL_RE.search(text)
+        else []
+    )
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath '.agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py' -Pattern 'argparse|add_argument|if __name__|main' -Context 0,2" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath '.agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py' -Pattern 'argparse|add_argument|--strict|if __name__|main' -Context 0,2" in C:\dev\horoscope_front
+ succeeded in 220ms:
+
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:10:import [7margparse[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:11:import re[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:12:import sys[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:205:def [7mmain[0m() -> int:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:206:    """Execute le lint depuis la ligne de commande."""[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:207:    parser = [7margparse[0m.ArgumentParser(description="Lint [0m[7m[0ma [0m[7m[0mCONDAMAD [0m[7m[0mstory [0m
+[7m[0mfile.")[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:208:    parser.[7madd_argument[0m([0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:209:        "story", type=Path, help="Path to a CONDAMAD story markdown file."[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:210:    )[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:211:    parser.[7madd_argument[0m(
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:212:        "[7m--strict[0m",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:213:        action="store_true",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:214:        help="Fail when anti-flou warnings are detected.",[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:240:[7mif __name__[0m == "__main__":
+> .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py:241:    sys.exit([7mmain[0m())
+
+
+ succeeded in 244ms:
+
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:5:criteres d'acceptation sans preuve, taches non reliees aux AC, do[7mmain[0me [0m
+[7m[0mmultiple[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:6:ou formulations vagues.[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:7:"""[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:11:import [7margparse[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:12:import re[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:13:import sys[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:20:    "Do[7mmain[0m Boundary",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:21:    "Operation Contract",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:22:    "Required Contracts",[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:327:    
+r"app\.openapi\(|app\.routes|from\s+backend\.app\.[7mmain[0m\s+import\s+app|"[0m
+[7m [0m[7m [0m[7m[0m.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:328: [0m[7m [0m[7m [0m[7m [0m[7m[0mr"TestClient|route [0m[7m[0mtable|loaded [0m
+[7m[0mconfig|settings\.|inspect\(|MetaData|alembic|"[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:329:    r"generated manifest|AST guard",[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:342:    "do[7mmain[0m",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:343:    "infra",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:344:    "ownership",[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:680:def validate_do[7mmain[0m_boundary(text: str) -> list[str]:
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:681:    """Controle le do[7mmain[0me unique et les non-goals."""[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:682:    errors: list[str] = [][0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:683:    section = get_section(text, "Do[7mmain[0m Boundary")
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:684:    do[7mmain[0m_count [0m[7m[0m= [0m[7m[0mlen(re.findall(r"^\s*-\s*Domain:\s*\S+", [0m[7m[0msection, [0m
+[7m[0mre.M))[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:685:    if do[7mmain[0m_count != 1:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:686:        errors.append([0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:687:            f"Do[7mmain [0m[7m[0mBoundary [0m[7m[0mmust [0m[7m[0mcontain [0m[7m[0mexactly [0m[7m[0mone [0m[7m[0m'- [0m[7m[0mDomain:' [0m
+[7m[0mentry, [0m[7m[0mfound [0m[7m[0m{domain_count}"[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:688:        )[0m
+[7m [0m[7m [0m[7m[0m.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:689: [0m[7m [0m[7m [0m[7m [0m[7m[0mfor [0m[7m[0mmarker [0m[7m[0min [0m[7m[0m["In [0m[7m[0mscope:", [0m[7m[0m"Out [0m[7m[0mof [0m[7m[0mscope:", [0m[7m[0m"Explicit [0m
+[7m[0mnon-goals:"]:[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:691:            errors.append(f"Do[7mmain[0m Boundary missing marker: {marker}")[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:692:    non_goals_match = re.search([0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:693:        r"Explicit non-goals:\s*\n(?P<body>(?:\s+-\s+.+\n?)+)",[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:698:        errors.append("Do[7mmain [0m[7m[0mBoundary [0m[7m[0mmust [0m[7m[0minclude [0m[7m[0mconcrete [0m[7m[0mexplicit [0m
+[7m[0mnon-goals")[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:699:    return errors[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:700:[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1643:        "Do not broaden the do[7mmain[0m",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1644:        "Do not introduce new dependencies",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1645:        "Do not mark a task complete without validation evidence",[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1705:    errors.extend(validate_do[7mmain[0m_boundary(text))[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1706:    errors.extend(validate_operation_contract(text))[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1707:    errors.extend(validate_required_contracts(text))[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1774:def [7mmain[0m() -> int:[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1775:    """Execute la validation depuis la ligne de commande."""[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1776:    parser = [7margparse[0m.ArgumentParser(description="Validate [0m[7m[0ma [0m[7m[0mCONDAMAD [0m
+[7m[0mstory [0m[7m[0mfile.")[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1777:    parser.[7madd_argument[0m([0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1778:        "--explain-contracts",[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1779:        action="store_true",[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1782:    parser.[7madd_argument[0m([0m
+[7m [0m[7m [0m[7m[0m.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1783: [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m[0m"story", [0m[7m[0mtype=Path, [0m[7m[0mhelp="Path [0m[7m[0mto [0m[7m[0ma [0m[7m[0mCONDAMAD [0m[7m[0mstory [0m[7m[0mmarkdown [0m
+[7m[0mfile."[0m
+[7m[0m  .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1784:    )[0m
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1801:[7mif __name__[0m == "__main__":
+> .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py:1802:    sys.exit([7mmain[0m())
+
+
+codex
+Aucun écart majeur nécessitant une réécriture de story ne ressort de la comparaison: les AC, non-goals, risques, validations et preuves attendues reprennent les enjeux du brief. Je lance donc une seule passe de validation/lint CONDAMAD, dans le venv comme requis.
+Aucune correction story/tracker nécessaire après comparaison ciblée au brief.
+  ✓ Lire le skill et vérifier AGENTS.md
+  ✓ Identifier la story via le tracker
+  ✓ Comparer brief, story et review existante
+  ✓ Corriger les écarts CONDAMAD nécessaires
+  → Valider/linter une seule passe finale
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "if (Test-Path -LiteralPath '.venv\\Scripts\\Activate.ps1') { '.venv present' } else { '.venv missing' }" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "if (Test-Path -LiteralPath '_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\generated\\11-code-review.md') { Select-String -LiteralPath '_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\generated\\11-code-review.md' -Pattern 'CLEAN' } else { 'NO_REVIEW_ARTIFACT' }" in C:\dev\horoscope_front
+ succeeded in 222ms:
+.venv present
+
+ succeeded in 228ms:
+NO_REVIEW_ARTIFACT
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md --strict" in C:\dev\horoscope_front
+ succeeded in 473ms:
+CONDAMAD story validation: PASS
+CONDAMAD story lint: PASS
+
+  ✓ Lire le skill et vérifier AGENTS.md
+  ✓ Identifier la story via le tracker
+  ✓ Comparer brief, story et review existante
+  ✓ Corriger les écarts CONDAMAD nécessaires
+  ✓ Valider/linter une seule passe finale
+codex
+Passe finale terminée.
+
+Écarts trouvés: aucun écart majeur entre le brief `_story_briefs/cs-225-calculation-graph-runtime-contracts.md` et la story ciblée. Objectif, scope, AC, non-goals, risques et validations sont alignés.
+
+Corrections faites: aucune correction nécessaire. Aucun artefact review existant à préserver ou réécrire.
+
+Statut final: story alignée et valide.
+
+Validations lancées dans le venv activé:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md
+python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py _condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md --strict
+```
+
+Résultat: `PASS` pour validation et lint strict.
+
+Note: le skill demandé `C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md` est absent, donc j’ai appliqué le workflow équivalent de revue ciblée avec les contraintes fournies.
+tokens used
+54 059
+Passe finale terminée.
+
+Écarts trouvés: aucun écart majeur entre le brief `_story_briefs/cs-225-calculation-graph-runtime-contracts.md` et la story ciblée. Objectif, scope, AC, non-goals, risques et validations sont alignés.
+
+Corrections faites: aucune correction nécessaire. Aucun artefact review existant à préserver ou réécrire.
+
+Statut final: story alignée et valide.
+
+Validations lancées dans le venv activé:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md
+python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py _condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md --strict
+```
+
+Résultat: `PASS` pour validation et lint strict.
+
+Note: le skill demandé `C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md` est absent, donc j’ai appliqué le workflow équivalent de revue ciblée avec les contraintes fournies.

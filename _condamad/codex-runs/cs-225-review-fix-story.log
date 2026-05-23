@@ -1,0 +1,2274 @@
+OpenAI Codex v0.128.0 (research preview)
+--------
+workdir: C:\dev\horoscope_front
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 019e523c-0ac7-7cc1-9ceb-b7e7de8f511c
+--------
+user
+En utilisant le skill [$condamad-review-fix-story](C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md), fais une revue de redaction de la story generee a partir du brief C:\dev\horoscope_front\_story_briefs\cs-225-calculation-graph-runtime-contracts.md.
+
+Objectif:
+- Trouve la story concernee via `_condamad/stories/story-status.md` en utilisant la colonne `Source` egale au brief.
+- Lance une review de redaction de la story.
+- Corrige directement les issues trouvees dans la story, le tracker, les guardrails ou les artefacts CONDAMAD concernes.
+- Relance la review apres correction.
+- Continue jusqu'a ce que la review ne trouve plus d'issue actionnable.
+
+Contraintes d'execution non interactive:
+- Ne modifie pas le code applicatif hors artefacts CONDAMAD de story/review.
+- Ne lis pas `_condamad/stories/regression-guardrails.md` en entier; utilise les IDs deja cites par la story/review ou une recherche ciblee par ID/surface.
+- Ne relis pas les fichiers complets des skills/validateurs sauf diagnostic inconnu impossible a comprendre depuis la sortie de commande.
+- Ne cherche pas les validateurs avec `rg --files`; utilise directement `.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py` et `.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py`.
+- Lis `AGENTS.md` seulement apres `Test-Path AGENTS.md`; si absent, note-le une seule fois sans erreur.
+- Ne lance pas `git status`, `git diff` ou `git show` si `.git` est absent; note une seule fois que ce dossier n'est pas un depot Git.
+- Si la story cible `backend` ou `frontend` mais que les racines attendues sont absentes, ne remplace pas `ready-to-dev` par `blocked` pour cette seule raison.
+- Dans ce cas, conserve ou ajoute `Repository structure alert:` et indique que l'implementation creera les repertoires/fichiers manquants si le scope reste confirme.
+- Ne transforme pas une alerte de structure repository en blocker tant que `condamad_story_validate.py` et `condamad_story_lint.py --strict` passent.
+- Ne recopie pas les gros fichiers dans ta reponse.
+- Si tu modifies une ligne de table Markdown, garde-la sous 160 caracteres avant validation.
+- Deux tentatives maximum pour une meme commande ou correction identique.
+- Si le blocage persiste, consigne-le dans le log et termine avec statut explicite.
+- Garde la sortie courte: cycle de review, issues corrigees, validations lancees, statut final.
+- Termine des que la story est clean selon la review de redaction.
+codex
+Je vais utiliser le skill demandé et limiter le périmètre aux artefacts CONDAMAD liés à la story/review. Je commence par charger ses consignes, vérifier `AGENTS.md`, puis retrouver la story depuis le tracker.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path AGENTS.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -Path _condamad\\stories\\story-status.md -Pattern 'cs-225-calculation-graph-runtime-contracts.md'" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path .agents\\skills\\condamad-review-fix-story\\SKILL.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path .git' in C:\dev\horoscope_front
+ succeeded in 231ms:
+True
+
+ succeeded in 244ms:
+
+_condamad\stories\story-status.md:231:| CS-225 | calculation-graph-runtime-contracts | Creer les contrats runtime du graphe de calcul | ready-to-dev 
+| `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md` | `_story_briefs/[7mcs-225-calculation-graph-runtime-contracts.md[0m` [0m[7m[0m| [0m
+[7m[0m2026-05-23 [0m[7m[0m|[0m
+
+
+ succeeded in 248ms:
+True
+
+2026-05-23T00:28:56.001100Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-review-fix-story\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 321ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-review-fix-story\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+codex
+Le chemin du skill fourni n’existe pas tel quel dans ce workspace, donc je note ce blocage une seule fois et je continue avec le workflow équivalent à partir des artefacts et scripts CONDAMAD disponibles. La story cible est `CS-225` et le workspace est bien un dépôt Git.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content -Path AGENTS.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents\\skills -Directory | Select-Object -ExpandProperty Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path _condamad\\stories\\CS-225-calculation-graph-runtime-contracts" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents\\skills\\condamad-story-writer\\scripts | Select-Object -ExpandProperty Name" in C:\dev\horoscope_front
+ succeeded in 213ms:
+condamad-story-writer
+
+ succeeded in 231ms:
+Objectif: produire une application web maintenable, testée, sécurisée, et cohérente.
+Stack imposée:
+- Backend: Python 3.13
+- Frontend: React (obligatoire)
+- OS cible dev: Windows / PowerShell
+
+1) Règle absolue: environnement Python
+- Toute commande Python (tests, lint, run, scripts) DOIT être exécutée après activation du venv:
+  - PowerShell: .\.venv\Scripts\Activate.ps1
+- Si le venv n'existe pas, le créer en premier, puis l'activer, puis installer les dépendances.
+- Ne jamais exécuter "python", "pip", "pytest", "ruff", etc. hors venv.
+- Dépendances gérées via backend/pyproject.toml (PEP 621):
+  - Installation production: cd backend && pip install .
+  - Installation développement: cd backend && pip install -e ".[dev]"
+  - NE PAS créer de requirements.txt (le pyproject.toml est la source unique)
+
+2) Règles d'or de dev (non négociables)
+- DRY: pas de duplication. Si tu copies/colles, c'est que tu dois refactor.
+- SOLID / orienté objet quand pertinent (pas de classes "fourre-tout").
+- KISS: pas d'over-engineering.
+- Vérifier ton travail: tests + lint + exécution locale. Pas de "ça doit marcher".
+- Lisibilité > astuce. Noms explicites, petites fonctions, responsabilités claires.
+- Documentation minimale obligatoire: tout fichier applicatif nouveau ou significativement modifié doit contenir un commentaire global en français en haut du fichier et des docstrings en français pour les modules/classes/fonctions publiques ou non triviales.
+
+3) Workflow attendu à CHAQUE changement
+- Comprendre la demande, proposer un mini-plan (3–7 étapes max).
+- Modifier le code avec le plus petit delta cohérent.
+- Ajouter/mettre à jour les tests.
+- Exécuter localement: lint + tests (dans le venv).
+- Finir avec un récap: ce qui a été fait, comment tester, risques/limites.
+
+4) Architecture de référence (proposée, à respecter)
+Monorepo:
+- backend/
+- frontend/
+- shared/ (optionnel: contrats, types, OpenAPI, etc.)
+
+Backend (recommandé):
+- Framework API: FastAPI
+- Gestion des dépendances: pyproject.toml (PEP 621) - NE PAS créer de requirements.txt
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+- Structure:
+  backend/
+    app/
+      api/          (routers)
+      core/         (config, logging, sécurité)
+      domain/       (entités, règles métier)
+      services/     (use-cases)
+      infra/        (db, clients externes)
+      tests/
+    pyproject.toml  (source unique des dépendances Python)
+
+Frontend (React obligatoire):
+- Vite + React recommandé
+- Structure:
+  frontend/
+    src/
+      api/          (client HTTP + hooks)
+      components/
+      pages/
+      state/        (store si besoin)
+      utils/
+      tests/
+
+5) Qualité Python (recommandations fortes)
+- Typage: type hints partout sur le code applicatif.
+- Validation d'entrées/sorties: Pydantic.
+- Lint/format: Ruff (format + lint) recommandé.
+- Tests: Pytest.
+- Logging structuré, pas de prints.
+- Commentaires/docstrings: français obligatoire pour le commentaire global de fichier et les docstrings. Les commentaires doivent expliquer l'intention métier/technique, pas paraphraser le code.
+
+Commandes standard (exemples PowerShell, toujours après activation venv):
+- Lint/format:
+  - ruff format .
+  - ruff check .
+- Tests:
+  - pytest -q
+  - Les tests sous `backend/tests/` exécutent `ensure_configured_sqlite_file_matches_alembic_head` (fixture session autouse dans `backend/tests/conftest.py`, **pas** `pytest_sessionstart`, qui s’exécute avant la collecte des tests). La fonction migre chaque fichier SQLite pertinent (`session.engine` et `settings.database_url`) puis applique un `create_all` ORM uniquement sur une base « secondaire » (typiquement le fichier temporaire de `app/tests/conftest.py`), pas sur `horoscope.db`. Pour les tests d’intégration qui partagent la session avec `app/tests/`, utiliser `tests/integration/app_db.py` plutôt qu’un import statique de `SessionLocal`.
+
+6) Qualité Front (recommandations fortes)
+- React en TypeScript recommandé.
+- ESLint + Prettier.
+- Tests: Vitest + Testing Library (minimum sur les composants critiques).
+- Pas de logique métier "importante" dans les composants UI: extraire en hooks/services.
+
+7) Contrats API et intégration front/back
+- Le contrat d'API doit être explicite:
+  - OpenAPI généré côté backend (FastAPI le fait nativement).
+- Le front consomme via un client central (fetch/axios) + gestion d'erreurs uniforme.
+- Toujours gérer:
+  - loading / error / empty states
+  - timeouts côté client si pertinent
+
+8) Données, sécurité, et secrets
+- Jamais de secrets en dur. Utiliser variables d'environnement + fichier .env (non commité).
+- Valider et sanitizer les entrées.
+- CORS: restrictif par défaut (pas de "*") sauf besoin clair.
+- AuthN/AuthZ: ne pas improviser. Si demandé, proposer une implémentation standard (JWT/OAuth) + tests.
+
+9) DB / migrations (si base de données)
+- Utiliser un ORM standard (SQLAlchemy) + migrations (Alembic).
+- Pas de requêtes SQL "cachées" dans la couche UI.
+- Les accès DB passent par une couche infra/repo.
+
+10) Performance et robustesse
+- Éviter le travail bloquant dans les handlers (I/O lourde => background tasks/queue si requis).
+- Pagination sur endpoints listant des collections.
+- Timeout sur appels externes.
+- Gestion propre des exceptions + réponses d'erreur cohérentes.
+
+11) Git et discipline de commits
+- Petits commits, message clair.
+- Ne jamais créer de nouvelle branche Git sauf demande expresse de l'utilisateur.
+- Ne jamais commiter:
+  - .env
+  - .venv
+  - node_modules
+- Mettre à jour README si le mode d'exécution change.
+
+12) Ce que l'agent NE DOIT PAS faire
+- Ne pas inventer des dépendances "magiques" non nécessaires.
+- Ne pas changer la stack (React obligatoire, Python 3.13 côté back).
+- Ne pas introduire 3 façons différentes de faire la même chose.
+- Ne pas "corriger" du style sans raison (refactor massif uniquement si demandé ou si nécessaire).
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+
+13) Checklist de fin (obligatoire avant de conclure)
+- Le venv était activé pour toutes les commandes Python.
+- Lint/format OK.
+- Tests OK.
+- L'app démarre localement (ou instructions exactes pour le faire).
+- Pas de duplication introduite.
+- Les erreurs sont gérées (status codes, messages).
+
+14) Style
+- Aucun style inline : tout doit etre mis en oeuvre dans le fichier .css ou .scss approprie
+- utiliser et reutiliser les variables de couleurs, bordure, marge, etc. present dans les feuilles styles. Verifier leur presence avant de les re creer.
+
+15) Utilisateur test
+- tu peux utiliser l'utilisateur test : daconrilcy@hotmail.com password : admin123
+
+ succeeded in 217ms:
+condamad_story_lint.py
+condamad_story_validate.py
+
+ succeeded in 252ms:
+
+    Directory: C:\dev\horoscope_front\_condamad\stories\CS-225-calculation-graph-runtime-contracts
+
+[32;1mMode   [0m[32;1m              LastWriteTime[0m[32;1m         Length[0m[32;1m Name[0m
+[32;1m----   [0m [32;1m             -------------[0m [32;1m        ------[0m [32;1m----[0m
+-a---          23/05/2026    02:28          24650 00-story.md
+
+
+codex
+Mini-plan: 1) identifier le contrat attendu par les validateurs existants, 2) lancer lint/validate dans le venv, 3) lire uniquement les zones signalées de la story, 4) corriger les artefacts CONDAMAD nécessaires, 5) relancer jusqu’à absence d’issue actionnable ou blocage explicite.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path .agents\\skills\\condamad-story-writer\\SKILL.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path _condamad -Recurse -File -Filter '*review*' | Select-Object -ExpandProperty FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents -Recurse -File -Filter '*review*' | Select-Object -ExpandProperty FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path .venv' in C:\dev\horoscope_front
+ succeeded in 240ms:
+2026-05-23T00:29:09.881831Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-story-writer\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 267ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-story-writer\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\SKILL.md' because it does not exist.[0m
+
+ succeeded in 256ms:
+True
+
+ succeeded in 344ms:
+C:\dev\horoscope_front\_condamad\codex-runs\cs-222-implementation-review-fix.log
+C:\dev\horoscope_front\_condamad\codex-runs\cs-223-review-fix-story.log
+C:\dev\horoscope_front\_condamad\codex-runs\cs-224-review-fix-story.log
+C:\dev\horoscope_front\_condamad\codex-runs\cs-225-review-fix-story.log
+C:\dev\horoscope_front\_condamad\stories\story-writing-review-2026-05-16.md
+C:\dev\horoscope_front\_condamad\stories\align-prompt-generation-story-validation-paths\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\api-adapter-boundary-convergence\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\block-supported-family-prompt-fallbacks\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\centralize-api-http-errors\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-backend-ops-quality-tests\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-converge-remaining-prompt-fallbacks\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-critical-load-scenarios\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-natal-cross-tool-dev-report\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\collect-retained-backend-tests\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-admin-llm-observability-router\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-api-v1-route-architecture\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-backend-test-topology\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-db-test-fixtures\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-horoscope-daily-narration-assembly\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\cover-both-backend-test-roots-in-cross-import-guard\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-001-harden-stripe-webhook-failure-retry-semantics\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-002-upgrade-stripe-api-version-with-webhook-contract-validation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-003-centralize-supported-stripe-webhook-event-ownership\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-004-move-admin-stripe-subscription-refresh-behind-billing-service-boundary\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-005-define-central-stripe-timeout-and-retry-policy\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-006-converger-namespace-racine-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-007-extraire-dependances-infra-hors-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-008-classer-reduire-compatibilites-legacy-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-009-separer-projection-publique-enrichissement-llm\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-010-corriger-resolution-evenements-astro-foundation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-011-supprimer-partage-session-db-calcul-threade-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-012-ajouter-garde-anti-croissance-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-013-propager-ids-correlation-narration-horoscope\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-014-supprimer-physiquement-namespace-racine-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-015-migrer-moteur-pur-prediction-domain-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-016-reclasser-dto-persisted-prediction-hors-namespace-legacy\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-017-decoupler-routeurs-api-namespace-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-018-remplacer-garde-anti-croissance-par-garde-extinction-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-019-clarifier-frontiere-jobs-scripts-backend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-020-classer-backend-docs-par-ownership-et-type-artifact\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-021-aligner-documentation-entitlement-canonique-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-022-uniformiser-gouvernance-docs-llm-source-truth\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-023-converger-emplacement-artefacts-calibration\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-024-repositionner-notes-llm-non-canoniques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-025-repositionner-note-historique-entitlement\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-026-canonicaliser-source-verite-tokens-design-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-027-centraliser-valeurs-visuelles-hardcodees-repetees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-028-formaliser-hierarchie-typographique-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-029-encadrer-styles-inline-statiques-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-030-durcir-fallbacks-variables-css-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-031-classer-surfaces-css-legacy-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-032-ajouter-guards-anti-drift-design-system\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-033-reduire-valeurs-visuelles-typographiques-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-034-convertir-styles-inline-statiques-allowlistes-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-035-reduire-fallbacks-css-allowlistes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-036-stabiliser-isolation-suite-vitest-help-page\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-037-reduire-dette-valeurs-visuelles-hardcodees-hors-lots-migres\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-038-convertir-styles-inline-statiques-turning-points-list\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-039-reduire-fallbacks-css-composants-ui-partages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-040-aligner-registre-markdown-allowlist-fallbacks-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-041-convertir-styles-inline-statiques-restants-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-042-reduire-fallbacks-css-allowlistes-surfaces-partagees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-043-reduire-valeurs-visuelles-typographiques-hardcodees-par-clusters\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-044-reduire-fallbacks-css-layout-shell-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-045-convertir-styles-inline-surfaces-actives\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-046-migrer-cluster-visuel-typographique-prioritaire\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-047-realigner-guard-visual-smoke-typographie-tokenisee\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-048-reduire-lot-courant-fallbacks-css-design-system\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-049-reduire-exceptions-styles-inline-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-050-migrer-lot-prioritaire-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-051-retirer-surfaces-css-legacy-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-052-reduire-cluster-restant-fallbacks-css-natal-chart\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-053-reduire-styles-inline-dynamiques-convertibles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-054-migrer-prochain-cluster-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-055-retirer-selectors-legacy-chat-admin-aliases-compatibility\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-056-reduire-fallbacks-css-restants-apres-refactor\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-057-reduire-styles-inline-dynamiques-convertibles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-058-migrer-cluster-coherent-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-059-retirer-selectors-legacy-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-060-reduire-derniers-fallbacks-css-tokens-premium\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-061-reduire-exceptions-styles-inline-encore-convertibles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-062-migrer-cluster-coherent-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-063-retirer-selectors-legacy-admin-prompts-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-064-retirer-dernier-fallback-css-migration-only\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-065-reduire-exceptions-styles-inline-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-066-migrer-cluster-coherent-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-067-retirer-selectors-legacy-admin-prompts-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-068-converger-namespaces-compatibility-migration-tokens-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-069-migrer-cluster-admin-settings-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-070-retirer-vocabulaire-legacy-admin-prompts-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-071-retirer-alias-css-astrologer-card\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-072-retirer-libelles-legacy-consultations\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-073-migrer-cluster-help-page-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-074-isoler-helppage-tokens-settings-page-scoped\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-075-converger-namespaces-css-migration-only-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-076-supprimer-compatibilites-runtime-frontend-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-077-supprimer-redirects-legacy-admin-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-078-migrer-cluster-prediction-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-079-migrer-cluster-composants-ui-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-080-supprimer-compatibilites-runtime-frontend-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-081-migrer-cluster-chat-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-082-migrer-cluster-app-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-083-fermer-garde-no-legacy-vocabulaire-css-actif\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-084-migrer-cluster-settings-valeurs-visuelles-typographiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-085-migrer-cluster-landing-valeurs-visuelles-typographiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-086-migrer-cluster-admin-valeurs-visuelles-typographiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-088-migrer-surface-subscriptions-helppage-tokens-help\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-090-extraire-domaine-feature-admin-prompts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-091-centraliser-contrats-hooks-api-admin-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-092-reduire-helpers-composants-dupliques-pages-react\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-093-converger-barrels-pages-exports-stale\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-094-classer-converger-routes-alias-publiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-095-ajouter-guards-anti-drift-pages-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-096-decomposer-responsabilites-restantes-admin-prompts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-097-centraliser-appels-api-admin-restants-hors-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-098-classer-centraliser-helpers-formatage-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-099-typer-pages-react-exclues-typescript\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-103-converger-layout-maitre-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-104-monter-landing-via-layout-principal\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-105-rattacher-routes-auth-publiques-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-106-ajouter-guards-hierarchie-layout-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-107-classer-pages-layout-owner\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-108-statuer-pages-publiques-candidates-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-109-fermer-decisions-residuelles-pages-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-110-corriger-garder-validite-css-primitives-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-111-retirer-redecider-exception-inline-style-twocolumnlayout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-112-aligner-statut-source-cs109-cloture\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-113-classer-converger-composants-consommateurs-api\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-114-supprimer-suppressions-typescript-composants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-115-decomposer-natal-interpretation-owner\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-116-classer-fermer-composants-non-consommes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-117-migrer-containers-auth-api-vers-feature-auth\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-118-relocate-natal-interpretation-feature-owner\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-119-supprimer-composants-test-only-sans-ui-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-120-converger-containers-api-restants-components-vers-owners\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-121-definir-primitives-css-generiques-app\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-122-migrer-layouts-etats-actions-vers-primitives-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-123-migrer-cartes-listes-badges-modales-vers-primitives-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-124-bloquer-selecteurs-et-variables-app-specifiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-125-fermer-taxonomie-variables-app-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-126-migrer-ou-garder-explicitement-precision-evidence\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-129-ameliorer-ui-profil-astrologue\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-131-converger-transport-http-frontend-api\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-132-centraliser-enveloppes-erreurs-api-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-133-structurer-modules-api-volumineux\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-134-interdire-imports-api-barrel-internes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-135-clarifier-ownership-support-ops-persona\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-136-definir-politique-facade-api-publique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-137-converger-dark-mode-surfaces-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-138-implementer-fond-dark-astral-avant-aube\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-139-refactoriser-ownership-css-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-140-aligner-themes-visuels-landing-light-dark\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-141-simplifier-hero-preview-landing\hero-preview-after.md
+C:\dev\horoscope_front\_condamad\stories\CS-141-simplifier-hero-preview-landing\hero-preview-before.md
+C:\dev\horoscope_front\_condamad\stories\CS-141-simplifier-hero-preview-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-142-extraire-proprietaire-seo-head-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-143-simplifier-complexite-visuelle-hero-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-144-converger-contrat-visuel-landing-menu-mobile\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-145-ajouter-garde-complexite-visuelle-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-146-corriger-responsive-accessibilite-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-148-corriger-catalogue-astrologers-responsive-conversion\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-149-optimiser-hierarchie-premium-catalogue-astrologers\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-152-normaliser-profils-signes-astraux\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-155-isoler-reference-runtime-astrologie-maisons\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-156-extraire-interpretation-astrologique-maisons\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-157-scinder-profils-maison-astrologie-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-158-brancher-scoring-produit-sur-runtime-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-159-ajouter-garde-frontiere-astrology-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-160-canonicaliser-contrats-interpretation-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-161-ajouter-profils-interpretation-maisons\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-162-heriter-regles-orbes-systemes-astrologiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-163-creer-runtime-canonique-force-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-164-enrichir-aspect-result-projection-publique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-165-construire-builder-interpretation-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-166-calculer-aspects-dominants-et-socle-synastrie\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-167-separer-semantique-et-editorial-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-168-canonicaliser-modifiers-et-poids-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-169-preparer-pattern-runtime-et-graphe-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-170-ajouter-provenance-et-priorisation-semantique-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-171-converger-referentiels-astrologie-db-json\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-173-localiser-interface-langue-utilisateur\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-174-localiser-libelles-astrologiques-backend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-175-creer-runtime-canonique-signes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-176-calculer-signature-balance-theme\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-177-finaliser-i18n-astrologique-backend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-178-documenter-zodiaque-ayanamsa-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-179-fermer-i18n-prediction-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-180-aligner-registre-modeles-db-infra\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-181-supprimer-constantes-astrologiques-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-182-remplacer-vocabulaire-public-astro-par-referentiels-db\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-183-fix-long-pytest-daily-prediction-aspects\generated\11-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-185-brancher-profils-signes-runtime-natal\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-185-brancher-profils-signes-runtime-natal\generated\11-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-187-brancher-points-astraux-runtime-natal\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-188-exploiter-profils-points-astraux-interpretation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-189-brancher-etoiles-fixes-scoring-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-190-seed-astral-dignity-reference-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-191-advanced-planet-dignity-engine\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-192-planetary-condition-profile-v1\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-193-planetary-condition-signals\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-194-dominant-planets-engine\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-194-dominant-planets-engine\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-195-advanced-planetary-conditions\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-196-interpretation-adapter-layer\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-196-interpretation-adapter-layer\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-197-sect-audit-explicit-contract\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-198-planet-sect-condition-normalization\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-199-advanced-sect-scoring-integration\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-200-hellenistic-medieval-golden-cases\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-200-hellenistic-medieval-golden-cases\generated\11-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-200-hellenistic-medieval-golden-cases\generated\12-brief-alignment-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-201-natal-public-json-projection-cleanup\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-202-natal-expert-panel\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-202-natal-expert-panel\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-202-natal-expert-panel\generated\12-brief-alignment-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-203-natal-dignity-audit-persistence\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-203-natal-dignity-audit-persistence\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-204-hayz-rejoicing-explicit-condition-contracts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-205-sect-aware-triplicity-golden-cases\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-206-benefic-malefic-sect-mitigation-signals\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-207-traditional-advanced-final-audit-documentation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-208-advanced-planetary-conditions-contracts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-209-solar-proximity-conditions-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-210-planetary-motion-conditions-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-211-solar-phase-relation-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-212-moon-phase-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-212-moon-phase-calculator\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-213-planetary-visibility-conditions-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-213-planetary-visibility-conditions-calculator\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-214-integrate-advanced-planetary-conditions-natal-result\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-214-integrate-advanced-planetary-conditions-natal-result\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-215-integrate-advanced-planetary-conditions-accidental-dignities\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-215-integrate-advanced-planetary-conditions-accidental-dignities\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-216-advanced-planetary-conditions-interpretation-profiles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-216-advanced-planetary-conditions-interpretation-profiles\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-217-unified-chart-object-runtime-contract\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-218-aspect-engine-chart-object-consumption\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-218-aspect-engine-chart-object-consumption\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-219-chart-object-motion-visibility-payloads\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-220-dignity-dominance-capability-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-220-dignity-dominance-capability-runtime\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-221-chart-object-house-position-rulership-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-221-chart-object-house-position-rulership-runtime\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-222-fixed-star-conjunction-runtime-from-chart-objects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\decide-public-email-unsubscribe-canonicalization\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\formalize-consultation-guidance-prompt-ownership\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\formalize-scripts-ownership\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\guard-backend-pytest-test-roots\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\harden-api-adapter-boundary-guards\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\harden-local-dev-stack-script\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\portable-llm-release-readiness\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\priorite-3-runtime-maisons-riches\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\reclassify-story-regression-guards\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\reduce-api-sql-boundary-debt-public-email\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\refactor-api-v1-routers\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-api-v1-router-logic\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-bash-stripe-dev-listener\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-cross-test-module-imports\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-llm-narrator-legacy-direct-openai\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-root-route-removal-audit-validator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\replace-deprecated-llm-narrator-tests\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\replace-direct-sessionlocal-test-imports\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\replace-seed-validation-facade-test\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\stabilize-transit-performance-benchmark\generated\11-code-review.md
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents\\skills\\condamad-story-writer -Recurse | Select-Object FullName,Length" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path _condamad\\codex-runs\\cs-225-review-fix-story.log" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -Path _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md -Pattern '"'^#|''^Status:|''^Source:|Repository structure alert|Guardrail|Acceptance|Validation|TODO|TBD|blocked|ready-to-dev|backend|frontend'"'" in C:\dev\horoscope_front
+ succeeded in 237ms:
+
+[32;1mFullName                                                                                      [0m[32;1m Length[0m
+[32;1m--------                                                                                      [0m [32;1m------[0m
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts                            
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py     8403
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py 63912
+
+
+ succeeded in 272ms:
+
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:1:[7m# [0m[7m[0mStory [0m[7m[0mCS-225 [0m[7m[0mcalculation-graph-runtime-contracts: [0m[7m[0mCreer [0m[7m[0mles [0m[7m[0mcontrats [0m
+[7m[0mruntime [0m[7m[0mdu [0m[7m[0mgraphe [0m[7m[0mde [0m[7m[0mcalcul[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:2:[7mStatus:[0m ready-to-dev
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:4:[7m#[0m# 1. Objective
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:9:[7m#[0m# 2. Trigger / Source
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:15:- Skill availability note: 
+`.agents/skills/condamad-story-writer/SKILL.md`, le cheatsheet demande et `resolve_[7mguardrail[0ms.py` [0m[7m[0mne [0m[7m[0msont [0m[7m[0mpas [0m[7m[0mpresents.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:16:- Source-alignment review: la story ajoute des contrats et [7mvalidation[0ms [0m
+[7m[0mpurs, [0m[7m[0msans [0m[7m[0mAPI, [0m[7m[0mDB, [0m[7m[0mfrontend, [0m[7m[0mmigration [0m[7m[0mdu [0m[7m[0mpipeline [0m[7m[0mnatal [0m[7m[0mou [0m[7m[0mdependance [0m[7m[0mexterne [0m[7m[0mde [0m[7m[0mgraph [0m[7m[0mprocessing.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:18:[7m#[0m# 3. Domain Boundary
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:22:- Domain: `[7mbackend[0m/app/domain/astrology/runtime`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:26:  - creer `CalculationGraph[7mValidation[0mResult` [0m[7m[0met [0m[7m[0mles [0m[7m[0merreurs [0m
+[7m[0mdeterministes [0m[7m[0mdu [0m[7m[0mvalidator;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:36:  - changer une route FastAPI, un schema public, OpenAPI, DB, 
+migrations, [7mfrontend [0m[7m[0mou [0m[7m[0mprompts;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:40:  - ne pas enrichir `_condamad/stories/regression-[7mguardrail[0ms.md` [0m[7m[0mpendant [0m
+[7m[0mcette [0m[7m[0mgeneration [0m[7m[0mnormale;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:41:  - ne pas ajouter de dossier de base sous `[7mbackend[0m/`;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:45:[7m#[0m# 4. Operation Contract
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:49:- Archetype reason: la story ajoute un socle de contrats [7mbackend[0m-domain [0m
+[7m[0met [0m[7m[0mun [0m[7m[0mvalidator [0m[7m[0mpur [0m[7m[0mpour [0m[7m[0mune [0m[7m[0morchestration [0m[7m[0mfuture.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:52:  - autorise: nouveaux modules de contrats et de [7mvalidation [0m[7m[0msous [0m[7m[0mle [0m
+[7m[0mruntime [0m[7m[0mastrologique;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:55:  - interdit: execution metier d'un graphe, changement API, DB, 
+[7mfrontend[0m, [0m[7m[0mpipeline [0m[7m[0mnatal [0m[7m[0mou [0m[7m[0mcontrats [0m[7m[0mpublics.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:58:- User decision required if: l'implementation touche une route publique, 
+une migration DB, le [7mfrontend[0m, [0m[7m[0mune [0m[7m[0mdependance [0m[7m[0mexterne [0m[7m[0mou [0m[7m[0m`build_natal_result`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:59:- Additional [7mvalidation[0m rules:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:60:  - les contrats utilisent des dataclasses immuables et typees sans 
+dependance FastAPI, SQLAlchemy, infra, settings, LLM ou [7mfrontend[0m;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:68:[7m#[0m# 4a. Required Contracts
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:81:[7m#[0m# 4b. Runtime Source of Truth
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:84:  - 
+`[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:85:  - 
+`[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:86:  - `[7mbackend[0m/app/domain/astrology/runtime/chart_object_runtime_data.py` [0m
+[7m[0mpour [0m[7m[0mcompatibilite [0m[7m[0mdes [0m[7m[0mfuturs [0m[7m[0mnodes;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:92:  - tests unitaires sous `[7mbackend[0m/tests/unit/domain/astrology/`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:94:  - `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:95:  - `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:101:[7m#[0m# 4c. Baseline / Before-After Rule
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:104:  - `Get-Content 
+[7mbackend[0m/app/domain/astrology/runtime/chart_object_runtime_data.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:105:  - `Get-Content 
+[7mbackend[0m/app/domain/astrology/runtime/astrological_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:108:  - `Select-String "RG-144|RG-148" 
+_condamad/stories/regression-[7mguardrail[0ms.md`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:111:  - tests CS-225 du [7mValidation[0m Plan;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:114:  - diff adjacent sur API, DB, migrations, [7mfrontend[0m et pipeline natal.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:126:[7m#[0m# 4d. Ownership Routing Rule
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:130:| Contrats de graphe de calcul | 
+`[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_contracts.py` [0m[7m[0m| [0m[7m[0mroute [0m[7m[0mAPI, [0m[7m[0mservice [0m[7m[0mmonolithique, [0m[7m[0mfrontend [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:131:| [7mValidation [0m[7m[0mdeclarative [0m[7m[0m| [0m
+[7m[0m`backend/app/domain/astrology/runtime/calculation_graph_validator.py` [0m[7m[0m| [0m[7m[0m`natal_calculation.py`, [0m[7m[0minfra, [0m[7m[0mDB [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:134:| Tests unitaires | `[7mbackend[0m/tests/unit/domain/astrology/` [0m[7m[0m| [0m[7m[0mtests [0m[7m[0mAPI [0m
+[7m[0mopaques [0m[7m[0mpour [0m[7m[0mlogique [0m[7m[0mpure [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:136:[7m#[0m# 4e. Allowlist / Exception Register
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:140:| `[7mbackend[0m/app/domain/astrology/services/natal_calculation.py` [0m[7m[0m| [0m[7m[0mordre [0m
+[7m[0mprocedural [0m[7m[0mexistant [0m[7m[0m| [0m[7m[0mPipeline [0m[7m[0mnatal [0m[7m[0mnon [0m[7m[0mmigre [0m[7m[0mpar [0m[7m[0mCS-225. [0m[7m[0m| [0m[7m[0mTemporary; [0m[7m[0mexit [0m[7m[0mcondition: [0m[7m[0mfuture [0m[7m[0mmigration [0m[7m[0mstory [0m[7m[0mapproved. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:144:[7mValidation[0m rule:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:148:[7m#[0m# 4f. Contract Shape
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:159:  - `CalculationGraph[7mValidation[0mResult`;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:160:  - `CalculationGraph[7mValidation[0mError`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:195:  - `topological_order` may be empty when [7mvalidation [0m[7m[0mfails [0m[7m[0mbefore [0m
+[7m[0mordering.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:200:- [7mFrontend[0m type impact:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:201:  - none; no [7mfrontend[0m contract changes are allowed.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:205:[7m#[0m# 4g. Batch Migration Plan
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:210:| 2 | [7mvalidation [0m[7m[0mmanuelle [0m[7m[0mdes [0m[7m[0mdependances [0m[7m[0m| [0m[7m[0mvalidator [0m[7m[0mpur [0m[7m[0m| [0m[7m[0maucun [0m
+[7m[0mruntime [0m[7m[0m| [0m[7m[0mvalidator [0m[7m[0mtests [0m[7m[0m| [0m[7m[0mtopological [0m[7m[0morder [0m[7m[0m| [0m[7m[0mcycle [0m[7m[0mnon [0m[7m[0mdetecte [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:216:[7m#[0m# 4h. Reintroduction Guard
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:219:  - aucun `networkx`, `igraph` ou dependance externe de graph 
+processing dans `[7mbackend[0m/app/domain/astrology`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:221:  - aucun import FastAPI, SQLAlchemy, infra, settings, LLM ou [7mfrontend [0m
+[7m[0mdans [0m[7m[0mles [0m[7m[0mmodules [0m[7m[0mde [0m[7m[0mcontrats [0m[7m[0met [0m[7m[0mvalidator;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:229:  - scan cible `rg -n "networkx|igraph|graphlib" 
+[7mbackend[0m/app/domain/astrology [0m[7m[0mbackend/tests [0m[7m[0m-g [0m[7m[0m"*.py"`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:231:  - 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:232:  - 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:233:  - `[7mbackend[0m/tests/architecture` [0m[7m[0mseulement [0m[7m[0msi [0m[7m[0mun [0m[7m[0mguard [0m[7m[0md'imports [0m
+[7m[0mtransverse [0m[7m[0mest [0m[7m[0majoute.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:235:  - chemins complets `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:236:  - chemins complets `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:239:[7m#[0m# 4i. Persistent Evidence Artifacts
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:243:| [7mValidation [0m[7m[0mevidence [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/validation.md` [0m[7m[0m| [0m[7m[0mConserver [0m[7m[0mtests, [0m[7m[0mlint [0m[7m[0met [0m[7m[0mresultats [0m[7m[0mcibles [0m[7m[0mCS-225. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:247:[7m#[0m# 5. Current State Evidence
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:249:- Le runtime astrologique contient deja des contrats specialises sous 
+`[7mbackend[0m/app/domain/astrology/runtime`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:254:- Evidence 1: `[7mbackend[0m/app/domain/astrology/runtime` [0m[7m[0m- [0m[7m[0mcontrats [0m[7m[0mruntime [0m
+[7m[0mexistants [0m[7m[0mconstates [0m[7m[0mpar [0m[7m[0mlecture [0m[7m[0mciblee [0m[7m[0mdu [0m[7m[0mdossier.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:256:[7m#[0m# 6. Target State
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:266:[7m#[0m# 6a. Regression Guardrails
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:270:- [7mbackend[0m-domain: yes;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:275:- [7mfrontend[0m/style/build/i18n/auth: no.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:277:Selected [7mguardrail[0ms:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:288:- [7mFrontend[0m/style [0m[7m[0mguardrails: [0m[7m[0mhors [0m[7m[0mscope, [0m[7m[0maucun [0m[7m[0mfichier [0m[7m[0mfrontend [0m[7m[0mou [0m[7m[0mCSS [0m
+[7m[0mn'est [0m[7m[0mtouche.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:292:- Aucun [7mguardrail [0m[7m[0mglobal [0m[7m[0mdedie [0m[7m[0mau [0m[7m[0mgraphe [0m[7m[0mde [0m[7m[0mcalcul [0m[7m[0mdeclaratif [0m[7m[0mn'existe [0m
+[7m[0mencore; [0m[7m[0mne [0m[7m[0mpas [0m[7m[0menrichir [0m[7m[0mle [0m[7m[0mregistre [0m[7m[0mpendant [0m[7m[0mcette [0m[7m[0mgeneration [0m[7m[0mnormale.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:294:[7m#[0m# 7. Acceptance Criteria
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:298:| AC1 | Les contrats de graphe de calcul existent sous 
+`[7mbackend[0m/app/domain/astrology/runtime`. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mimport [0m[7m[0mdirect [0m[7m[0mdes [0m
+[7m[0mdataclasses. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:299:| AC2 | Les nodes declarent inputs, outputs, dependances obligatoires, 
+dependances optionnelles et calculator stable. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mexemple [0m
+[7m[0m`natal_chart_v1`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:300:| AC3 | Les [7mvalidation[0ms [0m[7m[0mdetectent [0m[7m[0mdependances [0m[7m[0minconnues, [0m[7m[0mdoublons [0m[7m[0mde [0m
+[7m[0mnode, [0m[7m[0mdoublons [0m[7m[0md'output [0m[7m[0met [0m[7m[0mcycles. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_calculation_graph_validator.py`; [0m[7m[0mmessages [0m[7m[0md'erreurs [0m
+[7m[0mdeterministes. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:301:| AC4 | Aucun calcul astrologique metier ni execution de graph n'est 
+introduit. | AST guard + `rg -n "importlib|__import__|build_natal_result" [7mbackend[0m/app/domain/astrology/runtime [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:302:| AC5 | Le graphe de calcul est distingue du graphe astrologique 
+semantique et de `chart_objects`. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mdoc [0m
+[7m[0m`docs/architecture/astrology-calculation-graph.md`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:303:| AC6 | Aucun changement API, DB ou [7mfrontend [0m[7m[0mn'est [0m[7m[0mintroduit. [0m[7m[0m| [0m[7m[0m`pytest [0m
+[7m[0m-q [0m[7m[0mbackend/tests/architecture/test_api_contract_neutrality.py`; [0m[7m[0mruntime [0m[7m[0mevidence [0m[7m[0m`app.routes`, [0m[7m[0m`app.openapi()`, [0m[7m[0m`TestClient`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:304:| AC7 | Les tests unitaires du validator passent avec ordre topologique 
+deterministe. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:305:| AC8 | La documentation d'architecture existe et mentionne les limites 
+de CS-225. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mdoc [0m[7m[0mpath [0m[7m[0mcible. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:307:[7m#[0m# 8. Implementation Tasks
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:311:- [ ] Task: creer `calculation_graph_validator.py` sans import API, DB, 
+infra, settings, LLM ou [7mfrontend[0m. [0m[7m[0m(AC: [0m[7m[0mAC3, [0m[7m[0mAC4)[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:312:- [ ] Task: implementer les [7mvalidation[0ms [0m[7m[0mde [0m[7m[0mchamps [0m[7m[0mvides, [0m[7m[0mdoublons, [0m
+[7m[0mdependances [0m[7m[0minconnues, [0m[7m[0mcycles [0m[7m[0mdirects [0m[7m[0met [0m[7m[0mindirects. [0m[7m[0m(AC: [0m[7m[0mAC3)[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:319:[7m#[0m# 9. Mandatory Reuse / DRY Constraints
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:321:- Reutiliser les conventions de dataclasses immuables deja presentes 
+dans `[7mbackend[0m/app/domain/astrology/runtime`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:322:- Reutiliser les helpers de tests et fixtures [7mbackend [0m[7m[0mexistants [0m[7m[0mau [0m[7m[0mlieu [0m
+[7m[0mde [0m[7m[0mcreer [0m[7m[0mune [0m[7m[0mseconde [0m[7m[0mtopologie [0m[7m[0mde [0m[7m[0mtest.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:326:[7m#[0m# 10. No Legacy / Forbidden Paths
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:328:- Ne pas modifier le [7mfrontend[0m.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:337:[7m#[0m# 11. Generated Contract Check
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:348:[7m#[0m# 12. Files to Inspect First
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:350:- `[7mbackend[0m/app/domain/astrology/runtime/chart_object_runtime_data.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:351:- 
+`[7mbackend[0m/app/domain/astrology/runtime/astrological_graph_contracts.py`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:352:- `[7mbackend[0m/app/domain/astrology/services/natal_calculation.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:353:- `[7mbackend[0m/tests/unit/domain/astrology/`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:354:- `_condamad/stories/regression-[7mguardrail[0ms.md` [0m[7m[0mavec [0m[7m[0mrecherche [0m[7m[0mciblee [0m
+[7m[0m`RG-144|RG-148`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:356:[7m#[0m# 13. Expected Files to Modify
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:360:- `[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_contracts.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:361:- `[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_validator.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:363:- 
+`_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/[7mvalidation[0m.md`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:367:- 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:368:- 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:372:- `[7mfrontend[0m/src`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:373:- `[7mbackend[0m/alembic`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:374:- `[7mbackend[0m/app/api`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:375:- `[7mbackend[0m/app/domain/astrology/services/natal_calculation.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:377:[7m#[0m# 14. Dependency Policy
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:382:[7m#[0m# 15. Validation Plan
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:388:cd [7mbackend[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:397:pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:398:pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:404:rg -n "networkx|igraph|graphlib" [7mbackend[0m/app/domain/astrology [0m
+[7m[0mbackend/tests [0m[7m[0m-g [0m[7m[0m"*.py"[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:405:rg -n "CalculationGraphDefinition|CalculationNodeDefinition" 
+[7mbackend[0m/app/domain/astrology/runtime [0m[7m[0mbackend/tests[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:411:pytest -q [7mbackend[0m/tests/architecture/test_api_contract_neutrality.py
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:416:[7m#[0m# 16. Regression Risks
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:423:[7m#[0m# 17. Dev Agent Instructions
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:431:- Ne pas utiliser de style inline, CSS ou [7mfrontend[0m: [0m[7m[0maucun [0m[7m[0mfichier [0m
+[7m[0mfrontend [0m[7m[0mn'est [0m[7m[0mattendu.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:433:- Executer les [7mvalidation[0ms apres activation du venv.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:434:- Do not mark a task complete without [7mvalidation[0m evidence.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:439:[7m#[0m# 18. CS-225 Final Evidence Template
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:442:[7m#[0m# CS-225 Final Evidence
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:444:[7m#[0m## Contracts
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:449:[7m#[0m## Validation
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:455:[7m#[0m## Scope
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:457:- No API, DB or [7mfrontend[0m changes.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:460:[7m#[0m## Commands
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:464:- pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:465:- pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:468:[7m#[0m# 19. Story Generation Validation Notes
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:473:- `resolve_[7mguardrail[0ms.py` [0m[7m[0mis [0m[7m[0munavailable; [0m[7m[0mguardrails [0m[7m[0mwere [0m[7m[0mselected [0m[7m[0mby [0m
+[7m[0mtargeted [0m[7m[0mID [0m[7m[0msearch [0m[7m[0monly.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:474:- No regression [7mguardrail[0m registry update was made.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:477:[7m#[0m# 20. References
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:480:- `_condamad/stories/regression-[7mguardrail[0ms.md` [0m[7m[0mtargeted [0m[7m[0mIDs [0m
+[7m[0m`RG-144|RG-148`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:481:- 
+`_condamad/stories/CS-224-legacy-runtime-surface-cleanup-[7mguardrail[0ms/00-story.md` [0m[7m[0mstructure [0m[7m[0mreference.[0m
+
+
+ succeeded in 343ms:
+OpenAI Codex v0.128.0 (research preview)
+--------
+workdir: C:\dev\horoscope_front
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 019e523c-0ac7-7cc1-9ceb-b7e7de8f511c
+--------
+user
+En utilisant le skill [$condamad-review-fix-story](C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md), fais une revue de redaction de la story generee a partir du brief C:\dev\horoscope_front\_story_briefs\cs-225-calculation-graph-runtime-contracts.md.
+
+Objectif:
+- Trouve la story concernee via `_condamad/stories/story-status.md` en utilisant la colonne `Source` egale au brief.
+- Lance une review de redaction de la story.
+- Corrige directement les issues trouvees dans la story, le tracker, les guardrails ou les artefacts CONDAMAD concernes.
+- Relance la review apres correction.
+- Continue jusqu'a ce que la review ne trouve plus d'issue actionnable.
+
+Contraintes d'execution non interactive:
+- Ne modifie pas le code applicatif hors artefacts CONDAMAD de story/review.
+- Ne lis pas `_condamad/stories/regression-guardrails.md` en entier; utilise les IDs deja cites par la story/review ou une recherche ciblee par ID/surface.
+- Ne relis pas les fichiers complets des skills/validateurs sauf diagnostic inconnu impossible a comprendre depuis la sortie de commande.
+- Ne cherche pas les validateurs avec `rg --files`; utilise directement `.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py` et `.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py`.
+- Lis `AGENTS.md` seulement apres `Test-Path AGENTS.md`; si absent, note-le une seule fois sans erreur.
+- Ne lance pas `git status`, `git diff` ou `git show` si `.git` est absent; note une seule fois que ce dossier n'est pas un depot Git.
+- Si la story cible `backend` ou `frontend` mais que les racines attendues sont absentes, ne remplace pas `ready-to-dev` par `blocked` pour cette seule raison.
+- Dans ce cas, conserve ou ajoute `Repository structure alert:` et indique que l'implementation creera les repertoires/fichiers manquants si le scope reste confirme.
+- Ne transforme pas une alerte de structure repository en blocker tant que `condamad_story_validate.py` et `condamad_story_lint.py --strict` passent.
+- Ne recopie pas les gros fichiers dans ta reponse.
+- Si tu modifies une ligne de table Markdown, garde-la sous 160 caracteres avant validation.
+- Deux tentatives maximum pour une meme commande ou correction identique.
+- Si le blocage persiste, consigne-le dans le log et termine avec statut explicite.
+- Garde la sortie courte: cycle de review, issues corrigees, validations lancees, statut final.
+- Termine des que la story est clean selon la review de redaction.
+codex
+Je vais utiliser le skill demandé et limiter le périmètre aux artefacts CONDAMAD liés à la story/review. Je commence par charger ses consignes, vérifier `AGENTS.md`, puis retrouver la story depuis le tracker.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path AGENTS.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -Path _condamad\\stories\\story-status.md -Pattern 'cs-225-calculation-graph-runtime-contracts.md'" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path .agents\\skills\\condamad-review-fix-story\\SKILL.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path .git' in C:\dev\horoscope_front
+ succeeded in 231ms:
+True
+
+ succeeded in 244ms:
+
+_condamad\stories\story-status.md:231:| CS-225 | calculation-graph-runtime-contracts | Creer les contrats runtime du graphe de calcul | ready-to-dev 
+| `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md` | `_story_briefs/[7mcs-225-calculation-graph-runtime-contracts.md[0m` [0m[7m[0m| [0m
+[7m[0m2026-05-23 [0m[7m[0m|[0m
+
+
+ succeeded in 248ms:
+True
+
+2026-05-23T00:28:56.001100Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-review-fix-story\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 321ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-review-fix-story\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-review-fix-story\SKILL.md' because it does not exist.[0m
+
+codex
+Le chemin du skill fourni n’existe pas tel quel dans ce workspace, donc je note ce blocage une seule fois et je continue avec le workflow équivalent à partir des artefacts et scripts CONDAMAD disponibles. La story cible est `CS-225` et le workspace est bien un dépôt Git.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content -Path AGENTS.md' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents\\skills -Directory | Select-Object -ExpandProperty Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path _condamad\\stories\\CS-225-calculation-graph-runtime-contracts" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents\\skills\\condamad-story-writer\\scripts | Select-Object -ExpandProperty Name" in C:\dev\horoscope_front
+ succeeded in 213ms:
+condamad-story-writer
+
+ succeeded in 231ms:
+Objectif: produire une application web maintenable, testée, sécurisée, et cohérente.
+Stack imposée:
+- Backend: Python 3.13
+- Frontend: React (obligatoire)
+- OS cible dev: Windows / PowerShell
+
+1) Règle absolue: environnement Python
+- Toute commande Python (tests, lint, run, scripts) DOIT être exécutée après activation du venv:
+  - PowerShell: .\.venv\Scripts\Activate.ps1
+- Si le venv n'existe pas, le créer en premier, puis l'activer, puis installer les dépendances.
+- Ne jamais exécuter "python", "pip", "pytest", "ruff", etc. hors venv.
+- Dépendances gérées via backend/pyproject.toml (PEP 621):
+  - Installation production: cd backend && pip install .
+  - Installation développement: cd backend && pip install -e ".[dev]"
+  - NE PAS créer de requirements.txt (le pyproject.toml est la source unique)
+
+2) Règles d'or de dev (non négociables)
+- DRY: pas de duplication. Si tu copies/colles, c'est que tu dois refactor.
+- SOLID / orienté objet quand pertinent (pas de classes "fourre-tout").
+- KISS: pas d'over-engineering.
+- Vérifier ton travail: tests + lint + exécution locale. Pas de "ça doit marcher".
+- Lisibilité > astuce. Noms explicites, petites fonctions, responsabilités claires.
+- Documentation minimale obligatoire: tout fichier applicatif nouveau ou significativement modifié doit contenir un commentaire global en français en haut du fichier et des docstrings en français pour les modules/classes/fonctions publiques ou non triviales.
+
+3) Workflow attendu à CHAQUE changement
+- Comprendre la demande, proposer un mini-plan (3–7 étapes max).
+- Modifier le code avec le plus petit delta cohérent.
+- Ajouter/mettre à jour les tests.
+- Exécuter localement: lint + tests (dans le venv).
+- Finir avec un récap: ce qui a été fait, comment tester, risques/limites.
+
+4) Architecture de référence (proposée, à respecter)
+Monorepo:
+- backend/
+- frontend/
+- shared/ (optionnel: contrats, types, OpenAPI, etc.)
+
+Backend (recommandé):
+- Framework API: FastAPI
+- Gestion des dépendances: pyproject.toml (PEP 621) - NE PAS créer de requirements.txt
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+- Structure:
+  backend/
+    app/
+      api/          (routers)
+      core/         (config, logging, sécurité)
+      domain/       (entités, règles métier)
+      services/     (use-cases)
+      infra/        (db, clients externes)
+      tests/
+    pyproject.toml  (source unique des dépendances Python)
+
+Frontend (React obligatoire):
+- Vite + React recommandé
+- Structure:
+  frontend/
+    src/
+      api/          (client HTTP + hooks)
+      components/
+      pages/
+      state/        (store si besoin)
+      utils/
+      tests/
+
+5) Qualité Python (recommandations fortes)
+- Typage: type hints partout sur le code applicatif.
+- Validation d'entrées/sorties: Pydantic.
+- Lint/format: Ruff (format + lint) recommandé.
+- Tests: Pytest.
+- Logging structuré, pas de prints.
+- Commentaires/docstrings: français obligatoire pour le commentaire global de fichier et les docstrings. Les commentaires doivent expliquer l'intention métier/technique, pas paraphraser le code.
+
+Commandes standard (exemples PowerShell, toujours après activation venv):
+- Lint/format:
+  - ruff format .
+  - ruff check .
+- Tests:
+  - pytest -q
+  - Les tests sous `backend/tests/` exécutent `ensure_configured_sqlite_file_matches_alembic_head` (fixture session autouse dans `backend/tests/conftest.py`, **pas** `pytest_sessionstart`, qui s’exécute avant la collecte des tests). La fonction migre chaque fichier SQLite pertinent (`session.engine` et `settings.database_url`) puis applique un `create_all` ORM uniquement sur une base « secondaire » (typiquement le fichier temporaire de `app/tests/conftest.py`), pas sur `horoscope.db`. Pour les tests d’intégration qui partagent la session avec `app/tests/`, utiliser `tests/integration/app_db.py` plutôt qu’un import statique de `SessionLocal`.
+
+6) Qualité Front (recommandations fortes)
+- React en TypeScript recommandé.
+- ESLint + Prettier.
+- Tests: Vitest + Testing Library (minimum sur les composants critiques).
+- Pas de logique métier "importante" dans les composants UI: extraire en hooks/services.
+
+7) Contrats API et intégration front/back
+- Le contrat d'API doit être explicite:
+  - OpenAPI généré côté backend (FastAPI le fait nativement).
+- Le front consomme via un client central (fetch/axios) + gestion d'erreurs uniforme.
+- Toujours gérer:
+  - loading / error / empty states
+  - timeouts côté client si pertinent
+
+8) Données, sécurité, et secrets
+- Jamais de secrets en dur. Utiliser variables d'environnement + fichier .env (non commité).
+- Valider et sanitizer les entrées.
+- CORS: restrictif par défaut (pas de "*") sauf besoin clair.
+- AuthN/AuthZ: ne pas improviser. Si demandé, proposer une implémentation standard (JWT/OAuth) + tests.
+
+9) DB / migrations (si base de données)
+- Utiliser un ORM standard (SQLAlchemy) + migrations (Alembic).
+- Pas de requêtes SQL "cachées" dans la couche UI.
+- Les accès DB passent par une couche infra/repo.
+
+10) Performance et robustesse
+- Éviter le travail bloquant dans les handlers (I/O lourde => background tasks/queue si requis).
+- Pagination sur endpoints listant des collections.
+- Timeout sur appels externes.
+- Gestion propre des exceptions + réponses d'erreur cohérentes.
+
+11) Git et discipline de commits
+- Petits commits, message clair.
+- Ne jamais créer de nouvelle branche Git sauf demande expresse de l'utilisateur.
+- Ne jamais commiter:
+  - .env
+  - .venv
+  - node_modules
+- Mettre à jour README si le mode d'exécution change.
+
+12) Ce que l'agent NE DOIT PAS faire
+- Ne pas inventer des dépendances "magiques" non nécessaires.
+- Ne pas changer la stack (React obligatoire, Python 3.13 côté back).
+- Ne pas introduire 3 façons différentes de faire la même chose.
+- Ne pas "corriger" du style sans raison (refactor massif uniquement si demandé ou si nécessaire).
+- Ne pas ajouter de dossier de base dans `backend/` sans accord explicite de l'utilisateur.
+
+13) Checklist de fin (obligatoire avant de conclure)
+- Le venv était activé pour toutes les commandes Python.
+- Lint/format OK.
+- Tests OK.
+- L'app démarre localement (ou instructions exactes pour le faire).
+- Pas de duplication introduite.
+- Les erreurs sont gérées (status codes, messages).
+
+14) Style
+- Aucun style inline : tout doit etre mis en oeuvre dans le fichier .css ou .scss approprie
+- utiliser et reutiliser les variables de couleurs, bordure, marge, etc. present dans les feuilles styles. Verifier leur presence avant de les re creer.
+
+15) Utilisateur test
+- tu peux utiliser l'utilisateur test : daconrilcy@hotmail.com password : admin123
+
+ succeeded in 217ms:
+condamad_story_lint.py
+condamad_story_validate.py
+
+ succeeded in 252ms:
+
+    Directory: C:\dev\horoscope_front\_condamad\stories\CS-225-calculation-graph-runtime-contracts
+
+[32;1mMode   [0m[32;1m              LastWriteTime[0m[32;1m         Length[0m[32;1m Name[0m
+[32;1m----   [0m [32;1m             -------------[0m [32;1m        ------[0m [32;1m----[0m
+-a---          23/05/2026    02:28          24650 00-story.md
+
+
+codex
+Mini-plan: 1) identifier le contrat attendu par les validateurs existants, 2) lancer lint/validate dans le venv, 3) lire uniquement les zones signalées de la story, 4) corriger les artefacts CONDAMAD nécessaires, 5) relancer jusqu’à absence d’issue actionnable ou blocage explicite.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path .agents\\skills\\condamad-story-writer\\SKILL.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path _condamad -Recurse -File -Filter '*review*' | Select-Object -ExpandProperty FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents -Recurse -File -Filter '*review*' | Select-Object -ExpandProperty FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Test-Path .venv' in C:\dev\horoscope_front
+ succeeded in 240ms:
+2026-05-23T00:29:09.881831Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-story-writer\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 267ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path .agents\skills\condamad-story-writer\SKILL.md[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-story-writer\SKILL.md' because it does not exist.[0m
+
+ succeeded in 256ms:
+True
+
+ succeeded in 344ms:
+C:\dev\horoscope_front\_condamad\codex-runs\cs-222-implementation-review-fix.log
+C:\dev\horoscope_front\_condamad\codex-runs\cs-223-review-fix-story.log
+C:\dev\horoscope_front\_condamad\codex-runs\cs-224-review-fix-story.log
+C:\dev\horoscope_front\_condamad\codex-runs\cs-225-review-fix-story.log
+C:\dev\horoscope_front\_condamad\stories\story-writing-review-2026-05-16.md
+C:\dev\horoscope_front\_condamad\stories\align-prompt-generation-story-validation-paths\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\api-adapter-boundary-convergence\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\block-supported-family-prompt-fallbacks\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\centralize-api-http-errors\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-backend-ops-quality-tests\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-converge-remaining-prompt-fallbacks\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-critical-load-scenarios\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\classify-natal-cross-tool-dev-report\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\collect-retained-backend-tests\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-admin-llm-observability-router\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-api-v1-route-architecture\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-backend-test-topology\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-db-test-fixtures\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\converge-horoscope-daily-narration-assembly\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\cover-both-backend-test-roots-in-cross-import-guard\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-001-harden-stripe-webhook-failure-retry-semantics\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-002-upgrade-stripe-api-version-with-webhook-contract-validation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-003-centralize-supported-stripe-webhook-event-ownership\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-004-move-admin-stripe-subscription-refresh-behind-billing-service-boundary\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-005-define-central-stripe-timeout-and-retry-policy\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-006-converger-namespace-racine-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-007-extraire-dependances-infra-hors-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-008-classer-reduire-compatibilites-legacy-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-009-separer-projection-publique-enrichissement-llm\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-010-corriger-resolution-evenements-astro-foundation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-011-supprimer-partage-session-db-calcul-threade-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-012-ajouter-garde-anti-croissance-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-013-propager-ids-correlation-narration-horoscope\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-014-supprimer-physiquement-namespace-racine-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-015-migrer-moteur-pur-prediction-domain-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-016-reclasser-dto-persisted-prediction-hors-namespace-legacy\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-017-decoupler-routeurs-api-namespace-app-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-018-remplacer-garde-anti-croissance-par-garde-extinction-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-019-clarifier-frontiere-jobs-scripts-backend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-020-classer-backend-docs-par-ownership-et-type-artifact\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-021-aligner-documentation-entitlement-canonique-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-022-uniformiser-gouvernance-docs-llm-source-truth\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-023-converger-emplacement-artefacts-calibration\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-024-repositionner-notes-llm-non-canoniques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-025-repositionner-note-historique-entitlement\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-026-canonicaliser-source-verite-tokens-design-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-027-centraliser-valeurs-visuelles-hardcodees-repetees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-028-formaliser-hierarchie-typographique-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-029-encadrer-styles-inline-statiques-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-030-durcir-fallbacks-variables-css-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-031-classer-surfaces-css-legacy-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-032-ajouter-guards-anti-drift-design-system\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-033-reduire-valeurs-visuelles-typographiques-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-034-convertir-styles-inline-statiques-allowlistes-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-035-reduire-fallbacks-css-allowlistes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-036-stabiliser-isolation-suite-vitest-help-page\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-037-reduire-dette-valeurs-visuelles-hardcodees-hors-lots-migres\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-038-convertir-styles-inline-statiques-turning-points-list\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-039-reduire-fallbacks-css-composants-ui-partages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-040-aligner-registre-markdown-allowlist-fallbacks-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-041-convertir-styles-inline-statiques-restants-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-042-reduire-fallbacks-css-allowlistes-surfaces-partagees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-043-reduire-valeurs-visuelles-typographiques-hardcodees-par-clusters\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-044-reduire-fallbacks-css-layout-shell-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-045-convertir-styles-inline-surfaces-actives\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-046-migrer-cluster-visuel-typographique-prioritaire\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-047-realigner-guard-visual-smoke-typographie-tokenisee\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-048-reduire-lot-courant-fallbacks-css-design-system\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-049-reduire-exceptions-styles-inline-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-050-migrer-lot-prioritaire-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-051-retirer-surfaces-css-legacy-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-052-reduire-cluster-restant-fallbacks-css-natal-chart\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-053-reduire-styles-inline-dynamiques-convertibles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-054-migrer-prochain-cluster-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-055-retirer-selectors-legacy-chat-admin-aliases-compatibility\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-056-reduire-fallbacks-css-restants-apres-refactor\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-057-reduire-styles-inline-dynamiques-convertibles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-058-migrer-cluster-coherent-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-059-retirer-selectors-legacy-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-060-reduire-derniers-fallbacks-css-tokens-premium\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-061-reduire-exceptions-styles-inline-encore-convertibles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-062-migrer-cluster-coherent-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-063-retirer-selectors-legacy-admin-prompts-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-064-retirer-dernier-fallback-css-migration-only\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-065-reduire-exceptions-styles-inline-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-066-migrer-cluster-coherent-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-067-retirer-selectors-legacy-admin-prompts-aliases-compatibility-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-068-converger-namespaces-compatibility-migration-tokens-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-069-migrer-cluster-admin-settings-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-070-retirer-vocabulaire-legacy-admin-prompts-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-071-retirer-alias-css-astrologer-card\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-072-retirer-libelles-legacy-consultations\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-073-migrer-cluster-help-page-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-074-isoler-helppage-tokens-settings-page-scoped\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-075-converger-namespaces-css-migration-only-restants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-076-supprimer-compatibilites-runtime-frontend-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-077-supprimer-redirects-legacy-admin-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-078-migrer-cluster-prediction-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-079-migrer-cluster-composants-ui-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-080-supprimer-compatibilites-runtime-frontend-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-081-migrer-cluster-chat-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-082-migrer-cluster-app-valeurs-visuelles-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-083-fermer-garde-no-legacy-vocabulaire-css-actif\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-084-migrer-cluster-settings-valeurs-visuelles-typographiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-085-migrer-cluster-landing-valeurs-visuelles-typographiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-086-migrer-cluster-admin-valeurs-visuelles-typographiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-088-migrer-surface-subscriptions-helppage-tokens-help\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-090-extraire-domaine-feature-admin-prompts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-091-centraliser-contrats-hooks-api-admin-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-092-reduire-helpers-composants-dupliques-pages-react\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-093-converger-barrels-pages-exports-stale\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-094-classer-converger-routes-alias-publiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-095-ajouter-guards-anti-drift-pages-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-096-decomposer-responsabilites-restantes-admin-prompts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-097-centraliser-appels-api-admin-restants-hors-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-098-classer-centraliser-helpers-formatage-pages\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-099-typer-pages-react-exclues-typescript\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-103-converger-layout-maitre-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-104-monter-landing-via-layout-principal\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-105-rattacher-routes-auth-publiques-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-106-ajouter-guards-hierarchie-layout-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-107-classer-pages-layout-owner\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-108-statuer-pages-publiques-candidates-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-109-fermer-decisions-residuelles-pages-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-110-corriger-garder-validite-css-primitives-layout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-111-retirer-redecider-exception-inline-style-twocolumnlayout\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-112-aligner-statut-source-cs109-cloture\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-113-classer-converger-composants-consommateurs-api\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-114-supprimer-suppressions-typescript-composants\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-115-decomposer-natal-interpretation-owner\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-116-classer-fermer-composants-non-consommes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-117-migrer-containers-auth-api-vers-feature-auth\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-118-relocate-natal-interpretation-feature-owner\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-119-supprimer-composants-test-only-sans-ui-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-120-converger-containers-api-restants-components-vers-owners\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-121-definir-primitives-css-generiques-app\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-122-migrer-layouts-etats-actions-vers-primitives-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-123-migrer-cartes-listes-badges-modales-vers-primitives-css\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-124-bloquer-selecteurs-et-variables-app-specifiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-125-fermer-taxonomie-variables-app-restantes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-126-migrer-ou-garder-explicitement-precision-evidence\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-129-ameliorer-ui-profil-astrologue\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-131-converger-transport-http-frontend-api\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-132-centraliser-enveloppes-erreurs-api-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-133-structurer-modules-api-volumineux\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-134-interdire-imports-api-barrel-internes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-135-clarifier-ownership-support-ops-persona\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-136-definir-politique-facade-api-publique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-137-converger-dark-mode-surfaces-frontend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-138-implementer-fond-dark-astral-avant-aube\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-139-refactoriser-ownership-css-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-140-aligner-themes-visuels-landing-light-dark\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-141-simplifier-hero-preview-landing\hero-preview-after.md
+C:\dev\horoscope_front\_condamad\stories\CS-141-simplifier-hero-preview-landing\hero-preview-before.md
+C:\dev\horoscope_front\_condamad\stories\CS-141-simplifier-hero-preview-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-142-extraire-proprietaire-seo-head-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-143-simplifier-complexite-visuelle-hero-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-144-converger-contrat-visuel-landing-menu-mobile\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-145-ajouter-garde-complexite-visuelle-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-146-corriger-responsive-accessibilite-landing\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-148-corriger-catalogue-astrologers-responsive-conversion\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-149-optimiser-hierarchie-premium-catalogue-astrologers\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-152-normaliser-profils-signes-astraux\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-155-isoler-reference-runtime-astrologie-maisons\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-156-extraire-interpretation-astrologique-maisons\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-157-scinder-profils-maison-astrologie-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-158-brancher-scoring-produit-sur-runtime-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-159-ajouter-garde-frontiere-astrology-prediction\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-160-canonicaliser-contrats-interpretation-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-161-ajouter-profils-interpretation-maisons\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-162-heriter-regles-orbes-systemes-astrologiques\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-163-creer-runtime-canonique-force-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-164-enrichir-aspect-result-projection-publique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-165-construire-builder-interpretation-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-166-calculer-aspects-dominants-et-socle-synastrie\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-167-separer-semantique-et-editorial-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-168-canonicaliser-modifiers-et-poids-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-169-preparer-pattern-runtime-et-graphe-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-170-ajouter-provenance-et-priorisation-semantique-aspects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-171-converger-referentiels-astrologie-db-json\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-173-localiser-interface-langue-utilisateur\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-174-localiser-libelles-astrologiques-backend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-175-creer-runtime-canonique-signes\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-176-calculer-signature-balance-theme\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-177-finaliser-i18n-astrologique-backend\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-178-documenter-zodiaque-ayanamsa-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-179-fermer-i18n-prediction-astrologique\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-180-aligner-registre-modeles-db-infra\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-181-supprimer-constantes-astrologiques-hardcodees\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-182-remplacer-vocabulaire-public-astro-par-referentiels-db\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-183-fix-long-pytest-daily-prediction-aspects\generated\11-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-185-brancher-profils-signes-runtime-natal\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-185-brancher-profils-signes-runtime-natal\generated\11-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-187-brancher-points-astraux-runtime-natal\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-188-exploiter-profils-points-astraux-interpretation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-189-brancher-etoiles-fixes-scoring-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-190-seed-astral-dignity-reference-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-191-advanced-planet-dignity-engine\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-192-planetary-condition-profile-v1\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-193-planetary-condition-signals\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-194-dominant-planets-engine\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-194-dominant-planets-engine\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-195-advanced-planetary-conditions\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-196-interpretation-adapter-layer\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-196-interpretation-adapter-layer\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-197-sect-audit-explicit-contract\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-198-planet-sect-condition-normalization\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-199-advanced-sect-scoring-integration\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-200-hellenistic-medieval-golden-cases\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-200-hellenistic-medieval-golden-cases\generated\11-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-200-hellenistic-medieval-golden-cases\generated\12-brief-alignment-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-201-natal-public-json-projection-cleanup\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-202-natal-expert-panel\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-202-natal-expert-panel\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-202-natal-expert-panel\generated\12-brief-alignment-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-203-natal-dignity-audit-persistence\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-203-natal-dignity-audit-persistence\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-204-hayz-rejoicing-explicit-condition-contracts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-205-sect-aware-triplicity-golden-cases\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-206-benefic-malefic-sect-mitigation-signals\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-207-traditional-advanced-final-audit-documentation\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-208-advanced-planetary-conditions-contracts\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-209-solar-proximity-conditions-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-210-planetary-motion-conditions-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-211-solar-phase-relation-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-212-moon-phase-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-212-moon-phase-calculator\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-213-planetary-visibility-conditions-calculator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-213-planetary-visibility-conditions-calculator\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-214-integrate-advanced-planetary-conditions-natal-result\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-214-integrate-advanced-planetary-conditions-natal-result\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-215-integrate-advanced-planetary-conditions-accidental-dignities\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-215-integrate-advanced-planetary-conditions-accidental-dignities\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-216-advanced-planetary-conditions-interpretation-profiles\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-216-advanced-planetary-conditions-interpretation-profiles\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-217-unified-chart-object-runtime-contract\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-218-aspect-engine-chart-object-consumption\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-218-aspect-engine-chart-object-consumption\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-219-chart-object-motion-visibility-payloads\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-220-dignity-dominance-capability-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-220-dignity-dominance-capability-runtime\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-221-chart-object-house-position-rulership-runtime\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-221-chart-object-house-position-rulership-runtime\generated\11-story-writing-review.md
+C:\dev\horoscope_front\_condamad\stories\CS-222-fixed-star-conjunction-runtime-from-chart-objects\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\decide-public-email-unsubscribe-canonicalization\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\formalize-consultation-guidance-prompt-ownership\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\formalize-scripts-ownership\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\guard-backend-pytest-test-roots\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\harden-api-adapter-boundary-guards\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\harden-local-dev-stack-script\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\portable-llm-release-readiness\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\priorite-3-runtime-maisons-riches\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\reclassify-story-regression-guards\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\reduce-api-sql-boundary-debt-public-email\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\refactor-api-v1-routers\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-api-v1-router-logic\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-bash-stripe-dev-listener\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-cross-test-module-imports\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-llm-narrator-legacy-direct-openai\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\remove-root-route-removal-audit-validator\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\replace-deprecated-llm-narrator-tests\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\replace-direct-sessionlocal-test-imports\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\replace-seed-validation-facade-test\generated\11-code-review.md
+C:\dev\horoscope_front\_condamad\stories\stabilize-transit-performance-benchmark\generated\11-code-review.md
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -Path .agents\\skills\\condamad-story-writer -Recurse | Select-Object FullName,Length" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path _condamad\\codex-runs\\cs-225-review-fix-story.log" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -Path _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md -Pattern '"'^#|''^Status:|''^Source:|Repository structure alert|Guardrail|Acceptance|Validation|TODO|TBD|blocked|ready-to-dev|backend|frontend'"'" in C:\dev\horoscope_front
+ succeeded in 237ms:
+
+[32;1mFullName                                                                                      [0m[32;1m Length[0m
+[32;1m--------                                                                                      [0m [32;1m------[0m
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts                            
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py     8403
+C:\dev\horoscope_front\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py 63912
+
+
+ succeeded in 272ms:
+
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:1:[7m# [0m[7m[0mStory [0m[7m[0mCS-225 [0m[7m[0mcalculation-graph-runtime-contracts: [0m[7m[0mCreer [0m[7m[0mles [0m[7m[0mcontrats [0m
+[7m[0mruntime [0m[7m[0mdu [0m[7m[0mgraphe [0m[7m[0mde [0m[7m[0mcalcul[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:2:[7mStatus:[0m ready-to-dev
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:4:[7m#[0m# 1. Objective
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:9:[7m#[0m# 2. Trigger / Source
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:15:- Skill availability note: 
+`.agents/skills/condamad-story-writer/SKILL.md`, le cheatsheet demande et `resolve_[7mguardrail[0ms.py` [0m[7m[0mne [0m[7m[0msont [0m[7m[0mpas [0m[7m[0mpresents.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:16:- Source-alignment review: la story ajoute des contrats et [7mvalidation[0ms [0m
+[7m[0mpurs, [0m[7m[0msans [0m[7m[0mAPI, [0m[7m[0mDB, [0m[7m[0mfrontend, [0m[7m[0mmigration [0m[7m[0mdu [0m[7m[0mpipeline [0m[7m[0mnatal [0m[7m[0mou [0m[7m[0mdependance [0m[7m[0mexterne [0m[7m[0mde [0m[7m[0mgraph [0m[7m[0mprocessing.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:18:[7m#[0m# 3. Domain Boundary
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:22:- Domain: `[7mbackend[0m/app/domain/astrology/runtime`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:26:  - creer `CalculationGraph[7mValidation[0mResult` [0m[7m[0met [0m[7m[0mles [0m[7m[0merreurs [0m
+[7m[0mdeterministes [0m[7m[0mdu [0m[7m[0mvalidator;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:36:  - changer une route FastAPI, un schema public, OpenAPI, DB, 
+migrations, [7mfrontend [0m[7m[0mou [0m[7m[0mprompts;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:40:  - ne pas enrichir `_condamad/stories/regression-[7mguardrail[0ms.md` [0m[7m[0mpendant [0m
+[7m[0mcette [0m[7m[0mgeneration [0m[7m[0mnormale;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:41:  - ne pas ajouter de dossier de base sous `[7mbackend[0m/`;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:45:[7m#[0m# 4. Operation Contract
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:49:- Archetype reason: la story ajoute un socle de contrats [7mbackend[0m-domain [0m
+[7m[0met [0m[7m[0mun [0m[7m[0mvalidator [0m[7m[0mpur [0m[7m[0mpour [0m[7m[0mune [0m[7m[0morchestration [0m[7m[0mfuture.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:52:  - autorise: nouveaux modules de contrats et de [7mvalidation [0m[7m[0msous [0m[7m[0mle [0m
+[7m[0mruntime [0m[7m[0mastrologique;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:55:  - interdit: execution metier d'un graphe, changement API, DB, 
+[7mfrontend[0m, [0m[7m[0mpipeline [0m[7m[0mnatal [0m[7m[0mou [0m[7m[0mcontrats [0m[7m[0mpublics.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:58:- User decision required if: l'implementation touche une route publique, 
+une migration DB, le [7mfrontend[0m, [0m[7m[0mune [0m[7m[0mdependance [0m[7m[0mexterne [0m[7m[0mou [0m[7m[0m`build_natal_result`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:59:- Additional [7mvalidation[0m rules:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:60:  - les contrats utilisent des dataclasses immuables et typees sans 
+dependance FastAPI, SQLAlchemy, infra, settings, LLM ou [7mfrontend[0m;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:68:[7m#[0m# 4a. Required Contracts
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:81:[7m#[0m# 4b. Runtime Source of Truth
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:84:  - 
+`[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:85:  - 
+`[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:86:  - `[7mbackend[0m/app/domain/astrology/runtime/chart_object_runtime_data.py` [0m
+[7m[0mpour [0m[7m[0mcompatibilite [0m[7m[0mdes [0m[7m[0mfuturs [0m[7m[0mnodes;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:92:  - tests unitaires sous `[7mbackend[0m/tests/unit/domain/astrology/`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:94:  - `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:95:  - `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:101:[7m#[0m# 4c. Baseline / Before-After Rule
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:104:  - `Get-Content 
+[7mbackend[0m/app/domain/astrology/runtime/chart_object_runtime_data.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:105:  - `Get-Content 
+[7mbackend[0m/app/domain/astrology/runtime/astrological_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:108:  - `Select-String "RG-144|RG-148" 
+_condamad/stories/regression-[7mguardrail[0ms.md`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:111:  - tests CS-225 du [7mValidation[0m Plan;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:114:  - diff adjacent sur API, DB, migrations, [7mfrontend[0m et pipeline natal.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:126:[7m#[0m# 4d. Ownership Routing Rule
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:130:| Contrats de graphe de calcul | 
+`[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_contracts.py` [0m[7m[0m| [0m[7m[0mroute [0m[7m[0mAPI, [0m[7m[0mservice [0m[7m[0mmonolithique, [0m[7m[0mfrontend [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:131:| [7mValidation [0m[7m[0mdeclarative [0m[7m[0m| [0m
+[7m[0m`backend/app/domain/astrology/runtime/calculation_graph_validator.py` [0m[7m[0m| [0m[7m[0m`natal_calculation.py`, [0m[7m[0minfra, [0m[7m[0mDB [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:134:| Tests unitaires | `[7mbackend[0m/tests/unit/domain/astrology/` [0m[7m[0m| [0m[7m[0mtests [0m[7m[0mAPI [0m
+[7m[0mopaques [0m[7m[0mpour [0m[7m[0mlogique [0m[7m[0mpure [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:136:[7m#[0m# 4e. Allowlist / Exception Register
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:140:| `[7mbackend[0m/app/domain/astrology/services/natal_calculation.py` [0m[7m[0m| [0m[7m[0mordre [0m
+[7m[0mprocedural [0m[7m[0mexistant [0m[7m[0m| [0m[7m[0mPipeline [0m[7m[0mnatal [0m[7m[0mnon [0m[7m[0mmigre [0m[7m[0mpar [0m[7m[0mCS-225. [0m[7m[0m| [0m[7m[0mTemporary; [0m[7m[0mexit [0m[7m[0mcondition: [0m[7m[0mfuture [0m[7m[0mmigration [0m[7m[0mstory [0m[7m[0mapproved. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:144:[7mValidation[0m rule:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:148:[7m#[0m# 4f. Contract Shape
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:159:  - `CalculationGraph[7mValidation[0mResult`;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:160:  - `CalculationGraph[7mValidation[0mError`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:195:  - `topological_order` may be empty when [7mvalidation [0m[7m[0mfails [0m[7m[0mbefore [0m
+[7m[0mordering.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:200:- [7mFrontend[0m type impact:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:201:  - none; no [7mfrontend[0m contract changes are allowed.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:205:[7m#[0m# 4g. Batch Migration Plan
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:210:| 2 | [7mvalidation [0m[7m[0mmanuelle [0m[7m[0mdes [0m[7m[0mdependances [0m[7m[0m| [0m[7m[0mvalidator [0m[7m[0mpur [0m[7m[0m| [0m[7m[0maucun [0m
+[7m[0mruntime [0m[7m[0m| [0m[7m[0mvalidator [0m[7m[0mtests [0m[7m[0m| [0m[7m[0mtopological [0m[7m[0morder [0m[7m[0m| [0m[7m[0mcycle [0m[7m[0mnon [0m[7m[0mdetecte [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:216:[7m#[0m# 4h. Reintroduction Guard
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:219:  - aucun `networkx`, `igraph` ou dependance externe de graph 
+processing dans `[7mbackend[0m/app/domain/astrology`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:221:  - aucun import FastAPI, SQLAlchemy, infra, settings, LLM ou [7mfrontend [0m
+[7m[0mdans [0m[7m[0mles [0m[7m[0mmodules [0m[7m[0mde [0m[7m[0mcontrats [0m[7m[0met [0m[7m[0mvalidator;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:229:  - scan cible `rg -n "networkx|igraph|graphlib" 
+[7mbackend[0m/app/domain/astrology [0m[7m[0mbackend/tests [0m[7m[0m-g [0m[7m[0m"*.py"`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:231:  - 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:232:  - 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:233:  - `[7mbackend[0m/tests/architecture` [0m[7m[0mseulement [0m[7m[0msi [0m[7m[0mun [0m[7m[0mguard [0m[7m[0md'imports [0m
+[7m[0mtransverse [0m[7m[0mest [0m[7m[0majoute.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:235:  - chemins complets `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:236:  - chemins complets `pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`;[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:239:[7m#[0m# 4i. Persistent Evidence Artifacts
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:243:| [7mValidation [0m[7m[0mevidence [0m[7m[0m| [0m
+[7m[0m`_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/validation.md` [0m[7m[0m| [0m[7m[0mConserver [0m[7m[0mtests, [0m[7m[0mlint [0m[7m[0met [0m[7m[0mresultats [0m[7m[0mcibles [0m[7m[0mCS-225. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:247:[7m#[0m# 5. Current State Evidence
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:249:- Le runtime astrologique contient deja des contrats specialises sous 
+`[7mbackend[0m/app/domain/astrology/runtime`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:254:- Evidence 1: `[7mbackend[0m/app/domain/astrology/runtime` [0m[7m[0m- [0m[7m[0mcontrats [0m[7m[0mruntime [0m
+[7m[0mexistants [0m[7m[0mconstates [0m[7m[0mpar [0m[7m[0mlecture [0m[7m[0mciblee [0m[7m[0mdu [0m[7m[0mdossier.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:256:[7m#[0m# 6. Target State
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:266:[7m#[0m# 6a. Regression Guardrails
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:270:- [7mbackend[0m-domain: yes;
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:275:- [7mfrontend[0m/style/build/i18n/auth: no.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:277:Selected [7mguardrail[0ms:
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:288:- [7mFrontend[0m/style [0m[7m[0mguardrails: [0m[7m[0mhors [0m[7m[0mscope, [0m[7m[0maucun [0m[7m[0mfichier [0m[7m[0mfrontend [0m[7m[0mou [0m[7m[0mCSS [0m
+[7m[0mn'est [0m[7m[0mtouche.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:292:- Aucun [7mguardrail [0m[7m[0mglobal [0m[7m[0mdedie [0m[7m[0mau [0m[7m[0mgraphe [0m[7m[0mde [0m[7m[0mcalcul [0m[7m[0mdeclaratif [0m[7m[0mn'existe [0m
+[7m[0mencore; [0m[7m[0mne [0m[7m[0mpas [0m[7m[0menrichir [0m[7m[0mle [0m[7m[0mregistre [0m[7m[0mpendant [0m[7m[0mcette [0m[7m[0mgeneration [0m[7m[0mnormale.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:294:[7m#[0m# 7. Acceptance Criteria
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:298:| AC1 | Les contrats de graphe de calcul existent sous 
+`[7mbackend[0m/app/domain/astrology/runtime`. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mimport [0m[7m[0mdirect [0m[7m[0mdes [0m
+[7m[0mdataclasses. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:299:| AC2 | Les nodes declarent inputs, outputs, dependances obligatoires, 
+dependances optionnelles et calculator stable. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mexemple [0m
+[7m[0m`natal_chart_v1`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:300:| AC3 | Les [7mvalidation[0ms [0m[7m[0mdetectent [0m[7m[0mdependances [0m[7m[0minconnues, [0m[7m[0mdoublons [0m[7m[0mde [0m
+[7m[0mnode, [0m[7m[0mdoublons [0m[7m[0md'output [0m[7m[0met [0m[7m[0mcycles. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_calculation_graph_validator.py`; [0m[7m[0mmessages [0m[7m[0md'erreurs [0m
+[7m[0mdeterministes. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:301:| AC4 | Aucun calcul astrologique metier ni execution de graph n'est 
+introduit. | AST guard + `rg -n "importlib|__import__|build_natal_result" [7mbackend[0m/app/domain/astrology/runtime [0m[7m[0m-g [0m[7m[0m"*.py"`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:302:| AC5 | Le graphe de calcul est distingue du graphe astrologique 
+semantique et de `chart_objects`. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mdoc [0m
+[7m[0m`docs/architecture/astrology-calculation-graph.md`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:303:| AC6 | Aucun changement API, DB ou [7mfrontend [0m[7m[0mn'est [0m[7m[0mintroduit. [0m[7m[0m| [0m[7m[0m`pytest [0m
+[7m[0m-q [0m[7m[0mbackend/tests/architecture/test_api_contract_neutrality.py`; [0m[7m[0mruntime [0m[7m[0mevidence [0m[7m[0m`app.routes`, [0m[7m[0m`app.openapi()`, [0m[7m[0m`TestClient`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:304:| AC7 | Les tests unitaires du validator passent avec ordre topologique 
+deterministe. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:305:| AC8 | La documentation d'architecture existe et mentionne les limites 
+de CS-225. | `pytest -q [7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; [0m[7m[0mdoc [0m[7m[0mpath [0m[7m[0mcible. [0m[7m[0m|[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:307:[7m#[0m# 8. Implementation Tasks
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:311:- [ ] Task: creer `calculation_graph_validator.py` sans import API, DB, 
+infra, settings, LLM ou [7mfrontend[0m. [0m[7m[0m(AC: [0m[7m[0mAC3, [0m[7m[0mAC4)[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:312:- [ ] Task: implementer les [7mvalidation[0ms [0m[7m[0mde [0m[7m[0mchamps [0m[7m[0mvides, [0m[7m[0mdoublons, [0m
+[7m[0mdependances [0m[7m[0minconnues, [0m[7m[0mcycles [0m[7m[0mdirects [0m[7m[0met [0m[7m[0mindirects. [0m[7m[0m(AC: [0m[7m[0mAC3)[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:319:[7m#[0m# 9. Mandatory Reuse / DRY Constraints
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:321:- Reutiliser les conventions de dataclasses immuables deja presentes 
+dans `[7mbackend[0m/app/domain/astrology/runtime`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:322:- Reutiliser les helpers de tests et fixtures [7mbackend [0m[7m[0mexistants [0m[7m[0mau [0m[7m[0mlieu [0m
+[7m[0mde [0m[7m[0mcreer [0m[7m[0mune [0m[7m[0mseconde [0m[7m[0mtopologie [0m[7m[0mde [0m[7m[0mtest.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:326:[7m#[0m# 10. No Legacy / Forbidden Paths
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:328:- Ne pas modifier le [7mfrontend[0m.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:337:[7m#[0m# 11. Generated Contract Check
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:348:[7m#[0m# 12. Files to Inspect First
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:350:- `[7mbackend[0m/app/domain/astrology/runtime/chart_object_runtime_data.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:351:- 
+`[7mbackend[0m/app/domain/astrology/runtime/astrological_graph_contracts.py`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:352:- `[7mbackend[0m/app/domain/astrology/services/natal_calculation.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:353:- `[7mbackend[0m/tests/unit/domain/astrology/`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:354:- `_condamad/stories/regression-[7mguardrail[0ms.md` [0m[7m[0mavec [0m[7m[0mrecherche [0m[7m[0mciblee [0m
+[7m[0m`RG-144|RG-148`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:356:[7m#[0m# 13. Expected Files to Modify
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:360:- `[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_contracts.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:361:- `[7mbackend[0m/app/domain/astrology/runtime/calculation_graph_validator.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:363:- 
+`_condamad/stories/CS-225-calculation-graph-runtime-contracts/evidence/[7mvalidation[0m.md`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:367:- 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:368:- 
+`[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:372:- `[7mfrontend[0m/src`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:373:- `[7mbackend[0m/alembic`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:374:- `[7mbackend[0m/app/api`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:375:- `[7mbackend[0m/app/domain/astrology/services/natal_calculation.py`.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:377:[7m#[0m# 14. Dependency Policy
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:382:[7m#[0m# 15. Validation Plan
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:388:cd [7mbackend[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:397:pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:398:pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:404:rg -n "networkx|igraph|graphlib" [7mbackend[0m/app/domain/astrology [0m
+[7m[0mbackend/tests [0m[7m[0m-g [0m[7m[0m"*.py"[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:405:rg -n "CalculationGraphDefinition|CalculationNodeDefinition" 
+[7mbackend[0m/app/domain/astrology/runtime [0m[7m[0mbackend/tests[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:411:pytest -q [7mbackend[0m/tests/architecture/test_api_contract_neutrality.py
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:416:[7m#[0m# 16. Regression Risks
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:423:[7m#[0m# 17. Dev Agent Instructions
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:431:- Ne pas utiliser de style inline, CSS ou [7mfrontend[0m: [0m[7m[0maucun [0m[7m[0mfichier [0m
+[7m[0mfrontend [0m[7m[0mn'est [0m[7m[0mattendu.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:433:- Executer les [7mvalidation[0ms apres activation du venv.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:434:- Do not mark a task complete without [7mvalidation[0m evidence.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:439:[7m#[0m# 18. CS-225 Final Evidence Template
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:442:[7m#[0m# CS-225 Final Evidence
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:444:[7m#[0m## Contracts
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:449:[7m#[0m## Validation
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:455:[7m#[0m## Scope
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:457:- No API, DB or [7mfrontend[0m changes.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:460:[7m#[0m## Commands
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:464:- pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_contracts.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:465:- pytest -q 
+[7mbackend[0m/tests/unit/domain/astrology/test_calculation_graph_validator.py[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:468:[7m#[0m# 19. Story Generation Validation Notes
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:473:- `resolve_[7mguardrail[0ms.py` [0m[7m[0mis [0m[7m[0munavailable; [0m[7m[0mguardrails [0m[7m[0mwere [0m[7m[0mselected [0m[7m[0mby [0m
+[7m[0mtargeted [0m[7m[0mID [0m[7m[0msearch [0m[7m[0monly.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:474:- No regression [7mguardrail[0m registry update was made.
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:477:[7m#[0m# 20. References
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:480:- `_condamad/stories/regression-[7mguardrail[0ms.md` [0m[7m[0mtargeted [0m[7m[0mIDs [0m
+[7m[0m`RG-144|RG-148`.[0m
+_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:481:- 
+`_condamad/stories/CS-224-legacy-runtime-surface-cleanup-[7mguardrail[0ms/00-story.md` [0m[7m[0mstructure [0m[7m[0mreference.[0m
+
+
+
+codex
+Je lance maintenant les validateurs dédiés sur la story cible, avec activation explicite du venv comme imposé. Je vais d’abord demander l’aide courte des scripts pour confirmer les arguments sans lire leur contenu complet.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py --help" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --help" in C:\dev\horoscope_front
+ succeeded in 348ms:
+usage: condamad_story_validate.py [-h] [--explain-contracts] story
+
+Validate a CONDAMAD story file.
+
+positional arguments:
+  story                Path to a CONDAMAD story markdown file.
+
+options:
+  -h, --help           show this help message and exit
+  --explain-contracts  Print archetype contract requirements and story
+                       contract coverage.
+
+ succeeded in 358ms:
+usage: condamad_story_lint.py [-h] [--strict] story
+
+Lint a CONDAMAD story file.
+
+positional arguments:
+  story       Path to a CONDAMAD story markdown file.
+
+options:
+  -h, --help  show this help message and exit
+  --strict    Fail when anti-flou warnings are detected.
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+2026-05-23T00:29:28.228569Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Line 140 exceeds 180 characters
+- Line 298 exceeds 180 characters
+- Line 299 exceeds 180 characters
+- Line 300 exceeds 180 characters
+- Line 301 exceeds 180 characters
+- Line 302 exceeds 180 characters
+- Line 303 exceeds 180 characters
+- Line 305 exceeds 180 characters
+
+ exited 1 in 346ms:
+CONDAMAD story lint: FAIL
+- Line 140 exceeds 180 characters
+- Line 298 exceeds 180 characters
+- Line 299 exceeds 180 characters
+- Line 300 exceeds 180 characters
+- Line 301 exceeds 180 characters
+- Line 302 exceeds 180 characters
+- Line 303 exceeds 180 characters
+- Line 305 exceeds 180 characters
+
+ succeeded in 351ms:
+CONDAMAD story validation: PASS
+
+codex
+Premier cycle: `validate` passe, mais `lint --strict` signale uniquement des lignes Markdown trop longues. Je vais réduire ces lignes sans changer le fond, en privilégiant des tableaux lisibles avec retours ciblés.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 134..145 | ForEach-Object { '"'{0}: {1}' -f "'$_, $lines[$_-1] }' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 294..306 | ForEach-Object { '"'{0}: {1}' -f "'$_, $lines[$_-1] }' in C:\dev\horoscope_front
+ succeeded in 214ms:
+294: ## 7. Acceptance Criteria
+295: 
+296: | AC | Requirement | Evidence |
+297: |---|---|---|
+298: | AC1 | Les contrats de graphe de calcul existent sous `backend/app/domain/astrology/runtime`. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; import direct des dataclasses. |
+299: | AC2 | Les nodes declarent inputs, outputs, dependances obligatoires, dependances optionnelles et calculator stable. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; exemple `natal_chart_v1`. |
+300: | AC3 | Les validations detectent dependances inconnues, doublons de node, doublons d'output et cycles. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`; messages d'erreurs deterministes. |
+301: | AC4 | Aucun calcul astrologique metier ni execution de graph n'est introduit. | AST guard + `rg -n "importlib|__import__|build_natal_result" backend/app/domain/astrology/runtime -g "*.py"`. |
+302: | AC5 | Le graphe de calcul est distingue du graphe astrologique semantique et de `chart_objects`. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; doc `docs/architecture/astrology-calculation-graph.md`. |
+303: | AC6 | Aucun changement API, DB ou frontend n'est introduit. | `pytest -q backend/tests/architecture/test_api_contract_neutrality.py`; runtime evidence `app.routes`, `app.openapi()`, `TestClient`. |
+304: | AC7 | Les tests unitaires du validator passent avec ordre topologique deterministe. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`. |
+305: | AC8 | La documentation d'architecture existe et mentionne les limites de CS-225. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; doc path cible. |
+306: 
+
+ succeeded in 249ms:
+134: | Tests unitaires | `backend/tests/unit/domain/astrology/` | tests API opaques pour logique pure |
+135: 
+136: ## 4e. Allowlist / Exception Register
+137: 
+138: | File | Symbol / Route / Import | Reason | Expiry or permanence decision |
+139: |---|---|---|---|
+140: | `backend/app/domain/astrology/services/natal_calculation.py` | ordre procedural existant | Pipeline natal non migre par CS-225. | Temporary; exit condition: future migration story approved. |
+141: | `astrological_graph_contracts.py` | graphe semantique astrologique | Contrat metier distinct du graphe de calcul. | Permanent. |
+142: | serializers et routes publics | contrats JSON existants | CS-225 ne change pas l'API publique. | Permanent pour cette story. |
+143: 
+144: Validation rule:
+145: 
+
+codex
+Je modifie seulement la story CONDAMAD, sur les lignes de tableaux signalées. Les critères restent les mêmes, mais les libellés et preuves sont resserrés pour rester sous la limite de longueur.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md
+[orchestrator] omitted diff block (72 lines)
+codex
+Les corrections de longueur sont appliquées. Je relance le cycle `validate` puis `lint --strict` sur la même story.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+2026-05-23T00:29:58.727772Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+CONDAMAD story validation: FAIL
+- Allowlist / Exception Register temporary exception needs date or exit condition
+- AC2 has no concrete validation evidence
+- AC4 has no concrete validation evidence
+- AC5 has no concrete validation evidence
+- AC8 has no concrete validation evidence
+
+ exited 1 in 328ms:
+CONDAMAD story validation: FAIL
+- Allowlist / Exception Register temporary exception needs date or exit condition
+- AC2 has no concrete validation evidence
+- AC4 has no concrete validation evidence
+- AC5 has no concrete validation evidence
+- AC8 has no concrete validation evidence
+
+2026-05-23T00:29:58.746827Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Allowlist / Exception Register temporary exception needs date or exit condition
+- AC2 has no concrete validation evidence
+- AC4 has no concrete validation evidence
+- AC5 has no concrete validation evidence
+- AC8 has no concrete validation evidence
+
+ exited 1 in 344ms:
+CONDAMAD story lint: FAIL
+- Allowlist / Exception Register temporary exception needs date or exit condition
+- AC2 has no concrete validation evidence
+- AC4 has no concrete validation evidence
+- AC5 has no concrete validation evidence
+- AC8 has no concrete validation evidence
+
+[orchestrator] omitted diff block (36 lines)
+codex
+Deuxième cycle: la réduction a retiré des marqueurs que les validateurs exigent. Je remets des preuves concrètes et l’expression `exit condition`, en gardant les lignes plus courtes que la limite.
+2026-05-23T00:30:11.187735Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in C:\dev\horoscope_front\_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md:
+| AC2 | Les nodes declarent inputs, outputs, dependances obligatoires et optionnelles, plus un calculator stable. | Test contracts; exemple `natal_chart_v1`. |
+| AC4 | Aucun calcul astrologique metier ni execution de graph n'est introduit. | AST guard + scan `importlib|__import__|build_natal_result` dans runtime. |
+| AC5 | Le graphe de calcul reste distinct du graphe astrologique semantique et de `chart_objects`. | Test contracts + doc `docs/architecture/astrology-calculation-graph.md`. |
+[orchestrator] omitted diff block (36 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 138..142 | ForEach-Object { '"'{0}: {1}' -f "'$_, $lines[$_-1] }' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 298..305 | ForEach-Object { '"'{0}: {1}' -f "'$_, $lines[$_-1] }' in C:\dev\horoscope_front
+ succeeded in 221ms:
+138: | File | Symbol / Route / Import | Reason | Expiry or permanence decision |
+139: |---|---|---|---|
+140: | `backend/app/domain/astrology/services/natal_calculation.py` | ordre procedural | Pipeline natal hors scope CS-225. | Temporary; exit: future migration story approved. |
+141: | `astrological_graph_contracts.py` | graphe semantique astrologique | Contrat metier distinct du graphe de calcul. | Permanent. |
+142: | serializers et routes publics | contrats JSON existants | CS-225 ne change pas l'API publique. | Permanent pour cette story. |
+
+ succeeded in 239ms:
+298: | AC1 | Les contrats de graphe de calcul existent sous le runtime astrologique. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`. |
+299: | AC2 | Les nodes declarent inputs, outputs, dependances obligatoires et optionnelles, plus un calculator stable. | Test contracts; exemple `natal_chart_v1`. |
+300: | AC3 | Les validations detectent dependances inconnues, doublons de node/output et cycles. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`. |
+301: | AC4 | Aucun calcul astrologique metier ni execution de graph n'est introduit. | AST guard + scan `importlib|__import__|build_natal_result` dans runtime. |
+302: | AC5 | Le graphe de calcul reste distinct du graphe astrologique semantique et de `chart_objects`. | Test contracts + doc `docs/architecture/astrology-calculation-graph.md`. |
+303: | AC6 | Aucun changement API, DB ou frontend n'est introduit. | Test `test_api_contract_neutrality.py`; evidence `app.routes`, `app.openapi()`, `TestClient`. |
+304: | AC7 | Les tests unitaires du validator passent avec ordre topologique deterministe. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`. |
+305: | AC8 | La documentation d'architecture existe et mentionne les limites de CS-225. | Test contracts; doc path cible. |
+
+[orchestrator] omitted diff block (111 lines)
+codex
+J’ai restauré les preuves attendues par les validateurs sans élargir le scope. Je relance le même cycle de review.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+2026-05-23T00:30:32.774787Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Line 299 exceeds 180 characters
+- Line 301 exceeds 180 characters
+- Line 302 exceeds 180 characters
+- Line 305 exceeds 180 characters
+
+ exited 1 in 325ms:
+CONDAMAD story lint: FAIL
+- Line 299 exceeds 180 characters
+- Line 301 exceeds 180 characters
+- Line 302 exceeds 180 characters
+- Line 305 exceeds 180 characters
+
+ succeeded in 356ms:
+CONDAMAD story validation: PASS
+
+[orchestrator] omitted diff block (36 lines)
+codex
+Le dernier échec est à nouveau strictement rédactionnel: quatre lignes dépassent la limite après réintroduction des preuves. Je raccourcis les exigences, pas les contrôles.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md
+[orchestrator] omitted diff block (72 lines)
+codex
+Les lignes longues ont été resserrées. Je relance la validation et le lint strict pour confirmer que la story est clean.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 336ms:
+CONDAMAD story validation: PASS
+
+2026-05-23T00:30:53.461161Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Line 299 exceeds 180 characters
+
+ exited 1 in 354ms:
+CONDAMAD story lint: FAIL
+- Line 299 exceeds 180 characters
+
+[orchestrator] omitted diff block (36 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$line=(Get-Content $p)[298]; '"'{0} chars: {1}' -f "'$line.Length,$line' in C:\dev\horoscope_front
+ succeeded in 255ms:
+181 chars: | AC2 | Les nodes exposent inputs, outputs, deps requises/optionnelles et calculator stable. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`. |
+
+[orchestrator] omitted diff block (111 lines)
+codex
+Le dépassement restant était d’un caractère sur AC2. Correction faite, je fais le dernier passage de review automatisée.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 339ms:
+CONDAMAD story validation: PASS
+
+2026-05-23T00:31:06.550763Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.4 seconds
+Output:
+CONDAMAD story lint: FAIL
+- Strict warning: AC2 is possibly compound; keep one invariant per AC
+- Strict warning: AC3 is possibly compound; keep one invariant per AC
+- Strict warning: AC5 is possibly compound; keep one invariant per AC
+- Strict warning: AC6 is possibly compound; keep one invariant per AC
+- Strict warning: Validation plan changes into backend then still uses backend/ paths
+
+ exited 1 in 358ms:
+CONDAMAD story lint: FAIL
+- Strict warning: AC2 is possibly compound; keep one invariant per AC
+- Strict warning: AC3 is possibly compound; keep one invariant per AC
+- Strict warning: AC5 is possibly compound; keep one invariant per AC
+- Strict warning: AC6 is possibly compound; keep one invariant per AC
+- Strict warning: Validation plan changes into backend then still uses backend/ paths
+
+[orchestrator] omitted diff block (36 lines)
+codex
+Le lint strict passe maintenant au niveau sémantique: plusieurs AC sont jugés trop composés, et le plan de validation mélange `cd backend` avec des chemins préfixés `backend/`. Je vais reformuler les invariants sans changer le scope, puis corriger le bloc de commandes.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 296..305 | ForEach-Object { '"'{0}: {1}' -f "'$_, $lines[$_-1] }' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 382..413 | ForEach-Object { '"'{0}: {1}' -f "'$_, $lines[$_-1] }' in C:\dev\horoscope_front
+ succeeded in 225ms:
+296: | AC | Requirement | Evidence |
+297: |---|---|---|
+298: | AC1 | Les contrats de graphe de calcul existent sous le runtime astrologique. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`. |
+299: | AC2 | Nodes: inputs, outputs, deps requises/optionnelles et calculator stable. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`. |
+300: | AC3 | Les validations detectent dependances inconnues, doublons de node/output et cycles. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`. |
+301: | AC4 | Pas de calcul metier ni execution de graphe. | `rg -n "importlib|__import__|build_natal_result" backend/app/domain/astrology/runtime -g "*.py"`. |
+302: | AC5 | Graphe de calcul distinct du graphe semantique et de `chart_objects`. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; doc cible. |
+303: | AC6 | Aucun changement API, DB ou frontend n'est introduit. | Test `test_api_contract_neutrality.py`; evidence `app.routes`, `app.openapi()`, `TestClient`. |
+304: | AC7 | Les tests unitaires du validator passent avec ordre topologique deterministe. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`. |
+305: | AC8 | La doc d'architecture mentionne les limites de CS-225. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py`; doc cible. |
+
+ succeeded in 228ms:
+382: ## 15. Validation Plan
+383: 
+384: Run all Python commands after activating the venv:
+385: 
+386: ```powershell
+387: .\.venv\Scripts\Activate.ps1
+388: cd backend
+389: ruff format .
+390: ruff check .
+391: pytest -q
+392: ```
+393: 
+394: Run targeted tests:
+395: 
+396: ```powershell
+397: pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_contracts.py
+398: pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py
+399: ```
+400: 
+401: Run anti-regression scans:
+402: 
+403: ```powershell
+404: rg -n "networkx|igraph|graphlib" backend/app/domain/astrology backend/tests -g "*.py"
+405: rg -n "CalculationGraphDefinition|CalculationNodeDefinition" backend/app/domain/astrology/runtime backend/tests
+406: ```
+407: 
+408: Run API neutrality proof:
+409: 
+410: ```powershell
+411: pytest -q backend/tests/architecture/test_api_contract_neutrality.py
+412: ```
+413: 
+
+[orchestrator] omitted diff block (240 lines)
+codex
+Les AC composés ont été resserrés en invariants uniques, et le plan de validation reste exécuté depuis la racine après activation du venv. Je relance le cycle complet.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 358ms:
+CONDAMAD story validation: PASS
+
+ succeeded in 371ms:
+CONDAMAD story lint: PASS
+
+[orchestrator] omitted diff block (50 lines)
+codex
+La review automatisée est clean. Je vais ajouter l’artefact de review rédactionnelle pour CS-225 afin que le résultat soit persistant dans le dossier de story, sans toucher au code applicatif.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path _condamad\\stories\\CS-224-legacy-runtime-surface-cleanup-guardrails\\generated\\11-story-writing-review.md -TotalCount 120" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Test-Path _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\generated" in C:\dev\horoscope_front
+ succeeded in 211ms:
+False
+
+2026-05-23T00:31:42.558528Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path _condamad\stories\CS-224-legacy-runtime-surface-cle[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\generated\11-story-writing-review.md' because it does not exist.[0m
+
+ exited 1 in 287ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -Path _condamad\stories\CS-224-legacy-runtime-surface-cle[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\_condamad\stories\CS-224-legacy-runtime-surface-cleanup-guardrails\generated\11-story-writing-review.md' because it does not exist.[0m
+
+[orchestrator] omitted diff block (50 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path _condamad\\stories\\CS-220-dignity-dominance-capability-runtime\\generated\\11-story-writing-review.md -TotalCount 120" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -Path _condamad\\stories\\CS-221-chart-object-house-position-rulership-runtime\\generated\\11-story-writing-review.md -TotalCount 120" in C:\dev\horoscope_front
+ succeeded in 214ms:
+<!-- Revue redactionnelle CONDAMAD de la story CS-221. -->
+
+# CS-221 Story Writing Review
+
+## Iteration 1 - Issues Found
+
+Verdict: changes requested.
+
+Findings:
+
+- La section `Current State Evidence` presentait encore `CS-221` comme le
+  prochain numero disponible, alors que `story-status.md` contient deja
+  l'enregistrement de la story en `ready-to-dev`.
+- Les mentions `ajout de RG-148` pouvaient laisser croire que le guardrail
+  devait toujours etre cree, alors que le registre contient deja l'invariant
+  `RG-148` dans le worktree courant.
+- `AC11` demandait `test_natal_result_contract.py`, mais ce test n'etait pas
+  repris dans la liste executable des tests cibles du Validation Plan.
+
+Corrections appliquees:
+
+- Mise a jour de l'evidence d'etat courant pour decrire `CS-221` comme deja
+  enregistree dans `story-status.md`.
+- Remplacement des formulations d'ajout obligatoire de `RG-148` par une regle
+  de verification ou d'ajout conditionnel si absent.
+- Ajout de
+  `backend/tests/unit/domain/astrology/test_natal_result_contract.py` aux tests
+  cibles du Validation Plan.
+
+Validation apres corrections:
+
+- `condamad_story_validate.py`: PASS.
+- `condamad_story_validate.py --explain-contracts`: PASS.
+- `condamad_story_lint.py`: PASS.
+- `condamad_story_lint.py --strict`: PASS.
+
+## Iteration 2 - Issues Found
+
+Verdict: changes requested.
+
+Findings:
+
+- `AC17` exigeait la presence de `CS-221 Final Evidence`, mais le Validation
+  Plan ne contenait pas le scan executable correspondant depuis la racine du
+  repository.
+
+Corrections appliquees:
+
+- Ajout du scan
+  `rg -n "CS-221 Final Evidence" _condamad/stories/CS-221-chart-object-house-position-rulership-runtime/evidence/validation.md`
+  dans les scans anti-regression du Validation Plan.
+
+Validation apres corrections:
+
+- `condamad_story_validate.py`: PASS.
+- `condamad_story_validate.py --explain-contracts`: PASS.
+- `condamad_story_lint.py`: PASS.
+- `condamad_story_lint.py --strict`: PASS.
+
+## Iteration 3 - Issues Found
+
+Verdict: changes requested after brief-alignment check.
+
+Findings:
+
+- Le brief nomme `HousePositionRuntimePayload`, tandis que la story utilise
+  `ChartObjectHousePositionPayload`. Le choix est correct pour le repo, mais il
+  devait etre explicite pour ne pas ressembler a un oubli du payload demande.
+- Le brief place CS-221 avant les fixed stars / CS-222. La story bornait bien le
+  domaine astrology runtime, mais ne disait pas explicitement que les etoiles
+  fixes restent pour une story ulterieure.
+
+Corrections appliquees:
+
+- Ajout d'une regle de nommage: `ChartObjectHousePositionPayload` est la
+  surface house position canonique existante a enrichir, sans creer de doublon
+  `HousePositionRuntimePayload`.
+- Ajout des etoiles fixes / CS-222 comme hors scope explicite et comme decision
+  d'alignement source.
+
+Validation apres corrections:
+
+- `condamad_story_validate.py`: PASS.
+- `condamad_story_validate.py --explain-contracts`: PASS.
+- `condamad_story_lint.py`: PASS.
+- `condamad_story_lint.py --strict`: PASS.
+
+## Iteration 4 - Clean Review
+
+Verdict: clean.
+
+Checks:
+
+- La story reste bornee au runtime backend astrology et n'elargit pas vers API,
+  DB, migrations, frontend, interpretation ou projection JSON publique.
+- Les contrats requis restent presents: runtime source of truth, baseline,
+  ownership routing, allowlist exception, contract shape, reintroduction guard
+  et evidence persistante.
+- Les AC sont atomiques et les preuves attendues sont couvertes par le plan de
+  validation ou par les scans explicites.
+- Les taches couvrent baseline, contrats, projectors/enrichers, orchestration,
+  tests, guards et preuve finale.
+- Les guardrails interdisent toujours selection par `object_type`, second
+  resolver, table locale de rulership, fallback silencieux et payload narratif.
+
+Validation:
+
+- `condamad_story_validate.py`: PASS.
+- `condamad_story_validate.py --explain-contracts`: PASS.
+- `condamad_story_lint.py`: PASS.
+- `condamad_story_lint.py --strict`: PASS.
+
+ succeeded in 236ms:
+<!-- Preuve de review redactionnelle de la story CS-220. -->
+
+# CS-220 Story Writing Review
+
+## Iteration 1 - findings
+
+Verdict: CHANGES_REQUESTED
+
+Findings:
+
+- `00-story.md` melangeait les champs requis des payloads dignity et dominance,
+  ce qui pouvait laisser croire que chaque payload devait porter tous les
+  scores.
+- L'evidence d'etat courant sur `PlanetDominanceEngine().calculate` contenait
+  une phrase grammaticalement incorrecte.
+- La section `Regression Guardrails` classait `RG-001` a `RG-143` comme
+  non-applicables tout en listant `RG-135`, `RG-141` et `RG-142` comme
+  applicables.
+- Plusieurs criteres d'acceptation citaient des fichiers de test sans chemin
+  complet, contrairement au niveau de precision attendu par le plan de
+  validation.
+- Les AC qui parlaient de projectors, enrichers et absence de texte narratif
+  ne couvraient qu'un cote dignity ou dominance alors que l'exigence etait
+  bilaterale.
+- La numerotation sautait de la section 15 a la section 17 sans section
+  `Internal Usage Search`, contrairement au format des stories voisines.
+
+Corrections appliquees:
+
+- Separation explicite des champs requis par payload et ajout d'une regle de
+  projection sans recalcul.
+- Correction de la phrase d'evidence 9.
+- Reclassification des invariants non-applicables pour ne plus contredire les
+  invariants applicables.
+- Qualification des commandes de validation AC avec des chemins complets.
+- Extension des AC6, AC7, AC8 et AC13 pour couvrir dignity et dominance.
+- Ajout de la section `16. Internal Usage Search`.
+
+## Iteration 2 - findings
+
+Verdict: CHANGES_REQUESTED
+
+Findings:
+
+- Les corrections de chemins complets dans le tableau des AC faisaient depasser
+  plusieurs lignes au-dela de la limite stricte de 180 caracteres.
+
+Corrections appliquees:
+
+- Ajout d'une note de prefixe pour les tests sous
+  `backend/tests/unit/domain/astrology/`.
+- Raccourcissement des cellules du tableau AC sans retirer les commandes
+  completes du Validation Plan.
+
+## Iteration 3 - findings
+
+Verdict: CHANGES_REQUESTED
+
+Findings:
+
+- Les raccourcis de preuves des AC6, AC7, AC8 et AC13 etaient lisibles, mais
+  plus assez concrets pour les validateurs de story.
+
+Corrections appliquees:
+
+- Separation des exigences dignity et dominance en AC distincts.
+- Maintien de commandes `pytest` concretes dans chaque AC sans depasser la
+  limite de longueur de ligne.
+- Mise a jour des references AC des taches 2 et 4.
+
+## Iteration 4 - findings
+
+Verdict: CHANGES_REQUESTED
+
+Findings:
+
+- Trois lignes du tableau AC restaient au-dessus de la limite stricte de 180
+  caracteres apres separation des AC.
+
+Corrections appliquees:
+
+- Raccourcissement des libelles AC6 et AC17.
+- Raccourcissement de la preuve AC16 en s'appuyant sur le chemin relatif deja
+  defini pour l'artefact `evidence/validation.md`.
+
+## Iteration 5 - findings
+
+Verdict: CHANGES_REQUESTED
+
+Findings:
+
+- La ligne AC17 restait a 183 caracteres.
+
+Correction appliquee:
+
+- Raccourcissement du libelle AC17 sans changer sa preuve executable.
+
+## Iteration 6 - findings
+
+Verdict: CHANGES_REQUESTED
+
+Findings:
+
+- La story couvrait le coeur du brief, mais ne rendait pas assez explicite la
+  semantique de `supports_dignities` et `supports_dominance`.
+- Les objets a exclure par defaut des dignites, comme angles, cuspides, maisons
+  et etoiles fixes, n'etaient pas assez visibles dans les objectifs.
+- Les tests attendus du brief sur les donnees minimales absentes, payloads sans
+  capacite et payloads ciblant un code inconnu n'etaient pas portes par des AC
+  dedies.
+- Le guardrail anti-eligibilite par type ne couvrait pas explicitement les
+  branches par code nominal ou liste `TRADITIONAL_PLANETS`.
+
+Corrections appliquees:
+
+- Ajout de la semantique des capacites dans le scope et l'etat cible.
+- Ajout des exclusions par defaut pour les objets non dignifiables sans
+  doctrine explicite.
+- Ajout des AC21 a AC24 pour erreurs explicites, payloads incoherents,
+  non-dignifiabilite par defaut et branches nominales.
+
+[orchestrator] omitted diff block (50 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "New-Item -ItemType Directory -Path _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\generated -Force | Out-Null" in C:\dev\horoscope_front
+ succeeded in 236ms:
+[orchestrator] omitted diff block (263 lines)
+codex
+L’artefact de review est ajouté sous `generated/`. Je fais une dernière vérification de la story avec validation standard, explication de contrats et lint strict.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py --explain-contracts _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 329ms:
+CONDAMAD story validation: PASS
+
+ succeeded in 338ms:
+CONDAMAD story contract explanation
+- Primary archetype: custom
+- Archetype required contracts:
+  - <none or custom>
+- Story contracts marked yes:
+  - Allowlist Exception
+  - Baseline Snapshot
+  - Batch Migration
+  - Contract Shape
+  - Ownership Routing
+  - Persistent Evidence
+  - Reintroduction Guard
+  - Runtime Source of Truth
+- Story contracts marked no:
+  - <none>
+- Missing required contracts:
+  - <none>
+
+ succeeded in 380ms:
+CONDAMAD story lint: PASS
+
+[orchestrator] omitted diff block (105 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 140,298,299,300,301,302,303,305 | ForEach-Object { $line=$lines[$_-1]; '"'{0}: {1} chars' -f "'$_,$line.Length }' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 384..392 | ForEach-Object { '"'{0}: {1}' -f "'$_, $lines[$_-1] }' in C:\dev\horoscope_front
+ succeeded in 237ms:
+140: 174 chars
+298: 168 chars
+299: 144 chars
+300: 167 chars
+301: 154 chars
+302: 162 chars
+303: 148 chars
+305: 162 chars
+
+ succeeded in 267ms:
+384: Run all Python commands after activating the venv:
+385: 
+386: ```powershell
+387: .\.venv\Scripts\Activate.ps1
+388: ruff format backend
+389: ruff check backend
+390: pytest -q backend/tests
+391: ```
+392: 
+
+[orchestrator] omitted diff block (105 lines)
+codex
+Une vérification de longueur sur les lignes de tableaux modifiées montre encore des lignes entre 162 et 174 caractères, même si le lint accepte jusqu’à 180. Je les ramène sous 160 comme demandé, puis je relance.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-225-calculation-graph-runtime-contracts\00-story.md
+[orchestrator] omitted diff block (210 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$p='"'_condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md'; "'$lines=Get-Content $p; 140,298,299,300,301,302,303,305 | ForEach-Object { $line=$lines[$_-1]; '"'{0}: {1} chars' -f "'$_,$line.Length }' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 234ms:
+140: 136 chars
+298: 155 chars
+299: 144 chars
+300: 140 chars
+301: 154 chars
+302: 145 chars
+303: 148 chars
+305: 143 chars
+
+ succeeded in 339ms:
+CONDAMAD story validation: PASS
+
+ succeeded in 343ms:
+CONDAMAD story lint: PASS
+
+[orchestrator] omitted diff block (105 lines)
+codex
+Les lignes de tableaux modifiées sont maintenant toutes sous 160 caractères, et les deux validateurs passent. Je relance l’explication de contrats pour conserver le même niveau de vérification final.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py --explain-contracts _condamad\\stories\\CS-225-calculation-graph-runtime-contracts\\00-story.md" in C:\dev\horoscope_front
+ succeeded in 344ms:
+CONDAMAD story contract explanation
+- Primary archetype: custom
+- Archetype required contracts:
+  - <none or custom>
+- Story contracts marked yes:
+  - Allowlist Exception
+  - Baseline Snapshot
+  - Batch Migration
+  - Contract Shape
+  - Ownership Routing
+  - Persistent Evidence
+  - Reintroduction Guard
+  - Runtime Source of Truth
+- Story contracts marked no:
+  - <none>
+- Missing required contracts:
+  - <none>
+
+[orchestrator] omitted diff block (105 lines)
+codex
+Review rédactionnelle CS-225 terminée. Le skill demandé était absent au chemin fourni, donc j’ai appliqué le workflow CONDAMAD disponible avec les validateurs imposés.
+
+Modifié uniquement des artefacts CONDAMAD :
+- [00-story.md](C:/dev/horoscope_front/_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md)
+- [11-story-writing-review.md](C:/dev/horoscope_front/_condamad/stories/CS-225-calculation-graph-runtime-contracts/generated/11-story-writing-review.md)
+
+Issues corrigées :
+- lignes de tableaux trop longues, ramenées sous 160 caractères ;
+- `exit condition` manquante dans l’allowlist temporaire ;
+- preuves AC trop génériques ;
+- AC composés reformulés en invariants plus atomiques ;
+- plan de validation incohérent avec `cd backend` + chemins `backend/`.
+
+Validations relancées avec venv activé :
+- `condamad_story_validate.py`: PASS
+- `condamad_story_validate.py --explain-contracts`: PASS
+- `condamad_story_lint.py --strict`: PASS
+
+Statut final : story clean selon la review rédactionnelle, aucune issue actionnable restante.
+[orchestrator] omitted diff block (105 lines)
+tokens used
+169 673
+Review rédactionnelle CS-225 terminée. Le skill demandé était absent au chemin fourni, donc j’ai appliqué le workflow CONDAMAD disponible avec les validateurs imposés.
+
+Modifié uniquement des artefacts CONDAMAD :
+- [00-story.md](C:/dev/horoscope_front/_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md)
+- [11-story-writing-review.md](C:/dev/horoscope_front/_condamad/stories/CS-225-calculation-graph-runtime-contracts/generated/11-story-writing-review.md)
+
+Issues corrigées :
+- lignes de tableaux trop longues, ramenées sous 160 caractères ;
+- `exit condition` manquante dans l’allowlist temporaire ;
+- preuves AC trop génériques ;
+- AC composés reformulés en invariants plus atomiques ;
+- plan de validation incohérent avec `cd backend` + chemins `backend/`.
+
+Validations relancées avec venv activé :
+- `condamad_story_validate.py`: PASS
+- `condamad_story_validate.py --explain-contracts`: PASS
+- `condamad_story_lint.py --strict`: PASS
+
+Statut final : story clean selon la review rédactionnelle, aucune issue actionnable restante.

@@ -1,0 +1,2690 @@
+OpenAI Codex v0.128.0 (research preview)
+--------
+workdir: C:\dev\horoscope_front
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: medium
+reasoning summaries: none
+session id: 019e52a6-bda5-7ef1-a1c5-03ac068e88b8
+--------
+user
+En utilisant le skill [$condamad-dev-story](C:\dev\horoscope_front\.agents\skills\condamad-dev-story\SKILL.md), implemente la story generee a partir du brief C:\dev\horoscope_front\_story_briefs\cs-227-calculation-graph-runner-cache-provenance.md.
+
+Objectif:
+- Retrouve exactement une story via `_condamad/stories/story-status.md` en utilisant la colonne `Source` egale au brief.
+- Implemente cette story avec le workflow CONDAMAD Dev Story.
+- Mets a jour les preuves d'implementation, la traceabilite AC, le statut de story, et les validations applicables.
+
+Contraintes d'execution non interactive:
+- Travaille sur une seule story.
+- Respecte les AC, les non-goals, les guardrails et le plan de validation de la capsule.
+- Ne modifie pas le brief initial.
+- Avant de lire `generated/*.md`, verifie que la capsule est complete; si des fichiers generated requis manquent, lance `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py <story> --root <repo>` puis `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py <capsule>`.
+- Ne fais pas de `Get-Content` sur chaque fichier generated manquant; un generated absent est une preparation de capsule, pas une erreur a repeter.
+- Ne laisse pas de shim, alias, fallback silencieux, doublon actif ou chemin legacy sauf exigence explicite de la story.
+- Si la story cible une racine absente, cree les fichiers/repertoires necessaires uniquement si c'est dans le scope de la story.
+- Si `.git` est absent, note `not a git repository` une seule fois et ne lance pas `git status`, `git diff`, `git show` ou `git diff --check`.
+- Ne lis pas les references larges du skill sauf diagnostic ou decision qui les exige; commence par la story, la capsule et les guardrails scopees.
+- Ne lis pas `_condamad/stories/regression-guardrails.md` en entier si les IDs peuvent etre resolus depuis la story, la capsule ou une recherche ciblee.
+- N'utilise pas `rg --files` depuis la racine; limite les inventaires aux dossiers touches et exclue `target`, `.venv`, `node_modules`, `__pycache__`, `.pytest_cache`, `.ruff_cache`.
+- Pour Python, prefere `python -B -m pytest ...` afin d'eviter les caches bytecode; nettoie les caches generes avant l'evidence finale si un outil les cree.
+- Utilise `ruff format <fichiers python modifies ou dossiers touches>` plutot que `ruff format .`, sauf exigence explicite de la capsule.
+- Pour les scans negatifs `rg`, considere le code de sortie 1 comme `PASS: no matches` lorsque l'objectif est l'absence de motif; consigne-le sans boucle de correction.
+- Evite les here-strings PowerShell pour ecrire des fichiers; utilise `apply_patch` pour les edits manuels et des commandes courtes pour les validations.
+- Lance les tests/checks pertinents definis par la capsule et par le projet; consigne toute validation non lancee avec raison.
+- Mets a jour `_condamad/stories/story-status.md` a `ready-to-review` quand l'implementation est complete.
+- Garde la sortie courte: fichiers modifies, validations, statut final, risques.
+- Termine des que l'implementation est prete pour review, ou avec un blocage explicite.
+codex
+J’utilise le skill demandé `condamad-dev-story` et je vais d’abord lire ses consignes, puis identifier la story exacte depuis le statut sans toucher au brief. Ensuite je vérifierai la capsule avant de lire ses fichiers générés.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath C:\\dev\\horoscope_front\\.agents\\skills\\condamad-dev-story\\SKILL.md" in C:\dev\horoscope_front
+2026-05-23T02:25:26.100000Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath C:\dev\horoscope_front\.agents\skills\condam[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-dev-story\SKILL.md' because it does not exist.[0m
+
+ exited 1 in 283ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath C:\dev\horoscope_front\.agents\skills\condam[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'C:\dev\horoscope_front\.agents\skills\condamad-dev-story\SKILL.md' because it does not exist.[0m
+
+codex
+Le chemin de skill fourni n’existe pas tel quel. Je vérifie uniquement l’emplacement `.agents\skills` pour voir si le skill a un nom ou une casse différente, puis je continue avec le meilleur équivalent disponible si nécessaire.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath .agents\\skills -Force | Select-Object Name,FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Test-Path -LiteralPath _condamad\\stories\\story-status.md; Select-String -LiteralPath _condamad\\stories\\story-status.md -Pattern 'cs-227-calculation-graph-runner-cache-provenance.md'" in C:\dev\horoscope_front
+ succeeded in 215ms:
+True
+
+_condamad\stories\story-status.md:233:| CS-227 | calculation-graph-runner-cache-provenance | Executer un graphe de calcul avec cache et provenance | 
+ready-to-dev | `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md` | 
+`_story_briefs/[7mcs-227-calculation-graph-runner-cache-provenance.md[0m` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+
+
+ succeeded in 234ms:
+
+[32;1mName                 [0m[32;1m FullName[0m
+[32;1m----                 [0m [32;1m--------[0m
+condamad-story-writer C:\dev\horoscope_front\.agents\skills\condamad-story-writer
+
+
+codex
+Le skill `condamad-dev-story` est absent; seul `condamad-story-writer` est installé. La story exacte est `CS-227` avec le statut `ready-to-dev`, je poursuis donc le workflow demandé en appliquant ses règles directement depuis la story et sa capsule.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath _condamad\\stories\\CS-227-calculation-graph-runner-cache-provenance -Force | Select-Object Name,PSIsContainer" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath .agents\\skills -Recurse -Filter condamad_prepare.py -Force | Select-Object FullName; Get-ChildItem -LiteralPath .agents\\skills -Recurse -Filter condamad_validate.py -Force | Select-Object FullName" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'git rev-parse --is-inside-work-tree' in C:\dev\horoscope_front
+ succeeded in 233ms:
+
+[32;1mName       [0m[32;1m PSIsContainer[0m
+[32;1m----       [0m [32;1m-------------[0m
+00-story.md         False
+
+
+ succeeded in 224ms:
+true
+
+ succeeded in 258ms:
+codex
+La capsule n’est pas complète: le dossier de story ne contient que `00-story.md`, et les scripts de préparation/validation mentionnés dans la consigne sont absents avec le skill. Je lis la story de base pour déterminer si l’implémentation reste possible sans les fichiers générés.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath _condamad\\stories\\CS-227-calculation-graph-runner-cache-provenance\\00-story.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath .agents\\skills\\condamad-story-writer -Force | Select-Object Name,PSIsContainer" in C:\dev\horoscope_front
+ succeeded in 214ms:
+# Story CS-227 calculation-graph-runner-cache-provenance: Executer un graphe de calcul avec cache et provenance
+Status: ready-to-dev
+
+## 1. Objective
+
+Creer un runner topologique minimal pour executer un `CalculationGraphDefinition` valide avec un contexte initial, un registry explicite de calculateurs,
+un cache limite a l'execution et une provenance inspectable par node.
+
+## 2. Trigger / Source
+
+- Source type: architecture-runtime-runner.
+- Source reference: `_story_briefs/cs-227-calculation-graph-runner-cache-provenance.md`.
+- Reason for change: CS-225 decrit les contrats de graphe et CS-226 decrit le graphe natal; il manque le mecanisme d'execution pur.
+- Selected story writer mode: Fast Story Writer Mode.
+- Skill availability note: `.agents/skills/condamad-story-writer/SKILL.md`, le cheatsheet demande et `resolve_guardrails.py` ne sont pas presents.
+- Source-alignment review: la story ajoute un runner backend-domain pur, sans API, DB, frontend, cache persistant ou migration du pipeline natal.
+
+## References
+
+- `_story_briefs/cs-227-calculation-graph-runner-cache-provenance.md`.
+- `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md`.
+- `_condamad/stories/CS-226-natal-calculation-graph-definition/00-story.md`.
+- `_condamad/stories/regression-guardrails.md` avec recherche ciblee `RG-144|RG-145|RG-147|RG-148`.
+
+## 3. Domain Boundary
+
+Cette story appartient a un seul domaine:
+
+- Domain: `backend/app/domain/astrology/runtime`.
+- In scope:
+  - creer `CalculationGraphRunner`;
+  - creer `CalculationGraphContext`;
+  - creer `CalculationNodeRegistry`;
+  - creer `CalculationNodeCallable` ou un protocole equivalent;
+  - creer `CalculationNodeResult`;
+  - creer `CalculationGraphExecutionResult`;
+  - creer `CalculationGraphExecutionError` pour porter les erreurs runtime stables;
+  - executer les nodes en ordre topologique valide par `CalculationGraphValidator`;
+  - resoudre les calculateurs uniquement depuis un registry explicite;
+  - gerer un cache en memoire limite a une execution;
+  - exposer la provenance minimale par node: inputs consommes, output produit, calculator code;
+  - tester un graphe lineaire, un graphe convergent, le cache, les erreurs et l'absence d'import dynamique.
+- Out of scope:
+  - migrer `build_natal_result`;
+  - brancher le graphe natal en production;
+  - ajouter un cache persistant;
+  - parallelliser les nodes;
+  - appeler une API externe;
+  - ajouter retries, metriques production, worker, Celery, Prefect, Airflow, networkx ou autre dependance externe;
+  - modifier les calculateurs astrologiques existants;
+  - changer une route FastAPI, un schema public, OpenAPI, DB, migration, frontend ou prompt.
+- Explicit non-goals:
+  - ne pas enrichir `_condamad/stories/regression-guardrails.md` pendant cette generation normale;
+  - ne pas ajouter de dossier de base sous `backend/`;
+  - ne pas faire d'import dynamique de calculator;
+  - ne pas ajouter de fallback ou shim pour executer le pipeline natal;
+  - ne pas introduire de calcul astrologique nouveau.
+
+## 4. Operation Contract
+
+- Operation type: create
+- Primary archetype: custom
+- Archetype reason: la story ajoute une infrastructure backend-domain pure qui execute les contrats de graphe existants.
+- Behavior change allowed: constrained
+- Behavior change constraints:
+  - autorise: nouveaux contrats runtime d'execution et runner sous le runtime astrologique;
+  - autorise: tests unitaires de runner avec calculateurs factices;
+  - autorise: evidence de neutralite API via `app.routes`, `app.openapi()` et `TestClient`;
+  - interdit: migration de `build_natal_result`, changement API, DB, frontend, cache persistant, orchestration parallele ou dependance externe.
+- Deletion allowed: no
+- Replacement allowed: no
+- User decision required if: l'implementation touche une route publique, une migration DB, le frontend, une dependance externe ou `build_natal_result`.
+- Additional validation rules:
+  - `CalculationGraphRunner.run()` appelle le validator CS-225 avant tout calcul;
+  - un graphe invalide retourne `success=False`, ne lance aucun calculateur et expose les erreurs de validation;
+  - l'ordre d'execution vient du `topological_order` valide ou d'une resolution equivalente testee comme deterministe;
+  - les calculateurs sont resolus seulement par `CalculationNodeRegistry`;
+  - `importlib.import_module`, `eval`, `globals()` et resolution magique de fonctions sont interdits;
+  - le contexte initial reste immuable pour l'appelant;
+  - un output deja present dans le contexte initial produit un `cache_hit=True` sans recalcul;
+  - les erreurs de dependance manquante, calculateur inconnu et calculateur en echec ont des messages stables et testables;
+  - la provenance associe chaque node a `node_code`, `input_keys`, `output_key` et `calculator`;
+  - `app.routes`, `app.openapi()`, `pytest` et `TestClient` prouvent l'absence de delta API volontaire.
+
+## 4a. Required Contracts
+
+| Contract | Required | Reason |
+|---|---:|---|
+| Runtime Source of Truth | yes | Le runner devient le mecanisme canonique d'execution des definitions de graphe de calcul. |
+| Baseline Snapshot | yes | Les contrats CS-225 et la definition CS-226 doivent etre connus avant ajout. |
+| Ownership Routing | yes | Runner, contrats, registry, tests et pipeline natal ont des proprietaires distincts. |
+| Allowlist Exception | yes | Le pipeline procedural et les graphes declaratifs non executes restent autorises hors runner. |
+| Contract Shape | yes | Context, registry, resultats de node, resultats d'execution et erreurs sont le coeur de la story. |
+| Batch Migration | yes | Contrats d'execution, runner, tests, scans et evidence sont livres par lots controlables. |
+| Reintroduction Guard | yes | Les scans bloquent import dynamique, dependances externes et deltas API/DB/front. |
+| Persistent Evidence | yes | Tests, scans et preuve finale doivent etre conserves dans le dossier CS-227. |
+
+## 4b. Runtime Source of Truth
+
+- Primary source of truth:
+  - `backend/app/domain/astrology/runtime/calculation_graph_runner.py`;
+  - `backend/app/domain/astrology/runtime/calculation_graph_contracts.py`;
+  - `backend/app/domain/astrology/runtime/calculation_graph_validator.py`;
+  - `backend/app/domain/astrology/runtime/natal_calculation_graph.py` comme definition consommatrice future non migree.
+- Runtime/domain artifacts:
+  - context immuable de valeurs;
+  - registry explicite de calculateurs;
+  - resultats de node avec status, cache et provenance;
+  - resultat global d'execution avec outputs, node_results, execution_order, cache_hits, provenance et errors;
+  - tests unitaires sous `backend/tests/unit/domain/astrology/`.
+- Secondary evidence:
+  - `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`;
+  - `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`;
+  - `app.routes`, `app.openapi()` et `TestClient` sans delta public volontaire;
+  - scans cibles anti-import dynamique et anti-dependance externe.
+- Static scans alone are not sufficient because:
+  - ils ne prouvent ni l'ordre topologique runtime, ni le cache par execution, ni les messages d'erreur, ni la neutralite OpenAPI.
+
+## 4c. Baseline / Before-After Rule
+
+- Baseline artifact before implementation:
+  - `Get-Content backend/app/domain/astrology/runtime/calculation_graph_contracts.py`;
+  - `Get-Content backend/app/domain/astrology/runtime/calculation_graph_validator.py`;
+  - `Get-Content backend/app/domain/astrology/runtime/natal_calculation_graph.py`;
+  - recherche ciblee de `CalculationGraphRunner|CalculationGraphContext|CalculationNodeRegistry`;
+  - recherche ciblee de `build_natal_result` dans `backend/app/domain/astrology/services/natal_calculation.py`;
+  - `Select-String "RG-144|RG-145|RG-147|RG-148" _condamad/stories/regression-guardrails.md`.
+- Comparison after implementation:
+  - memes recherches ciblees apres implementation;
+  - tests CS-227 du Validation Plan;
+  - preuve `app.routes`;
+  - preuve `app.openapi()`;
+  - diff adjacent sur API, DB, migrations, frontend et pipeline natal.
+- Expected invariant:
+  - le pipeline natal reste procedural;
+  - le graphe natal reste non migre en production;
+  - le runner reste pur et synchrone;
+  - aucun endpoint public ne change volontairement.
+- Allowed differences:
+  - nouveau module `calculation_graph_runner.py`;
+  - exports package minimaux si le runtime les utilise deja;
+  - tests unitaires et evidence CS-227;
+  - Registry gap: un invariant dedie au runner de graphe pourra etre ajoute ulterieurement hors generation normale.
+
+## 4d. Ownership Routing Rule
+
+| Responsibility type | Canonical owner | Forbidden destination |
+|---|---|---|
+| Context d'execution | `calculation_graph_runner.py` | route API, DB, frontend |
+| Registry de calculateurs | `calculation_graph_runner.py` | import dynamique, global module lookup |
+| Execution topologique | `CalculationGraphRunner` | `natal_calculation.py`, infra, worker externe |
+| Validation declarative | `calculation_graph_validator.py` | runner dupliquant toutes les regles CS-225 |
+| Definition natal | `natal_calculation_graph.py` | runner ou service monolithique |
+| Tests unitaires | `backend/tests/unit/domain/astrology/` | tests API opaques pour logique pure |
+
+## 4e. Allowlist / Exception Register
+
+| File | Symbol / Route / Import | Reason | Expiry or permanence decision |
+|---|---|---|---|
+| `natal_calculation.py` | ordre procedural | Pipeline natal hors migration CS-227. | Temporary; exit condition: CS-228 approved. |
+| `natal_calculation_graph.py` | definition declarative | Consommateur futur, non execute en production par CS-227. | Temporary; exit condition: integration story approved. |
+| `calculation_graph_validator.py` | validation topologique | Source de validation CS-225 a reutiliser. | Permanent. |
+| serializers et routes publics | contrats JSON existants | CS-227 ne change pas l'API publique. | Permanent pour cette story. |
+
+Validation rule:
+
+- Toute resolution de calculator par import dynamique, toute migration de `build_natal_result` ou tout cache global bloque l'implementation CS-227.
+
+## 4f. Contract Shape
+
+- Contract type:
+  - dataclasses Python immuables avec `frozen=True` et `slots=True`;
+  - callable type ou protocole de calculator;
+  - registry explicite;
+  - runner pur;
+  - aucune nouvelle API HTTP.
+- Required dataclasses:
+  - `CalculationGraphContext`;
+  - `CalculationNodeResult`;
+  - `CalculationGraphExecutionResult`;
+  - `CalculationGraphExecutionError`.
+- Required type or protocol:
+  - `CalculationNodeCallable = Callable[[CalculationGraphContext], object]` ou `CalculationNodeExecutor`.
+- Required class:
+  - `CalculationNodeRegistry`;
+  - `CalculationGraphRunner`.
+- Fields:
+  - `values`;
+  - `node_code`;
+  - `output_key`;
+  - `status`;
+  - `input_keys`;
+  - `calculator`;
+  - `cache_hit`;
+  - `error`;
+  - `graph_code`;
+  - `success`;
+  - `outputs`;
+  - `node_results`;
+  - `execution_order`;
+  - `errors`.
+- Required fields:
+  - `values`;
+  - `node_code`;
+  - `output_key`;
+  - `status`;
+  - `input_keys`;
+  - `calculator`;
+  - `cache_hit`;
+  - `error`;
+  - `graph_code`;
+  - `success`;
+  - `outputs`;
+  - `node_results`;
+  - `execution_order`;
+  - `cache_hits`;
+  - `provenance`;
+  - `errors`.
+- Optional fields:
+  - `error` may be null for successful nodes;
+  - `errors` may be empty for successful executions.
+- Required result surfaces:
+  - `outputs`;
+  - `node_results`;
+  - `execution_order`;
+  - `cache_hits`;
+  - `provenance`;
+  - `errors`.
+- Required behavior:
+  - `CalculationGraphContext.get_required(key)` retourne la valeur ou produit un signal de dependance manquante stable;
+  - `CalculationGraphRunner(registry).run(definition, initial_context)` retourne un `CalculationGraphExecutionResult`;
+  - le cache ne vit que dans la methode `run`;
+  - les outputs produits ne mutent pas le contexte initial.
+- Status codes:
+  - no HTTP endpoint, method or status code is changed.
+- Serialization names:
+  - no public JSON key is renamed or removed by CS-227.
+- Frontend type impact:
+  - none; no frontend contract changes are allowed.
+- Generated contract impact:
+  - none; `app.routes`, `app.openapi()` and `TestClient` must show no public delta.
+
+## 4g. Batch Migration Plan
+
+| Batch | Old surface | Canonical surface | Consumers changed | Tests adapted | No-shim proof | Blocker condition |
+|---|---|---|---|---|---|---|
+| 1 | pas de context runtime commun | `CalculationGraphContext` | aucun public | context tests | immutability proof | context mute |
+| 2 | calculateurs implicites | `CalculationNodeRegistry` | tests factices | registry tests | no dynamic import | import magique |
+| 3 | ordre theorique seulement | `CalculationGraphRunner` | tests factices | runner tests | validator called | ordre instable |
+| 4 | recomputation locale | cache par `run` | tests factices | cache tests | no global cache | cache persistant |
+| 5 | erreurs dispersees | resultats runtime structures | tests factices | error tests | messages stables | erreur opaque |
+| 6 | preuve manuelle API neutre | `app.routes` et `app.openapi()` | aucun public | TestClient smoke | zero public delta | route ou schema modifie |
+
+Completion rule: chaque batch conserve `pytest -q`, `app.routes`, `app.openapi()`, l'absence de cache global et le pipeline natal procedural.
+
+## 4h. Reintroduction Guard
+
+- Guard target:
+  - aucun `networkx`, `igraph`, `graphlib`, Celery, Prefect, Airflow ou dependance externe de workflow dans le runtime;
+  - aucun `importlib.import_module`, `eval`, `globals()` ou lookup magique pour resoudre un calculator;
+  - aucun import FastAPI, SQLAlchemy, infra, settings, LLM ou frontend dans le runner;
+  - aucun changement volontaire de `app.routes`, `app.openapi()` ou payload public;
+  - aucune mutation de `build_natal_result` pour executer le graphe;
+  - aucun cache global, singleton mutable ou stockage persistant de resultats de node.
+- Guard mechanism:
+  - tests unitaires du runner;
+  - tests unitaires du validator CS-225;
+  - AST guard ou scans cibles sur imports et lookup interdits;
+  - `TestClient` smoke sur OpenAPI;
+  - scan cible `rg -n "importlib|eval\\(|globals\\(|networkx|igraph|graphlib|celery|prefect|airflow" backend/app/domain/astrology backend/tests -g "*.py"`.
+- Guard owner:
+  - `backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`;
+  - `backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`;
+  - `backend/tests/architecture` seulement si un guard d'imports transverse est ajoute.
+- Guard evidence:
+  - chemin complet `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`;
+  - chemin complet `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py`;
+  - token runtime `AST guard`, `app.routes`, `app.openapi()` et `TestClient`.
+
+## 4i. Persistent Evidence Artifacts
+
+| Artifact | Path | Purpose |
+|---|---|---|
+| Validation evidence | `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/validation.md` | Conserver tests, lint et resultats cibles CS-227. |
+| API neutrality | `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/openapi-routes.md` | Conserver OpenAPI et routes. |
+| Runner guards | `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/runner-guards.md` | Prouver registry, cache local et imports. |
+
+## 5. Current State Evidence
+
+- CS-225 introduit les contrats et le validator du graphe de calcul.
+- CS-226 declare le graphe natal sans l'executer.
+- Le pipeline natal reste orchestre proceduralement dans `natal_calculation.py`.
+- Aucun runner topologique, registry de calculateurs ou cache d'execution n'est encore la surface canonique documentee.
+- Evidence 1: `_story_briefs/cs-227-calculation-graph-runner-cache-provenance.md` - brief du runner attendu et de ses limites.
+- Evidence 2: `_condamad/stories/CS-225-calculation-graph-runtime-contracts/00-story.md` - contrats de graphe deja prets.
+- Evidence 3: `_condamad/stories/CS-226-natal-calculation-graph-definition/00-story.md` - definition de graphe deja prete.
+
+## 6. Target State
+
+- `CalculationGraphContext` porte les valeurs d'execution sans muter le contexte initial.
+- `CalculationNodeRegistry` resout explicitement les calculateurs par code stable.
+- `CalculationGraphRunner` valide la definition avant tout calcul.
+- Le runner execute les nodes dans un ordre topologique deterministe.
+- Les outputs sont collectes dans `CalculationGraphExecutionResult`.
+- Les resultats par node exposent status, cache hit, inputs consommes, output produit, calculator et erreur stable.
+- Le cache est local a un appel `run`.
+- Les erreurs de validation, input manquant, calculator inconnu et calculateur en echec sont testees.
+- Aucun calcul astrologique existant, endpoint, DB, migration ou frontend ne change.
+
+## 7. Acceptance Criteria
+
+| AC | Requirement | Evidence |
+|---|---|---|
+| AC1 | Le runner execute un graphe valide en ordre topologique. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`; execution_order. |
+| AC2 | Le validator CS-225 est appele avant tout calcul. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`; compteur calculator nul. |
+| AC3 | Les calculateurs sont resolus uniquement via registry explicite. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`; AST guard. |
+| AC4 | Les outputs sont collectes dans le resultat global. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+| AC5 | L'input manquant produit un message stable. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+| AC6 | Le cache reste local a l'execution. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`; AST guard. |
+| AC7 | La provenance minimale est disponible. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`; provenance assertions. |
+| AC8 | Le contexte initial n'est pas mute. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+| AC9 | Aucun calcul astrologique existant n'est modifie. | `pytest -q backend/tests`; AST guard; diff services/calculators. |
+| AC10 | Aucune API publique ne change. | `pytest -q backend/tests/architecture/test_api_contract_neutrality.py`; OpenAPI proof. |
+| AC11 | Aucune importation dynamique n'est utilisee. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`; scan imports; AST guard. |
+| AC12 | Le graphe lineaire est couvert. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+| AC13 | Le graphe convergent est couvert. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+| AC14 | Le calculator inconnu produit un message stable. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+| AC15 | Le calculateur en echec produit un message stable. | `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+| AC16 | Aucun fichier DB ou frontend n'est modifie. | diff adjacent DB/frontend; `pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`. |
+
+## 8. Implementation Tasks
+
+- [ ] Task: creer `calculation_graph_runner.py` avec commentaire global et docstrings en francais. (AC: AC1)
+- [ ] Task: ajouter `CalculationGraphContext` immuable avec `get_required`. (AC: AC5, AC8)
+- [ ] Task: ajouter `CalculationNodeRegistry` avec resolution explicite des calculateurs. (AC: AC3, AC11)
+- [ ] Task: ajouter les resultats `CalculationNodeResult` et `CalculationGraphExecutionResult`. (AC: AC4, AC7)
+- [ ] Task: brancher `CalculationGraphValidator().validate(definition)` avant l'execution. (AC: AC2)
+- [ ] Task: executer les nodes dans l'ordre topologique deterministe. (AC: AC1, AC12)
+- [ ] Task: implementer le cache local a `run` pour les outputs deja presents. (AC: AC6)
+- [ ] Task: produire une erreur stable pour input manquant. (AC: AC5)
+- [ ] Task: produire une erreur stable pour calculator inconnu. (AC: AC14)
+- [ ] Task: produire une erreur stable pour calculateur en echec. (AC: AC15)
+- [ ] Task: ajouter le test unitaire de graphe factice lineaire. (AC: AC1, AC12)
+- [ ] Task: ajouter le test unitaire de graphe factice convergent. (AC: AC1, AC13)
+- [ ] Task: ajouter les tests de validation invalide sans execution de calculator. (AC: AC2)
+- [ ] Task: ajouter les tests de registry, cache, provenance et immutabilite du contexte initial. (AC: AC3, AC6, AC7, AC8)
+- [ ] Task: ajouter l'AST guard ou scan cible contre import dynamique, cache global et dependance externe. (AC: AC6, AC11)
+- [ ] Task: ajouter les preuves `app.routes`, `app.openapi()` et `TestClient` de neutralite API. (AC: AC10)
+- [ ] Task: collecter l'evidence finale dans le dossier CS-227. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC10, AC11, AC12, AC13, AC14, AC15, AC16)
+
+## 9. Mandatory Reuse / DRY Constraints
+
+- Reutiliser `CalculationGraphDefinition`, `CalculationNodeDefinition`, `CalculationInputDefinition` et `CalculationNodeStatus` depuis CS-225.
+- Reutiliser `CalculationGraphValidator` pour valider dependances, doublons et cycles.
+- Reutiliser `natal_calculation_graph.py` comme contrat de definition future, sans le brancher en production.
+- Ne pas dupliquer les calculateurs astrologiques existants.
+- Ne pas creer une seconde logique de validation de graphe hors besoin runtime minimal.
+
+## 10. No Legacy / Forbidden Paths
+
+- Ne pas modifier le frontend.
+- Ne pas ajouter de migration Alembic.
+- Ne pas changer de route FastAPI, schema public, serializer public ou OpenAPI.
+- Ne pas ajouter `networkx`, `igraph`, `graphlib`, Celery, Prefect, Airflow ou dependance externe de workflow.
+- Ne pas utiliser `importlib.import_module`, `eval`, `globals()` ou lookup magique.
+- Ne pas migrer `build_natal_result`.
+- Ne pas modifier les calculateurs astrologiques existants.
+- Ne pas ajouter de cache global, cache persistant, retry ou thread pool.
+- Ne pas ajouter de fallback runtime, shim legacy ou couche compatibility pour executer le pipeline natal.
+
+## 11. Generated Contract Check
+
+- Capture before:
+  - `app.routes`;
+  - `app.openapi()`;
+  - un smoke `TestClient` sur OpenAPI.
+- Capture after:
+  - memes preuves.
+- Expected result:
+  - aucun endpoint, method, status code ou schema public ne change volontairement.
+
+## 12. Files to Inspect First
+
+- `backend/app/domain/astrology/runtime/calculation_graph_contracts.py`.
+- `backend/app/domain/astrology/runtime/calculation_graph_validator.py`.
+- `backend/app/domain/astrology/runtime/natal_calculation_graph.py`.
+- `backend/app/domain/astrology/services/natal_calculation.py`.
+- `_condamad/stories/regression-guardrails.md` avec recherche ciblee `RG-144|RG-145|RG-147|RG-148`.
+
+## 13. Expected Files to Modify
+
+Likely files:
+
+- `backend/app/domain/astrology/runtime/calculation_graph_runner.py`.
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/validation.md`.
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/openapi-routes.md`.
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/runner-guards.md`.
+
+Likely tests:
+
+- `backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`.
+- `backend/tests/architecture/test_api_contract_neutrality.py` seulement si la preuve API neutre n'existe pas deja.
+
+Files not expected to change:
+
+- `frontend/src`.
+- `backend/alembic`.
+- `backend/app/api`.
+- `backend/app/domain/astrology/services/natal_calculation.py`.
+- `backend/app/domain/astrology/calculators`.
+
+## 14. Dependency Policy
+
+- New dependencies: none.
+- Justification: no dependency changes are authorized.
+
+## 15. Validation Plan
+
+Run all Python commands after activating the venv:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+ruff format backend
+ruff check backend
+pytest -q backend/tests
+```
+
+Run targeted tests:
+
+```powershell
+pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_runner.py
+pytest -q backend/tests/unit/domain/astrology/test_calculation_graph_validator.py
+```
+
+Run anti-regression scans:
+
+```powershell
+rg -n "CalculationGraphRunner|CalculationGraphContext|CalculationNodeRegistry" backend/app/domain/astrology backend/tests -g "*.py"
+rg -n "importlib|eval\(|globals\(|networkx|igraph|graphlib|celery|prefect|airflow" backend/app/domain/astrology backend/tests -g "*.py"
+rg -n "cache:|_cache|global_cache|persistent_cache" backend/app/domain/astrology/runtime/calculation_graph_runner.py
+```
+
+Run API neutrality proof:
+
+```powershell
+pytest -q backend/tests/architecture/test_api_contract_neutrality.py
+```
+
+The dedicated API neutrality evidence must name `app.routes`, `app.openapi()` and `TestClient`.
+
+## 16. Regression Risks
+
+- Un ordre topologique instable peut rendre les resultats difficiles a comparer.
+- Un cache global peut reutiliser des outputs entre executions independantes.
+- Une resolution magique de calculator peut contourner le registry explicite.
+- Une erreur runtime opaque peut masquer input manquant et calculator inconnu.
+- Une confusion entre runner pur et pipeline natal peut migrer trop tot `build_natal_result`.
+
+## 17. Dev Agent Instructions
+
+- Commencer par lire les fichiers de `Files to Inspect First`.
+- Implement only this story.
+- Do not broaden the domain.
+- Do not introduce new dependencies.
+- Implementer le plus petit delta coherent.
+- Garder les commentaires globaux et docstrings en francais dans les nouveaux fichiers applicatifs.
+- Ne pas utiliser de style inline, CSS ou frontend: aucun fichier frontend n'est attendu.
+- Ne pas creer de `requirements.txt`.
+- Executer les validations apres activation du venv.
+- Do not mark a task complete without validation evidence.
+- If an AC cannot be satisfied, stop and record the blocker in story evidence.
+- Stopper et documenter le blocage dans l'evidence si un AC ne peut pas etre satisfait.
+- Do not preserve legacy behavior by adding a fallback, shim or compatibility layer for graph execution.
+- Conserver dans l'evidence les commandes lancees, les resultats de tests, les scans et la preuve `app.routes` / `app.openapi()`.
+
+## 18. CS-227 Final Evidence Template
+
+```markdown
+## CS-227 Final Evidence
+
+### Runner
+- Added CalculationGraphRunner, CalculationGraphContext and CalculationNodeRegistry.
+- Graph validation runs before calculators.
+- Linear and convergent fake graphs execute in deterministic topological order.
+
+### Cache and Provenance
+- Cache is local to a single run call.
+- Initial context remains unchanged.
+- Node results expose input keys, output key, calculator and cache hit.
+
+### Guards
+- No dynamic import or magical calculator lookup.
+- No global or persistent cache.
+- No API, DB or frontend changes.
+```
+
+ succeeded in 227ms:
+
+[32;1mName   [0m[32;1m PSIsContainer[0m
+[32;1m----   [0m [32;1m-------------[0m
+scripts          True
+
+
+codex
+Mini-plan:
+1. Lire les fichiers runtime ciblés, le pipeline natal et les guardrails RG ciblés.
+2. Capturer une baseline API/routes et vérifier les tests existants pertinents.
+3. Ajouter le runner pur, les tests unitaires et éventuellement le test de neutralité API manquant.
+4. Lancer format/lint/tests/scans dans le venv avec commandes ciblées.
+5. Écrire les preuves, passer la story à `ready-to-review`, puis refaire les validations nécessaires.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\app\\domain\\astrology\\runtime\\calculation_graph_contracts.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\app\\domain\\astrology\\runtime\\calculation_graph_validator.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\app\\domain\\astrology\\runtime\\natal_calculation_graph.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\app\\domain\\astrology\\services\\natal_calculation.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\regression-guardrails.md -Pattern 'RG-144|RG-145|RG-147|RG-148'" in C:\dev\horoscope_front
+ succeeded in 245ms:
+# Validation pure des graphes de calcul astrologiques declaratifs.
+"""Valide les contrats de graphe sans importer ni executer de calculateur."""
+
+from __future__ import annotations
+
+from collections import Counter
+
+from app.domain.astrology.runtime.calculation_graph_contracts import (
+    CalculationGraphDefinition,
+    CalculationGraphValidationError,
+    CalculationGraphValidationResult,
+    CalculationNodeDefinition,
+)
+
+
+def validate_calculation_graph_definition(
+    graph: CalculationGraphDefinition,
+) -> CalculationGraphValidationResult:
+    """Valide un graphe et retourne ses erreurs ainsi qu'un ordre theorique."""
+    errors: list[CalculationGraphValidationError] = []
+    errors.extend(_validate_non_empty_fields(graph))
+    errors.extend(_validate_duplicates(graph))
+
+    if errors:
+        return CalculationGraphValidationResult(
+            graph_code=graph.graph_code,
+            is_valid=False,
+            errors=tuple(errors),
+        )
+
+    known_input_keys = {input_definition.key for input_definition in graph.required_inputs}
+    output_to_node = {node.output_key: node for node in graph.nodes}
+    errors.extend(_validate_required_dependencies(graph, known_input_keys, output_to_node))
+
+    cycle_errors, topological_order = _topological_order(graph, output_to_node)
+    errors.extend(cycle_errors)
+
+    return CalculationGraphValidationResult(
+        graph_code=graph.graph_code,
+        is_valid=not errors,
+        errors=tuple(errors),
+        topological_order=() if errors else topological_order,
+    )
+
+
+def _validate_non_empty_fields(
+    graph: CalculationGraphDefinition,
+) -> tuple[CalculationGraphValidationError, ...]:
+    """Controle les identifiants obligatoires du contrat."""
+    errors: list[CalculationGraphValidationError] = []
+    if not graph.graph_code.strip():
+        errors.append(CalculationGraphValidationError("Calculation graph requires a graph_code."))
+    if not graph.version.strip():
+        errors.append(
+            CalculationGraphValidationError(
+                f"Calculation graph '{graph.graph_code}' requires a version."
+            )
+        )
+    for input_definition in graph.required_inputs:
+        if not input_definition.key.strip():
+            errors.append(
+                CalculationGraphValidationError(
+                    f"Calculation graph '{graph.graph_code}' declares an input without key."
+                )
+            )
+        if not input_definition.value_type.strip():
+            errors.append(
+                CalculationGraphValidationError(
+                    f"Calculation input '{input_definition.key}' requires a value_type.",
+                    key=input_definition.key,
+                )
+            )
+    for node in graph.nodes:
+        errors.extend(_validate_node_non_empty_fields(graph, node))
+    return tuple(errors)
+
+
+def _validate_node_non_empty_fields(
+    graph: CalculationGraphDefinition,
+    node: CalculationNodeDefinition,
+) -> tuple[CalculationGraphValidationError, ...]:
+    """Controle les champs obligatoires d'un node."""
+    errors: list[CalculationGraphValidationError] = []
+    if not node.code.strip():
+        errors.append(
+            CalculationGraphValidationError(
+                f"Calculation graph '{graph.graph_code}' declares a node without code."
+            )
+        )
+    if not node.output_key.strip():
+        errors.append(
+            CalculationGraphValidationError(
+                f"Calculation node '{node.code}' requires an output_key.",
+                node_code=node.code,
+            )
+        )
+    if not node.calculator.strip():
+        errors.append(
+            CalculationGraphValidationError(
+                f"Calculation node '{node.code}' requires a calculator.",
+                node_code=node.code,
+            )
+        )
+    for dependency in node.depends_on:
+        if not dependency.strip():
+            errors.append(
+                CalculationGraphValidationError(
+                    f"Calculation node '{node.code}' declares an empty dependency.",
+                    node_code=node.code,
+                )
+            )
+    for dependency in node.optional_depends_on:
+        if not dependency.strip():
+            errors.append(
+                CalculationGraphValidationError(
+                    f"Calculation node '{node.code}' declares an empty optional dependency.",
+                    node_code=node.code,
+                )
+            )
+    return tuple(errors)
+
+
+def _validate_duplicates(
+    graph: CalculationGraphDefinition,
+) -> tuple[CalculationGraphValidationError, ...]:
+    """Detecte les doublons de codes, sorties et entrees."""
+    errors: list[CalculationGraphValidationError] = []
+    for code, count in _duplicates(node.code for node in graph.nodes):
+        if count > 1:
+            errors.append(
+                CalculationGraphValidationError(
+                    f"Calculation graph '{graph.graph_code}' declares duplicate node code '{code}'."
+                )
+            )
+    for output_key, count in _duplicates(node.output_key for node in graph.nodes):
+        if count > 1:
+            errors.append(
+                CalculationGraphValidationError(
+                    f"Calculation graph '{graph.graph_code}' declares duplicate output_key "
+                    f"'{output_key}'."
+                )
+            )
+    for input_key, count in _duplicates(
+        input_definition.key for input_definition in graph.required_inputs
+    ):
+        if count > 1:
+            errors.append(
+                CalculationGraphValidationError(
+                    f"Calculation graph '{graph.graph_code}' declares duplicate input key "
+                    f"'{input_key}'."
+                )
+            )
+    return tuple(errors)
+
+
+def _duplicates(values: object) -> tuple[tuple[str, int], ...]:
+    """Retourne les valeurs non vides comptees de maniere stable."""
+    counter = Counter(value for value in values if isinstance(value, str) and value.strip())
+    return tuple((value, counter[value]) for value in sorted(counter))
+
+
+def _validate_required_dependencies(
+    graph: CalculationGraphDefinition,
+    known_input_keys: set[str],
+    output_to_node: dict[str, CalculationNodeDefinition],
+) -> tuple[CalculationGraphValidationError, ...]:
+    """Rejette les dependances obligatoires inconnues."""
+    known_keys = known_input_keys | set(output_to_node)
+    errors: list[CalculationGraphValidationError] = []
+    for node in graph.nodes:
+        for dependency in node.depends_on:
+            if dependency not in known_keys:
+                errors.append(
+                    CalculationGraphValidationError(
+                        f"Calculation node '{node.code}' depends on unknown key '{dependency}'.",
+                        node_code=node.code,
+                        key=dependency,
+                    )
+                )
+    return tuple(errors)
+
+
+def _topological_order(
+    graph: CalculationGraphDefinition,
+    output_to_node: dict[str, CalculationNodeDefinition],
+) -> tuple[tuple[CalculationGraphValidationError, ...], tuple[str, ...]]:
+    """Produit un ordre topologique stable ou une erreur de cycle."""
+    node_by_code = {node.code: node for node in graph.nodes}
+    dependencies_by_code = {
+        node.code: tuple(
+            output_to_node[dependency].code
+            for dependency in (*node.depends_on, *node.optional_depends_on)
+            if dependency in output_to_node
+        )
+        for node in graph.nodes
+    }
+    permanent: set[str] = set()
+    temporary: set[str] = set()
+    ordered: list[str] = []
+
+    for node in graph.nodes:
+        cycle = _visit_node(
+            node.code,
+            graph,
+            dependencies_by_code,
+            node_by_code,
+            permanent,
+            temporary,
+            ordered,
+            (),
+        )
+        if cycle is not None:
+            return (cycle,), ()
+
+    return (), tuple(ordered)
+
+
+def _visit_node(
+    node_code: str,
+    graph: CalculationGraphDefinition,
+    dependencies_by_code: dict[str, tuple[str, ...]],
+    node_by_code: dict[str, CalculationNodeDefinition],
+    permanent: set[str],
+    temporary: set[str],
+    ordered: list[str],
+    stack: tuple[str, ...],
+) -> CalculationGraphValidationError | None:
+    """Parcourt les dependances d'un node en detectant les cycles."""
+    if node_code in permanent:
+        return None
+    if node_code in temporary:
+        cycle_path = (*stack[stack.index(node_code) :], node_code)
+        return CalculationGraphValidationError(
+            f"Calculation graph '{graph.graph_code}' contains a cycle: {' -> '.join(cycle_path)}.",
+            node_code=node_code,
+        )
+
+    temporary.add(node_code)
+    next_stack = (*stack, node_code)
+    for dependency_code in dependencies_by_code[node_code]:
+        cycle = _visit_node(
+            dependency_code,
+            graph,
+            dependencies_by_code,
+            node_by_code,
+            permanent,
+            temporary,
+            ordered,
+            next_stack,
+        )
+        if cycle is not None:
+            return cycle
+
+    temporary.remove(node_code)
+    permanent.add(node_code)
+    ordered.append(node_by_code[node_code].code)
+    return None
+
+ succeeded in 225ms:
+# Definition declarative du graphe de calcul natal runtime.
+"""Expose le graphe natal sans executer ni importer le pipeline metier."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+
+from app.domain.astrology.runtime.calculation_graph_contracts import (
+    CalculationGraphDefinition,
+    CalculationInputDefinition,
+    CalculationNodeDefinition,
+)
+
+NATAL_GRAPH_CODE = "natal_chart_v1"
+NATAL_GRAPH_VERSION = "1"
+CANONICAL_RUNTIME_TAG = "canonical_runtime"
+COMPATIBILITY_PROJECTION_TAG = "compatibility_projection"
+PUBLIC_PROJECTION_TAG = "public_projection"
+
+
+class NatalCalculationNodeCode(StrEnum):
+    """Codes stables des nodes documentant le pipeline natal."""
+
+    PREPARE_BIRTH_DATA = "prepare_birth_data"
+    PLANET_POSITIONS = "planet_positions"
+    ASTRAL_POINTS = "astral_points"
+    HOUSES_RAW = "houses_raw"
+    HOUSES_RUNTIME = "houses_runtime"
+    SIGNS_RUNTIME = "signs_runtime"
+    CHART_OBJECTS = "chart_objects"
+    ASPECTS_RUNTIME = "aspects_runtime"
+    HOUSE_POSITIONS = "house_positions"
+    HOUSE_RULERSHIPS = "house_rulerships"
+    FIXED_STAR_CONJUNCTIONS = "fixed_star_conjunctions"
+    ADVANCED_CONDITIONS = "advanced_conditions"
+    MOTION_VISIBILITY_PAYLOADS = "motion_visibility_payloads"
+    DIGNITIES = "dignities"
+    DOMINANCE = "dominance"
+    CHART_SIGNATURE = "chart_signature"
+    INTERPRETATION_INPUT = "interpretation_input"
+    PLANET_POSITIONS_PROJECTION = "planet_positions_projection"
+    ASTRAL_POINTS_PROJECTION = "astral_points_projection"
+    HOUSES_PROJECTION = "houses_projection"
+    ASPECTS_PROJECTION = "aspects_projection"
+    DIGNITY_RESULTS_PROJECTION = "dignity_results_projection"
+    ADVANCED_CONDITIONS_PROJECTION = "advanced_conditions_projection"
+    FIXED_STAR_CONJUNCTIONS_PROJECTION = "fixed_star_conjunctions_projection"
+    PUBLIC_NATAL_RESULT = "public_natal_result"
+
+
+def build_natal_calculation_graph_definition() -> CalculationGraphDefinition:
+    """Construit la definition inspectable du graphe natal canonique."""
+    return CalculationGraphDefinition(
+        graph_code=NATAL_GRAPH_CODE,
+        version=NATAL_GRAPH_VERSION,
+        required_inputs=_build_required_inputs(),
+        nodes=_build_nodes(),
+    )
+
+
+def _build_required_inputs() -> tuple[CalculationInputDefinition, ...]:
+    """Declare les entrees minimales et derivees disponibles au graphe."""
+    return (
+        CalculationInputDefinition(key="birth_datetime", value_type="datetime"),
+        CalculationInputDefinition(key="timezone", value_type="str"),
+        CalculationInputDefinition(key="coordinates", value_type="Coordinates"),
+        CalculationInputDefinition(key="house_system", value_type="str"),
+        CalculationInputDefinition(key="zodiac_mode", value_type="str"),
+        CalculationInputDefinition(key="runtime_reference", value_type="AstrologyRuntimeReference"),
+        CalculationInputDefinition(key="locale", value_type="str"),
+        CalculationInputDefinition(key="calculation_options", value_type="Mapping[str, object]"),
+        CalculationInputDefinition(key="prepared_birth_data", value_type="BirthPreparedData"),
+        CalculationInputDefinition(key="julian_day", value_type="float"),
+        CalculationInputDefinition(key="effective_house_system", value_type="str"),
+    )
+
+
+def _build_nodes() -> tuple[CalculationNodeDefinition, ...]:
+    """Declare les nodes dans un ordre lisible proche du pipeline procedural."""
+    return (
+        _canonical_node(
+            NatalCalculationNodeCode.PREPARE_BIRTH_DATA,
+            output_key="prepared_birth_data",
+            depends_on=("birth_datetime", "timezone", "coordinates", "calculation_options"),
+            calculator="prepare_birth_data",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.PLANET_POSITIONS,
+            output_key="planet_positions",
+            depends_on=("julian_day", "runtime_reference", "zodiac_mode"),
+            calculator="calculate_planet_positions",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.ASTRAL_POINTS,
+            output_key="astral_points",
+            depends_on=("julian_day", "runtime_reference", "zodiac_mode"),
+            calculator="calculate_astral_points",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.HOUSES_RAW,
+            output_key="houses_raw",
+            depends_on=("julian_day", "coordinates", "effective_house_system"),
+            calculator="calculate_houses",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.HOUSES_RUNTIME,
+            output_key="houses_runtime",
+            depends_on=("julian_day", "coordinates", "house_system", "houses_raw"),
+            calculator="build_houses_runtime",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.SIGNS_RUNTIME,
+            output_key="signs_runtime",
+            depends_on=("planet_positions", "runtime_reference"),
+            calculator="build_sign_runtime_data",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.CHART_OBJECTS,
+            output_key="chart_objects",
+            depends_on=(
+                "planet_positions",
+                "astral_points",
+                "houses_runtime",
+                "runtime_reference",
+            ),
+            calculator="build_chart_object_runtime_data",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.ASPECTS_RUNTIME,
+            output_key="aspects_runtime",
+            depends_on=("chart_objects", "runtime_reference"),
+            calculator="calculate_major_aspects",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.HOUSE_POSITIONS,
+            output_key="house_positions",
+            depends_on=("houses_runtime", "chart_objects"),
+            calculator="enrich_house_position_payloads",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.HOUSE_RULERSHIPS,
+            output_key="house_rulerships",
+            depends_on=("houses_runtime", "chart_objects", "runtime_reference"),
+            calculator="house_ruler_resolver",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.FIXED_STAR_CONJUNCTIONS,
+            output_key="fixed_star_conjunctions",
+            depends_on=("chart_objects", "runtime_reference"),
+            calculator="fixed_star_conjunction_calculator",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.ADVANCED_CONDITIONS,
+            output_key="advanced_conditions",
+            depends_on=("planet_positions", "aspects_runtime", "runtime_reference"),
+            calculator="advanced_condition_engine",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.MOTION_VISIBILITY_PAYLOADS,
+            output_key="motion_visibility_payloads",
+            depends_on=("chart_objects", "advanced_conditions"),
+            calculator="build_motion_visibility_payloads",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.DIGNITIES,
+            output_key="dignities",
+            depends_on=("chart_objects", "houses_runtime", "aspects_runtime", "runtime_reference"),
+            calculator="planet_dignity_scoring_service",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.CHART_SIGNATURE,
+            output_key="chart_signature",
+            depends_on=("chart_objects", "signs_runtime", "houses_runtime", "aspects_runtime"),
+            calculator="chart_signature_calculator",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.DOMINANCE,
+            output_key="dominance",
+            depends_on=(
+                "chart_objects",
+                "houses_runtime",
+                "house_rulerships",
+                "advanced_conditions",
+                "aspects_runtime",
+                "dignities",
+                "runtime_reference",
+            ),
+            calculator="planet_dominance_engine",
+        ),
+        _canonical_node(
+            NatalCalculationNodeCode.INTERPRETATION_INPUT,
+            output_key="interpretation_input",
+            depends_on=("chart_objects", "aspects_runtime", "dominance", "advanced_conditions"),
+            calculator="chart_interpretation_input_builder",
+        ),
+        _projection_node(
+            NatalCalculationNodeCode.PLANET_POSITIONS_PROJECTION,
+            output_key="planet_positions_projection",
+            depends_on=("planet_positions",),
+            calculator="project_planet_positions",
+        ),
+        _projection_node(
+            NatalCalculationNodeCode.ASTRAL_POINTS_PROJECTION,
+            output_key="astral_points_projection",
+            depends_on=("astral_points",),
+            calculator="project_astral_points",
+        ),
+        _projection_node(
+            NatalCalculationNodeCode.HOUSES_PROJECTION,
+            output_key="houses_projection",
+            depends_on=("houses_runtime",),
+            calculator="project_houses",
+        ),
+        _projection_node(
+            NatalCalculationNodeCode.ASPECTS_PROJECTION,
+            output_key="aspects_projection",
+            depends_on=("aspects_runtime",),
+            calculator="project_aspects",
+        ),
+        _projection_node(
+            NatalCalculationNodeCode.DIGNITY_RESULTS_PROJECTION,
+            output_key="dignity_results_projection",
+            depends_on=("dignities",),
+            calculator="project_dignity_results",
+        ),
+        _projection_node(
+            NatalCalculationNodeCode.ADVANCED_CONDITIONS_PROJECTION,
+            output_key="advanced_conditions_projection",
+            depends_on=("advanced_conditions",),
+            calculator="project_advanced_conditions",
+        ),
+        _projection_node(
+            NatalCalculationNodeCode.FIXED_STAR_CONJUNCTIONS_PROJECTION,
+            output_key="fixed_star_conjunctions_projection",
+            depends_on=("fixed_star_conjunctions",),
+            calculator="project_fixed_star_conjunctions",
+        ),
+        CalculationNodeDefinition(
+            code=NatalCalculationNodeCode.PUBLIC_NATAL_RESULT.value,
+            output_key="public_natal_result",
+            depends_on=(
+                "prepared_birth_data",
+                "planet_positions_projection",
+                "astral_points_projection",
+                "houses_projection",
+                "aspects_projection",
+                "dignity_results_projection",
+                "advanced_conditions_projection",
+                "fixed_star_conjunctions_projection",
+                "chart_signature",
+                "interpretation_input",
+            ),
+            calculator="project_public_natal_result",
+            tags=(PUBLIC_PROJECTION_TAG,),
+        ),
+    )
+
+
+def _canonical_node(
+    code: NatalCalculationNodeCode,
+    *,
+    output_key: str,
+    depends_on: tuple[str, ...],
+    calculator: str,
+) -> CalculationNodeDefinition:
+    """Cree un node canonique sans dependance vers les projections."""
+    return CalculationNodeDefinition(
+        code=code.value,
+        output_key=output_key,
+        depends_on=depends_on,
+        calculator=calculator,
+        tags=(CANONICAL_RUNTIME_TAG,),
+    )
+
+
+def _projection_node(
+    code: NatalCalculationNodeCode,
+    *,
+    output_key: str,
+    depends_on: tuple[str, ...],
+    calculator: str,
+) -> CalculationNodeDefinition:
+    """Cree une projection de compatibilite terminale du graphe."""
+    return CalculationNodeDefinition(
+        code=code.value,
+        output_key=output_key,
+        depends_on=depends_on,
+        calculator=calculator,
+        tags=(COMPATIBILITY_PROJECTION_TAG,),
+    )
+
+ succeeded in 257ms:
+# Contrats declaratifs du graphe de calcul astrologique runtime.
+"""Contrats types pour decrire un graphe de calcul sans l'executer."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+
+
+class CalculationNodeStatus(StrEnum):
+    """Statuts observables d'un node dans un futur runner de graphe."""
+
+    DECLARED = "declared"
+    READY = "ready"
+    EXECUTED = "executed"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationInputDefinition:
+    """Definition d'une entree disponible pour les nodes du graphe."""
+
+    key: str
+    value_type: str
+    required: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationNodeDefinition:
+    """Contrat stable d'un calcul declaratif et de ses dependances."""
+
+    code: str
+    output_key: str
+    depends_on: tuple[str, ...]
+    calculator: str
+    optional_depends_on: tuple[str, ...] = ()
+    tags: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationGraphDefinition:
+    """Definition inspectable d'un graphe de calcul astrologique."""
+
+    graph_code: str
+    version: str
+    nodes: tuple[CalculationNodeDefinition, ...]
+    required_inputs: tuple[CalculationInputDefinition, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationGraphValidationError:
+    """Erreur deterministe produite par la validation du graphe."""
+
+    message: str
+    node_code: str | None = None
+    key: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationGraphValidationResult:
+    """Resultat structure d'une validation declarative de graphe."""
+
+    graph_code: str
+    is_valid: bool
+    errors: tuple[CalculationGraphValidationError, ...]
+    topological_order: tuple[str, ...] = ()
+
+ succeeded in 268ms:
+
+_condamad\stories\regression-guardrails.md:187:| [7mRG-144 [0m[7m[0m| [0m[7m[0m`CS-217-unified-chart-object-runtime-contract` [0m[7m[0m| [0m[7m[0mContrat [0m[7m[0mruntime [0m[7m[0munifie [0m[7m[0mdes [0m[7m[0mobjets [0m[7m[0mdu [0m
+[7m[0mtheme [0m[7m[0mnatal [0m[7m[0m| [0m[7m[0m`backend/app/domain/astrology/runtime/chart_object_runtime_data.py` [0m[7m[0mdoit [0m[7m[0mrester [0m[7m[0mle [0m[7m[0mcontrat [0m[7m[0mcanonique [0m[7m[0mminimal [0m[7m[0mdes [0m[7m[0mobjets [0m[7m[0mexploitables [0m
+[7m[0mdu [0m[7m[0mtheme, [0m[7m[0met [0m[7m[0m`backend/app/domain/astrology/builders/chart_object_runtime_builder.py` [0m[7m[0mdoit [0m[7m[0mrester [0m[7m[0mle [0m[7m[0mseul [0m[7m[0mowner [0m[7m[0mde [0m[7m[0mprojection [0m[7m[0mdepuis [0m[7m[0mles [0m[7m[0mcollections [0m
+[7m[0mhistoriques; [0m[7m[0mles [0m[7m[0mcalculateurs [0m[7m[0mmetier [0m[7m[0mdoivent [0m[7m[0mconsommer [0m[7m[0m`ChartObjectCapabilities` [0m[7m[0met [0m[7m[0mnon [0m[7m[0majouter [0m[7m[0mde [0m[7m[0mnouvelles [0m[7m[0mbranches [0m[7m[0m`object_type`, [0m[7m[0met [0m
+[7m[0m`NatalResult.chart_objects` [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mremplacer [0m[7m[0mni [0m[7m[0mcasser [0m[7m[0m`planet_positions`, [0m[7m[0m`astral_points`, [0m[7m[0m`houses`, [0m[7m[0mangles, [0m[7m[0maspects, [0m[7m[0mdignites [0m[7m[0mou [0m[7m[0mchamps [0m
+[7m[0minternes [0m[7m[0mexistants. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_builder.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_natal_result_chart_objects.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"calculability" [0m[7m[0mbackend/app/domain/astrology/runtime [0m
+[7m[0mbackend/app/domain/astrology/builders [0m[7m[0mbackend/tests/unit/domain/astrology`, [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"if [0m[7m[0mobject_type [0m[7m[0m==|if [0m[7m[0m.*\\.object_type [0m[7m[0m==|match [0m[7m[0mobject_type|match [0m
+[7m[0m.*\\.object_type" [0m[7m[0mbackend/app/domain/astrology/calculators [0m[7m[0mbackend/app/domain/astrology/dignities [0m[7m[0mbackend/app/domain/astrology/dominance [0m
+[7m[0mbackend/app/domain/astrology/advanced_conditions [0m[7m[0mbackend/app/domain/astrology/planetary_conditions [0m[7m[0mbackend/app/domain/astrology/interpretation [0m
+[7m[0mbackend/app/domain/astrology/interpretation_adapters [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0mdiff [0m[7m[0madjacent [0m[7m[0msur [0m[7m[0m`planetary_conditions`, [0m[7m[0m`dignities`, [0m[7m[0m`dominance`, [0m
+[7m[0m`advanced_conditions`, [0m[7m[0m`interpretation`, [0m[7m[0m`json_builder.py`, [0m[7m[0mAPI, [0m[7m[0minfra, [0m[7m[0mmigrations [0m[7m[0met [0m[7m[0mfrontend. [0m[7m[0m|[0m
+_condamad\stories\regression-guardrails.md:188:| [7mRG-145 [0m[7m[0m| [0m[7m[0m`CS-218-aspect-engine-chart-object-consumption` [0m[7m[0m| [0m[7m[0mFrontiere [0m[7m[0md'entree [0m[7m[0mdu [0m[7m[0mmoteur [0m[7m[0md'aspects [0m
+[7m[0mnatal [0m[7m[0m| [0m[7m[0mLe [0m[7m[0mmoteur [0m[7m[0md'aspects [0m[7m[0mnatal [0m[7m[0mdoit [0m[7m[0mconsommer [0m[7m[0mles [0m[7m[0mcandidats [0m[7m[0mdepuis [0m[7m[0m`NatalResult.chart_objects` [0m[7m[0m/ [0m[7m[0m`ChartObjectRuntimeData` [0m[7m[0mpar [0m
+[7m[0m`capabilities.supports_aspects`, [0m[7m[0mpuis [0m[7m[0mles [0m[7m[0mprojeter [0m[7m[0mvia [0m[7m[0mun [0m[7m[0mprojector [0m[7m[0munique [0m[7m[0mvers [0m[7m[0m`AspectBodyRuntimeData`; [0m[7m[0mil [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mredevenir [0m[7m[0mconsommateur [0m
+[7m[0mdirect [0m[7m[0mde [0m[7m[0m`planet_positions`, [0m[7m[0m`astral_points`, [0m[7m[0m`angles` [0m[7m[0mou [0m[7m[0m`fixed_stars`, [0m[7m[0mni [0m[7m[0majouter [0m[7m[0mde [0m[7m[0mbranches [0m[7m[0mmetier [0m[7m[0m`object_type` [0m[7m[0mdans [0m[7m[0mles [0m[7m[0mcalculateurs [0m
+[7m[0md'aspects. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m[7m[0mbackend/tests/unit/domain/astrology/test_aspect_chart_object_inputs.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_natal_aspects_include_points.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"object_type [0m[7m[0m==|\\.object_type|ChartObjectType" [0m
+[7m[0mbackend/app/domain/astrology/calculators [0m[7m[0m-g [0m[7m[0m"*.py"`, [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"planet_positions|astral_points|angles|fixed_stars" [0m
+[7m[0mbackend/app/domain/astrology/calculators [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m[7m[0mscan [0m[7m[0mdes [0m[7m[0mbuilders [0m[7m[0mspecialises [0m[7m[0minterdits [0m
+[7m[0m`PlanetAspectBodyBuilder|AngleAspectBodyBuilder|AstralPointAspectBodyBuilder|FixedStarAspectBodyBuilder`. [0m[7m[0m|[0m
+_condamad\stories\regression-guardrails.md:190:| [7mRG-147 [0m[7m[0m| [0m[7m[0m`CS-220-dignity-dominance-capability-runtime` [0m[7m[0m| [0m[7m[0mPayloads [0m[7m[0mdignity [0m[7m[0met [0m[7m[0mdominance [0m[7m[0mdes [0m[7m[0mobjets [0m
+[7m[0mdu [0m[7m[0mtheme [0m[7m[0m| [0m[7m[0m`ChartObjectRuntimeData.payloads.dignity` [0m[7m[0met [0m[7m[0m`payloads.dominance` [0m[7m[0mdoivent [0m[7m[0mrester [0m[7m[0mdes [0m[7m[0mprojections [0m[7m[0mcalculatoires [0m[7m[0mdes [0m[7m[0mresultats [0m[7m[0mhistoriques, [0m
+[7m[0mselectionnees [0m[7m[0mpar [0m[7m[0m`supports_dignities` [0m[7m[0met [0m[7m[0m`supports_dominance`; [0m[7m[0ml'eligibilite [0m[7m[0mne [0m[7m[0mdoit [0m[7m[0mpas [0m[7m[0mrevenir [0m[7m[0ma [0m[7m[0m`object_type`, [0m[7m[0mles [0m[7m[0menrichers [0m[7m[0mne [0m[7m[0mdoivent [0m[7m[0mpas [0m
+[7m[0mrecalculer [0m[7m[0mles [0m[7m[0mscores, [0m[7m[0met [0m[7m[0m`DominantPlanetsResult` [0m[7m[0mreste [0m[7m[0mle [0m[7m[0mclassement [0m[7m[0mchart-level. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_dignity_runtime.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_dominance_runtime.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_natal_result_chart_objects.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_traditional_golden_cases.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"object_type [0m[7m[0m==|\\.object_type [0m
+[7m[0m==|ChartObjectType\\.PLANET|ChartObjectType\\.LUMINARY" [0m[7m[0mbackend/app/domain/astrology/dignities [0m[7m[0mbackend/app/domain/astrology/dominance`, [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"planet_positions" [0m[7m[0mbackend/app/domain/astrology/dignities [0m[7m[0mbackend/app/domain/astrology/dominance`, [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"interpretation|narrative|prompt|llm|meaning|psychological" [0m[7m[0mbackend/app/domain/astrology/runtime [0m[7m[0mbackend/app/domain/astrology/dignities [0m
+[7m[0mbackend/app/domain/astrology/dominance` [0m[7m[0met [0m[7m[0mevidence [0m[7m[0m`_condamad/stories/CS-220-dignity-dominance-capability-runtime/evidence/validation.md`. [0m[7m[0m|[0m
+_condamad\stories\regression-guardrails.md:191:| [7mRG-148 [0m[7m[0m| [0m[7m[0m`CS-221-chart-object-house-position-rulership-runtime` [0m[7m[0m| [0m[7m[0mPayloads [0m[7m[0mhouse [0m[7m[0mposition [0m[7m[0met [0m
+[7m[0mrulership [0m[7m[0mdes [0m[7m[0mobjets [0m[7m[0mdu [0m[7m[0mtheme [0m[7m[0m| [0m[7m[0m`ChartObjectRuntimeData.payloads.house_position` [0m[7m[0met [0m[7m[0m`payloads.rulership` [0m[7m[0mdoivent [0m[7m[0mrester [0m[7m[0mles [0m[7m[0msurfaces [0m[7m[0mruntime [0m[7m[0mtypes [0m
+[7m[0mpour [0m[7m[0mla [0m[7m[0mposition [0m[7m[0men [0m[7m[0mmaison, [0m[7m[0mla [0m[7m[0mmodalite [0m[7m[0mangular/succedent/cadent, [0m[7m[0mles [0m[7m[0mmaisons [0m[7m[0mgouvernees, [0m[7m[0mles [0m[7m[0mrulers [0m[7m[0mASC/MC [0m[7m[0met [0m[7m[0mles [0m[7m[0mdispositors; [0m[7m[0mces [0m[7m[0mfaits [0m[7m[0mdoivent [0m
+[7m[0metre [0m[7m[0mprojetes [0m[7m[0mdepuis [0m[7m[0m`HouseRulerResolver`, [0m[7m[0m`HouseRulerResult`, [0m[7m[0m`sign_rulerships` [0m[7m[0met [0m[7m[0mles [0m[7m[0mhelpers [0m[7m[0mruntime [0m[7m[0mexistants, [0m[7m[0msans [0m[7m[0msecond [0m[7m[0mresolver, [0m[7m[0mtable [0m
+[7m[0mlocale [0m[7m[0mde [0m[7m[0mrulers, [0m[7m[0mbranche [0m[7m[0md'eligibilite [0m[7m[0mpar [0m[7m[0m`object_type`, [0m[7m[0minterpretation, [0m[7m[0mAPI, [0m[7m[0mDB, [0m[7m[0mprojection [0m[7m[0mJSON [0m[7m[0mpublique [0m[7m[0mou [0m[7m[0mfrontend. [0m[7m[0m| [0m[7m[0m`pytest [0m[7m[0m-q [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_house_position_rulership_runtime.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_builder.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_natal_result_chart_objects.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py [0m[7m[0mbackend/tests/unit/domain/astrology/test_planet_dominance_engine.py [0m
+[7m[0mbackend/tests/unit/domain/astrology/test_traditional_golden_cases.py` [0m[7m[0m+ [0m[7m[0mscans [0m[7m[0m`rg [0m[7m[0m-n [0m[7m[0m"object_type [0m[7m[0m==|\\.object_type [0m
+[7m[0m==|ChartObjectType\\.PLANET|ChartObjectType\\.LUMINARY" [0m[7m[0mbackend/app/domain/astrology/builders [0m[7m[0mbackend/app/domain/astrology/dignities [0m
+[7m[0mbackend/app/domain/astrology/dominance [0m[7m[0m-g [0m[7m[0m"*.py"`, [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"HouseRulershipPayloadBuilder|MarsRulershipPayloadBuilder|SIGN_RULERS|sign_rulers\\s*=\\s*\\{" [0m[7m[0mbackend/app/domain/astrology [0m[7m[0m-g [0m[7m[0m"*.py"`, [0m[7m[0m`rg [0m[7m[0m-n [0m
+[7m[0m"interpretation|narrative|prompt|llm|meaning|psychological" [0m[7m[0mbackend/app/domain/astrology/runtime [0m[7m[0mbackend/app/domain/astrology/builders [0m[7m[0m-g [0m[7m[0m"*.py"` [0m[7m[0met [0m
+[7m[0mevidence [0m[7m[0m`_condamad/stories/CS-221-chart-object-house-position-rulership-runtime/evidence/validation.md`. [0m[7m[0m|[0m
+
+
+2026-05-23T02:25:54.952703Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath backend\app\domain\astrology\services\natal_[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'backend\app\domain\astrology\services\natal_calculation.py' because it does not exist.[0m
+
+ exited 1 in 287ms:
+[31;1mGet-Content: [0m
+[31;1m[36;1mLine |[0m
+[31;1m[36;1m[36;1m   2 | [0m [36;1mGet-Content -LiteralPath backend\app\domain\astrology\services\natal_[0m …[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[31;1m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCannot find path 'backend\app\domain\astrology\services\natal_calculation.py' because it does not exist.[0m
+
+codex
+Le fichier de service natal attendu par la story a été déplacé ou renommé. Je fais une recherche ciblée de `build_natal_result` dans `backend/app/domain/astrology` pour confirmer la surface à ne pas modifier.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"def build_natal_result|build_natal_result\" backend\\app\\domain\\astrology -g \"*.py\"" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"CalculationGraphRunner|CalculationGraphContext|CalculationNodeRegistry\" backend\\app\\domain\\astrology backend\\tests -g \"*.py\"" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath backend\\tests\\unit\\domain\\astrology -Force | Where-Object { "'$_.Name -like '"'*calculation_graph*' -or "'$_.Name -like '"'*api*' } | Select-Object Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath backend\\tests\\architecture -Force | Select-Object Name" in C:\dev\horoscope_front
+2026-05-23T02:26:02.401390Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+
+ exited 1 in 206ms:
+ succeeded in 224ms:
+backend\app\domain\astrology\natal_calculation.py:549:def build_natal_result(
+
+ succeeded in 244ms:
+
+[32;1mName[0m
+[32;1m----[0m
+test_calculation_graph_contracts.py
+test_calculation_graph_validator.py
+test_natal_calculation_graph_definition.py
+
+
+ succeeded in 260ms:
+
+[32;1mName[0m
+[32;1m----[0m
+__pycache__
+test_api_contract_neutrality.py
+test_chart_interpretation_input_boundary.py
+test_chart_runtime_surface_documentation.py
+test_chart_runtime_surface_guardrails.py
+
+
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_validator.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_contracts.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\tests\\architecture\\test_api_contract_neutrality.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\app\\domain\\astrology\\natal_calculation.py -TotalCount 620 | Select-Object -Last 100" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Test-Path -LiteralPath .venv\\Scripts\\Activate.ps1; Get-Content -LiteralPath backend\\pyproject.toml -TotalCount 120" in C:\dev\horoscope_front
+ succeeded in 220ms:
+# Tests d'architecture prouvant la neutralite API de CS-225.
+"""Verifie que le graphe de calcul reste hors contrat HTTP public."""
+
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+
+def test_calculation_graph_contracts_are_not_public_openapi_schemas() -> None:
+    """Les contrats CS-225 ne sont pas exposes dans OpenAPI."""
+    schemas = app.openapi().get("components", {}).get("schemas", {})
+    route_paths = {route.path for route in app.routes}
+
+    assert "CalculationGraphDefinition" not in schemas
+    assert "CalculationNodeDefinition" not in schemas
+    assert "CalculationInputDefinition" not in schemas
+    assert not any("calculation-graph" in path for path in route_paths)
+
+
+def test_app_routes_remain_available_for_openapi_smoke() -> None:
+    """Les routes applicatives restent inspectables par TestClient."""
+    route_paths = {route.path for route in app.routes}
+    client = TestClient(app)
+
+    assert "/openapi.json" in route_paths
+    response = client.get("/openapi.json")
+    assert response.status_code == 200
+    assert "paths" in response.json()
+
+ succeeded in 216ms:
+True
+[build-system]
+requires = ["hatchling>=1.26.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "horoscope-backend"
+version = "0.1.0"
+description = "Horoscope backend"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "alembic==1.16.5",
+  "email-validator==2.2.0",
+  "fastapi==0.129.0",
+  "jinja2>=3.0.0",
+  "openai>=2.0.0",
+  "pydantic-settings>=2.0.0",
+  "PyJWT==2.10.1",
+  "psycopg[binary]==3.2.12",
+  "redis>=5.0.0",
+  "sqlalchemy==2.0.44",
+  "stripe==14.4.1",
+  "jsonschema[format]>=4.20.0",
+  "timezonefinder>=6.5.0",
+  "tzdata==2025.2",
+  "pyswisseph>=2.10.0",
+  "uvicorn==0.41.0",
+  "cryptography>=42.0.0",
+  "xhtml2pdf==0.2.16",
+  "sib-api-v3-sdk>=7.6.0",
+  "apscheduler>=3.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "aiosqlite>=0.21.0",
+  "bandit==1.8.6",
+  "httpx==0.28.1",
+  "pip-audit==2.9.0",
+  "pytest==9.0.2",
+  "pytest-asyncio>=0.23.0",
+  "ruff==0.15.1",
+]
+
+[dependency-groups]
+dev = [
+  "aiosqlite>=0.21.0",
+  "bandit==1.8.6",
+  "httpx==0.28.1",
+  "pip-audit==2.9.0",
+  "pytest==9.0.2",
+  "pytest-asyncio>=0.23.0",
+  "ruff==0.15.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = [
+  "app/tests",
+  "tests/architecture",
+  "tests/evaluation",
+  "tests/integration",
+  "tests/llm_orchestration",
+  "tests/unit",
+]
+asyncio_mode = "auto"
+addopts = "-p no:cacheprovider"
+filterwarnings = [
+  "ignore:Skipped unsupported reflection of expression-based index ix_llm_assembly_config_active_unique:sqlalchemy.exc.SAWarning",
+]
+markers = [
+  "golden: SwissEph precision tests with frozen reference values (requires pyswisseph)",
+  "integration: DB/API integration tests excluded from fast local runs",
+  "regression: regression tests (deselect with -m 'not regression')",
+  "slow: DB migration, subprocess, full regression, or quality-gate tests excluded from fast local runs",
+  "evaluation: marks tests as part of the evaluation matrix (Story 66.16)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = [".tmp-pytest", ".pytest_cache"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+force-include = { "../docs/recherches astro/signs_keywords.json" = "docs/recherches astro/signs_keywords.json" }
+
+ succeeded in 252ms:
+# Tests du validator declaratif des graphes de calcul runtime.
+"""Verifie les erreurs et l'ordre topologique du graphe CS-225."""
+
+from app.domain.astrology.runtime.calculation_graph_contracts import (
+    CalculationGraphDefinition,
+    CalculationInputDefinition,
+    CalculationNodeDefinition,
+)
+from app.domain.astrology.runtime.calculation_graph_validator import (
+    validate_calculation_graph_definition,
+)
+
+
+def test_minimal_graph_is_valid() -> None:
+    """Un graphe minimal expose inputs, node et ordre topologique."""
+    graph = CalculationGraphDefinition(
+        graph_code="natal_chart_v1",
+        version="1",
+        required_inputs=(
+            CalculationInputDefinition(key="julian_day", value_type="float"),
+            CalculationInputDefinition(key="coordinates", value_type="Coordinates"),
+            CalculationInputDefinition(key="house_system", value_type="str"),
+        ),
+        nodes=(
+            CalculationNodeDefinition(
+                code="houses",
+                output_key="houses_runtime",
+                depends_on=("julian_day", "coordinates", "house_system"),
+                calculator="houses_runtime_builder",
+            ),
+        ),
+    )
+
+    result = validate_calculation_graph_definition(graph)
+
+    assert result.is_valid is True
+    assert result.errors == ()
+    assert result.topological_order == ("houses",)
+
+
+def test_node_without_code_is_rejected() -> None:
+    """Un node sans code produit une erreur explicite."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            nodes=(
+                CalculationNodeDefinition(
+                    code="",
+                    output_key="houses_runtime",
+                    depends_on=(),
+                    calculator="houses_runtime_builder",
+                ),
+            ),
+        )
+    )
+
+    assert result.is_valid is False
+    assert "declares a node without code" in result.errors[0].message
+
+
+def test_duplicate_output_key_is_rejected() -> None:
+    """Deux nodes ne peuvent pas produire la meme sortie."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            nodes=(
+                _node("houses", "chart_objects"),
+                _node("points", "chart_objects"),
+            ),
+        )
+    )
+
+    assert result.is_valid is False
+    assert (
+        "Calculation graph 'natal_chart_v1' declares duplicate output_key 'chart_objects'."
+    ) in _messages(result)
+
+
+def test_duplicate_node_code_is_rejected() -> None:
+    """Deux nodes ne peuvent pas partager le meme code stable."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            nodes=(
+                _node("houses", "houses_runtime"),
+                _node("houses", "whole_sign_houses_runtime"),
+            ),
+        )
+    )
+
+    assert result.is_valid is False
+    assert (
+        "Calculation graph 'natal_chart_v1' declares duplicate node code 'houses'."
+    ) in _messages(result)
+
+
+def test_duplicate_input_key_is_rejected() -> None:
+    """Deux inputs ne peuvent pas declarer la meme cle."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            required_inputs=(
+                CalculationInputDefinition(key="julian_day", value_type="float"),
+                CalculationInputDefinition(key="julian_day", value_type="Decimal"),
+            ),
+            nodes=(),
+        )
+    )
+
+    assert result.is_valid is False
+    assert (
+        "Calculation graph 'natal_chart_v1' declares duplicate input key 'julian_day'."
+    ) in _messages(result)
+
+
+def test_unknown_required_dependency_is_rejected() -> None:
+    """Une dependance obligatoire doit venir des inputs ou sorties declares."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            nodes=(
+                CalculationNodeDefinition(
+                    code="house_rulers",
+                    output_key="house_rulerships_runtime",
+                    depends_on=("houses",),
+                    calculator="house_ruler_resolver",
+                ),
+            ),
+        )
+    )
+
+    assert result.is_valid is False
+    assert ("Calculation node 'house_rulers' depends on unknown key 'houses'.") in _messages(result)
+
+
+def test_direct_cycle_is_rejected() -> None:
+    """Un node ne peut pas dependre de sa propre sortie."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            nodes=(
+                CalculationNodeDefinition(
+                    code="houses",
+                    output_key="houses_runtime",
+                    depends_on=("houses_runtime",),
+                    calculator="houses_runtime_builder",
+                ),
+            ),
+        )
+    )
+
+    assert result.is_valid is False
+    assert ("Calculation graph 'natal_chart_v1' contains a cycle: houses -> houses.") in _messages(
+        result
+    )
+
+
+def test_indirect_cycle_is_rejected() -> None:
+    """Un cycle indirect retourne un chemin deterministe."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            nodes=(
+                CalculationNodeDefinition(
+                    code="houses",
+                    output_key="houses_runtime",
+                    depends_on=("signature_runtime",),
+                    calculator="houses_runtime_builder",
+                ),
+                CalculationNodeDefinition(
+                    code="signature",
+                    output_key="signature_runtime",
+                    depends_on=("houses_runtime",),
+                    calculator="chart_signature_builder",
+                ),
+            ),
+        )
+    )
+
+    assert result.is_valid is False
+    assert (
+        "Calculation graph 'natal_chart_v1' contains a cycle: houses -> signature -> houses."
+    ) in _messages(result)
+
+
+def test_unknown_optional_dependency_does_not_block_validation() -> None:
+    """Une dependance optionnelle inconnue reste inspectable sans erreur."""
+    result = validate_calculation_graph_definition(
+        CalculationGraphDefinition(
+            graph_code="natal_chart_v1",
+            version="1",
+            nodes=(
+                CalculationNodeDefinition(
+                    code="signature",
+                    output_key="signature_runtime",
+                    depends_on=(),
+                    optional_depends_on=("houses_runtime",),
+                    calculator="chart_signature_builder",
+                ),
+            ),
+        )
+    )
+
+    assert result.is_valid is True
+    assert result.errors == ()
+    assert result.topological_order == ("signature",)
+
+
+def test_topological_order_is_deterministic() -> None:
+    """L'ordre respecte les sorties consommees par les nodes declares."""
+    graph = CalculationGraphDefinition(
+        graph_code="natal_chart_v1",
+        version="1",
+        required_inputs=(
+            CalculationInputDefinition(key="julian_day", value_type="float"),
+            CalculationInputDefinition(key="coordinates", value_type="Coordinates"),
+            CalculationInputDefinition(key="house_system", value_type="str"),
+        ),
+        nodes=(
+            CalculationNodeDefinition(
+                code="signature",
+                output_key="signature_runtime",
+                depends_on=("houses_runtime", "house_rulerships_runtime"),
+                calculator="chart_signature_builder",
+            ),
+            CalculationNodeDefinition(
+                code="house_rulers",
+                output_key="house_rulerships_runtime",
+                depends_on=("houses_runtime",),
+                calculator="house_ruler_resolver",
+            ),
+            CalculationNodeDefinition(
+                code="houses",
+                output_key="houses_runtime",
+                depends_on=("julian_day", "coordinates", "house_system"),
+                calculator="houses_runtime_builder",
+            ),
+        ),
+    )
+
+    result = validate_calculation_graph_definition(graph)
+
+    assert result.is_valid is True
+    assert result.topological_order == ("houses", "house_rulers", "signature")
+
+
+def _node(code: str, output_key: str) -> CalculationNodeDefinition:
+    """Cree un node minimal pour les tests de validation."""
+    return CalculationNodeDefinition(
+        code=code,
+        output_key=output_key,
+        depends_on=(),
+        calculator=f"{code}_calculator",
+    )
+
+
+def _messages(result: object) -> tuple[str, ...]:
+    """Expose les messages d'erreur pour des assertions lisibles."""
+    return tuple(error.message for error in result.errors)
+
+ succeeded in 252ms:
+# Tests des contrats declaratifs du graphe de calcul runtime.
+"""Verifie la forme des contrats CS-225 et leur documentation."""
+
+from dataclasses import FrozenInstanceError, is_dataclass
+from pathlib import Path
+
+import pytest
+
+from app.domain.astrology.runtime.calculation_graph_contracts import (
+    CalculationGraphDefinition,
+    CalculationGraphValidationError,
+    CalculationGraphValidationResult,
+    CalculationInputDefinition,
+    CalculationNodeDefinition,
+    CalculationNodeStatus,
+)
+
+REPO_ROOT = Path(__file__).resolve().parents[5]
+DOC_PATH = REPO_ROOT / "docs/architecture/astrology-calculation-graph.md"
+
+
+def test_contracts_are_immutable_dataclasses() -> None:
+    """Les contrats principaux restent des dataclasses figees."""
+    contracts = (
+        CalculationInputDefinition,
+        CalculationNodeDefinition,
+        CalculationGraphDefinition,
+        CalculationGraphValidationError,
+        CalculationGraphValidationResult,
+    )
+
+    assert all(is_dataclass(contract) for contract in contracts)
+    graph = CalculationGraphDefinition(
+        graph_code="natal_chart_v1",
+        version="1",
+        nodes=(),
+    )
+
+    with pytest.raises(FrozenInstanceError):
+        graph.graph_code = "other"  # type: ignore[misc]
+
+
+def test_node_contract_exposes_stable_dependencies_and_output_key() -> None:
+    """Un node declare ses dependances, sa sortie et son calculateur stable."""
+    node = CalculationNodeDefinition(
+        code="houses",
+        output_key="houses_runtime",
+        depends_on=("julian_day", "coordinates", "house_system"),
+        optional_depends_on=("runtime_reference",),
+        calculator="houses_runtime_builder",
+        tags=("natal",),
+    )
+
+    assert node.output_key == "houses_runtime"
+    assert node.depends_on == ("julian_day", "coordinates", "house_system")
+    assert node.optional_depends_on == ("runtime_reference",)
+    assert node.calculator == "houses_runtime_builder"
+
+
+def test_input_contract_distinguishes_required_and_optional_inputs() -> None:
+    """Les entrees peuvent etre obligatoires ou optionnelles."""
+    required_input = CalculationInputDefinition(key="julian_day", value_type="float")
+    optional_input = CalculationInputDefinition(
+        key="runtime_reference",
+        value_type="RuntimeReference",
+        required=False,
+    )
+
+    assert required_input.required is True
+    assert optional_input.required is False
+
+
+def test_node_status_contract_lists_expected_lifecycle_values() -> None:
+    """Les statuts attendus sont explicites avant tout runner."""
+    assert tuple(status.value for status in CalculationNodeStatus) == (
+        "declared",
+        "ready",
+        "executed",
+        "failed",
+        "skipped",
+    )
+
+
+def test_architecture_document_distinguishes_graph_surfaces() -> None:
+    """La documentation distingue les graphes et chart_objects."""
+    content = DOC_PATH.read_text(encoding="utf-8")
+
+    assert "calculation graph" in content
+    assert "astrological graph" in content
+    assert "`chart_objects`" in content
+    assert "n'execute aucun calcul astrologique" in content
+
+ succeeded in 245ms:
+                        altitude_m=altitude_m,
+                    )
+                )
+                calculation_source = _calculation_source(engine, instruction)
+            sign_code = sign_from_longitude(longitude, sign_codes)
+            points_by_key[key] = {
+                "code": point.code,
+                "variant_code": instruction.variant_code,
+                "planet_code": point.code,
+                "longitude": round(longitude, 6),
+                "sign": sign_code,
+                "degree_in_sign": round(longitude % 30.0, 6),
+                "house": assign_house_number(longitude, houses_raw),
+                "calculation_source": calculation_source,
+                "is_physical_body": point.is_physical_body,
+            }
+            pending.remove(point)
+            progressed = True
+        if not progressed:
+            unresolved = ",".join(point.code for point in pending)
+            _raise_invalid_reference(
+                runtime_reference.reference_version,
+                "astral_points",
+                f"unresolved_derived_points:{unresolved}",
+            )
+    return list(points_by_key.values())
+
+
+def build_natal_result(
+    birth_input: BirthInput,
+    runtime_reference: AstrologyRuntimeReference,
+    ruleset_version: str,
+    timeout_check: Callable[[], None] | None = None,
+    engine: str = "simplified",
+    birth_lat: float | None = None,
+    birth_lon: float | None = None,
+    zodiac: ZodiacType = ZodiacType.TROPICAL,
+    ayanamsa: str | None = None,
+    frame: FrameType = FrameType.GEOCENTRIC,
+    house_system: HouseSystemType = HouseSystemType.PLACIDUS,
+    altitude_m: float | None = None,
+    ephemeris_path_version: str | None = None,
+    ephemeris_path_hash: str | None = None,
+    tt_enabled: bool = False,
+    derive_enabled: bool = False,
+    aspect_school: str = "modern",
+    aspect_rules_version: str = "1.0.0",
+    include_points_in_aspects: bool = False,
+) -> NatalResult:
+    aspect_school_code = str(getattr(aspect_school, "value", aspect_school)).strip().lower()
+    if timeout_check is not None:
+        timeout_check()
+
+    version = runtime_reference.reference_version
+    if not version:
+        raise NatalCalculationError(
+            code="reference_version_not_found",
+            message="reference version not found",
+            details={"version": ""},
+        )
+
+    planets_data = runtime_reference.planets.items
+    signs_data = runtime_reference.signs.items
+    houses_data = runtime_reference.houses.items
+    aspects_data = runtime_reference.aspects.items
+    aspect_orb_rules_data = runtime_reference.aspects.orb_rules
+    celestial_catalog = CelestialRuntimeCatalog.from_runtime_reference(runtime_reference)
+
+    if not planets_data:
+        _raise_invalid_reference(version, "planets", "missing_or_empty")
+    if not signs_data:
+        _raise_invalid_reference(version, "signs", "missing_or_empty")
+    if not houses_data:
+        _raise_invalid_reference(version, "houses", "missing_or_empty")
+    if not aspects_data:
+        _raise_invalid_reference(version, "aspects", "missing_or_empty")
+
+    prepared = prepare_birth_data(birth_input, tt_enabled=tt_enabled, derive_enabled=derive_enabled)
+    if timeout_check is not None:
+        timeout_check()
+    planet_codes = [item.code for item in planets_data if item.code]
+    if not planet_codes:
+        _raise_invalid_reference(version, "planets", "missing_code")
+
+    sign_codes = [item.code for item in signs_data if item.code]
+    if not sign_codes:
+        _raise_invalid_reference(version, "signs", "missing_code")
+
+    house_numbers: list[int] = []
+    for item in houses_data:
+        house_numbers.append(item.number)
+    if not house_numbers:
+        _raise_invalid_reference(version, "houses", "missing_number")
+
+    # Engine-specific calculation
+    if engine == "swisseph":
+        if birth_lat is None or birth_lon is None:
+            raise NatalCalculationError(
+                code="missing_birth_coordinates",
+                message="birth_lat and birth_lon are required for swisseph engine",
+
+codex
+Les contrats existants sont des dataclasses figées, le validator expose déjà l’ordre topologique, et le test d’architecture couvre `app.routes`, `app.openapi()` et `TestClient`. Je vais ajouter un module runner isolé et des tests dédiés sans modifier le pipeline natal.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath backend\\app\\domain\\astrology\\runtime -Force | Select-Object Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "if (Test-Path -LiteralPath backend\\app\\domain\\astrology\\runtime\\__init__.py) { Get-Content -LiteralPath backend\\app\\domain\\astrology\\runtime\\__init__.py }" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath _condamad\\stories\\CS-227-calculation-graph-runner-cache-provenance -Force | Select-Object Name,PSIsContainer" in C:\dev\horoscope_front
+ succeeded in 235ms:
+
+[32;1mName[0m
+[32;1m----[0m
+__pycache__
+__init__.py
+aspect_calculation_contracts.py
+aspect_modifiers.py
+aspect_runtime_data.py
+astrological_graph_contracts.py
+calculation_graph_contracts.py
+calculation_graph_validator.py
+chart_object_runtime_data.py
+chart_signature_runtime_data.py
+dominant_aspect_runtime_data.py
+house_runtime_data.py
+natal_calculation_graph.py
+pattern_runtime_data.py
+runtime_reference.py
+sign_runtime_data.py
+
+
+ succeeded in 240ms:
+
+[32;1mName       [0m[32;1m PSIsContainer[0m
+[32;1m----       [0m [32;1m-------------[0m
+00-story.md         False
+
+
+ succeeded in 263ms:
+"""Contrats runtime riches pour les objets astrologiques calculés."""
+
+from importlib import import_module
+from typing import Any
+
+from app.domain.astrology.runtime.chart_signature_runtime_data import (
+    BalanceScoreRuntimeData,
+    ChartBalanceRuntimeData,
+    ChartSignatureRuntimeData,
+    DominanceRankRuntimeData,
+)
+from app.domain.astrology.runtime.house_runtime_data import (
+    HouseAxisRuntimeData,
+    HouseOccupantRuntimeData,
+    HouseRulerRuntimeData,
+    HouseRuntimeData,
+    HouseStrengthRuntimeData,
+    resolve_house_kind,
+)
+from app.domain.astrology.runtime.runtime_reference import (
+    AnglePointReferenceData,
+    AnglePointReferenceSet,
+    AspectOrbRuleReferenceData,
+    AspectReferenceData,
+    AspectReferenceSet,
+    AstrologyRuntimeReference,
+    AstrologySystemReferenceData,
+    AstrologySystemReferenceSet,
+    DignityReferenceData,
+    DignityReferenceSet,
+    HouseAxisReferenceData,
+    HouseReferenceData,
+    HouseReferenceSet,
+    HouseSystemReferenceData,
+    HouseSystemReferenceSet,
+    PlanetNatureReferenceData,
+    PlanetNatureReferenceSet,
+    PlanetReferenceData,
+    PlanetReferenceSet,
+    SignReferenceData,
+    SignReferenceSet,
+)
+from app.domain.astrology.runtime.sign_runtime_data import (
+    SignDignityRuntimeData,
+    SignDominanceReason,
+    SignOccupantRuntimeData,
+    SignRuntimeData,
+)
+
+__all__ = [
+    "AspectIdentityRuntimeData",
+    "AspectInterpretationRuntimeData",
+    "AspectMetadataRuntimeData",
+    "AspectModifierRuntimeData",
+    "AspectModifierType",
+    "AspectOrbRuntimeData",
+    "AspectParticipantsRuntimeData",
+    "AspectPhaseRuntimeData",
+    "AspectRuntimeData",
+    "AspectRuntimeWeightTaxonomy",
+    "AnglePointReferenceData",
+    "AnglePointReferenceSet",
+    "AspectOrbRuleReferenceData",
+    "AspectReferenceData",
+    "AspectReferenceSet",
+    "AstrologyRuntimeReference",
+    "AstrologySystemReferenceData",
+    "AstrologySystemReferenceSet",
+    "AstrologicalGraphEdgeType",
+    "AstrologicalGraphNodeType",
+    "BalanceScoreRuntimeData",
+    "ChartBalanceRuntimeData",
+    "ChartSignatureRuntimeData",
+    "DominantAspectReason",
+    "DominantAspectRuntimeData",
+    "DominanceRankRuntimeData",
+    "DignityReferenceData",
+    "DignityReferenceSet",
+    "HouseAxisRuntimeData",
+    "HouseAxisReferenceData",
+    "HouseOccupantRuntimeData",
+    "HouseReferenceData",
+    "HouseReferenceSet",
+    "HouseRulerRuntimeData",
+    "HouseRuntimeData",
+    "HouseSystemReferenceData",
+    "HouseSystemReferenceSet",
+    "HouseStrengthRuntimeData",
+    "PatternGraphEdge",
+    "PatternGraphNode",
+    "PatternRuntimeData",
+    "PatternType",
+    "PlanetReferenceData",
+    "PlanetNatureReferenceData",
+    "PlanetNatureReferenceSet",
+    "PlanetReferenceSet",
+    "SignReferenceData",
+    "SignReferenceSet",
+    "SignDignityRuntimeData",
+    "SignDominanceReason",
+    "SignOccupantRuntimeData",
+    "SignRuntimeData",
+    "resolve_house_kind",
+]
+
+_LAZY_EXPORTS = {
+    "AspectIdentityRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectInterpretationRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectMetadataRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectModifierRuntimeData": "app.domain.astrology.runtime.aspect_modifiers",
+    "AspectModifierType": "app.domain.astrology.runtime.aspect_modifiers",
+    "AspectOrbRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectParticipantsRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectPhaseRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AspectRuntimeWeightTaxonomy": "app.domain.astrology.runtime.aspect_modifiers",
+    "AstrologicalGraphEdgeType": "app.domain.astrology.runtime.astrological_graph_contracts",
+    "AstrologicalGraphNodeType": "app.domain.astrology.runtime.astrological_graph_contracts",
+    "DominantAspectReason": "app.domain.astrology.runtime.dominant_aspect_runtime_data",
+    "DominantAspectRuntimeData": "app.domain.astrology.runtime.dominant_aspect_runtime_data",
+    "PatternGraphEdge": "app.domain.astrology.runtime.pattern_runtime_data",
+    "PatternGraphNode": "app.domain.astrology.runtime.pattern_runtime_data",
+    "PatternRuntimeData": "app.domain.astrology.runtime.pattern_runtime_data",
+    "PatternType": "app.domain.astrology.runtime.pattern_runtime_data",
+}
+
+
+def __getattr__(name: str) -> Any:
+    """Charge paresseusement les exports runtime pour eviter les cycles."""
+    if name not in _LAZY_EXPORTS:
+        raise AttributeError(name)
+    module = import_module(_LAZY_EXPORTS[name])
+    value = getattr(module, name)
+    globals()[name] = value
+    return value
+
+codex
+Je vais créer deux fichiers seulement pour le code de story: le module runner et son test unitaire. Je ne touche pas au `__init__.py` runtime pour éviter d’élargir la surface, même s’il contient déjà un lazy import préexistant qui devra être distingué dans les preuves de scan.
+apply patch
+patch: completed
+C:\dev\horoscope_front\backend\app\domain\astrology\runtime\calculation_graph_runner.py
+C:\dev\horoscope_front\backend\tests\unit\domain\astrology\test_calculation_graph_runner.py
+[orchestrator] omitted diff block (1130 lines)
+codex
+Le runner et les tests sont ajoutés. Je lance maintenant le formatage ciblé et les tests ciblés dans le venv, puis j’ajusterai les éventuels problèmes signalés par Ruff ou Pytest.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; ruff format backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; ruff check backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py" in C:\dev\horoscope_front
+ succeeded in 308ms:
+2 files reformatted
+
+2026-05-23T02:27:58.912515Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.3 seconds
+Output:
+E501 Line too long (103 > 100)
+   --> backend\app\domain\astrology\runtime\calculation_graph_runner.py:254:101
+    |
+252 |         graph_code=definition.graph_code,
+253 |         success=False,
+254 |         outputs={result.output_key: provenance[result.node_code]["output"] for result in node_results},
+    |                                                                                                     ^^^
+255 |         node_results=failed_results,
+256 |         execution_order=tuple(execution_order),
+    |
+
+F401 [*] `pytest` imported but unused
+  --> backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:8:8
+   |
+ 6 | from pathlib import Path
+ 7 |
+ 8 | import pytest
+   |        ^^^^^^
+ 9 |
+10 | from app.domain.astrology.runtime.calculation_graph_contracts import (
+   |
+help: Remove unused import: `pytest`
+
+E501 Line too long (101 > 100)
+  --> backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:33:101
+   |
+31 |         CalculationNodeRegistry(
+32 |             {
+33 |                 "double": lambda context: _record(calls, "double", context.get_required("seed") * 2),
+   |                                                                                                     ^
+34 |                 "label": lambda context: _record(
+35 |                     calls,
+   |
+
+E501 Line too long (102 > 100)
+   --> backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:148:101
+    |
+147 |     assert result.success is False
+148 |     assert result.errors[0].message == "Calculation node 'explode' calculator 'explode' failed: boom."
+    |                                                                                                     ^^
+149 |     assert result.node_results[0].error == result.errors[0]
+    |
+
+Found 4 errors.
+[*] 1 fixable with the `--fix` option.
+
+ exited 1 in 311ms:
+E501 Line too long (103 > 100)
+   --> backend\app\domain\astrology\runtime\calculation_graph_runner.py:254:101
+    |
+252 |         graph_code=definition.graph_code,
+253 |         success=False,
+254 |         outputs={result.output_key: provenance[result.node_code]["output"] for result in node_results},
+    |                                                                                                     ^^^
+255 |         node_results=failed_results,
+256 |         execution_order=tuple(execution_order),
+    |
+
+F401 [*] `pytest` imported but unused
+  --> backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:8:8
+   |
+ 6 | from pathlib import Path
+ 7 |
+ 8 | import pytest
+   |        ^^^^^^
+ 9 |
+10 | from app.domain.astrology.runtime.calculation_graph_contracts import (
+   |
+help: Remove unused import: `pytest`
+
+E501 Line too long (101 > 100)
+  --> backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:33:101
+   |
+31 |         CalculationNodeRegistry(
+32 |             {
+33 |                 "double": lambda context: _record(calls, "double", context.get_required("seed") * 2),
+   |                                                                                                     ^
+34 |                 "label": lambda context: _record(
+35 |                     calls,
+   |
+
+E501 Line too long (102 > 100)
+   --> backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:148:101
+    |
+147 |     assert result.success is False
+148 |     assert result.errors[0].message == "Calculation node 'explode' calculator 'explode' failed: boom."
+    |                                                                                                     ^^
+149 |     assert result.node_results[0].error == result.errors[0]
+    |
+
+Found 4 errors.
+[*] 1 fixable with the `--fix` option.
+
+[orchestrator] omitted diff block (571 lines)
+codex
+Ruff signale uniquement des longueurs de ligne et un import inutilisé. Je corrige ces points mécaniques sans changer le comportement.
+2026-05-23T02:28:04.940171Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in C:\dev\horoscope_front\backend\app\domain\astrology\runtime\calculation_graph_runner.py:
+        outputs={result.output_key: provenance[result.node_code]["output"] for result in node_results},
+[orchestrator] omitted diff block (571 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py -Pattern \"outputs=\" -Context 0,3" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-Content -LiteralPath backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py -TotalCount 170" in C:\dev\horoscope_front
+ succeeded in 226ms:
+
+> backend\app\domain\astrology\runtime\calculation_graph_runner.py:196:            [7moutputs=[0m{node.output_key: [0m[7m[0mvalues[node.output_key] [0m[7m[0mfor [0m[7m[0mnode [0m[7m[0min [0m
+[7m[0mdefinition.nodes},[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:197:            node_results=tuple(node_results),[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:198:            execution_order=tuple(execution_order),[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:199:            cache_hits=tuple(cache_hits),[0m
+> backend\app\domain\astrology\runtime\calculation_graph_runner.py:212:        [7moutputs=[0m{},[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:213:        node_results=(),[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:214:        execution_order=(),[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:215:        cache_hits=(),[0m
+> backend\app\domain\astrology\runtime\calculation_graph_runner.py:254:        [7moutputs=[0m{[0m
+[7m [0m[7m [0m[7m[0mbackend\app\domain\astrology\runtime\calculation_graph_runner.py:255: [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m [0m[7m[0mresult.output_key: [0m[7m[0mprovenance[result.node_code]["output"] [0m[7m[0mfor [0m
+[7m[0mresult [0m[7m[0min [0m[7m[0mnode_results[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:256:        },[0m
+[7m[0m  backend\app\domain\astrology\runtime\calculation_graph_runner.py:257:        node_results=failed_results,[0m
+
+
+ succeeded in 228ms:
+# Tests du runner des graphes de calcul astrologiques runtime.
+"""Verifie execution, cache, provenance et garde-fous du runner CS-227."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from app.domain.astrology.runtime.calculation_graph_contracts import (
+    CalculationGraphDefinition,
+    CalculationInputDefinition,
+    CalculationNodeDefinition,
+    CalculationNodeStatus,
+)
+from app.domain.astrology.runtime.calculation_graph_runner import (
+    CalculationGraphContext,
+    CalculationGraphRunner,
+    CalculationNodeRegistry,
+)
+
+
+def test_linear_graph_executes_in_topological_order_and_collects_outputs() -> None:
+    """Un graphe lineaire valide s'execute dans l'ordre topologique."""
+    calls: list[str] = []
+    graph = _graph(
+        _node("double", "double_value", ("seed",), "double"),
+        _node("label", "label", ("double_value",), "label"),
+    )
+    runner = CalculationGraphRunner(
+        CalculationNodeRegistry(
+            {
+                "double": lambda context: _record(
+                    calls, "double", context.get_required("seed") * 2
+                ),
+                "label": lambda context: _record(
+                    calls,
+                    "label",
+                    f"value={context.get_required('double_value')}",
+                ),
+            }
+        )
+    )
+
+    result = runner.run(graph, CalculationGraphContext({"seed": 21}))
+
+    assert result.success is True
+    assert calls == ["double", "label"]
+    assert result.execution_order == ("double", "label")
+    assert result.outputs == {"double_value": 42, "label": "value=42"}
+    assert tuple(node.status for node in result.node_results) == (
+        CalculationNodeStatus.EXECUTED,
+        CalculationNodeStatus.EXECUTED,
+    )
+
+
+def test_convergent_graph_reuses_upstream_outputs() -> None:
+    """Un graphe convergent consomme les sorties amont declarees."""
+    graph = _graph(
+        _node("left", "left_value", ("seed",), "left"),
+        _node("right", "right_value", ("seed",), "right"),
+        _node("merge", "merged", ("left_value", "right_value"), "merge"),
+    )
+    runner = CalculationGraphRunner(
+        CalculationNodeRegistry(
+            {
+                "left": lambda context: context.get_required("seed") + 1,
+                "right": lambda context: context.get_required("seed") + 2,
+                "merge": lambda context: (
+                    context.get_required("left_value"),
+                    context.get_required("right_value"),
+                ),
+            }
+        )
+    )
+
+    result = runner.run(graph, CalculationGraphContext({"seed": 10}))
+
+    assert result.success is True
+    assert result.execution_order == ("left", "right", "merge")
+    assert result.outputs["merged"] == (11, 12)
+
+
+def test_invalid_graph_is_validated_before_any_calculator_runs() -> None:
+    """Un graphe invalide retourne les erreurs sans appeler de calculateur."""
+    calls: list[str] = []
+    graph = CalculationGraphDefinition(
+        graph_code="invalid",
+        version="1",
+        nodes=(_node("broken", "broken_output", ("unknown_input",), "broken"),),
+    )
+    runner = CalculationGraphRunner(
+        CalculationNodeRegistry({"broken": lambda context: _record(calls, "broken", None)})
+    )
+
+    result = runner.run(graph, CalculationGraphContext({}))
+
+    assert result.success is False
+    assert calls == []
+    assert result.execution_order == ()
+    assert "depends on unknown key 'unknown_input'" in result.errors[0].message
+
+
+def test_missing_required_runtime_input_has_stable_error() -> None:
+    """Une entree declaree mais absente du contexte produit un message stable."""
+    graph = CalculationGraphDefinition(
+        graph_code="runtime_missing",
+        version="1",
+        required_inputs=(CalculationInputDefinition("seed", "int"),),
+        nodes=(_node("double", "double_value", ("seed",), "double"),),
+    )
+    runner = CalculationGraphRunner(
+        CalculationNodeRegistry({"double": lambda context: context.get_required("seed")})
+    )
+
+    result = runner.run(graph, CalculationGraphContext({}))
+
+    assert result.success is False
+    assert result.errors[0].message == "Calculation node 'double' missing required input 'seed'."
+    assert result.node_results[0].status == CalculationNodeStatus.FAILED
+
+
+def test_unknown_calculator_has_stable_error() -> None:
+    """Un calculateur absent du registry est signale sans resolution magique."""
+    graph = _graph(_node("double", "double_value", ("seed",), "missing_calculator"))
+    runner = CalculationGraphRunner(CalculationNodeRegistry({}))
+
+    result = runner.run(graph, CalculationGraphContext({"seed": 3}))
+
+    assert result.success is False
+    assert (
+        result.errors[0].message
+        == "Calculation node 'double' uses unknown calculator 'missing_calculator'."
+    )
+
+
+def test_failing_calculator_has_stable_error() -> None:
+    """Une exception de calculateur reste encapsulee dans le resultat runtime."""
+
+    def fail(_context: CalculationGraphContext) -> object:
+        """Declenche une erreur factice de calcul."""
+        raise ValueError("boom")
+
+    graph = _graph(_node("explode", "value", ("seed",), "explode"))
+    runner = CalculationGraphRunner(CalculationNodeRegistry({"explode": fail}))
+
+    result = runner.run(graph, CalculationGraphContext({"seed": 1}))
+
+    assert result.success is False
+    assert (
+        result.errors[0].message == "Calculation node 'explode' calculator 'explode' failed: boom."
+    )
+    assert result.node_results[0].error == result.errors[0]
+
+
+def test_cache_is_local_to_one_run_and_initial_context_is_not_mutated() -> None:
+    """Un output deja present evite le recalcul sans polluer l'appel suivant."""
+    calls: list[str] = []
+    graph = _graph(_node("double", "double_value", ("seed",), "double"))
+    runner = CalculationGraphRunner(
+        CalculationNodeRegistry(
+            {"double": lambda context: _record(calls, "double", context.get_required("seed") * 2)}
+        )
+    )
+    initial_values = {"seed": 4, "double_value": 99}
+
+    cached = runner.run(graph, CalculationGraphContext(initial_values))
+    fresh = runner.run(graph, CalculationGraphContext({"seed": 4}))
+
+    assert cached.success is True
+
+[orchestrator] omitted diff block (1721 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; ruff format backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; ruff check backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B -m pytest -q backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py" in C:\dev\horoscope_front
+ succeeded in 274ms:
+All checks passed!
+
+ succeeded in 297ms:
+2 files reformatted
+
+ succeeded in 1852ms:
+.........                                                                [100%]
+9 passed in 0.45s
+
+[orchestrator] omitted diff block (571 lines)
+codex
+Les tests ciblés passent. Je retire maintenant les littéraux interdits du test de garde lui-même pour que les scans négatifs ne signalent pas le fichier de test comme faux positif.
+apply patch
+patch: completed
+C:\dev\horoscope_front\backend\tests\unit\domain\astrology\test_calculation_graph_runner.py
+[orchestrator] omitted diff block (1142 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; ruff format backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py; ruff check backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B -m pytest -q backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_validator.py backend\\tests\\architecture\\test_api_contract_neutrality.py" in C:\dev\horoscope_front
+ succeeded in 316ms:
+1 file left unchanged
+All checks passed!
+
+ succeeded in 5446ms:
+.....................                                                    [100%]
+21 passed in 3.52s
+
+[orchestrator] omitted diff block (571 lines)
+codex
+Les validations ciblées passent. J’enchaîne avec les validations projet demandées et les scans anti-régression, en gardant séparé le scan large qui peut exposer des éléments préexistants hors runner.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; ruff check backend" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B -m pytest -q backend\\tests" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"CalculationGraphRunner|CalculationGraphContext|CalculationNodeRegistry\" backend\\app\\domain\\astrology backend\\tests -g \"*.py\"" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"importlib|eval\\(|globals\\(|networkx|igraph|graphlib|celery|prefect|airflow\" backend\\app\\domain\\astrology backend\\tests -g \"*.py\"" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"cache:|_cache|global_cache|persistent_cache\" backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py" in C:\dev\horoscope_front
+ succeeded in 218ms:
+backend\app\domain\astrology\runtime\calculation_graph_runner.py:20:CalculationNodeCallable = Callable[["CalculationGraphContext"], object]
+backend\app\domain\astrology\runtime\calculation_graph_runner.py:33:class CalculationGraphContext:
+backend\app\domain\astrology\runtime\calculation_graph_runner.py:90:class CalculationNodeRegistry:
+backend\app\domain\astrology\runtime\calculation_graph_runner.py:102:class CalculationGraphRunner:
+backend\app\domain\astrology\runtime\calculation_graph_runner.py:105:    def __init__(self, registry: CalculationNodeRegistry) -> None:
+backend\app\domain\astrology\runtime\calculation_graph_runner.py:112:        initial_context: CalculationGraphContext,
+backend\app\domain\astrology\runtime\calculation_graph_runner.py:171:                output = calculator(CalculationGraphContext(values))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:15:    CalculationGraphContext,
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:16:    CalculationGraphRunner,
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:17:    CalculationNodeRegistry,
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:28:    runner = CalculationGraphRunner(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:29:        CalculationNodeRegistry(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:45:    result = runner.run(graph, CalculationGraphContext({"seed": 21}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:64:    runner = CalculationGraphRunner(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:65:        CalculationNodeRegistry(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:77:    result = runner.run(graph, CalculationGraphContext({"seed": 10}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:92:    runner = CalculationGraphRunner(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:93:        CalculationNodeRegistry({"broken": lambda context: _record(calls, "broken", None)})
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:96:    result = runner.run(graph, CalculationGraphContext({}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:112:    runner = CalculationGraphRunner(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:113:        CalculationNodeRegistry({"double": lambda context: context.get_required("seed")})
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:116:    result = runner.run(graph, CalculationGraphContext({}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:126:    runner = CalculationGraphRunner(CalculationNodeRegistry({}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:128:    result = runner.run(graph, CalculationGraphContext({"seed": 3}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:140:    def fail(_context: CalculationGraphContext) -> object:
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:145:    runner = CalculationGraphRunner(CalculationNodeRegistry({"explode": fail}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:147:    result = runner.run(graph, CalculationGraphContext({"seed": 1}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:160:    runner = CalculationGraphRunner(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:161:        CalculationNodeRegistry(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:167:    cached = runner.run(graph, CalculationGraphContext(initial_values))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:168:    fresh = runner.run(graph, CalculationGraphContext({"seed": 4}))
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:182:    runner = CalculationGraphRunner(
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:183:        CalculationNodeRegistry({"double": lambda context: context.get_required("seed") * 2})
+backend\tests\unit\domain\astrology\test_calculation_graph_runner.py:186:    result = runner.run(graph, CalculationGraphContext({"seed": 5}))
+
+2026-05-23T02:29:00.630440Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+
+ exited 1 in 231ms:
+ succeeded in 240ms:
+backend\tests\llm_orchestration\test_eval_harness.py:12:    report = await run_eval("test", "v1", "/non/existent", db)
+backend\tests\llm_orchestration\test_eval_harness.py:46:        report = await run_eval("test", "v1", str(f_path), db)
+backend\tests\llm_orchestration\test_eval_harness.py:77:        report = await run_eval("test", "v1", str(f_path), db)
+backend\app\domain\astrology\runtime\__init__.py:3:from importlib import import_module
+backend\app\domain\astrology\runtime\__init__.py:134:    globals()[name] = value
+backend\app\domain\astrology\interpretation\__init__.py:6:from importlib import import_module
+backend\app\domain\astrology\interpretation\__init__.py:52:    globals()[name] = value
+backend\tests\unit\domain\astrology\test_natal_calculation_graph_definition.py:165:        "networkx",
+backend\tests\unit\domain\astrology\test_natal_calculation_graph_definition.py:166:        "igraph",
+backend\tests\unit\domain\astrology\test_natal_calculation_graph_definition.py:167:        "graphlib",
+
+ succeeded in 343ms:
+All checks passed!
+
+ succeeded in 27477ms:
+........................................................................ [  8%]
+........................................................................ [ 17%]
+........................................................................ [ 26%]
+........................................................................ [ 34%]
+........................................................................ [ 43%]
+........................................................................ [ 52%]
+........................................................................ [ 60%]
+........................................................................ [ 69%]
+........................................................................ [ 78%]
+........................................................................ [ 87%]
+........................................................................ [ 95%]
+...................................                                      [100%]
+827 passed, 200 deselected in 25.10s
+
+[orchestrator] omitted diff block (571 lines)
+codex
+Le lint complet et la suite backend passent. Le scan large des imports interdits remonte des occurrences préexistantes dans des `__init__.py` lazy-loading et un ancien test de définition, mais le scan ciblé du runner ne trouve aucun cache global/persistant. Je capture maintenant la preuve API concise et les fichiers modifiés.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; python -B -c \"from app.main import app; from fastapi.testclient import TestClient; routes=sorted({r.path for r in app.routes}); schemas=app.openapi().get('components',{}).get('schemas',{}); response=TestClient(app).get('/openapi.json'); print('routes_count=', len(routes)); print('has_openapi_route=', '/openapi.json' in routes); print('testclient_status=', response.status_code); print('calculation_graph_schemas=', [k for k in schemas if 'CalculationGraph' in k or 'CalculationNode' in k or 'CalculationInput' in k]); print('calculation_graph_routes=', [p for p in routes if 'calculation-graph' in p])\"" in C:\dev\horoscope_front\backend
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'git status --short' in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "git diff -- backend\\app\\domain\\astrology\\natal_calculation.py frontend backend\\alembic backend\\app\\api" in C:\dev\horoscope_front
+ succeeded in 239ms:
+[orchestrator] omitted diff block (2511 lines)
+codex
+La commande de preuve API a produit la bonne sortie mais l’activation venv était relative au mauvais répertoire, donc je la relance proprement depuis la racine avant d’utiliser Python. Les changements listés par `git status` incluent beaucoup de modifications préexistantes; je ne les touche pas.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command ".\\.venv\\Scripts\\Activate.ps1; Set-Location backend; python -B -c \"from app.main import app; from fastapi.testclient import TestClient; routes=sorted({r.path for r in app.routes}); schemas=app.openapi().get('components',{}).get('schemas',{}); response=TestClient(app).get('/openapi.json'); print('routes_count=', len(routes)); print('has_openapi_route=', '/openapi.json' in routes); print('testclient_status=', response.status_code); print('calculation_graph_schemas=', [k for k in schemas if 'CalculationGraph' in k or 'CalculationNode' in k or 'CalculationInput' in k]); print('calculation_graph_routes=', [p for p in routes if 'calculation-graph' in p])\"" in C:\dev\horoscope_front
+ succeeded in 4219ms:
+routes_count= 197
+has_openapi_route= True
+testclient_status= 200
+calculation_graph_schemas= []
+calculation_graph_routes= []
+
+[orchestrator] omitted diff block (571 lines)
+codex
+Je vais maintenant écrire les preuves persistantes dans le dossier CS-227 et passer la story à `ready-to-review`. Les preuves incluent la trace AC, les validations lancées, les scans et la neutralité API.
+apply patch
+patch: completed
+C:\dev\horoscope_front\_condamad\stories\CS-227-calculation-graph-runner-cache-provenance\00-story.md
+C:\dev\horoscope_front\_condamad\stories\CS-227-calculation-graph-runner-cache-provenance\evidence\openapi-routes.md
+C:\dev\horoscope_front\_condamad\stories\CS-227-calculation-graph-runner-cache-provenance\evidence\runner-guards.md
+C:\dev\horoscope_front\_condamad\stories\CS-227-calculation-graph-runner-cache-provenance\evidence\validation.md
+C:\dev\horoscope_front\_condamad\stories\story-status.md
+[orchestrator] omitted diff block (1518 lines)
+codex
+Les preuves et le statut sont mis à jour. Je fais un dernier contrôle de whitespace/diff ciblé et une vérification courte des fichiers CS-227 pour confirmer que la story est bien passée en review.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "git diff --check -- backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py _condamad\\stories\\CS-227-calculation-graph-runner-cache-provenance _condamad\\stories\\story-status.md" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Select-String -LiteralPath _condamad\\stories\\story-status.md -Pattern 'CS-227'; Select-String -LiteralPath _condamad\\stories\\CS-227-calculation-graph-runner-cache-provenance\\00-story.md -Pattern '"'^Status:'"'" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "Get-ChildItem -LiteralPath _condamad\\stories\\CS-227-calculation-graph-runner-cache-provenance\\evidence -Force | Select-Object Name" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"importlib|eval\\(|globals\\(|networkx|igraph|graphlib|celery|prefect|airflow\" backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py -g \"*.py\"" in C:\dev\horoscope_front
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "rg -n \"cache:|_cache|global_cache|persistent_cache\" backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py" in C:\dev\horoscope_front
+ succeeded in 243ms:
+warning: in the working copy of '_condamad/stories/story-status.md', LF will be replaced by CRLF the next time Git touches it
+
+2026-05-23T02:30:52.329146Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+
+ exited 1 in 231ms:
+2026-05-23T02:30:52.350996Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 0.2 seconds
+Output:
+
+ exited 1 in 244ms:
+ succeeded in 251ms:
+
+[32;1mName[0m
+[32;1m----[0m
+openapi-routes.md
+runner-guards.md
+validation.md
+
+
+ succeeded in 274ms:
+
+_condamad\stories\story-status.md:233:| [7mCS-227 [0m[7m[0m| [0m[7m[0mcalculation-graph-runner-cache-provenance [0m[7m[0m| [0m[7m[0mExecuter [0m[7m[0mun [0m[7m[0mgraphe [0m[7m[0mde [0m[7m[0mcalcul [0m[7m[0mavec [0m[7m[0mcache [0m[7m[0met [0m[7m[0mprovenance [0m[7m[0m| [0m
+[7m[0mready-to-review [0m[7m[0m| [0m[7m[0m`_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md` [0m[7m[0m| [0m
+[7m[0m`_story_briefs/cs-227-calculation-graph-runner-cache-provenance.md` [0m[7m[0m| [0m[7m[0m2026-05-23 [0m[7m[0m|[0m
+_condamad\stories\CS-227-calculation-graph-runner-cache-provenance\00-story.md:2:[7mStatus:[0m ready-to-review
+
+
+[orchestrator] omitted diff block (759 lines)
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command "git status --short -- backend\\app\\domain\\astrology\\runtime\\calculation_graph_runner.py backend\\tests\\unit\\domain\\astrology\\test_calculation_graph_runner.py _condamad\\stories\\CS-227-calculation-graph-runner-cache-provenance _condamad\\stories\\story-status.md" in C:\dev\horoscope_front
+ succeeded in 248ms:
+ M _condamad/stories/story-status.md
+?? _condamad/stories/CS-227-calculation-graph-runner-cache-provenance/
+?? backend/app/domain/astrology/runtime/calculation_graph_runner.py
+?? backend/tests/unit/domain/astrology/test_calculation_graph_runner.py
+
+[orchestrator] omitted diff block (759 lines)
+codex
+Implémentation CS-227 prête pour review.
+
+**Fichiers modifiés**
+- `backend/app/domain/astrology/runtime/calculation_graph_runner.py`
+- `backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/validation.md`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/openapi-routes.md`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/runner-guards.md`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md`
+- `_condamad/stories/story-status.md`
+
+**Validations**
+- `ruff check backend` : OK
+- `python -B -m pytest -q backend\tests` : OK, `827 passed, 200 deselected`
+- Tests ciblés runner/validator/API neutrality : OK, `21 passed`
+- Preuve API : `app.routes`, `app.openapi()` et `TestClient` OK, aucun schema/route calculation graph public.
+- Scans ciblés runner : OK, aucune importation dynamique ni cache global/persistant.
+
+**Statut**
+- Story `CS-227` passée à `ready-to-review`.
+
+**Risques / notes**
+- Le skill demandé `.agents/skills/condamad-dev-story/SKILL.md` et les scripts `condamad_prepare.py` / `condamad_validate.py` sont absents.
+- Le scan large remonte des occurrences préexistantes hors runner (`__init__.py` lazy exports, anciens tests). Le nouveau runner n’en introduit pas.
+[orchestrator] omitted diff block (759 lines)
+tokens used
+105 190
+Implémentation CS-227 prête pour review.
+
+**Fichiers modifiés**
+- `backend/app/domain/astrology/runtime/calculation_graph_runner.py`
+- `backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/validation.md`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/openapi-routes.md`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/evidence/runner-guards.md`
+- `_condamad/stories/CS-227-calculation-graph-runner-cache-provenance/00-story.md`
+- `_condamad/stories/story-status.md`
+
+**Validations**
+- `ruff check backend` : OK
+- `python -B -m pytest -q backend\tests` : OK, `827 passed, 200 deselected`
+- Tests ciblés runner/validator/API neutrality : OK, `21 passed`
+- Preuve API : `app.routes`, `app.openapi()` et `TestClient` OK, aucun schema/route calculation graph public.
+- Scans ciblés runner : OK, aucune importation dynamique ni cache global/persistant.
+
+**Statut**
+- Story `CS-227` passée à `ready-to-review`.
+
+**Risques / notes**
+- Le skill demandé `.agents/skills/condamad-dev-story/SKILL.md` et les scripts `condamad_prepare.py` / `condamad_validate.py` sont absents.
+- Le scan large remonte des occurrences préexistantes hors runner (`__init__.py` lazy exports, anciens tests). Le nouveau runner n’en introduit pas.
