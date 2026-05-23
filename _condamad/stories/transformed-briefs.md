@@ -20,3 +20,4 @@
 | cs-239 | `_story_briefs\cs-239-audit-chart-object-capability-payload-audit.md` | `_condamad\stories\cs-239-audit-chart-object-capability-payload\00-story.md` |
 | cs-240 | `_story_briefs\cs-240-audit-reference-governance-audit.md` | `_condamad\stories\cs-240-audit-reference-governance\00-story.md` |
 | cs-241 | `_story_briefs\cs-241-audit-astronomical-accuracy-audit.md` | `_condamad\stories\cs-241-audit-astronomical-accuracy\00-story.md` |
+| cs-242 | `_story_briefs\cs-242-audit-calculation-graph-readiness-audit.md` | `_condamad\stories\cs-242-audit-calculation-graph-readiness\00-story.md` |
