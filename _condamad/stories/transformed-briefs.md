@@ -25,3 +25,4 @@
 | cs-244 | `_story_briefs\cs-244-audit-product-data-needs-audit.md` | `_condamad\stories\cs-244-audit-product-data-needs\00-story.md` |
 | cs-245 | `_story_briefs\cs-245-archi-canonical-astrology-runtime-transition.md` | `_condamad\stories\cs-245-canonical-astrology-runtime-transition\00-story.md` |
 | cs-246 | `_story_briefs\cs-246-canonical-astrology-graph-family-registry.md` | `_condamad\stories\cs-246-canonical-astrology-graph-family-registry\00-story.md` |
+| cs-247 | `_story_briefs\cs-247-graph-manifest-node-io-schema-contract.md` | `_condamad\stories\cs-247-graph-manifest-node-io-schema-contract\00-story.md` |
