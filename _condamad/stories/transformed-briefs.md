@@ -36,3 +36,4 @@
 | cs-255 | `_story_briefs\cs-255-archi-synthese-architecture-produit-en-place.md` | `_condamad\stories\cs-255-product-architecture-current-state\00-story.md` |
 | cs-256 | `_story_briefs\cs-256-define-structured-facts-v1-stable-hashable-fact-projection.md` | `_condamad\stories\cs-256-structured-facts-v1-contract\00-story.md` |
 | cs-257 | `_story_briefs\cs-257-define-beginner-summary-v1-deterministic-b2c-projection.md` | `_condamad\stories\cs-257-beginner-summary-v1-b2c-projection\00-story.md` |
+| cs-258 | `_story_briefs\cs-258-define-client-interpretation-projection-v1-by-plan.md` | `_condamad\stories\cs-258-client-interpretation-projection-v1-by-plan\00-story.md` |
