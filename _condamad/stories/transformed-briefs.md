@@ -42,3 +42,4 @@
 | cs-261 | `_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md` | `_condamad\stories\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers\00-story.md` |
 | cs-262 | `_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md` | `_condamad\stories\cs-262-audit-existing-prompt-version-answer-id-storage\00-story.md` |
 | cs-263 | `_story_briefs\cs-263-define-generic-projection-endpoint-contract.md` | `_condamad\stories\cs-263-generic-projection-endpoint-contract\00-story.md` |
+| cs-264 | `_story_briefs\cs-264-implement-projection-persistence-and-projection-hash.md` | `_condamad\stories\cs-264-projection-persistence-projection-hash\00-story.md` |
