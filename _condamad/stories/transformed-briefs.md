@@ -56,3 +56,4 @@
 | cs-275 | `_story_briefs\cs-275-decide-admin-chart-diagnostics-retention-redaction-replay-policy.md` | `_condamad\stories\cs-275-admin-chart-diagnostics-policy\00-story.md` |
 | cs-276 | `_story_briefs\cs-276-implement-admin-chart-diagnostics-v1.md` | `_condamad\stories\cs-276-admin-chart-diagnostics-v1\00-story.md` |
 | cs-277 | `_story_briefs\cs-277-define-replay-snapshot-v1-storage-and-security-model.md` | `_condamad\stories\cs-277-replay-snapshot-v1-storage-security-model\00-story.md` |
+| cs-278 | `_story_briefs\cs-278-implement-replay-snapshot-v1-if-approved.md` | `_condamad\stories\cs-278-replay-snapshot-v1-implementation\00-story.md` |
