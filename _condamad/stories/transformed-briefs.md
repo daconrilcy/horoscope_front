@@ -43,3 +43,4 @@
 | cs-262 | `_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md` | `_condamad\stories\cs-262-audit-existing-prompt-version-answer-id-storage\00-story.md` |
 | cs-263 | `_story_briefs\cs-263-define-generic-projection-endpoint-contract.md` | `_condamad\stories\cs-263-generic-projection-endpoint-contract\00-story.md` |
 | cs-264 | `_story_briefs\cs-264-implement-projection-persistence-and-projection-hash.md` | `_condamad\stories\cs-264-projection-persistence-projection-hash\00-story.md` |
+| cs-265 | `_story_briefs\cs-265-add-projection-versioning-and-incompatibility-policy.md` | `_condamad\stories\cs-265-projection-versioning-incompatibility-policy\00-story.md` |
