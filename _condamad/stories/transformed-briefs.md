@@ -40,3 +40,4 @@
 | cs-259 | `_story_briefs\cs-259-define-narrative-answer-audit-v1.md` | `_condamad\stories\cs-259-narrative-answer-audit-v1-contract\00-story.md` |
 | cs-260 | `_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md` | `_condamad\stories\cs-260-evidence-refs-contract-validation\00-story.md` |
 | cs-261 | `_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md` | `_condamad\stories\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers\00-story.md` |
+| cs-262 | `_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md` | `_condamad\stories\cs-262-audit-existing-prompt-version-answer-id-storage\00-story.md` |
