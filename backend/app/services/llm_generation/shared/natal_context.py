@@ -136,7 +136,7 @@ def build_astral_point_interpretation_context(
     """Construit la section séparée des points astraux interprétés pour le LLM."""
     return {
         "astral_point_interpretations": [
-            interpreted_point.to_prompt_context() for interpreted_point in interpreted_points
+            interpreted_point.to_narrative_context() for interpreted_point in interpreted_points
         ]
     }
 

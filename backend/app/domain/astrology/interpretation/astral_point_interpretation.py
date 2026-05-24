@@ -52,10 +52,10 @@ class InterpretedAstralPoint:
     micro_note: str | None
     core_keywords: tuple[str, ...]
     shadow_keywords: tuple[str, ...]
-    prompt_hints: tuple[str, ...]
+    narrative_guidance: tuple[str, ...]
 
-    def to_prompt_context(self) -> dict[str, object]:
-        """Sérialise la vue pour le contexte LLM sans exposer le profil DB brut."""
+    def to_narrative_context(self) -> dict[str, object]:
+        """Sérialise la vue narrative sans exposer le profil DB brut."""
         return {
             "code": self.code,
             "variant_code": self.variant_code,
@@ -66,7 +66,7 @@ class InterpretedAstralPoint:
             "micro_note": self.micro_note,
             "core_keywords": list(self.core_keywords),
             "shadow_keywords": list(self.shadow_keywords),
-            "prompt_hints": list(self.prompt_hints),
+            "narrative_guidance": list(self.narrative_guidance),
         }
 
 
@@ -117,7 +117,7 @@ class AstralPointInterpretationEnricher:
             micro_note=interpretation_profile.micro_note,
             core_keywords=interpretation_profile.keywords.core,
             shadow_keywords=interpretation_profile.keywords.shadow,
-            prompt_hints=(
+            narrative_guidance=(
                 *interpretation_profile.keywords.psychological,
                 *interpretation_profile.keywords.spiritual,
             ),

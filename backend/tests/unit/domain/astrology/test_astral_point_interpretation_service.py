@@ -85,7 +85,7 @@ def test_service_builds_interpreted_points_without_mutating_natal_result() -> No
     assert interpreted.sign == source_position.sign
     assert interpreted.house == source_position.house
     assert interpreted.core_keywords == ("growth",)
-    assert interpreted.prompt_hints == ("learning", "calling")
+    assert interpreted.narrative_guidance == ("learning", "calling")
     assert natal_result.model_dump()["astral_points"] == before_points
 
 

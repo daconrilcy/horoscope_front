@@ -498,7 +498,7 @@ class TestNatalInterpretationService:
         class FakeInterpretedPoint:
             """Point interprété minimal pour vérifier le contexte transmis au LLM."""
 
-            def to_prompt_context(self) -> dict[str, object]:
+            def to_narrative_context(self) -> dict[str, object]:
                 """Retourne la forme sérialisée attendue par le contexte LLM."""
                 return {
                     "code": "north_node",
@@ -510,7 +510,7 @@ class TestNatalInterpretationService:
                     "micro_note": None,
                     "core_keywords": ["growth"],
                     "shadow_keywords": ["fear of change"],
-                    "prompt_hints": ["learning"],
+                    "narrative_guidance": ["learning"],
                 }
 
         class FakeAstralPointInterpretationService:
@@ -573,7 +573,7 @@ class TestNatalInterpretationService:
         assert captured_input is not None
         astro_context = json.loads(captured_input.astro_context)
         assert astro_context == {
-            "astral_point_interpretations": [FakeInterpretedPoint().to_prompt_context()]
+            "astral_point_interpretations": [FakeInterpretedPoint().to_narrative_context()]
         }
         assert "astral_point_interpretations" not in captured_input.natal_data
 

@@ -62,6 +62,40 @@ __all__ = [
     "AspectStructuralRuntimeData",
     "AspectStructuralModifierRuntimeData",
     "resolve_aspect_interpretive_hints",
+    "AstrologyDoctrineGovernanceEntry",
+    "AstrologyDoctrineGovernanceError",
+    "CanonicalRuleOwner",
+    "DoctrineDecisionStatus",
+    "RuleSourceOwnerStatus",
+    "SchoolPolicy",
+    "VersionPolicy",
+    "build_astrology_doctrine_governance",
+    "get_astrology_doctrine_governance",
+    "list_astrology_doctrine_governance",
+    "validate_doctrine_status_transition",
+    "validate_owner_status_transition",
+    "DEPENDENCY_STORY_IDS",
+    "SELECTED_TEMPORAL_FAMILY_CODE",
+    "SELECTED_TEMPORAL_TECHNIQUE_NAME",
+    "TEMPORAL_SELECTION_DECISION_STORY_ID",
+    "TEMPORAL_SELECTION_OWNER",
+    "FirstTemporalTechniqueSelection",
+    "TemporalCandidateDecision",
+    "TemporalCandidateStatus",
+    "TemporalChartObjectRequirement",
+    "TemporalInputRequirement",
+    "TemporalPublicProjectionStatus",
+    "TemporalRelationshipRequirement",
+    "TemporalTechniqueSelectionStatus",
+    "build_first_temporal_technique_selection",
+    "temporal_selection_to_dict",
+    "ChartObjectCapabilityTaxonomyEntry",
+    "ChartObjectCapabilityTaxonomyError",
+    "ChartObjectDecisionStatus",
+    "ChartObjectFamily",
+    "build_chart_object_capability_taxonomy",
+    "get_chart_object_capability_taxonomy",
+    "list_chart_object_capability_taxonomy",
     "AnglePointReferenceData",
     "AnglePointReferenceSet",
     "AspectOrbRuleReferenceData",
@@ -122,6 +156,76 @@ _LAZY_EXPORTS = {
     "AspectStructuralRuntimeData": "app.domain.astrology.runtime.aspect_runtime_data",
     "AspectStructuralModifierRuntimeData": "app.domain.astrology.runtime.aspect_modifiers",
     "resolve_aspect_interpretive_hints": "app.domain.astrology.runtime.aspect_runtime_data",
+    "AstrologyDoctrineGovernanceEntry": (
+        "app.domain.astrology.runtime.astrology_doctrine_governance"
+    ),
+    "AstrologyDoctrineGovernanceError": (
+        "app.domain.astrology.runtime.astrology_doctrine_governance"
+    ),
+    "CanonicalRuleOwner": "app.domain.astrology.runtime.astrology_doctrine_governance",
+    "DoctrineDecisionStatus": "app.domain.astrology.runtime.astrology_doctrine_governance",
+    "RuleSourceOwnerStatus": "app.domain.astrology.runtime.astrology_doctrine_governance",
+    "SchoolPolicy": "app.domain.astrology.runtime.astrology_doctrine_governance",
+    "VersionPolicy": "app.domain.astrology.runtime.astrology_doctrine_governance",
+    "build_astrology_doctrine_governance": (
+        "app.domain.astrology.runtime.astrology_doctrine_governance"
+    ),
+    "get_astrology_doctrine_governance": (
+        "app.domain.astrology.runtime.astrology_doctrine_governance"
+    ),
+    "list_astrology_doctrine_governance": (
+        "app.domain.astrology.runtime.astrology_doctrine_governance"
+    ),
+    "validate_doctrine_status_transition": (
+        "app.domain.astrology.runtime.astrology_doctrine_governance"
+    ),
+    "validate_owner_status_transition": (
+        "app.domain.astrology.runtime.astrology_doctrine_governance"
+    ),
+    "DEPENDENCY_STORY_IDS": "app.domain.astrology.runtime.temporal_technique_selection",
+    "SELECTED_TEMPORAL_FAMILY_CODE": "app.domain.astrology.runtime.temporal_technique_selection",
+    "SELECTED_TEMPORAL_TECHNIQUE_NAME": (
+        "app.domain.astrology.runtime.temporal_technique_selection"
+    ),
+    "TEMPORAL_SELECTION_DECISION_STORY_ID": (
+        "app.domain.astrology.runtime.temporal_technique_selection"
+    ),
+    "TEMPORAL_SELECTION_OWNER": "app.domain.astrology.runtime.temporal_technique_selection",
+    "FirstTemporalTechniqueSelection": (
+        "app.domain.astrology.runtime.temporal_technique_selection"
+    ),
+    "TemporalCandidateDecision": "app.domain.astrology.runtime.temporal_technique_selection",
+    "TemporalCandidateStatus": "app.domain.astrology.runtime.temporal_technique_selection",
+    "TemporalChartObjectRequirement": ("app.domain.astrology.runtime.temporal_technique_selection"),
+    "TemporalInputRequirement": "app.domain.astrology.runtime.temporal_technique_selection",
+    "TemporalPublicProjectionStatus": ("app.domain.astrology.runtime.temporal_technique_selection"),
+    "TemporalRelationshipRequirement": (
+        "app.domain.astrology.runtime.temporal_technique_selection"
+    ),
+    "TemporalTechniqueSelectionStatus": (
+        "app.domain.astrology.runtime.temporal_technique_selection"
+    ),
+    "build_first_temporal_technique_selection": (
+        "app.domain.astrology.runtime.temporal_technique_selection"
+    ),
+    "temporal_selection_to_dict": "app.domain.astrology.runtime.temporal_technique_selection",
+    "ChartObjectCapabilityTaxonomyEntry": (
+        "app.domain.astrology.runtime.chart_object_capability_taxonomy"
+    ),
+    "ChartObjectCapabilityTaxonomyError": (
+        "app.domain.astrology.runtime.chart_object_capability_taxonomy"
+    ),
+    "ChartObjectDecisionStatus": "app.domain.astrology.runtime.chart_object_capability_taxonomy",
+    "ChartObjectFamily": "app.domain.astrology.runtime.chart_object_capability_taxonomy",
+    "build_chart_object_capability_taxonomy": (
+        "app.domain.astrology.runtime.chart_object_capability_taxonomy"
+    ),
+    "get_chart_object_capability_taxonomy": (
+        "app.domain.astrology.runtime.chart_object_capability_taxonomy"
+    ),
+    "list_chart_object_capability_taxonomy": (
+        "app.domain.astrology.runtime.chart_object_capability_taxonomy"
+    ),
     "AstrologicalGraphEdgeType": "app.domain.astrology.runtime.astrological_graph_contracts",
     "AstrologicalGraphNodeType": "app.domain.astrology.runtime.astrological_graph_contracts",
     "DominantAspectReason": "app.domain.astrology.runtime.dominant_aspect_runtime_data",

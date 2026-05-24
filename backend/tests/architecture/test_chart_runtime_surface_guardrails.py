@@ -29,6 +29,7 @@ LEGACY_ATTRIBUTE_ALLOWLIST = {
 }
 CHART_OBJECT_TYPE_ALLOWLIST = {
     "builders/chart_object_runtime_builder.py": "Owner canonique de projection vers types runtime.",
+    "runtime/chart_object_capability_taxonomy.py": "Owner canonique de la matrice de familles.",
     "runtime/chart_object_runtime_data.py": "Declaration du contrat enum canonique.",
 }
 SPECIALIZED_BUILDER_ALLOWLIST = {
@@ -42,6 +43,8 @@ FORBIDDEN_TYPE_MEMBERS = frozenset(
 FORBIDDEN_BUILDER_PREFIXES = ("Planet", "Angle", "AstralPoint", "FixedStar")
 LOCAL_THRESHOLD_ALLOWLIST = {
     ("ephemeris_provider.py", "0.01"): "Tolerance d'audit ephemeride existante.",
+    ("runtime/astronomical_proof.py", "0.01"): "Tolerance canonique CS-250 SwissEph.",
+    ("runtime/astronomical_proof.py", "17"): "Jour ISO du cas golden topocentrique CS-250.",
     ("builders/aspect_runtime_builder.py", "0.01"): "Protection numerique de projection aspect.",
     ("interpretation/aspect_strength.py", "0.01"): "Protection numerique interpretative existante.",
     ("planetary_conditions/contracts.py", "17.0"): "Constante nommee de contrat cazimi.",
@@ -80,6 +83,21 @@ def test_domain_code_does_not_route_business_logic_by_object_type() -> None:
         for node in ast.walk(tree):
             if _branches_on_object_type(node) or _references_forbidden_chart_object_type(node):
                 offenders.append(f"{relative_path}:{getattr(node, 'lineno', '?')}")
+
+    assert offenders == []
+
+
+def test_chart_object_capability_taxonomy_is_single_runtime_owner() -> None:
+    """La matrice de capacites reste sous l'owner runtime canonique."""
+    offenders: list[str] = []
+    expected_owner = "runtime/chart_object_capability_taxonomy.py"
+    for module_path in _python_files(DOMAIN_ROOT):
+        relative_path = _relative(module_path)
+        if relative_path == expected_owner:
+            continue
+        source = module_path.read_text(encoding="utf-8")
+        if "CHART_OBJECT_CAPABILITY_TAXONOMY_DECLARATIONS" in source:
+            offenders.append(relative_path)
 
     assert offenders == []
 

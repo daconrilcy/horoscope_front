@@ -51,6 +51,8 @@ def test_linear_graph_executes_in_topological_order_and_collects_outputs() -> No
     assert calls == ["double", "label"]
     assert result.execution_order == ("double", "label")
     assert result.outputs == {"double_value": 42, "label": "value=42"}
+    assert result.execution_trace is not None
+    assert tuple(node.code for node in result.execution_trace.nodes) == ("double", "label")
     assert tuple(node.status for node in result.node_results) == (
         CalculationNodeStatus.EXECUTED,
         CalculationNodeStatus.EXECUTED,

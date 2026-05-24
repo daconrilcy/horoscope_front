@@ -75,7 +75,7 @@ def test_build_user_natal_chart_summary_context_returns_none_when_chart_missing(
 def test_build_astral_point_interpretation_context_serializes_separate_section() -> None:
     """Le contexte LLM expose les points interprétés dans une section dédiée."""
     interpreted_point = SimpleNamespace(
-        to_prompt_context=lambda: {
+        to_narrative_context=lambda: {
             "code": "north_node",
             "variant_code": "true",
             "sign": "leo",
@@ -85,11 +85,11 @@ def test_build_astral_point_interpretation_context_serializes_separate_section()
             "micro_note": None,
             "core_keywords": ["growth"],
             "shadow_keywords": ["fear of change"],
-            "prompt_hints": ["learning"],
+            "narrative_guidance": ["learning"],
         }
     )
 
     context = build_astral_point_interpretation_context((interpreted_point,))
 
     assert set(context) == {"astral_point_interpretations"}
-    assert context["astral_point_interpretations"] == [interpreted_point.to_prompt_context()]
+    assert context["astral_point_interpretations"] == [interpreted_point.to_narrative_context()]

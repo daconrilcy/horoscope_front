@@ -145,6 +145,14 @@ INTERPRETIVE_TOKEN_ALLOWLIST = {
         "resolve_aspect_interpretive_hints",
         "energy_type",
     ): ("Resolver dedie aux hints depuis un profil interpretatif.", "Permanent."),
+    (
+        "runtime/astrology_graph_family_registry.py",
+        "module",
+        "narrative",
+    ): (
+        "Code de famille obligatoire CS-246 `narrative_generation_v1`, sans exposition publique.",
+        "Permanent.",
+    ),
 }
 
 

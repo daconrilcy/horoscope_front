@@ -10,6 +10,11 @@ from app.domain.astrology.runtime.calculation_graph_contracts import (
     CalculationInputDefinition,
     CalculationNodeDefinition,
 )
+from app.domain.astrology.runtime.calculation_graph_manifest import (
+    CalculationGraphManifest,
+    GraphCompatibilityPolicy,
+    build_graph_manifest_from_definition,
+)
 
 NATAL_GRAPH_CODE = "natal_chart_v1"
 NATAL_GRAPH_VERSION = "1"
@@ -55,6 +60,21 @@ def build_natal_calculation_graph_definition() -> CalculationGraphDefinition:
         version=NATAL_GRAPH_VERSION,
         required_inputs=_build_required_inputs(),
         nodes=_build_nodes(),
+    )
+
+
+def build_natal_calculation_graph_manifest() -> CalculationGraphManifest:
+    """Construit le manifeste valide du graphe natal depuis la definition runtime."""
+    from app.domain.astrology.runtime.astrology_graph_family_registry import (
+        get_astrology_graph_family,
+    )
+
+    graph = build_natal_calculation_graph_definition()
+    family = get_astrology_graph_family(NATAL_GRAPH_CODE)
+    return build_graph_manifest_from_definition(
+        graph,
+        family_code=family.code,
+        compatibility_policy=GraphCompatibilityPolicy.COMPATIBLE,
     )
 
 

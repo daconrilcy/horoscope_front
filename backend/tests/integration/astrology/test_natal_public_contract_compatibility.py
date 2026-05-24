@@ -1,5 +1,5 @@
 # Tests de compatibilite publique du contrat natal.
-"""Verifie que CS-224 ne publie pas les surfaces internes chart_objects."""
+"""Verifie que les surfaces runtime internes restent hors API publique."""
 
 from __future__ import annotations
 
@@ -10,6 +10,15 @@ from app.domain.astrology.natal_calculation import HouseResult, NatalResult, Pla
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.main import app
 
+FORBIDDEN_PUBLIC_RUNTIME_TERMS = (
+    "chart_objects",
+    "ChartObjectRuntimeData",
+    "FixedStarConjunctionRuntimePayload",
+    "interpretation_input",
+    "CalculationGraphExecutionTrace",
+    "CalculationGraphManifest",
+)
+
 
 def test_openapi_keeps_natal_runtime_surfaces_internal() -> None:
     """Le schema public ne contient pas les payloads runtime internes."""
@@ -19,9 +28,7 @@ def test_openapi_keeps_natal_runtime_surfaces_internal() -> None:
 
     assert response.status_code == 200
     serialized_openapi = str(response.json())
-    assert "chart_objects" not in serialized_openapi
-    assert "ChartObjectRuntimeData" not in serialized_openapi
-    assert "FixedStarConjunctionRuntimePayload" not in serialized_openapi
+    assert all(term not in serialized_openapi for term in FORBIDDEN_PUBLIC_RUNTIME_TERMS)
 
 
 def test_public_natal_calculate_route_is_still_registered() -> None:

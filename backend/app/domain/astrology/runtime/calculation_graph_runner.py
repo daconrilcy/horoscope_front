@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from time import perf_counter
 from types import MappingProxyType
 
 from app.domain.astrology.runtime.calculation_graph_contracts import (
@@ -12,6 +13,10 @@ from app.domain.astrology.runtime.calculation_graph_contracts import (
     CalculationGraphValidationError,
     CalculationNodeDefinition,
     CalculationNodeStatus,
+)
+from app.domain.astrology.runtime.calculation_graph_execution_trace import (
+    CalculationGraphExecutionTrace,
+    build_execution_trace,
 )
 from app.domain.astrology.runtime.calculation_graph_validator import (
     validate_calculation_graph_definition,
@@ -57,6 +62,7 @@ class CalculationNodeResult:
     input_keys: tuple[str, ...]
     calculator: str
     cache_hit: bool
+    duration_ms: float | None = None
     error: CalculationGraphExecutionError | None = None
 
 
@@ -72,6 +78,7 @@ class CalculationGraphExecutionResult:
     cache_hits: tuple[str, ...]
     provenance: Mapping[str, Mapping[str, object]]
     errors: tuple[CalculationGraphExecutionError, ...] = ()
+    execution_trace: CalculationGraphExecutionTrace | None = None
 
     def __post_init__(self) -> None:
         """Fige les surfaces de sortie pour eviter les mutations apres execution."""
@@ -111,11 +118,14 @@ class CalculationGraphRunner:
         self,
         definition: CalculationGraphDefinition,
         initial_context: CalculationGraphContext,
+        *,
+        run_id: str | None = None,
     ) -> CalculationGraphExecutionResult:
         """Valide puis execute le graphe avec un cache limite a cet appel."""
         validation = validate_calculation_graph_definition(definition)
         if not validation.is_valid:
-            return _validation_failure(definition, validation.errors)
+            result = _validation_failure(definition, validation.errors)
+            return _with_execution_trace(definition, result, run_id)
 
         values = dict(initial_context.values)
         node_by_code = {node.code: node for node in definition.nodes}
@@ -129,14 +139,14 @@ class CalculationGraphRunner:
             input_keys = _consumed_input_keys(node, values)
             if node.output_key in values:
                 cache_hits.append(node.code)
-                node_results.append(_node_result(node, input_keys, cache_hit=True))
+                node_results.append(_node_result(node, input_keys, cache_hit=True, duration_ms=0.0))
                 execution_order.append(node.code)
                 provenance[node.code] = _provenance(node, input_keys, values[node.output_key])
                 continue
 
             missing_key = _missing_required_key(node, values)
             if missing_key is not None:
-                return _execution_failure(
+                result = _execution_failure(
                     definition,
                     node_results,
                     execution_order,
@@ -150,10 +160,11 @@ class CalculationGraphRunner:
                         key=missing_key,
                     ),
                 )
+                return _with_execution_trace(definition, result, run_id)
 
             calculator = self._registry.get(node.calculator)
             if calculator is None:
-                return _execution_failure(
+                result = _execution_failure(
                     definition,
                     node_results,
                     execution_order,
@@ -167,11 +178,13 @@ class CalculationGraphRunner:
                         node_code=node.code,
                     ),
                 )
+                return _with_execution_trace(definition, result, run_id)
 
+            started_at = perf_counter()
             try:
                 output = calculator(CalculationGraphContext(values))
             except Exception as exc:
-                return _execution_failure(
+                result = _execution_failure(
                     definition,
                     node_results,
                     execution_order,
@@ -185,14 +198,23 @@ class CalculationGraphRunner:
                         node_code=node.code,
                         cause=exc,
                     ),
+                    duration_ms=_elapsed_ms(started_at),
                 )
+                return _with_execution_trace(definition, result, run_id)
 
             values[node.output_key] = output
             execution_order.append(node.code)
-            node_results.append(_node_result(node, input_keys, cache_hit=False))
+            node_results.append(
+                _node_result(
+                    node,
+                    input_keys,
+                    cache_hit=False,
+                    duration_ms=_elapsed_ms(started_at),
+                )
+            )
             provenance[node.code] = _provenance(node, input_keys, output)
 
-        return CalculationGraphExecutionResult(
+        result = CalculationGraphExecutionResult(
             graph_code=definition.graph_code,
             success=True,
             outputs={node.output_key: values[node.output_key] for node in definition.nodes},
@@ -201,6 +223,7 @@ class CalculationGraphRunner:
             cache_hits=tuple(cache_hits),
             provenance=provenance,
         )
+        return _with_execution_trace(definition, result, run_id)
 
 
 def _validation_failure(
@@ -236,6 +259,7 @@ def _execution_failure(
     node: CalculationNodeDefinition,
     input_keys: tuple[str, ...],
     error: CalculationGraphExecutionError,
+    duration_ms: float | None = 0.0,
 ) -> CalculationGraphExecutionResult:
     """Construit un resultat d'echec sans poursuivre les nodes suivants."""
     failed_results = (
@@ -247,6 +271,7 @@ def _execution_failure(
             input_keys=input_keys,
             calculator=node.calculator,
             cache_hit=False,
+            duration_ms=duration_ms,
             error=error,
         ),
     )
@@ -269,6 +294,7 @@ def _node_result(
     input_keys: tuple[str, ...],
     *,
     cache_hit: bool,
+    duration_ms: float | None,
 ) -> CalculationNodeResult:
     """Cree le resultat nominal d'un node execute ou cache."""
     return CalculationNodeResult(
@@ -278,6 +304,7 @@ def _node_result(
         input_keys=input_keys,
         calculator=node.calculator,
         cache_hit=cache_hit,
+        duration_ms=duration_ms,
     )
 
 
@@ -311,3 +338,27 @@ def _provenance(
         "output": output,
         "calculator": node.calculator,
     }
+
+
+def _with_execution_trace(
+    definition: CalculationGraphDefinition,
+    result: CalculationGraphExecutionResult,
+    run_id: str | None,
+) -> CalculationGraphExecutionResult:
+    """Attache la trace interne redigee au resultat du runner."""
+    return CalculationGraphExecutionResult(
+        graph_code=result.graph_code,
+        success=result.success,
+        outputs=result.outputs,
+        node_results=result.node_results,
+        execution_order=result.execution_order,
+        cache_hits=result.cache_hits,
+        provenance=result.provenance,
+        errors=result.errors,
+        execution_trace=build_execution_trace(definition, result, run_id=run_id),
+    )
+
+
+def _elapsed_ms(started_at: float) -> float:
+    """Retourne une duree technique arrondie sans information metier sensible."""
+    return round((perf_counter() - started_at) * 1000, 3)
