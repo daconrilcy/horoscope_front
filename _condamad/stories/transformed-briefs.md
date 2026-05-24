@@ -69,3 +69,4 @@
 | cs-288 | `_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md` | `_condamad\stories\cs-288-narrative-answer-audit-v1-persistence\00-story.md` |
 | cs-289 | `_story_briefs\cs-289-implement-evidence-refs-validation.md` | `_condamad\stories\cs-289-evidence-refs-section-validation\00-story.md` |
 | cs-290 | `_story_briefs\cs-290-implement-rejected-narrative-answer-workflow.md` | `_condamad\stories\cs-290-rejected-narrative-answer-workflow\00-story.md` |
+| cs-291 | `_story_briefs\cs-291-implement-generic-projection-endpoint.md` | `_condamad\stories\cs-291-generic-projection-endpoint-runtime\00-story.md` |
