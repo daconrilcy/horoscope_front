@@ -33,3 +33,4 @@
 | cs-252 | `_story_briefs\cs-252-astrology-doctrine-school-governance-model.md` | `_condamad\stories\cs-252-astrology-doctrine-school-governance-model\00-story.md` |
 | cs-253 | `_story_briefs\cs-253-first-temporal-technique-implementation-path.md` | `_condamad\stories\cs-253-first-temporal-technique-implementation-path\00-story.md` |
 | cs-254 | `_story_briefs\cs-254-ai-scoring-narrative-input-contract.md` | `_condamad\stories\cs-254-ai-scoring-narrative-input-contract\00-story.md` |
+| cs-255 | `_story_briefs\cs-255-archi-synthese-architecture-produit-en-place.md` | `_condamad\stories\cs-255-product-architecture-current-state\00-story.md` |
