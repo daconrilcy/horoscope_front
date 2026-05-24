@@ -60,3 +60,4 @@
 | cs-279 | `_story_briefs\cs-279-define-transit-chart-v1-internal-manifest.md` | `_condamad\stories\cs-279-transit-chart-v1-internal-manifest\00-story.md` |
 | cs-280 | `_story_briefs\cs-280-implement-internal-transit-runtime.md` | `_condamad\stories\cs-280-internal-transit-runtime\00-story.md` |
 | cs-281 | `_story_briefs\cs-281-define-transit-client-projection-by-plan.md` | `_condamad\stories\cs-281-transit-client-projection-by-plan\00-story.md` |
+| cs-282 | `_story_briefs\cs-282-expose-transit-projection-only-after-proof-gate.md` | `_condamad\stories\cs-282-transit-projection-proof-gated-api\00-story.md` |
