@@ -49,3 +49,4 @@
 | cs-268 | `_story_briefs\cs-268-add-admin-answer-audit-access-logs.md` | `_condamad\stories\cs-268-answer-audit-access-logs\00-story.md` |
 | cs-269 | `_story_briefs\cs-269-add-rejected-answer-review-workflow.md` | `_condamad\stories\cs-269-add-rejected-answer-review-workflow\00-story.md` |
 | cs-270 | `_story_briefs\cs-270-define-internal-role-model-admin-marketer-techno-astro-expert.md` | `_condamad\stories\cs-270-internal-role-model\00-story.md` |
+| cs-271 | `_story_briefs\cs-271-define-permission-matrix-for-business-technical-astrology-debug-data.md` | `_condamad\stories\cs-271-admin-data-permission-matrix\00-story.md` |
