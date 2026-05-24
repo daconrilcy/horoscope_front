@@ -64,3 +64,4 @@
 | cs-283 | `_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md` | `_condamad\stories\cs-283-b2c-projection-entitlement-policy\00-story.md` |
 | cs-284 | `_story_briefs\cs-284-audit-existing-astrology-disclaimers-and-projection-disclaimer-policy.md` | `_condamad\stories\cs-284-astrology-disclaimer-projection-policy\00-story.md` |
 | cs-285 | `_story_briefs\cs-285-implement-structured-facts-v1-builder.md` | `_condamad\stories\cs-285-structured-facts-v1-builder\00-story.md` |
+| cs-286 | `_story_briefs\cs-286-implement-beginner-summary-v1-builder.md` | `_condamad\stories\cs-286-beginner-summary-v1-builder\00-story.md` |
