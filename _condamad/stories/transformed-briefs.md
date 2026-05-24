@@ -51,3 +51,4 @@
 | cs-270 | `_story_briefs\cs-270-define-internal-role-model-admin-marketer-techno-astro-expert.md` | `_condamad\stories\cs-270-internal-role-model\00-story.md` |
 | cs-271 | `_story_briefs\cs-271-define-permission-matrix-for-business-technical-astrology-debug-data.md` | `_condamad\stories\cs-271-admin-data-permission-matrix\00-story.md` |
 | cs-272 | `_story_briefs\cs-272-split-admin-endpoints-by-domain-business-technical-astrology.md` | `_condamad\stories\cs-272-admin-endpoint-domain-segmentation\00-story.md` |
+| cs-273 | `_story_briefs\cs-273-define-expert-technical-projection-v1-admin-astro-expert-only.md` | `_condamad\stories\cs-273-expert-technical-projection-v1-internal-contract\00-story.md` |
