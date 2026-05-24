@@ -38,3 +38,4 @@
 | cs-257 | `_story_briefs\cs-257-define-beginner-summary-v1-deterministic-b2c-projection.md` | `_condamad\stories\cs-257-beginner-summary-v1-b2c-projection\00-story.md` |
 | cs-258 | `_story_briefs\cs-258-define-client-interpretation-projection-v1-by-plan.md` | `_condamad\stories\cs-258-client-interpretation-projection-v1-by-plan\00-story.md` |
 | cs-259 | `_story_briefs\cs-259-define-narrative-answer-audit-v1.md` | `_condamad\stories\cs-259-narrative-answer-audit-v1-contract\00-story.md` |
+| cs-260 | `_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md` | `_condamad\stories\cs-260-evidence-refs-contract-validation\00-story.md` |
