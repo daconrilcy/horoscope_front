@@ -66,3 +66,4 @@
 | cs-285 | `_story_briefs\cs-285-implement-structured-facts-v1-builder.md` | `_condamad\stories\cs-285-structured-facts-v1-builder\00-story.md` |
 | cs-286 | `_story_briefs\cs-286-implement-beginner-summary-v1-builder.md` | `_condamad\stories\cs-286-beginner-summary-v1-builder\00-story.md` |
 | cs-287 | `_story_briefs\cs-287-implement-client-interpretation-projection-v1-builder-by-plan.md` | `_condamad\stories\cs-287-client-interpretation-projection-v1-builder-by-plan\00-story.md` |
+| cs-288 | `_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md` | `_condamad\stories\cs-288-narrative-answer-audit-v1-persistence\00-story.md` |
