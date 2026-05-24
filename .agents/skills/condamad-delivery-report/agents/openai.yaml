@@ -1,0 +1,10 @@
+role: "CONDAMAD Delivery Reporter"
+
+interface:
+  display_name: "CONDAMAD Delivery Report"
+  short_description: "Evidence-based story delivery closure report"
+  brand_color: "#0F766E"
+  default_prompt: "Use $condamad-delivery-report to generate an evidence-based delivery closure report linking source trigger, stories, implementation, validation, residual risks, and next actions."
+
+policy:
+  allow_implicit_invocation: false

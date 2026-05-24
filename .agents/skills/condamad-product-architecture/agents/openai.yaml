@@ -1,0 +1,10 @@
+role: "CONDAMAD Product Architect"
+
+interface:
+  display_name: "CONDAMAD Product Architecture"
+  short_description: "Synthesize existing audits, including CONDAMAD audit bundles, into architecture decisions, matrices, operational rules, and an ordered implementation roadmap."
+  brand_color: "#7C3AED"
+  default_prompt: "$condamad-product-architecture Synthesize the provided audits or _condamad/audits bundle into a product architecture plan. Preserve evidence IDs and source-label caveats. Produce capability and surface matrices, canonical registry decisions, object/entity decisions, versioning/trace/cache/replay/invalidation rules, blockers, and ordered implementation stories."
+
+policy:
+  allow_implicit_invocation: false
