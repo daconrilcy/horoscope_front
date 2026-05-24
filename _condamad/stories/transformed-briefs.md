@@ -47,3 +47,4 @@
 | cs-266 | `_story_briefs\cs-266-add-openapi-internal-public-exposure-guards.md` | `_condamad\stories\cs-266-openapi-internal-public-exposure-guards\00-story.md` |
 | cs-267 | `_story_briefs\cs-267-define-admin-answer-audit-api.md` | `_condamad\stories\cs-267-admin-answer-audit-api\00-story.md` |
 | cs-268 | `_story_briefs\cs-268-add-admin-answer-audit-access-logs.md` | `_condamad\stories\cs-268-answer-audit-access-logs\00-story.md` |
+| cs-269 | `_story_briefs\cs-269-add-rejected-answer-review-workflow.md` | `_condamad\stories\cs-269-add-rejected-answer-review-workflow\00-story.md` |
