@@ -1,0 +1,10 @@
+CS-255 application surface status
+
+Command:
+git status --short -- frontend/src backend/app backend/tests backend/app/tests backend/migrations
+
+Result:
+<no output>
+
+Interpretation:
+PASS. CS-255 did not modify frontend source, backend application source, backend tests, backend app tests, or backend migrations.

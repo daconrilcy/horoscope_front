@@ -1,0 +1,75 @@
+CS-255 validation evidence
+
+Scope:
+- Documentation-only product architecture synthesis.
+- Application code, frontend code, tests, migrations, routes, serializers and OpenAPI contracts were not edited.
+
+Commands and results:
+
+1. Test-Path .\docs\architecture\product-architecture-current-state.md
+Result: PASS, returned True.
+
+2. rg -n "CS-237|CS-254|delivery report|ChartObjectRuntimeData|CalculationGraph|structured_facts|beginner_summary|expert_technical_projection|llm_input" .\docs\architecture\product-architecture-current-state.md
+Result: PASS, required source, runtime and primitive terms found.
+
+3. rg -n "interne|publique|admin|debug|LLM|narration|interprétation|calcul" .\docs\architecture\product-architecture-current-state.md
+Result: PASS, exposure and boundary terms found.
+
+4. rg -n "fixed_star_contacts|astrologer_debug_data|transit_chart_v1|needs-user-decision|preuve ephemeris|décision sécurité" .\docs\architecture\product-architecture-current-state.md
+Result: PASS, open decisions and temporal status terms found.
+
+5. . .\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; assert Path('docs/architecture/product-architecture-current-state.md').exists(); assert Path('_condamad/stories/CS-255-product-architecture-current-state/evidence/source-checklist.md').exists(); print('path assertions PASS')"
+Result: PASS. Python command was run after activating the venv.
+
+6. rg -n "registry|manifest|trace|taxonomy|proof|governance|temporal|AI narrative" docs/architecture/product-architecture-current-state.md
+Result: PASS, required primitive role vocabulary found.
+
+7. rg -n "ChartObjectRuntimeData|chart_objects|traces brutes|API publique|raw calculation graph payloads" docs/architecture/product-architecture-current-state.md
+Result: PASS, raw runtime terms are present only as forbidden/internal-surface decisions.
+
+8. rg -n "Résumé exécutif|Architecture produit en place|Primitives canoniques internes|Surfaces produit et niveaux d'exposition|Frontières calcul / interprétation / narration|Familles astrologiques et statut produit|Garde-fous et validations|Limites et décisions ouvertes|Prochaines stories recommandées" docs/architecture/product-architecture-current-state.md
+Result: PASS, required story headings found.
+
+9. . .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -c "from app.main import app; text=str(app.openapi()); forbidden=['ChartObjectRuntimeData','chart_objects','CalculationGraphExecutionTrace']; assert not any(item in text for item in forbidden), [item for item in forbidden if item in text]; print('openapi raw-runtime absence PASS')"
+Result: PASS. Python command was run after activating the venv.
+
+10. . .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -c "from app.main import app; forbidden=('chart_objects','execution-trace','graph-family','temporal'); hits=[getattr(r,'path','') for r in app.routes if any(x in getattr(r,'path','') for x in forbidden)]; assert not hits, hits; print('routes raw-runtime absence PASS')"
+Result: PASS. Python command was run after activating the venv.
+
+11. rg -n "natal_chart_v1|transit_chart_v1|chemin sélectionné|exposition publique" docs/architecture/product-architecture-current-state.md
+Result: PASS, family status wording found.
+
+12. rg -n "Prochaines stories recommandées|décision produit|décision sécurité|preuve ephemeris" docs/architecture/product-architecture-current-state.md
+Result: PASS, roadmap and decision terms found.
+
+13. git status --short -- frontend/src backend/app backend/tests backend/app/tests backend/migrations
+Result: PASS, returned no lines.
+
+14. git diff --check -- docs/architecture/product-architecture-current-state.md _condamad/stories/CS-255-product-architecture-current-state/evidence/source-checklist.md
+Result: PASS, no whitespace errors.
+
+Fresh review after product-architecture correction:
+
+15. rg -n "_condamad/stories/CS-246-canonical-astrology-graph-family-registry/generated/10-final-evidence.md|_condamad/stories/CS-247-graph-manifest-node-io-schema-contract/generated/10-final-evidence.md|_condamad/stories/CS-248-calculation-graph-execution-trace-contract/generated/10-final-evidence.md|_condamad/stories/CS-249-chart-object-capability-taxonomy-matrix/generated/10-final-evidence.md|_condamad/stories/CS-250-astronomical-proof-before-public-temporal-runtime/generated/10-final-evidence.md|_condamad/stories/CS-251-official-product-primitives-public-projection-roadmap/generated/10-final-evidence.md|_condamad/stories/CS-252-astrology-doctrine-school-governance-model/generated/10-final-evidence.md|_condamad/stories/CS-253-first-temporal-technique-implementation-path/generated/10-final-evidence.md|_condamad/stories/CS-254-ai-scoring-narrative-input-contract/generated/10-final-evidence.md" docs/architecture/product-architecture-current-state.md
+Result: PASS, each CS-246 through CS-254 final evidence path is explicitly cited.
+
+16. rg -n "Résumé exécutif|Architecture produit en place|Primitives canoniques internes|Surfaces produit et niveaux d'exposition|Frontières calcul / interprétation / narration|Familles astrologiques et statut produit|Garde-fous et validations|Limites et décisions ouvertes|Prochaines stories recommandées" docs/architecture/product-architecture-current-state.md
+Result: PASS, all nine required story headings remain present.
+
+17. . .\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; assert Path('docs/architecture/product-architecture-current-state.md').exists(); assert Path('_condamad/stories/CS-255-product-architecture-current-state/evidence/source-checklist.md').exists(); print('path assertions PASS')"
+Result: PASS. Python command was run after activating the venv.
+
+18. . .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -c "from app.main import app; text=str(app.openapi()); forbidden=['ChartObjectRuntimeData','chart_objects','CalculationGraphExecutionTrace']; hits=[item for item in forbidden if item in text]; assert not hits, hits; print('openapi raw-runtime absence PASS')"
+Result: PASS. Python command was run after activating the venv.
+
+19. . .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -c "from app.main import app; forbidden=('chart_objects','execution-trace','graph-family','temporal'); hits=[getattr(r,'path','') for r in app.routes if any(x in getattr(r,'path','') for x in forbidden)]; assert not hits, hits; print('routes raw-runtime absence PASS')"
+Result: PASS. Python command was run after activating the venv.
+
+20. git status --short -- frontend/src backend/app backend/tests backend/app/tests backend/migrations
+Result: PASS, returned no lines.
+
+Fresh review conclusion:
+PASS. The corrected report covers the CS-255 story, source brief, mandatory source citations, CS-246 through CS-254 final evidence paths, required headings, canonical primitive coverage, surface separation, raw-runtime non-public posture, family status split, unresolved decisions and concrete next-story roadmap. No application file is changed.
+
+Skipped:
+- Broad backend/frontend test suites and local dev server startup were not run because CS-255 is documentation-only and no application behavior changed.
