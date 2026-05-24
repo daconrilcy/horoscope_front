@@ -1,0 +1,46 @@
+{
+  "contract_note": {
+    "provenance": "source references owned by runner results",
+    "replay_snapshot": "not implemented by this contract",
+    "trace": "ordered redacted execution facts"
+  },
+  "graph_code": "fake_graph",
+  "graph_version": "2026.05",
+  "nodes": [
+    {
+      "cache_status": "miss",
+      "code": "double",
+      "duration_ms": 0.003,
+      "error_kind": null,
+      "input_keys": [
+        "seed"
+      ],
+      "output_keys": [
+        "double_value"
+      ],
+      "provenance_ref": "provenance:double",
+      "status": "executed"
+    },
+    {
+      "cache_status": "miss",
+      "code": "label",
+      "duration_ms": 0.002,
+      "error_kind": null,
+      "input_keys": [
+        "double_value"
+      ],
+      "output_keys": [
+        "label"
+      ],
+      "provenance_ref": "provenance:label",
+      "status": "executed"
+    }
+  ],
+  "provenance_refs": [
+    "provenance:double",
+    "provenance:label"
+  ],
+  "redaction_policy": "keys-and-provenance-refs-v1",
+  "run_id": "evidence-run",
+  "version": "1"
+}

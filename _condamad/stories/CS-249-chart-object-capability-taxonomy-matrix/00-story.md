@@ -1,5 +1,5 @@
 # Story CS-249 chart-object-capability-taxonomy-matrix: Define Chart Object Capability And Object Taxonomy Matrix
-Status: ready-to-dev
+Status: ready-to-review
 
 ## 1. Objective
 

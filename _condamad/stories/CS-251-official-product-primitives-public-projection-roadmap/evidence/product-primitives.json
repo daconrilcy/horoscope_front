@@ -1,0 +1,111 @@
+{
+  "story": "CS-251",
+  "owner": "docs/architecture/official-product-primitives-public-projections.md",
+  "fixed_star_policy": "needs-user-decision",
+  "forbidden_public_surfaces": [
+    "chart_objects",
+    "ChartObjectRuntimeData",
+    "raw calculation graph payloads",
+    "interpretation_input"
+  ],
+  "primitives": [
+    {
+      "primitive_id": "structured_facts",
+      "audience": ["expert", "PDF", "AI", "public-user"],
+      "public_status": "public",
+      "source_runtime": "public natal projections and json_builder.py",
+      "public_projection_owner": "future structured facts API projection",
+      "forbidden_raw_surfaces": [
+        "chart_objects",
+        "ChartObjectRuntimeData",
+        "raw calculation graph payloads"
+      ],
+      "api_contract_story": "CS-255 API contract",
+      "frontend_client_story": "CS-255 frontend client",
+      "ui_component_story": "CS-255 UI component",
+      "openapi_policy": "OpenAPI-ready"
+    },
+    {
+      "primitive_id": "beginner_summary",
+      "audience": ["beginner", "public-user", "AI", "PDF"],
+      "public_status": "public",
+      "source_runtime": "public natal projections and compact natal context",
+      "public_projection_owner": "future beginner summary API projection",
+      "forbidden_raw_surfaces": [
+        "chart_objects",
+        "raw score breakdowns",
+        "raw calculation graph payloads"
+      ],
+      "api_contract_story": "CS-256 API contract",
+      "frontend_client_story": "CS-256 frontend client",
+      "ui_component_story": "CS-256 UI component",
+      "openapi_policy": "OpenAPI-ready"
+    },
+    {
+      "primitive_id": "expert_technical_projection",
+      "audience": ["expert", "astrologer"],
+      "public_status": "public",
+      "source_runtime": "dignities, conditions, dominance and public aspects",
+      "public_projection_owner": "future expert API projection",
+      "forbidden_raw_surfaces": [
+        "ChartObjectRuntimeData",
+        "raw dominance payloads",
+        "raw dignity payloads",
+        "interpretation_input"
+      ],
+      "api_contract_story": "CS-255 API contract",
+      "frontend_client_story": "CS-255 frontend client",
+      "ui_component_story": "CS-255 UI component",
+      "openapi_policy": "OpenAPI-ready"
+    },
+    {
+      "primitive_id": "fixed_star_contacts",
+      "audience": ["expert", "public-user", "AI"],
+      "public_status": "needs-user-decision",
+      "source_runtime": "backend/app/domain/astrology/fixed_stars",
+      "public_projection_owner": "none until product decision",
+      "forbidden_raw_surfaces": [
+        "raw fixed star catalog dump",
+        "raw conjunction payloads",
+        "ChartObjectRuntimeData"
+      ],
+      "api_contract_story": "CS-257 API contract blocked until policy decision",
+      "frontend_client_story": "CS-257 frontend client blocked until policy decision",
+      "ui_component_story": "CS-257 UI component blocked until policy decision",
+      "openapi_policy": "blocked"
+    },
+    {
+      "primitive_id": "astrologer_debug_data",
+      "audience": ["astrologer", "debug"],
+      "public_status": "needs-user-decision",
+      "source_runtime": "calculation traces, audit rows and runtime graph",
+      "public_projection_owner": "none",
+      "forbidden_raw_surfaces": [
+        "chart_objects",
+        "raw calculation graph payloads",
+        "internal IDs",
+        "audit internals"
+      ],
+      "api_contract_story": "none until audience/auth decision",
+      "frontend_client_story": "none until audience/auth decision",
+      "ui_component_story": "none until audience/auth decision",
+      "openapi_policy": "blocked"
+    },
+    {
+      "primitive_id": "llm_input",
+      "audience": ["AI"],
+      "public_status": "LLM-only",
+      "source_runtime": "interpretation_input and compact natal context",
+      "public_projection_owner": "none for public API",
+      "forbidden_raw_surfaces": [
+        "interpretation_input",
+        "prompt internals",
+        "evidence IDs beyond display need"
+      ],
+      "api_contract_story": "none",
+      "frontend_client_story": "none",
+      "ui_component_story": "none",
+      "openapi_policy": "OpenAPI-neutral"
+    }
+  ]
+}

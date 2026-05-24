@@ -1,5 +1,5 @@
 # Story CS-247 graph-manifest-node-io-schema-contract: Add Graph Manifest And Node IO Schema Contract
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -275,13 +275,13 @@ Registry gap:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1: Create typed graph manifest and node IO schema contracts with French file comment and docstrings. (AC: AC1, AC2, AC3)
-- [ ] Task 2: Build the `natal_chart_v1` manifest from the existing graph definition and family registry. (AC: AC1)
-- [ ] Task 3: Validate duplicate outputs, unknown inputs and missing node schemas. (AC: AC4, AC5, AC6)
-- [ ] Task 4: Add deterministic comparison behavior for compatibility policy decisions. (AC: AC7)
-- [ ] Task 5: Add targeted unit tests for valid natal manifest and invalid manifest cases. (AC: AC1, AC2, AC3, AC4, AC5, AC6)
-- [ ] Task 6: Add or reuse API neutrality proof with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC8)
-- [ ] Task 7: Persist before, after, comparison and validation evidence under the CS-247 story folder. (AC: AC9)
+- [x] Task 1: Create typed graph manifest and node IO schema contracts with French file comment and docstrings. (AC: AC1, AC2, AC3)
+- [x] Task 2: Build the `natal_chart_v1` manifest from the existing graph definition and family registry. (AC: AC1)
+- [x] Task 3: Validate duplicate outputs, unknown inputs and missing node schemas. (AC: AC4, AC5, AC6)
+- [x] Task 4: Add deterministic comparison behavior for compatibility policy decisions. (AC: AC7)
+- [x] Task 5: Add targeted unit tests for valid natal manifest and invalid manifest cases. (AC: AC1, AC2, AC3, AC4, AC5, AC6)
+- [x] Task 6: Add or reuse API neutrality proof with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC8)
+- [x] Task 7: Persist before, after, comparison and validation evidence under the CS-247 story folder. (AC: AC9)
 
 ## 9. Mandatory Reuse / DRY Constraints
 

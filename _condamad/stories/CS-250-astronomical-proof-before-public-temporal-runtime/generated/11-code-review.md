@@ -1,35 +1,34 @@
-# Editorial Review CS-250
+# Implementation Review CS-250
 
 Verdict: CLEAN
 
 ## Review Cycles
 
 - Cycle 1: CHANGES_REQUESTED.
-  - Finding: `RG-002` and `RG-022` were cited as applicable guardrails even though their registry scope is API-router and prompt-generation work.
-  - Fix: replaced those entries with a scoped registry gap and moved `RG-002` and `RG-022` to explicit non-applicable examples.
+  - Finding: implementation evidence was still review-handoff oriented; `generated/11-code-review.md`, the CS-253 gate evidence, and the proof manifest recorded the pre-closure gate state instead of the final implementation review state.
+  - Fix: synchronized CS-250 to `done`, refreshed gate/proof evidence to `proof-closed`, and strengthened the architecture test so it verifies both blocked and proof-closed states.
 - Cycle 2: CLEAN.
-  - The source brief primitives are explicit in the story: production `swisseph` proof, sensitive golden cases, ephemeris trace, tolerance policy,
-    simplified-mode public gate, and CS-253 blocking.
-  - The CS-241 sensitive cases are named: Paris, DST, high latitude, Lahiri, topocentric, whole sign, and Placidus.
-  - The story keeps frontend, public API, migrations, doctrine expansion, and temporal technique implementation out of scope.
-  - The review output path is this generated artifact.
+  - Production `swisseph` proof is centralized in `backend/app/domain/astrology/runtime/astronomical_proof.py`.
+  - Sensitive golden cases cover Paris, DST, high latitude, Lahiri, topocentric, whole sign, and Placidus cases.
+  - Tolerance policy is a single owner, reused by all CS-250 golden assertions.
+  - Ephemeris trace is persisted in `_condamad/stories/CS-250-astronomical-proof-before-public-temporal-runtime/evidence/astronomical-proof.json`.
+  - CS-253 gate evidence is consistent with proof closure: blocked before `done`, `proof-closed` after CS-250 review closure.
+  - No frontend, public API, DB, migration, auth, i18n, styling, or temporal technique implementation surface was introduced for this story.
 
 ## Validation Results
 
-- Story validation command: `condamad_story_validate.py` on the CS-250 `00-story.md`: PASS.
-- Strict story lint command: `condamad_story_lint.py --strict` on the CS-250 `00-story.md`: PASS.
+- `condamad_validate.py` on the CS-250 capsule: PASS.
+- `condamad_story_validate.py` on the CS-250 `00-story.md`: PASS.
+- `condamad_story_lint.py --strict` on the CS-250 `00-story.md`: PASS.
+- `ruff check` on scoped CS-250 implementation and guardrail files: PASS.
+- `pytest` on CS-250 targeted unit and architecture tests plus touched architecture guardrail: PASS.
 
 All Python validation commands were run after `. .\.venv\Scripts\Activate.ps1`.
 
-## Produced Artifacts
-
-- `_condamad/stories/CS-250-astronomical-proof-before-public-temporal-runtime/generated/11-code-review.md`
-
 ## Propagation Decision
 
-- no-propagation: the correction is local to this story's guardrail evidence and does not reveal reusable skill, AGENTS, or registry learning.
+- no-propagation: the correction is local to CS-250 implementation evidence and does not require AGENTS.md, registry, or skill updates.
 
 ## Residual Risk
 
-- No exact public temporal astronomy proof guardrail exists in the registry; the story records this as a registry gap and compensates with targeted
-  validation commands.
+- Golden references are anchored to the active `pyswisseph` runtime and the proof manifest records integrated Moshier fallback when no external ephemeris path is bootstrapped.

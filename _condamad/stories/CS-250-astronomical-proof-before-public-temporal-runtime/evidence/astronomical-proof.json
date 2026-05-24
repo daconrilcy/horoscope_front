@@ -1,0 +1,307 @@
+{
+  "authorized_public_temporal": true,
+  "cs253_gate": {
+    "authorized_public_temporal": true,
+    "cs253_gate_state": "proof-closed",
+    "marker": "cs253-blocked-by-cs250-astronomical-proof",
+    "reason": "CS-250 est done; une story temporelle publique peut revalider son scope."
+  },
+  "ephemeris_trace": {
+    "mode": "swisseph",
+    "path_hash": null,
+    "path_version": null,
+    "reproducibility_note": "pyswisseph-moshier-integrated-no-external-path",
+    "swisseph_version": "2.10.03"
+  },
+  "golden_cases": [
+    {
+      "expected_reference": {
+        "ascendant_longitude": 138.870068,
+        "ayanamsa_value": null,
+        "cusp_10_longitude": 35.519045,
+        "cusp_1_longitude": 138.870068,
+        "mc_longitude": 35.519045,
+        "mercury_longitude": 65.440952,
+        "moon_longitude": 343.413125,
+        "sun_longitude": 83.99028
+      },
+      "golden_case_id": "paris-normal-placidus",
+      "input_profile": {
+        "altitude_m": null,
+        "ayanamsa": null,
+        "birth_date": "1990-06-15",
+        "birth_time": "10:30",
+        "birth_timezone": "Europe/Paris",
+        "frame": "geocentric",
+        "house_system": "placidus",
+        "jd_ut": 2448057.8541666665,
+        "latitude": 48.8566,
+        "longitude": 2.3522,
+        "zodiac": "tropical"
+      },
+      "objective": "Cas Paris standard tropical Placidus.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    },
+    {
+      "expected_reference": {
+        "ascendant_longitude": 147.87981,
+        "ayanamsa_value": null,
+        "cusp_10_longitude": 48.17952,
+        "cusp_1_longitude": 147.87981,
+        "mc_longitude": 48.17952,
+        "mercury_longitude": 230.283789,
+        "moon_longitude": 154.35132,
+        "sun_longitude": 214.08024
+      },
+      "golden_case_id": "paris-dst-ambiguous",
+      "input_profile": {
+        "altitude_m": null,
+        "ayanamsa": null,
+        "birth_date": "2024-10-27",
+        "birth_time": "02:30",
+        "birth_timezone": "Europe/Paris",
+        "frame": "geocentric",
+        "house_system": "placidus",
+        "jd_ut": 2460610.5208333335,
+        "latitude": 48.8566,
+        "longitude": 2.3522,
+        "zodiac": "tropical"
+      },
+      "objective": "Heure locale ambigue de fin DST Europe/Paris.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    },
+    {
+      "expected_reference": {
+        "ascendant_longitude": 273.769477,
+        "ayanamsa_value": null,
+        "cusp_10_longitude": 216.088823,
+        "cusp_1_longitude": 273.769477,
+        "mc_longitude": 216.088823,
+        "mercury_longitude": 27.009673,
+        "moon_longitude": 255.613553,
+        "sun_longitude": 10.826916
+      },
+      "golden_case_id": "paris-dst-nonexistent",
+      "input_profile": {
+        "altitude_m": null,
+        "ayanamsa": null,
+        "birth_date": "2024-03-31",
+        "birth_time": "03:30",
+        "birth_timezone": "Europe/Paris",
+        "frame": "geocentric",
+        "house_system": "placidus",
+        "jd_ut": 2460400.5625,
+        "latitude": 48.8566,
+        "longitude": 2.3522,
+        "zodiac": "tropical"
+      },
+      "objective": "Heure locale apres saut DST Europe/Paris.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    },
+    {
+      "expected_reference": {
+        "ascendant_longitude": 340.090263,
+        "ayanamsa_value": null,
+        "cusp_10_longitude": 268.173542,
+        "cusp_1_longitude": 340.090263,
+        "mc_longitude": 268.173542,
+        "mercury_longitude": 268.369213,
+        "moon_longitude": 154.350058,
+        "sun_longitude": 290.197152
+      },
+      "golden_case_id": "high-latitude-placidus",
+      "input_profile": {
+        "altitude_m": null,
+        "ayanamsa": null,
+        "birth_date": "1985-01-10",
+        "birth_time": "12:00",
+        "birth_timezone": "Atlantic/Reykjavik",
+        "frame": "geocentric",
+        "house_system": "placidus",
+        "jd_ut": 2446076.0,
+        "latitude": 64.1466,
+        "longitude": -21.9426,
+        "zodiac": "tropical"
+      },
+      "objective": "Latitude elevee avec maisons Placidus stables.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    },
+    {
+      "expected_reference": {
+        "ascendant_longitude": 100.191313,
+        "ayanamsa_value": 23.857092,
+        "cusp_10_longitude": 357.456455,
+        "cusp_1_longitude": 100.191313,
+        "mc_longitude": 357.456455,
+        "mercury_longitude": 248.036053,
+        "moon_longitude": 199.470553,
+        "sun_longitude": 256.515697
+      },
+      "golden_case_id": "lahiri-sidereal",
+      "input_profile": {
+        "altitude_m": null,
+        "ayanamsa": "lahiri",
+        "birth_date": "2000-01-01",
+        "birth_time": "12:00",
+        "birth_timezone": "UTC",
+        "frame": "geocentric",
+        "house_system": "placidus",
+        "jd_ut": 2451545.0,
+        "latitude": 28.6139,
+        "longitude": 77.209,
+        "zodiac": "sidereal"
+      },
+      "objective": "Mode sideral Lahiri et trace d'ayanamsa.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    },
+    {
+      "expected_reference": {
+        "ascendant_longitude": 108.160128,
+        "ayanamsa_value": null,
+        "cusp_10_longitude": 353.306935,
+        "cusp_1_longitude": 108.160128,
+        "mc_longitude": 353.306935,
+        "mercury_longitude": 100.389013,
+        "moon_longitude": 304.591124,
+        "sun_longitude": 115.202661
+      },
+      "golden_case_id": "topocentric-altitude",
+      "input_profile": {
+        "altitude_m": 4392.0,
+        "ayanamsa": null,
+        "birth_date": "2000-07-17",
+        "birth_time": "12:00",
+        "birth_timezone": "UTC",
+        "frame": "topocentric",
+        "house_system": "placidus",
+        "jd_ut": 2451743.0,
+        "latitude": 46.8523,
+        "longitude": -121.7603,
+        "zodiac": "tropical"
+      },
+      "objective": "Calcul topocentrique avec altitude explicite.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    },
+    {
+      "expected_reference": {
+        "ascendant_longitude": 147.033682,
+        "ayanamsa_value": null,
+        "cusp_10_longitude": 30.0,
+        "cusp_1_longitude": 120.0,
+        "mc_longitude": 47.009905,
+        "mercury_longitude": 123.125606,
+        "moon_longitude": 154.960685,
+        "sun_longitude": 102.200902
+      },
+      "golden_case_id": "whole-sign-paris",
+      "input_profile": {
+        "altitude_m": null,
+        "ayanamsa": null,
+        "birth_date": "1973-07-04",
+        "birth_time": "09:00",
+        "birth_timezone": "Europe/Paris",
+        "frame": "geocentric",
+        "house_system": "whole_sign",
+        "jd_ut": 2441867.8333333335,
+        "latitude": 48.8566,
+        "longitude": 2.3522,
+        "zodiac": "tropical"
+      },
+      "objective": "Maisons whole sign sans derive de cuspides Placidus.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    },
+    {
+      "expected_reference": {
+        "ascendant_longitude": 174.537887,
+        "ayanamsa_value": null,
+        "cusp_10_longitude": 81.913408,
+        "cusp_1_longitude": 174.537887,
+        "mc_longitude": 81.913408,
+        "mercury_longitude": 254.637502,
+        "moon_longitude": 21.306723,
+        "sun_longitude": 269.587628
+      },
+      "golden_case_id": "placidus-edge-helsinki",
+      "input_profile": {
+        "altitude_m": null,
+        "ayanamsa": null,
+        "birth_date": "1966-12-21",
+        "birth_time": "23:45",
+        "birth_timezone": "Europe/Helsinki",
+        "frame": "geocentric",
+        "house_system": "placidus",
+        "jd_ut": 2439481.40625,
+        "latitude": 60.1699,
+        "longitude": 24.9384,
+        "zodiac": "tropical"
+      },
+      "objective": "Cas Placidus limite a latitude nord sans bascule silencieuse.",
+      "tolerance": {
+        "ayanamsa_degrees": 0.01,
+        "house_angle_degrees": 0.02,
+        "julian_day_days": 1e-06,
+        "longitude_degrees": 0.01,
+        "name": "swisseph-sensitive-v1",
+        "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+      }
+    }
+  ],
+  "mode": "swisseph",
+  "tolerance_policy": {
+    "ayanamsa_degrees": 0.01,
+    "house_angle_degrees": 0.02,
+    "julian_day_days": 1e-06,
+    "longitude_degrees": 0.01,
+    "name": "swisseph-sensitive-v1",
+    "reason": "Tolérance serrée pour pyswisseph>=2.10.0 avec Moshier intégré; les maisons gardent une marge légèrement supérieure pour les angles."
+  }
+}

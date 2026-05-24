@@ -1,4 +1,4 @@
-# Editorial Review CS-253 first-temporal-technique-implementation-path
+# Implementation Review CS-253 first-temporal-technique-implementation-path
 
 Verdict: CLEAN
 
@@ -7,26 +7,43 @@ Verdict: CLEAN
 - Reviewed story: `_condamad/stories/CS-253-first-temporal-technique-implementation-path/00-story.md`.
 - Source brief: `_story_briefs/cs-253-first-temporal-technique-implementation-path.md`.
 - Tracker row: `_condamad/stories/story-status.md` row for `CS-253`.
-- Guardrails checked by scoped ID lookup only: `RG-002`, `RG-010`, `RG-095`.
+- Implementation surface:
+  - `backend/app/domain/astrology/runtime/temporal_technique_selection.py`;
+  - `backend/app/domain/astrology/runtime/__init__.py`;
+  - `backend/tests/unit/domain/astrology/test_temporal_technique_selection.py`;
+  - `backend/tests/architecture/test_temporal_family_single_path.py`;
+  - `backend/tests/architecture/test_api_contract_neutrality.py`;
+  - CS-253 evidence artifacts.
 
 ## Review Cycle
 
-- Iteration 1 finding: `RG-022` was selected as a backend validation guardrail, but the registry entry is prompt-generation specific.
-- Fix applied: replaced `RG-022` with applicable backend test topology and astrology/prediction boundary guardrails.
-- Iteration 2 result: no remaining actionable drafting issue found.
+- Iteration 1 finding: the `risk_acceptance_non_public=True` branch used a gate state outside the CS-250 vocabulary.
+- Risk: runtime evidence could drift from the source gate contract while still staying non-public.
+- Fix applied: `build_first_temporal_technique_selection` now returns `cs250_gate_state=risk-accepted-non-public` for that branch.
+- Test update: `test_written_risk_acceptance_remains_non_public` asserts the CS-250 gate value, and a `done` gate test proves `proof-closed`.
+- Iteration 2 result: no remaining actionable implementation, proof, guardrail, test or AC-alignment issue found.
 
-## Brief Alignment
+## AC Alignment
 
-- The story selects exactly one temporal path: `transit_chart_v1`.
-- Candidate comparison is required through explicit rejection reasons for the other temporal families.
-- Required inputs, graph path, chart objects, relationships, public gate, CS-250 dependency and end criteria are explicit.
-- The story refuses batch multi-technique work and requires tests/scans proving only one family is opened.
-- Public API, frontend, DB, migration, auth, i18n, style and build surfaces remain out of scope.
+- `transit_chart_v1` is the only selected family and no executable temporal graph is created.
+- Synastry, returns, progressions, composite, profections and forecasting remain closed with explicit reasons.
+- Required inputs, graph contracts, chart objects, relationships, dependencies and end criteria are declared.
+- CS-250 `done` produces `selected-ready-after-cs250`; pre-done remains blocked; risk acceptance remains non-public.
+- Public API, OpenAPI, frontend, DB and migration surfaces remain unchanged.
+- Evidence files exist under the CS-253 story capsule.
 
 ## Validation Results
 
-- PASS: `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-253-first-temporal-technique-implementation-path\\00-story.md`
-- PASS: `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-253-first-temporal-technique-implementation-path\\00-story.md`
+- PASS: `.\.venv\Scripts\Activate.ps1; ruff format backend\app\domain\astrology\runtime\temporal_technique_selection.py backend\tests\unit\domain\astrology\test_temporal_technique_selection.py`
+- PASS: `.\.venv\Scripts\Activate.ps1; ruff check backend\app\domain\astrology\runtime\temporal_technique_selection.py backend\tests\unit\domain\astrology\test_temporal_technique_selection.py`
+- PASS: `.\.venv\Scripts\Activate.ps1; ruff check backend`
+- PASS: `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_temporal_technique_selection.py` (`7 passed`)
+- PASS: `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\architecture\test_temporal_family_single_path.py` (`4 passed`)
+- PASS: `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\architecture\test_api_contract_neutrality.py` (`14 passed`)
+- PASS: `.\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "<risk-accepted-non-public gate assertion>"`
+- PASS: `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend` (`3228 passed, 1 skipped, 1182 deselected`)
+- PASS: `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-253-first-temporal-technique-implementation-path\00-story.md`
+- PASS: `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-253-first-temporal-technique-implementation-path\00-story.md`
 
 ## Produced Artifacts
 
@@ -34,8 +51,8 @@ Verdict: CLEAN
 
 ## Propagation
 
-- no-propagation: the guardrail citation fix is local to this CS-253 story contract.
+- no-propagation: the correction is local to CS-253 runtime evidence semantics and does not require AGENTS.md, guardrail registry or skill updates.
 
 ## Residual Risk
 
-- The story depends on CS-246, CS-247, CS-248 and the CS-250 gate; implementation must preserve the non-public status until the gate closes or a written risk acceptance exists.
+- None identified for CS-253 after the fresh review.

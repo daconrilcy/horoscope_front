@@ -1,0 +1,840 @@
+{
+  "compatibility_policy": "compatible",
+  "family_code": "natal_chart_v1",
+  "graph_code": "natal_chart_v1",
+  "graph_version": "1",
+  "nodes": [
+    {
+      "code": "prepare_birth_data",
+      "depends_on": [
+        "birth_datetime",
+        "timezone",
+        "coordinates",
+        "calculation_options"
+      ],
+      "input_schema": [
+        {
+          "key": "birth_datetime",
+          "required": true,
+          "value_type": "datetime"
+        },
+        {
+          "key": "timezone",
+          "required": true,
+          "value_type": "str"
+        },
+        {
+          "key": "coordinates",
+          "required": true,
+          "value_type": "Coordinates"
+        },
+        {
+          "key": "calculation_options",
+          "required": true,
+          "value_type": "Mapping[str, object]"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "prepared_birth_data",
+        "required": true,
+        "value_type": "prepare_birth_data.output"
+      }
+    },
+    {
+      "code": "planet_positions",
+      "depends_on": [
+        "julian_day",
+        "runtime_reference",
+        "zodiac_mode",
+        "houses_raw"
+      ],
+      "input_schema": [
+        {
+          "key": "julian_day",
+          "required": true,
+          "value_type": "float"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        },
+        {
+          "key": "zodiac_mode",
+          "required": true,
+          "value_type": "str"
+        },
+        {
+          "key": "houses_raw",
+          "required": true,
+          "value_type": "houses_raw.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "planet_positions",
+        "required": true,
+        "value_type": "planet_positions.output"
+      }
+    },
+    {
+      "code": "astral_points",
+      "depends_on": [
+        "julian_day",
+        "runtime_reference",
+        "zodiac_mode"
+      ],
+      "input_schema": [
+        {
+          "key": "julian_day",
+          "required": true,
+          "value_type": "float"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        },
+        {
+          "key": "zodiac_mode",
+          "required": true,
+          "value_type": "str"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "astral_points",
+        "required": true,
+        "value_type": "astral_points.output"
+      }
+    },
+    {
+      "code": "houses_raw",
+      "depends_on": [
+        "julian_day",
+        "coordinates",
+        "effective_house_system"
+      ],
+      "input_schema": [
+        {
+          "key": "julian_day",
+          "required": true,
+          "value_type": "float"
+        },
+        {
+          "key": "coordinates",
+          "required": true,
+          "value_type": "Coordinates"
+        },
+        {
+          "key": "effective_house_system",
+          "required": true,
+          "value_type": "str"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "houses_raw",
+        "required": true,
+        "value_type": "houses_raw.output"
+      }
+    },
+    {
+      "code": "houses_runtime",
+      "depends_on": [
+        "houses_raw",
+        "house_rulerships"
+      ],
+      "input_schema": [
+        {
+          "key": "houses_raw",
+          "required": true,
+          "value_type": "houses_raw.output"
+        },
+        {
+          "key": "house_rulerships",
+          "required": true,
+          "value_type": "house_rulerships.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "houses_runtime",
+        "required": true,
+        "value_type": "houses_runtime.output"
+      }
+    },
+    {
+      "code": "signs_runtime",
+      "depends_on": [
+        "planet_positions",
+        "runtime_reference",
+        "dignities"
+      ],
+      "input_schema": [
+        {
+          "key": "planet_positions",
+          "required": true,
+          "value_type": "planet_positions.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        },
+        {
+          "key": "dignities",
+          "required": true,
+          "value_type": "dignities.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "signs_runtime",
+        "required": true,
+        "value_type": "signs_runtime.output"
+      }
+    },
+    {
+      "code": "house_rulerships",
+      "depends_on": [
+        "houses_raw",
+        "planet_positions",
+        "runtime_reference"
+      ],
+      "input_schema": [
+        {
+          "key": "houses_raw",
+          "required": true,
+          "value_type": "houses_raw.output"
+        },
+        {
+          "key": "planet_positions",
+          "required": true,
+          "value_type": "planet_positions.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "house_rulerships",
+        "required": true,
+        "value_type": "house_rulerships.output"
+      }
+    },
+    {
+      "code": "motion_visibility_payloads",
+      "depends_on": [
+        "planet_positions"
+      ],
+      "input_schema": [
+        {
+          "key": "planet_positions",
+          "required": true,
+          "value_type": "planet_positions.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "motion_visibility_payloads",
+        "required": true,
+        "value_type": "motion_visibility_payloads.output"
+      }
+    },
+    {
+      "code": "chart_objects",
+      "depends_on": [
+        "planet_positions",
+        "astral_points",
+        "houses_runtime",
+        "house_rulerships",
+        "motion_visibility_payloads",
+        "runtime_reference"
+      ],
+      "input_schema": [
+        {
+          "key": "planet_positions",
+          "required": true,
+          "value_type": "planet_positions.output"
+        },
+        {
+          "key": "astral_points",
+          "required": true,
+          "value_type": "astral_points.output"
+        },
+        {
+          "key": "houses_runtime",
+          "required": true,
+          "value_type": "houses_runtime.output"
+        },
+        {
+          "key": "house_rulerships",
+          "required": true,
+          "value_type": "house_rulerships.output"
+        },
+        {
+          "key": "motion_visibility_payloads",
+          "required": true,
+          "value_type": "motion_visibility_payloads.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "chart_objects",
+        "required": true,
+        "value_type": "chart_objects.output"
+      }
+    },
+    {
+      "code": "fixed_star_conjunctions",
+      "depends_on": [
+        "chart_objects",
+        "runtime_reference"
+      ],
+      "input_schema": [
+        {
+          "key": "chart_objects",
+          "required": true,
+          "value_type": "chart_objects.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "fixed_star_conjunctions",
+        "required": true,
+        "value_type": "fixed_star_conjunctions.output"
+      }
+    },
+    {
+      "code": "aspects_runtime",
+      "depends_on": [
+        "chart_objects",
+        "fixed_star_conjunctions",
+        "runtime_reference"
+      ],
+      "input_schema": [
+        {
+          "key": "chart_objects",
+          "required": true,
+          "value_type": "chart_objects.output"
+        },
+        {
+          "key": "fixed_star_conjunctions",
+          "required": true,
+          "value_type": "fixed_star_conjunctions.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "aspects_runtime",
+        "required": true,
+        "value_type": "aspects_runtime.output"
+      }
+    },
+    {
+      "code": "house_positions",
+      "depends_on": [
+        "houses_runtime",
+        "chart_objects"
+      ],
+      "input_schema": [
+        {
+          "key": "houses_runtime",
+          "required": true,
+          "value_type": "houses_runtime.output"
+        },
+        {
+          "key": "chart_objects",
+          "required": true,
+          "value_type": "chart_objects.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "house_positions",
+        "required": true,
+        "value_type": "house_positions.output"
+      }
+    },
+    {
+      "code": "advanced_conditions",
+      "depends_on": [
+        "planet_positions",
+        "aspects_runtime",
+        "dignities",
+        "runtime_reference"
+      ],
+      "input_schema": [
+        {
+          "key": "planet_positions",
+          "required": true,
+          "value_type": "planet_positions.output"
+        },
+        {
+          "key": "aspects_runtime",
+          "required": true,
+          "value_type": "aspects_runtime.output"
+        },
+        {
+          "key": "dignities",
+          "required": true,
+          "value_type": "dignities.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "advanced_conditions",
+        "required": true,
+        "value_type": "advanced_conditions.output"
+      }
+    },
+    {
+      "code": "dignities",
+      "depends_on": [
+        "chart_objects",
+        "fixed_star_conjunctions",
+        "runtime_reference"
+      ],
+      "input_schema": [
+        {
+          "key": "chart_objects",
+          "required": true,
+          "value_type": "chart_objects.output"
+        },
+        {
+          "key": "fixed_star_conjunctions",
+          "required": true,
+          "value_type": "fixed_star_conjunctions.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "dignities",
+        "required": true,
+        "value_type": "dignities.output"
+      }
+    },
+    {
+      "code": "chart_signature",
+      "depends_on": [
+        "signs_runtime",
+        "houses_runtime",
+        "aspects_runtime"
+      ],
+      "input_schema": [
+        {
+          "key": "signs_runtime",
+          "required": true,
+          "value_type": "signs_runtime.output"
+        },
+        {
+          "key": "houses_runtime",
+          "required": true,
+          "value_type": "houses_runtime.output"
+        },
+        {
+          "key": "aspects_runtime",
+          "required": true,
+          "value_type": "aspects_runtime.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "chart_signature",
+        "required": true,
+        "value_type": "chart_signature.output"
+      }
+    },
+    {
+      "code": "dominance",
+      "depends_on": [
+        "chart_objects",
+        "fixed_star_conjunctions",
+        "houses_runtime",
+        "house_rulerships",
+        "advanced_conditions",
+        "aspects_runtime",
+        "dignities",
+        "runtime_reference"
+      ],
+      "input_schema": [
+        {
+          "key": "chart_objects",
+          "required": true,
+          "value_type": "chart_objects.output"
+        },
+        {
+          "key": "fixed_star_conjunctions",
+          "required": true,
+          "value_type": "fixed_star_conjunctions.output"
+        },
+        {
+          "key": "houses_runtime",
+          "required": true,
+          "value_type": "houses_runtime.output"
+        },
+        {
+          "key": "house_rulerships",
+          "required": true,
+          "value_type": "house_rulerships.output"
+        },
+        {
+          "key": "advanced_conditions",
+          "required": true,
+          "value_type": "advanced_conditions.output"
+        },
+        {
+          "key": "aspects_runtime",
+          "required": true,
+          "value_type": "aspects_runtime.output"
+        },
+        {
+          "key": "dignities",
+          "required": true,
+          "value_type": "dignities.output"
+        },
+        {
+          "key": "runtime_reference",
+          "required": true,
+          "value_type": "AstrologyRuntimeReference"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "dominance",
+        "required": true,
+        "value_type": "dominance.output"
+      }
+    },
+    {
+      "code": "interpretation_input",
+      "depends_on": [
+        "chart_objects",
+        "aspects_runtime",
+        "dominance",
+        "advanced_conditions"
+      ],
+      "input_schema": [
+        {
+          "key": "chart_objects",
+          "required": true,
+          "value_type": "chart_objects.output"
+        },
+        {
+          "key": "aspects_runtime",
+          "required": true,
+          "value_type": "aspects_runtime.output"
+        },
+        {
+          "key": "dominance",
+          "required": true,
+          "value_type": "dominance.output"
+        },
+        {
+          "key": "advanced_conditions",
+          "required": true,
+          "value_type": "advanced_conditions.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "interpretation_input",
+        "required": true,
+        "value_type": "interpretation_input.output"
+      }
+    },
+    {
+      "code": "planet_positions_projection",
+      "depends_on": [
+        "planet_positions"
+      ],
+      "input_schema": [
+        {
+          "key": "planet_positions",
+          "required": true,
+          "value_type": "planet_positions.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "planet_positions_projection",
+        "required": true,
+        "value_type": "planet_positions_projection.output"
+      }
+    },
+    {
+      "code": "astral_points_projection",
+      "depends_on": [
+        "astral_points"
+      ],
+      "input_schema": [
+        {
+          "key": "astral_points",
+          "required": true,
+          "value_type": "astral_points.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "astral_points_projection",
+        "required": true,
+        "value_type": "astral_points_projection.output"
+      }
+    },
+    {
+      "code": "houses_projection",
+      "depends_on": [
+        "houses_runtime"
+      ],
+      "input_schema": [
+        {
+          "key": "houses_runtime",
+          "required": true,
+          "value_type": "houses_runtime.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "houses_projection",
+        "required": true,
+        "value_type": "houses_projection.output"
+      }
+    },
+    {
+      "code": "aspects_projection",
+      "depends_on": [
+        "aspects_runtime"
+      ],
+      "input_schema": [
+        {
+          "key": "aspects_runtime",
+          "required": true,
+          "value_type": "aspects_runtime.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "aspects_projection",
+        "required": true,
+        "value_type": "aspects_projection.output"
+      }
+    },
+    {
+      "code": "dignity_results_projection",
+      "depends_on": [
+        "dignities"
+      ],
+      "input_schema": [
+        {
+          "key": "dignities",
+          "required": true,
+          "value_type": "dignities.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "dignity_results_projection",
+        "required": true,
+        "value_type": "dignity_results_projection.output"
+      }
+    },
+    {
+      "code": "advanced_conditions_projection",
+      "depends_on": [
+        "advanced_conditions"
+      ],
+      "input_schema": [
+        {
+          "key": "advanced_conditions",
+          "required": true,
+          "value_type": "advanced_conditions.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "advanced_conditions_projection",
+        "required": true,
+        "value_type": "advanced_conditions_projection.output"
+      }
+    },
+    {
+      "code": "fixed_star_conjunctions_projection",
+      "depends_on": [
+        "fixed_star_conjunctions"
+      ],
+      "input_schema": [
+        {
+          "key": "fixed_star_conjunctions",
+          "required": true,
+          "value_type": "fixed_star_conjunctions.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "fixed_star_conjunctions_projection",
+        "required": true,
+        "value_type": "fixed_star_conjunctions_projection.output"
+      }
+    },
+    {
+      "code": "public_natal_result",
+      "depends_on": [
+        "prepared_birth_data",
+        "planet_positions_projection",
+        "astral_points_projection",
+        "houses_projection",
+        "aspects_projection",
+        "dignity_results_projection",
+        "advanced_conditions_projection",
+        "fixed_star_conjunctions_projection",
+        "chart_signature",
+        "interpretation_input"
+      ],
+      "input_schema": [
+        {
+          "key": "prepared_birth_data",
+          "required": true,
+          "value_type": "prepare_birth_data.output"
+        },
+        {
+          "key": "planet_positions_projection",
+          "required": true,
+          "value_type": "planet_positions_projection.output"
+        },
+        {
+          "key": "astral_points_projection",
+          "required": true,
+          "value_type": "astral_points_projection.output"
+        },
+        {
+          "key": "houses_projection",
+          "required": true,
+          "value_type": "houses_projection.output"
+        },
+        {
+          "key": "aspects_projection",
+          "required": true,
+          "value_type": "aspects_projection.output"
+        },
+        {
+          "key": "dignity_results_projection",
+          "required": true,
+          "value_type": "dignity_results_projection.output"
+        },
+        {
+          "key": "advanced_conditions_projection",
+          "required": true,
+          "value_type": "advanced_conditions_projection.output"
+        },
+        {
+          "key": "fixed_star_conjunctions_projection",
+          "required": true,
+          "value_type": "fixed_star_conjunctions_projection.output"
+        },
+        {
+          "key": "chart_signature",
+          "required": true,
+          "value_type": "chart_signature.output"
+        },
+        {
+          "key": "interpretation_input",
+          "required": true,
+          "value_type": "interpretation_input.output"
+        }
+      ],
+      "optional_depends_on": [],
+      "output_schema": {
+        "key": "public_natal_result",
+        "required": true,
+        "value_type": "public_natal_result.output"
+      }
+    }
+  ],
+  "required_inputs": [
+    {
+      "key": "birth_datetime",
+      "required": true,
+      "value_type": "datetime"
+    },
+    {
+      "key": "timezone",
+      "required": true,
+      "value_type": "str"
+    },
+    {
+      "key": "coordinates",
+      "required": true,
+      "value_type": "Coordinates"
+    },
+    {
+      "key": "house_system",
+      "required": true,
+      "value_type": "str"
+    },
+    {
+      "key": "zodiac_mode",
+      "required": true,
+      "value_type": "str"
+    },
+    {
+      "key": "runtime_reference",
+      "required": true,
+      "value_type": "AstrologyRuntimeReference"
+    },
+    {
+      "key": "locale",
+      "required": true,
+      "value_type": "str"
+    },
+    {
+      "key": "calculation_options",
+      "required": true,
+      "value_type": "Mapping[str, object]"
+    },
+    {
+      "key": "prepared_birth_data",
+      "required": true,
+      "value_type": "BirthPreparedData"
+    },
+    {
+      "key": "julian_day",
+      "required": true,
+      "value_type": "float"
+    },
+    {
+      "key": "effective_house_system",
+      "required": true,
+      "value_type": "str"
+    }
+  ]
+}

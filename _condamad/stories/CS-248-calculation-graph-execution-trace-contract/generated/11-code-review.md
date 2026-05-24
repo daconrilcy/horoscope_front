@@ -1,51 +1,76 @@
-# Editorial Review - CS-248 calculation-graph-execution-trace-contract
+# Code Review - CS-248 calculation-graph-execution-trace-contract
 
 Verdict: CLEAN
 
-Review date: 2026-05-23
+Review date: 2026-05-24
 
 ## Review Scope
 
 - Story: `_condamad/stories/CS-248-calculation-graph-execution-trace-contract/00-story.md`
 - Source brief: `_story_briefs/cs-248-calculation-graph-execution-trace-contract.md`
 - Tracker row: `_condamad/stories/story-status.md`
-- Scoped guardrails checked: `RG-002`, `RG-003`, `RG-010`
+- Implementation files reviewed:
+  - `backend/app/domain/astrology/runtime/calculation_graph_execution_trace.py`
+  - `backend/app/domain/astrology/runtime/calculation_graph_runner.py`
+  - `backend/tests/unit/domain/astrology/test_calculation_graph_execution_trace.py`
+  - `backend/tests/unit/domain/astrology/test_calculation_graph_runner.py`
+  - `backend/tests/architecture/test_api_contract_neutrality.py`
+- Evidence reviewed:
+  - `generated/10-final-evidence.md`
+  - `generated/03-acceptance-traceability.md`
+  - `generated/07-no-legacy-dry-guardrails.md`
+  - `evidence/validation.md`
+  - `evidence/trace-after.json`
+  - `evidence/openapi-routes.md`
 
 ## Iteration 1 Findings
 
-- Guardrail alignment: the draft cited `RG-022`, whose registry scope is prompt-generation validation paths.
-  The story now cites `RG-010` for backend test topology, while keeping `RG-002` and `RG-003` for API ownership and route neutrality.
-- Brief alignment: the brief required a duration or non-sensitive technical metric, but the story did not make that
-  primitive explicit enough in target state, acceptance criteria and implementation tasks.
-  The story now names `duration_ms` / non-sensitive duration metric in the node contract, target state, AC3 and tasks.
+- No actionable implementation issue found.
+- No story, AC, scope or brief change was required.
+- No code correction was applied during this review/fix cycle.
 
-## Final Review
+## Implementation Conformance
 
-- The story names every in-scope primitive from the brief: versioned trace, graph code, graph version, run/correlation id,
-  ordered nodes, node status, cache state, non-sensitive duration metric, redacted input/output keys, normalized error kind,
-  provenance references, and the distinction between trace, provenance and replay snapshot.
-- The out-of-scope list preserves the brief exclusions: no public route, no admin UI, no persistence, no replay conversion,
-  and no frontend change.
-- Acceptance criteria cover success, failure, cache, duration metric, redaction, terminology separation, internal-only scope,
-  API neutrality and persisted evidence.
-- Expected files and validation commands remain scoped to backend runtime, backend tests and CONDAMAD evidence.
-- Tracker source and status match the target brief and story path.
+- AC1-AC3: runner results attach a versioned execution trace with graph identity, run id, ordered nodes and duration metrics.
+- AC4: failed calculator and missing-input cases expose normalized error kinds without raw cause objects.
+- AC5: cache hits expose hit state and output keys without cached values.
+- AC6-AC7: trace payloads expose input/output keys and provenance refs, not raw runtime values.
+- AC8: the trace contract distinguishes trace, provenance and replay snapshot, with replay remaining unimplemented.
+- AC9: no API router, OpenAPI schema, frontend, DB model or migration is introduced by CS-248.
+- AC10: before/after, API neutrality and validation evidence artifacts are present in the story capsule.
+
+## Guardrails
+
+- RG-002: PASS. Trace ownership stays under backend domain runtime; no API router owns the trace.
+- RG-003: PASS. `app.routes`, `app.openapi()` and `TestClient` evidence show no route or public schema exposure.
+- RG-010: PASS. Tests stay under collected backend test roots.
+- No new allowlist, compatibility shim, fallback trace contract, replay snapshot, persistence surface or public serializer was found.
 
 ## Validation Results
 
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-248-calculation-graph-execution-trace-contract\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-248-calculation-graph-execution-trace-contract\00-story.md`
+All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
-Both commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+| Command | Result | Evidence |
+|---|---|---|
+| `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py .\_condamad\stories\CS-248-calculation-graph-execution-trace-contract\00-story.md` | PASS | `CONDAMAD story validation: PASS` |
+| `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict .\_condamad\stories\CS-248-calculation-graph-execution-trace-contract\00-story.md` | PASS | `CONDAMAD story lint: PASS` |
+| `ruff check backend\app\domain\astrology\runtime\calculation_graph_execution_trace.py backend\app\domain\astrology\runtime\calculation_graph_runner.py backend\tests\unit\domain\astrology\test_calculation_graph_execution_trace.py backend\tests\unit\domain\astrology\test_calculation_graph_runner.py backend\tests\architecture\test_api_contract_neutrality.py` | PASS | `All checks passed!` |
+| `python -B -m pytest -q backend\tests\unit\domain\astrology\test_calculation_graph_execution_trace.py backend\tests\unit\domain\astrology\test_calculation_graph_runner.py backend\tests\architecture\test_api_contract_neutrality.py` | PASS | `23 passed` |
+| `ruff check backend` | PASS | `All checks passed!` |
+| `python -B -m pytest -q backend\tests` | PASS | `904 passed, 201 deselected` |
+| `python -B -c "from app.main import app; assert 'ExecutionTrace' not in str(app.openapi())"` | PASS | Run with `PYTHONPATH=backend` |
+| `python -B -c "from app.main import app; assert not any('execution-trace' in getattr(r, 'path', '') for r in app.routes)"` | PASS | Run with `PYTHONPATH=backend` |
+| `rg -n "ExecutionTrace\|redaction_policy\|provenance_ref" backend\app\domain\astrology\runtime backend\tests\unit\domain\astrology -g "*.py"` | PASS | Hits limited to runtime module, runner hook and unit tests |
+| `rg -n "ExecutionTrace\|CalculationGraphExecutionTrace\|execution-trace\|execution_trace\|replay_snapshot" backend\app\api frontend backend\migrations -g "*.py" -g "*.ts" -g "*.tsx"` | PASS_WITH_LIMITATIONS | Only unrelated LLM replay migrations matched |
 
-## Produced Artifacts
+## Fresh Review
 
-- `_condamad/stories/CS-248-calculation-graph-execution-trace-contract/generated/11-code-review.md`
+Fresh review after validation remains CLEAN. The implementation closes the source brief phase without residual in-domain work.
 
 ## Propagation
 
-- no-propagation: the correction is local to this story's guardrail citation and review evidence.
+- no-propagation: the review produced no reusable correction or guardrail update.
 
 ## Residual Risk
 
-- No remaining drafting issue identified.
+- Existing unrelated LLM replay migration names remain outside CS-248.

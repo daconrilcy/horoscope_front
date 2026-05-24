@@ -1,5 +1,5 @@
 # Story CS-246 canonical-astrology-graph-family-registry: Define Canonical Astrology Graph Family Registry
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -290,14 +290,14 @@ Registry gap:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1: Create the typed graph family registry module with French file comment and docstrings. (AC: AC1, AC2)
-- [ ] Task 2: Declare the eleven mandatory family codes and their metadata fields. (AC: AC1, AC2)
-- [ ] Task 3: Mark temporal families blocked by astronomical proof until CS-250 or risk acceptance. (AC: AC4)
-- [ ] Task 4: Add resolver and validator behavior for duplicate and unknown family codes. (AC: AC5, AC6)
-- [ ] Task 5: Link `natal_chart_v1` metadata to the existing natal graph contract without public behavior delta. (AC: AC3, AC7)
-- [ ] Task 6: Add targeted unit tests for completeness, metadata, blockers, duplicate codes and unknown codes. (AC: AC1, AC2, AC4, AC5, AC6)
-- [ ] Task 7: Add or reuse API neutrality proof with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC7)
-- [ ] Task 8: Persist validation, API neutrality and registry snapshot evidence under the CS-246 story folder. (AC: AC8)
+- [x] Task 1: Create the typed graph family registry module with French file comment and docstrings. (AC: AC1, AC2)
+- [x] Task 2: Declare the eleven mandatory family codes and their metadata fields. (AC: AC1, AC2)
+- [x] Task 3: Mark temporal families blocked by astronomical proof until CS-250 or risk acceptance. (AC: AC4)
+- [x] Task 4: Add resolver and validator behavior for duplicate and unknown family codes. (AC: AC5, AC6)
+- [x] Task 5: Link `natal_chart_v1` metadata to the existing natal graph contract without public behavior delta. (AC: AC3, AC7)
+- [x] Task 6: Add targeted unit tests for completeness, metadata, blockers, duplicate codes and unknown codes. (AC: AC1, AC2, AC4, AC5, AC6)
+- [x] Task 7: Add or reuse API neutrality proof with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC7)
+- [x] Task 8: Persist validation, API neutrality and registry snapshot evidence under the CS-246 story folder. (AC: AC8)
 
 ## 9. Mandatory Reuse / DRY Constraints
 

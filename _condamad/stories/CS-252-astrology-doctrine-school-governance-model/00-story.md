@@ -1,5 +1,5 @@
 # Story CS-252 astrology-doctrine-school-governance-model: Define Astrology Doctrine And School Governance Model
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 
@@ -306,16 +306,16 @@ Non-applicable examples:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1: Create the typed doctrine governance module with French file comment and docstrings. (AC: AC1, AC2)
-- [ ] Task 2: Declare all CS-240 rule families and the allowed owner statuses. (AC: AC1, AC2)
-- [ ] Task 3: Classify dominance, sign, house, and dignity weighting families from CS-241 F-003. (AC: AC3)
-- [ ] Task 4: Add doctrine mode, school policy, version policy, and blocker fields. (AC: AC4)
-- [ ] Task 5: Add transition validation for owner and doctrine status movement. (AC: AC5)
-- [ ] Task 6: Preserve unresolved doctrine or product choices as `needs-user-decision`. (AC: AC6)
-- [ ] Task 7: Add the architecture guard against unmanaged thresholds, weights, profiles, and school markers. (AC: AC7)
-- [ ] Task 8: Add future-technique citation fields for temporal, traditional, modern, and forecasting stories. (AC: AC8)
-- [ ] Task 9: Add or reuse API neutrality proof with `app.routes`, `app.openapi()`, and `TestClient`. (AC: AC9)
-- [ ] Task 10: Persist before, after, guard, API neutrality, and validation evidence under the CS-252 story folder. (AC: AC10)
+- [x] Task 1: Create the typed doctrine governance module with French file comment and docstrings. (AC: AC1, AC2)
+- [x] Task 2: Declare all CS-240 rule families and the allowed owner statuses. (AC: AC1, AC2)
+- [x] Task 3: Classify dominance, sign, house, and dignity weighting families from CS-241 F-003. (AC: AC3)
+- [x] Task 4: Add doctrine mode, school policy, version policy, and blocker fields. (AC: AC4)
+- [x] Task 5: Add transition validation for owner and doctrine status movement. (AC: AC5)
+- [x] Task 6: Preserve unresolved doctrine or product choices as `needs-user-decision`. (AC: AC6)
+- [x] Task 7: Add the architecture guard against unmanaged thresholds, weights, profiles, and school markers. (AC: AC7)
+- [x] Task 8: Add future-technique citation fields for temporal, traditional, modern, and forecasting stories. (AC: AC8)
+- [x] Task 9: Add or reuse API neutrality proof with `app.routes`, `app.openapi()`, and `TestClient`. (AC: AC9)
+- [x] Task 10: Persist before, after, guard, API neutrality, and validation evidence under the CS-252 story folder. (AC: AC10)
 
 ## 9. Mandatory Reuse / DRY Constraints
 

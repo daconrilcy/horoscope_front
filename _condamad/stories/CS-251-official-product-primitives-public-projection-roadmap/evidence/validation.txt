@@ -1,0 +1,37 @@
+CS-251 validation evidence
+
+Environment:
+- PowerShell on Windows.
+- Python commands executed after `. .\.venv\Scripts\Activate.ps1`.
+- `$env:PYTHONPATH='backend'` set for app import checks and pytest from repo root.
+
+Commands run:
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-251-official-product-primitives-public-projection-roadmap\00-story.md --root . --story-key CS-251-official-product-primitives-public-projection-roadmap --with-optional` -> PASS.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-251-official-product-primitives-public-projection-roadmap` -> PASS.
+- `ruff format backend\tests\integration\astrology\test_natal_public_contract_compatibility.py backend\tests\architecture\test_api_contract_neutrality.py` -> PASS; 1 file reformatted, 1 unchanged.
+- `ruff check backend` -> PASS.
+- `python -B -m pytest -q backend\tests\integration\astrology\test_natal_public_contract_compatibility.py backend\tests\architecture\test_chart_runtime_surface_guardrails.py backend\tests\architecture\test_api_contract_neutrality.py` -> PASS; 17 passed, 3 deselected.
+- `rg -n "structured facts|beginner summary|expert technical projection|fixed-star contacts|LLM input" docs\architecture` -> PASS; required primitive names found.
+- `rg -n "API contract|frontend client|UI component|needs-user-decision" docs\architecture\official-product-primitives-public-projections.md` -> PASS; roadmap layers and fixed-star blocker found.
+- `python -B -c "from app.main import app; data=str(app.openapi()); assert 'ChartObjectRuntimeData' not in data; assert 'chart_objects' not in data; assert 'interpretation_input' not in data"` -> PASS.
+- `python -B -c "from app.main import app; assert all('chart_objects' not in getattr(r, 'path', '') for r in app.routes); assert all('interpretation-input' not in getattr(r, 'path', '') for r in app.routes)"` -> PASS.
+- `python -B -c "from pathlib import Path; assert Path('_condamad/stories/CS-251-official-product-primitives-public-projection-roadmap/evidence/product-primitives.json').exists()"` -> PASS.
+- `python -B -m pytest -q` -> PASS; 3159 passed, 1 skipped, 1182 deselected.
+- `git diff --check -- docs\architecture\official-product-primitives-public-projections.md backend\tests\integration\astrology\test_natal_public_contract_compatibility.py backend\tests\architecture\test_api_contract_neutrality.py _condamad\stories\CS-251-official-product-primitives-public-projection-roadmap _condamad\stories\story-status.md` -> PASS; only CRLF working-copy warnings.
+
+Skipped:
+- Frontend tests: not applicable; story explicitly forbids frontend changes.
+- Browser validation: not applicable; no UI route/component/style changed.
+
+Cleanup:
+- Removed known cache folders `.pytest_cache`, `backend\.pytest_cache`, `.ruff_cache`, `backend\.ruff_cache` when present.
+- Removed accidental duplicate helper-created capsule folder after verifying the resolved path was inside the workspace.
+
+Review replay on 2026-05-24:
+- `condamad_story_validate.py <CS-251 00-story.md>` -> PASS.
+- `condamad_story_lint.py --strict <CS-251 00-story.md>` -> PASS.
+- `ruff check backend` -> PASS.
+- `ruff format --check backend` -> PASS; 1583 files already formatted.
+- Targeted pytest for public contract, runtime guardrail and API neutrality tests -> PASS; 17 passed, 3 deselected.
+- OpenAPI/routes smoke check from `app.main` -> PASS.
+- Full `python -B -m pytest -q` -> PASS; 3159 passed, 1 skipped, 1182 deselected.

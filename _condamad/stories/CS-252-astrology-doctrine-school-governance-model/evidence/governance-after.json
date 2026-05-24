@@ -1,0 +1,331 @@
+{
+  "rule_families": [
+    {
+      "allowed_transitions": [
+        "mixed",
+        "needs-user-decision"
+      ],
+      "blocker": "",
+      "canonical_owner": "db-reference",
+      "doctrine_decision_status": "single-canonical-doctrine",
+      "evidence_refs": [
+        "docs/db_seeder/astrology/astral_aspect_orb_rules.json",
+        "backend/app/domain/astrology/runtime/natal_calculation_nodes.py",
+        "backend/app/domain/astrology/runtime/aspect_calculation_contracts.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "aspect_orbs",
+      "school_policy": "product-canonical",
+      "source_owner_status": "DB-owned",
+      "version_policy": "db-reference-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-241 F-003 requires product decision for DB weights and Python thresholds.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/dominance/planet_dominance_engine.py",
+        "backend/app/domain/astrology/dominance/contracts.py",
+        "backend/app/domain/astrology/dominance/chart_object_inputs.py",
+        "backend/app/domain/astrology/runtime/runtime_reference.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "dominance_weights",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-240 F-001 keeps Python and DB solar proximity thresholds unmerged.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/planetary_conditions/contracts.py",
+        "backend/app/domain/astrology/planetary_conditions/solar_proximity_calculator.py",
+        "backend/app/domain/astrology/dignities/accidental_dignity_calculator.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "combustion_thresholds",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-240 F-001 keeps cazimi source ownership unresolved.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/planetary_conditions/contracts.py",
+        "backend/app/domain/astrology/planetary_conditions/solar_proximity_calculator.py",
+        "backend/app/domain/astrology/dignities/accidental_dignity_calculator.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "cazimi_thresholds",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-240 F-001 documents divergent under-beams limits.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/planetary_conditions/contracts.py",
+        "backend/app/domain/astrology/planetary_conditions/planetary_visibility_calculator.py",
+        "backend/app/domain/astrology/planetary_conditions/solar_proximity_calculator.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "under_beams_thresholds",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-240 F-002 requires one auditable owner for motion rules.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/planetary_conditions/planetary_motion_profiles.py",
+        "backend/app/domain/astrology/planetary_conditions/planetary_motion_calculator.py",
+        "backend/app/domain/astrology/runtime/runtime_reference.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "speed_thresholds",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-240 F-002 leaves station thresholds split between DB and Python.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/planetary_conditions/planetary_motion_profiles.py",
+        "backend/app/domain/astrology/planetary_conditions/planetary_motion_calculator.py",
+        "backend/app/domain/astrology/dignities/accidental_dignity_calculator.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "station_thresholds",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-241 F-003 requires classification before changing house weights.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/interpretation/house_strength.py",
+        "backend/app/domain/astrology/dominance/planet_dominance_engine.py",
+        "backend/app/domain/astrology/runtime/house_runtime_data.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "house_weights",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "mixed",
+        "needs-user-decision"
+      ],
+      "blocker": "",
+      "canonical_owner": "db-reference",
+      "doctrine_decision_status": "single-canonical-doctrine",
+      "evidence_refs": [
+        "backend/app/domain/astrology/dignities/essential_dignity_calculator.py",
+        "backend/app/domain/astrology/dignities/accidental_dignity_calculator.py",
+        "backend/app/domain/astrology/dignities/planet_dignity_scoring_service.py",
+        "backend/app/domain/astrology/runtime/runtime_reference.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "dignity_weights",
+      "school_policy": "product-canonical",
+      "source_owner_status": "DB-owned",
+      "version_policy": "db-reference-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-241 F-003 leaves sign runtime weighting formula in Python.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/builders/sign_runtime_builder.py",
+        "backend/app/domain/astrology/interpretation/chart_signature.py",
+        "backend/app/domain/astrology/runtime/sign_runtime_data.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "sign_profiles",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "needs-user-decision"
+      ],
+      "blocker": "",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "single-canonical-doctrine",
+      "evidence_refs": [
+        "docs/db_seeder/astrology/astral_fixed_stars.json",
+        "backend/app/domain/astrology/runtime/chart_object_runtime_data.py",
+        "backend/app/domain/astrology/runtime/chart_object_capability_taxonomy.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "fixed_star_rules",
+      "school_policy": "product-canonical",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "needs-user-decision"
+      ],
+      "blocker": "",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "single-canonical-doctrine",
+      "evidence_refs": [
+        "backend/app/domain/astrology/runtime/aspect_runtime_data.py",
+        "backend/app/domain/astrology/runtime/aspect_modifiers.py",
+        "backend/app/domain/astrology/interpretation/aspect_strength.py",
+        "backend/app/domain/astrology/interpretation/aspect_interpretation_builder.py",
+        "backend/app/domain/astrology/interpretation/aspect_interpretation_facts.py",
+        "backend/app/domain/astrology/interpretation/aspect_semantic_provenance.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "aspect_rules",
+      "school_policy": "product-canonical",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    },
+    {
+      "allowed_transitions": [
+        "DB-owned",
+        "Python-owned",
+        "needs-user-decision",
+        "single-canonical-doctrine",
+        "versioned-school-supported"
+      ],
+      "blocker": "CS-240 F-004 requires complete source ownership before doctrine activation.",
+      "canonical_owner": "mixed-runtime-reference",
+      "doctrine_decision_status": "needs-user-decision",
+      "evidence_refs": [
+        "backend/app/domain/astrology/interpretation/advanced_conditions/advanced_condition_profile_catalog.py",
+        "backend/app/domain/astrology/interpretation/advanced_conditions/profile_runtime.py",
+        "backend/app/domain/astrology/interpretation/chart_interpretation_input_builder.py",
+        "backend/app/domain/astrology/interpretation/chart_object_interpretation_projector.py",
+        "backend/app/domain/astrology/interpretation/profile_fields.py",
+        "backend/app/domain/astrology/interpretation_adapters/interpretation_adapter_engine.py",
+        "backend/app/domain/astrology/interpretation_adapters/signal_builder.py",
+        "backend/app/domain/astrology/interpretation_adapters/theme_aggregator.py"
+      ],
+      "future_technique_notes": [
+        "CS-253 first temporal technique must cite doctrine governance before enabling a school.",
+        "Traditional, modern, and forecasting stories must keep doctrine status explicit."
+      ],
+      "rule_family": "interpretation_rules",
+      "school_policy": "needs-user-decision",
+      "source_owner_status": "mixed",
+      "version_policy": "mixed-version"
+    }
+  ]
+}

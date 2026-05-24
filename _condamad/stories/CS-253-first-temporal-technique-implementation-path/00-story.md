@@ -1,5 +1,5 @@
 # Story CS-253 first-temporal-technique-implementation-path: Select First Temporal Technique Implementation Path
-Status: ready-to-dev
+Status: done
 
 ## 1. Objective
 

@@ -1,5 +1,5 @@
 # Story CS-254 ai-scoring-narrative-input-contract: Define AI Scoring And Narrative Input Contract
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

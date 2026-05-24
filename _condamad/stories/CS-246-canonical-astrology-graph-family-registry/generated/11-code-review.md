@@ -1,4 +1,4 @@
-# CS-246 Draft Review
+# CS-246 Implementation Review
 
 Date: 2026-05-23
 Verdict: CLEAN
@@ -8,43 +8,48 @@ Verdict: CLEAN
 - Story: `_condamad/stories/CS-246-canonical-astrology-graph-family-registry/00-story.md`.
 - Source brief: `_story_briefs/cs-246-canonical-astrology-graph-family-registry.md`.
 - Tracker row: `_condamad/stories/story-status.md` entry `CS-246`.
-- Guardrails checked by scoped ID lookup only: `RG-002`, `RG-003`, `RG-007`, `RG-022`.
+- Implementation files: canonical registry module, targeted registry tests, API neutrality guard, runtime boundary guard.
+- Evidence files: validation, OpenAPI/routes proof, registry snapshot and final implementation evidence.
 
 ## Iteration 1 Finding
 
-- Fixed guardrail applicability drift: `RG-007` was cited as generic API neutrality evidence even though it covers
-  admin LLM observability endpoints. The story now treats `RG-007` as non-applicable and keeps API neutrality under
-  AC7 validation evidence.
+- Fixed AC4 coverage gap: `profection_v1` had `astrology-runtime-temporal` ownership but was not included in the
+  astronomical proof blocker invariant. The registry now gives it `blocked-by-astronomical-proof`, preserves the
+  doctrine blocker as an additional blocker, and the registry test includes it in the temporal family set.
+
+## Iteration 2 Finding
+
+- Fixed blocker evidence gap: the source brief requires cache blockers to be documented, but cache approval was only
+  implicit in `cache_invalidation_boundary`. Blocked families now include `cache policy approval required`, with a
+  unit test proving the blocker remains explicit.
 
 ## Final Review
 
-- Brief alignment: clean. The story covers the canonical registry, all mandatory family codes, metadata fields,
-  validation for unknown and duplicate families, `natal_chart_v1` linkage, blockers, cache and trace policy.
-- Scope control: clean. The story excludes frontend, public API changes, DB migrations, temporal technique
-  implementation, public `chart_objects` exposure and CS-253 product sequencing.
-- Evidence contract: clean. Required validation, API neutrality and registry snapshot artifacts are named separately.
-- Guardrails: clean. Selected guardrails are scoped to backend ownership, API route architecture and validation evidence.
-- Repository structure alert: implementation may create the missing registry or evidence files if the confirmed scope
-  still requires them; this is not a drafting blocker while validation and strict lint pass.
+- Brief alignment: clean. The registry covers all mandatory family codes, metadata fields, unknown and duplicate
+  rejection, natal graph linkage, blockers, cache boundary and trace policy.
+- AC alignment: clean. AC1 through AC8 have code evidence and executable validation evidence.
+- Guardrails: clean. Registry ownership stays under backend astrology runtime; no public API, frontend, DB or migration
+  surface exposes the internal registry.
+- Evidence: clean. Validation, API neutrality and registry snapshot artifacts are present and updated after fixes.
+- Status: clean. `_condamad/stories/story-status.md` is set to `done` for CS-246 after the clean implementation review.
 
 ## Validations
 
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...`:
-  target `_condamad\stories\CS-246-canonical-astrology-graph-family-registry\00-story.md`;
-  PASS.
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...`:
-  target `_condamad\stories\CS-246-canonical-astrology-graph-family-registry\00-story.md`;
-  PASS.
-
-## Produced Artifacts
-
-- `_condamad/stories/CS-246-canonical-astrology-graph-family-registry/generated/11-code-review.md`.
+- `.\.venv\Scripts\Activate.ps1; ruff format ...` - PASS.
+- `.\.venv\Scripts\Activate.ps1; ruff check` on the registry and targeted tests - PASS.
+- `.\.venv\Scripts\Activate.ps1; python -B -m pytest` targeted registry/API/runtime tests - PASS, 23 passed.
+- `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests` - PASS, 881 passed, 201 deselected.
+- `.\.venv\Scripts\Activate.ps1; python -B -c "from app.main import app; assert 'AstrologyGraphFamily' not in str(app.openapi())"` - PASS.
+- `.\.venv\Scripts\Activate.ps1; python -B -c` route exposure probe - PASS.
+- Public API, frontend and migration registry-exposure scan - PASS, no matches.
+- `condamad_story_validate.py` on CS-246 story - PASS.
+- `condamad_story_lint.py --strict` on CS-246 story - PASS.
 
 ## Propagation
 
-- no-propagation: the correction was local to this story's guardrail applicability text and does not require a reusable
-  update to guardrails, AGENTS.md or skills.
+- no-propagation: the findings were local CS-246 implementation and evidence corrections. No reusable update to
+  guardrails, AGENTS.md or skills is required.
 
 ## Residual Risk
 
-- Aucun risque restant identifie for the drafting contract.
+- Aucun risque restant identifie.

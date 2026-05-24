@@ -1,0 +1,128 @@
+{
+  "cs250_gate_state": "proof-closed",
+  "decision_owner": "backend-domain:astrology-runtime-temporal",
+  "dependency_story_ids": [
+    "CS-246",
+    "CS-247",
+    "CS-248",
+    "CS-250"
+  ],
+  "end_criteria": [
+    "CS-250 is done or written product risk acceptance limits non-public experiments.",
+    "Transit graph manifest is validated before any executable temporal runtime.",
+    "No public API, OpenAPI schema, frontend route, DB model or migration is added."
+  ],
+  "product_rationale": "Les transits reutilisent le socle natal, limitent le premier scope temporel a une lecture datee, et gardent les familles multi-chart ou doctrinales fermees.",
+  "public_projection_status": "ready-after-cs250",
+  "rejected_candidates": [
+    {
+      "family_code": "synastry_chart_v1",
+      "reason": "Requires multi-chart relationship ownership before first temporal path.",
+      "status": "closed"
+    },
+    {
+      "family_code": "solar_return_v1",
+      "reason": "Requires return-specific date/location policy after transit proof.",
+      "status": "closed"
+    },
+    {
+      "family_code": "lunar_return_v1",
+      "reason": "Requires return cadence and location policy after transit proof.",
+      "status": "closed"
+    },
+    {
+      "family_code": "progressed_chart_v1",
+      "reason": "Requires progression method governance before implementation.",
+      "status": "closed"
+    },
+    {
+      "family_code": "composite_chart_v1",
+      "reason": "Requires relationship and composition-method ownership first.",
+      "status": "closed"
+    },
+    {
+      "family_code": "profection_v1",
+      "reason": "Requires doctrine school governance before temporal implementation.",
+      "status": "closed"
+    },
+    {
+      "family_code": "forecasting_v1",
+      "reason": "Requires product forecasting primitive and technique bundle decision.",
+      "status": "closed"
+    }
+  ],
+  "required_chart_objects": [
+    {
+      "key": "natal_chart_objects",
+      "purpose": "stable target objects for transit comparison",
+      "source": "natal_chart_v1"
+    },
+    {
+      "key": "transiting_chart_objects",
+      "purpose": "moving objects computed for the target date",
+      "source": "transit_chart_v1"
+    },
+    {
+      "key": "transit_houses",
+      "purpose": "non-public diagnostics only until product projection is accepted",
+      "source": "transit_chart_v1 diagnostics"
+    }
+  ],
+  "required_graph_code": "transit_chart_v1",
+  "required_graph_contracts": [
+    "CS-246 graph family registry",
+    "CS-247 graph manifest and node IO schema",
+    "CS-248 calculation graph execution trace",
+    "CS-250 astronomical proof gate"
+  ],
+  "required_inputs": [
+    {
+      "key": "natal_chart_input",
+      "policy": "reuse validated natal runtime snapshot",
+      "value_type": "natal_chart_v1"
+    },
+    {
+      "key": "target_date_or_date_range",
+      "policy": "single target date first; bounded range only after trace review",
+      "value_type": "date | bounded date range"
+    },
+    {
+      "key": "timezone_policy",
+      "policy": "explicit timezone required for transit target",
+      "value_type": "IANA timezone"
+    },
+    {
+      "key": "location_policy",
+      "policy": "explicit transit location or documented natal-location reuse",
+      "value_type": "coordinates policy"
+    },
+    {
+      "key": "calculation_mode_proof",
+      "policy": "SwissEph proof must remain closed before public rollout",
+      "value_type": "CS-250 proof reference"
+    }
+  ],
+  "required_relationships": [
+    {
+      "key": "transit_object_to_natal_object",
+      "purpose": "track moving object contacts to natal anchors",
+      "source_object": "transiting_chart_objects",
+      "target_object": "natal_chart_objects"
+    },
+    {
+      "key": "transit_to_natal_aspect",
+      "purpose": "declare aspect relationship contract before calculation",
+      "source_object": "transiting_chart_objects",
+      "target_object": "natal_chart_objects"
+    },
+    {
+      "key": "house_transit_relationship",
+      "purpose": "diagnostic-only house transit relationship",
+      "source_object": "transiting_chart_objects",
+      "target_object": "natal houses"
+    }
+  ],
+  "selected_family_code": "transit_chart_v1",
+  "selected_technique_name": "Transit chart",
+  "selection_status": "selected-ready-after-cs250"
+}

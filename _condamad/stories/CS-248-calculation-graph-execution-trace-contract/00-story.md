@@ -1,5 +1,5 @@
 # Story CS-248 calculation-graph-execution-trace-contract: Add Calculation Graph Execution Trace Contract
-Status: ready-to-dev
+Status: ready-to-review
 
 ## 1. Objective
 
@@ -299,16 +299,16 @@ Registry gap:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1: Create the typed execution trace contract module with French file comment and docstrings. (AC: AC1, AC2, AC3)
-- [ ] Task 2: Add a trace builder that consumes graph definition and runner result objects. (AC: AC1, AC2, AC3)
-- [ ] Task 3: Map non-sensitive node duration or technical metric into the trace without payload values. (AC: AC3)
-- [ ] Task 4: Map runner failed node results to normalized `error_kind` values. (AC: AC4)
-- [ ] Task 5: Map cache hit node results to `cache_status` without copied cached values. (AC: AC5)
-- [ ] Task 6: Add redaction behavior for input and output payload values. (AC: AC6, AC7)
-- [ ] Task 7: Add contract text or typed naming that separates trace, provenance and replay snapshot. (AC: AC8)
-- [ ] Task 8: Add targeted unit tests for success, failed node, cache, duration metric and redaction cases. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
-- [ ] Task 9: Add or reuse API neutrality proof with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC9)
-- [ ] Task 10: Persist before, after, API neutrality and validation evidence under the CS-248 story folder. (AC: AC10)
+- [x] Task 1: Create the typed execution trace contract module with French file comment and docstrings. (AC: AC1, AC2, AC3)
+- [x] Task 2: Add a trace builder that consumes graph definition and runner result objects. (AC: AC1, AC2, AC3)
+- [x] Task 3: Map non-sensitive node duration or technical metric into the trace without payload values. (AC: AC3)
+- [x] Task 4: Map runner failed node results to normalized `error_kind` values. (AC: AC4)
+- [x] Task 5: Map cache hit node results to `cache_status` without copied cached values. (AC: AC5)
+- [x] Task 6: Add redaction behavior for input and output payload values. (AC: AC6, AC7)
+- [x] Task 7: Add contract text or typed naming that separates trace, provenance and replay snapshot. (AC: AC8)
+- [x] Task 8: Add targeted unit tests for success, failed node, cache, duration metric and redaction cases. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
+- [x] Task 9: Add or reuse API neutrality proof with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC9)
+- [x] Task 10: Persist before, after, API neutrality and validation evidence under the CS-248 story folder. (AC: AC10)
 
 ## 9. Mandatory Reuse / DRY Constraints
 

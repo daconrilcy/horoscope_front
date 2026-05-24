@@ -1,5 +1,5 @@
 # Story CS-250 astronomical-proof-before-public-temporal-runtime: Harden Astronomical Proof Before Public Temporal Runtime
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
