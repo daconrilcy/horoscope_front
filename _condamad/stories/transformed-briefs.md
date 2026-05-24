@@ -58,3 +58,4 @@
 | cs-277 | `_story_briefs\cs-277-define-replay-snapshot-v1-storage-and-security-model.md` | `_condamad\stories\cs-277-replay-snapshot-v1-storage-security-model\00-story.md` |
 | cs-278 | `_story_briefs\cs-278-implement-replay-snapshot-v1-if-approved.md` | `_condamad\stories\cs-278-replay-snapshot-v1-implementation\00-story.md` |
 | cs-279 | `_story_briefs\cs-279-define-transit-chart-v1-internal-manifest.md` | `_condamad\stories\cs-279-transit-chart-v1-internal-manifest\00-story.md` |
+| cs-280 | `_story_briefs\cs-280-implement-internal-transit-runtime.md` | `_condamad\stories\cs-280-internal-transit-runtime\00-story.md` |
