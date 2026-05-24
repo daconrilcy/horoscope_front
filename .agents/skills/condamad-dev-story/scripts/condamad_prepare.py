@@ -33,6 +33,8 @@ HEADING_RE = re.compile(r"^#{1,6}\s+")
 AC_HEADING_RE = re.compile(r"acceptance criteria|crit[eè]res d.?acceptation|ac\b", re.I)
 AC_LABEL_RE = re.compile(r"^(AC\s*\d+)\s*[:.-]\s*(.*)$", re.I)
 LIST_MARKER_RE = re.compile(r"^\s*(?:[-*]\s+|\d+[.)]\s+)")
+CS_ID_RE = re.compile(r"\bCS-\d+\b", re.I)
+STATUS_ROW_RE_TEMPLATE = r"^\|\s*{story_id}\s*\|"
 
 
 def slugify(value: str) -> str:
@@ -60,6 +62,44 @@ def infer_story_key(story_path: Path, story_text: str, explicit: str | None) -> 
         "",
     )
     return slugify(title)
+
+
+def detect_cs_ids(*values: str) -> list[str]:
+    """Retourne les identifiants CS-xxx uniques trouves dans l'ordre."""
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        for match in CS_ID_RE.finditer(value):
+            story_id = match.group(0).upper()
+            if story_id not in seen:
+                seen.add(story_id)
+                result.append(story_id)
+    return result
+
+
+def story_status_has_id(root: Path, story_id: str) -> bool:
+    """Indique si story-status.md contient une ligne exacte pour l'id."""
+    status_path = root / "_condamad/stories/story-status.md"
+    if not status_path.is_file():
+        return False
+    row_re = re.compile(
+        STATUS_ROW_RE_TEMPLATE.format(story_id=re.escape(story_id)), re.I | re.M
+    )
+    return bool(row_re.search(status_path.read_text(encoding="utf-8", errors="replace")))
+
+
+def resolve_capsule_path(root: Path, capsules_dir: Path, capsule: Path) -> Path:
+    """Normalise un chemin de capsule CLI."""
+    if capsule.is_absolute():
+        return capsule.expanduser().resolve()
+    candidate = (root / capsule).resolve()
+    if candidate.exists():
+        return candidate
+    base = capsules_dir if capsules_dir.is_absolute() else root / capsules_dir
+    base = base.resolve()
+    if candidate == base or base in candidate.parents:
+        return candidate
+    return (base / capsule).resolve()
 
 
 def strip_list_marker(value: str) -> str:
@@ -138,17 +178,21 @@ def extract_acceptance_criteria(story_text: str) -> list[tuple[str, str]]:
         )
 
     existing_labels: set[str] = set()
-    seen: set[str] = set()
+    seen_text: set[str] = set()
     result: list[tuple[str, str]] = []
     for criterion in candidates:
         explicit_label, text = normalize_acceptance_candidate(criterion)
         if not text:
             continue
-        label = explicit_label or next_unlabeled_ac(existing_labels)
-        key = (label.lower(), re.sub(r"\s+", " ", text).casefold())
-        if key in seen:
+        text_key = re.sub(r"\s+", " ", text).casefold()
+        if text_key in seen_text:
             continue
-        seen.add(key)
+        label = (
+            explicit_label
+            if explicit_label and explicit_label not in existing_labels
+            else next_unlabeled_ac(existing_labels)
+        )
+        seen_text.add(text_key)
         existing_labels.add(label)
         result.append((label, text))
 
@@ -176,17 +220,21 @@ Implement story `{story_key}` exactly as defined in `../00-story.md`.
 ## Execution rules
 
 - Read `../00-story.md` completely before editing code.
-- Read all required generated capsule files before implementation.
+- Load generated capsule summary before implementation; read a full generated file
+  only on conflict or when editing it.
 - Run `git status --short` before and after code changes.
 - Preserve unrelated user changes.
 - Implement only the current story.
-- Do not introduce compatibility wrappers, aliases, silent fallbacks, duplicate active paths, or legacy import routes unless explicitly required by the story.
+- Run early guard scans before broad validation.
+- Do not introduce compatibility wrappers, aliases, silent fallbacks, duplicate
+  active paths, or legacy import routes unless explicitly required by the story.
 - Record implementation and validation evidence in `10-final-evidence.md`.
 
 ## Done when
 
 - Every AC in `03-acceptance-traceability.md` has code evidence and validation evidence.
-- Commands in `06-validation-plan.md` have been run or explicitly documented as not run with reason and risk.
+- Commands in `06-validation-plan.md` have been run or explicitly documented as
+  not run with reason and risk.
 - `10-final-evidence.md` is complete.
 """
 
@@ -201,7 +249,9 @@ def render_traceability(criteria: list[tuple[str, str]]) -> str:
     ]
     for label, text in criteria:
         rows.append(
-            f"| {label} | {text.replace('|', '\\|')} | TBD after repository inspection | TBD after validation planning | PENDING |"
+            f"| {label} | {text.replace('|', '\\|')} | "
+            "TBD after repository inspection | "
+            "TBD after validation planning | PENDING |"
         )
     rows.extend(
         [
@@ -227,6 +277,8 @@ def render_target_files() -> str:
 ```bash
 rg "<main symbol or feature name>" .
 rg "legacy|compat|shim|fallback|deprecated|alias" .
+git diff --stat -- <story paths>
+git diff --name-only -- <story paths>
 ```
 
 Adapt searches to the story and repository layout.
@@ -249,13 +301,17 @@ def render_validation_plan() -> str:
 
 ```bash
 # Replace with the smallest relevant test command after repository inspection.
-pytest -q
+python -B -m pytest -q --tb=short
 ```
 
-## Architecture / negative scans
+## Early guard scans
+
+Run these before expensive test suites and fix failures first.
 
 ```bash
 rg "legacy|compat|shim|fallback|deprecated|alias" .
+rg "<<forbidden symbol/import patterns from story guardrails>>" .
+git diff --check
 ```
 
 ## Lint / static checks
@@ -267,7 +323,7 @@ ruff check .
 ## Full regression checks
 
 ```bash
-pytest -q
+python -B -m pytest -q --tb=short
 ```
 
 ## Rule for skipped commands
@@ -311,87 +367,94 @@ def render_guardrails() -> str:
 """
 
 
-def render_final_evidence(story_key: str) -> str:
+def render_final_evidence(
+    story_key: str, criteria: list[tuple[str, str]]
+) -> str:
     """Rend le squelette de preuve finale."""
+    ac_rows = "\n".join(
+        f"| {label} | not-started | not-run | BLOCKED | "
+        "Replace with real AC evidence before final validation. |"
+        for label, _text in criteria
+    )
     return f"""# Final Evidence — {story_key}
 
 ## Story status
 
-- Validation outcome: TBD
+- Validation outcome: not-started
 - Ready for review: no
 - Story key: {story_key}
 - Source story: `00-story.md`
-- Capsule path: TBD
+- Capsule path: not-recorded
 
 ## Preflight
 
-- Repository root: TBD
+- Repository root: not-recorded
 - Story source: `00-story.md`
-- Initial `git status --short`: TBD
-- Pre-existing dirty files: TBD
-- AGENTS.md files considered: TBD
+- Initial `git status --short`: not-run
+- Pre-existing dirty files: not-recorded
+- AGENTS.md files considered: not-recorded
 - Capsule generated: yes
 
 ## Capsule validation
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | TBD | |
-| `generated/01-execution-brief.md` | yes | yes | TBD | |
-| `generated/03-acceptance-traceability.md` | yes | yes | TBD | |
-| `generated/04-target-files.md` | yes | yes | TBD | |
-| `generated/06-validation-plan.md` | yes | yes | TBD | |
-| `generated/07-no-legacy-dry-guardrails.md` | yes | yes | TBD | |
-| `generated/10-final-evidence.md` | yes | yes | TBD | |
+| `00-story.md` | yes | yes | not-validated | |
+| `generated/01-execution-brief.md` | yes | yes | not-validated | |
+| `generated/03-acceptance-traceability.md` | yes | yes | not-validated | |
+| `generated/04-target-files.md` | yes | yes | not-validated | |
+| `generated/06-validation-plan.md` | yes | yes | not-validated | |
+| `generated/07-no-legacy-dry-guardrails.md` | yes | yes | not-validated | |
+| `generated/10-final-evidence.md` | yes | yes | not-validated | |
 
 ## AC validation
 
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
-| TBD | TBD | TBD | PENDING | |
+{ac_rows}
 
 ## Files changed
 
-- TBD
+- none-recorded
 
 ## Files deleted
 
-- TBD
+- none-recorded
 
 ## Tests added or updated
 
-- TBD
+- none-recorded
 
 ## Commands run
 
 | Command | Working directory | Result | Exit status | Evidence summary |
 |---|---|---|---:|---|
-| TBD | TBD | TBD | TBD | TBD |
+| not-run | not-recorded | not-run | 0 | Replace before final validation. |
 
 ## Commands skipped or blocked
 
-- TBD
+- none-recorded
 
 ## DRY / No Legacy evidence
 
-- TBD
+- not-recorded
 
 ## Diff review
 
-- `git diff --stat`: TBD
-- `git diff --check`: TBD
+- `git diff --stat`: not-run
+- `git diff --check`: not-run
 
 ## Final worktree status
 
-- TBD
+- not-recorded
 
 ## Remaining risks
 
-- TBD
+- none-recorded
 
 ## Suggested reviewer focus
 
-- TBD
+- not-recorded
 """
 
 
@@ -466,7 +529,7 @@ def build_templates(
         "04-target-files.md": render_target_files(),
         "06-validation-plan.md": render_validation_plan(),
         "07-no-legacy-dry-guardrails.md": render_guardrails(),
-        "10-final-evidence.md": render_final_evidence(story_key),
+        "10-final-evidence.md": render_final_evidence(story_key, criteria),
     }
     if with_optional:
         templates.update(
@@ -482,7 +545,10 @@ def main() -> int:
     """Execute la generation de capsule depuis la ligne de commande."""
     parser = argparse.ArgumentParser(description="Generate a CONDAMAD story capsule.")
     parser.add_argument(
-        "story", type=Path, help="Path to the source story markdown file."
+        "story",
+        type=Path,
+        nargs="?",
+        help="Path to the source story markdown file.",
     )
     parser.add_argument(
         "--root",
@@ -498,6 +564,23 @@ def main() -> int:
         type=Path,
         default=Path("_condamad/stories"),
         help="Capsule base directory relative to root unless absolute.",
+    )
+    parser.add_argument(
+        "--capsule",
+        type=Path,
+        help=(
+            "Existing or target capsule path. Required when reusing a known "
+            "CS-xxx capsule without --story-key."
+        ),
+    )
+    parser.add_argument(
+        "--repair-generated-only",
+        type=Path,
+        metavar="CAPSULE",
+        help=(
+            "Regenerate missing generated files for an existing capsule without "
+            "copying a source story."
+        ),
     )
     parser.add_argument(
         "--overwrite-generated",
@@ -516,6 +599,35 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    root = args.root.expanduser().resolve()
+    base = (
+        args.capsules_dir
+        if args.capsules_dir.is_absolute()
+        else root / args.capsules_dir
+    )
+
+    if args.repair_generated_only:
+        capsule = resolve_capsule_path(root, args.capsules_dir, args.repair_generated_only)
+        target_story = capsule / "00-story.md"
+        if not target_story.is_file():
+            raise SystemExit(f"Capsule story not found: {target_story}")
+        story_text = target_story.read_text(encoding="utf-8")
+        story_key = capsule.name
+        criteria = extract_acceptance_criteria(story_text)
+        templates = build_templates(story_key, criteria, args.with_optional)
+        generated = capsule / "generated"
+        generated.mkdir(parents=True, exist_ok=True)
+        expected_files = REQUIRED_GENERATED + (
+            OPTIONAL_GENERATED if args.with_optional else []
+        )
+        for name in expected_files:
+            write_if_missing(generated / name, templates[name], args.overwrite_generated)
+        print(f"CONDAMAD capsule repaired: {capsule}")
+        return 0
+
+    if args.story is None:
+        raise SystemExit("Story file is required unless --repair-generated-only is used.")
+
     story_path = args.story.expanduser().resolve()
     if not story_path.exists():
         raise SystemExit(f"Story file not found: {story_path}")
@@ -524,13 +636,40 @@ def main() -> int:
 
     story_text = story_path.read_text(encoding="utf-8")
     story_key = infer_story_key(story_path, story_text, args.story_key)
-    root = args.root.expanduser().resolve()
-    base = (
-        args.capsules_dir
-        if args.capsules_dir.is_absolute()
-        else root / args.capsules_dir
-    )
-    capsule = base / story_key
+    cs_ids = detect_cs_ids(story_key, story_path.name, story_text)
+    if len(cs_ids) > 1 and not args.story_key and not args.capsule:
+        raise SystemExit(
+            "Multiple CS-xxx identifiers detected. Use --story-key or --capsule."
+        )
+    if cs_ids and not args.story_key and not args.capsule:
+        cs_key = slugify(cs_ids[0])
+        if story_key != cs_key:
+            raise SystemExit(
+                f"Detected {cs_ids[0]} but inferred story key '{story_key}'. "
+                "Use --story-key or --capsule to avoid a parallel capsule."
+            )
+        if story_status_has_id(root, cs_ids[0]):
+            raise SystemExit(
+                f"{cs_ids[0]} already exists in story-status.md. "
+                "Use --story-key or --capsule to update the intended capsule."
+            )
+
+    if args.capsule:
+        capsule = resolve_capsule_path(root, args.capsules_dir, args.capsule)
+        story_key = capsule.name
+    else:
+        capsule = base / story_key
+
+    if (
+        cs_ids
+        and slugify(cs_ids[0]) != capsule.name
+        and not capsule.name.casefold().startswith(f"{slugify(cs_ids[0])}-")
+        and not args.story_key
+    ):
+        raise SystemExit(
+            f"Detected {cs_ids[0]} but target capsule is '{capsule.name}'. "
+            "Use --story-key to confirm the mismatch intentionally."
+        )
     generated = capsule / "generated"
     generated.mkdir(parents=True, exist_ok=True)
 

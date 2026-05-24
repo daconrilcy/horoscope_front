@@ -39,13 +39,18 @@ A successful run produces:
 
 Start from the target story/capsule and load only decision-relevant context.
 
-Always read:
+Always read, but keep generated capsule loading compact:
 
 - target `00-story.md`;
-- generated capsule files listed in Section 4;
+- a compact generated capsule summary containing story key, ACs, non-goals,
+  target paths, validation commands, and guardrails;
 - applicable repository `AGENTS.md`;
 - scoped regression guardrail IDs already named by the story/capsule, or a
   resolver/search result for the touched surface.
+
+Read a full generated capsule file only when the compact summary is missing,
+conflicting, or insufficient for the next decision. Do not read all files under
+`generated/` in full by default. The summary should stay within 80-120 lines.
 
 Read references only on trigger:
 
@@ -65,6 +70,11 @@ Read references only on trigger:
 
 Do not paste large reference, registry, diff, or generated evidence bodies into
 chat. Summarize facts and cite paths.
+
+Do not `Get-Content` or otherwise print an entire application file when
+`rg -n`, a symbol search, or a line-bounded excerpt is enough. Treat broad file
+reads as expensive: use at most two broad reads before editing, then switch to
+targeted symbol/line reads unless new evidence justifies another broad read.
 
 Conflict order:
 
@@ -119,6 +129,13 @@ When generating or repairing a capsule, use `scripts/condamad_prepare.py` and
 `scripts/condamad_validate.py` when available. Preserve human-owned story intent:
 do not rewrite ACs, business scope, or non-goals unless the user explicitly asks.
 
+Use `scripts/condamad_capsule_summary.py <capsule>` when available to load the
+compact capsule summary. For an existing capsule, prefer repair-only generation
+(`condamad_prepare.py --repair-generated-only <capsule>`) over re-preparing from
+the story source. If a `CS-xxx` story already appears in `story-status.md`, pass
+`--story-key` or `--capsule`; do not allow title-based inference to create a
+parallel capsule.
+
 ## 5. Non-Negotiables
 
 Workspace safety:
@@ -138,6 +155,8 @@ Command hygiene:
 - in PowerShell snippets, avoid ambiguous interpolation such as `"$p:$i"`; use
   `"{0}:{1}" -f $p,$i` or `${p}`;
 - use `rg`/targeted reads before broad inventories;
+- prefer `rg -n` plus line-bounded excerpts over `Get-Content` on whole source
+  files; never print a full application file only to inspect one symbol;
 - avoid root-wide inventories unless necessary; exclude build/cache paths;
 - do not include `__pycache__`, `.pytest_cache`, `.ruff_cache`, or compiled
   outputs in evidence;
@@ -147,6 +166,8 @@ Command hygiene:
   without printing child contents;
 - for Python validation prefer `python -B -m pytest ...` after venv activation
   when repository instructions require a venv;
+- standardize Python commands from the repository root; in PowerShell, activate
+  the documented venv first when required, then run `python -B -m ...`;
 - prefer scoped formatting over root formatting unless the repo/story requires
   root-wide formatting.
 
@@ -158,6 +179,9 @@ Scope:
 - for audit-sourced stories, stop if the story claims closure but lacks exact
   surface, closure map, stop condition, before/after evidence, or anti-return
   guard requirements.
+- for audit-sourced stories, prepare a compact closure map before code:
+  exact surface, forbidden symbols, existing guards, tests to modify, and stop
+  condition.
 
 DRY / No Legacy forbidden unless explicit:
 
@@ -218,10 +242,11 @@ the user explicitly requests a parallel worktree strategy.
    without overwriting user evidence.
 
 3. **Load story context**
-   Read required capsule files in Section 4 plus scoped guardrail evidence and
-   optional context files only when useful. Extract story key, goal, ACs,
-   non-goals, changed-area constraints, validation expectations, forbidden
-   legacy patterns, guardrail IDs, and whether frontend delegation is required.
+   Load the compact capsule summary plus scoped guardrail evidence and optional
+   context files only when useful. Extract story key, goal, ACs, non-goals,
+   changed-area constraints, validation expectations, forbidden legacy patterns,
+   guardrail IDs, and whether frontend delegation is required. Read a full
+   generated file only on conflict, missing summary data, or when editing it.
 
    For audit-sourced stories, also read the referenced finding/candidate and
    nearby same-domain stories when paths exist. Classify source closure as
@@ -231,6 +256,12 @@ the user explicitly requests a parallel worktree strategy.
 4. **Inspect before editing**
    Use targeted `rg` and file reads. Adapt searches to the story. Include
    legacy/compat/fallback and import scans when relevant.
+
+   Run an architecture guard preflight before introducing sensitive domain
+   vocabulary or namespaces such as doctrine, profile, school, runtime, canonical
+   services, or known legacy imports. Read the relevant guard tests first, scan
+   for forbidden terms/imports, and verify any new guard-test string against the
+   existing guards before running broad pytest.
 
 5. **Plan**
    Create or update `generated/05-implementation-plan.md` when useful. Include
@@ -247,17 +278,20 @@ the user explicitly requests a parallel worktree strategy.
    code plus validation evidence for each resolution.
 
 7. **Validate**
-   Run the story validation plan in order: targeted tests, architecture/negative
-   scans, lint/static checks, broader regression suite, project quality gate.
-   Also run applicable regression guard commands. Record exact command, result,
-   skipped reason, and risk for every skipped check.
+   Use an economical validation ladder. First run fast scans for forbidden
+   terms, legacy imports, boundary violations, conflict markers, and guardrail
+   IDs. Then run targeted tests, architecture/negative scans, lint/static
+   checks, broader regression suite, and project quality gate. Stop and fix
+   short-guard failures before expensive full-suite validation. Also run
+   applicable regression guard commands. Record exact command, result, skipped
+   reason, and risk for every skipped check.
 
    Typical backend commands, adjusted to repo instructions:
 
    ```bash
    ruff format <changed python files or touched dirs>
    ruff check .
-   python -B -m pytest -q
+   python -B -m pytest -q --tb=short
    ```
 
    Typical frontend evidence includes package script discovery, `pnpm lint`,
@@ -265,10 +299,12 @@ the user explicitly requests a parallel worktree strategy.
    static guards, and applicable `RG-XXX` commands or documented skips.
 
 8. **Review diff**
-   When `.git` exists, run `git diff --stat` and review `git diff`. Confirm no
-   unrelated churn, forbidden legacy, unjustified deletions, unproved ACs, or
-   unclassified audit residual work. When `.git` is absent, use scoped file
-   inventories instead.
+   When `.git` exists, first run `git diff --stat -- <paths>` and
+   `git diff --name-only -- <paths>` for the story surface. Use full
+   `git diff -- <file>` only for targeted internal review of changed files.
+   Confirm no unrelated churn, forbidden legacy, unjustified deletions,
+   unproved ACs, or unclassified audit residual work. When `.git` is absent,
+   use scoped file inventories instead.
 
 9. **Complete evidence**
    Update `03-acceptance-traceability.md`, `09-dev-log.md` when useful,
@@ -283,6 +319,16 @@ the user explicitly requests a parallel worktree strategy.
 ## 8. Response Budget
 
 Persist detail in capsule evidence, not chat. Chat is for status and decisions.
+
+Output compression:
+
+- write long command output, proof details, diff notes, and failure transcripts
+  to capsule evidence files under `generated/` or `evidence/`;
+- keep chat/log output to status, path, concise result, and next action;
+- for long pytest runs, use `--tb=short` first and rerun only the failing test
+  with fuller output when needed;
+- after an orchestrator prints token usage or run metadata, do not repeat the
+  final response body.
 
 During execution:
 
@@ -324,6 +370,9 @@ Preserve existing story ID/key/title/path/source unless this run generated the
 story. Update `Last update` to local `YYYY-MM-DD`. Do not mark final evidence
 ready for review without matching `story-status.md`.
 
+Update only the exact row matching `^| CS-xxx |` when a story ID exists. Use a
+compact before/after row as evidence; never print the whole story registry.
+
 For legacy BMAD stories, preserve the original contract. Only update allowed
 sections such as Tasks/Subtasks, Dev Agent Record, File List, Change Log, and
 Status.
@@ -359,6 +408,10 @@ A story is complete only when:
 Available helpers under `scripts/`:
 
 - `condamad_prepare.py`: create a capsule from a story markdown file.
+- `condamad_capsule_summary.py`: print an 80-120 line capsule summary for
+  loading context without full generated-file reads.
+- `condamad_update_story_status.py`: replace one exact `CS-xxx` registry row
+  and print only before/after rows.
 - `condamad_validate.py`: validate capsule structure/evidence readiness.
 - `condamad_legacy_scan.py`: scan selected paths for legacy patterns.
 - `condamad_collect_evidence.py`: capture git status and diff-stat evidence.

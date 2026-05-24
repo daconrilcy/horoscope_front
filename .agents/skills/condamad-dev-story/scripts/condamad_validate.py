@@ -49,7 +49,10 @@ COMPLETE_STATUS_PATTERNS = [
 ]
 
 INCOMPLETE_STATUS_RE = re.compile(r"\b(?:pending|tbd|todo|in_progress)\b", re.I)
-MARKER_RE = re.compile(r"\bTBD\b|\bPENDING\b", re.I)
+MARKER_RE = re.compile(
+    r"\b(?:TBD|PENDING|not-started|not-run|not-recorded|none-recorded|not-validated)\b",
+    re.I,
+)
 
 
 class MarkdownTable(NamedTuple):
@@ -66,7 +69,25 @@ def read_text(path: Path) -> str:
 
 def split_markdown_row(line: str) -> list[str]:
     """Decoupe une ligne de table markdown en cellules normalisees."""
-    return [cell.strip() for cell in line.strip().strip("|").split("|")]
+    cells: list[str] = []
+    current: list[str] = []
+    content = line.strip().strip("|")
+    index = 0
+    while index < len(content):
+        char = content[index]
+        if char == "\\" and index + 1 < len(content) and content[index + 1] == "|":
+            current.append("|")
+            index += 2
+            continue
+        if char == "|":
+            cells.append("".join(current).strip())
+            current.clear()
+            index += 1
+            continue
+        current.append(char)
+        index += 1
+    cells.append("".join(current).strip())
+    return cells
 
 
 def is_markdown_separator(line: str) -> bool:
@@ -114,20 +135,37 @@ def find_table_with_columns(
     return None
 
 
-def status_column_values(table: MarkdownTable) -> list[str]:
-    """Extrait les valeurs de la colonne Status d'une table markdown."""
+def column_values(table: MarkdownTable, column: str) -> list[str]:
+    """Extrait les valeurs non vides d'une colonne de table markdown."""
     header_map = {
         normalize_header(header): position
         for position, header in enumerate(table.headers)
     }
-    status_index = header_map.get("status")
-    if status_index is None:
+    column_index = header_map.get(normalize_header(column))
+    if column_index is None:
         return []
     return [
-        row[status_index].strip()
+        row[column_index].strip()
         for row in table.rows
-        if len(row) > status_index and row[status_index].strip()
+        if len(row) > column_index and row[column_index].strip()
     ]
+
+
+def status_column_values(table: MarkdownTable) -> list[str]:
+    """Extrait les valeurs de la colonne Status d'une table markdown."""
+    return column_values(table, "Status")
+
+
+def duplicate_values(values: list[str]) -> list[str]:
+    """Retourne les valeurs dupliquees dans l'ordre de detection."""
+    seen: set[str] = set()
+    duplicates: list[str] = []
+    for value in values:
+        normalized = value.casefold()
+        if normalized in seen and value not in duplicates:
+            duplicates.append(value)
+        seen.add(normalized)
+    return duplicates
 
 
 def is_complete_status(value: str) -> bool:
@@ -154,22 +192,27 @@ def validate_capsule(capsule: Path, final: bool) -> list[str]:
             errors.append(f"Required file is empty: {rel}")
 
     traceability = capsule / "generated/03-acceptance-traceability.md"
+    traceability_table: MarkdownTable | None = None
     if traceability.is_file() and traceability.stat().st_size > 0:
         text = read_text(traceability)
-        table = find_table_with_columns(text, ["AC", "Requirement", "Status"])
-        if table is None:
+        traceability_table = find_table_with_columns(text, ["AC", "Requirement", "Status"])
+        if traceability_table is None:
             errors.append(
                 "Traceability table missing required columns: AC, Requirement, Status"
             )
-        elif final:
-            statuses = status_column_values(table)
-            if not statuses:
-                errors.append("Traceability table has no status values in final mode")
-            for status in statuses:
-                if not is_complete_status(status):
-                    errors.append(
-                        f"Traceability has invalid final status: {status or '<empty>'}"
-                    )
+        else:
+            duplicate_acs = duplicate_values(column_values(traceability_table, "AC"))
+            for ac in duplicate_acs:
+                errors.append(f"Traceability has duplicate AC row: {ac}")
+            if final:
+                statuses = status_column_values(traceability_table)
+                if not statuses:
+                    errors.append("Traceability table has no status values in final mode")
+                for status in statuses:
+                    if not is_complete_status(status):
+                        errors.append(
+                            f"Traceability has invalid final status: {status or '<empty>'}"
+                        )
 
     final_evidence = capsule / "generated/10-final-evidence.md"
     if final_evidence.is_file() and final_evidence.stat().st_size > 0:
@@ -177,16 +220,34 @@ def validate_capsule(capsule: Path, final: bool) -> list[str]:
         for section in FINAL_REQUIRED_SECTIONS:
             if not re.search(rf"^##\s+{re.escape(section)}\s*$", text, re.I | re.M):
                 errors.append(f"Final evidence missing section: {section}")
-        if (
-            find_table_with_columns(
-                text, ["AC", "Implementation evidence", "Validation evidence", "Status"]
-            )
-            is None
-        ):
+        final_ac_table = find_table_with_columns(
+            text, ["AC", "Implementation evidence", "Validation evidence", "Status"]
+        )
+        if final_ac_table is None:
             errors.append("Final evidence missing AC validation table")
+        else:
+            duplicate_acs = duplicate_values(column_values(final_ac_table, "AC"))
+            for ac in duplicate_acs:
+                errors.append(f"Final evidence has duplicate AC row: {ac}")
+        if final_ac_table is not None and final:
+            if traceability_table is not None:
+                traceability_acs = column_values(traceability_table, "AC")
+                final_acs = column_values(final_ac_table, "AC")
+                if traceability_acs != final_acs:
+                    errors.append(
+                        "Final evidence AC rows do not match traceability AC rows"
+                    )
+            statuses = status_column_values(final_ac_table)
+            if not statuses:
+                errors.append("Final evidence AC table has no status values in final mode")
+            for status in statuses:
+                if not is_complete_status(status):
+                    errors.append(
+                        f"Final evidence has invalid AC status: {status or '<empty>'}"
+                    )
         if final and MARKER_RE.search(text):
             errors.append(
-                "Final evidence still contains TBD/PENDING markers in final mode"
+                "Final evidence still contains placeholder markers in final mode"
             )
 
     return errors
@@ -201,7 +262,7 @@ def main() -> int:
     parser.add_argument(
         "--final",
         action="store_true",
-        help="Require final evidence to be complete, with no TBD/PENDING markers.",
+        help="Require final evidence to be complete, with no placeholder markers.",
     )
     args = parser.parse_args()
 
