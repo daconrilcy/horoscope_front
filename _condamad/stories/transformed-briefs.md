@@ -54,3 +54,4 @@
 | cs-273 | `_story_briefs\cs-273-define-expert-technical-projection-v1-admin-astro-expert-only.md` | `_condamad\stories\cs-273-expert-technical-projection-v1-internal-contract\00-story.md` |
 | cs-274 | `_story_briefs\cs-274-define-astrology-full-data-v1-internal-expert-projection.md` | `_condamad\stories\cs-274-astrology-full-data-v1-internal-expert-projection\00-story.md` |
 | cs-275 | `_story_briefs\cs-275-decide-admin-chart-diagnostics-retention-redaction-replay-policy.md` | `_condamad\stories\cs-275-admin-chart-diagnostics-policy\00-story.md` |
+| cs-276 | `_story_briefs\cs-276-implement-admin-chart-diagnostics-v1.md` | `_condamad\stories\cs-276-admin-chart-diagnostics-v1\00-story.md` |
