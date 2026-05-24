@@ -62,3 +62,4 @@
 | cs-281 | `_story_briefs\cs-281-define-transit-client-projection-by-plan.md` | `_condamad\stories\cs-281-transit-client-projection-by-plan\00-story.md` |
 | cs-282 | `_story_briefs\cs-282-expose-transit-projection-only-after-proof-gate.md` | `_condamad\stories\cs-282-transit-projection-proof-gated-api\00-story.md` |
 | cs-283 | `_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md` | `_condamad\stories\cs-283-b2c-projection-entitlement-policy\00-story.md` |
+| cs-284 | `_story_briefs\cs-284-audit-existing-astrology-disclaimers-and-projection-disclaimer-policy.md` | `_condamad\stories\cs-284-astrology-disclaimer-projection-policy\00-story.md` |
