@@ -8,3 +8,38 @@ Command: python -B -m pytest -q tests/api/admin/test_replay_snapshot_v1_api.py -
 8 passed in 5.15s
 Command: final capsule validation
 CONDAMAD validation: PASS
+
+CS-304 review-fix validation - 2026-05-25
+Command: . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py --final _condamad\stories\CS-304-design-admin-audit-and-replay-flows
+Result: PASS
+Output: CONDAMAD validation: PASS
+
+Command: . ..\.venv\Scripts\Activate.ps1; python -B -m pytest -q tests/api/admin/test_rejected_answer_review_workflow.py tests/api/admin/test_replay_snapshot_v1_api.py --tb=short
+Working directory: backend
+Result: PASS
+Output: 16 passed in 35.34s
+
+Command: . ..\.venv\Scripts\Activate.ps1; python -B -m pytest -q tests/architecture/test_admin_replay_snapshot_v1_public_exposure.py --tb=short
+Working directory: backend
+Result: PASS
+Output: 3 passed in 4.79s
+
+Command: rg -n "visible_fields.*(raw|birth_date|birth_time|birth_place|birth_lat|birth_lon|birth_timezone|secret|provider token|payload)" docs\architecture\admin-audit-replay-flows.md
+Result: PASS
+Output: exit 1, no forbidden sensitive token appears inside visible_fields.
+
+Command: rg -n "admin_audit_log_accessed|replay_snapshot_v1\.metadata_read|replay_snapshot_v1\.replay_attempt|replay_snapshot_v1\.purge|admin_rejected_answer_review_accessed|admin_rejected_answer_reviewed" docs\architecture\admin-audit-replay-flows.md
+Result: PASS
+Output: all expected audit events are named in the admin flow contract.
+
+Command: . .\.venv\Scripts\Activate.ps1; ruff check .
+Result: PASS
+Output: All checks passed!
+
+Command: . .\.venv\Scripts\Activate.ps1; ruff format --check .
+Result: PASS
+Output: 1686 files already formatted.
+
+Command: git diff --check
+Result: PASS
+Output: no whitespace errors; Git reported line-ending normalization warnings only.
