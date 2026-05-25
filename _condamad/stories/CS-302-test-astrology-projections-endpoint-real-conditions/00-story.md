@@ -1,5 +1,5 @@
 # Story CS-302 test-astrology-projections-endpoint-real-conditions: Test Astrology Projections Endpoint In Real Conditions
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
