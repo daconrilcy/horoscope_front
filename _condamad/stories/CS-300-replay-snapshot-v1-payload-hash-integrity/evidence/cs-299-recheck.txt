@@ -1,0 +1,5 @@
+CS-299 recheck:
+- Replay execution/audit evidence remains valid after the payload/hash repair.
+- Success and provider-failure audit tests still pass through the real replay runtime.
+- Canonical hash mismatch is now explicitly refused with `input_hash_mismatch`.
+- No provider payload text is written to replay attempt audit details.

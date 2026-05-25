@@ -1,0 +1,6 @@
+After evidence:
+- `ReplaySnapshotV1Service.create_snapshot` builds one canonical replay payload with `build_replay_snapshot_v1_payload`.
+- `llm_replay_snapshots.input_hash` is `compute_replay_snapshot_v1_payload_hash(replay_payload)`.
+- `input_enc` encrypts the same `replay_payload`.
+- `replay` decrypts `snapshot.input_enc`, recomputes `compute_replay_snapshot_v1_payload_hash(user_input)`, and compares it to `snapshot.input_hash`.
+- The real `log_call -> create_snapshot -> replay` success path is covered by `test_real_replay_execution_success_is_audited`.

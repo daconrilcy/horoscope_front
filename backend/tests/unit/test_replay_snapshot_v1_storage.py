@@ -12,6 +12,10 @@ from app.domain.llm.runtime.observability_service import (
     build_replay_snapshot_v1_metadata,
 )
 from app.infra.db.models.llm.llm_observability import LlmReplaySnapshotModel
+from app.services.replay_snapshot_v1_service import (
+    build_replay_snapshot_v1_payload,
+    compute_replay_snapshot_v1_payload_hash,
+)
 
 
 def _gateway_result() -> GatewayResult:
@@ -56,24 +60,28 @@ def test_replay_snapshot_model_contains_approved_v1_columns() -> None:
 
 def test_replay_snapshot_metadata_keeps_only_references_hashes_and_versions() -> None:
     """Verifie que les metadonnees persistables excluent le contenu utilisateur brut."""
+    user_input = {
+        "message": "je veux une interpretation complete",
+        "birth_date": "1991-04-05",
+        "birth_time": "12:34",
+        "birth_place": "Paris",
+        "email": "person@example.com",
+        "api_key": "sk-secret",
+    }
     metadata = build_replay_snapshot_v1_metadata(
-        user_input={
-            "message": "je veux une interpretation complete",
-            "birth_date": "1991-04-05",
-            "birth_time": "12:34",
-            "birth_place": "Paris",
-            "email": "person@example.com",
-            "api_key": "sk-secret",
-        },
-        input_hash="a" * 64,
+        user_input=user_input,
         request_id="request-cs-295",
         trace_id="trace-cs-295",
         use_case="story-cs-295",
         result=_gateway_result(),
     )
+    expected_hash = compute_replay_snapshot_v1_payload_hash(
+        build_replay_snapshot_v1_payload(user_input)
+    )
 
     assert metadata["input_ref"]["kind"] == "encrypted_isolated_payload_ref"
-    assert metadata["input_ref"]["input_hash"] == "a" * 64
+    assert metadata["input_ref"]["input_hash"] == expected_hash
+    assert metadata["input_hash"] == expected_hash
     assert metadata["redaction_state"] == REPLAY_SNAPSHOT_V1_REDACTION_STATE
     assert metadata["version_identity"]["prompt_version_id"] == "prompt-template-v7"
 

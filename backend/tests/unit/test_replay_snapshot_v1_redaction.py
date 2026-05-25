@@ -46,7 +46,6 @@ def test_replay_snapshot_metadata_does_not_include_forbidden_raw_values() -> Non
             "email": "person@example.com",
             "password": "admin123",
         },
-        input_hash="b" * 64,
         request_id="request-redaction",
         trace_id="trace-redaction",
         use_case="story-cs-295",

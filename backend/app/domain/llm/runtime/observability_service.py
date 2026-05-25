@@ -468,7 +468,6 @@ async def log_call(
                     db,
                     call_log_id=log_entry.id,
                     user_input=user_input,
-                    input_hash=input_hash,
                     request_id=request_id,
                     trace_id=trace_id,
                     use_case=use_case,

@@ -14,14 +14,16 @@ from app.core.config import settings
 from app.domain.audit.safe_details import ReplaySnapshotActivityAuditDetails
 from app.domain.llm.runtime.contracts import GatewayError, ReplayResult
 from app.domain.llm.runtime.crypto_utils import decrypt_input
-from app.domain.llm.runtime.observability_service import compute_input_hash
 from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
     LlmReplaySnapshotModel,
     map_status_to_enum,
 )
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
-from app.services.replay_snapshot_v1_service import ReplaySnapshotV1Service
+from app.services.replay_snapshot_v1_service import (
+    ReplaySnapshotV1Service,
+    compute_replay_snapshot_v1_payload_hash,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +67,7 @@ async def replay(
     prompt_version_id: str,
 ) -> ReplayResult:
     """
-    Replays an LLM call with a different prompt version.
+    Rejoue un appel LLM avec une autre version de prompt.
     """
     # AC7: Refuse in production - LOCKED to settings.app_env
     env = settings.app_env
@@ -121,13 +123,13 @@ async def replay(
     # 3. Decrypt user_input
     user_input = decrypt_input(snapshot.input_enc)
 
-    # 3b. Integrity check: recompute hash and compare with original log
-    recomputed_hash = compute_input_hash(user_input)
-    if recomputed_hash != original_log.input_hash:
+    # Le controle d'integrite compare le hash du payload canonique stocke avec le snapshot.
+    recomputed_hash = compute_replay_snapshot_v1_payload_hash(user_input)
+    if recomputed_hash != snapshot.input_hash:
         logger.error(
             "replay_integrity_check_failed request_id=%s expected=%s computed=%s",
             request_id,
-            original_log.input_hash,
+            snapshot.input_hash,
             recomputed_hash,
         )
         _record_replay_attempt_audit(

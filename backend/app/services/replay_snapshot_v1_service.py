@@ -71,6 +71,16 @@ def _stable_hash(payload: Any) -> str:
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
 
+def build_replay_snapshot_v1_payload(user_input: Dict[str, Any]) -> dict[str, Any]:
+    """Construit le payload canonique autorise pour le replay chiffre."""
+    return sanitize_payload(user_input, Sink.LLM_REPLAY_SNAPSHOTS)
+
+
+def compute_replay_snapshot_v1_payload_hash(replay_payload: Dict[str, Any]) -> str:
+    """Calcule le hash d'integrite sur le payload replay canonique."""
+    return _stable_hash(replay_payload)
+
+
 def _public_meta_value(value: Any) -> Any:
     """Normalise une valeur runtime en metadonnee JSON sans objet applicatif."""
     if hasattr(value, "value"):
@@ -83,23 +93,23 @@ def _public_meta_value(value: Any) -> Any:
 def build_replay_snapshot_v1_metadata(
     *,
     user_input: Dict[str, Any],
-    input_hash: str,
     request_id: str,
     trace_id: str,
     use_case: str,
     result: GatewayResult | None,
 ) -> dict[str, Any]:
     """Construit les metadonnees approuvees du snapshot sans donnees brutes."""
-    sanitized_input = sanitize_payload(user_input, Sink.LLM_REPLAY_SNAPSHOTS)
-    input_key_hashes = sorted(_stable_hash(key) for key in sanitized_input)
+    replay_payload = build_replay_snapshot_v1_payload(user_input)
+    input_hash = compute_replay_snapshot_v1_payload_hash(replay_payload)
+    input_key_hashes = sorted(_stable_hash(key) for key in replay_payload)
     input_ref: dict[str, Any] = {
         "kind": "encrypted_isolated_payload_ref",
         "input_hash": input_hash,
         "input_schema_version": "user_input_key_hashes_v1",
         "input_key_hashes": input_key_hashes,
     }
-    if any("birth" in key.lower() for key in sanitized_input):
-        input_ref["birth_data_ref_hash"] = _stable_hash(sanitized_input)
+    if any("birth" in key.lower() for key in replay_payload):
+        input_ref["birth_data_ref_hash"] = _stable_hash(replay_payload)
 
     obs = getattr(result.meta, "obs_snapshot", None) if result else None
     version_identity = {
@@ -122,8 +132,9 @@ def build_replay_snapshot_v1_metadata(
     }
 
     return {
-        "sanitized_input": sanitized_input,
+        "replay_payload": replay_payload,
         "input_ref": sanitize_payload(input_ref, Sink.LLM_REPLAY_SNAPSHOTS),
+        "input_hash": input_hash,
         "version_identity": sanitize_payload(
             {key: _public_meta_value(value) for key, value in version_identity.items()},
             Sink.LLM_REPLAY_SNAPSHOTS,
@@ -145,7 +156,6 @@ class ReplaySnapshotV1Service:
         *,
         call_log_id: uuid.UUID,
         user_input: Dict[str, Any],
-        input_hash: str,
         request_id: str,
         trace_id: str,
         use_case: str,
@@ -159,7 +169,6 @@ class ReplaySnapshotV1Service:
         snapshot_created_at = created_at or datetime_provider.utcnow()
         snapshot_metadata = build_replay_snapshot_v1_metadata(
             user_input=user_input,
-            input_hash=input_hash,
             request_id=request_id,
             trace_id=trace_id,
             use_case=use_case,
@@ -171,11 +180,11 @@ class ReplaySnapshotV1Service:
             created_at=snapshot_created_at,
             expires_at=snapshot_created_at + timedelta(days=REPLAY_SNAPSHOT_V1_RETENTION_DAYS),
             input_ref=snapshot_metadata["input_ref"],
-            input_hash=input_hash,
+            input_hash=snapshot_metadata["input_hash"],
             version_identity=snapshot_metadata["version_identity"],
             provenance=snapshot_metadata["provenance"],
             redaction_state=snapshot_metadata["redaction_state"],
-            input_enc=encrypt_input(snapshot_metadata["sanitized_input"]),
+            input_enc=encrypt_input(snapshot_metadata["replay_payload"]),
         )
         db.add(snapshot)
         db.flush()
@@ -445,7 +454,10 @@ class ReplaySnapshotV1Service:
     def _is_expired(snapshot: LlmReplaySnapshotModel, *, now: datetime | None = None) -> bool:
         """Indique si un snapshot a depasse sa date d'expiration."""
         effective_now = now or datetime_provider.utcnow()
-        return snapshot.expires_at <= effective_now
+        expires_at = snapshot.expires_at
+        if expires_at.tzinfo is None and effective_now.tzinfo is not None:
+            expires_at = expires_at.replace(tzinfo=effective_now.tzinfo)
+        return expires_at <= effective_now
 
     @staticmethod
     def _is_purged(snapshot: LlmReplaySnapshotModel) -> bool:

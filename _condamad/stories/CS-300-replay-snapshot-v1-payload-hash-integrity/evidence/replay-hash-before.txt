@@ -1,0 +1,5 @@
+Before evidence: create_snapshot encrypts snapshot_metadata["sanitized_input"] while replay compares compute_input_hash(decrypted payload) to original_log.input_hash.
+            input_enc=encrypt_input(snapshot_metadata["sanitized_input"]),
+    recomputed_hash = compute_input_hash(user_input)
+    if recomputed_hash != original_log.input_hash:
+            original_log.input_hash,

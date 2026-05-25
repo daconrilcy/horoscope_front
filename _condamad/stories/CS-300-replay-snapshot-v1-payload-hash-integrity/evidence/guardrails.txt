@@ -1,0 +1,6 @@
+Scoped guardrails:
+- RG-002 `refactor-api-v1-routers`: no API router code changed; admin API and public exposure tests pass.
+- RG-022 `align-prompt-generation-story-validation-paths`: validation commands use collected backend pytest files.
+- Replay-specific guard: `encrypt_input(user_input)` is absent from the replay execution audit success test.
+- Public route guard: exact public replay paths are absent from `backend/app`; runtime `app.openapi()` and `app.routes` assertions pass.
+- RG-047 and RG-052 are non-applicable: no frontend or style files touched.

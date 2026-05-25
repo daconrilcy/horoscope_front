@@ -1,0 +1,20 @@
+Validation summary:
+- `ruff format app\services\replay_snapshot_v1_service.py app\ops\llm\replay_service.py app\domain\llm\runtime\observability_service.py tests\unit\test_replay_snapshot_v1_execution_audit.py tests\integration\test_replay_snapshot_v1_db_redaction.py tests\unit\test_replay_snapshot_v1_storage.py tests\unit\test_replay_snapshot_v1_redaction.py tests\unit\test_replay_snapshot_v1_service_retention.py` PASS.
+- `ruff check .` PASS.
+- `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_execution_audit.py --tb=short` PASS: 7 passed.
+- `python -B -m pytest -q tests\integration\test_replay_snapshot_v1_db_redaction.py --tb=short --long` PASS: 1 passed.
+- `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_redaction.py --tb=short` PASS: 2 passed.
+- `python -B -m pytest -q tests\api\admin\test_replay_snapshot_v1_api.py --tb=short` PASS: 8 passed.
+- `python -B -m pytest -q tests\architecture\test_replay_snapshot_v1_execution_boundary.py --tb=short` PASS: 3 passed.
+- `python -B -m pytest -q tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py --tb=short` PASS: 3 passed.
+- `python -B -m pytest -q backend\tests\unit\test_replay_snapshot_v1_storage_security_model.py backend\tests\unit\test_replay_snapshot_v1_storage.py backend\tests\unit\test_replay_snapshot_v1_service_retention.py backend\tests\unit\test_replay_snapshot_v1_service_ownership.py backend\tests\unit\test_replay_snapshot_v1_service_metadata.py backend\tests\unit\test_replay_snapshot_v1_service_manual_purge.py backend\tests\unit\test_replay_snapshot_v1_service_audit.py backend\tests\unit\test_replay_snapshot_v1_retention.py backend\tests\unit\test_replay_snapshot_v1_redaction.py backend\tests\unit\test_replay_snapshot_v1_purge.py backend\tests\unit\test_replay_snapshot_v1_ownership.py backend\tests\unit\test_replay_snapshot_v1_execution_audit.py backend\tests\integration\test_replay_snapshot_v1_service_purge.py backend\tests\integration\test_replay_snapshot_v1_service_non_cascade.py backend\tests\integration\test_replay_snapshot_v1_db_redaction.py --tb=short --long` PASS: 36 passed.
+- `rg -n "encrypt_input\(user_input\)" backend\tests\unit\test_replay_snapshot_v1_execution_audit.py` PASS: no matches.
+- `rg -n '"/v1/replay_snapshot_v1"|"/v1/public/replay_snapshot_v1"|"/api/replay_snapshot_v1"|"/replay_snapshot_v1"' backend\app` PASS: no matches.
+- `python -B -c "from app.main import app; assert all('/v1/replay_snapshot_v1' not in p for p in app.openapi()['paths'])"` PASS.
+- `python -B -c "from app.main import app; assert all(getattr(r, 'path', '') != '/replay_snapshot_v1' for r in app.routes)"` PASS.
+- `git diff --check` PASS.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-300-replay-snapshot-v1-payload-hash-integrity` PASS.
+
+Notes:
+- Integration tests are deselected by default in this project; replay integration checks were run with `--long`.
+- One replay integration test reads `backend/app/services/replay_snapshot_v1_service.py` from the repository root, so the 36-test replay suite was executed from the repository root with `backend\...` paths.

@@ -143,6 +143,7 @@ OPERATIONAL_FIELDS: Set[str] = {
     "after",
     "commercial_gestures_count",
     "record_count",
+    "purged_count",
     "variant_id",
     "event_name",
     "conversion_status",

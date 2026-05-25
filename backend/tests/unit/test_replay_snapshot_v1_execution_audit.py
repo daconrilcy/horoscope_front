@@ -13,8 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 import app.infra.db.models  # noqa: F401
 from app.domain.llm.runtime.contracts import GatewayError, GatewayMeta, GatewayResult, UsageInfo
-from app.domain.llm.runtime.crypto_utils import encrypt_input
-from app.domain.llm.runtime.observability_service import compute_input_hash
+from app.domain.llm.runtime.observability_service import log_call
 from app.infra.db.base import Base
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmReplaySnapshotModel
@@ -242,42 +241,17 @@ class _FailingGateway:
         raise GatewayError("provider unavailable")
 
 
-def _replay_ready_snapshot(db: Session, *, request_id: str) -> LlmReplaySnapshotModel:
-    """Cree un log et un snapshot dechiffrable pour le chemin de replay reel."""
-    now = datetime(2026, 5, 25, 8, 30, tzinfo=UTC)
-    user_input = {"question": "safe replay input"}
-    input_hash = compute_input_hash(user_input)
-    log = LlmCallLogModel(
-        use_case="story-cs-298",
-        model="gpt-test",
-        latency_ms=1,
-        tokens_in=1,
-        tokens_out=1,
-        cost_usd_estimated=0.0,
-        validation_status="valid",
-        request_id=request_id,
-        trace_id="trace-replay-execution",
-        input_hash=input_hash,
-        environment="test",
-        expires_at=now + timedelta(days=90),
+async def _replay_ready_snapshot(db: Session, *, request_id: str) -> LlmReplaySnapshotModel:
+    """Cree le snapshot par le chemin applicatif log_call -> create_snapshot."""
+    await log_call(
+        db,
+        "story-cs-300",
+        request_id,
+        "trace-replay-execution",
+        {"question": "safe replay input"},
+        result=None,
     )
-    db.add(log)
-    db.flush()
-    snapshot = LlmReplaySnapshotModel(
-        call_log_id=log.id,
-        snapshot_type="replay_snapshot_v1",
-        created_at=now,
-        expires_at=now + timedelta(days=1),
-        input_ref={"kind": "encrypted_isolated_payload_ref", "input_hash": input_hash},
-        input_hash=input_hash,
-        version_identity={"model": "gpt-test", "prompt_version_id": "prompt-v1"},
-        provenance={"request_ref": request_id},
-        redaction_state="encrypted_isolated_redacted_metadata_v1",
-        input_enc=encrypt_input(user_input),
-    )
-    db.add(snapshot)
-    db.flush()
-    return snapshot
+    return db.execute(select(LlmReplaySnapshotModel)).scalar_one()
 
 
 @pytest.mark.asyncio
@@ -285,7 +259,7 @@ async def test_real_replay_execution_success_is_audited(monkeypatch: pytest.Monk
     """Prouve que le chemin de replay reel audite le succes sans payload provider."""
     db = _db_session()
     try:
-        snapshot = _replay_ready_snapshot(db, request_id="req-real-replay-success")
+        snapshot = await _replay_ready_snapshot(db, request_id="req-real-replay-success")
         monkeypatch.setattr("app.domain.llm.runtime.gateway.LLMGateway", _SuccessfulGateway)
 
         result = await replay(db, "req-real-replay-success", "prompt-v2")
@@ -308,7 +282,7 @@ async def test_real_replay_execution_failure_is_audited(monkeypatch: pytest.Monk
     """Prouve que l'erreur provider du replay reel produit un audit failed."""
     db = _db_session()
     try:
-        snapshot = _replay_ready_snapshot(db, request_id="req-real-replay-failed")
+        snapshot = await _replay_ready_snapshot(db, request_id="req-real-replay-failed")
         monkeypatch.setattr("app.domain.llm.runtime.gateway.LLMGateway", _FailingGateway)
 
         with pytest.raises(GatewayError):
@@ -319,6 +293,31 @@ async def test_real_replay_execution_failure_is_audited(monkeypatch: pytest.Monk
         assert event.status == "failed"
         assert event.target_id == str(snapshot.id)
         assert event.details["reason"] == "provider_execution_failed"
+        _assert_safe_details(event.details)
+    finally:
+        db.close()
+
+
+@pytest.mark.asyncio
+async def test_real_replay_canonical_hash_mismatch_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Prouve le refus explicite quand le hash canonique du snapshot diverge."""
+    db = _db_session()
+    try:
+        snapshot = await _replay_ready_snapshot(db, request_id="req-real-replay-hash-mismatch")
+        snapshot.input_hash = "0" * 64
+        db.flush()
+        monkeypatch.setattr("app.domain.llm.runtime.gateway.LLMGateway", _SuccessfulGateway)
+
+        with pytest.raises(GatewayError):
+            await replay(db, "req-real-replay-hash-mismatch", "prompt-v2")
+
+        event = _single_event(db)
+        assert event.action == "replay_snapshot_v1.replay_attempt"
+        assert event.status == "failed"
+        assert event.target_id == str(snapshot.id)
+        assert event.details["reason"] == "input_hash_mismatch"
         _assert_safe_details(event.details)
     finally:
         db.close()

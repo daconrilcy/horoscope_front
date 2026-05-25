@@ -53,7 +53,6 @@ def test_create_snapshot_applies_exact_thirty_day_retention() -> None:
             db,
             call_log_id=log.id,
             user_input={"message": "bonjour"},
-            input_hash=log.input_hash,
             request_id=log.request_id,
             trace_id=log.trace_id,
             use_case=log.use_case,

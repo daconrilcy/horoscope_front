@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.domain.llm.runtime.crypto_utils import decrypt_input
 from app.domain.llm.runtime.observability_service import log_call
 from app.infra.db.models.llm.llm_observability import LlmReplaySnapshotModel
+from app.services.replay_snapshot_v1_service import compute_replay_snapshot_v1_payload_hash
 
 
 @pytest.mark.asyncio
@@ -62,6 +63,8 @@ async def test_persisted_replay_snapshot_metadata_excludes_raw_sensitive_values(
         assert forbidden not in inspectable_payload
 
     encrypted_payload = decrypt_input(snapshot.input_enc)
+    assert snapshot.input_hash == compute_replay_snapshot_v1_payload_hash(encrypted_payload)
+    assert snapshot.input_ref["input_hash"] == snapshot.input_hash
     assert encrypted_payload["message"] != "interpretation confidentielle"
     assert encrypted_payload["birth_date"] != "1991-04-05"
     assert encrypted_payload["birth_time"] != "12:34"
