@@ -82,3 +82,4 @@
 | cs-301 | `_story_briefs\cs-301-revalidate-replay-snapshot-v1-runtime-closure-after-integrity-fix.md` | `_condamad\stories\cs-301-revalidate-replay-snapshot-v1-runtime-closure\00-story.md` |
 | cs-302 | `_story_briefs\cs-302-test-astrology-projections-endpoint-real-conditions.md` | `_condamad\stories\cs-302-test-astrology-projections-endpoint-real-conditions\00-story.md` |
 | cs-303 | `_story_briefs\cs-303-connect-b2c-frontend-to-astrology-projections.md` | `_condamad\stories\cs-303-connect-b2c-frontend-to-astrology-projections\00-story.md` |
+| cs-304 | `_story_briefs\cs-304-design-admin-audit-and-replay-flows.md` | `_condamad\stories\cs-304-design-admin-audit-and-replay-flows\00-story.md` |
