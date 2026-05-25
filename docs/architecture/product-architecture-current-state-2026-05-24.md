@@ -12,7 +12,7 @@
 | decision | `ChartObjectRuntimeData` et `CalculationGraph` sont des primitives canoniques internes; elles ne deviennent pas des contrats API publics. | CS-245 `05-executive-summary.md`; CS-238 F-001/E-005..E-008; CS-244 F-001/E-004/E-008/E-009/E-010/E-019 |
 | decision | La direction autorisee est `calcul -> faits -> signaux -> narration/projection`; les prompts, textes narratifs et providers AI ne sont pas source de verite astrologique. | CS-243 F-001..F-003/E-006..E-014; CS-254 final evidence |
 | observed | `natal_chart_v1` est le seul runtime de famille livre; `transit_chart_v1` est le chemin temporel selectionne, mais aucune exposition publique temporelle n'est livree. | CS-245 summary; CS-246 final evidence; CS-253 final evidence |
-| decision | Les primitives produit publiques sont des projections nommees: `structured_facts`, `beginner_summary`, `expert_technical_projection`; `fixed_star_contacts` et `astrologer_debug_data` restent `needs-user-decision`; `llm_input` reste LLM-only. | `docs/architecture/official-product-primitives-public-projections.md`; CS-251 final evidence |
+| decision | Les primitives produit publiques restent `structured_facts` et `beginner_summary`; `expert_technical_projection` est reclassifie interne, non client, ADMIN/futur ASTRO_EXPERT target-only; `fixed_star_contacts` et `astrologer_debug_data` restent `needs-user-decision`; `llm_input` reste LLM-only. | `docs/architecture/official-product-primitives-public-projections.md`; CS-251 final evidence; CS-273 |
 | blocker | `fixed_star_contacts`, `astrologer_debug_data`, preuve ephemeris externe, gouvernance doctrine et runtime temporel public restent bloques par decisions produit, securite, data ou doctrine. | Delivery report sections 9/11; CS-238 F-002/F-003; CS-240 F-001..F-006; CS-250 final evidence |
 | blocker | Les contradictions visibles ne sont pas lissees: runtime interne utile mais public interdit, cache local mais cache durable non autorise, DB/Python tous deux proprietaires de regles, fixed stars seulement en conjonctions zodiacales. | CS-245 `02-gap-register.md`; CS-245 `04-risk-matrix.md` |
 
@@ -73,7 +73,7 @@ Story label caveats: CS-245 noted that source labels such as CS-243, CS-244 and 
 | `transit_chart_v1` | natal chart, transit date/time/location, ephemeris proof | natal objects, transiting objects, relationships | family registry, manifest template, proof gate, temporal selection | internal now; public_api blocked | partial | public runtime and API exposure not delivered | CS-253 evidence; CS-250 evidence; CS-242 F-001/F-005 |
 | Other temporal families | multi-chart inputs | synastry/return/progression/composite/profection objects | registry entries and future manifests | internal only until selected | blocked | product choice, proof, doctrine | CS-237 F-001; CS-246 evidence; CS-253 evidence |
 | Chart object taxonomy | chart object runtime payloads | planets, luminaires, angles, cusps, fixed stars, lots, calculated points | capability taxonomy matrix | internal, observability | partial | lots/Chiron/asteroids/midpoints and angle/node policies | CS-239 F-001..F-006; CS-249 evidence |
-| Expert public projection | stable technical fields only | structured public facts | `expert_technical_projection` | public_api future, frontend future | framed | exact field list and raw exclusions per API story | CS-244 F-001; CS-251 evidence |
+| Expert internal projection | stable technical fields only | structured facts and evidence refs | `expert_technical_projection` | internal admin/expert only; no B2C frontend | framed internal-only by CS-273 | exact field list, access logs and raw exclusions per internal contract | CS-244 F-001; CS-251 evidence; CS-273 |
 | Beginner summary | compact translated safe facts | structured facts, labels, masking | `beginner_summary` | public_api future, frontend future, AI output | framed | deterministic contract not implemented as API | CS-244 F-002; CS-251 evidence |
 | Fixed-star contacts | conjunction contacts, star catalog refs | fixed stars, target objects | `fixed_star_contacts` if approved | blocked public; LLM/internal possible | blocked | `needs-user-decision` public/gated/rejected | CS-237 F-002; CS-238 F-002; CS-251 evidence |
 | Astrologer/debug data | traces, audit rows, graph runtime | debug artifacts | protected admin/debug contract | admin_debug blocked | blocked | audience, authz, retention, redaction | CS-238 F-003; CS-244 F-004 |
@@ -86,7 +86,7 @@ Story label caveats: CS-245 noted that source labels such as CS-243, CS-244 and 
 | Surface | Current contract | Expected contract | Capabilities exposed | Consumers | Risks | Blockers | Required changes | Sources |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | internal | `ChartObjectRuntimeData`, `CalculationGraph`, registry, manifest, trace, taxonomy | Versioned internal contracts with owners and redaction | natal runtime, selected temporal path, AI input assembly | backend runtime/services | accidental public coupling | none for internal use; owner decisions for extensions | keep canonical modules as owners | CS-245 summary; CS-246..CS-254 evidence |
-| public_api | Existing natal public payloads; no raw graph/object/traces | explicit projections: `structured_facts`, `expert_technical_projection`, `beginner_summary` | stable facts only | frontend, public users, PDF | raw runtime leak, OpenAPI drift | fixed-star policy, debug exclusion | future API contract stories before frontend work | CS-238 F-001; CS-244 F-001/F-002; CS-251 |
+| public_api | Existing natal public payloads; no raw graph/object/traces | explicit public projections: `structured_facts`, `beginner_summary`; `expert_technical_projection` is internal-only | stable facts only for public clients | frontend, public users, PDF | raw runtime leak, OpenAPI drift | fixed-star policy, debug exclusion | future API contract stories before frontend work; no B2C expert projection | CS-238 F-001; CS-244 F-001/F-002; CS-251; CS-273 |
 | admin_debug | No protected graph/debug product surface evidenced | protected, authorized, redacted trace/debug artifact if approved | traces, audit rows, diagnostic facts | support/admin/astrologer if approved | privacy/security leakage | product/security decision | decide audience/auth/retention first | CS-238 F-003; CS-244 F-004 |
 | automation_or_llm | AI narrative input contract; no provider integration | LLM-only input from facts/signals/source versions | `llm_input`, readiness, projection links | AI narration/scoring services | prompt becomes source of truth | scoring/masking policy | keep provider-neutral contract | CS-243 F-001..F-003; CS-254 |
 | frontend | Existing natal simple/expert surfaces only | consume public projections after API contract | current natal display, future expert/beginner | React app | fields inferred by availability | API contracts not delivered for new projections | no frontend before API contract | CS-244 F-001/F-002; CS-251 |
@@ -114,7 +114,7 @@ Owner: product/API/frontend
 | ID | Version | Inputs | Output contract | Compatibility | Deprecation | Trace fields | Sources |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `structured_facts` | v1 | stable natal public data | public structured facts | OpenAPI-ready once implemented | deprecate only with API version | source primitive, source version | CS-251; CS-244 F-001 |
-| `expert_technical_projection` | v1 | selected technical fields | expert projection | explicit field compatibility | no raw fallback | source fields, exclusion proof | CS-251; CS-244 F-001 |
+| `expert_technical_projection` | v1 | selected technical fields | internal expert projection | explicit field compatibility | no raw fallback | source fields, exclusion proof, access decision logs | CS-251; CS-244 F-001; CS-273 |
 | `beginner_summary` | v1 | compact facts, labels, masking | beginner projection | deterministic summary contract | no raw score exposure | masking policy, evidence refs | CS-251; CS-244 F-002 |
 | `fixed_star_contacts` | v1 candidate | contacts + policy | blocked public/gated/rejected | none until decision | rejected/gated/public explicit | decision owner, source rule | CS-251; CS-238 F-002 |
 | `astrologer_debug_data` | v1 candidate | traces/audit rows | blocked protected surface | none until authz | no public fallback | retention, redaction, actor | CS-251; CS-244 F-004 |
@@ -207,32 +207,32 @@ Plan de validation CS-255:
 | blocker | Temporal public runtime | `transit_chart_v1` selected but no public route/OpenAPI/frontend delivered. | product/backend/API | public transit chart | CS-253; CS-250 |
 | blocker | Ephemeris proof deployment | Moshier integrated proof is recorded; external `.se1` deployment hash/path policy remains a risk. | data/backend | stronger public accuracy claims | CS-250 remaining risk; CS-241 F-003/F-004 |
 | blocker | Doctrine governance policy | DB/Python rule sources still need owner decisions for broad expansion. | product astrology/data | doctrine-heavy temporal/traditional features | CS-240 F-001..F-006; CS-252 |
-| open question | Exact expert fields | Public expert projection needs field selection. | product/API | `expert_technical_projection` API story | CS-244 F-001; CS-251 |
+| open question | Exact expert fields | Internal expert projection fields need controlled selection for ADMIN/future ASTRO_EXPERT usage. | product/API/security | `expert_technical_projection` internal contract evolution | CS-244 F-001; CS-251; CS-273 |
 | open question | Beginner masking policy | Beginner projection needs deterministic masking/labels. | product/API | `beginner_summary` API story | CS-244 F-002; CS-251 |
 
 ## Prochaines stories recommandées
 
 ## Ordered implementation roadmap
 
-### Story 1: Define expert technical public projection contract
+### Story 1: Evolve expert technical internal projection contract
 
 Story ID: next-available-id
 Source label: CS-251 roadmap `expert_technical_projection`; CS-244 SC candidate provenance
-Goal: create a public API contract for expert technical fields without exposing `ChartObjectRuntimeData`, `chart_objects`, raw dominance/dignity payloads or `interpretation_input`.
+Goal: evolve the internal ADMIN/future ASTRO_EXPERT contract for expert technical fields without exposing `ChartObjectRuntimeData`, `chart_objects`, raw dominance/dignity payloads or `interpretation_input` to B2C.
 Source audits: CS-238, CS-244, CS-251.
 Source findings: CS-238 F-001/F-005; CS-244 F-001; CS-251 final evidence.
-Scope: API contract only, field list, exclusions, OpenAPI tests, frontend client story split.
-Out of scope: frontend UI, raw runtime exposure, temporal runtime.
-Dependencies: current CS-251 roadmap.
+Scope: internal contract only, field list, exclusions, access logs, OpenAPI neutrality tests.
+Out of scope: frontend UI, public API, raw runtime exposure, temporal runtime.
+Dependencies: current CS-251 roadmap and CS-273 reclassification.
 Acceptance criteria:
 - `expert_technical_projection_v1` schema exists with explicit field allowlist.
-- OpenAPI and tests prove forbidden raw runtime names absent.
+- OpenAPI and tests prove the projection and forbidden raw runtime names stay absent from public contracts.
 - `calcul -> faits -> signaux -> narration/projection` remains unchanged.
 Validation evidence:
-- OpenAPI diff, route/schema tests, negative `rg` scans.
+- OpenAPI diff, route/schema neutrality tests, negative `rg` scans.
 Blockers / decisions:
 - Product/API owner approves exact expert fields.
-Stop condition: no raw runtime name is public.
+Stop condition: no raw runtime name or expert technical projection is public.
 
 ### Story 2: Define beginner summary public projection contract
 
