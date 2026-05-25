@@ -73,3 +73,4 @@
 | cs-292 | `_story_briefs\cs-292-reconcile-cs-262-ai-traceability-audit-final-evidence.md` | `_condamad\stories\cs-292-reconcile-cs-262-ai-traceability-final-evidence\00-story.md` |
 | cs-293 | `_story_briefs\cs-293-close-astrology-disclaimer-projection-policy-evidence.md` | `_condamad\stories\cs-293-close-astrology-disclaimer-projection-policy-evidence\00-story.md` |
 | cs-294 | `_story_briefs\cs-294-reevaluate-admin-answer-audit-access-logs-after-runtime.md` | `_condamad\stories\cs-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md` |
+| cs-295 | `_story_briefs\cs-295-implement-replay-snapshot-v1-storage-redaction.md` | `_condamad\stories\cs-295-replay-snapshot-v1-storage-redaction\00-story.md` |
