@@ -1,0 +1,45 @@
+Validation summary - CS-301 implementation review
+
+Date: 2026-05-25
+Environment: PowerShell, repository venv activated with .\.venv\Scripts\Activate.ps1 before Python, Ruff and pytest commands.
+
+Commands run from repository root:
+
+- python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-301-revalidate-replay-snapshot-v1-runtime-closure\00-story.md
+  Result: PASS - CONDAMAD story validation: PASS
+
+- python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-301-revalidate-replay-snapshot-v1-runtime-closure\00-story.md
+  Result: PASS - CONDAMAD story lint: PASS
+
+- python .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-301-revalidate-replay-snapshot-v1-runtime-closure
+  Result: PASS - CONDAMAD validation: PASS
+
+Commands run from backend after activating the repository venv:
+
+- ruff check .
+  Result: PASS - All checks passed.
+
+- python -B -m pytest -q tests\unit\test_replay_snapshot_v1_execution_audit.py tests\integration\test_replay_snapshot_v1_db_redaction.py tests\api\admin\test_replay_snapshot_v1_api.py tests\architecture\test_replay_snapshot_v1_execution_boundary.py tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py --tb=short --long
+  Result: PASS - 22 passed in 8.25s.
+
+- python -B -m pytest -q --tb=short
+  Result: PASS - 3422 passed, 1 skipped, 1216 deselected in 305.90s.
+
+- python -B -c "from app.main import app; assert all(path.startswith('/v1/admin/audit') for path in app.openapi()['paths'] if 'replay_snapshot_v1' in path); assert all(getattr(route, 'path', '') != '/replay_snapshot_v1' for route in app.routes); print('PASS: replay_snapshot_v1 admin/internal exposure only')"
+  Result: PASS - replay_snapshot_v1 admin/internal exposure only.
+
+Commands run from repository root:
+
+- rg -n "replay_snapshot_v1" frontend\src
+  Result: PASS - no matches.
+
+- rg -n "encrypt_input\(user_input\)" backend\tests\unit\test_replay_snapshot_v1_execution_audit.py
+  Result: PASS - no matches.
+
+Review conclusion:
+
+- Runtime replay validation remains green after CS-300.
+- The focused suite proves the real replay closure surface, including the application snapshot path and admin/API/architecture guards.
+- Full backend pytest status is recorded.
+- Public/client replay exposure and fabricated-only proof scans remain negative.
+- No validation was skipped during this implementation review pass.

@@ -1,4 +1,4 @@
-# CS-301 Editorial Review
+# CS-301 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,39 +7,44 @@ Verdict: CLEAN
 - Source brief: `_story_briefs/cs-301-revalidate-replay-snapshot-v1-runtime-closure-after-integrity-fix.md`
 - Story: `_condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/00-story.md`
 - Tracker row: `_condamad/stories/story-status.md`
-- Review type: compact pre-implementation story-contract review.
+- Implementation evidence: `generated/10-final-evidence.md` and `evidence/validation.txt`
+- Review type: implementation closure review after CS-300 integrity repair.
 
-## Brief Alignment
+## Alignment Review
 
-- The story covers the real `log_call -> snapshot -> replay` proof required after CS-300.
-- The story rejects fabricated-only `encrypt_input(user_input)` proof as the closure basis.
-- The story keeps replay exposure strictly admin/internal through `app.routes`, OpenAPI, and `frontend/src` checks.
-- The story includes the full forbidden-data token set named by the brief.
-- The story requires updates to CS-278 evidence, CS-299 evidence, and the CS-256 to CS-291 delivery report.
-- The story preserves the brief's non-goals: no new replay service, no DPO/security model change, no role expansion,
-  no frontend/client exposure, and no bulk export.
+- The tracker row matches the requested story path and source brief.
+- The final evidence proves `log_call -> snapshot -> replay` after CS-300 using the replay runtime test surface.
+- Fabricated-only `encrypt_input(user_input)` proof is rejected as closure basis.
+- CS-278 final evidence, CS-299 final evidence, and the CS-256 to CS-291 delivery report cite CS-300/CS-301 as the repaired closure basis.
+- Replay exposure remains admin/internal only through backend API, `app.routes`, OpenAPI, and frontend scan evidence.
+- Forbidden-data evidence covers the brief token set and classifies expected enforcement/test hits.
+- No backend source, frontend source, migration, route, generated client, or dependency change is required for CS-301.
 
 ## Validation Results
 
-- `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py`
-  `_condamad\\stories\\CS-301-revalidate-replay-snapshot-v1-runtime-closure\\00-story.md`:
-  PASS
-- `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict`
-  `_condamad\\stories\\CS-301-revalidate-replay-snapshot-v1-runtime-closure\\00-story.md`:
-  PASS
+- `condamad_story_validate.py ...\00-story.md`: PASS.
+- `condamad_story_lint.py --strict ...\00-story.md`: PASS.
+- `condamad_validate.py _condamad\stories\CS-301-revalidate-replay-snapshot-v1-runtime-closure`: PASS.
+- `ruff check .` from `backend`: PASS.
+- Targeted replay runtime/API/architecture pytest with `--long`: PASS, 22 passed.
+- Full backend pytest: PASS, 3422 passed, 1 skipped, 1216 deselected.
+- Runtime OpenAPI/routes replay exposure assertion: PASS.
+- `frontend/src` replay scan and fabricated-proof scan: PASS, no matches.
 
 ## Findings
 
-No actionable drafting issue found.
+No actionable implementation or evidence issue remains.
 
-## Produced Artifacts
+## Issues Fixed In This Review Loop
 
-- `_condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/11-code-review.md`
+- Replaced stale pre-implementation review wording with implementation review evidence.
+- Added the story-declared consolidated validation transcript at `evidence/validation.txt`.
+- Updated tracker/final evidence status from review-ready to done after fresh validation.
 
 ## Propagation
 
-No-propagation: the review produced only local story-review evidence and found no reusable workflow learning.
+No-propagation: corrections are local CONDAMAD evidence/status fixes and do not reveal reusable workflow learning.
 
 ## Residual Risk
 
-Runtime closure still depends on the future implementation pass executing the backend validations and persisting evidence.
+No remaining local implementation risk identified. CI evidence was not inspected.

@@ -7,7 +7,7 @@
 - Story key: CS-301-revalidate-replay-snapshot-v1-runtime-closure
 - Source story: `_condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/00-story.md`
 - Capsule path: `_condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure`
-- Tracker status: `ready-to-review`
+- Tracker status: `done`
 
 ## Preflight
 
@@ -76,7 +76,7 @@ uses snapshots produced by application runtime code, and rejects fabricated-only
 |---|---|---|---|
 | `condamad_prepare.py ... --story-key CS-301-revalidate-replay-snapshot-v1-runtime-closure` | repo root, venv active | PASS | Required generated files repaired. |
 | `condamad_validate.py _condamad\stories\CS-301-revalidate-replay-snapshot-v1-runtime-closure` | repo root, venv active | PASS | Capsule structure valid. |
-| `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_execution_audit.py tests\integration\test_replay_snapshot_v1_db_redaction.py tests\api\admin\test_replay_snapshot_v1_api.py tests\architecture\test_replay_snapshot_v1_execution_boundary.py tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py --tb=short` | `backend` | PASS | 21 passed, 1 deselected. |
+| `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_execution_audit.py tests\integration\test_replay_snapshot_v1_db_redaction.py tests\api\admin\test_replay_snapshot_v1_api.py tests\architecture\test_replay_snapshot_v1_execution_boundary.py tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py --tb=short --long` | `backend` | PASS | Fresh review run: 22 passed. |
 | `ruff check .` | `backend` | PASS | All checks passed. |
 | `python -B -m pytest -q --tb=short` | `backend` | PASS | 3422 passed, 1 skipped, 1216 deselected. |
 | Runtime `app.openapi()` and `app.routes` replay assertions | `backend` | PASS | Only approved `/v1/admin/audit/replay_snapshot_v1/...` paths present. |
