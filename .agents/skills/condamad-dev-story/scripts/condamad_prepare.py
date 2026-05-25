@@ -82,9 +82,7 @@ def story_status_has_id(root: Path, story_id: str) -> bool:
     status_path = root / "_condamad/stories/story-status.md"
     if not status_path.is_file():
         return False
-    row_re = re.compile(
-        STATUS_ROW_RE_TEMPLATE.format(story_id=re.escape(story_id)), re.I | re.M
-    )
+    row_re = re.compile(STATUS_ROW_RE_TEMPLATE.format(story_id=re.escape(story_id)), re.I | re.M)
     return bool(row_re.search(status_path.read_text(encoding="utf-8", errors="replace")))
 
 
@@ -170,12 +168,8 @@ def extract_acceptance_criteria(story_text: str) -> list[tuple[str, str]]:
     """
     candidates = collect_acceptance_candidates(story_text)
 
-    for match in re.finditer(
-        r"(?im)^\s*(?:[-*]\s*)?(AC\s*\d+)\s*[:.-]\s*(.+)$", story_text
-    ):
-        candidates.append(
-            f"{match.group(1).replace(' ', '')}: {match.group(2).strip()}"
-        )
+    for match in re.finditer(r"(?im)^\s*(?:[-*]\s*)?(AC\s*\d+)\s*[:.-]\s*(.+)$", story_text):
+        candidates.append(f"{match.group(1).replace(' ', '')}: {match.group(2).strip()}")
 
     existing_labels: set[str] = set()
     seen_text: set[str] = set()
@@ -367,9 +361,7 @@ def render_guardrails() -> str:
 """
 
 
-def render_final_evidence(
-    story_key: str, criteria: list[tuple[str, str]]
-) -> str:
+def render_final_evidence(story_key: str, criteria: list[tuple[str, str]]) -> str:
     """Rend le squelette de preuve finale."""
     ac_rows = "\n".join(
         f"| {label} | not-started | not-run | BLOCKED | "
@@ -600,11 +592,7 @@ def main() -> int:
     args = parser.parse_args()
 
     root = args.root.expanduser().resolve()
-    base = (
-        args.capsules_dir
-        if args.capsules_dir.is_absolute()
-        else root / args.capsules_dir
-    )
+    base = args.capsules_dir if args.capsules_dir.is_absolute() else root / args.capsules_dir
 
     if args.repair_generated_only:
         capsule = resolve_capsule_path(root, args.capsules_dir, args.repair_generated_only)
@@ -617,9 +605,7 @@ def main() -> int:
         templates = build_templates(story_key, criteria, args.with_optional)
         generated = capsule / "generated"
         generated.mkdir(parents=True, exist_ok=True)
-        expected_files = REQUIRED_GENERATED + (
-            OPTIONAL_GENERATED if args.with_optional else []
-        )
+        expected_files = REQUIRED_GENERATED + (OPTIONAL_GENERATED if args.with_optional else [])
         for name in expected_files:
             write_if_missing(generated / name, templates[name], args.overwrite_generated)
         print(f"CONDAMAD capsule repaired: {capsule}")
@@ -638,9 +624,7 @@ def main() -> int:
     story_key = infer_story_key(story_path, story_text, args.story_key)
     cs_ids = detect_cs_ids(story_key, story_path.name, story_text)
     if len(cs_ids) > 1 and not args.story_key and not args.capsule:
-        raise SystemExit(
-            "Multiple CS-xxx identifiers detected. Use --story-key or --capsule."
-        )
+        raise SystemExit("Multiple CS-xxx identifiers detected. Use --story-key or --capsule.")
     if cs_ids and not args.story_key and not args.capsule:
         cs_key = slugify(cs_ids[0])
         if story_key != cs_key:
@@ -690,9 +674,7 @@ def main() -> int:
     criteria = extract_acceptance_criteria(story_text)
     templates = build_templates(story_key, criteria, args.with_optional)
 
-    expected_files = REQUIRED_GENERATED + (
-        OPTIONAL_GENERATED if args.with_optional else []
-    )
+    expected_files = REQUIRED_GENERATED + (OPTIONAL_GENERATED if args.with_optional else [])
     for name in expected_files:
         content = templates[name]
         write_if_missing(generated / name, content, args.overwrite_generated)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Met à jour une ligne story-status.md par identifiant CS-xxx exact."""
+"""Update one CONDAMAD story-status.md row by exact CS-xxx id."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def split_markdown_row(line: str) -> list[str]:
-    """Découpe une ligne de table markdown en préservant les pipes échappés."""
+    """Split a markdown table row while preserving escaped pipes."""
     cells: list[str] = []
     current: list[str] = []
     content = line.strip().strip("|")
@@ -32,7 +32,7 @@ def split_markdown_row(line: str) -> list[str]:
 
 
 def replace_row(path: Path, story_id: str, new_row: str) -> tuple[str, str]:
-    """Remplace exactement une ligne markdown pour story_id."""
+    """Replace exactly one markdown table row for story_id."""
     text = path.read_text(encoding="utf-8")
     row_re = re.compile(rf"^\|\s*{re.escape(story_id)}\s*\|.*$", re.I | re.M)
     matches = list(row_re.finditer(text))
@@ -49,9 +49,7 @@ def replace_row(path: Path, story_id: str, new_row: str) -> tuple[str, str]:
         )
     cells = split_markdown_row(normalized)
     if not cells or cells[0].upper() != story_id:
-        raise SystemExit(
-            f"New row must keep {story_id} as the first markdown table cell."
-        )
+        raise SystemExit(f"New row must keep {story_id} as the first markdown table cell.")
     before_cells = split_markdown_row(before)
     if len(cells) != len(before_cells):
         raise SystemExit(
@@ -63,7 +61,7 @@ def replace_row(path: Path, story_id: str, new_row: str) -> tuple[str, str]:
 
 
 def main() -> int:
-    """Point d'entrée CLI."""
+    """CLI entry point."""
     parser = argparse.ArgumentParser(description="Update one CONDAMAD story status row.")
     parser.add_argument("story_id", help="Exact story id, for example CS-246.")
     parser.add_argument("new_row", help="Complete replacement markdown table row.")

@@ -1,6 +1,5 @@
 ---
 name: condamad-review-fix-story
-version: 1
 description: "Orchestrate a CONDAMAD story drafting review loop: run condamad-story-draft-review as an editorial story-contract reviewer, detect every drafting issue, fix story artifacts, validate, then repeat until no story-contract issue remains. Use when the user asks to review and correct a CONDAMAD story draft or run an automated Review to Fix to Review cycle for story readiness. Invoke condamad-feedback-loop before closure when review findings, user corrections, failed validations, regressions, or repeated execution mistakes reveal reusable learning that should update evidence, tests, guardrails, AGENTS.md, or an owning skill."
 ---
 
@@ -290,7 +289,7 @@ When a fresh review has no issues:
 6. Confirm audit-source closure status is closed, intentionally phased with
    remaining map, blocked by an explicit decision, or non-domain. Do not close a
    full-closure story with hidden residual in-domain work.
-Do not commit or push unless the user explicitly asks for repository publishing.
+Do not commit or push. Repository publication is owned by the orchestrator.
 
 ## Final response
 
@@ -301,5 +300,5 @@ Respond in French. Include:
 - issues fixed, summarized by category;
 - files changed;
 - validations run and result;
-- publish result when the user explicitly requested commit/push;
+- repository publication status only when the orchestrator reports it;
 - remaining risks, or `Aucun risque restant identifie`.

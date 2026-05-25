@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Produit un résumé compact d'une capsule CONDAMAD.
+"""Print a compact CONDAMAD capsule summary.
 
-Le résumé reste volontairement borné pour charger le contexte utile sans
-imprimer tous les fichiers générés.
+The summary is intentionally bounded so agents can load the story execution
+context without printing every generated file.
 """
 
 from __future__ import annotations
@@ -24,14 +24,14 @@ SUMMARY_INPUTS = [
 
 
 def read_text(path: Path) -> str:
-    """Lit le texte en tolérant les caractères invalides."""
+    """Read text with replacement so summaries never fail on encoding noise."""
     if not path.is_file():
         return ""
     return path.read_text(encoding="utf-8", errors="replace")
 
 
 def section_lines(text: str, names: tuple[str, ...], limit: int = 18) -> list[str]:
-    """Extrait quelques lignes depuis des sections markdown nommées."""
+    """Extract a few lines from named markdown sections."""
     wanted = tuple(name.casefold() for name in names)
     lines: list[str] = []
     in_section = False
@@ -50,7 +50,7 @@ def section_lines(text: str, names: tuple[str, ...], limit: int = 18) -> list[st
 
 
 def table_rows(text: str, headers: tuple[str, ...], limit: int = 12) -> list[str]:
-    """Extrait une table dont l'en-tête contient les libellés demandés."""
+    """Extract table rows whose header contains all requested labels."""
     result: list[str] = []
     capture = False
     for line in text.splitlines():
@@ -71,7 +71,7 @@ def table_rows(text: str, headers: tuple[str, ...], limit: int = 12) -> list[str
 
 
 def bullets(text: str, limit: int = 12) -> list[str]:
-    """Retourne des lignes de liste compactes."""
+    """Return compact bullet-like lines."""
     result: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
@@ -83,7 +83,7 @@ def bullets(text: str, limit: int = 12) -> list[str]:
 
 
 def append_block(output: list[str], title: str, lines: list[str]) -> None:
-    """Ajoute un bloc titré quand le contenu existe."""
+    """Append a titled block if content exists."""
     if not lines:
         return
     output.append(f"## {title}")
@@ -92,7 +92,7 @@ def append_block(output: list[str], title: str, lines: list[str]) -> None:
 
 
 def build_summary(capsule: Path) -> list[str]:
-    """Construit un résumé borné pour une capsule."""
+    """Build a bounded summary for one capsule."""
     generated = capsule / "generated"
     story = read_text(capsule / "00-story.md")
     traceability = read_text(generated / "03-acceptance-traceability.md")
@@ -111,36 +111,23 @@ def build_summary(capsule: Path) -> list[str]:
     append_block(
         output,
         "Story Scope",
-        section_lines(story, ("goal", "scope", "non-goal", "acceptance"), 20)
-        or bullets(story, 10),
+        section_lines(story, ("goal", "scope", "non-goal", "acceptance"), 20) or bullets(story, 10),
     )
-    append_block(
-        output,
-        "Acceptance Criteria",
-        table_rows(traceability, ("AC", "Requirement"), 18),
-    )
+    append_block(output, "Acceptance Criteria", table_rows(traceability, ("AC", "Requirement"), 18))
     append_block(
         output,
         "Target Paths",
-        section_lines(
-            target_files,
-            ("must inspect", "likely modified", "forbidden"),
-            18,
-        ),
+        section_lines(target_files, ("must inspect", "likely modified", "forbidden"), 18),
     )
     append_block(
         output,
         "Validation",
         section_lines(
-            validation,
-            ("targeted", "early guard", "architecture", "lint", "full regression"),
-            22,
+            validation, ("targeted", "early guard", "architecture", "lint", "full regression"), 22
         ),
     )
     append_block(
-        output,
-        "Guardrails",
-        section_lines(guardrails, ("forbidden", "required", "reviewer"), 22),
+        output, "Guardrails", section_lines(guardrails, ("forbidden", "required", "reviewer"), 22)
     )
     append_block(
         output,
@@ -154,10 +141,8 @@ def build_summary(capsule: Path) -> list[str]:
 
 
 def main() -> int:
-    """Point d'entrée CLI."""
-    parser = argparse.ArgumentParser(
-        description="Print compact CONDAMAD capsule summary."
-    )
+    """CLI entry point."""
+    parser = argparse.ArgumentParser(description="Print compact CONDAMAD capsule summary.")
     parser.add_argument("capsule", type=Path, help="Path to _condamad/stories/<story-key>.")
     args = parser.parse_args()
 

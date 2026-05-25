@@ -145,8 +145,8 @@ Workspace safety:
 - if `.git` is absent, record `not a git repository` once and skip git commands;
 - record dirty files in `generated/09-dev-log.md` or final evidence;
 - never overwrite unrelated user changes;
-- never run destructive git commands, amend, squash, reset, rebase, or
-  force-push unless explicitly requested;
+- never run destructive git commands, amend, squash, reset, rebase, force-push,
+  commit, or push; repository publication is owned by the orchestrator;
 - delete files only when justified by the story/plan.
 
 Command hygiene:

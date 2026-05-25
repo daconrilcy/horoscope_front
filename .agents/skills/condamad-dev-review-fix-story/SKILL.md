@@ -1,13 +1,11 @@
 ---
 name: condamad-dev-review-fix-story
-version: 1
 description: >
   Orchestrate an efficient end-to-end CONDAMAD story workflow: implement exactly
   one story with condamad-dev-story, run independent read-only subagent review
   layers when Codex subagents are available and the current user request
   explicitly authorizes delegation, fix accepted findings, re-review until clean,
-  and close the story
-  without automatic commit or push unless the user explicitly asks for it. Use
+  and close the story without committing or pushing. Use
   when the user asks to develop a story with independent review, run dev then
   review/fix, finish a CONDAMAD story end-to-end, or use dedicated subagents for
   story review after implementation. During closure, invoke
@@ -44,8 +42,8 @@ orchestration loop:
    Codex session.
 
 This skill composes existing CONDAMAD skills. Do not duplicate or weaken their
-rules. The only wrapper-specific override is that `condamad-review-fix-story`
-must not commit or push unless the current user request explicitly asks for it.
+rules. The only wrapper-specific override is that repository publication is
+owned by the orchestrator: this skill must not commit or push.
 Apply `../condamad-dev-story/references/condamad-principles.md` throughout the
 orchestration so SOLID, DRY, KISS, and YAGNI remain mandatory across
 implementation, review, fixes, validation, and closure evidence.
@@ -73,7 +71,7 @@ Apply instructions in this order:
 3. Repository `AGENTS.md` files for touched paths.
 4. Target story acceptance criteria and explicit non-goals.
 5. CONDAMAD capsule evidence.
-6. This wrapper's explicit no-auto-commit/no-auto-push rule.
+6. This wrapper's explicit no-commit/no-push rule.
 7. `condamad-dev-story`, `condamad-code-review`, and
    `condamad-review-fix-story`.
 8. `condamad-frontend-dev` for frontend implementation, frontend review fixes,
@@ -345,11 +343,10 @@ static guard results, registry updates needed, and remaining risks.
 Use `condamad-review-fix-story` for the closure loop, with this mandatory
 wrapper override:
 
-- do not commit or push unless the current user request explicitly asks for
-  commit and push.
-- if `condamad-review-fix-story` says to commit or push as part of closure,
-  stop before that step, report the uncommitted clean state, and wait for an
-  explicit commit/push request.
+- do not commit or push.
+- if another instruction says to commit or push as part of closure, stop before
+  that step and report the clean state; repository publication is owned by the
+  orchestrator.
 
 Repeat review, fix, and validation until a fresh review reaches `CLEAN` or
 `ACCEPTABLE_WITH_LIMITATIONS` with all required validation evidence present. Do
@@ -390,7 +387,7 @@ Before final response:
    - `done` only when the fresh review is clean or acceptable with complete
      required validation;
    - `ready-to-review` when findings remain or validation is incomplete.
-6. Commit and push only when explicitly requested by the user.
+6. Do not commit or push; repository publication is owned by the orchestrator.
 
 ## Final response
 
@@ -403,5 +400,5 @@ Respond in French. Include:
 - frontend subagent usage and evidence when frontend fixes were involved;
 - files changed;
 - validations run and result;
-- commit and push result only when requested;
+- repository publication status only when the orchestrator reports it;
 - remaining risks, or `Aucun risque restant identifie`.
