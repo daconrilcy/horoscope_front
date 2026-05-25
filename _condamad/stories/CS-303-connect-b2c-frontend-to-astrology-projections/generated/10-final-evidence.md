@@ -2,7 +2,7 @@
 
 ## Story status
 
-- Validation outcome: done-with-full-suite-limitations
+- Validation outcome: done-with-browser-startup-limitations
 - Ready for review: clean implementation review completed
 - Story key: `CS-303-connect-b2c-frontend-to-astrology-projections`
 - Source story: `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/00-story.md`
@@ -44,7 +44,7 @@
 | AC9 | Existing app-owned disclaimers remain source of rendered legal copy | disclaimer scan; existing disclaimer tests | PASS |
 | AC10 | No forbidden internal frontend exposure in touched app paths | forbidden-term `rg` scans | PASS |
 | AC11 | Backend route contract referenced | `app.openapi()`, `app.routes`, backend projection tests | PASS |
-| AC12 | Frontend validation | targeted PASS; full suite has unrelated failures | PASS_WITH_LIMITATIONS |
+| AC12 | Frontend validation | targeted PASS; CS-305 full suite PASS addendum | PASS |
 | AC13 | Evidence artifacts persisted | `evidence/*`, generated trace/final evidence | PASS |
 
 ## Files changed
@@ -86,7 +86,7 @@
 | `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation` | `frontend` | PASS | Fresh review pass; 33 tests passed. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi` | `frontend` | PASS | Fresh review pass; 91 tests passed. |
 | `.\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.lint.json; .\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.node.json` | `frontend` | PASS | Fresh review typecheck without lockfile write. |
-| `node .\scripts\run-vite-logged.mjs vitest vitest run` | `frontend` | FAIL_WITH_LIMITATIONS | 19 failures in unrelated localization/consultation suites; CS-303 targeted suites passed. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run` | `frontend` | PASS via CS-305 | `_condamad/stories/CS-305-stabilize-frontend-full-vitest-suite-after-projection-wiring/evidence/full-vitest-after.txt`: 116 files, 1271 passed, 8 skipped. |
 | `python -B -m pytest backend\tests\api\test_projection_openapi.py backend\tests\api\test_projection_endpoint.py backend\tests\api\test_projection_authorization.py -q --tb=short` | repo root, venv active | PASS | 8 backend API tests passed. |
 | `python -B -c app.openapi/app.routes contract check` | repo root then `backend`, venv active | PASS | Runtime route and OpenAPI contract confirmed. |
 | targeted `rg` guard scans | repo root | PASS | Direct HTTP, inline style, forbidden internals, disclaimer ownership, `any`. |
@@ -97,7 +97,7 @@
 
 - `pnpm test:e2e`: NOT_RUN; story is component/API wiring and targeted Vitest coverage plus local page tests covered the flow. Risk: browser-only layout issues could remain.
 - Fresh `pnpm` script reruns: NOT_RUN after concurrent attempts caused Windows EPERM lockfile rename errors. Equivalent Vitest and TypeScript commands were run directly from `node_modules`.
-- Local app startup: NOT_RUN; no server kept running because validation focused on tested `/natal` integration and full suite already exercised rendering. Risk: manual visual QA still useful.
+- Local app startup: NOT_RUN; no server kept running because validation focused on tested `/natal` integration and the full suite now exercises rendering through CS-305. Risk: manual visual QA still useful.
 
 ## DRY / No Legacy evidence
 
@@ -123,8 +123,14 @@
 
 ## Remaining risks
 
-- Full frontend suite is not green due unrelated localization/consultation failures. CS-303 targeted and `/natal` suites are green.
 - No browser screenshot/manual startup was performed.
+
+## CS-305 validation closure addendum
+
+- CS-305 stabilized the full frontend Vitest suite after CS-303 projection wiring.
+- Full-suite limitation status: closed.
+- Evidence: `_condamad/stories/CS-305-stabilize-frontend-full-vitest-suite-after-projection-wiring/generated/10-final-evidence.md`.
+- Remaining CS-303 limitation: browser/manual startup for `/natal` projection rendering remains not run.
 
 ## Suggested reviewer focus
 

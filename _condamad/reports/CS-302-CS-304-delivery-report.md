@@ -21,10 +21,10 @@ CS-302 through CS-304 close the projection delivery chain from backend runtime p
 | Story | Delivery status | Basis |
 |---|---|---|
 | CS-302 | Delivered | Final evidence records `Validation outcome: pass`, review verdict `CLEAN`, full backend pytest PASS, and all AC1-AC11 PASS. |
-| CS-303 | Partially delivered | Implementation review is `CLEAN` and targeted validation passed, but full frontend `vitest run` failed with 19 unrelated failures and local browser startup was not run. |
+| CS-303 | Delivered with browser/manual QA limitation | Implementation review is `CLEAN`, targeted validation passed, and CS-305 proves the full frontend `vitest run` now passes; local browser startup was not run. |
 | CS-304 | Delivered | Final evidence records `Validation outcome: PASS`, review verdict `CLEAN`, targeted admin API and architecture tests PASS, and all AC1-AC6 PASS. |
 
-Initiative status: `Partially delivered` because CS-303 has documented validation limitations.
+Initiative status: `Delivered with browser/manual QA limitation` because CS-305 removed the CS-303 full frontend Vitest limitation, while local browser startup remains unproved.
 
 ## 2. Initial context and trigger
 
@@ -56,7 +56,7 @@ Initiative status: `Partially delivered` because CS-303 has documented validatio
 | CS-303 | AC1: central API client sends projection requests. | CS-303 story objective | `frontend/src/api/astrologyProjections.ts`; `frontend/src/api/index.ts` | `pnpm test -- natalChartApi` PASS; backend API checks PASS | Delivered |
 | CS-303 | AC2-AC8: projection content, loading, empty, error, entitlement and degraded states render on `/natal`. | CS-303 acceptance criteria | `NatalInterpretation.tsx`; `NatalInterpretationContent.tsx`; `NatalInterpretation.css` | Targeted Vitest suites PASS in `generated/10-final-evidence.md` and `generated/11-code-review.md` | Delivered |
 | CS-303 | AC9-AC11: app-owned disclaimers, hidden sensitive internals, backend contract reference. | CS-303 acceptance criteria | Existing `natalChartTranslations`; wrapper uses public response fields; backend contract references | `rg` guard scans PASS; `app.openapi()`/`app.routes` PASS; backend pytest PASS | Delivered |
-| CS-303 | AC12: frontend validation passes. | CS-303 acceptance criteria | Targeted frontend and typecheck validations | Targeted PASS, but full `node .\scripts\run-vite-logged.mjs vitest vitest run` FAIL_WITH_LIMITATIONS with 19 unrelated failures | Partially delivered |
+| CS-303 | AC12: frontend validation passes. | CS-303 acceptance criteria | Targeted frontend and typecheck validations; CS-305 full-suite stabilization | Targeted PASS and CS-305 full `node .\scripts\run-vite-logged.mjs vitest vitest run` PASS: 116 files, 1271 passed, 8 skipped | Delivered |
 | CS-303 | AC13: evidence artifacts persisted. | CS-303 acceptance criteria | CS-303 `evidence/*` and generated capsule files | `condamad_validate.py` PASS | Delivered |
 | CS-304 | AC1: admin flows fully described. | CS-304 story objective | `docs/architecture/admin-audit-replay-flows.md` | `evidence/doc-contract-check.txt`; `doc-before.txt`; `doc-after.txt` | Delivered |
 | CS-304 | AC2-AC3: audit events named and forbidden sensitive fields excluded. | CS-304 acceptance criteria | Audit event mapping and masked-field declarations in `docs/architecture/admin-audit-replay-flows.md` | `evidence/validation.txt`; `evidence/sensitive-field-scan.txt` PASS | Delivered |
@@ -77,7 +77,8 @@ Initiative status: `Partially delivered` because CS-303 has documented validatio
 ### Test evidence
 
 - `_condamad/stories/CS-302-test-astrology-projections-endpoint-real-conditions/generated/11-code-review.md`: CS-302 review verdict `CLEAN`; full backend pytest recorded as 3432 passed, 1 skipped, 1216 deselected after review fix.
-- `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/11-code-review.md`: CS-303 review verdict `CLEAN`; targeted frontend/backend checks passed; full frontend suite failed with documented unrelated failures.
+- `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/11-code-review.md`: CS-303 review verdict `CLEAN`; targeted frontend/backend checks passed.
+- `_condamad/stories/CS-305-stabilize-frontend-full-vitest-suite-after-projection-wiring/generated/10-final-evidence.md`: full frontend suite limitation closed; `node .\scripts\run-vite-logged.mjs vitest vitest run` PASS with 116 files, 1271 passed and 8 skipped.
 - `_condamad/stories/CS-304-design-admin-audit-and-replay-flows/generated/11-code-review.md`: CS-304 review verdict `CLEAN`; targeted admin API, architecture, contract scans, story validation and Ruff checks passed.
 
 ### Documentation evidence
@@ -100,7 +101,7 @@ Initiative status: `Partially delivered` because CS-303 has documented validatio
 | CS-302 exact `app.routes`/`app.openapi()` check | targeted | PASS | CS-302 final evidence and code review | Canonical route present; exact forbidden paths absent. |
 | CS-303 targeted Vitest suites and typecheck | targeted | PASS | `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/11-code-review.md` | `natalChartApi`, `natalInterpretation`, architecture/page suites and TypeScript checks passed. |
 | CS-303 backend projection contract checks | targeted | PASS | CS-303 final evidence and review | Backend API pytest and runtime route/OpenAPI checks passed after venv activation. |
-| CS-303 full frontend Vitest suite | full suite | FAIL | `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/11-code-review.md` | 19 unrelated failures in dashboard, daily horoscope, shortcuts and consultation localization/flow suites. |
+| CS-303 full frontend Vitest suite | full suite | PASS | `_condamad/stories/CS-305-stabilize-frontend-full-vitest-suite-after-projection-wiring/generated/10-final-evidence.md` | CS-305 stabilized dashboard, daily horoscope, shortcuts and consultation localization/flow suites; 116 files passed. |
 | CS-303 browser/manual startup | manual | NOT RUN | `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/10-final-evidence.md` | Local app startup was not run; visual QA risk remains. |
 | CS-304 targeted admin API tests | targeted | PASS | `_condamad/stories/CS-304-design-admin-audit-and-replay-flows/generated/10-final-evidence.md` | `test_rejected_answer_review_workflow.py` and `test_replay_snapshot_v1_api.py` passed. |
 | CS-304 replay public exposure architecture test | targeted | PASS | CS-304 final evidence and review | 3 architecture tests passed. |
@@ -115,35 +116,32 @@ Initiative status: `Partially delivered` because CS-303 has documented validatio
 
 ### Known limits
 
-- CS-303 full frontend suite is not green; evidence classifies failures as unrelated to CS-303, but the report cannot mark the full suite as PASS.
 - CS-303 local browser startup/manual visual QA was not run; rendering is proven by component tests, not by a live browser session.
 - CS-304 did not run the full backend pytest suite; targeted admin API and architecture tests passed and runtime code was unchanged.
 
 ### Assumptions
 
 - Report-time worktree cleanliness means the implementation artifacts are already incorporated into the current repository state; exact commit range is not evidenced.
-- CS-303 targeted validation is sufficient to prove the story-specific behavior, but not sufficient to remove the broader frontend regression risk.
+- CS-305 full-suite validation is sufficient to remove the CS-303 full frontend Vitest limitation, but not the browser/manual QA limitation.
 
 ## 9. Residual risks
 
-- CS-303 broad frontend regression risk remains until the unrelated full-suite failures are fixed or formally waived; impact: future changes may be blocked by non-story failures.
 - CS-303 browser-only layout or interaction defects may remain because no local app startup or screenshot/manual browser QA is recorded.
 - CS-304 future UI implementation remains blocked until admin AuthN/AuthZ, audit-log read instrumentation and redaction gates are proved; evidence: CS-304 final evidence and review residual risk.
 
 ## 10. Evidence gaps
 
 - Exact commit range for the CS-302 to CS-304 delivery is not evidenced; only current branch `main`, HEAD `432ca81d`, and clean worktree are recorded.
-- CS-303 full frontend failures are classified as unrelated in story evidence, but this report does not contain the failing test names beyond the review summary categories.
+- CS-303 full frontend failures are closed by CS-305, whose failure ledger contains the failing test groups and dispositions.
 - No report-time rerun of lint/tests was executed for this report; validation status relies on story-time evidence and current clean worktree.
 
 ## 11. Recommended next actions
 
-1. Fix or formally classify the unrelated full frontend Vitest failures recorded by CS-303, then rerun `node .\scripts\run-vite-logged.mjs vitest vitest run`.
-2. Run a browser/manual QA pass for `/natal` projection rendering to close the CS-303 visual-startup gap.
-3. Before implementing any CS-304 admin UI, require proof of internal admin AuthN/AuthZ, audit-log read instrumentation and redaction gates.
+1. Run a browser/manual QA pass for `/natal` projection rendering to close the CS-303 visual-startup gap.
+2. Before implementing any CS-304 admin UI, require proof of internal admin AuthN/AuthZ, audit-log read instrumentation and redaction gates.
 
 ## 12. Final delivery status
 
-`Partially delivered`
+`Delivered with browser/manual QA limitation`
 
-CS-302 and CS-304 are delivered with PASS/CLEAN evidence. CS-303 has CLEAN implementation review and passing targeted validation for the projection API, rendering states, backend contract and guard scans, but the full frontend suite failed with documented unrelated failures and browser startup was not run. Under the delivery-report workflow, that unresolved validation limitation prevents marking the whole CS-302 to CS-304 range as fully delivered.
+CS-302 and CS-304 are delivered with PASS/CLEAN evidence. CS-303 has CLEAN implementation review and passing targeted validation for the projection API, rendering states, backend contract and guard scans. CS-305 closes the previously documented full frontend Vitest limitation with a passing logged full suite. The remaining limitation is local browser/manual startup for `/natal` projection rendering.

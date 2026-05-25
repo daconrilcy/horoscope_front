@@ -1,3 +1,4 @@
+// Centralise les libelles traduits du parcours de consultations.
 import type { AstrologyLang } from "./astrology"
 import type { AppLocale } from "./types"
 
@@ -8,6 +9,11 @@ const CONSULTATIONS_I18N: Record<string, Partial<Record<AstrologyLang, string>>>
     fr: "Retour au tableau de bord",
     en: "Back to dashboard",
     es: "Volver al tablero de mando",
+  },
+  back_to_overview: {
+    fr: "Retour à l'aperçu",
+    en: "Back to overview",
+    es: "Volver al resumen",
   },
   // ... (rest of the file remains same, but I must provide full content)
   loading_catalogue: {

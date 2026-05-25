@@ -1,3 +1,4 @@
+// Verifie les raccourcis du tableau de bord et leur localisation.
 import type { ReactNode } from "react"
 import { MemoryRouter } from "react-router-dom"
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest"
@@ -144,6 +145,7 @@ describe("ShortcutsSection", () => {
 
   it("localise les raccourcis du dashboard en anglais", () => {
     localStorage.setItem("lang", "en")
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" })
     render(<ShortcutsSection />, { wrapper: RouterWrapper })
 
     expect(screen.getByRole("heading", { name: "Activities" })).toBeInTheDocument()

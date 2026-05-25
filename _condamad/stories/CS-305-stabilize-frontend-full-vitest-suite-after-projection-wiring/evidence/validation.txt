@@ -1,0 +1,2385 @@
+CS-305 validation log - 2026-05-25
+
+> pnpm lint
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Already up to date
+Progress: resolved 293, reused 243, downloaded 0, added 0, done
+[EPERM] EPERM: operation not permitted, rename 'C:\dev\horoscope_front\frontend\node_modules\.pnpm\lock.yaml.1094923416' -> 'C:\dev\horoscope_front\frontend\node_modules\.pnpm\lock.yaml'
+
+
+
+[ERROR] Command failed with exit code 4294963248: "C:\Program Files\nodejs\node.exe" "C:\Users\cyril\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+
+pnpm: Command failed with exit code 4294963248: "C:\Program Files\nodejs\node.exe" "C:\Users\cyril\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+    at getFinalError (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:28550:14)
+    at makeError (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:30857:21)
+    at getSyncResult (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32701:10)
+    at spawnSubprocessSync (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32661:14)
+    at execaCoreSync (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32591:23)
+    at callBoundExeca (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35119:23)
+    at boundExeca (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35096:49)
+    at sync (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35255:10)
+    at runPnpmCli (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:208877:5)
+    at runDepsStatusCheck (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:210581:7)
+
+> pnpm lint (retry)
+$ tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run natalChartApi
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 19ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  23:33:47
+   Duration  1.29s (transform 217ms, setup 255ms, import 229ms, tests 19ms, environment 641ms)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 31ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 857ms
+
+ Test Files  2 passed (2)
+      Tests  33 passed (33)
+   Start at  23:33:49
+   Duration  2.56s (transform 527ms, setup 550ms, import 791ms, tests 888ms, environment 1.33s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 157ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 19ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 2514ms
+
+ Test Files  3 passed (3)
+      Tests  91 passed (91)
+   Start at  23:33:52
+   Duration  4.49s (transform 999ms, setup 816ms, import 1.29s, tests 2.69s, environment 2.00s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/design-system-guards.test.ts (39 tests) 1013ms
+ ✓ src/tests/AdminSettingsPage.test.tsx (3 tests) 897ms
+     ✓ revokes blob urls after export download  631ms
+ ✓ src/tests/AdminLogsPage.test.tsx (1 test) 1203ms
+     ✓ uses audit logs with filters, detail modal and csv export  1202ms
+ ✓ src/tests/StarfieldBackground.test.tsx (38 tests) 2093ms
+       ✓ shows/hides starfield when theme is toggled  361ms
+       ✓ generates same star positions with same seed  319ms
+ ✓ src/tests/PersonasAdmin.test.tsx (2 tests) 1112ms
+     ✓ renders persona list, detail and deactivation modal  645ms
+     ✓ shows an error when persona update fails  466ms
+ ✓ src/tests/NatalExpertPanel.test.tsx (4 tests) 381ms
+ ✓ src/tests/chat/ChatComponents.test.tsx (55 tests) 1450ms
+ ✓ src/tests/AdminSamplePayloadsAdmin.test.tsx (2 tests) 432ms
+ ✓ src/tests/SignUpForm.test.tsx (13 tests) 1563ms
+ ✓ src/tests/SignInForm.test.tsx (14 tests) 1598ms
+ ✓ src/tests/AdminContentPage.test.tsx (1 test) 2262ms
+     ✓ renders sections and updates content, feature flags and rules  2261ms
+ ✓ src/tests/layout/Header.test.tsx (13 tests) 2157ms
+     ✓ persiste l'allemand quand il est fourni par le référentiel API  357ms
+ ✓ src/tests/ChatPage.test.tsx (22 tests) 1937ms
+       ✓ renders empty state when no conversations exist  456ms
+       ✓ sends message and shows optimistic update  371ms
+ ✓ src/tests/LandingPage.test.tsx (10 tests) 2638ms
+     ✓ rend la composition landing et les CTA analytics sans boucle runtime  658ms
+     ✓ confine le focus dans le menu mobile, bloque le scroll et restaure le bouton  533ms
+     ✓ envoie les evenements analytics quand les CTA hero sont cliques  397ms
+ ✓ src/tests/layout/Sidebar.test.tsx (3 tests) 424ms
+ ✓ src/tests/AppShell.test.tsx (3 tests) 2037ms
+     ✓ applique le cycle complet hidden -> expanded -> icon-only -> hidden  1054ms
+     ✓ ouvre et ferme le menu utilisateur puis permet la deconnexion  502ms
+     ✓ bascule le theme dark/light depuis le header  476ms
+ ✓ src/tests/SettingsPage.test.tsx (5 tests) 2187ms
+       ✓ affiche les onglets Compte, Abonnement, Usage  912ms
+       ✓ navigue entre les onglets  834ms
+ ✓ src/tests/AdminPromptsRouting.test.tsx (4 tests) 1516ms
+     ✓ redirige /admin/prompts vers le catalogue canonique  1008ms
+ ✓ src/tests/SubscriptionGuidePage.test.tsx (4 tests) 2330ms
+     ✓ affiche les 3 cartes de plans et identifie le plan actuel avec priorité  1858ms
+ ✓ src/components/ui/Select/Select.test.tsx (7 tests) 398ms
+ ✓ src/tests/BillingSuccessPage.test.tsx (9 tests) 410ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 3662ms
+     ✓ appelle l'API de suppression et rafraîchit la liste  566ms
+     ✓ déclenche le téléchargement PDF  573ms
+     ✓ déclenche l'aperçu PDF  363ms
+ ✓ src/components/ui/Button/Button.test.tsx (16 tests) 395ms
+ ✓ src/tests/TimezoneSelect.test.tsx (16 tests) 4942ms
+     ✓ navigates with keyboard arrows and highlights options  2191ms
+     ✓ closes dropdown on click outside  302ms
+ ✓ src/tests/BottomNavPremium.test.tsx (26 tests) 407ms
+ ✓ src/tests/AdminPromptsPage.releaseCatalog.integration.test.tsx (1 test) 3169ms
+     ✓ après clic « Ouvrir dans le catalogue », bascule vers /admin/prompts/catalog et conserve l'entrée manifeste sélectionnée  3165ms
+ ✓ src/tests/router.test.tsx (11 tests) 3282ms
+     ✓ redirects unauthenticated user to /login with returnTo  496ms
+     ✓ allows authenticated user to access protected route  1117ms
+     ✓ allows admin user to access /admin routes  447ms
+     ✓ keeps dashboard tab active in BottomNav for both routes  338ms
+     ✓ renders /consultations without missing provider error  379ms
+ ✓ src/tests/App.test.tsx (9 tests) 3331ms
+     ✓ shows landing page at / for unauthenticated user  875ms
+     ✓ shows login form at /login when unauthenticated  366ms
+     ✓ shows privacy policy at /privacy under the public layout  379ms
+     ✓ redirects authenticated user from / to /dashboard  490ms
+     ✓ shows AppShell with sidebar for authenticated user  464ms
+ ❯ src/tests/DashboardPage.test.tsx (11 tests | 1 failed) 3361ms
+     × affiche le résumé de l'horoscope et les raccourcis d'activités 1145ms
+     ✓ priorise daily_synthesis sur le résumé de climat  473ms
+     ✓ navigue vers le détail de l'horoscope quand on clique sur le résumé  570ms
+     ✓ ouvre le détail via la touche espace sur la carte résumé 96ms
+     ✓ n'affiche plus les sections détaillées (Moments clés, Agenda) 129ms
+     ✓ rend le dashboard avec les controles globaux uniquement dans le layout 236ms
+     ✓ gère l'état de chargement du résumé sans masquer les activités 62ms
+     ✓ freeze la navigation vers le détail tant que l'horoscope du jour est en cours de rédaction 199ms
+     ✓ gère l'erreur de prédiction en affichant un message dédié et une relance 233ms
+     ✓ localise les nouveaux libellés dashboard en anglais 113ms
+     ✓ utilise un fallback neutre quand le signe est absent des données de naissance 102ms
+ ✓ src/tests/BillingCancelPage.test.tsx (2 tests) 384ms
+ ✓ src/tests/page-architecture-guards.test.ts (21 tests) 365ms
+ ✓ src/tests/ConsultationReconnection.test.tsx (6 tests) 349ms
+ ✓ src/tests/B2BReconciliationPanel.test.tsx (2 tests) 370ms
+     ✓ loads list, detail and executes actions  336ms
+ ✓ src/components/ui/Form/Form.test.tsx (4 tests) 370ms
+ ✓ src/tests/HelpPage.test.tsx (4 tests) 4413ms
+     ✓ affiche le hero premium et les sections d'aide  2658ms
+     ✓ permet de soumettre un ticket et affiche un message de succès  1473ms
+ ✓ src/tests/AdminPromptsCatalogFlow.test.tsx (3 tests) 5031ms
+     ✓ affiche la lecture en activation composants et artefacts runtime  2062ms
+     ✓ ouvre l édition sur le nœud use case overlay et expose la couche free  1891ms
+     ✓ rend la persona et le delta before/after persona pour une cible premium  1076ms
+ ✓ src/tests/AstrologersPage.test.tsx (28 tests) 4784ms
+       ✓ alternates the first displayed astrologer between visits  793ms
+       ✓ displays complete profile with hero, metrics, specialties and reviews  589ms
+       ✓ routes natal and consultation CTAs to supported pages  334ms
+       ✓ opens the review composer when selecting a rating for the first time  454ms
+       ✓ shows a validation message when the review is shorter than 10 characters  412ms
+ ✓ src/tests/ConsultationsPage.test.tsx (17 tests) 1468ms
+       ✓ renders upgrade CTAs to Basic instead of consultation actions for free users  323ms
+ ✓ src/tests/AdminPage.test.tsx (8 tests) 4900ms
+     ✓ redirects non-admin user (user) from /admin to dashboard  1513ms
+     ✓ allows admin user to access /admin hub  1980ms
+     ✓ displays 10 sections in the sidebar for admin  344ms
+     ✓ renders canonical admin routes without legacy redirects  946ms
+ ✓ src/tests/useEntitlementSnapshot.test.tsx (4 tests) 345ms
+ ✓ src/tests/SidebarContext.test.tsx (2 tests) 354ms
+     ✓ applies the documented state transitions  332ms
+ ✓ src/tests/ThemeProvider.test.tsx (22 tests) 360ms
+ ✓ src/tests/AdminDashboardPage.test.tsx (3 tests) 649ms
+     ✓ re-fetches flux KPIs when filters change  321ms
+ ✓ src/tests/visual-smoke.test.tsx (23 tests) 424ms
+ ✓ src/tests/component-usage-guards.test.ts (4 tests) 358ms
+     ✓ scanne les sources actives contre les symboles, aliases et selecteurs CS-119  305ms
+ ✓ src/tests/DailyHoroscopePage.test.tsx (22 tests) 5900ms
+     ✓ affiche la prediction API, les categories dynamiques et les heures en HH:mm  3702ms
+       ✓ affiche un CTA Basic dans le hero et sur chaque section verrouillée pour utilisateur free (AC3)  330ms
+ ✓ src/tests/SubscriptionSettings.test.tsx (20 tests) 7232ms
+     ✓ appelle useStripeCheckoutSession avec le code canonique pour un utilisateur sans abonnement Stripe  969ms
+     ✓ utilise Checkout Stripe pour un utilisateur free exposé comme plan actif local sans profil Stripe  576ms
+     ✓ affiche un résumé de statut avec plan actif, expérience, renouvellement et prochaine échéance  433ms
+     ✓ n'envoie jamais basic-entry ou premium-unlimited à useStripeCheckoutSession — uniquement les codes canoniques  472ms
+     ✓ repasse par un nouveau Checkout quand l'ancien abonnement Stripe est canceled et qu'aucun plan n'est actif  443ms
+     ✓ utilise le flow d'upgrade immédiat quand l'abonnement actif passe de basic à premium  663ms
+     ✓ affiche un retour visible et bloque la double soumission quand l'upgrade est payé automatiquement  701ms
+     ✓ redirige vers Checkout Stripe hébergé quand un paiement additionnel est requis  654ms
+     ✓ conserve le portail subscription_update pour un downgrade actif premium vers basic  302ms
+     ✓ passe en mode réactivation quand cancel_at_period_end est déjà vrai  433ms
+ ✓ src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx (7 tests) 364ms
+ ✓ src/tests/UserAvatar.test.tsx (5 tests) 379ms
+ ✓ src/tests/AdminSupportPage.test.tsx (1 test) 387ms
+     ✓ renders empty ticket and flagged-content states through API owners  385ms
+ ✓ src/tests/SupportOpsPanel.test.tsx (1 test) 312ms
+     ✓ renders and supports search and rollback  310ms
+ ✓ src/tests/BirthProfilePage.test.tsx (41 tests) 7020ms
+     ✓ shows loading then pre-fills form with existing birth data  337ms
+     ✓ shows the generation button only if birth data exists  606ms
+     ✓ generates natal chart successfully and triggers navigation  385ms
+     ✓ clears generationError when form changes after failed generation  374ms
+     ✓ shows specific error message when generation returns 422 (invalid birth data)  358ms
+ ✓ src/components/ui/LockedSection/LockedSection.test.tsx (6 tests) 288ms
+ ✓ src/tests/AstrologerSelectStep.test.tsx (2 tests) 304ms
+ ✓ src/components/ui/EmptyState/EmptyState.test.tsx (3 tests) 271ms
+ ✓ src/tests/EnterpriseCredentialsPanel.test.tsx (1 test) 326ms
+     ✓ renders panel and supports generate + rotate  325ms
+ ✓ src/components/ui/Modal/Modal.test.tsx (6 tests) 301ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 6157ms
+     ✓ redirects locked free header CTA to subscription instead of requesting a complete reading  408ms
+     ✓ renders success state sections  518ms
+     ✓ renders NatalExpertPanel from latestChart data on the natal page  673ms
+     ✓ affiche les planètes en français (AC1 i18n)  315ms
+ ✓ src/tests/ShortcutCard.test.tsx (21 tests) 810ms
+ ✓ src/tests/AdminAiGenerationsPage.test.tsx (1 test) 287ms
+ ✓ src/tests/AdminEntitlementsPage.test.tsx (2 tests) 117ms
+ ✓ src/tests/AdminUserDetailPage.test.tsx (1 test) 133ms
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 636ms
+ ✓ src/tests/AstroMoodBackground.test.tsx (10 tests) 83ms
+ ✓ src/components/ui/Field/Field.test.tsx (7 tests) 100ms
+ ✓ src/tests/UserMenu.test.tsx (7 tests) 100ms
+ ✓ src/tests/NotFoundPage.test.tsx (1 test) 255ms
+ ✓ src/tests/FaqSection.test.tsx (3 tests) 105ms
+ ✓ src/tests/css-fallback-policy.test.ts (3 tests) 61ms
+ ✓ src/tests/inline-style-policy.test.ts (4 tests) 89ms
+ ✓ src/tests/legacy-style-policy.test.ts (4 tests) 96ms
+ ✓ src/tests/UsageSettings.test.tsx (1 test) 79ms
+ ✓ src/tests/ConsultationMigration.test.tsx (4 tests) 95ms
+ ✓ src/tests/ui-icons.test.tsx (33 tests) 83ms
+ ✓ src/components/ui/Card/Card.test.tsx (6 tests) 62ms
+ ✓ src/components/ui/Skeleton/Skeleton.test.tsx (5 tests) 56ms
+ ❯ src/tests/astrology-i18n.test.ts (71 tests | 1 failed) 64ms
+     ✓ translates aries correctly in FR/EN/ES 3ms
+     ✓ translates taurus correctly in FR/EN/ES 1ms
+     ✓ translates gemini correctly in FR/EN/ES 1ms
+     ✓ translates cancer correctly in FR/EN/ES 0ms
+     ✓ translates leo correctly in FR/EN/ES 0ms
+     ✓ translates virgo correctly in FR/EN/ES 0ms
+     ✓ translates libra correctly in FR/EN/ES 0ms
+     ✓ translates scorpio correctly in FR/EN/ES 0ms
+     ✓ translates sagittarius correctly in FR/EN/ES 1ms
+     ✓ translates capricorn correctly in FR/EN/ES 0ms
+     ✓ translates aquarius correctly in FR/EN/ES 0ms
+     ✓ translates pisces correctly in FR/EN/ES 0ms
+     ✓ handles uppercase codes (case-insensitive) 1ms
+     ✓ returns raw code as fallback for unknown sign 0ms
+     ✓ translates sun correctly in FR/EN/ES 0ms
+     ✓ translates moon correctly in FR/EN/ES 0ms
+     ✓ translates mercury correctly in FR/EN/ES 0ms
+     ✓ translates venus correctly in FR/EN/ES 0ms
+     ✓ translates mars correctly in FR/EN/ES 0ms
+     ✓ translates jupiter correctly in FR/EN/ES 0ms
+     ✓ translates saturn correctly in FR/EN/ES 0ms
+     ✓ translates uranus correctly in FR/EN/ES 0ms
+     ✓ translates neptune correctly in FR/EN/ES 0ms
+     ✓ translates pluto correctly in FR/EN/ES 0ms
+     ✓ handles uppercase codes (case-insensitive) 0ms
+     ✓ returns raw code as fallback for unknown planet 0ms
+     ✓ translates house 1 correctly in FR/EN/ES 0ms
+     ✓ translates house 2 correctly in FR/EN/ES 0ms
+     ✓ translates house 3 correctly in FR/EN/ES 0ms
+     ✓ translates house 4 correctly in FR/EN/ES 0ms
+     ✓ translates house 5 correctly in FR/EN/ES 0ms
+     ✓ translates house 6 correctly in FR/EN/ES 0ms
+     ✓ translates house 7 correctly in FR/EN/ES 0ms
+     ✓ translates house 8 correctly in FR/EN/ES 0ms
+     ✓ translates house 9 correctly in FR/EN/ES 0ms
+     ✓ translates house 10 correctly in FR/EN/ES 0ms
+     ✓ translates house 11 correctly in FR/EN/ES 0ms
+     ✓ translates house 12 correctly in FR/EN/ES 0ms
+     ✓ returns fallback for house 13 in fr 0ms
+     ✓ returns fallback for house 99 in en 0ms
+     ✓ returns fallback for house 14 in es 0ms
+     ✓ returns fallback for house 0 in fr 0ms
+     ✓ translates conjunction correctly in FR/EN/ES 0ms
+     ✓ translates sextile correctly in FR/EN/ES 0ms
+     ✓ translates square correctly in FR/EN/ES 0ms
+     ✓ translates trine correctly in FR/EN/ES 0ms
+     ✓ translates opposition correctly in FR/EN/ES 0ms
+     ✓ translates semisextile correctly in FR/EN/ES 0ms
+     ✓ translates quincunx correctly in FR/EN/ES 0ms
+     ✓ translates semisquare correctly in FR/EN/ES 0ms
+     ✓ translates sesquiquadrate correctly in FR/EN/ES 0ms
+     ✓ handles uppercase codes (case-insensitive) 0ms
+     ✓ returns raw code as fallback for unknown aspect 0ms
+     ✓ returns French when navigator.language is fr-FR 1ms
+     ✓ returns English when navigator.language is en-US 0ms
+     ✓ returns Spanish when navigator.language is es-ES 0ms
+     ✓ returns German when navigator.language is de-DE 0ms
+     ✓ falls back to French for unsupported language 0ms
+     × prefers supported navigator language over cached localStorage lang 8ms
+     ✓ uses cached localStorage lang when navigator.language is unsupported 0ms
+     ✓ ignores invalid localStorage lang and uses navigator 0ms
+     ✓ falls back to French when navigator.language is empty string 0ms
+     ✓ falls back to French when navigator.language is undefined 0ms
+     ✓ falls back to French when navigator is undefined 0ms
+     ✓ returns current language from detectLang 17ms
+     ✓ returns bound translation functions that work without lang parameter 2ms
+     ✓ exposes setLang to change language programmatically 4ms
+     ✓ setLang persists the new language to localStorage 3ms
+     ✓ updates lang when localStorage changes in another tab (storage event) 3ms
+     ✓ ignores storage events for other keys 2ms
+     ✓ cleans up storage event listener on unmount 3ms
+ ✓ src/components/ui/Badge/Badge.test.tsx (6 tests) 56ms
+ ✓ src/tests/AdminPromptsLogicGraph.test.tsx (1 test) 47ms
+ ✓ src/tests/formatDate.test.ts (20 tests) 34ms
+ ✓ src/tests/AdminPermissions.test.tsx (2 tests) 40ms
+ ✓ src/tests/theme-tokens.test.ts (98 tests) 32ms
+ ✓ src/tests/predictionI18n.test.ts (13 tests) 31ms
+ ✓ src/tests/api-architecture.test.ts (5 tests) 33ms
+ ✓ src/tests/consultationStore.test.ts (14 tests) 39ms
+ ✓ src/tests/formatPrice.test.ts (2 tests) 30ms
+ ✓ src/tests/AppBgStyles.test.ts (48 tests) 24ms
+ ✓ src/tests/useDailyPrediction.test.tsx (4 tests) 29ms
+ ✓ src/tests/geocodingApi.test.ts (19 tests) 24ms
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 63ms
+ ✓ src/tests/useAnalytics.test.tsx (1 test) 23ms
+ ✓ src/utils/dailyAstrology.test.ts (1 test) 19ms
+ ✓ src/tests/enterpriseCredentialsApi.test.ts (4 tests) 20ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 38ms
+ ✓ src/tests/b2bReconciliationApi.test.ts (5 tests) 19ms
+ ✓ src/tests/b2bEditorialApi.test.ts (4 tests) 16ms
+ ✓ src/tests/apiClient.test.ts (3 tests) 16ms
+ ✓ src/tests/b2bBillingApi.test.ts (4 tests) 16ms
+ ✓ src/tests/privacyApi.test.ts (5 tests) 14ms
+ ✓ src/tests/b2bAstrologyApi.test.ts (3 tests) 15ms
+ ✓ src/tests/AdminPromptsPage.test.tsx (30 tests | 8 skipped) 12731ms
+     ✓ affiche le catalogue canonique et les badges de source  1865ms
+     ✓ ouvre une ligne du catalogue au clavier et garde un contrat responsive explicite  809ms
+     ✓ structure le détail catalogue : ordre des sections, zone Actions et prompts repliables  850ms
+     ✓ réinitialise les filtres catalogue via le bouton dédié  851ms
+     ✓ passe le sample payload sélectionné dans la runtime preview  868ms
+     ✓ réaligne le sample payload runtime si la sélection n’est plus dans la liste (P2)  889ms
+     ✓ conserve les sample payloads runtime quand la ligne sélectionnée sort de la page catalogue  808ms
+     ✓ affiche un libellé FR et le message serveur en repli quand la runtime preview échoue  735ms
+     ✓ bascule en fallback texte quand le graphe devient trop dense  379ms
+     ✓ classe les sources selon le contrat backend (runtime/fallback/sample)  325ms
+     ✓ affiche des messages de premier rang pour preview partielle, erreur et données d'exemple vides  358ms
+     ✓ annonce les états critiques avec des rôles ARIA adaptés  317ms
+     ✓ affiche une valeur vide quand elle est autorisée sans la marquer redacted  307ms
+     ✓ affiche l'historique release snapshot et le diff  438ms
+     ✓ affiche l'onglet consommation avec granularité, pagination serveur et axe canonique  453ms
+     ✓ réinitialise le drill-down quand la granularité redéfinit le périmètre d'agrégats  499ms
+     ✓ envoie les filtres temporels de consommation au format UTC dans la requete API  454ms
+     ✓ affiche le bandeau de mode, ouvre une confirmation avant execute-sample puis envoie le POST  916ms
+ ✓ src/tests/b2bUsageApi.test.ts (3 tests) 14ms
+ ✓ src/tests/timezones.test.ts (9 tests) 5ms
+ ✓ src/tests/guidanceApi.test.ts (5 tests) 14ms
+ ✓ src/tests/opsPersonaApi.test.ts (4 tests) 13ms
+ ✓ src/tests/adminPromptsApi.test.ts (3 tests) 11ms
+ ✓ src/tests/dailyPredictionApi.test.ts (4 tests) 13ms
+ ✓ src/tests/ui-nav.test.ts (5 tests) 5ms
+ ✓ src/tests/classNames.test.ts (10 tests) 6ms
+ ✓ src/tests/generateUniqueId.test.ts (7 tests) 4ms
+ ✓ src/tests/authToken.test.ts (3 tests) 3ms
+ ✓ src/tests/predictionBands.test.ts (3 tests) 3ms
+ ✓ src/tests/ui-barrel.test.ts (4 tests) 3ms
+ ✓ src/tests/dailySummaryHelper.test.ts (3 tests) 3ms
+ ✓ src/tests/astrologers-validation.test.ts (4 tests) 3ms
+ ✓ src/utils/dailyAdviceCardMapper.test.ts (2 tests) 3ms
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+System.Management.Automation.RemoteException
+ FAIL  src/tests/astrology-i18n.test.ts > detectLang > prefers supported navigator language over cached localStorage lang
+AssertionError: expected 'es' to be 'en' // Object.is equality
+System.Management.Automation.RemoteException
+Expected: "en"
+Received: "es"
+System.Management.Automation.RemoteException
+ ❯ src/tests/astrology-i18n.test.ts:179:26
+    177|     vi.stubGlobal("navigator", { language: "en-US" })
+    178|     localStorage.setItem("lang", "es")
+    179|     expect(detectLang()).toBe("en")
+       |                          ^
+    180|   })
+    181|
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+System.Management.Automation.RemoteException
+ FAIL  src/tests/DashboardPage.test.tsx > DashboardPage Landing > affiche le résumé de l'horoscope et les raccourcis d'activités
+TestingLibraryElementError: Unable to find an element with the text: /Une excellente journée vous attend/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-bg-container"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"app-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-left"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Ouvrir le menu"[39m
+              [33mclass[39m=[32m"app-header-hamburger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-menu"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 5h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 12h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 19h16"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-brand"[39m
+          [36m>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Astrorizon"[39m
+              [33mclass[39m=[32m"app-header-logo"[39m
+              [33msrc[39m=[32m"/src/assets/logo.png"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"app-header-title"[39m
+            [36m>[39m
+              [0mAstrorizon[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Changer le thème"[39m
+              [33mclass[39m=[32m"app-header-theme-toggle"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-moon"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"20"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"20"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-language-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-label[39m=[32m"Choisir la langue"[39m
+                [33mclass[39m=[32m"app-header-language-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-languages"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m5 8 6 6"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 5h12"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M7 2h1"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14 18h6"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"app-header-language-flag"[39m
+                [36m>[39m
+                  [36m<img[39m
+                    [33malt[39m=[32m""[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                    [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                  [36m/>[39m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-haspopup[39m=[32m"menu"[39m
+                [33maria-label[39m=[32m"Menu utilisateur"[39m
+                [33mclass[39m=[32m"user-avatar user-avatar--md"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"user-avatar__initial"[39m
+                [36m>[39m
+                  [0mT[...
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"app-bg-container"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"app-header"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-left"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Ouvrir le menu"[39m
+                [33mclass[39m=[32m"app-header-hamburger"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-menu"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 5h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 12h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 19h16"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-brand"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Astrorizon"[39m
+                [33mclass[39m=[32m"app-header-logo"[39m
+                [33msrc[39m=[32m"/src/assets/logo.png"[39m
+              [36m/>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"app-header-title"[39m
+              [36m>[39m
+                [0mAstrorizon[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Changer le thème"[39m
+                [33mclass[39m=[32m"app-header-theme-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-moon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"20"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-language-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-label[39m=[32m"Choisir la langue"[39m
+                  [33mclass[39m=[32m"app-header-language-toggle"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-languages"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m5 8 6 6"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M2 5h12"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M7 2h1"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M14 18h6"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag"[39m
+                  [36m>[39m
+                    [36m<img[39m
+                      [33malt[39m=[32m""[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                      [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                    [36m/>[39m
+                  [36m</span>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-haspopup[39m=[32m"menu"[39m
+                  [33maria-label[39m=[32m"Menu utilisateur"[39m
+                  [33mclass...
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/tests/DashboardPage.test.tsx:130:11
+    128|     renderDashboard()
+    129|
+    130|     await waitFor(() => {
+       |           ^
+    131|       expect(screen.getByText(/Une excellente journée vous attend/i)).…
+    132|     })
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+System.Management.Automation.RemoteException
+
+ Test Files  2 failed | 114 passed (116)
+      Tests  2 failed | 1269 passed | 8 skipped (1279)
+   Start at  23:34:02
+   Duration  20.01s (transform 59.21s, setup 98.90s, import 100.42s, tests 123.57s, environment 225.31s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run (final retry)
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/design-system-guards.test.ts (39 tests) 1060ms
+ ✓ src/tests/AdminSettingsPage.test.tsx (3 tests) 884ms
+     ✓ revokes blob urls after export download  670ms
+ ✓ src/tests/AdminLogsPage.test.tsx (1 test) 1133ms
+     ✓ uses audit logs with filters, detail modal and csv export  1132ms
+ ✓ src/tests/StarfieldBackground.test.tsx (38 tests) 1990ms
+ ✓ src/tests/PersonasAdmin.test.tsx (2 tests) 1095ms
+     ✓ renders persona list, detail and deactivation modal  601ms
+     ✓ shows an error when persona update fails  493ms
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 175ms
+ ✓ src/tests/SignUpForm.test.tsx (13 tests) 1220ms
+     ✓ renders inputs, submit button, and back-to-signin link  319ms
+ ✓ src/tests/chat/ChatComponents.test.tsx (55 tests) 1324ms
+ ✓ src/tests/SignInForm.test.tsx (14 tests) 1487ms
+ ✓ src/tests/AdminSamplePayloadsAdmin.test.tsx (2 tests) 488ms
+ ✓ src/tests/AdminContentPage.test.tsx (1 test) 2188ms
+     ✓ renders sections and updates content, feature flags and rules  2186ms
+ ✓ src/tests/layout/Header.test.tsx (13 tests) 1901ms
+ ✓ src/tests/LandingPage.test.tsx (10 tests) 2050ms
+     ✓ rend la composition landing et les CTA analytics sans boucle runtime  563ms
+     ✓ confine le focus dans le menu mobile, bloque le scroll et restaure le bouton  359ms
+     ✓ envoie les evenements analytics quand les CTA hero sont cliques  320ms
+ ✓ src/tests/ChatPage.test.tsx (22 tests) 1828ms
+       ✓ renders empty state when no conversations exist  397ms
+ ✓ src/tests/AppShell.test.tsx (3 tests) 1782ms
+     ✓ applique le cycle complet hidden -> expanded -> icon-only -> hidden  955ms
+     ✓ ouvre et ferme le menu utilisateur puis permet la deconnexion  364ms
+     ✓ bascule le theme dark/light depuis le header  462ms
+ ✓ src/tests/layout/Sidebar.test.tsx (3 tests) 445ms
+ ✓ src/tests/visual-smoke.test.tsx (23 tests) 277ms
+ ✓ src/tests/TimezoneSelect.test.tsx (16 tests) 4219ms
+     ✓ navigates with keyboard arrows and highlights options  1809ms
+ ✓ src/tests/AdminPromptsRouting.test.tsx (4 tests) 1475ms
+     ✓ redirige /admin/prompts vers le catalogue canonique  894ms
+ ✓ src/tests/SubscriptionGuidePage.test.tsx (4 tests) 2273ms
+     ✓ affiche les 3 cartes de plans et identifie le plan actuel avec priorité  1830ms
+ ✓ src/tests/BottomNavPremium.test.tsx (26 tests) 356ms
+ ✓ src/tests/BillingSuccessPage.test.tsx (9 tests) 413ms
+ ✓ src/tests/SettingsPage.test.tsx (5 tests) 2304ms
+       ✓ affiche les onglets Compte, Abonnement, Usage  1067ms
+       ✓ navigue entre les onglets  808ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 3351ms
+     ✓ appelle l'API de suppression et rafraîchit la liste  402ms
+     ✓ déclenche le téléchargement PDF  431ms
+     ✓ déclenche l'aperçu PDF  350ms
+ ✓ src/components/ui/Select/Select.test.tsx (7 tests) 378ms
+ ✓ src/tests/App.test.tsx (9 tests) 2659ms
+     ✓ shows landing page at / for unauthenticated user  524ms
+     ✓ shows privacy policy at /privacy under the public layout  398ms
+     ✓ redirects authenticated user from / to /dashboard  420ms
+     ✓ shows AppShell with sidebar for authenticated user  376ms
+ ✓ src/components/ui/Button/Button.test.tsx (16 tests) 379ms
+ ✓ src/tests/AdminPromptsPage.releaseCatalog.integration.test.tsx (1 test) 2887ms
+     ✓ après clic « Ouvrir dans le catalogue », bascule vers /admin/prompts/catalog et conserve l'entrée manifeste sélectionnée  2883ms
+ ❯ src/tests/router.test.tsx (11 tests | 1 failed) 3220ms
+     ✓ redirects unauthenticated user to /login with returnTo  453ms
+     × allows authenticated user to access protected route 1071ms
+     ✓ redirects non-admin user from /admin to / 26ms
+     ✓ allows admin user to access /admin routes  444ms
+     ✓ allows support user to access /support route 107ms
+     ✓ allows enterprise_admin to access /enterprise routes 181ms
+     ✓ renders DashboardPage on /dashboard 80ms
+     ✓ expose un fallback accessible pour le chargement differe d'une route 28ms
+     ✓ keeps dashboard tab active in BottomNav for both routes  440ms
+     ✓ renders /consultations without missing provider error  380ms
+     ✓ déclare les routes astrologers et chat conversation 5ms
+ ❯ src/tests/DashboardPage.test.tsx (11 tests | 1 failed) 3309ms
+     × affiche le résumé de l'horoscope et les raccourcis d'activités 1142ms
+     ✓ priorise daily_synthesis sur le résumé de climat  654ms
+     ✓ navigue vers le détail de l'horoscope quand on clique sur le résumé  535ms
+     ✓ ouvre le détail via la touche espace sur la carte résumé 112ms
+     ✓ n'affiche plus les sections détaillées (Moments clés, Agenda) 72ms
+     ✓ rend le dashboard avec les controles globaux uniquement dans le layout 197ms
+     ✓ gère l'état de chargement du résumé sans masquer les activités 112ms
+     ✓ freeze la navigation vers le détail tant que l'horoscope du jour est en cours de rédaction 163ms
+     ✓ gère l'erreur de prédiction en affichant un message dédié et une relance 172ms
+     ✓ localise les nouveaux libellés dashboard en anglais 80ms
+     ✓ utilise un fallback neutre quand le signe est absent des données de naissance 68ms
+ ✓ src/tests/AdminSupportPage.test.tsx (1 test) 274ms
+ ✓ src/tests/BillingCancelPage.test.tsx (2 tests) 382ms
+ ✓ src/tests/NatalExpertPanel.test.tsx (4 tests) 631ms
+     ✓ rend les blocs experts du payload public sans calcul local  480ms
+ ✓ src/tests/UserAvatar.test.tsx (5 tests) 277ms
+ ✓ src/tests/B2BReconciliationPanel.test.tsx (2 tests) 343ms
+     ✓ loads list, detail and executes actions  313ms
+ ✓ src/tests/ConsultationsPage.test.tsx (17 tests) 1673ms
+       ✓ renders upgrade CTAs to Basic instead of consultation actions for free users  413ms
+ ✓ src/tests/AdminPromptsCatalogFlow.test.tsx (3 tests) 4797ms
+     ✓ affiche la lecture en activation composants et artefacts runtime  1860ms
+     ✓ ouvre l édition sur le nœud use case overlay et expose la couche free  1796ms
+     ✓ rend la persona et le delta before/after persona pour une cible premium  1139ms
+ ✓ src/tests/AstrologersPage.test.tsx (28 tests) 4445ms
+       ✓ alternates the first displayed astrologer between visits  678ms
+       ✓ displays complete profile with hero, metrics, specialties and reviews  532ms
+       ✓ creates or resumes chat from the profile CTA  310ms
+       ✓ routes natal and consultation CTAs to supported pages  303ms
+       ✓ opens the review composer when selecting a rating for the first time  416ms
+       ✓ shows a validation message when the review is shorter than 10 characters  381ms
+ ✓ src/tests/HelpPage.test.tsx (4 tests) 4245ms
+     ✓ affiche le hero premium et les sections d'aide  2493ms
+     ✓ permet de soumettre un ticket et affiche un message de succès  1405ms
+ ✓ src/tests/AdminPage.test.tsx (8 tests) 4299ms
+     ✓ redirects non-admin user (user) from /admin to dashboard  1710ms
+     ✓ allows admin user to access /admin hub  1171ms
+     ✓ renders canonical admin routes without legacy redirects  997ms
+ ✓ src/components/ui/Form/Form.test.tsx (4 tests) 408ms
+     ✓ integrates with Select component  301ms
+ ✓ src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx (7 tests) 317ms
+ ✓ src/tests/ThemeProvider.test.tsx (22 tests) 361ms
+ ✓ src/tests/SidebarContext.test.tsx (2 tests) 314ms
+ ✓ src/tests/DailyHoroscopePage.test.tsx (22 tests) 5541ms
+     ✓ affiche la prediction API, les categories dynamiques et les heures en HH:mm  3276ms
+       ✓ affiche un CTA Basic dans le hero et sur chaque section verrouillée pour utilisateur free (AC3)  317ms
+ ✓ src/tests/page-architecture-guards.test.ts (21 tests) 471ms
+ ✓ src/tests/component-usage-guards.test.ts (4 tests) 342ms
+ ✓ src/tests/AdminDashboardPage.test.tsx (3 tests) 597ms
+ ✓ src/tests/useEntitlementSnapshot.test.tsx (4 tests) 347ms
+ ✓ src/tests/EnterpriseCredentialsPanel.test.tsx (1 test) 261ms
+ ✓ src/tests/SubscriptionSettings.test.tsx (20 tests) 6814ms
+     ✓ appelle useStripeCheckoutSession avec le code canonique pour un utilisateur sans abonnement Stripe  701ms
+     ✓ utilise Checkout Stripe pour un utilisateur free exposé comme plan actif local sans profil Stripe  439ms
+     ✓ affiche un résumé de statut avec plan actif, expérience, renouvellement et prochaine échéance  388ms
+     ✓ n'envoie jamais basic-entry ou premium-unlimited à useStripeCheckoutSession — uniquement les codes canoniques  445ms
+     ✓ repasse par un nouveau Checkout quand l'ancien abonnement Stripe est canceled et qu'aucun plan n'est actif  511ms
+     ✓ utilise le flow d'upgrade immédiat quand l'abonnement actif passe de basic à premium  717ms
+     ✓ affiche un retour visible et bloque la double soumission quand l'upgrade est payé automatiquement  695ms
+     ✓ redirige vers Checkout Stripe hébergé quand un paiement additionnel est requis  568ms
+     ✓ conserve le portail subscription_update pour un downgrade actif premium vers basic  352ms
+     ✓ passe en mode réactivation quand cancel_at_period_end est déjà vrai  412ms
+ ✓ src/tests/SupportOpsPanel.test.tsx (1 test) 273ms
+ ✓ src/tests/AstrologerSelectStep.test.tsx (2 tests) 244ms
+ ✓ src/tests/ConsultationReconnection.test.tsx (6 tests) 359ms
+ ✓ src/tests/BirthProfilePage.test.tsx (41 tests) 6498ms
+     ✓ shows the generation button only if birth data exists  505ms
+     ✓ clears generationError when form changes after failed generation  308ms
+     ✓ shows specific error message when generation returns 422 (invalid birth data)  336ms
+ ✓ src/components/ui/LockedSection/LockedSection.test.tsx (6 tests) 243ms
+ ✓ src/components/ui/Modal/Modal.test.tsx (6 tests) 262ms
+ ✓ src/components/ui/EmptyState/EmptyState.test.tsx (3 tests) 233ms
+ ✓ src/tests/AdminAiGenerationsPage.test.tsx (1 test) 248ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 5445ms
+     ✓ redirects locked free header CTA to subscription instead of requesting a complete reading  427ms
+     ✓ renders success state sections  386ms
+     ✓ renders NatalExpertPanel from latestChart data on the natal page  469ms
+     ✓ affiche les planètes en français (AC1 i18n)  306ms
+ ✓ src/tests/AdminEntitlementsPage.test.tsx (2 tests) 111ms
+ ✓ src/tests/AdminUserDetailPage.test.tsx (1 test) 117ms
+ ✓ src/tests/legacy-style-policy.test.ts (4 tests) 105ms
+ ✓ src/tests/FaqSection.test.tsx (3 tests) 86ms
+ ✓ src/components/ui/Field/Field.test.tsx (7 tests) 97ms
+ ✓ src/tests/inline-style-policy.test.ts (4 tests) 99ms
+ ✓ src/tests/UserMenu.test.tsx (7 tests) 82ms
+ ✓ src/tests/ShortcutCard.test.tsx (21 tests) 652ms
+ ✓ src/tests/NotFoundPage.test.tsx (1 test) 222ms
+ ✓ src/tests/ui-icons.test.tsx (33 tests) 83ms
+ ✓ src/tests/ConsultationMigration.test.tsx (4 tests) 88ms
+ ✓ src/tests/AstroMoodBackground.test.tsx (10 tests) 83ms
+ ✓ src/tests/UsageSettings.test.tsx (1 test) 74ms
+ ✓ src/components/ui/Card/Card.test.tsx (6 tests) 58ms
+ ✓ src/tests/css-fallback-policy.test.ts (3 tests) 56ms
+ ✓ src/tests/AdminPromptsLogicGraph.test.tsx (1 test) 46ms
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 60ms
+ ✓ src/components/ui/Skeleton/Skeleton.test.tsx (5 tests) 57ms
+ ✓ src/components/ui/Badge/Badge.test.tsx (6 tests) 53ms
+ ✓ src/tests/AdminPermissions.test.tsx (2 tests) 36ms
+ ✓ src/tests/formatDate.test.ts (20 tests) 36ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 36ms
+ ✓ src/tests/consultationStore.test.ts (14 tests) 29ms
+ ✓ src/tests/api-architecture.test.ts (5 tests) 29ms
+ ✓ src/tests/theme-tokens.test.ts (98 tests) 32ms
+ ✓ src/tests/formatPrice.test.ts (2 tests) 24ms
+ ✓ src/tests/predictionI18n.test.ts (13 tests) 32ms
+ ✓ src/tests/useDailyPrediction.test.tsx (4 tests) 29ms
+ ✓ src/tests/astrology-i18n.test.ts (71 tests) 53ms
+ ✓ src/tests/AppBgStyles.test.ts (48 tests) 25ms
+ ✓ src/tests/useAnalytics.test.tsx (1 test) 21ms
+ ✓ src/tests/geocodingApi.test.ts (19 tests) 21ms
+ ✓ src/tests/enterpriseCredentialsApi.test.ts (4 tests) 18ms
+ ✓ src/utils/dailyAstrology.test.ts (1 test) 19ms
+ ✓ src/tests/b2bReconciliationApi.test.ts (5 tests) 18ms
+ ✓ src/tests/b2bBillingApi.test.ts (4 tests) 17ms
+ ✓ src/tests/b2bEditorialApi.test.ts (4 tests) 16ms
+ ✓ src/tests/AdminPromptsPage.test.tsx (30 tests | 8 skipped) 11972ms
+     ✓ affiche le catalogue canonique et les badges de source  1684ms
+     ✓ ouvre une ligne du catalogue au clavier et garde un contrat responsive explicite  620ms
+     ✓ structure le détail catalogue : ordre des sections, zone Actions et prompts repliables  865ms
+     ✓ réinitialise les filtres catalogue via le bouton dédié  790ms
+     ✓ passe le sample payload sélectionné dans la runtime preview  794ms
+     ✓ réaligne le sample payload runtime si la sélection n’est plus dans la liste (P2)  846ms
+     ✓ conserve les sample payloads runtime quand la ligne sélectionnée sort de la page catalogue  807ms
+     ✓ affiche un libellé FR et le message serveur en repli quand la runtime preview échoue  662ms
+     ✓ bascule en fallback texte quand le graphe devient trop dense  344ms
+     ✓ classe les sources selon le contrat backend (runtime/fallback/sample)  320ms
+     ✓ affiche des messages de premier rang pour preview partielle, erreur et données d'exemple vides  316ms
+     ✓ annonce les états critiques avec des rôles ARIA adaptés  316ms
+     ✓ affiche une valeur vide quand elle est autorisée sans la marquer redacted  313ms
+     ✓ affiche l'historique release snapshot et le diff  399ms
+     ✓ affiche l'onglet consommation avec granularité, pagination serveur et axe canonique  422ms
+     ✓ réinitialise le drill-down quand la granularité redéfinit le périmètre d'agrégats  513ms
+     ✓ envoie les filtres temporels de consommation au format UTC dans la requete API  448ms
+     ✓ affiche le bandeau de mode, ouvre une confirmation avant execute-sample puis envoie le POST  952ms
+ ✓ src/tests/apiClient.test.ts (3 tests) 14ms
+ ✓ src/tests/b2bAstrologyApi.test.ts (3 tests) 14ms
+ ✓ src/tests/b2bUsageApi.test.ts (3 tests) 14ms
+ ✓ src/tests/privacyApi.test.ts (5 tests) 15ms
+ ✓ src/tests/guidanceApi.test.ts (5 tests) 13ms
+ ✓ src/tests/dailyPredictionApi.test.ts (4 tests) 7ms
+ ✓ src/tests/opsPersonaApi.test.ts (4 tests) 7ms
+ ✓ src/tests/adminPromptsApi.test.ts (3 tests) 7ms
+ ✓ src/tests/classNames.test.ts (10 tests) 4ms
+ ✓ src/tests/timezones.test.ts (9 tests) 6ms
+ ✓ src/tests/generateUniqueId.test.ts (7 tests) 4ms
+ ✓ src/tests/ui-nav.test.ts (5 tests) 5ms
+ ✓ src/tests/predictionBands.test.ts (3 tests) 3ms
+ ✓ src/utils/dailyAdviceCardMapper.test.ts (2 tests) 3ms
+ ✓ src/tests/authToken.test.ts (3 tests) 3ms
+ ✓ src/tests/ui-barrel.test.ts (4 tests) 3ms
+ ✓ src/tests/astrologers-validation.test.ts (4 tests) 3ms
+ ✓ src/tests/dailySummaryHelper.test.ts (3 tests) 3ms
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+System.Management.Automation.RemoteException
+ FAIL  src/tests/DashboardPage.test.tsx > DashboardPage Landing > affiche le résumé de l'horoscope et les raccourcis d'activités
+TestingLibraryElementError: Unable to find an element with the text: /Une excellente journée vous attend/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-bg-container"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"app-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-left"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Ouvrir le menu"[39m
+              [33mclass[39m=[32m"app-header-hamburger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-menu"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 5h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 12h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 19h16"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-brand"[39m
+          [36m>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Astrorizon"[39m
+              [33mclass[39m=[32m"app-header-logo"[39m
+              [33msrc[39m=[32m"/src/assets/logo.png"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"app-header-title"[39m
+            [36m>[39m
+              [0mAstrorizon[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Changer le thème"[39m
+              [33mclass[39m=[32m"app-header-theme-toggle"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-moon"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"20"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"20"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-language-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-label[39m=[32m"Choisir la langue"[39m
+                [33mclass[39m=[32m"app-header-language-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-languages"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m5 8 6 6"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 5h12"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M7 2h1"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14 18h6"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"app-header-language-flag"[39m
+                [36m>[39m
+                  [36m<img[39m
+                    [33malt[39m=[32m""[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                    [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                  [36m/>[39m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-haspopup[39m=[32m"menu"[39m
+                [33maria-label[39m=[32m"Menu utilisateur"[39m
+                [33mclass[39m=[32m"user-avatar user-avatar--md"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"user-avatar__initial"[39m
+                [36m>[39m
+                  [0mT[...
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"app-bg-container"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"app-header"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-left"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Ouvrir le menu"[39m
+                [33mclass[39m=[32m"app-header-hamburger"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-menu"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 5h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 12h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 19h16"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-brand"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Astrorizon"[39m
+                [33mclass[39m=[32m"app-header-logo"[39m
+                [33msrc[39m=[32m"/src/assets/logo.png"[39m
+              [36m/>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"app-header-title"[39m
+              [36m>[39m
+                [0mAstrorizon[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Changer le thème"[39m
+                [33mclass[39m=[32m"app-header-theme-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-moon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"20"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-language-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-label[39m=[32m"Choisir la langue"[39m
+                  [33mclass[39m=[32m"app-header-language-toggle"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-languages"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m5 8 6 6"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M2 5h12"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M7 2h1"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M14 18h6"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag"[39m
+                  [36m>[39m
+                    [36m<img[39m
+                      [33malt[39m=[32m""[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                      [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                    [36m/>[39m
+                  [36m</span>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-haspopup[39m=[32m"menu"[39m
+                  [33maria-label[39m=[32m"Menu utilisateur"[39m
+                  [33mclass...
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/tests/DashboardPage.test.tsx:130:11
+    128|     renderDashboard()
+    129|
+    130|     await waitFor(() => {
+       |           ^
+    131|       expect(screen.getByText(/Une excellente journée vous attend/i)).…
+    132|     })
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+System.Management.Automation.RemoteException
+ FAIL  src/tests/router.test.tsx > AuthGuard > allows authenticated user to access protected route
+TestingLibraryElementError: Unable to find role="heading" and name "Tableau de bord"
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-bg-container"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"app-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-left"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Ouvrir le menu"[39m
+              [33mclass[39m=[32m"app-header-hamburger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-menu"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 5h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 12h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 19h16"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-brand"[39m
+          [36m>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Astrorizon"[39m
+              [33mclass[39m=[32m"app-header-logo"[39m
+              [33msrc[39m=[32m"/src/assets/logo.png"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"app-header-title"[39m
+            [36m>[39m
+              [0mAstrorizon[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Changer le thème"[39m
+              [33mclass[39m=[32m"app-header-theme-toggle"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-moon"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"20"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"20"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-language-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-label[39m=[32m"Choisir la langue"[39m
+                [33mclass[39m=[32m"app-header-language-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-languages"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m5 8 6 6"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 5h12"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M7 2h1"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14 18h6"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"app-header-language-flag"[39m
+                [36m>[39m
+                  [36m<img[39m
+                    [33malt[39m=[32m""[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                    [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                  [36m/>[39m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-haspopup[39m=[32m"menu"[39m
+                [33maria-label[39m=[32m"Menu utilisateur"[39m
+                [33mclass[39m=[32m"user-avatar user-avatar--md"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"user-avatar__initial"[39m
+                [36m>[39m
+                  [0mT[...
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"app-bg-container"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"app-header"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-left"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Ouvrir le menu"[39m
+                [33mclass[39m=[32m"app-header-hamburger"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-menu"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 5h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 12h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 19h16"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-brand"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Astrorizon"[39m
+                [33mclass[39m=[32m"app-header-logo"[39m
+                [33msrc[39m=[32m"/src/assets/logo.png"[39m
+              [36m/>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"app-header-title"[39m
+              [36m>[39m
+                [0mAstrorizon[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Changer le thème"[39m
+                [33mclass[39m=[32m"app-header-theme-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-moon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"20"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-language-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-label[39m=[32m"Choisir la langue"[39m
+                  [33mclass[39m=[32m"app-header-language-toggle"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-languages"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m5 8 6 6"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M2 5h12"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M7 2h1"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M14 18h6"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag"[39m
+                  [36m>[39m
+                    [36m<img[39m
+                      [33malt[39m=[32m""[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                      [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                    [36m/>[39m
+                  [36m</span>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-haspopup[39m=[32m"menu"[39m
+                  [33maria-label[39m=[32m"Menu utilisateur"[39m
+                  [33mclass...
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/tests/router.test.tsx:253:11
+    251|     renderApp(["/dashboard"])
+    252|
+    253|     await waitFor(() => {
+       |           ^
+    254|       expect(screen.getByRole("heading", { level: 2, name: "Tableau de…
+    255|     })
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+System.Management.Automation.RemoteException
+
+ Test Files  2 failed | 114 passed (116)
+      Tests  2 failed | 1269 passed | 8 skipped (1279)
+   Start at  23:35:31
+   Duration  19.63s (transform 62.66s, setup 100.19s, import 104.69s, tests 114.31s, environment 222.40s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run (final pass run)
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/design-system-guards.test.ts (39 tests) 1039ms
+ ✓ src/tests/AdminSettingsPage.test.tsx (3 tests) 921ms
+     ✓ revokes blob urls after export download  629ms
+ ✓ src/tests/AdminLogsPage.test.tsx (1 test) 1189ms
+     ✓ uses audit logs with filters, detail modal and csv export  1187ms
+ ✓ src/tests/StarfieldBackground.test.tsx (38 tests) 2159ms
+       ✓ generates same star positions with same seed  344ms
+ ✓ src/tests/PersonasAdmin.test.tsx (2 tests) 1078ms
+     ✓ renders persona list, detail and deactivation modal  610ms
+     ✓ shows an error when persona update fails  466ms
+ ✓ src/tests/SignUpForm.test.tsx (13 tests) 1350ms
+ ✓ src/tests/chat/ChatComponents.test.tsx (55 tests) 1253ms
+ ✓ src/tests/NatalExpertPanel.test.tsx (4 tests) 337ms
+ ✓ src/tests/SignInForm.test.tsx (14 tests) 1433ms
+ ✓ src/tests/AdminContentPage.test.tsx (1 test) 2218ms
+     ✓ renders sections and updates content, feature flags and rules  2216ms
+ ✓ src/tests/LandingPage.test.tsx (10 tests) 2049ms
+     ✓ rend la composition landing et les CTA analytics sans boucle runtime  594ms
+     ✓ confine le focus dans le menu mobile, bloque le scroll et restaure le bouton  469ms
+ ✓ src/tests/layout/Header.test.tsx (13 tests) 2020ms
+     ✓ expose les boutons hamburger, thème et menu utilisateur avec leurs labels  312ms
+ ✓ src/tests/AdminSamplePayloadsAdmin.test.tsx (2 tests) 514ms
+     ✓ liste les sample payloads et appelle include_inactive quand la case est cochée  308ms
+ ✓ src/tests/ChatPage.test.tsx (22 tests) 1811ms
+       ✓ renders empty state when no conversations exist  480ms
+ ✓ src/tests/AppShell.test.tsx (3 tests) 1955ms
+     ✓ applique le cycle complet hidden -> expanded -> icon-only -> hidden  1089ms
+     ✓ ouvre et ferme le menu utilisateur puis permet la deconnexion  479ms
+     ✓ bascule le theme dark/light depuis le header  386ms
+ ✓ src/tests/layout/Sidebar.test.tsx (3 tests) 441ms
+ ✓ src/tests/AdminPromptsRouting.test.tsx (4 tests) 1610ms
+     ✓ redirige /admin/prompts vers le catalogue canonique  955ms
+     ✓ affiche la route personas canonique du domaine prompts  364ms
+ ✓ src/tests/page-architecture-guards.test.ts (21 tests) 218ms
+ ✓ src/tests/SubscriptionGuidePage.test.tsx (4 tests) 2327ms
+     ✓ affiche les 3 cartes de plans et identifie le plan actuel avec priorité  1740ms
+ ✓ src/tests/SettingsPage.test.tsx (5 tests) 2430ms
+       ✓ affiche les onglets Compte, Abonnement, Usage  1083ms
+       ✓ navigue entre les onglets  908ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 3191ms
+     ✓ appelle l'API de suppression et rafraîchit la liste  478ms
+     ✓ déclenche le téléchargement PDF  442ms
+     ✓ déclenche l'aperçu PDF  300ms
+ ✓ src/tests/TimezoneSelect.test.tsx (16 tests) 4410ms
+     ✓ navigates with keyboard arrows and highlights options  1914ms
+ ✓ src/components/ui/Button/Button.test.tsx (16 tests) 381ms
+ ✓ src/components/ui/Form/Form.test.tsx (4 tests) 355ms
+ ✓ src/tests/App.test.tsx (9 tests) 2924ms
+     ✓ shows landing page at / for unauthenticated user  526ms
+     ✓ shows login form at /login when unauthenticated  382ms
+     ✓ shows privacy policy at /privacy under the public layout  413ms
+     ✓ redirects authenticated user from / to /dashboard  503ms
+     ✓ shows AppShell with sidebar for authenticated user  398ms
+ ✓ src/tests/AdminPromptsPage.releaseCatalog.integration.test.tsx (1 test) 2992ms
+     ✓ après clic « Ouvrir dans le catalogue », bascule vers /admin/prompts/catalog et conserve l'entrée manifeste sélectionnée  2990ms
+ ✓ src/tests/BillingSuccessPage.test.tsx (9 tests) 446ms
+ ✓ src/tests/BillingCancelPage.test.tsx (2 tests) 388ms
+ ✓ src/tests/router.test.tsx (11 tests) 3353ms
+     ✓ redirects unauthenticated user to /login with returnTo  511ms
+     ✓ allows authenticated user to access protected route  1248ms
+     ✓ allows admin user to access /admin routes  497ms
+     ✓ keeps dashboard tab active in BottomNav for both routes  329ms
+     ✓ renders /consultations without missing provider error  398ms
+ ❯ src/tests/DashboardPage.test.tsx (11 tests | 1 failed) 3392ms
+     × affiche le résumé de l'horoscope et les raccourcis d'activités 1152ms
+     ✓ priorise daily_synthesis sur le résumé de climat  490ms
+     ✓ navigue vers le détail de l'horoscope quand on clique sur le résumé  610ms
+     ✓ ouvre le détail via la touche espace sur la carte résumé 125ms
+     ✓ n'affiche plus les sections détaillées (Moments clés, Agenda) 105ms
+     ✓ rend le dashboard avec les controles globaux uniquement dans le layout 176ms
+     ✓ gère l'état de chargement du résumé sans masquer les activités 105ms
+     ✓ freeze la navigation vers le détail tant que l'horoscope du jour est en cours de rédaction 205ms
+     ✓ gère l'erreur de prédiction en affichant un message dédié et une relance 265ms
+     ✓ localise les nouveaux libellés dashboard en anglais 83ms
+     ✓ utilise un fallback neutre quand le signe est absent des données de naissance 73ms
+ ✓ src/components/ui/Select/Select.test.tsx (7 tests) 399ms
+ ✓ src/tests/ThemeProvider.test.tsx (22 tests) 304ms
+ ✓ src/tests/BottomNavPremium.test.tsx (26 tests) 409ms
+ ✓ src/tests/AdminPromptsCatalogFlow.test.tsx (3 tests) 4917ms
+     ✓ affiche la lecture en activation composants et artefacts runtime  1920ms
+     ✓ ouvre l édition sur le nœud use case overlay et expose la couche free  1919ms
+     ✓ rend la persona et le delta before/after persona pour une cible premium  1077ms
+ ✓ src/tests/ConsultationsPage.test.tsx (17 tests) 1517ms
+       ✓ renders upgrade CTAs to Basic instead of consultation actions for free users  323ms
+ ✓ src/tests/AstrologersPage.test.tsx (28 tests) 4592ms
+       ✓ alternates the first displayed astrologer between visits  790ms
+       ✓ displays complete profile with hero, metrics, specialties and reviews  510ms
+       ✓ creates or resumes chat from the profile CTA  368ms
+       ✓ routes natal and consultation CTAs to supported pages  309ms
+       ✓ opens the review composer when selecting a rating for the first time  407ms
+       ✓ shows a validation message when the review is shorter than 10 characters  342ms
+ ✓ src/tests/ConsultationReconnection.test.tsx (6 tests) 328ms
+ ✓ src/tests/HelpPage.test.tsx (4 tests) 4378ms
+     ✓ affiche le hero premium et les sections d'aide  2569ms
+     ✓ permet de soumettre un ticket et affiche un message de succès  1513ms
+ ✓ src/tests/AdminDashboardPage.test.tsx (3 tests) 556ms
+ ✓ src/tests/AdminPage.test.tsx (8 tests) 4620ms
+     ✓ redirects non-admin user (user) from /admin to dashboard  1579ms
+     ✓ allows admin user to access /admin hub  1681ms
+     ✓ displays 10 sections in the sidebar for admin  310ms
+     ✓ renders canonical admin routes without legacy redirects  943ms
+ ✓ src/tests/B2BReconciliationPanel.test.tsx (2 tests) 345ms
+     ✓ loads list, detail and executes actions  316ms
+ ✓ src/tests/useEntitlementSnapshot.test.tsx (4 tests) 344ms
+ ✓ src/tests/SidebarContext.test.tsx (2 tests) 314ms
+ ✓ src/tests/component-usage-guards.test.ts (4 tests) 319ms
+ ✓ src/tests/UserAvatar.test.tsx (5 tests) 318ms
+ ✓ src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx (7 tests) 325ms
+ ✓ src/tests/DailyHoroscopePage.test.tsx (22 tests) 5606ms
+     ✓ affiche la prediction API, les categories dynamiques et les heures en HH:mm  3303ms
+       ✓ affiche un CTA Basic dans le hero et sur chaque section verrouillée pour utilisateur free (AC3)  343ms
+ ✓ src/tests/SubscriptionSettings.test.tsx (20 tests) 6885ms
+     ✓ appelle useStripeCheckoutSession avec le code canonique pour un utilisateur sans abonnement Stripe  821ms
+     ✓ utilise Checkout Stripe pour un utilisateur free exposé comme plan actif local sans profil Stripe  495ms
+     ✓ affiche un résumé de statut avec plan actif, expérience, renouvellement et prochaine échéance  413ms
+     ✓ n'envoie jamais basic-entry ou premium-unlimited à useStripeCheckoutSession — uniquement les codes canoniques  430ms
+     ✓ repasse par un nouveau Checkout quand l'ancien abonnement Stripe est canceled et qu'aucun plan n'est actif  525ms
+     ✓ utilise le flow d'upgrade immédiat quand l'abonnement actif passe de basic à premium  718ms
+     ✓ affiche un retour visible et bloque la double soumission quand l'upgrade est payé automatiquement  632ms
+     ✓ redirige vers Checkout Stripe hébergé quand un paiement additionnel est requis  509ms
+     ✓ conserve le portail subscription_update pour un downgrade actif premium vers basic  374ms
+     ✓ passe en mode réactivation quand cancel_at_period_end est déjà vrai  406ms
+ ✓ src/tests/SupportOpsPanel.test.tsx (1 test) 289ms
+ ✓ src/tests/AdminSupportPage.test.tsx (1 test) 309ms
+     ✓ renders empty ticket and flagged-content states through API owners  307ms
+ ✓ src/tests/visual-smoke.test.tsx (23 tests) 378ms
+ ✓ src/components/ui/Modal/Modal.test.tsx (6 tests) 262ms
+ ✓ src/tests/BirthProfilePage.test.tsx (41 tests) 6620ms
+     ✓ shows the generation button only if birth data exists  594ms
+     ✓ shows specific error message when natal engine is unavailable  300ms
+     ✓ shows specific error message when generation returns 422 (invalid birth data)  323ms
+ ✓ src/tests/AdminAiGenerationsPage.test.tsx (1 test) 257ms
+ ✓ src/tests/EnterpriseCredentialsPanel.test.tsx (1 test) 268ms
+ ✓ src/tests/AstrologerSelectStep.test.tsx (2 tests) 244ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 5565ms
+     ✓ redirects locked free header CTA to subscription instead of requesting a complete reading  473ms
+     ✓ renders success state sections  444ms
+     ✓ renders NatalExpertPanel from latestChart data on the natal page  418ms
+ ✓ src/components/ui/EmptyState/EmptyState.test.tsx (3 tests) 232ms
+ ✓ src/components/ui/LockedSection/LockedSection.test.tsx (6 tests) 264ms
+ ✓ src/tests/ShortcutCard.test.tsx (21 tests) 697ms
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 567ms
+ ✓ src/tests/NotFoundPage.test.tsx (1 test) 223ms
+ ✓ src/tests/legacy-style-policy.test.ts (4 tests) 103ms
+ ✓ src/components/ui/Field/Field.test.tsx (7 tests) 85ms
+ ✓ src/tests/inline-style-policy.test.ts (4 tests) 89ms
+ ✓ src/tests/AdminEntitlementsPage.test.tsx (2 tests) 109ms
+ ✓ src/tests/AdminUserDetailPage.test.tsx (1 test) 120ms
+ ✓ src/tests/AstroMoodBackground.test.tsx (10 tests) 74ms
+ ✓ src/tests/FaqSection.test.tsx (3 tests) 87ms
+ ✓ src/tests/ui-icons.test.tsx (33 tests) 75ms
+ ✓ src/tests/ConsultationMigration.test.tsx (4 tests) 88ms
+ ✓ src/tests/UserMenu.test.tsx (7 tests) 88ms
+ ✓ src/tests/css-fallback-policy.test.ts (3 tests) 60ms
+ ✓ src/tests/UsageSettings.test.tsx (1 test) 77ms
+ ✓ src/components/ui/Skeleton/Skeleton.test.tsx (5 tests) 63ms
+ ✓ src/components/ui/Card/Card.test.tsx (6 tests) 62ms
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 64ms
+ ✓ src/components/ui/Badge/Badge.test.tsx (6 tests) 54ms
+ ✓ src/tests/formatDate.test.ts (20 tests) 35ms
+ ✓ src/tests/AdminPromptsLogicGraph.test.tsx (1 test) 48ms
+ ✓ src/tests/AdminPermissions.test.tsx (2 tests) 39ms
+ ✓ src/tests/predictionI18n.test.ts (13 tests) 32ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 39ms
+ ✓ src/tests/theme-tokens.test.ts (98 tests) 33ms
+ ✓ src/tests/useDailyPrediction.test.tsx (4 tests) 36ms
+ ✓ src/tests/api-architecture.test.ts (5 tests) 38ms
+ ✓ src/tests/consultationStore.test.ts (14 tests) 38ms
+ ✓ src/tests/astrology-i18n.test.ts (71 tests) 67ms
+ ✓ src/tests/AppBgStyles.test.ts (48 tests) 37ms
+ ✓ src/tests/formatPrice.test.ts (2 tests) 27ms
+ ✓ src/tests/geocodingApi.test.ts (19 tests) 24ms
+ ✓ src/tests/useAnalytics.test.tsx (1 test) 22ms
+ ✓ src/utils/dailyAstrology.test.ts (1 test) 18ms
+ ✓ src/tests/b2bEditorialApi.test.ts (4 tests) 16ms
+ ✓ src/tests/b2bReconciliationApi.test.ts (5 tests) 17ms
+ ✓ src/tests/enterpriseCredentialsApi.test.ts (4 tests) 18ms
+ ✓ src/tests/b2bBillingApi.test.ts (4 tests) 18ms
+ ✓ src/tests/AdminPromptsPage.test.tsx (30 tests | 8 skipped) 12327ms
+     ✓ affiche le catalogue canonique et les badges de source  1840ms
+     ✓ ouvre une ligne du catalogue au clavier et garde un contrat responsive explicite  636ms
+     ✓ structure le détail catalogue : ordre des sections, zone Actions et prompts repliables  937ms
+     ✓ réinitialise les filtres catalogue via le bouton dédié  796ms
+     ✓ passe le sample payload sélectionné dans la runtime preview  693ms
+     ✓ réaligne le sample payload runtime si la sélection n’est plus dans la liste (P2)  936ms
+     ✓ conserve les sample payloads runtime quand la ligne sélectionnée sort de la page catalogue  823ms
+     ✓ affiche un libellé FR et le message serveur en repli quand la runtime preview échoue  623ms
+     ✓ bascule en fallback texte quand le graphe devient trop dense  307ms
+     ✓ classe les sources selon le contrat backend (runtime/fallback/sample)  301ms
+     ✓ affiche des messages de premier rang pour preview partielle, erreur et données d'exemple vides  352ms
+     ✓ annonce les états critiques avec des rôles ARIA adaptés  311ms
+     ✓ affiche une valeur vide quand elle est autorisée sans la marquer redacted  327ms
+     ✓ affiche l'historique release snapshot et le diff  397ms
+     ✓ affiche l'onglet consommation avec granularité, pagination serveur et axe canonique  405ms
+     ✓ réinitialise le drill-down quand la granularité redéfinit le périmètre d'agrégats  513ms
+     ✓ envoie les filtres temporels de consommation au format UTC dans la requete API  453ms
+     ✓ affiche le bandeau de mode, ouvre une confirmation avant execute-sample puis envoie le POST  1071ms
+ ✓ src/tests/apiClient.test.ts (3 tests) 15ms
+ ✓ src/tests/privacyApi.test.ts (5 tests) 14ms
+ ✓ src/tests/b2bAstrologyApi.test.ts (3 tests) 15ms
+ ✓ src/tests/b2bUsageApi.test.ts (3 tests) 37ms
+ ✓ src/tests/guidanceApi.test.ts (5 tests) 14ms
+ ✓ src/tests/timezones.test.ts (9 tests) 9ms
+ ✓ src/tests/ui-nav.test.ts (5 tests) 10ms
+ ✓ src/tests/adminPromptsApi.test.ts (3 tests) 11ms
+ ✓ src/tests/opsPersonaApi.test.ts (4 tests) 12ms
+ ✓ src/tests/dailyPredictionApi.test.ts (4 tests) 12ms
+ ✓ src/tests/generateUniqueId.test.ts (7 tests) 5ms
+ ✓ src/tests/classNames.test.ts (10 tests) 5ms
+ ✓ src/tests/predictionBands.test.ts (3 tests) 4ms
+ ✓ src/tests/authToken.test.ts (3 tests) 3ms
+ ✓ src/tests/ui-barrel.test.ts (4 tests) 4ms
+ ✓ src/tests/astrologers-validation.test.ts (4 tests) 4ms
+ ✓ src/utils/dailyAdviceCardMapper.test.ts (2 tests) 3ms
+ ✓ src/tests/dailySummaryHelper.test.ts (3 tests) 3ms
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+System.Management.Automation.RemoteException
+ FAIL  src/tests/DashboardPage.test.tsx > DashboardPage Landing > affiche le résumé de l'horoscope et les raccourcis d'activités
+TestingLibraryElementError: Unable to find an element with the text: /Une excellente journée vous attend/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-bg-container"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"app-header"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-left"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Ouvrir le menu"[39m
+              [33mclass[39m=[32m"app-header-hamburger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-menu"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 5h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 12h16"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M4 19h16"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-brand"[39m
+          [36m>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Astrorizon"[39m
+              [33mclass[39m=[32m"app-header-logo"[39m
+              [33msrc[39m=[32m"/src/assets/logo.png"[39m
+            [36m/>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"app-header-title"[39m
+            [36m>[39m
+              [0mAstrorizon[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"app-header-actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33maria-label[39m=[32m"Changer le thème"[39m
+              [33mclass[39m=[32m"app-header-theme-toggle"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-moon"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"20"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"20"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</button>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-language-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-label[39m=[32m"Choisir la langue"[39m
+                [33mclass[39m=[32m"app-header-language-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-languages"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"18"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"18"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m5 8 6 6"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M2 5h12"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M7 2h1"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14 18h6"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"app-header-language-flag"[39m
+                [36m>[39m
+                  [36m<img[39m
+                    [33malt[39m=[32m""[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                    [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                  [36m/>[39m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-expanded[39m=[32m"false"[39m
+                [33maria-haspopup[39m=[32m"menu"[39m
+                [33maria-label[39m=[32m"Menu utilisateur"[39m
+                [33mclass[39m=[32m"user-avatar user-avatar--md"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"user-avatar__initial"[39m
+                [36m>[39m
+                  [0mT[...
+System.Management.Automation.RemoteException
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"app-shell app-bg app-bg--internal"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"app-bg-container"[39m
+        [36m>[39m
+          [36m<header[39m
+            [33mclass[39m=[32m"app-header"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-left"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Ouvrir le menu"[39m
+                [33mclass[39m=[32m"app-header-hamburger"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-menu"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 5h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 12h16"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M4 19h16"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-brand"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Astrorizon"[39m
+                [33mclass[39m=[32m"app-header-logo"[39m
+                [33msrc[39m=[32m"/src/assets/logo.png"[39m
+              [36m/>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"app-header-title"[39m
+              [36m>[39m
+                [0mAstrorizon[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"app-header-actions"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"Changer le thème"[39m
+                [33mclass[39m=[32m"app-header-theme-toggle"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"lucide lucide-moon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"20"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"20"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</button>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-language-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-label[39m=[32m"Choisir la langue"[39m
+                  [33mclass[39m=[32m"app-header-language-toggle"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-languages"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m5 8 6 6"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m4 14 6-6 2-3"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M2 5h12"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M7 2h1"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"m22 22-5-10-5 10"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M14 18h6"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"app-header-language-flag"[39m
+                  [36m>[39m
+                    [36m<img[39m
+                      [33malt[39m=[32m""[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"app-header-language-flag-image"[39m
+                      [33msrc[39m=[32m"data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%203%202'%3e%3crect%20width='1'%20height='2'%20fill='%230055a4'/%3e%3crect%20x='1'%20width='1'%20height='2'%20fill='%23ffffff'/%3e%3crect%20x='2'%20width='1'%20height='2'%20fill='%23ef4135'/%3e%3c/svg%3e"[39m
+                    [36m/>[39m
+                  [36m</span>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"app-header-avatar-wrapper"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-haspopup[39m=[32m"menu"[39m
+                  [33maria-label[39m=[32m"Menu utilisateur"[39m
+                  [33mclass...
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/tests/DashboardPage.test.tsx:130:11
+    128|     renderDashboard()
+    129|
+    130|     await waitFor(() => {
+       |           ^
+    131|       expect(screen.getByText(/Une excellente journée vous attend/i)).…
+    132|     })
+System.Management.Automation.RemoteException
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+System.Management.Automation.RemoteException
+
+ Test Files  1 failed | 115 passed (116)
+      Tests  1 failed | 1270 passed | 8 skipped (1279)
+   Start at  23:36:18
+   Duration  19.79s (transform 58.13s, setup 99.13s, import 100.34s, tests 117.24s, environment 225.69s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run (final pass run 2)
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/design-system-guards.test.ts (39 tests) 535ms
+ ✓ src/tests/AdminSettingsPage.test.tsx (3 tests) 647ms
+     ✓ revokes blob urls after export download  397ms
+ ✓ src/tests/AdminLogsPage.test.tsx (1 test) 788ms
+     ✓ uses audit logs with filters, detail modal and csv export  787ms
+ ✓ src/tests/StarfieldBackground.test.tsx (38 tests) 1048ms
+ ✓ src/tests/PersonasAdmin.test.tsx (2 tests) 839ms
+     ✓ renders persona list, detail and deactivation modal  468ms
+     ✓ shows an error when persona update fails  370ms
+ ✓ src/tests/SignUpForm.test.tsx (13 tests) 869ms
+ ✓ src/tests/SignInForm.test.tsx (14 tests) 910ms
+ ✓ src/tests/chat/ChatComponents.test.tsx (55 tests) 804ms
+ ✓ src/tests/layout/Header.test.tsx (13 tests) 1124ms
+ ✓ src/tests/LandingPage.test.tsx (10 tests) 1351ms
+     ✓ rend la composition landing et les CTA analytics sans boucle runtime  342ms
+     ✓ confine le focus dans le menu mobile, bloque le scroll et restaure le bouton  316ms
+ ✓ src/tests/AdminContentPage.test.tsx (1 test) 1591ms
+     ✓ renders sections and updates content, feature flags and rules  1590ms
+ ✓ src/tests/AppShell.test.tsx (3 tests) 928ms
+     ✓ applique le cycle complet hidden -> expanded -> icon-only -> hidden  514ms
+ ✓ src/tests/ChatPage.test.tsx (22 tests) 1161ms
+ ✓ src/tests/AdminPromptsRouting.test.tsx (4 tests) 1116ms
+     ✓ redirige /admin/prompts vers le catalogue canonique  748ms
+ ✓ src/tests/SettingsPage.test.tsx (5 tests) 1378ms
+       ✓ affiche les onglets Compte, Abonnement, Usage  625ms
+       ✓ navigue entre les onglets  436ms
+ ✓ src/tests/SubscriptionGuidePage.test.tsx (4 tests) 1522ms
+     ✓ affiche les 3 cartes de plans et identifie le plan actuel avec priorité  1174ms
+ ✓ src/tests/ConsultationsPage.test.tsx (17 tests) 1175ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 2040ms
+ ✓ src/tests/TimezoneSelect.test.tsx (16 tests) 2795ms
+     ✓ navigates with keyboard arrows and highlights options  1088ms
+ ✓ src/tests/AdminPromptsPage.releaseCatalog.integration.test.tsx (1 test) 1809ms
+     ✓ après clic « Ouvrir dans le catalogue », bascule vers /admin/prompts/catalog et conserve l'entrée manifeste sélectionnée  1808ms
+ ✓ src/tests/router.test.tsx (11 tests) 1964ms
+     ✓ allows authenticated user to access protected route  472ms
+     ✓ allows admin user to access /admin routes  392ms
+     ✓ renders /consultations without missing provider error  369ms
+ ✓ src/tests/App.test.tsx (9 tests) 2108ms
+     ✓ shows landing page at / for unauthenticated user  422ms
+     ✓ shows privacy policy at /privacy under the public layout  398ms
+     ✓ redirects authenticated user from / to /dashboard  373ms
+ ✓ src/tests/HelpPage.test.tsx (4 tests) 2626ms
+     ✓ affiche le hero premium et les sections d'aide  1147ms
+     ✓ permet de soumettre un ticket et affiche un message de succès  1270ms
+ ✓ src/tests/AstrologersPage.test.tsx (28 tests) 2765ms
+       ✓ alternates the first displayed astrologer between visits  399ms
+ ✓ src/tests/AdminPage.test.tsx (8 tests) 2769ms
+     ✓ redirects non-admin user (user) from /admin to dashboard  672ms
+     ✓ allows admin user to access /admin hub  935ms
+     ✓ renders canonical admin routes without legacy redirects  807ms
+ ✓ src/tests/AdminPromptsCatalogFlow.test.tsx (3 tests) 3467ms
+     ✓ affiche la lecture en activation composants et artefacts runtime  1322ms
+     ✓ ouvre l édition sur le nœud use case overlay et expose la couche free  1310ms
+     ✓ rend la persona et le delta before/after persona pour une cible premium  833ms
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 484ms
+ ✓ src/tests/DailyHoroscopePage.test.tsx (22 tests) 3347ms
+     ✓ affiche la prediction API, les categories dynamiques et les heures en HH:mm  1595ms
+ ✓ src/tests/ShortcutCard.test.tsx (21 tests) 576ms
+ ✓ src/tests/AdminSamplePayloadsAdmin.test.tsx (2 tests) 671ms
+     ✓ liste les sample payloads et appelle include_inactive quand la case est cochée  403ms
+ ✓ src/tests/DashboardPage.test.tsx (11 tests) 1364ms
+     ✓ affiche le résumé de l'horoscope et les raccourcis d'activités  410ms
+ ✓ src/components/ui/Select/Select.test.tsx (7 tests) 443ms
+ ✓ src/tests/SubscriptionSettings.test.tsx (20 tests) 4688ms
+     ✓ appelle useStripeCheckoutSession avec le code canonique pour un utilisateur sans abonnement Stripe  451ms
+     ✓ utilise Checkout Stripe pour un utilisateur free exposé comme plan actif local sans profil Stripe  302ms
+     ✓ utilise le flow d'upgrade immédiat quand l'abonnement actif passe de basic à premium  414ms
+     ✓ affiche un retour visible et bloque la double soumission quand l'upgrade est payé automatiquement  442ms
+     ✓ redirige vers Checkout Stripe hébergé quand un paiement additionnel est requis  393ms
+     ✓ passe en mode réactivation quand cancel_at_period_end est déjà vrai  368ms
+ ✓ src/tests/BottomNavPremium.test.tsx (26 tests) 452ms
+ ✓ src/tests/BillingSuccessPage.test.tsx (9 tests) 514ms
+ ✓ src/tests/layout/Sidebar.test.tsx (3 tests) 563ms
+     ✓ starts hidden and opens as overlay with backdrop  329ms
+ ✓ src/components/ui/Button/Button.test.tsx (16 tests) 431ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 4142ms
+ ✓ src/tests/B2BReconciliationPanel.test.tsx (2 tests) 366ms
+     ✓ loads list, detail and executes actions  334ms
+ ✓ src/tests/BirthProfilePage.test.tsx (41 tests) 5002ms
+     ✓ shows the generation button only if birth data exists  348ms
+ ✓ src/tests/BillingCancelPage.test.tsx (2 tests) 404ms
+ ✓ src/components/ui/Form/Form.test.tsx (4 tests) 405ms
+ ✓ src/tests/useEntitlementSnapshot.test.tsx (4 tests) 348ms
+ ✓ src/tests/visual-smoke.test.tsx (23 tests) 336ms
+ ✓ src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx (7 tests) 302ms
+ ✓ src/tests/NatalExpertPanel.test.tsx (4 tests) 709ms
+     ✓ rend les blocs experts du payload public sans calcul local  531ms
+ ✓ src/tests/UserAvatar.test.tsx (5 tests) 280ms
+ ✓ src/tests/component-usage-guards.test.ts (4 tests) 334ms
+ ✓ src/tests/SidebarContext.test.tsx (2 tests) 332ms
+     ✓ applies the documented state transitions  312ms
+ ✓ src/tests/AdminDashboardPage.test.tsx (3 tests) 587ms
+ ✓ src/tests/ConsultationReconnection.test.tsx (6 tests) 368ms
+ ✓ src/tests/AdminSupportPage.test.tsx (1 test) 316ms
+     ✓ renders empty ticket and flagged-content states through API owners  314ms
+ ✓ src/tests/SupportOpsPanel.test.tsx (1 test) 236ms
+ ✓ src/tests/ThemeProvider.test.tsx (22 tests) 319ms
+ ✓ src/tests/EnterpriseCredentialsPanel.test.tsx (1 test) 219ms
+ ✓ src/components/ui/LockedSection/LockedSection.test.tsx (6 tests) 191ms
+ ✓ src/components/ui/Modal/Modal.test.tsx (6 tests) 215ms
+ ✓ src/tests/AdminAiGenerationsPage.test.tsx (1 test) 185ms
+ ✓ src/tests/AstrologerSelectStep.test.tsx (2 tests) 192ms
+ ✓ src/components/ui/EmptyState/EmptyState.test.tsx (3 tests) 160ms
+ ✓ src/tests/legacy-style-policy.test.ts (4 tests) 90ms
+ ✓ src/tests/inline-style-policy.test.ts (4 tests) 87ms
+ ✓ src/tests/AdminUserDetailPage.test.tsx (1 test) 106ms
+ ✓ src/tests/AdminEntitlementsPage.test.tsx (2 tests) 84ms
+ ✓ src/tests/NotFoundPage.test.tsx (1 test) 166ms
+ ✓ src/tests/UserMenu.test.tsx (7 tests) 76ms
+ ✓ src/components/ui/Field/Field.test.tsx (7 tests) 153ms
+ ✓ src/tests/UsageSettings.test.tsx (1 test) 79ms
+ ✓ src/tests/page-architecture-guards.test.ts (21 tests) 516ms
+ ✓ src/tests/ui-icons.test.tsx (33 tests) 106ms
+ ✓ src/tests/FaqSection.test.tsx (3 tests) 101ms
+ ✓ src/tests/AstroMoodBackground.test.tsx (10 tests) 85ms
+ ✓ src/tests/astrology-i18n.test.ts (71 tests) 54ms
+ ✓ src/tests/ConsultationMigration.test.tsx (4 tests) 88ms
+ ✓ src/components/ui/Skeleton/Skeleton.test.tsx (5 tests) 58ms
+ ✓ src/tests/css-fallback-policy.test.ts (3 tests) 60ms
+ ✓ src/components/ui/Card/Card.test.tsx (6 tests) 61ms
+ ✓ src/components/ui/Badge/Badge.test.tsx (6 tests) 60ms
+ ✓ src/tests/AdminPromptsLogicGraph.test.tsx (1 test) 50ms
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 65ms
+ ✓ src/tests/AdminPermissions.test.tsx (2 tests) 38ms
+ ✓ src/tests/AdminPromptsPage.test.tsx (30 tests | 8 skipped) 9933ms
+     ✓ affiche le catalogue canonique et les badges de source  1032ms
+     ✓ ouvre une ligne du catalogue au clavier et garde un contrat responsive explicite  331ms
+     ✓ structure le détail catalogue : ordre des sections, zone Actions et prompts repliables  589ms
+     ✓ réinitialise les filtres catalogue via le bouton dédié  572ms
+     ✓ passe le sample payload sélectionné dans la runtime preview  601ms
+     ✓ réaligne le sample payload runtime si la sélection n’est plus dans la liste (P2)  785ms
+     ✓ conserve les sample payloads runtime quand la ligne sélectionnée sort de la page catalogue  766ms
+     ✓ affiche un libellé FR et le message serveur en repli quand la runtime preview échoue  575ms
+     ✓ bascule en fallback texte quand le graphe devient trop dense  308ms
+     ✓ classe les sources selon le contrat backend (runtime/fallback/sample)  365ms
+     ✓ affiche des messages de premier rang pour preview partielle, erreur et données d'exemple vides  353ms
+     ✓ affiche l'historique release snapshot et le diff  346ms
+     ✓ affiche l'onglet consommation avec granularité, pagination serveur et axe canonique  329ms
+     ✓ réinitialise le drill-down quand la granularité redéfinit le périmètre d'agrégats  452ms
+     ✓ envoie les filtres temporels de consommation au format UTC dans la requete API  419ms
+     ✓ affiche le bandeau de mode, ouvre une confirmation avant execute-sample puis envoie le POST  1154ms
+ ✓ src/tests/api-architecture.test.ts (5 tests) 30ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 45ms
+ ✓ src/tests/b2bUsageApi.test.ts (3 tests) 15ms
+ ✓ src/tests/consultationStore.test.ts (14 tests) 32ms
+ ✓ src/tests/AppBgStyles.test.ts (48 tests) 25ms
+ ✓ src/tests/useDailyPrediction.test.tsx (4 tests) 29ms
+ ✓ src/tests/formatDate.test.ts (20 tests) 33ms
+ ✓ src/tests/theme-tokens.test.ts (98 tests) 33ms
+ ✓ src/tests/predictionI18n.test.ts (13 tests) 31ms
+ ✓ src/tests/formatPrice.test.ts (2 tests) 28ms
+ ✓ src/tests/geocodingApi.test.ts (19 tests) 25ms
+ ✓ src/tests/useAnalytics.test.tsx (1 test) 20ms
+ ✓ src/tests/b2bBillingApi.test.ts (4 tests) 16ms
+ ✓ src/utils/dailyAstrology.test.ts (1 test) 20ms
+ ✓ src/tests/enterpriseCredentialsApi.test.ts (4 tests) 18ms
+ ✓ src/tests/b2bReconciliationApi.test.ts (5 tests) 18ms
+ ✓ src/tests/b2bEditorialApi.test.ts (4 tests) 22ms
+ ✓ src/tests/apiClient.test.ts (3 tests) 16ms
+ ✓ src/tests/b2bAstrologyApi.test.ts (3 tests) 15ms
+ ✓ src/tests/guidanceApi.test.ts (5 tests) 13ms
+ ✓ src/tests/privacyApi.test.ts (5 tests) 13ms
+ ✓ src/tests/timezones.test.ts (9 tests) 9ms
+ ✓ src/tests/classNames.test.ts (10 tests) 4ms
+ ✓ src/tests/opsPersonaApi.test.ts (4 tests) 12ms
+ ✓ src/tests/generateUniqueId.test.ts (7 tests) 4ms
+ ✓ src/tests/dailyPredictionApi.test.ts (4 tests) 13ms
+ ✓ src/tests/ui-nav.test.ts (5 tests) 9ms
+ ✓ src/tests/adminPromptsApi.test.ts (3 tests) 11ms
+ ✓ src/tests/predictionBands.test.ts (3 tests) 4ms
+ ✓ src/tests/astrologers-validation.test.ts (4 tests) 4ms
+ ✓ src/utils/dailyAdviceCardMapper.test.ts (2 tests) 3ms
+ ✓ src/tests/ui-barrel.test.ts (4 tests) 5ms
+ ✓ src/tests/authToken.test.ts (3 tests) 3ms
+ ✓ src/tests/dailySummaryHelper.test.ts (3 tests) 4ms
+
+ Test Files  116 passed (116)
+      Tests  1271 passed | 8 skipped (1279)
+   Start at  23:37:35
+   Duration  18.07s (transform 27.20s, setup 97.13s, import 60.12s, tests 82.31s, environment 251.06s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> pnpm lint (after final patches)
+$ tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run natalChartApi (after final patches)
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 18ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  23:38:14
+   Duration  1.27s (transform 205ms, setup 255ms, import 214ms, tests 18ms, environment 639ms)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation (after final patches)
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 29ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 891ms
+
+ Test Files  2 passed (2)
+      Tests  33 passed (33)
+   Start at  23:38:16
+   Duration  2.57s (transform 519ms, setup 543ms, import 777ms, tests 920ms, environment 1.34s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi (after final patches)
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 153ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 19ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 2498ms
+
+ Test Files  3 passed (3)
+      Tests  91 passed (91)
+   Start at  23:38:19
+   Duration  4.46s (transform 1.00s, setup 767ms, import 1.29s, tests 2.67s, environment 2.04s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+> rg -n "fetch\(.*/v1/astrology/projections" src
+PASS: no matches (projection direct fetch)
+
+> rg -n "style=" src -g "*.tsx"
+src\components\DomainRankingCard.tsx:48:                  style={{ width: `${Math.min(domain.score_10 * 10, 100)}%` }}
+src\components\prediction\DayTimelineSectionV4.tsx:139:                style={{ ['--period-accent' as string]: accentColor }}
+src\components\ui\Skeleton\Skeleton.tsx:26:      style={style}
+src\components\ui\Skeleton\Skeleton.tsx:53:      style={groupStyle}
+
+> Final validation addendum after file-level comments
+
+- `pnpm lint`: PASS after one Windows EPERM retry; TypeScript commands completed.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run natalChartApi`: PASS, 15 tests.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation`: PASS, 33 tests.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi`: PASS, 91 tests.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run`: PASS, 116 files, 1271 passed, 8 skipped.
+- `rg -n "fetch\\(.*/v1/astrology/projections" src`: PASS, no matches.
+- `rg -n "provider_response|raw_runtime|replay_snapshot|admin_answer_audit|expert_technical_projection_v1|astrology_full_data_v1" src`: PASS, no matches.
+- `rg -n "style=" src/tests/ConsultationsPage.test.tsx src/tests/DailyHoroscopePage.test.tsx src/tests/DashboardPage.test.tsx src/tests/ShortcutCard.test.tsx`: PASS, no matches.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-305-stabilize-frontend-full-vitest-suite-after-projection-wiring`: PASS with `.venv` active.
+- `git diff --check`: PASS; line-ending warnings only.

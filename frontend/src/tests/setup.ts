@@ -1,3 +1,4 @@
+// Configure l'environnement Vitest partage par les tests React.
 import "@testing-library/jest-dom/vitest"
 import { cleanup } from "@testing-library/react"
 import { afterEach, beforeEach, vi } from "vitest"
@@ -121,6 +122,7 @@ process.stderr.write = ((chunk: string | Uint8Array, ...args: unknown[]) => {
 // Default language for all tests to French so existing string assertions stay stable.
 beforeEach(() => {
   installBrowserApiMocks()
+  localStorage.removeItem("lang")
 
   if (typeof navigator !== "undefined") {
     vi.stubGlobal("navigator", {

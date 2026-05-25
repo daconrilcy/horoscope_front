@@ -1,3 +1,4 @@
+// Couvre le catalogue de consultations et le parcours wizard associe.
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
@@ -144,6 +145,7 @@ describe("ConsultationsPage", () => {
   beforeEach(() => {
     localStorage.clear()
     localStorage.setItem("lang", "en")
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" })
     sessionStorage.clear()
     vi.clearAllMocks()
     mockUseFeatureAccess.mockReturnValue({ feature_code: "thematic_consultation", granted: true })
@@ -226,6 +228,7 @@ describe("ConsultationWizardPage - Story 47.8 Flow", () => {
   beforeEach(() => {
     localStorage.clear()
     localStorage.setItem("lang", "en")
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" })
     sessionStorage.clear()
     vi.clearAllMocks()
   })

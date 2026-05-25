@@ -1,3 +1,4 @@
+// Verifie le rendu localise et les interactions de l'horoscope quotidien.
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -1079,6 +1080,7 @@ describe("DailyHoroscopePage", () => {
 
   it("bascule les libelles de prediction en anglais quand la langue active est en", async () => {
     localStorage.setItem("lang", "en");
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" });
     installFetchMock();
 
     renderDashboard();
@@ -1132,6 +1134,7 @@ describe("DailyHoroscopePage", () => {
 
   it("localise les titres de section en anglais", async () => {
     localStorage.setItem("lang", "en");
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" });
     installFetchMock();
 
     renderDashboard();

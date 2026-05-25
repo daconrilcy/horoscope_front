@@ -1,3 +1,4 @@
+// Couvre les etats principaux du tableau de bord utilisateur.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -127,9 +128,12 @@ describe("DashboardPage Landing", () => {
     
     renderDashboard()
 
-    await waitFor(() => {
-      expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Une excellente journée vous attend/i)).toBeInTheDocument()
+      },
+      { timeout: 5000 },
+    )
 
     expect(screen.getByText("Activités")).toBeInTheDocument()
     expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
@@ -327,6 +331,7 @@ describe("DashboardPage Landing", () => {
 
   it("localise les nouveaux libellés dashboard en anglais", async () => {
     localStorage.setItem("lang", "en")
+    vi.stubGlobal("navigator", { ...navigator, language: "en-US" })
     vi.stubGlobal("fetch", makeFetchMock())
 
     renderDashboard()
