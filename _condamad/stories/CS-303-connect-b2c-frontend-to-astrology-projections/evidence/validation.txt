@@ -1,0 +1,22 @@
+Validation CS-303 - 2026-05-25
+
+PASS pnpm test -- component-architecture-guards natalInterpretation NatalChartPage natalChartApi
+PASS pnpm test -- natalChartApi
+PASS pnpm test -- astrologyProjectionsApi natalInterpretation
+PASS pnpm lint
+PASS python -B -m pytest backend\tests\api\test_projection_openapi.py backend\tests\api\test_projection_endpoint.py backend\tests\api\test_projection_authorization.py -q --tb=short
+PASS python -B -c app.openapi/app.routes contract check for /v1/astrology/projections
+PASS python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-303-connect-b2c-frontend-to-astrology-projections
+
+PASS rg -n -P "(?<!re)fetch\(|axios\." frontend scoped paths: no direct HTTP calls outside apiFetch.
+PASS rg -n "style=\{\{" frontend scoped paths: no inline styles in touched TSX.
+PASS rg forbidden internals on touched app paths: no provider_response, raw_runtime, replay_snapshot, admin_answer_audit, expert_technical_projection_v1, prompt.
+PASS rg disclaimer scan: only app-owned legalNoticeLines/disclaimerTitle rendering remains.
+PASS rg "\bany\b" touched app paths: no matches.
+
+LIMITATION pnpm test: FAIL 18 tests in 4 unrelated i18n/consultation files:
+- src/tests/ShortcutCard.test.tsx: English dashboard shortcut localization expectation.
+- src/tests/DashboardPage.test.tsx: English dashboard localization expectation.
+- src/tests/DailyHoroscopePage.test.tsx: English daily horoscope localization expectations.
+- src/tests/ConsultationsPage.test.tsx: consultation page localization/flow expectations.
+CS-303 targeted files and /natal regression suite passed.

@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { ApiError, generateNatalChart, useLatestNatalChart } from "@api"
+import { ApiError, generateNatalChart, requestAstrologyProjection, useLatestNatalChart } from "@api"
 import { getBirthData, type BirthProfileData } from "../api/birthProfile"
 import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
@@ -11,6 +11,7 @@ const getSubjectFromAccessTokenMock = vi.fn()
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: (options: unknown) => useQueryMock(options),
+  useQueries: () => [],
 }))
 
 vi.mock("../utils/authToken", () => ({
@@ -90,6 +91,85 @@ describe("generateNatalChart", () => {
     await expect(generateNatalChart("test-token")).rejects.toMatchObject({
       code: "unknown_error",
       status: 500,
+    })
+  })
+})
+
+describe("astrologyProjectionsApi", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("envoie les deux projections B2C via le client central authentifie", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        chart_id: "chart-123",
+        projection_type: "beginner_summary_v1",
+        projection_version: "v1",
+        persisted: false,
+        projection_hash: "hash",
+        payload: { state: "normal" },
+        metadata: { source: "chart_id", plan_code: "free", request_id: "req-1" },
+      }),
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await requestAstrologyProjection("test-token", {
+      chart_id: "chart-123",
+      projection_type: "beginner_summary_v1",
+    })
+    await requestAstrologyProjection("test-token", {
+      chart_id: "chart-123",
+      projection_type: "client_interpretation_projection_v1",
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    const firstBody = JSON.parse((fetchMock.mock.calls[0]?.[1] as RequestInit).body as string)
+    const secondBody = JSON.parse((fetchMock.mock.calls[1]?.[1] as RequestInit).body as string)
+    expect(firstBody).toMatchObject({
+      chart_id: "chart-123",
+      projection_type: "beginner_summary_v1",
+      projection_version: "v1",
+      persist: false,
+    })
+    expect(secondBody).toMatchObject({
+      chart_id: "chart-123",
+      projection_type: "client_interpretation_projection_v1",
+      projection_version: "v1",
+      persist: false,
+    })
+    expect((fetchMock.mock.calls[0]?.[1] as RequestInit).headers).toMatchObject({
+      "Content-Type": "application/json",
+      Authorization: "Bearer test-token",
+    })
+  })
+
+  it("normalise les refus d'entitlement de projection", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({
+          error: {
+            code: "projection.unauthorized",
+            message: "user plan is not authorized for public projections",
+            request_id: "req-denied",
+          },
+        }),
+      }),
+    )
+
+    await expect(
+      requestAstrologyProjection("test-token", {
+        chart_id: "chart-123",
+        projection_type: "client_interpretation_projection_v1",
+      }),
+    ).rejects.toMatchObject({
+      code: "projection.unauthorized",
+      status: 403,
+      requestId: "req-denied",
     })
   })
 })

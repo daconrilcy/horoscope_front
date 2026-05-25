@@ -1,0 +1,13 @@
+{
+  "frontend_wrapper": "frontend/src/api/astrologyProjections.ts",
+  "method": "POST",
+  "path": "/v1/astrology/projections",
+  "request_shape_used_by_frontend": {
+    "chart_id": "existing natal chart id",
+    "projection_type": ["beginner_summary_v1", "client_interpretation_projection_v1"],
+    "projection_version": "v1",
+    "persist": false
+  },
+  "response_shape_consumed_by_frontend": ["chart_id", "projection_type", "projection_version", "payload", "metadata"],
+  "runtime_contract_validation": "PASS app.openapi()+app.routes"
+}

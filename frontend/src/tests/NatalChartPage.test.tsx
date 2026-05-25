@@ -19,6 +19,7 @@ import {
   useNatalPdfTemplates,
   useNatalInterpretationById,
 } from "../api/natalChart"
+import { useAstrologyProjections } from "../api/astrologyProjections"
 
 /**
  * Mock de ApiError pour les tests.
@@ -44,6 +45,10 @@ vi.mock("../api/natalChart", () => ({
   useNatalInterpretationById: vi.fn(),
 }))
 
+vi.mock("../api/astrologyProjections", () => ({
+  useAstrologyProjections: vi.fn(),
+}))
+
 vi.mock("../utils/authToken", () => ({
   useAccessTokenSnapshot: () => "mock-token",
 }))
@@ -62,6 +67,8 @@ const mockUseNatalPdfTemplates: ReturnType<typeof vi.mocked<typeof useNatalPdfTe
   vi.mocked(useNatalPdfTemplates)
 const mockUseNatalInterpretationById: ReturnType<typeof vi.mocked<typeof useNatalInterpretationById>> =
   vi.mocked(useNatalInterpretationById)
+const mockUseAstrologyProjections: ReturnType<typeof vi.mocked<typeof useAstrologyProjections>> =
+  vi.mocked(useAstrologyProjections)
 const mockUseFeatureAccess: ReturnType<typeof vi.mocked<typeof useFeatureAccess>> = vi.mocked(useFeatureAccess)
 const mockUseUpgradeHint: ReturnType<typeof vi.mocked<typeof useUpgradeHint>> = vi.mocked(useUpgradeHint)
 
@@ -222,6 +229,7 @@ beforeEach(() => {
     data: null,
     refetch: vi.fn(),
   })
+  mockUseAstrologyProjections.mockReturnValue([])
 })
 
 afterEach(() => {

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { NatalInterpretationSection } from "../features/natal-chart/NatalInterpretation";
-import { 
+import {
   useNatalInterpretation, 
   useNatalInterpretationsList, 
   useNatalPdfTemplates,
@@ -13,6 +13,8 @@ import {
   previewNatalInterpretationPdf,
 } from "../api/natalChart";
 import { useAstrologers } from "../api/astrologers";
+import { useAstrologyProjections } from "../api/astrologyProjections";
+import { ApiError } from "../api/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routerFutureFlags } from "./test-utils";
 
@@ -36,6 +38,14 @@ vi.mock("../api/astrologers", async () => {
   return {
     ...actual,
     useAstrologers: vi.fn(),
+  };
+});
+
+vi.mock("../api/astrologyProjections", async () => {
+  const actual = await vi.importActual("../api/astrologyProjections");
+  return {
+    ...actual,
+    useAstrologyProjections: vi.fn(),
   };
 });
 
@@ -130,6 +140,45 @@ describe("NatalInterpretationSection", () => {
     });
     (useNatalInterpretationById as any).mockReturnValue({ isLoading: false, data: null });
     (useAstrologers as any).mockReturnValue({ isLoading: false, data: mockAstrologers });
+    (useAstrologyProjections as any).mockReturnValue([
+      {
+        type: "beginner_summary_v1",
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        data: {
+          chart_id: "chart-123",
+          projection_type: "beginner_summary_v1",
+          projection_version: "v1",
+          persisted: false,
+          projection_hash: "hash-beginner",
+          payload: {
+            state: "normal",
+            display_messages: [{ code: "BGS_NORMAL", message: "Votre resume debutant est disponible." }],
+            summary_items: [{ code: "sun_sign", label: "Soleil en Bélier" }],
+          },
+          metadata: { source: "chart_id", plan_code: "free", request_id: "req-beginner" },
+        },
+      },
+      {
+        type: "client_interpretation_projection_v1",
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        data: {
+          chart_id: "chart-123",
+          projection_type: "client_interpretation_projection_v1",
+          projection_version: "v1",
+          persisted: false,
+          projection_hash: "hash-client",
+          payload: {
+            state: "normal",
+            sections: [{ code: "orientation_generale", title: "Orientation générale", text: "Lecture client test." }],
+          },
+          metadata: { source: "chart_id", plan_code: "basic", request_id: "req-client" },
+        },
+      },
+    ]);
   });
 
   const renderSection = (props: Partial<ComponentProps<typeof NatalInterpretationSection>> = {}) => {
@@ -626,6 +675,92 @@ describe("NatalInterpretationSection", () => {
     renderSection();
     expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();
     expect(screen.getByText("Résumé test de votre personnalité.")).toBeInTheDocument();
+  });
+
+  it("affiche les projections beginner_summary_v1 et client_interpretation_projection_v1", () => {
+    renderSection();
+
+    expect(screen.getByText("Résumé débutant")).toBeInTheDocument();
+    expect(screen.getByText("Soleil en Bélier")).toBeInTheDocument();
+    expect(screen.getByText("Interprétation client")).toBeInTheDocument();
+    expect(screen.getByText("Lecture client test.")).toBeInTheDocument();
+  });
+
+  it("affiche l'état loading des projections", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      { type: "beginner_summary_v1", isLoading: true, error: null, refetch: vi.fn() },
+      { type: "client_interpretation_projection_v1", isLoading: true, error: null, refetch: vi.fn() },
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText(/Chargement des projections astrologiques/i)).toBeInTheDocument();
+  });
+
+  it("affiche l'état empty des projections", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      { type: "beginner_summary_v1", isLoading: false, error: null, refetch: vi.fn() },
+      { type: "client_interpretation_projection_v1", isLoading: false, error: null, refetch: vi.fn() },
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText(/Aucune projection publique n'est disponible/i)).toBeInTheDocument();
+  });
+
+  it("affiche l'état erreur API des projections", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      { type: "beginner_summary_v1", isLoading: false, error: new Error("down"), refetch: vi.fn() },
+      { type: "client_interpretation_projection_v1", isLoading: false, error: null, refetch: vi.fn() },
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText(/Les projections ne sont pas disponibles/i)).toBeInTheDocument();
+  });
+
+  it("affiche le refus entitlement des projections", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      {
+        type: "beginner_summary_v1",
+        isLoading: false,
+        error: new ApiError("projection.unauthorized", "denied", 403),
+        refetch: vi.fn(),
+      },
+      { type: "client_interpretation_projection_v1", isLoading: false, error: null, refetch: vi.fn() },
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText(/abonnement actuel ne permet pas/i)).toBeInTheDocument();
+  });
+
+  it("affiche le mode dégradé des projections", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      {
+        type: "beginner_summary_v1",
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        data: {
+          chart_id: "chart-123",
+          projection_type: "beginner_summary_v1",
+          projection_version: "v1",
+          persisted: false,
+          projection_hash: "hash-degraded",
+          payload: {
+            state: "degraded",
+            display_messages: [{ code: "BGS_DEGRADED_NO_TIME", message: "Votre resume est affiche sans ascendant." }],
+          },
+          metadata: { source: "chart_id", plan_code: "free", request_id: "req-degraded" },
+        },
+      },
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText(/Projection partielle/i)).toBeInTheDocument();
+    expect(screen.getByText(/sans ascendant/i)).toBeInTheDocument();
   });
 
   it("affiche systématiquement les mentions légales applicatives", () => {

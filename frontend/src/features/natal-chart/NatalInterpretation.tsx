@@ -3,7 +3,9 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
 
+import { useAstrologyProjections } from "../../api/astrologyProjections"
 import type { FeatureEntitlementResponse } from "../../api/billing"
+import { ApiError } from "../../api/client"
 import {
   deleteNatalInterpretation,
   downloadNatalInterpretationPdf,
@@ -18,7 +20,10 @@ import { natalChartTranslations } from "../../i18n/natalChart"
 import { type AstrologyLang } from "../../i18n/astrology"
 import { ErrorBoundary } from "@components/ErrorBoundary"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
-import { InterpretationContent } from "../../components/natal-interpretation/NatalInterpretationContent"
+import {
+  InterpretationContent,
+  type AstrologyProjectionPanelState,
+} from "../../components/natal-interpretation/NatalInterpretationContent"
 import {
   ConfirmDeleteModal,
   InterpretationError,
@@ -134,6 +139,19 @@ export function NatalInterpretationSection({
     interpretationId: selectedInterpretationId ?? undefined,
     locale: localeFromLang(lang),
   })
+  const projectionQueries = useAstrologyProjections({
+    enabled: chartLoaded && Boolean(chartId),
+    chartId,
+  })
+  const projectionState: AstrologyProjectionPanelState = {
+    isLoading: projectionQueries.some((query) => query.isLoading),
+    isEntitlementError: projectionQueries.some(
+      (query) => query.error instanceof ApiError && query.error.status === 403,
+    ),
+    isApiError: projectionQueries.some((query) => Boolean(query.error)),
+    projections: projectionQueries.flatMap((query) => (query.data ? [query.data] : [])),
+    refetchAll: () => projectionQueries.forEach((query) => query.refetch()),
+  }
 
   const activeQuery = selectedInterpretationId ? idQuery : mainQuery
   const { data, isLoading, error, refetch } = activeQuery
@@ -472,6 +490,7 @@ export function NatalInterpretationSection({
               lang={lang}
               fallbackEvidence={fallbackEvidence}
               isLockedFree={isLockedFree}
+              projectionState={projectionState}
             />
             {isUpsellOpen && (
               <PersonaSelector

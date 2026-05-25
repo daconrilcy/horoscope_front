@@ -1,0 +1,8 @@
+{
+  "source": "backend/app/services/api_contracts/public/projections.py",
+  "method": "POST",
+  "path": "/v1/astrology/projections",
+  "request_fields": ["chart_id", "birth_input", "projection_type", "projection_version", "persist"],
+  "response_fields": ["chart_id", "projection_type", "projection_version", "persisted", "projection_hash", "payload", "metadata"],
+  "public_projection_types": ["structured_facts_v1", "beginner_summary_v1", "client_interpretation_projection_v1"]
+}
