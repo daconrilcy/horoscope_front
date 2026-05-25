@@ -1,5 +1,5 @@
 # Story CS-289 evidence-refs-section-validation: Implement evidence_refs Section Validation
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

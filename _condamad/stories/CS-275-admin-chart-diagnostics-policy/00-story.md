@@ -1,5 +1,5 @@
 # Story CS-275 admin-chart-diagnostics-policy: Decide admin_chart_diagnostics Retention Redaction Replay Policy
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

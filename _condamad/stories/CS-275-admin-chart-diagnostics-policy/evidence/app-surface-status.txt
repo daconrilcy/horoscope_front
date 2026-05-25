@@ -1,0 +1,23 @@
+CS-275 application surface status
+
+Intended application delta:
+- docs/architecture/admin-chart-diagnostics-v1-policy.md
+- backend/tests/unit/test_admin_chart_diagnostics_policy.py
+
+Forbidden application surfaces:
+- backend/app/api/**
+- backend/app/services/**
+- backend/app/infra/db/**
+- backend/migrations/**
+- frontend/src/**
+- generated OpenAPI clients
+
+Negative scan:
+rg -n "admin_chart_diagnostics" backend\app\api backend\app\services backend\app\infra\db backend\migrations frontend\src -g "*.py" -g "*.ts" -g "*.tsx" -g "*.md"
+
+Result:
+PASS: no matches. No diagnostic route, service, DB model, migration, frontend source, or generated client was added by this story.
+
+Runtime checks:
+PASS: app.openapi() does not contain admin_chart_diagnostics.
+PASS: app.routes does not contain admin_chart_diagnostics.

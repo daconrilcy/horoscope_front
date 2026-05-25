@@ -1,0 +1,151 @@
+CS-272 fresh implementation review validation transcript
+VENV: activated via .\.venv\Scripts\Activate.ps1 for all Python/Ruff/Pytest commands
+COMMAND: python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-272-admin-endpoint-domain-segmentation\00-story.md
+CONDAMAD story validation: PASS
+EXIT: 0
+COMMAND: python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-272-admin-endpoint-domain-segmentation\00-story.md
+CONDAMAD story lint: PASS
+EXIT: 0
+COMMAND: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad/stories/CS-272-admin-endpoint-domain-segmentation
+CONDAMAD validation: PASS
+EXIT: 0
+COMMAND: ruff format --check backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+1 file already formatted
+EXIT: 0
+COMMAND: ruff check .
+All checks passed!
+EXIT: 0
+COMMAND: python -B -m pytest -q backend/tests/unit/test_admin_endpoint_segmentation_contract.py backend/tests/architecture/test_api_contract_neutrality.py --tb=short
+........................                                                 [100%]
+24 passed in 4.71s
+EXIT: 0
+COMMAND: python -B -c "from app.main import app; assert any('/v1/admin' in getattr(r, 'path', '') for r in app.routes); data=str(app.openapi()); assert 'admin_chart_diagnostics' not in data"
+EXIT: 0
+COMMAND: rg -n "business|technical|astrology|CS-271|MARKETER|TECHNO|ASTRO_EXPERT" docs/architecture/admin-endpoint-domain-segmentation.md
+7:Ce contrat fixe la segmentation cible des endpoints admin entre les familles `business`, `technical` et `astrology`. Il sert de reference pour
+8:les prochaines stories d'API admin et complete la matrice CS-271 sans activer de nouveaux roles runtime, sans refactorer les routes actuelles
+14:- `MARKETER`, `TECHNO` et `ASTRO_EXPERT` sont des roles cibles issus de CS-271 et restent non actifs tant qu'une story RBAC dediee n'est pas
+23:| `business` | `/v1/admin/dashboard`, `/v1/admin/users`, `/v1/admin/entitlements`, `/v1/admin/exports`, `/v1/admin/support` | `ADMIN` actif; `MARKETER` cible non actif | Acces admin existant, roles cibles refuses | Journaliser `actor`, `route_family`, `action`, `correlation_id` pour export, modification, support et revelation de donnees | `internal-admin`; non promu dans un contrat client public | Aucune route client ne doit exposer exports admin, donnees de facturation completes, gestes commerciaux ou support interne | CS-271, CS-266 |
+24:| `technical` | `/v1/admin/ai`, `/v1/admin/logs`, `/v1/admin/llm`, `/v1/admin/llm/observability`, `/v1/admin/llm/sample-payloads`, `/v1/admin/llm/consumption`, `/v1/admin/llm/assembly`, `/v1/admin/llm/releases` | `ADMIN` actif; `TECHNO` cible non actif | Acces admin existant, roles cibles refuses | Journaliser `actor`, `route_family`, `action`, `correlation_id` pour trace, replay, prompt, release, payload et diagnostic | `internal-technical`; jamais ajoute a l'OpenAPI client public | Les endpoints client sont exclus de `debug`, `replay`, `trace`, `prompt` et donnees runtime techniques completes | CS-271, CS-266 |
+25:| `astrology` | `/v1/admin/content`, `/v1/admin/pdf-templates`, `/v1/admin/answer-audits`, `/v1/admin/audit` | `ADMIN` actif; `ASTRO_EXPERT` cible non actif | Acces admin existant, roles cibles refuses | Journaliser `actor`, `route_family`, `action`, `correlation_id` pour correction, audit, publication, rejet et revue experte | `internal-admin`; schemas internes non publies comme contrat client | Les endpoints client sont exclus des surfaces d'audit, debug, replay, trace, prompt et full astrology runtime | CS-271, CS-266 |
+27:## Regles de rattachement aux roles CS-271
+29:- La famille `business` consomme la matrice CS-271 pour les besoins futurs `MARKETER`, mais aucun acces courant n'est accorde a ce role.
+30:- La famille `technical` consomme la matrice CS-271 pour les besoins futurs `TECHNO`, mais aucun acces courant n'est accorde a ce role.
+31:- La famille `astrology` consomme la matrice CS-271 pour les besoins futurs `ASTRO_EXPERT`, mais aucun acces courant n'est accorde a ce role.
+37:  classees comme contrats `internal-admin` ou `internal-technical`.
+49:- `route_family`: famille admin segmentee, par exemple `business`, `technical` ou `astrology`.
+57:- Aucun endpoint client ne doit partager une surface admin de `debug`, `replay`, `trace`, `prompt` ou full astrology runtime.
+65:Ce contrat ne refactore aucun endpoint, ne renomme aucune route, n'active pas `MARKETER`, `TECHNO` ou `ASTRO_EXPERT`, ne cree pas d'ecran admin,
+EXIT: 0
+COMMAND: rg -n "actor|route_family|action|correlation_id|OpenAPI interne|app.openapi|debug|replay|trace|prompt|runtime|client" docs/architecture/admin-endpoint-domain-segmentation.md
+8:les prochaines stories d'API admin et complete la matrice CS-271 sans activer de nouveaux roles runtime, sans refactorer les routes actuelles
+9:et sans exposer de nouvelles donnees aux clients.
+17:- Les contrats OpenAPI internes admin restent separes de l'OpenAPI client public definie par CS-266.
+21:| domain_family | route_family | target_roles | current_access_state | logging_rule | openapi_visibility | client_exclusion | source_dependency |
+23:| `business` | `/v1/admin/dashboard`, `/v1/admin/users`, `/v1/admin/entitlements`, `/v1/admin/exports`, `/v1/admin/support` | `ADMIN` actif; `MARKETER` cible non actif | Acces admin existant, roles cibles refuses | Journaliser `actor`, `route_family`, `action`, `correlation_id` pour export, modification, support et revelation de donnees | `internal-admin`; non promu dans un contrat client public | Aucune route client ne doit exposer exports admin, donnees de facturation completes, gestes commerciaux ou support interne | CS-271, CS-266 |
+24:| `technical` | `/v1/admin/ai`, `/v1/admin/logs`, `/v1/admin/llm`, `/v1/admin/llm/observability`, `/v1/admin/llm/sample-payloads`, `/v1/admin/llm/consumption`, `/v1/admin/llm/assembly`, `/v1/admin/llm/releases` | `ADMIN` actif; `TECHNO` cible non actif | Acces admin existant, roles cibles refuses | Journaliser `actor`, `route_family`, `action`, `correlation_id` pour trace, replay, prompt, release, payload et diagnostic | `internal-technical`; jamais ajoute a l'OpenAPI client public | Les endpoints client sont exclus de `debug`, `replay`, `trace`, `prompt` et donnees runtime techniques completes | CS-271, CS-266 |
+25:| `astrology` | `/v1/admin/content`, `/v1/admin/pdf-templates`, `/v1/admin/answer-audits`, `/v1/admin/audit` | `ADMIN` actif; `ASTRO_EXPERT` cible non actif | Acces admin existant, roles cibles refuses | Journaliser `actor`, `route_family`, `action`, `correlation_id` pour correction, audit, publication, rejet et revue experte | `internal-admin`; schemas internes non publies comme contrat client | Les endpoints client sont exclus des surfaces d'audit, debug, replay, trace, prompt et full astrology runtime | CS-271, CS-266 |
+34:## Regles OpenAPI interne
+36:- `OpenAPI interne` des familles admin: les routes `/v1/admin/...` peuvent rester visibles dans l'application FastAPI courante, mais elles sont
+38:- L'OpenAPI client public ne doit pas devenir le support de publication des schemas internes de debug, replay, trace, prompt ou runtime
+40:- `app.openapi()` est la source de verification runtime pour prouver l'absence de projections internes publiques, conformement a CS-266.
+42:  client.
+48:- `actor`: identite technique ou utilisateur interne ayant declenche l'action.
+49:- `route_family`: famille admin segmentee, par exemple `business`, `technical` ou `astrology`.
+50:- `action`: lecture, recherche, export, correction, replay, publication, rejet ou diagnostic.
+51:- `correlation_id`: identifiant de correlation pour relier requete, audit et incident.
+55:## Exclusions client
+57:- Aucun endpoint client ne doit partager une surface admin de `debug`, `replay`, `trace`, `prompt` ou full astrology runtime.
+58:- Les donnees de naissance, prompts, payloads bruts, traces d'execution, snapshots de replay et diagnostics astrologiques admin restent hors
+59:  contrat client.
+60:- Les endpoints client peuvent exposer des projections produit controlees, mais jamais les surfaces internes permettant de rejouer, diagnostiquer
+65:Ce contrat ne refactore aucun endpoint, ne renomme aucune route, n'active pas `MARKETER`, `TECHNO` ou `ASTRO_EXPERT`, ne cree pas d'ecran admin,
+66:ne modifie pas l'authentification, ne cree pas de migration, n'ajoute pas de replay et ne change pas les schemas OpenAPI existants.
+EXIT: 0
+COMMAND: git status --short -- backend/app frontend/src docs/architecture/admin-endpoint-domain-segmentation.md backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+ M backend/app/api/v1/routers/registry.py
+ M backend/app/core/sensitive_data.py
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/infra/db/models/__init__.py
+ M backend/app/services/api_contracts/admin/audit.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+?? backend/app/api/v1/routers/admin/answer_audit.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/ops/rejected_answer_review.py
+?? backend/app/services/projection_persistence_service.py
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+?? backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+?? docs/architecture/admin-endpoint-domain-segmentation.md
+EXIT: 0
+
+FINAL REVIEW RERUN AFTER STATUS/EVIDENCE PATCH
+VENV: activated via .\.venv\Scripts\Activate.ps1 for all Python/Ruff/Pytest commands
+COMMAND: python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-272-admin-endpoint-domain-segmentation\00-story.md
+CONDAMAD story validation: PASS
+EXIT: 0
+COMMAND: python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-272-admin-endpoint-domain-segmentation\00-story.md
+CONDAMAD story lint: PASS
+EXIT: 0
+COMMAND: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad/stories/CS-272-admin-endpoint-domain-segmentation
+CONDAMAD validation: PASS
+EXIT: 0
+COMMAND: ruff format --check backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+1 file already formatted
+EXIT: 0
+COMMAND: ruff check .
+All checks passed!
+EXIT: 0
+COMMAND: python -B -m pytest -q backend/tests/unit/test_admin_endpoint_segmentation_contract.py backend/tests/architecture/test_api_contract_neutrality.py --tb=short
+24 passed in 4.75s
+EXIT: 0
+
+FINAL REVIEW RERUN AFTER GENERATED EVIDENCE LINE-WRAP PATCH
+VENV: activated via .\.venv\Scripts\Activate.ps1 for all Python/Ruff/Pytest commands
+COMMAND: python story validate CS-272
+CONDAMAD story validation: PASS
+EXIT: 0
+COMMAND: python story lint --strict CS-272
+CONDAMAD story lint: PASS
+EXIT: 0
+COMMAND: python condamad_validate CS-272 capsule
+CONDAMAD validation: PASS
+EXIT: 0
+COMMAND: ruff check .
+All checks passed!
+EXIT: 0
+COMMAND: pytest CS-272 contract and OpenAPI neutrality
+........................                                                 [100%]
+24 passed in 4.85s
+EXIT: 0
+
+FINAL ALIGNMENT PASS ON 2026-05-24
+VENV: activated via .\.venv\Scripts\Activate.ps1 before Python/Ruff/Pytest commands
+COMMAND: python story validate CS-272
+CONDAMAD story validation: PASS
+EXIT: 0
+COMMAND: python story lint --strict CS-272
+CONDAMAD story lint: PASS
+EXIT: 0
+COMMAND: python condamad_validate CS-272 capsule
+CONDAMAD validation: PASS
+EXIT: 0
+COMMAND: ruff format --check backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+1 file already formatted
+EXIT: 0
+COMMAND: ruff check .
+All checks passed!
+EXIT: 0
+COMMAND: pytest CS-272 contract and OpenAPI neutrality
+........................                                                 [100%]
+24 passed in 4.54s
+EXIT: 0
+COMMAND: runtime admin/openapi smoke from app.routes and app.openapi
+runtime admin/openapi smoke: PASS
+EXIT: 0
+COMMAND: pytest -q from backend after root venv activation
+3269 passed, 1 skipped, 1191 deselected in 337.73s (0:05:37)
+EXIT: 0

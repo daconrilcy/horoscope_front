@@ -1,5 +1,5 @@
 # Story CS-264 projection-persistence-projection-hash: Persist Projection Payloads With projection_hash
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

@@ -1,5 +1,5 @@
 # Story CS-283 b2c-projection-entitlement-policy: Define B2C Projection Entitlement Policy
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -121,16 +121,16 @@ existing quota linkage without implementing payment, B2B API, frontend behavior,
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect existing projection, audit and entitlement owners before writing the policy. (AC: AC1, AC2, AC3, AC6)
-- [ ] Task 2: Create `docs/architecture/b2c-projection-entitlement-policy.md` with a French global file comment. (AC: AC1)
-- [ ] Task 3: Define the B2C role of the policy for free, basic and premium access. (AC: AC1, AC2)
-- [ ] Task 4: Document the projection-by-plan matrix for `structured_facts_v1`, `beginner_summary_v1` and client interpretation. (AC: AC2, AC3)
-- [ ] Task 5: Document denied internal projections and forbidden technical surfaces for B2C clients. (AC: AC4)
-- [ ] Task 6: Document the controlled `plan_insufficient` error shape for future authorization tests. (AC: AC5)
-- [ ] Task 7: Document AI audit triggers for basic, premium, long and sensitive narrative outputs. (AC: AC6)
-- [ ] Task 8: Document quota linkage only from existing product decisions and defer new quota creation. (AC: AC7)
-- [ ] Task 9: Align `docs/architecture/official-product-primitives-public-projections.md` to reference CS-283 policy ownership. (AC: AC1, AC2)
-- [ ] Task 10: Persist validation, scoped status and source checklist evidence under the CS-283 evidence folder. (AC: AC8, AC9, AC10)
+- [x] Task 1: Inspect existing projection, audit and entitlement owners before writing the policy. (AC: AC1, AC2, AC3, AC6)
+- [x] Task 2: Create `docs/architecture/b2c-projection-entitlement-policy.md` with a French global file comment. (AC: AC1)
+- [x] Task 3: Define the B2C role of the policy for free, basic and premium access. (AC: AC1, AC2)
+- [x] Task 4: Document the projection-by-plan matrix for `structured_facts_v1`, `beginner_summary_v1` and client interpretation. (AC: AC2, AC3)
+- [x] Task 5: Document denied internal projections and forbidden technical surfaces for B2C clients. (AC: AC4)
+- [x] Task 6: Document the controlled `plan_insufficient` error shape for future authorization tests. (AC: AC5)
+- [x] Task 7: Document AI audit triggers for basic, premium, long and sensitive narrative outputs. (AC: AC6)
+- [x] Task 8: Document quota linkage only from existing product decisions and defer new quota creation. (AC: AC7)
+- [x] Task 9: Align `docs/architecture/official-product-primitives-public-projections.md` to reference CS-283 policy ownership. (AC: AC1, AC2)
+- [x] Task 10: Persist validation, scoped status and source checklist evidence under the CS-283 evidence folder. (AC: AC8, AC9, AC10)
 
 ## Files to Inspect First
 

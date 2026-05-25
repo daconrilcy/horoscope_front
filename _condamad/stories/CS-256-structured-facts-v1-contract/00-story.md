@@ -1,5 +1,5 @@
 # Story CS-256 structured-facts-v1-contract: Define structured_facts_v1 Stable Hashable Fact Projection
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

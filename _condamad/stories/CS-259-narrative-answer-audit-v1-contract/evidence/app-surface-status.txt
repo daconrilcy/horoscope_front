@@ -1,0 +1,2 @@
+Command: git status --short -- backend/app frontend/src backend/tests backend/migrations
+PASS: no changes under scoped application roots.

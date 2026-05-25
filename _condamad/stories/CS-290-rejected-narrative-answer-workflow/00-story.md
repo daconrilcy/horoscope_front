@@ -1,5 +1,5 @@
 # Story CS-290 rejected-narrative-answer-workflow: Implement Rejected Narrative Answer Workflow
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

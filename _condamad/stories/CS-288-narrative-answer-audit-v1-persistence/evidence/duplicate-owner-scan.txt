@@ -1,0 +1,13 @@
+# Duplicate owner scan
+
+Command: `rg -n "CREATE TABLE narrative_answer_audit|class NarrativeAnswerAuditModel|narrative_answer_audit" app tests migrations`
+
+Result: PASS.
+
+Expected matches are limited to:
+- CS-288 tests and architecture guards.
+- Existing CS-259/CS-287 contract/projection references.
+- `backend/app/infra/db/repositories/llm/narrative_answer_audit_repository.py`, which is a repository over `UserNatalInterpretationModel`, not a second table.
+- `backend/migrations/versions/20260525_0139_extend_user_natal_interpretations_audit_v1.py`, which extends `user_natal_interpretations` and contains no `op.create_table`.
+
+No `CREATE TABLE narrative_answer_audit` and no `NarrativeAnswerAuditModel` were found.

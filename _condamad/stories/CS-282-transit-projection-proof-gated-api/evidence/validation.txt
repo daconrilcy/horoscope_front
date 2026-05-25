@@ -1,0 +1,168 @@
+CS-282 validation transcript
+
+> ruff format app/api/v1/routers/public/transit_projection.py app/services/api_contracts/public/transit_projection.py app/services/transit_projection app/tests/integration/test_transit_projection_api.py tests/architecture/test_api_contract_neutrality.py
+8 files left unchanged
+
+> ruff check .
+All checks passed!
+
+> python -B -m pytest -q app/tests/integration/test_transit_projection_api.py --long --tb=short
+......                                                                   [100%]
+6 passed in 5.97s
+
+> python -B -m pytest -q tests/architecture/test_api_contract_neutrality.py --tb=short
+.....................                                                    [100%]
+21 passed in 3.58s
+
+> python -B -m pytest -q app/tests/unit/test_api_router_architecture.py::test_router_modules_do_not_define_local_schemas app/tests/unit/test_api_router_architecture.py::test_router_root_audit_lists_every_registered_api_v1_router_module app/tests/unit/test_api_router_architecture.py::test_api_sql_boundary_debt_matches_exact_allowlist app/tests/unit/test_api_router_architecture.py::test_service_modules_do_not_import_fastapi_or_wildcards --tb=short
+....                                                                     [100%]
+4 passed in 0.58s
+
+> python -B -m pytest -q --tb=short
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+..................................s..................................... [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+........................................................................ [ 56%]
+........................................................................ [ 58%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 65%]
+........................................................................ [ 67%]
+........................................................................ [ 69%]
+........................................................................ [ 71%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 89%]
+........................................................................ [ 91%]
+........................................................................ [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 97%]
+........................................................................ [ 99%]
+....                                                                     [100%]
+3315 passed, 1 skipped, 1201 deselected in 231.11s (0:03:51)
+
+> python -B -c "from app.main import app; assert [getattr(r, 'path', '') for r in app.routes].count('/v1/transit/projection') == 1"
+
+> python -B -c "from app.main import app; data=str(app.openapi()); assert 'transit_client_projection_v1' in data"
+
+> python -B -c "from app.main import app; data=str(app.openapi()); assert 'TransitChartRuntime' not in data and 'transit_chart_v1' not in data"
+
+> python -B -c "from pathlib import Path; assert Path('../_condamad/stories/CS-280-internal-transit-runtime/evidence/validation.txt').exists()"
+
+> python -B -c "from pathlib import Path; assert Path('../_condamad/stories/CS-281-transit-client-projection-by-plan/evidence/validation.txt').exists()"
+
+> rg -n transit_chart_v1|TransitChartRuntime|execution_trace|debug_payload app/api app/services/api_contracts
+PASS: no matches
+
+> rg -n forbidden public route fragments app tests
+PASS: no matches
+
+> python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-282-transit-projection-proof-gated-api --final
+CONDAMAD validation: PASS
+
+Post-review correction transcript, 2026-05-25
+
+> ruff check app/services/entitlement/feature_scope_registry.py scripts/seed_product_entitlements.py app/services/feature_registry_consistency_validator.py app/services/transit_projection/proof_gate.py app/tests/integration/test_transit_projection_api.py app/tests/unit/test_product_entitlements_models.py
+All checks passed!
+
+> python -B -m pytest -q app/tests/integration/test_transit_projection_api.py --long --tb=short
+........                                                                 [100%]
+8 passed in 6.36s
+
+> python -B -m pytest -q app/tests/unit/test_feature_registry_consistency_validator.py app/tests/unit/test_product_entitlements_models.py tests/architecture/test_api_contract_neutrality.py --tb=short
+....................................                                     [100%]
+36 passed in 2.97s
+
+> ruff check .
+All checks passed!
+
+> python -B -m pytest -q --tb=short
+3315 passed, 1 skipped, 1203 deselected in 229.77s (0:03:49)
+
+> python -B -c "from app.main import app; assert [getattr(r, 'path', '') for r in app.routes].count('/v1/transit/projection') == 1"
+PASS
+
+> python -B -c "from app.main import app; data=str(app.openapi()); assert 'transit_client_projection_v1' in data"
+PASS
+
+> python -B -c "from app.main import app; data=str(app.openapi()); assert 'TransitChartRuntime' not in data and 'transit_chart_v1' not in data"
+PASS
+
+> python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-282-transit-projection-proof-gated-api --final
+CONDAMAD validation: PASS
+
+> python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py .\_condamad\stories\CS-282-transit-projection-proof-gated-api\00-story.md
+CONDAMAD story validation: PASS
+
+> python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict .\_condamad\stories\CS-282-transit-projection-proof-gated-api\00-story.md
+CONDAMAD story lint: PASS
+
+Post-portability test rerun:
+
+> ruff format app/tests/integration/test_transit_projection_api.py
+1 file reformatted
+
+> ruff check app/tests/integration/test_transit_projection_api.py
+All checks passed!
+
+> python -B -m pytest -q app/tests/integration/test_transit_projection_api.py --long --tb=short
+........                                                                 [100%]
+8 passed in 6.24s
+
+Post-brief-alignment correction transcript, 2026-05-25
+
+> ruff format app/api/v1/routers/public/transit_projection.py app/services/transit_projection/proof_gate.py app/tests/integration/test_transit_projection_api.py
+3 files left unchanged
+
+> ruff check app/api/v1/routers/public/transit_projection.py app/services/transit_projection/proof_gate.py app/tests/integration/test_transit_projection_api.py
+All checks passed!
+
+> python -B -m pytest -q app/tests/integration/test_transit_projection_api.py --long --tb=short
+.........                                                                [100%]
+9 passed in 6.11s
+
+> ruff check .
+All checks passed!
+
+> python -B -m pytest -q tests/architecture/test_api_contract_neutrality.py --tb=short
+.....................                                                    [100%]
+21 passed in 3.59s
+
+> python -B -m pytest -q --tb=short
+3315 passed, 1 skipped, 1204 deselected in 228.75s (0:03:48)
+
+> python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-282-transit-projection-proof-gated-api --final
+CONDAMAD validation: PASS
+
+> python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-282-transit-projection-proof-gated-api\00-story.md
+CONDAMAD story validation: PASS
+
+> python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-282-transit-projection-proof-gated-api\00-story.md
+CONDAMAD story lint: PASS

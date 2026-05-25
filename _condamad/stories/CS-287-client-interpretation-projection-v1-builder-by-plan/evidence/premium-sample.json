@@ -1,0 +1,246 @@
+{
+  "audit_input": {
+    "audit_contract": "narrative_answer_audit_v1",
+    "excluded_audit_surfaces": [
+      "audit_rows",
+      "provider_payloads",
+      "prompt_payloads",
+      "review_internals"
+    ],
+    "interpretive_signal_ids": [
+      "dignity_codes:asc",
+      "dignity_codes:moon",
+      "dignity_codes:sun",
+      "dispositor_codes:asc",
+      "dispositor_codes:moon",
+      "dispositor_codes:sun",
+      "fixed_star_contact_codes:regulus:asc",
+      "fixed_star_contact_codes:regulus:moon",
+      "fixed_star_contact_codes:regulus:sun",
+      "house_position_codes:asc",
+      "house_position_codes:moon",
+      "house_position_codes:sun"
+    ],
+    "plan": "premium",
+    "section_codes": [
+      "orientation_generale",
+      "points_forts",
+      "limite_de_lecture",
+      "upgrade_hint",
+      "themes_personnels",
+      "relations_aux_autres",
+      "rythme_actuel",
+      "conseil_pratique",
+      "analyse_approfondie",
+      "tensions_et_ressources",
+      "fenetres_de_prediction",
+      "plan_d_action",
+      "nuances_et_arbitrages"
+    ],
+    "support_element_codes": [
+      "confidence_wording",
+      "source_label",
+      "source_label",
+      "highlight",
+      "personalization_note"
+    ]
+  },
+  "disclaimer_codes": [
+    "ASTROLOGY_GENERAL_LIMITATION"
+  ],
+  "excluded_surfaces": [
+    "audit_internals",
+    "debug_traces",
+    "expert_technical_projection_v1",
+    "full_structured_facts",
+    "prompt_payloads",
+    "provider_responses",
+    "raw_runtime_objects",
+    "technical_scores"
+  ],
+  "interpretive_signals": [
+    "dignity_codes:asc",
+    "dignity_codes:moon",
+    "dignity_codes:sun",
+    "dispositor_codes:asc",
+    "dispositor_codes:moon",
+    "dispositor_codes:sun",
+    "fixed_star_contact_codes:regulus:asc",
+    "fixed_star_contact_codes:regulus:moon",
+    "fixed_star_contact_codes:regulus:sun",
+    "house_position_codes:asc",
+    "house_position_codes:moon",
+    "house_position_codes:sun"
+  ],
+  "plan": "premium",
+  "plan_variant": "premium",
+  "projection_id": "client_interpretation_projection_v1",
+  "sections": [
+    {
+      "code": "orientation_generale",
+      "depth": "premium",
+      "display_hint": "short",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel",
+        "theme dominant mars"
+      ]
+    },
+    {
+      "code": "points_forts",
+      "depth": "premium",
+      "display_hint": "short",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel",
+        "theme dominant mars"
+      ]
+    },
+    {
+      "code": "limite_de_lecture",
+      "depth": "premium",
+      "display_hint": "short",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "upgrade_hint",
+      "depth": "premium",
+      "display_hint": "upgrade",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "themes_personnels",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "contexte de maison",
+        "position principale",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "relations_aux_autres",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "relation entre deux themes",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "rythme_actuel",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "relation entre deux themes",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "conseil_pratique",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel",
+        "theme dominant mars"
+      ]
+    },
+    {
+      "code": "analyse_approfondie",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "contexte de maison",
+        "position principale",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "tensions_et_ressources",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "relation entre deux themes",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "fenetres_de_prediction",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel",
+        "theme dominant mars"
+      ]
+    },
+    {
+      "code": "plan_d_action",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel",
+        "theme dominant mars"
+      ]
+    },
+    {
+      "code": "nuances_et_arbitrages",
+      "depth": "premium",
+      "display_hint": "detailed",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "relation entre deux themes",
+        "ressenti personnel"
+      ]
+    }
+  ],
+  "source_projection": "structured_facts_v1",
+  "source_projection_id": "structured_facts_v1",
+  "state": "normal",
+  "support_elements": [
+    {
+      "code": "confidence_wording",
+      "value": "lecture forte"
+    },
+    {
+      "code": "source_label",
+      "value": "ascendant"
+    },
+    {
+      "code": "source_label",
+      "value": "ressenti personnel"
+    },
+    {
+      "code": "highlight",
+      "value": "theme dominant mars"
+    },
+    {
+      "code": "personalization_note",
+      "value": "liens entre themes disponibles"
+    }
+  ]
+}

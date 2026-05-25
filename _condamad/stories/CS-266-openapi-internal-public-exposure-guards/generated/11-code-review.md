@@ -1,4 +1,4 @@
-# Editorial Review CS-266: CLEAN
+# Implementation Review CS-266: CLEAN
 
 ## Verdict
 
@@ -9,43 +9,61 @@ CLEAN.
 - Story: `_condamad/stories/CS-266-openapi-internal-public-exposure-guards/00-story.md`
 - Source brief: `_story_briefs/cs-266-add-openapi-internal-public-exposure-guards.md`
 - Tracker row: `_condamad/stories/story-status.md`
-- Guardrails checked by targeted IDs: RG-002, RG-003, RG-007, RG-020, RG-022.
+- Implementation files reviewed:
+  - `backend/tests/architecture/test_api_contract_neutrality.py`
+  - `backend/app/tests/integration/test_api_openapi_contract.py`
+  - `backend/docs/openapi-public-internal-boundary.md`
+  - `backend/docs/ownership-index.md`
+- Evidence reviewed:
+  - `_condamad/stories/CS-266-openapi-internal-public-exposure-guards/evidence/openapi-before.json`
+  - `_condamad/stories/CS-266-openapi-internal-public-exposure-guards/evidence/openapi-after.json`
+  - `_condamad/stories/CS-266-openapi-internal-public-exposure-guards/evidence/validation.txt`
+  - `_condamad/stories/CS-266-openapi-internal-public-exposure-guards/generated/03-acceptance-traceability.md`
+  - `_condamad/stories/CS-266-openapi-internal-public-exposure-guards/generated/10-final-evidence.md`
 
 ## Iteration Summary
 
-- Iteration 1 found two drafting issues:
-  - The forbidden-token `rg` command scanned the whole repository instead of the backend target named by the brief.
-  - RG-020 and RG-022 were listed as active guardrails although this story does not touch prompt-generation ownership.
+- Iteration 1 found one evidence/status issue:
+  - `generated/11-code-review.md` still documented the earlier drafting review and the story file still said `ready-to-dev` while the tracker said `ready-to-review`.
 - Fixes applied:
-  - Restricted the forbidden-token scan to `.\backend`.
-  - Kept RG-002, RG-003, and RG-007 active; moved RG-020 and RG-022 to non-applicable examples.
-- Iteration 2 found no remaining actionable drafting issue.
+  - Replaced this artifact with a fresh implementation review.
+  - Set the story file and tracker row to `done` after validations passed.
+  - Updated AC7 evidence wording to match the final tracker state.
+- Iteration 2 found no remaining actionable implementation, evidence, test, guardrail, or AC-alignment issue.
+
+## Acceptance Criteria Review
+
+| AC | Review result |
+|---|---|
+| AC1 | PASS: architecture test serializes `app.openapi()` and rejects the exact internal projection token set. |
+| AC2 | PASS: integration test exercises protected admin, ops, and b2b route samples with `TestClient`; `/v1/internal` remains absent. |
+| AC3 | PASS: route family inventory is derived from `app.routes` and public paths from `app.openapi()["paths"]`. |
+| AC4 | PASS: OpenAPI before/after evidence files exist and compare equal. |
+| AC5 | PASS: forbidden-token guard is automated on runtime public OpenAPI plus a public-surface `rg` scan. |
+| AC6 | PASS: backend documentation and ownership index define the public/internal OpenAPI boundary. |
+| AC7 | PASS: evidence artifacts exist and tracker/story status are now synchronized to `done`. |
 
 ## Validation Results
 
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-266-openapi-internal-public-exposure-guards\00-story.md`
-  - PASS: CONDAMAD story validation.
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-266-openapi-internal-public-exposure-guards\00-story.md`
-  - PASS: CONDAMAD story lint.
+- `ruff check .` from `backend`: PASS.
+- `python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py app\tests\integration\test_api_openapi_contract.py --long --tb=short` from `backend`: PASS, 22 passed.
+- `python -B -m pytest -q app\tests\unit\test_backend_docs_ownership.py --tb=short` from `backend`: PASS, 3 passed.
+- Runtime `/openapi.json` route inventory assertion from `backend`: PASS.
+- Runtime `ChartObjectRuntimeData` OpenAPI absence assertion from `backend`: PASS.
+- OpenAPI before/after equality assertion from `backend`: PASS.
+- Public-surface forbidden-token `rg` scan from repo root: PASS, no matches.
+- `python -B -m pytest -q --tb=short` from `backend`: PASS, 3247 passed, 1 skipped, 1186 deselected.
+- `condamad_story_validate.py` for the target story: PASS after final status and review artifact update.
+- `condamad_story_lint.py --strict` for the target story: PASS after final status and review artifact update.
 
-## Brief Alignment
+## Guardrail Review
 
-- The story preserves all in-scope brief primitives:
-  - public and internal endpoint mapping;
-  - OpenAPI runtime scans;
-  - forbidden internal projection tokens;
-  - route authorization checks;
-  - controlled access errors;
-  - public/internal documentation separation.
-- Out-of-scope items remain explicit:
-  - expert projection implementation;
-  - B2B developer portal;
-  - global auth strategy changes;
-  - runtime trace exposure.
+- RG-002 PASS: API v1 route guard coverage stays in canonical backend test ownership.
+- RG-003 PASS: route inventory comes from the loaded FastAPI app and canonical registered routes.
+- RG-007 PASS: admin/ops protected route families remain protected and are not moved into public OpenAPI.
 
 ## Closure Notes
 
-- Produced artifact: `_condamad/stories/CS-266-openapi-internal-public-exposure-guards/generated/11-code-review.md`.
-- Tracker status remains `ready-to-dev`; tracker date was already `2026-05-24`.
-- Propagation decision: no-propagation; fixes are local to this story contract.
-- Residual risk: none identified for story drafting.
+- Story/status alignment: tracker path and source brief match the requested CS-266 story.
+- Propagation decision: no-propagation; the correction is local evidence/status synchronization after implementation review.
+- Residual risk: none identified for CS-266 implementation closure.

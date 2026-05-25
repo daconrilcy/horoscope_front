@@ -1,0 +1,9 @@
+CS-278 runtime surface status, 2026-05-25
+
+Result: BLOCKED before application changes.
+
+No backend route, public route, frontend route, generated client, migration, DB table, replay service tree or OpenAPI surface was added by CS-278.
+
+Blocking source:
+- docs/architecture/replay-snapshot-v1-storage-security-model.md: approval_state remains non approuve.
+- _condamad/stories/CS-277-replay-snapshot-v1-storage-security-model/generated/10-final-evidence.md: CS-278 must not implement runtime replay until DPO/security approval exists.

@@ -1,0 +1,436 @@
+## VC2 policy path exists
+> python -B -c "from pathlib import Path; assert Path('docs/architecture/b2c-projection-entitlement-policy.md').exists()"
+
+EXIT_CODE=0
+## VC3 policy id and plans
+> rg -n "b2c_projection_entitlement_policy|free|basic|premium" docs/architecture/b2c-projection-entitlement-policy.md
+7:- `policy_id`: `b2c_projection_entitlement_policy`
+9:- Plans autorises: `free`, `basic`, `premium`
+17:| projection_id | minimum_plan | free | basic | premium | allowed_content_depth |
+19:| `structured_facts_v1` | `free` | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | faits stables, hashables et non narratifs; aucun prompt, debug ou raw runtime |
+20:| `beginner_summary_v1` | `free` | resume deterministe court, vulgarise, sans details techniques | resume deterministe complet pour lecture debutant | resume deterministe complet avec contexte de support, sans runtime brut | langage client, labels compacts, highlights et disclaimers |
+21:| `client_interpretation_projection_v1` | `free` | profondeur courte `free_short`, guidance limitee et paywall/degraded states | profondeur `basic`, narration plus complete et aide de lecture | profondeur `premium`, narration longue et support enrichi | variation par narration et aide client; jamais par exposition de runtime technique |
+45:| `current_plan` | oui | plan courant parmi `free`, `basic`, `premium` ou valeur runtime controlee si aucun plan actif |
+56:- toute reponse `basic` declenche `narrative_answer_audit_v1`;
+57:- toute reponse `premium` declenche `narrative_answer_audit_v1`;
+60:- une reponse `free` courte peut rester hors persistance d'audit seulement si elle n'est ni longue, ni sensitive, ni generee comme reponse narrative soumise a audit par CS-259.
+
+EXIT_CODE=0
+## VC4 projection ids
+> rg -n "structured_facts_v1|beginner_summary_v1|client_interpretation_projection_v1" docs/architecture/b2c-projection-entitlement-policy.md
+19:| `structured_facts_v1` | `free` | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | faits stables, hashables et non narratifs; aucun prompt, debug ou raw runtime |
+20:| `beginner_summary_v1` | `free` | resume deterministe court, vulgarise, sans details techniques | resume deterministe complet pour lecture debutant | resume deterministe complet avec contexte de support, sans runtime brut | langage client, labels compacts, highlights et disclaimers |
+21:| `client_interpretation_projection_v1` | `free` | profondeur courte `free_short`, guidance limitee et paywall/degraded states | profondeur `basic`, narration plus complete et aide de lecture | profondeur `premium`, narration longue et support enrichi | variation par narration et aide client; jamais par exposition de runtime technique |
+23:`authorized_projections` contient uniquement `structured_facts_v1`, `beginner_summary_v1` et `client_interpretation_projection_v1` pour les clients B2C dans le scope natal public actuel. Toute nouvelle projection client ou transit reste hors de cette politique tant qu'une decision produit separee et un contrat API dedie ne l'autorisent pas.
+
+EXIT_CODE=0
+## VC5 internal denial terms
+> rg -n "expert|admin|debug|raw runtime|prompt|denied_internal_projections" docs/architecture/b2c-projection-entitlement-policy.md
+13:Cette politique ne cree pas de route, serializer, schema OpenAPI, table, migration, paiement, client frontend, prompt ou provider integration. Les futures stories d'API doivent consommer cette matrice comme source produit et conserver les payloads techniques hors des reponses B2C.
+19:| `structured_facts_v1` | `free` | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | faits stables, hashables et non narratifs; aucun prompt, debug ou raw runtime |
+27:`denied_internal_projections` interdit aux clients B2C:
+29:- les projections expert, dont `expert_technical_projection_v1`;
+30:- les projections admin, dont `astrology_full_data_v1`, `admin_chart_diagnostics_v1` et les payloads d'audit;
+31:- les surfaces debug, traces, graphes de calcul, provider internals et model internals;
+32:- les surfaces raw runtime, `ChartObjectRuntimeData`, raw calculation graph payloads et proof internals;
+33:- les prompts, prompt payloads, prompt refs brutes, provider responses et audit rows.
+44:| `message` | oui | message client-readable, sans detail runtime, prompt, provider, debug ou audit payload |
+62:L'audit conserve ses propres contrats et ne doit pas injecter `audit rows`, prompt payloads, provider internals ou proof internals dans les projections client.
+
+EXIT_CODE=0
+## VC6 plan insufficient fields
+> rg -n "plan_insufficient|current_plan|required_plan|projection_id|upgrade_hint" docs/architecture/b2c-projection-entitlement-policy.md
+17:| projection_id | minimum_plan | free | basic | premium | allowed_content_depth |
+39:`plan_insufficient_error` definit la forme stable de l'erreur `plan_insufficient` pour les futures autorisations API:
+43:| `code` | oui | valeur exacte `plan_insufficient` |
+45:| `current_plan` | oui | plan courant parmi `free`, `basic`, `premium` ou valeur runtime controlee si aucun plan actif |
+46:| `required_plan` | oui | premier plan necessaire selon la `projection_matrix` |
+47:| `projection_id` | oui | projection client demandee; jamais une projection interne detaillee |
+48:| `upgrade_hint` | optionnel | conseil lisible, non technique, sans exposer de prix Stripe, d'identifiant provider ou de payload interne |
+75:- Les futurs tests d'autorisation API peuvent s'appuyer sur `policy_id`, `projection_matrix`, `plan_insufficient_error` et `audit_trigger_policy`.
+
+EXIT_CODE=0
+## VC7 audit triggers
+> rg -n "narrative_answer_audit_v1|basic|premium|long|sensitive" docs/architecture/b2c-projection-entitlement-policy.md
+9:- Plans autorises: `free`, `basic`, `premium`
+17:| projection_id | minimum_plan | free | basic | premium | allowed_content_depth |
+21:| `client_interpretation_projection_v1` | `free` | profondeur courte `free_short`, guidance limitee et paywall/degraded states | profondeur `basic`, narration plus complete et aide de lecture | profondeur `premium`, narration longue et support enrichi | variation par narration et aide client; jamais par exposition de runtime technique |
+45:| `current_plan` | oui | plan courant parmi `free`, `basic`, `premium` ou valeur runtime controlee si aucun plan actif |
+54:`audit_trigger_policy` rattache les reponses narratives B2C a `narrative_answer_audit_v1`:
+56:- toute reponse `basic` declenche `narrative_answer_audit_v1`;
+57:- toute reponse `premium` declenche `narrative_answer_audit_v1`;
+58:- toute reponse narrative `long` declenche `narrative_answer_audit_v1`, quel que soit le plan;
+59:- toute reponse `sensitive` declenche `narrative_answer_audit_v1`, quel que soit le plan;
+60:- une reponse `free` courte peut rester hors persistance d'audit seulement si elle n'est ni longue, ni sensitive, ni generee comme reponse narrative soumise a audit par CS-259.
+
+EXIT_CODE=0
+## VC8 quota linkage
+> rg -n "quota|limit|separate product decision" docs/architecture/b2c-projection-entitlement-policy.md
+21:| `client_interpretation_projection_v1` | `free` | profondeur courte `free_short`, guidance limitee et paywall/degraded states | profondeur `basic`, narration plus complete et aide de lecture | profondeur `premium`, narration longue et support enrichi | variation par narration et aide client; jamais par exposition de runtime technique |
+66:`quota_policy` reutilise uniquement les decisions existantes de quota et limit presentes dans les services billing et entitlement, notamment les bindings de plan, `PlanFeatureQuotaModel`, `quota_runtime.py` et les gates existants.
+68:Aucun quota de projection B2C n'est cree par cette story. Si la matrice exige demain un compteur par projection, une separate product decision est obligatoire avant toute migration, route, middleware, feature binding ou test d'autorisation.
+
+EXIT_CODE=0
+## VC9 OpenAPI neutrality
+> python -B -c "from app.main import app; assert 'b2c_projection_entitlement_policy' not in str(app.openapi())"
+
+EXIT_CODE=0
+## VC10 route neutrality
+> python -B -c "from app.main import app; assert all('b2c-projection-entitlement' not in getattr(r, 'path', '') for r in app.routes)"
+
+EXIT_CODE=0
+## VC11 architecture neutrality test
+> python -B -m pytest -q backend/tests/architecture/test_api_contract_neutrality.py --tb=short
+.....................                                                    [100%]
+21 passed in 3.62s
+
+EXIT_CODE=0
+## VC17 broad doc/source scan
+> rg -n "entitlement|free|basic|premium|plan insuffisant|projection interne" .\docs .\_story_briefs
+.\docs\admin-implementation-overview.md:59:4. `/admin/entitlements` - `AdminEntitlementsPage`
+.\docs\admin-implementation-overview.md:63:   - Endpoints : `/v1/admin/entitlements/matrix`, `PATCH /v1/admin/entitlements/{planId}/{featureId}`.
+.\docs\admin-implementation-overview.md:128:- `admin_entitlements_router` (`/v1/admin/entitlements`)
+.\docs\api-contracts-backend.md:41:## `/v1/entitlements/me` - Plan Commercial et Droits Effectifs
+.\docs\architecture\admin-endpoint-domain-segmentation.md:23:| `business` | `/v1/admin/dashboard`, `/v1/admin/users`, `/v1/admin/entitlements`, `/v1/admin/exports`, `/v1/admin/support` | `ADMIN` actif; `MARKETER` cible non actif | Acces admin existant, roles cibles refuses | Journaliser `actor`, `route_family`, `action`, `correlation_id` pour export, modification, support et revelation de donnees | `internal-admin`; non promu dans un contrat client public | Aucune route client ne doit exposer exports admin, donnees de facturation completes, gestes commerciaux ou support interne | CS-271, CS-266 |
+.\docs\architecture\astrology-full-data-v1-contract.md:5:`astrology_full_data_v1` est une projection interne, protected, non client et
+.\docs\architecture\admin-permission-matrix.md:22:| `business` | Donnees commerciales et operationnelles | abonnements, facturation, entitlements, exports, indicateurs, support commercial | visible pour `ADMIN`; agrege ou masque pour les roles cibles |
+.\docs\architecture\admin-permission-matrix.md:38:| `correct` | Corriger une donnee, un contenu, un entitlement ou un statut. | Aucune correction par roles cibles sans RBAC et workflow d'audit dedies. |
+.\docs\architecture\admin-permission-matrix.md:44:| `ADMIN` | `business` | abonnements, facturation, entitlements, exports | `read`, `search`, `export`, `correct` | autorise | acces complet admin existant | visible sauf secrets et tokens | decided | active |
+.\docs\architecture\b2c-projection-entitlement-policy.md:7:- `policy_id`: `b2c_projection_entitlement_policy`
+.\docs\architecture\b2c-projection-entitlement-policy.md:8:- Owner canonique: `docs/architecture/b2c-projection-entitlement-policy.md`
+.\docs\architecture\b2c-projection-entitlement-policy.md:9:- Plans autorises: `free`, `basic`, `premium`
+.\docs\architecture\b2c-projection-entitlement-policy.md:10:- Sources de vocabulaire: `backend/app/services/billing/models.py`, `backend/app/services/entitlement/**`, CS-256, CS-257, CS-258 et CS-259.
+.\docs\architecture\b2c-projection-entitlement-policy.md:17:| projection_id | minimum_plan | free | basic | premium | allowed_content_depth |
+.\docs\architecture\b2c-projection-entitlement-policy.md:19:| `structured_facts_v1` | `free` | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | autorise comme base factuelle controlee quand un contrat API public existe | faits stables, hashables et non narratifs; aucun prompt, debug ou raw runtime |
+.\docs\architecture\b2c-projection-entitlement-policy.md:20:| `beginner_summary_v1` | `free` | resume deterministe court, vulgarise, sans details techniques | resume deterministe complet pour lecture debutant | resume deterministe complet avec contexte de support, sans runtime brut | langage client, labels compacts, highlights et disclaimers |
+.\docs\architecture\b2c-projection-entitlement-policy.md:21:| `client_interpretation_projection_v1` | `free` | profondeur courte `free_short`, guidance limitee et paywall/degraded states | profondeur `basic`, narration plus complete et aide de lecture | profondeur `premium`, narration longue et support enrichi | variation par narration et aide client; jamais par exposition de runtime technique |
+.\docs\architecture\b2c-projection-entitlement-policy.md:35:Une projection interne ne devient pas B2C par fallback, alias, shim, compat path ou champ optionnel dans une projection client. Si un appel futur demande une projection interne avec un plan B2C, la reponse attendue est un refus controle, pas une degradation silencieuse vers un payload technique partiel.
+.\docs\architecture\b2c-projection-entitlement-policy.md:45:| `current_plan` | oui | plan courant parmi `free`, `basic`, `premium` ou valeur runtime controlee si aucun plan actif |
+.\docs\architecture\b2c-projection-entitlement-policy.md:47:| `projection_id` | oui | projection client demandee; jamais une projection interne detaillee |
+.\docs\architecture\b2c-projection-entitlement-policy.md:56:- toute reponse `basic` declenche `narrative_answer_audit_v1`;
+.\docs\architecture\b2c-projection-entitlement-policy.md:57:- toute reponse `premium` declenche `narrative_answer_audit_v1`;
+.\docs\architecture\b2c-projection-entitlement-policy.md:60:- une reponse `free` courte peut rester hors persistance d'audit seulement si elle n'est ni longue, ni sensitive, ni generee comme reponse narrative soumise a audit par CS-259.
+.\docs\architecture\b2c-projection-entitlement-policy.md:66:`quota_policy` reutilise uniquement les decisions existantes de quota et limit presentes dans les services billing et entitlement, notamment les bindings de plan, `PlanFeatureQuotaModel`, `quota_runtime.py` et les gates existants.
+.\docs\architecture\beginner-summary-v1-contract.md:7:`beginner_summary_v1` est la projection B2C deterministe destinee aux contextes public-user, beginner, free et basic.
+.\docs\architecture\beginner-summary-v1-contract.md:9:Ce contrat documente une forme cible lisible pour un client debutant. Il ne cree pas de builder, de route API, de schema OpenAPI, de table, de migration, de client frontend, de serializer runtime, de prompt LLM, de narration longue ou de projection premium.
+.\docs\architecture\beginner-summary-v1-contract.md:24:| `audience` | `public-user`, `beginner`, `free`, `basic`. |
+.\docs\architecture\beginner-summary-v1-contract.md:30:| `excluded_surfaces` | Donnees techniques completes, full facts, raw runtime, debug, audit, traces internes et champs premium. |
+.\docs\architecture\beginner-summary-v1-contract.md:76:- une projection expert ou premium;
+.\docs\architecture\beginner-summary-v1-contract.md:84:La compatibilite free/basic impose un resume court, comprehensible et controle. Toute projection premium ou expert doit rester dans un contrat separe.
+.\docs\agent\story-29-N1-chart-json-canon.md:132:- `test_build_evidence_catalog_basic` : vérifie les identifiants générés
+.\docs\architecture\client-interpretation-projection-v1-contract.md:8:pour les clients `free`, `basic` et `premium`.
+.\docs\architecture\client-interpretation-projection-v1-contract.md:25:| `audience` | Clients B2C `public-user`, `free`, `basic` et `premium`. |
+.\docs\architecture\client-interpretation-projection-v1-contract.md:28:| `plan_variant` | Une des valeurs controlees: `free`, `basic` ou `premium`. |
+.\docs\architecture\client-interpretation-projection-v1-contract.md:41:| `free` | `orientation_generale`, `points_forts`, `limite_de_lecture`, `upgrade_hint` | Donner une interpretation courte, utile et non anxiogene, avec peu de personnalisation et sans prediction detaillee. |
+.\docs\architecture\client-interpretation-projection-v1-contract.md:42:| `basic` | Sections `free` plus `themes_personnels`, `relations_aux_autres`, `rythme_actuel`, `conseil_pratique` | Offrir une lecture plus personnalisee, reliee aux themes dominants et a quelques appuis vulgarises. |
+.\docs\architecture\client-interpretation-projection-v1-contract.md:43:| `premium` | Sections `basic` plus `analyse_approfondie`, `tensions_et_ressources`, `fenetres_de_prediction`, `plan_d_action`, `nuances_et_arbitrages` | Produire une interpretation riche, nuancee, plus predictive et actionnable sans devenir une projection expert. |
+.\docs\architecture\client-interpretation-projection-v1-contract.md:46:`free`, `basic` et `premium` porte uniquement sur la profondeur narrative, le
+.\docs\architecture\client-interpretation-projection-v1-contract.md:52:| Dimension | `free` | `basic` | `premium` |
+.\docs\architecture\entitlements-canonical-platform.md:4:> This file is retained as a historical architecture note. Active entitlement
+.\docs\architecture\entitlements-canonical-platform.md:6:> integration tests guarded by `app/tests/unit/test_entitlement_docs_runtime_parity.py`.
+.\docs\architecture\entitlements-canonical-platform.md:11:Ce document définit la source de vérité pour les droits d'accès (entitlements) aux fonctionnalités B2C de la plateforme.
+.\docs\architecture\entitlements-canonical-platform.md:30:- **Module Supprimé** : `backend/app/services/quota_service.py` (`QuotaService`) a été supprimé. Tout nouveau code doit utiliser `QuotaUsageService` et le système canonique d'entitlements.
+.\docs\architecture\entitlements-canonical-platform.md:31:- **Refactor Frontend** : Les helpers frontend (`useBillingQuota`, `fetchQuotaStatus`) ont été renommés en `useChatEntitlementUsage`, `fetchChatEntitlementUsage` pour refléter leur usage réel de `GET /v1/entitlements/me`.
+.\docs\architecture\entitlements-canonical-platform.md:57:Depuis la story 61.18, le système d'entitlements canonique s'étend au segment B2B. En story 61.25, le stockage a été découplé pour utiliser une table native B2B.
+.\docs\architecture\entitlements-canonical-platform.md:82:- **Audit Ops** : `GET /v1/ops/b2b/entitlements/audit` lit exclusivement `enterprise_feature_usage_counters`. L'absence d' `admin_user_id` n'est plus un motif de blocage ou d'audit "settings_fallback".
+.\docs\architecture\entitlements-canonical-platform.md:176:Le système de protection des entitlements repose désormais sur quatre couches complémentaires :
+.\docs\architecture\entitlements-canonical-platform.md:193:python backend/scripts/check_canonical_entitlement_db_consistency.py
+.\docs\architecture\entitlements-canonical-platform.md:248:- `backend/scripts/seed_product_entitlements.py`
+.\docs\architecture\entitlements-canonical-platform.md:250:- `backend/app/services/b2b_entitlement_repair_service.py`
+.\docs\architecture\entitlements-canonical-platform.md:256:Depuis la story 61.32, toute mutation effective effectuée via `CanonicalEntitlementMutationService` laisse une trace d'audit structurée et transactionnelle dans la table `canonical_entitlement_mutation_audits`.
+.\docs\architecture\entitlements-canonical-platform.md:270:- **actor_identifier** : Nom du script ou du service (ex: `seed_product_entitlements.py`, `b2b_entitlement_repair_service`).
+.\docs\architecture\entitlements-canonical-platform.md:283:- **Seed initial** : `seed_product_entitlements.py`
+.\docs\architecture\entitlements-canonical-platform.md:285:- **Repair B2B** : `b2b_entitlement_repair_service.py` (inclut la classification manuelle des plans à zéro unité).
+.\docs\architecture\entitlements-canonical-platform.md:289:Depuis la story 61.33, les mutations auditées dans `canonical_entitlement_mutation_audits` sont consultables via une API ops sécurisée, paginée et filtrable.
+.\docs\architecture\entitlements-canonical-platform.md:293:- **Liste paginée** : `GET /v1/ops/entitlements/mutation-audits`
+.\docs\architecture\entitlements-canonical-platform.md:299:- **Détail par ID** : `GET /v1/ops/entitlements/mutation-audits/{audit_id}`
+.\docs\architecture\entitlements-canonical-platform.md:306:- **Rate limiting** : Appliqué par utilisateur, rôle et globalement (clés `ops_entitlement_mutation_audits:*`).
+.\docs\architecture\entitlements-canonical-platform.md:334:L'endpoint `GET /v1/ops/entitlements/mutation-audits` accepte désormais 3 nouveaux filtres optionnels :
+.\docs\architecture\entitlements-canonical-platform.md:352:### Table `canonical_entitlement_mutation_audit_reviews`
+.\docs\architecture\entitlements-canonical-platform.md:359:| `audit_id` | int FK UNIQUE | Référence vers `canonical_entitlement_mutation_audits.id` |
+.\docs\architecture\entitlements-canonical-platform.md:379:POST /v1/ops/entitlements/mutation-audits/{audit_id}/review
+.\docs\architecture\entitlements-canonical-platform.md:401:`GET /v1/ops/entitlements/mutation-audits` accepte un nouveau paramètre optionnel `review_status`.
+.\docs\architecture\entitlements-canonical-platform.md:407:GET /v1/ops/entitlements/mutation-audits?review_status=pending_review
+.\docs\architecture\entitlements-canonical-platform.md:420:### Table `canonical_entitlement_mutation_audit_review_events`
+.\docs\architecture\entitlements-canonical-platform.md:429:| `audit_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_audits.id` |
+.\docs\architecture\entitlements-canonical-platform.md:452:GET /v1/ops/entitlements/mutation-audits/{audit_id}/review-history
+.\docs\architecture\entitlements-canonical-platform.md:507:GET /v1/ops/entitlements/mutation-audits/review-queue
+.\docs\architecture\entitlements-canonical-platform.md:543:- Les payloads complets `before_payload` et `after_payload` ne sont pas exposés dans la queue ; ils restent accessibles via `GET /v1/ops/entitlements/mutation-audits/{audit_id}`.
+.\docs\architecture\entitlements-canonical-platform.md:548:GET /v1/ops/entitlements/mutation-audits/review-queue/summary
+.\docs\architecture\entitlements-canonical-platform.md:614:### Table `canonical_entitlement_mutation_alert_events`
+.\docs\architecture\entitlements-canonical-platform.md:621:| `audit_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_audits.id` |
+.\docs\architecture\entitlements-canonical-platform.md:681:- `canonical_entitlement_mutation_alert_events` reste la vérité métier: une alerte existe pour un état donné.
+.\docs\architecture\entitlements-canonical-platform.md:684:- Chaque relance écrit une tentative append-only dans `canonical_entitlement_mutation_alert_delivery_attempts`.
+.\docs\architecture\entitlements-canonical-platform.md:686:### Table `canonical_entitlement_mutation_alert_delivery_attempts`
+.\docs\architecture\entitlements-canonical-platform.md:691:| `alert_event_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_alert_events.id` |
+.\docs\architecture\entitlements-canonical-platform.md:708:GET  /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
+.\docs\architecture\entitlements-canonical-platform.md:709:POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
+.\docs\architecture\entitlements-canonical-platform.md:750:GET /v1/ops/entitlements/mutation-audits/alerts/summary
+.\docs\architecture\entitlements-canonical-platform.md:751:GET /v1/ops/entitlements/mutation-audits/alerts
+.\docs\architecture\entitlements-canonical-platform.md:752:POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch
+.\docs\architecture\entitlements-canonical-platform.md:753:GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/attempts
+.\docs\architecture\entitlements-canonical-platform.md:754:POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/retry
+.\docs\architecture\entitlements-canonical-platform.md:765:`GET /v1/ops/entitlements/mutation-audits/alerts`
+.\docs\architecture\entitlements-canonical-platform.md:784:- tous les champs persistés de `canonical_entitlement_mutation_alert_events`
+.\docs\architecture\entitlements-canonical-platform.md:792:- `attempt_count` compte uniquement les lignes de `canonical_entitlement_mutation_alert_delivery_attempts`
+.\docs\architecture\entitlements-canonical-platform.md:824:`GET /v1/ops/entitlements/mutation-audits/alerts/summary`
+.\docs\architecture\entitlements-canonical-platform.md:852:POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch
+.\docs\architecture\entitlements-canonical-platform.md:873:  "plan_code": "premium",
+.\docs\architecture\entitlements-canonical-platform.md:912:### Table `canonical_entitlement_mutation_alert_event_handlings`
+.\docs\architecture\entitlements-canonical-platform.md:919:| `alert_event_id` | int FK UNIQUE | Référence vers `canonical_entitlement_mutation_alert_events.id` |
+.\docs\architecture\entitlements-canonical-platform.md:929:POST /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/handle
+.\docs\architecture\entitlements-canonical-platform.md:962:`GET /v1/ops/entitlements/mutation-audits/alerts` expose désormais :
+.\docs\architecture\entitlements-canonical-platform.md:978:`POST /v1/ops/entitlements/mutation-audits/alerts/retry-batch` conserve le filtre implicite `delivery_status=failed`, mais exclut désormais les alertes ayant un handling explicite `suppressed` ou `resolved`.
+.\docs\architecture\entitlements-canonical-platform.md:987:- une projection mutable courante dans `canonical_entitlement_mutation_alert_event_handlings`
+.\docs\architecture\entitlements-canonical-platform.md:988:- un journal append-only dans `canonical_entitlement_mutation_alert_event_handling_events`
+.\docs\architecture\entitlements-canonical-platform.md:990:### Table append-only `canonical_entitlement_mutation_alert_event_handling_events`
+.\docs\architecture\entitlements-canonical-platform.md:997:| `alert_event_id` | int FK INDEX | Référence vers `canonical_entitlement_mutation_alert_events.id` |
+.\docs\architecture\entitlements-canonical-platform.md:1029:GET /v1/ops/entitlements/mutation-audits/alerts/{alert_event_id}/handling-history
+.\docs\architecture\entitlements-canonical-platform.md:1083:POST /v1/ops/entitlements/mutation-audits/alerts/handle-batch
+.\docs\architecture\entitlements-canonical-platform.md:1109:  "plan_code": "premium",
+.\docs\architecture\entitlements-canonical-platform.md:1157:### Table `canonical_entitlement_mutation_alert_suppression_rules`
+.\docs\architecture\entitlements-canonical-platform.md:1187:GET   /v1/ops/entitlements/mutation-audits/alerts/suppression-rules
+.\docs\architecture\entitlements-canonical-platform.md:1188:POST  /v1/ops/entitlements/mutation-audits/alerts/suppression-rules
+.\docs\architecture\entitlements-canonical-platform.md:1189:PATCH /v1/ops/entitlements/mutation-audits/alerts/suppression-rules/{rule_id}
+.\docs\agent\story-29-N2-natal-interpretation-gateway.md:37:       ├─ Step C: choisit use_case selon entitlement (short | complete)
+.\docs\agent\story-29-N2-natal-interpretation-gateway.md:50:- L'entitlement (simple vs complete) est déterminé par un flag dans l'endpoint (`use_case_level: "short" | "complete"`)
+.\docs\agent\story-29-N2-natal-interpretation-gateway.md:67:- Pas de gestion de paiement/Stripe dans cette story (entitlement = paramètre simple)
+.\docs\architecture\evidence-refs-contract.md:30:- `plan.premium.deep_dive`.
+.\docs\billing-self-service-mvp.md:73:6. Le backend met à jour le `StripeBillingProfile`, invalide le cache billing utilisateur, puis le runtime B2C relit ce snapshot canonique pour exposer le plan commercial et les entitlements.
+.\docs\billing-self-service-mvp.md:81:- Pas de mutation synchrone du snapshot billing ni de recalcul d'entitlements dans l'endpoint portail. Le webhook Stripe reste l'unique source de vérité pour les changements effectifs.
+.\docs\billing-self-service-mvp.md:82:- Le contrat `GET /v1/billing/subscription` et le resolver `GET /v1/entitlements/me` ne dépendent plus du seul `UserSubscriptionModel` legacy quand un snapshot Stripe exploitable existe.
+.\docs\architecture\internal-role-model.md:77:- users, billing, entitlements, exports et reconciliation;
+.\docs\architecture\generic-projection-endpoint-contract.md:21:destinee aux experiences `public-user`, `free`, `basic` et `premium` selon la
+.\docs\architecture\generic-projection-endpoint-contract.md:36:| `projection_type` | obligatoire | Identifiant de projection B2C autorise par type et par plan ou entitlement. |
+.\docs\architecture\generic-projection-endpoint-contract.md:68:| Appliquer l'autorisation B2C | Couche d'orchestration future avec politique plan ou entitlement. | Ne pas ouvrir les projections internes par defaut. |
+.\docs\architecture\generic-projection-endpoint-contract.md:76:L'acces B2C est decide par `projection_type`, puis par plan ou entitlement. Une
+.\docs\architecture\generic-projection-endpoint-contract.md:82:| `beginner_summary_v1` | Accessible aux experiences debutant, `public-user`, `free` et `basic` selon la politique produit. |
+.\docs\architecture\generic-projection-endpoint-contract.md:83:| `client_interpretation_projection_v1` | Accessible aux clients `free`, `basic` et `premium`; la profondeur narrative depend du plan ou entitlement. |
+.\docs\architecture\generic-projection-endpoint-contract.md:100:| `403` | `projection.unauthorized` | `projection_type` est interdit au client, a son plan ou a ses entitlements. |
+.\docs\agent\story-29-N4-ui-rendu-upsell.md:57:- Parcours upsell fonctionnel (free → CTA → complete)
+.\docs\architecture\narrative-answer-audit-v1-contract.md:15:| `role` | Preuve interne permettant d'auditer une reponse narrative basic, premium, long, sensitive ou free_short. |
+.\docs\architecture\narrative-answer-audit-v1-contract.md:26:| `answer_type` | Categorie fonctionnelle de la reponse: `basic`, `premium`, `long`, `sensitive` ou `free_short`. |
+.\docs\architecture\official-product-primitives-public-projections.md:10:CS-283 ajoute l'owner d'entitlement B2C
+.\docs\architecture\official-product-primitives-public-projections.md:11:`docs/architecture/b2c-projection-entitlement-policy.md` pour la matrice
+.\docs\architecture\official-product-primitives-public-projections.md:12:`b2c_projection_entitlement_policy` des plans `free`, `basic` et `premium`. Ce
+.\docs\architecture\official-product-primitives-public-projections.md:34:| `client_interpretation_projection` | client interpretation by plan | free, basic, premium, public-user | public | `structured_facts_v1`, signaux interpretatifs pre-narratifs, contexte natal compact LLM | `docs/architecture/client-interpretation-projection-v1-contract.md` (`client_interpretation_projection_v1`, CS-258) | runtime technique brut, proof internals, prompt internals, provider internals, `expert_technical_projection_v1` | future API contract, not CS-258 | future frontend client, not CS-258 | future UI component, not CS-258 | OpenAPI-neutral in CS-258 |
+.\docs\architecture\official-product-primitives-public-projections.md:35:| `transit_client_projection` | transit client projection by plan | free, basic, premium, public-user | blocked | `transit_chart_v1` interne, apres proof gate astronomique et doctrine limits valides | `docs/architecture/transit-client-projection-v1-contract.md` (`transit_client_projection_v1`, CS-281) | raw runtime payloads, graph traces, proof internals, debug fields, `expert_technical_projection_v1`, public transit route | future API contract only after proof gate, not CS-281 | future frontend client blocked, not CS-281 | future UI component blocked, not CS-281 | OpenAPI-neutral in CS-281; blocked until proof gate |
+.\docs\architecture\official-product-primitives-public-projections.md:70:| 3 | `client_interpretation_projection` | CS-258 definit `client_interpretation_projection_v1` par profondeur free/basic/premium. | Client dedie hors scope CS-258, apres contrat API separe. | Composant public-user hors scope CS-258. | Variation par narration et support vulgarise, jamais par runtime technique brut. |
+.\docs\architecture\official-product-primitives-public-projections.md:83:- `gated`: meme projection, mais routee derriere autorisation/entitlement;
+.\docs\billing-trials-and-first-payment.md:5:Le produit ne décide jamais l'accès premium à partir d'un simple booléen `paid/unpaid`.
+.\docs\billing-trials-and-first-payment.md:6:La source de vérité reste Stripe, réconciliée par webhook puis exposée au runtime produit via `subscription_status` et `entitlement_plan`.
+.\docs\billing-trials-and-first-payment.md:10:- le `plan_code` runtime B2C depuis `entitlement_plan` ;
+.\docs\billing-trials-and-first-payment.md:27:| `canceled` | Abonnement résilié | retour `free` |
+.\docs\billing-trials-and-first-payment.md:28:| `unpaid` | Factures impayées, accès révoqué | retour `free` |
+.\docs\billing-trials-and-first-payment.md:90:- un abonnement `trialing` ouvre bien l'accès via `entitlement_plan`
+.\docs\billing-trials-and-first-payment.md:93:- un abonnement `paused` retombe sur `free`
+.\docs\architecture\product-entitlements-model.md:4:Ce document décrit le nouveau modèle d'entitlements produit introduit pour découpler les droits d'accès et les quotas de la structure historique du billing (Stripe/Legacy tables).
+.\docs\architecture\product-entitlements-model.md:13:1.  **Plan Commercial** : L'offre souscrite (ex: `free`, `trial`, `basic`, `premium`).
+.\docs\architecture\product-entitlements-model.md:23:-   `plan_code` : Identifiant unique (ex: `premium`).
+.\docs\architecture\product-entitlements-model.md:61:-   Le script de seed (`seed_product_entitlements.py`) est idempotent et convergent (il met à jour les données existantes et supprime les quotas obsolètes).
+.\docs\architecture\product-entitlements-model.md:90:- Tarification (prix, devise), hors périmètre du modèle d'entitlements.
+.\docs\agent\story-30-2-astroresponse-v2.md:173:    """Canonical structured response for premium astrological interpretations (v2)."""
+.\docs\agent\story-30-2-astroresponse-v2.md:257:    """Canonical structured response for premium astrological interpretations.
+.\docs\agent\story-30-2-astroresponse-v2.md:299:logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+.\docs\agent\story-30-3-gateway-gpt5.md:644:logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+.\docs\db_seeder\astrology\astral_accidental_dignity_types.json:160:      "code": "free_from_sunbeams",
+.\docs\db_seeder\astrology\astral_accidental_dignity_types.json:303:      "code": "free_from_malefics",
+.\docs\architecture\transit-client-projection-v1-contract.md:6:`free`, `basic` et `premium`. Elle est couchee au-dessus du runtime interne
+.\docs\architecture\transit-client-projection-v1-contract.md:21:| `audience` | Clients B2C `public-user`, `free`, `basic` et `premium`. |
+.\docs\architecture\transit-client-projection-v1-contract.md:24:| `plan_variant` | Une des valeurs controlees: `free`, `basic` ou `premium`. |
+.\docs\architecture\transit-client-projection-v1-contract.md:29:| `excluded_surfaces` | Raw runtime, graph traces, proof internals, debug fields, API route, frontend, DB, migration, entitlement et product promise. |
+.\docs\architecture\transit-client-projection-v1-contract.md:35:| `free` | `orientation_generale`, `periode_active_simplifiee`, `theme_du_moment`, `limite_de_lecture`, `upgrade_hint` non technique | Donner une lecture courte, prudente et utile sans prediction detaillee ni diagnostic technique. |
+.\docs\architecture\transit-client-projection-v1-contract.md:36:| `basic` | Sections `free` plus `fenetres_de_timing`, `transits_principaux_vulgarises`, `conseil_pratique`, `points_de_vigilance` | Relier les transits dominants a des themes personnels avec plus de contexte, sans exposer les objets runtime. |
+.\docs\architecture\transit-client-projection-v1-contract.md:37:| `premium` | Sections `basic` plus `sequence_temporelle`, `nuances_et_arbitrages`, `priorites_d_action`, `lecture_des_cycles`, `limites_explicites` | Produire une narration plus riche, nuancee et actionnable, tout en restant une projection client non expert. |
+.\docs\architecture\transit-client-projection-v1-contract.md:41:`premium` augmente la richesse explicative et la granularite narrative; il ne
+.\docs\architecture\transit-client-projection-v1-contract.md:46:| Dimension | `free` | `basic` | `premium` |
+.\docs\architecture\transit-client-projection-v1-contract.md:78:- projection validation evidence couvrant la matrice `free`, `basic`, `premium`;
+.\docs\architecture\transit-client-projection-v1-contract.md:83:route, schema, serializer, entitlement, migration ou UI ne peut inferer une
+.\docs\architecture\transit-client-projection-v1-contract.md:109:- DB model, migration, persistence, entitlement enforcement, pricing ou product
+.\docs\architecture\transit-client-projection-v1-contract.md:113:le client frontend, l'UI, la persistance ou l'entitlement. Ce document reste le
+.\docs\architecture\transit-client-projection-v1-contract.md:121:second systeme d'entitlement ou de debug par plan.
+.\docs\db_seeder\astrology\astral_house_interpretation_profiles.json:396:      "summary": "The fifth house describes creativity, pleasure, romance, children, play, joy, talent and the desire to express oneself freely.",
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:693:        "freedom",
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:709:        "need for freedom",
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:720:        "freedom needs"
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:770:        "Describe what seeks freedom or awakening.",
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:1631:        "freedom",
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:1647:        "need for freedom",
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:1658:        "freedom needs"
+.\docs\db_seeder\astrology\astral_planet_interpretation_profiles.json:1708:        "Describe what seeks freedom or awakening.",
+.\docs\db_seeder\astrology\astral_sign_keywords.json:316:        "entitlement",
+.\docs\db_seeder\astrology\astral_sign_keywords.json:534:        "freedom",
+.\docs\db_seeder\astrology\astral_sign_keywords.json:592:        "freedom addiction",
+.\docs\db_seeder\astrology\astral_sign_keywords.json:666:        "freedom",
+.\docs\architecture\ungrounded-narrative-rejection-workflow.md:17:| `answer_type` | Categorie de reponse heritee de `narrative_answer_audit_v1`: `basic`, `premium`, `long`, `sensitive` ou `free_short`. |
+.\docs\architecture\ungrounded-narrative-rejection-workflow.md:163:  "answer_type": "premium",
+.\docs\architecture\ungrounded-narrative-rejection-workflow.md:177:    "prompt": "prompt_ref:premium_narrative.v1",
+.\docs\entitlements-canonical-closure.md:1:# Clôture du chantier entitlements canoniques — Objectif atteint
+.\docs\entitlements-canonical-closure.md:6:plateforme canonique d'entitlements gouvernée, observable et validée de bout en bout.
+.\docs\entitlements-canonical-closure.md:14:| Migration B2C | 61.11–61.17 | Gates B2C migrées, endpoint `GET /v1/entitlements/me`, décommission quota legacy |
+.\docs\entitlements-canonical-closure.md:28:   `docs/entitlements-legacy-remnants.md` sont la liste de référence.
+.\docs\entitlements-canonical-closure.md:34:Aucune nouvelle étape structurante du chantier entitlements n'est planifiée dans
+.\docs\entitlements-legacy-remnants.md:9:| `backend/app/services/entitlement_service.py` | Service B2C legacy | `à supprimer` | Supprimé en 61.50, remplacé par `EffectiveEntitlementResolverService` |
+.\docs\entitlements-legacy-remnants.md:10:| `backend/app/tests/unit/test_entitlement_service.py` | Tests legacy | `à supprimer` | Supprimé avec le service correspondant |
+.\docs\entitlements-legacy-remnants.md:11:| `FeatureEntitlement` dans `backend/app/services/entitlement_types.py` | Dataclass legacy | `à supprimer` | Supprimée, le runtime repose sur `EffectiveFeatureAccess` |
+.\docs\entitlements-legacy-remnants.md:17:| `backend/app/services/chat_entitlement_gate.py` | Mapping legacy d'erreur | `conservé intentionnellement` | Conserve `reason` en plus de `reason_code` pour compatibilité du flux chat |
+.\docs\entitlements-legacy-remnants.md:18:| `backend/app/services/natal_chart_long_entitlement_gate.py` | Mapping legacy d'erreur | `conservé intentionnellement` | Compatibilité du contrat d'erreur existant |
+.\docs\entitlements-legacy-remnants.md:19:| `backend/app/services/thematic_consultation_entitlement_gate.py` | Mapping legacy d'erreur | `conservé intentionnellement` | Compatibilité du contrat d'erreur existant |
+.\docs\entitlements-legacy-remnants.md:28:| `backend/app/tests/integration/test_chat_entitlement.py` | Assertions legacy | `dette documentée` | Continue d'asserter `reason=no_plan` / `disabled_by_plan` |
+.\docs\entitlements-legacy-remnants.md:29:| `backend/app/tests/integration/test_natal_chart_long_entitlement.py` | Assertions legacy | `dette documentée` | Vérifie encore le vocabulaire legacy côté gate |
+.\docs\entitlements-legacy-remnants.md:30:| `backend/app/tests/integration/test_thematic_consultation_entitlement.py` | Assertions legacy | `dette documentée` | Vérifie encore `details.reason` pour compatibilité API |
+.\docs\entitlements-legacy-remnants.md:31:| `backend/app/tests/unit/test_chat_entitlement_gate.py` | Assertions legacy | `dette documentée` | Couvre l'adaptateur legacy des gates |
+.\docs\entitlements-legacy-remnants.md:32:| `backend/app/tests/unit/test_natal_chart_long_entitlement_gate.py` | Assertions legacy | `dette documentée` | Couvre l'adaptateur legacy des gates |
+.\docs\entitlements-legacy-remnants.md:33:| `backend/app/tests/unit/test_thematic_consultation_entitlement_gate.py` | Assertions legacy | `dette documentée` | Couvre l'adaptateur legacy des gates |
+.\docs\entitlements-operations.md:9:La source de vérité métier est `backend/scripts/seed_product_entitlements.py`.
+.\docs\entitlements-operations.md:29:   python .\scripts\seed_product_entitlements.py
+.\docs\entitlements-operations.md:32:4. Mettre à jour `docs/entitlements-validation-matrix.md` avec la nouvelle
+.\docs\entitlements-operations.md:40:   pytest -q app/tests/integration/test_entitlements_e2e_matrix.py
+.\docs\entitlements-operations.md:47:| Seed | `backend/scripts/seed_product_entitlements.py` | Source de vérité des plans B2C et de leurs bindings |
+.\docs\entitlements-operations.md:48:| Modèle DB | `backend/app/infra/db/models/product_entitlements.py` | Tables `PlanCatalogModel`, `FeatureCatalogModel`, `PlanFeatureBindingModel`, `PlanFeatureQuotaModel` et compteurs |
+.\docs\entitlements-operations.md:50:| Resolver | `backend/app/services/effective_entitlement_resolver_service.py` | Source unique des droits effectifs au runtime |
+.\docs\entitlements-operations.md:51:| Endpoint | `backend/app/api/v1/routers/entitlements.py` | Expose `GET /v1/entitlements/me` au frontend |
+.\docs\entitlements-operations.md:52:| Contrat API | `backend/app/api/v1/schemas/entitlements.py` | Schémas Pydantic du payload frontend |
+.\docs\entitlements-operations.md:53:| Validation e2e | `backend/app/tests/integration/test_entitlements_e2e_matrix.py` | Verrouille la matrice métier et le contrat frontend |
+.\docs\entitlements-operations.md:62:   pytest -q app/tests/integration/test_entitlements_e2e_matrix.py
+.\docs\entitlements-operations.md:71:   pytest -q app/tests/integration/test_entitlements_me.py
+.\docs\entitlements-operations.md:72:   pytest -q app/tests/integration/test_thematic_consultation_entitlement.py
+.\docs\entitlements-operations.md:75:3. Appeler `GET /v1/entitlements/me` avec un utilisateur représentatif et
+.\docs\entitlements-validation-matrix.md:4:`backend/scripts/seed_product_entitlements.py`, puis les traduit dans le contrat
+.\docs\entitlements-validation-matrix.md:5:exposé par `GET /v1/entitlements/me`.
+.\docs\entitlements-validation-matrix.md:15:- `Comportement API`: lecture attendue du payload `GET /v1/entitlements/me`.
+.\docs\entitlements-validation-matrix.md:26:## Plan `free` actif (`plan_code="free"`, `billing_status="active"`)
+.\docs\entitlements-validation-matrix.md:44:## Plan `basic` actif (`plan_code="basic"`, `billing_status="active"`)
+.\docs\entitlements-validation-matrix.md:53:## Plan `premium` actif (`plan_code="premium"`, `billing_status="active"`)
+.\docs\entitlements-validation-matrix.md:78:- `variant_code` n'est exposé que pour `natal_chart_long` en `trial`, `basic` et `premium`.
+.\docs\funnel\landing_funnel.md:9:- **Scénario B — Freemium + achats in-app / crédits** : le produit livre une valeur gratuite claire, puis vend l’intensité (quotas), des “packs”, ou des modules premium ; si l’app est mobile, intégrer les règles de commission des stores dans l’économie du modèle. citeturn11search14turn11search3
+.\docs\funnel\landing_funnel.md:97:- `{public}` : “équipes marketing”, “freelances”, “PME”, “créateurs”, “RH”, etc.
+.\docs\funnel\landing_funnel.md:168:- Scénario B (freemium) : limites (quota) + upsell contextuel + pack.
+.\docs\funnel\landing_funnel.md:183:  E -->|Scénario B: freemium| H[Limites + Upsell contextuel]
+.\docs\funnel\landing_funnel.md:238:- **Objet** : “Débloquez {bénéfice premium} (offre {durée})”
+.\docs\funnel\landing_funnel.md:383:- **Low** (no-code + templates + set-up minimal) : outils + 1–2 freelances
+.\docs\funnel\landing_funnel.md:395:| Analytics | entity["company","Plausible Analytics","web analytics"] (Starter ~9$/mo) citeturn9search3 | entity["company","Matomo","web analytics"] (Cloud dès ~29/mo HT, on-prem 0€ logiciel) citeturn19view3 | entity["company","PostHog","product analytics"] (free tier + add-ons/enterprise à partir de paliers) citeturn7search3turn7search7 |
+.\docs\interfaces\deep-research-report- signup-signin.md:5:Cette spécification décrit un **système d’authentification web** (signup/signin) à la fois **frictionless pour le grand public** et **robuste pour les usages Pro/B2B et Admin**, dans une esthétique “cosmic minimal” (premium, sobre, lisible). Elle est alignée sur des sources de référence : entity["organization","OWASP","web security nonprofit"] (anti-brute-force, anti-enumeration, MFA, sessions), entity["organization","IETF","internet standards body"] (OAuth / sécurité des jetons), entity["organization","W3C","web standards consortium"] (WCAG 2.1 AA), entity["organization","CNIL","data protection authority france"] (RGPD : minimisation, consentement, conservation) et entity["organization","NIST","us standards institute"] (règles de mots de passe et UX “password manager friendly”). citeturn0search0turn1search2turn1search3turn8view0turn0search2turn7search4turn1search4turn10search1
+.\docs\interfaces\deep-research-report- signup-signin.md:465:| Firebase Auth | Large couverture méthodes + FirebaseUI ; MFA (notamment via Identity Platform) | UI drop-in possible | Faible à moyen | Très large | freemium/usage |
+.\docs\llm-go-no-go-formal.md:11:- manifest cible : `natal:interpretation:premium:fr-FR`
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:40:- controle d'entitlement pour `use_case_level="complete"` ;
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:55:- `variant_code`, issu de l'entitlement pour le complete.
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:76:- `natal_long_free` pour la variante `free_short`.
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:210:- `natal_long_free`
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:406:- analyse premium hierarchisee ;
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:424:### Complete premium
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:436:### Complete free short
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:440:- `variant_code="free_short"`
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:441:- `use_case_key="natal_long_free"`
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:460:Ces modules bypassent cache et persistance pour eviter de melanger une reponse generique/premium avec une reponse module. L'injection du theme reste identique : `chart_json` + `natal_data` + `evidence_catalog`.
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:486:- schema free pour `natal_long_free`.
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:535:### 5. Use-case `natal_long_free`
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:537:`natal_long_free` suit le meme adapter, mais n'apparait pas dans les contrats canoniques vus comme `natal_interpretation` / `natal_interpretation_short`. Il depend donc davantage des configs/seeds runtime. A surveiller dans les evolutions de gouvernance.
+.\docs\llm\2026-05-14-analyse-injection-donnees-theme-astral-prompt.md:585:  |-- mapping AstroResponse v1/v2/v3/free
+.\docs\llm\llm-db-governance.md:47:2. documenter la justification et la decision (`keep`, `migrate`, `freeze`, `archive`, `drop`) ;
+.\docs\interfaces\deep-research-report.md:5:Cette spécification décrit une interface **moderne, efficace et “premium”** pour une application web d’astrologie combinant : lecture de thème astral, chat avec astrologue virtuel, choix d’astrologue (humain/pro), tirage de cartes/runes, espace utilisateur, portail B2B (API keys + configuration “modèle”), et back-office admin. L’objectif est de permettre à un agent (ou une équipe) d’implémenter l’interface **sans ambiguïté**, avec un design system complet, des parcours clés, une architecture de l’information, des maquettes recommandées (pages + états), des animations, et des contrats API.
+.\docs\interfaces\final_modif.md:18:    - L'interpretation natal : si une ou plusieur interpretations completes existent : faire apparaitre par default la derniere realisée ou si l'utilisateur en a selectionné une manuellement, garder la selection de l'utilisateur visible par default. Sinon affiché l'interpretation short ou generer l'interpretation short s'il n'existe pas. Si deux interpretation short existent : celle de l'abonnement free ou celle de l'abonnement basic / premium : retirer de la liste celle de l'abonnemennt free.
+.\docs\interfaces\horoscope-home-corrections.md:3:Contexte : les deux écrans livrés par l’agent **ne matchent pas** les maquettes de référence (celles générées précédemment : light pastel premium + dark cosmic).
+.\docs\interfaces\horoscope-home-corrections.md:15:- **Bottom nav** : labels + icônes trop pâles (presque gris clair), active state trop “tile” et peu premium.
+.\docs\interfaces\horoscope-home-corrections.md:57:- `strokeWidth = 1.75` partout (premium).
+.\docs\interfaces\horoscope-home-corrections.md:170:- Cards trop “plates” : on perd l’effet premium/glass.
+.\docs\interfaces\horoscope-home-corrections.md:192:- Active state : trop “bloc” (tile). Dans la ref c’est subtil et premium.
+.\docs\llm-prod-release-step-by-step.md:59:  --manifest-entry-id natal:interpretation:premium:fr-FR `
+.\docs\llm-prod-release-step-by-step.md:61:  --output artifacts\llm-qualification-evidence-premium.json
+.\docs\llm-prod-release-step-by-step.md:67:Get-Content artifacts\llm-qualification-evidence-premium.json
+.\docs\llm-prod-release-step-by-step.md:79:  --manifest-entry-id natal:interpretation:premium:fr-FR `
+.\docs\llm-prod-release-step-by-step.md:80:  --output artifacts\llm-golden-evidence-premium.json
+.\docs\llm-prod-release-step-by-step.md:86:Get-Content artifacts\llm-golden-evidence-premium.json
+.\docs\llm-prod-release-step-by-step.md:98:  --manifest-entry-id natal:interpretation:premium:fr-FR `
+.\docs\llm-prod-release-step-by-step.md:100:  --output artifacts\llm-smoke-evidence-premium.json
+.\docs\llm-prod-release-step-by-step.md:120:  -QualificationPath artifacts\llm-qualification-evidence-premium.json `
+.\docs\llm-prod-release-step-by-step.md:121:  -GoldenPath artifacts\llm-golden-evidence-premium.json `
+.\docs\llm-prod-release-step-by-step.md:122:  -SmokePath artifacts\llm-smoke-evidence-premium.json
+.\docs\interfaces\horoscope-home-guidelines-v3.md:3:**But**: retrouver le rendu **premium** de la maquette initiale (fond saturé + sparkle/stars, hero card très “cosmic”, mini cards colorées par thème, raccourcis contrastés, bottom nav glass pill).
+.\docs\interfaces\horoscope-home-guidelines-v3.md:240:Règle: une card “glass premium” = **background translucide + border + shadow + blur**.
+.\docs\llm-prompt-generation-by-feature.md:60:- `backend/tests/fixtures/golden/natal_premium_test.yaml`
+.\docs\llm-prompt-generation-by-feature.md:382:- `_normalize_plan_for_assembly()` convertit `premium`, `pro`, `ultra`, `full` en `premium`
+.\docs\llm-prompt-generation-by-feature.md:383:- toute autre valeur de plan, y compris absence, est normalisée en `free`
+.\docs\llm-prompt-generation-by-feature.md:532:- `artifacts/llm-qualification-evidence-premium.json`
+.\docs\llm-prompt-generation-by-feature.md:533:- `artifacts/llm-golden-evidence-premium.json`
+.\docs\llm-prompt-generation-by-feature.md:534:- `artifacts/llm-smoke-evidence-premium.json`
+.\docs\llm-prompt-generation-by-feature.md:535:- `artifacts/llm-release-readiness-premium.json`
+.\docs\llm-prompt-generation-by-feature.md:544:- `natal:interpretation:premium:fr-FR`
+.\docs\llm-prompt-generation-by-feature.md:549:- la fixture premium dédiée `backend/tests/fixtures/golden/natal_premium_test.yaml` a été ajoutée pour valider le contrat enrichi `AstroResponse_v3` ;
+.\docs\interfaces\horoscope-ui-spec.md:15:- Police : on vise le rendu “iOS premium”.
+.\docs\interfaces\horoscope-ui-spec.md:19:- Pixel-perfect : on privilégie des valeurs fixes (padding, radius, tailles) plutôt que du “responsive freestyle”.
+.\docs\interfaces\horoscope-ui-spec.md:371:- `strokeWidth` : **1.75** (premium)
+.\docs\interfaces\horoscope-ui-spec.md:493:1) **Fond** : le rendu “premium” dépend du mix *gradient + noise + (stars en dark)*
+.\docs\interfaces\horoscope-v3-vs-original-enriched-report-v4.md:3:Référence utilisée : la maquette light originale jointe (écran “Horoscope” premium pastel).
+.\docs\interfaces\horoscope-v3-vs-original-enriched-report-v4.md:6:Objectif : obtenir un rendu **très proche** du visuel original : lisibilité “premium”, profondeur glass, cartes détachées du fond, constellation lumineuse mais intégrée, et mini-cards **très légèrement** teintées (pas des aplats saturés).
+.\docs\interfaces\horoscope-v3-vs-original-enriched-report-v4.md:27:- Le titre “Horoscope” et les textes sont en **dark ink** (muted violet/noir) → lisibilité + premium.
+.\docs\interfaces\horoscope-v3-vs-original-enriched-report-v4.md:38:- Zone CTA posée sur un **sous-panel** (une seconde surface glass arrondie) → profondeur premium
+.\docs\llm-release-runbook.md:13:- `natal:interpretation:premium:fr-FR`
+.\docs\llm-release-runbook.md:28:- ajout d'une fixture golden premium alignée sur le contrat enrichi `AstroResponse_v3`.
+.\docs\llm-release-runbook.md:57:- `artifacts/llm-qualification-evidence-premium.json`
+.\docs\llm-release-runbook.md:58:- `artifacts/llm-golden-evidence-premium.json`
+.\docs\llm-release-runbook.md:59:- `artifacts/llm-smoke-evidence-premium.json`
+.\docs\llm-release-runbook.md:60:- `artifacts/llm-release-readiness-premium.json`
+.\docs\llm-release-runbook.md:95:  --manifest-entry-id natal:interpretation:premium:fr-FR `
+.\docs\llm-release-runbook.md:97:  --output artifacts\llm-qualification-evidence-premium.json
+.\docs\llm-release-runbook.md:113:  --manifest-entry-id natal:interpretation:premium:fr-FR `
+.\docs\llm-release-runbook.md:114:  --output artifacts\llm-golden-evidence-premium.json
+.\docs\llm-release-runbook.md:143:  --manifest-entry-id natal:interpretation:premium:fr-FR `
+.\docs\llm-release-runbook.md:145:  --output artifacts\llm-smoke-evidence-premium.json
+.\docs\llm-release-runbook.md:154:  -QualificationPath artifacts\llm-qualification-evidence-premium.json `
+.\docs\llm-release-runbook.md:155:  -GoldenPath artifacts\llm-golden-evidence-premium.json `
+.\docs\llm-release-runbook.md:156:  -SmokePath artifacts\llm-smoke-evidence-premium.json
+.\docs\interfaces\integration_fond_astrologique_dashboard.md:5:Créer un fond premium, doux et vivant pour la page **Dashboard** de l'application, afin d'illustrer l'**humeur astrologique du jour**.
+.\docs\interfaces\integration_fond_astrologique_dashboard.md:29:Le résultat attendu est un composant d'interface premium, cohérent avec une page de résumé astrologique haut de gamme.
+.\docs\interfaces\integration_fond_astrologique_dashboard.md:1084:C'est l'approche la plus cohérente pour obtenir un rendu premium, vivant, contrôlé et maintenable.
+.\docs\interfaces\mockup\support\help-page-mockup.css:493:.plan-card--premium {
+.\docs\interfaces\mockup\support\help-page-mockup.html:32:            <p class="section-kicker">Support astral premium</p>
+.\docs\interfaces\mockup\support\help-page-mockup.html:143:                  Une carte explicative plus dense, accompagnée d’un résumé premium mieux différencié.
+.\docs\interfaces\mockup\support\help-page-mockup.html:172:                  <article class="plan-card plan-card--premium">
+.\docs\stripe-webhook-dev.md:118:| `customer.subscription.deleted` | ✅ Oui | Fin d'abonnement (résiliation ou non-renouvellement). Met à jour `subscription_status = "canceled"` et recalcule `entitlement_plan`. |
+.\_story_briefs\cs-257-define-beginner-summary-v1-deterministic-b2c-projection.md:5:Définir `beginner_summary_v1` comme projection B2C simple, déterministe et compréhensible pour les usages free/basic.
+.\_story_briefs\cs-257-define-beginner-summary-v1-deterministic-b2c-projection.md:32:- Définir les projections premium.
+.\_story_briefs\cs-257-define-beginner-summary-v1-deterministic-b2c-projection.md:40:5. La projection reste compatible free/basic sans exposer d'audit technique.
+.\_story_briefs\cs-257-define-beginner-summary-v1-deterministic-b2c-projection.md:45:rg -n "beginner_summary_v1|B2C|free|basic|heure de naissance|mode dégradé" .\docs .\_story_briefs
+.\_story_briefs\cs-258-define-client-interpretation-projection-v1-by-plan.md:5:Définir la projection d'interprétation client par plan B2C : free, basic et premium.
+.\_story_briefs\cs-258-define-client-interpretation-projection-v1-by-plan.md:21:1. Définir les sections free, basic et premium.
+.\_story_briefs\cs-258-define-client-interpretation-projection-v1-by-plan.md:36:1. Les plans free/basic/premium sont distingués par profondeur produit.
+.\_story_briefs\cs-258-define-client-interpretation-projection-v1-by-plan.md:45:rg -n "client_interpretation|free|basic|premium|LLM|rédacteur|runtime technique" .\docs .\_story_briefs
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:5:Définir `narrative_answer_audit_v1` pour auditer les réponses LLM basic, premium, longues ou sensibles.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:26:6. Définir les catégories `answer_type` : `basic`, `premium`, `long`, `sensitive`, `free_short`.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:38:2. Toutes les réponses basic, premium, longues ou sensibles sont dans le périmètre.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:41:5. `answer_type` ou `response_category` permet de distinguer `basic`, `premium`, `long`, `sensitive` et `free_short`.
+.\_story_briefs\cs-273-define-expert-technical-projection-v1-admin-astro-expert-only.md:5:Reclasser et définir `expert_technical_projection_v1` comme projection interne admin/futur expert astro, non destinée au client B2C.
+.\_story_briefs\cs-274-define-astrology-full-data-v1-internal-expert-projection.md:5:Définir `astrology_full_data_v1` comme projection interne complète pour usage expert astro.
+.\_story_briefs\cs-274-define-astrology-full-data-v1-internal-expert-projection.md:36:1. `astrology_full_data_v1` est documentée comme projection interne.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:5:Définir la politique d'accès B2C aux projections astrologiques pour les plans free, basic et premium.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:13:Créer une matrice d'entitlements par plan B2C et par projection.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:21:1. Mapper chaque projection B2C autorisée aux plans free/basic/premium.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:23:3. Définir les erreurs plan insuffisant.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:24:4. Définir les règles d'audit IA déclenchées par basic/premium/long/sensitive.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:36:1. Chaque projection client est mappée à free, basic ou premium.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:38:3. Les réponses basic/premium déclenchent l'audit IA.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:39:4. Les erreurs plan insuffisant sont contrôlées.
+.\_story_briefs\cs-283-define-b2c-projection-entitlement-policy.md:45:rg -n "entitlement|free|basic|premium|plan insuffisant|projection interne" .\docs .\_story_briefs
+.\_story_briefs\cs-281-define-transit-client-projection-by-plan.md:9:Les transits ne sont pas publics. Avant toute exposition, il faut définir ce que free, basic et premium pourraient voir, avec preuves et doctrine fermées.
+.\_story_briefs\cs-281-define-transit-client-projection-by-plan.md:21:1. Définir les contenus free/basic/premium.
+.\_story_briefs\cs-281-define-transit-client-projection-by-plan.md:45:rg -n "transit|free|basic|premium|proof gate|non public|LLM" .\docs .\_story_briefs
+.\_story_briefs\cs-284-audit-existing-astrology-disclaimers-and-projection-disclaimer-policy.md:13:Définir une politique de disclaimers pour les projections free/basic/premium.
+.\_story_briefs\cs-284-audit-existing-astrology-disclaimers-and-projection-disclaimer-policy.md:53:- CS-283 pour les entitlements B2C.
+.\_story_briefs\cs-286-implement-beginner-summary-v1-builder.md:31:- Implémenter les projections premium.
+.\_story_briefs\cs-287-implement-client-interpretation-projection-v1-builder-by-plan.md:13:Créer ou adapter le builder qui prépare les projections d'interprétation client free/basic/premium.
+.\_story_briefs\cs-287-implement-client-interpretation-projection-v1-builder-by-plan.md:23:3. Appliquer la politique d'entitlements.
+.\_story_briefs\cs-287-implement-client-interpretation-projection-v1-builder-by-plan.md:38:3. Les projections basic/premium sont prêtes à alimenter l'audit IA.
+.\_story_briefs\cs-287-implement-client-interpretation-projection-v1-builder-by-plan.md:39:4. Les erreurs plan insuffisant sont testées.
+.\_story_briefs\cs-287-implement-client-interpretation-projection-v1-builder-by-plan.md:55:- CS-283 pour les entitlements.
+.\_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md:38:3. `answer_type` distingue basic, premium, long, sensitive et free_short.
+.\_story_briefs\cs-291-implement-generic-projection-endpoint.md:9:CS-263 définit le contrat de l'endpoint. L'implémentation doit arriver après les builders, la politique d'entitlements, la persistance et les garde-fous OpenAPI.
+.\_story_briefs\cs-291-implement-generic-projection-endpoint.md:25:5. Appliquer persistance optionnelle, entitlements et interdictions internes.
+.\_story_briefs\cs-291-implement-generic-projection-endpoint.md:39:3. Les plans free/basic/premium sont contrôlés.
+.\_story_briefs\cs-291-implement-generic-projection-endpoint.md:58:- CS-283 pour les entitlements.
+
+EXIT_CODE=0
+## VC13 evidence path exists
+> python -B -c "from pathlib import Path; assert Path('_condamad/stories/CS-283-b2c-projection-entitlement-policy/evidence/validation.txt').exists()"
+
+EXIT_CODE=0

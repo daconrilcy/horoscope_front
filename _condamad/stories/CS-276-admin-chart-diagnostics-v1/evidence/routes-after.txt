@@ -1,0 +1,3 @@
+/v1/admin/audit ['GET']
+/v1/admin/audit/export ['POST']
+/v1/admin/audit/admin_chart_diagnostics_v1/{chart_reference} ['GET']

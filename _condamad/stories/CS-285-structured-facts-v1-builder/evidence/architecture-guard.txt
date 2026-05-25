@@ -1,0 +1,3 @@
+PASS builder imports ChartInterpretationInputBuilder
+PASS single canonical StructuredFactsV1Builder owner under interpretation
+PASS structured_facts_v1_builder.py declared in astrology doctrine governed surfaces

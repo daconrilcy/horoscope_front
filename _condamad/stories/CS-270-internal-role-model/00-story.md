@@ -1,5 +1,5 @@
 # Story CS-270 internal-role-model: Define Internal Role Model
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -26,6 +26,8 @@ creating accounts, changing migrations, or opening access to non-admin actors.
 - `docs/architecture/internal-role-model.md` exists and starts with a French global file comment.
 - The document defines `ADMIN`, `MARKETER`, `TECHNO` and `ASTRO_EXPERT` with their business intent.
 - `ADMIN` is documented as the only currently active operational internal role with full admin access.
+- Existing runtime roles outside this target quartet, including `user`, `support`, `ops` and `enterprise_admin`, are explicitly kept out of
+  the internal role model and are not aliases for `MARKETER`, `TECHNO` or `ASTRO_EXPERT`.
 - `MARKETER`, `TECHNO` and `ASTRO_EXPERT` are documented as target roles with no current access grant.
 - Internal roles are explicitly separated from B2C customers and B2B accounts.
 - Admin-related surfaces are identified from current product and admin documentation without changing routes.
@@ -53,6 +55,7 @@ creating accounts, changing migrations, or opening access to non-admin actors.
   - Business intent for `ADMIN`, `MARKETER`, `TECHNO` and `ASTRO_EXPERT`.
   - Separation between internal roles, B2C customers and B2B accounts.
   - Current active state documenting `ADMIN` as the only operational internal role.
+  - Explicit boundary between this target quartet and pre-existing runtime roles outside the internal role model.
   - Future permission implications and CS-271 dependency.
   - Static and targeted backend checks proving no access activation is introduced.
 - Out of scope:
@@ -120,12 +123,13 @@ creating accounts, changing migrations, or opening access to non-admin actors.
 - [ ] Task 2: Create `docs/architecture/internal-role-model.md` with a French global file comment. (AC: AC1)
 - [ ] Task 3: Define `ADMIN`, `MARKETER`, `TECHNO` and `ASTRO_EXPERT` with distinct business intent. (AC: AC2)
 - [ ] Task 4: State that `ADMIN` is the only currently active operational internal role. (AC: AC3)
-- [ ] Task 5: State that future roles grant no access until RBAC is implemented. (AC: AC4)
-- [ ] Task 6: Separate B2C customers and B2B accounts from internal staff roles. (AC: AC5, AC6)
-- [ ] Task 7: List the current admin surfaces concerned by future permission slicing. (AC: AC7)
-- [ ] Task 8: Link the future permission matrix dependency to CS-271. (AC: AC8)
-- [ ] Task 9: Add a targeted contract test for the document and inactive future roles. (AC: AC3, AC4, AC9)
-- [ ] Task 10: Persist validation and scoped status evidence under the CS-270 evidence folder. (AC: AC9, AC10)
+- [ ] Task 5: State that existing runtime roles outside the quartet are not aliases for future roles. (AC: AC3, AC4)
+- [ ] Task 6: State that future roles grant no access until RBAC is implemented. (AC: AC4)
+- [ ] Task 7: Separate B2C customers and B2B accounts from internal staff roles. (AC: AC5, AC6)
+- [ ] Task 8: List the current admin surfaces concerned by future permission slicing. (AC: AC7)
+- [ ] Task 9: Link the future permission matrix dependency to CS-271. (AC: AC8)
+- [ ] Task 10: Add a targeted contract test for the document and inactive future roles. (AC: AC3, AC4, AC9)
+- [ ] Task 11: Persist validation and scoped status evidence under the CS-270 evidence folder. (AC: AC9, AC10)
 
 ## Files to Inspect First
 
@@ -233,6 +237,8 @@ creating accounts, changing migrations, or opening access to non-admin actors.
   - frontend admin guard changes
 - Required guards:
   - `python` checks current backend role constants for absent target-only roles.
+  - `pytest -q backend/tests/unit/test_internal_role_model_contract.py` proves pre-existing runtime roles are not aliases for target-only
+    internal roles.
   - `pytest -q backend/tests/unit/test_internal_role_model_contract.py` proves the document and inactive target-role contract.
   - `rg` checks the role model document for B2C/B2B separation and CS-271 dependency.
   - `git status --short -- backend/app frontend/src backend/migrations` proves scoped application surface neutrality.

@@ -1,0 +1,603 @@
+tests\api\admin\test_rejected_answer_review_workflow.py:102:                    "prompt_version": "prompt-v7",
+tests\api\admin\test_rejected_answer_review_workflow.py:138:    assert item["prompt_version"] == "prompt-v7"
+tests\api\admin\test_rejected_answer_review_workflow.py:303:    assert "auto_correct_rejected_prompt" not in openapi_text
+tests\llm_orchestration\test_assembly_resolution.py:9:    assemble_developer_prompt,
+tests\llm_orchestration\test_assembly_resolution.py:13:from app.domain.llm.prompting.catalog import PROMPT_FALLBACK_CONFIGS
+tests\llm_orchestration\test_assembly_resolution.py:27:from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_assembly_resolution.py:108:async def test_db_prompt_resolution_does_not_require_supported_fallback_prompt(
+tests\llm_orchestration\test_assembly_resolution.py:112:    """Un prompt DB publie reste resoluble sans prompt fallback supporte."""
+tests\llm_orchestration\test_assembly_resolution.py:117:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_assembly_resolution.py:120:        developer_prompt="DB guidance prompt {{situation}}",
+tests\llm_orchestration\test_assembly_resolution.py:129:    db.add_all([prompt, use_case])
+tests\llm_orchestration\test_assembly_resolution.py:148:    assert plan.rendered_developer_prompt.startswith("DB guidance prompt")
+tests\llm_orchestration\test_assembly_resolution.py:149:    assert plan.prompt_version_id == str(prompt.id)
+tests\llm_orchestration\test_assembly_resolution.py:158:        developer_prompt="FEATURE PROMPT {{locale}}",
+tests\llm_orchestration\test_assembly_resolution.py:203:    assert resolved.feature_template_prompt == "FEATURE PROMPT {{locale}}"
+tests\llm_orchestration\test_assembly_resolution.py:208:    full_prompt = assemble_developer_prompt(resolved, resolved_db)
+tests\llm_orchestration\test_assembly_resolution.py:209:    assert full_prompt == "FEATURE PROMPT {{locale}}"
+tests\llm_orchestration\test_assembly_resolution.py:231:        developer_prompt="FEATURE PROMPT {{locale}}",
+tests\llm_orchestration\test_assembly_resolution.py:271:        developer_prompt="GENERIC",
+tests\llm_orchestration\test_assembly_resolution.py:325:        developer_prompt="FROM ASSEMBLY",
+tests\llm_orchestration\test_assembly_resolution.py:356:    assert plan.rendered_developer_prompt == "FROM ASSEMBLY"
+tests\llm_orchestration\test_assembly_resolution.py:365:        developer_prompt="Persona {{persona_name}}",
+tests\llm_orchestration\test_assembly_resolution.py:404:    assert "Persona Standard" in plan.rendered_developer_prompt
+tests\llm_orchestration\test_assembly_resolution.py:413:        developer_prompt="PROMPT",
+tests\llm_orchestration\test_assembly_resolution.py:474:        developer_prompt="P",
+tests\llm_orchestration\test_assembly_resolution.py:529:        developer_prompt="Valid {{locale}}",
+tests\llm_orchestration\test_assembly_resolution.py:536:        developer_prompt="Invalid {{forbidden}}",
+tests\llm_orchestration\test_assembly_resolution.py:560:        developer_prompt="CHAT PROMPT {{last_user_msg}}",
+tests\llm_orchestration\test_architecture_guards.py:3:from app.domain.llm.prompting.validators import (
+tests\llm_orchestration\test_architecture_guards.py:32:        rendered_developer_prompt="p",
+tests\llm_orchestration\test_admin_llm_api.py:15:from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+tests\llm_orchestration\test_admin_llm_api.py:93:        f"/v1/admin/llm/use-cases/{use_case_key}/prompts",
+tests\llm_orchestration\test_admin_llm_api.py:96:            "developer_prompt": "Prompt for {{locale}} and {{use_case}}",
+tests\llm_orchestration\test_admin_llm_api.py:105:            select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_create_draft")
+tests\llm_orchestration\test_admin_llm_api.py:113:    hist_resp = client.get(f"/v1/admin/llm/use-cases/{use_case_key}/prompts", headers=headers)
+tests\llm_orchestration\test_admin_llm_api.py:120:        f"/v1/admin/llm/use-cases/{use_case_key}/prompts/{version_id}/publish",
+tests\llm_orchestration\test_admin_llm_api.py:128:            select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_publish")
+tests\llm_orchestration\test_admin_llm_api.py:135:    # 5. Verify active prompt in use cases list
+tests\llm_orchestration\test_admin_llm_api.py:138:    assert chat_uc["active_prompt_version_id"] == version_id
+tests\llm_orchestration\test_admin_llm_api.py:142:        f"/v1/admin/llm/use-cases/{use_case_key}/prompts",
+tests\llm_orchestration\test_admin_llm_api.py:145:            "developer_prompt": "Prompt V2 for {{locale}} and {{use_case}}",
+tests\llm_orchestration\test_admin_llm_api.py:149:    client.patch(f"/v1/admin/llm/use-cases/{use_case_key}/prompts/{v2_id}/publish", headers=headers)
+tests\llm_orchestration\test_admin_llm_api.py:152:        f"/v1/admin/llm/use-cases/{use_case_key}/prompts",
+tests\llm_orchestration\test_admin_llm_api.py:183:        "/v1/admin/llm/use-cases/test_natal/prompts",
+tests\llm_orchestration\test_admin_llm_api.py:186:            "developer_prompt": "Prompt V1 {{locale}} {{use_case}}",
+tests\llm_orchestration\test_admin_llm_api.py:190:    client.patch(f"/v1/admin/llm/use-cases/test_natal/prompts/{v1_id}/publish", headers=headers)
+tests\llm_orchestration\test_admin_llm_api.py:193:        "/v1/admin/llm/use-cases/test_natal/prompts",
+tests\llm_orchestration\test_admin_llm_api.py:196:            "developer_prompt": "Prompt V2 {{locale}} {{use_case}}",
+tests\llm_orchestration\test_admin_llm_api.py:200:    client.patch(f"/v1/admin/llm/use-cases/test_natal/prompts/{v2_id}/publish", headers=headers)
+tests\llm_orchestration\test_admin_llm_api.py:203:        "/v1/admin/llm/use-cases/test_natal/prompts",
+tests\llm_orchestration\test_admin_llm_api.py:206:            "developer_prompt": "Prompt V3 {{locale}} {{use_case}}",
+tests\llm_orchestration\test_admin_llm_api.py:210:    client.patch(f"/v1/admin/llm/use-cases/test_natal/prompts/{v3_id}/publish", headers=headers)
+tests\llm_orchestration\test_admin_llm_api.py:224:            select(AuditEventModel).where(AuditEventModel.action == "llm_prompt_rollback")
+tests\factories\astrology_runtime_reference_factory.py:323:            "prompt_hint": "functional_strength_positive",
+tests\factories\astrology_runtime_reference_factory.py:335:            "prompt_hint": "visibility_emphasized",
+tests\factories\astrology_runtime_reference_factory.py:347:            "prompt_hint": "constraint_present",
+tests\unit\test_admin_permission_matrix_contract.py:17:DEBUG_CATEGORIES = {"traces", "prompts", "replay"}
+tests\llm_orchestration\test_gateway_meta_enrichi.py:20:        rendered_developer_prompt="...",
+tests\llm_orchestration\test_gateway_meta_enrichi.py:46:    from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
+tests\llm_orchestration\test_gateway_meta_enrichi.py:78:        rendered_developer_prompt="...",
+tests\llm_orchestration\test_gateway_meta_enrichi.py:114:        rendered_developer_prompt="...",
+tests\unit\test_admin_manual_execute_response.py:19:            rendered_prompt="Instruction pour le chart_json suivant."
+tests\unit\test_admin_manual_execute_response.py:49:    assert isinstance(payload.prompt_sent, str)
+tests\unit\test_admin_manual_execute_response.py:56:        transformation_pipeline=SimpleNamespace(rendered_prompt="x"),
+tests\unit\test_admin_manual_execute_response.py:88:        transformation_pipeline=SimpleNamespace(rendered_prompt="secret prompt"),
+tests\unit\test_admin_manual_execute_response.py:119:    assert payload.prompt_sent == "[anonymization_unavailable]"
+tests\architecture\test_chart_interpretation_input_boundary.py:27:    "prompt",
+tests\llm_orchestration\test_gateway_errors.py:8:async def test_raises_prompt_render_error_if_var_missing(db):
+tests\llm_orchestration\test_gateway_errors.py:19:        model="m", developer_prompt="Hello {{name}}", required_prompt_placeholders=["name"]
+tests\architecture\test_aspect_runtime_boundary.py:29:    "prompt",
+tests\architecture\test_aspect_runtime_boundary.py:101:def test_structural_modules_do_not_produce_prompt_or_llm_calls() -> None:
+tests\architecture\test_aspect_runtime_boundary.py:102:    """AST guard: le runtime structurel ne produit ni prompt ni appel LLM."""
+tests\architecture\test_aspect_runtime_boundary.py:111:        for forbidden in ("prompt", "llm", "OpenAI", "AIEngineAdapter", "chat.completions"):
+tests\architecture\test_astrology_runtime_boundary.py:45:        "prompt",
+tests\llm_orchestration\test_execution_profile_taxonomy.py:17:from app.infra.db.models.llm.llm_prompt import PromptStatus
+tests\llm_orchestration\test_execution_profile_taxonomy.py:136:    with patch("app.domain.llm.configuration.assembly_admin_service.db_resolve_prompt_prompt"):
+tests\unit\test_admin_endpoint_segmentation_contract.py:50:CLIENT_EXCLUSION_TERMS = {"debug", "replay", "trace", "prompt", "full astrology runtime"}
+tests\llm_orchestration\test_execution_profiles.py:9:from app.infra.db.models.llm.llm_prompt import PromptStatus
+tests\llm_orchestration\test_execution_profiles.py:70:    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+tests\llm_orchestration\test_execution_profiles.py:88:        developer_prompt="PROMPT",
+tests\llm_orchestration\test_context_quality.py:3:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_context_quality.py:27:    prompt = "Base prompt"
+tests\llm_orchestration\test_context_quality.py:30:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "any_feat", "minimal")
+tests\llm_orchestration\test_context_quality.py:35:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "any_feat", "full")
+tests\llm_orchestration\test_context_quality.py:37:    assert augmented == prompt
+tests\llm_orchestration\test_context_quality.py:42:    prompt = "Base prompt"
+tests\llm_orchestration\test_context_quality.py:45:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "minimal")
+tests\llm_orchestration\test_context_quality.py:52:    prompt = "Base. {{#context_quality:minimal}}Manual warning{{/context_quality}}"
+tests\llm_orchestration\test_context_quality.py:54:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "minimal")
+tests\llm_orchestration\test_context_quality.py:56:    assert augmented == prompt
+tests\architecture\test_ai_narrative_input_boundary.py:22:    "prompt",
+tests\architecture\test_ai_narrative_input_boundary.py:23:    "llm_output",
+tests\architecture\test_ai_narrative_input_boundary.py:24:    "final_narrative",
+tests\architecture\test_ai_narrative_input_boundary.py:25:    "rendered_text",
+tests\architecture\test_ai_narrative_input_boundary.py:26:    "provider_response",
+tests\llm_orchestration\test_config_coherence_validator.py:15:from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+tests\llm_orchestration\test_config_coherence_validator.py:16:from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_config_coherence_validator.py:27:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_config_coherence_validator.py:30:        developer_prompt="{{last_user_msg}}",
+tests\llm_orchestration\test_config_coherence_validator.py:50:        feature_template_ref=prompt.id,
+tests\llm_orchestration\test_config_coherence_validator.py:55:    db.add_all([use_case, prompt, profile, config])
+tests\llm_orchestration\test_config_coherence_validator.py:70:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_config_coherence_validator.py:73:        developer_prompt="{{last_user_msg}}",
+tests\llm_orchestration\test_config_coherence_validator.py:98:        feature_template_ref=prompt.id,
+tests\llm_orchestration\test_config_coherence_validator.py:105:    db.add_all([use_case, prompt, profile, schema, config])
+tests\llm_orchestration\test_config_coherence_validator.py:119:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_config_coherence_validator.py:122:        developer_prompt="{{last_user_msg}}",
+tests\llm_orchestration\test_config_coherence_validator.py:144:        feature_template_ref=prompt.id,
+tests\llm_orchestration\test_config_coherence_validator.py:150:    db.add_all([use_case, prompt, profile, config])
+tests\llm_orchestration\test_catalog_resolution.py:6:from app.domain.llm.prompting.catalog import PROMPT_CATALOG, resolve_model
+tests\llm_orchestration\test_llm_gateway_compose.py:11:    """Vérifie que les 4 couches de prompt sont bien composées."""
+tests\llm_orchestration\test_llm_gateway_compose.py:46:    # Layer 2: Developer prompt
+tests\llm_orchestration\test_llm_gateway_compose.py:83:    dev_prompt = args["messages"][1]["content"]
+tests\llm_orchestration\test_llm_gateway_compose.py:84:    assert "from_context" in dev_prompt
+tests\llm_orchestration\test_llm_gateway_compose.py:89:    """Vérifie que seules les variables autorisées sont injectées dans le prompt."""
+tests\llm_orchestration\test_llm_gateway_compose.py:117:    dev_prompt = args["messages"][1]["content"]
+tests\llm_orchestration\test_llm_gateway_compose.py:118:    assert "HACK" not in dev_prompt
+tests\evaluation\__init__.py:27:from app.api.v1.routers.admin.llm.prompts import (
+tests\evaluation\__init__.py:120:    old explicit legacy reseed flag: published prompts/use-cases/personas are
+tests\evaluation\__init__.py:129:    from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+tests\evaluation\__init__.py:132:    from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+tests\evaluation\__init__.py:134:    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
+tests\evaluation\__init__.py:135:    from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
+tests\evaluation\__init__.py:136:    from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
+tests\evaluation\__init__.py:137:    from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
+tests\evaluation\__init__.py:139:    from app.ops.llm.bootstrap.seed_guidance_prompts import seed_guidance_prompts
+tests\evaluation\__init__.py:161:                get_active_prompt_version(db, "natal_interpretation_short") is not None,
+tests\evaluation\__init__.py:167:            prompt_count,
+tests\evaluation\__init__.py:172:            has_active_short_prompt,
+tests\evaluation\__init__.py:182:            prompt_count,
+tests\evaluation\__init__.py:187:            has_active_short_prompt,
+tests\evaluation\__init__.py:192:        or prompt_count == 0
+tests\evaluation\__init__.py:194:        or not has_active_short_prompt
+tests\evaluation\__init__.py:205:            "canonical_llm_bootstrap_auto_heal schemas=%s prompts=%s personas=%s "
+tests\evaluation\__init__.py:209:        prompt_count,
+tests\evaluation\__init__.py:214:        has_active_short_prompt,
+tests\evaluation\__init__.py:222:            seed_prompts()
+tests\evaluation\__init__.py:223:            seed_natal_v3_prompts()
+tests\evaluation\__init__.py:224:            seed_chat_prompt_v2()
+tests\evaluation\__init__.py:225:            seed_guidance_prompts()
+tests\llm_orchestration\test_llm_convergence.py:10:from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+tests\llm_orchestration\test_llm_convergence.py:11:from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_llm_convergence.py:50:            developer_prompt=f"PROMPT FOR {uc_key}",
+tests\llm_orchestration\test_llm_convergence.py:177:                developer_prompt="Fallback prompt",
+tests\evaluation\test_prompt_resolution.py:16:from app.infra.db.models.llm.llm_prompt import (
+tests\evaluation\test_prompt_resolution.py:25:async def test_prompt_resolution_matrix(
+tests\evaluation\test_prompt_resolution.py:29:    Evaluates prompt resolution for every combination in the matrix.
+tests\evaluation\test_prompt_resolution.py:70:            developer_prompt=(
+tests\evaluation\test_prompt_resolution.py:100:            from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+tests\evaluation\test_prompt_resolution.py:156:        from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
+tests\evaluation\test_prompt_resolution.py:189:                prompt = plan_resolved.rendered_developer_prompt
+tests\evaluation\test_prompt_resolution.py:192:                placeholders_ok = "{{" not in prompt and "}}" not in prompt
+tests\evaluation\test_prompt_resolution.py:198:                        "MINIMAL" in prompt or "[CONTEXTE" in prompt or "dégradé" in prompt.lower()
+tests\evaluation\test_prompt_resolution.py:205:                    or p_data["name"] in prompt
+tests\evaluation\test_prompt_resolution.py:213:                    and "[CONSIGNE DE LONGUEUR]" in prompt
+tests\evaluation\test_prompt_resolution.py:222:                    print(f"DEBUG PROMPT: {prompt}")
+tests\llm_orchestration\test_length_budgets.py:10:from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
+tests\llm_orchestration\test_length_budgets.py:18:        developer_prompt="BASE PROMPT",
+tests\llm_orchestration\test_length_budgets.py:61:    """Test Story 66.12: Length budget is injected into developer prompt."""
+tests\llm_orchestration\test_length_budgets.py:74:    assert "[CONSIGNE DE LONGUEUR]" in plan.rendered_developer_prompt
+tests\llm_orchestration\test_length_budgets.py:75:    assert "Cible : concise" in plan.rendered_developer_prompt
+tests\llm_orchestration\test_length_budgets.py:76:    assert "Section 'summary' : 2 sentences" in plan.rendered_developer_prompt
+tests\unit\domain\astrology\interpretation\test_chart_interpretation_input_contracts.py:45:        "prompt",
+tests\evaluation\test_output_contract.py:28:    from app.domain.llm.prompting.narrator_contract import NARRATOR_OUTPUT_SCHEMA
+tests\evaluation\test_output_contract.py:36:            # We fetch it from app.domain.llm.prompting.schemas as it might not be in seeds
+tests\evaluation\test_output_contract.py:37:            from app.domain.llm.prompting.schemas import AstroFreeResponseV1
+tests\llm_orchestration\test_gateway_regressions_fix.py:39:async def test_prompt_version_id_propagation():
+tests\llm_orchestration\test_gateway_regressions_fix.py:40:    """Verify that prompt_version_id from config is preserved in final GatewayResult."""
+tests\llm_orchestration\test_gateway_regressions_fix.py:42:    real_prompt_id = str(uuid.uuid4())
+tests\llm_orchestration\test_gateway_regressions_fix.py:51:        meta=GatewayMeta(latency_ms=10, model="m", prompt_version_id="hardcoded-v1"),
+tests\llm_orchestration\test_gateway_regressions_fix.py:57:    # Use config override to set a real prompt_version_id
+tests\llm_orchestration\test_gateway_regressions_fix.py:58:    config = UseCaseConfig(model="m", developer_prompt="hello", prompt_version_id=real_prompt_id)
+tests\llm_orchestration\test_gateway_regressions_fix.py:72:    # Critical: final result must carry the resolved prompt_version_id, not the provider default
+tests\llm_orchestration\test_gateway_regressions_fix.py:73:    assert result.meta.prompt_version_id == real_prompt_id
+tests\llm_orchestration\test_gateway_regressions_fix.py:84:    from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_gateway_regressions_fix.py:97:        # 2. Setup use case and prompt
+tests\llm_orchestration\test_gateway_regressions_fix.py:101:        prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_gateway_regressions_fix.py:104:            developer_prompt="hello",
+tests\llm_orchestration\test_gateway_regressions_fix.py:107:        db.add(prompt)
+tests\llm_orchestration\test_gateway_regressions_fix.py:126:                developer_prompt="hello",
+tests\llm_orchestration\test_gateway_regressions_fix.py:127:                prompt_version_id=str(prompt.id),
+tests\llm_orchestration\test_gateway_regressions_fix.py:149:        # Check that it's NOT hardcoded-v1 if prompt was found
+tests\llm_orchestration\test_gateway_regressions_fix.py:150:        assert str(log_entry.prompt_version_id) == str(prompt.id)
+tests\llm_orchestration\test_gateway_regressions_fix.py:172:        missing_prompt_id = str(uuid.uuid4())
+tests\llm_orchestration\test_gateway_regressions_fix.py:180:            meta=GatewayMeta(latency_ms=12, model="m", prompt_version_id="hardcoded-v1"),
+tests\llm_orchestration\test_gateway_regressions_fix.py:188:                developer_prompt="hello",
+tests\llm_orchestration\test_gateway_regressions_fix.py:189:                prompt_version_id=missing_prompt_id,
+tests\llm_orchestration\test_gateway_regressions_fix.py:208:        assert result.meta.prompt_version_id == missing_prompt_id
+tests\llm_orchestration\test_gateway_regressions_fix.py:210:        assert log_entry.prompt_version_id is None
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:95:        "prompt",
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:96:        "llm_output",
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:97:        "final_narrative",
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:98:        "rendered_text",
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:99:        "provider_response",
+tests\llm_orchestration\test_gateway_pipeline.py:33:    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+tests\llm_orchestration\test_gateway_pipeline.py:35:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_gateway_pipeline.py:38:        developer_prompt="Hello",
+tests\llm_orchestration\test_gateway_pipeline.py:47:    db.add(prompt)
+tests\llm_orchestration\test_gateway_pipeline.py:68:                developer_prompt="Hello",
+tests\llm_orchestration\test_gateway_pipeline.py:69:                prompt_version_id=str(prompt.id),
+tests\llm_orchestration\test_gateway_pipeline.py:93:    from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+tests\llm_orchestration\test_gateway_pipeline.py:94:    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+tests\llm_orchestration\test_gateway_pipeline.py:100:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_gateway_pipeline.py:103:        developer_prompt="Hello",
+tests\llm_orchestration\test_gateway_pipeline.py:112:    db.add(prompt)
+tests\llm_orchestration\test_gateway_pipeline.py:145:                developer_prompt="Hello",
+tests\llm_orchestration\test_gateway_pipeline.py:146:                prompt_version_id=str(prompt.id),
+tests\llm_orchestration\test_gateway_pipeline.py:192:        rendered_developer_prompt="...",
+tests\unit\test_template_injector_extension.py:6:    prompt = "Base. {{#context_quality:partial}}Handling...{{/context_quality}}"
+tests\unit\test_template_injector_extension.py:7:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "partial")
+tests\unit\test_template_injector_extension.py:9:    assert augmented == prompt
+tests\unit\test_template_injector_extension.py:16:    prompt = "Base. {{#context_quality:minimal}}Handling...{{/context_quality}}"
+tests\unit\test_template_injector_extension.py:17:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "minimal")
+tests\unit\test_template_injector_extension.py:19:    assert augmented == prompt
+tests\unit\test_template_injector_extension.py:26:    prompt = "Base prompt without quality blocks."
+tests\unit\test_template_injector_extension.py:27:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "partial")
+tests\unit\test_template_injector_extension.py:29:    assert "Base prompt without quality blocks." in augmented
+tests\unit\test_template_injector_extension.py:37:    prompt = "Base prompt."
+tests\unit\test_template_injector_extension.py:38:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "full")
+tests\unit\test_template_injector_extension.py:40:    assert augmented == prompt
+tests\unit\test_template_injector_extension.py:47:    prompt = "Base prompt."
+tests\unit\test_template_injector_extension.py:50:    augmented, injected, handled = ContextQualityInjector.inject(prompt, "natal", "unknown")
+tests\unit\test_template_injector_extension.py:52:    assert augmented == prompt
+tests\llm_orchestration\test_gateway_model_override.py:26:                meta=GatewayMeta(latency_ms=10, model=override_model, prompt_version_id="v1"),
+tests\llm_orchestration\test_gateway_model_override.py:62:                meta=GatewayMeta(latency_ms=10, model=default_model, prompt_version_id="v1"),
+tests\llm_orchestration\test_gateway_model_override.py:98:                meta=GatewayMeta(latency_ms=10, model=override_model, prompt_version_id="v1"),
+tests\unit\test_sensitive_data_non_leakage.py:95:        "payload": "full prompt text",
+tests\evaluation\test_differentiation.py:14:from app.infra.db.models.llm.llm_prompt import (
+tests\evaluation\test_differentiation.py:24:    """Checks that premium plan produces a different (longer/richer) prompt than free."""
+tests\evaluation\test_differentiation.py:33:        developer_prompt="BASE",
+tests\evaluation\test_differentiation.py:97:    assert plan_free.rendered_developer_prompt != plan_prem.rendered_developer_prompt
+tests\evaluation\test_differentiation.py:98:    assert "CONSIGNE ABONNEMENT PREMIUM" in plan_prem.rendered_developer_prompt
+tests\evaluation\test_differentiation.py:99:    assert "CONSIGNE ABONNEMENT FREE" in plan_free.rendered_developer_prompt
+tests\evaluation\test_differentiation.py:113:        developer_prompt="BASE",
+tests\unit\test_replay_snapshot_v1_storage_security_model.py:46:    "raw prompts",
+tests\llm_orchestration\test_observability.py:166:            prompt_version_id=str(uuid.uuid4()),
+tests\unit\test_llm_sensitive_model_validators.py:24:from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, LlmUseCaseConfigModel
+tests\unit\test_llm_sensitive_model_validators.py:31:    prompt_indexes = {index.name for index in LlmPromptVersionModel.__table__.indexes}
+tests\unit\test_llm_sensitive_model_validators.py:35:    assert "ix_llm_prompt_version_active_unique" in prompt_indexes
+tests\unit\test_llm_sensitive_model_validators.py:53:    prompt_relationships = set(LlmPromptVersionModel.__mapper__.relationships.keys())
+tests\unit\test_llm_sensitive_model_validators.py:58:    assert "use_case" in prompt_relationships
+tests\unit\test_llm_sensitive_model_validators.py:81:def test_prompt_models_mark_legacy_and_canonical_boundaries() -> None:
+tests\unit\test_llm_sensitive_model_validators.py:94:    assert LlmPromptVersionModel.canonical_text_fields == {"developer_prompt"}
+tests\integration\test_llm_doc_conformity.py:49:    assert validator.is_update_required(["docs/llm-prompt-generation-by-feature.md"])
+tests\integration\test_llm_doc_conformity.py:256:                "docs/llm-prompt-generation-by-feature.md",
+tests\llm_orchestration\test_narrator_migration.py:6:from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
+tests\llm_orchestration\test_narrator_migration.py:7:from app.domain.llm.prompting.narrator_contract import NarratorResult
+tests\llm_orchestration\test_narrator_migration.py:388:    from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\unit\test_llm_model_namespace_guard.py:31:    "llm_output_schema.py",
+tests\unit\test_llm_model_namespace_guard.py:33:    "llm_prompt.py",
+tests\llm_orchestration\test_llm_unification.py:9:from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_llm_unification.py:14:from app.ops.llm.prompt_registry_v2 import PromptRegistryV2
+tests\llm_orchestration\test_llm_unification.py:25:        developer_prompt="DAILY HOROSCOPE FEATURE",
+tests\llm_orchestration\test_llm_unification.py:119:        developer_prompt="PROMPT",
+tests\llm_orchestration\test_llm_unification.py:128:        PromptRegistryV2.publish_prompt(db, version.id)
+tests\llm_orchestration\test_llm_unification.py:131:    assert "prompt_registry_v2_naming_warning" in caplog.text
+tests\llm_orchestration\test_llm_unification.py:141:        developer_prompt="FULL HOROSCOPE",
+tests\unit\test_llm_canonical_perimeter.py:18:from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+tests\integration\test_admin_llm_integration.py:9:from app.infra.db.models.llm.llm_prompt import (
+tests\integration\test_admin_llm_integration.py:23:async def test_publish_prompt_blocks_on_golden_regression():
+tests\integration\test_admin_llm_integration.py:49:            developer_prompt="Test",
+tests\integration\test_admin_llm_integration.py:79:                f"/v1/admin/llm/use-cases/natal_test_66_36/prompts/{version_id}/publish"
+tests\integration\test_admin_llm_integration.py:91:async def test_publish_prompt_blocks_on_golden_invalid():
+tests\integration\test_admin_llm_integration.py:115:            developer_prompt="Test",
+tests\integration\test_admin_llm_integration.py:143:                f"/v1/admin/llm/use-cases/natal_test_invalid/prompts/{version_id}/publish"
+tests\integration\test_admin_llm_integration.py:156:async def test_publish_prompt_warns_on_golden_constrained():
+tests\integration\test_admin_llm_integration.py:180:            developer_prompt="Test",
+tests\integration\test_admin_llm_integration.py:208:                "app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt",
+tests\integration\test_admin_llm_integration.py:212:                    f"/v1/admin/llm/use-cases/natal_test_warn/prompts/{version_id}/publish"
+tests\integration\test_admin_llm_integration.py:224:async def test_publish_prompt_passes_on_golden_success():
+tests\integration\test_admin_llm_integration.py:249:            developer_prompt="Test",
+tests\integration\test_admin_llm_integration.py:272:        # Need to mock PromptRegistryV2.publish_prompt too
+tests\integration\test_admin_llm_integration.py:278:                "app.ops.llm.prompt_registry_v2.PromptRegistryV2.publish_prompt",
+tests\integration\test_admin_llm_integration.py:282:                    f"/v1/admin/llm/use-cases/natal_test_ok/prompts/{version_id}/publish"
+tests\llm_orchestration\test_llm_legacy_extinction.py:1:"""Gardes anti-retour pour les anciens chemins prompts LLM."""
+tests\llm_orchestration\test_llm_legacy_extinction.py:7:from app.domain.llm.prompting.catalog import (
+tests\llm_orchestration\test_llm_legacy_extinction.py:29:def test_supported_use_cases_are_absent_from_prompt_fallback_configs() -> None:
+tests\llm_orchestration\test_llm_legacy_extinction.py:30:    """Bloque le retour de prompts runtime pour les familles gouvernees."""
+tests\integration\test_llm_documentation_governance.py:25:    doc_path = root / "docs" / "llm-prompt-generation-by-feature.md"
+tests\unit\domain\astrology\test_aspect_runtime_contracts.py:43:    "prompt",
+tests\llm_orchestration\test_prompt_registry_v2.py:11:from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_prompt_registry_v2.py:16:from app.ops.llm.prompt_registry_v2 import PromptRegistryV2
+tests\llm_orchestration\test_prompt_registry_v2.py:29:        from app.ops.llm.prompt_registry_v2 import _prompt_cache
+tests\llm_orchestration\test_prompt_registry_v2.py:31:        _prompt_cache.clear()
+tests\llm_orchestration\test_prompt_registry_v2.py:39:def test_get_active_prompt_none(db):
+tests\llm_orchestration\test_prompt_registry_v2.py:40:    prompt = PromptRegistryV2.get_active_prompt(db, "unknown")
+tests\llm_orchestration\test_prompt_registry_v2.py:41:    assert prompt is None
+tests\llm_orchestration\test_prompt_registry_v2.py:54:        developer_prompt="Prompt V1 {{locale}} {{use_case}}",
+tests\llm_orchestration\test_prompt_registry_v2.py:61:    published = PromptRegistryV2.publish_prompt(db, v1.id)
+tests\llm_orchestration\test_prompt_registry_v2.py:65:    active = PromptRegistryV2.get_active_prompt(db, "test_uc")
+tests\llm_orchestration\test_prompt_registry_v2.py:79:        developer_prompt="P1",
+tests\llm_orchestration\test_prompt_registry_v2.py:86:        developer_prompt="P2",
+tests\llm_orchestration\test_prompt_registry_v2.py:93:    PromptRegistryV2.publish_prompt(db, v2.id)
+tests\llm_orchestration\test_prompt_registry_v2.py:99:    active = PromptRegistryV2.get_active_prompt(db, "test_uc")
+tests\llm_orchestration\test_prompt_registry_v2.py:113:        developer_prompt="P1",
+tests\llm_orchestration\test_prompt_registry_v2.py:121:        developer_prompt="P2",
+tests\llm_orchestration\test_prompt_registry_v2.py:129:    rolled_back = PromptRegistryV2.rollback_prompt(db, "test_uc")
+tests\llm_orchestration\test_prompt_registry_v2.py:146:        developer_prompt="P1",
+tests\llm_orchestration\test_prompt_registry_v2.py:153:    p1 = PromptRegistryV2.get_active_prompt(db, "test_uc")
+tests\llm_orchestration\test_prompt_registry_v2.py:154:    assert p1.developer_prompt == "P1"
+tests\llm_orchestration\test_prompt_registry_v2.py:160:        .values(developer_prompt="P1-MODIFIED")
+tests\llm_orchestration\test_prompt_registry_v2.py:165:    p2 = PromptRegistryV2.get_active_prompt(db, "test_uc")
+tests\llm_orchestration\test_prompt_registry_v2.py:166:    assert p2.developer_prompt == "P1"
+tests\llm_orchestration\test_prompt_registry_v2.py:170:    p3 = PromptRegistryV2.get_active_prompt(db, "test_uc")
+tests\llm_orchestration\test_prompt_registry_v2.py:171:    assert p3.developer_prompt == "P1-MODIFIED"
+tests\llm_orchestration\test_prompt_registry_v2.py:174:def test_publish_prompt_forbidden_for_legacy_daily_prediction(db):
+tests\llm_orchestration\test_prompt_registry_v2.py:187:        developer_prompt="Legacy daily prompt",
+tests\llm_orchestration\test_prompt_registry_v2.py:194:        PromptRegistryV2.publish_prompt(db, version.id)
+tests\llm_orchestration\test_prompt_registry_v2.py:197:def test_rollback_prompt_forbidden_for_legacy_daily_prediction(db):
+tests\llm_orchestration\test_prompt_registry_v2.py:210:        developer_prompt="Legacy daily prompt",
+tests\llm_orchestration\test_prompt_registry_v2.py:218:        PromptRegistryV2.rollback_prompt(db, "daily_prediction")
+tests\llm_orchestration\test_prompt_registry_v2.py:230:        developer_prompt="Legacy archived",
+tests\llm_orchestration\test_prompt_registry_v2.py:238:        developer_prompt="Current published",
+tests\llm_orchestration\test_prompt_registry_v2.py:245:    rolled_back = PromptRegistryV2.rollback_prompt(db, "test_uc")
+tests\unit\test_historical_facade_transition_guards.py:28:        root / "app" / "api" / "v1" / "routers" / "admin" / "llm" / "prompts.py",
+tests\unit\test_historical_facade_transition_guards.py:29:        root / "app" / "domain" / "llm" / "prompting" / "context.py",
+tests\unit\test_historical_facade_transition_guards.py:33:        "app.llm_orchestration.legacy_prompt_runtime",
+tests\unit\test_historical_facade_transition_guards.py:34:        "app.prompts.catalog",
+tests\unit\test_historical_facade_transition_guards.py:61:        root / "app" / "ops" / "llm" / "bootstrap" / "seed_29_prompts.py": {
+tests\unit\test_historical_facade_transition_guards.py:62:            "scripts.seed_29_prompts",
+tests\unit\test_historical_facade_transition_guards.py:64:        root / "app" / "ops" / "llm" / "bootstrap" / "seed_30_8_v3_prompts.py": {
+tests\unit\test_historical_facade_transition_guards.py:65:            "scripts.seed_30_8_v3_prompts",
+tests\unit\test_historical_facade_transition_guards.py:67:        root / "app" / "ops" / "llm" / "bootstrap" / "seed_30_14_chat_prompt.py": {
+tests\unit\test_historical_facade_transition_guards.py:68:            "scripts.seed_30_14_chat_prompt",
+tests\unit\test_historical_facade_transition_guards.py:100:        root / "app" / "prompts",
+tests\integration\test_llm_db_invariants.py:24:from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+tests\integration\test_llm_db_invariants.py:25:from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
+tests\integration\test_llm_db_invariants.py:417:        fk.get("referred_table") == "llm_output_schemas"
+tests\llm_orchestration\test_prompt_lint.py:5:from app.ops.llm.prompt_lint import PromptLint
+tests\llm_orchestration\test_prompt_lint.py:10:    result = PromptLint.lint_prompt(text)
+tests\llm_orchestration\test_prompt_lint.py:17:    result = PromptLint.lint_prompt(text)
+tests\llm_orchestration\test_prompt_lint.py:25:    result = PromptLint.lint_prompt(text)
+tests\llm_orchestration\test_prompt_lint.py:33:    result = PromptLint.lint_prompt(text)
+tests\llm_orchestration\test_prompt_lint.py:40:    with patch("app.ops.llm.prompt_lint.ai_engine_settings") as mock_settings:
+tests\llm_orchestration\test_prompt_lint.py:41:        mock_settings.llm_prompt_forbidden_words = ["pineapple", "banana"]
+tests\llm_orchestration\test_prompt_lint.py:44:        result = PromptLint.lint_prompt(text)
+tests\llm_orchestration\test_prompt_lint.py:49:        result_safe = PromptLint.lint_prompt(text_safe)
+tests\llm_orchestration\test_prompt_lint.py:55:    result = PromptLint.lint_prompt(text)
+tests\unit\test_expert_technical_projection_contract.py:72:        "prompt internals",
+tests\integration\test_admin_llm_catalog.py:34:from app.infra.db.models.llm.llm_prompt import (
+tests\integration\test_admin_llm_catalog.py:111:        developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:535:            developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
+tests\integration\test_admin_llm_catalog.py:609:        pip = payload["transformation_pipeline"]["post_injectors_prompt"]
+tests\integration\test_admin_llm_catalog.py:622:            runtime_artifacts["developer_prompt_assembled"]["artifact_type"]
+tests\integration\test_admin_llm_catalog.py:623:            == "developer_prompt_assembled"
+tests\integration\test_admin_llm_catalog.py:626:            runtime_artifacts["developer_prompt_after_injectors"]["injection_point"] == "developer"
+tests\integration\test_admin_llm_catalog.py:628:        assert runtime_artifacts["system_prompt"]["injection_point"] == "system"
+tests\integration\test_admin_llm_catalog.py:632:        assert payload["transformation_pipeline"]["assembled_prompt"] is not None
+tests\integration\test_admin_llm_catalog.py:633:        assert payload["transformation_pipeline"]["post_injectors_prompt"] is not None
+tests\integration\test_admin_llm_catalog.py:634:        assert payload["transformation_pipeline"]["rendered_prompt"] is not None
+tests\integration\test_admin_llm_catalog.py:720:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:845:            developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
+tests\integration\test_admin_llm_catalog.py:905:        from app.services.llm_generation import admin_prompts as admin_llm_logic
+tests\integration\test_admin_llm_catalog.py:914:            "app.services.llm_generation.admin_prompts.resolve_assembly",
+tests\integration\test_admin_llm_catalog.py:926:        assert "developer_prompt_after_persona" in runtime_artifacts
+tests\integration\test_admin_llm_catalog.py:929:            in (runtime_artifacts["developer_prompt_after_persona"]["delta_note"] or "").lower()
+tests\integration\test_admin_llm_catalog.py:1010:            developer_prompt=HOROSCOPE_DAILY_NARRATION_PROMPT,
+tests\integration\test_admin_llm_catalog.py:1064:            in runtime_artifacts["developer_prompt_assembled"]["content"]
+tests\integration\test_admin_llm_catalog.py:1125:                developer_prompt="Base prompt {{locale}} {{last_user_msg}}",
+tests\integration\test_admin_llm_catalog.py:1207:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1339:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1471:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1600:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1712:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1841:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:2157:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:2229:            "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit"
+tests\integration\test_admin_llm_catalog.py:2294:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2299:                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit"
+tests\integration\test_admin_llm_catalog.py:2314:        assert isinstance(body["prompt_sent"], str) and len(body["prompt_sent"]) > 0
+tests\integration\test_admin_llm_catalog.py:2362:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2367:                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
+tests\integration\test_admin_llm_catalog.py:2398:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2403:                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
+tests\integration\test_admin_llm_catalog.py:2433:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2440:                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
+tests\integration\test_admin_llm_catalog.py:2459:def test_admin_llm_catalog_execute_sample_prompt_render_error_mocked():
+tests\integration\test_admin_llm_catalog.py:2470:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2475:                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
+tests\integration\test_admin_llm_catalog.py:2484:        assert err["details"]["failure_kind"] == "prompt_render"
+tests\integration\test_admin_llm_catalog.py:2505:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2510:                "app.api.v1.routers.admin.llm.prompts._record_admin_manual_execution_audit",
+tests\llm_orchestration\test_prompt_governance_registry.py:12:import app.domain.llm.governance.prompt_governance_registry as gov_registry_module
+tests\llm_orchestration\test_prompt_governance_registry.py:17:from app.domain.llm.governance.prompt_governance_registry import (
+tests\llm_orchestration\test_prompt_governance_registry.py:21:from app.domain.llm.prompting.catalog import (
+tests\llm_orchestration\test_prompt_governance_registry.py:26:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_prompt_governance_registry.py:39:    / "prompt_governance_registry.json"
+tests\llm_orchestration\test_prompt_governance_registry.py:45:    / "classify-converge-remaining-prompt-fallbacks"
+tests\llm_orchestration\test_prompt_governance_registry.py:130:def test_prompt_fallback_config_exceptions_are_exact() -> None:
+tests\llm_orchestration\test_prompt_governance_registry.py:139:def test_converged_prompt_fallback_keys_do_not_build_config(use_case_key: str) -> None:
+tests\llm_orchestration\test_prompt_governance_registry.py:140:    """Bloque le retour executable des prompts fallback converges."""
+tests\llm_orchestration\test_prompt_governance_registry.py:309:            "get_prompt_governance_registry",
+tests\llm_orchestration\test_placeholder_validation.py:3:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\integration\test_llm_db_cleanup_registry.py:67:        if migration != "20260422_0072_archive_prompt_fallback_use_case.py"
+tests\integration\test_llm_db_cleanup_registry.py:82:        and "20260422_0072_archive_prompt_fallback_use_case.py" in (violation.detail or "")
+tests\llm_orchestration\test_persona_boundary.py:6:from app.domain.llm.prompting.persona_boundary import validate_persona_block
+tests\llm_orchestration\test_persona_boundary.py:7:from app.domain.llm.prompting.personas import compose_persona_block
+tests\unit\test_canonical_llm_bootstrap.py:77:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+tests\unit\test_canonical_llm_bootstrap.py:83:    seed_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:84:    seed_natal_v3_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:85:    seed_chat_prompt_v2 = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:86:    seed_guidance_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:95:    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+tests\unit\test_canonical_llm_bootstrap.py:97:        "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
+tests\unit\test_canonical_llm_bootstrap.py:98:        seed_natal_v3_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:101:        "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
+tests\unit\test_canonical_llm_bootstrap.py:102:        seed_chat_prompt_v2,
+tests\unit\test_canonical_llm_bootstrap.py:105:        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+tests\unit\test_canonical_llm_bootstrap.py:106:        seed_guidance_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:121:    seed_prompts.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:122:    seed_natal_v3_prompts.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:123:    seed_chat_prompt_v2.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:124:    seed_guidance_prompts.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:144:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+tests\unit\test_canonical_llm_bootstrap.py:149:    seed_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:150:    seed_natal_v3_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:151:    seed_chat_prompt_v2 = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:152:    seed_guidance_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:166:    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+tests\unit\test_canonical_llm_bootstrap.py:168:        "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
+tests\unit\test_canonical_llm_bootstrap.py:169:        seed_natal_v3_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:172:        "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
+tests\unit\test_canonical_llm_bootstrap.py:173:        seed_chat_prompt_v2,
+tests\unit\test_canonical_llm_bootstrap.py:176:        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+tests\unit\test_canonical_llm_bootstrap.py:177:        seed_guidance_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:209:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+tests\unit\test_canonical_llm_bootstrap.py:213:    seed_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:215:    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+tests\unit\test_canonical_llm_bootstrap.py:223:    seed_prompts.assert_not_called()
+tests\unit\test_canonical_llm_bootstrap.py:227:def test_canonical_llm_bootstrap_reseeds_when_active_short_prompt_is_missing(monkeypatch) -> None:
+tests\unit\test_canonical_llm_bootstrap.py:242:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+tests\unit\test_canonical_llm_bootstrap.py:248:    seed_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:249:    seed_natal_v3_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:250:    seed_chat_prompt_v2 = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:251:    seed_guidance_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:260:    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+tests\unit\test_canonical_llm_bootstrap.py:262:        "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
+tests\unit\test_canonical_llm_bootstrap.py:263:        seed_natal_v3_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:266:        "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
+tests\unit\test_canonical_llm_bootstrap.py:267:        seed_chat_prompt_v2,
+tests\unit\test_canonical_llm_bootstrap.py:270:        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+tests\unit\test_canonical_llm_bootstrap.py:271:        seed_guidance_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:286:    seed_prompts.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:287:    seed_natal_v3_prompts.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:288:    seed_chat_prompt_v2.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:289:    seed_guidance_prompts.assert_called_once()
+tests\unit\test_canonical_llm_bootstrap.py:311:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+tests\unit\test_canonical_llm_bootstrap.py:315:    seed_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:317:    seed_natal_v3_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:318:    seed_chat_prompt_v2 = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:319:    seed_guidance_prompts = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:323:    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+tests\unit\test_canonical_llm_bootstrap.py:329:        "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
+tests\unit\test_canonical_llm_bootstrap.py:330:        seed_natal_v3_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:333:        "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
+tests\unit\test_canonical_llm_bootstrap.py:334:        seed_chat_prompt_v2,
+tests\unit\test_canonical_llm_bootstrap.py:337:        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+tests\unit\test_canonical_llm_bootstrap.py:338:        seed_guidance_prompts,
+tests\unit\test_canonical_llm_bootstrap.py:352:    seed_prompts.assert_not_called()
+tests\unit\test_canonical_llm_bootstrap.py:353:    seed_natal_v3_prompts.assert_not_called()
+tests\unit\test_canonical_llm_bootstrap.py:354:    seed_chat_prompt_v2.assert_not_called()
+tests\unit\test_canonical_llm_bootstrap.py:355:    seed_guidance_prompts.assert_not_called()
+tests\llm_orchestration\test_replay_service.py:23:            await replay(db, "any-req", "any-prompt")
+tests\llm_orchestration\test_replay_service.py:30:        await replay(db, "non-existent", "any-prompt")
+tests\integration\test_llm_semantic_conformity.py:10:    validate_assemble_prompt_transform_order,
+tests\integration\test_llm_semantic_conformity.py:11:    validate_gateway_prompt_transform_order,
+tests\integration\test_llm_semantic_conformity.py:38:            current_prompt = config.developer_prompt
+tests\integration\test_llm_semantic_conformity.py:41:                    current_prompt,
+tests\integration\test_llm_semantic_conformity.py:45:                    current_prompt, request.user_input.feature, cq_level
+tests\integration\test_llm_semantic_conformity.py:48:                current_prompt = (
+tests\integration\test_llm_semantic_conformity.py:49:                    f"{current_prompt}\\n\\n[CONSIGNE DE VERBOSITÉ] {verbosity_instruction}"
+tests\integration\test_llm_semantic_conformity.py:51:            rendered_developer_prompt = self.renderer.render(
+tests\integration\test_llm_semantic_conformity.py:52:                current_prompt,
+tests\integration\test_llm_semantic_conformity.py:54:                required_variables=config.required_prompt_placeholders,
+tests\integration\test_llm_semantic_conformity.py:70:    assert validate_gateway_prompt_transform_order(good) == []
+tests\integration\test_llm_semantic_conformity.py:71:    assert len(validate_gateway_prompt_transform_order(bad)) >= 1
+tests\integration\test_llm_semantic_conformity.py:76:def assemble_developer_prompt(resolved, config):
+tests\integration\test_llm_semantic_conformity.py:77:    prompt = "x"
+tests\integration\test_llm_semantic_conformity.py:79:        prompt = LengthBudgetInjector.inject_into_developer_prompt(prompt, resolved.length_budget)
+tests\integration\test_llm_semantic_conformity.py:80:    prompt, injected, handled = ContextQualityInjector.inject(
+tests\integration\test_llm_semantic_conformity.py:81:        prompt, config.feature, context_quality
+tests\integration\test_llm_semantic_conformity.py:83:    return prompt
+tests\integration\test_llm_semantic_conformity.py:86:def assemble_developer_prompt(resolved, config):
+tests\integration\test_llm_semantic_conformity.py:87:    prompt = "x"
+tests\integration\test_llm_semantic_conformity.py:88:    prompt, injected, handled = ContextQualityInjector.inject(
+tests\integration\test_llm_semantic_conformity.py:89:        prompt, config.feature, context_quality
+tests\integration\test_llm_semantic_conformity.py:92:        prompt = LengthBudgetInjector.inject_into_developer_prompt(prompt, resolved.length_budget)
+tests\integration\test_llm_semantic_conformity.py:93:    return prompt
+tests\integration\test_llm_semantic_conformity.py:95:    assert validate_assemble_prompt_transform_order(good) == []
+tests\integration\test_llm_semantic_conformity.py:96:    assert len(validate_assemble_prompt_transform_order(bad)) >= 1
+tests\llm_orchestration\test_v2_validation.py:14:from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_v2_validation.py:25:    If a prompt in DB tries to use {{messages}}, it must be ignored/filtered
+tests\llm_orchestration\test_v2_validation.py:28:    # 1. Create use case and prompt using internal variable
+tests\llm_orchestration\test_v2_validation.py:33:        required_prompt_placeholders=["messages"],
+tests\llm_orchestration\test_v2_validation.py:36:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_v2_validation.py:40:        developer_prompt="Hello {{messages}} {{locale}} {{use_case}}",
+tests\llm_orchestration\test_v2_validation.py:43:    db.add(prompt)
+tests\llm_orchestration\test_v2_validation.py:63:    # but IS in required_prompt_placeholders
+tests\llm_orchestration\test_v2_validation.py:94:        mock_execute.side_effect = PromptRenderError("boom", details={"field": "prompt"})
+tests\llm_orchestration\test_v2_validation.py:106:    assert exc_info.value.code == "prompt_render_error"
+tests\llm_orchestration\test_qualified_context.py:7:from app.domain.llm.prompting.context import (
+tests\llm_orchestration\test_qualified_context.py:66:            to_prompt_line=lambda: "desc",
+tests\llm_orchestration\test_prompt_renderer.py:3:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_stable_profiles.py:10:from app.infra.db.models.llm.llm_prompt import (
+tests\llm_orchestration\test_stable_profiles.py:45:    assert "[CONSIGNE DE VERBOSITÉ]" in plan.rendered_developer_prompt
+tests\llm_orchestration\test_stable_profiles.py:46:    assert "concise" in plan.rendered_developer_prompt
+tests\llm_orchestration\test_stable_profiles.py:85:    from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
+tests\llm_orchestration\test_stable_profiles.py:103:        developer_prompt="P",
+tests\llm_orchestration\test_stable_profiles.py:143:    prompt = LlmPromptVersionModel(
+tests\llm_orchestration\test_stable_profiles.py:146:        developer_prompt="Return a compact structured response.",
+tests\llm_orchestration\test_stable_profiles.py:150:    db.add(prompt)
+tests\llm_orchestration\test_resolved_execution_plan.py:68:        rendered_developer_prompt="VERY LONG PROMPT",
+tests\llm_orchestration\test_resolved_execution_plan.py:79:    assert "rendered_developer_prompt" not in log_dict
+tests\llm_orchestration\test_resolved_execution_plan.py:96:            rendered_developer_prompt="Prompt",
+tests\llm_orchestration\test_resolved_execution_plan.py:134:    assert "Ta seule mission est de corriger le format JSON" in plan.rendered_developer_prompt
+tests\integration\test_llm_runtime_suppression.py:122:                    "app.domain.llm.runtime.gateway.assemble_developer_prompt",
+tests\integration\test_llm_runtime_suppression.py:123:                    return_value="test prompt",
+tests\integration\test_llm_runtime_suppression.py:274:                    "app.domain.llm.runtime.gateway.assemble_developer_prompt",
+tests\integration\test_llm_runtime_suppression.py:275:                    return_value="test prompt",
+tests\integration\test_llm_runtime_suppression.py:361:                    "app.domain.llm.runtime.gateway.assemble_developer_prompt",
+tests\integration\test_llm_runtime_suppression.py:362:                    return_value="test prompt",
+tests\integration\test_llm_runtime_suppression.py:418:        mock_config.prompt_version_id = "test"
+tests\integration\test_llm_runtime_suppression.py:422:        mock_config.developer_prompt = "test prompt"
+tests\integration\test_llm_runtime_suppression.py:427:        mock_config.required_prompt_placeholders = []
+tests\integration\test_llm_legacy_extinction.py:43:        developer_prompt="stub-stage05",
+tests\integration\test_llm_legacy_extinction.py:84:    mock_plan.rendered_developer_prompt = "test"
+tests\integration\test_llm_legacy_extinction.py:88:    mock_plan.required_prompt_placeholders = []
+tests\integration\test_llm_release.py:31:from app.infra.db.models.llm.llm_prompt import PromptStatus
+tests\integration\test_llm_release.py:248:        # Pick a target that avoids schema-heavy and known legacy prompt pitfalls when possible.
+tests\integration\test_llm_golden_regression.py:71:                prompt_version_id="test-v1",
+tests\integration\test_llm_golden_regression.py:123:                prompt_version_id="test-v1",
+tests\integration\test_llm_golden_regression.py:177:                prompt_version_id="test-v1",
+tests\integration\test_llm_golden_regression.py:227:                prompt_version_id="test-v1",
+tests\integration\test_llm_golden_regression.py:277:                prompt_version_id="test-v1",
+tests\integration\test_llm_golden_regression.py:320:                prompt_version_id="test-v1",
+tests\integration\test_llm_golden_regression.py:373:                prompt_version_id="test-v1",
+tests\integration\test_llm_golden_regression.py:429:                prompt_version_id="test-v1",
+tests\integration\test_llm_integrated_propagation.py:6:from app.domain.llm.prompting.context import PromptCommonContext, QualifiedContext
+tests\integration\test_llm_integrated_propagation.py:54:    # We need a developer prompt that handles partial quality
+tests\integration\test_llm_integrated_propagation.py:55:    # We'll mock the legacy compatibility resolver to return this prompt
+tests\integration\test_llm_integrated_propagation.py:60:        developer_prompt=(
+tests\integration\test_llm_integrated_propagation.py:61:            "Base prompt. {{#context_quality:partial}}Partial handling here.{{/context_quality}}"
+tests\integration\test_llm_integrated_propagation.py:63:        required_prompt_placeholders=[],
+tests\integration\test_llm_integrated_propagation.py:77:        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+tests\integration\test_llm_integrated_propagation.py:141:        developer_prompt="Base prompt without blocks.",
+tests\integration\test_llm_integrated_propagation.py:142:        required_prompt_placeholders=[],
+tests\integration\test_llm_integrated_propagation.py:155:        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+tests\integration\test_llm_integrated_propagation.py:221:        model="gpt-4o", developer_prompt="Base prompt.", required_prompt_placeholders=[]
+tests\integration\test_llm_integrated_propagation.py:234:        "app.domain.llm.prompting.context.CommonContextBuilder.build", return_value=mock_ctx
+tests\integration\test_llm_doc_conformity_hardening.py:134:        changed_files=["docs/llm-prompt-generation-by-feature.md"],
+tests\integration\test_llm_doc_conformity_hardening.py:205:            "docs/llm-prompt-generation-by-feature.md",
+tests\integration\test_llm_governance_registry.py:100:        developer_prompt="test prompt",
+tests\integration\test_llm_governance_registry.py:101:        prompt_version_id="stub-v1",
+tests\integration\test_llm_observability_integration.py:63:        developer_prompt="Prompt",
+tests\integration\test_llm_observability_integration.py:78:                rendered_developer_prompt="Chat prompt",
+tests\integration\test_llm_observability_integration.py:117:        developer_prompt="Prompt",
+tests\integration\test_llm_observability_integration.py:129:        rendered_developer_prompt="Prompt",
+tests\integration\test_llm_observability_integration.py:177:        developer_prompt="Prompt",
+tests\integration\test_llm_observability_integration.py:188:        rendered_developer_prompt="Prompt with context quality instructions",
+tests\integration\test_llm_observability_integration.py:236:        developer_prompt="Prompt",
+tests\integration\test_llm_observability_integration.py:247:        rendered_developer_prompt="Prompt",
+tests\integration\test_llm_observability_integration.py:296:        developer_prompt="Prompt",
+tests\integration\test_llm_observability_integration.py:308:        rendered_developer_prompt="Prompt",
+tests\integration\test_llm_provider_locking.py:67:    mock_config.developer_prompt = "stub"
+tests\integration\test_llm_provider_locking.py:68:    mock_config.required_prompt_placeholders = []
+tests\integration\test_llm_provider_locking.py:70:    mock_config.prompt_version_id = "stub"
+tests\integration\test_llm_provider_locking.py:83:        developer_prompt="stub",
+tests\integration\test_llm_provider_locking.py:84:        required_prompt_placeholders=[],
+tests\integration\test_llm_provider_locking.py:86:        prompt_version_id="stub",
+tests\integration\test_llm_provider_locking.py:142:            "app.domain.llm.runtime.gateway.assemble_developer_prompt",
+tests\integration\test_llm_provider_locking.py:190:    mock_config.developer_prompt = "stub"
+tests\integration\test_llm_provider_locking.py:191:    mock_config.required_prompt_placeholders = []
+tests\integration\test_llm_provider_locking.py:193:    mock_config.prompt_version_id = "stub"
+tests\integration\test_llm_provider_locking.py:206:        developer_prompt="stub",
+tests\integration\test_llm_provider_locking.py:207:        required_prompt_placeholders=[],
+tests\integration\test_llm_provider_locking.py:209:        prompt_version_id="stub",
+tests\integration\test_llm_provider_locking.py:265:            "app.domain.llm.runtime.gateway.assemble_developer_prompt",
+tests\integration\test_llm_provider_locking.py:314:    mock_config.developer_prompt = "stub"
+tests\integration\test_llm_provider_locking.py:315:    mock_config.required_prompt_placeholders = []
+tests\integration\test_llm_provider_locking.py:317:    mock_config.prompt_version_id = "stub"
+tests\integration\test_llm_provider_locking.py:346:            "app.domain.llm.runtime.gateway.assemble_developer_prompt",
+tests\integration\test_llm_legacy_residual_governance.py:18:from app.domain.llm.prompting.catalog import DEPRECATED_USE_CASE_MAPPING
+tests\integration\test_llm_legacy_residual_governance.py:105:    doc_path = _repo_root() / "docs" / "llm-prompt-generation-by-feature.md"
+tests\unit\domain\astrology\test_chart_object_dignity_runtime.py:204:        "prompt",
+tests\unit\domain\astrology\test_chart_object_dominance_runtime.py:207:        "prompt",
+tests\unit\prediction\test_astrologer_prompt_builder.py:5:from app.domain.llm.prompting.context import PromptCommonContext
+tests\unit\prediction\test_astrologer_prompt_builder.py:6:from app.domain.prediction.astrologer_prompt_builder import AstrologerPromptBuilder
+tests\unit\prediction\test_astrologer_prompt_builder.py:32:    prompt = AstrologerPromptBuilder().build(
+tests\unit\prediction\test_astrologer_prompt_builder.py:39:    assert "Variante de narration : summary_only" in prompt
+tests\unit\prediction\test_astrologer_prompt_builder.py:40:    assert "strictement 7 à 8 phrases complètes" not in prompt
+tests\unit\prediction\test_astrologer_prompt_builder.py:41:    assert "comprise entre 50% et 67% de la version complète" not in prompt
+tests\unit\prediction\test_astrologer_prompt_builder.py:42:    assert "450 à 700 caractères" not in prompt
+tests\unit\prediction\test_astrologer_prompt_builder.py:46:    prompt = AstrologerPromptBuilder().build(
+tests\unit\prediction\test_astrologer_prompt_builder.py:52:    assert "Variante de narration : standard" in prompt
+tests\unit\prediction\test_astrologer_prompt_builder.py:53:    assert "strictement 10 à 12 phrases complètes" not in prompt
+tests\unit\prediction\test_astrologer_prompt_builder.py:57:    source = (BACKEND_ROOT / "app/domain/prediction/astrologer_prompt_builder.py").read_text(
+tests\unit\prediction\test_astrologer_prompt_builder.py:80:    prompt = AstrologerPromptBuilder().build(
+tests\unit\prediction\test_astrologer_prompt_builder.py:86:    assert "Soleil en Lion" in prompt
+tests\unit\prediction\test_astrologer_prompt_builder.py:87:    assert "Ascendant : Belier" in prompt
+tests\unit\domain\astrology\test_planet_condition_signal_builder.py:118:                    prompt_hint="visibility_hint",
+tests\unit\domain\astrology\test_planet_condition_signal_builder.py:130:                    prompt_hint="functional_strength_hint",
+tests\unit\domain\astrology\test_planet_condition_signal_builder.py:193:    assert signal.prompt_hint == "constraint_hint"
+tests\unit\domain\astrology\test_signal_builder.py:231:                        prompt_hint="visibility_emphasized",

@@ -1,5 +1,5 @@
 # Story CS-277 replay-snapshot-v1-storage-security-model: Define replay_snapshot_v1 Storage And Security Model
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

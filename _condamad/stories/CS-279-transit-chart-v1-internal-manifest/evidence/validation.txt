@@ -1,0 +1,21 @@
+CS-279 validation summary
+
+Review/fix iteration 1 rerun:
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_transit_chart_manifest.py backend\tests\architecture\test_api_contract_neutrality.py --tb=short
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-279-transit-chart-v1-internal-manifest
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-279-transit-chart-v1-internal-manifest\00-story.md
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-279-transit-chart-v1-internal-manifest\00-story.md
+PASS rg -n "transit_chart_v1|transit_chart_manifest" backend\app\api frontend\src backend\migrations returned exit 1; no public API/frontend/migration matches.
+PASS .\.venv\Scripts\Activate.ps1; ruff check .
+PASS git diff --check -- _condamad\stories\CS-279-transit-chart-v1-internal-manifest _condamad\stories\story-status.md backend\app\domain\astrology\runtime\transit_chart_manifest.py backend\tests\unit\domain\astrology\test_transit_chart_manifest.py backend\tests\architecture\test_api_contract_neutrality.py
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-279-transit-chart-v1-internal-manifest
+PASS .\.venv\Scripts\Activate.ps1; ruff format backend\app\domain\astrology\runtime\transit_chart_manifest.py backend\tests\unit\domain\astrology\test_transit_chart_manifest.py backend\tests\architecture\test_api_contract_neutrality.py
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_transit_chart_manifest.py backend\tests\architecture\test_api_contract_neutrality.py --tb=short
+PASS .\.venv\Scripts\Activate.ps1; ruff check .
+PASS rg -n "transit_chart_v1|transit_chart_manifest" backend\app\api frontend\src returned exit 1; no public API/frontend matches.
+PASS rg -n "CS-250|proof|preuve|CS-252|doctrine|replay|trace" backend\app\domain\astrology\runtime\transit_chart_manifest.py backend\tests\unit\domain\astrology\test_transit_chart_manifest.py
+PASS git diff --check -- backend\app\domain\astrology\runtime\transit_chart_manifest.py backend\tests\unit\domain\astrology\test_transit_chart_manifest.py backend\tests\architecture\test_api_contract_neutrality.py _condamad\stories\CS-279-transit-chart-v1-internal-manifest
+LIMITATION .\.venv\Scripts\Activate.ps1; python -B -m pytest -q --tb=short failed outside CS-279: backend\app\tests\unit\test_backend_quality_test_ownership.py reports pre-existing untracked backend/tests/unit/test_replay_snapshot_v1_storage_security_model.py missing from ownership registry.
+
+Local app smoke: covered by TestClient(app).get("/openapi.json") in backend\tests\architecture\test_api_contract_neutrality.py.

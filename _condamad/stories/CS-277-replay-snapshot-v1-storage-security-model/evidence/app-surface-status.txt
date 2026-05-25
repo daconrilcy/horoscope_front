@@ -1,0 +1,13 @@
+CS-277 app surface status
+
+Scope expectation:
+- No CS-277 edit in `backend/app/**`.
+- No CS-277 edit in `backend/migrations/**`.
+- No CS-277 edit in `frontend/src/**`.
+- No route, service, builder, DB model, migration, frontend UI, generated client or public OpenAPI exposure for `replay_snapshot_v1`.
+
+Evidence:
+- `rg -n "replay_snapshot_v1" backend\app frontend\src backend\migrations` returned no matches.
+- `app.routes` check confirmed no route path contains `replay_snapshot_v1`.
+- `app.openapi()` check confirmed OpenAPI does not contain `replay_snapshot_v1`.
+- `git status --short -- backend\app frontend\src` shows pre-existing unrelated backend/app changes from prior stories and no CS-277 frontend/src change.

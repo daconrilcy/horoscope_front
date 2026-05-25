@@ -1,0 +1,25 @@
+CS-271 scoped app-surface status - 2026-05-24
+
+Command:
+git status --short -- backend/app frontend/src backend/migrations
+
+Result:
+ M backend/app/api/v1/routers/registry.py
+ M backend/app/core/sensitive_data.py
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/infra/db/models/__init__.py
+ M backend/app/services/api_contracts/admin/audit.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+?? backend/app/api/v1/routers/admin/answer_audit.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/ops/rejected_answer_review.py
+?? backend/app/services/projection_persistence_service.py
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+?? backend/migrations/versions/20260524_0138_create_persisted_projections.py
+
+Interpretation:
+These app-surface changes were already present outside CS-271 and were not edited for this story. CS-271 introduced only documentation, one unit contract test, capsule evidence and the story-status row update.

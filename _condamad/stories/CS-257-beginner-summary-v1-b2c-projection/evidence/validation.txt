@@ -1,0 +1,61 @@
+CS-257 validation evidence
+
+Target story:
+_condamad/stories/CS-257-beginner-summary-v1-b2c-projection/00-story.md
+
+Registry verification:
+PASS - CS-257 row matched:
+- Path: `_condamad/stories/CS-257-beginner-summary-v1-b2c-projection/00-story.md`
+- Source: `_story_briefs/cs-257-define-beginner-summary-v1-deterministic-b2c-projection.md`
+
+Capsule:
+PASS - . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-257-beginner-summary-v1-b2c-projection\00-story.md --root . --story-key CS-257-beginner-summary-v1-b2c-projection
+PASS - . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-257-beginner-summary-v1-b2c-projection
+
+Contract presence:
+PASS - . .\.venv\Scripts\Activate.ps1; python -B -c "from pathlib import Path; assert Path('docs/architecture/beginner-summary-v1-contract.md').exists()"
+
+Content scans:
+PASS - rg -n "beginner_summary_v1|B2C|free|basic" docs\architecture\beginner-summary-v1-contract.md
+PASS - rg -n "signes principaux|ascendant|maison dominante|thèmes dominants" docs\architecture\beginner-summary-v1-contract.md
+PASS - rg -n "loading|empty|degraded|unavailable|trigger" docs\architecture\beginner-summary-v1-contract.md
+PASS - rg -n "heure de naissance|ascendant|house-dependent|degraded_reason" docs\architecture\beginner-summary-v1-contract.md
+PASS - rg -n "structured_facts_v1|upstream factual source|direct public payload" docs\architecture\beginner-summary-v1-contract.md
+PASS - rg -n "controlled error|raw runtime|debug|audit|premium" docs\architecture\beginner-summary-v1-contract.md
+PASS - rg -n "beginner_summary_v1|CS-257|future API contract, not CS-257|fixed_star_contacts" docs\architecture\official-product-primitives-public-projections.md
+
+Application surface:
+PASS - . .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; assert 'beginner_summary_v1' not in str(app.openapi())"
+PASS - . .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; assert all('beginner_summary' not in getattr(r, 'path', '') for r in app.routes)"
+PASS - git status --short -- backend/app frontend/src backend/tests backend/migrations produced no output.
+
+Quality gates:
+PASS - . .\.venv\Scripts\Activate.ps1; ruff format --check .
+PASS - . .\.venv\Scripts\Activate.ps1; ruff check .
+TIMEOUT - . .\.venv\Scripts\Activate.ps1; python -B -m pytest -q --tb=short from backend exceeded 120s without result.
+PASS - . ..\.venv\Scripts\Activate.ps1; python -B -m pytest -q --tb=short from backend: 3236 passed, 1 skipped, 1182 deselected in 345.29s.
+PASS - . ..\.venv\Scripts\Activate.ps1; python -B -m pytest -q --tb=short from backend: 3236 passed, 1 skipped, 1182 deselected in 342.40s during implementation review/fix.
+PASS - git diff --check
+
+Implementation review/fix cycle:
+Iteration 1 findings:
+- generated/06-validation-plan.md still contained generic placeholder validation text instead of the CS-257 contract, app-surface and evidence checks.
+- generated/11-code-review.md still documented a compact pre-implementation drafting review instead of a fresh implementation review.
+
+Fixes:
+- Replaced generated/06-validation-plan.md with the concrete CS-257 validation plan.
+- Refreshed generated/11-code-review.md, final evidence and tracker status after fresh validation.
+
+Fresh review:
+PASS - implementation review clean after proof correction; AC1-AC10 remain covered and no application surface drift was found.
+
+Closure:
+PASS - . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-257-beginner-summary-v1-b2c-projection
+PASS - . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-257-beginner-summary-v1-b2c-projection\00-story.md
+PASS - . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-257-beginner-summary-v1-b2c-projection\00-story.md
+PASS - CS-257 tracker row and 00-story status are both `done` with the requested story path and source brief.
+
+Skipped:
+- ruff format: no Python files were modified; Markdown contract files are outside Ruff formatting.
+- frontend checks and browser validation: no frontend file changed; frontend is an explicit non-goal.
+- local app server startup: documentation-only story; app import/OpenAPI/routes checks passed.

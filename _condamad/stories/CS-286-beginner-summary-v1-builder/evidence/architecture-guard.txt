@@ -1,0 +1,6 @@
+Owner audit PASS: existing structured_facts_v1 builder found at backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py; no prior beginner_summary_v1 owner found before implementation.
+Canonical owner PASS: backend/app/domain/astrology/interpretation/beginner_summary_v1_builder.py is the only file containing BeginnerSummaryV1Builder under interpretation/*.py.
+Source guard PASS: builder imports STRUCTURED_FACTS_V1_PROJECTION_ID and refuses non structured_facts_v1 projection_id.
+Contract field alignment PASS: payload exposes CS-257 fields audience, source_projection, allowed_fields and display_messages while preserving CS-286 source_projection_id and message_code.
+Negative scan PASS: rg -n "prompt|llm_output|final_narrative|rendered_text|provider_response" backend\app\domain\astrology\interpretation\beginner_summary_v1_builder.py backend\tests\unit\domain\astrology\test_beginner_summary_v1_builder.py returned exit 1 (no matches).
+No API delta PASS: story changed no backend/app/api/** files.

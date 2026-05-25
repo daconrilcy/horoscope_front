@@ -1,0 +1,47 @@
+CS-275 validation evidence
+
+Commands executed from C:\dev\horoscope_front with .\.venv\Scripts\Activate.ps1 active before Python/Ruff commands.
+
+PASS: cd backend; ruff format tests\unit\test_admin_chart_diagnostics_policy.py
+Output: 1 file left unchanged
+
+PASS: cd backend; ruff check tests\unit\test_admin_chart_diagnostics_policy.py
+Output: All checks passed!
+
+PASS: cd backend; python -B -m pytest -q tests\unit\test_admin_chart_diagnostics_policy.py --tb=short
+Output: 4 passed in 3.60s
+
+PASS: cd backend; python -B -c "from app.main import app; assert 'admin_chart_diagnostics' not in str(app.openapi())"
+
+PASS: cd backend; python -B -c "from app.main import app; assert all('admin_chart_diagnostics' not in getattr(r, 'path', '') for r in app.routes)"
+
+PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-275-admin-chart-diagnostics-policy\00-story.md
+Output: CONDAMAD story validation: PASS
+
+PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-275-admin-chart-diagnostics-policy\00-story.md
+Output: CONDAMAD story lint: PASS
+
+PASS: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-275-admin-chart-diagnostics-policy
+Output: CONDAMAD validation: PASS
+
+FINAL PASS after status and review evidence updates: story validation, strict story lint and capsule validation.
+Output: CONDAMAD story validation: PASS; CONDAMAD story lint: PASS; CONDAMAD validation: PASS
+
+FINAL PASS after status and review evidence updates: cd backend; ruff check tests\unit\test_admin_chart_diagnostics_policy.py
+Output: All checks passed!
+
+FINAL PASS after status and review evidence updates: cd backend; python -B -m pytest -q tests\unit\test_admin_chart_diagnostics_policy.py --tb=short
+Output: 4 passed in 3.46s
+
+PASS: rg required policy terms in docs\architecture\admin-chart-diagnostics-v1-policy.md
+
+PASS: rg -n "admin_chart_diagnostics" backend\app\api backend\app\services backend\app\infra\db backend\migrations frontend\src -g "*.py" -g "*.ts" -g "*.tsx" -g "*.md"
+Output: no matches; rg exit code 1 treated as PASS for negative scan.
+
+PASS: git diff --check -- docs\architecture\admin-chart-diagnostics-v1-policy.md backend\tests\unit\test_admin_chart_diagnostics_policy.py _condamad\stories\CS-275-admin-chart-diagnostics-policy
+FINAL PASS: git diff --check scoped to CS-275 surfaces and story-status.
+Output: no whitespace errors; Git emitted CRLF normalization warnings only.
+
+SKIPPED: full backend pytest suite. Reason: documentation-only story; targeted pytest plus runtime OpenAPI/route checks cover changed surface; workspace has substantial unrelated in-progress changes.
+
+SKIPPED: local web server. Reason: no endpoint/UI was added; app import, app.openapi() and app.routes checks passed.

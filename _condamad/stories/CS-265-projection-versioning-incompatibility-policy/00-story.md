@@ -1,5 +1,5 @@
 # Story CS-265 projection-versioning-incompatibility-policy: Define Projection Versioning And Incompatibility Policy
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

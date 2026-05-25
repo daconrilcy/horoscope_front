@@ -1,5 +1,5 @@
 # Story CS-285 structured-facts-v1-builder: Implement structured_facts_v1 Builder
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -111,15 +111,15 @@ hashing, keep interpretive signals separate, exclude narrative text and keep the
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect CS-256 and closest backend builders before choosing the owner. (AC: AC1)
-- [ ] Task 2: Extend the closest existing owner or add one adjacent canonical builder for `structured_facts_v1`. (AC: AC1, AC2)
-- [ ] Task 3: Build the deterministic payload with projection id, source versions and ordered fact collections. (AC: AC2, AC3)
-- [ ] Task 4: Separate structural facts from interpretive signals in the emitted payload. (AC: AC2, AC4)
-- [ ] Task 5: Exclude narrative, prompt, advice and LLM output fields from the payload. (AC: AC4)
-- [ ] Task 6: Encode missing optional data with deterministic empty or null semantics from the contract. (AC: AC5)
-- [ ] Task 7: Add route and OpenAPI exposure guards for `structured_facts_v1`. (AC: AC6)
-- [ ] Task 8: Add AST or targeted scan guards against duplicate builder pipelines. (AC: AC1, AC7)
-- [ ] Task 9: Persist validation, route-neutrality and stability evidence under the CS-285 evidence folder. (AC: AC8)
+- [x] Task 1: Inspect CS-256 and closest backend builders before choosing the owner. (AC: AC1)
+- [x] Task 2: Extend the closest existing owner or add one adjacent canonical builder for `structured_facts_v1`. (AC: AC1, AC2)
+- [x] Task 3: Build the deterministic payload with projection id, source versions and ordered fact collections. (AC: AC2, AC3)
+- [x] Task 4: Separate structural facts from interpretive signals in the emitted payload. (AC: AC2, AC4)
+- [x] Task 5: Exclude narrative, prompt, advice and LLM output fields from the payload. (AC: AC4)
+- [x] Task 6: Encode missing optional data with deterministic empty or null semantics from the contract. (AC: AC5)
+- [x] Task 7: Add route and OpenAPI exposure guards for `structured_facts_v1`. (AC: AC6)
+- [x] Task 8: Add AST or targeted scan guards against duplicate builder pipelines. (AC: AC1, AC7)
+- [x] Task 9: Persist validation, route-neutrality and stability evidence under the CS-285 evidence folder. (AC: AC8)
 
 ## Files to Inspect First
 

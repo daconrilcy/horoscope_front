@@ -1,5 +1,5 @@
 # Story CS-286 beginner-summary-v1-builder: Implement beginner_summary_v1 Builder
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

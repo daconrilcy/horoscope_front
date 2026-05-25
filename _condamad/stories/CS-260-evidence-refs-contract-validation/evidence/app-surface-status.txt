@@ -1,0 +1,13 @@
+# app surface status
+## git status --short -- backend/app frontend/src backend/migrations frontend
+## git status --short -- docs/architecture/evidence-refs-contract.md CS-260 story story-status
+ M _condamad/stories/story-status.md
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/evidence/
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/generated/01-execution-brief.md
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/generated/04-target-files.md
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/generated/06-validation-plan.md
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/generated/09-dev-log.md
+?? _condamad/stories/CS-260-evidence-refs-contract-validation/generated/10-final-evidence.md
+?? docs/architecture/evidence-refs-contract.md

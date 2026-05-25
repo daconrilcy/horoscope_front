@@ -1,0 +1,34 @@
+# Validation summary - CS-260
+
+## Implementation validation
+
+- Contract existence: PASS, `docs/architecture/evidence-refs-contract.md` exists.
+- Contract keyword scan: PASS, see `evidence/contract-rg.txt`.
+- Contract shape scan: PASS, see `evidence/contract-shape-rg.txt`.
+- Runtime OpenAPI/routes neutrality: PASS, see `evidence/openapi-routes.txt`.
+- Scoped application status: PASS, see `evidence/app-surface-status.txt`.
+- Backend lint: PASS, see `evidence/ruff-check.txt`.
+- Backend tests: PASS, see `evidence/pytest.txt`.
+- Capsule validation: PASS, see `evidence/capsule-validate-final.txt`.
+
+## Review correction validation
+
+- Corrected stale story status from `ready-to-dev` to `done`.
+- Added missing persistent evidence artifacts required by the story:
+  `_condamad/stories/CS-260-evidence-refs-contract-validation/evidence/validation.txt` and
+  `_condamad/stories/CS-260-evidence-refs-contract-validation/evidence/source-checklist.md`.
+- Replaced the stale drafting review with a fresh implementation review in
+  `_condamad/stories/CS-260-evidence-refs-contract-validation/generated/11-code-review.md`.
+- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`: PASS.
+- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`: PASS.
+- Contract scan over `docs/architecture/evidence-refs-contract.md`: PASS.
+- `python -B -c "from app.main import app; ..."` from `backend`: PASS, `openapi_routes_neutral=True`.
+- `ruff check .` from `backend`: PASS, `All checks passed!`.
+- `python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py` from `backend`: PASS, `15 passed`.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...`: PASS.
+- `git diff --check -- docs\architecture\evidence-refs-contract.md ...`: PASS, line-ending warnings only.
+
+## Skipped validations
+
+- Frontend lint, build and browser checks: skipped because the story is documentation-only and `frontend/src/**` is explicitly out of scope.
+- Local app startup: skipped because no runtime implementation was added; OpenAPI/routes neutrality and backend tests cover the required runtime check.

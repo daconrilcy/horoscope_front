@@ -1,41 +1,69 @@
-# CS-258 Draft Review - client_interpretation_projection_v1 By Plan
+# CS-258 Implementation Review - client_interpretation_projection_v1 By Plan
 
 Verdict: CLEAN
 Review date: 2026-05-24
-Review type: compact pre-implementation CONDAMAD story-contract review
+Review type: CONDAMAD implementation review
 
 ## Reviewed Scope
 
 - Story: `_condamad/stories/CS-258-client-interpretation-projection-v1-by-plan/00-story.md`
 - Source brief: `_story_briefs/cs-258-define-client-interpretation-projection-v1-by-plan.md`
 - Tracker row: `_condamad/stories/story-status.md`
-- Scoped guardrail lookup: `RG-002`
+- Contract document: `docs/architecture/client-interpretation-projection-v1-contract.md`
+- Registry alignment: `docs/architecture/official-product-primitives-public-projections.md`
+- Evidence files:
+  - `_condamad/stories/CS-258-client-interpretation-projection-v1-by-plan/evidence/validation.txt`
+  - `_condamad/stories/CS-258-client-interpretation-projection-v1-by-plan/evidence/app-surface-status.txt`
+  - `_condamad/stories/CS-258-client-interpretation-projection-v1-by-plan/evidence/source-checklist.md`
 
-## Review Cycle
+## Iterations
 
-- Iteration 1: CHANGES_REQUESTED for story-table line lengths above the requested Markdown limits.
-- Fix: shortened AC5 wording and replaced or shortened long evidence/guardrail table rows.
-- Iteration 2: CLEAN after validation and strict lint passed.
+| Iteration | Verdict | Findings | Resolution |
+|---|---|---|---|
+| 1 | CHANGES_REQUESTED | Review artifact still described a draft/pre-implementation review; final evidence reported `PASS_WITH_LIMITATIONS`; required source checklist was absent. | Updated implementation review evidence, normalized final evidence to PASS for the validated touched surface, and added source checklist evidence. |
+| 2 | CLEAN | No actionable implementation, AC, evidence, guardrail or validation issue remains. | Closure authorized. |
 
-## Brief Alignment
+## Acceptance Criteria Review
 
-The story explicitly covers free, basic and premium sections, narrative depth rules, vulgarized support elements,
-technical client exclusions, `structured_facts_v1`, interpretive signals and the LLM as rédacteur rather than calculator.
+| AC | Review result |
+|---|---|
+| AC1 | PASS: `docs/architecture/client-interpretation-projection-v1-contract.md` documents `client_interpretation_projection_v1`. |
+| AC2 | PASS: the contract distinguishes `free`, `basic` and `premium` by section depth and product value. |
+| AC3 | PASS: narrative depth covers section count, personalization, predictions and explanatory richness. |
+| AC4 | PASS: support elements are client-readable and vulgarized. |
+| AC5 | PASS: raw runtime, proof internals, prompt internals and provider internals are excluded from client payloads. |
+| AC6 | PASS: `structured_facts_v1`, interpretive signals and the LLM `rédacteur` role are explicit. |
+| AC7 | PASS: `expert_technical_projection_v1`, provider implementation, definitive prompts and admin roles remain out of scope. |
+| AC8 | PASS: OpenAPI and route neutrality are evidenced. |
+| AC9 | PASS: scoped app-source status shows no `backend/app` or `frontend/src` drift. |
+| AC10 | PASS: validation, app-surface status and source-checklist evidence are persisted. |
 
-The story preserves the brief exclusions: no LLM provider, no definitive prompts, no `expert_technical_projection_v1`,
-and no admin role definition.
+## Guardrails
 
-## Validation Results
+- RG-002: PASS. `backend/app` and `frontend/src` are referenced as source owners or non-change surfaces only; scoped status evidence shows no app source drift.
+- Story-local guard: PASS. The contract forbids raw runtime payloads, proof internals, expert projection leakage and LLM-as-calculator wording.
 
-- PASS: `condamad_story_validate.py`
-  on `_condamad\stories\CS-258-client-interpretation-projection-v1-by-plan\00-story.md`
-- PASS: `condamad_story_lint.py --strict`
-  on `_condamad\stories\CS-258-client-interpretation-projection-v1-by-plan\00-story.md`
+## Validation Summary
+
+- PASS: contract vocabulary and brief-alignment `rg` scans.
+- PASS: OpenAPI neutrality assertion.
+- PASS: route neutrality assertion.
+- PASS: `git status --short -- backend/app frontend/src` returned no entries.
+- PASS: backend `ruff check .`.
+- PASS: targeted domain/architecture pytest checks recorded in `evidence/validation.txt`.
+- PASS: CONDAMAD story validation and strict lint after review cleanup, both with venv active.
+- PASS: `evidence/source-checklist.md` exists and records brief, tracker, registry, dependency and guardrail source coverage.
+
+## Skipped Validation
+
+- Full backend pytest was not rerun during review cleanup because CS-258 is documentation-only, earlier full-suite execution exceeded 5 minutes, and the
+  targeted checks cover the changed surface.
+- Frontend/browser validation was not run because the story explicitly forbids frontend changes.
 
 ## Propagation Decision
 
-No propagation: corrections were local drafting fixes and do not reveal reusable learning for guardrails, AGENTS.md or skills.
+No propagation: fixes were local evidence/review cleanup for CS-258 and do not reveal reusable guardrail, AGENTS.md or skill learning.
 
 ## Residual Risk
 
-No actionable drafting risk remains. Implementation must keep the story documentation-only unless a later user decision changes the scope.
+Aucun risque restant identifie.

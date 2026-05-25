@@ -1,0 +1,47 @@
+{
+  "check_constraints": [
+    "ck_user_natal_interpretations_answer_type",
+    "ck_user_natal_interpretations_grounding_status"
+  ],
+  "columns": [
+    "answer_id",
+    "answer_type",
+    "chart_id",
+    "created_at",
+    "degraded_mode",
+    "evidence_refs",
+    "grounding_status",
+    "id",
+    "interpretation_payload",
+    "level",
+    "llm_input_hash",
+    "llm_input_version",
+    "model",
+    "persona_id",
+    "persona_name",
+    "plan",
+    "projection_hash",
+    "projection_version",
+    "prompt_ref",
+    "prompt_snapshot_ref",
+    "prompt_version",
+    "prompt_version_id",
+    "provider",
+    "use_case",
+    "user_id",
+    "variant_code",
+    "was_fallback"
+  ],
+  "indexes": [
+    "idx_user_natal_interpretations_listing",
+    "ix_user_natal_interpretations_answer_id",
+    "ix_user_natal_interpretations_audit_lookup",
+    "ix_user_natal_interpretations_chart_id",
+    "ix_user_natal_interpretations_created_at",
+    "ix_user_natal_interpretations_level",
+    "ix_user_natal_interpretations_user_id",
+    "uq_user_natal_interpretations_null_persona",
+    "uq_user_natal_interpretations_with_persona"
+  ],
+  "table": "user_natal_interpretations"
+}

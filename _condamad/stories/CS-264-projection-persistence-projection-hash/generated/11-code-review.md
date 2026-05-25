@@ -1,4 +1,4 @@
-# CS-264 Editorial Story Review
+# CS-264 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,37 +7,47 @@ Verdict: CLEAN
 - Story: `_condamad/stories/CS-264-projection-persistence-projection-hash/00-story.md`
 - Source brief: `_story_briefs/cs-264-implement-projection-persistence-and-projection-hash.md`
 - Tracker row: `_condamad/stories/story-status.md` entry for `CS-264`
-- Guardrails checked by targeted lookup: `RG-002`, `RG-022`
+- Implementation files: projection hash helper, DB model, repository, service, Alembic migration and projection tests.
+- Evidence files: `evidence/validation.txt`, `evidence/schema-after.txt`, `evidence/app-surface-status.txt`, `evidence/source-checklist.md`.
 
-## Brief Alignment
+## Iteration 1 Findings
 
-- Persistence model is explicit: projection type, version, hash, payload, source versions, source, owner IDs and generation date.
-- Canonical hash behavior is explicit: deterministic JSON ordering, stable separators, UTF-8 SHA-256, stability and divergence tests.
-- Source version retention is explicit in target state, contract shape, ACs, tasks and validation plan.
-- `narrative_answer_audit_v1` linkage is explicit through type, version and `projection_hash`.
-- Access is constrained by projection type and role or access scope; no public route or frontend exposure is authorized.
-- Builder gating is explicit: persistence must stop and record a blocker when no real builder exists.
-- Out-of-scope items from the brief remain excluded: all projections, back-office, long historical retention and client exposure.
+| Finding | Severity | Resolution | Validation |
+|---|---|---|---|
+| JSON normalization was duplicated between `projection_hash.py` and `projection_persistence_service.py`. | Medium | Exposed `projection_value_to_jsonable` from the canonical hash module and reused it in the service. | `ruff check .`; projection tests PASS. |
+| Persistence test used an ad hoc `source_versions` dict instead of the existing `AINarrativeSourceVersions` vocabulary. | Medium | Updated the test to pass `AINarrativeSourceVersions` and assert the persisted normalized contract shape. | Projection tests PASS. |
+| Story evidence named `source-checklist.md`, but the artifact was absent. | Low | Added `evidence/source-checklist.md` with builder selection, reuse and boundary evidence. | CONDAMAD story validation/lint PASS. |
 
-## Findings
+## Fresh Review Result
 
-No actionable drafting issue found.
+No actionable implementation, evidence, guardrail or AC-alignment issue remains.
+
+- AC1-AC4: persisted row includes hash, payload, source versions and generated timestamp; hash stability/divergence tests pass.
+- AC5: repository reads require projection type, projection version and explicit access scope.
+- AC6: missing builder raises before DB insertion; forbidden fake/synthetic/fallback scan is clean.
+- AC7: narrative audit linkage names persisted projection identity with `projection_hash`.
+- AC8: schema test covers required columns and migration declaration.
+- AC9: runtime route/OpenAPI check confirms no public projection persistence exposure.
+- AC10: CS-264 evidence artifacts are present and updated.
 
 ## Validation Results
 
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-264-projection-persistence-projection-hash\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-264-projection-persistence-projection-hash\00-story.md`
+- PASS: `ruff format` on changed Python paths.
+- PASS: `ruff check .`
+- PASS: `python -B -m pytest -q tests\unit\projections tests\integration\test_projection_persistence_schema.py tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py --tb=short`
+- PASS: `python -B -m pytest -q --tb=short`
+- PASS: runtime `app.routes` and `app.openapi()` projection-exposure check.
+- PASS: targeted fake/synthetic/fallback projection scan.
+- PASS: targeted public API route exposure scan.
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-264-projection-persistence-projection-hash\00-story.md`
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-264-projection-persistence-projection-hash\00-story.md`
 
-Both Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
-
-## Produced Artifacts
-
-- `_condamad/stories/CS-264-projection-persistence-projection-hash/generated/11-code-review.md`
+All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
 ## Propagation Decision
 
-No propagation: the review produced only local story-review evidence and found no reusable process learning.
+No propagation: all corrections are local to CS-264 implementation and evidence; no reusable skill, guardrail registry or AGENTS.md update is required.
 
 ## Residual Risk
 
-Implementation must still prove at development time that a real builder exists for the first persisted projection type.
+No remaining implementation risk identified for CS-264. The selected first persisted projection type remains `ai_narrative_input.v1` because no registered `structured_facts_v1` builder exists in this repository snapshot.

@@ -1,5 +1,5 @@
 # Story CS-288 narrative-answer-audit-v1-persistence: Implement narrative_answer_audit_v1 Persistence
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

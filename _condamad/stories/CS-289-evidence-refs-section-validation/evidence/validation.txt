@@ -1,0 +1,73 @@
+CS-289 validation transcript summary
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\evidence_refs_validation.py app\infra\db\repositories\llm\narrative_answer_audit_repository.py tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py tests\integration\test_narrative_answer_audit_evidence_refs.py tests\architecture\test_evidence_refs_validation_boundary.py
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\evidence_refs_validation.py app\infra\db\repositories\llm\narrative_answer_audit_repository.py tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py tests\integration\test_narrative_answer_audit_evidence_refs.py tests\architecture\test_evidence_refs_validation_boundary.py
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py tests\integration\test_narrative_answer_audit_evidence_refs.py tests\architecture\test_evidence_refs_validation_boundary.py
+Result: 9 passed, 1 deselected.
+
+Initial global pytest result: FAIL because `tests/integration/test_narrative_answer_audit_evidence_refs.py` used local `Base.metadata.create_all`, which violates the project DB harness guard. Fixed by reusing the canonical `db` fixture.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py tests\integration\test_narrative_answer_audit_evidence_refs.py tests\architecture\test_evidence_refs_validation_boundary.py app\tests\unit\test_backend_db_test_harness.py
+Result: 13 passed, 1 deselected.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert all('evidence_refs' not in getattr(route, 'path', '') for route in app.routes); assert 'evidence_refs_validation' not in str(app.openapi()); print('runtime surface unchanged')"
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short
+Result: 3355 passed, 1 skipped, 1209 deselected.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-289-evidence-refs-section-validation
+
+Implementation review iteration 1: FAIL.
+Finding fixed: orphan or unscoped `evidence_refs` in multi-section audits could be ignored instead of reported as invalid section evidence.
+Finding fixed: `source_hash` format only checked length, not SHA-256 hexadecimal content.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\evidence_refs_validation.py tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\evidence_refs_validation.py tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py
+Result: 10 passed.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short tests\integration\test_narrative_answer_audit_evidence_refs.py tests\architecture\test_evidence_refs_validation_boundary.py
+Result: 2 passed, 1 deselected.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert all('evidence_refs' not in getattr(route, 'path', '') for route in app.routes); assert 'evidence_refs_validation' not in str(app.openapi()); print('runtime surface unchanged')"
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-289-evidence-refs-section-validation\00-story.md
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-289-evidence-refs-section-validation\00-story.md
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short
+Result: 3358 passed, 1 skipped, 1209 deselected.
+
+Implementation review iteration 2: CLEAN.
+
+Post-implementation brief alignment recheck 2026-05-25:
+
+PASS tracker row matches CS-289 path and source brief.
+PASS source brief, story ACs, implementation, tests and final evidence align.
+FIXED missing declared artifact: evidence/duplicate-validator-scan.txt.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-289-evidence-refs-section-validation\00-story.md
+Result: CONDAMAD story validation: PASS.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-289-evidence-refs-section-validation\00-story.md
+Result: CONDAMAD story lint: PASS.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-289-evidence-refs-section-validation
+Result: CONDAMAD validation: PASS.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\evidence_refs_validation.py app\infra\db\repositories\llm\narrative_answer_audit_repository.py tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py tests\integration\test_narrative_answer_audit_evidence_refs.py tests\architecture\test_evidence_refs_validation_boundary.py
+Result: All checks passed.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short tests\unit\test_evidence_refs_validation.py tests\unit\test_evidence_refs_section_status.py tests\integration\test_narrative_answer_audit_evidence_refs.py tests\architecture\test_evidence_refs_validation_boundary.py
+Result: 12 passed, 1 deselected.
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert all('evidence_refs' not in getattr(route, 'path', '') for route in app.routes); assert 'evidence_refs_validation' not in str(app.openapi()); print('runtime surface unchanged')"
+Result: runtime surface unchanged.

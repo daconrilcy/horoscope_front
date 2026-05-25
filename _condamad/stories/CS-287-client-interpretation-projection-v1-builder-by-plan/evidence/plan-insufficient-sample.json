@@ -1,0 +1,31 @@
+{
+  "disclaimer_codes": [
+    "ASTROLOGY_GENERAL_LIMITATION"
+  ],
+  "error": {
+    "code": "plan_insufficient",
+    "current_plan": "basic",
+    "message": "Votre plan actuel ne permet pas cette profondeur d'interpretation.",
+    "projection_id": "client_interpretation_projection_v1",
+    "required_plan": "premium",
+    "upgrade_hint": "Passez au plan premium pour debloquer cette lecture."
+  },
+  "excluded_surfaces": [
+    "audit_internals",
+    "debug_traces",
+    "expert_technical_projection_v1",
+    "full_structured_facts",
+    "prompt_payloads",
+    "provider_responses",
+    "raw_runtime_objects",
+    "technical_scores"
+  ],
+  "plan": "premium",
+  "plan_variant": "premium",
+  "projection_id": "client_interpretation_projection_v1",
+  "sections": [],
+  "source_projection": "structured_facts_v1",
+  "source_projection_id": "structured_facts_v1",
+  "state": "plan_insufficient",
+  "support_elements": []
+}

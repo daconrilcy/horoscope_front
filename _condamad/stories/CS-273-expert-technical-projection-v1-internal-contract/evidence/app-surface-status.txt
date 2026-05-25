@@ -1,0 +1,40 @@
+CS-273 scoped app surface status
+
+Command:
+git status --short -- backend/app frontend/src backend/migrations
+
+Observed output during validation:
+
+ M backend/app/api/v1/routers/registry.py
+ M backend/app/core/sensitive_data.py
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/infra/db/models/__init__.py
+ M backend/app/services/api_contracts/admin/audit.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+?? backend/app/api/v1/routers/admin/answer_audit.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/ops/rejected_answer_review.py
+?? backend/app/services/projection_persistence_service.py
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+?? backend/migrations/versions/20260524_0138_create_persisted_projections.py
+
+Interpretation:
+
+- These app/migration changes existed before CS-273 implementation began.
+- CS-273 did not edit backend/app, frontend/src or backend/migrations.
+- CS-273 added only docs, one backend unit contract test, capsule generated files and evidence.
+
+CS-273 changed-file proof:
+
+- Tracked CS-273 changes: `_condamad/stories/CS-273-expert-technical-projection-v1-internal-contract/00-story.md`,
+  `_condamad/stories/story-status.md`, `docs/architecture/official-product-primitives-public-projections.md`,
+  `docs/architecture/product-architecture-current-state-2026-05-24.md`.
+- Untracked CS-273 files: `docs/architecture/expert-technical-projection-v1-contract.md`,
+  `backend/tests/unit/test_expert_technical_projection_contract.py`,
+  `_condamad/stories/CS-273-expert-technical-projection-v1-internal-contract/evidence/**`,
+  `_condamad/stories/CS-273-expert-technical-projection-v1-internal-contract/generated/**`.
+- None of the CS-273 changed files is under `backend/app`, `frontend/src` or `backend/migrations`.

@@ -1,4 +1,4 @@
-# CS-288 Editorial Story Review
+# CS-288 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,35 +7,45 @@ Verdict: CLEAN
 - Target story: `_condamad/stories/CS-288-narrative-answer-audit-v1-persistence/00-story.md`
 - Source brief: `_story_briefs/cs-288-implement-narrative-answer-audit-v1-persistence.md`
 - Tracker row: `_condamad/stories/story-status.md`
-- Guardrails checked by targeted ID lookup only: RG-002, RG-022, RG-041, RG-047, RG-052
+- Implementation scope reviewed: model, repository, migration, sensitive-data policy, runtime enrichment, tests and CS-288 evidence.
+- Guardrails reviewed: duplicate owner scan, API/frontend exposure guard and RG-002 route-boundary applicability.
 
 ## Iterations
 
 - Iteration 1: CHANGES_REQUESTED.
-  - RG-022 was selected as active even though the story is backend persistence, not prompt-generation validation.
-  - Expected evidence artifact checks covered only part of the persistent evidence list.
+  - `condamad_validate.py --final` failed because `generated/10-final-evidence.md` grouped AC rows differently from
+    `generated/03-acceptance-traceability.md`.
 - Iteration 2: CLEAN.
-  - RG-022 is now explicitly non-applicable.
-  - The validation plan checks `storage-decision.md`, `duplicate-owner-scan.txt`, `schema-before.json`, `schema-after.json` and `validation.txt`.
+  - Final evidence now lists AC1 through AC13 individually and validation passes after the correction.
+
+## Findings Fixed
+
+| Finding | Fix | Validation |
+|---|---|---|
+| Final evidence AC rows did not match traceability AC rows. | Expanded `generated/10-final-evidence.md` to one row per AC. | `condamad_validate.py --final`: PASS. |
+
+## Implementation Findings
+
+No remaining actionable implementation issue was found.
+
+The implementation covers the source brief primitives: reuse of existing storage from CS-262, CS-259 field coverage,
+closed `answer_type` and `grounding_status` vocabularies, persisted hashes, prompt provenance, provider/model metadata,
+prepared `evidence_refs`, create/read tests, duplicate-storage guard, non-exposure to client/API surfaces and sensitive-data policy.
 
 ## Validation Results
 
-- `condamad_story_validate.py _condamad\stories\CS-288-narrative-answer-audit-v1-persistence\00-story.md`: PASS
-- `condamad_story_lint.py --strict _condamad\stories\CS-288-narrative-answer-audit-v1-persistence\00-story.md`: PASS
-- Targeted line-length check over the story: PASS
-
-## Editorial Findings
-
-No remaining actionable drafting issue was found.
-
-The story covers the source brief primitives: existing storage reuse from CS-262, mandatory CS-259 fields, answer type vocabulary,
-versions, hashes, prompt provenance, provider, model, `grounding_status`, creation/read tests, duplicate-storage guard,
-prepared `evidence_refs` link shape, non-exposure to client/API surfaces and sensitive-data policy.
+- `ruff check .`: PASS
+- Targeted CS-288 pytest suite: PASS, `7 passed, 4 deselected`
+- `condamad_validate.py --final _condamad/stories/CS-288-narrative-answer-audit-v1-persistence`: PASS
+- Full backend pytest: PASS, `3346 passed, 1 skipped, 1208 deselected`
+- `ruff format --check <CS-288 python files>`: PASS
+- `git diff --check -- <CS-288 paths>`: PASS, CRLF warning only
 
 ## Propagation
 
-No-propagation: all corrections are local to the CS-288 story contract and final review artifact.
+No-propagation: the only review correction was local to CS-288 evidence.
 
 ## Residual Risk
 
-No drafting risk remains. Implementation risk is limited to the future backend persistence work and is already represented in the story risks.
+No remaining review risk identified. Product risk remains limited to the story-approved historical backfill placeholders and
+prepared-only `evidence_refs` validation.

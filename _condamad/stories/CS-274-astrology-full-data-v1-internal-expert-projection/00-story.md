@@ -1,5 +1,5 @@
 # Story CS-274 astrology-full-data-v1-internal-expert-projection: Define astrology_full_data_v1 Internal Expert Projection
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

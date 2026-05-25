@@ -1,4 +1,4 @@
-# Editorial Review CS-263: Generic Projection Endpoint Contract
+# Implementation Review CS-263: Generic Projection Endpoint Contract
 
 Verdict: CLEAN
 
@@ -7,9 +7,9 @@ Verdict: CLEAN
 - Story reviewed: `_condamad/stories/CS-263-generic-projection-endpoint-contract/00-story.md`.
 - Source brief: `_story_briefs/cs-263-define-generic-projection-endpoint-contract.md`.
 - Tracker row: `_condamad/stories/story-status.md`, source column matched the brief.
-- Review type: compact pre-implementation story-contract review.
+- Review type: implementation review after direct fix loop.
 
-## Brief Alignment
+## Fresh Review After Correction
 
 - Endpoint objective is explicit: document `POST /v1/astrology/projections` without implementing a route.
 - Payload primitives are explicit: `chart_id`, `birth_input`, `projection_type`, `projection_version`, `persist`.
@@ -18,6 +18,7 @@ Verdict: CLEAN
 - B2C access rules, internal technical projection denial and B2B API exclusion are explicit.
 - Service separation remains explicit between chart calculation and projection construction.
 - Out-of-scope boundaries cover OpenAPI mutation, route implementation, persistence, frontend and B2B API.
+- Evidence artifacts are aligned with the story contract, including `evidence/source-checklist.md`.
 
 ## Guardrails
 
@@ -30,14 +31,25 @@ Verdict: CLEAN
 
 - PASS: story validation via activated venv and `condamad_story_validate.py`.
 - PASS: strict story lint via activated venv and `condamad_story_lint.py --strict`.
+- PASS: capsule validation via activated venv and `condamad_validate.py`.
+- PASS: stale non-canonical source checklist reference scan; no stale reference remains.
+- PASS: canonical `source-checklist.md` reference scan.
+- PASS: runtime neutrality checks for `app.openapi()`, `app.routes` and `TestClient` 404.
+- PASS: targeted architecture tests, `15 passed`.
+- PASS: `ruff check .`.
+- PASS: `git diff --check` on CS-263 story/docs surfaces.
 
 ## Findings
 
-No actionable drafting issue found.
+No actionable implementation issue remains.
+
+## Issues Fixed
+
+- Fixed evidence-path drift: the story required `_condamad/stories/CS-263-generic-projection-endpoint-contract/evidence/source-checklist.md`, but implementation evidence initially used a non-canonical text-extension artifact.
 
 ## Produced Artifacts
 
-- Created `_condamad/stories/CS-263-generic-projection-endpoint-contract/generated/11-code-review.md`.
+- Refreshed `_condamad/stories/CS-263-generic-projection-endpoint-contract/generated/11-code-review.md`.
 
 ## Propagation
 
@@ -45,4 +57,4 @@ No actionable drafting issue found.
 
 ## Residual Risk
 
-Aucun risque restant identifie for the drafted story contract.
+Aucun risque restant identifie.

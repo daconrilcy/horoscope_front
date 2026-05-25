@@ -1,0 +1,21 @@
+CS-289 duplicate validator scan
+
+Command:
+rg -n "def validate_evidence_refs_by_section|class EvidenceRefsValidationResult|evidence_refs_validation" backend\app backend\tests -g '!**/__pycache__/**' -g '!**/.pytest_cache/**'
+
+Result: PASS.
+
+Expected findings:
+- Canonical validator module:
+  backend\app\domain\astrology\interpretation\evidence_refs_validation.py
+- Single function definition:
+  backend\app\domain\astrology\interpretation\evidence_refs_validation.py:152:def validate_evidence_refs_by_section(
+- Single result class definition:
+  backend\app\domain\astrology\interpretation\evidence_refs_validation.py:117:class EvidenceRefsValidationResult:
+- Integration imports only:
+  backend\app\infra\db\repositories\llm\narrative_answer_audit_repository.py
+  backend\tests\unit\test_evidence_refs_validation.py
+  backend\tests\unit\test_evidence_refs_section_status.py
+  backend\tests\integration\test_narrative_answer_audit_evidence_refs.py
+
+Conclusion: no parallel application validator was found.

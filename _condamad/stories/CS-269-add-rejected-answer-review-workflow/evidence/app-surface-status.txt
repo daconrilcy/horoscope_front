@@ -1,0 +1,34 @@
+CS-269 app surface status
+
+Touched backend app files:
+- backend/app/api/v1/routers/admin/answer_audit.py
+- backend/app/api/v1/routers/registry.py
+- backend/app/services/api_contracts/admin/audit.py
+- backend/app/services/ops/rejected_answer_review.py
+- backend/app/core/sensitive_data.py
+
+Touched tests and docs:
+- backend/tests/api/admin/test_rejected_answer_review_workflow.py
+- docs/architecture/rejected-answer-review-workflow-limits.md
+- backend/pyproject.toml
+- backend/app/tests/unit/test_backend_db_test_harness.py
+- _condamad/stories/converge-api-v1-route-architecture/router-root-audit.md
+- _condamad/stories/guard-backend-pytest-test-roots/backend-test-topology.md
+- _condamad/stories/harden-api-adapter-boundary-guards/router-sql-allowlist.md
+
+Untouched scoped forbidden surfaces:
+- frontend/src/**
+- backend/app/api/v1/routers/public/**
+- backend/migrations/**
+- generated OpenAPI clients
+
+Runtime app proof:
+- `/v1/admin/answer-audits/rejected` present in app routes.
+- `/v1/users/me/answer-audits/rejected` absent from OpenAPI.
+- `/v1/support/rejected-answers` absent from OpenAPI.
+
+Architecture guard proof:
+- Route root audit lists `app.api.v1.routers.admin.answer_audit`.
+- SQL boundary allowlist records the bounded DB dependency injection debt for the route adapter.
+- Backend pytest topology includes `tests/api`.
+- DB harness guard classifies the CS-269 test-local SQLite `create_all`.

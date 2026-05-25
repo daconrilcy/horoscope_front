@@ -1,0 +1,13 @@
+PASS ruff check .
+PASS ruff format app/domain/astrology/interpretation/structured_facts_v1_builder.py tests/unit/domain/astrology/test_structured_facts_v1_builder.py (2 files unchanged)
+PASS ruff check app/domain/astrology/interpretation/structured_facts_v1_builder.py tests/unit/domain/astrology/test_structured_facts_v1_builder.py
+PASS python -B -m pytest -q tests/unit/domain/astrology/test_structured_facts_v1_builder.py --tb=short (7 passed)
+PASS ruff check app/domain/astrology/runtime/astrology_doctrine_governance.py app/domain/astrology/interpretation/structured_facts_v1_builder.py tests/unit/domain/astrology/test_structured_facts_v1_builder.py tests/architecture/test_astrology_doctrine_governance_guardrails.py
+PASS python -B -m pytest -q tests/unit/domain/astrology/test_structured_facts_v1_builder.py tests/architecture/test_astrology_doctrine_governance_guardrails.py --tb=short (9 passed)
+PASS python -B -m pytest -q --tb=short (3322 passed, 1 skipped, 1204 deselected)
+PASS ruff check .
+PASS public OpenAPI and app.routes guards
+PASS targeted forbidden narrative field scan over builder/test/sample: no matches (rg exit 1)
+PASS condamad_story_validate.py _condamad/stories/CS-285-structured-facts-v1-builder/00-story.md
+PASS condamad_story_lint.py --strict _condamad/stories/CS-285-structured-facts-v1-builder/00-story.md
+PASS condamad_validate.py _condamad/stories/CS-285-structured-facts-v1-builder

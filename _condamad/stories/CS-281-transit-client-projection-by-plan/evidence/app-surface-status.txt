@@ -1,0 +1,44 @@
+CS-281 application surface status
+
+Scope:
+- backend/app
+- frontend/src
+- backend/migrations
+
+Result:
+- No CS-281 edits were made under backend/app, frontend/src or backend/migrations.
+- `rg -n "transit_client_projection_v1|TransitClientProjection|transit-client" backend/app/api frontend/src backend/migrations` returned exit 1, interpreted as PASS: no matches.
+- Loaded app checks passed:
+  - `app.openapi()` does not contain `transit_client_projection_v1`.
+  - `app.routes` contains no path with `transit`.
+
+Scoped git status observed after implementation:
+```text
+ M backend/app/api/v1/routers/registry.py
+ M backend/app/core/sensitive_data.py
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/domain/astrology/runtime/astrology_doctrine_governance.py
+ M backend/app/infra/db/models/__init__.py
+ M backend/app/services/api_contracts/admin/audit.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+ M docs/architecture/official-product-primitives-public-projections.md
+?? backend/app/api/v1/routers/admin/answer_audit.py
+?? backend/app/api/v1/routers/admin/chart_diagnostics.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/domain/astrology/runtime/transit_chart_manifest.py
+?? backend/app/domain/astrology/runtime/transit_chart_runtime.py
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/api_contracts/admin/chart_diagnostics.py
+?? backend/app/services/ops/admin_chart_diagnostics.py
+?? backend/app/services/ops/rejected_answer_review.py
+?? backend/app/services/projection_persistence_service.py
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+?? backend/app/tests/integration/test_admin_chart_diagnostics_api.py
+?? docs/architecture/transit-client-projection-v1-contract.md
+```
+
+Note:
+- The backend app/test dirty files above were already present in the initial preflight status and are not CS-281 application edits.

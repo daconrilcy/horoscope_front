@@ -1,5 +1,5 @@
 # Story CS-281 transit-client-projection-by-plan: Define Transit Client Projection By Plan
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

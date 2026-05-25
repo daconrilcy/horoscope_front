@@ -1,0 +1,74 @@
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:1:# CS-260 — Add evidence_refs Contract And Validation
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:5:Définir le contrat `evidence_refs` et les validations associées pour chaque section narrative auditée.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:9:Chaque affirmation importante d'une réponse IA doit pouvoir être reliée à des faits ou signaux autorisés. Les `evidence_refs` servent à auditer les réponses sans exposer les preuves techniques au client.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:13:Spécifier un format de preuve section par section, utilisable par l'audit admin et la validation anti-hallucination.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:21:1. Définir la structure d'une référence de preuve.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:22:2. Associer les preuves aux sections narratives.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:25:5. Définir la différence entre preuve technique admin et élément d'appui vulgarisé client.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:26:6. Exiger qu'une `evidence_ref` pointe vers une source validée et hashée, pas seulement vers une chaîne décorative.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:30:- Créer un viewer admin.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:32:- Exposer les preuves techniques aux clients.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:37:1. `evidence_refs` est documenté comme contrat versionné.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:38:2. Chaque section auditée peut porter ses preuves.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:39:3. Les sources de preuves sont contrôlées.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:40:4. Une preuve manquante peut déclencher un statut non fondé.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:41:5. Une `evidence_ref` sans source validée et hashée est invalide.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:42:6. Les preuves client restent vulgarisées si exposées.
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:47:rg -n "evidence_refs|preuve|section|grounding|hash|source validée|vulgarisé|admin" .\docs .\_story_briefs
+_story_briefs\cs-260-add-evidence-refs-contract-and-validation.md:58:Le risque principal est de créer des références symboliques non vérifiables. Les preuves doivent pointer vers des sources versionnées et hashables.
+docs\architecture\evidence-refs-contract.md:1:<!-- Commentaire global: ce document fixe le contrat canonique evidence_refs pour relier les sections narratives auditees a des sources validees et hashables sans exposer les preuves techniques au client. -->
+docs\architecture\evidence-refs-contract.md:3:# Contrat `evidence_refs`
+docs\architecture\evidence-refs-contract.md:5:`evidence_refs` est le contrat versionne qui relie chaque section narrative auditee a des sources controlees.
+docs\architecture\evidence-refs-contract.md:6:Il sert a l'audit admin et a la validation anti-hallucination des reponses narratives, sans creer de route, schema OpenAPI, table, migration, builder, service, prompt, provider call, frontend ou serializer runtime.
+docs\architecture\evidence-refs-contract.md:12:| `contract_id` | Valeur exacte: `evidence_refs`. |
+docs\architecture\evidence-refs-contract.md:13:| `contract_version` | Version du contrat de references de preuves, par exemple `evidence_refs.v1`. |
+docs\architecture\evidence-refs-contract.md:15:| `audit_parent` | `narrative_answer_audit_v1`, qui porte l'audit de reponse et le `grounding_status` global. |
+docs\architecture\evidence-refs-contract.md:16:| `fact_base` | `structured_facts_v1`, projection factuelle stable, versionnee et hashable. |
+docs\architecture\evidence-refs-contract.md:17:| `client_exposure_policy` | Les preuves techniques restent internes; les surfaces client-facing ne peuvent exposer qu'un support vulgarise approuve. |
+docs\architecture\evidence-refs-contract.md:21:Une section auditee est une portion stable d'une reponse narrative que l'audit peut verifier separement.
+docs\architecture\evidence-refs-contract.md:22:Chaque section doit porter un `section_id` stable, independant du texte rendu, afin de relier une ou plusieurs preuves au meme fragment metier meme si la prose change.
+docs\architecture\evidence-refs-contract.md:24:Exemples de sections admissibles:
+docs\architecture\evidence-refs-contract.md:32:Le `section_id` ne doit pas etre derive d'une position dans un tableau, d'un libelle UI traduisible ou d'une phrase generee.
+docs\architecture\evidence-refs-contract.md:41:| `evidence_ref_id` | Identifiant stable de la preuve, unique dans l'audit de reponse. |
+docs\architecture\evidence-refs-contract.md:42:| `section_id` | Identifiant stable de la section narrative auditee. |
+docs\architecture\evidence-refs-contract.md:44:| `source_id` | Identifiant de la source validee pointee par la preuve. |
+docs\architecture\evidence-refs-contract.md:46:| `source_hash` | Hash stable du payload source ou de l'artefact de projection valide. |
+docs\architecture\evidence-refs-contract.md:47:| `validation_state` | Etat de validation de la preuve. |
+docs\architecture\evidence-refs-contract.md:48:| `grounding_status` | Resultat de rattachement de la section aux preuves disponibles. |
+docs\architecture\evidence-refs-contract.md:50:Une `evidence_ref` sans `source_id`, sans `source_version` ou sans `source_hash` n'est pas une preuve valide.
+docs\architecture\evidence-refs-contract.md:51:Une chaine decorative telle que "voir le Soleil en Lion" ne suffit jamais: la reference doit pointer vers une source validee et un hash stable.
+docs\architecture\evidence-refs-contract.md:59:| `structured_fact` | Fait issu de `structured_facts_v1`. | Le `source_id` pointe vers une famille ou un fait stable, et le `source_hash` respecte le hash input boundary de `structured_facts_v1`. |
+docs\architecture\evidence-refs-contract.md:61:| `projection_version` | Version de projection publique, interne ou LLM-only autorisee par la gouvernance produit. | Le `source_id` pointe vers la projection ou le lien de projection, avec hash de l'artefact valide. |
+docs\architecture\evidence-refs-contract.md:64:Les prompts, textes rendus, reponses LLM, labels UI, explications client, provider internals et payloads debug bruts ne sont pas des sources autorisees pour `evidence_refs`.
+docs\architecture\evidence-refs-contract.md:68:La validation d'une preuve doit verifier toutes les conditions suivantes:
+docs\architecture\evidence-refs-contract.md:73:4. le `source_hash` est present;
+docs\architecture\evidence-refs-contract.md:74:5. le `source_hash` correspond au payload canonique valide;
+docs\architecture\evidence-refs-contract.md:75:6. la preuve est reliee a un `section_id` auditable.
+docs\architecture\evidence-refs-contract.md:81:| `validated` | La preuve pointe vers une source validee et hashable, et le hash correspond. |
+docs\architecture\evidence-refs-contract.md:82:| `missing_source` | Le `source_id` ne pointe vers aucune source validee disponible. |
+docs\architecture\evidence-refs-contract.md:84:| `missing_hash` | Le `source_hash` est absent ou vide. |
+docs\architecture\evidence-refs-contract.md:85:| `hash_mismatch` | Le hash fourni ne correspond pas au payload source canonique. |
+docs\architecture\evidence-refs-contract.md:87:Toute erreur de validation doit rester visible dans l'audit admin.
+docs\architecture\evidence-refs-contract.md:88:Elle ne doit pas etre convertie en fallback silencieux ni en preuve nominale.
+docs\architecture\evidence-refs-contract.md:90:## Statut de grounding par section
+docs\architecture\evidence-refs-contract.md:92:Le `grounding_status` d'une section auditee prend exactement l'une des valeurs suivantes:
+docs\architecture\evidence-refs-contract.md:96:| `grounded` | Toutes les affirmations importantes de la section sont rattachees a des preuves validees. |
+docs\architecture\evidence-refs-contract.md:97:| `partial` | Une partie de la section est rattachee a des preuves validees, mais au moins une reserve reste visible. |
+docs\architecture\evidence-refs-contract.md:98:| `unfounded` | Une preuve manquante, invalide ou en `hash_mismatch` empeche de fonder la section. |
+docs\architecture\evidence-refs-contract.md:101:Une section sans preuve attendue peut rester `not_checked` uniquement si le controle n'a pas encore ete execute.
+docs\architecture\evidence-refs-contract.md:102:Une section qui attendait une preuve mais ne dispose d'aucune `evidence_ref` valide doit pouvoir devenir `unfounded`.
+docs\architecture\evidence-refs-contract.md:104:## Separation admin et client
+docs\architecture\evidence-refs-contract.md:106:`admin_proof` designe les metadonnees techniques internes utilisables par l'audit et les controles anti-hallucination:
+docs\architecture\evidence-refs-contract.md:110:- hashes;
+docs\architecture\evidence-refs-contract.md:112:- details d'erreur tels que `missing_source`, `unsupported_source_type`, `missing_hash` et `hash_mismatch`.
+docs\architecture\evidence-refs-contract.md:114:`client_support` designe un element d'appui vulgarise, optionnel, redige pour une surface client-facing future.
+docs\architecture\evidence-refs-contract.md:115:Il peut expliquer qu'une interpretation s'appuie sur des themes ou facteurs astrologiques, mais il ne doit pas exposer `admin_proof`, hashes, prompt internals, provider internals, audit rows ou payloads techniques.
+docs\architecture\evidence-refs-contract.md:117:La presence de `client_support` ne valide jamais une preuve.
+docs\architecture\evidence-refs-contract.md:118:La validation vient uniquement d'une `evidence_ref` rattachee a une source validee et hashable.
+docs\architecture\evidence-refs-contract.md:122:Cette story ne publie pas `evidence_refs` dans une route, un schema OpenAPI, une table, une migration, un client frontend ou une UI.
+docs\architecture\evidence-refs-contract.md:131:- viewer admin;
+docs\architecture\evidence-refs-contract.md:139:  "contract_id": "evidence_refs",
+docs\architecture\evidence-refs-contract.md:140:  "contract_version": "evidence_refs.v1",
+docs\architecture\evidence-refs-contract.md:141:  "section_id": "dominants.overview",
+docs\architecture\evidence-refs-contract.md:146:  "source_hash": "sha256:example-stable-source-hash",
+docs\architecture\evidence-refs-contract.md:148:  "grounding_status": "grounded"

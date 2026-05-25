@@ -1,0 +1,20 @@
+CS-270 validation evidence
+
+- ruff format .\backend\tests\unit\test_internal_role_model_contract.py: PASS
+- ruff check .\backend\tests\unit\test_internal_role_model_contract.py: PASS
+- ruff check .: PASS
+- python -B -m pytest -q .\backend\tests\unit\test_internal_role_model_contract.py --tb=short: PASS, 4 passed
+- python -B -m pytest -q --tb=short: PASS, 3190 passed, 1 skipped, 1191 deselected
+- python -B -c "from app.main import app; print(len(app.routes))": PASS, 224 routes after root venv activation and Set-Location backend
+- rg document contract scan: PASS
+- rg future-role runtime scan over backend/app, frontend/src and backend/migrations: PASS, exit 1 means no matches
+- git diff --check on story paths: PASS
+- condamad_validate.py on CS-270 capsule: PASS after evidence update
+- condamad_story_validate.py on 00-story.md: PASS during implementation review
+- condamad_story_lint.py --strict on 00-story.md: PASS during implementation review
+- source-checklist.md existence and content review: PASS
+- brief-vs-runtime alignment review: PASS after clarifying that `user`, `support`, `ops` and `enterprise_admin` are outside the target quartet and not aliases for future roles
+- role fiche refactor validation: PASS, targeted pytest and capsule validation stayed green after replacing the long role table
+- ruff check .: PASS during final implementation review
+- python -B -m pytest -q --tb=short: PASS, 3190 passed, 1 skipped, 1191 deselected during final implementation review
+- python -B -c "from app.main import app; print(len(app.routes))": PASS, 224 routes during final implementation review

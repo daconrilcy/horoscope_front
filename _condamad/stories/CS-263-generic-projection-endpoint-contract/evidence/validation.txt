@@ -1,0 +1,49 @@
+CS-263 validation evidence
+
+Review/fix refresh on 2026-05-24:
+- Finding fixed: evidence path drift between the story contract source checklist path and the produced artifact extension.
+- Fix applied: renamed the source checklist artifact to `source-checklist.md` and updated generated evidence references.
+- Fresh review result: CLEAN after correction.
+
+Capsule:
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-263-generic-projection-endpoint-contract\00-story.md --root C:\dev\horoscope_front --story-key CS-263-generic-projection-endpoint-contract
+  PASS
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-263-generic-projection-endpoint-contract
+  PASS
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-263-generic-projection-endpoint-contract\00-story.md
+  PASS
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py _condamad\stories\CS-263-generic-projection-endpoint-contract\00-story.md --strict
+  PASS
+
+Contract scans:
+- rg -n "/v1/astrology/projections|projection_type|projection_version|birth_input|chart_id|persist" .\docs .\_story_briefs
+  PASS: required terms found in docs/architecture/generic-projection-endpoint-contract.md and source brief.
+- rg -n "projection_version.*obligatoire|obligatoire.*projection_version|chart_id.*birth_input|birth_input.*chart_id|calcul.*projection|projection.*calcul|dependency_unavailable|unauthorized|B2B|hors scope|techniques internes|interdites" docs\architecture\generic-projection-endpoint-contract.md
+  PASS: mandatory version, source selection, service separation, errors, B2B exclusion and internal projection denial found.
+- rg -n "source-checklist\.txt" _condamad\stories\CS-263-generic-projection-endpoint-contract
+  PASS: no stale non-canonical source checklist reference remains; rg exit code 1 treated as expected absence.
+- rg -n "source-checklist\.md" _condamad\stories\CS-263-generic-projection-endpoint-contract
+  PASS: story and generated evidence reference the canonical `.md` artifact.
+
+Runtime neutrality:
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -c "from app.main import app; paths = app.openapi().get('paths', {}); assert '/v1/astrology/projections' not in paths; print('PASS openapi route absent')"; Pop-Location
+  PASS
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -c "from app.main import app; assert all(getattr(route, 'path', '') != '/v1/astrology/projections' for route in app.routes); print('PASS app.routes route absent')"; Pop-Location
+  PASS
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -c "from fastapi.testclient import TestClient; from app.main import app; response = TestClient(app).post('/v1/astrology/projections', json={}); assert response.status_code == 404, response.status_code; print('PASS TestClient neutral 404')"; Pop-Location
+  PASS
+- rg -n "/v1/astrology/projections" backend\app frontend\src
+  PASS: no matches; rg exit code 1 treated as expected absence.
+
+Lint and tests:
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; ruff check .; Pop-Location
+  PASS: All checks passed.
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -m pytest -q tests/architecture/test_api_contract_neutrality.py; Pop-Location
+  PASS: 15 passed.
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -m pytest -q --tb=short; Pop-Location
+  PASS: 3236 passed, 1 skipped, 1182 deselected in 299.97s.
+- Note: an initial targeted pytest rerun used `backend/tests/architecture/test_api_contract_neutrality.py` while already in `backend`; it was not counted and was rerun with `tests/architecture/test_api_contract_neutrality.py`.
+
+Diff hygiene:
+- git diff --check -- docs/architecture/generic-projection-endpoint-contract.md _condamad/stories/CS-263-generic-projection-endpoint-contract
+  PASS

@@ -1,0 +1,19 @@
+CS-263 app surface status
+
+Command: git status --short -- backend/app frontend/src docs/architecture/generic-projection-endpoint-contract.md _condamad/stories/CS-263-generic-projection-endpoint-contract
+Result: PASS
+Summary:
+- backend/app: no CS-263 changes
+- frontend/src: no CS-263 changes
+- docs/architecture/generic-projection-endpoint-contract.md: added
+- CS-263 capsule generated/evidence files: added/updated
+
+Runtime neutrality:
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -c "from app.main import app; paths = app.openapi().get('paths', {}); assert '/v1/astrology/projections' not in paths; print('PASS openapi route absent')"; Pop-Location
+  PASS openapi route absent
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -c "from app.main import app; assert all(getattr(route, 'path', '') != '/v1/astrology/projections' for route in app.routes); print('PASS app.routes route absent')"; Pop-Location
+  PASS app.routes route absent
+- .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -c "from fastapi.testclient import TestClient; from app.main import app; response = TestClient(app).post('/v1/astrology/projections', json={}); assert response.status_code == 404, response.status_code; print('PASS TestClient neutral 404')"; Pop-Location
+  PASS TestClient neutral 404
+- rg -n "/v1/astrology/projections" backend\app frontend\src
+  PASS: no runtime/frontend matches. rg exit code 1 treated as expected absence.

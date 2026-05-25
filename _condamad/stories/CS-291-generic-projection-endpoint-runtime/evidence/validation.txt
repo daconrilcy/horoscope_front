@@ -1,0 +1,27 @@
+CS-291 validation transcript
+
+Environment:
+- Repository: C:\dev\horoscope_front
+- Python commands: executed after .\.venv\Scripts\Activate.ps1
+
+Commands:
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-291-generic-projection-endpoint-runtime --root .: PASS
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-291-generic-projection-endpoint-runtime: PASS
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-291-generic-projection-endpoint-runtime\00-story.md: PASS
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-291-generic-projection-endpoint-runtime\00-story.md: PASS
+- ruff format app\api\v1\routers\public\projections.py app\services\projections\projection_endpoint_service.py tests\api\test_projection_authorization.py tests\unit\services\test_projection_endpoint_service.py tests\unit\domain\astrology\test_beginner_summary_v1_builder.py tests\unit\domain\astrology\test_structured_facts_v1_builder.py tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py tests\architecture\test_api_contract_neutrality.py: PASS
+- ruff check .: PASS
+- python -B -m pytest -q tests/api/test_projection_endpoint.py tests/api/test_projection_authorization.py tests/api/test_projection_persistence_endpoint.py tests/api/test_projection_openapi.py tests/unit/services/test_projection_endpoint_service.py tests/unit/domain/astrology/test_structured_facts_v1_builder.py tests/unit/domain/astrology/test_beginner_summary_v1_builder.py tests/unit/domain/astrology/test_client_interpretation_projection_v1_builder.py tests/architecture/test_api_contract_neutrality.py --tb=short: PASS, 57 passed
+- python -B -m pytest -q app/tests/unit/test_api_error_architecture.py::test_services_do_not_encode_http_status_mapping app/tests/unit/test_api_router_architecture.py::test_router_root_audit_lists_every_registered_api_v1_router_module app/tests/unit/test_api_router_architecture.py::test_api_sql_boundary_debt_matches_exact_allowlist --tb=short: PASS, 3 passed
+- python -B -m pytest -q --tb=short: PASS, 3378 passed, 1 skipped, 1211 deselected
+- python -B -c "from app.main import app; assert '/v1/astrology/projections' in app.openapi().get('paths', {})": PASS
+- python -B -c "from app.main import app; assert '/v1/astrology/projections' in {getattr(r, 'path', '') for r in app.routes}": PASS
+- rg -n '"/v1/projections"|"/v1/astrology/projection"|"/v1/astrology/projections/internal"|"/v1/b2b/astrology/projections"|"/v1/admin/astrology/projections"' app tests: PASS, no forbidden route path matches
+- uvicorn app.main:app --host 127.0.0.1 --port 8012, then GET /openapi.json: PASS
+
+Review/fix notes:
+- Full pytest initially failed on six CS-291-related regressions: service HTTP status mapping, missing router-root audit row, missing SQL boundary evidence and three stale projection/OpenAPI guard tests.
+- Corrections were applied directly to implementation tests, router error mapping and guardrail evidence, then fresh full pytest passed.
+
+Commands skipped or blocked:
+- Frontend checks: not applicable; no frontend files were touched.

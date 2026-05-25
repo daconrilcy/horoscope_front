@@ -1,0 +1,12 @@
+Command:
+git status --short -- backend/app frontend/src backend/tests backend/migrations
+
+Result:
+PASS - no output.
+
+Interpretation:
+No backend application source, frontend source, backend tests or backend migrations were changed by CS-257.
+
+Additional app-surface guards:
+PASS - PYTHONPATH=backend python -B -c "from app.main import app; assert 'beginner_summary_v1' not in str(app.openapi())"
+PASS - PYTHONPATH=backend python -B -c "from app.main import app; assert all('beginner_summary' not in getattr(r, 'path', '') for r in app.routes)"

@@ -1,5 +1,5 @@
 # Story CS-257 beginner-summary-v1-b2c-projection: Define beginner_summary_v1 Deterministic B2C Projection
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

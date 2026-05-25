@@ -1,0 +1,3 @@
+VC7 PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert 'beginner_summary_v1' not in str(app.openapi())"
+VC8 PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert all('beginner_summary' not in getattr(r, 'path', '') for r in app.routes)"
+TestClient PASS: python -B -m pytest -q tests\unit\domain\astrology\test_beginner_summary_v1_builder.py --tb=short includes /health smoke.

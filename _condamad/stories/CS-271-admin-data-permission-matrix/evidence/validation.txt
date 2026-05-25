@@ -1,0 +1,85 @@
+CS-271 validation evidence - 2026-05-24
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-dev-story\scripts\condamad_prepare.py .\_condamad\stories\CS-271-admin-data-permission-matrix\00-story.md --root . --capsule .\_condamad\stories\CS-271-admin-data-permission-matrix
+Result: CONDAMAD capsule ready.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-271-admin-data-permission-matrix
+Result: CONDAMAD validation PASS before implementation.
+
+PASS .\.venv\Scripts\Activate.ps1; ruff format .\backend\tests\unit\test_admin_permission_matrix_contract.py
+Result: 1 file left unchanged.
+
+PASS .\.venv\Scripts\Activate.ps1; ruff check .\backend\tests\unit\test_admin_permission_matrix_contract.py
+Result: All checks passed.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q .\backend\tests\unit\test_admin_permission_matrix_contract.py --tb=short
+Result: 5 passed in 0.37s.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q .\backend\tests\unit\test_admin_permission_matrix_contract.py .\backend\tests\unit\test_internal_role_model_contract.py --tb=short
+Result: 9 passed in 0.37s.
+
+PASS .\.venv\Scripts\Activate.ps1; Set-Location .\backend; ruff check .
+Result: All checks passed.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B -c "<VALID_ROLES guard>"
+Result: PASS runtime roles unchanged: ['admin', 'enterprise_admin', 'ops', 'support', 'user'].
+
+PASS rg -n "ADMIN|MARKETER|TECHNO|ASTRO_EXPERT|business|technical|astrology|debug|read|search|export|replay|correct|B2C|OPEN-ADMIN-PERM" .\docs\architecture\admin-permission-matrix.md
+Result: required matrix markers found.
+
+PASS git diff --check -- .\docs\architecture\admin-permission-matrix.md .\backend\tests\unit\test_admin_permission_matrix_contract.py .\_condamad\stories\CS-271-admin-data-permission-matrix
+Result: no whitespace errors.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-271-admin-data-permission-matrix
+Result: CONDAMAD validation PASS after final evidence update.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q .\backend\tests\unit\test_admin_permission_matrix_contract.py --tb=short
+Result: 5 passed in 0.39s during review/fix iteration 1.
+
+PASS .\.venv\Scripts\Activate.ps1; ruff check .\backend\tests\unit\test_admin_permission_matrix_contract.py
+Result: All checks passed during review/fix iteration 1.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-271-admin-data-permission-matrix
+Result: CONDAMAD validation PASS during review/fix iteration 1.
+
+PASS rg -n "ADMIN|MARKETER|TECHNO|ASTRO_EXPERT|business|technical|astrology|debug|read|search|export|replay|correct|B2C|OPEN-ADMIN-PERM" .\docs\architecture\admin-permission-matrix.md
+Result: required matrix markers found during review/fix iteration 1.
+
+PASS_WITH_LIMITATIONS git status --short -- docs/architecture/admin-permission-matrix.md backend/tests/unit/test_admin_permission_matrix_contract.py _condamad/stories/CS-271-admin-data-permission-matrix _condamad/stories/story-status.md backend/app frontend/src backend/migrations
+Result: CS-271 doc/test/evidence are present; unrelated backend app and migration changes remain pre-existing outside this story.
+
+SKIPPED full pytest suite.
+Reason: CS-271 is documentation plus targeted contract test; unrelated dirty backend files from other stories are present.
+
+SKIPPED local app startup.
+Reason: no runtime application code or frontend code changed.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q .\backend\tests\unit\test_admin_permission_matrix_contract.py --tb=short
+Result: 5 passed in 0.37s during final brief/code alignment recheck.
+
+PASS .\.venv\Scripts\Activate.ps1; ruff check .\backend\tests\unit\test_admin_permission_matrix_contract.py
+Result: All checks passed during final brief/code alignment recheck.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-271-admin-data-permission-matrix
+Result: CONDAMAD validation PASS after status evidence alignment.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py .\_condamad\stories\CS-271-admin-data-permission-matrix\00-story.md
+Result: CONDAMAD story validation PASS after status evidence alignment.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict .\_condamad\stories\CS-271-admin-data-permission-matrix\00-story.md
+Result: CONDAMAD story lint PASS after status evidence alignment.
+
+PASS rg -n "matrice|permission|business|technical|astrology|debug|données de naissance|replay" .\docs .\_story_briefs
+Result: required brief validation markers found; command output is broad because the repository contains many matching docs.
+
+PASS_WITH_LIMITATIONS git status --short -- backend/app frontend/src
+Result: unrelated pre-existing backend app changes remain visible; no CS-271 frontend or backend app surface change was introduced.
+
+PASS git diff --check -- .\_condamad\stories\CS-271-admin-data-permission-matrix .\docs\architecture\admin-permission-matrix.md .\backend\tests\unit\test_admin_permission_matrix_contract.py
+Result: no whitespace errors; Git reported LF/CRLF normalization warnings on Markdown files only.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-271-admin-data-permission-matrix
+Result: CONDAMAD validation PASS after final evidence wording alignment.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict .\_condamad\stories\CS-271-admin-data-permission-matrix\00-story.md
+Result: CONDAMAD story lint PASS after final evidence wording alignment.

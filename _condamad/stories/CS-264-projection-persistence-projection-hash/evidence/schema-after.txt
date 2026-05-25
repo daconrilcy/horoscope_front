@@ -1,0 +1,15 @@
+persisted_projections runtime schema columns:
+- id
+- chart_id
+- user_id
+- projection_type
+- projection_version
+- projection_hash
+- payload
+- source_versions
+- source
+- generated_at
+
+Migration:
+- backend/migrations/versions/20260524_0138_create_persisted_projections.py
+- Alembic head after implementation: 20260524_0138

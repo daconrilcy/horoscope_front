@@ -1,5 +1,5 @@
 # Story CS-261 add-rejection-workflow-for-ungrounded-narrative-answers: Add Rejection Workflow For Ungrounded Narrative Answers
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

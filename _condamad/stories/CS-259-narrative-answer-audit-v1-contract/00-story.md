@@ -1,5 +1,5 @@
 # Story CS-259 narrative-answer-audit-v1-contract: Define narrative_answer_audit_v1 Audit Contract
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -118,16 +118,16 @@ grounding state and rejected answer storage without implementing persistence, pr
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect CS-254, CS-256, AI narrative input and public projection governance before writing the contract. (AC: AC1, AC4)
-- [ ] Task 2: Create `docs/architecture/narrative-answer-audit-v1-contract.md` with a French global file comment. (AC: AC1)
-- [ ] Task 3: Define the audit role for basic, premium, long, sensitive and free_short answers. (AC: AC1, AC6)
-- [ ] Task 4: Document mandatory answer, chart, user, plan and projection identity fields. (AC: AC2)
-- [ ] Task 5: Document `projection_hash` and `llm_input_hash` as required audit anchors. (AC: AC3)
-- [ ] Task 6: Document LLM input, prompt, provider and model provenance fields. (AC: AC4)
-- [ ] Task 7: Document `grounding_status` values and rejected answer storage rules. (AC: AC5)
-- [ ] Task 8: Document full prompt retention or `prompt_ref` plus payload snapshot. (AC: AC7)
-- [ ] Task 9: Document client-facing masking so technical proofs stay internal. (AC: AC8)
-- [ ] Task 10: Persist validation, scoped status and source checklist evidence under the CS-259 evidence folder. (AC: AC9, AC10, AC11)
+- [x] Task 1: Inspect CS-254, CS-256, AI narrative input and public projection governance before writing the contract. (AC: AC1, AC4)
+- [x] Task 2: Create `docs/architecture/narrative-answer-audit-v1-contract.md` with a French global file comment. (AC: AC1)
+- [x] Task 3: Define the audit role for basic, premium, long, sensitive and free_short answers. (AC: AC1, AC6)
+- [x] Task 4: Document mandatory answer, chart, user, plan and projection identity fields. (AC: AC2)
+- [x] Task 5: Document `projection_hash` and `llm_input_hash` as required audit anchors. (AC: AC3)
+- [x] Task 6: Document LLM input, prompt, provider and model provenance fields. (AC: AC4)
+- [x] Task 7: Document `grounding_status` values and rejected answer storage rules. (AC: AC5)
+- [x] Task 8: Document full prompt retention or `prompt_ref` plus payload snapshot. (AC: AC7)
+- [x] Task 9: Document client-facing masking so technical proofs stay internal. (AC: AC8)
+- [x] Task 10: Persist validation, scoped status and source checklist evidence under the CS-259 evidence folder. (AC: AC9, AC10, AC11)
 
 ## Files to Inspect First
 

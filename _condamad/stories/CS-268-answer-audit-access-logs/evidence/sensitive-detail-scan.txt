@@ -1,0 +1,12 @@
+CS-268 sensitive detail and parallel-store scan
+
+Command:
+rg -n "AnswerAuditAccessLogModel|admin_answer_audit_access_logs|answer_audit_access_log_repository|/v1/answer-audits/access-logs|/v1/users/me/answer-audits/access-logs|/v1/admin/answer-audit-replay" backend\app backend\tests docs\architecture
+
+Result:
+- One expected historical guard reference in `backend/app/tests/integration/test_admin_answer_audit_contract.py`.
+- No application model, repository, table, route, public access-log endpoint or client access-log endpoint was introduced for CS-268.
+
+Sensitive persisted details:
+- No CS-268 runtime audit payload is written because the protected answer-audit consultation surface and CS-288 persistence owner are absent.
+- Retention documentation explicitly forbids prompt, proof payload, secret and raw birth fields in future access-event details.

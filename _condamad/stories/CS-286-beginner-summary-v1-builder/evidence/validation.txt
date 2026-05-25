@@ -1,0 +1,12 @@
+Validation transcript CS-286
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\beginner_summary_v1_builder.py tests\unit\domain\astrology\test_beginner_summary_v1_builder.py
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\beginner_summary_v1_builder.py tests\unit\domain\astrology\test_beginner_summary_v1_builder.py
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_beginner_summary_v1_builder.py --tb=short -> 8 passed
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short -> 3330 passed, 1 skipped, 1204 deselected
+PASS: public surface guards in evidence/public-surface-guard.txt
+PASS: architecture guards in evidence/architecture-guard.txt
+PASS: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-286-beginner-summary-v1-builder
+PASS: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-286-beginner-summary-v1-builder\00-story.md
+PASS: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-286-beginner-summary-v1-builder\00-story.md
+PASS: git diff --check on CS-286 touched paths

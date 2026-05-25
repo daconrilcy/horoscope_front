@@ -1,0 +1,10 @@
+Runtime API surface check:
+- Command: python -B -c "from app.main import app; routes=[...]; app.openapi(); ..."
+- Result: PASS
+- Routes loaded: 221
+- OpenAPI paths: 193
+- No route path containing "projection" was introduced by CS-264.
+- OpenAPI does not contain "persisted_projections" or "projection_persistence".
+
+Frontend:
+- No frontend files modified.

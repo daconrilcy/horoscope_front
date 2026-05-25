@@ -1,0 +1,50 @@
+CS-268 validation transcript
+
+Environment:
+- PowerShell on Windows.
+- Python commands executed after `.venv\Scripts\Activate.ps1`.
+
+Commands:
+1. `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-268-answer-audit-access-logs\00-story.md --root .`
+   - Result: FAIL; multiple CS identifiers detected, script requested explicit story key or capsule.
+
+2. `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-268-answer-audit-access-logs\00-story.md --root . --story-key CS-268`
+   - Result: FAIL for canonical target; script created `_condamad/stories/cs-268`, then canonical capsule validation still reported missing generated files.
+   - Remediation: removed only the mistakenly created `_condamad/stories/cs-268` capsule after verifying its resolved path was inside the workspace.
+
+3. `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --root . --repair-generated-only _condamad\stories\CS-268-answer-audit-access-logs --with-optional`
+   - Result: PASS; canonical capsule repaired.
+
+4. `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-268-answer-audit-access-logs`
+   - Result: PASS before implementation decision.
+
+5. `python -B -m pytest -q app\tests\integration\test_admin_answer_audit_contract.py --tb=short`
+   - Working directory: `backend`.
+   - Result: NOT RUN BY PYTEST CONFIG; `5 deselected in 0.08s`.
+   - Classification: skipped/limited evidence, because the configured collection rules deselected this integration file in the current environment.
+
+6. `python -B -c "from app.main import app; paths={getattr(r,'path','') for r in app.routes}; assert '/v1/admin/answer-audits' not in paths; assert '/v1/admin/answer-audits/{answer_id}' not in paths; assert '/v1/admin/answer-audits' not in app.openapi().get('paths', {}); print('PASS runtime admin_answer_audit_v1 routes absent pending CS-288')"`
+   - Working directory: `backend`.
+   - Result: PASS; runtime route and OpenAPI path absent.
+
+7. `rg -n "AnswerAuditAccessLogModel|admin_answer_audit_access_logs|answer_audit_access_log_repository|/v1/answer-audits/access-logs|/v1/users/me/answer-audits/access-logs|/v1/admin/answer-audit-replay" backend\app backend\tests docs\architecture`
+   - Result: PASS_WITH_EXPECTED_GUARD_REFERENCE; no app store/route introduced, one expected forbidden-path guard term remains in an existing test.
+
+8. `rg -n "RGPD|retention|politique" docs\architecture\admin-answer-audit-access-retention.md`
+   - Result: PASS after retention documentation was added.
+
+9. `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-268-answer-audit-access-logs`
+   - Result: PASS after evidence update.
+
+10. `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-268-answer-audit-access-logs`
+    - Working directory: repository root.
+    - Environment: `.venv\Scripts\Activate.ps1` active.
+    - Result: PASS after implementation review artifact correction.
+
+11. `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-268-answer-audit-access-logs\00-story.md`
+    - Working directory: repository root.
+    - Environment: `.venv\Scripts\Activate.ps1` active.
+    - Result: PASS after implementation review artifact correction.
+
+12. `git diff --check -- _condamad\stories\CS-268-answer-audit-access-logs\generated\11-code-review.md`
+    - Result: PASS; only the standard LF-to-CRLF working-copy warning was emitted.

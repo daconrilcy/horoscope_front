@@ -1,5 +1,5 @@
 # Story CS-260 evidence-refs-contract-validation: Add evidence_refs Contract And Validation
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -116,15 +116,15 @@ to client-facing payloads, creating admin UI, altering astrology calculations, o
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect CS-256, CS-259, AI input and public projection governance before writing the contract. (AC: AC1, AC4)
-- [ ] Task 2: Create `docs/architecture/evidence-refs-contract.md` with a French global file comment. (AC: AC1)
-- [ ] Task 3: Define section-level ownership with stable `section_id` references. (AC: AC2)
-- [ ] Task 4: Document mandatory proof reference fields and stable source hash requirements. (AC: AC3, AC5)
-- [ ] Task 5: Document authorized source kinds for facts, interpretive signals and projection versions. (AC: AC4)
-- [ ] Task 6: Document validation errors for missing source, unsupported source type, missing hash and hash mismatch. (AC: AC5, AC6)
-- [ ] Task 7: Document section grounding outcomes including `grounded`, `partial`, `unfounded` and `not_checked`. (AC: AC6)
-- [ ] Task 8: Document separation between admin technical proof metadata and client-facing support wording. (AC: AC7)
-- [ ] Task 9: Persist validation, scoped status and source checklist evidence under the CS-260 evidence folder. (AC: AC8, AC9, AC10)
+- [x] Task 1: Inspect CS-256, CS-259, AI input and public projection governance before writing the contract. (AC: AC1, AC4)
+- [x] Task 2: Create `docs/architecture/evidence-refs-contract.md` with a French global file comment. (AC: AC1)
+- [x] Task 3: Define section-level ownership with stable `section_id` references. (AC: AC2)
+- [x] Task 4: Document mandatory proof reference fields and stable source hash requirements. (AC: AC3, AC5)
+- [x] Task 5: Document authorized source kinds for facts, interpretive signals and projection versions. (AC: AC4)
+- [x] Task 6: Document validation errors for missing source, unsupported source type, missing hash and hash mismatch. (AC: AC5, AC6)
+- [x] Task 7: Document section grounding outcomes including `grounded`, `partial`, `unfounded` and `not_checked`. (AC: AC6)
+- [x] Task 8: Document separation between admin technical proof metadata and client-facing support wording. (AC: AC7)
+- [x] Task 9: Persist validation, scoped status and source checklist evidence under the CS-260 evidence folder. (AC: AC8, AC9, AC10)
 
 ## Files to Inspect First
 

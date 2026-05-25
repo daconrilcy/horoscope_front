@@ -1,0 +1,57 @@
+CS-290 validation transcript, 2026-05-25.
+
+All Python commands were run after activating .\.venv\Scripts\Activate.ps1.
+
+Brief/code alignment pass, 2026-05-25.
+
+Finding fixed: story header status still said ready-to-dev while the tracker, implementation review and final evidence marked CS-290 done.
+The final evidence also kept a stale residual risk about missing evidence_refs even though the second review fixed that path and the unit suite
+covers missing evidence_refs on required sections.
+
+Fix: 00-story.md now says Status: done, and generated/10-final-evidence.md now records no remaining identified risk.
+
+PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-290-rejected-narrative-answer-workflow\00-story.md
+PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-290-rejected-narrative-answer-workflow\00-story.md
+PASS: python -B -m pytest -q tests\unit\test_rejected_narrative_answer_workflow.py tests\unit\test_rejected_narrative_answer_logging.py tests\integration\test_rejected_narrative_answer_audit.py tests\integration\test_rejected_narrative_answer_response.py tests\architecture\test_rejected_narrative_answer_boundary.py --tb=short
+Result: 8 passed, 2 deselected.
+
+All Python commands were run after activating .\.venv\Scripts\Activate.ps1.
+
+PASS: condamad_prepare.py --repair-generated-only _condamad\stories\CS-290-rejected-narrative-answer-workflow --root C:\dev\horoscope_front
+PASS: condamad_validate.py _condamad\stories\CS-290-rejected-narrative-answer-workflow
+PASS: ruff format changed Python files
+PASS: ruff check app\services\llm_generation\natal\rejected_answer_workflow.py --fix
+PASS: ruff check .
+PASS: python -B -m pytest -q tests\unit\test_rejected_narrative_answer_workflow.py tests\unit\test_rejected_narrative_answer_logging.py tests\integration\test_rejected_narrative_answer_audit.py tests\integration\test_rejected_narrative_answer_response.py tests\architecture\test_rejected_narrative_answer_boundary.py --tb=short
+Result: 7 passed, 2 deselected.
+PASS: python -B -m pytest -q --tb=short
+Result: 3365 passed, 1 skipped, 1211 deselected.
+PASS: python -B -c "from app.main import app; assert 'rejected_narrative_answer' not in str(app.openapi())"
+PASS: python -B -c "from app.main import app; assert all('rejected-narrative' not in getattr(r, 'path', '') for r in app.routes)"
+PASS: rg raw sentinel scan in app/API/frontend returned no matches.
+PASS: rg retry queue/manual publish scan in natal workflow returned no matches.
+
+Review/fix iteration 2026-05-25.
+
+Finding fixed: payloads with required narrative sections but missing evidence_refs were not routed through CS-289 as empty evidence, so they
+could avoid rejected outcome creation.
+
+Fix: rejected_answer_workflow now validates missing or invalid evidence_refs as an empty proof list when section requirements exist; the unit
+suite covers this missing-evidence case. interpretation_service now accepts an audit_source_payload so rejected audit hashes stay tied to the
+source answer payload even when the stored client projection is controlled.
+
+PASS: ruff format app\services\llm_generation\natal\rejected_answer_workflow.py app\services\llm_generation\natal\interpretation_service.py tests\unit\test_rejected_narrative_answer_workflow.py
+PASS: ruff check app\services\llm_generation\natal\rejected_answer_workflow.py app\services\llm_generation\natal\interpretation_service.py tests\unit\test_rejected_narrative_answer_workflow.py tests\unit\test_rejected_narrative_answer_logging.py tests\integration\test_rejected_narrative_answer_audit.py tests\integration\test_rejected_narrative_answer_response.py tests\architecture\test_rejected_narrative_answer_boundary.py
+PASS: python -B -m pytest -q tests\unit\test_rejected_narrative_answer_workflow.py tests\unit\test_rejected_narrative_answer_logging.py tests\integration\test_rejected_narrative_answer_audit.py tests\integration\test_rejected_narrative_answer_response.py tests\architecture\test_rejected_narrative_answer_boundary.py --tb=short
+Result: 8 passed, 2 deselected.
+PASS: python -B -m pytest -q app\tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py app\tests\integration\test_natal_free_short_variant.py --tb=short
+Result: 2 passed, 1 deselected.
+PASS: ruff check .
+PASS: python -B -m pytest -q --tb=short
+Result: 3366 passed, 1 skipped, 1211 deselected.
+PASS: python -B -c "from app.main import app; assert 'rejected_narrative_answer' not in str(app.openapi())"
+PASS: python -B -c "from app.main import app; assert all('rejected-narrative' not in getattr(r, 'path', '') for r in app.routes)"
+PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-290-rejected-narrative-answer-workflow\00-story.md
+PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-290-rejected-narrative-answer-workflow\00-story.md
+
+All Python commands were run after activating .\.venv\Scripts\Activate.ps1.

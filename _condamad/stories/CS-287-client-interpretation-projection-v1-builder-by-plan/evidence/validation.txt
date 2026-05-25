@@ -1,0 +1,12 @@
+CS-287 validation summary
+
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-287-client-interpretation-projection-v1-builder-by-plan
+PASS cd backend; ruff format app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py
+PASS cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py --tb=short
+PASS cd backend; ruff check app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py
+PASS cd backend; python -B -c loaded app/openapi/TestClient public-surface guard
+PASS rg forbidden app.api/app.infra/provider imports: no matches, exit 1 expected
+PASS cd backend; ruff check .
+PASS cd backend; python -B -m pytest -q --tb=short: 3339 passed, 1 skipped, 1204 deselected
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-287-client-interpretation-projection-v1-builder-by-plan
+PASS git diff --check -- CS-287 story paths

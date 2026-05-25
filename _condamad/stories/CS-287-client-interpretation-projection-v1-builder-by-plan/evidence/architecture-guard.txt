@@ -1,0 +1,12 @@
+PASS architecture guard
+
+Owner evidence:
+- Builder path: backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py
+- Reused upstream source: STRUCTURED_FACTS_V1_PROJECTION_ID from structured_facts_v1_builder.py
+- Reused disclaimer owner: BEGINNER_SUMMARY_V1_DISCLAIMER_CODES and BEGINNER_SUMMARY_V1_NO_TIME_DISCLAIMER_CODES
+
+Forbidden import scan:
+rg -n "from app\.(api|infra)|import app\.(api|infra)|chat\.completions|AsyncOpenAI|LLMNarrator" backend\app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py backend\tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py
+
+Result:
+PASS: no matches, exit 1 expected.

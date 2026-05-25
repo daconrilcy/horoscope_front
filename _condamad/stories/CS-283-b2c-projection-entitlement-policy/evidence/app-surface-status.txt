@@ -1,0 +1,79 @@
+## Scoped application status
+> git status --short -- backend/app frontend/src backend/tests backend/migrations
+ M backend/app/api/v1/routers/registry.py
+ M backend/app/core/sensitive_data.py
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/domain/astrology/runtime/astrology_doctrine_governance.py
+ M backend/app/infra/db/models/__init__.py
+ M backend/app/services/api_contracts/admin/audit.py
+ M backend/app/services/entitlement/feature_scope_registry.py
+ M backend/app/services/feature_registry_consistency_validator.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+ M backend/app/tests/unit/test_product_entitlements_models.py
+ M backend/tests/architecture/test_api_contract_neutrality.py
+ M backend/tests/unit/domain/astrology/interpretation/test_ai_narrative_input_contract.py
+?? backend/app/api/v1/routers/admin/answer_audit.py
+?? backend/app/api/v1/routers/admin/chart_diagnostics.py
+?? backend/app/api/v1/routers/public/transit_projection.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/domain/astrology/runtime/transit_chart_manifest.py
+?? backend/app/domain/astrology/runtime/transit_chart_runtime.py
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/api_contracts/admin/chart_diagnostics.py
+?? backend/app/services/api_contracts/public/transit_projection.py
+?? backend/app/services/ops/admin_chart_diagnostics.py
+?? backend/app/services/ops/rejected_answer_review.py
+?? backend/app/services/projection_persistence_service.py
+?? backend/app/services/transit_projection/
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+?? backend/app/tests/integration/test_admin_chart_diagnostics_api.py
+?? backend/app/tests/integration/test_transit_projection_api.py
+?? backend/migrations/versions/20260524_0138_create_persisted_projections.py
+?? backend/tests/api/
+?? backend/tests/architecture/test_admin_chart_diagnostics_boundaries.py
+?? backend/tests/integration/test_projection_persistence_schema.py
+?? backend/tests/unit/domain/astrology/test_transit_chart_manifest.py
+?? backend/tests/unit/domain/astrology/test_transit_chart_runtime.py
+?? backend/tests/unit/projections/
+?? backend/tests/unit/test_admin_chart_diagnostics_policy.py
+?? backend/tests/unit/test_admin_chart_diagnostics_redaction.py
+?? backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+?? backend/tests/unit/test_admin_permission_matrix_contract.py
+?? backend/tests/unit/test_astrology_full_data_contract.py
+?? backend/tests/unit/test_expert_technical_projection_contract.py
+?? backend/tests/unit/test_internal_role_model_contract.py
+?? backend/tests/unit/test_replay_snapshot_v1_storage_security_model.py
+## Scoped backend/frontend status
+> git status --short -- backend/app frontend/src
+ M backend/app/api/v1/routers/registry.py
+ M backend/app/core/sensitive_data.py
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/domain/astrology/runtime/astrology_doctrine_governance.py
+ M backend/app/infra/db/models/__init__.py
+ M backend/app/services/api_contracts/admin/audit.py
+ M backend/app/services/entitlement/feature_scope_registry.py
+ M backend/app/services/feature_registry_consistency_validator.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+ M backend/app/tests/unit/test_product_entitlements_models.py
+?? backend/app/api/v1/routers/admin/answer_audit.py
+?? backend/app/api/v1/routers/admin/chart_diagnostics.py
+?? backend/app/api/v1/routers/public/transit_projection.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/domain/astrology/runtime/transit_chart_manifest.py
+?? backend/app/domain/astrology/runtime/transit_chart_runtime.py
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/api_contracts/admin/chart_diagnostics.py
+?? backend/app/services/api_contracts/public/transit_projection.py
+?? backend/app/services/ops/admin_chart_diagnostics.py
+?? backend/app/services/ops/rejected_answer_review.py
+?? backend/app/services/projection_persistence_service.py
+?? backend/app/services/transit_projection/
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+?? backend/app/tests/integration/test_admin_chart_diagnostics_api.py
+?? backend/app/tests/integration/test_transit_projection_api.py

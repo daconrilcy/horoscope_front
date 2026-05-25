@@ -1,5 +1,5 @@
 # Story CS-263 generic-projection-endpoint-contract: Define Generic Projection Endpoint Contract
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -110,17 +110,17 @@ service separation, unavailable dependency handling and B2B API exclusion while 
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect existing projection governance, CS-256 to CS-259 stories and chart lookup owner before writing the contract. (AC: AC1, AC4)
-- [ ] Task 2: Create `docs/architecture/generic-projection-endpoint-contract.md` with a French global file comment. (AC: AC1)
-- [ ] Task 3: Define method, path, B2C audience and no-runtime-implementation policy for `POST /v1/astrology/projections`. (AC: AC1, AC9)
-- [ ] Task 4: Document request fields `chart_id`, `birth_input`, `projection_type`, `projection_version` and `persist`. (AC: AC2, AC3)
-- [ ] Task 5: Document the existing `chart_id` versus `birth_input` source selection rule. (AC: AC4)
-- [ ] Task 6: Document separate responsibilities for chart calculation and projection construction. (AC: AC5)
-- [ ] Task 7: Document controlled error categories for validation, access, missing chart and unavailable dependencies. (AC: AC6)
-- [ ] Task 8: Document B2C projection access rules and internal technical projection denial. (AC: AC7, AC8)
-- [ ] Task 9: Document that unavailable calculation or projection dependencies are blocking and logged outcomes. (AC: AC6)
-- [ ] Task 10: Document that B2B API behavior is not defined or exposed by this story. (AC: AC10)
-- [ ] Task 11: Persist validation, scoped status and source checklist evidence under the CS-263 evidence folder. (AC: AC9, AC11)
+- [x] Task 1: Inspect existing projection governance, CS-256 to CS-259 stories and chart lookup owner before writing the contract. (AC: AC1, AC4)
+- [x] Task 2: Create `docs/architecture/generic-projection-endpoint-contract.md` with a French global file comment. (AC: AC1)
+- [x] Task 3: Define method, path, B2C audience and no-runtime-implementation policy for `POST /v1/astrology/projections`. (AC: AC1, AC9)
+- [x] Task 4: Document request fields `chart_id`, `birth_input`, `projection_type`, `projection_version` and `persist`. (AC: AC2, AC3)
+- [x] Task 5: Document the existing `chart_id` versus `birth_input` source selection rule. (AC: AC4)
+- [x] Task 6: Document separate responsibilities for chart calculation and projection construction. (AC: AC5)
+- [x] Task 7: Document controlled error categories for validation, access, missing chart and unavailable dependencies. (AC: AC6)
+- [x] Task 8: Document B2C projection access rules and internal technical projection denial. (AC: AC7, AC8)
+- [x] Task 9: Document that unavailable calculation or projection dependencies are blocking and logged outcomes. (AC: AC6)
+- [x] Task 10: Document that B2B API behavior is not defined or exposed by this story. (AC: AC10)
+- [x] Task 11: Persist validation, scoped status and source checklist evidence under the CS-263 evidence folder. (AC: AC9, AC11)
 
 ## Files to Inspect First
 

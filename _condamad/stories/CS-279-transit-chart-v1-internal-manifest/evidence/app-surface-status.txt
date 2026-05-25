@@ -1,0 +1,14 @@
+CS-279 application surface status
+
+Scoped implementation files:
+- backend/app/domain/astrology/runtime/transit_chart_manifest.py
+- backend/tests/unit/domain/astrology/test_transit_chart_manifest.py
+- backend/tests/architecture/test_api_contract_neutrality.py
+
+Public exposure scan:
+PASS rg -n "transit_chart_v1|transit_chart_manifest" backend\app\api frontend\src backend\migrations
+returned exit 1, meaning no public API, frontend or migration match was found.
+
+Application surface note:
+The wider worktree contains unrelated dirty backend and story files from other story surfaces.
+CS-279 did not normalize or revert those files.

@@ -1,0 +1,4 @@
+9:Il ne cree pas de table, migration, repository, route API, schema OpenAPI, serializer, client frontend, ecran admin, prompt template, appel provider, file de retry ou mecanisme de retry.
+145:Cette story ne cree pas de retry queue, de retry automatique, de fallback provider, de re-generation silencieuse ou de bouton admin de relance.
+152:Le workflow peut referencer des identifiants d'audit, des hashes de projection et des `evidence_refs`, mais il ne stocke pas de payload debug de calcul, ne lit pas les traces de calcul comme source de preuve narrative et ne modifie pas les logs d'astrology runtime.
+203:Il ne constitue ni un serializer runtime, ni une route publique, ni une migration, ni un schema OpenAPI.

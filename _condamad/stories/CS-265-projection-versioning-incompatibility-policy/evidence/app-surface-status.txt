@@ -1,0 +1,23 @@
+CS-265 app surface status - 2026-05-24
+
+Story-owned runtime-neutrality checks:
+- app.openapi() does not expose /v1/astrology/projections: PASS.
+- app.routes does not include /v1/astrology/projections: PASS.
+- rg negative scan for CS-265 policy implementation terms in backend/app and frontend/src: PASS, no matches.
+- frontend/src was not modified by this story.
+- backend/app was not modified by this story.
+- backend/migrations was not modified by this story.
+
+Pre-existing dirty app-root entries remain from other stories:
+- backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+- backend/app/infra/db/models/__init__.py
+- backend/app/domain/astrology/projections/
+- backend/app/infra/db/models/projection_persistence.py
+- backend/app/infra/db/repositories/projection_repository.py
+- backend/app/services/projection_persistence_service.py
+
+Story-owned changed files:
+- docs/architecture/projection-versioning-incompatibility-policy.md
+- backend/tests/architecture/test_api_contract_neutrality.py
+- _condamad/stories/CS-265-projection-versioning-incompatibility-policy/**
+- _condamad/stories/story-status.md row CS-265 only

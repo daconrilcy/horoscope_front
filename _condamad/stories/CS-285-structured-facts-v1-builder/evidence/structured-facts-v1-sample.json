@@ -1,0 +1,234 @@
+{
+  "contract_version": "structured_facts_v1.contract.v1",
+  "dominants": [
+    {
+      "code": "mars",
+      "dominance_level": "dominant",
+      "factors": [
+        "angularity"
+      ],
+      "rank": 1,
+      "score": 0.82,
+      "source": "fixture.profile"
+    }
+  ],
+  "excluded_surfaces": [
+    "ChartObjectRuntimeData",
+    "raw_chart_objects",
+    "debug_raw_traces",
+    "runtime_traces",
+    "internal_runtime_payloads",
+    "text_generation_surfaces",
+    "recommendation_generation_surfaces",
+    "external_completion_payloads"
+  ],
+  "hash_input": {
+    "contract_version": "structured_facts_v1.contract.v1",
+    "dominants": [
+      {
+        "code": "mars",
+        "dominance_level": "dominant",
+        "factors": [
+          "angularity"
+        ],
+        "rank": 1,
+        "score": 0.82,
+        "source": "fixture.profile"
+      }
+    ],
+    "interpretive_signals": {
+      "advanced_condition_codes": [],
+      "dignity_codes": [
+        "mars"
+      ],
+      "dispositor_codes": [
+        "mars"
+      ],
+      "fixed_star_contact_codes": [
+        "regulus:mars"
+      ],
+      "house_position_codes": [
+        "mars"
+      ]
+    },
+    "missing_data": {
+      "chart_id": "chart-1",
+      "empty_collections": [
+        "advanced_condition_facts"
+      ],
+      "sign_balances": null
+    },
+    "projection_id": "structured_facts_v1",
+    "source_versions": {
+      "interpretation_input": "chart_interpretation_input.v1",
+      "reference_versions": [
+        "fixture.dignity",
+        "fixture.dominance",
+        "fixture.fixed_star",
+        "fixture.motion",
+        "fixture.rulership",
+        "fixture.visibility",
+        "houses.runtime",
+        "mars"
+      ],
+      "runtime_contract": "chart_object_runtime_data.v1",
+      "structured_facts_contract": "structured_facts_v1.contract.v1"
+    },
+    "structural_facts": {
+      "houses": [
+        {
+          "code": "mars",
+          "house_cusp_code": "house_1_cusp",
+          "house_cusp_longitude_deg": null,
+          "house_modality": "angular",
+          "house_number": 1,
+          "source": "houses.runtime"
+        }
+      ],
+      "major_aspects": [
+        {
+          "angle_deg": 120.0,
+          "code": "trine",
+          "family": "major",
+          "orb_deg": 1.0,
+          "orb_max_deg": 6.0,
+          "participant_codes": [
+            "moon",
+            "sun"
+          ],
+          "source": "aspect_runtime",
+          "strength_level": "dominant"
+        }
+      ],
+      "positions": [
+        {
+          "classifications": [
+            "planet"
+          ],
+          "code": "mars",
+          "degree_in_sign": 15.0,
+          "house_number": 1,
+          "latitude_deg": null,
+          "longitude_deg": 15.0,
+          "object_type": "planet",
+          "source_key": "mars",
+          "source_type": "ephemeris",
+          "zodiac_sign": "aries"
+        }
+      ],
+      "source_metadata": {
+        "aspect_count": 1,
+        "chart_id": "chart-1",
+        "chart_type": "natal",
+        "object_count": 1,
+        "source_codes": [
+          "fixture.dignity",
+          "fixture.dominance",
+          "fixture.fixed_star",
+          "fixture.motion",
+          "fixture.rulership",
+          "fixture.visibility",
+          "houses.runtime",
+          "mars"
+        ]
+      }
+    }
+  },
+  "interpretive_signals": {
+    "advanced_condition_codes": [],
+    "dignity_codes": [
+      "mars"
+    ],
+    "dispositor_codes": [
+      "mars"
+    ],
+    "fixed_star_contact_codes": [
+      "regulus:mars"
+    ],
+    "house_position_codes": [
+      "mars"
+    ]
+  },
+  "missing_data": {
+    "chart_id": "chart-1",
+    "empty_collections": [
+      "advanced_condition_facts"
+    ],
+    "sign_balances": null
+  },
+  "projection_id": "structured_facts_v1",
+  "source_versions": {
+    "interpretation_input": "chart_interpretation_input.v1",
+    "reference_versions": [
+      "fixture.dignity",
+      "fixture.dominance",
+      "fixture.fixed_star",
+      "fixture.motion",
+      "fixture.rulership",
+      "fixture.visibility",
+      "houses.runtime",
+      "mars"
+    ],
+    "runtime_contract": "chart_object_runtime_data.v1",
+    "structured_facts_contract": "structured_facts_v1.contract.v1"
+  },
+  "structural_facts": {
+    "houses": [
+      {
+        "code": "mars",
+        "house_cusp_code": "house_1_cusp",
+        "house_cusp_longitude_deg": null,
+        "house_modality": "angular",
+        "house_number": 1,
+        "source": "houses.runtime"
+      }
+    ],
+    "major_aspects": [
+      {
+        "angle_deg": 120.0,
+        "code": "trine",
+        "family": "major",
+        "orb_deg": 1.0,
+        "orb_max_deg": 6.0,
+        "participant_codes": [
+          "moon",
+          "sun"
+        ],
+        "source": "aspect_runtime",
+        "strength_level": "dominant"
+      }
+    ],
+    "positions": [
+      {
+        "classifications": [
+          "planet"
+        ],
+        "code": "mars",
+        "degree_in_sign": 15.0,
+        "house_number": 1,
+        "latitude_deg": null,
+        "longitude_deg": 15.0,
+        "object_type": "planet",
+        "source_key": "mars",
+        "source_type": "ephemeris",
+        "zodiac_sign": "aries"
+      }
+    ],
+    "source_metadata": {
+      "aspect_count": 1,
+      "chart_id": "chart-1",
+      "chart_type": "natal",
+      "object_count": 1,
+      "source_codes": [
+        "fixture.dignity",
+        "fixture.dominance",
+        "fixture.fixed_star",
+        "fixture.motion",
+        "fixture.rulership",
+        "fixture.visibility",
+        "houses.runtime",
+        "mars"
+      ]
+    }
+  }
+}

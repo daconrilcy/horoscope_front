@@ -1,0 +1,26 @@
+COMMAND: git status --short -- backend/app frontend/src docs/architecture/admin-endpoint-domain-segmentation.md backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+ M backend/app/api/v1/routers/registry.py
+ M backend/app/core/sensitive_data.py
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/infra/db/models/__init__.py
+ M backend/app/services/api_contracts/admin/audit.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+?? backend/app/api/v1/routers/admin/answer_audit.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/ops/rejected_answer_review.py
+?? backend/app/services/projection_persistence_service.py
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+?? backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+?? docs/architecture/admin-endpoint-domain-segmentation.md
+
+REVIEW NOTE:
+- CS-272 intended app-facing additions are limited to:
+  - docs/architecture/admin-endpoint-domain-segmentation.md
+  - backend/tests/unit/test_admin_endpoint_segmentation_contract.py
+- backend/app and frontend/src still show pre-existing dirty work from other stories; CS-272 did not edit those paths during the review/fix cycle.
+- Because the CS-272 doc and test are new untracked files, a plain git diff --stat does not describe the full CS-272 surface; this status output is the
+  authoritative scoped evidence for route/frontend neutrality.

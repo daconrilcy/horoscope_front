@@ -1,0 +1,11 @@
+CS-269 client exposure scan
+
+PASS: runtime/OpenAPI route absence
+Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert any('/v1/admin/answer-audits/rejected' in getattr(r, 'path', '') for r in app.routes); assert '/v1/users/me/answer-audits/rejected' not in str(app.openapi()); assert '/v1/support/rejected-answers' not in str(app.openapi())"
+
+PASS: no forbidden app workflow symbols
+Command: rg -n "RejectedAnswerReplay|auto_correct_rejected_prompt|admin_rejected_answer_public|AnswerAuditAccessLogModel|admin_answer_audit_access_logs|answer_audit_access_log_repository" backend\app
+Result: exit 1 = PASS no matches.
+
+PASS: no public router edits in CS-269 scope
+Evidence: `git status --short -- backend/app/api/v1/routers/public frontend/src backend/migrations` did not show CS-269 edits in these forbidden surfaces.

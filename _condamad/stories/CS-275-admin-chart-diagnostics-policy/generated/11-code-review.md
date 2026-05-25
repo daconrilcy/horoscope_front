@@ -1,4 +1,4 @@
-# CS-275 Editorial Story Review
+# CS-275 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,33 +7,42 @@ Verdict: CLEAN
 - Story: `_condamad/stories/CS-275-admin-chart-diagnostics-policy/00-story.md`
 - Source brief: `_story_briefs/cs-275-decide-admin-chart-diagnostics-retention-redaction-replay-policy.md`
 - Tracker row: `_condamad/stories/story-status.md`
-- Guardrail ID checked: `RG-002`
+- Policy: `docs/architecture/admin-chart-diagnostics-v1-policy.md`
+- Tests: `backend/tests/unit/test_admin_chart_diagnostics_policy.py`
+- Evidence: CS-275 `generated/**` and `evidence/**`
 
 ## Review Summary
 
-- The story maps the brief objective to a documentation-first backend-domain policy for `admin_chart_diagnostics_v1`.
-- Retention, redaction, replay separation, birth-data sensitivity, admin consultation logs and client exclusion are explicit.
-- The story keeps implementation of diagnostics, replay, calculations and client exposure out of scope.
-- Dependencies on CS-271 and CS-272 are preserved without redefining their ownership.
-- The review artifact path is separate from the story contract and matches the expected generated evidence location.
+- Tracker row matches the target path and brief source.
+- The policy covers retention, redaction, replay separation, sensitive birth data, admin consultation logs and client exclusion.
+- The implementation remains documentation-only plus a targeted contract test; no route, service, DB, migration or frontend surface is introduced.
+- Runtime neutrality is validated through `app.openapi()`, `app.routes`, targeted pytest and forbidden-surface scans.
+- DPO/security retention approval remains intentionally open and blocks later runtime, storage, replay and client work.
 
 ## Issues Fixed
 
-- None. First-pass review found no actionable drafting issue.
+- Missing persistent source evidence: added `evidence/source-checklist.md` and updated AC11 traceability.
+- Stale review evidence: replaced the drafting-only review artifact with this implementation review.
 
 ## Validation Results
 
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-275-admin-chart-diagnostics-policy\00-story.md`:
-  PASS
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-275-admin-chart-diagnostics-policy\00-story.md`:
-  PASS
+- `ruff format tests\unit\test_admin_chart_diagnostics_policy.py`: PASS, file unchanged.
+- `ruff check tests\unit\test_admin_chart_diagnostics_policy.py`: PASS.
+- `python -B -m pytest -q tests\unit\test_admin_chart_diagnostics_policy.py --tb=short`: PASS, `4 passed`.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`: PASS.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...\CS-275-admin-chart-diagnostics-policy`: PASS.
+- `app.openapi()` and `app.routes` checks for `admin_chart_diagnostics`: PASS.
+- Required policy `rg` scans: PASS.
+- Forbidden application surface scan: PASS, no matches.
+- `git diff --check` scoped to CS-275 surfaces: PASS.
 
-Both Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+All Python and Ruff commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
 ## Residual Risk
 
-- No residual story-contract risk identified. Implementation risk remains limited to proving runtime neutrality when the policy document and tests are added.
+- DPO/security retention approval is still open by policy design; runtime diagnostics, replay storage, migrations, clients and frontend work remain blocked.
 
 ## Propagation
 
-- no-propagation: the review produced only local story-review evidence and no reusable guardrail, AGENTS or skill learning.
+- no-propagation: the correction was local to CS-275 evidence and does not require a reusable guardrail, AGENTS or skill update.

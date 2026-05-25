@@ -1,0 +1,5 @@
+CS-278 DB schema status, 2026-05-25
+
+Result: NOT MODIFIED.
+
+No schema migration or DB model extension was created because the CS-277 approval gate is not satisfied. The existing owner remains `backend/app/infra/db/models/llm/llm_observability.py` with table `llm_replay_snapshots`.

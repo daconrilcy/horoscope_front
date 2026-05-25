@@ -1,0 +1,19 @@
+# Validation CS-288
+
+PASS - `. ..\.venv\Scripts\Activate.ps1; ruff format <CS-288 python files>`
+PASS - `. ..\.venv\Scripts\Activate.ps1; ruff check .`
+PASS - targeted CS-288 pytest suite: model, sensitive-data, repository, schema and architecture tests.
+PASS - `. ..\.venv\Scripts\Activate.ps1; python -B -m pytest -q --tb=short` => `3346 passed, 1 skipped, 1208 deselected`
+PASS - `. ..\.venv\Scripts\Activate.ps1; python -B -c "from app.main import app; assert app.openapi()"`
+PASS - `git diff --check -- <CS-288 paths>`
+PASS - `. .\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .`
+PASS - targeted CS-288 pytest suite after review fix => `7 passed, 4 deselected`
+PASS - `condamad_validate.py --final <CS-288 capsule>`
+PASS - `. .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q --tb=short` => `3346 passed, 1 skipped, 1208 deselected`
+PASS - `. .\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check <CS-288 python files>` => `10 files already formatted`
+PASS - `git diff --check -- <CS-288 paths>` => whitespace PASS; CRLF warning only.
+
+Notes:
+- First full pytest failed because new tests used unclassified `create_engine` / `Base.metadata.create_all`.
+  Tests now reuse the project DB fixture or SQLAlchemy metadata inspection, then full pytest passed.
+- Review/fix iteration 1 found stale final evidence AC rows; `generated/10-final-evidence.md` was aligned with `generated/03-acceptance-traceability.md`, then validation passed.

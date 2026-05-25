@@ -1,0 +1,252 @@
+## VC2 contract exists
+exit=0
+## VC3 identity fields
+1:<!-- Commentaire global: ce document fixe le contrat canonique narrative_answer_audit_v1 sans creer d'implementation runtime, persistence, API ou frontend. -->
+3:# Contrat `narrative_answer_audit_v1`
+5:`narrative_answer_audit_v1` est le contrat d'audit versionne des reponses narratives produites avec assistance LLM.
+14:| `contract_id` | Valeur exacte: `narrative_answer_audit_v1`. |
+25:| `answer_id` | Identifiant unique de la reponse narrative produite ou rejetee. |
+26:| `answer_type` | Categorie fonctionnelle de la reponse: `basic`, `premium`, `long`, `sensitive` ou `free_short`. |
+27:| `chart_id` | Identifiant du theme ayant servi a produire la projection auditee. |
+28:| `user_id` | Identifiant du proprietaire metier de la reponse au moment de generation. |
+29:| `plan` | Plan commercial applique au moment de generation. |
+76:- `answer_id`, `answer_type`, `chart_id`, `user_id` et `plan`;
+94:Les surfaces publiques futures devront definir un contrat API separe. `narrative_answer_audit_v1` reste un contrat interne d'audit.
+98:`narrative_answer_audit_v1` peut referencer `structured_facts_v1`, `projection_hash`, `AINarrativeInputContract` et `llm_input_hash`.
+exit=0
+## VC4 hash fields
+30:| `projection_version` | Version de la projection factuelle utilisee comme base. |
+31:| `projection_hash` | Hash stable et obligatoire du payload de projection audite. |
+33:`projection_hash` n'est pas une metadata optionnelle: il est l'ancre de comparaison entre la narration et la projection factuelle.
+41:| `llm_input_version` | Version du contrat d'entree LLM, par exemple le contrat interne issu de `AINarrativeInputContract`. |
+42:| `llm_input_hash` | Hash stable et obligatoire du payload d'entree LLM transmis a la generation. |
+47:`llm_input_hash` doit etre conserve meme si la reponse est rejetee, afin de prouver quel contexte a ete evalue.
+77:- `projection_version` et `projection_hash`;
+78:- `llm_input_version` et `llm_input_hash`;
+89:- `projection_hash`, `llm_input_hash`, `prompt_version`, `provider` ou `model`;
+98:`narrative_answer_audit_v1` peut referencer `structured_facts_v1`, `projection_hash`, `AINarrativeInputContract` et `llm_input_hash`.
+exit=0
+## VC5 LLM provenance
+6:Il rattache chaque prose generee ou rejetee aux faits, aux entrees LLM, au prompt, au provider, au model et a l'etat de grounding utilises au moment de generation.
+8:Ce contrat est declaratif. Il ne cree pas de table, migration, repository, route API, schema OpenAPI, serializer, client frontend, ecran admin, prompt template ou integration provider.
+17:| `client_exposure_policy` | Les payloads client-facing ne doivent exposer ni technical proof, ni provider internals, ni prompt payload, ni audit rows. |
+43:| `prompt_version` | Version du prompt contractuel utilise. |
+44:| `provider` | Identifiant interne du fournisseur LLM. |
+45:| `model` | Identifiant interne du modele provider utilise. |
+55:| `full prompt` | Texte complet du prompt conserve dans l'audit interne. |
+56:| `prompt_ref` + `payload snapshot` | Reference stable vers le prompt versionne et snapshot du payload variable utilise. |
+58:Le choix entre `full prompt` et `prompt_ref` plus `payload snapshot` releve d'une future politique de retention. Cette story ne definit pas la retention RGPD finale.
+79:- `prompt_version`, `provider`, `model` et la preuve de prompt;
+89:- `projection_hash`, `llm_input_hash`, `prompt_version`, `provider` ou `model`;
+90:- prompt brut, `full prompt`, `prompt_ref` ou `payload snapshot`;
+91:- technical proof, provider internals, model internals ou audit rows;
+exit=0
+## VC6 grounding statuses
+66:| `grounded` | La reponse est coherente avec les faits et preuves attendus. |
+67:| `partial` | La reponse est majoritairement rattachee aux faits, avec une reserve explicite d'audit. |
+68:| `ungrounded` | La reponse ne peut pas etre suffisamment rattachee aux faits ou preuves. |
+69:| `rejected` | La reponse a ete refusee avant exposition ou usage metier. |
+70:| `not_checked` | Le controle de grounding n'a pas encore ete execute; l'etat doit rester visible et auditable. |
+74:Les reponses `rejected` restent dans le perimetre d'audit. Elles doivent conserver:
+exit=0
+## VC7 answer types
+15:| `role` | Preuve interne permettant d'auditer une reponse narrative basic, premium, long, sensitive ou free_short. |
+26:| `answer_type` | Categorie fonctionnelle de la reponse: `basic`, `premium`, `long`, `sensitive` ou `free_short`. |
+exit=0
+## VC8 client masking
+17:| `client_exposure_policy` | Les payloads client-facing ne doivent exposer ni technical proof, ni provider internals, ni prompt payload, ni audit rows. |
+82:Une reponse rejetee ne doit pas etre supprimee de l'audit simplement parce qu'elle n'est pas client-facing.
+86:Les projections client-facing peuvent afficher une reponse interpretee, des messages de degradation ou des explications utilisateur.
+91:- technical proof, provider internals, model internals ou audit rows;
+exit=0
+## VC17 broad docs scan
+.\_story_briefs\cs-225-calculation-graph-runtime-contracts.md:311:- Unknown dependencies are rejected.
+.\_story_briefs\cs-225-calculation-graph-runtime-contracts.md:312:- Duplicate nodes and outputs are rejected.
+.\_story_briefs\cs-225-calculation-graph-runtime-contracts.md:313:- Cycles are rejected.
+.\docs\api-contracts-backend.md:56:  - `local_datetime` (local date-time rejected)
+.\docs\architecture\narrative-answer-audit-v1-contract.md:1:<!-- Commentaire global: ce document fixe le contrat canonique narrative_answer_audit_v1 sans creer d'implementation runtime, persistence, API ou frontend. -->
+.\docs\architecture\narrative-answer-audit-v1-contract.md:3:# Contrat `narrative_answer_audit_v1`
+.\docs\architecture\narrative-answer-audit-v1-contract.md:5:`narrative_answer_audit_v1` est le contrat d'audit versionne des reponses narratives produites avec assistance LLM.
+.\docs\architecture\narrative-answer-audit-v1-contract.md:14:| `contract_id` | Valeur exacte: `narrative_answer_audit_v1`. |
+.\docs\architecture\narrative-answer-audit-v1-contract.md:25:| `answer_id` | Identifiant unique de la reponse narrative produite ou rejetee. |
+.\docs\architecture\narrative-answer-audit-v1-contract.md:26:| `answer_type` | Categorie fonctionnelle de la reponse: `basic`, `premium`, `long`, `sensitive` ou `free_short`. |
+.\docs\architecture\narrative-answer-audit-v1-contract.md:31:| `projection_hash` | Hash stable et obligatoire du payload de projection audite. |
+.\docs\architecture\narrative-answer-audit-v1-contract.md:33:`projection_hash` n'est pas une metadata optionnelle: il est l'ancre de comparaison entre la narration et la projection factuelle.
+.\docs\architecture\narrative-answer-audit-v1-contract.md:42:| `llm_input_hash` | Hash stable et obligatoire du payload d'entree LLM transmis a la generation. |
+.\docs\architecture\narrative-answer-audit-v1-contract.md:47:`llm_input_hash` doit etre conserve meme si la reponse est rejetee, afin de prouver quel contexte a ete evalue.
+.\docs\architecture\narrative-answer-audit-v1-contract.md:62:`grounding_status` est obligatoire et prend exactement l'une des valeurs suivantes:
+.\docs\architecture\narrative-answer-audit-v1-contract.md:69:| `rejected` | La reponse a ete refusee avant exposition ou usage metier. |
+.\docs\architecture\narrative-answer-audit-v1-contract.md:74:Les reponses `rejected` restent dans le perimetre d'audit. Elles doivent conserver:
+.\docs\architecture\narrative-answer-audit-v1-contract.md:76:- `answer_id`, `answer_type`, `chart_id`, `user_id` et `plan`;
+.\docs\architecture\narrative-answer-audit-v1-contract.md:77:- `projection_version` et `projection_hash`;
+.\docs\architecture\narrative-answer-audit-v1-contract.md:78:- `llm_input_version` et `llm_input_hash`;
+.\docs\architecture\narrative-answer-audit-v1-contract.md:89:- `projection_hash`, `llm_input_hash`, `prompt_version`, `provider` ou `model`;
+.\docs\architecture\narrative-answer-audit-v1-contract.md:94:Les surfaces publiques futures devront definir un contrat API separe. `narrative_answer_audit_v1` reste un contrat interne d'audit.
+.\docs\architecture\narrative-answer-audit-v1-contract.md:98:`narrative_answer_audit_v1` peut referencer `structured_facts_v1`, `projection_hash`, `AINarrativeInputContract` et `llm_input_hash`.
+.\docs\architecture\official-product-primitives-public-projections.md:40:| debug | traces, payloads internes, audit rows, garde runtime | `astrologer_debug_data` | rejected for public; needs-user-decision pour surface protegee |
+.\docs\architecture\official-product-primitives-public-projections.md:74:- `rejected`: aucune section publique; usage limite a `llm_input` ou debug
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:61:| CS-245 architecture transition | Synthese audits -> stories CS-246..CS-254. | PASS after correction | Internal primitives adopted; raw public exposure rejected; remap applied. | PA-E-001..PA-E-014 | GAP-001..GAP-016; R-001..R-011 | Owner decisions and remap caveats. | none | capstone baseline |
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:78:| Fixed-star contacts | conjunction contacts, star catalog refs | fixed stars, target objects | `fixed_star_contacts` if approved | blocked public; LLM/internal possible | blocked | `needs-user-decision` public/gated/rejected | CS-237 F-002; CS-238 F-002; CS-251 evidence |
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:106:| `transit_chart_v1` | v1 | natal + transit datetime/options | selected path contract, not public runtime | public compatibility deferred | rejected alternatives stay closed | selected_family, gate_state | CS-253; CS-250 |
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:107:| other family codes | v1 reserved | family-specific | blocked registry metadata | no runtime until owner/manifest/proof | rejected/closed status explicit | blocker/status/user_decisions | CS-246; CS-253 |
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:119:| `fixed_star_contacts` | v1 candidate | contacts + policy | blocked public/gated/rejected | none until decision | rejected/gated/public explicit | decision owner, source rule | CS-251; CS-238 F-002 |
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:205:| blocker | `fixed_star_contacts` policy | Contacts exist, but public/gated/rejected status is undecided. | product/API/security | CS-257-style public fixed-star projection | CS-238 F-002; CS-251 |
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:256:### Story 3: Decide fixed-star public/gated/rejected policy
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:260:Goal: decide whether fixed-star contacts become public, gated, or rejected.
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:267:- Decision is explicit: `public`, `gated`, or `rejected`.
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:287:- If rejected, roadmap records no debug API/frontend story.
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:324:- Every object/rule family is classified as active, blocked, rejected, or migration candidate.
+.\docs\architecture\product-architecture-current-state-2026-05-24.md:336:| Should `fixed_star_contacts` be public, gated or rejected? | Prevents accidental exposure of raw fixed-star payloads. | product/security | fixed-star projection/API/UI | keep `needs-user-decision` | CS-251; CS-238 F-002 |
+.\_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:21:1. Définir les conditions de passage à `rejected`.
+.\_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:38:1. Le statut `rejected` est défini comme état terminal auditable.
+.\_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:49:rg -n "rejected|ungrounded|rejection_reason|réponse rejetée|message contrôlé|retry|audit" .\docs .\_story_briefs
+.\_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:55:- CS-259 pour `narrative_answer_audit_v1`.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:1:# CS-259 — Define narrative_answer_audit_v1
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:5:Définir `narrative_answer_audit_v1` pour auditer les réponses LLM basic, premium, longues ou sensibles.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:21:1. Définir les champs obligatoires : `answer_id`, `answer_type`, `chart_id`, `user_id`, `plan`, `projection_version`, `projection_hash`.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:22:2. Ajouter `llm_input_version`, `llm_input_hash`, `prompt_version`, `provider`, `model`.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:23:3. Définir `grounding_status`.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:26:6. Définir les catégories `answer_type` : `basic`, `premium`, `long`, `sensitive`, `free_short`.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:40:4. Les statuts `grounded`, `partial`, `ungrounded`, `rejected`, `not_checked` sont définis.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:41:5. `answer_type` ou `response_category` permet de distinguer `basic`, `premium`, `long`, `sensitive` et `free_short`.
+.\_story_briefs\cs-259-define-narrative-answer-audit-v1.md:47:rg -n "narrative_answer_audit_v1|answer_id|answer_type|projection_hash|llm_input_hash|grounding_status|rejected" .\docs .\_story_briefs
+.\_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md:1:# CS-262 — Audit Existing Prompt Version And answer_id Storage
+.\_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md:5:Auditer l'existant autour du stockage `answer_id`, versions de prompt, provider, modèle et snapshots de prompt.
+.\_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md:9:Plusieurs champs nécessaires à `narrative_answer_audit_v1` existent peut-être déjà. Avant d'ajouter de nouveaux contrats ou migrations, il faut vérifier l'état réel.
+.\_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md:22:2. Vérifier l'existence de `answer_id`.
+.\_story_briefs\cs-262-audit-existing-prompt-version-answer-id-storage.md:45:rg -n "answer_id|prompt_version|provider|model|prompt" .\backend .\docs .\_condamad
+.\_story_briefs\cs-264-implement-projection-persistence-and-projection-hash.md:1:# CS-264 — Implement Projection Persistence And projection_hash
+.\_story_briefs\cs-264-implement-projection-persistence-and-projection-hash.md:5:Implémenter la persistance des projections et le calcul de `projection_hash`.
+.\_story_briefs\cs-264-implement-projection-persistence-and-projection-hash.md:27:5. Vérifier le lien avec `narrative_answer_audit_v1`.
+.\_story_briefs\cs-264-implement-projection-persistence-and-projection-hash.md:39:1. Une projection persistée porte `projection_hash`.
+.\_story_briefs\cs-267-define-admin-answer-audit-api.md:53:- CS-288 pour la persistance réelle de `narrative_answer_audit_v1`.
+.\_story_briefs\cs-289-implement-evidence-refs-validation.md:40:5. La validation s'intègre à `narrative_answer_audit_v1`.
+.\_story_briefs\cs-289-implement-evidence-refs-validation.md:56:- CS-264 pour `projection_hash`, si requis par l'implémentation retenue.
+.\_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md:1:# CS-288 — Implement narrative_answer_audit_v1 Persistence
+.\_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md:5:Implémenter la persistance de `narrative_answer_audit_v1`.
+.\_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md:22:2. Stocker `answer_id`, `answer_type`, `chart_id`, `user_id`, `plan`.
+.\_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md:23:3. Stocker versions, hashes, prompt, provider, model et `grounding_status`.
+.\_story_briefs\cs-288-implement-narrative-answer-audit-v1-persistence.md:38:3. `answer_type` distingue basic, premium, long, sensitive et free_short.
+.\_story_briefs\cs-290-implement-rejected-narrative-answer-workflow.md:22:2. Marquer les réponses non fondées en `rejected`.
+.\docs\recherches astro\2026-05-24-rapport-process-astrologique-backend-post-cs-254.md:402:3. Trancher `fixed_star_contacts`: public, gated ou rejected.
+exit=0
+## VC9 OpenAPI neutral
+exit=0
+## VC10 routes neutral
+exit=0
+## VC11 architecture neutrality pytest
+## VC9 OpenAPI neutral rerun
+exit=0
+## VC10 routes neutral rerun
+exit=0
+## VC11 architecture neutrality pytest rerun
+...............                                                          [100%]
+15 passed in 4.26s
+exit=0
+## VC15 ruff check backend rerun
+All checks passed!
+exit=0
+## VC16 backend pytest full
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 20%]
+........................................................................ [ 22%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 31%]
+........................................................................ [ 33%]
+........................................................................ [ 35%]
+..................................s..................................... [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 44%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+## VC16 backend pytest full rerun long-timeout
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 20%]
+........................................................................ [ 22%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 31%]
+........................................................................ [ 33%]
+........................................................................ [ 35%]
+..................................s..................................... [ 37%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 44%]
+........................................................................ [ 46%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 71%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 91%]
+........................................................................ [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 97%]
+.....................................................................    [100%]
+3236 passed, 1 skipped, 1182 deselected in 343.81s (0:05:43)
+exit=0
+
+## Final implementation review correction
+Finding: `generated/11-code-review.md` contained a clean pre-implementation editorial review instead of a fresh implementation review.
+Fix: replaced it with implementation review evidence covering the delivered contract, AC traceability, validation artifacts and app-surface guardrails.
+Status update: CS-259 tracker row and story header set to `done` after clean implementation review.
+
+## Final CONDAMAD story validation after review correction
+Command: python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-259-narrative-answer-audit-v1-contract\00-story.md
+Result: PASS
+
+## Final CONDAMAD strict story lint after review correction
+Command: python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-259-narrative-answer-audit-v1-contract\00-story.md
+Result: PASS
+
+## Final capsule validation after review correction
+Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-259-narrative-answer-audit-v1-contract
+Result: PASS
+
+## Final AC scan after review correction
+Command: rg -n "narrative_answer_audit_v1|answer_id|answer_type|projection_hash|llm_input_hash|grounding_status|rejected" .\docs .\_story_briefs
+Result: PASS
+
+## Final scoped app-surface status after review correction
+Command: git status --short -- backend/app frontend/src backend/tests backend/migrations
+Result: PASS; no scoped application-root changes.

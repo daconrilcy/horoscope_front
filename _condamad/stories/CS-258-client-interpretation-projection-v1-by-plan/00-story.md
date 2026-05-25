@@ -1,5 +1,5 @@
 # Story CS-258 client-interpretation-projection-v1-by-plan: Define client_interpretation_projection_v1 By Plan
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

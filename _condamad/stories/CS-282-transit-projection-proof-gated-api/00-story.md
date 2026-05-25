@@ -1,5 +1,5 @@
 # Story CS-282 transit-projection-proof-gated-api: Expose Transit Projection Only After Proof Gate
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

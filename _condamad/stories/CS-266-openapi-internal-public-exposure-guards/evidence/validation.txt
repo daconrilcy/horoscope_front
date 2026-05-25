@@ -1,0 +1,43 @@
+CS-266 validation summary
+
+Environment:
+- PowerShell on Windows.
+- Python/Ruff/Pytest commands run after `.venv\Scripts\Activate.ps1`.
+
+Commands:
+- `condamad_prepare.py --repair-generated-only`: PASS.
+- `condamad_validate.py` before implementation: PASS.
+- OpenAPI before snapshot write: PASS.
+- `ruff format tests\architecture\test_api_contract_neutrality.py app\tests\integration\test_api_openapi_contract.py`: PASS.
+- `ruff check .`: PASS.
+- `python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py --tb=short`: PASS, 19 passed.
+- `python -B -m pytest -q app\tests\integration\test_api_openapi_contract.py --tb=short`: deselected without `--long` by repo hook.
+- `python -B -m pytest -q app\tests\integration\test_api_openapi_contract.py --long --tb=short`: PASS, 3 passed.
+- `/openapi.json` route inventory command: PASS.
+- `ChartObjectRuntimeData` public OpenAPI absence command: PASS.
+- Public-surface forbidden token scan over `backend\app\api\v1\routers\public` and non-admin/ops/b2b API contracts: PASS, no matches.
+- OpenAPI after snapshot write and before/after equality assertion: PASS.
+- First full fast backend suite: FAIL, docs ownership index missing the new backend doc.
+- `python -B -m pytest -q app\tests\unit\test_backend_docs_ownership.py --tb=short`: PASS after ownership-index update.
+- `python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py app\tests\integration\test_api_openapi_contract.py --long --tb=short`: PASS, 22 passed.
+- Final `python -B -m pytest -q --tb=short`: PASS, 3247 passed, 1 skipped, 1186 deselected.
+- `git diff --check -- <story paths>`: PASS.
+- Final `condamad_validate.py`: PASS.
+
+Fresh implementation review validation on 2026-05-24:
+- `ruff check .`: PASS.
+- `python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py app\tests\integration\test_api_openapi_contract.py --long --tb=short`: PASS, 22 passed.
+- `python -B -m pytest -q app\tests\unit\test_backend_docs_ownership.py --tb=short`: PASS, 3 passed.
+- `/openapi.json` route inventory command: PASS.
+- `ChartObjectRuntimeData` public OpenAPI absence command: PASS.
+- OpenAPI before/after equality command: PASS.
+- Public-surface forbidden-token scan over public routers and non-admin/ops/b2b API contracts: PASS, no matches.
+- First fresh `python -B -m pytest -q --tb=short`: timed out at 184 seconds before a verdict.
+- Final fresh `python -B -m pytest -q --tb=short`: PASS, 3247 passed, 1 skipped, 1186 deselected.
+- Fresh `condamad_story_validate.py`: PASS after final status/review artifact update.
+- Fresh `condamad_story_lint.py --strict`: PASS after final status/review artifact update.
+
+Notes:
+- Broad forbidden-token `rg` across all backend has expected matches in internal runtime, docs, and tests.
+- The negative scan used for AC5 is scoped to public OpenAPI/public API-contract surfaces.
+- OpenAPI before/after snapshots are byte-equal after sorted JSON serialization, proving no public API surface delta.

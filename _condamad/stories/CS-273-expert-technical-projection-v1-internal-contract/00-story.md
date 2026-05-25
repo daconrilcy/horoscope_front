@@ -1,5 +1,5 @@
 # Story CS-273 expert-technical-projection-v1-internal-contract: Define expert_technical_projection_v1 Internal Contract
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -27,6 +27,7 @@ evidence, exclude raw technical/debug payloads, and document access-log expectat
 
 - `docs/architecture/expert-technical-projection-v1-contract.md` exists and starts with a French global file comment.
 - `expert_technical_projection_v1` is documented as internal, interne, non client and not client-safe.
+- Current architecture synthesis wording no longer presents `expert_technical_projection` as a public expert projection or future B2C API.
 - Authorized consumers are limited to current `ADMIN` and future target-only `ASTRO_EXPERT`.
 - B2C clients are explicitly denied as consumers of this projection.
 - Authorized astrology data families cover technical but meaningful astrology facts, structured signals and evidence references.
@@ -142,6 +143,7 @@ evidence, exclude raw technical/debug payloads, and document access-log expectat
 
 - `_story_briefs/cs-273-define-expert-technical-projection-v1-admin-astro-expert-only.md` - source brief.
 - `docs/architecture/official-product-primitives-public-projections.md` - existing projection primitive registry to reclassify.
+- `docs/architecture/product-architecture-current-state-2026-05-24.md` - existing architecture synthesis to keep aligned with CS-273 reclassification.
 - `_condamad/stories/CS-270-internal-role-model/00-story.md` - role vocabulary dependency.
 - `_condamad/stories/CS-271-admin-data-permission-matrix/00-story.md` - permission ownership dependency.
 - `_condamad/stories/CS-256-structured-facts-v1-contract/00-story.md` - structured facts dependency.
@@ -213,11 +215,13 @@ evidence, exclude raw technical/debug payloads, and document access-log expectat
 - Comparison after implementation:
   - `docs/architecture/expert-technical-projection-v1-contract.md`
   - `docs/architecture/official-product-primitives-public-projections.md`
+  - `docs/architecture/product-architecture-current-state-2026-05-24.md`
   - `backend/tests/unit/test_expert_technical_projection_contract.py`
   - `_condamad/stories/CS-273-expert-technical-projection-v1-internal-contract/evidence/validation.txt`
   - `_condamad/stories/CS-273-expert-technical-projection-v1-internal-contract/evidence/app-surface-status.txt`
 - Expected invariant:
-  - The only intended repository delta is one architecture contract document, one registry reclassification, one targeted test and story evidence artifacts.
+  - The only intended repository delta is one architecture contract document, registry/current-state reclassification wording, one targeted test and story
+    evidence artifacts.
 
 ## Ownership Routing Rule
 
@@ -331,6 +335,7 @@ Likely files:
 
 - `docs/architecture/expert-technical-projection-v1-contract.md` - define the canonical internal projection contract.
 - `docs/architecture/official-product-primitives-public-projections.md` - reclassify the expert projection away from public/client-safe status.
+- `docs/architecture/product-architecture-current-state-2026-05-24.md` - align current-state wording so it no longer calls the expert projection public.
 - `backend/tests/unit/test_expert_technical_projection_contract.py` - cover document content, registry reclassification and runtime neutrality.
 - `_condamad/stories/CS-273-expert-technical-projection-v1-internal-contract/evidence/validation.txt` - persist validation output.
 - `_condamad/stories/CS-273-expert-technical-projection-v1-internal-contract/evidence/app-surface-status.txt` - persist scoped status output.

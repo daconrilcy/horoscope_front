@@ -1,5 +1,5 @@
 # Story CS-280 internal-transit-runtime: Implement Internal Transit Runtime
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

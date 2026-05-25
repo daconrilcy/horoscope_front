@@ -1,0 +1,82 @@
+CS-273 validation evidence
+
+Commands:
+
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract --root C:\dev\horoscope_front --with-optional
+  Result: PASS. Capsule repaired.
+
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract
+  Result: PASS.
+
+- .\.venv\Scripts\Activate.ps1; ruff format backend\tests\unit\test_expert_technical_projection_contract.py
+  Result: PASS. One file formatted.
+
+- .\.venv\Scripts\Activate.ps1; ruff check backend docs
+  Result: PASS. All checks passed.
+
+- .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\test_expert_technical_projection_contract.py --tb=short
+  Result: PASS. 6 passed.
+
+- .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\test_expert_technical_projection_contract.py backend\tests\architecture\test_api_contract_neutrality.py --tb=short
+  Result: PASS. 25 passed.
+
+- .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; payload=str(app.openapi()); paths={route.path for route in app.routes}; assert 'expert_technical_projection_v1' not in payload; assert not any('expert-technical-projection' in p for p in paths); print('PASS openapi/routes neutral')"
+  Result: PASS openapi/routes neutral.
+
+- rg -n "dignity|conditions|dominance|aspects|houses|structured_facts_v1|structured signals|evidence_refs|raw runtime traces|prompt internals|replay payloads|provider debug dumps|actor|role|projection id|action|decision|correlation_id" docs\architecture\expert-technical-projection-v1-contract.md
+  Result: PASS. Required contract terms found.
+
+- Scoped expert registry row scan for "| public |", "futur contrat public expert", "CS-255 API contract", "CS-255 frontend client", "CS-255 UI component" and "OpenAPI-ready"
+  Result: PASS. No forbidden public wording remains on the expert row.
+
+- git diff --check -- docs\architecture\expert-technical-projection-v1-contract.md docs\architecture\official-product-primitives-public-projections.md backend\tests\unit\test_expert_technical_projection_contract.py _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract
+  Result: PASS. Exit 0; Git printed a line-ending warning for the existing tracked registry document only.
+
+Skipped:
+
+- Full repository pytest: skipped because CS-273 is documentation/contract scoped and the workspace contains many unrelated dirty backend/story files. Targeted unit and architecture neutrality tests passed.
+- Frontend checks: skipped because CS-273 forbids frontend changes and no frontend file was modified by this story.
+
+Review/fix loop validation:
+
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract\00-story.md
+  Result: PASS. CONDAMAD story validation: PASS.
+
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract\00-story.md
+  Result: PASS. CONDAMAD story lint: PASS.
+
+- .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\test_expert_technical_projection_contract.py backend\tests\architecture\test_api_contract_neutrality.py --tb=short
+  Result: PASS. 25 passed.
+
+- .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; assert 'expert_technical_projection_v1' not in str(app.openapi()); assert all('expert_technical_projection' not in getattr(r, 'path', '') for r in app.routes)"
+  Result: PASS. OpenAPI/routes neutral.
+
+- .\.venv\Scripts\Activate.ps1; ruff format --check backend\tests\unit\test_expert_technical_projection_contract.py; ruff check backend\tests\unit\test_expert_technical_projection_contract.py
+  Result: PASS. One file already formatted; all checks passed.
+
+- git diff --check -- _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract _condamad\stories\story-status.md docs\architecture\expert-technical-projection-v1-contract.md docs\architecture\official-product-primitives-public-projections.md backend\tests\unit\test_expert_technical_projection_contract.py
+  Result: PASS. Exit 0; line-ending warnings only.
+
+Post-implementation brief-alignment correction:
+
+- Finding: `docs\architecture\product-architecture-current-state-2026-05-24.md` still called `expert_technical_projection` a public expert projection and
+  future public API/frontend surface, contradicting CS-273 brief reclassification.
+
+- Correction: current-state wording now classifies the expert projection as internal-only, non client, ADMIN/future ASTRO_EXPERT target-only, with no B2C
+  frontend/API exposure. The targeted CS-273 unit test now covers this document.
+
+- .\.venv\Scripts\Activate.ps1; ruff format --check backend\tests\unit\test_expert_technical_projection_contract.py; ruff check backend\tests\unit\test_expert_technical_projection_contract.py; python -B -m pytest -q backend\tests\unit\test_expert_technical_projection_contract.py backend\tests\architecture\test_api_contract_neutrality.py --tb=short
+  Result: FAIL first pass. 25 passed, 1 failed because the new assertion forbade `public_api future, frontend future` repo-wide and caught the valid
+  beginner-summary row. Test was narrowed to lines mentioning `expert_technical_projection`.
+
+- .\.venv\Scripts\Activate.ps1; ruff format --check backend\tests\unit\test_expert_technical_projection_contract.py; ruff check backend\tests\unit\test_expert_technical_projection_contract.py; python -B -m pytest -q backend\tests\unit\test_expert_technical_projection_contract.py backend\tests\architecture\test_api_contract_neutrality.py --tb=short; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; assert 'expert_technical_projection_v1' not in str(app.openapi()); assert all('expert_technical_projection' not in getattr(r, 'path', '') for r in app.routes)"
+  Result: PASS. 26 passed; Ruff format check and lint passed; OpenAPI/routes neutrality command passed.
+
+- .\.venv\Scripts\Activate.ps1; rg -n "expert_technical_projection_v1|ADMIN|ASTRO_EXPERT|non client|interne|not client-safe|internal|B2C" .\docs .\_story_briefs; rg -n "Expert public projection|Public expert projection needs field selection|Define expert technical public projection contract" docs\architecture\product-architecture-current-state-2026-05-24.md
+  Result: PASS. Required alignment terms found; stale public expert wording absent from current-state synthesis.
+
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract\00-story.md; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract\00-story.md
+  Result: PASS. CONDAMAD story validation and strict lint passed.
+
+- git diff --check -- _condamad\stories\CS-273-expert-technical-projection-v1-internal-contract _condamad\stories\story-status.md docs\architecture\expert-technical-projection-v1-contract.md docs\architecture\official-product-primitives-public-projections.md docs\architecture\product-architecture-current-state-2026-05-24.md backend\tests\unit\test_expert_technical_projection_contract.py
+  Result: PASS. Exit 0; line-ending warnings only.

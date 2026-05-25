@@ -1,0 +1,87 @@
+{
+  "disclaimer_codes": [
+    "ASTROLOGY_GENERAL_LIMITATION"
+  ],
+  "excluded_surfaces": [
+    "audit_internals",
+    "debug_traces",
+    "expert_technical_projection_v1",
+    "full_structured_facts",
+    "prompt_payloads",
+    "provider_responses",
+    "raw_runtime_objects",
+    "technical_scores"
+  ],
+  "interpretive_signals": [
+    "dignity_codes:asc",
+    "dignity_codes:moon"
+  ],
+  "plan": "free",
+  "plan_variant": "free",
+  "projection_id": "client_interpretation_projection_v1",
+  "sections": [
+    {
+      "code": "orientation_generale",
+      "depth": "free_short",
+      "display_hint": "short",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel",
+        "theme dominant mars"
+      ]
+    },
+    {
+      "code": "points_forts",
+      "depth": "free_short",
+      "display_hint": "short",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel",
+        "theme dominant mars"
+      ]
+    },
+    {
+      "code": "limite_de_lecture",
+      "depth": "free_short",
+      "display_hint": "short",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel"
+      ]
+    },
+    {
+      "code": "upgrade_hint",
+      "depth": "free_short",
+      "display_hint": "upgrade",
+      "source_labels": [
+        "ascendant",
+        "position principale",
+        "ressenti personnel"
+      ]
+    }
+  ],
+  "source_projection": "structured_facts_v1",
+  "source_projection_id": "structured_facts_v1",
+  "state": "normal",
+  "support_elements": [
+    {
+      "code": "confidence_wording",
+      "value": "lecture forte"
+    },
+    {
+      "code": "source_label",
+      "value": "ascendant"
+    },
+    {
+      "code": "source_label",
+      "value": "ressenti personnel"
+    },
+    {
+      "code": "highlight",
+      "value": "theme dominant mars"
+    }
+  ]
+}

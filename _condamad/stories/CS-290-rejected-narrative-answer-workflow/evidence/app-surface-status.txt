@@ -1,0 +1,7 @@
+CS-290 application surface status, 2026-05-25.
+
+PASS: No public or admin route was added for rejected narrative answers.
+PASS: app.openapi() does not expose rejected_narrative_answer.
+PASS: app.routes contains no rejected-narrative route.
+PASS: frontend/src was not modified.
+PASS: generated OpenAPI clients were not modified.

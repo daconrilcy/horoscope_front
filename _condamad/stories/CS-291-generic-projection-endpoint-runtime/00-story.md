@@ -1,5 +1,5 @@
 # Story CS-291 generic-projection-endpoint-runtime: Implement Generic Projection Endpoint
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

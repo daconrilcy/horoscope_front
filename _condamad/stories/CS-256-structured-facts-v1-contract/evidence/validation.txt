@@ -1,0 +1,59 @@
+CS-256 validation transcript
+============================
+
+Environment:
+- Repository: C:\dev\horoscope_front
+- Python commands executed after `. .\.venv\Scripts\Activate.ps1`
+
+Preflight:
+- `git status --short`: PASS, clean.
+- `condamad_prepare.py ... --story-key CS-256-structured-facts-v1-contract`: PASS.
+- `condamad_validate.py _condamad\stories\CS-256-structured-facts-v1-contract`: PASS.
+
+Contract path:
+- `python -B -c "from pathlib import Path; assert Path('docs/architecture/structured-facts-v1-contract.md').exists()"`: PASS.
+
+Required scans:
+- `rg -n "structured_facts_v1|stable|hashable|non narrative" docs\architecture\structured-facts-v1-contract.md`: PASS.
+- `rg -n "positions|houses|major aspects|dominants|source metadata" docs\architecture\structured-facts-v1-contract.md`: PASS.
+- `rg -n "stable ordering|deterministic serialization|hash input boundary|AI audit" docs\architecture\structured-facts-v1-contract.md`: PASS.
+- `rg -n "AINarrativeInputContract|downstream|reference|calculation truth" docs\architecture\structured-facts-v1-contract.md`: PASS.
+- `rg -n "ChartObjectRuntimeData|chart_objects|debug raw traces|internal payloads" docs\architecture\structured-facts-v1-contract.md`: PASS.
+- `rg -n "B2C|optionnel|product projection" docs\architecture\structured-facts-v1-contract.md`: PASS.
+
+Application neutrality:
+- From `backend`: `python -B -c "from app.main import app; assert 'structured_facts_v1' not in str(app.openapi())"`: PASS.
+- From `backend`: `python -B -c "from app.main import app; assert all('structured_facts' not in getattr(r, 'path', '') for r in app.routes)"`: PASS.
+- `git status --short -- backend\app frontend\src`: PASS, no output.
+
+Quality checks:
+- From `backend`: `ruff check .`: PASS, all checks passed.
+- From `backend`: `python -B -m pytest -q --tb=short`: first run timed out at 5 minutes; rerun with longer timeout PASS, 3236 passed, 1 skipped, 1182 deselected in 344.18s.
+
+Skipped:
+- `ruff format <python files>`: not applicable because no Python files changed.
+- Frontend and browser validations: not applicable because no frontend file or user-facing route changed.
+
+Cache cleanup:
+- Removed known `.pytest_cache` / `.ruff_cache` paths when present under the workspace.
+
+Review correction cycle 1:
+- Finding category: stale generated evidence placeholders and stale earlier-review/status evidence.
+- Fixed files: `00-story.md`, generated target files, validation plan, guardrails, final evidence, review evidence and tracker row.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-256-structured-facts-v1-contract\00-story.md`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-256-structured-facts-v1-contract\00-story.md`: PASS.
+- Stale placeholder/status scan over CS-256 story artifacts and the contract document: PASS, no output.
+- From `backend`: `python -B -c "from app.main import app; assert 'structured_facts_v1' not in str(app.openapi())"`: PASS.
+- From `backend`: `python -B -c "from app.main import app; assert all('structured_facts' not in getattr(r, 'path', '') for r in app.routes)"`: PASS.
+- `git status --short -- backend\app frontend\src`: PASS, no output.
+- From `backend`: `ruff check .`: PASS, all checks passed.
+- `git diff --check` on CS-256 story artifacts, tracker row and contract document: PASS; only line-ending warnings reported.
+
+Review correction cycle 2:
+- Finding category: generated traceability evidence shape drift introduced while shortening long lines.
+- `condamad_validate.py _condamad\stories\CS-256-structured-facts-v1-contract`: FAIL; traceability table was missing required columns.
+- Fix: restored a minimal `AC`, `Requirement`, `Status` table and kept detailed AC evidence below it.
+- Line-length scan over CS-256 capsule artifacts: PASS, no output.
+- Stale placeholder/status scan over CS-256 story artifacts and the contract document: PASS, no output.
+- `condamad_validate.py _condamad\stories\CS-256-structured-facts-v1-contract`: PASS after fix.
+- Fresh implementation review: CLEAN.

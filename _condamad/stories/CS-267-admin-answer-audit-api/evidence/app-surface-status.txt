@@ -1,0 +1,22 @@
+CS-267 scoped app surface status
+
+Command:
+git status --short -- backend/app frontend/src
+
+Result:
+ M backend/app/domain/astrology/interpretation/ai_narrative_input_contracts.py
+ M backend/app/infra/db/models/__init__.py
+?? backend/app/tests/integration/test_admin_answer_audit_contract.py
+ M backend/app/tests/integration/test_api_openapi_contract.py
+ M backend/app/tests/unit/test_backend_db_test_harness.py
+ M backend/app/tests/unit/test_backend_services_structure_guard.py
+?? backend/app/domain/astrology/projections/
+?? backend/app/infra/db/models/projection_persistence.py
+?? backend/app/infra/db/repositories/projection_repository.py
+?? backend/app/services/projection_persistence_service.py
+
+Classification:
+- Pre-existing unrelated dirty worktree observed before CS-267 implementation.
+- CS-267 added only `backend/app/tests/integration/test_admin_answer_audit_contract.py` under the documented pytest root.
+- CS-267 did not add or modify backend/app runtime source files or frontend/src files.
+- Runtime neutrality is proven by targeted pytest over app.routes, app.openapi(), and TestClient.

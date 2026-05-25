@@ -1,5 +1,5 @@
 # Story CS-267 admin-answer-audit-api: Define admin_answer_audit_v1 Admin API
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -120,7 +120,7 @@ frontend admin UI, replay workflow, client access, or calculation debug coupling
 | AC7 | Rejected answers are consultable. | Evidence profile: json_contract_shape; `rg` checks rejected status and rejection_reason. |
 | AC8 | Chart diagnostics stay separate. | Evidence profile: targeted_forbidden_symbol_scan; `rg` checks admin_chart_diagnostics_v1 separation. |
 | AC9 | Runtime route exposure is unchanged. | Evidence profile: runtime_openapi_contract; `python` checks `app.routes` and `app.openapi()`. |
-| AC10 | Protected route behavior is specified. | Evidence profile: runtime_openapi_contract; `pytest -q backend/tests/api/admin/test_answer_audit_contract.py`. |
+| AC10 | Protected route behavior is specified. | Evidence profile: runtime_openapi_contract; `pytest -q backend/app/tests/integration/test_admin_answer_audit_contract.py`. |
 | AC11 | Application source surfaces remain unchanged. | Evidence profile: repo_wide_negative_scan; `python` records scoped git status output. |
 | AC12 | Evidence artifacts are persisted. | Evidence profile: baseline_before_after_diff; `python` checks CS-267 evidence paths. |
 
@@ -236,7 +236,7 @@ frontend admin UI, replay workflow, client access, or calculation debug coupling
   - `backend/app/api/v1/routers/admin/logs.py`
 - Comparison after implementation:
   - `docs/architecture/admin-answer-audit-api.md`
-  - `backend/tests/api/admin/test_answer_audit_contract.py`
+  - `backend/app/tests/integration/test_admin_answer_audit_contract.py`
   - `_condamad/stories/CS-267-admin-answer-audit-api/evidence/validation.txt`
   - `_condamad/stories/CS-267-admin-answer-audit-api/evidence/app-surface-status.txt`
 - Expected invariant:
@@ -294,7 +294,7 @@ frontend admin UI, replay workflow, client access, or calculation debug coupling
   - `python` checks `app.routes` for forbidden route paths.
   - `python` checks `app.openapi()` for no client exposure.
   - `rg` checks the contract and tests for masking and diagnostic separation.
-  - `pytest -q backend/tests/api/admin/test_answer_audit_contract.py` runs the `TestClient` contract suite.
+  - `pytest -q backend/app/tests/integration/test_admin_answer_audit_contract.py` runs the `TestClient` contract suite.
 
 ## Regression Guardrails
 
@@ -332,14 +332,14 @@ frontend admin UI, replay workflow, client access, or calculation debug coupling
 Likely files:
 
 - `docs/architecture/admin-answer-audit-api.md` - define the canonical protected admin API contract.
-- `backend/tests/api/admin/test_answer_audit_contract.py` - cover route exposure, OpenAPI and masking contract checks.
+- `backend/app/tests/integration/test_admin_answer_audit_contract.py` - cover route exposure, OpenAPI and masking contract checks.
 - `_condamad/stories/CS-267-admin-answer-audit-api/evidence/validation.txt` - persist validation output.
 - `_condamad/stories/CS-267-admin-answer-audit-api/evidence/app-surface-status.txt` - persist scoped status output.
 - `_condamad/stories/CS-267-admin-answer-audit-api/evidence/source-checklist.md` - persist source coverage.
 
 Likely tests:
 
-- `backend/tests/api/admin/test_answer_audit_contract.py` - `TestClient`, `app.routes` and `app.openapi()` contract checks.
+- `backend/app/tests/integration/test_admin_answer_audit_contract.py` - `TestClient`, `app.routes` and `app.openapi()` contract checks.
 
 Files not expected to change:
 
@@ -362,7 +362,7 @@ Files not expected to change:
 - VC5: `rg -n "masked birth data|birth_date|birth_time|birth_place|birth_lat|birth_lon|birth_timezone" docs/architecture/admin-answer-audit-api.md`
 - VC6: `rg -n "401|403|404|503|require_admin_user|admin-only" docs/architecture/admin-answer-audit-api.md`
 - VC7: `rg -n "admin_chart_diagnostics_v1|calculation debug|client endpoint|replay" docs/architecture/admin-answer-audit-api.md`
-- VC8: `pytest -q backend/tests/api/admin/test_answer_audit_contract.py`
+- VC8: `pytest -q backend/app/tests/integration/test_admin_answer_audit_contract.py`
 - VC9: `python -c "from app.main import app; assert all('/v1/users/me/answer-audits' not in getattr(r, 'path', '') for r in app.routes)"`
 - VC10: `python -c "from app.main import app; assert '/v1/users/me/answer-audits' not in str(app.openapi())"`
 - VC11: `python -c "from pathlib import Path; assert Path('_condamad/stories/CS-267-admin-answer-audit-api/evidence/validation.txt').exists()"`

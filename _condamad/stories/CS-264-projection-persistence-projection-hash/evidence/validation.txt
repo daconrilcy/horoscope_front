@@ -1,0 +1,34 @@
+Validation summary for CS-264 review/fix iteration 1:
+
+PASS - ruff format on changed Python paths.
+PASS - python -B -m pytest -q tests\unit\projections\test_projection_hash.py tests\unit\projections\test_projection_persistence.py tests\unit\projections\test_projection_builder_gate.py --tb=short
+       Result: 4 passed.
+FAIL then FIXED - ruff check .
+       Initial result: import sorting issue in tests\unit\projections\test_projection_persistence.py.
+       Fix: ruff check tests\unit\projections\test_projection_persistence.py --fix and ruff format.
+PASS - python -B -m pytest -q tests\unit\projections tests\integration\test_projection_persistence_schema.py tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py --tb=short
+       Result: 11 passed, 2 deselected.
+PASS - app.routes/app.openapi runtime check.
+       Result: 221 routes, 193 OpenAPI paths, no projection persistence exposure.
+PASS - targeted fake/synthetic/fallback projection scan.
+PASS - targeted API route exposure scan.
+PASS - ruff check .
+       Result: All checks passed.
+PASS - python -B -m pytest -q --tb=short
+       Result: 3243 passed, 1 skipped, 1184 deselected.
+PASS - python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-264-projection-persistence-projection-hash\00-story.md
+       Result: CONDAMAD story validation: PASS.
+PASS - python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-264-projection-persistence-projection-hash\00-story.md
+       Result: CONDAMAD story lint: PASS.
+
+All Python commands were run after activating .\.venv\Scripts\Activate.ps1.
+
+Review/fix corrections validated:
+
+- Removed duplicated JSON normalization from projection persistence service by reusing the canonical projection hash module.
+- Stored source versions through the existing AINarrativeSourceVersions contract instead of an ad hoc dict in the persistence test.
+- Added evidence/source-checklist.md to prove builder selection and boundary checks.
+
+Skipped:
+
+- Frontend validation, by explicit story scope: no frontend files or public API clients changed.

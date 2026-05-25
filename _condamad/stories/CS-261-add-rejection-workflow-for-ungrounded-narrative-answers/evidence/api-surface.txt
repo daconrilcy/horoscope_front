@@ -1,0 +1,3 @@
+openapi_paths_count= 193
+routes_count= 221
+forbidden_rejection_paths= []

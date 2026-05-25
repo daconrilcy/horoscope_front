@@ -1,0 +1,74 @@
+{
+  "allowed_fields": [
+    "ascendant",
+    "dominant_house",
+    "dominant_themes",
+    "main_signs"
+  ],
+  "ascendant": {
+    "code": "ascendant",
+    "value": "cancer"
+  },
+  "audience": [
+    "basic",
+    "beginner",
+    "free",
+    "public-user"
+  ],
+  "disclaimer_codes": [
+    "ASTROLOGY_GENERAL_LIMITATION"
+  ],
+  "display_messages": [
+    {
+      "code": "BGS_NORMAL",
+      "message": "Votre resume debutant est disponible."
+    }
+  ],
+  "dominant_house": {
+    "code": "dominant_house",
+    "value": 1
+  },
+  "dominant_themes": [
+    {
+      "code": "mars",
+      "label": "mars"
+    }
+  ],
+  "excluded_surfaces": [
+    "audit_details",
+    "debug_traces",
+    "evidence_refs",
+    "full_structured_facts",
+    "internal_payloads",
+    "technical_scores"
+  ],
+  "main_signs": [
+    {
+      "code": "moon_sign",
+      "value": "taurus"
+    },
+    {
+      "code": "sun_sign",
+      "value": "aries"
+    }
+  ],
+  "message_code": "BGS_NORMAL",
+  "projection_id": "beginner_summary_v1",
+  "source_projection": "structured_facts_v1",
+  "source_projection_id": "structured_facts_v1",
+  "state": "normal",
+  "summary_items": [
+    {
+      "code": "moon_sign",
+      "value": "taurus"
+    },
+    {
+      "code": "sun_sign",
+      "value": "aries"
+    },
+    {
+      "code": "dominant_theme:mars",
+      "value": "mars"
+    }
+  ]
+}

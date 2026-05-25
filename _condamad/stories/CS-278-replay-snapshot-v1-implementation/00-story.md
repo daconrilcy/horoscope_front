@@ -1,6 +1,8 @@
 # Story CS-278 replay-snapshot-v1-implementation: Implement replay_snapshot_v1 After Approval
 Status: ready-to-dev
 
+Implementation review status: blocked before backend implementation until CS-277 has a written DPO/security approval artifact.
+
 ## Trigger / Source
 
 - Source type: brief direct with repository-informed boundary.

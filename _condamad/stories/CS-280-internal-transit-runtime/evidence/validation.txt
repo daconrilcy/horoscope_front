@@ -1,0 +1,19 @@
+CS-280 validation summary, 2026-05-25
+
+PASS: condamad_prepare.py --repair-generated-only _condamad/stories/CS-280-internal-transit-runtime --root C:/dev/horoscope_front
+PASS: condamad_validate.py _condamad/stories/CS-280-internal-transit-runtime
+PASS: condamad_story_validate.py _condamad/stories/CS-280-internal-transit-runtime/00-story.md
+PASS: condamad_story_lint.py --strict _condamad/stories/CS-280-internal-transit-runtime/00-story.md
+PASS: ruff format --check .
+PASS: ruff check .
+PASS: python -B -m pytest -q tests/unit/domain/astrology/test_transit_chart_runtime.py --tb=short
+PASS: python -B -m pytest -q tests/unit/domain/astrology/test_transit_chart_runtime.py tests/architecture/test_api_contract_neutrality.py tests/architecture/test_astrology_doctrine_governance_guardrails.py tests/architecture/test_astrology_runtime_boundary.py --tb=short
+PASS: python -B -m pytest -q app/tests/unit/test_backend_quality_test_ownership.py tests/unit/test_replay_snapshot_v1_storage_security_model.py --tb=short
+PASS: app.openapi() absence of transit_chart_v1
+PASS: app.routes absence of transit route paths
+PASS: TestClient /openapi.json smoke
+PASS: rg API/frontend/migrations forbidden runtime symbols returned no matches
+PASS: rg API/frontend forbidden route fragments returned no matches
+PASS: python -B -m pytest -q --tb=short
+
+Full backend pytest result: 3315 passed, 1 skipped, 1195 deselected in 395.87s.

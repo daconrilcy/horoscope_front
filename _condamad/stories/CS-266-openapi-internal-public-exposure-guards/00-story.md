@@ -1,5 +1,5 @@
 # Story CS-266 openapi-internal-public-exposure-guards: Add OpenAPI Internal Public Exposure Guards
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

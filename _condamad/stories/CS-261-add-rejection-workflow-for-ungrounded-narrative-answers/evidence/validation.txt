@@ -1,0 +1,83 @@
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:21:1. Définir les conditions de passage à `rejected`.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:26:6. Définir que le client reçoit un message contrôlé, jamais la réponse IA brute.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:27:7. Préciser que tout retry éventuel reste une décision de future story.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:34:- Créer une file de retry.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:38:1. Le statut `rejected` est défini comme état terminal auditable.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:39:2. La réponse rejetée est conservée pour analyse interne.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:43:6. Le retry n'est pas implémenté par cette story.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:49:rg -n "rejected|ungrounded|rejection_reason|réponse rejetée|message contrôlé|retry|audit" .\docs .\_story_briefs
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:55:- CS-259 pour `narrative_answer_audit_v1`.
+_story_briefs\cs-261-add-rejection-workflow-for-ungrounded-narrative-answers.md:56:- CS-260 pour `evidence_refs`.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:1:<!-- Commentaire global: ce document fixe le workflow canonique de rejet des reponses narratives non fondees sans creer de surface runtime, API, DB, frontend ou retry. -->
+docs\architecture\ungrounded-narrative-rejection-workflow.md:3:# Workflow `ungrounded_narrative_rejection_workflow`
+docs\architecture\ungrounded-narrative-rejection-workflow.md:5:`ungrounded_narrative_rejection_workflow` definit le traitement auditable d'une reponse narrative LLM qui ne peut pas etre rattachee aux preuves attendues.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:6:Il complete `narrative_answer_audit_v1` pour le statut d'audit et reutilise `evidence_refs` pour la validite des preuves, sans devenir proprietaire du calcul astrologique, des prompts, du provider, de la persistence ou d'une projection client.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:9:Il ne cree pas de table, migration, repository, route API, schema OpenAPI, serializer, client frontend, ecran admin, prompt template, appel provider, file de retry ou mecanisme de retry.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:15:| `workflow_id` | Valeur exacte: `ungrounded_narrative_rejection_workflow`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:16:| `answer_id` | Identifiant unique de la reponse narrative auditee. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:17:| `answer_type` | Categorie de reponse heritee de `narrative_answer_audit_v1`: `basic`, `premium`, `long`, `sensitive` ou `free_short`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:18:| `grounding_status` | Etat d'audit avant rejet, generalement `ungrounded`, ou resultat equivalent issu de preuves invalides. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:19:| `status` | Valeur terminale exacte: `rejected`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:21:Le statut `rejected` est un etat terminal auditable.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:22:Une fois applique, il ne peut pas redevenir `grounded`, `partial`, `ungrounded` ou `not_checked` dans le meme cycle de generation.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:23:Toute tentative future de produire une autre narration doit creer une nouvelle generation auditee, avec un nouvel audit ou une nouvelle version explicitement reliee.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:27:La transition vers `rejected` est autorisee uniquement lorsque l'audit prouve qu'une reponse ne doit pas etre exposee au client.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:32:| `grounding_status` vaut `ungrounded` dans `narrative_answer_audit_v1`. | La reponse passe a `status: rejected`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:33:| Une ou plusieurs `evidence_refs` attendues sont invalides avec `missing_source`, `unsupported_source_type`, `missing_hash` ou `hash_mismatch`. | La reponse passe a `status: rejected` si la section concernee supporte une affirmation client importante. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:34:| Une section auditee devient `unfounded` faute de preuve valide et hashable. | La reponse passe a `status: rejected` si la prose ne peut pas etre corrigee sans nouvelle generation. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:35:| La provenance LLM minimale est absente: prompt, provider, model, `llm_input_hash` ou `projection_hash`. | La reponse passe a `status: rejected` parce que l'audit ne peut pas verifier la narration. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:38:Une preuve manquante ou invalide reste visible dans l'audit admin.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:42:La réponse rejetée est conservee pour analyse interne seulement.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:43:Le champ `raw_answer_storage` retient le contenu brut rejete afin que l'equipe habilitee puisse diagnostiquer l'ecart entre narration, prompt, provider, model et preuves.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:47:| `raw_answer_storage` | Contenu brut de la reponse IA rejetee, stocke en perimetre interne protege. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:48:| `evidence_refs` | References de preuves controlees et leur etat de validation au moment du rejet. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:49:| `audit_metadata.source` | Source fonctionnelle de la generation ou du cas d'usage. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:50:| `audit_metadata.prompt` | Reference de prompt ou snapshot autorise par `narrative_answer_audit_v1`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:51:| `audit_metadata.provider` | Identifiant interne du provider LLM. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:52:| `audit_metadata.model` | Identifiant interne du modele utilise. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:53:| `audit_metadata.projection_hash` | Hash stable de la projection factuelle auditee. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:54:| `audit_metadata.llm_input_hash` | Hash stable de l'entree LLM auditee. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:57:Elles servent au diagnostic, a l'analyse qualite, a la revue admin future et a la preuve d'audit.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:61:Le champ `client_message` contient un message controle et supportable par le service client.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:62:Il ne doit jamais inclure `raw_answer_storage`, la reponse IA brute, le prompt, les hashes, les details provider ou les lignes d'audit.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:68:  "client_message": "Nous ne pouvons pas afficher cette interpretation car sa fiabilite n'a pas pu etre confirmee. Notre support peut vous aider si le probleme persiste."
+docs\architecture\ungrounded-narrative-rejection-workflow.md:73:le client recoit un message contrôlé, jamais la reponse non fondee ni la reponse IA brute rejetee.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:77:`rejection_reason` est obligatoire et doit prendre une valeur structuree, recherchable et stable.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:81:| `ungrounded_claim` | Une affirmation narrative importante ne peut pas etre rattachee aux faits ou preuves attendus. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:83:| `unsupported_evidence_source` | Une preuve pointe vers un `source_type` non autorise par `evidence_refs`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:95:- `rejection_reason`;
+docs\architecture\ungrounded-narrative-rejection-workflow.md:98:- `evidence_refs.validation_state`;
+docs\architecture\ungrounded-narrative-rejection-workflow.md:99:- `audit_metadata.source`;
+docs\architecture\ungrounded-narrative-rejection-workflow.md:100:- `audit_metadata.provider`;
+docs\architecture\ungrounded-narrative-rejection-workflow.md:101:- `audit_metadata.model`;
+docs\architecture\ungrounded-narrative-rejection-workflow.md:102:- `audit_metadata.projection_hash`;
+docs\architecture\ungrounded-narrative-rejection-workflow.md:103:- `audit_metadata.llm_input_hash`;
+docs\architecture\ungrounded-narrative-rejection-workflow.md:109:Le `log_event` canonique est `narrative_answer_rejected`.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:113:| `event_type` | Valeur exacte: `narrative_answer_rejected`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:114:| `workflow_id` | `ungrounded_narrative_rejection_workflow`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:115:| `answer_id` | Identifiant de reponse auditee. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:117:| `rejection_reason` | Valeur structuree obligatoire. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:118:| `grounding_status` | Etat avant rejet, par exemple `ungrounded`. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:127:Les payloads d'alerte ne contiennent pas la reponse brute rejetee; ils referencent l'audit interne par identifiants et hashes masques si necessaire.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:131:`privacy_controls` est obligatoire et doit couvrir:
+docs\architecture\ungrounded-narrative-rejection-workflow.md:136:| `access_scope` | Restreindre `raw_answer_storage`, `rejection_detail`, prompt et metadonnees provider aux roles internes habilites: audit, qualite, support escalade ou securite. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:137:| `client_exposure` | Exposer uniquement `client_message` ou une projection publique future explicitement approuvee. |
+docs\architecture\ungrounded-narrative-rejection-workflow.md:142:## Politique de retry
+docs\architecture\ungrounded-narrative-rejection-workflow.md:144:`retry_policy` prend la valeur exacte `future_story_decision`.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:145:Cette story ne cree pas de retry queue, de retry automatique, de fallback provider, de re-generation silencieuse ou de bouton admin de relance.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:147:Toute strategie de retry devra etre traitee par une story dediee, avec contrat de persistence, droits admin, limitation de tentatives, observabilite et preuve anti-boucle.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:151:`debug_boundary` separe ce workflow des donnees de calcul astrologique et des traces runtime de calcul.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:152:Le workflow peut referencer des identifiants d'audit, des hashes de projection et des `evidence_refs`, mais il ne stocke pas de payload debug de calcul, ne lit pas les traces de calcul comme source de preuve narrative et ne modifie pas les logs d'astrology runtime.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:155:Les diagnostics de rejet narratif restent dans `ungrounded_narrative_rejection_workflow`, `narrative_answer_audit_v1`, `evidence_refs` et l'observabilite LLM runtime existante.
+docs\architecture\ungrounded-narrative-rejection-workflow.md:161:  "workflow_id": "ungrounded_narrative_rejection_workflow",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:164:  "grounding_status": "ungrounded",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:165:  "status": "rejected",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:166:  "rejection_reason": "evidence_hash_mismatch",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:168:  "raw_answer_storage": "internal_only_retained_rejected_ai_answer",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:169:  "evidence_refs": [
+docs\architecture\ungrounded-narrative-rejection-workflow.md:175:  "audit_metadata": {
+docs\architecture\ungrounded-narrative-rejection-workflow.md:183:  "client_message": "Nous ne pouvons pas afficher cette interpretation car sa fiabilite n'a pas pu etre confirmee. Notre support peut vous aider si le probleme persiste.",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:185:    "event_type": "narrative_answer_rejected",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:192:  "privacy_controls": {
+docs\architecture\ungrounded-narrative-rejection-workflow.md:197:  "retry_policy": "future_story_decision",
+docs\architecture\ungrounded-narrative-rejection-workflow.md:198:  "debug_boundary": "separate_from_calculation_debug_and_astrology_runtime_traces"

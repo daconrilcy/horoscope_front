@@ -1,0 +1,68 @@
+CS-265 validation evidence - 2026-05-24
+
+Commands run:
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-265-projection-versioning-incompatibility-policy\00-story.md --root . --story-key CS-265-projection-versioning-incompatibility-policy
+  Result: PASS; generated capsule files created.
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-265-projection-versioning-incompatibility-policy
+  Result: PASS before implementation.
+- .\.venv\Scripts\Activate.ps1; ruff format backend\tests\architecture\test_api_contract_neutrality.py
+  Result: PASS; 1 file left unchanged.
+- Targeted rg checks for projection_version, v1/v2, dépréciée, source_versions, incompatible, recalcul, mandatory, breaking, unknown/deprecated blocking, admin log, backward compatibility, stable public API and B2B.
+  Result: PASS.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -c "from app.main import app; assert '/v1/astrology/projections' not in app.openapi().get('paths', {})"
+  Result: PASS.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -c "from app.main import app; assert all(getattr(r, 'path', '') != '/v1/astrology/projections' for r in app.routes)"
+  Result: PASS.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py --tb=short
+  First result: FAIL; missing exact guard strings "admin log", "silent" and "unknown".
+  Final result: PASS; 17 passed in 3.50s after policy wording correction.
+- rg -n "projection-versioning-incompatibility-policy|ProjectionVersioningPolicy|unknown projection version|deprecated projection version" backend\app frontend\src
+  Result: PASS; no matches in app roots. Exit code 1 treated as expected absence.
+- git diff --check -- docs/architecture/projection-versioning-incompatibility-policy.md backend/tests/architecture/test_api_contract_neutrality.py
+  Result: PASS; only CRLF warnings from Git.
+- .\.venv\Scripts\Activate.ps1; ruff check .
+  Result: PASS; All checks passed.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q --tb=short
+  Result: PASS; 3245 passed, 1 skipped, 1184 deselected in 209.93s.
+
+Fresh implementation review validations:
+- .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-265-projection-versioning-incompatibility-policy
+  Result: PASS.
+- .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-265-projection-versioning-incompatibility-policy\00-story.md
+  Result: PASS.
+- .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-265-projection-versioning-incompatibility-policy\00-story.md
+  Result: PASS.
+- rg -n "projection_version|v1|v2|dépréciée|source_versions|incompatible|recalcul" .\docs .\_story_briefs
+  Result: PASS.
+- git status --short -- backend/app frontend/src
+  Result: expected pre-existing dirty backend/app entries only; frontend/src clean.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -c "from app.main import app; assert '/v1/astrology/projections' not in app.openapi().get('paths', {})"
+  Result: PASS.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -c "from app.main import app; assert all(getattr(r, 'path', '') != '/v1/astrology/projections' for r in app.routes)"
+  Result: PASS.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py --tb=short
+  Result: PASS; 17 passed in 5.12s.
+- .\.venv\Scripts\Activate.ps1; ruff check .
+  Result: PASS; All checks passed.
+- .\.venv\Scripts\Activate.ps1; ruff format --check .
+  Result: PASS; 1605 files already formatted.
+- .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q --tb=short
+  Result: PASS; 3245 passed, 1 skipped, 1184 deselected in 348.75s.
+- git diff --check -- docs/architecture/projection-versioning-incompatibility-policy.md backend/tests/architecture/test_api_contract_neutrality.py _condamad/stories/CS-265-projection-versioning-incompatibility-policy _condamad/stories/story-status.md
+  Result: PASS; Git reported CRLF normalization warnings only.
+- Final closure rerun after aligning `00-story.md` status with `story-status.md`:
+  - .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-265-projection-versioning-incompatibility-policy
+    Result: PASS.
+  - .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-265-projection-versioning-incompatibility-policy\00-story.md
+    Result: PASS.
+  - .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-265-projection-versioning-incompatibility-policy\00-story.md
+    Result: PASS.
+  - git diff --check -- _condamad/stories/CS-265-projection-versioning-incompatibility-policy _condamad/stories/story-status.md
+    Result: PASS; Git reported CRLF normalization warnings only.
+
+Invalid attempt, not counted as validation:
+- From workdir backend: .\.venv\Scripts\Activate.ps1; python -B -c "from app.main import app; assert '/v1/astrology/projections' not in app.openapi().get('paths', {})"
+  Result: invalid command context because the relative venv activation path was wrong from backend. The check was rerun from repo root with venv activation before Set-Location.
+
+Cache cleanup:
+- Removed known .pytest_cache and .ruff_cache directories under the workspace after validation when present.

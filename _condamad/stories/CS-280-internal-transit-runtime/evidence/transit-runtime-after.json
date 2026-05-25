@@ -1,0 +1,1116 @@
+{
+  "astronomical_proof_refs": [
+    "cs253-blocked-by-cs250-astronomical-proof",
+    "mode:swisseph",
+    "tolerance:swisseph-sensitive-v1",
+    "golden:paris-normal-placidus",
+    "golden:paris-dst-ambiguous",
+    "golden:paris-dst-nonexistent"
+  ],
+  "doctrine_limits": [
+    "aspect_rules:product-canonical:single-canonical-doctrine",
+    "interpretation_rules:needs-user-decision:needs-user-decision",
+    "public_copy:no-transit-text",
+    "fixed_stars:not-exposed",
+    "public_projection:blocked"
+  ],
+  "family_code": "transit_chart_v1",
+  "public_exposure": "blocked",
+  "trace": {
+    "contract_version": "transit-chart-runtime-v1",
+    "doctrine_limit_keys": [
+      "aspect_rules",
+      "interpretation_rules",
+      "public_copy",
+      "fixed_stars",
+      "public_projection"
+    ],
+    "family_code": "transit_chart_v1",
+    "keys": [
+      "run_id",
+      "family_code",
+      "contract_version",
+      "transiting_object_codes",
+      "relationship_codes",
+      "proof_ref_keys",
+      "doctrine_limit_keys",
+      "public_exposure"
+    ],
+    "proof_ref_keys": [
+      "cs253-blocked-by-cs250-astronomical-proof",
+      "mode:swisseph",
+      "tolerance:swisseph-sensitive-v1",
+      "golden:paris-normal-placidus",
+      "golden:paris-dst-ambiguous",
+      "golden:paris-dst-nonexistent"
+    ],
+    "public_exposure": "blocked",
+    "relationship_codes": [
+      "moon:trine:sun",
+      "sun:conjunction:moon"
+    ],
+    "run_id": "unit-run-001",
+    "transiting_object_codes": [
+      "sun",
+      "moon",
+      "asc",
+      "dsc",
+      "mc",
+      "ic",
+      "house_1_cusp",
+      "house_2_cusp",
+      "house_3_cusp",
+      "house_4_cusp",
+      "house_5_cusp",
+      "house_6_cusp",
+      "house_7_cusp",
+      "house_8_cusp",
+      "house_9_cusp",
+      "house_10_cusp",
+      "house_11_cusp",
+      "house_12_cusp"
+    ]
+  },
+  "transit_to_natal_relationships": [
+    {
+      "aspect": {
+        "aspect": {
+          "angle": 120.0,
+          "code": "trine",
+          "family": "major"
+        },
+        "metadata": {
+          "is_exact": false,
+          "is_major": true,
+          "is_tight": true
+        },
+        "modifiers": [
+          {
+            "applies_to": [
+              "moon",
+              "sun"
+            ],
+            "intensity": 0.75,
+            "modifier_type": "tight_orb",
+            "reason": null,
+            "source": "aspect_strength"
+          }
+        ],
+        "orb": {
+          "exact": 1.25,
+          "max": 7.0,
+          "ratio": 0.1786,
+          "strength_level": "dominant"
+        },
+        "participants": {
+          "planet_a": "moon",
+          "planet_b": "sun"
+        },
+        "phase": null,
+        "strength": {
+          "is_exact": false,
+          "is_tight": true,
+          "level": "dominant",
+          "normalized_score": 1.0,
+          "reasons": [
+            "major_aspect",
+            "tight_orb"
+          ]
+        }
+      },
+      "natal_object_code": "sun",
+      "relationship_code": "moon:trine:sun",
+      "source": "app.domain.astrology.builders.aspect_runtime_builder",
+      "transit_object_code": "moon"
+    },
+    {
+      "aspect": {
+        "aspect": {
+          "angle": 0.0,
+          "code": "conjunction",
+          "family": "major"
+        },
+        "metadata": {
+          "is_exact": true,
+          "is_major": true,
+          "is_tight": true
+        },
+        "modifiers": [
+          {
+            "applies_to": [
+              "sun",
+              "moon"
+            ],
+            "intensity": 1.0,
+            "modifier_type": "exact_orb",
+            "reason": null,
+            "source": "aspect_strength"
+          }
+        ],
+        "orb": {
+          "exact": 0.2,
+          "max": 8.0,
+          "ratio": 0.025,
+          "strength_level": "dominant"
+        },
+        "participants": {
+          "planet_a": "sun",
+          "planet_b": "moon"
+        },
+        "phase": null,
+        "strength": {
+          "is_exact": true,
+          "is_tight": true,
+          "level": "dominant",
+          "normalized_score": 1.0,
+          "reasons": [
+            "major_aspect",
+            "exact_orb"
+          ]
+        }
+      },
+      "natal_object_code": "moon",
+      "relationship_code": "sun:conjunction:moon",
+      "source": "app.domain.astrology.builders.aspect_runtime_builder",
+      "transit_object_code": "sun"
+    }
+  ],
+  "transiting_chart_objects": [
+    {
+      "capabilities": {
+        "supports_aspects": true,
+        "supports_dignities": true,
+        "supports_dominance": true,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": true,
+        "supports_motion": false,
+        "supports_rulership": true,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "luminary"
+      ],
+      "code": "sun",
+      "display_name": "Sun",
+      "latitude": null,
+      "longitude": 84.1,
+      "object_type": "luminary",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": null,
+        "house_position": {
+          "house_cusp_code": "house_10_cusp",
+          "house_cusp_longitude": null,
+          "house_modality": "angular",
+          "house_number": 10,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "sun",
+        "source_type": "ephemeris"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 24.099999999999994,
+        "sign_code": "gemini"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": true,
+        "supports_dignities": true,
+        "supports_dominance": true,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": true,
+        "supports_motion": false,
+        "supports_rulership": true,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "luminary"
+      ],
+      "code": "moon",
+      "display_name": "Moon",
+      "latitude": null,
+      "longitude": 102.5,
+      "object_type": "luminary",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": null,
+        "house_position": {
+          "house_cusp_code": "house_11_cusp",
+          "house_cusp_longitude": null,
+          "house_modality": "succedent",
+          "house_number": 11,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "moon",
+        "source_type": "ephemeris"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 12.5,
+        "sign_code": "cancer"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": true,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": true,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "angle"
+      ],
+      "code": "asc",
+      "display_name": "Ascendant",
+      "latitude": null,
+      "longitude": 0.0,
+      "object_type": "angle",
+      "payloads": {
+        "angle": {
+          "angle_code": "asc",
+          "associated_house": 1
+        },
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": null,
+        "house_position": {
+          "house_cusp_code": "house_1_cusp",
+          "house_cusp_longitude": 0.0,
+          "house_modality": "angular",
+          "house_number": 1,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:1",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": true,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": true,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "angle"
+      ],
+      "code": "dsc",
+      "display_name": "Descendant",
+      "latitude": null,
+      "longitude": 180.0,
+      "object_type": "angle",
+      "payloads": {
+        "angle": {
+          "angle_code": "dsc",
+          "associated_house": 7
+        },
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": null,
+        "house_position": {
+          "house_cusp_code": "house_7_cusp",
+          "house_cusp_longitude": 180.0,
+          "house_modality": "angular",
+          "house_number": 7,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:7",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": true,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": true,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "angle"
+      ],
+      "code": "mc",
+      "display_name": "Midheaven",
+      "latitude": null,
+      "longitude": 270.0,
+      "object_type": "angle",
+      "payloads": {
+        "angle": {
+          "angle_code": "mc",
+          "associated_house": 10
+        },
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": null,
+        "house_position": {
+          "house_cusp_code": "house_10_cusp",
+          "house_cusp_longitude": 270.0,
+          "house_modality": "angular",
+          "house_number": 10,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:10",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": true,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": true,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "angle"
+      ],
+      "code": "ic",
+      "display_name": "Imum Coeli",
+      "latitude": null,
+      "longitude": 90.0,
+      "object_type": "angle",
+      "payloads": {
+        "angle": {
+          "angle_code": "ic",
+          "associated_house": 4
+        },
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": null,
+        "house_position": {
+          "house_cusp_code": "house_4_cusp",
+          "house_cusp_longitude": 90.0,
+          "house_modality": "angular",
+          "house_number": 4,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:4",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_1_cusp",
+      "display_name": "House 1 cusp",
+      "latitude": null,
+      "longitude": 0.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 0.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 1
+        },
+        "house_position": {
+          "house_cusp_code": "house_1_cusp",
+          "house_cusp_longitude": 0.0,
+          "house_modality": "angular",
+          "house_number": 1,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:1",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_2_cusp",
+      "display_name": "House 2 cusp",
+      "latitude": null,
+      "longitude": 30.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 30.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 2
+        },
+        "house_position": {
+          "house_cusp_code": "house_2_cusp",
+          "house_cusp_longitude": 30.0,
+          "house_modality": "succedent",
+          "house_number": 2,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:2",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_3_cusp",
+      "display_name": "House 3 cusp",
+      "latitude": null,
+      "longitude": 60.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 60.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 3
+        },
+        "house_position": {
+          "house_cusp_code": "house_3_cusp",
+          "house_cusp_longitude": 60.0,
+          "house_modality": "cadent",
+          "house_number": 3,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:3",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_4_cusp",
+      "display_name": "House 4 cusp",
+      "latitude": null,
+      "longitude": 90.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 90.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 4
+        },
+        "house_position": {
+          "house_cusp_code": "house_4_cusp",
+          "house_cusp_longitude": 90.0,
+          "house_modality": "angular",
+          "house_number": 4,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:4",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_5_cusp",
+      "display_name": "House 5 cusp",
+      "latitude": null,
+      "longitude": 120.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 120.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 5
+        },
+        "house_position": {
+          "house_cusp_code": "house_5_cusp",
+          "house_cusp_longitude": 120.0,
+          "house_modality": "succedent",
+          "house_number": 5,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:5",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_6_cusp",
+      "display_name": "House 6 cusp",
+      "latitude": null,
+      "longitude": 150.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 150.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 6
+        },
+        "house_position": {
+          "house_cusp_code": "house_6_cusp",
+          "house_cusp_longitude": 150.0,
+          "house_modality": "cadent",
+          "house_number": 6,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:6",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_7_cusp",
+      "display_name": "House 7 cusp",
+      "latitude": null,
+      "longitude": 180.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 180.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 7
+        },
+        "house_position": {
+          "house_cusp_code": "house_7_cusp",
+          "house_cusp_longitude": 180.0,
+          "house_modality": "angular",
+          "house_number": 7,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:7",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_8_cusp",
+      "display_name": "House 8 cusp",
+      "latitude": null,
+      "longitude": 210.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 210.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 8
+        },
+        "house_position": {
+          "house_cusp_code": "house_8_cusp",
+          "house_cusp_longitude": 210.0,
+          "house_modality": "succedent",
+          "house_number": 8,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:8",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_9_cusp",
+      "display_name": "House 9 cusp",
+      "latitude": null,
+      "longitude": 240.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 240.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 9
+        },
+        "house_position": {
+          "house_cusp_code": "house_9_cusp",
+          "house_cusp_longitude": 240.0,
+          "house_modality": "cadent",
+          "house_number": 9,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:9",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_10_cusp",
+      "display_name": "House 10 cusp",
+      "latitude": null,
+      "longitude": 270.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 270.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 10
+        },
+        "house_position": {
+          "house_cusp_code": "house_10_cusp",
+          "house_cusp_longitude": 270.0,
+          "house_modality": "angular",
+          "house_number": 10,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:10",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_11_cusp",
+      "display_name": "House 11 cusp",
+      "latitude": null,
+      "longitude": 300.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 300.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 11
+        },
+        "house_position": {
+          "house_cusp_code": "house_11_cusp",
+          "house_cusp_longitude": 300.0,
+          "house_modality": "succedent",
+          "house_number": 11,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:11",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    },
+    {
+      "capabilities": {
+        "supports_aspects": false,
+        "supports_dignities": false,
+        "supports_dominance": false,
+        "supports_fixed_star_conjunction": false,
+        "supports_house_position": true,
+        "supports_interpretation": false,
+        "supports_motion": false,
+        "supports_rulership": false,
+        "supports_visibility": false
+      },
+      "classifications": [
+        "house_cusp"
+      ],
+      "code": "house_12_cusp",
+      "display_name": "House 12 cusp",
+      "latitude": null,
+      "longitude": 330.0,
+      "object_type": "house_cusp",
+      "payloads": {
+        "angle": null,
+        "dignity": null,
+        "dominance": null,
+        "fixed_star": null,
+        "fixed_star_conjunctions": [],
+        "house_cusp": {
+          "cusp_longitude": 330.0,
+          "cusp_sign": "aries",
+          "house_kind": null,
+          "house_number": 12
+        },
+        "house_position": {
+          "house_cusp_code": "house_12_cusp",
+          "house_cusp_longitude": 330.0,
+          "house_modality": "cadent",
+          "house_number": 12,
+          "source": "houses.runtime"
+        },
+        "motion": null,
+        "planetary_conditions": null,
+        "rulership": null,
+        "visibility": null
+      },
+      "source": {
+        "source_key": "house:12",
+        "source_type": "house_system"
+      },
+      "zodiac_position": {
+        "degree_in_sign": 0.0,
+        "sign_code": "aries"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+CS-258 validation evidence
+
+PASS:
+- Capsule prepared and validated with venv active.
+- CONDAMAD story validation passed after implementation-review cleanup:
+  `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-258-client-interpretation-projection-v1-by-plan\00-story.md`.
+- CONDAMAD strict story lint passed after implementation-review cleanup:
+  `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-258-client-interpretation-projection-v1-by-plan\00-story.md`.
+- Targeted contract scans found `client_interpretation_projection_v1`, free/basic/premium, narrative depth, support elements, `rédacteur`, runtime technique exclusions and expert exclusions.
+- OpenAPI assertion passed: `client_interpretation_projection_v1` is absent from `app.openapi()`.
+- Route assertion passed: no `client_interpretation` route path.
+- `git status --short -- backend/app frontend/src` returned no entries.
+- `ruff check .` from `backend` passed.
+- `python -B -m pytest -q --tb=short tests/unit/domain/astrology/interpretation/test_ai_narrative_input_contract.py` passed: 4 tests.
+- `python -B -m pytest -q --tb=short tests/architecture/test_ai_narrative_input_boundary.py tests/architecture/test_chart_interpretation_input_boundary.py` passed: 6 tests.
+- Required evidence files exist:
+  `evidence/validation.txt`, `evidence/app-surface-status.txt`, `evidence/source-checklist.md` and `generated/11-code-review.md`.
+
+LIMITATIONS:
+- Full backend `python -B -m pytest -q --tb=short` was not rerun during implementation-review cleanup because CS-258 is documentation-only,
+  earlier full-suite execution exceeded 5 minutes, and targeted checks plus OpenAPI/route neutrality cover the touched surface.
+- `tests/integration/astrology/test_natal_public_contract_compatibility.py` was fully deselected by pytest configuration (`3 deselected`).
+- No frontend/browser validation: story scope explicitly excludes frontend changes.

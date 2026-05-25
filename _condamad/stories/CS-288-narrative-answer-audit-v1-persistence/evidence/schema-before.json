@@ -1,0 +1,35 @@
+{
+  "table": "user_natal_interpretations",
+  "source": "pre-implementation inspection of backend/app/infra/db/models/user_natal_interpretation.py",
+  "columns": [
+    "id",
+    "user_id",
+    "chart_id",
+    "level",
+    "use_case",
+    "variant_code",
+    "persona_id",
+    "persona_name",
+    "prompt_version_id",
+    "interpretation_payload",
+    "was_fallback",
+    "degraded_mode",
+    "created_at"
+  ],
+  "missing_cs259_fields_before": [
+    "answer_id",
+    "answer_type",
+    "plan",
+    "projection_version",
+    "projection_hash",
+    "llm_input_version",
+    "llm_input_hash",
+    "prompt_version",
+    "prompt_ref",
+    "prompt_snapshot_ref",
+    "provider",
+    "model",
+    "grounding_status",
+    "evidence_refs"
+  ]
+}

@@ -1,0 +1,23 @@
+CS-277 validation evidence
+
+- Fresh review run: 2026-05-25.
+- `ruff format backend\tests\unit\test_replay_snapshot_v1_storage_security_model.py`: PASS, 1 file left unchanged.
+- `ruff check backend\tests\unit\test_replay_snapshot_v1_storage_security_model.py`: PASS, all checks passed.
+- `python -B -m pytest -q backend\tests\unit\test_replay_snapshot_v1_storage_security_model.py --tb=short`: PASS, 5 passed.
+- `python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in str(app.openapi())"` from `backend`: PASS.
+- `python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in {getattr(r, 'path', '') for r in app.routes}"` from `backend`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-277-replay-snapshot-v1-storage-security-model\00-story.md`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-277-replay-snapshot-v1-storage-security-model\00-story.md`: PASS.
+- `rg -n "replay_snapshot_v1|snapshot|stockage|sécurité|rétention|audit IA|diagnostics" docs _story_briefs`: PASS, found the CS-277 brief and architecture references.
+- `rg -n "replay_snapshot_v1" backend\app frontend\src backend\migrations`: PASS/no matches, exit code 1 expected for negative scan.
+- `git status --short -- backend\app frontend\src`: PASS for CS-277 scope; output contains unrelated pre-existing backend/app changes and no frontend/src change.
+- `git diff --check -- <CS-277 paths>`: PASS; only CRLF conversion warnings were emitted.
+- Final alignment evidence refreshed in `evidence\source-checklist.md`, `generated\03-acceptance-traceability.md`, `generated\10-final-evidence.md` and `generated\11-code-review.md`: PASS/CLEAN.
+
+All Python commands above were run after activating `.\.venv\Scripts\Activate.ps1` or `..\.venv\Scripts\Activate.ps1` from `backend`.
+
+Skipped:
+
+- Full `ruff check .`: skipped because scoped Python delta is one test file and many unrelated dirty files are already present.
+- Full pytest suite: skipped for dirty-worktree isolation; targeted contract and FastAPI runtime checks cover CS-277.
+- Local server start: skipped because this is documentation-only; FastAPI app loaded successfully in runtime checks and TestClient.

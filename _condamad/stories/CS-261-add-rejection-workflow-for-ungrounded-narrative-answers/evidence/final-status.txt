@@ -1,0 +1,11 @@
+ M _condamad/stories/story-status.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/evidence/
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/01-execution-brief.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/04-target-files.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/05-implementation-plan.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/06-validation-plan.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/09-dev-log.md
+?? _condamad/stories/CS-261-add-rejection-workflow-for-ungrounded-narrative-answers/generated/10-final-evidence.md
+?? docs/architecture/ungrounded-narrative-rejection-workflow.md

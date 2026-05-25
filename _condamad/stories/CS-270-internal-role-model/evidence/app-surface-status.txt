@@ -1,0 +1,14 @@
+CS-270 scoped application surface status
+
+Command:
+git status --short -- .\backend\app .\frontend\src .\backend\migrations
+
+Result:
+Pre-existing dirty backend application and migration files were present before CS-270.
+No CS-270 implementation change was made under backend/app, frontend/src or backend/migrations.
+
+Future-role activation scan:
+rg -n "MARKETER|TECHNO|ASTRO_EXPERT" .\backend\app .\frontend\src .\backend\migrations -g "*.py" -g "*.tsx" -g "*.ts" -g "*.js" -g "*.jsx"
+
+Result:
+PASS, no matches in forbidden runtime surfaces.

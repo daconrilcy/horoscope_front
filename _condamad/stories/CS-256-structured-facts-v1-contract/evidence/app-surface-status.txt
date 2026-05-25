@@ -1,0 +1,19 @@
+CS-256 application surface status
+=================================
+
+Application source roots:
+- `backend/app`: unchanged.
+- `frontend/src`: unchanged.
+
+Command:
+- `git status --short -- backend\app frontend\src`
+
+Result:
+- PASS: no output.
+
+OpenAPI and routes:
+- `structured_facts_v1` is absent from `app.openapi()`: PASS.
+- No route path containing `structured_facts` exists in `app.routes`: PASS.
+
+Conclusion:
+- CS-256 did not add or alter backend runtime code, API routes, OpenAPI schemas, frontend sources, DB models or migrations.

@@ -1,0 +1,3 @@
+PASS app.openapi() does not expose structured_facts_v1
+PASS app.routes does not expose structured_facts paths
+PASS TestClient /health smoke status 200

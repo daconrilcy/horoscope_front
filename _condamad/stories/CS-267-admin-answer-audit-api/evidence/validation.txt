@@ -1,0 +1,24 @@
+CS-267 validation evidence
+
+- Capsule prepare: PASS
+  Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-267-admin-answer-audit-api\00-story.md --root . --story-key CS-267-admin-answer-audit-api
+- Capsule validate before implementation: PASS
+  Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-267-admin-answer-audit-api
+- Ruff format targeted test: PASS
+  Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m ruff format app\tests\integration\test_admin_answer_audit_contract.py
+- Contract rg scan: PASS
+  Command: rg -n "admin_answer_audit_v1|GET /v1/admin/answer-audits|GET /v1/admin/answer-audits/\{answer_id\}|birth_lat|birth_lon|/v1/users/me/answer-audits|/v1/admin/chart-diagnostics/answer-audits|/v1/admin/answer-audit-replay|source-checklist" docs\architecture\admin-answer-audit-api.md backend\app\tests\integration\test_admin_answer_audit_contract.py _condamad\stories\CS-267-admin-answer-audit-api
+- Ruff check targeted test: PASS
+  Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m ruff check app\tests\integration\test_admin_answer_audit_contract.py
+- Targeted pytest and topology guard: PASS, 6 passed, 5 deselected
+  Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q app\tests\integration\test_admin_answer_audit_contract.py app\tests\unit\test_backend_test_topology.py --tb=short
+- Ruff check backend: PASS
+  Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m ruff check .
+- Full backend pytest: PASS, 3247 passed, 1 skipped, 1191 deselected
+  Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short
+- App/frontend answer-audit scan: PASS, only CS-267 test path appears under documented pytest root
+  Command: git status --short -- backend/app frontend/src
+- Story validation and strict lint: PASS
+  Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-267-admin-answer-audit-api\00-story.md; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-267-admin-answer-audit-api\00-story.md
+- Capsule validation after review fixes: PASS
+  Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-267-admin-answer-audit-api

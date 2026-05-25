@@ -1,0 +1,150 @@
+{
+  "classification": "internal-non-public",
+  "contract_version": "transit-chart-manifest-v1",
+  "doctrine_prerequisites": [
+    {
+      "evidence_ref": "backend/app/domain/astrology/runtime/aspect_runtime_data.py; backend/app/domain/astrology/runtime/aspect_modifiers.py; backend/app/domain/astrology/interpretation/aspect_strength.py; backend/app/domain/astrology/interpretation/aspect_interpretation_builder.py; backend/app/domain/astrology/interpretation/aspect_interpretation_facts.py; backend/app/domain/astrology/interpretation/aspect_semantic_provenance.py",
+      "owner": "app.domain.astrology.runtime.astrology_doctrine_governance",
+      "requirement": "aspect_rules requires school policy product-canonical and doctrine status single-canonical-doctrine",
+      "story_id": "CS-252"
+    },
+    {
+      "evidence_ref": "backend/app/domain/astrology/interpretation/advanced_conditions/advanced_condition_profile_catalog.py; backend/app/domain/astrology/interpretation/advanced_conditions/profile_runtime.py; backend/app/domain/astrology/interpretation/chart_interpretation_input_builder.py; backend/app/domain/astrology/interpretation/chart_object_interpretation_projector.py; backend/app/domain/astrology/interpretation/profile_fields.py; backend/app/domain/astrology/interpretation_adapters/interpretation_adapter_engine.py; backend/app/domain/astrology/interpretation_adapters/signal_builder.py; backend/app/domain/astrology/interpretation_adapters/theme_aggregator.py",
+      "owner": "app.domain.astrology.runtime.astrology_doctrine_governance",
+      "requirement": "interpretation_rules requires school policy needs-user-decision and doctrine status needs-user-decision",
+      "story_id": "CS-252"
+    },
+    {
+      "evidence_ref": "TEMPORAL_TECHNIQUE_CITATION_NOTES",
+      "owner": "app.domain.astrology.runtime.astrology_doctrine_governance",
+      "requirement": "forecasting semantics stay blocked while school policy is needs-user-decision or doctrine status is needs-user-decision",
+      "story_id": "CS-252"
+    }
+  ],
+  "family_code": "transit_chart_v1",
+  "follow_up_runtime_stories": [
+    {
+      "gate": "requires this internal manifest and CS-250 proof evidence",
+      "key": "internal_graph_manifest",
+      "purpose": "define transit calculation graph nodes and node IO"
+    },
+    {
+      "gate": "requires graph manifest, trace policy and no public route",
+      "key": "calculation_runner_integration",
+      "purpose": "wire a non-public runner for transit calculation"
+    },
+    {
+      "gate": "requires doctrine and product projection approval",
+      "key": "projection_contract",
+      "purpose": "define any client-safe transit projection shape"
+    },
+    {
+      "gate": "requires CS-250, CS-252, projection contract, auth and OpenAPI review",
+      "key": "public_api_gate",
+      "purpose": "decide whether a public transit API can exist"
+    }
+  ],
+  "inputs": [
+    {
+      "key": "natal_chart_reference",
+      "policy": "reference an already validated natal chart; do not embed public payloads",
+      "value_type": "natal_chart_v1 runtime reference"
+    },
+    {
+      "key": "transit_target",
+      "policy": "single transit datetime first; bounded period requires runner trace approval",
+      "value_type": "target datetime | bounded period"
+    },
+    {
+      "key": "timezone",
+      "policy": "explicit timezone required for every transit target",
+      "value_type": "IANA timezone"
+    },
+    {
+      "key": "location_policy",
+      "policy": "no silent location fallback; policy must be traceable",
+      "value_type": "explicit coordinates | documented natal-location reuse"
+    },
+    {
+      "key": "proof_reference",
+      "policy": "public temporal claims stay blocked until proof evidence is closed",
+      "value_type": "CS-250 proof artifact reference"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "transiting_chart_objects",
+      "policy": "computed objects stay internal and non-public",
+      "value_type": "internal chart object collection"
+    },
+    {
+      "key": "transit_to_natal_relationships",
+      "policy": "relationships require doctrine and projection gates before public wording",
+      "value_type": "internal relationship descriptors"
+    },
+    {
+      "key": "diagnostic_trace_keys",
+      "policy": "trace keys may prove execution but do not create replay storage",
+      "value_type": "redacted trace key list"
+    },
+    {
+      "key": "blocked_public_status",
+      "policy": "blocked-until-cs250-cs252-projection-and-api-gates",
+      "value_type": "public exposure gate"
+    }
+  ],
+  "owner": "backend-domain:astrology-runtime-temporal",
+  "proof_prerequisites": [
+    {
+      "evidence_ref": "cs253-blocked-by-cs250-astronomical-proof",
+      "owner": "app.domain.astrology.runtime.astronomical_proof",
+      "requirement": "swisseph proof gate remains closed for public transit",
+      "story_id": "CS-250"
+    },
+    {
+      "evidence_ref": "build_astronomical_proof_manifest.ephemeris_trace",
+      "owner": "app.domain.astrology.runtime.astronomical_proof",
+      "requirement": "ephemeris source metadata and path hash posture must be recorded",
+      "story_id": "CS-250"
+    },
+    {
+      "evidence_ref": "AstronomicalTolerancePolicy",
+      "owner": "app.domain.astrology.runtime.astronomical_proof",
+      "requirement": "tolerance posture swisseph-sensitive-v1 must remain explicit",
+      "story_id": "CS-250"
+    }
+  ],
+  "public_exposure_status": "blocked-until-cs250-cs252-projection-and-api-gates",
+  "trace_requirements": [
+    {
+      "key": "run_id",
+      "policy": "required for diagnostics; not a public identifier",
+      "value_type": "opaque internal run identifier"
+    },
+    {
+      "key": "graph_code",
+      "policy": "records the internal family code only",
+      "value_type": "transit_chart_v1"
+    },
+    {
+      "key": "graph_version",
+      "policy": "required for future invalidation and comparison",
+      "value_type": "v1"
+    },
+    {
+      "key": "node_status",
+      "policy": "status-only diagnostics without raw payload exposure",
+      "value_type": "redacted node status list"
+    },
+    {
+      "key": "redacted_input_keys",
+      "policy": "input keys only; no birth data, coordinates or ephemeris payload values",
+      "value_type": "tuple[str, ...]"
+    },
+    {
+      "key": "redacted_output_keys",
+      "policy": "output keys only; trace does not create replay storage",
+      "value_type": "tuple[str, ...]"
+    }
+  ]
+}

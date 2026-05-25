@@ -1,0 +1,6 @@
+CS-290 response mask scan, 2026-05-25.
+
+PASS: rg -n "RAW_AI_ANSWER_MUST_STAY_INTERNAL|RAW_REJECTED_INTERNAL_ONLY|RAW_SECRET_ANSWER" backend\app\services\llm_generation\natal backend\app\api frontend\src
+Result: no matches; raw rejected answer sentinels only appear in tests/evidence.
+
+PASS: integration response test confirms client payload contains controlled wording only and excludes raw_answer_storage and validation_context.

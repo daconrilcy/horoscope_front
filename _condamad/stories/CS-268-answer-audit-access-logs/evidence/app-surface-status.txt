@@ -1,0 +1,20 @@
+CS-268 scoped app surface status
+
+Initial git status: dirty before CS-268 with many unrelated CS-256..CS-267/backend/doc changes already present.
+
+Runtime route evidence:
+- `/v1/admin/answer-audits` absent from `app.routes`.
+- `/v1/admin/answer-audits/{answer_id}` absent from `app.routes`.
+- `/v1/admin/answer-audits` absent from `app.openapi()["paths"]`.
+
+Dependency evidence:
+- `_condamad/stories/story-status.md` has CS-288 at `ready-to-dev`.
+- `docs/architecture/admin-answer-audit-api.md` states the CS-267 contract is declarative and creates no runtime route, persistence or OpenAPI schema.
+
+CS-268 app code changes:
+- none.
+
+CS-268 documentation/evidence changes:
+- `docs/architecture/admin-answer-audit-access-retention.md`
+- `_condamad/stories/CS-268-answer-audit-access-logs/evidence/**`
+- `_condamad/stories/CS-268-answer-audit-access-logs/generated/**`

@@ -1,5 +1,5 @@
 # Story CS-272 admin-endpoint-domain-segmentation: Define Admin Endpoint Domain Segmentation
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

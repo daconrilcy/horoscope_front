@@ -1,5 +1,5 @@
 # Story CS-279 transit-chart-v1-internal-manifest: Define transit_chart_v1 Internal Manifest
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -115,16 +115,16 @@ doctrine limits, trace requirements and follow-up runtime stories, without addin
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect the brief, current architecture document and CS-253 temporal selection owner before edits. (AC: AC1, AC2)
-- [ ] Task 2: Create or extend the canonical backend-domain manifest module with French file comment and docstrings. (AC: AC1)
-- [ ] Task 3: Encode `transit_chart_v1` as the exact internal manifest family code. (AC: AC2)
-- [ ] Task 4: Define internal inputs for natal source, transit target time, timezone, location policy and proof reference. (AC: AC3)
-- [ ] Task 5: Define internal outputs for transiting objects, transit-to-natal relationships, diagnostics and blocked exposure status. (AC: AC4)
-- [ ] Task 6: Attach CS-250 proof prerequisites and CS-252 doctrine prerequisites to the manifest. (AC: AC5, AC6)
-- [ ] Task 7: Define trace keys with redaction boundaries and no replay storage claim. (AC: AC7)
-- [ ] Task 8: Add manifest tests and reuse API neutrality tests with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC2, AC8)
-- [ ] Task 9: Record follow-up runtime stories for graph manifest, runner integration, projection contract and API gate. (AC: AC9)
-- [ ] Task 10: Persist validation, manifest snapshot and application-surface evidence under the CS-279 folder. (AC: AC10)
+- [x] Task 1: Inspect the brief, current architecture document and CS-253 temporal selection owner before edits. (AC: AC1, AC2)
+- [x] Task 2: Create or extend the canonical backend-domain manifest module with French file comment and docstrings. (AC: AC1)
+- [x] Task 3: Encode `transit_chart_v1` as the exact internal manifest family code. (AC: AC2)
+- [x] Task 4: Define internal inputs for natal source, transit target time, timezone, location policy and proof reference. (AC: AC3)
+- [x] Task 5: Define internal outputs for transiting objects, transit-to-natal relationships, diagnostics and blocked exposure status. (AC: AC4)
+- [x] Task 6: Attach CS-250 proof prerequisites and CS-252 doctrine prerequisites to the manifest. (AC: AC5, AC6)
+- [x] Task 7: Define trace keys with redaction boundaries and no replay storage claim. (AC: AC7)
+- [x] Task 8: Add manifest tests and reuse API neutrality tests with `app.routes`, `app.openapi()` and `TestClient`. (AC: AC2, AC8)
+- [x] Task 9: Record follow-up runtime stories for graph manifest, runner integration, projection contract and API gate. (AC: AC9)
+- [x] Task 10: Persist validation, manifest snapshot and application-surface evidence under the CS-279 folder. (AC: AC10)
 
 ## Files to Inspect First
 

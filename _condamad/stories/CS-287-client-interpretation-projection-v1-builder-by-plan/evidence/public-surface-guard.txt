@@ -1,0 +1,7 @@
+PASS public surface guard
+
+Command:
+.\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; from fastapi.testclient import TestClient; assert 'client_interpretation_projection_v1' not in str(app.openapi()); assert all('client_interpretation_projection_v1' not in getattr(r, 'path', '') for r in app.routes); assert TestClient(app).get('/health').status_code == 200; print('PASS public surface guard')"
+
+Result:
+No route path or OpenAPI schema exposes client_interpretation_projection_v1; TestClient health smoke returned 200.

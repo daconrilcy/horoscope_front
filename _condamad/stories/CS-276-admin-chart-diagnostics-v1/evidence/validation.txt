@@ -1,0 +1,186 @@
+CS-276 validation transcript
+
+Backend lint
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+ruff check .
+
+Result:
+PASS
+All checks passed!
+
+Backend format check
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+ruff format --check app\api\v1\routers\admin\chart_diagnostics.py app\services\ops\admin_chart_diagnostics.py app\tests\integration\test_admin_chart_diagnostics_api.py tests\unit\test_admin_chart_diagnostics_redaction.py tests\architecture\test_admin_chart_diagnostics_boundaries.py
+
+Result:
+PASS
+5 files already formatted
+
+Targeted pytest
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -m pytest -q app\tests\integration\test_admin_chart_diagnostics_api.py tests\unit\test_admin_chart_diagnostics_redaction.py tests\architecture\test_admin_chart_diagnostics_boundaries.py tests\unit\test_admin_endpoint_segmentation_contract.py --tb=short
+
+Result:
+PASS
+12 passed, 4 deselected in 11.00s
+
+Review-fix regression pytest
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -m pytest -q app\tests\unit\test_api_router_architecture.py::test_router_modules_do_not_define_private_helpers app\tests\unit\test_api_router_architecture.py::test_router_root_audit_lists_every_registered_api_v1_router_module app\tests\unit\test_api_router_architecture.py::test_api_sql_boundary_debt_matches_exact_allowlist app\tests\unit\test_backend_db_test_harness.py::test_create_all_usage_stays_classified_outside_primary_horoscope_db app\tests\unit\test_backend_db_test_harness.py::test_sqlite_secondary_factories_stay_classified tests\architecture\test_api_contract_neutrality.py::test_internal_projection_tokens_are_not_public_openapi_contract tests\unit\test_admin_chart_diagnostics_policy.py::test_client_public_openapi_and_runtime_surfaces_are_denied app\tests\integration\test_admin_chart_diagnostics_api.py tests\unit\test_admin_chart_diagnostics_redaction.py tests\architecture\test_admin_chart_diagnostics_boundaries.py tests\unit\test_admin_endpoint_segmentation_contract.py --tb=short
+
+Result:
+PASS
+19 passed, 4 deselected in 14.92s
+
+VC1 route registered
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -c "from app.main import app; assert any('admin_chart_diagnostics_v1' in getattr(r, 'path', '') for r in app.routes)"
+
+Result:
+PASS
+
+VC2 OpenAPI exposes contract
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -c "from app.main import app; data=str(app.openapi()); assert 'admin_chart_diagnostics_v1' in data"
+
+Result:
+PASS
+
+VC3 no public OpenAPI path
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -c "from app.main import app; assert all('admin_chart_diagnostics_v1' not in p for p in app.openapi()['paths'] if p.startswith('/v1/public'))"
+
+Result:
+PASS
+
+VC8 replay and answer-audit separation
+
+Command:
+rg -n "replay_snapshot_v1|llm_replay|narrative_answer_audit" backend/app/services/ops/admin_chart_diagnostics.py
+
+Result:
+PASS
+No service matches.
+
+VC9 raw source-field scan
+
+Command:
+rg -n "birth_date|birth_time|birth_place|coordinates|raw_input" backend/app/services/ops/admin_chart_diagnostics.py backend/app/tests/integration/test_admin_chart_diagnostics_api.py backend/tests/unit/test_admin_chart_diagnostics_redaction.py backend/tests/architecture/test_admin_chart_diagnostics_boundaries.py
+
+Result:
+PASS
+No matches.
+
+CONDAMAD story validation
+
+Command:
+.\.venv\Scripts\Activate.ps1
+python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-276-admin-chart-diagnostics-v1\00-story.md
+python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-276-admin-chart-diagnostics-v1\00-story.md
+python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-276-admin-chart-diagnostics-v1
+
+Result:
+PASS
+CONDAMAD story validation: PASS
+CONDAMAD story lint: PASS
+CONDAMAD validation: PASS
+
+Diff check
+
+Command:
+git diff --check -- _condamad/stories/CS-276-admin-chart-diagnostics-v1 backend/app/api/v1/routers/admin/chart_diagnostics.py backend/app/services/api_contracts/admin/chart_diagnostics.py backend/app/services/ops/admin_chart_diagnostics.py backend/app/tests/integration/test_admin_chart_diagnostics_api.py backend/tests/unit/test_admin_chart_diagnostics_redaction.py backend/tests/architecture/test_admin_chart_diagnostics_boundaries.py backend/app/api/v1/routers/registry.py _condamad/stories/story-status.md
+
+Result:
+PASS
+
+Full backend pytest
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -m pytest -q --tb=short
+
+Result:
+PASS
+3295 passed, 1 skipped, 1195 deselected in 395.29s
+
+Full backend pytest after brief-alignment fix
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -m pytest -q --tb=short
+
+Intermediate result:
+FAIL
+1 failed, 3294 passed, 1 skipped, 1195 deselected in 332.72s
+Failure: `test_api_sql_boundary_debt_matches_exact_allowlist` found the new source-missing `db.commit` missing from the exact
+allowlist.
+
+Fix:
+Added the exact CS-276 row to `_condamad/stories/harden-api-adapter-boundary-guards/router-sql-allowlist.md`.
+
+Targeted recheck:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -m pytest -q app\tests\unit\test_api_router_architecture.py::test_api_sql_boundary_debt_matches_exact_allowlist --tb=short
+
+Targeted result:
+PASS
+1 passed in 0.39s
+
+Final result:
+PASS
+3295 passed, 1 skipped, 1195 deselected in 395.48s
+
+Brief-alignment missing-source audit regression
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+python -B -m pytest -q app\tests\integration\test_admin_chart_diagnostics_api.py tests\unit\test_admin_chart_diagnostics_redaction.py tests\architecture\test_admin_chart_diagnostics_boundaries.py --tb=short
+
+Result:
+PASS
+7 passed, 4 deselected in 11.48s
+
+Brief-alignment lint and story validation
+
+Command:
+.\.venv\Scripts\Activate.ps1
+cd backend
+ruff check .
+ruff format --check app\api\v1\routers\admin\chart_diagnostics.py app\services\ops\admin_chart_diagnostics.py app\tests\integration\test_admin_chart_diagnostics_api.py
+cd ..
+python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-276-admin-chart-diagnostics-v1\00-story.md
+python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-276-admin-chart-diagnostics-v1\00-story.md
+python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-276-admin-chart-diagnostics-v1
+
+Result:
+PASS
+All checks passed!
+3 files already formatted
+CONDAMAD story validation: PASS
+CONDAMAD story lint: PASS
+CONDAMAD validation: PASS

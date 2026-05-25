@@ -1,0 +1,74 @@
+CS-274 validation evidence
+
+Environment:
+- PowerShell on Windows.
+- Python commands were run after `. .\.venv\Scripts\Activate.ps1`.
+
+Commands:
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-274-astrology-full-data-v1-internal-expert-projection`
+  - PASS: CONDAMAD validation: PASS
+- `ruff format backend\tests\unit\test_astrology_full_data_contract.py`
+  - PASS: 1 file left unchanged
+- `ruff check .`
+  - PASS: All checks passed
+- `python -B -m pytest -q backend\tests\unit\test_astrology_full_data_contract.py --tb=short`
+  - PASS: 8 passed
+- `python -B -m pytest -q backend\tests\architecture\test_api_contract_neutrality.py --tb=short`
+  - PASS: 19 passed
+- `python -B -c "from app.main import app; assert 'astrology_full_data_v1' not in str(app.openapi())"`
+  - PASS
+- `python -B -c "from app.main import app; assert all('astrology_full_data' not in getattr(r, 'path', '') for r in app.routes)"`
+  - PASS
+- `python -B -m pytest -q --tb=short`
+  - PASS: 3215 passed, 1 skipped, 1191 deselected
+
+Targeted scans:
+- `rg -n "ADMIN|ASTRO_EXPERT|target-only|CS-271|permission matrix" docs\architecture\astrology-full-data-v1-contract.md`
+  - PASS: required access vocabulary found.
+- `rg -n "admin_chart_diagnostics_v1|debug|diagnostics|replay|trace" docs\architecture\astrology-full-data-v1-contract.md`
+  - PASS: diagnostics boundary found.
+- `rg -n "positions|houses|dignities|conditions|aspects|dominance|fixed-star" docs\architecture\astrology-full-data-v1-contract.md`
+  - PASS: required astrology families found.
+- `rg -n "birth date|birth time|birth place|user id|chart id|mask" docs\architecture\astrology-full-data-v1-contract.md`
+  - PASS: masking terms found.
+- `rg -n "structured_facts_v1|source versions|doctrine|school|evidence_refs" docs\architecture\astrology-full-data-v1-contract.md`
+  - PASS: source dependencies found.
+
+Evidence artifact checks:
+- `evidence/validation.txt`: PASS.
+- `evidence/app-surface-status.txt`: PASS.
+- `evidence/source-checklist.md`: PASS.
+
+Review/fix closure checks, 2026-05-24:
+- `ruff check .`
+  - PASS: All checks passed.
+- `python -B -m pytest -q backend\tests\unit\test_astrology_full_data_contract.py --tb=short`
+  - PASS: 8 passed.
+- `python -B -m pytest -q backend\tests\architecture\test_api_contract_neutrality.py --tb=short`
+  - PASS: 19 passed.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-274-astrology-full-data-v1-internal-expert-projection`
+  - PASS: CONDAMAD validation: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-274-astrology-full-data-v1-internal-expert-projection\00-story.md`
+  - PASS: CONDAMAD story validation: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-274-astrology-full-data-v1-internal-expert-projection\00-story.md`
+  - PASS: CONDAMAD story lint: PASS.
+
+All Python commands above were run after `. .\.venv\Scripts\Activate.ps1`.
+
+Post-implementation brief-alignment rerun, 2026-05-24:
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-274-astrology-full-data-v1-internal-expert-projection\00-story.md`
+  - PASS: CONDAMAD story validation: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-274-astrology-full-data-v1-internal-expert-projection\00-story.md`
+  - PASS: CONDAMAD story lint: PASS.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-274-astrology-full-data-v1-internal-expert-projection`
+  - PASS: CONDAMAD validation: PASS.
+- `ruff check .`
+  - PASS: All checks passed.
+- `python -B -m pytest -q backend\tests\unit\test_astrology_full_data_contract.py --tb=short`
+  - PASS: 8 passed.
+- `python -B -m pytest -q backend\tests\architecture\test_api_contract_neutrality.py --tb=short`
+  - PASS: 19 passed.
+- `Set-Location backend; python -B -c "from app.main import app; assert 'astrology_full_data_v1' not in str(app.openapi()); assert all('astrology_full_data' not in getattr(r, 'path', '') for r in app.routes)"`
+  - PASS: OpenAPI and routes remain neutral.
+
+All post-implementation Python commands above were run after `. .\.venv\Scripts\Activate.ps1`.

@@ -1,5 +1,5 @@
 # Story CS-271 admin-data-permission-matrix: Define Permission Matrix For Admin Data Domains
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -121,17 +121,17 @@ is implemented.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect the brief, CS-270, current RBAC role set and admin implementation overview before writing the matrix. (AC: AC1, AC7, AC10)
-- [ ] Task 2: Create `docs/architecture/admin-permission-matrix.md` with a French global file comment. (AC: AC1)
-- [ ] Task 3: Define matrix rows for `ADMIN`, `MARKETER`, `TECHNO` and `ASTRO_EXPERT`. (AC: AC2, AC7)
-- [ ] Task 4: Classify business, technical, astrology and debug data domains. (AC: AC3)
-- [ ] Task 5: Mark birth data as sensitive with explicit masking rules. (AC: AC4)
-- [ ] Task 6: Classify traces, prompts and replay as separate surfaces. (AC: AC5)
-- [ ] Task 7: Cover read, search, export, replay and correct action semantics. (AC: AC6)
-- [ ] Task 8: Exclude B2C client access from the admin permission matrix. (AC: AC8)
-- [ ] Task 9: Add a dedicated open-decisions section for uncertain permissions. (AC: AC9)
-- [ ] Task 10: Add a targeted contract test for the matrix and inactive future roles. (AC: AC2, AC6, AC7, AC10)
-- [ ] Task 11: Persist validation and scoped status evidence under the CS-271 evidence folder. (AC: AC10, AC11)
+- [x] Task 1: Inspect the brief, CS-270, current RBAC role set and admin implementation overview before writing the matrix. (AC: AC1, AC7, AC10)
+- [x] Task 2: Create `docs/architecture/admin-permission-matrix.md` with a French global file comment. (AC: AC1)
+- [x] Task 3: Define matrix rows for `ADMIN`, `MARKETER`, `TECHNO` and `ASTRO_EXPERT`. (AC: AC2, AC7)
+- [x] Task 4: Classify business, technical, astrology and debug data domains. (AC: AC3)
+- [x] Task 5: Mark birth data as sensitive with explicit masking rules. (AC: AC4)
+- [x] Task 6: Classify traces, prompts and replay as separate surfaces. (AC: AC5)
+- [x] Task 7: Cover read, search, export, replay and correct action semantics. (AC: AC6)
+- [x] Task 8: Exclude B2C client access from the admin permission matrix. (AC: AC8)
+- [x] Task 9: Add a dedicated open-decisions section for uncertain permissions. (AC: AC9)
+- [x] Task 10: Add a targeted contract test for the matrix and inactive future roles. (AC: AC2, AC6, AC7, AC10)
+- [x] Task 11: Persist validation and scoped status evidence under the CS-271 evidence folder. (AC: AC10, AC11)
 
 ## Files to Inspect First
 

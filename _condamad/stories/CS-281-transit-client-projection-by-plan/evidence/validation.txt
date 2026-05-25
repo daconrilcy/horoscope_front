@@ -1,0 +1,85 @@
+CS-281 validation transcript
+
+Environment:
+- Repository root: C:\dev\horoscope_front
+- Python commands executed after `. .\.venv\Scripts\Activate.ps1`
+- For app import checks, `PYTHONPATH=backend`
+
+Commands:
+
+1. `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-281-transit-client-projection-by-plan --root C:\dev\horoscope_front`
+Result: PASS, capsule repaired.
+
+2. `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-281-transit-client-projection-by-plan`
+Result: PASS.
+
+3. `rg -n "transit_client_projection_v1|free|basic|premium" docs\architecture\transit-client-projection-v1-contract.md`
+Result: PASS, required projection id and plan terms found.
+
+4. `rg -n "narration|richness|debug|raw runtime|trace" docs\architecture\transit-client-projection-v1-contract.md`
+Result: PASS, narrative differentiation and raw/debug exclusions found.
+
+5. `rg -n "degraded|unavailable|proof gate|non public" docs\architecture\transit-client-projection-v1-contract.md`
+Result: PASS, degraded/unavailable states and non-public proof gate found.
+
+6. `rg -n "LLM|rédacteur|not calculator|proof owner" docs\architecture\transit-client-projection-v1-contract.md`
+Result: PASS, LLM writer boundary found.
+
+7. `python -B -c "from pathlib import Path; assert Path('docs/architecture/transit-client-projection-v1-contract.md').exists()"`
+Result: PASS.
+
+8. `python -B -c "from app.main import app; assert 'transit_client_projection_v1' not in str(app.openapi())"`
+Result: PASS.
+
+9. `python -B -c "from app.main import app; assert all('transit' not in getattr(r, 'path', '') for r in app.routes)"`
+Result: PASS.
+
+10. `rg -n "transit_client_projection_v1|TransitClientProjection|transit-client" backend\app\api frontend\src backend\migrations`
+Result: PASS, exit 1 means no matches for the forbidden public/API/frontend/migration surface.
+
+11. `python -B -m pytest -q backend/tests/architecture/test_api_contract_neutrality.py --tb=short`
+Result: PASS, 21 passed.
+
+12. `python -B -m ruff check .`
+Result: PASS, all checks passed.
+
+13. `python -B -m pytest -q --tb=short`
+Result: PASS, 3239 passed, 1 skipped, 1195 deselected in 213.44s.
+
+14. `rg -n "transit|free|basic|premium|proof gate|non public|LLM" .\docs .\_story_briefs`
+Result: PASS, broad source/doc evidence scan found the new contract and related source material.
+
+15. `git diff --check -- docs/architecture/transit-client-projection-v1-contract.md docs/architecture/official-product-primitives-public-projections.md _condamad/stories/CS-281-transit-client-projection-by-plan _condamad/stories/story-status.md`
+Result: PASS, no whitespace errors; Git reported LF/CRLF warnings for pre-existing line ending normalization behavior.
+
+Skipped:
+- `ruff format <python files>`: not applicable, no Python files were modified for CS-281.
+
+Fresh implementation review loop:
+
+16. `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-281-transit-client-projection-by-plan\00-story.md`
+Result: PASS, after venv activation.
+
+17. `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-281-transit-client-projection-by-plan\00-story.md`
+Result: PASS, after venv activation.
+
+18. Contract `rg` scans for projection id, plans, debug exclusion, degraded/unavailable states and LLM role.
+Result: PASS.
+
+19. `rg -n "transit_client_projection_v1|TransitClientProjection|transit-client" backend\app\api frontend\src backend\migrations`
+Result: PASS, exit 1 means no forbidden public/API/frontend/migration matches.
+
+20. Loaded app checks for `app.openapi()` and `app.routes`
+Result: PASS, no `transit_client_projection_v1` OpenAPI exposure and no route path containing `transit`.
+
+21. `python -B -m pytest -q backend/tests/architecture/test_api_contract_neutrality.py --tb=short`
+Result: PASS, 21 passed.
+
+22. `python -B -m ruff check .`
+Result: PASS, all checks passed.
+
+23. `python -B -m pytest -q --tb=short`
+Result: PASS, 3239 passed, 1 skipped, 1195 deselected in 238.12s.
+
+24. Fresh implementation review artifact
+Result: PASS, `_condamad/stories/CS-281-transit-client-projection-by-plan/generated/11-code-review.md` reports `Verdict: CLEAN`.

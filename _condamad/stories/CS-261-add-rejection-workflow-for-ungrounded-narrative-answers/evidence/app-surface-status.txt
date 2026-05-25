@@ -1,0 +1,6 @@
+Command: git status --short -- backend/app frontend/src
+Result: PASS
+
+Output:
+
+No backend app or frontend source file was modified by CS-261.

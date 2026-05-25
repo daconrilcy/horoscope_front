@@ -1,0 +1,41 @@
+CS-269 validation transcript summary after final brief-alignment review/fix iteration
+
+PASS: scoped format
+Command: .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\api\v1\routers\admin\answer_audit.py app\services\api_contracts\admin\audit.py app\services\ops\rejected_answer_review.py app\core\sensitive_data.py tests\api\admin\test_rejected_answer_review_workflow.py
+Result: 5 files left unchanged.
+
+PASS: scoped lint
+Command: .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\api\v1\routers\admin\answer_audit.py app\services\api_contracts\admin\audit.py app\services\ops\rejected_answer_review.py app\core\sensitive_data.py tests\api\admin\test_rejected_answer_review_workflow.py
+Result: All checks passed.
+
+PASS: targeted tests
+Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\admin\test_rejected_answer_review_workflow.py --tb=short
+Result: 8 passed in 33.86s.
+
+PASS: backend lint
+Command: .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+Result: All checks passed.
+
+PASS: architecture guard fixes
+Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q app\tests\unit\test_api_router_architecture.py::test_router_root_audit_lists_every_registered_api_v1_router_module app\tests\unit\test_api_router_architecture.py::test_api_sql_boundary_debt_matches_exact_allowlist app\tests\unit\test_backend_db_test_harness.py::test_create_all_usage_stays_classified_outside_primary_horoscope_db app\tests\unit\test_backend_test_topology.py --tb=short
+Result: 9 passed.
+
+PASS: runtime route and OpenAPI guards
+Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; paths={getattr(r,'path','') for r in app.routes}; assert '/v1/admin/answer-audits/rejected' in paths; assert '/v1/admin/answer-audits/rejected/{answer_id}' in paths; assert '/v1/admin/answer-audits/rejected/{answer_id}/review' in paths; text=str(app.openapi()); assert '/v1/users/me/answer-audits/rejected' not in text; assert '/v1/support/rejected-answers' not in text; assert '/v1/answer-audits/rejected' not in paths"
+Result: PASS.
+
+PASS: forbidden app symbol scan
+Command: rg -n "RejectedAnswerReplay|auto_correct_rejected_prompt|admin_rejected_answer_public|AnswerAuditAccessLogModel|admin_answer_audit_access_logs|answer_audit_access_log_repository" backend\app
+Result: exit 1 = PASS no matches.
+
+PASS: manual correction limits scan
+Command: rg -n "manual correction|prompt|contract|validation" docs\architecture\rejected-answer-review-workflow-limits.md
+Result: PASS.
+
+PASS: CONDAMAD story validation and strict lint
+Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-269-add-rejected-answer-review-workflow\00-story.md; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-269-add-rejected-answer-review-workflow\00-story.md
+Result: CONDAMAD story validation: PASS; CONDAMAD story lint: PASS.
+
+PASS: full backend pytest
+Command: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short
+Result: 3255 passed, 1 skipped, 1191 deselected in 228.80s.
