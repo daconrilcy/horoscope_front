@@ -176,6 +176,15 @@ def test_audit_service_sanitization(db):
             "content": "should-be-redacted",
             "use_case": "allowed",
             "user_id": 12345,
+            "raw_rejected_answer": "internal rejected answer",
+            "prompt": "full prompt must not be persisted",
+            "secret": "token",
+            "birth_date": "1990-01-01",
+            "birth_time": "12:30",
+            "birth_place": "Paris",
+            "birth_lat": 48.8566,
+            "birth_lon": 2.3522,
+            "birth_timezone": "Europe/Paris",
             "nested": {"email": "nested@leak.com", "inner": {"secret": "very-secret"}},
         },
     )
@@ -184,6 +193,15 @@ def test_audit_service_sanitization(db):
 
     assert "password" not in event.details
     assert "content" not in event.details
+    assert "raw_rejected_answer" not in event.details
+    assert "prompt" not in event.details
+    assert "secret" not in event.details
+    assert "birth_date" not in event.details
+    assert "birth_time" not in event.details
+    assert "birth_place" not in event.details
+    assert "birth_lat" not in event.details
+    assert "birth_lon" not in event.details
+    assert "birth_timezone" not in event.details
     assert event.details["use_case"] == "allowed"
     assert event.details["user_id"] == "[MASKED]"
     assert "nested" not in event.details

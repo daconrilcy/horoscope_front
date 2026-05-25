@@ -345,7 +345,6 @@ class RejectedAnswerReviewService:
             answer_id=answer_id,
             details={
                 "review_status": valid_review_status,
-                "review_note": review_note,
             },
         )
         db.commit()

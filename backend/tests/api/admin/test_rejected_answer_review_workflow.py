@@ -116,6 +116,37 @@ def _auth_header(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}", "X-Request-Id": "req-review-test"}
 
 
+def _assert_successful_admin_event(
+    event: AuditEventModel,
+    *,
+    action: str,
+    target_id: str | None,
+) -> None:
+    """Vérifie le contrat minimal d'un événement d'accès admin journalisé."""
+    assert event.actor_user_id is not None
+    assert event.actor_role == "admin"
+    assert event.action == action
+    assert event.status == "success"
+    assert event.target_type == "rejected_answer_review"
+    assert event.target_id == target_id
+    assert event.created_at is not None
+    assert event.details["contract_id"] == "admin_answer_audit_v1"
+
+    forbidden_detail_keys = {
+        "raw_rejected_answer",
+        "prompt",
+        "secret",
+        "birth_date",
+        "birth_time",
+        "birth_place",
+        "birth_lat",
+        "birth_lon",
+        "birth_timezone",
+        "review_note",
+    }
+    assert forbidden_detail_keys.isdisjoint(event.details)
+
+
 def test_admin_can_list_rejected_answers(admin_token: str) -> None:
     """Vérifie la liste admin protégée, son audit et les champs de contrat."""
     _seed_rejected_answer()
@@ -148,8 +179,12 @@ def test_admin_can_list_rejected_answers(admin_token: str) -> None:
             )
         )
         assert event is not None
+        _assert_successful_admin_event(
+            event,
+            action="admin_rejected_answer_review_accessed",
+            target_id=None,
+        )
         assert event.details["consultation"] == "list"
-        assert event.details["contract_id"] == "admin_answer_audit_v1"
         assert event.details["record_count"] == 1
 
 
@@ -175,10 +210,12 @@ def test_admin_detail_logs_consultation_and_shows_limits(admin_token: str) -> No
             )
         )
         assert event is not None
-        assert event.target_type == "rejected_answer_review"
-        assert event.target_id == "answer-rejected-1"
-        assert event.details["contract_id"] == "admin_answer_audit_v1"
-        assert "raw_rejected_answer" not in event.details
+        _assert_successful_admin_event(
+            event,
+            action="admin_rejected_answer_review_accessed",
+            target_id="answer-rejected-1",
+        )
+        assert event.details["review_status"] == "pending_review"
 
 
 def test_admin_review_status_change_is_internal_and_logged(admin_token: str) -> None:
@@ -210,6 +247,11 @@ def test_admin_review_status_change_is_internal_and_logged(admin_token: str) -> 
             )
         )
         assert event is not None
+        _assert_successful_admin_event(
+            event,
+            action="admin_rejected_answer_reviewed",
+            target_id="answer-rejected-1",
+        )
         assert event.details["review_status"] == "resolved_validation_followup"
 
 
@@ -271,6 +313,19 @@ def test_workflow_is_admin_protected(admin_token: str, user_token: str) -> None:
     assert missing_auth.status_code == 401
     assert forbidden.status_code == 403
     assert allowed.status_code == 200
+
+    with open_app_test_db_session() as db:
+        review_events = db.scalars(
+            select(AuditEventModel).where(
+                AuditEventModel.action.in_(
+                    {
+                        "admin_rejected_answer_review_accessed",
+                        "admin_rejected_answer_reviewed",
+                    }
+                )
+            )
+        ).all()
+        assert [event.status for event in review_events] == ["success"]
 
 
 def test_runtime_routes_and_openapi_expose_only_admin_rejected_workflow() -> None:

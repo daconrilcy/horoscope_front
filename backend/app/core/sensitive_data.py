@@ -220,6 +220,7 @@ FIELD_CLASSIFICATION: Dict[str, DataCategory] = {
     "messages": DataCategory.USER_AUTHORED_CONTENT,
     "question": DataCategory.USER_AUTHORED_CONTENT,
     "prompt": DataCategory.USER_AUTHORED_CONTENT,
+    "raw_rejected_answer": DataCategory.USER_AUTHORED_CONTENT,
     "raw_output": DataCategory.USER_AUTHORED_CONTENT,
     "structured_output": DataCategory.USER_AUTHORED_CONTENT,
     "birth_data": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
