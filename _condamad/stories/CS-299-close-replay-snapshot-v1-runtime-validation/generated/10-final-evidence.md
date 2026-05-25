@@ -2,13 +2,26 @@
 
 ## Story status
 
-- Validation outcome: pass.
+- Validation outcome: superseded-by-CS-300-repair-and-CS-301-revalidation.
 - Ready for review: yes.
 - Story key: CS-299-close-replay-snapshot-v1-runtime-validation.
 - Source story: `_condamad/stories/CS-299-close-replay-snapshot-v1-runtime-validation/00-story.md`.
 - Capsule path: `_condamad/stories/CS-299-close-replay-snapshot-v1-runtime-validation`.
 - Tracker status: `done`.
-- Parent runtime status: CS-278 updated to `done` after proof.
+- Parent runtime status: CS-278 remains `done` only after CS-300 repair proof and CS-301 revalidation.
+
+## CS-301 correction addendum
+
+Post-closure review found the original CS-299 proof insufficient because it did
+not independently prove the real `log_call -> snapshot -> replay` path after
+the payload/hash defect was repaired. CS-300 repaired the payload/hash integrity
+contract, and CS-301 supersedes the weak CS-299-only closure with current local
+runtime validation.
+
+- Defect disclosure: CS-299 alone must not be used as fabricated-only replay proof.
+- Repair evidence: `_condamad/stories/CS-300-replay-snapshot-v1-payload-hash-integrity/generated/10-final-evidence.md`.
+- Revalidation evidence: `_condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/10-final-evidence.md`.
+- Current status: corrected/superseded; closure is valid after CS-300 and CS-301.
 
 ## Preflight
 
@@ -36,9 +49,9 @@
 | AC | Implementation evidence | Validation evidence | Status |
 |---|---|---|---|
 | AC1 | CS-295..CS-298 final, review and validation artifacts reviewed in `evidence/source-checklist.md`. | Artifact existence check PASS; tracker rows for CS-295..CS-298 are `done`. | PASS |
-| AC2 | CS-278 final evidence updated to runtime closure evidence. | CS-299 runtime route/OpenAPI checks PASS. | PASS |
-| AC3 | CS-278 tracker row updated to `done` only after validation. | Backend lint/full pytest/runtime/scans PASS before row update. | PASS |
-| AC4 | Delivery report updated to final replay runtime status. | Report scan PASS for CS-278/replay runtime/residual entries. | PASS |
+| AC2 | CS-278 final evidence updated to runtime closure evidence. | CS-301 revalidates CS-300 repair with runtime route/OpenAPI checks PASS. | PASS |
+| AC3 | CS-278 tracker row remains `done` only after validation. | Backend lint/full pytest/runtime/scans PASS in CS-301 before evidence/report update. | PASS |
+| AC4 | Delivery report updated to final replay runtime status. | CS-301 report scan/checks PASS for CS-278/CS-300/replay runtime entries. | PASS |
 | AC5 | Backend lint passes. | `ruff check .`: PASS. | PASS |
 | AC6 | Full backend pytest passes. | `python -B -m pytest -q --tb=short`: 3421 passed, 1 skipped, 1216 deselected. | PASS |
 | AC7 | OpenAPI exposes only approved internal admin replay routes. | `app.openapi()` assertion PASS. | PASS |
@@ -74,6 +87,8 @@
 | `ruff format --check .` | `backend` | PASS | 1684 files already formatted. |
 | `ruff check .` | `backend` | PASS | All checks passed. |
 | `python -B -m pytest -q --tb=short` | `backend` | PASS | 3421 passed, 1 skipped, 1216 deselected. |
+| CS-301 replay runtime targeted pytest set | `backend` | PASS | 21 passed, 1 deselected; persisted in CS-301 `evidence/targeted-pytest.txt`. |
+| CS-301 full backend pytest | `backend` | PASS | 3422 passed, 1 skipped, 1216 deselected; persisted in CS-301 `evidence/full-backend-pytest.txt`. |
 | `app.openapi()` replay path assertion | `backend` | PASS | Only approved admin audit replay paths present. |
 | `app.routes` replay path assertion | `backend` | PASS | Public/root/support/client replay paths absent. |
 | Replay TestClient and architecture pytest set | `backend` | PASS | 14 passed. |
@@ -95,6 +110,7 @@
 ## Diff review
 
 - Story-scope changes are evidence/report/tracker only.
+- CS-301 changes are evidence/report/tracker only; no runtime source file changed for the revalidation.
 - One validation command initially failed because it compared raw route-list duplicates instead of the route set; the corrected assertion passed and is persisted.
 - Implementation review found the first forbidden-data scan omitted `email` and `payload_enc`; the corrected scan is persisted with classified hits.
 - The accidental helper-created `_condamad/stories/cs-299` capsule was removed after the correct capsule was repaired.
@@ -106,11 +122,11 @@
 
 ## Remaining risks
 
-- CI evidence was not inspected.
+- CI evidence was not inspected; CS-301 supplies local revalidation after the CS-300 repair.
 
 ## Suggested reviewer focus
 
-- Verify that CS-295 through CS-298 evidence plus CS-299 local validation is sufficient to mark parent CS-278 `done`.
+- Verify that CS-300 repair evidence plus CS-301 local validation is sufficient to keep parent CS-278 `done`.
 
 ## Feedback loop routing
 

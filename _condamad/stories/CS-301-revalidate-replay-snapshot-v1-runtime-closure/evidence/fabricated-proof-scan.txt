@@ -1,0 +1,1 @@
+_condamad\stories\CS-300-replay-snapshot-v1-payload-hash-integrity\generated\10-final-evidence.md:38:| AC4 | Fabricated `encrypt_input(user_input)` success fixture removed. | Targeted `rg` PASS: no matches. | PASS |

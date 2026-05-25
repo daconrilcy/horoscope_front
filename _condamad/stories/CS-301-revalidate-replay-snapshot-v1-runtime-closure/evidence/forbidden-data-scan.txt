@@ -1,0 +1,38 @@
+backend\tests\architecture\test_replay_snapshot_v1_execution_boundary.py:45:    assert "raw_output=None" in source
+backend\tests\architecture\test_replay_snapshot_v1_execution_boundary.py:46:    assert "structured_output=None" in source
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:33:            "birth_date": "1991-04-05",
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:34:            "birth_time": "12:34",
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:35:            "birth_place": "Paris",
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:36:            "email": "person@example.com",
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:37:            "password": "admin123",
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:69:    assert encrypted_payload["birth_date"] != "1991-04-05"
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:70:    assert encrypted_payload["birth_time"] != "12:34"
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:71:    assert encrypted_payload["birth_place"] != "Paris"
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:72:    assert encrypted_payload["email"] != "person@example.com"
+backend\tests\integration\test_replay_snapshot_v1_db_redaction.py:73:    assert "password" not in encrypted_payload
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:28:    "raw_prompt",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:29:    "birth_date",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:30:    "birth_time",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:31:    "birth_place",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:32:    "latitude",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:33:    "longitude",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:34:    "email",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:35:    "password",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:36:    "api_key",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:37:    "payload_enc",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:179:        email="admin@example.test",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:189:        email=f"{role}@example.test",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:24:    "raw_prompt",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:25:    "birth_date",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:26:    "birth_time",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:27:    "birth_place",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:28:    "latitude",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:29:    "longitude",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:30:    "email",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:31:    "password",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:32:    "api_key",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:33:    "payload_enc",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:229:            raw_output="provider text hidden by replay result",
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:230:            structured_output={"hidden": "provider"},
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:268:        assert result.raw_output is None
+backend\tests\unit\test_replay_snapshot_v1_execution_audit.py:269:        assert result.structured_output is None

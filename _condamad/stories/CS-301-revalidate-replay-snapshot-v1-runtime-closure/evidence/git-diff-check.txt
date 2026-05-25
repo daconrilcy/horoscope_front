@@ -1,0 +1,3 @@
+warning: in the working copy of '_condamad/reports/CS-256-CS-291-delivery-report.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/stories/CS-278-replay-snapshot-v1-implementation/generated/10-final-evidence.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/stories/CS-299-close-replay-snapshot-v1-runtime-validation/generated/10-final-evidence.md', LF will be replaced by CRLF the next time Git touches it

@@ -1,0 +1,12 @@
+ M _condamad/reports/CS-256-CS-291-delivery-report.md
+ M _condamad/stories/CS-278-replay-snapshot-v1-implementation/generated/10-final-evidence.md
+ M _condamad/stories/CS-299-close-replay-snapshot-v1-runtime-validation/generated/10-final-evidence.md
+ M _condamad/stories/story-status.md
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/evidence/
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/01-execution-brief.md
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/04-target-files.md
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/06-validation-plan.md
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/09-dev-log.md
+?? _condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/10-final-evidence.md

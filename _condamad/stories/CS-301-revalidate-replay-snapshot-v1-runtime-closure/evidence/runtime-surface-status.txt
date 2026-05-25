@@ -1,0 +1,2 @@
+openapi= ['/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt']
+routes= ['/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt']
