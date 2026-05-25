@@ -1,22 +1,30 @@
 Validation CS-303 - 2026-05-25
 
-PASS pnpm test -- component-architecture-guards natalInterpretation NatalChartPage natalChartApi
-PASS pnpm test -- natalChartApi
-PASS pnpm test -- astrologyProjectionsApi natalInterpretation
-PASS pnpm lint
-PASS python -B -m pytest backend\tests\api\test_projection_openapi.py backend\tests\api\test_projection_endpoint.py backend\tests\api\test_projection_authorization.py -q --tb=short
-PASS python -B -c app.openapi/app.routes contract check for /v1/astrology/projections
-PASS python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-303-connect-b2c-frontend-to-astrology-projections
+PASS node .\scripts\run-vite-logged.mjs vitest vitest run natalChartApi
+PASS node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation
+PASS node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi
+PASS .\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.lint.json
+PASS .\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.node.json
 
-PASS rg -n -P "(?<!re)fetch\(|axios\." frontend scoped paths: no direct HTTP calls outside apiFetch.
-PASS rg -n "style=\{\{" frontend scoped paths: no inline styles in touched TSX.
-PASS rg forbidden internals on touched app paths: no provider_response, raw_runtime, replay_snapshot, admin_answer_audit, expert_technical_projection_v1, prompt.
-PASS rg disclaimer scan: only app-owned legalNoticeLines/disclaimerTitle rendering remains.
-PASS rg "\bany\b" touched app paths: no matches.
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest backend\tests\api\test_projection_openapi.py backend\tests\api\test_projection_endpoint.py backend\tests\api\test_projection_authorization.py -q --tb=short
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c app.openapi/app.routes contract check for /v1/astrology/projections
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-303-connect-b2c-frontend-to-astrology-projections
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-303-connect-b2c-frontend-to-astrology-projections\00-story.md
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-303-connect-b2c-frontend-to-astrology-projections\00-story.md
 
-LIMITATION pnpm test: FAIL 18 tests in 4 unrelated i18n/consultation files:
+PASS rg -n -P "(?<!re)fetch\(|axios\." touched CS-303 frontend files: no direct HTTP calls outside apiFetch.
+PASS rg -n "style=\{\{" touched CS-303 frontend files: no inline styles.
+PASS rg forbidden internals on touched CS-303 frontend files: no provider_response, raw_runtime, replay_snapshot, admin_answer_audit, expert_technical_projection_v1, astrology_full_data_v1 or admin_chart_diagnostics_v1.
+PASS rg "\bany\b" touched CS-303 app files: no matches.
+PASS rg disclaimer scan: legalNoticeLines/disclaimerTitle remain app-owned; no projection payload disclaimer rendering.
+
+FAIL_WITH_LIMITATIONS node .\scripts\run-vite-logged.mjs vitest vitest run:
+- 19 failures in 4 unrelated frontend suites.
 - src/tests/ShortcutCard.test.tsx: English dashboard shortcut localization expectation.
-- src/tests/DashboardPage.test.tsx: English dashboard localization expectation.
+- src/tests/DashboardPage.test.tsx: dashboard content/localization expectations.
 - src/tests/DailyHoroscopePage.test.tsx: English daily horoscope localization expectations.
 - src/tests/ConsultationsPage.test.tsx: consultation page localization/flow expectations.
-CS-303 targeted files and /natal regression suite passed.
+- CS-303 targeted files and /natal regression suites passed.
+
+NOT_RUN pnpm commands were not reused after a parallel retry caused Windows EPERM lockfile rename errors.
+The same test/typecheck scripts were run directly through repository node_modules to avoid lockfile writes.

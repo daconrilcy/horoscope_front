@@ -2,12 +2,12 @@
 
 ## Story status
 
-- Validation outcome: targeted-pass-with-full-suite-limitations
-- Ready for review: yes
+- Validation outcome: done-with-full-suite-limitations
+- Ready for review: clean implementation review completed
 - Story key: `CS-303-connect-b2c-frontend-to-astrology-projections`
 - Source story: `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/00-story.md`
 - Capsule path: `_condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections`
-- Registry status: `ready-to-review`
+- Registry status: `done`
 
 ## Preflight
 
@@ -77,21 +77,26 @@
 | `git status --short` | repo root | PASS | Initial clean; final dirty files recorded. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only ...` | repo root, venv active | PASS | Generated missing capsule files. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...` | repo root, venv active | PASS | Capsule structure valid. |
-| `pnpm test -- astrologyProjectionsApi natalInterpretation --runInBand` | `frontend` | FAIL | Unsupported Vitest option; rerun without option. |
-| `pnpm test -- astrologyProjectionsApi natalInterpretation` | `frontend` | PASS | Projection component state tests passed; API file run separately. |
-| `pnpm test -- natalChartApi` | `frontend` | PASS | 15 tests passed. |
-| `pnpm test -- component-architecture-guards natalInterpretation NatalChartPage natalChartApi` | `frontend` | PASS | 124 tests passed. |
-| `pnpm lint` | `frontend` | PASS | TypeScript lint/typecheck script passed. |
-| `pnpm test` | `frontend` | FAIL_WITH_LIMITATIONS | 18 failures in unrelated localization/consultation suites; CS-303 targeted suites passed. |
+| `pnpm test -- astrologyProjectionsApi natalInterpretation --runInBand` | `frontend` | FAIL | Unsupported Vitest option; rerun without option during implementation. |
+| `pnpm test -- astrologyProjectionsApi natalInterpretation` | `frontend` | PASS | Implementation pass; projection component state tests passed. |
+| `pnpm test -- natalChartApi` | `frontend` | PASS | Implementation pass; 15 tests passed. |
+| `pnpm test -- component-architecture-guards natalInterpretation NatalChartPage natalChartApi` | `frontend` | PASS | Implementation pass; 124 tests passed. |
+| `pnpm lint` | `frontend` | PASS | Implementation pass; TypeScript lint/typecheck script passed. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run natalChartApi` | `frontend` | PASS | Fresh review pass; 15 tests passed. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation` | `frontend` | PASS | Fresh review pass; 33 tests passed. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi` | `frontend` | PASS | Fresh review pass; 91 tests passed. |
+| `.\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.lint.json; .\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.node.json` | `frontend` | PASS | Fresh review typecheck without lockfile write. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run` | `frontend` | FAIL_WITH_LIMITATIONS | 19 failures in unrelated localization/consultation suites; CS-303 targeted suites passed. |
 | `python -B -m pytest backend\tests\api\test_projection_openapi.py backend\tests\api\test_projection_endpoint.py backend\tests\api\test_projection_authorization.py -q --tb=short` | repo root, venv active | PASS | 8 backend API tests passed. |
 | `python -B -c app.openapi/app.routes contract check` | repo root then `backend`, venv active | PASS | Runtime route and OpenAPI contract confirmed. |
 | targeted `rg` guard scans | repo root | PASS | Direct HTTP, inline style, forbidden internals, disclaimer ownership, `any`. |
-| `git diff --check -- <story paths>` | repo root | PASS | No whitespace errors. |
+| `git diff --check -- <story paths>` | repo root | PASS | No whitespace errors during implementation evidence pass. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-303-connect-b2c-frontend-to-astrology-projections` | repo root, venv active | PASS | Final capsule validation after evidence update. |
 
 ## Commands skipped or blocked
 
 - `pnpm test:e2e`: NOT_RUN; story is component/API wiring and targeted Vitest coverage plus local page tests covered the flow. Risk: browser-only layout issues could remain.
+- Fresh `pnpm` script reruns: NOT_RUN after concurrent attempts caused Windows EPERM lockfile rename errors. Equivalent Vitest and TypeScript commands were run directly from `node_modules`.
 - Local app startup: NOT_RUN; no server kept running because validation focused on tested `/natal` integration and full suite already exercised rendering. Risk: manual visual QA still useful.
 
 ## DRY / No Legacy evidence
@@ -110,17 +115,10 @@
 ## Final worktree status
 
 ```text
+ M _condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/evidence/validation.txt
+ M _condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/10-final-evidence.md
+ M _condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/11-code-review.md
  M _condamad/stories/story-status.md
- M frontend/src/api/index.ts
- M frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx
- M frontend/src/features/natal-chart/NatalInterpretation.css
- M frontend/src/features/natal-chart/NatalInterpretation.tsx
- M frontend/src/tests/NatalChartPage.test.tsx
- M frontend/src/tests/natalChartApi.test.tsx
- M frontend/src/tests/natalInterpretation.test.tsx
-?? _condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/evidence/
-?? _condamad/stories/CS-303-connect-b2c-frontend-to-astrology-projections/generated/*.md
-?? frontend/src/api/astrologyProjections.ts
 ```
 
 ## Remaining risks
