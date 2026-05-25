@@ -1,0 +1,61 @@
+CS-294 validation transcript - 2026-05-25
+
+PASS - capsule validation
+Command:
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime
+Output: CONDAMAD validation: PASS
+
+PASS - final capsule validation after evidence update
+Command:
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime
+Output: CONDAMAD validation: PASS
+
+PASS - scoped format
+Command:
+.\.venv\Scripts\Activate.ps1; cd backend; ruff format app\services\ops\rejected_answer_review.py app\core\sensitive_data.py tests\api\admin\test_rejected_answer_review_workflow.py tests\unit\test_sensitive_data_non_leakage.py
+Output: 1 file reformatted, then targeted test-file rerun left unchanged. Review-fix rerun: 1 file reformatted, 3 files left unchanged.
+
+PASS - targeted pytest
+Command:
+.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\admin\test_rejected_answer_review_workflow.py tests\unit\test_sensitive_data_non_leakage.py --tb=short
+Output: 17 passed in 37.16s. Review-fix rerun after raw birth-field assertions: 17 passed in 34.99s.
+
+PASS - route inventory
+Command:
+.\.venv\Scripts\Activate.ps1; cd backend; python -B -c "<app.routes and app.openapi answer-audits assertions>"
+Output: routes and OpenAPI expose only the three `/v1/admin/answer-audits/rejected` paths.
+
+PASS - lint
+Command:
+.\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+Output: All checks passed! Review-fix rerun: All checks passed!
+
+PASS - parallel audit store scan
+Command:
+rg -n "AnswerAuditAccessLogModel|admin_answer_audit_access_logs|answer_audit_access_log_repository" backend\app -g "*.py"
+Output: no matches; exit 1 treated as PASS.
+
+PASS - forbidden runtime route scan
+Command:
+rg -n "/v1/answer-audits/rejected|/v1/users/me/answer-audits/rejected|/v1/support/rejected-answers|/v1/admin/answer-audit-replay" backend\app\api backend\app\services -g "*.py"
+Output: no matches; exit 1 treated as PASS.
+
+PASS - CONDAMAD story validation and strict lint
+Command:
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md
+Output: CONDAMAD story validation: PASS; CONDAMAD story lint: PASS.
+
+PASS - diff whitespace
+Command:
+git diff --check
+Output: no whitespace errors; Git reported LF-to-CRLF working-copy warnings only.
+
+PASS - app import/start smoke
+Evidence:
+The route inventory command imported `app.main:app` and loaded routes/OpenAPI successfully.
+
+PASS - full backend pytest
+Command:
+.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short
+Output: 3380 passed, 1 skipped, 1212 deselected in 297.73s.

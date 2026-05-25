@@ -1,0 +1,86 @@
+CS-293 validation transcript
+
+Environment:
+- PowerShell on Windows.
+- Python commands executed after .\.venv\Scripts\Activate.ps1.
+- Backend commands executed from backend.
+
+Commands and results:
+
+1. python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-293-close-astrology-disclaimer-projection-policy-evidence --root . --with-optional
+Result: PASS
+Summary: CONDAMAD capsule repaired.
+
+2. python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-293-close-astrology-disclaimer-projection-policy-evidence
+Result: PASS
+Summary: CONDAMAD validation PASS.
+
+3. rg -n "astrology_disclaimer_projection_policy|beginner_summary_v1|client_interpretation_projection_v1|free|basic|premium|natal|prediction|AI|degraded mode|missing birth time|application-controlled|application code|does not create|does not mutate|product gap|guidance" docs\architecture\astrology-disclaimer-projection-policy.md _condamad\stories\CS-284-astrology-disclaimer-projection-policy\evidence\disclaimer-inventory.md
+Result: PASS
+Summary: required policy id, usage classes, plan mapping, LLM boundary and gap terms found.
+
+4. python -B -c "from pathlib import Path; assert Path('../docs/architecture/astrology-disclaimer-projection-policy.md').exists(); assert Path('../_condamad/stories/CS-284-astrology-disclaimer-projection-policy/evidence').exists(); assert Path('../_condamad/stories/CS-284-astrology-disclaimer-projection-policy/generated/10-final-evidence.md').exists(); print('policy-and-evidence-paths: PASS')"
+Result: PASS
+Summary: policy-and-evidence-paths: PASS.
+
+5. python -B -c "from app.main import app; assert 'astrology_disclaimer_projection_policy' not in str(app.openapi()); assert all('disclaimer-policy' not in getattr(r, 'path', '') for r in app.routes); print('openapi-and-routes-neutrality: PASS')"
+Result: PASS
+Summary: openapi-and-routes-neutrality: PASS.
+
+6. ruff check .
+Result: PASS
+Summary: All checks passed.
+
+7. python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py --tb=short
+Result: PASS
+Summary: 21 passed.
+
+8. python -B -m pytest -q --tb=short
+Result: PASS
+Summary: 3380 passed, 1 skipped, 1212 deselected.
+
+9. git diff --check -- docs\architecture\astrology-disclaimer-projection-policy.md _condamad\stories\CS-284-astrology-disclaimer-projection-policy _condamad\stories\CS-293-close-astrology-disclaimer-projection-policy-evidence _condamad\stories\story-status.md
+Result: PASS
+Summary: no whitespace errors.
+
+Skipped:
+- ruff format: no Python files modified.
+- Frontend/browser checks: no frontend source, route, UI or CSS change in scope.
+
+Final alignment pass on 2026-05-25:
+
+10. python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-284-astrology-disclaimer-projection-policy\00-story.md
+Result: PASS
+Summary: CS-284 story contract valid after status synchronization.
+
+11. python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-284-astrology-disclaimer-projection-policy\00-story.md
+Result: PASS
+Summary: CS-284 strict story lint valid after status synchronization.
+
+12. python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py --final _condamad\stories\CS-284-astrology-disclaimer-projection-policy
+Result: PASS
+Summary: CS-284 final capsule validation valid after generated evidence repair.
+
+13. python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py --final _condamad\stories\CS-293-close-astrology-disclaimer-projection-policy-evidence
+Result: PASS
+Summary: CS-293 final capsule validation remains valid.
+
+14. python -B -c "from app.main import app; assert 'astrology_disclaimer_projection_policy' not in str(app.openapi()); assert all('disclaimer-policy' not in getattr(r, 'path', '') for r in app.routes)"
+Result: PASS
+Summary: openapi-and-routes-neutrality: PASS.
+
+15. ruff check .
+Result: PASS
+Summary: All checks passed.
+
+16. python -B -m pytest -q tests\architecture\test_api_contract_neutrality.py --tb=short
+Result: PASS
+Summary: 21 passed.
+
+17. python -B -m pytest -q --tb=short
+Result: PASS
+Summary: 3380 passed, 1 skipped, 1212 deselected.
+
+18. git diff --check -- docs\architecture\astrology-disclaimer-projection-policy.md _condamad\stories\CS-284-astrology-disclaimer-projection-policy _condamad\stories\CS-293-close-astrology-disclaimer-projection-policy-evidence _condamad\stories\story-status.md
+Result: PASS
+Summary: no whitespace errors; Git reported line-ending normalization warnings only.

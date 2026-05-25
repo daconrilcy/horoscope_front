@@ -1,5 +1,5 @@
 # Story CS-293 close-astrology-disclaimer-projection-policy-evidence: Close Astrology Disclaimer Projection Policy Evidence
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

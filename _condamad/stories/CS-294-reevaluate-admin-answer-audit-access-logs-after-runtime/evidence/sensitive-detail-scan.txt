@@ -1,0 +1,16 @@
+CS-294 sensitive detail scan - 2026-05-25
+
+Application change:
+- `AuditService` now classifies `raw_rejected_answer` as `USER_AUTHORED_CONTENT`, which is forbidden for `Sink.AUDIT_TRAIL`.
+- `RejectedAnswerReviewService.update_review_status` no longer persists free-form `review_note` into audit event details.
+
+Command:
+rg -n "raw_rejected_answer|\"prompt\"|\"secret\"|\"birth_date\"|\"review_note\"" backend\app\services\ops\rejected_answer_review.py backend\app\api\v1\routers\admin\answer_audit.py
+
+Result: REVIEWED_MATCHES
+- `review_note` still appears as input/response state in `RejectedAnswerReviewService` and the admin route payload, but no longer appears in the `details={...}` passed to `_record_review_audit_event`.
+- No `raw_rejected_answer`, `"prompt"`, `"secret"` or raw `birth_*` audit-detail key is passed by the rejected answer review route/service.
+
+Test proof:
+- `backend/tests/api/admin/test_rejected_answer_review_workflow.py` asserts persisted list/detail/review audit event details exclude `raw_rejected_answer`, `prompt`, `secret`, `review_note` and raw birth fields.
+- `backend/tests/unit/test_sensitive_data_non_leakage.py` asserts `AuditService.record_event` drops `raw_rejected_answer`, `prompt`, `secret` and raw birth fields for audit trail details.

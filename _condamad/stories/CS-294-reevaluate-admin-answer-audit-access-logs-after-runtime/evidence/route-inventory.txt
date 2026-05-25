@@ -1,0 +1,22 @@
+CS-294 route inventory - 2026-05-25
+
+Command:
+.\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; paths=sorted(getattr(r,'path','') for r in app.routes if 'answer-audits' in getattr(r,'path','')); openapi=app.openapi()['paths']; print('routes=', paths); print('openapi=', sorted(p for p in openapi if 'answer-audits' in p)); assert '/v1/admin/answer-audits/rejected' in paths; assert '/v1/admin/answer-audits/rejected/{answer_id}' in paths; assert '/v1/admin/answer-audits/rejected/{answer_id}/review' in paths"
+
+Result: PASS
+
+Runtime app.routes:
+- /v1/admin/answer-audits/rejected
+- /v1/admin/answer-audits/rejected/{answer_id}
+- /v1/admin/answer-audits/rejected/{answer_id}/review
+
+OpenAPI paths:
+- /v1/admin/answer-audits/rejected
+- /v1/admin/answer-audits/rejected/{answer_id}
+- /v1/admin/answer-audits/rejected/{answer_id}/review
+
+Forbidden route scan:
+Command:
+rg -n "/v1/answer-audits/rejected|/v1/users/me/answer-audits/rejected|/v1/support/rejected-answers|/v1/admin/answer-audit-replay" backend\app\api backend\app\services -g "*.py"
+
+Result: PASS, exit 1 means no runtime owner matches.

@@ -1,0 +1,71 @@
+CS-262 final evidence validation transcript
+Story: CS-292 reconcile-cs-262-ai-traceability-final-evidence
+Date: 2026-05-25
+
+Preflight:
+- Existing dirty files before work were limited to unrelated .agents/skills changes.
+- An accidental preparation artifact at _condamad/stories/cs-292 was removed after verifying it was inside the workspace and created by this run.
+- CS-292 capsule repair and validation: PASS.
+- CS-292 story-status row path/source brief matched the requested story.
+
+Validation commands:
+
+1. `. .\.venv\Scripts\Activate.ps1; python -B -c "<audit folder contains six markdown files>"`
+   Result: PASS.
+
+2. `. .\.venv\Scripts\Activate.ps1; python -B -c "<CS262 final evidence exists>"`
+   Result: PASS.
+
+3. `. .\.venv\Scripts\Activate.ps1; rg -n "00-audit-report.md|01-evidence-log.md|02-finding-register.md" $env:CS262_FINAL`
+   Result: PASS; all three filenames found.
+
+4. `. .\.venv\Scripts\Activate.ps1; rg -n "03-story-candidates.md|04-risk-matrix.md|05-executive-summary.md" $env:CS262_FINAL`
+   Result: PASS; all three filenames found.
+
+5. `. .\.venv\Scripts\Activate.ps1; rg -n "answer_id|prompt_version|provider|model|full_prompt|prompt_ref|prompt_payload_snapshot" $env:CS262_FINAL`
+   Result: PASS; all seven fields found in the reconciliation matrix.
+
+6. `. .\.venv\Scripts\Activate.ps1; rg -n "CS-288|resolved-by-CS-288|open-decision|retention|DPO" $env:CS262_FINAL`
+   Result: PASS; resolved and open decision terms found.
+
+7. `. .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests/unit/test_narrative_answer_audit_model.py tests/integration/test_narrative_answer_audit_repository.py tests/integration/test_narrative_answer_audit_schema.py --tb=short`
+   Result: PASS; `2 passed, 5 deselected in 0.45s`.
+
+8. `. .\.venv\Scripts\Activate.ps1; python -B -c "<story-status contains CS-262 ready-to-review>"`
+   Result: PASS.
+
+9. `. .\.venv\Scripts\Activate.ps1; python -B -c "<validation transcript exists>"`
+   Result: PASS.
+
+10. `git status --short -- backend/app backend/tests frontend/src backend/migrations`
+    Result: PASS; no output.
+
+11. `. .\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check app\infra\db\models\user_natal_interpretation.py tests\unit\test_narrative_answer_audit_model.py tests\integration\test_narrative_answer_audit_repository.py tests\integration\test_narrative_answer_audit_schema.py`
+    Result: PASS; `4 files already formatted`.
+
+12. `. .\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .`
+    Result: PASS; `All checks passed!`.
+
+13. `. .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q --tb=short`
+    Result: PASS; `3380 passed, 1 skipped, 1212 deselected in 395.43s`.
+
+14. Cache cleanup:
+    Result: PASS; removed `.pytest_cache`, `.ruff_cache`, `backend\.pytest_cache`, `backend\.ruff_cache`.
+
+15. `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py --final _condamad\stories\CS-292-reconcile-cs-262-ai-traceability-final-evidence`
+    Result: PASS; `CONDAMAD validation: PASS`.
+
+Scoped no-application-source-change evidence:
+- `git status --short -- backend/app backend/tests frontend/src backend/migrations`: no output.
+
+Status update evidence:
+- CS-262 row moved from `ready-to-dev` to `ready-to-review` after final evidence creation.
+- CS-292 row moved from `ready-to-dev` to `ready-to-review` after implementation evidence completion.
+
+Final worktree evidence:
+- Story-local changed/untracked files are CONDAMAD evidence plus `_condamad/stories/story-status.md`.
+- Pre-existing unrelated `.agents/skills/**` dirty files remain untouched.
+
+Open decisions preserved:
+- `full_prompt`: open-decision for product/DPO retention.
+- `prompt_payload_snapshot`: open-decision for retention, DPO review, snapshot contents, retention window and backfill policy.

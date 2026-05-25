@@ -1,5 +1,5 @@
 # Story CS-284 astrology-disclaimer-projection-policy: Define Astrology Disclaimer Projection Policy
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

@@ -1,0 +1,23 @@
+CS-293 app surface status
+
+Command:
+git status --short -- backend\app frontend\src backend\migrations docs\architecture\astrology-disclaimer-projection-policy.md _condamad\stories\CS-284-astrology-disclaimer-projection-policy _condamad\stories\CS-293-close-astrology-disclaimer-projection-policy-evidence _condamad\stories\story-status.md
+
+Result:
+PASS
+
+Scoped status:
+M  _condamad/stories/story-status.md
+?? _condamad/stories/CS-284-astrology-disclaimer-projection-policy/evidence/
+?? _condamad/stories/CS-284-astrology-disclaimer-projection-policy/generated/10-final-evidence.md
+?? _condamad/stories/CS-293-close-astrology-disclaimer-projection-policy-evidence/generated/
+?? docs/architecture/astrology-disclaimer-projection-policy.md
+
+Interpretation:
+No CS-293-owned change appears under backend/app, frontend/src or backend/migrations.
+The listed changes are the canonical policy document, CONDAMAD evidence/capsule artifacts and the CS-293 tracker status row.
+
+Final alignment status:
+- CS-284 `00-story.md` and tracker row are synchronized to `done` on 2026-05-25.
+- CS-284 generated capsule files were repaired so `condamad_validate.py --final` passes.
+- No story-owned change appears under `backend/app`, `frontend/src` or `backend/migrations`.

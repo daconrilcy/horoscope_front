@@ -1,4 +1,4 @@
-# CS-294 Editorial Story Review
+# CS-294 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,15 +7,13 @@ Verdict: CLEAN
 - Reviewed story: `_condamad/stories/CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime/00-story.md`.
 - Source brief: `_story_briefs/cs-294-reevaluate-admin-answer-audit-access-logs-after-runtime.md`.
 - Tracker row: `_condamad/stories/story-status.md`, row for `CS-294`.
+- Implementation files: backend rejected-answer review service, sensitive-data policy and targeted API/unit tests.
 - Guardrails checked by scoped ID search only: `RG-002`, `RG-003`, `RG-007`, `RG-022`.
 
 ## Review Findings
 
-- Fixed: validation artifact checks `VC12` through `VC14` used root-relative `_condamad/...` paths after `cd backend`.
-  They now use `../_condamad/...`, matching the declared working directory.
-- Fixed: sensitive-field scan `VC10` targeted all `app tests`, which would flag expected assertion literals in tests.
-  It now targets the runtime owners that could pass audit details to `AuditService`.
-- Fixed: the final `VC10` command was shortened after strict lint reported a line-length violation.
+- Fixed in implementation review iteration 1: AC7 tests proved `birth_date` but not the full raw birth-data family named by the story.
+  API and unit tests now assert `birth_time`, `birth_place`, `birth_lat`, `birth_lon` and `birth_timezone` are absent from persisted audit details.
 
 ## Alignment Result
 
@@ -27,13 +25,18 @@ Verdict: CLEAN
 
 ## Validation
 
-- PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md`
-- PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\services\ops\rejected_answer_review.py app\core\sensitive_data.py tests\api\admin\test_rejected_answer_review_workflow.py tests\unit\test_sensitive_data_non_leakage.py`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\admin\test_rejected_answer_review_workflow.py tests\unit\test_sensitive_data_non_leakage.py --tb=short`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; ruff check .`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "<app.routes and app.openapi admin answer-audit assertions>"`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short`
+- PASS: `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime`
+- PASS: `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md`
+- PASS: `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md`
 
 ## Residual Risk
 
-- No drafting issue remains actionable. Runtime implementation can still discover whether CS-268 closes fully or needs
-  the already-bounded follow-up path.
+- No implementation issue remains actionable for the CS-294 acceptance criteria after the fresh review.
 
 ## Propagation
 
