@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
+import inspect
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 import app.infra.db.models  # noqa: F401
+import app.services.replay_snapshot_v1_service as replay_snapshot_v1_service
 from app.infra.db.base import Base
 from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmReplaySnapshotModel
 from app.infra.db.models.llm.llm_release import LlmReleaseSnapshotModel
@@ -72,9 +74,8 @@ def test_replay_snapshot_purge_does_not_delete_call_logs_or_release_snapshots() 
 
         after_logs = db.scalar(select(func.count()).select_from(LlmCallLogModel))
         after_releases = db.scalar(select(func.count()).select_from(LlmReleaseSnapshotModel))
-        service_source = (
-            Base.metadata.tables["llm_replay_snapshots"].name
-            + PathLikeSource.replay_service_source()
+        service_source = Base.metadata.tables["llm_replay_snapshots"].name + inspect.getsource(
+            replay_snapshot_v1_service
         )
         assert result.purged_count == 1
         assert after_logs == before_logs
@@ -83,16 +84,3 @@ def test_replay_snapshot_purge_does_not_delete_call_logs_or_release_snapshots() 
         assert "admin_chart_diagnostics" not in service_source
     finally:
         db.close()
-
-
-class PathLikeSource:
-    """Expose la source service sans ajouter de dependance aux chemins globaux de test."""
-
-    @staticmethod
-    def replay_service_source() -> str:
-        """Retourne la source du service pour le scan non-cascade cible."""
-        from pathlib import Path
-
-        return Path("backend/app/services/replay_snapshot_v1_service.py").read_text(
-            encoding="utf-8"
-        )

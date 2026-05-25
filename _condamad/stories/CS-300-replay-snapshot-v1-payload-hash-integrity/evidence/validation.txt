@@ -1,4 +1,26 @@
 Validation summary:
+- Implementation review iteration 1 found a cwd-dependent guardrail in
+  `tests\integration\test_replay_snapshot_v1_service_non_cascade.py`: the 36-test replay suite
+  failed from `backend` because the test read `backend/app/services/replay_snapshot_v1_service.py`
+  relative to the current directory.
+- Fix applied: replaced the brittle file-path read with `inspect.getsource()` on the imported
+  `app.services.replay_snapshot_v1_service` module.
+- `ruff format tests\integration\test_replay_snapshot_v1_service_non_cascade.py` PASS: 1 file reformatted.
+- `ruff check .` PASS after the implementation-review fix.
+- `python -B -m pytest -q tests\integration\test_replay_snapshot_v1_service_non_cascade.py --tb=short --long`
+  PASS: 1 passed.
+- `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_storage_security_model.py tests\unit\test_replay_snapshot_v1_storage.py tests\unit\test_replay_snapshot_v1_service_retention.py tests\unit\test_replay_snapshot_v1_service_ownership.py tests\unit\test_replay_snapshot_v1_service_metadata.py tests\unit\test_replay_snapshot_v1_service_manual_purge.py tests\unit\test_replay_snapshot_v1_service_audit.py tests\unit\test_replay_snapshot_v1_retention.py tests\unit\test_replay_snapshot_v1_redaction.py tests\unit\test_replay_snapshot_v1_purge.py tests\unit\test_replay_snapshot_v1_ownership.py tests\unit\test_replay_snapshot_v1_execution_audit.py tests\integration\test_replay_snapshot_v1_service_purge.py tests\integration\test_replay_snapshot_v1_service_non_cascade.py tests\integration\test_replay_snapshot_v1_db_redaction.py --tb=short --long`
+  PASS after the implementation-review fix: 36 passed.
+- Final implementation review rerun:
+  - replay integrity/redaction subset PASS: 10 passed.
+  - expanded replay suite from `backend` PASS: 36 passed.
+  - admin/API/architecture replay guard suite PASS: 14 passed.
+  - negative scans for fabricated raw replay setup and forbidden public replay paths PASS: no matches.
+  - runtime `app.openapi()` and `app.routes` exposure assertions PASS.
+  - `git diff --check` PASS.
+  - `condamad_validate.py` PASS.
+  - `condamad_story_validate.py` PASS.
+  - `condamad_story_lint.py --strict` PASS.
 - `ruff format app\services\replay_snapshot_v1_service.py app\ops\llm\replay_service.py app\domain\llm\runtime\observability_service.py tests\unit\test_replay_snapshot_v1_execution_audit.py tests\integration\test_replay_snapshot_v1_db_redaction.py tests\unit\test_replay_snapshot_v1_storage.py tests\unit\test_replay_snapshot_v1_redaction.py tests\unit\test_replay_snapshot_v1_service_retention.py` PASS.
 - `ruff check .` PASS.
 - `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_execution_audit.py --tb=short` PASS: 7 passed.
@@ -17,4 +39,5 @@ Validation summary:
 
 Notes:
 - Integration tests are deselected by default in this project; replay integration checks were run with `--long`.
-- One replay integration test reads `backend/app/services/replay_snapshot_v1_service.py` from the repository root, so the 36-test replay suite was executed from the repository root with `backend\...` paths.
+- The prior cwd-dependent replay integration guardrail was fixed during implementation review, so the
+  replay suite now passes from `backend` with `tests\...` paths.

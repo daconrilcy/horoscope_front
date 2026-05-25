@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: pass
-- Ready for review: yes
+- Ready for review: clean implementation review
 - Story key: CS-300-replay-snapshot-v1-payload-hash-integrity
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-300-replay-snapshot-v1-payload-hash-integrity`
@@ -98,11 +98,13 @@ See `evidence/validation.txt` for exact commands and outputs. Summary:
 ## Final worktree status
 
 - Modified backend service/runtime/tests and story capsule evidence files only.
-- `story-status.md` synchronized to `ready-to-review`.
+- `story-status.md` synchronized to `done` after a clean implementation review.
 
 ## Remaining risks
 
 - Existing line-ending warnings report LF files will be converted to CRLF when Git touches them; no whitespace errors were reported.
+- Full repository pytest was not run; replay snapshot v1 scoped runtime, integration, API, architecture,
+  story validation, and strict lint checks passed.
 
 ## Suggested reviewer focus
 

@@ -1,5 +1,5 @@
 # Story CS-300 replay-snapshot-v1-payload-hash-integrity: Repair replay_snapshot_v1 Payload Hash Integrity
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
