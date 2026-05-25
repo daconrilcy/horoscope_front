@@ -1,0 +1,12 @@
+CS-302 validation transcript
+- ruff format backend/tests/api/test_projection_real_conditions.py backend/tests/api/test_projection_authorization.py: PASS
+- ruff check backend/tests/api/test_projection_real_conditions.py backend/tests/api/test_projection_authorization.py: PASS
+- python -B -m pytest -q --tb=short tests/api/test_projection_real_conditions.py tests/api/test_projection_authorization.py tests/api/test_projection_persistence_endpoint.py tests/api/test_projection_openapi.py: PASS, 14 passed
+- ruff check .: PASS
+- python -B -m pytest -q --tb=short tests/api/test_projection_real_conditions.py tests/api/test_projection_authorization.py tests/api/test_projection_persistence_endpoint.py tests/api/test_projection_openapi.py tests/unit/services/test_projection_endpoint_service.py tests/unit/domain/astrology/test_structured_facts_v1_builder.py tests/unit/domain/astrology/test_beginner_summary_v1_builder.py tests/unit/domain/astrology/test_client_interpretation_projection_v1_builder.py: PASS, 42 passed
+- python -B -m pytest -q --tb=short: PASS, 3431 passed, 1 skipped, 1216 deselected in 348.77s
+- app.routes/app.openapi canonical route check: PASS
+- public OpenAPI internal identifier scan: PASS
+- rg forbidden projection route paths in backend/app: PASS no matches (exit 1 expected)
+- git diff --check: PASS with line-ending warning on backend/tests/api/test_projection_authorization.py
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-302-test-astrology-projections-endpoint-real-conditions: PASS after final evidence update

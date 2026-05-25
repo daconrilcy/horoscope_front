@@ -1,0 +1,286 @@
+{
+  "controlled_missing_chart_error": {
+    "body": {
+      "error": {
+        "code": "projection.chart_not_found",
+        "details": {
+          "chart_id": "unknown-chart"
+        },
+        "message": "chart result was not found for this user",
+        "request_id": "req-cs302-error"
+      }
+    },
+    "status_code": 404
+  },
+  "degraded_missing_birth_time": {
+    "body": {
+      "chart_id": "chart-realistic",
+      "metadata": {
+        "persisted_id": null,
+        "plan_code": "basic",
+        "request_id": "req-cs302-no-time",
+        "source": "birth_input"
+      },
+      "payload": {
+        "allowed_fields": [
+          "ascendant",
+          "dominant_house",
+          "dominant_themes",
+          "main_signs"
+        ],
+        "audience": [
+          "basic",
+          "beginner",
+          "free",
+          "public-user"
+        ],
+        "degraded_reason": "no_time",
+        "disclaimer_codes": [
+          "ASTROLOGY_GENERAL_LIMITATION",
+          "ASTROLOGY_MISSING_BIRTH_TIME"
+        ],
+        "display_messages": [
+          {
+            "code": "BGS_DEGRADED_NO_TIME",
+            "message": "Votre resume est affiche sans ascendant ni maisons detaillees car l'heure de naissance manque."
+          }
+        ],
+        "dominant_themes": [],
+        "excluded_surfaces": [
+          "audit_details",
+          "debug_traces",
+          "evidence_refs",
+          "full_structured_facts",
+          "internal_payloads",
+          "technical_scores"
+        ],
+        "main_signs": [
+          {
+            "code": "sun_sign",
+            "value": "aries"
+          }
+        ],
+        "message_code": "BGS_DEGRADED_NO_TIME",
+        "missing_data": [
+          "no_time"
+        ],
+        "projection_id": "beginner_summary_v1",
+        "source_projection": "structured_facts_v1",
+        "source_projection_id": "structured_facts_v1",
+        "state": "degraded",
+        "summary_items": [
+          {
+            "code": "sun_sign",
+            "value": "aries"
+          }
+        ]
+      },
+      "persisted": false,
+      "projection_hash": "61013c5cac1bd83b4c3ec4c17995447cc4b3c7e9001d474a822e1d51741a81c6",
+      "projection_type": "beginner_summary_v1",
+      "projection_version": "v1"
+    },
+    "status_code": 200
+  },
+  "success_client_interpretation_projection_v1": {
+    "body": {
+      "chart_id": "chart-realistic",
+      "metadata": {
+        "persisted_id": null,
+        "plan_code": "premium",
+        "request_id": "req-cs302-success",
+        "source": "chart_id"
+      },
+      "payload": {
+        "audit_input": {
+          "audit_contract": "narrative_answer_audit_v1",
+          "excluded_audit_surfaces": [
+            "audit_rows",
+            "provider_payloads",
+            "prompt_payloads",
+            "review_internals"
+          ],
+          "interpretive_signal_ids": [
+            "dignity_codes:mars",
+            "dispositor_codes:mars",
+            "fixed_star_contact_codes:regulus:mars",
+            "house_position_codes:mars"
+          ],
+          "plan": "premium",
+          "section_codes": [
+            "orientation_generale",
+            "points_forts",
+            "limite_de_lecture",
+            "upgrade_hint",
+            "themes_personnels",
+            "relations_aux_autres",
+            "rythme_actuel",
+            "conseil_pratique",
+            "analyse_approfondie",
+            "tensions_et_ressources",
+            "fenetres_de_prediction",
+            "plan_d_action",
+            "nuances_et_arbitrages"
+          ],
+          "support_element_codes": [
+            "confidence_wording",
+            "highlight",
+            "personalization_note"
+          ]
+        },
+        "disclaimer_codes": [
+          "ASTROLOGY_GENERAL_LIMITATION"
+        ],
+        "excluded_surfaces": [
+          "audit_internals",
+          "debug_traces",
+          "expert_technical_projection_v1",
+          "full_structured_facts",
+          "prompt_payloads",
+          "provider_responses",
+          "raw_runtime_objects",
+          "technical_scores"
+        ],
+        "interpretive_signals": [
+          "dignity_codes:mars",
+          "dispositor_codes:mars",
+          "fixed_star_contact_codes:regulus:mars",
+          "house_position_codes:mars"
+        ],
+        "plan": "premium",
+        "plan_variant": "premium",
+        "projection_id": "client_interpretation_projection_v1",
+        "sections": [
+          {
+            "code": "orientation_generale",
+            "depth": "premium",
+            "display_hint": "short",
+            "source_labels": [
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "points_forts",
+            "depth": "premium",
+            "display_hint": "short",
+            "source_labels": [
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "limite_de_lecture",
+            "depth": "premium",
+            "display_hint": "short",
+            "source_labels": []
+          },
+          {
+            "code": "upgrade_hint",
+            "depth": "premium",
+            "display_hint": "upgrade",
+            "source_labels": []
+          },
+          {
+            "code": "themes_personnels",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "contexte de maison",
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "relations_aux_autres",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "relation entre deux themes",
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "rythme_actuel",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "relation entre deux themes",
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "conseil_pratique",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "analyse_approfondie",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "contexte de maison",
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "tensions_et_ressources",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "relation entre deux themes",
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "fenetres_de_prediction",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "plan_d_action",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "theme dominant mars"
+            ]
+          },
+          {
+            "code": "nuances_et_arbitrages",
+            "depth": "premium",
+            "display_hint": "detailed",
+            "source_labels": [
+              "relation entre deux themes",
+              "theme dominant mars"
+            ]
+          }
+        ],
+        "source_projection": "structured_facts_v1",
+        "source_projection_id": "structured_facts_v1",
+        "state": "normal",
+        "support_elements": [
+          {
+            "code": "confidence_wording",
+            "value": "lecture forte"
+          },
+          {
+            "code": "highlight",
+            "value": "theme dominant mars"
+          },
+          {
+            "code": "personalization_note",
+            "value": "liens entre themes disponibles"
+          }
+        ]
+      },
+      "persisted": false,
+      "projection_hash": "ca0bb9cb4eceab3fb25f13019dd6e57dca2ee128464394a7c9492b78488a6abd",
+      "projection_type": "client_interpretation_projection_v1",
+      "projection_version": "v1"
+    },
+    "status_code": 200
+  }
+}

@@ -1,5 +1,5 @@
 # Story CS-302 test-astrology-projections-endpoint-real-conditions: Test Astrology Projections Endpoint In Real Conditions
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -111,14 +111,14 @@ and backend validation evidence usable before frontend integration.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect the CS-291 route, service, schemas, and existing projection API tests before editing. (AC: AC1, AC2, AC3, AC9)
-- [ ] Task 2: Add realistic `TestClient` scenarios for all three public projection types. (AC: AC1, AC2, AC3)
-- [ ] Task 3: Add plan matrix and entitlement denial proof using current resolver or service doubles. (AC: AC4, AC5)
-- [ ] Task 4: Add invalid payload and no-chart response tests with the shared public error envelope. (AC: AC6, AC7)
-- [ ] Task 5: Add degraded birth-input evidence for missing optional birth time. (AC: AC8)
-- [ ] Task 6: Preserve optional persistence proof through the existing persistence endpoint test path. (AC: AC9)
-- [ ] Task 7: Capture OpenAPI and runtime route evidence from `app.openapi()` and `app.routes`. (AC: AC10)
-- [ ] Task 8: Persist JSON response samples, OpenAPI snapshot, validation output, and limits notes under the CS-302 evidence folder. (AC: AC11)
+- [x] Task 1: Inspect the CS-291 route, service, schemas, and existing projection API tests before editing. (AC: AC1, AC2, AC3, AC9)
+- [x] Task 2: Add realistic `TestClient` scenarios for all three public projection types. (AC: AC1, AC2, AC3)
+- [x] Task 3: Add plan matrix and entitlement denial proof using current resolver or service doubles. (AC: AC4, AC5)
+- [x] Task 4: Add invalid payload and no-chart response tests with the shared public error envelope. (AC: AC6, AC7)
+- [x] Task 5: Add degraded birth-input evidence for missing optional birth time. (AC: AC8)
+- [x] Task 6: Preserve optional persistence proof through the existing persistence endpoint test path. (AC: AC9)
+- [x] Task 7: Capture OpenAPI and runtime route evidence from `app.openapi()` and `app.routes`. (AC: AC10)
+- [x] Task 8: Persist JSON response samples, OpenAPI snapshot, validation output, and limits notes under the CS-302 evidence folder. (AC: AC11)
 
 ## Files to Inspect First
 

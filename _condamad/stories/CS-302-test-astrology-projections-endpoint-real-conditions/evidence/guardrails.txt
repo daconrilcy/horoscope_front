@@ -1,0 +1,6 @@
+RG-002: router diff review; no router source changed.
+RG-003: PASS app.routes/app.openapi canonical /v1/astrology/projections only.
+RG-007: PASS public OpenAPI operation excludes expert_technical_projection_v1 and admin_chart_diagnostics_v1.
+RG-022: PASS validation paths target backend pytest files collected below.
+Story-local forbidden app route scan: PASS no matches in backend/app for legacy projection paths.
+Frontend guardrails RG-047/RG-052: out of scope; no frontend files changed.

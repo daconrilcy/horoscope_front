@@ -84,6 +84,7 @@ def test_projection_endpoint_denies_insufficient_plan() -> None:
 
     assert response.status_code == 403
     assert response.json()["error"]["details"]["current_plan"] == "none"
+    assert response.json()["error"]["details"]["required_plan"] == "free"
 
 
 def _client_with(service: _DenyingProjectionService) -> TestClient:
