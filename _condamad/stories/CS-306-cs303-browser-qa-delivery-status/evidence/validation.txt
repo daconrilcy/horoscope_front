@@ -1,0 +1,282 @@
+# Validation CS-306
+
+## pnpm lint
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Already up to date
+Progress: resolved 293, reused 243, downloaded 0, added 0, done
+[EPERM] EPERM: operation not permitted, rename 'C:\dev\horoscope_front\frontend\node_modules\.pnpm\lock.yaml.3240217390' -> 'C:\dev\horoscope_front\frontend\node_modules\.pnpm\lock.yaml'
+
+
+
+[ERROR] Command failed with exit code 4294963248: "C:\Program Files\nodejs\node.exe" "C:\Users\cyril\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+
+pnpm: Command failed with exit code 4294963248: "C:\Program Files\nodejs\node.exe" "C:\Users\cyril\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+    at getFinalError (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:28550:14)
+    at makeError (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:30857:21)
+    at getSyncResult (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32701:10)
+    at spawnSubprocessSync (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32661:14)
+    at execaCoreSync (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32591:23)
+    at callBoundExeca (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35119:23)
+    at boundExeca (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35096:49)
+    at sync (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35255:10)
+    at runPnpmCli (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:208877:5)
+    at runDepsStatusCheck (file:///C:/Users/cyril/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:210581:7)
+
+## pnpm lint retry
+$ tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
+
+## vitest natalChartApi
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 18ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  23:55:48
+   Duration  1.26s (transform 201ms, setup 252ms, import 210ms, tests 18ms, environment 638ms)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+## vitest natalInterpretation
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 29ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 848ms
+
+ Test Files  2 passed (2)
+      Tests  33 passed (33)
+   Start at  23:55:49
+   Duration  2.51s (transform 505ms, setup 560ms, import 759ms, tests 877ms, environment 1.31s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+## vitest component guards
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 151ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 19ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 1690ms
+
+ Test Files  3 passed (3)
+      Tests  91 passed (91)
+   Start at  23:55:52
+   Duration  3.64s (transform 937ms, setup 751ms, import 1.31s, tests 1.86s, environment 2.02s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+## full vitest
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/design-system-guards.test.ts (39 tests) 631ms
+ ✓ src/tests/AdminLogsPage.test.tsx (1 test) 840ms
+     ✓ uses audit logs with filters, detail modal and csv export  839ms
+ ✓ src/tests/StarfieldBackground.test.tsx (38 tests) 1315ms
+ ✓ src/tests/PersonasAdmin.test.tsx (2 tests) 801ms
+     ✓ renders persona list, detail and deactivation modal  485ms
+     ✓ shows an error when persona update fails  315ms
+ ✓ src/tests/SignUpForm.test.tsx (13 tests) 791ms
+ ✓ src/tests/chat/ChatComponents.test.tsx (55 tests) 784ms
+ ✓ src/tests/SignInForm.test.tsx (14 tests) 892ms
+ ✓ src/tests/layout/Header.test.tsx (13 tests) 1186ms
+ ✓ src/tests/ChatPage.test.tsx (22 tests) 1194ms
+       ✓ renders empty state when no conversations exist  302ms
+ ✓ src/tests/AdminContentPage.test.tsx (1 test) 1739ms
+     ✓ renders sections and updates content, feature flags and rules  1738ms
+ ✓ src/tests/AppShell.test.tsx (3 tests) 1077ms
+     ✓ applique le cycle complet hidden -> expanded -> icon-only -> hidden  564ms
+ ✓ src/tests/LandingPage.test.tsx (10 tests) 1582ms
+     ✓ rend la composition landing et les CTA analytics sans boucle runtime  392ms
+     ✓ confine le focus dans le menu mobile, bloque le scroll et restaure le bouton  342ms
+ ✓ src/tests/AdminPromptsRouting.test.tsx (4 tests) 1019ms
+     ✓ redirige /admin/prompts vers le catalogue canonique  707ms
+ ✓ src/tests/SettingsPage.test.tsx (5 tests) 1589ms
+       ✓ affiche les onglets Compte, Abonnement, Usage  707ms
+       ✓ navigue entre les onglets  529ms
+ ✓ src/tests/SubscriptionGuidePage.test.tsx (4 tests) 1605ms
+     ✓ affiche les 3 cartes de plans et identifie le plan actuel avec priorité  1286ms
+ ✓ src/tests/ConsultationsPage.test.tsx (17 tests) 1277ms
+ ✓ src/tests/TimezoneSelect.test.tsx (16 tests) 2851ms
+     ✓ navigates with keyboard arrows and highlights options  1140ms
+ ✓ src/tests/natalInterpretation.test.tsx (29 tests) 2149ms
+ ✓ src/tests/DashboardPage.test.tsx (11 tests) 1765ms
+     ✓ affiche le résumé de l'horoscope et les raccourcis d'activités  579ms
+     ✓ navigue vers le détail de l'horoscope quand on clique sur le résumé  353ms
+ ✓ src/tests/AdminPromptsPage.releaseCatalog.integration.test.tsx (1 test) 1848ms
+     ✓ après clic « Ouvrir dans le catalogue », bascule vers /admin/prompts/catalog et conserve l'entrée manifeste sélectionnée  1846ms
+ ✓ src/tests/router.test.tsx (11 tests) 1931ms
+     ✓ allows authenticated user to access protected route  391ms
+     ✓ allows admin user to access /admin routes  443ms
+     ✓ renders /consultations without missing provider error  371ms
+ ✓ src/tests/App.test.tsx (9 tests) 2186ms
+     ✓ shows landing page at / for unauthenticated user  433ms
+     ✓ shows login form at /login when unauthenticated  303ms
+     ✓ shows privacy policy at /privacy under the public layout  405ms
+     ✓ redirects authenticated user from / to /dashboard  407ms
+ ✓ src/tests/AstrologersPage.test.tsx (28 tests) 2779ms
+       ✓ alternates the first displayed astrologer between visits  407ms
+       ✓ displays complete profile with hero, metrics, specialties and reviews  340ms
+ ✓ src/tests/HelpPage.test.tsx (4 tests) 2673ms
+     ✓ affiche le hero premium et les sections d'aide  1208ms
+     ✓ permet de soumettre un ticket et affiche un message de succès  1279ms
+ ✓ src/tests/AdminPage.test.tsx (8 tests) 2690ms
+     ✓ redirects non-admin user (user) from /admin to dashboard  532ms
+     ✓ allows admin user to access /admin hub  966ms
+     ✓ renders canonical admin routes without legacy redirects  838ms
+ ✓ src/tests/AdminSettingsPage.test.tsx (3 tests) 726ms
+     ✓ revokes blob urls after export download  470ms
+ ✓ src/tests/AdminPromptsCatalogFlow.test.tsx (3 tests) 3267ms
+     ✓ affiche la lecture en activation composants et artefacts runtime  1292ms
+     ✓ ouvre l édition sur le nœud use case overlay et expose la couche free  1230ms
+     ✓ rend la persona et le delta before/after persona pour une cible premium  743ms
+ ✓ src/tests/NatalExpertPanel.test.tsx (4 tests) 684ms
+     ✓ rend les blocs experts du payload public sans calcul local  530ms
+ ✓ src/tests/DailyHoroscopePage.test.tsx (22 tests) 3092ms
+     ✓ affiche la prediction API, les categories dynamiques et les heures en HH:mm  1303ms
+ ✓ src/tests/AdminSamplePayloadsAdmin.test.tsx (2 tests) 646ms
+     ✓ liste les sample payloads et appelle include_inactive quand la case est cochée  388ms
+ ✓ src/tests/SubscriptionSettings.test.tsx (20 tests) 4679ms
+     ✓ appelle useStripeCheckoutSession avec le code canonique pour un utilisateur sans abonnement Stripe  493ms
+     ✓ utilise le flow d'upgrade immédiat quand l'abonnement actif passe de basic à premium  444ms
+     ✓ affiche un retour visible et bloque la double soumission quand l'upgrade est payé automatiquement  450ms
+     ✓ redirige vers Checkout Stripe hébergé quand un paiement additionnel est requis  420ms
+     ✓ passe en mode réactivation quand cancel_at_period_end est déjà vrai  357ms
+ ✓ src/tests/ShortcutCard.test.tsx (21 tests) 561ms
+ ✓ src/tests/AdminDashboardPage.test.tsx (3 tests) 532ms
+ ✓ src/tests/layout/Sidebar.test.tsx (3 tests) 544ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 4042ms
+     ✓ renders NatalExpertPanel from latestChart data on the natal page  320ms
+ ✓ src/tests/BillingSuccessPage.test.tsx (9 tests) 511ms
+ ✓ src/components/ui/Select/Select.test.tsx (7 tests) 456ms
+ ✓ src/components/ui/Button/Button.test.tsx (16 tests) 415ms
+ ✓ src/tests/BirthProfilePage.test.tsx (41 tests) 4808ms
+     ✓ shows the generation button only if birth data exists  304ms
+ ✓ src/tests/BottomNavPremium.test.tsx (26 tests) 412ms
+ ✓ src/tests/B2BReconciliationPanel.test.tsx (2 tests) 359ms
+     ✓ loads list, detail and executes actions  321ms
+ ✓ src/tests/BillingCancelPage.test.tsx (2 tests) 376ms
+ ✓ src/tests/ThemeProvider.test.tsx (22 tests) 309ms
+ ✓ src/tests/SidebarContext.test.tsx (2 tests) 305ms
+ ✓ src/tests/ConsultationReconnection.test.tsx (6 tests) 337ms
+ ✓ src/tests/useEntitlementSnapshot.test.tsx (4 tests) 360ms
+ ✓ src/tests/page-architecture-guards.test.ts (21 tests) 398ms
+ ✓ src/tests/component-usage-guards.test.ts (4 tests) 312ms
+ ✓ src/components/ui/Form/Form.test.tsx (4 tests) 356ms
+ ✓ src/tests/UserAvatar.test.tsx (5 tests) 274ms
+ ✓ src/tests/AdminSupportPage.test.tsx (1 test) 274ms
+ ✓ src/tests/visual-smoke.test.tsx (23 tests) 340ms
+ ✓ src/tests/SupportOpsPanel.test.tsx (1 test) 233ms
+ ✓ src/components/ui/Modal/Modal.test.tsx (6 tests) 222ms
+ ✓ src/tests/EnterpriseCredentialsPanel.test.tsx (1 test) 241ms
+ ✓ src/components/ui/UpgradeCTA/UpgradeCTA.test.tsx (7 tests) 258ms
+ ✓ src/components/ui/LockedSection/LockedSection.test.tsx (6 tests) 212ms
+ ✓ src/tests/AstrologerSelectStep.test.tsx (2 tests) 208ms
+ ✓ src/tests/AdminAiGenerationsPage.test.tsx (1 test) 213ms
+ ✓ src/components/ui/EmptyState/EmptyState.test.tsx (3 tests) 174ms
+ ✓ src/tests/legacy-style-policy.test.ts (4 tests) 83ms
+ ✓ src/tests/AdminEntitlementsPage.test.tsx (2 tests) 99ms
+ ✓ src/components/ui/Field/Field.test.tsx (7 tests) 79ms
+ ✓ src/tests/AdminUserDetailPage.test.tsx (1 test) 112ms
+ ✓ src/tests/component-architecture-guards.test.ts (5 tests) 411ms
+ ✓ src/tests/NotFoundPage.test.tsx (1 test) 206ms
+ ✓ src/tests/UserMenu.test.tsx (7 tests) 79ms
+ ✓ src/tests/FaqSection.test.tsx (3 tests) 85ms
+ ✓ src/tests/AstroMoodBackground.test.tsx (10 tests) 72ms
+ ✓ src/tests/ConsultationMigration.test.tsx (4 tests) 77ms
+ ✓ src/tests/ui-icons.test.tsx (33 tests) 71ms
+ ✓ src/tests/inline-style-policy.test.ts (4 tests) 80ms
+ ✓ src/tests/css-fallback-policy.test.ts (3 tests) 53ms
+ ✓ src/components/ui/Skeleton/Skeleton.test.tsx (5 tests) 56ms
+ ✓ src/tests/UsageSettings.test.tsx (1 test) 70ms
+ ✓ src/tests/AdminPromptsLogicGraph.test.tsx (1 test) 45ms
+ ✓ src/components/ui/Card/Card.test.tsx (6 tests) 58ms
+ ✓ src/tests/AdminPermissions.test.tsx (2 tests) 36ms
+ ✓ src/components/ui/Badge/Badge.test.tsx (6 tests) 50ms
+ ✓ src/tests/astrology-i18n.test.ts (71 tests) 54ms
+ ✓ src/tests/formatDate.test.ts (20 tests) 34ms
+ ✓ src/tests/AdminPromptsPage.test.tsx (30 tests | 8 skipped) 9726ms
+     ✓ affiche le catalogue canonique et les badges de source  1016ms
+     ✓ ouvre une ligne du catalogue au clavier et garde un contrat responsive explicite  441ms
+     ✓ structure le détail catalogue : ordre des sections, zone Actions et prompts repliables  549ms
+     ✓ réinitialise les filtres catalogue via le bouton dédié  554ms
+     ✓ passe le sample payload sélectionné dans la runtime preview  658ms
+     ✓ réaligne le sample payload runtime si la sélection n’est plus dans la liste (P2)  736ms
+     ✓ conserve les sample payloads runtime quand la ligne sélectionnée sort de la page catalogue  717ms
+     ✓ affiche un libellé FR et le message serveur en repli quand la runtime preview échoue  559ms
+     ✓ annonce les états critiques avec des rôles ARIA adaptés  319ms
+     ✓ affiche l'historique release snapshot et le diff  372ms
+     ✓ affiche l'onglet consommation avec granularité, pagination serveur et axe canonique  388ms
+     ✓ réinitialise le drill-down quand la granularité redéfinit le périmètre d'agrégats  467ms
+     ✓ envoie les filtres temporels de consommation au format UTC dans la requete API  404ms
+     ✓ affiche le bandeau de mode, ouvre une confirmation avant execute-sample puis envoie le POST  961ms
+ ✓ src/tests/theme-tokens.test.ts (98 tests) 30ms
+ ✓ src/tests/predictionI18n.test.ts (13 tests) 28ms
+ ✓ src/tests/consultationStore.test.ts (14 tests) 30ms
+ ✓ src/tests/api-architecture.test.ts (5 tests) 28ms
+ ✓ src/tests/useDailyPrediction.test.tsx (4 tests) 24ms
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 55ms
+ ✓ src/tests/AppBgStyles.test.ts (48 tests) 20ms
+ ✓ src/tests/formatPrice.test.ts (2 tests) 24ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 32ms
+ ✓ src/tests/geocodingApi.test.ts (19 tests) 19ms
+ ✓ src/tests/enterpriseCredentialsApi.test.ts (4 tests) 15ms
+ ✓ src/tests/b2bEditorialApi.test.ts (4 tests) 14ms
+ ✓ src/utils/dailyAstrology.test.ts (1 test) 17ms
+ ✓ src/tests/useAnalytics.test.tsx (1 test) 17ms
+ ✓ src/tests/b2bReconciliationApi.test.ts (5 tests) 16ms
+ ✓ src/tests/b2bBillingApi.test.ts (4 tests) 13ms
+ ✓ src/tests/b2bAstrologyApi.test.ts (3 tests) 16ms
+ ✓ src/tests/guidanceApi.test.ts (5 tests) 12ms
+ ✓ src/tests/apiClient.test.ts (3 tests) 15ms
+ ✓ src/tests/b2bUsageApi.test.ts (3 tests) 15ms
+ ✓ src/tests/privacyApi.test.ts (5 tests) 12ms
+ ✓ src/tests/ui-nav.test.ts (5 tests) 10ms
+ ✓ src/tests/timezones.test.ts (9 tests) 5ms
+ ✓ src/tests/generateUniqueId.test.ts (7 tests) 4ms
+ ✓ src/tests/classNames.test.ts (10 tests) 5ms
+ ✓ src/tests/predictionBands.test.ts (3 tests) 3ms
+ ✓ src/tests/opsPersonaApi.test.ts (4 tests) 12ms
+ ✓ src/tests/dailyPredictionApi.test.ts (4 tests) 12ms
+ ✓ src/tests/adminPromptsApi.test.ts (3 tests) 11ms
+ ✓ src/tests/authToken.test.ts (3 tests) 3ms
+ ✓ src/tests/ui-barrel.test.ts (4 tests) 4ms
+ ✓ src/tests/astrologers-validation.test.ts (4 tests) 3ms
+ ✓ src/utils/dailyAdviceCardMapper.test.ts (2 tests) 3ms
+ ✓ src/tests/dailySummaryHelper.test.ts (3 tests) 3ms
+
+ Test Files  116 passed (116)
+      Tests  1271 passed | 8 skipped (1279)
+   Start at  23:56:01
+   Duration  17.87s (transform 31.11s, setup 94.29s, import 66.04s, tests 82.49s, environment 242.14s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+## backend projection pytest
+........                                                                 [100%]
+8 passed in 3.63s
+
+## backend runtime openapi route check
+PASS projection route and OpenAPI present
+
+## static guard scans
+
+### direct projection fetch
+PASS: no matches
+
+### forbidden projection internals
+PASS: no matches
+
+### inline style in CS-303 TSX owners
+PASS: no matches
+
+## evidence artifact existence
+PASS required CS-306 evidence artifacts exist
+
+## ruff check backend
+All checks passed!
+
+## final capsule validation
+CONDAMAD validation: PASS

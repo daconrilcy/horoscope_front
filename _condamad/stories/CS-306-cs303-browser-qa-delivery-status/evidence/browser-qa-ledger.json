@@ -1,0 +1,226 @@
+{
+  "artifact_type": "browser-log",
+  "route": "/natal",
+  "command": "node evidence/cs306-browser-qa.mjs",
+  "result": "pass",
+  "report_status": "Delivered",
+  "date": "2026-05-25T22:01:14.678Z",
+  "entries": [
+    {
+      "artifact_type": "browser-screenshot",
+      "route": "/natal",
+      "viewport": "desktop",
+      "projection_state": "success",
+      "command": "node evidence/cs306-browser-qa.mjs",
+      "result": "pass",
+      "report_status": "Delivered",
+      "screenshot_path": "C:\\dev\\horoscope_front\\_condamad\\stories\\CS-306-cs303-browser-qa-delivery-status\\evidence\\browser-desktop.png",
+      "visible_text_contains": [
+        "Résumé débutant",
+        "Interprétation client",
+        "Résumé débutant visible en navigateur CS-306.",
+        "Interprétation client validée dans Chromium pour CS-306."
+      ],
+      "projection_box": {
+        "x": 82,
+        "y": 3586.890625,
+        "width": 1202,
+        "height": 486.921875
+      },
+      "primary_controls_box": {
+        "x": 82,
+        "y": 2435.546875,
+        "width": 760,
+        "height": 190.5
+      },
+      "no_primary_control_overlap": true,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/reference-data/languages",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/users/me/settings",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/auth/me",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/users/me/natal-chart/latest",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/entitlements/me",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/interpretations",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/pdf-templates",
+          "postData": null
+        },
+        {
+          "method": "POST",
+          "path": "/v1/natal/interpretation",
+          "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/astrology/projections",
+          "postData": "{\"chart_id\":\"chart-cs306\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/astrology/projections",
+          "postData": "{\"chart_id\":\"chart-cs306\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/interpretations",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/interpretations",
+          "postData": null
+        }
+      ],
+      "captured_text_excerpt": "Projections B2C\n\nSynthèse publique du thème\nRésumé débutant\nv1\nRésumé débutant visible en navigateur CS-306.\nLecture claire\nRepères concrets\nInterprétation client\nv1\nProjection client visible\n\nInterprétation client validée dans Chromium pour CS-306.\n\nSupport public uniquement"
+    },
+    {
+      "artifact_type": "browser-screenshot",
+      "route": "/natal",
+      "viewport": "mobile",
+      "projection_state": "success",
+      "command": "node evidence/cs306-browser-qa.mjs",
+      "result": "pass",
+      "report_status": "Delivered",
+      "screenshot_path": "C:\\dev\\horoscope_front\\_condamad\\stories\\CS-306-cs303-browser-qa-delivery-status\\evidence\\browser-mobile.png",
+      "visible_text_contains": [
+        "Résumé débutant",
+        "Interprétation client",
+        "Résumé débutant visible en navigateur CS-306.",
+        "Interprétation client validée dans Chromium pour CS-306."
+      ],
+      "projection_box": {
+        "x": 44,
+        "y": 4659.046875,
+        "width": 302,
+        "height": 534.921875
+      },
+      "primary_controls_box": {
+        "x": 44,
+        "y": 3259.359375,
+        "width": 302,
+        "height": 240.5
+      },
+      "no_primary_control_overlap": true,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/reference-data/languages",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/users/me/settings",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/auth/me",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/users/me/natal-chart/latest",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/entitlements/me",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/interpretations",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/pdf-templates",
+          "postData": null
+        },
+        {
+          "method": "POST",
+          "path": "/v1/natal/interpretation",
+          "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/astrology/projections",
+          "postData": "{\"chart_id\":\"chart-cs306\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/astrology/projections",
+          "postData": "{\"chart_id\":\"chart-cs306\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/interpretations",
+          "postData": null
+        },
+        {
+          "method": "GET",
+          "path": "/v1/natal/interpretations",
+          "postData": null
+        }
+      ],
+      "captured_text_excerpt": "Projections B2C\n\nSynthèse publique du thème\nRésumé débutant\nv1\nRésumé débutant visible en navigateur CS-306.\nLecture claire\nRepères concrets\nInterprétation client\nv1\nProjection client visible\n\nInterprétation client validée dans Chromium pour CS-306.\n\nSupport public uniquement"
+    }
+  ],
+  "projection_state_coverage": [
+    {
+      "projection_state": "success",
+      "result": "pass",
+      "evidence": "desktop and mobile browser screenshots"
+    },
+    {
+      "projection_state": "loading",
+      "result": "pass",
+      "evidence": "natalInterpretation Vitest state coverage"
+    },
+    {
+      "projection_state": "controlled-error",
+      "result": "pass",
+      "evidence": "natalInterpretation Vitest state coverage"
+    },
+    {
+      "projection_state": "entitlement",
+      "result": "pass",
+      "evidence": "natalInterpretation Vitest state coverage"
+    },
+    {
+      "projection_state": "empty",
+      "result": "pass",
+      "evidence": "natalInterpretation Vitest state coverage"
+    },
+    {
+      "projection_state": "degraded",
+      "result": "pass",
+      "evidence": "natalInterpretation Vitest state coverage"
+    }
+  ]
+}
