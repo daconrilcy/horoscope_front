@@ -76,3 +76,4 @@
 | cs-295 | `_story_briefs\cs-295-implement-replay-snapshot-v1-storage-redaction.md` | `_condamad\stories\cs-295-replay-snapshot-v1-storage-redaction\00-story.md` |
 | cs-296 | `_story_briefs\cs-296-implement-replay-snapshot-v1-service-retention-purge.md` | `_condamad\stories\cs-296-replay-snapshot-v1-service-retention-purge\00-story.md` |
 | cs-297 | `_story_briefs\cs-297-expose-internal-admin-replay-snapshot-v1-api.md` | `_condamad\stories\cs-297-expose-internal-admin-replay-snapshot-v1-api\00-story.md` |
+| cs-298 | `_story_briefs\cs-298-implement-replay-snapshot-v1-execution-audit.md` | `_condamad\stories\cs-298-replay-snapshot-v1-execution-audit\00-story.md` |
