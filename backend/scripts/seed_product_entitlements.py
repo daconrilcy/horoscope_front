@@ -1,12 +1,7 @@
-"""Seed script for product entitlements.
+"""Initialise le catalogue canonique des entitlements produit.
 
-This script initializes the canonical product entitlements catalog:
-- Plans: free, trial, basic, premium
-- Features: natal_chart_short, natal_chart_long, astrologer_chat, thematic_consultation
-- Bindings and quotas for each plan.
-
-Run:
-    python backend/scripts/seed_product_entitlements.py
+Le script crée ou met à jour les plans B2C, leurs features et les bindings
+runtime utilisés par les gates publics.
 """
 
 from __future__ import annotations
@@ -93,6 +88,12 @@ def seed() -> None:
                 "variant_code": "summary_only",
                 "quotas": [],
             },
+            "transit_client_projection": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "free",
+                "quotas": [],
+            },
         },
         "trial": {
             "natal_chart_short": {
@@ -139,6 +140,12 @@ def seed() -> None:
                 "is_enabled": True,
                 "access_mode": AccessMode.UNLIMITED,
                 "variant_code": "full",
+                "quotas": [],
+            },
+            "transit_client_projection": {
+                "is_enabled": False,
+                "access_mode": AccessMode.DISABLED,
+                "variant_code": None,
                 "quotas": [],
             },
         },
@@ -211,6 +218,12 @@ def seed() -> None:
                 "variant_code": "full",
                 "quotas": [],
             },
+            "transit_client_projection": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "basic",
+                "quotas": [],
+            },
         },
         "premium": {
             "natal_chart_short": {
@@ -279,6 +292,12 @@ def seed() -> None:
                 "is_enabled": True,
                 "access_mode": AccessMode.UNLIMITED,
                 "variant_code": "full",
+                "quotas": [],
+            },
+            "transit_client_projection": {
+                "is_enabled": True,
+                "access_mode": AccessMode.UNLIMITED,
+                "variant_code": "premium",
                 "quotas": [],
             },
         },
@@ -358,6 +377,11 @@ def seed() -> None:
                 {
                     "feature_code": "horoscope_daily",
                     "feature_name": "Horoscope Daily",
+                    "is_metered": False,
+                },
+                {
+                    "feature_code": "transit_client_projection",
+                    "feature_name": "Transit Client Projection",
                     "is_metered": False,
                 },
             ]

@@ -1,3 +1,5 @@
+"""Politiques de classification et de sanitization des données sensibles."""
+
 from __future__ import annotations
 
 import enum
@@ -78,6 +80,17 @@ OPERATIONAL_FIELDS: Set[str] = {
     "timestamp",
     "expires_at",
     "prompt_version_id",
+    "prompt_version",
+    "prompt_ref",
+    "prompt_snapshot_ref",
+    "answer_id",
+    "answer_type",
+    "projection_version",
+    "projection_hash",
+    "llm_input_version",
+    "llm_input_hash",
+    "grounding_status",
+    "evidence_refs",
     "persona_id",
     "assembly_id",
     "status",
@@ -115,6 +128,15 @@ OPERATIONAL_FIELDS: Set[str] = {
     "plan_code",
     "event_version",
     "revenue_cents",
+    "contract_id",
+    "correlation_id",
+    "diagnostic_scope",
+    "node_count",
+    "projection_id",
+    "review_status",
+    "route_family",
+    "subject_reference_hash",
+    "consultation",
 }
 
 # AC2: Matrix sink -> treatment

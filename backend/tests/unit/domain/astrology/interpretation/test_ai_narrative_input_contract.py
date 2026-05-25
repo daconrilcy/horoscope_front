@@ -13,6 +13,8 @@ from app.domain.astrology.interpretation.ai_narrative_input_builder import (
 from app.domain.astrology.interpretation.ai_narrative_input_contracts import (
     AI_NARRATIVE_INPUT_CONTRACT_VERSION,
     AINarrativeInputContract,
+    AINarrativePersistedProjectionIdentity,
+    AINarrativePublicProjectionLink,
 )
 from app.domain.astrology.natal_calculation import AspectResult
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
@@ -103,6 +105,23 @@ def test_ai_narrative_contract_does_not_define_forbidden_source_fields() -> None
         type(_build_contract().interpretive_signals),
     ):
         assert forbidden.isdisjoint({field.name for field in fields(contract)})
+
+
+def test_ai_narrative_public_link_can_anchor_narrative_answer_audit_projection_hash() -> None:
+    """Le lien interne expose type, version et hash pour `narrative_answer_audit_v1`."""
+    link = AINarrativePublicProjectionLink(
+        owner="docs/architecture/official-product-primitives-public-projections.md",
+        primitive_id="llm_input",
+        projection_id="controlled_internal_projection",
+        persisted_projection=AINarrativePersistedProjectionIdentity(
+            projection_type="ai_narrative_input",
+            projection_version="ai_narrative_input.v1",
+            projection_hash="a" * 64,
+        ),
+    )
+
+    assert link.persisted_projection is not None
+    assert link.persisted_projection.projection_hash == "a" * 64
 
 
 def _build_contract() -> AINarrativeInputContract:

@@ -9,6 +9,7 @@ SERVICES_ROOT_ALLOWLIST = {
     "auth_service.py",
     "feature_registry_consistency_validator.py",
     "geocoding_service.py",
+    "projection_persistence_service.py",
     "privacy_service.py",
     "reference_data_service.py",
 }

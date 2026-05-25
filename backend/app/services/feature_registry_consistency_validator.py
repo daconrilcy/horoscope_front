@@ -7,6 +7,7 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import NatalChar
 from app.services.entitlement.thematic_consultation_entitlement_gate import (
     ThematicConsultationEntitlementGate,
 )
+from app.services.transit_projection.access_gate import TRANSIT_PROJECTION_FEATURE_CODE
 
 
 class FeatureRegistryConsistencyError(ValueError):
@@ -27,6 +28,7 @@ class FeatureRegistryConsistencyValidator:
             NatalChartLongEntitlementGate.FEATURE_CODE,
             feature_scope_registry.FeatureScope.B2C,
         ),
+        (TRANSIT_PROJECTION_FEATURE_CODE, feature_scope_registry.FeatureScope.B2C),
         (B2BApiEntitlementGate.FEATURE_CODE, feature_scope_registry.FeatureScope.B2B),
     ]
 

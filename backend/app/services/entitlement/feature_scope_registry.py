@@ -50,6 +50,7 @@ FEATURE_SCOPE_REGISTRY: dict[str, FeatureScope] = {
     "thematic_consultation": FeatureScope.B2C,
     "natal_chart_long": FeatureScope.B2C,
     "horoscope_daily": FeatureScope.B2C,
+    "transit_client_projection": FeatureScope.B2C,
     # B2B features (EnterpriseQuotaUsageService + enterprise_feature_usage_counters)
     "b2b_api_access": FeatureScope.B2B,
 }

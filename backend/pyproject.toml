@@ -57,6 +57,7 @@ dev = [
 pythonpath = ["."]
 testpaths = [
   "app/tests",
+  "tests/api",
   "tests/architecture",
   "tests/evaluation",
   "tests/integration",

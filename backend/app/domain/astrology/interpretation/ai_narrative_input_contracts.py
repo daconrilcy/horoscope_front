@@ -97,12 +97,30 @@ class AINarrativeMaskingPolicy:
 
 
 @dataclass(frozen=True, slots=True)
+class AINarrativePersistedProjectionIdentity:
+    """Identite d'une projection persistée référencable par l'audit narratif."""
+
+    projection_type: str
+    projection_version: str
+    projection_hash: str
+
+    def __post_init__(self) -> None:
+        """Valide l'ancre minimale de `narrative_answer_audit_v1`."""
+        for field_name in ("projection_type", "projection_version", "projection_hash"):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"AI narrative persisted projection requires {field_name}")
+        if len(self.projection_hash) != 64:
+            raise ValueError("AI narrative persisted projection requires sha256 projection_hash")
+
+
+@dataclass(frozen=True, slots=True)
 class AINarrativePublicProjectionLink:
     """Lien vers un owner de projection publique sans embarquer son payload."""
 
     owner: str
     primitive_id: str
     projection_id: str
+    persisted_projection: AINarrativePersistedProjectionIdentity | None = None
 
     def __post_init__(self) -> None:
         """Valide les references publiques controlees."""

@@ -19,6 +19,7 @@ from app.domain.astrology.interpretation.astral_point_interpretation import (
     AstralPointInterpretationService,
 )
 from app.domain.astrology.natal_calculation import NatalResult
+from app.domain.astrology.projections.projection_hash import compute_projection_hash
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
@@ -55,12 +56,19 @@ from app.services.llm_generation.natal.prompt_context import (
     _detect_degraded_mode,
     build_astral_point_interpretation_context,
 )
+from app.services.llm_generation.natal.rejected_answer_workflow import (
+    RejectedNarrativeAnswerOutcome,
+    build_rejected_narrative_answer_outcome_from_payload,
+    emit_rejected_narrative_answer_log,
+)
 from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from app.services.user_profile.natal_chart_service import UserNatalChartReadData
 
 logger = logging.getLogger(__name__)
+
+LLM_INPUT_AUDIT_VERSION = "llm_runtime_gateway_input.v1"
 
 MODULE_TO_USE_CASE_KEY: dict[str, str] = {
     "NATAL_PSY_PROFILE": "natal_psy_profile",
@@ -153,6 +161,85 @@ def _normalize_free_short_title(title: str, summary: str) -> str:
     if not re.search(r"[.!?]$", normalized):
         normalized = f"{normalized}."
     return normalized
+
+
+def _answer_type_for_audit(level: str, variant_code: str | None) -> str:
+    """Determine la categorie d'audit CS-259 depuis le contexte de generation."""
+    if variant_code == "free_short":
+        return "free_short"
+    if level == "short":
+        return "basic"
+    return "premium"
+
+
+def _apply_narrative_answer_audit(
+    model: UserNatalInterpretationModel,
+    *,
+    level: str,
+    variant_code: str | None,
+    schema_version: str,
+    request_id: str,
+    gateway_result: GatewayResult,
+    persist_payload: dict[str, object],
+    audit_source_payload: dict[str, object] | None = None,
+    rejected_outcome: RejectedNarrativeAnswerOutcome | None = None,
+) -> None:
+    """Renseigne l'audit narratif persistant sans exposer les donnees sensibles."""
+    audit_payload = audit_source_payload or persist_payload
+    prompt_version = gateway_result.meta.prompt_version_id
+    llm_input_identity = {
+        "use_case": gateway_result.use_case,
+        "prompt_version": prompt_version,
+        "request_id": request_id,
+    }
+    model.answer_id = f"{gateway_result.use_case}:{request_id}"
+    model.answer_type = _answer_type_for_audit(level, variant_code)
+    model.plan = gateway_result.meta.plan or "unknown"
+    model.projection_version = schema_version
+    model.projection_hash = compute_projection_hash(audit_payload)
+    model.llm_input_version = LLM_INPUT_AUDIT_VERSION
+    model.llm_input_hash = compute_projection_hash(llm_input_identity)
+    model.prompt_version = prompt_version
+    model.prompt_ref = f"llm_prompt_versions:{prompt_version}" if prompt_version else None
+    model.prompt_snapshot_ref = None
+    model.provider = gateway_result.meta.provider or "unknown"
+    model.model = gateway_result.meta.model
+    if rejected_outcome is None:
+        model.grounding_status = "not_checked"
+        model.evidence_refs = []
+        return
+    model.grounding_status = "rejected"
+    model.evidence_refs = rejected_outcome.validation_context
+    model.interpretation_payload = {
+        **persist_payload,
+        **rejected_outcome.to_persisted_payload(),
+    }
+
+
+def _build_rejected_narrative_answer_outcome(
+    *,
+    level: str,
+    variant_code: str | None,
+    schema_version: str,
+    request_id: str,
+    gateway_result: GatewayResult,
+    persist_payload: dict[str, object],
+) -> RejectedNarrativeAnswerOutcome | None:
+    """Evalue le rejet CS-290 depuis les preuves CS-289 deja presentes."""
+    llm_input_identity = {
+        "use_case": gateway_result.use_case,
+        "prompt_version": gateway_result.meta.prompt_version_id,
+        "request_id": request_id,
+    }
+    return build_rejected_narrative_answer_outcome_from_payload(
+        answer_id=f"{gateway_result.use_case}:{request_id}",
+        answer_type=_answer_type_for_audit(level, variant_code),
+        raw_answer=persist_payload,
+        projection_version=schema_version,
+        projection_hash=compute_projection_hash(persist_payload),
+        llm_input_version=LLM_INPUT_AUDIT_VERSION,
+        llm_input_hash=compute_projection_hash(llm_input_identity),
+    )
 
 
 class NatalInterpretationService:
@@ -689,6 +776,33 @@ class NatalInterpretationService:
             persist_payload = persist_payload.copy()
             persist_payload.pop("disclaimers", None)
 
+        rejected_outcome = _build_rejected_narrative_answer_outcome(
+            level=level,
+            variant_code=variant_code,
+            schema_version=schema_version,
+            request_id=request_id,
+            gateway_result=gateway_result,
+            persist_payload=persist_payload,
+        )
+        if rejected_outcome is not None:
+            emit_rejected_narrative_answer_log(
+                logger,
+                outcome=rejected_outcome,
+                request_id=request_id,
+                trace_id=trace_id,
+                use_case=gateway_result.use_case,
+            )
+            interpretation = AstroFreeResponseV1(
+                title="",
+                summary=rejected_outcome.client_message,
+                sections=[],
+                highlights=[],
+                advice=[],
+                evidence=[],
+                disclaimers=disclaimers,
+            )
+            meta.validation_status = "rejected"
+
         try:
             if not is_thematic_module:
                 unique_stmt = select(UserNatalInterpretationModel).where(
@@ -730,6 +844,16 @@ class NatalInterpretationService:
                         was_fallback=gateway_result.meta.fallback_triggered,
                         degraded_mode=degraded_mode_str,
                     )
+                    _apply_narrative_answer_audit(
+                        primary,
+                        level=level,
+                        variant_code=variant_code,
+                        schema_version=schema_version,
+                        request_id=request_id,
+                        gateway_result=gateway_result,
+                        persist_payload=persist_payload,
+                        rejected_outcome=rejected_outcome,
+                    )
                     db.add(primary)
                 else:
                     primary.chart_id = chart_id
@@ -741,6 +865,16 @@ class NatalInterpretationService:
                     primary.interpretation_payload = persist_payload
                     primary.was_fallback = gateway_result.meta.fallback_triggered
                     primary.degraded_mode = degraded_mode_str
+                    _apply_narrative_answer_audit(
+                        primary,
+                        level=level,
+                        variant_code=variant_code,
+                        schema_version=schema_version,
+                        request_id=request_id,
+                        gateway_result=gateway_result,
+                        persist_payload=persist_payload,
+                        rejected_outcome=rejected_outcome,
+                    )
 
                 db.commit()
                 db.refresh(primary)
@@ -869,6 +1003,34 @@ class NatalInterpretationService:
 
         # Persistence
         persist_payload = interpretation.model_dump()
+        rejection_source_payload = structured if isinstance(structured, dict) else persist_payload
+        rejected_outcome = _build_rejected_narrative_answer_outcome(
+            level="complete",
+            variant_code="free_short",
+            schema_version="v1",
+            request_id=request_id,
+            gateway_result=gateway_result,
+            persist_payload=rejection_source_payload,
+        )
+        if rejected_outcome is not None:
+            emit_rejected_narrative_answer_log(
+                logger,
+                outcome=rejected_outcome,
+                request_id=request_id,
+                trace_id=trace_id,
+                use_case=gateway_result.use_case,
+            )
+            interpretation = AstroFreeResponseV1(
+                title="",
+                summary=rejected_outcome.client_message,
+                sections=[],
+                highlights=[],
+                advice=[],
+                evidence=[],
+                disclaimers=disclaimers,
+            )
+            persist_payload = interpretation.model_dump()
+            meta.validation_status = "rejected"
 
         prompt_version_uuid = _parse_prompt_version_uuid(gateway_result.meta.prompt_version_id)
 
@@ -906,6 +1068,17 @@ class NatalInterpretationService:
                 was_fallback=gateway_result.meta.fallback_triggered,
                 degraded_mode=degraded_mode_str,
             )
+            _apply_narrative_answer_audit(
+                primary,
+                level="complete",
+                variant_code="free_short",
+                schema_version="v1",
+                request_id=request_id,
+                gateway_result=gateway_result,
+                persist_payload=persist_payload,
+                audit_source_payload=rejection_source_payload,
+                rejected_outcome=rejected_outcome,
+            )
             db.add(primary)
         else:
             primary.use_case = use_case_key
@@ -913,6 +1086,17 @@ class NatalInterpretationService:
             primary.interpretation_payload = persist_payload
             primary.was_fallback = gateway_result.meta.fallback_triggered
             primary.degraded_mode = degraded_mode_str
+            _apply_narrative_answer_audit(
+                primary,
+                level="complete",
+                variant_code="free_short",
+                schema_version="v1",
+                request_id=request_id,
+                gateway_result=gateway_result,
+                persist_payload=persist_payload,
+                audit_source_payload=rejection_source_payload,
+                rejected_outcome=rejected_outcome,
+            )
 
         db.flush()
         meta.id = primary.id

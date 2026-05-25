@@ -158,6 +158,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureBindingModel,
     PlanFeatureQuotaModel,
 )
+from app.infra.db.models.projection_persistence import PersistedProjectionModel
 from app.infra.db.models.reference import (
     AspectModel,
     AstralAnglePointModel,
@@ -335,6 +336,7 @@ __all__ = [
     "PlanFeatureBindingModel",
     "PlanFeatureQuotaModel",
     "FeatureUsageCounterModel",
+    "PersistedProjectionModel",
     "PredictionCategoryModel",
     "PlanetProfileModel",
     "AstralPlanetSignDignityModel",

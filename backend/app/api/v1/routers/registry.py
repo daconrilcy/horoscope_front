@@ -8,7 +8,11 @@ from typing import Sequence
 from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routers.admin.ai import router as admin_ai_router
+from app.api.v1.routers.admin.answer_audit import router as admin_answer_audit_router
 from app.api.v1.routers.admin.audit import router as admin_audit_router
+from app.api.v1.routers.admin.chart_diagnostics import (
+    router as admin_chart_diagnostics_router,
+)
 from app.api.v1.routers.admin.content import router as admin_content_router
 from app.api.v1.routers.admin.dashboard import router as admin_dashboard_router
 from app.api.v1.routers.admin.entitlements import router as admin_entitlements_router
@@ -61,8 +65,10 @@ from app.api.v1.routers.public.help import router as help_router
 from app.api.v1.routers.public.natal_interpretation import router as natal_interpretation_router
 from app.api.v1.routers.public.predictions import router as predictions_router
 from app.api.v1.routers.public.privacy import router as privacy_router
+from app.api.v1.routers.public.projections import router as projections_router
 from app.api.v1.routers.public.reference_data import router as reference_data_router
 from app.api.v1.routers.public.support import router as support_router
+from app.api.v1.routers.public.transit_projection import router as transit_projection_router
 from app.api.v1.routers.public.users import router as users_router
 
 
@@ -96,7 +102,9 @@ API_V1_ROUTER_REGISTRY: tuple[RouterRegistration, ...] = (
     RouterRegistration(admin_users_router),
     RouterRegistration(admin_support_router),
     RouterRegistration(admin_pdf_templates_router),
+    RouterRegistration(admin_answer_audit_router),
     RouterRegistration(admin_audit_router),
+    RouterRegistration(admin_chart_diagnostics_router),
     RouterRegistration(admin_content_router),
     RouterRegistration(astrologers_router),
     RouterRegistration(ephemeris_router),
@@ -124,8 +132,10 @@ API_V1_ROUTER_REGISTRY: tuple[RouterRegistration, ...] = (
     RouterRegistration(ops_persona_router),
     RouterRegistration(ops_entitlement_mutation_audits_router),
     RouterRegistration(predictions_router),
+    RouterRegistration(projections_router),
     RouterRegistration(privacy_router),
     RouterRegistration(reference_data_router),
+    RouterRegistration(transit_projection_router),
     RouterRegistration(users_router),
     RouterRegistration(support_router),
     RouterRegistration(help_router),

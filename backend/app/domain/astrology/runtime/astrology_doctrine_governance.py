@@ -395,6 +395,7 @@ _AUXILIARY_GOVERNED_RULE_SURFACES = frozenset(
         "backend/app/domain/astrology/interpretation/aspect_interpretation_contracts.py",
         "backend/app/domain/astrology/interpretation/advanced_conditions/contracts.py",
         "backend/app/domain/astrology/interpretation/chart_interpretation_input_contracts.py",
+        "backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py",
         "backend/app/domain/astrology/interpretation/advanced_conditions/__init__.py",
         "backend/app/domain/astrology/interpretation_adapters/contracts.py",
         "backend/app/domain/astrology/interpretation_adapters/priority_ranker.py",
@@ -417,6 +418,8 @@ _AUXILIARY_GOVERNED_RULE_SURFACES = frozenset(
         "backend/app/domain/astrology/runtime/runtime_reference.py",
         "backend/app/domain/astrology/runtime/sign_runtime_data.py",
         "backend/app/domain/astrology/runtime/temporal_technique_selection.py",
+        "backend/app/domain/astrology/runtime/transit_chart_manifest.py",
+        "backend/app/domain/astrology/runtime/transit_chart_runtime.py",
     }
 )
 
