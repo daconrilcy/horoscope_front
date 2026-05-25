@@ -12,6 +12,7 @@ SERVICES_ROOT_ALLOWLIST = {
     "projection_persistence_service.py",
     "privacy_service.py",
     "reference_data_service.py",
+    "replay_snapshot_v1_service.py",
 }
 
 REMOVED_ROOT_SERVICE_FILES = {

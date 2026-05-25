@@ -35,6 +35,36 @@ class LlmReplayAuditDetails(BaseSafeAuditDetails):
     diff_summary: Optional[Dict[str, Any]] = None
 
 
+class ReplaySnapshotPurgeAuditDetails(BaseSafeAuditDetails):
+    """Structure sûre pour les événements de purge replay_snapshot_v1."""
+
+    snapshot_id: str
+    call_log_id: str
+    status: str
+    purge_policy: str
+    purged_count: int
+
+
+class ReplaySnapshotActivityAuditDetails(BaseSafeAuditDetails):
+    """Structure sûre pour les événements admin replay_snapshot_v1."""
+
+    action: str
+    status: str
+    snapshot_id: str
+    request_id: str
+    reason: Optional[str] = None
+    diff_summary: Optional[Dict[str, Any]] = None
+
+
+class ReplaySnapshotBulkPurgeAuditDetails(BaseSafeAuditDetails):
+    """Structure sûre pour les événements de purge automatique replay_snapshot_v1."""
+
+    snapshot_type: str
+    status: str
+    purge_policy: str
+    purged_count: int
+
+
 class AdminActionAuditDetails(BaseSafeAuditDetails):
     """Structure sûre pour les actions d’administration génériques."""
 

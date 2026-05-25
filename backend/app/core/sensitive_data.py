@@ -54,6 +54,9 @@ OPERATIONAL_FIELDS: Set[str] = {
     "cost_usd",
     "cost_usd_estimated",
     "validation_status",
+    "original_validation_status",
+    "new_validation_status",
+    "status_changed",
     "repair_attempted",
     "fallback_triggered",
     "environment",
@@ -79,6 +82,13 @@ OPERATIONAL_FIELDS: Set[str] = {
     "manifest_entry_id",
     "timestamp",
     "expires_at",
+    "created_at",
+    "snapshot_type",
+    "kind",
+    "schema_version",
+    "input_ref",
+    "input_schema_version",
+    "input_key_hashes",
     "prompt_version_id",
     "prompt_version",
     "prompt_ref",
@@ -97,6 +107,18 @@ OPERATIONAL_FIELDS: Set[str] = {
     "attempt",
     "error_code",
     "input_hash",  # SHA-256 hash is allowed for correlation (AC12)
+    "birth_data_ref_hash",
+    "version_identity",
+    "provenance",
+    "redaction_state",
+    "payload_boundary",
+    "diff_summary",
+    "replay_attempt_id",
+    "diagnostics_ref",
+    "audit_ref",
+    "correlation_ref",
+    "request_ref",
+    "trace_ref",
     "locale",
     "export_type",
     "filters",
@@ -171,11 +193,11 @@ SINK_POLICY: Dict[Sink, Dict[DataCategory, PolicyAction]] = {
     },
     Sink.LLM_REPLAY_SNAPSHOTS: {
         DataCategory.SECRET_CREDENTIAL: PolicyAction.FORBIDDEN,
-        DataCategory.DIRECT_IDENTIFIER: PolicyAction.ENCRYPTED_ISOLATED,
+        DataCategory.DIRECT_IDENTIFIER: PolicyAction.HASHED,
         DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
-        DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.ENCRYPTED_ISOLATED,
-        DataCategory.USER_AUTHORED_CONTENT: PolicyAction.ENCRYPTED_ISOLATED,
-        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.ENCRYPTED_ISOLATED,
+        DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.HASHED,
+        DataCategory.USER_AUTHORED_CONTENT: PolicyAction.HASHED,
+        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.HASHED,
         DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
     },
     Sink.ADMIN_API: {
@@ -228,6 +250,10 @@ FIELD_CLASSIFICATION: Dict[str, DataCategory] = {
     "birthdate": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
     "birth_time": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
     "birth_place": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+    "latitude": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+    "longitude": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+    "birth_lat": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+    "birth_lon": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
     "natal_data": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
     "natal_chart_summary": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
     "chart_json": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
@@ -235,7 +261,7 @@ FIELD_CLASSIFICATION: Dict[str, DataCategory] = {
 
 
 def classify_field(field_name: str) -> DataCategory:
-    """Classifies a field name into a DataCategory."""
+    """Classe un nom de champ dans une categorie de sensibilite."""
     # Priority 1: Check explicit classification mapping
     field_lower = field_name.lower()
     if field_lower in FIELD_CLASSIFICATION:
@@ -263,12 +289,12 @@ def classify_field(field_name: str) -> DataCategory:
 
 
 def get_policy_action(sink: Sink, category: DataCategory) -> PolicyAction:
-    """Returns the policy action for a given sink and category."""
+    """Retourne le traitement applique a une categorie pour un sink."""
     return SINK_POLICY.get(sink, {}).get(category, PolicyAction.FORBIDDEN)
 
 
 def redact_value(value: Any, action: PolicyAction) -> Any:
-    """Applies the policy action to a value."""
+    """Applique le traitement de securite a une valeur."""
     if value is None:
         return None
 
@@ -295,7 +321,7 @@ def redact_value(value: Any, action: PolicyAction) -> Any:
 
 
 def sanitize_payload(payload: Dict[str, Any], sink: Sink) -> Dict[str, Any]:
-    """Sanitizes a payload dictionary for a specific sink."""
+    """Sanitise un dictionnaire de donnees pour un sink donne."""
     result = {}
     for key, value in payload.items():
         category = classify_field(key)

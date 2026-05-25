@@ -20,7 +20,7 @@ from app.infra.db.models.llm.llm_audit import (
     PublishedAtMixin,
 )
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
-from app.infra.db.models.llm.llm_observability import LlmCallLogModel
+from app.infra.db.models.llm.llm_observability import LlmCallLogModel, LlmReplaySnapshotModel
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
 from app.infra.db.models.llm.llm_release import (
@@ -315,6 +315,34 @@ def test_call_log_operational_metadata_is_split_from_base_log() -> None:
         "pipeline_kind",
     ]
     assert "ix_llm_call_log_operational_metadata_snapshot" in indexes
+
+
+def test_replay_snapshot_v1_schema_matches_model_metadata() -> None:
+    """Verifie que la table replay expose les colonnes approuvees par le modele."""
+    db = open_app_db_session()
+    try:
+        inspector = inspect(db.get_bind())
+        db_columns = {column["name"] for column in inspector.get_columns("llm_replay_snapshots")}
+    finally:
+        db.close()
+
+    model_columns = set(LlmReplaySnapshotModel.__table__.columns.keys())
+    required_columns = {
+        "snapshot_type",
+        "call_log_id",
+        "created_at",
+        "expires_at",
+        "input_ref",
+        "input_hash",
+        "version_identity",
+        "provenance",
+        "redaction_state",
+        "input_enc",
+        "payload_enc",
+    }
+
+    assert required_columns.issubset(model_columns)
+    assert required_columns.issubset(db_columns)
 
 
 def test_call_log_no_longer_persists_legacy_provider_columns() -> None:

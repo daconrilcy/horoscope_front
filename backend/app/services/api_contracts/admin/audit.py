@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -40,6 +41,30 @@ class AdminAuditExportRequest(BaseModel):
     action: str | None = None
     target_type: str | None = None
     period: Literal["7d", "30d", "all"] | None = None
+
+
+ReplaySnapshotV1Status = Literal["success", "not_found", "expired", "already_purged", "incomplete"]
+
+
+class AdminReplaySnapshotV1MetadataResponse(BaseModel):
+    """Metadonnees admin controlees d'un snapshot replay sans payload sensible."""
+
+    contract_id: Literal["admin_replay_snapshot_v1"] = "admin_replay_snapshot_v1"
+    snapshot_id: UUID
+    status: ReplaySnapshotV1Status
+    created_at: datetime
+    expires_at: datetime
+    redaction_state: str
+    version_identity: dict[str, object] | None = None
+    provenance_refs: dict[str, object] | None = None
+    audit_event_id: int | None = None
+    replay_attempt_id: str | None = None
+
+
+class AdminReplaySnapshotV1ReplayAttemptResponse(AdminReplaySnapshotV1MetadataResponse):
+    """Reponse d'acceptation d'une tentative de replay admin controlee."""
+
+    replay_attempt_id: str
 
 
 RejectedAnswerReviewStatus = Literal[

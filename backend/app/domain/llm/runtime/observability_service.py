@@ -16,19 +16,34 @@ from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.core.sensitive_data import Sink, sanitize_payload
 from app.domain.llm.runtime.contracts import GatewayResult
-from app.domain.llm.runtime.crypto_utils import encrypt_input
 from app.infra.db.models.llm.llm_observability import (
     LlmCallLogModel,
     LlmCallLogOperationalMetadataModel,
-    LlmReplaySnapshotModel,
     LlmValidationStatus,
     map_status_to_enum,
 )
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel
 from app.infra.observability.metrics import increment_counter
+from app.services.replay_snapshot_v1_service import (
+    REPLAY_SNAPSHOT_V1_REDACTION_STATE,
+    REPLAY_SNAPSHOT_V1_RETENTION_DAYS,
+    REPLAY_SNAPSHOT_V1_TYPE,
+    ReplaySnapshotV1Service,
+    build_replay_snapshot_v1_metadata,
+)
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "REPLAY_SNAPSHOT_V1_REDACTION_STATE",
+    "REPLAY_SNAPSHOT_V1_RETENTION_DAYS",
+    "REPLAY_SNAPSHOT_V1_TYPE",
+    "build_replay_snapshot_v1_metadata",
+    "compute_input_hash",
+    "log_call",
+    "purge_expired_logs",
+]
 
 
 def safe_uuid(val: Any) -> uuid.UUID | None:
@@ -449,11 +464,17 @@ async def log_call(
             )
 
             if user_input:
-                snapshot = LlmReplaySnapshotModel(
+                ReplaySnapshotV1Service.create_snapshot(
+                    db,
                     call_log_id=log_entry.id,
-                    input_enc=encrypt_input(user_input),
+                    user_input=user_input,
+                    input_hash=input_hash,
+                    request_id=request_id,
+                    trace_id=trace_id,
+                    use_case=use_case,
+                    result=result,
+                    created_at=datetime_provider.utcnow(),
                 )
-                db.add(snapshot)
 
     except Exception as e:
         # Observability should not break the main flow
@@ -468,13 +489,11 @@ async def purge_expired_logs(db: Session) -> int:
     now = datetime_provider.utcnow()
     from sqlalchemy import delete
 
-    # Delete snapshots first
-    stmt_snapshots = delete(LlmReplaySnapshotModel).where(LlmReplaySnapshotModel.expires_at <= now)
-    res_snapshots = db.execute(stmt_snapshots)
+    snapshot_result = ReplaySnapshotV1Service.purge_expired(db, now=now)
 
     # Delete logs
     stmt_logs = delete(LlmCallLogModel).where(LlmCallLogModel.expires_at <= now)
     res_logs = db.execute(stmt_logs)
 
     db.commit()
-    return res_logs.rowcount + res_snapshots.rowcount
+    return res_logs.rowcount + snapshot_result.purged_count

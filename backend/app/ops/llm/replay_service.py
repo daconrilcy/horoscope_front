@@ -1,12 +1,17 @@
+# Commentaire global: ce module orchestre le rejeu LLM sans posseder la politique de snapshot.
+"""Service d'execution de replay LLM adosse au cycle de vie replay_snapshot_v1."""
+
 from __future__ import annotations
 
 import logging
 import uuid
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.audit.safe_details import ReplaySnapshotActivityAuditDetails
 from app.domain.llm.runtime.contracts import GatewayError, ReplayResult
 from app.domain.llm.runtime.crypto_utils import decrypt_input
 from app.domain.llm.runtime.observability_service import compute_input_hash
@@ -15,8 +20,43 @@ from app.infra.db.models.llm.llm_observability import (
     LlmReplaySnapshotModel,
     map_status_to_enum,
 )
+from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
+from app.services.replay_snapshot_v1_service import ReplaySnapshotV1Service
 
 logger = logging.getLogger(__name__)
+
+
+def _record_replay_attempt_audit(
+    db: Session,
+    *,
+    snapshot_id: uuid.UUID,
+    request_id: str,
+    status: str,
+    reason: str | None = None,
+    diff_summary: dict[str, Any] | None = None,
+) -> None:
+    """Trace une tentative de replay reelle avec un detail d'audit borne."""
+    details = ReplaySnapshotActivityAuditDetails(
+        action="replay_snapshot_v1.replay_attempt",
+        status=status,
+        snapshot_id=str(snapshot_id),
+        request_id=request_id,
+        reason=reason,
+        diff_summary=diff_summary,
+    )
+    AuditService.record_event(
+        db,
+        payload=AuditEventCreatePayload(
+            request_id=request_id,
+            actor_user_id=None,
+            actor_role="system",
+            action="replay_snapshot_v1.replay_attempt",
+            target_type="llm_replay_snapshot",
+            target_id=str(snapshot_id),
+            status=status,
+            details=details.model_dump(exclude_none=True),
+        ),
+    )
 
 
 async def replay(
@@ -40,13 +80,43 @@ async def replay(
     if not original_log:
         raise GatewayError(f"Call log not found for request_id: {request_id}")
 
-    # 2. Fetch encrypted input snapshot
-    stmt_snap = select(LlmReplaySnapshotModel).where(
-        LlmReplaySnapshotModel.call_log_id == original_log.id
+    # 2. Fetch encrypted input snapshot through the canonical lifecycle service
+    snapshot_result = ReplaySnapshotV1Service.get_replay_payload_snapshot(
+        db,
+        call_log_id=original_log.id,
     )
-    snapshot = db.execute(stmt_snap).scalar_one_or_none()
-    if not snapshot:
-        raise GatewayError(f"Input snapshot not found or expired for request_id: {request_id}")
+    if snapshot_result.status != "success" or snapshot_result.metadata is None:
+        candidate_snapshot = db.execute(
+            select(LlmReplaySnapshotModel).where(
+                LlmReplaySnapshotModel.call_log_id == original_log.id,
+                LlmReplaySnapshotModel.snapshot_type == "replay_snapshot_v1",
+            )
+        ).scalar_one_or_none()
+        if candidate_snapshot is not None:
+            _record_replay_attempt_audit(
+                db,
+                snapshot_id=candidate_snapshot.id,
+                request_id=request_id,
+                status="failed",
+                reason=snapshot_result.status,
+            )
+        raise GatewayError(
+            f"Input snapshot unavailable for request_id: {request_id}",
+            details={"status": snapshot_result.status},
+        )
+    snapshot = db.get(LlmReplaySnapshotModel, snapshot_result.metadata.snapshot_id)
+    if snapshot is None:
+        _record_replay_attempt_audit(
+            db,
+            snapshot_id=snapshot_result.metadata.snapshot_id,
+            request_id=request_id,
+            status="failed",
+            reason="not_found",
+        )
+        raise GatewayError(
+            f"Input snapshot unavailable for request_id: {request_id}",
+            details={"status": "not_found"},
+        )
 
     # 3. Decrypt user_input
     user_input = decrypt_input(snapshot.input_enc)
@@ -59,6 +129,13 @@ async def replay(
             request_id,
             original_log.input_hash,
             recomputed_hash,
+        )
+        _record_replay_attempt_audit(
+            db,
+            snapshot_id=snapshot.id,
+            request_id=request_id,
+            status="failed",
+            reason="input_hash_mismatch",
         )
         raise GatewayError(
             "Integrity check failed for replay: input hash mismatch.",
@@ -76,14 +153,24 @@ async def replay(
         "persona_id": str(original_log.persona_id) if original_log.persona_id else None,
     }
 
-    result = await gateway.execute(
-        use_case=original_log.use_case,
-        user_input=user_input,
-        context=context,
-        request_id=f"replay-{uuid.uuid4().hex[:8]}",
-        trace_id=f"replay-{original_log.trace_id}",
-        db=db,
-    )
+    try:
+        result = await gateway.execute(
+            use_case=original_log.use_case,
+            user_input=user_input,
+            context=context,
+            request_id=f"replay-{uuid.uuid4().hex[:8]}",
+            trace_id=f"replay-{original_log.trace_id}",
+            db=db,
+        )
+    except Exception:
+        _record_replay_attempt_audit(
+            db,
+            snapshot_id=snapshot.id,
+            request_id=request_id,
+            status="failed",
+            reason="provider_execution_failed",
+        )
+        raise
 
     # 5. Build diff vs original
     new_status = map_status_to_enum(result.meta.validation_status)
@@ -98,6 +185,13 @@ async def replay(
         "new_validation_status": new_val,
         "status_changed": orig_val != new_val,
     }
+    _record_replay_attempt_audit(
+        db,
+        snapshot_id=snapshot.id,
+        request_id=request_id,
+        status="success",
+        diff_summary=diff,
+    )
 
     return ReplayResult(
         use_case=result.use_case,

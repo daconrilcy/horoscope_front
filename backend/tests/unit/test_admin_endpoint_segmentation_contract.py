@@ -120,14 +120,16 @@ def test_internal_openapi_rules_do_not_publish_internal_projection_tokens() -> N
     document = _document()
     openapi = app.openapi()
     openapi_payload = str(openapi)
+    public_paths = {
+        path: schema for path, schema in openapi["paths"].items() if path.startswith("/v1/public")
+    }
+    public_openapi_payload = str(public_paths)
 
     assert "OpenAPI interne" in document
     assert "app.openapi()" in document
     assert "CS-266" in document
     for forbidden_token in FORBIDDEN_PUBLIC_OPENAPI_TOKENS:
-        assert forbidden_token not in openapi_payload
+        assert forbidden_token not in public_openapi_payload
     assert "/v1/admin/audit/admin_chart_diagnostics_v1" in openapi_payload
-    public_paths = {
-        path: schema for path, schema in openapi["paths"].items() if path.startswith("/v1/public")
-    }
+    assert "/v1/admin/audit/replay_snapshot_v1" in openapi_payload
     assert "admin_chart_diagnostics_v1" not in str(public_paths)

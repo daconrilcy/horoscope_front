@@ -6,11 +6,13 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from sqlalchemy import (
+    JSON,
     UUID,
     Boolean,
+    DateTime,
     Float,
     ForeignKey,
     Index,
@@ -442,10 +444,27 @@ class LlmReplaySnapshotModel(Base):
         unique=True,
     )
 
+    snapshot_type: Mapped[str] = mapped_column(
+        String(VERSION_LENGTH),
+        default="replay_snapshot_v1",
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utc_now,
+        nullable=False,
+    )
+    input_ref: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    input_hash: Mapped[str] = mapped_column(String(INPUT_HASH_HEX_LENGTH), nullable=False)
+    version_identity: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    provenance: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    redaction_state: Mapped[str] = mapped_column(String(VERSION_LENGTH), nullable=False)
+
     input_enc: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)  # AES-256 encrypted JSON
+    payload_enc: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
 
     expires_at: Mapped[datetime] = mapped_column(
-        default=utc_now_plus_days(7),
+        default=utc_now_plus_days(30),
         nullable=False,
     )
 

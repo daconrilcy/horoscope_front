@@ -65,7 +65,7 @@ def test_contract_document_exists_and_has_required_shape() -> None:
     assert "replay_snapshot_v1_storage_security_model" in document
     assert "replay_snapshot_v1" in document
     assert "Protected internal replay support and debug data" in document
-    assert "production replay execution n'est pas approuvee" in document
+    assert "production replay execution est approuvee uniquement" in document
 
     missing_fields = sorted(field for field in REQUIRED_FIELDS if field not in document)
     assert missing_fields == []
@@ -98,10 +98,10 @@ def test_roles_retention_and_purge_are_restricted() -> None:
 
     assert "`MARKETER` is not an authorized role" in document
     assert "DPO-REPLAY-SNAPSHOT-V1-RETENTION-001" in document
-    assert "Held-back implementation surfaces" in document
-    assert "backend/app/api/**" in document
+    assert "Approved implementation surfaces" in document
+    assert "public/client routes or OpenAPI exposure" in document
     assert "frontend/src/**" in document
-    assert "`non approuve`" in document
+    assert "without a separate DPO/security decision" in document
 
     assert "expiry purge" in document
     assert "manual deletion" in document
@@ -122,7 +122,7 @@ def test_diagnostics_and_ai_audit_links_remain_separate() -> None:
 
 
 def test_runtime_routes_openapi_and_public_client_surfaces_do_not_expose_replay() -> None:
-    """Prouve que le contrat documentaire n'expose pas replay_snapshot_v1 au runtime."""
+    """Prouve que le runtime replay reste absent des surfaces publiques ou client."""
     route_paths = {getattr(route, "path", "") for route in app.routes}
     openapi_payload = str(app.openapi())
     public_openapi_payload = str(
@@ -134,7 +134,13 @@ def test_runtime_routes_openapi_and_public_client_surfaces_do_not_expose_replay(
     )
     client = TestClient(app)
 
-    assert all("replay_snapshot_v1" not in route_path for route_path in route_paths)
-    assert "replay_snapshot_v1" not in openapi_payload
+    replay_route_paths = {
+        route_path for route_path in route_paths if "replay_snapshot_v1" in route_path
+    }
+    assert replay_route_paths == {
+        "/v1/admin/audit/replay_snapshot_v1/{snapshot_id}",
+        "/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt",
+    }
+    assert "/v1/admin/audit/replay_snapshot_v1" in openapi_payload
     assert "replay_snapshot_v1" not in public_openapi_payload
     assert client.get("/openapi.json").status_code == 200
