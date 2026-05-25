@@ -7,7 +7,7 @@
 - Story key: `CS-302-test-astrology-projections-endpoint-real-conditions`
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-302-test-astrology-projections-endpoint-real-conditions`
-- Story registry: `ready-to-review`
+- Story registry: `done`
 
 ## Preflight
 
@@ -46,12 +46,20 @@
 | AC10 | `app.routes` and `app.openapi()` assert only canonical public projection endpoint. | Runtime Python checks PASS; OpenAPI snapshots persisted. | PASS |
 | AC11 | Evidence artifacts persisted under CS-302 `evidence/`. | File existence and capsule validation PASS. | PASS |
 
+## Review/fix evidence
+
+- Iteration 1 implementation review: CHANGES_REQUESTED because the forbidden route-path guard used an imprecise broad scan and lacked exact
+  pytest coverage for alternate public paths.
+- Fix: added exact `app.routes` and `app.openapi()` forbidden-path assertions in `backend/tests/api/test_projection_openapi.py`.
+- Iteration 2 implementation review: CLEAN after fresh lint, targeted tests, exact route/OpenAPI check, story validation, strict lint, and capsule validation.
+
 ## Files changed
 
 - `backend/tests/api/test_projection_real_conditions.py` - new realistic public endpoint HTTP coverage.
 - `backend/tests/api/test_projection_authorization.py` - strengthened entitlement denial assertion.
+- `backend/tests/api/test_projection_openapi.py` - added exact forbidden alternate-path guard.
 - `_condamad/stories/CS-302-test-astrology-projections-endpoint-real-conditions/**` - generated capsule files, evidence artifacts, traceability, dev log, final evidence.
-- `_condamad/stories/story-status.md` - CS-302 status set to `ready-to-review`.
+- `_condamad/stories/story-status.md` - CS-302 status set to `done`.
 
 ## Files deleted
 
@@ -73,8 +81,16 @@
 | `python -B -m pytest -q --tb=short tests\api\test_projection_real_conditions.py ...` | `backend` | PASS | 42 targeted tests passed. |
 | `python -B -m pytest -q --tb=short` | `backend` | PASS | 3431 passed, 1 skipped, 1216 deselected. |
 | `python -B -c "... app.routes/app.openapi ..."` | `backend` | PASS | Canonical public path present; forbidden paths absent. |
-| `rg` forbidden projection route paths in `backend/app` | repo root | PASS | No matches; exit 1 expected. |
+| Broad `rg` forbidden projection route scan | repo root | SUPERSEDED | Replaced by exact `app.routes` and `app.openapi()` disjoint checks after review finding F1. |
 | `git diff --check` | repo root | PASS | No whitespace errors; CRLF warning on touched test file. |
+| `ruff format tests\api\test_projection_openapi.py` | `backend` | PASS | Review fix formatting checked. |
+| `ruff check .` | `backend` | PASS | Backend lint passed after review fix. |
+| `python -B -m pytest -q --tb=short tests\api\test_projection_real_conditions.py ...` | `backend` | PASS | 43 targeted tests passed after review fix. |
+| `python -B -m pytest -q --tb=short` | `backend` | PASS | 3432 passed, 1 skipped, 1216 deselected after review fix. |
+| `python -B -c "... exact app.routes/app.openapi ..."` | `backend` | PASS | Canonical route present; exact forbidden paths absent. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md` | repo root | PASS | Story contract valid after review fix evidence. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md` | repo root | PASS | Strict story lint passed after review fix evidence. |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...\CS-302...` | repo root | PASS | Capsule validation passed after review fix evidence. |
 
 ## Commands skipped or blocked
 
@@ -104,7 +120,7 @@
 
 ## Final worktree status
 
-- Modified tracked files: `backend/tests/api/test_projection_authorization.py`, `_condamad/stories/story-status.md`, CS-302 `00-story.md`.
+- Modified tracked files: `backend/tests/api/test_projection_authorization.py`, `backend/tests/api/test_projection_openapi.py`, `_condamad/stories/story-status.md`, CS-302 `00-story.md`.
 - New files: `backend/tests/api/test_projection_real_conditions.py`, CS-302 `generated/` required files, CS-302 `evidence/` artifacts.
 
 ## Remaining risks

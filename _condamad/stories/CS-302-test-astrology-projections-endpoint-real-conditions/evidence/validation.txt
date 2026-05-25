@@ -7,6 +7,15 @@ CS-302 validation transcript
 - python -B -m pytest -q --tb=short: PASS, 3431 passed, 1 skipped, 1216 deselected in 348.77s
 - app.routes/app.openapi canonical route check: PASS
 - public OpenAPI internal identifier scan: PASS
-- rg forbidden projection route paths in backend/app: PASS no matches (exit 1 expected)
+- implementation review iteration 1: CHANGES_REQUESTED; exact forbidden route-path guard missing and prior broad `rg` evidence could false-positive the canonical route.
+- ruff format tests\api\test_projection_openapi.py: PASS
+- ruff check .: PASS
+- python -B -m pytest -q --tb=short tests\api\test_projection_real_conditions.py tests\api\test_projection_authorization.py tests\api\test_projection_persistence_endpoint.py tests\api\test_projection_openapi.py tests\unit\services\test_projection_endpoint_service.py tests\unit\domain\astrology\test_structured_facts_v1_builder.py tests\unit\domain\astrology\test_beginner_summary_v1_builder.py tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py: PASS, 43 passed
+- python -B -m pytest -q --tb=short: PASS, 3432 passed, 1 skipped, 1216 deselected in 336.24s
+- python -B -c exact app.routes/app.openapi canonical and forbidden path disjoint check: PASS
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-302-test-astrology-projections-endpoint-real-conditions\00-story.md: PASS
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-302-test-astrology-projections-endpoint-real-conditions\00-story.md: PASS
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-302-test-astrology-projections-endpoint-real-conditions: PASS
+- implementation review iteration 2: CLEAN; no actionable implementation, evidence, guardrail, or AC alignment issue remains.
 - git diff --check: PASS with line-ending warning on backend/tests/api/test_projection_authorization.py
 - python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-302-test-astrology-projections-endpoint-real-conditions: PASS after final evidence update
