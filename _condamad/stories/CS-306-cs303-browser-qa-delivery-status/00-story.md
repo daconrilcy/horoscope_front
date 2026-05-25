@@ -1,5 +1,5 @@
 # Story CS-306 cs303-browser-qa-delivery-status: Close CS-303 Browser QA And Refresh Delivery Status
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

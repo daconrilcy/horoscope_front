@@ -2,6 +2,7 @@
 import { chromium } from "../../../..//frontend/node_modules/playwright/index.mjs"
 import { spawn } from "node:child_process"
 import { mkdir, writeFile } from "node:fs/promises"
+import { createServer } from "node:net"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -11,8 +12,8 @@ const evidenceRoot = resolve(
   repoRoot,
   "_condamad/stories/CS-306-cs303-browser-qa-delivery-status/evidence",
 )
-const baseUrl = "http://127.0.0.1:4173"
 const startedAt = new Date().toISOString()
+let baseUrl
 
 const tokenPayload = Buffer.from(JSON.stringify({
   sub: "cs306-browser-user",
@@ -142,6 +143,20 @@ async function waitForServer() {
   throw new Error("Vite server did not become ready")
 }
 
+async function reserveFreePort() {
+  const server = createServer()
+  await new Promise((resolveListen, rejectListen) => {
+    server.once("error", rejectListen)
+    server.listen(0, "127.0.0.1", resolveListen)
+  })
+  const address = server.address()
+  await new Promise((resolveClose, rejectClose) => {
+    server.close((error) => (error ? rejectClose(error) : resolveClose()))
+  })
+  if (!address || typeof address === "string") throw new Error("Unable to reserve a local QA port")
+  return address.port
+}
+
 async function installRoutes(page, requests) {
   await page.route("**/v1/**", async (route) => {
     const request = route.request()
@@ -257,12 +272,18 @@ async function runViewport(browser, viewportName, viewport) {
 async function main() {
   await mkdir(evidenceRoot, { recursive: true })
   const startupLogPath = resolve(evidenceRoot, "startup-log.txt")
+  const port = await reserveFreePort()
+  baseUrl = `http://127.0.0.1:${port}`
   const server = spawn(
     process.execPath,
-    ["scripts/run-vite-logged.mjs", "vite", "vite-dev", "dev", "--host", "127.0.0.1", "--port", "4173"],
+    ["scripts/run-vite-logged.mjs", "vite", "vite-dev", "dev", "--host", "127.0.0.1", "--port", String(port), "--strictPort"],
     { cwd: frontendRoot, stdio: ["ignore", "pipe", "pipe"], shell: false },
   )
-  const startupLines = [`started_at=${startedAt}`, `command=node scripts/run-vite-logged.mjs vite vite-dev dev --host 127.0.0.1 --port 4173`]
+  const startupLines = [
+    `started_at=${startedAt}`,
+    `command=node scripts/run-vite-logged.mjs vite vite-dev dev --host 127.0.0.1 --port ${port} --strictPort`,
+    `base_url=${baseUrl}`,
+  ]
   server.stdout.on("data", (chunk) => startupLines.push(chunk.toString()))
   server.stderr.on("data", (chunk) => startupLines.push(chunk.toString()))
 
@@ -312,7 +333,7 @@ async function main() {
   } finally {
     if (browser) await browser.close()
     server.kill()
-    await writeFile(startupLogPath, `${startupLines.join("")}\n`)
+    await writeFile(startupLogPath, `${startupLines.join("\n")}\n`)
   }
 }
 

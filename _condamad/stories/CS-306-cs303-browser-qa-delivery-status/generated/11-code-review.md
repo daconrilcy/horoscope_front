@@ -1,47 +1,59 @@
-# CS-306 Editorial Story Review
+# CS-306 Implementation Review
 
-Date: 2026-05-25
+Date: 2026-05-26
 Verdict: CLEAN
 
 ## Reviewed Scope
 
 - Story: `_condamad/stories/CS-306-cs303-browser-qa-delivery-status/00-story.md`
-- Tracker source: `_condamad/stories/story-status.md`
 - Source brief: `_story_briefs/cs-306-close-cs303-browser-qa-and-refresh-delivery-status.md`
-- Scoped guardrails: RG-047, RG-052, story-local report guard
+- Tracker row: `_condamad/stories/story-status.md`
+- Delivery report: `_condamad/reports/CS-302-CS-304-delivery-report.md`
+- Evidence: CS-306 `evidence/` and `generated/10-final-evidence.md`
 
 ## Review Findings
 
-No actionable drafting issue found.
+No actionable implementation issue remains.
 
-The story explicitly preserves the brief objective: real-browser `/natal` QA for CS-303 projections,
-CS-303 targeted validation evidence, CS-305 or equivalent full-suite proof, and proof-backed refresh
-of `_condamad/reports/CS-302-CS-304-delivery-report.md`.
+The implementation aligns with the source brief and ACs:
 
-The story also keeps the required boundaries: no backend behavior change, no admin CS-304 work,
-no report promotion to `Delivered` without browser evidence and full frontend suite closure, no direct
-projection HTTP bypass, no inline TSX style drift, and no exposure of internal projection fields.
+- CS-306 is mapped to the expected story path and source brief in the tracker.
+- `/natal` browser QA is proven in Chromium for desktop and mobile with screenshots and a persisted ledger.
+- The QA script records the same strict Vite `base_url` that it opens, so startup evidence and browser evidence share
+  one local runtime.
+- Projection success is proven in the browser for `beginner_summary_v1` and
+  `client_interpretation_projection_v1`.
+- Loading, controlled error, entitlement, empty, and degraded states are covered by logged `natalInterpretation`
+  Vitest evidence.
+- CS-305 full-suite proof and the fresh CS-306 full-suite log justify removing the frontend suite limitation.
+- Backend projection route/OpenAPI proof remains green, with no backend implementation change.
+- Static guards show no direct projection fetch, forbidden internal projection field, or inline-style regression.
+- The delivery report is promoted to `Delivered` only after CS-305 full-suite proof and CS-306 browser proof.
+
+## Issues Fixed During Review
+
+- Fixed the browser QA script port ambiguity by reserving a free port, using `--strictPort`, and recording `base_url`.
+- Refreshed this review artifact from pre-implementation editorial review to implementation review.
+- Synchronized CS-306 story and tracker status to `done`.
 
 ## Validation Results
 
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-306-cs303-browser-qa-delivery-status\00-story.md`
-  - Result: PASS
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-306-cs303-browser-qa-delivery-status\00-story.md`
-  - Result: PASS
-
-Both Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
-
-## Produced Artifacts
-
-- Created this final editorial review artifact:
-  `_condamad/stories/CS-306-cs303-browser-qa-delivery-status/generated/11-code-review.md`
+- `node --check _condamad\stories\CS-306-cs303-browser-qa-delivery-status\evidence\cs306-browser-qa.mjs`: PASS.
+- `node _condamad\stories\CS-306-cs303-browser-qa-delivery-status\evidence\cs306-browser-qa.mjs`: PASS.
+- `pnpm lint`: PASS after one prior Windows EPERM retry, recorded in `evidence/validation.txt`.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run natalChartApi`: PASS, 15 tests.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation`: PASS, 33 tests.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi`: PASS, 91 tests.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run`: PASS, 116 files, 1271 passed, 8 skipped.
+- Backend projection pytest and runtime route/OpenAPI checks: PASS with `.venv` active.
+- Projection ownership, forbidden-field, and inline-style scans: PASS.
+- Story validation and strict lint: PASS with `.venv` active.
 
 ## Propagation Decision
 
-No propagation. The review produced no reusable learning or accepted correction beyond this local
-review artifact.
+No propagation. The fixes are local evidence hardening and status synchronization for CS-306.
 
 ## Residual Risk
 
-Implementation still depends on actual browser QA and CS-305 or equivalent full-suite evidence before
-the delivery report can be promoted to `Delivered`.
+No blocking risk remains. The browser QA uses controlled public API responses in Chromium while backend projection
+behavior is covered separately by API contract tests.

@@ -280,3 +280,14 @@ All checks passed!
 
 ## final capsule validation
 CONDAMAD validation: PASS
+
+## implementation review fix validation 2026-05-26
+
+### browser QA script syntax
+PASS: `node --check _condamad\stories\CS-306-cs303-browser-qa-delivery-status\evidence\cs306-browser-qa.mjs`
+
+### browser QA rerun after port fix
+PASS: `node _condamad\stories\CS-306-cs303-browser-qa-delivery-status\evidence\cs306-browser-qa.mjs`
+
+The rerun wrote `startup-log.txt` with a single strict Vite `base_url` and regenerated
+`browser-qa-ledger.json`, `browser-desktop.png`, `browser-mobile.png`, and `browser-qa-after.md`.

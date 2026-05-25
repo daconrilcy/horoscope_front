@@ -8,7 +8,7 @@
 - Source story: `_condamad/stories/CS-306-cs303-browser-qa-delivery-status/00-story.md`
 - Source brief: `_story_briefs/cs-306-close-cs303-browser-qa-and-refresh-delivery-status.md`
 - Capsule path: `_condamad/stories/CS-306-cs303-browser-qa-delivery-status`
-- Registry status: `ready-to-review`
+- Registry status: `done`
 
 ## Preflight
 
@@ -127,3 +127,18 @@
 ## Feedback loop routing
 
 - no-propagation: failures were local execution fixes (Windows path conversion and locator specificity) already captured in evidence; no reusable skill or repository guardrail update is needed.
+
+## Implementation review closure
+
+- Review verdict: CLEAN after one review/fix iteration.
+- Issues fixed by review phase:
+  - Browser QA startup ambiguity: `cs306-browser-qa.mjs` now reserves a free local port, starts Vite with
+    `--strictPort`, records the exact `base_url`, and opens `/natal` on that same server.
+  - Review evidence mismatch: `generated/11-code-review.md` was refreshed from pre-implementation editorial review
+    to implementation review.
+  - Status drift: `00-story.md` and `_condamad/stories/story-status.md` now record `done`.
+- Fresh validation on 2026-05-26:
+  - `node --check _condamad\stories\CS-306-cs303-browser-qa-delivery-status\evidence\cs306-browser-qa.mjs`: PASS.
+  - `node _condamad\stories\CS-306-cs303-browser-qa-delivery-status\evidence\cs306-browser-qa.mjs`: PASS.
+  - `.venv`-activated story validation and strict lint: PASS.
+- Propagation decision: no-propagation; the correction is local evidence hardening with no reusable guardrail update needed.
