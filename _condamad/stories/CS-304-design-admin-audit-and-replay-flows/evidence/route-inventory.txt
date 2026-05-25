@@ -1,0 +1,9 @@
+CS-304 focused route inventory
+/v1/admin/answer-audits/rejected
+/v1/admin/answer-audits/rejected/{answer_id}
+/v1/admin/answer-audits/rejected/{answer_id}/review
+/v1/admin/audit
+/v1/admin/audit/admin_chart_diagnostics_v1/{chart_reference}
+/v1/admin/audit/export
+/v1/admin/audit/replay_snapshot_v1/{snapshot_id}
+/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt

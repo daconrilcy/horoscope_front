@@ -1,0 +1,10 @@
+CS-304 validation - 2026-05-25T22:44:53
+Initial broad runtime guard: FAILED because existing unrelated /v1/audit and /v1/ops/*audit* routes are outside this story surface; replaced by focused consumed-surface and forbidden-family checks.
+Command: python -B -m pytest -q tests/api/admin/test_rejected_answer_review_workflow.py --tb=short
+........                                                                 [100%]
+8 passed in 34.16s
+Command: python -B -m pytest -q tests/api/admin/test_replay_snapshot_v1_api.py --tb=short
+........                                                                 [100%]
+8 passed in 5.15s
+Command: final capsule validation
+CONDAMAD validation: PASS
