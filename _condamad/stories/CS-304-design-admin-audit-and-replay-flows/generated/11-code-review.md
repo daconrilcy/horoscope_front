@@ -15,12 +15,16 @@ Review date: 2026-05-25
 
 - Iteration 1: one actionable implementation-contract issue found.
 - Iteration 2: fresh review after correction found no actionable issue.
+- Iteration 3: final code-vs-brief alignment pass found stale evidence/status artifacts, then revalidated clean.
 
 ## Issues Fixed
 
 - CR-1 audit expectation gap: `audit_log_review` did not name an audit event for reading audit logs, even though the brief requires
   auditable read/replay/purge/review-status actions. Fixed by naming `admin_audit_log_accessed` as a blocking future UI expectation and
   by treating missing runtime audit proof as an `incomplete` state for that flow.
+- CR-2 evidence/status freshness gap: `00-story.md` still said `ready-to-dev`, and `doc-after.txt` plus
+  `sensitive-field-scan.txt` still reflected the pre-CR-1 audit-log wording. Fixed by aligning the story status and evidence snapshots
+  with the final implemented contract.
 
 ## Review Result
 
@@ -47,6 +51,8 @@ The story explicitly covers the brief primitives:
 - `python -B -m pytest -q tests/api/admin/test_rejected_answer_review_workflow.py tests/api/admin/test_replay_snapshot_v1_api.py --tb=short`: PASS
 - `python -B -m pytest -q tests/architecture/test_admin_replay_snapshot_v1_public_exposure.py --tb=short`: PASS
 - Targeted contract scans: PASS
+- `condamad_story_validate.py` and `condamad_story_lint.py --strict`: PASS
+- `ruff check .` and `ruff format --check .`: PASS
 
 Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 

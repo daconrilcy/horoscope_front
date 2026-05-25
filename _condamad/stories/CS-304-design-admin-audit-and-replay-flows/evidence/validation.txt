@@ -43,3 +43,32 @@ Output: 1686 files already formatted.
 Command: git diff --check
 Result: PASS
 Output: no whitespace errors; Git reported line-ending normalization warnings only.
+
+CS-304 final code-vs-brief alignment pass - 2026-05-25
+Correction: aligned `00-story.md` status with tracker `done`, refreshed `doc-after.txt`, and refreshed
+`sensitive-field-scan.txt` so evidence reflects `admin_audit_log_accessed`.
+
+Command: . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py --final _condamad\stories\CS-304-design-admin-audit-and-replay-flows; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-304-design-admin-audit-and-replay-flows\00-story.md; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-304-design-admin-audit-and-replay-flows\00-story.md
+Working directory: repo root
+Result: PASS
+Output: CONDAMAD validation: PASS; CONDAMAD story validation: PASS; CONDAMAD story lint: PASS
+
+Command: . ..\.venv\Scripts\Activate.ps1; python -B -m pytest -q tests/api/admin/test_rejected_answer_review_workflow.py tests/api/admin/test_replay_snapshot_v1_api.py --tb=short; python -B -m pytest -q tests/architecture/test_admin_replay_snapshot_v1_public_exposure.py --tb=short
+Working directory: backend
+Result: PASS
+Output: 16 passed in 35.84s; 3 passed in 5.65s
+
+Command: rg -n "visible_fields.*(raw|birth_date|birth_time|birth_place|birth_lat|birth_lon|birth_timezone|secret|provider token|payload)" docs\architecture\admin-audit-replay-flows.md
+Working directory: repo root
+Result: PASS
+Output: exit 1, no forbidden sensitive token appears inside visible_fields.
+
+Command: rg -n "admin_audit_log_accessed|replay_snapshot_v1\.metadata_read|replay_snapshot_v1\.replay_attempt|replay_snapshot_v1\.purge|admin_rejected_answer_review_accessed|admin_rejected_answer_reviewed" docs\architecture\admin-audit-replay-flows.md
+Working directory: repo root
+Result: PASS
+Output: all expected audit events are named in the admin flow contract.
+
+Command: . .\.venv\Scripts\Activate.ps1; ruff check .; ruff format --check .
+Working directory: repo root
+Result: PASS
+Output: All checks passed!; 1686 files already formatted.
