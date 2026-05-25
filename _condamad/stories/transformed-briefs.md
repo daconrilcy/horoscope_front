@@ -72,3 +72,4 @@
 | cs-291 | `_story_briefs\cs-291-implement-generic-projection-endpoint.md` | `_condamad\stories\cs-291-generic-projection-endpoint-runtime\00-story.md` |
 | cs-292 | `_story_briefs\cs-292-reconcile-cs-262-ai-traceability-audit-final-evidence.md` | `_condamad\stories\cs-292-reconcile-cs-262-ai-traceability-final-evidence\00-story.md` |
 | cs-293 | `_story_briefs\cs-293-close-astrology-disclaimer-projection-policy-evidence.md` | `_condamad\stories\cs-293-close-astrology-disclaimer-projection-policy-evidence\00-story.md` |
+| cs-294 | `_story_briefs\cs-294-reevaluate-admin-answer-audit-access-logs-after-runtime.md` | `_condamad\stories\cs-294-reevaluate-admin-answer-audit-access-logs-after-runtime\00-story.md` |
