@@ -130,6 +130,7 @@ OPERATIONAL_FIELDS: Set[str] = {
     "revenue_cents",
     "contract_id",
     "correlation_id",
+    "decision",
     "diagnostic_scope",
     "node_count",
     "projection_id",

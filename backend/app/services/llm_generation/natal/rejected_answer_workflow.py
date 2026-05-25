@@ -93,6 +93,9 @@ def build_rejected_narrative_answer_outcome_from_payload(
     llm_input_hash: str,
 ) -> RejectedNarrativeAnswerOutcome | None:
     """Reutilise CS-289 pour rejeter un payload porteur de `evidence_refs`."""
+    if answer_type == "basic" and "evidence_refs" not in raw_answer:
+        return None
+
     section_requirements = _section_requirements(raw_answer)
     if not section_requirements:
         return None

@@ -106,6 +106,13 @@ def test_sanitize_payload_does_not_whitelist_generic_container_scalar_values():
     assert sanitized["email"] == "u...@example.com"
 
 
+def test_sanitize_payload_keeps_audit_decision_metadata():
+    """La decision d'audit reste une metadonnee operationnelle consultable."""
+    sanitized = sanitize_payload({"decision": "allowed"}, Sink.AUDIT_TRAIL)
+
+    assert sanitized["decision"] == "allowed"
+
+
 def test_logging_filter(caplog):
     logger = logging.getLogger("test_logger")
     # AC11 Terminal safety filter

@@ -215,6 +215,7 @@ APPROVED_SQLITE_FACTORY_PATHS = {
     Path("tests/evaluation/conftest.py"),
     Path("tests/integration/conftest.py"),
     Path("tests/integration/test_backend_sqlite_alignment.py"),
+    Path("tests/integration/test_narrative_answer_audit_schema.py"),
     Path("tests/integration/test_projection_persistence_schema.py"),
     Path("tests/llm_orchestration/conftest.py"),
     Path("tests/llm_orchestration/test_admin_llm_api.py"),

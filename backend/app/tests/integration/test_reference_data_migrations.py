@@ -4,6 +4,7 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine.reflection import Inspector
 
@@ -1653,7 +1654,7 @@ def test_aspect_interpretation_migration_accepts_matching_precreated_table(
         ).scalar()
     head_engine.dispose()
 
-    assert version == "20260523_0137"
+    assert version == ScriptDirectory.from_config(config).get_current_head()
     assert profile_count == version_count * 20
     assert {
         "ix_astral_aspect_interpretation_profiles_reference_version_id",

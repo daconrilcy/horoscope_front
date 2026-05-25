@@ -84,6 +84,23 @@ def test_missing_evidence_refs_on_required_sections_becomes_rejected() -> None:
     assert outcome.rejection_reason["validation_errors"] == ["missing_required_evidence_ref"]
 
 
+def test_basic_legacy_payload_without_evidence_refs_is_not_rejected() -> None:
+    """Le format court historique reste en audit `not_checked` sans rejet client."""
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-basic-legacy",
+        answer_type="basic",
+        raw_answer={
+            "sections": [{"key": "summary", "content": "texte court historique"}],
+        },
+        projection_version="v1",
+        projection_hash="a" * 64,
+        llm_input_version="llm_runtime_gateway_input.v1",
+        llm_input_hash="b" * 64,
+    )
+
+    assert outcome is None
+
+
 def test_client_payload_contains_controlled_wording_only() -> None:
     """Le payload client ne contient jamais le contenu narratif rejete."""
     validation_result = validate_evidence_refs_by_section(
