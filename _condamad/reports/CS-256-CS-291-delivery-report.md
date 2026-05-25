@@ -5,16 +5,19 @@
 | Field | Value |
 |---|---|
 | Generated at | 2026-05-25 09:59:23 +02:00 |
-| Updated at | 2026-05-25 after CS-301 replay runtime revalidation |
+| Updated at | 2026-05-25 after independent replay runtime review |
 | Repository | `c:\dev\horoscope_front` |
 | Branch | `main` |
 | Current HEAD at original report | `5429f8712423d075c4c97a7cc831ef5e3434c19b` - `Add Condamad audit reports` |
 | Reviewed current HEAD before CS-278 approval update | `48c06729` - `Close CS-262 and document replay approval gate` |
+| Latest reviewed HEAD | `677d1e6c` - `CONDAMAD implementation implementation-review-fix: cs-301` |
 | Commit range | Not evidenced |
 | Stories covered | CS-256 through CS-291 |
 | Source documents | `_condamad/stories/story-status.md`; `_condamad/stories/CS-*/00-story.md`; `_story_briefs/cs-256-*.md` through `_story_briefs/cs-291-*.md` |
 | Diff source | Story-time final evidence; report-time `git status --short` before report creation and after report creation |
-| Validation source | Story-time capsule evidence; CS-300 repair evidence; CS-301 full backend validation and runtime surface proof |
+| Validation source | Story-time capsule evidence; CS-300 repair evidence; CS-301 full backend validation; independent local replay runtime review; local CI-equivalent evidence |
+| Local CI-equivalent evidence | `_condamad/reports/CS-256-CS-291-local-ci-evidence.md` |
+| Release checklist | `_condamad/reports/CS-256-CS-291-release-checklist.md` |
 
 ## 1. Executive summary
 
@@ -24,7 +27,7 @@ Update-time evidence from CS-292, CS-293 and CS-294 changes that closure view: C
 
 Original initiative status: `Partially delivered`.
 
-Updated closure status after CS-301 runtime revalidation: `Delivered with local validation evidence after CS-300 repair`. CS-284 is closed by CS-293 evidence, CS-268 is closed for the current rejected-answer `admin_answer_audit_v1` runtime by CS-294, CS-262 is `done` with DPO/product-gated future prompt retention decisions, and CS-278 is closed by CS-295 through CS-301 under the DPO/security gate.
+Updated closure status after CS-301 runtime revalidation and independent review: `Delivered with local validation evidence after CS-300 repair`. CS-284 is closed by CS-293 evidence, CS-268 is closed for the current rejected-answer `admin_answer_audit_v1` runtime by CS-294, CS-262 is `done` with DPO/product-gated future prompt retention decisions, and CS-278 is closed by CS-295 through CS-301 under the DPO/security gate.
 
 The original blocking and missing-evidence items were material: CS-262 and CS-284 had no implementation final evidence; CS-268 was blocked by the absence, at that time, of the protected answer-audit consultation surface; CS-278 was intentionally blocked until external DPO/security approval resolves `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`.
 
@@ -34,6 +37,8 @@ Update-time review changes that assessment:
 - CS-284 is marked `done` and has policy/evidence closure from CS-293, including `docs/architecture/astrology-disclaimer-projection-policy.md`.
 - CS-268 has final runtime closure evidence for the current rejected-answer admin audit surface through CS-294.
 - CS-278 approval is documented in `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md`; CS-295 through CS-298 implement storage/redaction, retention/purge, internal admin API, execution and audit; CS-300 repairs payload/hash integrity; CS-301 revalidates the real `log_call -> snapshot -> replay` runtime path and keeps CS-278 `done`.
+- Independent review on 2026-05-25 confirmed the CS-300 repair at `677d1e6c`: the replay snapshot service now computes `llm_replay_snapshots.input_hash` from the same canonical sanitized replay payload encrypted in `input_enc`, and replay compares the decrypted payload hash to `snapshot.input_hash`.
+- Because no hosted CI exists, release evidence is attached as local CI-equivalent validation in `_condamad/reports/CS-256-CS-291-local-ci-evidence.md`, with a release/PR checklist in `_condamad/reports/CS-256-CS-291-release-checklist.md`.
 
 ## 2. Initial context and trigger
 
@@ -212,8 +217,10 @@ Builder and endpoint runtime:
 | CS-292 CS-262 reconciliation checks | evidence/runtime targeted | PASS | `_condamad/stories/CS-292-reconcile-cs-262-ai-traceability-final-evidence/generated/10-final-evidence.md`; `_condamad/stories/CS-262-audit-existing-prompt-version-answer-id-storage/generated/10-final-evidence.md` | Existing audit folder cited; CS-288-resolved fields and DPO/product-gated prompt-retention decisions separated. |
 | CS-293 CS-284 policy closure checks | docs/runtime targeted | PASS | `_condamad/stories/CS-293-close-astrology-disclaimer-projection-policy-evidence/generated/10-final-evidence.md`; `_condamad/stories/CS-284-astrology-disclaimer-projection-policy/generated/10-final-evidence.md` | Policy, inventory, app-surface status and OpenAPI neutrality evidenced. |
 | CS-278 replay runtime closure checks | full backend / runtime targeted | PASS | `_condamad/stories/CS-278-replay-snapshot-v1-implementation/generated/10-final-evidence.md`; `_condamad/stories/CS-299-close-replay-snapshot-v1-runtime-validation/generated/10-final-evidence.md`; `_condamad/stories/CS-300-replay-snapshot-v1-payload-hash-integrity/generated/10-final-evidence.md`; `_condamad/stories/CS-301-revalidate-replay-snapshot-v1-runtime-closure/generated/10-final-evidence.md` | CS-301 revalidated the CS-300 repair; `ruff check .` PASS; targeted replay pytest `21 passed, 1 deselected`; full backend pytest `3422 passed, 1 skipped, 1216 deselected`; OpenAPI/routes/TestClient and forbidden-data scans PASS. |
+| Independent replay runtime review | targeted | PASS | Current local review at `677d1e6c` | `.venv` active; `ruff check .` PASS; critical replay suite `22 passed`; expanded replay suite `50 passed`; legacy/admin replay checks `5 passed`; runtime/OpenAPI replay route assertion PASS with admin-only paths. |
+| Local CI-equivalent release evidence | targeted | PASS | `_condamad/reports/CS-256-CS-291-local-ci-evidence.md` | No hosted CI exists; local replacement evidence records `.venv` active, `ruff check .` PASS, replay runtime validation `22 passed`, and OpenAPI smoke PASS. |
 | Original report-time app validation | full suite | NOT RUN | This report | Original report generation did not rerun tests or app startup. |
-| Update-time targeted validation | targeted | PASS | Current review run | `.venv` active; `ruff check .` PASS; `python -B -m pytest -q tests\api\admin\test_rejected_answer_review_workflow.py tests\unit\test_sensitive_data_non_leakage.py tests\architecture\test_api_contract_neutrality.py --tb=short` returned `38 passed`. |
+| Update-time targeted validation | targeted | PASS | Earlier report update run | `.venv` active; `ruff check .` PASS; `python -B -m pytest -q tests\api\admin\test_rejected_answer_review_workflow.py tests\unit\test_sensitive_data_non_leakage.py tests\architecture\test_api_contract_neutrality.py --tb=short` returned `38 passed`. |
 | CI validation | external | NOT RUN | Not evidenced | No CI output was inspected for this report. |
 
 ## 8. Deviations, limits and assumptions
@@ -228,7 +235,7 @@ Builder and endpoint runtime:
 
 - Some final evidence files use non-canonical validation labels such as `pass`, `passed`, `PASS.`, `PASS_AFTER_FINAL_ALIGNMENT_REVIEW_FIX`, and `blocked-by-missing-prerequisite`; this report normalizes them to delivery statuses while retaining the source wording as evidence.
 - Several story-time final evidence files record pre-existing dirty worktrees. This report cannot reconstruct exact story preflight dirty state except from story evidence.
-- Original report generation did not execute test, lint or local startup commands. Update-time review reran targeted backend lint and tests, but did not rerun full backend pytest because CS-293 and CS-294 evidence already records full-suite passes.
+- Original report generation did not execute test, lint or local startup commands. Later updates include CS-301 full-suite evidence and an independent local replay runtime review with targeted replay lint/tests and OpenAPI route assertions.
 - Commit range is not evidenced; current HEAD is known, but the range implementing CS-256 through CS-291 was not established.
 - `docs/architecture/astrology-disclaimer-projection-policy.md` and `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md` are part of the closure documentation and must be committed with the updated report.
 
@@ -242,20 +249,21 @@ Builder and endpoint runtime:
 - CS-262 is closed as an audit/reconciliation story. Residual risk: future runtime storage of `full_prompt` or `prompt_payload_snapshot` must not proceed without product/DPO approval.
 - CS-284 is now evidenced and delivered through CS-293. Residual risk: guidance disclaimer behavior remains a future product concern if guidance becomes an official B2C projection.
 - CS-268 is closed for the current rejected-answer runtime surface through CS-294. Residual risk: future non-rejected `admin_answer_audit_v1` surfaces must add their own access-log proof.
-- CS-278 replay runtime is locally validated and closed after CS-300/CS-301. Residual risk: CI evidence was not inspected; attach CI run URLs/logs for the final delivery candidate.
-- No CI artifact was inspected. Impact: local story-time validation may not reflect CI environment. Mitigation: attach CI run URLs/logs for the final delivery candidate.
+- CS-278 replay runtime is locally validated and closed after CS-300/CS-301. Residual risk: no hosted CI system exists; the release uses local CI-equivalent evidence until a hosted CI pipeline is available.
+- Replay fidelity is intentionally bounded by the DPO/security model: replay uses the approved sanitized encrypted payload, not raw prompt, raw birth data, exact coordinates or direct identifiers.
+- No hosted CI artifact was inspected. Impact: local validation may not reflect a future CI environment. Mitigation: local CI-equivalent evidence is attached now; replace or supplement it with hosted CI run URLs if CI is introduced.
 
 ## 10. Evidence gaps
 
 - Original gaps for CS-262 and CS-284 are closed at evidence level: both now have `generated/10-final-evidence.md`, and both tracker rows are `done`.
 - No single initiative source document tying CS-256 through CS-291 together was found; range grouping is user-specified and registry-inferred.
 - No commit range or PR number was evidenced for the implementation set.
-- Original report-time lint/test/startup validation was not run; update-time targeted lint/tests were run and passed.
-- No CI status or pipeline logs were inspected.
+- Original report-time lint/test/startup validation was not run; update-time targeted lint/tests were run and passed, and CS-301 records full backend pytest evidence.
+- No hosted CI status or pipeline logs were inspected because no CI exists. Local CI-equivalent logs are attached in `_condamad/reports/CS-256-CS-291-local-ci-evidence.md`.
 
 ## 11. Recommended next actions
 
-1. Attach CI evidence or create a PR/release checklist linking this report, current HEAD and validation run IDs.
+1. Keep `_condamad/reports/CS-256-CS-291-local-ci-evidence.md` and `_condamad/reports/CS-256-CS-291-release-checklist.md` attached to the release until hosted CI exists.
 2. Keep future replay changes inside the approved DPO/security scope: 30-day retention maximum, automatic purge, auditable manual purge, redaction, encrypted isolated payload references, safe access logs, and no public/client exposure.
 3. Do not add runtime storage of `full_prompt` or `prompt_payload_snapshot` before the relevant product/DPO approval is recorded.
 
@@ -263,4 +271,4 @@ Builder and endpoint runtime:
 
 `Delivered with CS-278 runtime locally revalidated after CS-300`
 
-The CS-256 to CS-291 initiative has delivery evidence for the projection builders, narrative audit persistence, rejected answer workflow, generic projection endpoint runtime and the approved `replay_snapshot_v1` runtime. The update-time review confirms that CS-262 and CS-284 are now delivered, CS-268 is closed for the current rejected-answer admin audit runtime, and CS-278 is closed by CS-295 through CS-301 with local backend lint, full pytest, OpenAPI/routes/TestClient, forbidden-data scan evidence, and real `log_call -> snapshot -> replay` validation after CS-300.
+The CS-256 to CS-291 initiative has delivery evidence for the projection builders, narrative audit persistence, rejected answer workflow, generic projection endpoint runtime and the approved `replay_snapshot_v1` runtime. The update-time review confirms that CS-262 and CS-284 are now delivered, CS-268 is closed for the current rejected-answer admin audit runtime, and CS-278 is closed by CS-295 through CS-301 with local backend lint, full pytest, OpenAPI/routes/TestClient, forbidden-data scan evidence, and real `log_call -> snapshot -> replay` validation after CS-300. Independent local review at `677d1e6c` found no remaining runtime blocker; the only release-side evidence gap is external CI.
