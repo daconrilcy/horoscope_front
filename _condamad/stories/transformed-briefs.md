@@ -80,3 +80,4 @@
 | cs-299 | `_story_briefs\cs-299-close-replay-snapshot-v1-runtime-validation.md` | `_condamad\stories\cs-299-close-replay-snapshot-v1-runtime-validation\00-story.md` |
 | cs-300 | `_story_briefs\cs-300-fix-replay-snapshot-v1-payload-hash-integrity.md` | `_condamad\stories\cs-300-replay-snapshot-v1-payload-hash-integrity\00-story.md` |
 | cs-301 | `_story_briefs\cs-301-revalidate-replay-snapshot-v1-runtime-closure-after-integrity-fix.md` | `_condamad\stories\cs-301-revalidate-replay-snapshot-v1-runtime-closure\00-story.md` |
+| cs-302 | `_story_briefs\cs-302-test-astrology-projections-endpoint-real-conditions.md` | `_condamad\stories\cs-302-test-astrology-projections-endpoint-real-conditions\00-story.md` |
