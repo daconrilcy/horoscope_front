@@ -2,17 +2,17 @@
 
 | AC | Requirement | Implementation evidence | Validation evidence | Status |
 |---|---|---|---|---|
-| AC1 | CS-277 approval is gated. | Gate evaluated before backend edits. Latest approval artifact records `approval_state: approved` for `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`, and CS-278 is now `ready-to-dev`. | `rg -n "approval_state\|approved\|DPO-REPLAY-SNAPSHOT-V1-RETENTION-001" docs\architecture\replay-snapshot-v1-storage-security-model.md docs\architecture\replay-snapshot-v1-dpo-security-approval-request.md`. | PASS |
-| AC2 | Existing replay owners are reused. | Existing owners were inspected: `backend/app/ops/llm/replay_service.py`, `backend/app/services/llm_observability/admin_observability.py`, `backend/app/infra/db/models/llm/llm_observability.py`, `backend/app/core/sensitive_data.py`, `backend/app/domain/audit/safe_details.py`. No duplicate owner was introduced. | Targeted `rg` over replay, storage, audit and sensitive-data owners. | PASS_WITH_LIMITATIONS |
-| AC3 | Snapshot storage follows CS-277. | Runtime storage remains pending; implementation is now authorized under CS-277 approval. | Approval artifact and storage/security model. | READY_TO_DEV |
-| AC4 | Forbidden data is redacted. | Runtime redaction remains pending; approval preserves forbidden categories. | Approval artifact and storage/security model. | READY_TO_DEV |
-| AC5 | Snapshot access is permissioned. | Runtime access path remains pending; approved roles and constraints are documented. | Approval artifact and storage/security model. | READY_TO_DEV |
-| AC6 | Snapshot access is logged. | Runtime read, replay, export and purge logging remains pending; approval requires safe audit events. | Approval artifact and storage/security model. | READY_TO_DEV |
-| AC7 | Deterministic replay is proven. | Deterministic replay implementation remains pending; implementation can now add proof. | Approval artifact and story status. | READY_TO_DEV |
-| AC8 | Replay limits are documented. | Existing CS-277 storage/security model documents that runtime replay execution is not approved and held back. | `rg -n "production replay execution\|Held-back implementation surfaces" docs\architecture\replay-snapshot-v1-storage-security-model.md`. | PASS_WITH_LIMITATIONS |
-| AC9 | Retention behavior is enforced. | Runtime retention and purge remain pending; approval sets 30 days maximum, automatic purge and auditable manual purge. | Approval artifact and storage/security model. | READY_TO_DEV |
-| AC10 | Public API exposure is unchanged. | No route, router, client, generated client or OpenAPI surface was added. | Existing CS-277 runtime-neutrality tests and targeted runtime checks remain applicable. | PASS |
-| AC11 | Parallel replay owners are absent. | No second replay service tree, second table or parallel permission model was created. | `rg -n "replay_snapshot_v1" backend\app backend\tests backend\docs docs\architecture` shows only CS-277 documentation/tests before this evidence update. | PASS |
-| AC12 | Evidence artifacts are persisted. | CS-278 generated evidence records the approval blocker and skipped implementation. | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-278-replay-snapshot-v1-implementation` after evidence updates. | PASS |
+| AC1 | CS-277 approval is gated. | Approval artifact records `approval_state: approved` for `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`. | CS-299 source checklist and CS-278 final evidence. | PASS |
+| AC2 | Existing replay owners are reused. | Runtime uses `LlmReplaySnapshotModel`, `ReplaySnapshotV1Service`, admin audit router and bounded replay service. | CS-295 through CS-298 final evidence and full backend pytest PASS. | PASS |
+| AC3 | Snapshot storage follows CS-277. | CS-295 implements approved storage/redaction shape. | CS-295 evidence plus CS-299 full backend pytest PASS. | PASS |
+| AC4 | Forbidden data is redacted. | CS-295/CS-298 redaction and audit safety evidence excludes raw prompt, birth data, coordinates, direct identifiers and secrets. | CS-299 forbidden-data scan and replay safety tests PASS. | PASS |
+| AC5 | Snapshot access is permissioned. | CS-297 exposes only the internal admin audit route family. | CS-299 OpenAPI/routes/TestClient checks PASS. | PASS |
+| AC6 | Snapshot access is logged. | CS-298 records bounded metadata read, replay attempt and purge audit events. | CS-298 review evidence and CS-299 targeted tests PASS. | PASS |
+| AC7 | Deterministic replay is proven. | CS-298 wires bounded replay execution through the canonical runtime owner. | CS-298 execution boundary tests and CS-299 full backend pytest PASS. | PASS |
+| AC8 | Replay limits are documented. | DPO/security approval and storage model remain the policy sources; no policy file changed during CS-299. | CS-299 final evidence. | PASS |
+| AC9 | Retention behavior is enforced. | CS-296 implements 30-day retention, automatic purge and auditable manual purge. | CS-296 evidence and CS-299 full backend pytest PASS. | PASS |
+| AC10 | Public API exposure is unchanged except approved internal admin routes. | No public/root/support/client replay route or frontend/generated client was added. | CS-299 OpenAPI/routes scan PASS. | PASS |
+| AC11 | Parallel replay owners are absent. | No duplicate replay service tree, second table or compatibility closure path was added by CS-299. | CS-299 diff review and source checklist PASS. | PASS |
+| AC12 | Evidence artifacts are persisted. | CS-278 final evidence, CS-299 final evidence, delivery report and story-status are synchronized. | `condamad_validate.py` on CS-299 PASS. | PASS |
 
-Status values: `PASS`, `PASS_WITH_LIMITATIONS`, `READY_TO_DEV`, `FAIL`, `BLOCKED`.
+Status values: `PASS`, `PASS_WITH_LIMITATIONS`, `FAIL`, `BLOCKED`.

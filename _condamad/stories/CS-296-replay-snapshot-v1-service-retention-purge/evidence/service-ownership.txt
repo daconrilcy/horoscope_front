@@ -1,0 +1,19 @@
+PASS service ownership
+
+Canonical service:
+- backend/app/services/replay_snapshot_v1_service.py
+- class ReplaySnapshotV1Service
+- methods: create_snapshot, get_snapshot_metadata, get_replay_payload_snapshot, purge_expired, purge_snapshot
+
+Delegations:
+- backend/app/domain/llm/runtime/observability_service.py delegates snapshot creation and expired snapshot purge to ReplaySnapshotV1Service.
+- backend/app/ops/llm/replay_service.py delegates replay payload availability checks to ReplaySnapshotV1Service.
+- Review fix: metadata reads, replay payload reads, manual purge and automatic purge now restrict operations to snapshot_type replay_snapshot_v1.
+
+Architecture guard:
+- python -B -m pytest -q backend/tests/unit/test_replay_snapshot_v1_service_ownership.py --tb=short
+- result: PASS, included in targeted suite: 12 passed, 2 deselected.
+
+No public exposure:
+- rg -n "replay_snapshot_v1" backend\app\api frontend\src
+- result: PASS: no matches.

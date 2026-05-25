@@ -1,0 +1,13 @@
+Runtime route evidence:
+- /v1/admin/audit/replay_snapshot_v1/{snapshot_id}
+- /v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt
+
+Forbidden route checks:
+- /v1/replay_snapshot_v1 absent
+- /v1/public/replay_snapshot_v1 absent
+- /v1/support/replay_snapshot_v1 absent
+- /api/replay_snapshot_v1 absent
+- /replay_snapshot_v1 absent
+
+OpenAPI invariant:
+- every path containing replay_snapshot_v1 starts with /v1/admin/audit

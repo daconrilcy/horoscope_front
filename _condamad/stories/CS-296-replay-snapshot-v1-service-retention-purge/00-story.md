@@ -1,5 +1,5 @@
 # Story CS-296 replay-snapshot-v1-service-retention-purge: Implement replay_snapshot_v1 Service Retention And Purge
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

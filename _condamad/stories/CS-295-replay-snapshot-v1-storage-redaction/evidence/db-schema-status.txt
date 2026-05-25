@@ -1,0 +1,9 @@
+alembic heads:
+20260525_0140 (head)
+
+LlmReplaySnapshotModel columns:
+id,call_log_id,snapshot_type,created_at,input_ref,input_hash,version_identity,provenance,redaction_state,input_enc,payload_enc,expires_at
+
+Schema invariant:
+backend/tests/integration/test_llm_db_invariants.py::test_replay_snapshot_v1_schema_matches_model_metadata PASS
+

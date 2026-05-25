@@ -1,0 +1,8 @@
+{
+  "story": "CS-298",
+  "baseline": "pre-CS-298 generated capsule state",
+  "metadata_read_audit": "not implemented before this story",
+  "replay_attempt_audit_action": "legacy llm_replay_snapshot_replay_attempt_started when success only",
+  "purge_audit_action": "legacy llm_replay_snapshot_purged for selected purge paths",
+  "failed_outcome_audit": "not consistently persisted before route errors"
+}

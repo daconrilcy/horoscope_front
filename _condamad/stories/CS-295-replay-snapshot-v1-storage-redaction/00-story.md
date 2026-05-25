@@ -1,5 +1,5 @@
 # Story CS-295 replay-snapshot-v1-storage-redaction: Implement replay_snapshot_v1 Storage And Redaction
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

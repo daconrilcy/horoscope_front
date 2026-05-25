@@ -1,0 +1,11 @@
+PASS runtime surface
+
+Commands:
+- python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in str(app.openapi())"
+- python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in {getattr(r, 'path', '') for r in app.routes}"
+- rg -n "replay_snapshot_v1" backend\app\api frontend\src
+
+Results:
+- OpenAPI guard: PASS.
+- app.routes guard: PASS.
+- API/frontend scan: PASS: no matches.

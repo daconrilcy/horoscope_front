@@ -1,0 +1,22 @@
+Scoped storage scan:
+Pattern:
+`raw_prompt|birth_date|birth_time|birth_place|latitude|longitude|email|password|api_key`
+
+Paths:
+- `backend\app\infra\db\models\llm\llm_observability.py`
+- `backend\app\domain\llm\runtime\observability_service.py`
+- `backend\app\ops\llm\replay_service.py`
+- `backend\migrations\versions\20260525_0140_replay_snapshot_v1_storage_redaction.py`
+
+Result:
+PASS: no matches (rg exit code 1).
+
+Runtime/DB redaction evidence:
+- backend/tests/unit/test_replay_snapshot_v1_redaction.py PASS
+- backend/tests/integration/test_replay_snapshot_v1_db_redaction.py PASS
+- Alignment fix 2026-05-25: decrypted `input_enc` assertions now prove raw prompt text, raw birth data, direct identifiers and secrets are absent.
+- `Sink.LLM_REPLAY_SNAPSHOTS` hashes direct identifiers, correlable identifiers, user-authored content, birth data and exact coordinates before encryption.
+
+Broad repository scan note:
+The broad story pattern has expected matches in pre-existing non-storage domains and tests, plus `sensitive_data.py`
+classification keys. It is retained as diagnostic context, not as the AC absence proof.

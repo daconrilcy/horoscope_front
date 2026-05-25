@@ -1,0 +1,33 @@
+# Validation — CS-295
+
+- `ruff format <changed python files>`: PASS
+- `ruff check .`: PASS
+- CS-295 owner, storage, redaction, retention, purge, DB redaction and DB invariant pytest set: PASS (`8 passed, 19 deselected`)
+- `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_storage_security_model.py tests\integration --tb=short`: PASS (`5 passed, 213 deselected`)
+- `python -B -m pytest -q --tb=short`: PASS (`3388 passed, 1 skipped, 1214 deselected`)
+- Runtime OpenAPI guard: PASS
+- Runtime route guard: PASS
+- Scoped storage forbidden-field scan: PASS no matches
+- `git diff --check`: PASS, with CRLF warnings only
+- `condamad_validate.py`: PASS after final evidence update.
+- Fresh implementation review rerun on 2026-05-25:
+  - `ruff check .`: PASS
+  - CS-295 owner, storage, redaction, retention, purge, DB redaction and DB invariant pytest set: PASS (`8 passed, 19 deselected`)
+  - `ruff format --check .`: PASS (`1672 files already formatted`)
+  - Runtime OpenAPI guard: PASS
+  - Runtime route guard: PASS
+  - `condamad_story_validate.py`: PASS
+  - `condamad_story_lint.py --strict`: PASS
+  - `git diff --check`: PASS
+- Alignment fix rerun on 2026-05-25:
+  - CS-295 redaction, storage and DB redaction pytest set: PASS (`4 passed, 1 deselected`)
+  - `ruff format app\core\sensitive_data.py tests\unit\test_replay_snapshot_v1_redaction.py tests\integration\test_replay_snapshot_v1_db_redaction.py`: PASS
+  - `ruff check .`: PASS
+  - CS-295 owner, storage, redaction, retention, purge, DB redaction and DB invariant pytest set: PASS (`8 passed, 19 deselected`)
+  - `ruff format --check .`: PASS (`1672 files already formatted`)
+  - Runtime OpenAPI guard: PASS
+  - Runtime route guard: PASS
+  - `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_storage_security_model.py tests\integration --tb=short`: PASS (`5 passed, 213 deselected`)
+  - `condamad_story_validate.py`: PASS
+  - `condamad_story_lint.py --strict`: PASS
+  - `git diff --check`: PASS, with CRLF warnings only

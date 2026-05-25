@@ -1,0 +1,19 @@
+CS-299 runtime surface proof
+COMMAND: python -B -c OpenAPI admin-only replay path check
+['/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt']
+EXIT: 0
+COMMAND: python -B -c app.routes public replay absence check
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from app.main import app; paths=sorted(getattr(r,'path','') for r in app.routes if 'replay_snapshot_v1' in getattr(r,'path','')); print(paths); assert paths == ['/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt']; assert '/replay_snapshot_v1' not in paths
+                                                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+['/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt']
+EXIT: 1
+COMMAND: python -B -m pytest -q tests\api\admin\test_replay_snapshot_v1_api.py tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py tests\architecture\test_replay_snapshot_v1_execution_boundary.py --tb=short
+..............                                                           [100%]
+14 passed in 4.63s
+EXIT: 0
+COMMAND: python -B -c app.routes admin-only set and public replay absence check (corrected)
+{'routes': ['/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}'], 'unique': ['/v1/admin/audit/replay_snapshot_v1/{snapshot_id}', '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt']}
+EXIT: 0

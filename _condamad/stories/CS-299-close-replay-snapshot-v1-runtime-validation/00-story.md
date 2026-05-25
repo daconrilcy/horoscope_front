@@ -1,5 +1,5 @@
 # Story CS-299 close-replay-snapshot-v1-runtime-validation: Close replay_snapshot_v1 Runtime Validation
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

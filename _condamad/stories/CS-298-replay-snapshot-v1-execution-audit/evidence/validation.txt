@@ -1,0 +1,17 @@
+PASS ruff format . (backend): 1684 files left unchanged
+PASS ruff check . (backend)
+PASS targeted CS-298/API/architecture tests: 18 passed
+PASS required backend suite: 828 passed, 215 deselected
+PASS full backend pytest: 3421 passed, 1 skipped, 1216 deselected
+PASS OpenAPI admin-only replay_snapshot_v1 path check
+PASS runtime route absence check for /replay_snapshot_v1
+PASS app import/startup smoke check: `from app.main import app; assert app.title`
+PASS git diff --check
+PASS condamad_story_validate.py after review/fix update
+PASS condamad_story_lint.py --strict after review/fix update
+PASS_WITH_CLASSIFIED_HITS scoped sensitive scan: hits are forbidden-field test constants, masked admin email paths and purge tombstone `payload_enc = None`
+PASS alignment review 2026-05-25: tracker path/source, story ACs, implementation, tests and final evidence are aligned with the source brief
+PASS alignment rerun: condamad_story_validate.py
+PASS alignment rerun: condamad_story_lint.py --strict
+PASS alignment rerun: ruff check on CS-298 touched app/test files
+PASS alignment rerun: targeted CS-298/API/architecture tests -> 18 passed

@@ -15,4 +15,12 @@
 - `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md` now records `approval_state: approved`.
 - `docs/architecture/replay-snapshot-v1-storage-security-model.md` now references the approved decision.
 - CS-278 tracker status moved from `blocked` to `ready-to-dev`.
-- Runtime implementation remains pending; no backend app, migration, route, frontend or generated client file was changed by this approval update.
+- This approval-only update was later superseded by the CS-299 runtime closure pass.
+
+## 2026-05-25 runtime closure update
+
+- CS-295 through CS-298 implementation, review and validation evidence was reviewed.
+- CS-299 ran backend `ruff format --check .`, `ruff check .`, full backend pytest, OpenAPI/routes assertions, TestClient/architecture tests and forbidden-data scans.
+- CS-278 final evidence and acceptance traceability were updated to runtime closure.
+- CS-278 tracker status moved from `ready-to-dev` to `done`.
+- No backend app, migration, route, frontend or generated client file was changed by CS-299.

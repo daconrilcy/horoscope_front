@@ -1,0 +1,38 @@
+CS-299 forbidden-data scan
+COMMAND: rg -n "raw_prompt|birth_date|birth_time|birth_place|latitude|longitude|password|api_key" replay runtime owner files
+EXIT: 1 (PASS: no matches)
+COMMAND: python -B -m pytest -q replay redaction/audit safety tests --tb=short
+.........                                                                [100%]
+9 passed, 1 deselected in 1.72s
+EXIT: 0
+
+REVIEW FIX 2026-05-25:
+The first persisted scan omitted `email` and `payload_enc` while AC9 and the story guard list include them.
+The corrected review scan below covers the full forbidden-token set and classifies every hit.
+
+COMMAND:
+rg -n "raw_prompt|birth_date|birth_time|birth_place|latitude|longitude|email|password|api_key|payload_enc" `
+  backend\app\services\replay_snapshot_v1_service.py `
+  backend\app\api\v1\routers\admin\audit.py `
+  backend\app\services\api_contracts\admin\audit.py `
+  backend\app\domain\audit\safe_details.py `
+  backend\app\infra\db\models\llm\llm_observability.py `
+  backend\tests\api\admin\test_replay_snapshot_v1_api.py `
+  backend\tests\integration\test_replay_snapshot_v1_db_redaction.py `
+  backend\tests\unit\test_replay_snapshot_v1_redaction.py `
+  backend\tests\unit\test_replay_snapshot_v1_execution_audit.py
+
+CLASSIFIED HITS:
+- backend\tests\unit\test_replay_snapshot_v1_execution_audit.py: forbidden-token set used to assert audit details exclude every token.
+- backend\tests\unit\test_replay_snapshot_v1_redaction.py: fixtures inject raw sensitive values, then assert redaction/removal.
+- backend\tests\integration\test_replay_snapshot_v1_db_redaction.py: fixtures inject raw sensitive values, then assert DB/decrypted payload redaction.
+- backend\tests\api\admin\test_replay_snapshot_v1_api.py: forbidden-token set and admin test identities; payload assertions reject these keys.
+- backend\app\infra\db\models\llm\llm_observability.py: approved encrypted `payload_enc` column only, not an API/log/test emission.
+- backend\app\services\replay_snapshot_v1_service.py: manual purge clears `snapshot.payload_enc = None`.
+- backend\app\api\v1\routers\admin\audit.py and `api_contracts/admin/audit.py`: pre-existing masked audit-email field, not replay output.
+
+RESULT:
+PASS_WITH_CLASSIFIED_HITS. Hits are enforcement fixtures, redaction assertions, masked generic audit fields,
+or the approved encrypted DB column/clear operation. No raw prompt, raw birth data, exact coordinates,
+direct identifier, credential, raw provider payload or `payload_enc` field is emitted by replay API responses,
+audit details or persisted CS-299 evidence.

@@ -1,4 +1,4 @@
-# Editorial Review CS-295 replay-snapshot-v1-storage-redaction
+# Implementation Review CS-295 replay-snapshot-v1-storage-redaction
 
 Verdict: CLEAN
 
@@ -6,32 +6,45 @@ Verdict: CLEAN
 
 - Reviewed story: `_condamad/stories/CS-295-replay-snapshot-v1-storage-redaction/00-story.md`.
 - Source brief: `_story_briefs/cs-295-implement-replay-snapshot-v1-storage-redaction.md`.
-- Tracker row: `_condamad/stories/story-status.md`, source matched to the brief and status `ready-to-dev`.
-- Review mode: compact pre-implementation story-contract review.
+- Tracker row: `_condamad/stories/story-status.md`, path and source brief matched CS-295.
+- Review mode: implementation review after backend changes and persisted CONDAMAD evidence.
 
 ## Alignment Checks
 
-- Brief objective is preserved: extend the canonical replay snapshot persistence owner without adding a parallel store.
-- Required owner reuse is explicit for `LlmReplaySnapshotModel`, `llm_replay_snapshots`, creation, purge, redaction and safe audit details.
-- `expires_at = created_at + 30 days` is explicit in objective, target state, tasks, ACs and validation plan.
-- Forbidden data is explicit: raw prompts, birth data, exact coordinates, direct identifiers, secrets and credentials.
-- No public API, OpenAPI, generated client, frontend route or UI exposure is authorized.
-- Expected schema, migration, redaction, DB scan, purge and runtime exposure validations are present.
-- Scoped guardrails cited by the story were checked by ID only: RG-002, RG-003, RG-007, RG-022, RG-047 and RG-052.
+- AC1 owner reuse: `LlmReplaySnapshotModel` and `llm_replay_snapshots` remain the single replay snapshot owner.
+- AC2 schema: approved v1 fields are on the existing model and migration.
+- AC3 retention: new snapshots derive `expires_at` from `created_at + 30 days`.
+- AC4 and AC5 redaction: inspectable metadata and DB scan exclude raw forbidden values; encrypted payload boundary remains isolated.
+- AC6 migration: Alembic head and SQLAlchemy metadata include the required replay snapshot columns.
+- AC7 purge: expired replay snapshots are deleted without deleting unrelated active call logs.
+- AC8 exposure: no `replay_snapshot_v1` public route, OpenAPI path, frontend route or generated client exposure was added.
+- AC9 evidence: source, schema, redaction, runtime and validation evidence files are present.
 
-## Issues Fixed
+## Findings
 
-- None. The first editorial pass found no actionable drafting issue.
-
-## Produced Artifacts
-
-- Created this review artifact as the first clean editorial review output for CS-295.
+- Fixed: encrypted replay payload still preserved raw user-authored prompt text and raw birth data after decryption. This contradicted the
+  source brief and DPO/security model, which require stored content to be limited to references, hashes, versions and approved metadata.
+  `Sink.LLM_REPLAY_SNAPSHOTS` now hashes direct identifiers, correlable identifiers, user-authored content, birth data and exact coordinates
+  before encryption; provider secrets remain forbidden.
 
 ## Validation Results
 
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-295-replay-snapshot-v1-storage-redaction\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-295-replay-snapshot-v1-storage-redaction\00-story.md`
-- Both Python validation commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+- PASS: `ruff check .` from `backend`.
+- PASS: CS-295 owner, storage, redaction, retention, purge, DB redaction and DB invariant pytest set from `backend`.
+- PASS: `ruff format --check .` from `backend`.
+- PASS: `python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in str(app.openapi())"` from `backend`.
+- PASS: `python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in {getattr(r, 'path', '') for r in app.routes}"` from `backend`.
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-295-replay-snapshot-v1-storage-redaction\00-story.md`.
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-295-replay-snapshot-v1-storage-redaction\00-story.md`.
+- PASS: `git diff --check`.
+- PASS after fix: CS-295 redaction, storage and DB redaction pytest set.
+- PASS after fix: `ruff check .` from `backend`.
+- PASS after fix: CS-295 owner, storage, redaction, retention, purge, DB redaction and DB invariant pytest set.
+- PASS after fix: `ruff format --check .` from `backend`.
+- PASS after fix: runtime route and OpenAPI guards.
+- PASS after fix: brief validation command `python -B -m pytest -q tests\unit\test_replay_snapshot_v1_storage_security_model.py tests\integration --tb=short`.
+- PASS after fix: `condamad_story_validate.py`, `condamad_story_lint.py --strict`, `git diff --check`.
+- All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
 ## Propagation
 
@@ -39,4 +52,5 @@ Verdict: CLEAN
 
 ## Residual Risk
 
-- None identified for story drafting. Implementation risk remains covered by the story validation plan.
+- The encrypted `input_enc` boundary now stores transformed replay input only; no raw prompt, birth data, exact coordinate, direct identifier
+  or secret residual risk remains identified for CS-295.

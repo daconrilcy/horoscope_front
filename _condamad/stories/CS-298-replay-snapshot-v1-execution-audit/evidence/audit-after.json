@@ -1,0 +1,39 @@
+{
+  "story": "CS-298",
+  "actions": [
+    "replay_snapshot_v1.metadata_read",
+    "replay_snapshot_v1.replay_attempt",
+    "replay_snapshot_v1.purge"
+  ],
+  "detail_keys": [
+    "action",
+    "status",
+    "snapshot_id",
+    "request_id",
+    "reason",
+    "diff_summary"
+  ],
+  "runtime_execution_audit": {
+    "success": "real replay() execution records replay_snapshot_v1.replay_attempt after provider success",
+    "failed": "real replay() execution records replay_snapshot_v1.replay_attempt when provider execution fails",
+    "diff_summary_keys": [
+      "original_validation_status",
+      "new_validation_status",
+      "status_changed"
+    ]
+  },
+  "success_status": "success",
+  "failed_status": "failed",
+  "forbidden_detail_fields": [
+    "raw_prompt",
+    "birth_date",
+    "birth_time",
+    "birth_place",
+    "latitude",
+    "longitude",
+    "email",
+    "password",
+    "api_key",
+    "payload_enc"
+  ]
+}

@@ -1,5 +1,5 @@
 # Story CS-278 replay-snapshot-v1-implementation: Implement replay_snapshot_v1 After Approval
-Status: ready-to-dev
+Status: done
 
 Implementation review status: ready for backend implementation after DPO/security approval artifact `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`.
 

@@ -1,0 +1,12 @@
+Runtime public exposure guards:
+
+python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in str(app.openapi())"
+PASS
+
+python -B -c "from app.main import app; assert 'replay_snapshot_v1' not in {getattr(r, 'path', '') for r in app.routes}"
+PASS
+
+Frontend scope:
+git status --short -- frontend/src
+PASS: no frontend changes.
+

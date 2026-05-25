@@ -1,47 +1,79 @@
-# CS-297 Editorial Story Review
+# CS-297 Implementation Review
 
 Verdict: CLEAN
 Review date: 2026-05-25
-Review type: compact pre-implementation drafting review.
+Review type: implementation review and fix loop.
 
 ## Scope Reviewed
 
+- Story: `_condamad/stories/CS-297-expose-internal-admin-replay-snapshot-v1-api/00-story.md`.
 - Source brief: `_story_briefs/cs-297-expose-internal-admin-replay-snapshot-v1-api.md`.
 - Tracker row: `_condamad/stories/story-status.md`, row `CS-297`.
-- Story contract: `_condamad/stories/CS-297-expose-internal-admin-replay-snapshot-v1-api/00-story.md`.
-- Scoped guardrails: `RG-002`, `RG-003`, `RG-007`, `RG-022`.
+- Backend route and contracts:
+  - `backend/app/api/v1/routers/admin/audit.py`
+  - `backend/app/services/api_contracts/admin/audit.py`
+  - `backend/app/services/replay_snapshot_v1_service.py`
+- Tests and guardrails:
+  - `backend/tests/api/admin/test_replay_snapshot_v1_api.py`
+  - `backend/tests/architecture/test_admin_replay_snapshot_v1_public_exposure.py`
+  - `backend/tests/unit/test_admin_endpoint_segmentation_contract.py`
+  - `backend/tests/unit/test_replay_snapshot_v1_service_ownership.py`
+- Evidence:
+  - `evidence/openapi-before.json`
+  - `evidence/openapi-after.json`
+  - `evidence/routes-before.txt`
+  - `evidence/routes-after.txt`
+  - `evidence/access-control.txt`
+  - `evidence/validation.txt`
 
 ## Iteration 1 Findings
 
-- Validation command context was ambiguous: the story mixed root-relative `backend/...` paths with runtime imports that need backend module resolution.
+- Finding 1: the implementation evidence referenced architecture coverage, but
+  `backend/tests/architecture/test_admin_replay_snapshot_v1_public_exposure.py` was missing.
+- Finding 2: `generated/11-code-review.md` still contained a pre-implementation drafting review, not an implementation review.
+- Finding 3: the story status was inconsistent across artifacts: tracker `ready-to-review`, story file `ready-to-dev`.
+- Finding 4: `evidence/access-control.txt` was required by the story but absent.
+- Finding 5: the static `rg` validation in the story was too broad and matched the allowed admin route suffix.
 
 ## Fixes Applied
 
-- The story now requires all deterministic guards and validation commands to run from the repository root.
-- Runtime `app.main` checks now set `PYTHONPATH=backend`, so imports are deterministic without switching directories.
-- The broad backend pytest command now uses root-relative `backend\tests\...` paths.
+- Added the architecture guardrail test for runtime paths, OpenAPI methods and frontend/public-router absence.
+- Added access-control evidence for unauthenticated, user and support denial.
+- Corrected the static scan so runtime checks own the bare root path and `rg` owns public/client/support/API prefixes.
+- Refreshed target-file, validation and final review evidence.
+- Updated story and tracker status to `done` after fresh passing validation.
 
-## Iteration 2 Review
+## Acceptance Criteria Review
 
-- Brief alignment: PASS. The story preserves admin/internal namespace selection, metadata read, controlled replay attempt, audited purge,
-  non-admin denial, redacted responses, no public/client route and required tests.
-- Story contract completeness: PASS. Target state, ACs, tasks, expected files, non-goals, risks and evidence artifacts are explicit.
-- Guardrail alignment: PASS. Selected guardrails match backend API ownership, registry mounting, admin observability preservation and validation paths.
-- Tracker alignment: PASS. `CS-297` remains `ready-to-dev` with source brief and current local date.
+- AC1/AC2: PASS. Runtime and OpenAPI expose exactly the admin audit replay snapshot paths.
+- AC3: PASS. Metadata responses are contract-shaped and tested against forbidden sensitive fields.
+- AC4: PASS. Replay attempt delegates to `ReplaySnapshotV1Service.start_replay_attempt`, returns `202` and commits audit metadata.
+- AC5: PASS. Manual purge delegates to `ReplaySnapshotV1Service.purge_snapshot`, commits and returns `204`.
+- AC6: PASS. Missing auth returns `401`; user and support roles return `403`; denied calls do not reach the replay service.
+- AC7/AC8/AC9: PASS. Missing, expired and already purged states map to stable `404`/`410` errors.
+- AC10: PASS. Runtime and static guards prove no public, support, client, frontend or root replay path.
+- AC11: PASS. OpenAPI, route inventory, access-control and validation evidence are persisted.
 
 ## Validation Results
 
-- PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-297-expose-internal-admin-replay-snapshot-v1-api\00-story.md`
-- PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-297-expose-internal-admin-replay-snapshot-v1-api\00-story.md`
+- PASS: `ruff format tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py`.
+- PASS: `ruff check tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py`.
+- PASS: `python -B -m pytest -q tests\api\admin\test_replay_snapshot_v1_api.py tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py --tb=short` (`11 passed`).
+- PASS: `ruff check .`.
+- PASS: `python -B -m pytest -q tests\api\admin tests\architecture --tb=short` (`95 passed`).
+- PASS: `python -B -m pytest -q --tb=short` (`3412 passed, 1 skipped, 1216 deselected`).
+- PASS: CONDAMAD story validate and strict lint.
+- PASS: runtime OpenAPI and `app.routes` guards for admin-only replay exposure.
+- PASS: static negative scan for public/client/support/API replay paths.
 
-## Produced Artifacts
+## Fresh Review Verdict
 
-- `_condamad/stories/CS-297-expose-internal-admin-replay-snapshot-v1-api/generated/11-code-review.md`.
+CLEAN. No actionable implementation issue remains after iteration 1 fixes.
 
 ## Propagation Decision
 
-No-propagation: the correction is local to this story draft and does not reveal reusable process or guardrail learning.
+No-propagation: findings were local CS-297 evidence and guardrail closure issues.
 
 ## Residual Risk
 
-Aucun risque restant identifie for drafting readiness.
+Aucun risque restant identifie.

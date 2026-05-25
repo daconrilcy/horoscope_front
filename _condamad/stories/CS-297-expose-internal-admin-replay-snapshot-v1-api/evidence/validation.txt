@@ -1,0 +1,23 @@
+# Validation CS-297
+
+Review/fix iteration: 1
+Validation date: 2026-05-25
+Python venv: activated with `. .\.venv\Scripts\Activate.ps1` before every Python command.
+
+- PASS: `ruff format tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py` from `backend`.
+- PASS: `ruff check tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py` from `backend`.
+- PASS: `python -B -m pytest -q tests\api\admin\test_replay_snapshot_v1_api.py tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py --tb=short` from `backend` (`11 passed`).
+- PASS: `ruff check .` from `backend`.
+- PASS: `python -B -m pytest -q tests\api\admin tests\architecture --tb=short` from `backend` (`95 passed`).
+- PASS: `python -B -m pytest -q --tb=short` from `backend` (`3412 passed, 1 skipped, 1216 deselected`).
+- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-297-expose-internal-admin-replay-snapshot-v1-api\00-story.md`.
+- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-297-expose-internal-admin-replay-snapshot-v1-api\00-story.md`.
+- PASS: runtime OpenAPI contains `/v1/admin/audit/replay_snapshot_v1/{snapshot_id}`.
+- PASS: runtime `app.routes` contains `/v1/admin/audit/replay_snapshot_v1/{snapshot_id}`.
+- PASS: runtime OpenAPI replay paths all start with `/v1/admin/audit`.
+- PASS: runtime `app.routes` contains no `/v1/replay_snapshot_v1` or `/replay_snapshot_v1`.
+- PASS: static negative scan
+  `rg -n "/v1/replay_snapshot_v1|/v1/public/replay_snapshot_v1|/v1/support/replay_snapshot_v1|/api/replay_snapshot_v1" backend/app frontend/src`
+  returned no matches.
+
+Skipped validations: none.

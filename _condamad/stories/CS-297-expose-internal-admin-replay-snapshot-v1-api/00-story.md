@@ -1,5 +1,5 @@
 # Story CS-297 expose-internal-admin-replay-snapshot-v1-api: Expose Internal Admin replay_snapshot_v1 API
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -262,7 +262,7 @@ exposure and prove no public or generated-client route exists.
   - `pytest -q backend/tests/architecture/test_admin_replay_snapshot_v1_public_exposure.py`
   - `$env:PYTHONPATH='backend'; python -c "from app.main import app; assert all(p.startswith('/v1/admin/audit') for p in app.openapi()['paths'] if 'replay_snapshot_v1' in p)"`
   - `$env:PYTHONPATH='backend'; python -c "from app.main import app; assert not any(getattr(r,'path','') in {'/v1/replay_snapshot_v1','/replay_snapshot_v1'} for r in app.routes)"`
-  - `rg -n "/v1/replay_snapshot_v1|/v1/public/replay_snapshot_v1|/v1/support/replay_snapshot_v1|/replay_snapshot_v1" backend/app frontend/src`
+  - `rg -n "/v1/replay_snapshot_v1|/v1/public/replay_snapshot_v1|/v1/support/replay_snapshot_v1|/api/replay_snapshot_v1" backend/app frontend/src`
 
 ## Regression Guardrails
 
@@ -349,7 +349,7 @@ Files not expected to change:
 - VC3: `$env:PYTHONPATH='backend'; python -c "from app.main import app; paths=app.openapi()['paths']; assert '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}' in paths"`
 - VC4: `$env:PYTHONPATH='backend'; python -c "from app.main import app; assert '/v1/admin/audit/replay_snapshot_v1/{snapshot_id}' in [getattr(r,'path','') for r in app.routes]"`
 - VC5: `$env:PYTHONPATH='backend'; python -c "from app.main import app; assert all(p.startswith('/v1/admin/audit') for p in app.openapi()['paths'] if 'replay_snapshot_v1' in p)"`
-- VC6: `rg -n "/v1/replay_snapshot_v1|/v1/public/replay_snapshot_v1|/v1/support/replay_snapshot_v1|/replay_snapshot_v1" backend/app frontend/src`
+- VC6: `rg -n "/v1/replay_snapshot_v1|/v1/public/replay_snapshot_v1|/v1/support/replay_snapshot_v1|/api/replay_snapshot_v1" backend/app frontend/src`
 - VC7: `rg -n "raw_prompt|birth_date|birth_time|birth_place|latitude|longitude|email|password|api_key|payload_enc" backend/tests/api/admin`
 - VC8: `python -c "from pathlib import Path; assert Path('_condamad/stories/CS-297-expose-internal-admin-replay-snapshot-v1-api/evidence/openapi-after.json').exists()"`
 - VC9: `python -c "from pathlib import Path; assert Path('_condamad/stories/CS-297-expose-internal-admin-replay-snapshot-v1-api/evidence/validation.txt').exists()"`

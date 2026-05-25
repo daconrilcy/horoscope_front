@@ -1,5 +1,5 @@
 # Story CS-298 replay-snapshot-v1-execution-audit: Implement replay_snapshot_v1 Execution And Audit
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -115,16 +115,16 @@ deterministic limits.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Add safe replay snapshot audit detail DTOs for read, replay and purge outcomes. (AC: AC1, AC2, AC3, AC5)
-- [ ] Task 2: Record audit events around admin metadata reads using bounded identifiers and status details. (AC: AC1, AC5)
-- [ ] Task 3: Add controlled replay execution from the approved snapshot state. (AC: AC2, AC4, AC7)
-- [ ] Task 4: Refuse expired, purged and incomplete snapshots before provider execution. (AC: AC4, AC7)
-- [ ] Task 5: Record replay attempt success and failed outcomes through the canonical audit service. (AC: AC2, AC5)
-- [ ] Task 6: Record purge success and failed outcomes through the canonical audit service. (AC: AC3, AC5)
-- [ ] Task 7: Add non-leakage unit and admin API tests for audit details. (AC: AC1, AC2, AC3, AC5, AC6)
-- [ ] Task 8: Add an architecture guard for bounded replay execution ownership. (AC: AC7)
-- [ ] Task 9: Document deterministic replay inputs and non-deterministic provider limits. (AC: AC8)
-- [ ] Task 10: Persist validation and audit evidence artifacts under the CS-298 story folder. (AC: AC9)
+- [x] Task 1: Add safe replay snapshot audit detail DTOs for read, replay and purge outcomes. (AC: AC1, AC2, AC3, AC5)
+- [x] Task 2: Record audit events around admin metadata reads using bounded identifiers and status details. (AC: AC1, AC5)
+- [x] Task 3: Add controlled replay execution from the approved snapshot state. (AC: AC2, AC4, AC7)
+- [x] Task 4: Refuse expired, purged and incomplete snapshots before provider execution. (AC: AC4, AC7)
+- [x] Task 5: Record replay attempt success and failed outcomes through the canonical audit service. (AC: AC2, AC5)
+- [x] Task 6: Record purge success and failed outcomes through the canonical audit service. (AC: AC3, AC5)
+- [x] Task 7: Add non-leakage unit and admin API tests for audit details. (AC: AC1, AC2, AC3, AC5, AC6)
+- [x] Task 8: Add an architecture guard for bounded replay execution ownership. (AC: AC7)
+- [x] Task 9: Document deterministic replay inputs and non-deterministic provider limits. (AC: AC8)
+- [x] Task 10: Persist validation and audit evidence artifacts under the CS-298 story folder. (AC: AC9)
 
 ## Files to Inspect First
 

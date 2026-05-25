@@ -1,0 +1,42 @@
+CS-296 validation summary
+
+Environment:
+- Commands run from repository root with .\.venv\Scripts\Activate.ps1 unless noted.
+- A mistaken full pytest attempt was launched from backend/ with a missing relative venv activation; it exposed guard updates but was superseded by the final root-run validation below.
+
+Formatting and lint:
+- ruff format scoped changed Python files: PASS.
+- ruff check changed Python files: PASS.
+- ruff check .: PASS.
+
+Review/fix iteration 1 targeted CS-296 tests:
+- python -B -m pytest -q backend\tests\unit\test_replay_snapshot_v1_service_ownership.py backend\tests\unit\test_replay_snapshot_v1_service_retention.py backend\tests\unit\test_replay_snapshot_v1_service_metadata.py backend\tests\unit\test_replay_snapshot_v1_service_manual_purge.py backend\tests\unit\test_replay_snapshot_v1_service_audit.py backend\tests\integration\test_replay_snapshot_v1_service_purge.py backend\tests\integration\test_replay_snapshot_v1_service_non_cascade.py --tb=short
+- Result: 12 passed, 2 deselected.
+
+Review/fix iteration 1 runtime/public surface guards:
+- app.openapi replay_snapshot_v1 absence: PASS.
+- app.routes replay_snapshot_v1 absence: PASS.
+- rg -n "replay_snapshot_v1" backend\app\api frontend\src: PASS: no matches.
+
+Nearby CS-295 replay regression tests:
+- python -B -m pytest -q backend\tests\unit\test_replay_snapshot_v1_ownership.py backend\tests\unit\test_replay_snapshot_v1_storage.py backend\tests\unit\test_replay_snapshot_v1_redaction.py backend\tests\unit\test_replay_snapshot_v1_retention.py backend\tests\unit\test_replay_snapshot_v1_purge.py backend\tests\integration\test_replay_snapshot_v1_db_redaction.py --tb=short
+- Result: 9 passed, 1 deselected.
+
+Backend unit+integration suite:
+- python -B -m pytest -q backend\tests\unit backend\tests\integration --tb=short
+- Result after review fixes: 806 passed, 215 deselected.
+
+Full project pytest:
+- python -B -m pytest -q --tb=short
+- Result after review fixes: 3309 passed, 1 skipped, 1216 deselected.
+
+Runtime/static guards:
+- app.openapi replay_snapshot_v1 absence: PASS.
+- app.routes replay_snapshot_v1 absence: PASS.
+- rg -n "replay_snapshot_v1" backend\app\api frontend\src: PASS: no matches.
+- rg -n "replay_snapshot_v1|ReplaySnapshotV1Service|purge_snapshot|purge_expired|get_snapshot_metadata" backend\app backend\tests -g "*.py": PASS, service/tests only.
+
+Capsule:
+- condamad_validate.py _condamad\stories\CS-296-replay-snapshot-v1-service-retention-purge: PASS before implementation evidence update.
+- condamad_story_validate.py _condamad\stories\CS-296-replay-snapshot-v1-service-retention-purge\00-story.md: PASS after final status update.
+- condamad_story_lint.py --strict _condamad\stories\CS-296-replay-snapshot-v1-service-retention-purge\00-story.md: PASS after final status update.

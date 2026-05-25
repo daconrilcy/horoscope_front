@@ -1,0 +1,12 @@
+PASS purge non-cascade
+
+Tests:
+- python -B -m pytest -q backend/tests/integration/test_replay_snapshot_v1_service_purge.py backend/tests/integration/test_replay_snapshot_v1_service_non_cascade.py --tb=short
+- result: covered by targeted suite: 12 passed, 2 deselected.
+
+Evidence:
+- purge_expired deletes only expired replay_snapshot_v1 rows and keeps expired non-v1 snapshot rows untouched.
+- purge_expired returns ReplaySnapshotBulkPurgeAuditDetails and can write a bounded AuditService event when request_id is provided.
+- LlmCallLogModel rows remain unchanged by replay snapshot purge.
+- LlmReleaseSnapshotModel rows remain unchanged by replay snapshot purge.
+- service source scan does not reference narrative_answer_audit or admin_chart_diagnostics.

@@ -1,0 +1,14 @@
+# Access control evidence - CS-297
+
+Review date: 2026-05-25
+
+PASS: backend/tests/api/admin/test_replay_snapshot_v1_api.py::test_non_admin_and_unauthenticated_access_are_denied
+- unauthenticated GET /v1/admin/audit/replay_snapshot_v1/{snapshot_id}: 401
+- authenticated role=user: 403
+- authenticated role=support: 403
+- replay service call log remains empty for denied actors
+
+PASS: backend/app/api/v1/routers/admin/audit.py applies require_admin_user to:
+- GET /v1/admin/audit/replay_snapshot_v1/{snapshot_id}
+- POST /v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt
+- DELETE /v1/admin/audit/replay_snapshot_v1/{snapshot_id}
