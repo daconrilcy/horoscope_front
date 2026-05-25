@@ -84,3 +84,4 @@
 | cs-303 | `_story_briefs\cs-303-connect-b2c-frontend-to-astrology-projections.md` | `_condamad\stories\cs-303-connect-b2c-frontend-to-astrology-projections\00-story.md` |
 | cs-304 | `_story_briefs\cs-304-design-admin-audit-and-replay-flows.md` | `_condamad\stories\cs-304-design-admin-audit-and-replay-flows\00-story.md` |
 | cs-305 | `_story_briefs\cs-305-stabilize-frontend-full-vitest-suite-after-projection-wiring.md` | `_condamad\stories\cs-305-stabilize-frontend-full-vitest-suite-after-projection-wiring\00-story.md` |
+| cs-306 | `_story_briefs\cs-306-close-cs303-browser-qa-and-refresh-delivery-status.md` | `_condamad\stories\cs-306-cs303-browser-qa-delivery-status\00-story.md` |
