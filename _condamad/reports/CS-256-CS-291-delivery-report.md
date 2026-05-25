@@ -9,7 +9,7 @@
 | Repository | `c:\dev\horoscope_front` |
 | Branch | `main` |
 | Current HEAD at original report | `5429f8712423d075c4c97a7cc831ef5e3434c19b` - `Add Condamad audit reports` |
-| Reviewed current HEAD | `c0c721cc` - `chore(agents): update condamad workflows` |
+| Reviewed current HEAD before CS-278 approval update | `48c06729` - `Close CS-262 and document replay approval gate` |
 | Commit range | Not evidenced |
 | Stories covered | CS-256 through CS-291 |
 | Source documents | `_condamad/stories/story-status.md`; `_condamad/stories/CS-*/00-story.md`; `_story_briefs/cs-256-*.md` through `_story_briefs/cs-291-*.md` |
@@ -20,11 +20,11 @@
 
 This report originally covered 36 CONDAMAD stories from CS-256 to CS-291. Original repository evidence supported 32 stories as `Delivered`, 1 as `Partially delivered`, 1 as `Requires business/QA validation`, and 2 as `Not evidenced` for implementation closure. The first report-time `git status --short` check returned no output before this report was written; final verification after report creation showed this new report plus unrelated `.agents/skills/**` modifications. Several story-time final evidence files also record that their implementation ran in a dirty worktree with unrelated pre-existing changes.
 
-Update-time evidence from CS-292, CS-293 and CS-294 changes that closure view: CS-284 is now `Delivered`, CS-268 is closed for the current runtime surface, and CS-262 is now administratively `done` as an audit/reconciliation story. CS-278 remains the only intentionally blocked runtime implementation.
+Update-time evidence from CS-292, CS-293 and CS-294 changes that closure view: CS-284 is now `Delivered`, CS-268 is closed for the current runtime surface, and CS-262 is now administratively `done` as an audit/reconciliation story. Latest update: CS-278 is no longer blocked by DPO/security approval and is now `ready-to-dev`; runtime replay is still not implemented.
 
 Original initiative status: `Partially delivered`.
 
-Updated closure status after CS-292, CS-293 and CS-294 review: `Partially delivered with closure addendum`. CS-284 is now closed by CS-293 evidence, CS-268 is closed for the current rejected-answer `admin_answer_audit_v1` runtime by CS-294, and CS-262 is `done` with DPO/product-gated future prompt retention decisions. CS-278 remains intentionally blocked by external DPO/security approval.
+Updated closure status after CS-292, CS-293 and CS-294 review plus CS-278 approval update: `Partially delivered with CS-278 ready-to-dev`. CS-284 is now closed by CS-293 evidence, CS-268 is closed for the current rejected-answer `admin_answer_audit_v1` runtime by CS-294, CS-262 is `done` with DPO/product-gated future prompt retention decisions, and CS-278 is approved for implementation under the DPO/security gate.
 
 The original blocking and missing-evidence items were material: CS-262 and CS-284 had no implementation final evidence; CS-268 was blocked by the absence, at that time, of the protected answer-audit consultation surface; CS-278 was intentionally blocked until external DPO/security approval resolves `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`.
 
@@ -33,7 +33,7 @@ Update-time review changes that assessment:
 - CS-262 now has `generated/10-final-evidence.md` and is reconciled by CS-292 against `_condamad/audits/ai-traceability/2026-05-24-1734`; `full_prompt` and `prompt_payload_snapshot` are explicitly DPO/product-gated future implementation controls, not blockers for audit closure.
 - CS-284 is marked `done` and has policy/evidence closure from CS-293, including `docs/architecture/astrology-disclaimer-projection-policy.md`.
 - CS-268 has final runtime closure evidence for the current rejected-answer admin audit surface through CS-294.
-- CS-278 remains blocked and should not be forced without DPO/security approval; the required decision package is documented in `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md`.
+- CS-278 approval is now documented in `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md`; the story is `ready-to-dev`, but runtime implementation is still pending.
 
 ## 2. Initial context and trigger
 
@@ -67,7 +67,7 @@ The source trigger for each story is the corresponding `_story_briefs/cs-*.md` f
 | CS-275 | Decide admin chart diagnostics policy. | `_condamad/stories/CS-275-admin-chart-diagnostics-policy/00-story.md` | Policy before runtime diagnostics. |
 | CS-276 | Implement `admin_chart_diagnostics_v1`. | `_condamad/stories/CS-276-admin-chart-diagnostics-v1/00-story.md` | Admin/internal diagnostics runtime. |
 | CS-277 | Define replay snapshot storage and security model. | `_condamad/stories/CS-277-replay-snapshot-v1-storage-security-model/00-story.md` | Final evidence leaves runtime implementation gated by approval. |
-| CS-278 | Implement `replay_snapshot_v1` after approval. | `_condamad/stories/CS-278-replay-snapshot-v1-implementation/00-story.md` | Blocked before implementation because approval is absent. |
+| CS-278 | Implement `replay_snapshot_v1` after approval. | `_condamad/stories/CS-278-replay-snapshot-v1-implementation/00-story.md` | Approval now present; runtime implementation remains pending. |
 | CS-279 | Define `transit_chart_v1` internal manifest. | `_condamad/stories/CS-279-transit-chart-v1-internal-manifest/00-story.md` | Manifest/contract scope. |
 | CS-280 | Implement internal transit runtime. | `_condamad/stories/CS-280-internal-transit-runtime/00-story.md` | Internal runtime. |
 | CS-281 | Define transit client projection by plan. | `_condamad/stories/CS-281-transit-client-projection-by-plan/00-story.md` | Public projection contract by plan. |
@@ -107,7 +107,7 @@ Admin/internal policy and diagnostics:
 Replay and transit:
 
 - CS-277 defines the replay snapshot storage/security model and explicitly gates runtime implementation on DPO/security approval.
-- CS-278 stops before implementation because `approval_state` remains `non approuve` and blocker `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` is open.
+- CS-278 originally stopped before implementation because `approval_state` was `non approuve`; latest update records approval and moves CS-278 to `ready-to-dev`.
 - CS-279 through CS-282 cover internal transit manifest/runtime and proof-gated transit projection exposure.
 
 Builder and endpoint runtime:
@@ -141,7 +141,7 @@ Builder and endpoint runtime:
 | CS-275 | Admin chart diagnostics policy. | `_story_briefs/cs-275-*.md` | CS-275 final evidence. | Final evidence records PASS. | Delivered |
 | CS-276 | Admin chart diagnostics runtime. | `_story_briefs/cs-276-*.md` | CS-276 final evidence. | Final evidence records PASS. | Delivered |
 | CS-277 | Replay snapshot storage/security model. | `_story_briefs/cs-277-*.md` | `docs/architecture/replay-snapshot-v1-storage-security-model.md`; CS-277 final evidence. | Final evidence records scoped PASS with implementation review; runtime held back. | Delivered |
-| CS-278 | Replay snapshot runtime after approval. | `_story_briefs/cs-278-*.md` | Runtime implementation withheld by approval gate. | Approval scans PASS; replay OpenAPI/routes absence PASS; CS-277 blocker evidence cited. | Requires business/QA validation |
+| CS-278 | Replay snapshot runtime after approval. | `_story_briefs/cs-278-*.md` | Approval gate is now satisfied; runtime implementation remains pending. | DPO/security approval request is `approved`; storage/security model references the approval; CS-278 tracker is `ready-to-dev`. | Ready to dev |
 | CS-279 | Transit chart internal manifest. | `_story_briefs/cs-279-*.md` | CS-279 final evidence. | Final evidence records PASS. | Delivered |
 | CS-280 | Internal transit runtime. | `_story_briefs/cs-280-*.md` | CS-280 final evidence. | Final evidence records PASS. | Delivered |
 | CS-281 | Transit client projection by plan. | `_story_briefs/cs-281-*.md` | CS-281 final evidence. | Final evidence records PASS. | Delivered |
@@ -211,7 +211,7 @@ Builder and endpoint runtime:
 | CS-294 CS-268 runtime closure checks | targeted | PASS | `_condamad/stories/CS-294-reevaluate-admin-answer-audit-access-logs-after-runtime/generated/10-final-evidence.md`; `_condamad/stories/CS-268-answer-audit-access-logs/evidence/final-runtime-closure.md` | Current rejected-answer admin audit runtime is logged through `AuditService`; no parallel store added. |
 | CS-292 CS-262 reconciliation checks | evidence/runtime targeted | PASS | `_condamad/stories/CS-292-reconcile-cs-262-ai-traceability-final-evidence/generated/10-final-evidence.md`; `_condamad/stories/CS-262-audit-existing-prompt-version-answer-id-storage/generated/10-final-evidence.md` | Existing audit folder cited; CS-288-resolved fields and DPO/product-gated prompt-retention decisions separated. |
 | CS-293 CS-284 policy closure checks | docs/runtime targeted | PASS | `_condamad/stories/CS-293-close-astrology-disclaimer-projection-policy-evidence/generated/10-final-evidence.md`; `_condamad/stories/CS-284-astrology-disclaimer-projection-policy/generated/10-final-evidence.md` | Policy, inventory, app-surface status and OpenAPI neutrality evidenced. |
-| CS-278 approval and runtime neutrality checks | external / targeted | EXTERNALLY REQUIRED | `_condamad/stories/CS-278-replay-snapshot-v1-implementation/generated/10-final-evidence.md`; `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md` | Approval missing; decision package documented; implementation intentionally withheld. |
+| CS-278 approval and runtime neutrality checks | approval / targeted | PASS_FOR_IMPLEMENTATION_START | `_condamad/stories/CS-278-replay-snapshot-v1-implementation/generated/10-final-evidence.md`; `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md`; `docs/architecture/replay-snapshot-v1-storage-security-model.md` | Approval recorded; runtime implementation still pending. |
 | Original report-time app validation | full suite | NOT RUN | This report | Original report generation did not rerun tests or app startup. |
 | Update-time targeted validation | targeted | PASS | Current review run | `.venv` active; `ruff check .` PASS; `python -B -m pytest -q tests\api\admin\test_rejected_answer_review_workflow.py tests\unit\test_sensitive_data_non_leakage.py tests\architecture\test_api_contract_neutrality.py --tb=short` returned `38 passed`. |
 | CI validation | external | NOT RUN | Not evidenced | No CI output was inspected for this report. |
@@ -221,7 +221,7 @@ Builder and endpoint runtime:
 ### Deviations from story scope
 
 - CS-268 originally deviated from runtime implementation expectation because the protected consultation surface and persisted answer-audit owner were absent at story time. Update: CS-294 closes this for the current rejected-answer runtime surface and records closure in `_condamad/stories/CS-268-answer-audit-access-logs/evidence/final-runtime-closure.md`.
-- CS-278 deviates by stopping before implementation because CS-277 approval remains `non approuve` and `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` is open. Evidence: `_condamad/stories/CS-278-replay-snapshot-v1-implementation/generated/10-final-evidence.md` and `docs/architecture/replay-snapshot-v1-storage-security-model.md`.
+- CS-278 originally deviated by stopping before implementation because CS-277 approval remained `non approuve` and `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` was open. Update: approval is now recorded and CS-278 is `ready-to-dev`; runtime implementation remains pending.
 - CS-262 and CS-284 originally had clean editorial review artifacts only. Update: CS-262 and CS-284 are now synchronized to `done`; CS-262 leaves prompt retention as DPO/product-gated future implementation work.
 
 ### Known limits
@@ -235,14 +235,14 @@ Builder and endpoint runtime:
 ### Assumptions
 
 - The user's requested range CS-256 to CS-291 is the initiative boundary.
-- Story registry `done` means the story owner intended delivery closure unless contradicted by final evidence. This assumption is not applied to CS-278 because its evidence intentionally blocks runtime implementation pending DPO/security approval.
+- Story registry `done` means the story owner intended delivery closure unless contradicted by final evidence. CS-278 is not `done`; it is `ready-to-dev` after approval and still requires implementation evidence.
 
 ## 9. Residual risks
 
 - CS-262 is closed as an audit/reconciliation story. Residual risk: future runtime storage of `full_prompt` or `prompt_payload_snapshot` must not proceed without product/DPO approval.
 - CS-284 is now evidenced and delivered through CS-293. Residual risk: guidance disclaimer behavior remains a future product concern if guidance becomes an official B2C projection.
 - CS-268 is closed for the current rejected-answer runtime surface through CS-294. Residual risk: future non-rejected `admin_answer_audit_v1` surfaces must add their own access-log proof.
-- CS-278 replay runtime remains blocked by external DPO/security approval. Impact: replay snapshot runtime cannot be delivered without violating the CS-277 security gate. Mitigation: obtain written approval resolving `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`, then rerun CS-278.
+- CS-278 replay runtime remains undelivered. Impact: replay snapshot runtime is not available until the approved backend implementation is built and tested. Mitigation: implement CS-278 under the approved 30-day retention, redaction, encryption, access-log and no-public-exposure constraints.
 - No CI artifact was inspected. Impact: local story-time validation may not reflect CI environment. Mitigation: attach CI run URLs/logs for the final delivery candidate.
 
 ## 10. Evidence gaps
@@ -255,13 +255,13 @@ Builder and endpoint runtime:
 
 ## 11. Recommended next actions
 
-1. Keep CS-278 blocked until written DPO/security approval resolves `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`; use `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md` as the approval package.
-2. Do not implement runtime storage of `full_prompt`, `prompt_payload_snapshot` or replay snapshots before the relevant product/DPO approval is recorded.
+1. Implement CS-278 runtime under the approved DPO/security scope: 30-day retention maximum, automatic purge, auditable manual purge, redaction, encryption at rest for isolated payload references, safe access logs, and no public/client exposure.
+2. Do not implement runtime storage of `full_prompt` or `prompt_payload_snapshot` before the relevant product/DPO approval is recorded.
 3. Run a final release validation pass after isolating unrelated worktree changes: backend `ruff check .`, backend `python -B -m pytest -q --tb=short`, and local app startup/OpenAPI smoke, all with the venv activated.
 4. Attach CI evidence or create a PR/release checklist linking this report, current HEAD and validation run IDs.
 
 ## 12. Final delivery status
 
-`Partially delivered with closure addendum`
+`Partially delivered with CS-278 ready-to-dev`
 
-The CS-256 to CS-291 initiative has strong delivery evidence for the projection builders, narrative audit persistence, rejected answer workflow and generic projection endpoint runtime. The update-time review confirms that CS-262 and CS-284 are now delivered, and CS-268 is closed for the current rejected-answer admin audit runtime. The remaining hard blocker is CS-278, which requires external DPO/security approval before runtime implementation.
+The CS-256 to CS-291 initiative has strong delivery evidence for the projection builders, narrative audit persistence, rejected answer workflow and generic projection endpoint runtime. The update-time review confirms that CS-262 and CS-284 are now delivered, and CS-268 is closed for the current rejected-answer admin audit runtime. CS-278 is now approved and ready for development, but runtime replay remains undelivered until the approved backend implementation and tests are completed.

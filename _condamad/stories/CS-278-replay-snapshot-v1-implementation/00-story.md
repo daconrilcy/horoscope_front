@@ -1,19 +1,19 @@
 # Story CS-278 replay-snapshot-v1-implementation: Implement replay_snapshot_v1 After Approval
 Status: ready-to-dev
 
-Implementation review status: blocked before backend implementation until CS-277 has a written DPO/security approval artifact.
+Implementation review status: ready for backend implementation after DPO/security approval artifact `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`.
 
 ## Trigger / Source
 
 - Source type: brief direct with repository-informed boundary.
 - Source reference: `_story_briefs/cs-278-implement-replay-snapshot-v1-if-approved.md`.
-- Required dependency: CS-277 replay snapshot storage and security model must be approved before implementation.
+- Required dependency: CS-277 replay snapshot storage and security model is approved before implementation through `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md`.
 - Existing owner found: CS-277 defines the expected storage, security, redaction, role, retention and purge model.
 - Existing owner found: backend already contains LLM replay storage and service surfaces, so no parallel replay owner is authorized.
 - Existing owner found: `backend/app/core/sensitive_data.py` classifies LLM replay snapshots as sensitive data.
 - Existing owner found: `backend/app/domain/audit/safe_details.py` contains a safe audit details structure for LLM replay events.
 - Selected story writer mode: Fast Story Writer Mode.
-- Problem statement: `replay_snapshot_v1` can be implemented only after the CS-277 approval gate is satisfied.
+- Problem statement: `replay_snapshot_v1` can now be implemented under the approved CS-277 DPO/security gate.
 - Source-alignment evidence: PASS; approval gate, storage, permissions, logs, redaction, access, reproducibility and retention are covered.
 
 ## Objective

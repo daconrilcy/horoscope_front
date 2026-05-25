@@ -1,4 +1,4 @@
-<!-- Commentaire global: ce document definit le modele de stockage et de securite de replay_snapshot_v1 sans autoriser son execution runtime. -->
+<!-- Commentaire global: ce document definit le modele de stockage et de securite de replay_snapshot_v1 avec une approbation DPO/securite prealable au runtime. -->
 
 # replay_snapshot_v1 Storage Security Model
 
@@ -9,11 +9,12 @@
 | `model_id` | `replay_snapshot_v1_storage_security_model` |
 | `snapshot_type` | `replay_snapshot_v1` |
 | `classification` | Protected internal replay support and debug data. |
-| `approval_state` | `non approuve` tant que la decision DPO/security `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` reste ouverte. |
+| `approval_state` | `approved` par la decision DPO/security `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` documentee dans `docs/architecture/replay-snapshot-v1-dpo-security-approval-request.md`. |
 
 `replay_snapshot_v1` est un contrat interne protege pour cadrer un futur stockage de support et de debug. Il ne cree pas de replay
 executor, replay builder, replay service, route, modele de base de donnees, migration, client genere, UI frontend ou exposition
-OpenAPI publique. La production replay execution n'est pas approuvee par cette story.
+OpenAPI publique. La production replay execution est approuvee uniquement pour une implementation conforme a la decision DPO/security,
+sans exposition client ou publique.
 
 ## minimal_stored_content
 
@@ -79,24 +80,28 @@ Denied by default:
 
 ## retention_policy
 
-Retention target: `DPO-open`.
+Retention target: `30 days maximum`.
 
-Decision blocker: `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`.
+Decision id: `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001`.
 
-Held-back implementation surfaces until the blocker is resolved:
+Approved implementation surfaces remain limited to internal backend runtime and persistence work required by CS-278:
 
-- `backend/app/api/**`;
 - `backend/app/services/**`;
 - `backend/app/infra/db/**`;
 - `backend/migrations/**`;
+- background purge jobs scoped to replay snapshot expiry.
+
+Still forbidden without a separate DPO/security decision:
+
+- public/client routes or OpenAPI exposure;
 - `frontend/src/**`;
 - generated OpenAPI clients;
 - public B2C projection contracts;
-- background purge jobs and batch exports.
+- broad exports;
+- raw prompt, raw model payload, raw birth data, exact coordinate or direct identifier storage.
 
-The required decision must name the retention duration, legal basis, storage owner, encryption boundary, purge owner, deletion triggers,
-access-log retention and operational audit trail. Until then, the contract remains documentation-only and `approval_state` stays
-`non approuve`.
+The implementation must enforce retention duration, storage owner, encryption boundary, purge owner, deletion triggers, access-log
+retention and operational audit trail.
 
 ## purge_policy
 
@@ -121,7 +126,11 @@ reconstruction data, raw prompts, model payloads or secrets.
 record remains the owner of prompt evidence, grounding state, rejection state and provider audit metadata. Replay storage must not merge,
 copy or replace narrative answer audit records.
 
-## Surfaces refusees
+## Surfaces still refused
 
-This story explicitly denies replay routes, replay services, replay builders, database models, Alembic migrations, frontend UI, generated
-clients, public OpenAPI paths, RGPD policy changes, fallback storage paths, compatibility aliases and silent fallback behavior.
+The approval still denies frontend UI, generated clients, public/client OpenAPI
+paths, RGPD policy changes outside the approved decision, fallback storage
+paths, compatibility aliases and silent fallback behavior.
+
+Internal backend services, persistence, migrations and purge jobs may be added
+only if they stay inside the approved CS-278 runtime scope.

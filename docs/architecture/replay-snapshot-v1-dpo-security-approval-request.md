@@ -6,14 +6,25 @@
 
 ## Decision state
 
-`approval_state`: `pending`
+`approval_state`: `approved`
 
-This document does not approve runtime replay storage. It records the exact
-decision package required before CS-278 may implement `replay_snapshot_v1`.
+`approved_by`: `DPO/security validation communicated by user`
 
-## Required approval scope
+`approved_at`: `2026-05-25`
 
-The DPO/security decision must explicitly approve or reject:
+`retention_policy`: `30 days maximum, with automatic purge and auditable manual purge`
+
+`authorized_roles`: `ADMIN for metadata access after authorization; TECHNO and ASTRO_EXPERT only when RBAC maps them explicitly for technical diagnostics or astrology quality review`
+
+`required_controls`: `redaction, no raw prompt storage, no raw birth data, no direct identifiers, encryption at rest for any isolated payload reference, access audit logs for reads/replays/exports/purges, no public/client OpenAPI exposure`
+
+This document approves CS-278 to start implementation of `replay_snapshot_v1`
+under the constraints below. It does not itself create runtime replay storage,
+routes, services, models, migrations or purge jobs.
+
+## Approved scope
+
+The DPO/security decision approves:
 
 - the purpose of replay snapshots;
 - the maximum retention duration;
@@ -25,7 +36,7 @@ The DPO/security decision must explicitly approve or reject:
 - the authorized internal roles;
 - the audit-log requirements for reads, exports, replays and purges.
 
-## Allowed purpose proposal
+## Allowed purpose
 
 Replay snapshots may only be considered for controlled internal support,
 debugging, quality investigation and incident analysis.
@@ -33,10 +44,10 @@ debugging, quality investigation and incident analysis.
 They must not be used for marketing, model training, client-facing replay,
 free-form admin browsing or broad analytics.
 
-## Forbidden data proposal
+## Forbidden data
 
-The implementation remains blocked unless the approval decision confirms that
-these categories are forbidden or strictly transformed before storage:
+The approval confirms that these categories are forbidden or strictly
+transformed before storage:
 
 - raw birth data;
 - exact coordinates;
@@ -46,25 +57,28 @@ these categories are forbidden or strictly transformed before storage:
 - secrets, API keys, credentials and provider tokens;
 - user-authored free text unless an approved isolated encrypted boundary exists.
 
-## Retention proposal to approve
+## Approved retention
 
-The approval must name one concrete retention duration and one purge mechanism.
-Until then, `docs/architecture/replay-snapshot-v1-storage-security-model.md`
-keeps `approval_state` as `non approuve`.
+Replay snapshots may be retained for a maximum of 30 days.
+
+The implementation must provide automatic expiry purge and an auditable manual
+purge path. Purge must remove the replay snapshot and payload reference without
+cascading into unrelated diagnostics or narrative answer audit records.
 
 ## Runtime gate
 
-CS-278 must remain blocked until this document, or an equivalent signed
-DPO/security artifact, is updated with:
+CS-278 is unblocked for implementation only under this approved scope:
 
 ```text
 approval_state: approved
-approved_by: <name and role>
-approved_at: <date>
-retention_policy: <duration and purge rule>
-authorized_roles: <approved roles>
-required_controls: <audit, encryption, redaction and purge controls>
+decision_id: DPO-REPLAY-SNAPSHOT-V1-RETENTION-001
+approved_by: DPO/security validation communicated by user
+approved_at: 2026-05-25
+retention_policy: 30 days maximum, automatic purge, auditable manual purge
+authorized_roles: ADMIN; TECHNO and ASTRO_EXPERT only after explicit RBAC mapping
+required_controls: audit, encryption at rest, redaction, forbidden raw sensitive data, purge controls, no public/client exposure
 ```
 
-No backend API, service, model, migration, frontend UI, OpenAPI client,
-background purge job or replay executor may be added before that approval.
+Any implementation that needs broader retention, broader roles, raw prompt
+storage, raw birth data, exact coordinates, direct identifiers or public/client
+exposure must return to DPO/security review before code is added.

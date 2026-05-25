@@ -1,6 +1,6 @@
 # CS-278 Implementation Review
 
-Verdict: BLOCKED
+Verdict: READY_TO_DEV_AFTER_APPROVAL
 
 ## Review Scope
 
@@ -13,16 +13,19 @@ Verdict: BLOCKED
 
 ## Findings
 
-### F-001 - Blocking approval prerequisite is not satisfied
+### F-001 - Blocking approval prerequisite was not satisfied in the original review
 
-CS-278 cannot be closed as an implementation review because the required CS-277 approval gate is not satisfied.
+The original CS-278 implementation review could not close runtime implementation
+because the required CS-277 approval gate was not satisfied.
 
-- `_condamad/stories/story-status.md` marks CS-277 `done`, but that only closes the storage/security model story.
-- `docs/architecture/replay-snapshot-v1-storage-security-model.md` still records `approval_state` as `non approuve`.
-- The named decision blocker `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` remains open.
-- CS-277 final evidence explicitly states that CS-278 must not implement runtime replay until DPO/security approval exists.
+- `_condamad/stories/story-status.md` marked CS-277 `done`, but that only closed the storage/security model story.
+- `docs/architecture/replay-snapshot-v1-storage-security-model.md` recorded `approval_state` as `non approuve`.
+- The named decision blocker `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` was open.
+- CS-277 final evidence explicitly stated that CS-278 must not implement runtime replay until DPO/security approval exists.
 
-Resolution status: blocked by missing approval artifact; no application code fix is authorized in CS-278.
+Resolution status: resolved for implementation start. The approval artifact now
+records `approval_state: approved`; CS-278 is `ready-to-dev`. Runtime delivery
+still requires a dedicated implementation pass.
 
 ### F-002 - Previous review artifact used the wrong review scope
 
@@ -35,15 +38,15 @@ Resolution status: corrected by replacing this artifact with a scoped implementa
 
 - The source brief requires implementation only if the storage and security model is approved.
 - The CS-278 story preserves that gate and says to stop before code changes when CS-277 approval cannot be proven.
-- The current repository evidence proves no authorized approval artifact exists.
-- Therefore the correct implementation-review outcome is blocked, not done.
+- The latest repository evidence proves an authorized approval artifact exists.
+- Therefore the current outcome is ready to develop, not delivered.
 
 ## Validation Evidence
 
 - PASS: CS-278 tracker row matches the requested story path and source brief.
 - PASS: CS-277 dependency row is `done`.
-- PASS: CS-277 canonical contract still says `approval_state` is `non approuve`.
-- PASS: `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` remains the named retention/security blocker.
+- PASS: CS-277 canonical contract now references the approved DPO/security decision.
+- PASS: `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` is approved for implementation start.
 - PASS: runtime route and OpenAPI evidence in CS-278 final evidence shows no `replay_snapshot_v1` exposure was added.
 - PASS: CS-278 final evidence records no backend, migration, frontend, generated client or public route change.
 
@@ -54,5 +57,7 @@ Resolution status: corrected by replacing this artifact with a scoped implementa
 
 ## Residual Risk
 
-CS-278 remains blocked until a written DPO/security approval artifact resolves `DPO-REPLAY-SNAPSHOT-V1-RETENTION-001` and changes the
-canonical CS-277 approval state away from `non approuve`.
+CS-278 runtime remains undelivered. The next risk is implementation drift
+outside the approved scope: 30-day retention maximum, automatic purge,
+auditable manual purge, forbidden raw sensitive data, encryption at rest for
+isolated payload references, safe audit logs, and no public/client exposure.
