@@ -1,5 +1,5 @@
 # Story CS-310 tests-manuels-profils-naissance-projections-natal: Test Natal Projections With Manual Birth Profiles
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

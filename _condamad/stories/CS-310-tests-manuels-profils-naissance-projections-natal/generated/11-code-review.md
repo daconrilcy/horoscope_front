@@ -32,6 +32,7 @@ Verdict: CLEAN
 - AC7 PASS: frontend lint and targeted Vitest passed.
 - AC8 PASS: backend projection pytest passed with venv active.
 - AC9 PASS: CS-310 evidence and generated artifacts are persisted.
+- Status alignment PASS: tracker, story status, final evidence, and date now reflect the implemented `done` state.
 
 ## Validation Results
 

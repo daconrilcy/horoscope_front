@@ -36,5 +36,21 @@ Review/fix iteration 2026-05-26
 - cd frontend; node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi: PASS, 4 files, 122 tests.
 - .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short: PASS, 12 tests.
 
+Final brief/code alignment 2026-05-26
+- Finding fixed: `00-story.md` still declared `Status: ready-to-dev` while tracker and implementation evidence were closed as done.
+- Fix applied: `00-story.md` now declares `Status: done`; final evidence now records `Final implementation review: CLEAN` and `Story closed: yes`.
+- Tracker row: already `done`, path and source brief match, date `2026-05-26`.
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-310-tests-manuels-profils-naissance-projections-natal\00-story.md: PASS
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-310-tests-manuels-profils-naissance-projections-natal\00-story.md: PASS
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-310-tests-manuels-profils-naissance-projections-natal: PASS
+- cd frontend; pnpm lint: PASS
+- cd frontend; node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi: PASS, 4 files, 122 tests.
+- .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short: PASS, 12 tests.
+- Scoped sensitive-surface scan: PASS, no `/natal` matches.
+- Direct projection client bypass scan: PASS, no matches.
+- Scoped inline-style scan: PASS, no matches.
+- CS-310 evidence assertion: PASS.
+- git diff --check: PASS, LF/CRLF warnings only.
+
 Not run
 - New manual browser screenshot capture: not run; story permits browser-equivalent simulation, and CS-306 browser ledger plus targeted component/API/backend tests provide the executable evidence for this QA capsule.

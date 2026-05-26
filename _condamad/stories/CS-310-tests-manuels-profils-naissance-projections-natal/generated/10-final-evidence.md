@@ -3,7 +3,8 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Final implementation review: CLEAN
+- Story closed: yes
 - Story key: CS-310-tests-manuels-profils-naissance-projections-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-310-tests-manuels-profils-naissance-projections-natal`
@@ -101,7 +102,18 @@
 
 ## Final worktree status
 
-- Pending: CS-310 capsule evidence/generated files and story-status update.
+- Current pending files after final alignment pass:
+  - `00-story.md`
+  - `evidence/validation.txt`
+  - `generated/10-final-evidence.md`
+  - `generated/11-code-review.md`
+- Tracker row already matches final status: `done`, source brief path, story path, and date `2026-05-26`.
+
+## Final brief/code alignment pass
+
+- Status mismatch fixed: story status changed from `ready-to-dev` to `done`.
+- Implementation remains aligned with the brief: five synthetic profiles, traced `/natal` outcomes, degraded/error states, sensitive-surface checks, anomalies, and validations.
+- Fresh validation after this correction: story validate PASS, strict lint PASS, capsule validate PASS, frontend lint PASS, targeted Vitest PASS, backend pytest PASS, scans PASS.
 
 ## Remaining risks
 
