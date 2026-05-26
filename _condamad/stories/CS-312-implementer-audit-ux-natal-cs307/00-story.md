@@ -1,5 +1,5 @@
 # Story CS-312 implementer-audit-ux-natal-cs307: Implement CS-307 Natal UX Audit
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

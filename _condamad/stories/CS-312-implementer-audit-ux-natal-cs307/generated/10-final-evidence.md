@@ -3,7 +3,8 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Implementation review outcome: CLEAN
+- Closure status: done
 - Story key: CS-312-implementer-audit-ux-natal-cs307
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-312-implementer-audit-ux-natal-cs307`
@@ -70,7 +71,7 @@
 
 | Command | Working directory | Result | Evidence summary |
 |---|---|---|---|
-| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-312-implementer-audit-ux-natal-cs307` | repo root with venv active | PASS | Capsule complete before generated context use. |
+| `condamad_validate.py` on CS-312 capsule | repo root with venv active | PASS | Capsule complete before generated context use. |
 | `node _condamad\stories\CS-307-audit-ux-natal-apres-wiring-projections\evidence\cs307-ux-audit.mjs` | repo root | PASS | Browser proof and screenshots regenerated. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage` | `frontend` | PASS | 108 tests passed. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi` | `frontend` | PASS | 91 tests passed. |
@@ -81,8 +82,8 @@
 | ownership `rg` scan for `legalNoticeLines|disclaimerTitle` | repo root | PASS | Hits limited to component and i18n owners. |
 | `git diff --check` | repo root | PASS | No whitespace errors. |
 | `python -B -c "<CS-312 evidence assertion>"` | repo root with venv active | PASS | Required artifacts, screenshots, tracker rows, and CS-307 final evidence validated. |
-| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-312-implementer-audit-ux-natal-cs307` | repo root with venv active | PASS | Final CS-312 capsule validation passes. |
-| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-307-audit-ux-natal-apres-wiring-projections` | repo root with venv active | PASS | Final CS-307 capsule validation passes. |
+| `condamad_validate.py` on CS-312 capsule | repo root with venv active | PASS | Final CS-312 capsule validation passes. |
+| `condamad_validate.py` on CS-307 capsule | repo root with venv active | PASS | Final CS-307 capsule validation passes. |
 
 ## Commands skipped or blocked
 
@@ -98,6 +99,7 @@
 
 - `git diff --check`: PASS.
 - Scoped review confirmed story changes are limited to CS-307 evidence, CS-312 evidence, and story status.
+- Implementation review correction: story header statuses and CS-312 tracker status now match the clean closure state.
 
 ## Final worktree status
 

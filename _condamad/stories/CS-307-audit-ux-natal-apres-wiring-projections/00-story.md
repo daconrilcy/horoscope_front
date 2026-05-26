@@ -1,5 +1,5 @@
 # Story CS-307 audit-ux-natal-apres-wiring-projections: Audit UX Natal After Projection Wiring
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

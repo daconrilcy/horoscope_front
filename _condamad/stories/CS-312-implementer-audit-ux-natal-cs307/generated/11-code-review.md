@@ -1,49 +1,66 @@
-# Editorial Review - CS-312 implementer-audit-ux-natal-cs307
+# Implementation Review - CS-312 implementer-audit-ux-natal-cs307
 
 Verdict: CLEAN
 Review date: 2026-05-26
-Review type: compact pre-implementation story-contract review
+Review type: implementation evidence review after CS-312 closure pass
 
 ## Scope Reviewed
 
 - Source brief: `_story_briefs/cs-312-implementer-audit-ux-natal-cs307.md`.
 - Story contract: `_condamad/stories/CS-312-implementer-audit-ux-natal-cs307/00-story.md`.
-- Tracker row: `_condamad/stories/story-status.md` row for source brief `cs-312-implementer-audit-ux-natal-cs307.md`.
-- Scoped guardrails: RG-027, RG-041, RG-042, RG-047, RG-052.
+- Tracker row: `_condamad/stories/story-status.md` row for CS-312.
+- Closure target: `_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections`.
+- Evidence reviewed: CS-307 audit ledgers, screenshots, validation log, CS-307 final evidence, and CS-312 final evidence.
 
-## Findings
+## Iteration Findings
 
-No actionable drafting issue found.
+### Iteration 1
 
-## Brief Alignment
+- Finding: CS-307 and CS-312 `00-story.md` headers still said `ready-to-dev` after implementation evidence and tracker closure.
+- Finding: CS-312 tracker remained `ready-to-review`, so the implementation closure state was not synchronized.
+- Fix: updated CS-307 and CS-312 story headers to `done`, updated the CS-312 tracker row to `done`, and recorded this correction in final evidence.
 
-PASS. The story preserves the brief objective to implement the open CS-307 `/natal` UX audit, create the missing CS-307 evidence capsule,
-run real browser checks on desktop, tablet, and mobile, verify all named projection and disclaimer states, correct only proven UI defects,
-add targeted Vitest coverage, and close CS-307 only after validation evidence passes.
+## Acceptance Criteria Review
 
-## Closure Classification
+| AC | Review result |
+|---|---|
+| AC1 | PASS: CS-307 `generated/10-final-evidence.md` exists and records validation outcome `PASS`. |
+| AC2 | PASS: `ux-audit-before.md`, `ux-audit-after.md`, `browser-qa.md`, and JSON ledger classify inspected findings. |
+| AC3 | PASS: desktop, tablet, and mobile screenshots are present under `evidence/browser-screenshots/`. |
+| AC4 | PASS: projection states are covered by browser ledger entries and recorded targeted Vitest validation. |
+| AC5 | PASS: disclaimer evidence is recorded in screenshots, ownership scan evidence, and the browser ledger. |
+| AC6 | PASS: no frontend or backend application source changed; ownership scans are recorded and rechecked. |
+| AC7 | PASS: `validation.txt` records `pnpm lint`, targeted Vitest, architecture guard, and full Vitest success. |
+| AC8 | PASS: `product-decisions.md` records no pending product decision and no code-level product strategy. |
+| AC9 | PASS: CS-307 tracker row is `done`; CS-312 tracker row is now `done` after clean review. |
 
-Audit-sourced story classification: full-closure.
+## Fresh Review Result
 
-The story does not leave hidden in-domain work for CS-307. It requires final evidence, audit ledgers, browser screenshots, validation logs,
-product-decision documentation, and tracker closure gated by passing evidence.
+No actionable implementation issue remains.
+
+The no-code-change closure is acceptable because the browser audit produced explicit `acceptable` decisions for the inspected `/natal` states,
+persisted screenshots for the required viewports, and the implementation introduced no React, CSS, backend, dependency, or contract drift.
 
 ## Validation Evidence
 
-- `.\.venv\Scripts\Activate.ps1;`
-  `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py`
-  `_condamad\stories\CS-312-implementer-audit-ux-natal-cs307\00-story.md`
-  - Result: PASS.
-- `.\.venv\Scripts\Activate.ps1;`
-  `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict`
-  `_condamad\stories\CS-312-implementer-audit-ux-natal-cs307\00-story.md`
-  - Result: PASS.
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py`
+  `_condamad\stories\CS-312-implementer-audit-ux-natal-cs307` - PASS.
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py`
+  `_condamad\stories\CS-307-audit-ux-natal-apres-wiring-projections` - PASS.
+- `rg -n "style=" frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/pages -g "*.tsx"` - PASS, no matches.
+- `rg -n "fetch\(.*/v1/astrology/projections|axios\(.*/v1/astrology/projections" frontend/src` - PASS, no matches.
+- `pnpm lint` from `frontend` - PASS.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage` from `frontend` - PASS, 108 tests.
+- `git diff --check` - PASS.
 
-## Review Output
+Previously recorded implementation validation remains applicable because no application source changed during review-fix:
+browser audit PASS, architecture guard PASS, RG-052 suite PASS, and full Vitest PASS.
 
-- Produced artifact: `_condamad/stories/CS-312-implementer-audit-ux-natal-cs307/generated/11-code-review.md`.
-- Propagation decision: no-propagation; no reusable guardrail, AGENTS.md, validator, or skill update was needed.
+## Propagation Decision
+
+No propagation. The correction was local status/evidence synchronization for this implementation review and does not require a reusable
+guardrail, AGENTS.md, validator, or skill update.
 
 ## Residual Risk
 
-Aucun risque restant identifie for drafting. Implementation risk remains owned by the future CS-312 development pass and its runtime/browser evidence.
+Aucun risque restant identifie.
