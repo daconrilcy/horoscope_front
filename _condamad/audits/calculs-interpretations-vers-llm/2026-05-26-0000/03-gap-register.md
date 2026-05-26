@@ -1,0 +1,19 @@
+# Gap Register - Calculs Disponibles Vs Injection LLM
+
+| ID | Severity | Source surface | Class | Gap | Evidence | Impact | Recommended action |
+|---|---|---|---|---|---|---|---|
+| G-001 | High | `ChartInterpretationInputBuilder` | recent-refonte | Les faits pre-interpretatifs riches existent mais ne sont pas injectes dans `NatalExecutionInput`. | E-008, E-013, E-016 | Le prompt peut rester fonde sur une projection publique/historique plus pauvre que l'input interpretation recent. | Creer une story de routage LLM qui consomme un contrat narratif canonique sans exposer les payloads runtime bruts. |
+| G-002 | High | `AINarrativeInputContract` | recent-refonte | Le contrat le plus proche d'une entree IA canonique existe, mais le service natal continue de transmettre `chart_json`, `natal_data`, `evidence_catalog` et `astro_context`. | E-009, E-013, E-014, E-016 | Risque de narration inventee ou moins auditable, car readiness flags et liens de projection ne bornent pas l'entree actuelle. | Decider si `AINarrativeInputContract` devient le owner canonique d'injection LLM natale. |
+| G-003 | Medium | `structured_facts_v1` | recent-refonte | La projection stable/hashable existe et exclut explicitement les surfaces brutes, mais elle n'est pas incluse dans l'entree LLM. | E-010, E-013, E-016 | Les reponses LLM ne peuvent pas facilement citer un hash/fait stable de cette projection. | Evaluer une inclusion comme evidence factuelle, pas comme remplacement direct de tous les contextes. |
+| G-004 | Medium | `client_interpretation_projection_v1` | recent-refonte | La projection client plan-aware existe, mais elle n'est pas un consommateur actuel du gateway LLM. | E-011, E-016 | Le frontend peut voir une projection recente differente de la base prompt, creant une divergence de narration. | Decider si elle reste strictement UX ou si son `audit_input` devient un support LLM borne. |
+| G-005 | Medium | `chart_json` / `natal_data` | legacy | `chart_json` et `natal_data` pointent vers la meme projection publique/historique, sous deux formes differentes. | E-012, E-013, E-014 | Duplication de representation dans le prompt/runtime; risque de contradiction si l'une evolue sans l'autre. | Garder pour compatibilite jusqu'a migration; documenter `natal_data = chart_json_dict` comme surface transitionnelle. |
+| G-006 | Medium | `evidence_catalog` | legacy | Le catalogue d'evidence est derive de `chart_json`, pas des owners recents `structured_facts_v1` ou `AINarrativeInputContract`. | E-012, E-013 | Les labels d'evidence couvrent les faits publics serialises, pas toute la richesse interne disponible. | Ajouter un candidat de catalogue d'evidence narratif uniquement si le routage LLM change. |
+| G-007 | Low | `astro_context` | transition | `astro_context` enrichit surtout les points astraux interpretes, pas l'ensemble des conditions avancees, dominances ou payloads chart-object. | E-013 | Le nom generique peut faire croire qu'il couvre tout le contexte astrologique. | Renommer ou documenter son role lors d'une future convergence LLM; aucun changement dans cette story. |
+
+## Recent owners non exploites par l'injection LLM
+
+- `backend/app/domain/astrology/interpretation/chart_interpretation_input_builder.py` (`ChartInterpretationInputBuilder`) - recent-refonte, non appele par le chemin `NatalExecutionInput`.
+- `backend/app/domain/astrology/interpretation/ai_narrative_input_builder.py` (`AINarrativeInputBuilder`) - recent-refonte, non appele par le chemin `NatalExecutionInput`.
+- `backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py` (`structured_facts_v1`) - recent-refonte, consomme par projections publiques mais non par l'injection LLM natale.
+- `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` (`client_interpretation_projection_v1`) - recent-refonte, consomme par projections publiques/front mais non par le gateway LLM natal.
+

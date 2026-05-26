@@ -1,0 +1,14 @@
+# Legacy Register - Calculs Interpretations Vers LLM
+
+| Surface | Class | Owner | Current role | Canonical replacement / target | Evidence | Decision |
+|---|---|---|---|---|---|---|
+| `chart_json` | legacy | `backend/app/services/chart/json_builder.py` | Projection publique/historique envoyee au LLM comme string. | Futur contrat narratif derive de `ChartInterpretationInputBuilder` ou `AINarrativeInputContract`. | E-012, E-013 | Keep for compatibility; do not remove in audit. |
+| `natal_data` | legacy | `backend/app/services/llm_generation/natal/interpretation_service.py` | Double objet du meme `chart_json_dict` envoye au LLM. | Meme owner cible que `chart_json`, avec decision explicite de migration. | E-013, E-014 | Keep for compatibility; classify as duplicate representation risk. |
+| `evidence_catalog` | legacy | `backend/app/services/chart/json_builder.py` | Evidence labels derives de la projection publique. | Eventuel catalogue narratif si `structured_facts_v1` ou `AINarrativeInputContract` devient input LLM. | E-012, E-013 | Keep as current validation support. |
+| `astro_context` | transition | `backend/app/services/llm_generation/natal/interpretation_service.py` | Contexte narratif des points astraux, nom plus large que son contenu prouve. | Clarifier comme contexte specialise ou integrer dans contrat narratif canonique. | E-013 | Keep; decision de renommage/routage hors audit. |
+| `NatalResult` collections historiques | transition | `backend/app/domain/astrology/runtime/natal_result_assembler.py` | Contient anciennes collections publiques et nouveaux outputs internes. | Conserver comme facade runtime assemblee; router les prompts par projection canonique, pas par collections brutes. | E-007 | Keep; no deletion candidate. |
+| `ChartObjectRuntimeData` brut | recent-refonte | `backend/app/domain/astrology/runtime/chart_object_runtime_data.py` | Source runtime interne riche. | Pas une replacement public/LLM brut; target-candidate via projections controlees. | E-005 | Keep internal; never expose raw in prompts/public payloads. |
+| `structured_facts_v1` | recent-refonte | `backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py` | Projection stable/hashable recente. | Candidate factuel pour evidence LLM. | E-010, E-016 | Not legacy; unused by current LLM path. |
+| `client_interpretation_projection_v1` | recent-refonte | `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` | Projection client plan-aware recente. | Candidate seulement si UX/projection client doit informer le prompt. | E-011, E-016 | Not legacy; avoid making it a hidden prompt owner without decision. |
+| Frontend projection components | out-of-scope | `frontend/src/**` | Affichage des projections publiques. | Aucun changement dans cet audit. | E-015, E-017 | Out of scope. |
+
