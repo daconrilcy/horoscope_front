@@ -1,3 +1,4 @@
+// Hook applicatif centralisant l'emission analytics et la redaction des payloads publics.
 import { useCallback } from 'react'
 import { ANALYTICS_CONFIG } from '../config/analytics'
 
@@ -42,6 +43,7 @@ type AnalyticsWindow = Window & {
 
 const sensitiveAnalyticsFields = new Set<string>(SENSITIVE_ANALYTICS_FIELD_NAMES)
 
+/** Retire les champs sensibles avant tout envoi vers un fournisseur analytics. */
 export function sanitizeAnalyticsProps(props: AnalyticsProps): AnalyticsProps {
   return Object.fromEntries(
     Object.entries(props).filter(([key]) => !sensitiveAnalyticsFields.has(key)),
@@ -56,6 +58,7 @@ const hasConsent = () => {
   return consent === 'granted'
 }
 
+/** Fournit l'API de tracking commune afin d'eviter les appels fournisseur directs. */
 export const useAnalytics = () => {
   const track = useCallback((event: AnalyticsEvent, props: AnalyticsProps = {}) => {
     if (!ANALYTICS_CONFIG.enabled) return
@@ -89,9 +92,7 @@ export const useAnalytics = () => {
   return { track }
 }
 
-/**
- * Utility to parse UTM parameters from URL
- */
+/** Extrait les parametres UTM publics depuis l'URL courante. */
 export const getUtmParams = () => {
   const params = new URLSearchParams(window.location.search)
   return {

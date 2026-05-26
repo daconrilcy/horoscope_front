@@ -271,7 +271,9 @@ export function NatalInterpretationSection({
     ),
     projections: projectionQueries.flatMap((query) => (query.data ? [query.data] : [])),
     refetchAll: () => {
-      projectionQueries.forEach((query) => trackProjectionEvent("retry", query))
+      projectionQueries
+        .filter((query) => Boolean(query.error) && !(query.error instanceof ApiError && query.error.status === 403))
+        .forEach((query) => trackProjectionEvent("retry", query))
       projectionQueries.forEach((query) => query.refetch())
     },
   }
@@ -298,10 +300,11 @@ export function NatalInterpretationSection({
         return
       }
       if (!query.data) return
-      trackProjectionEvent("success", query)
       if (hasDegradedWithoutTime(query)) {
         trackProjectionEvent("degraded", query, "missing_birth_time")
+        return
       }
+      trackProjectionEvent("success", query)
     })
 
     if (

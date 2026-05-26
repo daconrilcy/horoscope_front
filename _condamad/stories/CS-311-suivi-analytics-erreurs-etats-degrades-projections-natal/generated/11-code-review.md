@@ -1,48 +1,60 @@
-# CS-311 Editorial Story Review
+# CS-311 Implementation Code Review
 
 Verdict: CLEAN
 
 ## Review Scope
 
 - Story: `_condamad/stories/CS-311-suivi-analytics-erreurs-etats-degrades-projections-natal/00-story.md`
-- Source brief: `_story_briefs/cs-311-suivi-analytics-erreurs-etats-degrades-projections-natal.md`
-- Tracker row: `_condamad/stories/story-status.md`
-- Guardrail lookup: scoped `RG-047` lookup only; the full registry was not read.
-- Review type: compact pre-implementation story-contract review.
+- Brief: `_story_briefs/cs-311-suivi-analytics-erreurs-etats-degrades-projections-natal.md`
+- Implementation: `frontend/src/hooks/useAnalytics.ts`,
+  `frontend/src/features/natal-chart/NatalInterpretation.tsx`,
+  `frontend/src/tests/useAnalytics.test.tsx`, and
+  `frontend/src/tests/natalInterpretation.test.tsx`
+- Evidence: CS-311 `evidence/` files, `generated/10-final-evidence.md`,
+  validation log, guard scans, and tracker row.
 
-## Iteration 1
+## Iteration 1 Findings
 
-Finding fixed:
+Fixed:
 
-- The regression guardrail table used `Needs-investigation` as if it were an applicable guardrail.
-  It is now a non-applicable resolver note outside the table, preserving the evidence need without creating a pseudo-guardrail.
+- Degraded projection payloads were also tracked as `natal_projection_success`.
+  The orchestration now emits `natal_projection_degraded` for degraded-without-time
+  payloads and skips the success event for that state.
+- Retry analytics were emitted for every projection refetched by the retry action.
+  Retry tracking now records only projections currently in non-entitlement error,
+  while still refetching all projection queries.
+- `useAnalytics.ts` lacked the repository-required French file-level comment and
+  public helper docstrings after a significant analytics-owner change.
 
-Validation after fix:
+Validation after fixes:
 
-- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md` - PASS.
-- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md` - PASS.
-
-## Final Brief Alignment Pass
-
-Finding fixed:
-
-- The story treated `empty` and `degraded` as generic states while the brief explicitly names missing birth data and degraded mode without time.
-  The story now binds AC6, AC7, tasks, target state, and contract shape to those public UI reasons without allowing raw birth data in analytics.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi` - PASS.
+- `pnpm lint` - PASS.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run` - PASS.
+- Direct analytics provider scan under `frontend/src/features`, `frontend/src/components`,
+  and `frontend/src/api` - PASS, no matches.
+- Direct projection fetch/axios scan under `frontend/src` - PASS, no matches.
+- Inline style scan for touched natal TSX surfaces - PASS, no matches.
+- Broad sensitive-key scan - PASS_WITH_CONTEXT; existing repository hits remain
+  documented in `evidence/sensitive-key-scan.txt`.
 
 ## Final Review
 
-- The story maps the brief objective to a minimal `/natal` projection analytics contract.
-- The seven required events are explicit: started, success, API error, entitlement denied, empty, degraded, and retry.
-- Missing birth-data empty states and degraded-without-time states are explicit and remain redacted through public `state_reason` only.
-- Sensitive payload exclusions are explicit in target state, ACs, contract shape, reintroduction guards, and validation plan.
-- Existing analytics ownership, frontend tests, documentation artifacts, and backend non-goals are stated without implementation drift.
-- The tracker row points to the source brief and story path with status `ready-to-dev`.
-- No unresolved drafting issue remains.
+- The seven cataloged `/natal` projection events are implemented through the existing
+  analytics owner and projection orchestration.
+- Event payloads stay within the public fields declared in `event-catalog.json`.
+- Missing birth-data, empty display, degraded-without-time, API error, entitlement
+  denial, success, started, and retry paths have test coverage.
+- Retry analytics are tied to the user retry action and error state, not internal
+  query retries or unaffected projections.
+- Backend entitlement decisions, projection API behavior, styles, dependencies,
+  and generated contracts are unchanged.
+- Tracker row points to the CS-311 story and source brief with status `done`.
 
 ## Propagation
 
-- no-propagation: the correction is local to the CS-311 story contract and review evidence.
+- no-propagation: findings were local to CS-311 implementation and evidence.
 
 ## Residual Risk
 
-- Implementation must still create the declared evidence artifacts and run the frontend validations before final delivery.
+- No unresolved implementation issue remains.

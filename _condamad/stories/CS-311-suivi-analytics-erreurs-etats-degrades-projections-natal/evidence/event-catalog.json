@@ -13,7 +13,7 @@
     {
       "event_name": "natal_projection_success",
       "state": "success",
-      "trigger": "A projection query returns public projection data.",
+      "trigger": "A projection query returns normal public projection data.",
       "allowed_fields": ["route", "state", "projection_type", "plan_code", "source"],
       "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
       "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"

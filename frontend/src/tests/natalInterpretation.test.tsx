@@ -896,9 +896,10 @@ describe("NatalInterpretationSection", () => {
 
   it("affiche l'état erreur API des projections et trace le retry utilisateur", () => {
     const refetchMock = vi.fn();
+    const stableRefetchMock = vi.fn();
     (useAstrologyProjections as any).mockReturnValue([
       { type: "beginner_summary_v1", isLoading: false, error: new Error("down"), refetch: refetchMock },
-      { type: "client_interpretation_projection_v1", isLoading: false, error: null, refetch: vi.fn() },
+      { type: "client_interpretation_projection_v1", isLoading: false, error: null, refetch: stableRefetchMock },
     ]);
 
     renderSection();
@@ -925,7 +926,11 @@ describe("NatalInterpretationSection", () => {
         public_error_code: "projection.request_failed",
       }),
     );
+    expect(
+      trackMock.mock.calls.filter(([eventName]) => eventName === "natal_projection_retry"),
+    ).toHaveLength(1);
     expect(refetchMock).toHaveBeenCalledTimes(1);
+    expect(stableRefetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("affiche le refus entitlement des projections", () => {
@@ -987,6 +992,14 @@ describe("NatalInterpretationSection", () => {
         projection_type: "beginner_summary_v1",
         state_reason: "missing_birth_time",
         plan_code: "free",
+      }),
+    );
+    expect(trackMock).not.toHaveBeenCalledWith(
+      "natal_projection_success",
+      expect.objectContaining({
+        route: "/natal",
+        state: "success",
+        projection_type: "beginner_summary_v1",
       }),
     );
   });

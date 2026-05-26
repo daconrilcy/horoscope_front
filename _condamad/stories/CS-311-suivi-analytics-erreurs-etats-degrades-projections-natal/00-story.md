@@ -1,5 +1,5 @@
 # Story CS-311 suivi-analytics-erreurs-etats-degrades-projections-natal: Track Natal Projection Analytics Errors And Degraded States
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
