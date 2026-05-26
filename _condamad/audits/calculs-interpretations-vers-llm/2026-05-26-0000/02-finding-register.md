@@ -5,7 +5,7 @@
 | F-001 | High | High | runtime-contract-drift | calculs-interpretations-vers-llm | E-008, E-009, E-010, E-011, E-013, E-016 | Natal LLM generation can rely on poorer legacy/transition inputs while richer recent interpretation owners remain unused. | Route future natal LLM input through an explicit canonical narrative/factual contract or mark this as a user architecture decision. | yes |
 | F-002 | Medium | High | duplicate-responsibility | calculs-interpretations-vers-llm | E-012, E-013, E-014 | `chart_json` and `natal_data` carry the same projection in two shapes, increasing drift risk when one representation evolves. | In a future implementation story, define one canonical LLM factual payload and keep duplicate fields only as compatibility until migrated. | yes |
 | F-003 | Medium | High | missing-canonical-owner | calculs-interpretations-vers-llm | E-010, E-012, E-013 | LLM evidence references are tied to public `chart_json`, not to stable facts or narrative readiness owners. | Decide whether `structured_facts_v1` or `AINarrativeInputContract` owns LLM evidence material. | yes |
-| F-004 | Low | Medium | missing-canonical-owner | calculs-interpretations-vers-llm | E-013 | `astro_context` name suggests broad astrology context but evidence shows a narrower astral-point context. | Do not change now; clarify ownership/name during LLM input convergence. | no |
+| F-004 | Low | Medium | missing-canonical-owner | calculs-interpretations-vers-llm | E-013, E-021 | `astro_context` name suggests broad astrology context but evidence shows a narrower astral-point context. | Do not change now; clarify ownership/name during LLM input convergence. | no |
 
 ## Finding Details
 
@@ -60,7 +60,7 @@
 - Confidence: Medium
 - Category: missing-canonical-owner
 - Domain: calculs-interpretations-vers-llm
-- Evidence: E-013
+- Evidence: E-013, E-021
 - Expected rule: context names should match proven scope to avoid accidental broad ownership.
 - Actual state: `astro_context` is built from astral-point interpretation context only in the inspected path.
 - Impact: `astro_context` name suggests broad astrology context but evidence shows a narrower astral-point context.

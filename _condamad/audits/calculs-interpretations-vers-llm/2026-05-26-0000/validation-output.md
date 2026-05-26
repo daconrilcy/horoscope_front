@@ -6,6 +6,8 @@ All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 |---|---|
 | `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000` | PASS - CONDAMAD domain audit validation passed. |
 | `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000` | PASS - CONDAMAD domain audit lint passed. |
+| Review rerun `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000` | PASS - CONDAMAD domain audit validation passed after review corrections. |
+| Review rerun `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000` | PASS - CONDAMAD domain audit lint passed after review corrections. |
 | `rg -n "legacy|recent-refonte|transition|target-candidate|out-of-scope" _condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000` | PASS - required class vocabulary found in audit artifacts. |
 | `rg -n "NatalExecutionInput|chart_json|natal_data|astro_context|evidence_catalog" _condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000` | PASS - required LLM input surfaces found in audit artifacts. |
 | `python -S -B -c "... required audit files exist ..."` | PASS - story-specific and CONDAMAD standard files exist. |

@@ -38,7 +38,7 @@ The audit should therefore feed architecture work, not code changes: converge LL
 | F-001 | High | Current natal LLM input bypasses recent interpretation/narrative owners and still uses legacy/transition surfaces. | E-008, E-009, E-010, E-011, E-013, E-016 | yes |
 | F-002 | Medium | `chart_json` and `natal_data` duplicate the same public projection in two shapes inside `NatalExecutionInput`. | E-012, E-013, E-014 | yes |
 | F-003 | Medium | `evidence_catalog` remains derived from public `chart_json`, not from recent stable fact/narrative owners. | E-010, E-012, E-013 | yes |
-| F-004 | Low | `astro_context` is a transition surface whose name is broader than its proven astral-point content. | E-013 | no |
+| F-004 | Low | `astro_context` is a transition surface whose name is broader than its proven astral-point content. | E-013, E-021 | no |
 
 ## File Usage Classification
 
@@ -54,14 +54,14 @@ The audit should therefore feed architecture work, not code changes: converge LL
 | `backend/app/domain/astrology/runtime/natal_calculation_graph.py` / `natal_chart_v1` | used | E-006 | Declares canonical calculation and projection nodes. | Source inspection only. |
 | `backend/app/domain/astrology/runtime/natal_result_assembler.py` / `NatalResultAssembler` | used | E-007 | Assembles historical and recent runtime outputs into `NatalResult`. | Downstream projection evidenced separately. |
 | `backend/app/domain/astrology/interpretation/chart_interpretation_input_builder.py` / `ChartInterpretationInputBuilder` | used | E-008 | Builds pre-interpretative input from runtime objects and facts. | Not wired to current natal LLM path. |
-| `backend/app/domain/astrology/interpretation/chart_interpretation_input_contracts.py` / `ChartInterpretationInputRuntimeData` | used | E-008, E-015 | Defines typed interpretation input surfaces consumed by builders. | Detailed class list not repeated here. |
+| `backend/app/domain/astrology/interpretation/chart_interpretation_input_contracts.py` / `ChartInterpretationInputRuntimeData` | used | E-008, E-020 | Defines typed interpretation input surfaces consumed by builders. | Detailed class list is evidenced in E-020. |
 | `backend/app/domain/astrology/interpretation/ai_narrative_input_builder.py` / `AINarrativeInputBuilder` | used | E-009 | Builds `AINarrativeInputContract` from interpretation input. | Not wired to current natal LLM path. |
 | `backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py` / `structured_facts_v1` | used | E-010 | Stable fact projection and possible evidence input. | Not current prompt input. |
 | `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` / `client_interpretation_projection_v1` | used | E-011 | Public client projection from `structured_facts_v1`. | UX projection, not direct LLM owner. |
 | `backend/app/services/chart/json_builder.py` / `build_chart_json` and `build_enriched_evidence_catalog` | used | E-012, E-013 | Current owner for `chart_json`, `natal_data` and `evidence_catalog` used by LLM. | Historical/public projection, not richest canonical input. |
 | `backend/app/services/llm_generation/natal/interpretation_service.py` / `NatalExecutionInput` assembly | used | E-013 | Current gateway input assembly owner. | No behavior changed. |
 | `backend/app/domain/llm/runtime/contracts.py` / `NatalExecutionInput` | intentional-public-export | E-014 | LLM runtime contract exported in `__all__` and consumed by adapter/service/tests. | Audit does not change contract shape. |
-| `backend/tests/unit/domain/astrology/**` selected tests | test-only | E-015 | Tests prove runtime, graph, interpretation and projection behavior. | Full suite may be expensive; targeted suite planned. |
+| `backend/tests/unit/domain/astrology/**` selected tests | test-only | E-019 | Mandatory associated tests prove runtime, graph, interpretation and projection behavior. | Full suite execution is recorded in `validation-output.md`. |
 | `frontend/src/**` | out-of-domain | E-015, E-017 | Frontend projection display is outside backend audit scope. | No frontend files read in depth. |
 
 ## DRY No Legacy Mono-Domain And Dependency Direction

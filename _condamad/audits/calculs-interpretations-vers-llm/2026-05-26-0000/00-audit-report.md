@@ -45,14 +45,14 @@ See the story-specific audit synthesis in `00-audit.md`. This file mirrors the C
 | `backend/app/domain/astrology/runtime/natal_calculation_graph.py` / `natal_chart_v1` | used | E-006 | Declares canonical calculation and projection nodes. | Source inspection only. |
 | `backend/app/domain/astrology/runtime/natal_result_assembler.py` / `NatalResultAssembler` | used | E-007 | Assembles historical and recent outputs into `NatalResult`. | Downstream projection separate. |
 | `backend/app/domain/astrology/interpretation/chart_interpretation_input_builder.py` / `ChartInterpretationInputBuilder` | used | E-008 | Builds pre-interpretative input. | Not wired to current natal LLM path. |
-| `backend/app/domain/astrology/interpretation/chart_interpretation_input_contracts.py` / contracts | used | E-008, E-015 | Typed interpretation input surfaces. | Class list not repeated. |
+| `backend/app/domain/astrology/interpretation/chart_interpretation_input_contracts.py` / contracts | used | E-008, E-020 | Typed interpretation input surfaces. | Class list evidenced in E-020. |
 | `backend/app/domain/astrology/interpretation/ai_narrative_input_builder.py` / `AINarrativeInputBuilder` | used | E-009 | Builds AI/narrative contract. | Not wired to current natal LLM path. |
 | `backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py` / `structured_facts_v1` | used | E-010 | Stable factual projection. | Not current prompt input. |
 | `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` / `client_interpretation_projection_v1` | used | E-011 | Public client projection. | UX projection, not direct LLM owner. |
 | `backend/app/services/chart/json_builder.py` / `build_chart_json`, `build_enriched_evidence_catalog` | used | E-012, E-013 | Current owner for `chart_json`, `natal_data`, `evidence_catalog`. | Public/historical projection. |
 | `backend/app/services/llm_generation/natal/interpretation_service.py` / `NatalExecutionInput` assembly | used | E-013 | Current gateway input assembly owner. | No behavior changed. |
 | `backend/app/domain/llm/runtime/contracts.py` / `NatalExecutionInput` | intentional-public-export | E-014 | LLM runtime contract exported and consumed by service/adapter/tests. | No shape change. |
-| `backend/tests/unit/domain/astrology/**` selected tests | test-only | E-015 | Tests cover runtime, graph, interpretation and projection behavior. | Targeted suite only. |
+| `backend/tests/unit/domain/astrology/**` selected tests | test-only | E-019 | Mandatory associated tests cover runtime, graph, interpretation and projection behavior. | Targeted suite execution is recorded in `validation-output.md`. |
 | `frontend/src/**` | out-of-domain | E-015, E-017 | Frontend projection display is outside backend audit. | No detailed frontend audit. |
 
 ## DRY No Legacy Mono-Domain And Dependency Direction
