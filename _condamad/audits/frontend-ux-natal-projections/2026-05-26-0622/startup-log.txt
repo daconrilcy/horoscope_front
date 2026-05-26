@@ -1,0 +1,10 @@
+started_at=2026-05-26T04:23:42.526Z
+command=node scripts/run-vite-logged.mjs vite vite-dev dev --host 127.0.0.1 --port 53088 --strictPort
+base_url=http://127.0.0.1:53088
+
+  [32m[1mVITE[22m v7.3.2[39m  [2mready in [0m[1m200[22m[2m[0m ms[22m
+
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m53088[22m/[39m
+
+result=pass
