@@ -1,0 +1,16 @@
+CS-320 runtime and frontend surface guard
+
+PASS - contract vocabulary present:
+rg -n "client_interpretation_projection_v1.*free|client_interpretation_projection_v1.*basic|client_interpretation_projection_v1.*premium|LLMInputSelection|EditorialDepthProfile|FrontendVisibilityRules|precision_level" docs\architecture\client-interpretation-projection-v1-contract.md _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping\evidence
+
+PASS - no active React entitlement matrix in natal render owners:
+rg -n "React.*entitlement|entitlement matrix|accepted_matrix|localPlanPolicy" frontend\src\features\natal-chart frontend\src\components\natal-interpretation -g "*.ts" -g "*.tsx"
+Result: exit 1, PASS: no matches.
+
+Classified hits from broader frontend scan:
+- frontend\src\tests\component-architecture-guards.test.ts contains the guard patterns and positive fixtures.
+- frontend\src\tests\natalInterpretation.test.tsx contains the payload type `ProjectionPlanCode`.
+- frontend\src\features\natal-chart\NatalInterpretation.tsx contains the backend response field `plan_code`.
+
+No backend restriction, React policy matrix, new route, DB migration, Stripe rule,
+prompt provider integration or frontend rendering rewrite was introduced by CS-320.

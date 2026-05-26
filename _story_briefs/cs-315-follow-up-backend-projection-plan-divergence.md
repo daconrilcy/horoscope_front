@@ -1,6 +1,6 @@
-<!-- Commentaire global: ce brief route la divergence CS-315 vers le backend sans introduire de politique React locale. -->
+<!-- Commentaire global: ce brief archive la divergence CS-315 et la reoriente vers la specification de differenciation LLM/front sans bloquer les calculs backend. -->
 
-# CS-315 Follow-up Backend Projection Plan Divergence
+# CS-315 Follow-up Plan Differentiation Without Backend Blocking
 
 Status: ready-to-dev
 
@@ -11,12 +11,17 @@ Status: ready-to-dev
 - Decision artifact: `docs/architecture/natal-projection-plan-matrix-product-decision.md`
 - Runtime evidence: `backend/tests/api/test_projection_real_conditions.py`
 
-## Divergence
+## Decision Update
 
-The CS-315 product decision states that `client_interpretation_projection_v1`
-is visible for `premium` and refused with upgrade for `free` and `basic`.
+Product decision update:
 
-The backend runtime suite currently proves a different behavior:
+- All calculations and interpretations must be executed for every B2C plan.
+- `beginner_summary_v1` remains available for `free`, `basic` and `premium`.
+- `client_interpretation_projection_v1` remains available for `free`, `basic` and `premium`.
+- Differentiation happens after calculation: LLM input selection, editorial depth, precision, detail level and frontend section visibility vary by plan.
+- React must not own access policy; it may render plan-differentiated sections only from backend/projection contracts.
+
+The backend runtime suite already matches the access part of this decision:
 
 - `backend/tests/api/test_projection_real_conditions.py::test_projection_endpoint_accepts_supported_b2c_plans`
   parametrizes `free`, `basic` and `premium`.
@@ -26,13 +31,28 @@ The backend runtime suite currently proves a different behavior:
 
 ## Required Owner Decision
 
-Backend and product owners must decide whether:
+Backend, product and frontend owners must now define:
 
-- the backend entitlement behavior should change to match the CS-315 product matrix; or
-- the CS-315 product decision should be revised to accept the current backend behavior.
+- which structured facts, evidence refs and interpretation inputs are passed to the LLM for each plan;
+- which editorial depth profile applies to `free`, `basic` and `premium`;
+- which frontend sections are visible or hidden by plan;
+- how tests prove that all plans still execute full calculations while exposing different levels of interpretation.
+
+No backend access restriction should be added for `client_interpretation_projection_v1` as part of this decision.
 
 ## Guardrails
 
 - Do not add a React-owned entitlement matrix.
-- Do not change backend authorization inside the CS-317 closure story.
-- Keep CS-315 closure evidence explicit that this divergence is routed here.
+- Do not change backend authorization to block calculations or interpretation generation by plan.
+- Do not remove full calculation execution for lower plans.
+- Keep differentiation in explicit backend/projection/LLM/front contracts, not in ad hoc UI branching.
+
+## Follow-up Story Shape
+
+Create a new implementation brief to define plan-aware interpretation shaping:
+
+- canonical contract for LLM input subsets by plan;
+- editorial depth profile per plan;
+- frontend section visibility contract per plan;
+- tests proving full calculation execution for all plans;
+- tests proving plan-differentiated output and display.

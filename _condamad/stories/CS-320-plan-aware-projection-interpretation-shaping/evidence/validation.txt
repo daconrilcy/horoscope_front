@@ -1,0 +1,30 @@
+CS-320 validation transcript summary
+
+PASS - rg contract terms:
+rg -n "free|basic|premium|EditorialDepthProfile|LLMInputSelection|FrontendVisibilityRules|precision_level|calculs|interpretations" docs\architecture\client-interpretation-projection-v1-contract.md _story_briefs\cs-320-definir-differenciation-llm-front-par-plan-b2c.md
+
+PASS - JSON evidence parse:
+.\.venv\Scripts\Activate.ps1; python -B -c "import json, pathlib; [json.loads(p.read_text(encoding='utf-8')) for p in pathlib.Path('_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence').glob('*-sample.json')]; print('JSON_EVIDENCE_PASS')"
+
+PASS - backend full projection availability:
+.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short
+Result: 12 passed.
+
+PASS - backend lint:
+.\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+Result: All checks passed.
+
+PASS - frontend lint:
+pnpm --dir frontend lint
+Result: tsc --noEmit checks passed.
+
+PASS - frontend architecture and natal rendering tests:
+pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards natalInterpretation NatalChartPage natalChartApi
+Result: 5 files passed, 130 tests passed.
+
+PASS - OpenAPI and route neutrality:
+.\.venv\Scripts\Activate.ps1; python -B -c "import sys; sys.path.insert(0,'backend'); from app.main import app; assert app.openapi(); assert any(getattr(r,'path','') == '/v1/astrology/projections' for r in app.routes); print('OPENAPI_ROUTE_PASS')"
+
+PASS - diff whitespace:
+git diff --check -- docs\architecture\client-interpretation-projection-v1-contract.md _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping _condamad\stories\story-status.md
+Result: no whitespace errors; Git only reported LF-to-CRLF warnings.

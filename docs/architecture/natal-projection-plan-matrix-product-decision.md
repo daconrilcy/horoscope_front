@@ -13,7 +13,8 @@ scope: `/natal`, `free`, `basic`, `premium`, `beginner_summary_v1`, `client_inte
 - `observed`: CS-309 prouve que `/natal` rend les projections selon les reponses backend et pas selon une matrice React locale. Sources: Evidence 3, Evidence 4, Evidence 6.
 - `decision`: la matrice CS-309 est adoptee comme matrice produit officielle CS-315 pour `/natal`.
 - `decision`: `beginner_summary_v1` est visible pour `free`, `basic` et `premium`.
-- `decision`: `client_interpretation_projection_v1` est refusee avec upgrade pour `free` et `basic`, puis visible pour `premium`.
+- `decision`: `client_interpretation_projection_v1` est calculee et disponible pour `free`, `basic` et `premium`.
+- `decision`: la differenciation commerciale ne porte pas sur l'execution des calculs ni sur l'existence de l'interpretation, mais sur les elements transmis au LLM, la richesse du travail redactionnel produit et les blocs affiches en frontend selon le plan.
 - `decision`: l'implementation source reste l'autorisation backend; React rend les succes et les 403 backend sans posseder de politique d'entitlement.
 - `decision`: CS-283 reste owner de la politique B2C generale; CS-315 ajoute seulement le sign-off produit `/natal`.
 - `decision`: toute divergence produit/backend devient un brief backend separe, pas une correction React locale.
@@ -26,6 +27,8 @@ scope: `/natal`, `free`, `basic`, `premium`, `beginner_summary_v1`, `client_inte
 Highest-risk implementation dependencies:
 - conserver la frontiere backend/frontend;
 - ne pas deduire de nouvelle regle Stripe/pricing;
+- conserver les calculs complets pour tous les plans;
+- differencier seulement les entrees LLM, la profondeur redactionnelle et les surfaces affichees;
 - verifier les tests CS-309 avant tout changement futur.
 
 ## Audit Source Map
@@ -54,28 +57,29 @@ story Evidence 1-9 and guardrails `RG-022`, `RG-041`.
 | Capability / family | Inputs | Objects required | Canonical contracts required | Surfaces required | Status | Blockers | Sources |
 |---|---|---|---|---|---|---|---|
 | `/natal` beginner summary access | `plan_code`, chart response | `ProjectionRequest`, `ProjectionResult`, `PlanCode` | `beginner_summary_v1`, `natal_projection_plan_matrix_product_decision_v1` | backend, frontend, docs | `implemented` | None observed | Evidence 3, 5, 6 |
-| `/natal` client interpretation access | `plan_code`, chart response, 403 | `ProjectionRequest`, `ProjectionResult`, `ProjectionAccessDecision` | `client_interpretation_projection_v1`, CS-283 policy | backend, frontend, docs | `partial` | Product/backend divergence must be briefed | Evidence 3, 4, 7 |
-| Mixed success plus 403 rendering | backend success and forbidden responses | `FrontendProjectionState`, `UpgradeState` | backend-shaped response contract | frontend | `implemented` | No React entitlement table allowed | Evidence 3, 4, 6 |
-| Product divergence handling | product vs backend behavior | `DivergenceRecord` | follow-up backend brief | docs, backlog | `implicit` | Brief mismatch | report, Evidence 4, AC5 |
+| `/natal` client interpretation access | `plan_code`, chart response | `ProjectionRequest`, `ProjectionResult`, `ProjectionAccessDecision` | `client_interpretation_projection_v1`, CS-283 policy | backend, frontend, docs | `implemented` | None observed | Evidence 3, 4, 7 |
+| Plan-differentiated LLM/editorial output | `plan_code`, full calculation result, projection facts | `LLMInputSelection`, `EditorialDepthProfile`, `FrontendVisibilityRules` | future plan-aware interpretation contract | backend, LLM, frontend, docs | `to specify` | Requires separate implementation stories | Product decision |
+| Mixed success rendering | backend success responses | `FrontendProjectionState` | backend-shaped response contract | frontend | `implemented` | No React entitlement table allowed | Evidence 3, 4, 6 |
+| Product divergence handling | product vs backend behavior | `DivergenceRecord` | follow-up brief when runtime contradicts decision | docs, backlog | `not needed for current backend access` | None observed | report, Evidence 4, AC5 |
 | Entitlement ownership routing | plan vocabulary, projection IDs | `B2CProjectionEntitlementPolicy` | `b2c_projection_entitlement_policy` | docs, backend | `implemented` | CS-315 must not replace CS-283 | Evidence 7, 8 |
 
 accepted_matrix:
 
 | plan_code | beginner_summary_v1 | client_interpretation_projection_v1 | Decision source |
 |---|---|---|---|
-| `free` | visible from backend response | forbidden with upgrade from backend 403 | Evidence 3 |
-| `basic` | visible from backend response | forbidden with upgrade from backend 403 | Evidence 3 |
-| `premium` | visible from backend response | visible from backend response | Evidence 3 |
+| `free` | visible from backend response | visible from backend response, concise LLM/editorial/front surface | Product owner decision |
+| `basic` | visible from backend response | visible from backend response, intermediate LLM/editorial/front surface | Product owner decision |
+| `premium` | visible from backend response | visible from backend response, richest LLM/editorial/front surface | Product owner decision |
 
 ## Surface Matrix
 
 | Surface | Current contract | Expected contract | Capabilities exposed | Consumers | Risks | Blockers | Required changes | Sources |
 |---|---|---|---|---|---|---|---|---|
 | internal | backend services authorize projection access | backend remains runtime source | access decisions | API handlers, tests | hidden policy drift | None observed | run backend tests | Evidence 5, 7 |
-| public_api | existing projection endpoint behavior | no new route or OpenAPI surface from CS-315 | success and 403 responses | frontend | docs changing runtime by implication | None observed | app route neutrality check | Story VC13 |
+| public_api | existing projection endpoint behavior | no new route or OpenAPI surface from CS-315 | success responses for supported B2C plans | frontend | docs changing runtime by implication | None observed | app route neutrality check | Story VC13 |
 | admin_debug | no CS-315 debug surface | no new admin/debug owner | none | maintainers | debug payload leakage | None observed | no change | Evidence 8 |
 | automation_or_llm | not authoritative for entitlement | may consume docs as context only | none | future agents | treating generated text as policy | PO validation remains owner | cite decision doc | Skill contract |
-| frontend | renders backend-shaped success/403 | no local entitlement matrix | mixed projection display | React `/natal` | React-owned access policy | Forbidden by story | run vitest and scans | Evidence 6, RG-022 |
+| frontend | renders backend-shaped projection responses | no local entitlement matrix; plan may affect displayed sections only through backend/projection data contracts | plan-differentiated display | React `/natal` | React-owned access policy | Forbidden by story | run vitest and scans | Evidence 6, RG-022 |
 | data_storage | no DB or migration scope | no persisted entitlement change | none | backend | accidental migration | Out of scope | no change | Story non-goals |
 | observability | tests/evidence artifacts | validation transcript and source alignment | validation proof | reviewers | unproven sign-off | product owner role only | persist CS-315 evidence | Evidence 1-9 |
 
@@ -117,6 +121,7 @@ Owner: `docs/architecture/b2c-projection-entitlement-policy.md`
 | `ProjectionId` | value_object | projection registry | docs and runtime responses | exact projection ID string | projection contract version suffix | API, frontend, docs | reuse | Evidence 8 |
 | `ProductMatrixDecision` | core_entity | Product Owner B2C Projections | documentation artifact | markdown fields in this report | `decision_id` suffix `v1` | docs, evidence | adopt | Evidence 1, story contract |
 | `ProjectionAccessDecision` | derived_object | backend authorization | runtime response/tests | success or 403 error | backend contract/version owner | API, frontend | backend owns | Evidence 5 |
+| `EditorialDepthProfile` | product_contract | Product Owner B2C Projections | future implementation story | free/basic/premium depth profile | version on editorial semantics change | LLM, frontend, docs | create separately | Product decision |
 | `FrontendProjectionState` | presentation_model | frontend rendering | no policy persistence | backend-shaped fixtures | follows backend/API contract | frontend | render only | Evidence 6 |
 | `ValidationEvidence` | debug_artifact | CONDAMAD story evidence | `_condamad/stories/.../evidence/` | text/markdown transcript | append per story run | observability | persist | story AC7 |
 
@@ -128,7 +133,7 @@ Owner: `docs/architecture/b2c-projection-entitlement-policy.md`
 | Trace | Every material access decision cites Evidence 3, 5, 6 or CS-283. | docs, tests, future stories | uncited policy or runtime changes | evidence path and guardrail ID | Architecture owner | Evidence 1-9 |
 | Cache | Future cache keys must include projection ID, projection version and plan when output differs by plan. | projection outputs | plan_code, projection_version, entitlement semantics | request_id, plan_code, projection_type | Backend owner | Evidence 3, 7 |
 | Replay | Replays must use backend authorization state, not React fixtures. | test replay, QA | backend behavior or fixture shape drift | backend test target and fixture target | QA/backend owners | Evidence 5, 6 |
-| Invalidation | Product/backend mismatch invalidates local acceptance and creates backend brief. | roadmap and docs | observed mismatch between matrix and backend tests | divergence brief path | Product and backend owners | story AC5 |
+| Invalidation | Product/backend mismatch invalidates local acceptance and creates a follow-up brief. | roadmap and docs | observed mismatch between decision and backend tests | divergence brief path | Product and backend owners | story AC5 |
 | Migration | No DB, Stripe, pricing, checkout or subscription migration is authorized by CS-315. | implementation scope | any requested runtime policy change | git/app surface status | Architecture owner | story non-goals |
 | Observability | Persist CS-315 evidence. | evidence folder | missing trace | evidence files | CONDAMAD reviewer | AC7, RG-022, report |
 
@@ -138,10 +143,11 @@ Owner: `docs/architecture/b2c-projection-entitlement-policy.md`
 |---|---|---|---|---|
 | `blocker` | Product owner person is not named. | Product Owner B2C Projections | nominative sign-off only | role-level sign-off accepted for CS-315; name remains open question |
 | `blocker` | No audit `F-*` or `SC-*` IDs exist for this brief-direct story. | Architecture owner | strict audit-style trace | use story Evidence 1-9 and source paths; do not invent IDs |
-| `decision` | CS-309 matrix accepted as official `/natal` matrix. | Product Owner B2C Projections | implementation handoff | accepted in this report |
+| `decision` | Backend-supported full calculation and interpretation for all B2C plans is accepted as official `/natal` access matrix. | Product Owner B2C Projections | implementation handoff | accepted in this report |
 | `decision` | Backend authorization remains implementation source. | Backend owner | frontend work | accepted |
 | `decision` | React must not own entitlement policy. | Frontend owner | UI changes | accepted |
-| `open question` | Should CS-283 be revised to narrow `client_interpretation_projection_v1` minimum plan for `/natal`? | Product + backend owners | backend entitlement alignment | default: create backend brief only if tests prove divergence |
+| `decision` | Differentiation belongs to LLM input selection, editorial depth and frontend section visibility, not to calculation availability. | Product + backend + frontend owners | future plan-aware enrichment | accepted |
+| `open question` | Which exact sections, evidence density, LLM context and editorial depth belong to free/basic/premium? | Product + backend + frontend owners | plan-aware enrichment implementation | create follow-up stories |
 
 ## Ordered Implementation Roadmap
 
@@ -186,26 +192,26 @@ Blockers / decisions:
 - any mismatch triggers Story 3.
 Stop condition: parity is green or divergence brief is opened.
 
-### Story 3: Open Backend Divergence Brief If Runtime Differs
+### Story 3: Specify Plan-Differentiated LLM And Front Display Rules
 
 Story ID: `next-available-id`
-Source label: `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`
-Goal: route product/backend mismatch to backend ownership.
-Source audits: CS-315 story AC5, CS-309 ambiguity ledger.
+Source label: next follow-up brief.
+Goal: define which LLM input elements, editorial depth and frontend sections differ by free/basic/premium.
+Source audits: CS-315 product decision, CS-309 ambiguity ledger.
 Source findings: Evidence 4, AC5.
-Scope: create backend brief describing exact mismatch and expected owner.
-Out of scope: React correction, pricing, Stripe, DB migration.
-Dependencies: failed Story 2 parity.
+Scope: plan-aware output shaping and display contract.
+Out of scope: removing calculations or blocking projection access by plan.
+Dependencies: Story 1 and Story 2.
 Acceptance criteria:
-- Brief names mismatching plan/projection rows.
+- Brief names plan-specific LLM input subsets, editorial depth expectations and frontend display sections.
 - Brief cites backend tests and this decision document.
 - No frontend policy matrix is introduced.
 Validation evidence:
 - path existence check for the brief.
 - targeted scan confirming no React entitlement matrix.
 Blockers / decisions:
-- product/backend owner decision required before runtime change.
-Stop condition: backend brief exists and CS-315 remains documentation-only.
+- product/backend/frontend owner decision required before runtime shaping changes.
+Stop condition: shaping/display brief exists and CS-315 remains documentation-only.
 
 ### Story 4: Add Regression Guard For React-Owned Entitlement Drift
 
@@ -231,7 +237,7 @@ Stop condition: drift guard exists or is explicitly declined.
 | Question | Why it matters | Owner | Blocks | Suggested default | Sources |
 |---|---|---|---|---|---|
 | Who is the named product owner behind the role? | reviewer accountability | Product Owner B2C Projections | nominative sign-off | keep role until tracker supplies name | CS-315 story, report action 4 |
-| Should CS-283 minimum plan text be narrowed for `/natal` client interpretation? | CS-283 currently describes broader plan-aware depth | Product + backend owners | policy harmonization | do not edit CS-283 in CS-315 | Evidence 7 |
+| Which LLM input fields and frontend sections differ by plan? | This is the actual commercial differentiation axis | Product + backend + frontend owners | plan-aware output shaping | create a dedicated follow-up brief | Product decision |
 | Should the React drift guard become global? | current guard is story-local registry gap | Architecture owner | future regression prevention | create next story only after CS-315 acceptance | RG-022, RG-041 |
 
 ## Validation Plan

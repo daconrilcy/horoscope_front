@@ -1,38 +1,43 @@
-# Story CS-320 plan-aware-projection-interpretation-shaping: Define Plan-Aware Projection Interpretation Shaping
-Status: ready-to-dev
+# Story CS-320 plan-aware-projection-interpretation-shaping: Define LLM And Front Differentiation By B2C Plan
+Status: ready-to-review
 
 ## Trigger / Source
 
 - Source type: repo-informed follow-up brief.
-- Source reference: `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`.
+- Source reference: `_story_briefs/cs-320-definir-differenciation-llm-front-par-plan-b2c.md`.
+- Prior divergence source: `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`.
 - Related source: `_condamad/stories/CS-315-product-plan-matrix-signoff-natal-projections/00-story.md`.
 - Related closure: `_condamad/stories/CS-317-cloturer-cs315-final-evidence-validation-runtime/00-story.md`.
+- Related product signoff evidence: `_condamad/stories/CS-315-product-plan-matrix-signoff-natal-projections/generated/10-final-evidence.md`.
+- Related runtime closure evidence: `_condamad/stories/CS-317-cloturer-cs315-final-evidence-validation-runtime/generated/10-final-evidence.md`.
+- Related frontend guard: `_condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/10-final-evidence.md`.
 - Decision artifact: `docs/architecture/natal-projection-plan-matrix-product-decision.md`.
 - Runtime evidence: `backend/tests/api/test_projection_real_conditions.py`.
+- Public API contract owner: `backend/app/services/api_contracts/public/projections.py`.
+- Feature page rendering owner: `frontend/src/features/natal-chart/NatalInterpretation.tsx`.
 - Selected story writer mode: Fast Story Writer Mode.
-- Problem statement: CS-315 keeps all B2C calculations available, but plan differentiation still needs one executable shaping contract.
+- Problem statement: CS-315 keeps all B2C calculations available, but LLM and frontend differentiation still need one executable contract.
 - Source-alignment evidence: PASS; the story preserves full calculation for all plans and moves differentiation after backend projection output.
 
 ## Objective
 
-Define and implement one plan-aware shaping contract for natal projection interpretation output after calculation.
+Define one plan-aware product and technical contract for natal projection interpretation output after calculation.
 
-The implementation must specify LLM input subsets, editorial depth profiles and frontend section visibility for `free`, `basic` and `premium` while keeping
-`beginner_summary_v1` and `client_interpretation_projection_v1` executable for every supported B2C plan.
+The contract must specify LLM input subsets, editorial depth profiles, precision/detail levels and frontend visibility for `free`, `basic` and `premium`.
+`beginner_summary_v1` and `client_interpretation_projection_v1` stay executable for every supported B2C plan.
 
 ## Target State
 
 - `client_interpretation_projection_v1` keeps full calculation execution for `free`, `basic` and `premium`.
-- A canonical backend/projection contract maps each plan to LLM input selection, editorial depth and frontend visibility rules.
-- Backend runtime payloads expose stable plan shaping metadata that React can render without owning access policy.
-- Frontend natal projection rendering uses backend projection sections and display hints instead of a local entitlement matrix.
-- Tests prove all B2C plans still receive HTTP 200 for `client_interpretation_projection_v1`.
-- Tests prove plan-differentiated output and visible sections differ through backend-shaped projection data.
-- No backend access restriction is added for `client_interpretation_projection_v1`.
+- A canonical product/technical contract maps each plan to LLM input selection, editorial depth, precision, detail and frontend visibility rules.
+- The contract names the future backend, LLM and frontend owners that must implement the plan shaping without moving policy into React.
+- Future backend validations prove all B2C plans still receive HTTP 200 for `client_interpretation_projection_v1`.
+- Future frontend validations prove rendering follows backend-shaped sections and display hints instead of a local entitlement matrix.
+- No immediate prompt, provider integration, frontend rendering rewrite or backend access restriction is included in this story.
 
 ## Current State Evidence
 
-- Evidence 1: `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md` - source brief read for this story.
+- Evidence 1: `_story_briefs/cs-320-definir-differenciation-llm-front-par-plan-b2c.md` - source brief read for this story.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-320`.
 - Evidence 3: `docs/architecture/natal-projection-plan-matrix-product-decision.md` - product decision says differentiation happens after calculation.
 - Evidence 4: `backend/tests/api/test_projection_real_conditions.py` - runtime test posts `client_interpretation_projection_v1` for all B2C plans.
@@ -42,6 +47,7 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
 - Evidence 8: `frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx` - frontend projection rendering owner found.
 - Evidence 9: `frontend/src/tests/component-architecture-guards.test.ts` - existing React entitlement matrix guard found.
 - Evidence 10: `_condamad/stories/regression-guardrails.md` - registry consulted through scoped resolver output and targeted ID lookup only.
+- Evidence 11: `_condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/10-final-evidence.md` - React policy guard closure read.
 - Source-alignment evidence: PASS; ACs cover the brief's backend, product, frontend and validation stakes without blocking calculations.
 
 ## Domain Boundary
@@ -49,14 +55,15 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
 - Domain: projection-plan-differentiation
 - In scope:
   - Backend/projection contract for plan-specific LLM input subsets.
-  - Editorial depth profile for `free`, `basic` and `premium`.
+  - Editorial depth, precision and detail profile for `free`, `basic` and `premium`.
   - Frontend section visibility contract emitted from backend projection payloads.
-  - Backend builder and tests for plan-differentiated shaping metadata.
-  - Frontend rendering and tests that consume backend-shaped sections only.
-  - Runtime evidence that full calculation still executes for all B2C plans.
+  - Future validation targets that stop a return to access blocking or React local policy.
+  - Owner routing for future backend builder, LLM prompt/depth and frontend rendering implementation stories.
+  - Future validation targets that prove full calculation still executes for all B2C plans.
 - Out of scope:
   - Stripe, pricing, checkout, subscription, DB schema, migrations, auth, i18n, styling and build tooling.
-  - React-owned entitlement policy, local access matrix, provider LLM integration, final prompt text and new public route creation.
+  - React-owned entitlement policy, local access matrix, provider LLM integration, final prompt text, runtime builder changes,
+    frontend rendering changes and new public route creation.
   - Registry enrichment in `_condamad/stories/regression-guardrails.md` during this normal story generation.
 - Explicit non-goals:
   - No backend restriction that blocks `client_interpretation_projection_v1` for `free`, `basic` or `premium`.
@@ -70,9 +77,10 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
 - Archetype reason: no supported archetype exactly fits the requested backend projection shaping plus frontend rendering contract.
 - Behavior change allowed: constrained
 - Behavior change constraints:
-  - Add only plan-aware shaping fields for LLM input selection, editorial depth and frontend visibility.
-  - Keep projection execution available for `free`, `basic` and `premium`.
-  - Reuse `client_interpretation_projection_v1` and `structured_facts_v1` owners before adding adjacent helpers.
+  - Define only the plan-aware shaping fields for LLM input selection, editorial depth and frontend visibility.
+  - Define precision and detail-level semantics for each B2C plan.
+  - Preserve the requirement that projection execution remains available for `free`, `basic` and `premium`.
+  - Route future implementation to `client_interpretation_projection_v1` and `structured_facts_v1` owners before adjacent helpers.
   - Keep API routes, DB, migrations, auth, i18n, style, build tooling, Stripe and subscription files unchanged.
   - Keep React as a renderer of backend-shaped projection sections, not a policy owner.
 - Deletion allowed: no
@@ -80,11 +88,12 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
 - User decision required if: product owners cannot define the per-plan LLM input subset or editorial depth profile.
 - Additional validation rules:
   - The contract must name `free`, `basic`, `premium`, `LLMInputSelection`, `EditorialDepthProfile` and `FrontendVisibilityRules`.
-  - The builder output must include plan shaping metadata without exposing raw runtime, provider payload or prompt internals.
-  - Backend tests must prove `client_interpretation_projection_v1` returns HTTP 200 for all three B2C plans.
-  - Backend tests must prove free, basic and premium shaping differ by fields, section visibility or editorial depth.
-  - Frontend tests must prove rendering follows backend visibility metadata and not a local plan matrix.
-  - Runtime evidence must include `pytest`, `TestClient`, `app.routes` and `app.openapi()`.
+  - The contract must name the precision and detail-level semantics used by each B2C plan.
+  - The contract must require future builder output to include plan shaping metadata without raw runtime, provider payload or prompt internals.
+  - Future backend tests must prove `client_interpretation_projection_v1` returns HTTP 200 for all three B2C plans.
+  - Future backend tests must prove free, basic and premium shaping differ by fields, section visibility or editorial depth.
+  - Future frontend tests must prove rendering follows backend visibility metadata and not a local plan matrix.
+  - Future runtime evidence must include `pytest`, `TestClient`, `app.routes` and `app.openapi()`.
 
 ## Required Contracts
 
@@ -103,37 +112,42 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
 
 | AC | Requirement | Validation evidence required |
 |---|---|---|
-| AC1 | A canonical shaping contract exists. | Evidence profile: json_contract_shape; `rg` checks `LLMInputSelection`, `EditorialDepthProfile` and `FrontendVisibilityRules`. |
-| AC2 | Backend output carries shaping metadata. | Evidence profile: json_contract_shape; `pytest` runs the builder test path. |
-| AC3 | All B2C plans execute the projection. | Evidence profile: runtime_openapi_contract; `pytest -q backend/tests/api/test_projection_real_conditions.py`. |
-| AC4 | Plan outputs differ after calculation. | Evidence profile: json_contract_shape; `pytest` runs the builder test path. |
-| AC5 | Frontend uses backend visibility data. | Evidence profile: frontend_typecheck_no_orphan; `pnpm --dir frontend vitest run natalInterpretation`. |
-| AC6 | React owns no plan access matrix. | Evidence profile: targeted_forbidden_symbol_scan; `pnpm --dir frontend vitest run component-architecture-guards`. |
-| AC7 | Runtime API surface stays canonical. | Evidence profile: runtime_openapi_contract; `python` checks `app.routes` and `app.openapi()`. |
+| AC1 | A canonical shaping contract uses the B2C plan set. | Evidence profile: json_contract_shape; `rg` checks plan names and contract terms. |
+| AC2 | The contract defines LLM input selection by plan. | Evidence profile: json_contract_shape; `rg` checks `LLMInputSelection` and allowed fact groups. |
+| AC3 | The contract defines `EditorialDepthProfile` by plan. | Evidence profile: json_contract_shape; `rg` checks `EditorialDepthProfile`. |
+| AC4 | The contract defines frontend visibility by plan. | Evidence profile: json_contract_shape; `rg` checks `FrontendVisibilityRules`. |
+| AC5 | The contract preserves full projection for all plans. | Evidence profile: runtime_openapi_contract; `pytest` runs real conditions tests. |
+| AC6 | The contract defines future implementation ownership. | Evidence profile: ownership_routing; `rg` checks the listed backend, LLM and frontend owner paths. |
+| AC7 | Future validations prevent policy drift. | Evidence profile: targeted_forbidden_symbol_scan; `pnpm` runs architecture guards. |
 | AC8 | Evidence artifacts are persisted. | Evidence profile: baseline_before_after_diff; `python` checks CS-320 evidence paths. |
 
 ## Implementation Tasks
 
-- [ ] Task 1: Re-read the CS-315 decision, existing projection contract and builder before choosing the shaping owner. (AC: AC1, AC2)
-- [ ] Task 2: Define the plan-aware shaping contract with LLM input subsets, editorial depth and frontend visibility fields. (AC: AC1)
-- [ ] Task 3: Extend the canonical projection builder or adjacent contract owner to emit shaping metadata by plan. (AC: AC2, AC4)
-- [ ] Task 4: Keep `client_interpretation_projection_v1` execution available for `free`, `basic` and `premium`. (AC: AC3)
-- [ ] Task 5: Add or update backend tests for plan-differentiated metadata and full calculation execution. (AC: AC2, AC3, AC4)
-- [ ] Task 6: Update frontend projection rendering to consume backend visibility metadata without policy branching. (AC: AC5, AC6)
-- [ ] Task 7: Add or update frontend tests for backend-shaped visibility differences across plans. (AC: AC5, AC6)
-- [ ] Task 8: Add loaded-app proof for route and OpenAPI neutrality. (AC: AC7)
-- [ ] Task 9: Persist validation, runtime and source-alignment evidence under the CS-320 evidence folder. (AC: AC8)
+- [ ] Task 1: Re-read the CS-315 decision, existing projection contract and listed owners before finalizing the shaping contract. (AC: AC1, AC6)
+- [ ] Task 2: Define the plan-aware contract with LLM inputs, editorial depth, precision, detail and frontend visibility. (AC: AC1, AC2, AC3, AC4)
+- [ ] Task 3: Document that `client_interpretation_projection_v1` execution stays available for `free`, `basic` and `premium`. (AC: AC5)
+- [ ] Task 4: Name backend, LLM and frontend implementation owners and their forbidden destinations. (AC: AC6)
+- [ ] Task 5: Define future backend validations for full execution and plan-differentiated metadata. (AC: AC5, AC7)
+- [ ] Task 6: Define future frontend validations for backend-shaped visibility and no React local plan matrix. (AC: AC4, AC7)
+- [ ] Task 7: Persist validation and source-alignment evidence under the CS-320 evidence folder. (AC: AC8)
 
 ## Files to Inspect First
 
 - `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md` - source brief.
+- `_story_briefs/cs-320-definir-differenciation-llm-front-par-plan-b2c.md` - current source brief.
+- `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md` - prior divergence brief.
 - `docs/architecture/natal-projection-plan-matrix-product-decision.md` - product decision and post-calculation boundary.
+- `_condamad/stories/CS-315-product-plan-matrix-signoff-natal-projections/generated/10-final-evidence.md` - CS-315 signoff evidence.
+- `_condamad/stories/CS-317-cloturer-cs315-final-evidence-validation-runtime/generated/10-final-evidence.md` - runtime closure evidence.
+- `_condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/10-final-evidence.md` - React policy guard evidence.
 - `docs/architecture/client-interpretation-projection-v1-contract.md` - existing plan-depth contract.
 - `docs/architecture/b2c-projection-entitlement-policy.md` - access policy owner that must not be moved to React.
+- `backend/app/services/api_contracts/public/projections.py` - public projection API contract owner.
 - `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` - canonical builder owner.
 - `backend/app/services/projections/projection_endpoint_service.py` - endpoint orchestration owner for projection payloads.
 - `backend/tests/unit/domain/astrology/test_client_interpretation_projection_v1_builder.py` - backend builder tests.
 - `backend/tests/api/test_projection_real_conditions.py` - TestClient evidence for supported B2C plans.
+- `frontend/src/features/natal-chart/NatalInterpretation.tsx` - natal feature page rendering owner.
 - `frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx` - projection rendering owner.
 - `frontend/src/tests/natalInterpretation.test.tsx` - frontend projection rendering tests.
 - `frontend/src/tests/component-architecture-guards.test.ts` - React entitlement matrix guard.
@@ -142,14 +156,15 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
 ## Runtime Source of Truth
 
 - Primary source of truth:
+  - This story defines the contract and names the future implementation validators below.
   - `backend/tests/api/test_projection_real_conditions.py` through `pytest` and `TestClient`.
   - `backend/tests/unit/domain/astrology/test_client_interpretation_projection_v1_builder.py` for shaped payload behavior.
   - `frontend/src/tests/natalInterpretation.test.tsx` for backend-shaped rendering.
   - `app.routes` and `app.openapi()` for runtime API neutrality.
 - Secondary evidence:
   - Targeted `rg` scans for shaping contract fields and React policy drift.
-- Static scans alone are not sufficient because:
-  - all three B2C plans must prove runtime projection execution and frontend rendering from backend-shaped payloads.
+- Static scans alone are not sufficient for later implementation stories because:
+  - all three B2C plans must then prove runtime projection execution and frontend rendering from backend-shaped payloads.
 
 ## Contract Shape
 
@@ -160,6 +175,7 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
   - `plan_variant`: one of `free`, `basic` or `premium`.
   - `llm_input_selection`: stable `LLMInputSelection` profile with allowed fact groups and evidence labels.
   - `editorial_depth_profile`: stable `EditorialDepthProfile` with depth code, section budget and prediction detail level.
+  - `precision_level`: stable client-readable level for specificity, prediction granularity and caveat density.
   - `frontend_visibility_rules`: stable `FrontendVisibilityRules` with visible section codes and display hints.
   - `sections`: backend-shaped client sections filtered by visibility rules.
   - `support_elements`: client-readable support elements allowed by plan.
@@ -171,6 +187,7 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
   - `llm_input_selection`
   - `editorial_depth_profile`
   - `frontend_visibility_rules`
+  - `precision_level`
   - `sections`
   - `support_elements`
   - `calculation_scope`
@@ -210,6 +227,7 @@ The implementation must specify LLM input subsets, editorial depth profiles and 
 |---|---|---|
 | LLM input selection profile | backend projection contract or interpretation domain owner | React component policy |
 | Editorial depth profile | backend projection contract or interpretation domain owner | local UI access matrix |
+| Precision and detail profile | backend projection contract or interpretation domain owner | local UI display heuristics |
 | Frontend visibility rules | backend projection payload consumed by React | frontend entitlement table |
 | Projection execution access | CS-283 policy and backend entitlement service boundary | frontend rendering code |
 | Runtime builder behavior | `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` | API router branching |
@@ -300,8 +318,8 @@ Non-applicable examples:
 | Premium sample payload | `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/premium-sample.json` | Keep premium shaping output. |
 | Validation output | `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/validation.txt` | Keep lint and test transcript. |
 | Runtime surface guard | `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/runtime-surface-guard.txt` | Prove route neutrality. |
-| Source alignment | `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/source-alignment.md` | Prove source stakes stayed covered. |
-| Review output | `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/generated/11-code-review.md` | Keep automatic review in a separate generated file. |
+| Source alignment | `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/source-alignment.md` | Prove brief alignment. |
+| Review output | `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/generated/11-code-review.md` | Keep review evidence. |
 
 ## Allowlist / Exception Register
 
@@ -318,11 +336,15 @@ Non-applicable examples:
 Likely files:
 
 - `docs/architecture/client-interpretation-projection-v1-contract.md` - add shaping metadata contract fields.
+- `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/validation.txt` - validation transcript.
+- `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/source-alignment.md` - source alignment proof.
+
+Likely files for later implementation stories:
+
 - `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` - emit shaping metadata by plan.
 - `backend/app/services/projections/projection_endpoint_service.py` - preserve generic endpoint orchestration for shaped payloads.
 - `frontend/src/components/natal-interpretation/NatalInterpretationTypes.ts` - parse optional backend shaping metadata.
 - `frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx` - render backend-shaped visibility metadata.
-- `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/validation.txt` - validation transcript.
 - `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/runtime-surface-guard.txt` - route and OpenAPI proof.
 
 Likely tests:
@@ -355,7 +377,7 @@ Files not expected to change:
 - VC7: `python -c "import sys; sys.path.insert(0,'backend'); from app.main import app; assert app.openapi()"`
 - VC8: `python -c "import sys; sys.path.insert(0,'backend'); from app.main import app; assert any(getattr(r,'path','') == '/v1/astrology/projections' for r in app.routes)"`
 - VC9: `python -c "from pathlib import Path; assert Path('_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/validation.txt').exists()"`
-- VC10: `rg -n "LLMInputSelection|EditorialDepthProfile|FrontendVisibilityRules" docs/architecture backend/app/domain/astrology/interpretation`
+- VC10: `rg -n "LLMInputSelection|EditorialDepthProfile|FrontendVisibilityRules|precision_level" docs/architecture backend/app/domain/astrology/interpretation`
 - VC11: `rg -n "React.*entitlement|free.*basic.*premium.*policy|accepted_matrix" frontend/src`
 - VC12: `pytest -q`
 - VC13: `pnpm --dir frontend lint`
@@ -389,15 +411,21 @@ Before VC15, activate the venv with `. .\.venv\Scripts\Activate.ps1` from the re
 ## References
 
 - `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`
+- `_story_briefs/cs-320-definir-differenciation-llm-front-par-plan-b2c.md`
 - `_condamad/stories/CS-315-product-plan-matrix-signoff-natal-projections/00-story.md`
+- `_condamad/stories/CS-315-product-plan-matrix-signoff-natal-projections/generated/10-final-evidence.md`
 - `_condamad/stories/CS-317-cloturer-cs315-final-evidence-validation-runtime/00-story.md`
+- `_condamad/stories/CS-317-cloturer-cs315-final-evidence-validation-runtime/generated/10-final-evidence.md`
+- `_condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/10-final-evidence.md`
 - `docs/architecture/natal-projection-plan-matrix-product-decision.md`
 - `docs/architecture/client-interpretation-projection-v1-contract.md`
 - `docs/architecture/b2c-projection-entitlement-policy.md`
+- `backend/app/services/api_contracts/public/projections.py`
 - `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py`
 - `backend/app/services/projections/projection_endpoint_service.py`
 - `backend/tests/unit/domain/astrology/test_client_interpretation_projection_v1_builder.py`
 - `backend/tests/api/test_projection_real_conditions.py`
+- `frontend/src/features/natal-chart/NatalInterpretation.tsx`
 - `frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx`
 - `frontend/src/tests/natalInterpretation.test.tsx`
 - `frontend/src/tests/component-architecture-guards.test.ts`

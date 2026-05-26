@@ -34,6 +34,53 @@ interpretatifs issus de `AINarrativeInterpretiveSignals` sont des entrees
 pre-narratives qui orientent le texte; ils ne deviennent pas un payload
 technique public.
 
+## Contrat de shaping par plan
+
+`client_interpretation_projection_v1` expose un contrat de shaping logique avant
+toute implementation de prompt ou de rendu. Les objets ci-dessous sont les noms
+canoniques a reprendre par les futures stories backend, LLM et frontend:
+
+- `LLMInputSelection`: selection des familles de faits autorisees pour redaction.
+- `EditorialDepthProfile`: profondeur redactionnelle attendue pour le plan.
+- `FrontendVisibilityRules`: sections visibles, resumees ou masquees par plan.
+- `precision_level`: granularite client-readable de specificity, prediction et
+  densite de caveats.
+
+Le shaping ne modifie pas la disponibilite de la projection. Les calculs et
+interpretations existent pour `free`, `basic` et `premium`; seule la selection
+des faits, la richesse redactionnelle et la presentation frontend varient.
+
+| Plan | `LLMInputSelection.allowed_fact_groups` | `EditorialDepthProfile` | `precision_level` | `FrontendVisibilityRules` |
+|---|---|---|---|---|
+| `free` | `dominant_themes`, `core_strengths`, `reading_limits`, `upgrade_context` | `free_short`: texte court, une lecture principale, caveats explicites. | `orientation`: specificity faible, pas de calendrier fin. | Sections principales visibles, details avances masques, upgrade hints autorises. |
+| `basic` | `free` plus `personal_themes`, `relationship_patterns`, `current_rhythm`, `practical_guidance` | `basic_contextual`: lecture contextualisee, exemples simples, conseil pratique. | `contextual`: specificity moyenne, tendances simples. | Sections free visibles, themes et conseils visibles, analyses profondes resumees. |
+| `premium` | `basic` plus `tensions_resources`, `prediction_windows`, `nuance_arbitration`, `action_priorities` | `premium_deep`: lecture longue, nuances, arbitrages et limites detaillees. | `detailed`: specificity haute, fenetres controlees et caveats denses. | Toutes sections client autorisees visibles, avec display hints detailles. |
+
+Les `evidence_refs` autorisees dans `LLMInputSelection` restent des labels
+client-safe ou des references internes indirectes. Le payload client ne doit pas
+exposer d'IDs d'audit bruts, de traces provider, de prompt final, de graphes de
+calcul ou de preuves expert.
+
+## Owners et validations futures
+
+| Responsabilite | Owner canonique | Destination interdite |
+|---|---|---|
+| Autorisation et acces projection | `docs/architecture/b2c-projection-entitlement-policy.md` et backend service d'entitlement | Matrice locale React ou branchement UI par plan. |
+| Contrat API public | `backend/app/services/api_contracts/public/projections.py` | Nouvelle route plan-specific ou schema divergent. |
+| Builder projection client | `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py` | Router API, frontend ou prompt provider. |
+| Selection des faits LLM | owner `structured_facts_v1` plus future orchestration LLM natale | Copie complete de runtime brut dans le prompt. |
+| Rendu frontend | `frontend/src/features/natal-chart/NatalInterpretation.tsx` et composants de projection | Politique commerciale, entitlement ou matrice free/basic/premium. |
+
+Les futures validations doivent inclure:
+
+- un test backend prouvant HTTP 200 pour `client_interpretation_projection_v1`
+  avec `free`, `basic` et `premium`;
+- un test backend prouvant que le shaping differencie au moins
+  `LLMInputSelection`, `EditorialDepthProfile` ou `FrontendVisibilityRules`;
+- un guard frontend bloquant une matrice locale `free`/`basic`/`premium`;
+- un scan OpenAPI confirmant l'absence de route plan-specific pour la
+  projection.
+
 ## Matrice des sections par plan
 
 | Plan | Sections autorisees | Intention produit |

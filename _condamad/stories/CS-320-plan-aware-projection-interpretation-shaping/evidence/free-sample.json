@@ -1,0 +1,48 @@
+{
+  "projection_id": "client_interpretation_projection_v1",
+  "plan_variant": "free",
+  "llm_input_selection": {
+    "contract": "LLMInputSelection",
+    "allowed_fact_groups": [
+      "dominant_themes",
+      "core_strengths",
+      "reading_limits",
+      "upgrade_context"
+    ],
+    "evidence_refs_policy": "client_safe_labels_only"
+  },
+  "editorial_depth_profile": {
+    "contract": "EditorialDepthProfile",
+    "depth_code": "free_short",
+    "section_budget": "low",
+    "prediction_detail_level": "none"
+  },
+  "precision_level": "orientation",
+  "frontend_visibility_rules": {
+    "contract": "FrontendVisibilityRules",
+    "visible_sections": [
+      "orientation_generale",
+      "points_forts",
+      "limite_de_lecture",
+      "upgrade_hint"
+    ],
+    "summarized_sections": [],
+    "hidden_sections": [
+      "analyse_approfondie",
+      "fenetres_de_prediction",
+      "nuances_et_arbitrages"
+    ],
+    "display_hints": [
+      "short",
+      "upgrade_hint"
+    ]
+  },
+  "calculation_scope": "full_projection_available_before_shaping",
+  "excluded_surfaces": [
+    "raw_runtime",
+    "provider_payload",
+    "prompt_internals",
+    "react_access_policy",
+    "expert_proof"
+  ]
+}

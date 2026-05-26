@@ -1,0 +1,62 @@
+{
+  "projection_id": "client_interpretation_projection_v1",
+  "plan_variant": "premium",
+  "llm_input_selection": {
+    "contract": "LLMInputSelection",
+    "allowed_fact_groups": [
+      "dominant_themes",
+      "core_strengths",
+      "reading_limits",
+      "upgrade_context",
+      "personal_themes",
+      "relationship_patterns",
+      "current_rhythm",
+      "practical_guidance",
+      "tensions_resources",
+      "prediction_windows",
+      "nuance_arbitration",
+      "action_priorities"
+    ],
+    "evidence_refs_policy": "client_safe_labels_only"
+  },
+  "editorial_depth_profile": {
+    "contract": "EditorialDepthProfile",
+    "depth_code": "premium_deep",
+    "section_budget": "high",
+    "prediction_detail_level": "controlled_windows"
+  },
+  "precision_level": "detailed",
+  "frontend_visibility_rules": {
+    "contract": "FrontendVisibilityRules",
+    "visible_sections": [
+      "orientation_generale",
+      "points_forts",
+      "limite_de_lecture",
+      "upgrade_hint",
+      "themes_personnels",
+      "relations_aux_autres",
+      "rythme_actuel",
+      "conseil_pratique",
+      "analyse_approfondie",
+      "tensions_et_ressources",
+      "fenetres_de_prediction",
+      "plan_d_action",
+      "nuances_et_arbitrages"
+    ],
+    "summarized_sections": [],
+    "hidden_sections": [],
+    "display_hints": [
+      "detailed",
+      "prediction_window",
+      "caveat_dense"
+    ]
+  },
+  "calculation_scope": "full_projection_available_before_shaping",
+  "excluded_surfaces": [
+    "raw_runtime",
+    "provider_payload",
+    "prompt_internals",
+    "react_access_policy",
+    "expert_proof"
+  ]
+}
