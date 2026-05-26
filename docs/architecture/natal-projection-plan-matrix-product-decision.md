@@ -17,15 +17,22 @@ scope: `/natal`, `free`, `basic`, `premium`, `beginner_summary_v1`, `client_inte
 - `decision`: l'implementation source reste l'autorisation backend; React rend les succes et les 403 backend sans posseder de politique d'entitlement.
 - `decision`: CS-283 reste owner de la politique B2C generale; CS-315 ajoute seulement le sign-off produit `/natal`.
 - `decision`: toute divergence produit/backend devient un brief backend separe, pas une correction React locale.
-- `blocker`: aucun finding d'audit formel `F-*` ni story candidate `SC-*` n'est fourni pour CS-315; la tracabilite utilise les Evidence 1-9 de la story et les artefacts CS-309.
+- `observed`: le rapport CS-307-CS-311 recommande un brief de sign-off produit pour la matrice CS-309.
+  Source: `_condamad/reports/CS-307-CS-311-delivery-report.md`, section 11.
+- `blocker`: aucun finding d'audit formel `F-*` ni story candidate `SC-*` n'est fourni pour CS-315.
+  La tracabilite utilise le rapport consolide, les Evidence 1-9 de la story et les artefacts CS-309.
 - `open question`: le nom nominatif du product owner n'est pas fourni; le role accountable retenu est `Product Owner B2C Projections`.
 
-Highest-risk implementation dependencies: conserver la frontiere backend/frontend, ne pas deduire de nouvelle regle Stripe/pricing, et verifier les tests CS-309 avant tout changement futur.
+Highest-risk implementation dependencies:
+- conserver la frontiere backend/frontend;
+- ne pas deduire de nouvelle regle Stripe/pricing;
+- verifier les tests CS-309 avant tout changement futur.
 
 ## Audit Source Map
 
 | Audit | Scope | Closure status | Key architecture inputs | Evidence IDs | Findings used | Blockers | Deferred context | Used for |
 |---|---|---|---|---|---|---|---|---|
+| CS-307-CS-311 report | `/natal` delivery | `Partially delivered` | CS-309 sign-off brief | section 11 action 4 | product risk | CS-307 gap | deferred QA limits | trigger |
 | CS-315 story contract | Product sign-off `/natal` | `ready-to-dev`, review `CLEAN` | Owner/date, runtime source, AC1-AC7, non-goals | Evidence 1-9 | N/A | Aucun ID `F-*` fourni | Product owner name | Output contract |
 | CS-309 plan matrix after | QA matrix `/natal` | After state documented | Six rows free/basic/premium by projection | Evidence 3 | N/A | Product sign-off missing before CS-315 | None | accepted_matrix |
 | CS-309 ambiguity ledger | Product ambiguity | Limitation documented | UI is QA evidence, not entitlement decision | Evidence 4 | N/A | Commercial boundary was not signed off | None | backend/frontend boundary |
@@ -34,9 +41,13 @@ Highest-risk implementation dependencies: conserver la frontiere backend/fronten
 | Backend authorization tests | API behavior evidence | Existing test target | 403, `projection.unauthorized`, plan details | Evidence 5 | N/A | Must run for implementation evidence | None | runtime source |
 | Frontend natal tests | Rendering parity evidence | Existing test target | backend-shaped success and 403 scenarios | Evidence 6 | N/A | Must not become policy owner | None | frontend surface |
 
-Story label caveats: no audit story candidate IDs are promoted to final IDs. CS-315 is already allocated in `_condamad/stories/story-status.md`; future implementation stories below use `next-available-id` unless the tracker assigns them.
+Story label caveats: no audit story candidate IDs are promoted to final IDs.
+CS-315 is already allocated in `_condamad/stories/story-status.md`.
+Future implementation stories below use `next-available-id` unless the tracker assigns them.
 
-Missing Evidence: no `_condamad/audits/**` bundle is cited by CS-315, so there are no source `F-*`, `SC-*` or `E-*` audit IDs beyond the story Evidence 1-9 and guardrails `RG-022`, `RG-041`.
+Missing Evidence: no `_condamad/audits/**` bundle is cited by CS-315.
+There are no source `F-*`, `SC-*` or `E-*` audit IDs beyond the CS-307-CS-311 report,
+story Evidence 1-9 and guardrails `RG-022`, `RG-041`.
 
 ## Capability Matrix
 
@@ -45,7 +56,7 @@ Missing Evidence: no `_condamad/audits/**` bundle is cited by CS-315, so there a
 | `/natal` beginner summary access | `plan_code`, chart response | `ProjectionRequest`, `ProjectionResult`, `PlanCode` | `beginner_summary_v1`, `natal_projection_plan_matrix_product_decision_v1` | backend, frontend, docs | `implemented` | None observed | Evidence 3, 5, 6 |
 | `/natal` client interpretation access | `plan_code`, chart response, 403 | `ProjectionRequest`, `ProjectionResult`, `ProjectionAccessDecision` | `client_interpretation_projection_v1`, CS-283 policy | backend, frontend, docs | `partial` | Product/backend divergence must be briefed | Evidence 3, 4, 7 |
 | Mixed success plus 403 rendering | backend success and forbidden responses | `FrontendProjectionState`, `UpgradeState` | backend-shaped response contract | frontend | `implemented` | No React entitlement table allowed | Evidence 3, 4, 6 |
-| Product divergence handling | product decision vs backend behavior | `DivergenceRecord` | `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md` | docs, backlog | `implicit` | Needs brief if mismatch appears | Evidence 4, story AC5 |
+| Product divergence handling | product vs backend behavior | `DivergenceRecord` | follow-up backend brief | docs, backlog | `implicit` | Brief mismatch | report, Evidence 4, AC5 |
 | Entitlement ownership routing | plan vocabulary, projection IDs | `B2CProjectionEntitlementPolicy` | `b2c_projection_entitlement_policy` | docs, backend | `implemented` | CS-315 must not replace CS-283 | Evidence 7, 8 |
 
 accepted_matrix:
@@ -119,7 +130,7 @@ Owner: `docs/architecture/b2c-projection-entitlement-policy.md`
 | Replay | Replays must use backend authorization state, not React fixtures. | test replay, QA | backend behavior or fixture shape drift | backend test target and fixture target | QA/backend owners | Evidence 5, 6 |
 | Invalidation | Product/backend mismatch invalidates local acceptance and creates backend brief. | roadmap and docs | observed mismatch between matrix and backend tests | divergence brief path | Product and backend owners | story AC5 |
 | Migration | No DB, Stripe, pricing, checkout or subscription migration is authorized by CS-315. | implementation scope | any requested runtime policy change | git/app surface status | Architecture owner | story non-goals |
-| Observability | Persist validation and source-alignment evidence for CS-315. | evidence folder | missing validation transcript | validation.txt, source-alignment.md | CONDAMAD reviewer | AC7, RG-022 |
+| Observability | Persist CS-315 evidence. | evidence folder | missing trace | evidence files | CONDAMAD reviewer | AC7, RG-022, report |
 
 ## Blockers And Decision Owners
 
@@ -139,8 +150,8 @@ Owner: `docs/architecture/b2c-projection-entitlement-policy.md`
 Story ID: `CS-315`
 Source label: CS-315 story
 Goal: keep the product matrix decision, validation transcript and source alignment evidence.
-Source audits: CS-315 story, CS-309 evidence, CS-283 policy.
-Source findings: Evidence 1-9, RG-022, RG-041.
+Source audits: CS-307-CS-311 delivery report, CS-315 story, CS-309 evidence, CS-283 policy.
+Source findings: report section 11 action 4, Evidence 1-9, RG-022, RG-041.
 Scope: this document, `validation.txt`, `source-alignment.md`.
 Out of scope: backend, frontend, DB, Stripe, pricing, checkout, subscription.
 Dependencies: none.
@@ -219,7 +230,7 @@ Stop condition: drift guard exists or is explicitly declined.
 
 | Question | Why it matters | Owner | Blocks | Suggested default | Sources |
 |---|---|---|---|---|---|
-| Who is the named product owner behind the role? | reviewer accountability | Product Owner B2C Projections | nominative sign-off | keep role until tracker supplies name | CS-315 story |
+| Who is the named product owner behind the role? | reviewer accountability | Product Owner B2C Projections | nominative sign-off | keep role until tracker supplies name | CS-315 story, report action 4 |
 | Should CS-283 minimum plan text be narrowed for `/natal` client interpretation? | CS-283 currently describes broader plan-aware depth | Product + backend owners | policy harmonization | do not edit CS-283 in CS-315 | Evidence 7 |
 | Should the React drift guard become global? | current guard is story-local registry gap | Architecture owner | future regression prevention | create next story only after CS-315 acceptance | RG-022, RG-041 |
 

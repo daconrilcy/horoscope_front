@@ -15,4 +15,11 @@ Controls planned by the story and report:
 - Backend pytest and frontend vitest remain required runtime parity checks before any behavior handoff.
 
 Runtime validation note:
-- This session produced the architecture/product report only. Backend pytest and frontend vitest are listed as validation plan items and were not needed to write code because no runtime code changed.
+- This session produced the architecture/product report only.
+- Backend pytest and frontend vitest are listed as validation plan items.
+- They were not needed to write code because no runtime code changed.
+
+Fresh review correction:
+- PASS: the report now traces `_condamad/reports/CS-307-CS-311-delivery-report.md`.
+- PASS: that report is recorded as the consolidated source recommending the CS-315 product sign-off brief.
+- PASS: source alignment evidence now records the corrected source coverage and a fresh story/report review verdict.
