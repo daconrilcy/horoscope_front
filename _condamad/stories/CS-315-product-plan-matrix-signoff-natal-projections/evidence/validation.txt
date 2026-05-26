@@ -1,25 +1,34 @@
-CS-315 product architecture validation
-date: 2026-05-26
+CS-315 closure validation transcript
 
-Resume:
-- Report created at docs/architecture/natal-projection-plan-matrix-product-decision.md.
-- Source alignment evidence created at _condamad/stories/CS-315-product-plan-matrix-signoff-natal-projections/evidence/source-alignment.md.
-- No backend, frontend, DB, migration, Stripe, pricing, checkout or subscription source files were modified.
+Validated at: 2026-05-26
 
-Controls planned by the story and report:
-- PASS: `rg -n "decision_id|decision_date|owner|accepted_matrix" docs/architecture/natal-projection-plan-matrix-product-decision.md`.
-- PASS: `rg -n "implementation_source|frontend_policy|backend authorization" docs/architecture/natal-projection-plan-matrix-product-decision.md`.
-- PASS: `rg -n "beginner_summary_v1|client_interpretation_projection_v1|free|basic|premium" docs/architecture/natal-projection-plan-matrix-product-decision.md`.
-- PASS: `Test-Path` for `validation.txt` and `source-alignment.md`.
-- PASS: targeted `git status --short -- docs/architecture/... evidence ... backend/app frontend/src backend/migrations` showed only the new report and evidence folder.
-- Backend pytest and frontend vitest remain required runtime parity checks before any behavior handoff.
+Commentaire global: ce transcript ferme CS-315 avec preuves runtime tout en routant la divergence produit/backend hors de React.
 
-Runtime validation note:
-- This session produced the architecture/product report only.
-- Backend pytest and frontend vitest are listed as validation plan items.
-- They were not needed to write code because no runtime code changed.
+Commands:
 
-Fresh review correction:
-- PASS: the report now traces `_condamad/reports/CS-307-CS-311-delivery-report.md`.
-- PASS: that report is recorded as the consolidated source recommending the CS-315 product sign-off brief.
-- PASS: source alignment evidence now records the corrected source coverage and a fresh story/report review verdict.
+- . .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests\api\test_projection_authorization.py tests\api\test_projection_endpoint.py --tb=short
+  Result: PASS; 5 passed in 2.79s.
+- . .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -c "from app.main import app; schema = app.openapi(); paths = sorted(schema.get('paths', {})); routes = sorted({getattr(r, 'path', '') for r in app.routes if getattr(r, 'path', '')}); assert schema; assert routes; assert '/v1/astrology/projections' in paths; print('openapi_paths=', len(paths)); print('routes=', len(routes)); print('projection_path_present=', '/v1/astrology/projections' in paths)"
+  Result: PASS; openapi_paths=201; routes=205; projection_path_present=True.
+- pnpm --dir frontend lint
+  Result: PASS; tsc --noEmit passed for tsconfig.lint.json and tsconfig.node.json.
+- pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi
+  Result: PASS; 4 test files passed, 123 tests passed; JSON report written to frontend/logs/vite/vitest-report.json.
+- . .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py --tb=short
+  Result: PASS; 9 passed in 2.66s. This exposes the product/backend divergence routed below.
+- rg -n "free.*basic.*premium|accepted_matrix|entitlement matrix" frontend/src
+  Result: PASS_WITH_LIMITATIONS; matches are existing plan-code types/tests and the admin API-owned entitlement page test, not a local `/natal` authorization matrix.
+- rg -n "accepted_matrix|frontend_policy|implementation_source|natal_projection_plan_matrix|beginner_summary_v1.*client_interpretation_projection_v1|client_interpretation_projection_v1.*beginner_summary_v1" frontend/src
+  Result: PASS_WITH_LIMITATIONS; only projection type rendering references were found, no CS-315 matrix policy owner in React.
+- rg -n "decision_id|decision_date|owner|accepted_matrix|implementation_source|frontend_policy" docs/architecture/natal-projection-plan-matrix-product-decision.md
+  Result: PASS; required decision and ownership fields are present.
+- . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-315-product-plan-matrix-signoff-natal-projections
+  Result: PASS; required generated capsule files repaired without rewriting the story.
+- . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-315-product-plan-matrix-signoff-natal-projections
+  Result: PASS.
+
+Divergence routing:
+
+- Created `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`.
+- The backend currently accepts `client_interpretation_projection_v1` for `free`, `basic` and `premium`; CS-315 product decision expects premium-only visibility.
+- No backend, frontend, DB, migration, pricing, Stripe, checkout, subscription or generated client files were modified.

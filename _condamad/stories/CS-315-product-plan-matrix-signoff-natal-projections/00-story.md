@@ -1,5 +1,5 @@
 # Story CS-315 product-plan-matrix-signoff-natal-projections: Validate Natal Projection Product Plan Matrix
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
