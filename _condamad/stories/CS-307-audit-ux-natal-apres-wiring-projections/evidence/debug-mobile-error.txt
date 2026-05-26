@@ -1,0 +1,134 @@
+Astrorizon
+?
+Aujourd'hui
+Chat
+Thème
+Consultations
+Astrologues
+THÈME NATAL
+Thème natal complet
+
+Interprétation actuelle par Luna Celeste
+
+OBTENIR LE THÈME NATAL COMPLET
+Généré le 26 mai 2026, 11:20
+·
+cs307-browser
+·
+Système de maisons Maisons égales
+Profil astrologique
+SIGNE SOLAIRE
+Bélier
+ASCENDANT
+Gémeaux
+Planètes
+
+Les positions clés de vos planètes, avec leur signe, leur maison et leur longitude de référence.
+
+Maisons
+
+Les douze maisons structurent les domaines de vie. Chaque cuspide marque l'ouverture d'un secteur du thème.
+
+Les aspects
+
+Les aspects décrivent les liens majeurs entre deux planètes. Les valeurs ci-dessous indiquent l'angle théorique et la précision observée.
+
+Aucun aspect majeur détecté pour ce calcul.
+
+JSON PUBLIC
+Panneau expert natal
+
+Faits techniques fournis par l'API publique du theme natal. Les blocs absents restent indiques comme indisponibles.
+
+Ancien payload ou projection partielle: aucun bloc expert avance n'est present.
+
+Secte du theme
+
+Bloc absent ou vide dans le payload public.
+
+Condition de secte par planete
+
+Bloc absent ou vide dans le payload public.
+
+Contrats traditionnels
+
+Bloc absent ou vide dans le payload public.
+
+Conditions avancees
+
+Bloc absent ou vide dans le payload public.
+
+Scores de dignite
+
+Bloc absent ou vide dans le payload public.
+
+Profils conditionnels
+
+Bloc absent ou vide dans le payload public.
+
+Signaux conditionnels
+
+Bloc absent ou vide dans le payload public.
+
+Planetes dominantes
+
+Dominantes indisponibles dans ce payload.
+
+Adaptateur interpretatif factuel
+
+Adaptateur indisponible dans ce payload.
+
+Comment lire ton thème natal
+Interprétation de votre thème
+OBTENIR LE THÈME NATAL COMPLET
+EXPORTS PDF
+Style
+default_natal
+Actions PDF
+Complet
+Votre theme natal garde une lecture claire.
+
+Interprétation par Luna Celeste
+
+Synthese CS-307 controlee pour auditer la page /natal.
+
+Points clés
+
+Elan visible
+
+Repere stable
+
+Conseils
+
+Conseils
+
+Ce que j’ai utilisé pour écrire cette interprétation
+
+Transparence : voici les éléments utilisés pour générer ce texte.
+
+1 élément dédupliqué
+
+Masquer le panneau d’audit
+
+AUTRES REPÈRES
+
+fixture navigateur CS-307
+
+Lectures publiques du thème
+
+Deux niveaux de lecture disponibles
+
+Préparation des lectures du thème...
+
+MENTIONS LÉGALES
+
+Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.
+
+Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.
+
+Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre.
+
+Aujourd'hui
+Chat
+Thème
+Consultations

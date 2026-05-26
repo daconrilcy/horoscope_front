@@ -1,0 +1,16 @@
+CS-307 validation log
+Date: 2026-05-26
+
+PASS repo root: node _condamad\stories\CS-307-audit-ux-natal-apres-wiring-projections\evidence\cs307-ux-audit.mjs
+PASS frontend: node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage
+PASS frontend: node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards NatalChartPage natalChartApi
+PASS repo root: rg -n "style=" frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/pages -g "*.tsx" returned no matches
+PASS repo root: rg -n "fetch\(.*/v1/astrology/projections|axios\(.*/v1/astrology/projections" frontend/src returned no matches
+PASS repo root: rg -n "legalNoticeLines|disclaimerTitle" frontend/src/components/natal-interpretation frontend/src/i18n frontend/src/tests
+PASS frontend: pnpm lint
+PASS frontend: node .\scripts\run-vite-logged.mjs vitest vitest run
+PASS frontend: pnpm test -- design-system theme-tokens legacy-style
+PASS repo root: rg -n -- "--default_dropshadow|migration-only" frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/pages frontend/src/styles found only registry/documentation hits
+PASS repo root: git diff --check
+
+No skipped validation.

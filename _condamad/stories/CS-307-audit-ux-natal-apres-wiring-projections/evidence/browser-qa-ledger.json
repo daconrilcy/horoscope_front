@@ -1,0 +1,628 @@
+{
+  "audit_date": "2026-05-26",
+  "route": "/natal",
+  "command": "node evidence/cs307-ux-audit.mjs",
+  "result": "pass",
+  "entries": [
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "desktop",
+      "state": "success",
+      "finding": "Projection hierarchy and disclaimer remain visible without critical overlap.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-desktop.png",
+      "result": "pass",
+      "checks": {
+        "no_primary_control_overlap": true,
+        "no_disclaimer_overlap": true,
+        "controls_overlap_boxes": {
+          "first": {
+            "x": 82,
+            "y": 2435.546875,
+            "width": 760,
+            "height": 190.5
+          },
+          "second": {
+            "x": 82,
+            "y": 3586.890625,
+            "width": 1202,
+            "height": 536.921875
+          }
+        },
+        "disclaimer_overlap_boxes": {
+          "first": {
+            "x": 82,
+            "y": 3586.890625,
+            "width": 1202,
+            "height": 536.921875
+          },
+          "second": {
+            "x": 82,
+            "y": 4155.8125,
+            "width": 1202,
+            "height": 166
+          }
+        },
+        "visible_text_excerpt": "Lectures publiques du thème\n\nDeux niveaux de lecture disponibles\nRésumé découverte\n\nUne vue simple pour comprendre les repères principaux du thème.\n\nv1\nResume debutant visible et scannable dans le navigateur CS-307.\nPoint solaire clair\nRythme personnel concret\nInterprétation client\n\nUne lecture plus suivie qui relie les éléments du thème en langage clair.\n\nv1\nProjection client lisible\n\nLa lecture client relie les signaux sans chevaucher les controles ou les mentions legales.\n\nSupport public cont",
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/reference-data/languages",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/settings",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/auth/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/natal-chart/latest",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/entitlements/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/pdf-templates",
+            "postData": null
+          },
+          {
+            "method": "POST",
+            "path": "/v1/natal/interpretation",
+            "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          }
+        ]
+      }
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "tablet",
+      "state": "success",
+      "finding": "Projection hierarchy and disclaimer remain visible without critical overlap.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-tablet.png",
+      "result": "pass",
+      "checks": {
+        "no_primary_control_overlap": true,
+        "no_disclaimer_overlap": true,
+        "controls_overlap_boxes": {
+          "first": {
+            "x": 82,
+            "y": 2527.921875,
+            "width": 656,
+            "height": 190.5
+          },
+          "second": {
+            "x": 82,
+            "y": 3679.265625,
+            "width": 656,
+            "height": 560.921875
+          }
+        },
+        "disclaimer_overlap_boxes": {
+          "first": {
+            "x": 82,
+            "y": 3679.265625,
+            "width": 656,
+            "height": 560.921875
+          },
+          "second": {
+            "x": 82,
+            "y": 4272.1875,
+            "width": 656,
+            "height": 205
+          }
+        },
+        "visible_text_excerpt": "Lectures publiques du thème\n\nDeux niveaux de lecture disponibles\nRésumé découverte\n\nUne vue simple pour comprendre les repères principaux du thème.\n\nv1\nResume debutant visible et scannable dans le navigateur CS-307.\nPoint solaire clair\nRythme personnel concret\nInterprétation client\n\nUne lecture plus suivie qui relie les éléments du thème en langage clair.\n\nv1\nProjection client lisible\n\nLa lecture client relie les signaux sans chevaucher les controles ou les mentions legales.\n\nSupport public cont",
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/reference-data/languages",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/settings",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/auth/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/natal-chart/latest",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/entitlements/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/pdf-templates",
+            "postData": null
+          },
+          {
+            "method": "POST",
+            "path": "/v1/natal/interpretation",
+            "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          }
+        ]
+      }
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "mobile",
+      "state": "success",
+      "finding": "Projection hierarchy and disclaimer remain visible without critical overlap.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-mobile.png",
+      "result": "pass",
+      "checks": {
+        "no_primary_control_overlap": true,
+        "no_disclaimer_overlap": true,
+        "controls_overlap_boxes": {
+          "first": {
+            "x": 44,
+            "y": 3259.359375,
+            "width": 302,
+            "height": 240.5
+          },
+          "second": {
+            "x": 44,
+            "y": 4659.046875,
+            "width": 302,
+            "height": 767.921875
+          }
+        },
+        "disclaimer_overlap_boxes": {
+          "first": {
+            "x": 44,
+            "y": 4659.046875,
+            "width": 302,
+            "height": 767.921875
+          },
+          "second": {
+            "x": 44,
+            "y": 5458.96875,
+            "width": 302,
+            "height": 302.5
+          }
+        },
+        "visible_text_excerpt": "Lectures publiques du thème\n\nDeux niveaux de lecture disponibles\nRésumé découverte\n\nUne vue simple pour comprendre les repères principaux du thème.\n\nv1\nResume debutant visible et scannable dans le navigateur CS-307.\nPoint solaire clair\nRythme personnel concret\nInterprétation client\n\nUne lecture plus suivie qui relie les éléments du thème en langage clair.\n\nv1\nProjection client lisible\n\nLa lecture client relie les signaux sans chevaucher les controles ou les mentions legales.\n\nSupport public cont",
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/reference-data/languages",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/settings",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/auth/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/natal-chart/latest",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/entitlements/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/pdf-templates",
+            "postData": null
+          },
+          {
+            "method": "POST",
+            "path": "/v1/natal/interpretation",
+            "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          }
+        ]
+      }
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "mobile",
+      "state": "degraded",
+      "finding": "degraded state remains understandable in the projection panel.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-mobile-degraded.png",
+      "result": "pass",
+      "checks": {
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/reference-data/languages",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/settings",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/auth/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/natal-chart/latest",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/entitlements/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/pdf-templates",
+            "postData": null
+          },
+          {
+            "method": "POST",
+            "path": "/v1/natal/interpretation",
+            "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          }
+        ]
+      }
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "mobile",
+      "state": "entitlement",
+      "finding": "entitlement state remains understandable in the projection panel.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-mobile-entitlement.png",
+      "result": "pass",
+      "checks": {
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/reference-data/languages",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/settings",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/auth/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/natal-chart/latest",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/entitlements/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/pdf-templates",
+            "postData": null
+          },
+          {
+            "method": "POST",
+            "path": "/v1/natal/interpretation",
+            "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          }
+        ]
+      }
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "mobile",
+      "state": "error",
+      "finding": "error state remains understandable in the projection panel.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-mobile-error.png",
+      "result": "pass",
+      "checks": {
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/reference-data/languages",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/settings",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/auth/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/natal-chart/latest",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/entitlements/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/pdf-templates",
+            "postData": null
+          },
+          {
+            "method": "POST",
+            "path": "/v1/natal/interpretation",
+            "postData": "{\"use_case_level\":\"short\",\"persona_id\":null,\"locale\":\"fr-FR\",\"force_refresh\":false,\"module\":null}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"beginner_summary_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "POST",
+            "path": "/v1/astrology/projections",
+            "postData": "{\"chart_id\":\"chart-cs307\",\"projection_type\":\"client_interpretation_projection_v1\",\"projection_version\":\"v1\",\"persist\":false}"
+          },
+          {
+            "method": "GET",
+            "path": "/v1/natal/interpretations",
+            "postData": null
+          }
+        ]
+      }
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "mobile",
+      "state": "empty",
+      "finding": "empty state remains understandable in the projection panel.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-mobile-empty.png",
+      "result": "pass",
+      "checks": {
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/reference-data/languages",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/settings",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/auth/me",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/users/me/natal-chart/latest",
+            "postData": null
+          },
+          {
+            "method": "GET",
+            "path": "/v1/entitlements/me",
+            "postData": null
+          }
+        ]
+      }
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "not-browser",
+      "state": "loading",
+      "finding": "Loading state remains covered by targeted Vitest while browser script verifies rendered page states.",
+      "decision": "acceptable",
+      "evidence_path": "frontend/src/tests/natalInterpretation.test.tsx",
+      "result": "pass",
+      "validation_command": "node .\\scripts\\run-vite-logged.mjs vitest vitest run natalInterpretation"
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "viewport": "desktop/tablet/mobile",
+      "state": "disclaimer",
+      "finding": "App-owned legal disclaimer is visible below projections and does not overlap the projection panel.",
+      "decision": "acceptable",
+      "evidence_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-qa.md",
+      "result": "pass",
+      "screenshot_path": "_condamad/stories/CS-307-audit-ux-natal-apres-wiring-projections/evidence/browser-screenshots/browser-desktop.png"
+    }
+  ]
+}
