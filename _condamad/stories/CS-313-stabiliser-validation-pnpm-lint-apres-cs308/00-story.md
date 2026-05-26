@@ -1,5 +1,5 @@
 # Story CS-313 stabiliser-validation-pnpm-lint-apres-cs308: Stabilize pnpm lint Validation After CS-308
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -102,14 +102,14 @@ The story closes only when the final evidence cites the cause, command, result, 
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect the CS-308 final evidence, CS-308 validation log, `frontend/package.json`, lockfile state, and AGENTS rules. (AC: AC1)
-- [ ] Task 2: Run `pnpm lint` from `frontend` and persist the fresh output in the CS-313 evidence directory. (AC: AC1)
-- [ ] Task 3: Classify the EPERM cause using bounded lockfile, process, script, and local repository evidence. (AC: AC2)
-- [ ] Task 4: Correct a proven repository-owned blocker with the smallest coherent delta. (AC: AC2, AC3)
-- [ ] Task 5: Document the official Windows fallback command path only when the cause is environmental. (AC: AC3)
-- [ ] Task 6: Run both local TypeScript no-emit commands from `frontend` and persist their output. (AC: AC4, AC5)
-- [ ] Task 7: Verify package manager and application-source boundaries with targeted scans and `git diff --name-only`. (AC: AC6, AC7)
-- [ ] Task 8: Update CS-308 evidence or create the CS-313 final validation report with cause, command, result, and risk. (AC: AC8)
+- [x] Task 1: Inspect the CS-308 final evidence, CS-308 validation log, `frontend/package.json`, lockfile state, and AGENTS rules. (AC: AC1)
+- [x] Task 2: Run `pnpm lint` from `frontend` and persist the fresh output in the CS-313 evidence directory. (AC: AC1)
+- [x] Task 3: Classify the EPERM cause using bounded lockfile, process, script, and local repository evidence. (AC: AC2)
+- [x] Task 4: Correct a proven repository-owned blocker with the smallest coherent delta. (AC: AC2, AC3)
+- [x] Task 5: Document the official Windows fallback command path only when the cause is environmental. (AC: AC3)
+- [x] Task 6: Run both local TypeScript no-emit commands from `frontend` and persist their output. (AC: AC4, AC5)
+- [x] Task 7: Verify package manager and application-source boundaries with targeted scans and `git diff --name-only`. (AC: AC6, AC7)
+- [x] Task 8: Update CS-308 evidence or create the CS-313 final validation report with cause, command, result, and risk. (AC: AC8)
 
 ## Files to Inspect First
 

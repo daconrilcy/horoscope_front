@@ -1,4 +1,4 @@
-# Editorial Review - CS-313 stabiliser-validation-pnpm-lint-apres-cs308
+# Implementation Review - CS-313 stabiliser-validation-pnpm-lint-apres-cs308
 
 Verdict: CLEAN
 
@@ -7,32 +7,60 @@ Verdict: CLEAN
 - Story reviewed: `_condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/00-story.md`
 - Source brief: `_story_briefs/cs-313-stabiliser-validation-pnpm-lint-apres-cs308.md`
 - Tracker row: `_condamad/stories/story-status.md` entry `CS-313`
-- Guardrails checked by targeted ID lookup only: `RG-047`, `RG-052`
+- Implementation evidence:
+  - `evidence/pnpm-lint-before.txt`
+  - `evidence/pnpm-lint-after.txt`
+  - `evidence/typescript-lint.txt`
+  - `evidence/cause-ledger.md`
+  - `evidence/validation.txt`
+  - `generated/10-final-evidence.md`
 
-## Review Result
+## Findings
 
-No actionable drafting issue remains.
+No actionable implementation issue remains.
 
-The story explicitly covers the brief primitives: fresh `pnpm lint` reproduction, Windows EPERM cause classification, local-only correction
-when repository-owned, official local-binary fallback when environmental, TypeScript command validation, package-manager boundary, and final
-evidence with cause, command, result, and residual risk.
+Resolved in this review cycle:
+
+- Closure metadata drift: `00-story.md` still used `ready-to-dev` and unchecked implementation tasks after implementation evidence was present.
+- Review artifact drift: this file still described the pre-implementation drafting review instead of the final implementation review.
+- Traceability wording drift: AC8 still said final evidence was pending even though the implementation evidence exists.
+
+## Acceptance Criteria Review
+
+| AC | Verdict | Evidence |
+|---|---|---|
+| AC1 | PASS | Fresh `pnpm lint` state is captured in `evidence/pnpm-lint-before.txt`. |
+| AC2 | PASS | `evidence/cause-ledger.md` classifies the CS-308 EPERM as a resolved Windows-environment blocker. |
+| AC3 | PASS | `pnpm lint` is the final passing path; `evidence/pnpm-lint-after.txt` records the final run. |
+| AC4 | PASS | `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.lint.json` exits 0. |
+| AC5 | PASS | `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.node.json` exits 0. |
+| AC6 | PASS | Changed-files evidence records no application source changes. |
+| AC7 | PASS | Package-manager drift scan leaves only story evidence self-references; frontend docs use pnpm for lint. |
+| AC8 | PASS | Final validation evidence is persisted in `evidence/validation.txt` and generated capsule evidence. |
 
 ## Validation Evidence
 
-- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md`: PASS
-- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md`: PASS
+Fresh validation commands run during this review:
 
-Both commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+- `pnpm lint` from `frontend`: PASS
+- `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.lint.json` from `frontend`: PASS
+- `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.node.json` from `frontend`: PASS
+- `rg -n "npm run lint|yarn lint|bun lint" frontend _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308`: PASS
+- `git diff --name-only -- frontend _condamad`: PASS before review metadata edits; no frontend application source was dirty.
+- `condamad_validate.py _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308`: PASS after venv activation.
+- `condamad_story_validate.py _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md`: PASS after venv activation.
+- `condamad_story_lint.py --strict _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md`: PASS after venv activation.
 
-## Produced Artifacts
+## Guardrails
 
-- This review artifact: `_condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/11-code-review.md`
+- RG-047: no TSX file changed; style scan evidence remains scoped to existing matches.
+- RG-052: no CSS file changed; migration-only scan evidence remains scoped to existing guard artifacts.
+- Package-manager boundary: no npm, yarn, or bun lint command was introduced outside story evidence self-references.
 
 ## Propagation Decision
 
-No propagation. The review produced only local clean-review evidence and did not reveal reusable learning requiring guardrail, AGENTS, or skill updates.
+No propagation. The review corrections are local closure metadata and review evidence updates.
 
 ## Residual Risk
 
-Implementation may still discover that `pnpm lint` remains blocked by local Windows EPERM behavior. The drafted story already requires a fresh
-reproduction, cause classification, and an auditable fallback or fix before closure.
+Windows EPERM can recur if another process locks pnpm internal files; the standard `pnpm lint` path is currently passing and no fallback is used.
