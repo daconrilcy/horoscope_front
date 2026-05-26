@@ -95,3 +95,4 @@
 | cs-314 | `_story_briefs\cs-314-capturer-pack-screenshots-profils-natal-cs310.md` | `_condamad\stories\cs-314-capturer-pack-screenshots-profils-natal-cs310\00-story.md` |
 | cs-315 | `_story_briefs\cs-315-faire-valider-matrice-produit-plans-projections-natal.md` | `_condamad\stories\cs-315-product-plan-matrix-signoff-natal-projections\00-story.md` |
 | cs-316 | `_story_briefs\cs-316-verifier-ingestion-analytics-runtime-projections-natal.md` | `_condamad\stories\cs-316-verifier-ingestion-analytics-runtime-projections-natal\00-story.md` |
+| cs-317 | `_story_briefs\cs-317-cloturer-cs315-final-evidence-validation-runtime.md` | `_condamad\stories\cs-317-cloturer-cs315-final-evidence-validation-runtime\00-story.md` |
