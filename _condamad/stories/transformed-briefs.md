@@ -101,3 +101,4 @@
 | cs-319 | `_story_briefs\cs-319-ajouter-garde-react-entitlement-matrix-natal.md` | `_condamad\stories\cs-319-natal-react-entitlement-matrix-guard\00-story.md` |
 | cs-320 | `_story_briefs\cs-320-definir-differenciation-llm-front-par-plan-b2c.md` | `_condamad\stories\cs-320-plan-aware-projection-interpretation-shaping\00-story.md` |
 | cs-321 | `_story_briefs\cs-321-preparer-integration-plausible-analytics.md` | `_condamad\stories\cs-321-preparer-integration-plausible-analytics\00-story.md` |
+| cs-322 | `_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md` | `_condamad\stories\cs-322-rapports-evidence-plan-plausible-reconciliation\00-story.md` |
