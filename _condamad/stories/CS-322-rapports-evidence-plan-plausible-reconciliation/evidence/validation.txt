@@ -1,0 +1,11 @@
+CS-322 validation transcript
+VC2 active-target stale scan excluding immutable CS-322 source brief: PASS (rg exit 1, no matches)
+VC3/VC4/VC5/VC6 wording scans: PASS (expected current decision/provider terms found)
+VC8 git diff --check: PASS with line-ending warnings only
+_condamad/reports/CS-312-CS-316-delivery-report.md
+Runtime diff backend/frontend/shared: PASS (no paths)
+VC7 journal existence: PASS
+VC10 ruff check .: PASS
+VC11 python -B -m pytest -q --tb=short: PASS (3316 passed, 1 skipped, 1216 deselected)
+Cache cleanup: removed known pytest/ruff cache directories when present
+Final capsule validation: PASS

@@ -42,8 +42,8 @@
 | AC6 | React has no local matrix policy. | No frontend source changes; targeted scans classify broad matches as existing type/test false positives. | PASS_WITH_LIMITATIONS | |
 | AC7 | CS-315 status aligned. | Python status check PASS; story and tracker set `done`. | PASS | |
 | AC8 | Capsule validation passes. | CS-315 validation PASS; CS-317 validation run after final evidence update. | PASS | |
-| AC9 | Divergence routed separately. | `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md` created. | PASS | Backend currently accepts all B2C plans for `client_interpretation_projection_v1`. |
-| AC10 | Delivery report gap removed. | Report updated to `Delivered with routed backend follow-up`. | PASS | |
+| AC9 | Differentiation routed separately. | `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md` now archives the route to CS-320. | PASS | Backend currently accepts all B2C plans for `client_interpretation_projection_v1`. |
+| AC10 | Delivery report gap removed. | Report updated for repository delivery evidence; CS-320 now owns plan-aware LLM/front differentiation. | PASS | |
 
 ## Files changed
 
@@ -106,7 +106,7 @@
 
 ## Remaining risks
 
-- Backend/product divergence remains open for owner decision: backend accepts `client_interpretation_projection_v1` for `free`, `basic` and `premium`; CS-315 product decision expects premium-only visibility.
+- No backend entitlement divergence remains after the current product decision: backend accepts `client_interpretation_projection_v1` for `free`, `basic` and `premium`; CS-320 owns the plan-aware LLM/front differentiation contract.
 
 ## Final review result
 

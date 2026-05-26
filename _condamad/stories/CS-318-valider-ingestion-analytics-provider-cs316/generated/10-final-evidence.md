@@ -79,7 +79,7 @@
 
 ## Commands skipped or blocked
 
-- External Plausible/Matomo dashboard observation: BLOCKED because no authorized observable provider environment was available in this execution.
+- External Plausible dashboard observation: BLOCKED because no authorized observable Plausible environment was available in this execution; Matomo is not currently used.
 - Backend tests/ruff: skipped because no backend or Python application file changed.
 - Local dev-server startup: skipped because no runtime application source changed.
 
@@ -106,7 +106,7 @@
 
 ## Remaining risks
 
-- Real provider ingestion remains unproven until a staging or production Plausible/Matomo environment is accessible to QA/business owners.
+- Real Plausible ingestion remains unproven until a staging or production Plausible environment is accessible to QA/business owners; Matomo removal is routed separately.
 
 ## Suggested reviewer focus
 

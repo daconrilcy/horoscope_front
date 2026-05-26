@@ -1,0 +1,10 @@
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:5:Mettre à jour les rapports et artefacts de clôture qui parlent encore d'une divergence backend/produit premium-only ou d'une cible Plausible/Matomo, alors que les décisions récentes sont désormais : tous les plans calculent/interprètent, la différenciation se fait LLM/front, et Plausible est la cible analytics de préparation.
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:18:- `Delivered with routed backend follow-up`
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:19:- `product/backend divergence`
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:20:- `premium-only`
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:21:- `Plausible/Matomo`
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:22:- `provider dashboard blocked`
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:42:1. Mettre à jour le rapport CS-312-CS-316 pour retirer l'ancienne notion de divergence backend/produit premium-only.
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:43:2. Remplacer les mentions Plausible/Matomo par Plausible-first lorsque le contexte parle de suite produit.
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:64:4. Les mentions Plausible/Matomo sont clarifiées : Plausible est la cible, Matomo n'est pas utilisé.
+_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md:73:rg -n "premium-only|refus.*free|refus.*basic|routed backend follow-up|product/backend divergence|Plausible/Matomo" _condamad/reports docs/architecture _story_briefs

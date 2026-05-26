@@ -19,9 +19,9 @@ CS-312, CS-313 and CS-314 are `Delivered`: each has final evidence, clean review
 
 CS-316 is repository-complete but depends on external provider verification: local runtime config is `noop`, so real analytics ingestion remains externally required. Its delivery status is `Requires business/QA validation`.
 
-CS-315 is closed by CS-317 evidence: final evidence and implementation review exist, backend/frontend runtime checks pass, and the current product decision keeps `client_interpretation_projection_v1` available for `free`, `basic` and `premium`. Commercial differentiation is now routed to CS-320 for LLM/front shaping.
+CS-315 is closed by CS-317 evidence: final evidence and implementation review exist, backend/frontend runtime checks pass, and the remaining product/backend mismatch is routed to `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`. Its delivery status is `Delivered with routed backend follow-up`.
 
-Final initiative status: `Delivered with repository evidence complete; CS-316 still needs external Plausible observation`.
+Final initiative status: `Delivered with routed backend follow-up`.
 
 ## 2. Initial context and trigger
 
@@ -52,7 +52,7 @@ The initial trigger is `_condamad/reports/CS-307-CS-311-delivery-report.md`, whi
 | CS-312 | CS-307 UX audit artifacts, screenshots, no-overlap proof, state/disclaimer visibility, tracker closure. | `_condamad/reports/CS-307-CS-311-delivery-report.md` action 1 | CS-307 `evidence/ux-audit-before.md`, `ux-audit-after.md`, `browser-qa.md`, `browser-screenshots/`, CS-307 `generated/10-final-evidence.md`; CS-312 final evidence. | `pnpm lint` PASS; targeted Vitest 108 PASS; architecture guard 91 PASS; full Vitest 1276 PASS; capsule validation PASS. | Delivered |
 | CS-313 | Standard `pnpm lint` closure path restored and CS-308 EPERM classified. | `_condamad/reports/CS-307-CS-311-delivery-report.md` action 2 | `frontend/README.md`, `evidence/pnpm-lint-before.txt`, `pnpm-lint-after.txt`, `typescript-lint.txt`, `cause-ledger.md`. | `pnpm lint` PASS; both `tsc.CMD` lint projects PASS; package-manager drift scans PASS; capsule/story validation PASS. | Delivered |
 | CS-314 | Fresh browser screenshot pack for five CS-310 profiles and QA ledger closure. | `_condamad/reports/CS-307-CS-311-delivery-report.md` action 3 | `evidence/screenshots/*.png`, `screenshot-ledger.json`, `anomaly-ledger.json`, `capture-cs314-screenshots.mjs`, validation aggregates. | Capture script PASS with 7 screenshots; backend `/health` PASS; `pnpm lint` PASS; targeted Vitest 123 PASS; backend pytest 12 PASS. | Delivered |
-| CS-315 | Product sign-off matrix for free/basic/premium `/natal` projections. | `_condamad/reports/CS-307-CS-311-delivery-report.md` action 4 | `docs/architecture/natal-projection-plan-matrix-product-decision.md`; CS-315 `generated/10-final-evidence.md`, `generated/11-code-review.md`, `evidence/source-alignment.md` and `validation.txt`; CS-320 differentiation brief. | Backend pytest PASS; OpenAPI/routes PASS; frontend lint PASS; Vite logged Vitest PASS; real-conditions backend suite PASS with all plans aligned to the current decision. | Delivered |
+| CS-315 | Product sign-off matrix for free/basic/premium `/natal` projections. | `_condamad/reports/CS-307-CS-311-delivery-report.md` action 4 | `docs/architecture/natal-projection-plan-matrix-product-decision.md`; CS-315 `generated/10-final-evidence.md`, `generated/11-code-review.md`, `evidence/source-alignment.md` and `validation.txt`; divergence brief. | Backend pytest PASS; OpenAPI/routes PASS; frontend lint PASS; Vite logged Vitest PASS; real-conditions backend suite PASS with divergence routed. | Delivered with routed backend follow-up |
 | CS-316 | Runtime ingestion verification or explicit external validation requirement for CS-311 analytics. | `_condamad/reports/CS-307-CS-311-delivery-report.md` action 5 | `analytics-runtime-config.json`, `analytics-ingestion-ledger.json`, `external-validation-required.md`, `redaction-scan.txt`, CS-316 final evidence. | Runtime config PASS; seven-event ledger PASS; catalog field comparison PASS; `pnpm lint` PASS; targeted Vitest 54 PASS; full Vitest 1276 PASS; provider dashboard BLOCKED by local `noop`. | Requires business/QA validation |
 
 ## 6. Evidence of completion
@@ -61,7 +61,7 @@ The initial trigger is `_condamad/reports/CS-307-CS-311-delivery-report.md`, whi
 
 - `frontend/README.md`: proves CS-313 documentation alignment to `pnpm lint`; no runtime code changed.
 - No frontend/backend application source changed for CS-312, CS-314, CS-315, or CS-316 according to their final evidence and commit stats.
-- `docs/architecture/natal-projection-plan-matrix-product-decision.md`: proves CS-315 product matrix decision content, accepted matrix, backend authorization boundary, frontend render-only policy, and plan-differentiation boundary.
+- `docs/architecture/natal-projection-plan-matrix-product-decision.md`: proves CS-315 product matrix decision content, accepted matrix, backend authorization boundary, frontend render-only policy, and divergence policy.
 
 ### Test evidence
 
@@ -101,14 +101,14 @@ The initial trigger is `_condamad/reports/CS-307-CS-311-delivery-report.md`, whi
 | CS-315 backend pytest | targeted | PASS | CS-315 final evidence | Authorization/endpoint suite 5 passed; real-conditions suite 9 passed. |
 | CS-315 frontend Vitest parity | targeted | PASS | CS-315 final evidence | Vite logged target 123 tests passed. |
 | CS-316 runtime config and ingestion ledger checks | targeted | PASS | CS-316 final evidence | Local provider is `noop`; seven event names covered. |
-| CS-316 external provider dashboard check | external | EXTERNALLY REQUIRED | `external-validation-required.md` | Blocked by unavailable local Plausible sink; Matomo is not currently used. |
+| CS-316 external provider dashboard check | external | EXTERNALLY REQUIRED | `external-validation-required.md` | Blocked by unavailable local Plausible/Matomo sink. |
 
 ## 8. Deviations, limits and assumptions
 
 ### Deviations from story scope
 
-- CS-315 has no remaining backend entitlement divergence after the current product decision: backend accepts `client_interpretation_projection_v1` for `free`, `basic` and `premium`, and CS-320 owns the LLM/front differentiation contract.
-- CS-315 runtime parity checks are now executed in CS-317 final evidence; the remaining CS-315-related follow-up is specification of plan-aware LLM/front shaping, not backend access restriction.
+- CS-315 has one routed runtime divergence: backend currently accepts `client_interpretation_projection_v1` for `free`, `basic` and `premium`, while the product decision expects premium-only visibility. The follow-up owner decision is tracked in `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`.
+- CS-315 runtime parity checks are now executed in CS-317 final evidence; the only remaining CS-315-related item is the routed backend/product divergence decision.
 
 ### Known limits
 
@@ -123,7 +123,7 @@ The initial trigger is `_condamad/reports/CS-307-CS-311-delivery-report.md`, whi
 
 ## 9. Residual risks
 
-- CS-315 plan differentiation risk: product, backend, LLM and frontend owners still need to specify the plan-aware enrichment contract for `client_interpretation_projection_v1`.
+- CS-315 divergence risk: product and backend owners still need to choose whether to update backend entitlement behavior or revise the product matrix for `client_interpretation_projection_v1`.
 - CS-316 external validation risk: production/staging analytics ingestion could still fail despite repo-local event catalog, redaction, and test evidence.
 - CS-313 environment risk: Windows EPERM can recur if another process locks pnpm internals, even though the standard `pnpm lint` path currently passes.
 - CS-314 evidence risk: deterministic screenshot replay may not catch every authenticated real-user browser variance.
@@ -131,16 +131,16 @@ The initial trigger is `_condamad/reports/CS-307-CS-311-delivery-report.md`, whi
 ## 10. Evidence gaps
 
 - No remaining CS-315 closure evidence gap. The remaining CS-315-related item is the routed backend/product decision brief.
-- CS-316 lacks real Plausible ingestion evidence; the story correctly records this as externally required, while Matomo is not the current provider target.
+- CS-316 lacks real Plausible/Matomo ingestion evidence; the story correctly records this as externally required.
 
 ## 11. Recommended next actions
 
-1. Specify the CS-320 plan-aware LLM/front differentiation contract for `free`, `basic` and `premium`.
-2. Execute CS-321 Plausible preparation and CS-316 external analytics-provider validation in staging or production when Plausible is configured and observable.
-3. Route Matomo code removal to CS-323; do not activate Matomo as a current analytics provider.
+1. Decide the routed CS-315 backend/product divergence in `_story_briefs/cs-315-follow-up-backend-projection-plan-divergence.md`.
+2. Execute CS-316 external analytics-provider validation in staging or production when Plausible/Matomo is configured and observable.
+3. Optionally promote the CS-315 React-owned entitlement drift guard into a follow-up story if product sign-off is accepted and future UI changes are expected.
 
 ## 12. Final delivery status
 
-`Delivered with repository evidence complete; external Plausible observation still required`
+`Delivered with routed backend follow-up`
 
-CS-312, CS-313, CS-314 and CS-315 are delivered within repository evidence limits, and CS-316 is complete within repository limits but requires external Plausible ingestion validation. CS-315 no longer has a closure evidence gap; its remaining work is CS-320 plan-aware LLM/front differentiation.
+CS-312, CS-313, CS-314 and CS-315 are delivered within repository evidence limits, and CS-316 is complete within repository limits but requires external ingestion validation. CS-315 no longer has a closure evidence gap; its remaining issue is a routed backend/product follow-up decision.
