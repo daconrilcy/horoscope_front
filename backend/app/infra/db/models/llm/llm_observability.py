@@ -12,7 +12,6 @@ from sqlalchemy import (
     JSON,
     UUID,
     Boolean,
-    DateTime,
     Float,
     ForeignKey,
     Index,
@@ -25,7 +24,7 @@ from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
-from app.infra.db.models.llm.llm_audit import utc_now, utc_now_plus_days
+from app.infra.db.models.llm.llm_audit import CreatedAtMixin, utc_now, utc_now_plus_days
 from app.infra.db.models.llm.llm_constraints import allowed_values_check
 from app.infra.db.models.llm.llm_field_lengths import (
     CONTEXT_QUALITY_LENGTH,
@@ -431,7 +430,7 @@ class LlmCallLogOperationalMetadataModel(Base):
     )
 
 
-class LlmReplaySnapshotModel(Base):
+class LlmReplaySnapshotModel(CreatedAtMixin, Base):
     """Stocke brièvement les entrées chiffrées nécessaires au rejeu contrôlé."""
 
     __tablename__ = "llm_replay_snapshots"
@@ -447,11 +446,6 @@ class LlmReplaySnapshotModel(Base):
     snapshot_type: Mapped[str] = mapped_column(
         String(VERSION_LENGTH),
         default="replay_snapshot_v1",
-        nullable=False,
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utc_now,
         nullable=False,
     )
     input_ref: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)

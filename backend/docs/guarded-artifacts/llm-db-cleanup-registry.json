@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "generated_for_story": "70-17-db-cleanup-llm-canonique",
   "governance_doc": "docs/llm/llm-db-governance.md",
   "reviewed_migrations": [
@@ -21,6 +21,7 @@
     "20260423_0080_rename_llm_call_log_provider_compat.py",
     "20260423_0081_finalize_llm_canonical_perimeter.py",
     "20260424_0082_drop_remaining_llm_legacy_columns.py",
+    "20260525_0140_replay_snapshot_v1_storage_redaction.py",
     "21011e7e01f2_add_execution_profile_ref_to_assembly.py",
     "2219fc77cb83_add_persona_id_to_chat_conversations.py",
     "2b616cdc516a_add_fallback_to_use_case_config.py",
