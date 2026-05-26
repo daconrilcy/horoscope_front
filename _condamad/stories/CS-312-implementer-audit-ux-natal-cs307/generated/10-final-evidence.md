@@ -43,7 +43,7 @@
 | AC6 | No application source changed. | Architecture guard, inline-style scan, direct HTTP scan PASS. | PASS | Existing owners preserved. |
 | AC7 | `validation.txt` and this evidence record commands. | `pnpm lint` PASS; full Vitest PASS. | PASS | 116 test files passed. |
 | AC8 | `product-decisions.md` created. | Python evidence assertion PASS. | PASS | No product decision embedded in code. |
-| AC9 | CS-307 row moved to `done` after proof; CS-312 moved to `ready-to-review`. | Python tracker assertion PASS. | PASS | Closure is evidence-gated. |
+| AC9 | CS-307 and CS-312 rows moved to `done` after proof and clean implementation review. | Python tracker assertion PASS. | PASS | Closure is evidence-gated. |
 
 ## Files changed
 
