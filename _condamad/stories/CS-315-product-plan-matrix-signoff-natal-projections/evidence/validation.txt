@@ -1,0 +1,18 @@
+CS-315 product architecture validation
+date: 2026-05-26
+
+Resume:
+- Report created at docs/architecture/natal-projection-plan-matrix-product-decision.md.
+- Source alignment evidence created at _condamad/stories/CS-315-product-plan-matrix-signoff-natal-projections/evidence/source-alignment.md.
+- No backend, frontend, DB, migration, Stripe, pricing, checkout or subscription source files were modified.
+
+Controls planned by the story and report:
+- PASS: `rg -n "decision_id|decision_date|owner|accepted_matrix" docs/architecture/natal-projection-plan-matrix-product-decision.md`.
+- PASS: `rg -n "implementation_source|frontend_policy|backend authorization" docs/architecture/natal-projection-plan-matrix-product-decision.md`.
+- PASS: `rg -n "beginner_summary_v1|client_interpretation_projection_v1|free|basic|premium" docs/architecture/natal-projection-plan-matrix-product-decision.md`.
+- PASS: `Test-Path` for `validation.txt` and `source-alignment.md`.
+- PASS: targeted `git status --short -- docs/architecture/... evidence ... backend/app frontend/src backend/migrations` showed only the new report and evidence folder.
+- Backend pytest and frontend vitest remain required runtime parity checks before any behavior handoff.
+
+Runtime validation note:
+- This session produced the architecture/product report only. Backend pytest and frontend vitest are listed as validation plan items and were not needed to write code because no runtime code changed.
