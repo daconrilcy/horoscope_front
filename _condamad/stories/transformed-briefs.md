@@ -91,3 +91,4 @@
 | cs-310 | `_story_briefs\cs-310-tests-manuels-profils-naissance-projections-natal.md` | `_condamad\stories\cs-310-tests-manuels-profils-naissance-projections-natal\00-story.md` |
 | cs-311 | `_story_briefs\cs-311-suivi-analytics-erreurs-etats-degrades-projections-natal.md` | `_condamad\stories\cs-311-suivi-analytics-erreurs-etats-degrades-projections-natal\00-story.md` |
 | cs-312 | `_story_briefs\cs-312-implementer-audit-ux-natal-cs307.md` | `_condamad\stories\cs-312-implementer-audit-ux-natal-cs307\00-story.md` |
+| cs-313 | `_story_briefs\cs-313-stabiliser-validation-pnpm-lint-apres-cs308.md` | `_condamad\stories\cs-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md` |
