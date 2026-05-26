@@ -3,7 +3,7 @@
 ## Story status
 
 - Story key: `CS-314-capturer-pack-screenshots-profils-natal-cs310`
-- Status: `ready-to-review`
+- Status: `done`
 - Source brief: `_story_briefs/cs-314-capturer-pack-screenshots-profils-natal-cs310.md`
 - Source finding closure: `full-closure` for the CS-310 residual QA screenshot gap.
 
@@ -23,9 +23,10 @@
 ## Implementation evidence
 
 - Added a Chromium screenshot pack under `evidence/screenshots/` for the five CS-310 synthetic profiles.
-- Added `evidence/screenshot-ledger.json` with route, profile, viewport, visible result, disclaimer result, sensitive-surface result, screenshot path, and anomaly id.
+- Added `evidence/screenshot-ledger.json` with route, profile, viewport, visible state, result, screenshot path, disclaimer result, sensitive-surface result, and anomaly id.
 - Added `evidence/anomaly-ledger.json`; no reproducible anomaly was found, so no follow-up brief was created.
 - Added `evidence/browser-pass-notes.md` and `evidence/capture-cs314-screenshots.mjs` documenting the deterministic browser replay.
+- Review fix: regenerated the screenshot ledger after aligning the capture script with required `visible_state` and `result` fields.
 
 ## Files changed
 
@@ -48,7 +49,7 @@
 | AC | Implementation evidence | Validation evidence | Status |
 |---|---|---|---|
 | AC1 | `evidence/screenshots/` contains seven PNG screenshots. | `validation-ledger.txt` confirms directory and paths. | PASS |
-| AC2 | `screenshot-ledger.json` covers all five CS-310 profiles. | `validation-ledger.txt` confirms five distinct profiles. | PASS |
+| AC2 | `screenshot-ledger.json` covers all five CS-310 profiles. | `validation-ledger.txt` confirms five profiles and required fields. | PASS |
 | AC3 | `cs310-missing-time-paris__desktop.png`. | `validation-ledger.txt` confirms the desktop entry. | PASS |
 | AC4 | `cs310-missing-time-paris__mobile.png`. | `validation-ledger.txt` confirms the mobile entry. | PASS |
 | AC5 | `cs310-controlled-incomplete__desktop.png`. | `validation-ledger.txt` confirms the desktop entry. | PASS |
@@ -63,11 +64,13 @@
 ## Commands run
 
 - `node _condamad\stories\CS-314-capturer-pack-screenshots-profils-natal-cs310\evidence\capture-cs314-screenshots.mjs`: PASS, 7 screenshots.
+- Review fix rerun of the same capture script: PASS, 7 screenshots and corrected ledger contract.
 - From `frontend`: `pnpm lint`: PASS.
 - From `frontend`: `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi`: PASS, 123 tests.
 - From `frontend`: `pnpm test -- inline-style design-system theme-tokens legacy-style`: PASS, 145 tests.
 - With `.venv` active from `backend`: `python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short`: PASS, 12 tests.
 - With `.venv` active: Python ledger/anomaly contract checks: PASS.
+- With `.venv` active: Python review check confirms CS-314 profile ids/categories match CS-310 `profile-set.json`: PASS.
 - Scoped sensitive marker scan on ledger/notes/anomaly ledger: PASS.
 - `git diff --check`: PASS.
 - With `.venv` active: `condamad_validate.py <capsule>`: PASS, persisted in `validation-capsule.txt`.

@@ -1,1 +1,1 @@
-PASS: CS-314 screenshot ledger contract
+PASS: CS-314 screenshot ledger contract includes required visible_state/result fields

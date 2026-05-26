@@ -5,3 +5,4 @@
 - 2026-05-26: Added a bounded Chromium evidence capture script and generated seven `/natal` screenshots plus ledgers.
 - 2026-05-26: Fixed evidence-script API route fixtures for language, entitlement, and PDF template contracts so the real React route rendered instead of the app error boundary.
 - 2026-05-26: Ran targeted frontend/backend validations and updated final evidence.
+- 2026-05-26: Review fix: aligned `screenshot-ledger.json` and the capture script with the story contract fields `visible_state` and `result`.

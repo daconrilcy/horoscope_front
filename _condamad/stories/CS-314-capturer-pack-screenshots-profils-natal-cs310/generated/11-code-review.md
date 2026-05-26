@@ -1,4 +1,4 @@
-# CS-314 Editorial Story Review
+# CS-314 Implementation Review
 
 Verdict: CLEAN
 
@@ -6,27 +6,41 @@ Verdict: CLEAN
 
 - Story: `_condamad/stories/CS-314-capturer-pack-screenshots-profils-natal-cs310/00-story.md`
 - Source brief: `_story_briefs/cs-314-capturer-pack-screenshots-profils-natal-cs310.md`
-- Tracker source row: `_condamad/stories/story-status.md`
-- Guardrails checked by cited IDs only: RG-047, RG-052, browser-screenshot-pack registry gap
+- Tracker row: `_condamad/stories/story-status.md`
+- Implementation evidence: `evidence/screenshot-ledger.json`, `evidence/anomaly-ledger.json`, `evidence/screenshots/`, validation logs, and final evidence.
+- Guardrails checked by cited IDs only: RG-047, RG-052, and the story's browser screenshot pack registry gap.
 
 ## Review / Fix Cycle
 
-- Iteration 1: found one source-alignment issue in AC11.
-- Fix applied: AC11 now requires both targeted backend projection validation areas from the brief, not only one test file.
-- Iteration 2: no remaining actionable drafting issue found.
+- Iteration 1 finding: the screenshot ledger used `visible_result` and `rendered_surface_result`, but the story contract requires `visible_state` and `result`.
+- Fix applied: `evidence/capture-cs314-screenshots.mjs` now emits `visible_state` and `result`; the capture script was rerun and regenerated the ledger.
+- Iteration 2 finding: none. The regenerated ledger matches the contract, profile coverage, screenshot paths, and validation evidence.
+
+## Acceptance Criteria Review
+
+| AC | Review result |
+|---|---|
+| AC1-AC6 | Seven PNG files exist and cover all five CS-310 profiles, including missing-time and controlled-incomplete desktop/mobile pairs. |
+| AC7 | Ledger records disclaimer classifications for every row. |
+| AC8 | Scoped evidence scan found no sensitive marker in ledger, notes, or anomaly ledger. |
+| AC9 | `anomaly-ledger.json` is empty and no follow-up brief is required. |
+| AC10 | Persisted frontend lint, targeted Vitest, and guardrail Vitest logs are passing. |
+| AC11 | Persisted backend projection pytest log is passing. |
+| AC12 | Final evidence summarizes the browser pass and the review fix. |
 
 ## Validation Results
 
-- `condamad_story_validate.py`: PASS after the story fix.
-- `condamad_story_lint.py --strict`: PASS after the story fix.
-
-## Produced Artifacts
-
-- First-pass editorial review artifact created at `generated/11-code-review.md`.
+- Capture script rerun: PASS, 7 screenshots.
+- Ledger contract check: PASS, including `visible_state`, `result`, five profile IDs, required viewport pairs, and screenshot path existence.
+- CS-310 profile-set alignment check: PASS.
+- Sensitive marker scan over ledger, notes, and anomaly ledger: PASS.
+- `condamad_validate.py`: PASS.
+- `condamad_story_validate.py`: PASS.
+- `condamad_story_lint.py --strict`: PASS.
+- `git diff --check`: PASS, with line-ending warnings only.
 
 ## Closure Notes
 
-- The story covers the brief objective, included scope, out-of-scope limits, acceptance criteria, validation commands, risks, and evidence paths.
-- No application files were reviewed or modified for this editorial pass.
-- Propagation decision: no-propagation; the correction was local to this story contract.
-- Residual risk: implementation may still uncover runtime browser or service blockers during the screenshot capture pass.
+- Story status is set to `done` in `00-story.md` and `_condamad/stories/story-status.md`.
+- Propagation decision: no-propagation; the correction is local to CS-314 evidence generation and does not reveal a reusable guardrail gap.
+- Residual risk: screenshots use deterministic API route responses in a real Chromium/Vite browser pass, while backend behavior is covered by targeted pytest logs.

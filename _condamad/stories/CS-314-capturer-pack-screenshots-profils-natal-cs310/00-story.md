@@ -1,5 +1,5 @@
 # Story CS-314 capturer-pack-screenshots-profils-natal-cs310: Capture CS-310 Natal Profile Screenshot Pack
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

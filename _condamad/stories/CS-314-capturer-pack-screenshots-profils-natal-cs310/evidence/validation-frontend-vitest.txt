@@ -1,14 +1,14 @@
 
  RUN  v4.1.5 C:/dev/horoscope_front/frontend
 
- ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 30ms
- ✓ src/tests/natalChartApi.test.tsx (15 tests) 18ms
- ✓ src/tests/natalInterpretation.test.tsx (33 tests) 944ms
- ✓ src/tests/NatalChartPage.test.tsx (71 tests) 1667ms
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 33ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 19ms
+ ✓ src/tests/natalInterpretation.test.tsx (33 tests) 983ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 1748ms
 
  Test Files  4 passed (4)
       Tests  123 passed (123)
-   Start at  13:07:27
-   Duration  3.47s (transform 1.32s, setup 1.01s, import 2.01s, tests 2.66s, environment 2.55s)
+   Start at  13:17:37
+   Duration  3.64s (transform 1.72s, setup 1.01s, import 2.27s, tests 2.78s, environment 2.45s)
 
 JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
