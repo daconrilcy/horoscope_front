@@ -8,7 +8,7 @@
 | AC4 | Projection state messages use plain wording. | Loading, entitlement, error, empty, degraded, and card-empty messages moved to `natalChart.ts` as plain client-facing copy. | PASS targeted Vitest state assertions. | PASS |
 | AC5 | Regulated-advice wording is absent. | New projection copy avoids medical, legal, financial, diagnostic, treatment, guarantee, and deterministic wording; refused wording records rejected deterministic phrasing. | PASS_WITH_LIMITATIONS global `rg` returns existing disclaimers/unrelated copy only; no new projection wording hit. | PASS_WITH_LIMITATIONS |
 | AC6 | Backend projection runtime remains unchanged. | No backend file modified; projection API transport remains centralized. | PASS `git diff --name-only -- backend frontend ...` shows frontend/capsule only; PASS direct transport scan. | PASS |
-| AC7 | Frontend validation commands pass. | Tests updated in `frontend/src/tests/natalInterpretation.test.tsx`; style added in existing CSS owner. | PASS `pnpm lint`; PASS targeted Vitest; PASS full Vitest. | PASS |
+| AC7 | Frontend validation commands pass. | Tests updated in `frontend/src/tests/natalInterpretation.test.tsx`; style added in existing CSS owner. | BLOCKED `pnpm lint` by pnpm EPERM before script execution; PASS equivalent `tsc` lint projects; PASS targeted Vitest; PASS full Vitest. | PASS_WITH_LIMITATIONS |
 | AC8 | Final wording decisions are persisted. | `evidence/refused-wording.md`, `evidence/validation.txt`, and this traceability file document decisions and validation. | PASS capsule validation after evidence update. | PASS |
 
 Status values: `PASS`, `PASS_WITH_LIMITATIONS`, `FAIL`, `BLOCKED`.

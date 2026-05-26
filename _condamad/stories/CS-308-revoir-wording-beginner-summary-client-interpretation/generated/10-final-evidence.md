@@ -2,7 +2,7 @@
 
 ## Story status
 
-- Validation outcome: PASS
+- Validation outcome: PASS_WITH_LIMITATIONS
 - Ready for review: yes
 - Story key: CS-308-revoir-wording-beginner-summary-client-interpretation
 - Source story: `00-story.md`
@@ -40,7 +40,7 @@
 | AC4 | Projection loading/entitlement/error/empty/degraded copy in i18n | Targeted Vitest | PASS | Plain state wording tested. |
 | AC5 | No regulated wording added to projection copy; refused ledger records rejected deterministic copy | Global forbidden term scan | PASS | Expected matches are existing disclaimers, unrelated copy, and tests; no projection panel wording uses regulated advice or deterministic guarantee wording. |
 | AC6 | Backend untouched | `git diff --name-only -- backend frontend ...`; direct transport `rg` | PASS | No backend file changed. |
-| AC7 | Test expectations updated | `pnpm lint`; targeted Vitest; full Vitest | PASS | Frontend checks passed. |
+| AC7 | Test expectations updated | `pnpm lint`; equivalent `tsc` lint projects; targeted Vitest; full Vitest | PASS_WITH_LIMITATIONS | `pnpm lint` is blocked by pnpm EPERM before script execution; equivalent `tsc` lint projects and Vitest checks passed. |
 | AC8 | `evidence/refused-wording.md`, `evidence/validation.txt`, traceability and final evidence | Capsule validation | PASS | Decisions persisted. |
 
 ## Files changed
@@ -75,6 +75,7 @@
 | `git diff --name-only -- backend frontend _condamad/stories/CS-308-revoir-wording-beginner-summary-client-interpretation` | repo root | PASS | Frontend/capsule only, no backend. |
 | `git diff --check` | repo root | PASS | Exit 0; line-ending warnings only. |
 | `pnpm dev -- --host 127.0.0.1 --port 5179` | `frontend` | PASS | Vite ready smoke observed at localhost, then stopped. |
+| Resume closure: story validate, story lint, capsule validate, targeted Vitest, `tsc` lint projects, scoped `rg` scans, `git diff --check` | repo root / `frontend` | PASS_WITH_LIMITATIONS | All rerun checks passed except `pnpm lint`, still blocked by pnpm EPERM before script execution. |
 
 ## Commands skipped or blocked
 
