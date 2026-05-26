@@ -1,5 +1,5 @@
 # Story CS-308 revoir-wording-beginner-summary-client-interpretation: Review Beginner Summary And Client Interpretation Wording
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

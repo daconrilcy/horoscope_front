@@ -29,6 +29,9 @@ Verdict: CLEAN
 - Iteration 1 finding fixed: the projection panel `aria-label` still used hardcoded technical wording,
   `Projections astrologiques`, outside the i18n wording owner and inventory coverage.
 - Resolution: `aria-label` now reuses `projectionCopy.panelLabel`, and targeted Vitest asserts the localized region name.
+- Iteration 2 finding fixed: `frontend/src/i18n/natalChart.ts` lacked the French global file comment required by `AGENTS.md`
+  after the CS-308 wording update.
+- Resolution: the file now starts with a French global comment describing the natal translation ownership.
 
 No remaining actionable implementation issue found.
 
@@ -47,6 +50,8 @@ No remaining actionable implementation issue found.
   no projection panel wording match remains.
 - PASS: `condamad_story_validate.py` and `condamad_story_lint.py --strict` after activating
   `.\.venv\Scripts\Activate.ps1`.
+- PASS: capsule validation after activating `.\.venv\Scripts\Activate.ps1`.
+- PASS: local Vite smoke served `http://127.0.0.1:5179/` with HTTP 200.
 
 ## Propagation
 

@@ -1,3 +1,4 @@
+// Traductions applicatives du theme natal, y compris les libelles des lectures publiques.
 import type { AstrologyLang } from "./astrology"
 
 export type NatalChartFaqItem = {

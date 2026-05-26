@@ -65,17 +65,17 @@
 
 | Command | Working directory | Result | Evidence summary |
 |---|---|---|---|
-| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-308-revoir-wording-beginner-summary-client-interpretation` | repo root after venv activation | PASS | Capsule valid. |
+| `condamad_validate.py` on CS-308 capsule | repo root after venv activation | PASS | Capsule valid. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation astrology-i18n natalChartApi` | `frontend` | PASS | 119 targeted tests passed. |
 | `pnpm lint` | `frontend` | BLOCKED | pnpm failed before running lint with EPERM while renaming `node_modules\.pnpm\lock.yaml.*`. |
-| `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.lint.json`; `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.node.json` | `frontend` | PASS | Equivalent commands from the lint script passed. |
+| `tsc.CMD --noEmit` on lint and node configs | `frontend` | PASS | Equivalent lint-script commands passed. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run` | `frontend` | PASS | 1271 passed, 8 skipped. |
 | `rg` payload disclaimer, direct transport, and inline style scans | `frontend` | PASS | No matches; exit 1 expected. |
-| `rg -n "medical\|juridique\|financier\|garanti\|certain\|diagnostic\|traitement" frontend/src` | repo root | PASS_WITH_EXPECTED_MATCHES | Existing disclaimers, unrelated copy, and tests only; no projection panel wording match. |
-| `git diff --name-only -- backend frontend _condamad/stories/CS-308-revoir-wording-beginner-summary-client-interpretation` | repo root | PASS | Frontend/capsule only, no backend. |
+| Regulated-term `rg` scan on `frontend/src` | repo root | PASS_WITH_EXPECTED_MATCHES | Existing unrelated hits only. |
+| `git diff --name-only` on backend, frontend, and CS-308 capsule | repo root | PASS | Frontend/capsule only, no backend. |
 | `git diff --check` | repo root | PASS | Exit 0; line-ending warnings only. |
 | `pnpm dev -- --host 127.0.0.1 --port 5179` | `frontend` | PASS | Vite ready smoke observed at localhost, then stopped. |
-| Resume closure: story validate, story lint, capsule validate, targeted Vitest, `tsc` lint projects, scoped `rg` scans, `git diff --check` | repo root / `frontend` | PASS_WITH_LIMITATIONS | All rerun checks passed except `pnpm lint`, still blocked by pnpm EPERM before script execution. |
+| Resume closure validation set | repo root / `frontend` | PASS_WITH_LIMITATIONS | All rerun checks passed except blocked `pnpm lint`. |
 
 ## Commands skipped or blocked
 
@@ -96,7 +96,8 @@
 
 ## Final worktree status
 
-- Story changes pending for review; no unrelated dirty files observed.
+- Story status is `done`; implementation review is CLEAN.
+- No unrelated dirty files observed.
 
 ## Remaining risks
 
@@ -109,3 +110,11 @@
 ## Feedback loop routing
 
 - no-propagation: no reusable skill, guardrail, or AGENTS.md update needed beyond story-local tests/evidence.
+
+## Implementation review closure
+
+- Final review verdict: CLEAN after two review/fix iterations.
+- Iteration 1 fixed the projection panel accessible label by reusing `projectionCopy.panelLabel`.
+- Iteration 2 fixed the missing French global comment in `frontend/src/i18n/natalChart.ts`.
+- Final status update: `00-story.md` and `_condamad/stories/story-status.md` set to `done` on 2026-05-26.
+- Fresh validation results are recorded in `evidence/validation.txt`.
