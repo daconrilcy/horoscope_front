@@ -35,8 +35,8 @@ The implementation keeps the guard in the existing frontend architecture owner, 
 - `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi`: PASS, 4 files / 123 tests.
 - `pnpm --dir frontend lint`: PASS.
 - `pnpm --dir frontend test`: PASS, 116 files / 1278 passed / 8 skipped.
-- Bounded `rg` entitlement scan: PASS, hits classified in `evidence/guard-scan-after.txt`.
-- `git diff --check`: PASS, CRLF warning only for touched test file.
+- Bounded `rg` entitlement scan on the exact brief paths: PASS, hits classified in `evidence/guard-scan-after.txt`.
+- `git diff --check`: PASS, CRLF warnings only for touched evidence files.
 - `git diff --name-only -- backend docs/architecture/natal-projection-plan-matrix-product-decision.md`: PASS, no output.
 - `condamad_validate.py`: PASS with venv active.
 - `condamad_story_validate.py`: PASS with venv active.

@@ -36,7 +36,7 @@
 | AC | Implementation evidence | Validation evidence | Status |
 |---|---|---|---|
 | AC1 | Added deterministic frontend architecture guard for local natal plan policy, including matrix, plan array/set, and branch-set detector examples. | `component-architecture-guards` Vitest PASS. | PASS |
-| AC2 | Scoped active roots to natal-chart feature, natal presentational components, and `NatalChartPage`. | Guard test PASS plus bounded scan evidence. | PASS |
+| AC2 | Scoped active roots to natal-chart feature, natal presentational components, and `NatalChartPage`. | Guard test PASS plus exact brief scan evidence, with non-`/natal` page hits classified. | PASS |
 | AC3 | Kept `natalInterpretation.test.tsx` fixture data allowed and explicitly asserted. | Targeted natal Vitest PASS. | PASS |
 | AC4 | No runtime React plan matrix introduced; only guard code changed. | `guard-scan-after.txt` classification PASS. | PASS |
 | AC5 | Existing natal rendering/API tests still pass. | Targeted natal Vitest PASS; full frontend test PASS. | PASS |
@@ -83,8 +83,8 @@
 | `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi` | repo root | PASS | 4 files, 123 tests passed. |
 | `pnpm --dir frontend lint` | repo root | PASS | TypeScript lint configs passed. |
 | `pnpm --dir frontend test` | repo root | PASS | 116 files passed; 1278 passed; 8 skipped. |
-| `rg -n "free.*basic.*premium|accepted_matrix|entitlement matrix|plan_code.*===" ...` | repo root | PASS | Hits classified in `guard-scan-after.txt`. |
-| `git diff --check` | repo root | PASS | Exit 0; Git reported LF/CRLF warning for touched test file only. |
+| `rg -n "free.*basic.*premium|accepted_matrix|entitlement matrix|plan_code.*===" ...` | repo root | PASS | Exact brief scope run; hits classified in `guard-scan-after.txt`. |
+| `git diff --check` | repo root | PASS | Exit 0; Git reported LF/CRLF warnings for touched evidence files only. |
 | `git diff --name-only -- backend docs/architecture/natal-projection-plan-matrix-product-decision.md` | repo root | PASS | No changed backend/product decision files. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard` | repo root, venv active | PASS | Capsule valid after final evidence updates. |
 | `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard\00-story.md` | repo root, venv active | PASS | Story valid after status update. |
@@ -110,20 +110,14 @@
 
 ## Final worktree status
 
-- `M _condamad/stories/story-status.md`
-- `M frontend/src/tests/component-architecture-guards.test.ts`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/evidence/`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/01-execution-brief.md`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/03-acceptance-traceability.md`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/04-target-files.md`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/06-validation-plan.md`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/07-no-legacy-dry-guardrails.md`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/09-dev-log.md`
-- `?? _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/10-final-evidence.md`
+- `M _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/evidence/guard-scan-after.txt`
+- `M _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/evidence/validation.txt`
+- `M _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/10-final-evidence.md`
+- `M _condamad/stories/CS-319-natal-react-entitlement-matrix-guard/generated/11-code-review.md`
 
 ## Remaining risks
 
-- The bounded `rg` scan intentionally reports the guard implementation, guard examples, and allowed fixtures; reviewers should rely on the Vitest architecture guard for deterministic enforcement.
+- The bounded `rg` scan intentionally reports the guard implementation, guard examples, out-of-scope non-`/natal` page hits, and allowed fixtures; reviewers should rely on the Vitest architecture guard for deterministic enforcement.
 
 ## Feedback loop routing
 

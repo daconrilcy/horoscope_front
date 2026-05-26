@@ -4,8 +4,8 @@ PASS pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest r
 PASS pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi -> 4 files, 123 tests passed
 PASS pnpm --dir frontend lint -> tsc lint/node configs passed
 PASS pnpm --dir frontend test -> 116 files passed, 1278 passed, 8 skipped
-PASS rg bounded entitlement scan -> only active payload type, guard tests, admin API-owner wording, and allowed backend-shaped fixtures
-PASS git diff --check -> exit 0; Git reported LF/CRLF warning for touched test file only
+PASS rg bounded entitlement scan -> exact brief scope run; only active /natal payload type, out-of-scope SubscriptionGuidePage page hits, guard tests, admin API-owner wording, and allowed backend-shaped fixtures
+PASS git diff --check -> exit 0; Git reported LF/CRLF warnings for touched evidence files only
 PASS python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard -> capsule validation passed after evidence updates
 PASS python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard\00-story.md -> story validation passed
 PASS python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-319-natal-react-entitlement-matrix-guard\00-story.md -> strict story lint passed
