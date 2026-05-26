@@ -1,0 +1,12 @@
+CS-314 backend validation aggregate
+
+## backend startup smoke
+
+CS-314 backend startup smoke
+
+PASS: backend /health returned 200
+
+## targeted pytest
+
+............                                                             [100%]
+12 passed in 2.99s

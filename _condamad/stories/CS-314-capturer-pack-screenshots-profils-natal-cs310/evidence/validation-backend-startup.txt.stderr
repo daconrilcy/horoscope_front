@@ -1,0 +1,153 @@
+INFO:     Started server process [25612]
+INFO:     Waiting for application startup.
+WARNING: canonical_entitlements_auto_heal missing_features=astrologer_chat,b2b_api_access,horoscope_daily,natal_chart_long,natal_chart_short,thematic_consultation,transit_client_projection
+INFO: Creating plan 'free'...
+INFO: Creating plan 'trial'...
+INFO: Creating plan 'basic'...
+INFO: Creating plan 'premium'...
+INFO: Creating feature 'natal_chart_short'...
+INFO: Creating feature 'natal_chart_long'...
+INFO: Creating feature 'astrologer_chat'...
+INFO: Creating feature 'thematic_consultation'...
+INFO: Creating feature 'horoscope_daily'...
+INFO: Creating feature 'transit_client_projection'...
+INFO: Upserting binding free -> natal_chart_short...
+INFO: Upserting binding free -> natal_chart_long...
+INFO: Upserting binding free -> astrologer_chat...
+INFO: Upserting binding free -> thematic_consultation...
+INFO: Upserting binding free -> horoscope_daily...
+INFO: Upserting binding free -> transit_client_projection...
+INFO: Upserting binding trial -> natal_chart_short...
+INFO: Upserting binding trial -> natal_chart_long...
+INFO: Upserting binding trial -> astrologer_chat...
+INFO: Upserting binding trial -> thematic_consultation...
+INFO: Upserting binding trial -> horoscope_daily...
+INFO: Upserting binding trial -> transit_client_projection...
+INFO: Upserting binding basic -> natal_chart_short...
+INFO: Upserting binding basic -> natal_chart_long...
+INFO: Upserting binding basic -> astrologer_chat...
+INFO: Upserting binding basic -> thematic_consultation...
+INFO: Upserting binding basic -> horoscope_daily...
+INFO: Upserting binding basic -> transit_client_projection...
+INFO: Upserting binding premium -> natal_chart_short...
+INFO: Upserting binding premium -> natal_chart_long...
+INFO: Upserting binding premium -> astrologer_chat...
+INFO: Upserting binding premium -> thematic_consultation...
+INFO: Upserting binding premium -> horoscope_daily...
+INFO: Upserting binding premium -> transit_client_projection...
+WARNING: canonical_llm_bootstrap_auto_heal schemas=0 prompts=0 personas=0 assemblies=0 profiles=0 missing_execution_profiles=0 active_short=False
+INFO: Created persona: Astrologue Standard
+INFO: Created profile for: Astrologue Standard
+INFO: Created active prompt profile for: Astrologue Standard
+INFO: Created persona: Selene Mystique
+INFO: Created profile for: Selene Mystique
+INFO: Created active prompt profile for: Selene Mystique
+INFO: Created persona: Orion Analyste
+INFO: Created profile for: Orion Analyste
+INFO: Created active prompt profile for: Orion Analyste
+INFO: Created persona: Luna Empathie
+INFO: Created profile for: Luna Empathie
+INFO: Created active prompt profile for: Luna Empathie
+INFO: Created persona: Atlas Direct
+INFO: Created profile for: Atlas Direct
+INFO: Created active prompt profile for: Atlas Direct
+INFO: Created persona: Nox Profondeur
+INFO: Created profile for: Nox Profondeur
+INFO: Created active prompt profile for: Nox Profondeur
+INFO: Updating use case config for natal_interpretation_short...
+INFO: Publishing new prompt version for natal_interpretation_short...
+INFO: Prompt for natal_interpretation_short prepared for commit.
+INFO: Updating use case config for natal_interpretation...
+INFO: Publishing new prompt version for natal_interpretation...
+INFO: Prompt for natal_interpretation prepared for commit.
+INFO: Seed process completed successfully.
+INFO: Lint advisories for natal_interpretation: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_interpretation
+INFO: Archived previous prompt version for natal_interpretation (id=036533a2-fc2f-4054-8ba7-f6e5cfac6346)
+INFO: Published GPT-5 v3 prompt for natal_interpretation
+INFO: Lint advisories for natal_psy_profile: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_psy_profile
+INFO: Published GPT-5 v3 prompt for natal_psy_profile
+INFO: Lint advisories for natal_shadow_integration: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_shadow_integration
+INFO: Published GPT-5 v3 prompt for natal_shadow_integration
+INFO: Lint advisories for natal_leadership_workstyle: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_leadership_workstyle
+INFO: Published GPT-5 v3 prompt for natal_leadership_workstyle
+INFO: Lint advisories for natal_creativity_joy: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_creativity_joy
+INFO: Published GPT-5 v3 prompt for natal_creativity_joy
+INFO: Lint advisories for natal_relationship_style: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_relationship_style
+INFO: Published GPT-5 v3 prompt for natal_relationship_style
+INFO: Lint advisories for natal_community_networks: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_community_networks
+INFO: Published GPT-5 v3 prompt for natal_community_networks
+INFO: Lint advisories for natal_values_security: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_values_security
+INFO: Published GPT-5 v3 prompt for natal_values_security
+INFO: Lint advisories for natal_evolution_path: ['Prompt is quite long (> 4,000 characters).']
+INFO: Lint passed for natal_evolution_path
+INFO: Published GPT-5 v3 prompt for natal_evolution_path
+INFO: Seed v3 completed successfully.
+INFO: Published new chat_astrologer prompt version.
+INFO: seed_narrator: archived legacy daily_prediction artifacts
+INFO: seed_narrator: updated NarratorResult_v1 schema
+INFO: seed_narrator: created published prompt version for horoscope_daily
+INFO: seed_narrator: created execution profile for horoscope_daily
+INFO: seed_narrator: created assembly for horoscope_daily / free
+INFO: seed_narrator: created assembly for horoscope_daily / premium
+INFO: seed_66_20_taxonomy: created assembly chat/astrologer/free
+INFO: seed_66_20_taxonomy: created assembly chat/astrologer/premium
+INFO: seed_66_20_taxonomy: created assembly guidance/daily/free
+INFO: seed_66_20_taxonomy: created assembly guidance/daily/premium
+INFO: seed_66_20_taxonomy: created assembly guidance/weekly/free
+INFO: seed_66_20_taxonomy: created assembly guidance/weekly/premium
+INFO: seed_66_20_taxonomy: created assembly guidance/contextual/free
+INFO: seed_66_20_taxonomy: created assembly guidance/contextual/premium
+INFO: seed_66_20_taxonomy: created assembly guidance/event/free
+INFO: seed_66_20_taxonomy: created assembly guidance/event/premium
+INFO: seed_66_20_taxonomy: created assembly natal/interpretation/free
+INFO: seed_66_20_taxonomy: created assembly natal/interpretation/premium
+INFO: seed_66_20_taxonomy: created assembly natal/psy_profile/premium
+INFO: seed_66_20_taxonomy: created assembly natal/shadow_integration/premium
+INFO: seed_66_20_taxonomy: created assembly natal/leadership_workstyle/premium
+INFO: seed_66_20_taxonomy: created assembly natal/creativity_joy/premium
+INFO: seed_66_20_taxonomy: created assembly natal/relationship_style/premium
+INFO: seed_66_20_taxonomy: created assembly natal/community_networks/premium
+INFO: seed_66_20_taxonomy: created assembly natal/values_security/premium
+INFO: seed_66_20_taxonomy: created assembly natal/evolution_path/premium
+INFO: seed_66_20_taxonomy: created targeted profile chat/astrologer/free
+INFO: seed_66_20_taxonomy: created targeted profile chat/astrologer/premium
+INFO: seed_66_20_taxonomy: created targeted profile guidance/daily/free
+INFO: seed_66_20_taxonomy: created targeted profile guidance/daily/premium
+INFO: seed_66_20_taxonomy: created targeted profile guidance/weekly/free
+INFO: seed_66_20_taxonomy: created targeted profile guidance/weekly/premium
+INFO: seed_66_20_taxonomy: created targeted profile guidance/contextual/free
+INFO: seed_66_20_taxonomy: created targeted profile guidance/contextual/premium
+INFO: seed_66_20_taxonomy: created targeted profile guidance/event/free
+INFO: seed_66_20_taxonomy: created targeted profile guidance/event/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/interpretation/free
+INFO: seed_66_20_taxonomy: created targeted profile natal/interpretation/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/psy_profile/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/shadow_integration/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/leadership_workstyle/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/creativity_joy/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/relationship_style/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/community_networks/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/values_security/premium
+INFO: seed_66_20_taxonomy: created targeted profile natal/evolution_path/premium
+WARNING: consultation_templates_auto_seed table is empty, seeding...
+WARNING: support_categories_auto_seed table is empty, seeding...
+INFO: dev_seed_admin_creating email=admin@test.com
+INFO: dev_seed_admin_success email=admin@test.com
+INFO: llm_qa_seed_startup_disabled
+INFO: feature_scope_registry_startup_validation_ok
+INFO: message='Request to Stripe api' method=get url=https://api.stripe.com/v1/billing_portal/configurations/bpc_1TGlBGHwm9IxTbGyDzlUqULq
+INFO: message='Stripe API response' path=https://api.stripe.com/v1/billing_portal/configurations/bpc_1TGlBGHwm9IxTbGyDzlUqULq response_code=200
+INFO: stripe_portal_startup_validation_advisory error=Stripe Customer Portal configuration is missing subscription_update prices for configured plans: price_1TElbnHwm9IxTbGyy2748MMF, price_1TH5gcHwm9IxTbGy8ibEAxDx
+INFO: canonical_db_startup_validation_ok
+INFO: llm_coherence_startup_validation mode=strict - scanning active snapshot or published configurations
+INFO: llm_coherence_startup_validation success - all active configurations are coherent
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)

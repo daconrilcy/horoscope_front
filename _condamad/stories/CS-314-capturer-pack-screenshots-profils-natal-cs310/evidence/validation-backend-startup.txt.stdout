@@ -1,0 +1,17 @@
+
+Seeding complete.
+Creating template: period
+Creating template: career
+Creating template: orientation
+Creating template: relationship
+Creating template: timing
+Seed completed successfully.
+Creating category: account_access
+Creating category: billing_issue
+Creating category: subscription_problem
+Creating category: bug
+Creating category: feature_question
+Creating category: data_privacy
+Creating category: other
+Seed completed successfully.
+INFO:     127.0.0.1:51493 - "GET /health HTTP/1.1" 200 OK

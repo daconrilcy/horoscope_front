@@ -26,6 +26,8 @@
 - Added `evidence/screenshot-ledger.json` with route, profile, viewport, visible state, result, screenshot path, disclaimer result, sensitive-surface result, and anomaly id.
 - Added `evidence/anomaly-ledger.json`; no reproducible anomaly was found, so no follow-up brief was created.
 - Added `evidence/browser-pass-notes.md` and `evidence/capture-cs314-screenshots.mjs` documenting the deterministic browser replay.
+- Added `evidence/validation-backend-startup.txt` proving the local FastAPI backend started and `/health` returned 200.
+- Added canonical aggregates `evidence/validation-frontend.txt` and `evidence/validation-backend.txt`.
 - Review fix: regenerated the screenshot ledger after aligning the capture script with required `visible_state` and `result` fields.
 
 ## Files changed
@@ -57,14 +59,15 @@
 | AC7 | `screenshot-ledger.json` records `disclaimer_result`. | Ledger classifications are present for every entry. | PASS |
 | AC8 | Ledger and notes exclude sensitive raw payload surfaces. | Scoped `rg` returned no matches on ledger/notes/anomaly ledger. | PASS |
 | AC9 | `anomaly-ledger.json` exists and contains no anomalies. | `validation-anomalies.txt` confirms no follow-up brief is required. | PASS |
-| AC10 | Frontend validation logs are persisted. | `pnpm lint`, targeted Vitest, and guardrail Vitest passed. | PASS |
-| AC11 | Backend validation log is persisted. | Targeted projection pytest modules passed. | PASS |
+| AC10 | Frontend validation logs are persisted. | `validation-frontend.txt` aggregates `pnpm lint`, targeted Vitest, and guardrail Vitest. | PASS |
+| AC11 | Backend validation log is persisted. | `validation-backend.txt` aggregates backend startup smoke and targeted projection pytest. | PASS |
 | AC12 | Final evidence summarizes the browser pass. | Capsule validation passed after evidence update. | PASS |
 
 ## Commands run
 
 - `node _condamad\stories\CS-314-capturer-pack-screenshots-profils-natal-cs310\evidence\capture-cs314-screenshots.mjs`: PASS, 7 screenshots.
 - Review fix rerun of the same capture script: PASS, 7 screenshots and corrected ledger contract.
+- With `.venv` active from `backend`: `python -m uvicorn app.main:app --host 127.0.0.1 --port 8001`: PASS, `/health` returned 200.
 - From `frontend`: `pnpm lint`: PASS.
 - From `frontend`: `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi`: PASS, 123 tests.
 - From `frontend`: `pnpm test -- inline-style design-system theme-tokens legacy-style`: PASS, 145 tests.
@@ -98,7 +101,9 @@
 
 ## Remaining risks
 
-- Screenshots use deterministic API routes in a real Chromium/Vite browser pass to replay CS-310 profiles. They prove the `/natal` rendered states without depending on mutable local account/database contents.
+- Screenshots use deterministic API routes in a real Chromium/Vite browser pass to replay CS-310 profiles.
+- The backend was started and smoke-checked separately, then the targeted backend projection contract passed by pytest.
+- No remaining brief-alignment blocker was found after adding the backend startup proof and canonical validation logs.
 
 ## Suggested reviewer focus
 

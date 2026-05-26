@@ -1,0 +1,40 @@
+CS-314 frontend validation aggregate
+
+## pnpm lint
+
+$ tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
+
+## targeted vitest
+
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalInterpretationEvidence.test.ts (4 tests) 33ms
+ ✓ src/tests/natalChartApi.test.tsx (15 tests) 19ms
+ ✓ src/tests/natalInterpretation.test.tsx (33 tests) 983ms
+ ✓ src/tests/NatalChartPage.test.tsx (71 tests) 1748ms
+
+ Test Files  4 passed (4)
+      Tests  123 passed (123)
+   Start at  13:17:37
+   Duration  3.64s (transform 1.72s, setup 1.01s, import 2.27s, tests 2.78s, environment 2.45s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+
+## guardrail vitest
+
+$ node ./scripts/run-vite-logged.mjs vitest vitest run "inline-style" "design-system" "theme-tokens" "legacy-style"
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/theme-tokens.test.ts (98 tests) 12ms
+ ✓ src/tests/legacy-style-policy.test.ts (4 tests) 24ms
+ ✓ src/tests/inline-style-policy.test.ts (4 tests) 21ms
+ ✓ src/tests/design-system-guards.test.ts (39 tests) 282ms
+
+ Test Files  4 passed (4)
+      Tests  145 passed (145)
+   Start at  13:08:09
+   Duration  1.28s (transform 249ms, setup 932ms, import 219ms, tests 338ms, environment 2.31s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json

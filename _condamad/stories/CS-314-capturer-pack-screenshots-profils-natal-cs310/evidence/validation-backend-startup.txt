@@ -1,0 +1,3 @@
+CS-314 backend startup smoke
+
+PASS: backend /health returned 200
