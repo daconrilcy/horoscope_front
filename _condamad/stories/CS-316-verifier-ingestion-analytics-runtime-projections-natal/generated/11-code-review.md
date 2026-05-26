@@ -65,6 +65,28 @@ Validation:
 - `condamad_story_validate.py`: PASS.
 - `condamad_story_lint.py --strict`: PASS.
 
+## Findings iteration 2
+
+### F4 - Scan sensible auto-reference par sa preuve
+
+Statut: fixed.
+
+Impact:
+`evidence/redaction-scan.txt` recopiait la commande avec les noms de champs interdits dans le dossier `evidence/`.
+Le scan sensible demande par la story se signalait donc lui-meme, ce qui rendait la preuve contradictoire avec AC5.
+
+Correction:
+
+- Replaced the literal forbidden-field pattern in `evidence/redaction-scan.txt` with a bounded description of the executed scan.
+- Kept the scan result, exit code, and interpretation without storing the sensitive field tokens in the scanned evidence folder.
+
+Validation:
+
+- Sensitive evidence scan rerun: PASS, exit 1 with no matches.
+- Ledger/catalog public-field comparison rerun: PASS.
+- Capsule validation rerun: PASS.
+- `git diff --check`: PASS.
+
 ## Fresh review after fixes
 
 Result: CLEAN.
@@ -74,7 +96,7 @@ Result: CLEAN.
 - AC2 is covered by `analytics-ingestion-ledger.json` with all seven CS-311 events.
 - AC3 is closed as `external_validation_required` because the local configured provider is `noop`.
 - AC4 is covered by catalog/ledger public-field comparison.
-- AC5 is covered by empty forbidden fields plus the persisted negative scan.
+- AC5 is covered by empty forbidden fields plus the persisted negative scan, which no longer reintroduces forbidden tokens.
 - AC6 is covered by `external-validation-required.md`.
 - AC7 and AC8 are covered by lint, targeted Vitest, guardrail Vitest, and full Vitest.
 - AC9 is covered by final evidence and this review artifact.
@@ -94,7 +116,7 @@ Result: CLEAN.
 - Runtime config JSON contract: PASS.
 - Seven-event ledger contract: PASS.
 - Ledger/catalog public-field comparison: PASS.
-- Sensitive-field scan: PASS.
+- Sensitive-field scan: PASS after removing the self-referential proof text.
 - Provider-call guard scan: PASS.
 - `pnpm lint`: PASS.
 - Targeted Vitest: PASS.

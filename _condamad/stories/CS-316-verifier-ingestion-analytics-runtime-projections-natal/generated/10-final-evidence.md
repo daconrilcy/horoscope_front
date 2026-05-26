@@ -16,6 +16,7 @@
 - Source brief: `_story_briefs/cs-316-verifier-ingestion-analytics-runtime-projections-natal.md`
 - Linked logs showed drafting review and brief alignment were already clean.
 - Implementation review found missing persisted evidence files announced by the final evidence.
+- Final alignment review found the sensitive scan proof was self-referential and corrected it.
 - Initial `git status --short`: `_condamad/run-state.json` was already untracked.
 
 ## Capsule validation
@@ -39,7 +40,7 @@
 | AC2 | Ledger JSON lists all seven CS-311 event names. | Python set comparison against expected seven names PASS. | PASS |
 | AC3 | Provider is unavailable locally; closure is `external_validation_required`. | Targeted Vitest PASS; loaded config evidence recorded. | PASS_WITH_LIMITATIONS |
 | AC4 | Ledger public fields mirror CS-311 catalog allowed fields for every event. | Python comparison against `event-catalog.json` PASS. | PASS |
-| AC5 | Ledger has empty `forbidden_fields_present` lists and evidence has no forbidden keys. | `evidence/redaction-scan.txt` records PASS. | PASS |
+| AC5 | Ledger has empty `forbidden_fields_present` lists and evidence has no forbidden keys. | Sensitive evidence scan rerun PASS after proof correction. | PASS |
 | AC6 | `external-validation-required.md` explains the unavailable sink and handoff state. | File existence and content review PASS. | PASS |
 | AC7 | Existing analytics boundary and natal projection instrumentation remain validated. | `pnpm lint` PASS; targeted Vitest PASS. | PASS |
 | AC8 | Full frontend Vitest remains green. | `node .\scripts\run-vite-logged.mjs vitest vitest run` PASS. | PASS |
@@ -102,6 +103,7 @@
 - Persisted proof drift: `redaction-scan.txt` and `validation-frontend.txt` were announced but absent.
 - Review artifact drift: `generated/11-code-review.md` still described drafting review instead of implementation review.
 - Status drift: tracker and story file did not yet reflect the clean implementation review closure.
+- Sensitive scan proof drift: `redaction-scan.txt` no longer stores the forbidden-field pattern inside the scanned evidence folder.
 
 ## DRY / No Legacy evidence
 
@@ -115,7 +117,7 @@
 - Story, tracker, generated review, and persisted evidence are synchronized.
 - No application runtime source file was changed during this review/fix pass.
 - `git diff --check`: PASS with Windows CRLF warnings only.
-- Fresh review after fixes: CLEAN.
+- Fresh review after final proof correction: CLEAN.
 
 ## Final worktree status
 
