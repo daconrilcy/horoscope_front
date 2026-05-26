@@ -108,3 +108,4 @@
 | cs-326 | `_story_briefs\cs-326-audit-projections-interpretatives-llm-input-readiness.md` | `_condamad\stories\cs-326-audit-projections-interpretatives-llm-input-readiness\00-story.md` |
 | cs-327 | `_story_briefs\cs-327-audit-configuration-prompts-placeholders-input-schema.md` | `_condamad\stories\cs-327-audit-configuration-prompts-placeholders-input-schema\00-story.md` |
 | cs-328 | `_story_briefs\cs-328-architecture-transition-calculs-interpretations-injection-llm.md` | `_condamad\stories\cs-328-architecture-transition-calculs-interpretations-injection-llm\00-story.md` |
+| cs-329 | `_story_briefs\cs-329-rapport-synthese-transition-injection-prompts-llm.md` | `_condamad\stories\cs-329-rapport-synthese-transition-injection-prompts-llm\00-story.md` |
