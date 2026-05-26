@@ -1,39 +1,64 @@
-# Review CS-329 - Rapport Synthese Transition Injection Prompts LLM
+# Implementation Review - CS-329 Rapport Synthese Transition Injection Prompts LLM
+
+<!-- Commentaire global: ce fichier conserve la review d'implementation fraiche apres correction de CS-329. -->
 
 Verdict: CLEAN
 
-## Review Scope
+## Review scope
 
 - Story reviewed: `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/00-story.md`
 - Source brief: `_story_briefs/cs-329-rapport-synthese-transition-injection-prompts-llm.md`
-- Tracker row: `_condamad/stories/story-status.md`, source column for CS-329
-- Guardrails checked by targeted ID lookup only: RG-002 and RG-041
+- Report artifacts: `_condamad/reports/calculs-interpretations-vers-prompts-llm/2026-05-26-0000/**`
+- Tracker row: `_condamad/stories/story-status.md`
+- Guardrails checked: no application change, source evidence persistence, report contract shape
 
-## Editorial Findings
+## Fresh review findings
 
-No actionable drafting issue remains.
+No actionable implementation issue remains.
 
-The story contract explicitly covers the source brief objective, the required CS-324 to CS-328 source base,
-the report output path, the twelve mandatory report sections, the seven mandatory questions, the six required
-future refactor story families, the no-application-change constraint, and the expected validation evidence.
+The report exists, cites CS-324 to CS-328, contains the twelve mandatory sections, answers the seven mandatory questions,
+maps current and target injection data, includes the six required future refactor story families and keeps future
+implementation work separate from this report-only story.
 
-Repository structure alerts are correctly recorded as implementation-time availability checks, not as drafting blockers.
+The previous blocker was invalid because the required upstream deliverable folders exist. The correction created the report
+and evidence files from those deliverables and replaced blocked evidence with validation-backed PASS evidence.
 
-## Validation Results
+## AC alignment
 
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm\00-story.md`
+| AC | Review result |
+|---|---|
+| AC1 | PASS: final report exists at the required timestamped path. |
+| AC2 | PASS: CS-324 to CS-328 are cited in report and evidence files. |
+| AC3 | PASS: the twelve mandatory report sections are present. |
+| AC4 | PASS: transition diagnostic, target architecture and contract are answered. |
+| AC5 | PASS: current and target data mapping includes `chart_json`, `structured_facts_v1`, `AINarrativeInput`, `NatalExecutionInput` and `ExecutionContext`. |
+| AC6 | PASS: the report includes `Stories de refactor recommandees` with the six required families. |
+| AC7 | PASS: no application, frontend, backend test or migration file changed. |
+| AC8 | PASS: source evidence and validation output are persisted. |
+| AC9 | PASS: backend rereads stayed bounded; no app source edit occurred. |
 
-Both Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+## Validation results
 
-## Review Output
+- PASS: report root and report file Python path checks.
+- PASS: CS-324 to CS-328 source-ID scan.
+- PASS: `legacy|recent-refonte|contrat cible|chart_json|structured_facts_v1` scan.
+- PASS: `AINarrativeInput|NatalExecutionInput|ExecutionContext|Stories de refactor recommandees` scan.
+- PASS: twelve-section heading scan.
+- PASS: evidence file Python path check.
+- PASS: `git status --short -- backend/app backend/tests frontend/src backend/migrations` returned no output.
+- PASS: CONDAMAD story validation.
+- PASS: CONDAMAD strict story lint.
+- PASS: `git diff --check` over CS-329 report/story artifacts and tracker exited 0, with LF-to-CRLF warnings only.
+- PASS: CS-329 tracker row is `done`, still points to the requested story and source brief, and keeps date `2026-05-27`.
 
-This file is the first-pass editorial review artifact requested by the story contract.
+All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
-Propagation decision: no-propagation. The review found no reusable learning that requires guardrail, AGENTS.md,
-tracker-shape, validator or skill updates.
+## Propagation decision
 
-## Residual Risk
+no-propagation. The issue was a local implementation/review evidence error and did not reveal a reusable guardrail, AGENTS.md
+or skill update requirement.
 
-Aucun risque restant identifie for the drafted story contract. Implementation must still stop and record a blocker
-if required CS-324 to CS-328 deliverables are unavailable when the report is produced.
+## Residual risk
+
+The CS-324 to CS-328 tracker rows still show `ready-to-dev` while their deliverable folders exist. This may need separate
+tracker governance cleanup, but it does not block CS-329 because the report cites the actual deliverables.

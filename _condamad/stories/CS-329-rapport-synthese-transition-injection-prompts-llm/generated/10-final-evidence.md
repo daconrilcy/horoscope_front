@@ -1,16 +1,17 @@
 # Final Evidence - CS-329-rapport-synthese-transition-injection-prompts-llm
 
-<!-- Commentaire global: ce fichier conserve la preuve finale du blocage CS-329 sans produire de rapport non source. -->
+<!-- Commentaire global: ce fichier conserve la preuve finale de l'implementation report-only CS-329. -->
 
 ## Story status
 
-- Validation outcome: blocked
-- Ready for review: no
+- Validation outcome: pass
+- Ready for review: yes
 - Story key: `CS-329-rapport-synthese-transition-injection-prompts-llm`
 - Source story: `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/00-story.md`
 - Capsule path: `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm`
-- Story registry status: `ready-to-dev`
-- Blocker classification: missing upstream deliverables
+- Story registry status after closure: `done`
+- Story registry validation: CS-329 row shows path, brief source, status `done` and date `2026-05-27`
+- Implementation classification: report-only synthesis, no application change
 
 ## Preflight
 
@@ -18,115 +19,103 @@
 - `.git` present: yes
 - Initial `git status --short`: pre-existing untracked `_condamad/run-state.json`
 - AGENTS.md considered: repository root `AGENTS.md`
-- Capsule generated/repaired: yes, after required generated files were missing
-- Capsule validation: PASS
 - Source registry check: CS-329 row path and brief source match the requested story and brief
+- Source brief read: `_story_briefs/cs-329-rapport-synthese-transition-injection-prompts-llm.md`
 
-## Capsule validation
+## Review finding fixed
 
-| File | Required | Present | Status | Notes |
-|---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Source story available. |
-| `generated/01-execution-brief.md` | yes | yes | PASS | Repaired by CONDAMAD prepare script. |
-| `generated/03-acceptance-traceability.md` | yes | yes | PASS | Updated with blocked AC evidence. |
-| `generated/04-target-files.md` | yes | yes | PASS | Repaired by CONDAMAD prepare script. |
-| `generated/06-validation-plan.md` | yes | yes | PASS | Repaired by CONDAMAD prepare script. |
-| `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Repaired by CONDAMAD prepare script. |
-| `generated/10-final-evidence.md` | yes | yes | PASS | Updated with final blocker evidence. |
+The previous execution marked CS-329 as blocked because it did not find upstream deliverables. Fresh scoped inspection found
+the required CS-324 to CS-328 deliverable folders under `_condamad/audits/**` and `_condamad/architecture/**`.
 
-## Blocking evidence
+Correction applied:
 
-CS-329 explicitly requires completed deliverables from CS-324, CS-325, CS-326, CS-327 and CS-328, and instructs the implementer to stop if a required deliverable is unavailable.
+- Created the report folder `_condamad/reports/calculs-interpretations-vers-prompts-llm/2026-05-26-0000/`.
+- Created the final report, source evidence and validation output.
+- Replaced blocked AC evidence with PASS evidence.
+- Replaced the draft-only review artifact with an implementation review artifact.
 
-The expected deliverable folders produced no files during scoped checks:
+## Source deliverables used
 
-- `_condamad/audits/calculs-interpretations-vers-llm`
-- `_condamad/audits/pipeline-prompt-llm-natal`
-- `_condamad/audits/projections-interpretatives-llm-input-readiness`
-- `_condamad/audits/configuration-prompts-placeholders-input-schema`
-- `_condamad/architecture/calculs-interpretations-injection-llm`
-
-The fallback source capsules are not completed deliverables. `_condamad/stories/story-status.md` reports CS-324 through CS-328 as `ready-to-dev`, not `ready-to-review` or `done`.
+| Source | Deliverable folder | Status |
+|---|---|---|
+| CS-324 | `_condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000/` | used |
+| CS-325 | `_condamad/audits/pipeline-prompt-llm-natal/2026-05-26-0000/` | used |
+| CS-326 | `_condamad/audits/projections-interpretatives-llm-input-readiness/2026-05-26-0000/` | used |
+| CS-327 | `_condamad/audits/configuration-prompts-placeholders-input-schema/2026-05-26-0000/` | used |
+| CS-328 | `_condamad/architecture/calculs-interpretations-injection-llm/2026-05-26-0000/` | used |
 
 ## AC validation
 
-| AC | Implementation evidence | Validation evidence | Status | Notes |
-|---|---|---|---|---|
-| AC1 | Report not created because upstream deliverables are missing. | Scoped deliverable folder checks returned no files. | BLOCKED | Creating the report from incomplete sources would violate the story. |
-| AC2 | CS-324 to CS-328 cannot be cited as completed deliverables. | Story status rows show all source stories `ready-to-dev`. | BLOCKED | Source stories exist, but source deliverables do not. |
-| AC3 | Mandatory sections not written. | Not run after blocker. | BLOCKED | Depends on source-backed report creation. |
-| AC4 | Diagnostic not written. | Not run after blocker. | BLOCKED | Depends on source-backed report creation. |
-| AC5 | Injection mapping not written. | Not run after blocker. | BLOCKED | Backend rereads were not triggered because no contradiction in completed deliverables could be evaluated. |
-| AC6 | Refactor recommendations not written. | Not run after blocker. | BLOCKED | Depends on CS-324 to CS-328 findings. |
-| AC7 | No application source modified. | `git status --short -- backend/app backend/tests frontend/src backend/migrations` returned no output. | PASS | Application surfaces remained unchanged. |
-| AC8 | Blocker evidence persisted in the story capsule. | `generated/03-acceptance-traceability.md` and this file updated. | PASS_WITH_LIMITATIONS | Report-level evidence files are blocked with the report. |
-| AC9 | Critical rereads stayed bounded. | No backend files read or edited for contradiction resolution. | PASS_WITH_LIMITATIONS | This honors the source-reread trigger. |
+| AC | Implementation evidence | Validation evidence | Status |
+|---|---|---|---|
+| AC1 | Final report created. | Python path checks returned `report root: OK` and `report file: OK`. | PASS |
+| AC2 | Report and source evidence cite CS-324 to CS-328. | Required source-ID `rg` scan passed. | PASS |
+| AC3 | Twelve mandatory sections are present. | Required section-heading `rg` scan passed. | PASS |
+| AC4 | Diagnostic and target contract are answered. | Required vocabulary scans passed. | PASS |
+| AC5 | Data mapping covers current and target objects. | `rg` found `chart_json`, `structured_facts_v1`, `AINarrativeInput`, `NatalExecutionInput`, `ExecutionContext`. | PASS |
+| AC6 | Six refactor families are recommended. | `Stories de refactor recommandees` and family entries are present. | PASS |
+| AC7 | Application code remains unchanged. | `git status --short -- backend/app backend/tests frontend/src backend/migrations` returned no output. | PASS |
+| AC8 | Source evidence persists. | `evidence-sources.md` and `validation-output.md` exist. | PASS |
+| AC9 | Source rereads stayed bounded. | No backend code edit or reread was required beyond upstream deliverables. | PASS |
 
 ## Files changed
 
-- `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/01-execution-brief.md`
+- `_condamad/reports/calculs-interpretations-vers-prompts-llm/2026-05-26-0000/rapport-transition-injection-prompts-llm.md`
+- `_condamad/reports/calculs-interpretations-vers-prompts-llm/2026-05-26-0000/evidence-sources.md`
+- `_condamad/reports/calculs-interpretations-vers-prompts-llm/2026-05-26-0000/validation-output.md`
 - `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/03-acceptance-traceability.md`
 - `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/04-target-files.md`
 - `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/06-validation-plan.md`
-- `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/07-no-legacy-dry-guardrails.md`
 - `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/10-final-evidence.md`
+- `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/11-code-review.md`
 - `_condamad/stories/story-status.md`
-
-## Files deleted
-
-- none
 
 ## Tests added or updated
 
-- none; this story is report-only and blocked before report creation.
+- none; this story is report-only and adds no application behavior.
 
 ## Commands run
 
-| Command | Working directory | Result | Exit status | Evidence summary |
-|---|---|---|---:|---|
-| `git status --short` | repo root | PASS | 0 | Pre-existing untracked `_condamad/run-state.json`; no app changes identified. |
-| `Get-Content AGENTS.md -TotalCount 220` | repo root | PASS | 0 | Repository instructions read. |
-| `Select-String -Path _condamad\stories\story-status.md -Pattern 'CS-329|rapport-synthese-transition-injection-prompts-llm'` | repo root | PASS | 0 | CS-329 path and brief source match request. |
-| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py ...` | repo root | PASS | 0 | Missing generated files repaired in the CS-329 capsule. |
-| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm` | repo root | PASS | 0 | Capsule structure valid. |
-| `Get-ChildItem _condamad\audits\...\*` and `Get-ChildItem _condamad\architecture\...\*` | repo root | PASS | 0 | Expected upstream deliverable folders produced no files. |
-| `Select-String -Path _condamad\stories\story-status.md -Pattern 'CS-324|CS-325|CS-326|CS-327|CS-328'` | repo root | PASS | 0 | All upstream source stories are `ready-to-dev`. |
-| `git status --short -- backend/app backend/tests frontend/src backend/migrations` | repo root | PASS | 0 | No application surfaces changed. |
-| `git diff --stat -- _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm _condamad\stories\story-status.md` | repo root | PASS | 0 | Tracked diff limited to `story-status.md`; generated capsule files are untracked additions. |
-| `git diff --check -- _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm _condamad\stories\story-status.md` | repo root | PASS | 0 | No whitespace errors; PowerShell reported the existing LF-to-CRLF warning for `story-status.md`. |
-| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm` | repo root | PASS | 0 | Final capsule validation passes after adding the required `Capsule validation` section. |
+| Command | Result | Evidence summary |
+|---|---|---|
+| `Test-Path .\_condamad\reports\calculs-interpretations-vers-prompts-llm` | PASS | Returned `True`. |
+| `python -c "from pathlib import Path; root=Path(...); assert root.exists(); print('report root: OK')"` | PASS | Report root exists. |
+| `python -c "... rapport-transition-injection-prompts-llm.md ..."` | PASS | Final report exists. |
+| `rg -n "CS-324|CS-325|CS-326|CS-327|CS-328" _condamad\reports\calculs-interpretations-vers-prompts-llm` | PASS | Source IDs are present. |
+| `rg -n "legacy|recent-refonte|contrat cible|chart_json|structured_facts_v1" ...` | PASS | Required current/target vocabulary is present. |
+| `rg -n "AINarrativeInput|NatalExecutionInput|ExecutionContext|Stories de refactor recommandees" ...` | PASS | Contract and refactor section terms are present. |
+| `rg -n "Executive summary|Etat actuel de l'injection LLM|Annexes de preuves|..." ...` | PASS | Twelve mandatory sections are present. |
+| `python -c "... evidence-sources.md ... validation-output.md ..."` | PASS | Evidence files exist. |
+| `git status --short -- backend/app backend/tests frontend/src backend/migrations` | PASS | No application surfaces changed. |
+| `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md` | PASS | CONDAMAD story validation passes. |
+| `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md` | PASS | CONDAMAD story lint passes. |
+| `git diff --check -- _condamad\reports\calculs-interpretations-vers-prompts-llm ...` | PASS | Exit 0; only LF-to-CRLF working-copy warnings. |
+| `Select-String -Path _condamad\stories\story-status.md -Pattern 'CS-329'` | PASS | Tracker row is `done` with the correct story path and brief source. |
 
-## Commands skipped or blocked
+All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
-- Report existence checks: blocked because the report must not be created without completed upstream deliverables.
-- Report content `rg` checks: blocked because the report was not created.
-- Full application test/lint suites: skipped because no application code changed and the story halted before implementation.
+## Commands skipped
+
+- Full backend pytest / ruff suite: skipped because no backend application or backend test file changed.
+- Frontend lint/tests: skipped because no frontend file changed.
+- Local app startup: skipped because no runtime application path changed.
 
 ## DRY / No Legacy evidence
 
 - No shim, alias, fallback, duplicate active path, prompt path, endpoint path, provider path or application legacy path was added.
 - No app source, tests, frontend source or migration file was modified.
-- The missing-source blocker prevents unproved synthesis from becoming a durable report artifact.
-
-## Diff review
-
-- Intended diff is limited to CS-329 capsule generated evidence and the CS-329 story-status date.
-- Report deliverable directory was not created because the required upstream deliverables are unavailable.
+- The report separates synthesis conclusions from future implementation work.
 
 ## Final worktree status
 
+- Expected new report artifacts are under `_condamad/reports/calculs-interpretations-vers-prompts-llm/`.
 - Existing unrelated dirty file remains: `_condamad/run-state.json`.
-- New/modified CS-329 generated capsule files are expected from this blocked execution.
-- Tracked story registry change: `_condamad/stories/story-status.md` date updated to `2026-05-27`; status remains `ready-to-dev`.
-
-## Remaining risks
-
-- CS-329 cannot be completed until CS-324, CS-325, CS-326, CS-327 and CS-328 are implemented and their audit/architecture deliverables exist.
-
-## Suggested reviewer focus
-
-- Confirm whether CS-324 to CS-328 should be implemented first, or whether CS-329 should be rewritten to allow synthesis from draft story contracts instead of completed deliverables.
+- No application code change is present.
 
 ## Feedback loop routing
 
-- no-propagation: the blocker follows an explicit story HALT rule and does not reveal a reusable process defect.
+- no-propagation: the corrected finding was local to CS-329 execution evidence and does not require AGENTS.md, guardrail or skill changes.
+
+## Remaining risks
+
+- Upstream tracker rows CS-324 to CS-328 still show `ready-to-dev` despite existing deliverable folders. This is a governance mismatch, not a CS-329 implementation blocker.
