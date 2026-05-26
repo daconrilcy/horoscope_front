@@ -1,0 +1,34 @@
+# CS-313 validation
+
+## Commands
+
+- PASS `pnpm lint` from `frontend`; output captured in `evidence/pnpm-lint-before.txt`.
+- PASS `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.lint.json` from `frontend`; exit 0 in `evidence/typescript-lint.txt`.
+- PASS `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.node.json` from `frontend`; exit 0 in `evidence/typescript-lint.txt`.
+- PASS `pnpm lint` from `frontend` after README correction; output captured in `evidence/pnpm-lint-after.txt`.
+- PASS `rg -n "npm run lint|yarn lint|bun lint" frontend _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308`; only the story's own validation-command literals remain.
+- PASS `rg -n "npm run lint|yarn lint|bun lint" frontend`; no matches, exit 1 expected.
+- PASS `git diff --name-only -- frontend _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308 _condamad/stories/story-status.md`; changed surface is `frontend/README.md` plus CS-313 evidence/generated files.
+- PASS `rg -n "style=" src -g "*.tsx"` from `frontend`; existing TSX style matches were inspected as out of scope because no TSX file changed.
+- PASS `rg -n -- "--default_dropshadow|migration-only" src` from `frontend`; existing registry/test matches are pre-existing guard artifacts, not introduced CSS drift.
+- PASS `condamad_validate.py _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308` after venv activation.
+- PASS `condamad_story_validate.py _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md` after venv activation.
+- PASS `condamad_story_lint.py --strict _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md` after venv activation.
+- PASS `git diff --check -- frontend _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308 _condamad\stories\story-status.md`; exit 0 with line-ending normalization warnings only.
+
+## Result
+
+- `command`: `pnpm lint`
+- `working_directory`: `frontend`
+- `result`: `pass`
+- `cause`: `resolved-windows-environment`
+- `fallback_status`: `not-used`
+- `residual_risk`: Windows EPERM can recur if another process locks pnpm internal files.
+
+## Changed files ledger
+
+- Application source files changed: none.
+- Documentation changed: `frontend/README.md` switched quality command examples from npm to pnpm.
+- Evidence changed: `_condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/evidence/**`.
+- Capsule changed: `_condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/**`.
+- Story tracker changed: `_condamad/stories/story-status.md` moved CS-313 to `ready-to-review`.

@@ -4,11 +4,11 @@ This template provides a minimal setup to get React working in Vite with HMR.
 
 ## Project Quality Commands
 
-- `npm run lint`: run strict TypeScript checks on app + node configs.
-- `npm run test`: run full Vitest suite.
-- `npm run test:b2b`: run the critical B2B frontend suite (API clients + panels).
-- `npm run test:b2b:coverage`: run the B2B suite with coverage thresholds.
-- `npm run audit:prod`: audit runtime dependencies only (`--omit=dev`).
+- `pnpm lint`: run strict TypeScript checks on app + node configs.
+- `pnpm test`: run full Vitest suite.
+- `pnpm test:b2b`: run the critical B2B frontend suite (API clients + panels).
+- `pnpm test:b2b:coverage`: run the B2B suite with coverage thresholds.
+- `pnpm audit:prod`: audit runtime dependencies only (`--omit=dev`).
 
 ## Auth Session Behavior
 

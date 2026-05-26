@@ -1,0 +1,4 @@
+COMMAND: .\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.lint.json
+EXIT: 0
+COMMAND: .\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.node.json
+EXIT: 0
