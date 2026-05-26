@@ -11,9 +11,9 @@ This run is read-only for application code. It creates audit artifacts only.
 ## Mandatory Answers
 
 1. Donnees qui entrent dans `LLMGateway`: `chart_json`, `natal_data`, `astro_context`, `plan`, `level`, `module`, `variant_code`, `question`, `persona_id`, `locale`, IDs de requete et `evidence_catalog` via flags (E-006, E-008, E-009).
-2. Donnees visibles dans le message utilisateur: `chart_json` only, either through prompt placeholder `{{chart_json}}` or through `Technical Data: {chart_json}`. `natal_data`, `astro_context`, `plan`, `level`, `module`, `variant_code` and `evidence_catalog` are runtime-only, validation-only or input-schema material unless a template explicitly references an allowed placeholder (E-010, E-011, E-012, E-013).
-3. `chart_json_in_prompt`: `_build_messages` sets it to true when `{{chart_json}}` exists in the rendered developer prompt. In that case `build_user_payload` suppresses the fallback `Technical Data` append, so injection strategy switches from user-data block append to template placeholder rendering (E-010, E-011).
-4. Branches: `short`, `complete`, `free_short` and thematic modules all originate from the same `chart_json_dict`, `evidence_catalog` and `astro_context` assembly; they differ by `use_case_key`, `level`, `validation_strict`, `question`, `module`, `variant_code` and schema fallback behavior (E-006, E-007, E-013, E-020).
+2. Donnees visibles dans le message utilisateur: `chart_json` only, either through prompt placeholder `{{chart_json}}` rendered by `PromptRenderer` or through `Technical Data: {chart_json}`. `natal_data`, `astro_context`, `plan`, `level`, `module`, `variant_code` and `evidence_catalog` are runtime-only, validation-only or input-schema material unless a template explicitly references an allowed placeholder (E-010, E-011, E-012, E-013, E-023).
+3. `chart_json_in_prompt`: `_build_messages` sets it to true when `{{chart_json}}` exists in the rendered developer prompt assembled by the prompt assembly path. In that case `build_user_payload` suppresses the fallback `Technical Data` append, so injection strategy switches from user-data block append to template placeholder rendering (E-010, E-011, E-023, E-024).
+4. Branches: `short`, `complete`, `free_short` and thematic modules all originate from the same `chart_json_dict`, `evidence_catalog` and `astro_context` assembly; they differ by `use_case_key`, `level`, `validation_strict`, `question`, `module`, `variant_code`, prompt assembly/fallback context and schema fallback behavior (E-006, E-007, E-013, E-020, E-024).
 5. `evidence_catalog`: it is passed into `ExecutionFlags` and consumed by output validation normalization/sanitization. Evidence found no source path where it constrains prompt composition or provider input text (E-008, E-011, E-017).
 6. Donnees refondues perdues/aplaties: the audited pipeline does not consume `structured_facts_v1`, `AINarrativeInput`, `ChartInterpretationInputBuilder` or `ChartObjectRuntimeData`; current prompt-visible data is the `build_chart_json` projection serialized as `chart_json`, with astral-point context serialized separately but not prompt-visible by default (E-006, E-015, E-019).
 7. Explicit legacy behavior: `/users` routes are maintained through `interpret_chart` mapped to `variant_code="free_short"`; schema v3/v2/v1 compatibility and fallback branches remain in deserialization; prompt fallback/legacy residuals are separately guarded by RG-018/RG-021 (E-003, E-005, E-006).
@@ -23,9 +23,9 @@ This run is read-only for application code. It creates audit artifacts only.
 | ID | Severity | Summary | Evidence | Story candidate |
 |---|---|---|---|---|
 | F-001 | High | Rich natal facts are carried to the gateway mainly through legacy/public `chart_json`, while recent canonical interpretation owners are absent from the scoped LLM prompt path. | E-006, E-008, E-013, E-019 | yes |
-| F-002 | Medium | `natal_data`, `astro_context`, `plan`, `level`, `module` and `variant_code` enter runtime context but are not prompt-visible in `build_user_payload`. | E-008, E-009, E-010, E-011 | yes |
+| F-002 | Medium | `natal_data`, `astro_context`, `plan`, `level`, `module` and `variant_code` enter runtime context but are not prompt-visible in `build_user_payload`. | E-008, E-009, E-010, E-011, E-023 | yes |
 | F-003 | Medium | `evidence_catalog` validates/sanitizes output evidence but does not constrain message composition. | E-008, E-011, E-017 | yes |
-| F-004 | Medium | Historical branch compatibility remains active for `/users`, `free_short`, schema v1/v2/v3 and prompt fallback/governance surfaces. | E-003, E-005, E-006, E-020 | yes |
+| F-004 | Medium | Historical branch compatibility remains active for `/users`, `free_short`, schema v1/v2/v3 and prompt fallback/governance surfaces. | E-003, E-005, E-006, E-020, E-024, E-025 | yes |
 
 ## File Usage Classification
 
@@ -46,10 +46,12 @@ This run is read-only for application code. It creates audit artifacts only.
 | `backend/app/domain/llm/configuration/canonical_use_case_registry.py` / natal contracts | intentional-public-export | E-013 | Canonical LLM use-case contracts require `chart_json` for natal and module prompts. | Contract source only. |
 | `backend/app/services/llm_generation/natal/prompt_context.py` | used | E-014 | Canonical import facade for shared natal prompt helpers. | No deletion recommendation. |
 | `backend/app/services/llm_generation/shared/natal_context.py` / `build_astral_point_interpretation_context` | used | E-015 | Producer of `astro_context` content used by the service. | Source inspection only. |
+| `backend/app/domain/llm/prompting/prompt_renderer.py` / `PromptRenderer.render` | used | E-023 | Renders allowed placeholders such as `{{chart_json}}` and governs unresolved or unauthorized placeholders. | Source inspection only. |
 | `backend/app/domain/llm/prompting/context.py` / common context builder | out-of-domain | E-016 | Separate prompt common context path inspected to avoid confusing it with the natal gateway path. | Not the CS-325 runtime path. |
+| `backend/app/domain/llm/configuration/assembly_resolver.py` / `resolve_assembly`, `assemble_developer_prompt` | used | E-024 | Composes the rendered developer prompt inspected by `_build_messages` for `{{chart_json}}`; also documents fallback/default template source behavior. | Source inspection only. |
 | `backend/app/domain/llm/runtime/output_validator.py` / evidence validation | used | E-017 | Consumer of `evidence_catalog` during output validation. | Source inspection only. |
-| `backend/tests/llm_orchestration/**` | test-only | E-018 | Existing LLM orchestration tests cover gateway/request/prompt behavior. | Execution recorded in validation output. |
-| `backend/app/tests/integration/test_llm_qa_runtime_contracts.py` | test-only | E-018 | Integration evidence for placeholder-based `chart_json` prompt rendering. | Execution recorded in validation output. |
+| `backend/tests/llm_orchestration/**` | test-only | E-018, E-025 | Existing LLM orchestration tests cover gateway/request/prompt behavior, prompt renderer governance, assembly resolution and fallback guards. | Execution recorded in validation output. |
+| `backend/app/tests/integration/test_llm_qa_runtime_contracts.py` | test-only | E-018, E-025 | Integration evidence for placeholder-based `chart_json` prompt rendering in developer messages. | Execution recorded in validation output. |
 
 ## Prior Audit And Story Closure
 
@@ -70,11 +72,10 @@ This run is read-only for application code. It creates audit artifacts only.
 ## Exhaustive Active Finding Surface
 
 - F-001: `backend/app/services/llm_generation/natal/interpretation_service.py`, `backend/app/domain/llm/runtime/contracts.py`, `backend/app/domain/llm/runtime/adapter.py`, selected canonical owner under `backend/app/domain/astrology/interpretation/**` if a future implementation chooses one.
-- F-002: `backend/app/domain/llm/runtime/gateway.py`, `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, `backend/app/domain/llm/runtime/contracts.py`, `backend/app/services/llm_generation/natal/interpretation_service.py`.
+- F-002: `backend/app/domain/llm/runtime/gateway.py`, `backend/app/domain/llm/prompting/prompt_renderer.py`, `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, `backend/app/domain/llm/runtime/contracts.py`, `backend/app/services/llm_generation/natal/interpretation_service.py`.
 - F-003: `backend/app/domain/llm/runtime/output_validator.py`, `backend/app/domain/llm/runtime/gateway.py`, `backend/app/services/llm_generation/natal/interpretation_service.py`.
-- F-004: `backend/app/services/llm_generation/natal/interpretation_service.py`, `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, prompt fallback/governance tests under `backend/tests/llm_orchestration/**`.
+- F-004: `backend/app/services/llm_generation/natal/interpretation_service.py`, `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, `backend/app/domain/llm/configuration/assembly_resolver.py`, prompt fallback/governance tests under `backend/tests/llm_orchestration/**`.
 
 ## Deferred Non-Domain Context
 
 No application implementation is performed here. Prompt text changes, provider settings, output schema changes, frontend display, DB changes, auth/security and CI are deferred non-domain concerns for this audit.
-

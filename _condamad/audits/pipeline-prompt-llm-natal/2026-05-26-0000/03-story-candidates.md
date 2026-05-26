@@ -35,18 +35,18 @@
 - Draft objective: add deterministic tests or guardrails proving only intended fields enter the user message and runtime-only fields remain non-visible unless placeholders explicitly allow them.
 - Closure intent: full-closure
 - Must include: explicit cases for `chart_json` with and without `{{chart_json}}`, and negative assertions for `natal_data`, `astro_context`, `plan`, `level`, `module`, `variant_code` in `build_user_payload`.
-- Validation hints: focused gateway tests around `_build_messages` and `build_user_payload`; scan audit matrix terms `prompt-visible`, `runtime-only`, `validation-only`.
+- Validation hints: focused gateway tests around `_build_messages` and `build_user_payload`; prompt renderer/assembly tests proving placeholder rendering does not make runtime-only fields visible by accident; scan audit matrix terms `prompt-visible`, `runtime-only`, `validation-only`.
 - Blockers: none unless product decides `astro_context` or `evidence_catalog` must become prompt-visible.
 
 ### Exhaustive Files To Modify
 
 - Application files: none expected unless behavior changes are explicitly authorized.
-- Governance/test files: likely `backend/tests/llm_orchestration/test_llm_gateway_compose.py` or a new focused runtime test.
+- Governance/test files: likely `backend/tests/llm_orchestration/test_llm_gateway_compose.py`, `backend/tests/llm_orchestration/test_prompt_renderer.py`, `backend/tests/llm_orchestration/test_assembly_resolution.py` or a new focused runtime test.
 - Before evidence required: E-010 and E-011 source behavior.
 - After evidence required: tests fail if runtime-only fields appear in user data block unexpectedly.
 - Ownership routing decisions: gateway owns message visibility; contracts own transport fields.
 - Mandatory no-wildcard allowlist and No Legacy checks: no broad placeholder allowlist and no silent fallback.
-- Reintroduction guard requirements: exact assertions on message content.
+- Reintroduction guard requirements: exact assertions on message content and placeholder-rendering behavior.
 - Stop condition: all audited fields have prompt-visible/runtime-only/validation-only tests or documented intentional gaps.
 - Expected classification changes: tests become test-only; no application file classification changes expected.
 
@@ -85,13 +85,13 @@
 - Draft objective: turn `/users`, `free_short`, schema v1/v2/v3 and prompt fallback compatibility into an explicit keep/remove decision register before changing runtime behavior.
 - Closure intent: full-closure
 - Must include: exact branch list, owner per branch, canonical replacement or keep rationale, tests/guards preventing unclassified compatibility growth.
-- Validation hints: branch tests around `interpret_chart`, `_generate_free_short`, schema deserialization and prompt fallback guard tests RG-018/RG-021.
+- Validation hints: branch tests around `interpret_chart`, `_generate_free_short`, schema deserialization, assembly resolution and prompt fallback guard tests RG-018/RG-021.
 - Blockers: needs-user-decision for any compatibility surface that is externally contracted.
 
 ### Exhaustive Files To Modify
 
 - Application files: none for classification-only story; implementation story may later target `backend/app/services/llm_generation/natal/interpretation_service.py`.
-- Governance/test files: compatibility register under `_condamad/stories/**` and targeted tests/guards.
+- Governance/test files: compatibility register under `_condamad/stories/**` and targeted tests/guards, including assembly resolution and prompt fallback guard tests.
 - Before evidence required: E-003, E-005, E-006, E-020.
 - After evidence required: every compatibility branch has status `intentional`, `delete-candidate`, or `needs-user-decision`.
 - Ownership routing decisions: API `/users` compatibility remains separate from LLM prompt input ownership.
@@ -103,4 +103,3 @@
 ## Deferred Non-Domain Candidates
 
 - None emitted for frontend, DB, auth, CI, provider cost, prompt copy or output schemas.
-

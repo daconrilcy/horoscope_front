@@ -14,10 +14,11 @@
 8. The service builds `NatalExecutionInput`.
 9. `AIEngineAdapter.generate_natal_interpretation` maps input to `LLMExecutionRequest`.
 10. `LLMGateway.execute_request` resolves execution plan and prompt.
-11. `_build_messages` merges `ExecutionContext.extra_context`.
-12. `_build_messages` sets `chart_json_in_prompt` from `{{chart_json}} in plan.rendered_developer_prompt`.
-13. `build_user_payload` emits the user data block.
-14. If `chart_json_in_prompt=false`, the user data block contains `Technical Data: {chart_json}`.
-15. If `chart_json_in_prompt=true`, the user data block omits `Technical Data`; `chart_json` is expected to be rendered in the developer prompt placeholder path.
-16. Provider response is validated; `evidence_catalog` participates in output validation, not message construction.
-
+11. `assembly_resolver` composes the developer prompt from feature/subfeature/plan-rule blocks when an assembly is used.
+12. `PromptRenderer` resolves allowed placeholders, including `{{chart_json}}` when present and provided.
+13. `_build_messages` merges `ExecutionContext.extra_context`.
+14. `_build_messages` sets `chart_json_in_prompt` from `{{chart_json}} in plan.rendered_developer_prompt`.
+15. `build_user_payload` emits the user data block.
+16. If `chart_json_in_prompt=false`, the user data block contains `Technical Data: {chart_json}`.
+17. If `chart_json_in_prompt=true`, the user data block omits `Technical Data`; `chart_json` is expected to be rendered in the developer prompt placeholder path.
+18. Provider response is validated; `evidence_catalog` participates in output validation, not message construction.

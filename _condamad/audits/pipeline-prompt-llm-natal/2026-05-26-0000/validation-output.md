@@ -25,3 +25,16 @@ Expected new audit artifact directory:
 
 - `_condamad/audits/pipeline-prompt-llm-natal/2026-05-26-0000/`
 
+## Targeted Audit Review - 2026-05-27
+
+Review correction: added missing mandatory-source evidence and classification for
+`backend/app/domain/llm/prompting/prompt_renderer.py` and
+`backend/app/domain/llm/configuration/assembly_resolver.py`, then propagated the
+evidence into findings, sequence, field/branch matrices and story candidates.
+
+| Command | Result |
+|---|---|
+| `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/pipeline-prompt-llm-natal/2026-05-26-0000` | PASS - CONDAMAD domain audit validation passed. |
+| `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/pipeline-prompt-llm-natal/2026-05-26-0000` | PASS - CONDAMAD domain audit lint passed. |
+| `python -S -B -c "import subprocess; out=subprocess.check_output(['git','status','--short','--','backend/app','backend/tests','frontend'], text=True); assert out.strip() == '', out"` | PASS - no application, backend test or frontend files changed. |
+| `rg -n "prompt_renderer.py\|assembly_resolver.py\|E-023\|E-024\|E-025\|PromptRenderer\|assembly_resolver" _condamad/audits/pipeline-prompt-llm-natal/2026-05-26-0000` | PASS - review-added mandatory source evidence is present across audit artifacts. |

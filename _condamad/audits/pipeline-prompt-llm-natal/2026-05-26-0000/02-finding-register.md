@@ -3,9 +3,9 @@
 | ID | Severity | Confidence | Category | Domain | Evidence | Impact | Recommended action | Story candidate |
 |---|---|---|---|---|---|---|---|---|
 | F-001 | High | High | missing-canonical-owner | pipeline-prompt-llm-natal | E-006, E-008, E-013, E-019 | Natal LLM generation can remain based on a public/legacy projection while richer recent facts exist outside the prompt path. | Choose and wire one canonical narrative/factual LLM input owner, or record a user decision that public `chart_json` remains intentional. | yes |
-| F-002 | Medium | High | runtime-contract-drift | pipeline-prompt-llm-natal | E-008, E-009, E-010, E-011 | Auditors and implementers can mistake runtime-carried fields for prompt-visible data. | Add a future guard or contract test that distinguishes prompt-visible fields from runtime-only fields. | yes |
+| F-002 | Medium | High | runtime-contract-drift | pipeline-prompt-llm-natal | E-008, E-009, E-010, E-011, E-023 | Auditors and implementers can mistake runtime-carried fields for prompt-visible data. | Add a future guard or contract test that distinguishes prompt-visible fields from runtime-only fields. | yes |
 | F-003 | Medium | High | duplicate-responsibility | pipeline-prompt-llm-natal | E-008, E-011, E-017 | Evidence validation can be mistaken for generation grounding, causing prompt changes to miss the real constraint path. | Define whether `evidence_catalog` remains validation-only or must be included in a future canonical prompt input contract. | yes |
-| F-004 | Medium | Medium | legacy-surface | pipeline-prompt-llm-natal | E-003, E-005, E-006, E-020 | Historical `/users`, `free_short`, schema compatibility and fallback surfaces make branch behavior harder to reason about. | Classify each compatibility surface as intentional or removable before any implementation refactor. | yes |
+| F-004 | Medium | Medium | legacy-surface | pipeline-prompt-llm-natal | E-003, E-005, E-006, E-020, E-024, E-025 | Historical `/users`, `free_short`, schema compatibility and fallback surfaces make branch behavior harder to reason about. | Classify each compatibility surface as intentional or removable before any implementation refactor. | yes |
 
 ## Finding Details
 
@@ -29,9 +29,9 @@
 - Confidence: High
 - Category: runtime-contract-drift
 - Domain: pipeline-prompt-llm-natal
-- Evidence: E-008, E-009, E-010, E-011
+- Evidence: E-008, E-009, E-010, E-011, E-023
 - Expected rule: audit and future stories must distinguish data entering `LLMGateway` from data visible in the user message.
-- Actual state: `build_user_payload` appends question/context and `Technical Data: {chart_json}` only when `chart_json_in_prompt` is false; other runtime fields do not become visible through this function.
+- Actual state: `build_user_payload` appends question/context and `Technical Data: {chart_json}` only when `chart_json_in_prompt` is false; `PromptRenderer` can render allowed placeholders from the developer prompt, but other runtime fields do not become visible through `build_user_payload`.
 - Impact: Auditors and implementers can mistake runtime-carried fields for prompt-visible data.
 - Recommended action: Add a future guard or contract test that distinguishes prompt-visible fields from runtime-only fields.
 - Story candidate: yes
@@ -57,11 +57,10 @@
 - Confidence: Medium
 - Category: legacy-surface
 - Domain: pipeline-prompt-llm-natal
-- Evidence: E-003, E-005, E-006, E-020
+- Evidence: E-003, E-005, E-006, E-020, E-024, E-025
 - Expected rule: compatibility routes, variants and fallback/schema branches must be explicitly classified before refactor work.
-- Actual state: `/users` uses `free_short`, `free_short` maps to `natal_long_free`, complete output accepts v3/v3_error/v2/v1 compatibility, and prompt fallback guardrails remain relevant.
+- Actual state: `/users` uses `free_short`, `free_short` maps to `natal_long_free`, complete output accepts v3/v3_error/v2/v1 compatibility, and assembly/prompt fallback guardrails remain relevant.
 - Impact: Historical `/users`, `free_short`, schema compatibility and fallback surfaces make branch behavior harder to reason about.
 - Recommended action: Classify each compatibility surface as intentional or removable before any implementation refactor.
 - Story candidate: yes
 - Suggested archetype: legacy-facade-removal
-

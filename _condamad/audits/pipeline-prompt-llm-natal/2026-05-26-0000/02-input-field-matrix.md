@@ -2,7 +2,7 @@
 
 | input field | producer | consumer | injection effective | statut |
 |---|---|---|---|---|
-| `chart_json` | `NatalInterpretationService.interpret` / `_generate_free_short` from `build_chart_json` | `AIEngineAdapter`, `LLMGateway.build_user_payload`, placeholder/input-schema payload mapping | prompt-visible | historical |
+| `chart_json` | `NatalInterpretationService.interpret` / `_generate_free_short` from `build_chart_json` | `AIEngineAdapter`, `LLMGateway.build_user_payload`, `PromptRenderer` placeholder path, input-schema payload mapping | prompt-visible | historical |
 | `natal_data` | same `chart_json_dict` as `chart_json` | `ExecutionContext.natal_data`; schema payload mapping prefers it for `chart_json` object | runtime-only | historical |
 | `evidence_catalog` | `build_enriched_evidence_catalog(chart_json_dict)` | `ExecutionFlags.evidence_catalog`; `validate_output` | validation-only | historical |
 | `astro_context` | `build_astral_point_interpretation_context` serialized by service | `ExecutionContext.astro_context`; extra allowed context | runtime-only | transition |
@@ -16,4 +16,3 @@
 | `AINarrativeInput` | domain astrology interpretation owner | no consumer in scoped natal LLM path | not-used | lost-or-flattened |
 | `ChartInterpretationInputBuilder` | domain astrology interpretation owner | no consumer in scoped natal LLM path | not-used | lost-or-flattened |
 | `ChartObjectRuntimeData` | domain astrology runtime owner | no direct consumer in scoped natal LLM path | not-used | lost-or-flattened |
-
