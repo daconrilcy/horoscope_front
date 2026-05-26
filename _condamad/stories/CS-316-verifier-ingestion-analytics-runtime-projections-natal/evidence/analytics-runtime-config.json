@@ -1,0 +1,18 @@
+{
+  "story_key": "CS-316-verifier-ingestion-analytics-runtime-projections-natal",
+  "captured_at": "2026-05-26",
+  "environment": "local",
+  "source": "frontend/src/config/analytics.ts",
+  "provider": "noop",
+  "enabled": true,
+  "domain": null,
+  "apiHost": "https://plausible.io",
+  "loaded_env": {
+    "VITE_ANALYTICS_PROVIDER": "unset",
+    "VITE_ANALYTICS_ENABLED": "unset",
+    "VITE_ANALYTICS_DOMAIN": "unset",
+    "VITE_ANALYTICS_API_HOST": "unset"
+  },
+  "closure": "external_validation_required",
+  "notes": "No external analytics sink is configured in the repository-local frontend environment; CS-316 closes with bounded handoff evidence instead of simulated provider ingestion."
+}

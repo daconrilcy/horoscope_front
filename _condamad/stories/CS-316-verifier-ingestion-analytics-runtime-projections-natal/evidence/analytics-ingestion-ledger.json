@@ -1,0 +1,86 @@
+{
+  "story_key": "CS-316-verifier-ingestion-analytics-runtime-projections-natal",
+  "baseline_catalog": "_condamad/stories/CS-311-suivi-analytics-erreurs-etats-degrades-projections-natal/evidence/event-catalog.json",
+  "provider": "noop",
+  "environment": "local",
+  "closure": "external_validation_required",
+  "events": [
+    {
+      "provider": "noop",
+      "environment": "local",
+      "event_name": "natal_projection_request_started",
+      "state": "started",
+      "observed": false,
+      "observed_fields": ["route", "state"],
+      "forbidden_fields_present": [],
+      "result": "external_validation_required",
+      "validation_reference": "frontend/src/tests/natalInterpretation.test.tsx"
+    },
+    {
+      "provider": "noop",
+      "environment": "local",
+      "event_name": "natal_projection_success",
+      "state": "success",
+      "observed": false,
+      "observed_fields": ["route", "state", "projection_type", "plan_code", "source"],
+      "forbidden_fields_present": [],
+      "result": "external_validation_required",
+      "validation_reference": "frontend/src/tests/natalInterpretation.test.tsx"
+    },
+    {
+      "provider": "noop",
+      "environment": "local",
+      "event_name": "natal_projection_api_error",
+      "state": "api_error",
+      "observed": false,
+      "observed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields_present": [],
+      "result": "external_validation_required",
+      "validation_reference": "frontend/src/tests/natalInterpretation.test.tsx"
+    },
+    {
+      "provider": "noop",
+      "environment": "local",
+      "event_name": "natal_projection_entitlement_denied",
+      "state": "entitlement_denied",
+      "observed": false,
+      "observed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields_present": [],
+      "result": "external_validation_required",
+      "validation_reference": "frontend/src/tests/natalInterpretation.test.tsx"
+    },
+    {
+      "provider": "noop",
+      "environment": "local",
+      "event_name": "natal_projection_empty",
+      "state": "empty",
+      "observed": false,
+      "observed_fields": ["route", "state", "state_reason"],
+      "forbidden_fields_present": [],
+      "result": "external_validation_required",
+      "validation_reference": "frontend/src/tests/natalInterpretation.test.tsx"
+    },
+    {
+      "provider": "noop",
+      "environment": "local",
+      "event_name": "natal_projection_degraded",
+      "state": "degraded",
+      "observed": false,
+      "observed_fields": ["route", "state", "projection_type", "state_reason", "plan_code", "source"],
+      "forbidden_fields_present": [],
+      "result": "external_validation_required",
+      "validation_reference": "frontend/src/tests/natalInterpretation.test.tsx"
+    },
+    {
+      "provider": "noop",
+      "environment": "local",
+      "event_name": "natal_projection_retry",
+      "state": "retry",
+      "observed": false,
+      "observed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields_present": [],
+      "result": "external_validation_required",
+      "validation_reference": "frontend/src/tests/natalInterpretation.test.tsx"
+    }
+  ]
+}
