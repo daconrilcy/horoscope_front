@@ -1,0 +1,55 @@
+CS-311 validation log
+
+Preflight:
+- git status --short: PASS, initial worktree clean.
+- condamad_prepare.py --repair-generated-only: PASS.
+- condamad_validate.py before generated reads: PASS.
+- story-status row: CS-311 path and brief source matched.
+
+Frontend targeted tests:
+- Command: node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi
+- Working directory: frontend
+- Result: PASS
+- Summary: 4 test files, 54 tests passed.
+
+Frontend lint/typecheck:
+- Command: pnpm lint
+- Working directory: frontend
+- Result: PASS
+- Summary: tsc --noEmit -p tsconfig.lint.json and tsc --noEmit -p tsconfig.node.json completed.
+
+Frontend full regression:
+- Command: node .\scripts\run-vite-logged.mjs vitest vitest run
+- Working directory: frontend
+- Result: PASS
+- Summary: 116 test files passed; 1276 tests passed; 8 skipped.
+
+Static guards:
+- Command: rg -n 'plausible\(|_paq\.push|console\.debug\(' frontend\src\features frontend\src\components frontend\src\api
+- Result: PASS, exit 1 means no matches.
+- Command: rg -n "fetch\(.*/v1/astrology/projections|axios\(.*/v1/astrology/projections" frontend\src
+- Result: PASS, exit 1 means no matches.
+- Command: rg -n "style=" frontend\src\features\natal-chart frontend\src\components\natal-interpretation -g "*.tsx"
+- Result: PASS, exit 1 means no matches.
+- Command: git diff --check -- <CS-311 story paths>
+- Result: PASS with line-ending warnings only.
+
+Sensitive-key guard:
+- Command: rg -n "birth_date|birth_time|birth_place|latitude|longitude|provider_response|raw_runtime|replay_snapshot|prompt|api_key|password" src
+- Working directory: frontend
+- Result: PASS_WITH_CONTEXT; existing repository hits and the redaction allowlist are documented in sensitive-key-scan.txt.
+
+Local startup:
+- Command: pnpm dev -- --host 127.0.0.1
+- Working directory: frontend
+- Result: PASS
+- Evidence: Invoke-WebRequest http://127.0.0.1:5173 returned HTTP 200.
+- Running server: PID 14672.
+
+Capsule closure:
+- Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-311-suivi-analytics-erreurs-etats-degrades-projections-natal
+- Working directory: repo root, venv active
+- Result: PASS
+
+Not run:
+- pnpm test:e2e: NOT_RUN; story changes component-level analytics behavior covered by Vitest, static guards, lint, full frontend test suite, and local startup. Browser-only risk remains limited to manual visual validation, with no CSS/layout changes in scope.

@@ -11,6 +11,42 @@ export type AnalyticsEvent =
   | 'register_start' 
   | 'register_success' 
   | 'register_error'
+  | 'natal_projection_request_started'
+  | 'natal_projection_success'
+  | 'natal_projection_api_error'
+  | 'natal_projection_entitlement_denied'
+  | 'natal_projection_empty'
+  | 'natal_projection_degraded'
+  | 'natal_projection_retry'
+
+export const SENSITIVE_ANALYTICS_FIELD_NAMES = [
+  'birth_date',
+  'birth_time',
+  'birth_place',
+  'latitude',
+  'longitude',
+  'provider_response',
+  'raw_runtime',
+  'replay_snapshot',
+  'prompt',
+  'api_key',
+  'password',
+] as const
+
+type AnalyticsProps = Record<string, unknown>
+
+type AnalyticsWindow = Window & {
+  plausible?: (event: AnalyticsEvent, options: { props: AnalyticsProps }) => void
+  _paq?: Array<['trackEvent', string, AnalyticsEvent, string]>
+}
+
+const sensitiveAnalyticsFields = new Set<string>(SENSITIVE_ANALYTICS_FIELD_NAMES)
+
+export function sanitizeAnalyticsProps(props: AnalyticsProps): AnalyticsProps {
+  return Object.fromEntries(
+    Object.entries(props).filter(([key]) => !sensitiveAnalyticsFields.has(key)),
+  )
+}
 
 const hasConsent = () => {
   if (ANALYTICS_CONFIG.provider === 'noop') return true
@@ -21,11 +57,12 @@ const hasConsent = () => {
 }
 
 export const useAnalytics = () => {
-  const track = useCallback((event: AnalyticsEvent, props: Record<string, any> = {}) => {
+  const track = useCallback((event: AnalyticsEvent, props: AnalyticsProps = {}) => {
     if (!ANALYTICS_CONFIG.enabled) return
+    const safeProps = sanitizeAnalyticsProps(props)
 
     if (ANALYTICS_CONFIG.provider === 'noop') {
-      console.debug(`[Analytics NOOP] ${event}`, props)
+      console.debug(`[Analytics NOOP] ${event}`, safeProps)
       return
     }
 
@@ -35,16 +72,16 @@ export const useAnalytics = () => {
     }
 
     if (ANALYTICS_CONFIG.provider === 'plausible') {
-      const win = window as any
+      const win = window as AnalyticsWindow
       if (typeof win.plausible === 'function') {
-        win.plausible(event, { props })
+        win.plausible(event, { props: safeProps })
       } else {
         console.warn('Plausible not loaded')
       }
     } else if (ANALYTICS_CONFIG.provider === 'matomo') {
-      const win = window as any
+      const win = window as AnalyticsWindow
       if (win._paq) {
-        win._paq.push(['trackEvent', 'Funnel', event, JSON.stringify(props)])
+        win._paq.push(['trackEvent', 'Funnel', event, JSON.stringify(safeProps)])
       }
     }
   }, [])

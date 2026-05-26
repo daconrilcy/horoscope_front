@@ -1,9 +1,9 @@
 // Container React orchestrant les donnees d'interpretation de theme natal.
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
 
-import { useAstrologyProjections } from "../../api/astrologyProjections"
+import { useAstrologyProjections, type AstrologyProjectionQueryState } from "../../api/astrologyProjections"
 import type { FeatureEntitlementResponse } from "../../api/billing"
 import { ApiError } from "../../api/client"
 import {
@@ -31,6 +31,7 @@ import {
   PdfActionsMenu,
   VersionSelector,
 } from "../../components/natal-interpretation/NatalInterpretationMenus"
+import { useAnalytics, type AnalyticsEvent } from "../../hooks/useAnalytics"
 import { PersonaSelector } from "./NatalInterpretationPersonaSelector"
 import "./NatalInterpretation.css"
 
@@ -86,6 +87,94 @@ function pdfLocaleFromLang(lang: AstrologyLang): "fr" | "en" | "es" {
   return "en"
 }
 
+type NatalProjectionAnalyticsState =
+  | "started"
+  | "success"
+  | "api_error"
+  | "entitlement_denied"
+  | "empty"
+  | "degraded"
+  | "retry"
+
+type NatalProjectionAnalyticsPayload = {
+  route: "/natal"
+  state: NatalProjectionAnalyticsState
+  projection_type?: AstrologyProjectionQueryState["type"]
+  state_reason?: "missing_birth_data" | "empty_display" | "missing_birth_time"
+  public_error_code?: string
+  plan_code?: "free" | "basic" | "premium"
+  source?: "chart_id" | "birth_input"
+}
+
+const projectionAnalyticsEvents: Record<NatalProjectionAnalyticsState, AnalyticsEvent> = {
+  started: "natal_projection_request_started",
+  success: "natal_projection_success",
+  api_error: "natal_projection_api_error",
+  entitlement_denied: "natal_projection_entitlement_denied",
+  empty: "natal_projection_empty",
+  degraded: "natal_projection_degraded",
+  retry: "natal_projection_retry",
+}
+
+function buildProjectionAnalyticsPayload(
+  state: NatalProjectionAnalyticsState,
+  query?: AstrologyProjectionQueryState,
+  stateReason?: NatalProjectionAnalyticsPayload["state_reason"],
+): NatalProjectionAnalyticsPayload {
+  const payload: NatalProjectionAnalyticsPayload = {
+    route: "/natal",
+    state,
+  }
+  if (query) {
+    payload.projection_type = query.type
+  }
+  if (query?.data?.metadata.plan_code) {
+    payload.plan_code = query.data.metadata.plan_code
+  }
+  if (query?.data?.metadata.source) {
+    payload.source = query.data.metadata.source
+  }
+  if (query?.error instanceof ApiError) {
+    payload.public_error_code = query.error.code
+  } else if (query?.error) {
+    payload.public_error_code = "projection.request_failed"
+  }
+  if (stateReason) {
+    payload.state_reason = stateReason
+  }
+  return payload
+}
+
+function projectionAnalyticsKey(event: AnalyticsEvent, payload: NatalProjectionAnalyticsPayload): string {
+  return JSON.stringify([
+    event,
+    payload.state,
+    payload.projection_type ?? null,
+    payload.state_reason ?? null,
+    payload.public_error_code ?? null,
+    payload.plan_code ?? null,
+    payload.source ?? null,
+  ])
+}
+
+function hasDegradedWithoutTime(query: AstrologyProjectionQueryState): boolean {
+  if (!query.data) return false
+  const payload = query.data.payload
+  const displayMessages = payload.display_messages
+  const missingData = payload.missing_data
+  return (
+    payload.state === "degraded" &&
+    (
+      (Array.isArray(displayMessages) &&
+        displayMessages.some((message) => {
+          if (!message || typeof message !== "object") return false
+          return "code" in message && message.code === "BGS_DEGRADED_NO_TIME"
+        })) ||
+      (Array.isArray(missingData) && missingData.includes("no_time"))
+    )
+  )
+}
+
 export function NatalInterpretationSection({
   chartLoaded,
   chartId,
@@ -100,6 +189,8 @@ export function NatalInterpretationSection({
 }: Props) {
   const pageT = natalChartTranslations[lang]
   const t = pageT.interpretation
+  const { track } = useAnalytics()
+  const trackedProjectionEvents = useRef(new Set<string>())
   const accessToken = useAccessTokenSnapshot()
   const navigate = useNavigate()
   const basicUpgradePath = "/settings/subscription"
@@ -143,6 +234,33 @@ export function NatalInterpretationSection({
     enabled: chartLoaded && Boolean(chartId),
     chartId,
   })
+  const trackProjectionEvent = (
+    state: NatalProjectionAnalyticsState,
+    query?: AstrologyProjectionQueryState,
+    stateReason?: NatalProjectionAnalyticsPayload["state_reason"],
+  ) => {
+    const event = projectionAnalyticsEvents[state]
+    const payload = buildProjectionAnalyticsPayload(state, query, stateReason)
+    const eventKey = projectionAnalyticsKey(event, payload)
+    if (state !== "retry" && trackedProjectionEvents.current.has(eventKey)) return
+    trackedProjectionEvents.current.add(eventKey)
+    track(event, payload)
+  }
+  const projectionStateSignature = useMemo(
+    () => JSON.stringify(
+      projectionQueries.map((query) => ({
+        type: query.type,
+        isLoading: query.isLoading,
+        hasData: Boolean(query.data),
+        state: query.data?.payload.state,
+        planCode: query.data?.metadata.plan_code,
+        source: query.data?.metadata.source,
+        errorCode: query.error instanceof ApiError ? query.error.code : query.error ? "projection.request_failed" : null,
+        errorStatus: query.error instanceof ApiError ? query.error.status : null,
+      })),
+    ),
+    [projectionQueries],
+  )
   const projectionState: AstrologyProjectionPanelState = {
     isLoading: projectionQueries.some((query) => query.isLoading),
     isEntitlementError: projectionQueries.some(
@@ -152,8 +270,47 @@ export function NatalInterpretationSection({
       (query) => Boolean(query.error) && !(query.error instanceof ApiError && query.error.status === 403),
     ),
     projections: projectionQueries.flatMap((query) => (query.data ? [query.data] : [])),
-    refetchAll: () => projectionQueries.forEach((query) => query.refetch()),
+    refetchAll: () => {
+      projectionQueries.forEach((query) => trackProjectionEvent("retry", query))
+      projectionQueries.forEach((query) => query.refetch())
+    },
   }
+
+  useEffect(() => {
+    if (!chartLoaded) return
+
+    if (!chartId) {
+      trackProjectionEvent("empty", undefined, "missing_birth_data")
+      return
+    }
+
+    if (projectionQueries.some((query) => query.isLoading)) {
+      trackProjectionEvent("started")
+    }
+
+    projectionQueries.forEach((query) => {
+      if (query.error instanceof ApiError && query.error.status === 403) {
+        trackProjectionEvent("entitlement_denied", query)
+        return
+      }
+      if (query.error) {
+        trackProjectionEvent("api_error", query)
+        return
+      }
+      if (!query.data) return
+      trackProjectionEvent("success", query)
+      if (hasDegradedWithoutTime(query)) {
+        trackProjectionEvent("degraded", query, "missing_birth_time")
+      }
+    })
+
+    if (
+      projectionQueries.length > 0 &&
+      projectionQueries.every((query) => !query.isLoading && !query.error && !query.data)
+    ) {
+      trackProjectionEvent("empty", undefined, "empty_display")
+    }
+  }, [chartLoaded, chartId, projectionStateSignature, track])
 
   const activeQuery = selectedInterpretationId ? idQuery : mainQuery
   const { data, isLoading, error, refetch } = activeQuery

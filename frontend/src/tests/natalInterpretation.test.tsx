@@ -24,6 +24,10 @@ import { ApiError } from "../api/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routerFutureFlags } from "./test-utils";
 
+const { trackMock } = vi.hoisted(() => ({
+  trackMock: vi.fn(),
+}));
+
 // Mock hooks
 vi.mock("../api/natalChart", async () => {
   const actual = await vi.importActual("../api/natalChart");
@@ -60,6 +64,16 @@ vi.mock("../utils/authToken", () => ({
   useAccessTokenSnapshot: () => "mock-token",
   getSubjectFromAccessToken: () => "mock-subject",
 }));
+
+vi.mock("../hooks/useAnalytics", async () => {
+  const actual = await vi.importActual("../hooks/useAnalytics");
+  return {
+    ...actual,
+    useAnalytics: () => ({
+      track: trackMock,
+    }),
+  };
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -176,6 +190,7 @@ describe("NatalInterpretationSection", () => {
   beforeEach(() => {
     cleanup();
     vi.clearAllMocks();
+    trackMock.mockClear();
     queryClient.clear();
     
     // Default mocks
@@ -734,6 +749,26 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText("Interprétation client")).toBeInTheDocument();
     expect(screen.getByText(/lecture plus suivie qui relie les éléments du thème/i)).toBeInTheDocument();
     expect(screen.getByText("Lecture client test.")).toBeInTheDocument();
+    expect(trackMock).toHaveBeenCalledWith(
+      "natal_projection_success",
+      expect.objectContaining({
+        route: "/natal",
+        state: "success",
+        projection_type: "beginner_summary_v1",
+        plan_code: "free",
+        source: "chart_id",
+      }),
+    );
+    expect(trackMock).toHaveBeenCalledWith(
+      "natal_projection_success",
+      expect.objectContaining({
+        route: "/natal",
+        state: "success",
+        projection_type: "client_interpretation_projection_v1",
+        plan_code: "basic",
+        source: "chart_id",
+      }),
+    );
   });
 
   it("CS-309 free: affiche le résumé autorisé et le verrou upgrade pour la projection premium refusée", () => {
@@ -837,6 +872,10 @@ describe("NatalInterpretationSection", () => {
     renderSection();
 
     expect(screen.getByText(/Préparation des lectures du thème/i)).toBeInTheDocument();
+    expect(trackMock).toHaveBeenCalledWith("natal_projection_request_started", {
+      route: "/natal",
+      state: "started",
+    });
   });
 
   it("affiche l'état empty des projections", () => {
@@ -848,17 +887,45 @@ describe("NatalInterpretationSection", () => {
     renderSection();
 
     expect(screen.getByText(/Aucune lecture publique n'est encore disponible/i)).toBeInTheDocument();
+    expect(trackMock).toHaveBeenCalledWith("natal_projection_empty", {
+      route: "/natal",
+      state: "empty",
+      state_reason: "empty_display",
+    });
   });
 
-  it("affiche l'état erreur API des projections", () => {
+  it("affiche l'état erreur API des projections et trace le retry utilisateur", () => {
+    const refetchMock = vi.fn();
     (useAstrologyProjections as any).mockReturnValue([
-      { type: "beginner_summary_v1", isLoading: false, error: new Error("down"), refetch: vi.fn() },
+      { type: "beginner_summary_v1", isLoading: false, error: new Error("down"), refetch: refetchMock },
       { type: "client_interpretation_projection_v1", isLoading: false, error: null, refetch: vi.fn() },
     ]);
 
     renderSection();
 
     expect(screen.getByText(/Les lectures du thème ne sont pas disponibles/i)).toBeInTheDocument();
+    expect(trackMock).toHaveBeenCalledWith(
+      "natal_projection_api_error",
+      expect.objectContaining({
+        route: "/natal",
+        state: "api_error",
+        projection_type: "beginner_summary_v1",
+        public_error_code: "projection.request_failed",
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Réessayer/i }));
+
+    expect(trackMock).toHaveBeenCalledWith(
+      "natal_projection_retry",
+      expect.objectContaining({
+        route: "/natal",
+        state: "retry",
+        projection_type: "beginner_summary_v1",
+        public_error_code: "projection.request_failed",
+      }),
+    );
+    expect(refetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("affiche le refus entitlement des projections", () => {
@@ -875,6 +942,15 @@ describe("NatalInterpretationSection", () => {
     renderSection();
 
     expect(screen.getByText(/demande une formule plus avancée/i)).toBeInTheDocument();
+    expect(trackMock).toHaveBeenCalledWith(
+      "natal_projection_entitlement_denied",
+      expect.objectContaining({
+        route: "/natal",
+        state: "entitlement_denied",
+        projection_type: "beginner_summary_v1",
+        public_error_code: "projection.unauthorized",
+      }),
+    );
   });
 
   it("affiche le mode dégradé des projections", () => {
@@ -903,6 +979,29 @@ describe("NatalInterpretationSection", () => {
 
     expect(screen.getByText(/Lecture partielle/i)).toBeInTheDocument();
     expect(screen.getByText(/sans ascendant/i)).toBeInTheDocument();
+    expect(trackMock).toHaveBeenCalledWith(
+      "natal_projection_degraded",
+      expect.objectContaining({
+        route: "/natal",
+        state: "degraded",
+        projection_type: "beginner_summary_v1",
+        state_reason: "missing_birth_time",
+        plan_code: "free",
+      }),
+    );
+  });
+
+  it("trace l'absence de donnees de naissance sans payload sensible", () => {
+    renderSection({ chartId: undefined });
+
+    expect(trackMock).toHaveBeenCalledWith("natal_projection_empty", {
+      route: "/natal",
+      state: "empty",
+      state_reason: "missing_birth_data",
+    });
+    expect(JSON.stringify(trackMock.mock.calls)).not.toMatch(
+      /birth_date|birth_time|birth_place|latitude|longitude|provider_response|raw_runtime|replay_snapshot|prompt|api_key|password/,
+    );
   });
 
   it("affiche systématiquement les mentions légales applicatives", () => {

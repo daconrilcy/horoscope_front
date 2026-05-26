@@ -1,0 +1,25 @@
+CS-311 sensitive-key scan evidence
+
+Command:
+  rg -n "birth_date|birth_time|birth_place|latitude|longitude|provider_response|raw_runtime|replay_snapshot|prompt|api_key|password" src
+Working directory:
+  frontend
+Result:
+  PASS_WITH_CONTEXT
+Notes:
+  The broad repository scan returned existing admin/test/prompt-domain matches plus the CS-311 redaction allowlist in useAnalytics.ts.
+  This command is intentionally broad in the story brief, so it is not a clean absence proof for the whole frontend repository.
+
+Scoped command:
+  rg -n "birth_date|birth_time|birth_place|latitude|longitude|provider_response|raw_runtime|replay_snapshot|prompt|api_key|password" frontend\src\features\natal-chart\NatalInterpretation.tsx frontend\src\components\natal-interpretation\NatalInterpretationContent.tsx frontend\src\api\astrologyProjections.ts
+Result:
+  PASS_WITH_CONTEXT
+Matches:
+  frontend\src\features\natal-chart\NatalInterpretation.tsx: public state_reason literals missing_birth_data and missing_birth_time.
+Notes:
+  No raw birth fields, coordinates, provider payloads, prompts, secrets, replay snapshots, or AI raw output are tracked.
+
+Runtime proof:
+  node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi
+Result:
+  PASS

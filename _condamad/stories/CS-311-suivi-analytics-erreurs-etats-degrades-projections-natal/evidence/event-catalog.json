@@ -1,0 +1,62 @@
+{
+  "story_key": "CS-311-suivi-analytics-erreurs-etats-degrades-projections-natal",
+  "route": "/natal",
+  "events": [
+    {
+      "event_name": "natal_projection_request_started",
+      "state": "started",
+      "trigger": "A projection query enters loading state for a loaded natal chart.",
+      "allowed_fields": ["route", "state"],
+      "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
+      "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"
+    },
+    {
+      "event_name": "natal_projection_success",
+      "state": "success",
+      "trigger": "A projection query returns public projection data.",
+      "allowed_fields": ["route", "state", "projection_type", "plan_code", "source"],
+      "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
+      "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"
+    },
+    {
+      "event_name": "natal_projection_api_error",
+      "state": "api_error",
+      "trigger": "A projection query fails with a non-entitlement error.",
+      "allowed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
+      "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"
+    },
+    {
+      "event_name": "natal_projection_entitlement_denied",
+      "state": "entitlement_denied",
+      "trigger": "A projection query returns backend-owned HTTP 403 entitlement denial.",
+      "allowed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
+      "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"
+    },
+    {
+      "event_name": "natal_projection_empty",
+      "state": "empty",
+      "trigger": "The projection panel has no public projection data or chart birth-data context is missing.",
+      "allowed_fields": ["route", "state", "state_reason"],
+      "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
+      "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"
+    },
+    {
+      "event_name": "natal_projection_degraded",
+      "state": "degraded",
+      "trigger": "A public projection payload is degraded because birth time is missing.",
+      "allowed_fields": ["route", "state", "projection_type", "state_reason", "plan_code", "source"],
+      "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
+      "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"
+    },
+    {
+      "event_name": "natal_projection_retry",
+      "state": "retry",
+      "trigger": "The user clicks the public retry action after a projection API error.",
+      "allowed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields": ["birth_date", "birth_time", "birth_place", "latitude", "longitude", "provider_response", "raw_runtime", "replay_snapshot", "prompt", "api_key", "password"],
+      "evidence_path": "frontend/src/features/natal-chart/NatalInterpretation.tsx"
+    }
+  ]
+}
