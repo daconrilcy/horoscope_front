@@ -1,0 +1,42 @@
+2026-05-26T11:06:29.946Z starting vite on 127.0.0.1:4173
+2026-05-26T11:06:30.492Z vite ready
+2026-05-26T11:06:30.492Z launch chromium
+2026-05-26T11:06:30.535Z chromium ready
+2026-05-26T11:06:30.536Z context cs310-precise-time-paris desktop
+2026-05-26T11:06:30.574Z capture cs310-precise-time-paris desktop
+2026-05-26T11:06:30.574Z goto cs310-precise-time-paris desktop
+2026-05-26T11:06:30.692Z goto committed cs310-precise-time-paris desktop
+2026-05-26T11:06:34.513Z body ready cs310-precise-time-paris desktop
+2026-05-26T11:06:35.173Z context cs310-missing-time-paris desktop
+2026-05-26T11:06:35.201Z capture cs310-missing-time-paris desktop
+2026-05-26T11:06:35.201Z goto cs310-missing-time-paris desktop
+2026-05-26T11:06:35.206Z goto committed cs310-missing-time-paris desktop
+2026-05-26T11:06:38.411Z body ready cs310-missing-time-paris desktop
+2026-05-26T11:06:39.018Z context cs310-missing-time-paris mobile
+2026-05-26T11:06:39.051Z capture cs310-missing-time-paris mobile
+2026-05-26T11:06:39.051Z goto cs310-missing-time-paris mobile
+2026-05-26T11:06:39.056Z goto committed cs310-missing-time-paris mobile
+2026-05-26T11:06:42.264Z body ready cs310-missing-time-paris mobile
+2026-05-26T11:06:42.506Z context cs310-foreign-location-tokyo desktop
+2026-05-26T11:06:42.535Z capture cs310-foreign-location-tokyo desktop
+2026-05-26T11:06:42.535Z goto cs310-foreign-location-tokyo desktop
+2026-05-26T11:06:42.540Z goto committed cs310-foreign-location-tokyo desktop
+2026-05-26T11:06:45.731Z body ready cs310-foreign-location-tokyo desktop
+2026-05-26T11:06:46.427Z context cs310-controlled-incomplete desktop
+2026-05-26T11:06:46.456Z capture cs310-controlled-incomplete desktop
+2026-05-26T11:06:46.456Z goto cs310-controlled-incomplete desktop
+2026-05-26T11:06:46.462Z goto committed cs310-controlled-incomplete desktop
+2026-05-26T11:06:46.935Z console cs310-controlled-incomplete desktop: Failed to load resource: the server responded with a status of 404 (Not Found)
+2026-05-26T11:06:49.658Z body ready cs310-controlled-incomplete desktop
+2026-05-26T11:06:49.831Z context cs310-controlled-incomplete mobile
+2026-05-26T11:06:49.859Z capture cs310-controlled-incomplete mobile
+2026-05-26T11:06:49.860Z goto cs310-controlled-incomplete mobile
+2026-05-26T11:06:49.864Z goto committed cs310-controlled-incomplete mobile
+2026-05-26T11:06:50.341Z console cs310-controlled-incomplete mobile: Failed to load resource: the server responded with a status of 404 (Not Found)
+2026-05-26T11:06:53.060Z body ready cs310-controlled-incomplete mobile
+2026-05-26T11:06:53.136Z context cs310-standard-lyon desktop
+2026-05-26T11:06:53.164Z capture cs310-standard-lyon desktop
+2026-05-26T11:06:53.164Z goto cs310-standard-lyon desktop
+2026-05-26T11:06:53.169Z goto committed cs310-standard-lyon desktop
+2026-05-26T11:06:56.372Z body ready cs310-standard-lyon desktop
+2026-05-26T11:06:57.050Z CS-314 captures: 7 screenshots

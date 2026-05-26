@@ -1,0 +1,15 @@
+$ node ./scripts/run-vite-logged.mjs vitest vitest run "inline-style" "design-system" "theme-tokens" "legacy-style"
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/theme-tokens.test.ts (98 tests) 12ms
+ ✓ src/tests/legacy-style-policy.test.ts (4 tests) 24ms
+ ✓ src/tests/inline-style-policy.test.ts (4 tests) 21ms
+ ✓ src/tests/design-system-guards.test.ts (39 tests) 282ms
+
+ Test Files  4 passed (4)
+      Tests  145 passed (145)
+   Start at  13:08:09
+   Duration  1.28s (transform 249ms, setup 932ms, import 219ms, tests 338ms, environment 2.31s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json

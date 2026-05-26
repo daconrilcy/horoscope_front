@@ -1,5 +1,5 @@
 # Story CS-314 capturer-pack-screenshots-profils-natal-cs310: Capture CS-310 Natal Profile Screenshot Pack
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -104,16 +104,16 @@ unless a reproducible blocker is captured and converted into a bounded follow-up
 
 ## Implementation Tasks
 
-- [ ] Task 1: Read CS-310 profile and QA ledgers, then derive the exact five browser scenarios. (AC: AC2)
-- [ ] Task 2: Start the required local frontend and backend services with the standard project commands. (AC: AC8, AC9)
-- [ ] Task 3: Authenticate with the provided test user only when `/natal` requires an authenticated session. (AC: AC2)
-- [ ] Task 4: Capture desktop screenshots for all five CS-310 profiles under the CS-314 screenshot directory. (AC: AC1, AC2)
-- [ ] Task 5: Capture mobile screenshots for missing-time and controlled-incomplete scenarios. (AC: AC4, AC6)
-- [ ] Task 6: Record route, profile, viewport, visible state, result, and screenshot path in `evidence/screenshot-ledger.json`. (AC: AC2, AC3, AC4, AC5, AC6)
-- [ ] Task 7: Record disclaimer and sensitive-surface results for each profile. (AC: AC7, AC8)
-- [ ] Task 8: Create `evidence/anomaly-ledger.json` and follow-up briefs for reproducible anomalies. (AC: AC9)
-- [ ] Task 9: Persist frontend and backend validation output in evidence files. (AC: AC10, AC11)
-- [ ] Task 10: Write `generated/10-final-evidence.md` with source alignment and final QA status. (AC: AC12)
+- [x] Task 1: Read CS-310 profile and QA ledgers, then derive the exact five browser scenarios. (AC: AC2)
+- [x] Task 2: Start the required local frontend and backend services with the standard project commands. (AC: AC8, AC9)
+- [x] Task 3: Authenticate with the provided test user only when `/natal` requires an authenticated session. (AC: AC2)
+- [x] Task 4: Capture desktop screenshots for all five CS-310 profiles under the CS-314 screenshot directory. (AC: AC1, AC2)
+- [x] Task 5: Capture mobile screenshots for missing-time and controlled-incomplete scenarios. (AC: AC4, AC6)
+- [x] Task 6: Record route, profile, viewport, visible state, result, and screenshot path in `evidence/screenshot-ledger.json`. (AC: AC2, AC3, AC4, AC5, AC6)
+- [x] Task 7: Record disclaimer and sensitive-surface results for each profile. (AC: AC7, AC8)
+- [x] Task 8: Create `evidence/anomaly-ledger.json` and follow-up briefs for reproducible anomalies. (AC: AC9)
+- [x] Task 9: Persist frontend and backend validation output in evidence files. (AC: AC10, AC11)
+- [x] Task 10: Write `generated/10-final-evidence.md` with source alignment and final QA status. (AC: AC12)
 
 ## Files to Inspect First
 
