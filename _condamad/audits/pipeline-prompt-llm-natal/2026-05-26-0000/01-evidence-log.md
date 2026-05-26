@@ -1,0 +1,27 @@
+# Evidence Log - Pipeline Prompt LLM Natal
+
+| ID | Evidence type | Command / Source | Inspected path / surface | Result | Limitation |
+|---|---|---|---|---|---|
+| E-001 | story-source | `Get-Content -Raw _condamad/stories/CS-325-audit-pipeline-prompt-llm-natal/00-story.md` | story contract | PASS | None. |
+| E-002 | brief-source | `Get-Content -Raw _story_briefs/cs-325-audit-pipeline-prompt-llm-natal-legacy-vs-canonique.md` | source brief | PASS | None. |
+| E-003 | guardrail-source | `Get-Content -Raw _condamad/stories/regression-guardrails.md` | RG-018, RG-021, RG-022 and adjacent natal/runtime guardrails | PASS | Registry has no exact guardrail for this audit artifact set. |
+| E-004 | prior-audit-source | `rg -n "Finding\|legacy\|natal\|LLM\|prompt\|chart" _condamad/audits/calculs-interpretations-vers-llm/2026-05-26-0000` | prior audit CS-324 | PASS | Adjacent domain, used as context only. |
+| E-005 | source-inspection | `Get-Content` line slice | `backend/app/services/llm_generation/natal/interpretation_service.py` `interpret_chart` lines 304-339 | PASS | Source inspection only; no runtime call executed. |
+| E-006 | source-inspection | `Get-Content` line slice | `backend/app/services/llm_generation/natal/interpretation_service.py` `interpret` lines 431-662 | PASS | Source inspection only. |
+| E-007 | source-inspection | `Get-Content` line slice | `backend/app/services/llm_generation/natal/interpretation_service.py` `_generate_free_short` lines 905-950 | PASS | Source inspection only. |
+| E-008 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/runtime/adapter.py` `AIEngineAdapter.generate_natal_interpretation` lines 235-275 | PASS | Source inspection only. |
+| E-009 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/runtime/contracts.py` `ExecutionUserInput`, `ExecutionContext`, `ExecutionFlags`, `NatalExecutionInput`, `LLMExecutionRequest` lines 95-165 | PASS | Source inspection only. |
+| E-010 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/runtime/gateway.py` `build_user_payload` lines 145-190 | PASS | Source inspection only. |
+| E-011 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/runtime/gateway.py` `_build_messages` lines 1451-1487 and validation lines 1545-1559 | PASS | Source inspection only. |
+| E-012 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/runtime/gateway.py` input-schema payload mapping lines 1887-1903 | PASS | Source inspection only. |
+| E-013 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/configuration/canonical_use_case_registry.py` natal contracts lines 180-213 and module contracts lines 270-405 | PASS | Source inspection only. |
+| E-014 | source-inspection | `Get-Content` line slice | `backend/app/services/llm_generation/natal/prompt_context.py` lines 1-25 | PASS | Source inspection only. |
+| E-015 | source-inspection | `Get-Content` line slice | `backend/app/services/llm_generation/shared/natal_context.py` `build_astral_point_interpretation_context` lines 133-141 | PASS | Source inspection only. |
+| E-016 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/prompting/context.py` `PromptCommonContext` and `CommonContextBuilder` natal data lines 39-115, 180-245 | PASS | Out-of-flow context builder is inspected only to bound the audit. |
+| E-017 | source-inspection | `Get-Content` line slice | `backend/app/domain/llm/runtime/output_validator.py` evidence validation lines 108-176, 236-288 | PASS | Source inspection only. |
+| E-018 | test-inventory | `rg -n "chart_json\|Technical Data\|LLMExecutionRequest\|NatalExecutionInput\|evidence_catalog\|placeholder" backend/tests/llm_orchestration backend/app/tests/integration/test_llm_qa_runtime_contracts.py` | LLM orchestration and QA runtime tests | PASS | Tests were inventoried; execution evidence is in validation output. |
+| E-019 | negative-scan | `rg -n "structured_facts_v1\|AINarrativeInput\|ChartInterpretationInputBuilder\|ChartObjectRuntimeData" backend/app/services/llm_generation/natal backend/app/domain/llm backend/tests/llm_orchestration` | current natal service and LLM runtime prompt path | PASS | Command returned no hits in scoped paths, proving these recent owners are not in the audited pipeline. |
+| E-020 | branch-scan | `rg -n "natal_long_free\|natal_interpretation_short\|natal_interpretation\|NATAL_PSY_PROFILE\|MODULE_TO_USE_CASE_KEY" backend/app backend/tests` | use-case and thematic module surfaces | PASS | Broad output was filtered manually to source/test owners relevant to this audit. |
+| E-021 | worktree-baseline | `git status --short` | repository worktree before audit writes | PASS | Pre-existing untracked `_condamad/run-state.json` was present. |
+| E-022 | validation-readonly | `git status --short -- backend/app backend/tests frontend` | forbidden application/test/frontend edit surfaces | PASS | Empty output expected and observed during validation. |
+
