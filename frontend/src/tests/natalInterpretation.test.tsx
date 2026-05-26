@@ -1,3 +1,4 @@
+// Tests de rendu de l'interpretation natale et des lectures publiques associees.
 import type { ComponentProps } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor, within } from "@testing-library/react";
@@ -680,9 +681,11 @@ describe("NatalInterpretationSection", () => {
   it("affiche les projections beginner_summary_v1 et client_interpretation_projection_v1", () => {
     renderSection();
 
-    expect(screen.getByText("Résumé débutant")).toBeInTheDocument();
+    expect(screen.getByText("Résumé découverte")).toBeInTheDocument();
+    expect(screen.getByText(/vue simple pour comprendre les repères principaux/i)).toBeInTheDocument();
     expect(screen.getByText("Soleil en Bélier")).toBeInTheDocument();
     expect(screen.getByText("Interprétation client")).toBeInTheDocument();
+    expect(screen.getByText(/lecture plus suivie qui relie les éléments du thème/i)).toBeInTheDocument();
     expect(screen.getByText("Lecture client test.")).toBeInTheDocument();
   });
 
@@ -694,7 +697,7 @@ describe("NatalInterpretationSection", () => {
 
     renderSection();
 
-    expect(screen.getByText(/Chargement des projections astrologiques/i)).toBeInTheDocument();
+    expect(screen.getByText(/Préparation des lectures du thème/i)).toBeInTheDocument();
   });
 
   it("affiche l'état empty des projections", () => {
@@ -705,7 +708,7 @@ describe("NatalInterpretationSection", () => {
 
     renderSection();
 
-    expect(screen.getByText(/Aucune projection publique n'est disponible/i)).toBeInTheDocument();
+    expect(screen.getByText(/Aucune lecture publique n'est encore disponible/i)).toBeInTheDocument();
   });
 
   it("affiche l'état erreur API des projections", () => {
@@ -716,7 +719,7 @@ describe("NatalInterpretationSection", () => {
 
     renderSection();
 
-    expect(screen.getByText(/Les projections ne sont pas disponibles/i)).toBeInTheDocument();
+    expect(screen.getByText(/Les lectures du thème ne sont pas disponibles/i)).toBeInTheDocument();
   });
 
   it("affiche le refus entitlement des projections", () => {
@@ -732,7 +735,7 @@ describe("NatalInterpretationSection", () => {
 
     renderSection();
 
-    expect(screen.getByText(/abonnement actuel ne permet pas/i)).toBeInTheDocument();
+    expect(screen.getByText(/demande une formule plus avancée/i)).toBeInTheDocument();
   });
 
   it("affiche le mode dégradé des projections", () => {
@@ -759,7 +762,7 @@ describe("NatalInterpretationSection", () => {
 
     renderSection();
 
-    expect(screen.getByText(/Projection partielle/i)).toBeInTheDocument();
+    expect(screen.getByText(/Lecture partielle/i)).toBeInTheDocument();
     expect(screen.getByText(/sans ascendant/i)).toBeInTheDocument();
   });
 

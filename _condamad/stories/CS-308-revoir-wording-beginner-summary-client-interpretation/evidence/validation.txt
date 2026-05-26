@@ -1,0 +1,16 @@
+<!-- Commentaire global: journal synthetique des validations executees pour CS-308. -->
+
+# CS-308 Validation
+
+- PASS `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-308-revoir-wording-beginner-summary-client-interpretation` from repo root after venv activation.
+- PASS `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation astrology-i18n natalChartApi` from `frontend`: 4 files, 119 tests passed.
+- PASS `pnpm lint` from `frontend`: TypeScript lint projects passed.
+- PASS `node .\scripts\run-vite-logged.mjs vitest vitest run` from `frontend`: 116 files, 1271 passed, 8 skipped.
+- PASS `rg -n "payload\.disclaimers|payload\[[\"']disclaimers" src/components/natal-interpretation src/features/natal-chart` from `frontend`: no matches, exit 1 expected.
+- PASS `rg -n "fetch\(.*/v1/astrology/projections|axios\(.*/v1/astrology/projections" src` from `frontend`: no matches, exit 1 expected.
+- PASS `rg -n "style=" src/features/natal-chart src/components/natal-interpretation -g "*.tsx"` from `frontend`: no matches, exit 1 expected.
+- PASS_WITH_LIMITATIONS `rg -n "medical|juridique|financier|garanti|certain|diagnostic|traitement" frontend/src` from repo root: hits are pre-existing app-owned disclaimers, existing guide text, unrelated frontend copy, and disclaimer tests; no new projection wording uses regulated-advice or deterministic guarantee wording.
+- PASS `git diff --name-only -- backend frontend _condamad/stories/CS-308-revoir-wording-beginner-summary-client-interpretation`: frontend and CS-308 capsule only; no backend file changed.
+- PASS `git diff --check`: exit 0; Git reported line-ending normalization warnings only.
+- PASS local startup smoke: `pnpm dev -- --host 127.0.0.1 --port 5179` started Vite and reported ready at `http://localhost:5173/`; process was stopped after the smoke check.
+- BLOCKED `pnpm exec prettier --write ...`: pnpm attempted dependency-status install and failed with EPERM renaming `node_modules\.pnpm\lock.yaml.*`; no source formatting change was required after lint/tests passed, and unintended `frontend/pnpm-lock.yaml` was removed.

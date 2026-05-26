@@ -92,7 +92,7 @@ export function InterpretationContent({
 
       <EvidenceTags evidence={evidence} title={t.evidenceTitle} t={t} />
 
-      <AstrologyProjectionsPanel projectionState={projectionState} />
+      <AstrologyProjectionsPanel projectionState={projectionState} lang={lang} />
 
       {legalNoticeLines.length > 0 && (
         <footer className="ni-disclaimer-footer">
@@ -115,42 +115,45 @@ export function InterpretationContent({
 
 function AstrologyProjectionsPanel({
   projectionState,
+  lang,
 }: {
   projectionState?: AstrologyProjectionPanelState
+  lang: NatalInterpretationLocale
 }) {
   if (!projectionState) {
     return null
   }
+  const projectionCopy = natalChartTranslations[lang].interpretation.projections
 
   return (
     <section className="ni-projections" aria-label="Projections astrologiques">
       <div className="ni-content-card ni-projections__card">
-        <p className="ni-section-label ni-section-label--card">Projections B2C</p>
-        <h3 className="ni-projections__title">Synthèse publique du thème</h3>
+        <p className="ni-section-label ni-section-label--card">{projectionCopy.panelLabel}</p>
+        <h3 className="ni-projections__title">{projectionCopy.panelTitle}</h3>
 
         {projectionState.isLoading ? (
-          <p className="ni-projections__state">Chargement des projections astrologiques...</p>
+          <p className="ni-projections__state">{projectionCopy.loading}</p>
         ) : projectionState.isEntitlementError ? (
           <p className="ni-projections__state ni-projections__state--locked" role="alert">
-            Votre abonnement actuel ne permet pas cette profondeur d'interprétation.
+            {projectionCopy.entitlement}
           </p>
         ) : projectionState.isApiError ? (
           <div className="ni-projections__state ni-projections__state--error" role="alert">
-            <p>Les projections ne sont pas disponibles pour le moment.</p>
+            <p>{projectionCopy.error}</p>
             <button
               type="button"
               className="ni-action-btn ni-action-btn--primary"
               onClick={projectionState.refetchAll}
             >
-              Réessayer
+              {projectionCopy.retry}
             </button>
           </div>
         ) : projectionState.projections.length === 0 ? (
-          <p className="ni-projections__state">Aucune projection publique n'est disponible pour ce thème.</p>
+          <p className="ni-projections__state">{projectionCopy.empty}</p>
         ) : (
           <div className="ni-projections__grid">
             {projectionState.projections.map((projection) => (
-              <ProjectionCard key={projection.projection_type} projection={projection} />
+              <ProjectionCard key={projection.projection_type} projection={projection} copy={projectionCopy} />
             ))}
           </div>
         )}
@@ -159,11 +162,17 @@ function AstrologyProjectionsPanel({
   )
 }
 
-function ProjectionCard({ projection }: { projection: AstrologyProjectionViewData }) {
+function ProjectionCard({
+  projection,
+  copy,
+}: {
+  projection: AstrologyProjectionViewData
+  copy: typeof natalChartTranslations.fr.interpretation.projections
+}) {
   const state = readString(projection.payload.state)
-  const title = projection.projection_type === "beginner_summary_v1"
-    ? "Résumé débutant"
-    : "Interprétation client"
+  const isBeginnerSummary = projection.projection_type === "beginner_summary_v1"
+  const title = isBeginnerSummary ? copy.beginnerTitle : copy.clientTitle
+  const description = isBeginnerSummary ? copy.beginnerDescription : copy.clientDescription
   const messages = readDisplayMessages(projection.payload.display_messages)
   const sections = readSections(projection.payload.sections)
   const summaryItems = readSummaryItems(projection.payload.summary_items)
@@ -174,13 +183,16 @@ function ProjectionCard({ projection }: { projection: AstrologyProjectionViewDat
   return (
     <article className="ni-projection-card">
       <div className="ni-projection-card__header">
-        <h4 className="ni-projection-card__title">{title}</h4>
+        <div>
+          <h4 className="ni-projection-card__title">{title}</h4>
+          <p className="ni-projection-card__description">{description}</p>
+        </div>
         <span className="ni-projection-card__version">{projection.projection_version}</span>
       </div>
 
       {state === "degraded" && (
         <p className="ni-projections__state ni-projections__state--degraded">
-          Projection partielle: données de naissance incomplètes.
+          {copy.degraded}
         </p>
       )}
 
@@ -224,7 +236,7 @@ function ProjectionCard({ projection }: { projection: AstrologyProjectionViewDat
       )}
 
       {isEmpty && !errorMessage && (
-        <p className="ni-projections__state">Aucun contenu affichable pour cette projection.</p>
+        <p className="ni-projections__state">{copy.cardEmpty}</p>
       )}
     </article>
   )

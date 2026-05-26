@@ -138,6 +138,21 @@ type NatalChartTranslations = {
     allAstrologersUsed: string
     evidenceEmpty: string
     dedupedCount: (count: number) => string
+    projections: {
+      panelLabel: string
+      panelTitle: string
+      loading: string
+      entitlement: string
+      error: string
+      retry: string
+      empty: string
+      degraded: string
+      cardEmpty: string
+      beginnerTitle: string
+      beginnerDescription: string
+      clientTitle: string
+      clientDescription: string
+    }
     sectionsMap: Record<string, string>
     evidenceCategories: {
       angles: string
@@ -274,6 +289,21 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       evidenceEmpty: "Aucun repère technique n’est disponible pour cette version.",
       dedupedCount: (count: number) =>
         `${count} élément${count > 1 ? "s" : ""} dédupliqué${count > 1 ? "s" : ""}`,
+      projections: {
+        panelLabel: "Lectures publiques du thème",
+        panelTitle: "Deux niveaux de lecture disponibles",
+        loading: "Préparation des lectures du thème...",
+        entitlement: "Cette lecture demande une formule plus avancée.",
+        error: "Les lectures du thème ne sont pas disponibles pour le moment.",
+        retry: "Réessayer",
+        empty: "Aucune lecture publique n'est encore disponible pour ce thème.",
+        degraded: "Lecture partielle : des données de naissance manquent.",
+        cardEmpty: "Aucun contenu lisible n'est disponible pour cette lecture.",
+        beginnerTitle: "Résumé découverte",
+        beginnerDescription: "Une vue simple pour comprendre les repères principaux du thème.",
+        clientTitle: "Interprétation client",
+        clientDescription: "Une lecture plus suivie qui relie les éléments du thème en langage clair.",
+      },
       sectionsMap: {
         overall: "Vue d'ensemble",
         career: "Carrière et vocation",
@@ -490,6 +520,21 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       allAstrologersUsed: "All available astrologers already have an interpretation.",
       evidenceEmpty: "No technical evidence is available for this version.",
       dedupedCount: (count: number) => `${count} deduplicated item${count > 1 ? "s" : ""}`,
+      projections: {
+        panelLabel: "Public chart readings",
+        panelTitle: "Two reading levels available",
+        loading: "Preparing the chart readings...",
+        entitlement: "This reading requires a more advanced plan.",
+        error: "Chart readings are not available right now.",
+        retry: "Retry",
+        empty: "No public reading is available for this chart yet.",
+        degraded: "Partial reading: some birth data is missing.",
+        cardEmpty: "No readable content is available for this reading.",
+        beginnerTitle: "Discovery summary",
+        beginnerDescription: "A simple view to understand the chart's main markers.",
+        clientTitle: "Client interpretation",
+        clientDescription: "A more continuous reading that links chart elements in clear language.",
+      },
       sectionsMap: {
         overall: "Overall Overview",
         career: "Career and Vocation",
@@ -705,6 +750,21 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       allAstrologersUsed: "Todos los astrólogos disponibles ya tienen una interpretación.",
       evidenceEmpty: "No hay evidencia técnica disponible para esta versión.",
       dedupedCount: (count: number) => `${count} elemento${count > 1 ? "s" : ""} deduplicado${count > 1 ? "s" : ""}`,
+      projections: {
+        panelLabel: "Lecturas públicas de la carta",
+        panelTitle: "Dos niveles de lectura disponibles",
+        loading: "Preparando las lecturas de la carta...",
+        entitlement: "Esta lectura requiere un plan más avanzado.",
+        error: "Las lecturas de la carta no están disponibles por el momento.",
+        retry: "Reintentar",
+        empty: "Todavía no hay ninguna lectura pública disponible para esta carta.",
+        degraded: "Lectura parcial: faltan algunos datos de nacimiento.",
+        cardEmpty: "No hay contenido legible disponible para esta lectura.",
+        beginnerTitle: "Resumen de descubrimiento",
+        beginnerDescription: "Una vista sencilla para entender las referencias principales de la carta.",
+        clientTitle: "Interpretación cliente",
+        clientDescription: "Una lectura más continua que conecta los elementos de la carta con lenguaje claro.",
+      },
       sectionsMap: {
         overall: "Visión general",
         career: "Carrera y vocación",

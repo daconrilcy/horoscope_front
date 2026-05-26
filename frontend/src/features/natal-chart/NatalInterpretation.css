@@ -883,6 +883,12 @@
   color: var(--premium-text-main);
 }
 
+.ni-projection-card__description {
+  margin: var(--space-1) 0 0;
+  color: var(--premium-text-muted);
+  font-size: var(--font-size-sm);
+}
+
 .ni-projection-card__version {
   color: var(--premium-text-muted);
   font-size: var(--font-size-sm);
