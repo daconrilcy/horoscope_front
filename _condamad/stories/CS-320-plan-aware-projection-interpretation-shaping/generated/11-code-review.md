@@ -1,4 +1,4 @@
-# Editorial Review CS-320
+# Implementation Review CS-320
 
 Verdict: CLEAN
 
@@ -7,43 +7,55 @@ Verdict: CLEAN
 - Story reviewed: `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/00-story.md`
 - Source brief: `_story_briefs/cs-320-definir-differenciation-llm-front-par-plan-b2c.md`
 - Tracker row: `_condamad/stories/story-status.md` entry for `CS-320`
-- Review type: pre-implementation story-contract drafting review
+- Review type: implementation, evidence, tests, guardrails and AC alignment review
+- Subagents used: no; the current request did not explicitly authorize delegated reviewers.
 
-## Review Summary
+## Implementation Summary
 
-- The story preserves the source brief decision that all B2C plans execute full projection calculation.
-- The story makes differentiation post-calculation through LLM input selection, editorial depth and frontend visibility rules.
-- The contract explicitly names `free`, `basic`, `premium`, `LLMInputSelection`, `EditorialDepthProfile` and `FrontendVisibilityRules`.
-- The brief-mandated prerequisite artifacts are now explicit in story routing, inspection targets and references.
-- The implementation scope is now aligned with the brief: CS-320 defines the contract, owners and future validations without requiring
-  immediate backend builder changes, frontend rendering changes, prompt implementation or provider integration.
-- React is constrained to consume backend-shaped visibility metadata and must not own a local entitlement matrix.
-- The validation plan covers backend runtime execution, builder shaping behavior, frontend rendering and route/OpenAPI neutrality.
-- Selected guardrails `RG-002`, `RG-003`, `RG-022` and `RG-041` are scoped consistently with the story surface.
+- CS-320 implements the brief as a product and technical contract, not as an immediate runtime/frontend rewrite.
+- The canonical contract is documented in `docs/architecture/client-interpretation-projection-v1-contract.md`.
+- Evidence samples under `evidence/*-sample.json` mirror `free`, `basic` and `premium` shaping semantics.
+- The contract names `LLMInputSelection`, `EditorialDepthProfile`, `precision_level` and `FrontendVisibilityRules`.
+- Full projection execution remains available for all B2C plans; backend projection tests pass.
+- React remains a renderer of backend-shaped data; frontend lint and architecture/natal rendering tests pass.
+- No API route, DB migration, Stripe/pricing surface, provider prompt integration or React entitlement matrix was added.
 
 ## Findings
 
-No actionable drafting issue found.
+No actionable implementation issue found in the fresh review after the evidence correction below.
 
-## Issues Fixed
+## Issues Fixed In This Review Loop
 
-- Source alignment: corrected this review artifact to reference the CS-320 brief.
-- Prerequisite routing: added the missing CS-315/CS-317 final evidence paths, public projection contract owner and natal feature page owner.
-- Scope alignment: narrowed CS-320 from immediate backend/frontend implementation to contract definition, owner routing and future validation
-  guardrails, matching the source brief's included scope and non-goals.
+- Evidence classification: replaced the stale pre-implementation drafting review with this implementation review artifact.
+- Closure status: synchronized the story tracker to `done` after fresh validation and a clean implementation review.
 
-## Validation Evidence
+## AC And Guardrail Review
 
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping\00-story.md`: PASS
-- Strict lint command: FAIL on line length only before final wrapping.
-- Targeted post-fix line-length check: PASS.
-- Both Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+| Area | Result | Evidence |
+|---|---|---|
+| AC1-AC4 contract shape | PASS | Contract scan and JSON sample parse cover plan set, LLM input, editorial depth and frontend visibility. |
+| AC5 full projection availability | PASS | Backend projection API tests passed for real conditions and endpoint coverage. |
+| AC6 ownership routing | PASS | Contract owner table names backend contract, builder, LLM/facts and frontend render owners. |
+| AC7 policy drift guard | PASS | Frontend lint and targeted Vitest guard/render tests passed; negative React owner scan remains clean. |
+| AC8 persisted evidence | PASS | Samples, validation transcript, source alignment and runtime surface guard are present. |
+| RG-002/RG-003/RG-022/RG-041 | PASS | No route drift, no API logic move, collected tests pass and entitlement docs remain aligned. |
 
-## Produced Artifacts
+## Fresh Validation Evidence
 
-- `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/generated/11-code-review.md`
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`: PASS
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`: PASS
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...\CS-320-plan-aware-projection-interpretation-shaping`: PASS
+- `python -B -c "...json..."`: PASS, JSON evidence samples parse.
+- `rg -n "free|basic|premium|EditorialDepthProfile|LLMInputSelection|FrontendVisibilityRules|precision_level|calculs|interpretations" ...`: PASS
+- `cd backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short`: PASS, 12 tests.
+- `cd backend; ruff check .`: PASS
+- `python -B -c "...app.openapi()..."`: PASS
+- `pnpm --dir frontend lint`: PASS
+- `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards natalInterpretation NatalChartPage natalChartApi`: PASS, 130 tests.
+
+All Python commands above were run after activating `.\.venv\Scripts\Activate.ps1`.
 
 ## Closure
 
-- Propagation decision: no-propagation; the review produced only local CS-320 editorial evidence.
-- Residual risk: implementation must still produce the required runtime, backend, frontend and evidence artifacts.
+- Propagation decision: no-propagation; the review correction is local to CS-320 evidence and tracker synchronization.
+- Residual risk: none identified.

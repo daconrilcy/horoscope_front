@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: clean implementation review completed
 - Story key: CS-320-plan-aware-projection-interpretation-shaping
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping`
@@ -35,7 +35,7 @@
 |---|---|---|---|---|
 | AC1 | Plan table in `docs/architecture/client-interpretation-projection-v1-contract.md`. | Contract `rg` scan. | PASS | Names `free`, `basic`, `premium`. |
 | AC2 | `LLMInputSelection.allowed_fact_groups` per plan plus JSON samples. | Contract scan and JSON parse. | PASS | No provider payload exposed. |
-| AC3 | `EditorialDepthProfile` and `precision_level` per plan plus JSON samples. | Contract scan and JSON parse. | PASS | Depth and precision are client-readable. |
+| AC3 | Depth and `precision_level` per plan plus JSON samples. | Contract scan and JSON parse. | PASS | Client-readable precision. |
 | AC4 | `FrontendVisibilityRules` per plan plus JSON samples. | Contract scan and frontend guards. | PASS | React remains renderer only. |
 | AC5 | Contract states full projection remains available. | Backend pytest projection tests: 12 passed. | PASS | No access restriction added. |
 | AC6 | Owners table added to contract. | Contract scan and OpenAPI route check. | PASS | Backend, LLM and frontend owners explicit. |
@@ -66,21 +66,32 @@
 
 ## Commands run
 
-| Command | Working directory | Result | Exit status | Evidence summary |
-|---|---|---|---:|---|
-| `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py ...` | repo root | PASS | 0 | Capsule generated. |
-| `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...` | repo root | PASS | 0 | Capsule structure valid. |
-| `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...` | repo root | PASS | 0 | Story validation passed. |
-| `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...` | repo root | PASS | 0 | Story lint passed after AC wording was made atomic. |
-| `rg -n "free|basic|premium|EditorialDepthProfile|LLMInputSelection|FrontendVisibilityRules|precision_level|calculs|interpretations" ...` | repo root | PASS | 0 | Contract vocabulary found. |
-| `. .\.venv\Scripts\Activate.ps1; python -B -c "...json..."` | repo root | PASS | 0 | Evidence samples parse as JSON. |
-| `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short` | backend | PASS | 0 | 12 tests passed. |
-| `. .\.venv\Scripts\Activate.ps1; cd backend; ruff check .` | backend | PASS | 0 | All checks passed. |
-| `pnpm --dir frontend lint` | repo root | PASS | 0 | TypeScript lint checks passed. |
-| `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards natalInterpretation NatalChartPage natalChartApi` | repo root | PASS | 0 | 130 tests passed. |
-| `. .\.venv\Scripts\Activate.ps1; python -B -c "...app.openapi()..."` | repo root | PASS | 0 | OpenAPI and `/v1/astrology/projections` route exist. |
-| `rg -n "React.*entitlement|entitlement matrix|accepted_matrix|localPlanPolicy" frontend\src\features\natal-chart frontend\src\components\natal-interpretation -g "*.ts" -g "*.tsx"` | repo root | PASS | 1 | No matches; negative scan passed. |
-| `git diff --check -- ...` | repo root | PASS | 0 | No whitespace errors; LF/CRLF warnings only. |
+- PASS: `condamad_prepare.py` generated the capsule.
+- PASS: `condamad_validate.py` validated the capsule.
+- PASS: `condamad_story_validate.py` validated `00-story.md`.
+- PASS: `condamad_story_lint.py --strict` passed after AC wording was made atomic.
+- PASS: contract `rg` scan found plan names and shaping vocabulary.
+- PASS: JSON evidence samples parse.
+- PASS: backend projection API tests passed, 12 tests.
+- PASS: backend `ruff check .`.
+- PASS: `pnpm --dir frontend lint`.
+- PASS: targeted frontend Vitest suite passed, 130 tests.
+- PASS: OpenAPI and `/v1/astrology/projections` route check.
+- PASS: negative React entitlement scan returned no owner matches.
+- PASS: `git diff --check -- ...`; LF/CRLF warnings only.
+
+## Fresh review closure validation
+
+- PASS: `condamad_story_validate.py` after venv activation.
+- PASS: `condamad_story_lint.py --strict` after venv activation.
+- PASS: `condamad_validate.py` after venv activation.
+- PASS: JSON evidence sample parse after venv activation.
+- PASS: contract and brief vocabulary scan.
+- PASS: backend projection API tests, 12 tests after venv activation.
+- PASS: backend `ruff check .` after venv activation.
+- PASS: OpenAPI and generic projection route check after venv activation.
+- PASS: `pnpm --dir frontend lint`.
+- PASS: targeted frontend Vitest suite, 5 files and 130 tests.
 
 ## Commands skipped or blocked
 
@@ -99,10 +110,8 @@
 
 ## Final worktree status
 
-- Final `git status --short`: story files, generated capsule/evidence,
-  `story-status.md` and contract doc are changed for CS-320; unrelated dirty
-  briefs/docs and `_condamad/run-state.json` were already present or outside
-  this implementation scope.
+- Final closure review updated `generated/11-code-review.md` and synchronized
+  `_condamad/stories/story-status.md` to `done` after fresh validation.
 
 ## Remaining risks
 
