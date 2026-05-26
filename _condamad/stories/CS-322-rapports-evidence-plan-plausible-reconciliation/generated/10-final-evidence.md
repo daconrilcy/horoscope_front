@@ -1,11 +1,13 @@
 # Final Evidence — CS-322-rapports-evidence-plan-plausible-reconciliation
 
-<!-- Commentaire global: cette preuve finale clôt CS-322 en documentant les artefacts reconciliés, les validations et le statut review-ready. -->
+<!-- Commentaire global: cette preuve finale clôt CS-322 en documentant les artefacts reconciliés, les validations et le statut done. -->
 
 ## Story status
 
 - Validation outcome: PASS
 - Ready for review: yes
+- Final implementation review: CLEAN
+- Final tracker status: done
 - Story key: CS-322-rapports-evidence-plan-plausible-reconciliation
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-322-rapports-evidence-plan-plausible-reconciliation`
@@ -31,7 +33,7 @@
 | `generated/06-validation-plan.md` | yes | yes | PASS | Present from repaired capsule. |
 | `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Present from repaired capsule. |
 | `generated/10-final-evidence.md` | yes | yes | PASS | Updated after implementation. |
-| `generated/11-code-review.md` | no | yes | PASS | Pre-existing clean review artifact preserved. |
+| `generated/11-code-review.md` | no | yes | PASS | Final implementation review is clean. |
 
 ## AC validation
 

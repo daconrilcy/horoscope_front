@@ -1,41 +1,48 @@
-# CS-322 Editorial Story Review
+# CS-322 Implementation Review
 
 Verdict: CLEAN
 
+<!-- Commentaire global: cette review de cloture verifie l'implementation CS-322, les preuves CONDAMAD et l'alignement avec les AC. -->
+
 ## Review Scope
 
-- Story: `_condamad/stories/CS-322-rapports-evidence-plan-plausible-reconciliation/00-story.md`
-- Source brief: `_story_briefs/cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md`
-- Tracker row: `_condamad/stories/story-status.md` entry for `CS-322`
-- Guardrail evidence: story-local guardrails only; no exact registry guardrail is required for this docs-only contract.
+- Story: `_condamad/stories/CS-322-rapports-evidence-plan-plausible-reconciliation/00-story.md`.
+- Source brief: `_story_briefs/cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md`.
+- Tracker row: `_condamad/stories/story-status.md` entry for `CS-322`, now marked `done`.
+- Implementation evidence: report wording, targeted final evidence, CS-322 journal, validation transcript and no-runtime-change proof.
+- Runtime source scope: backend, frontend and shared paths must remain unchanged.
 
-## Review Result
+## Fresh Review Result
 
-The story contract covers the source brief without narrowing the requested work:
+No actionable implementation issue remains.
 
-- report reconciliation for the CS-312 to CS-316 delivery report;
-- Plausible-first wording and Matomo not-currently-used clarification;
-- separation between repo closure, Plausible preparation, and CS-320 LLM/front differentiation;
-- targeted closure evidence updates only when current-state wording is obsolete;
-- a CS-322 reconciliation journal;
-- proof that backend and frontend runtime files stay unchanged.
+- AC1: the CS-312 to CS-316 delivery report no longer presents all-plan projection availability as a backend/product divergence.
+- AC2: the report states backend alignment for `client_interpretation_projection_v1` across `free`, `basic` and `premium`.
+- AC3: follow-up routing points to CS-320 for LLM/front differentiation and to CS-321/CS-323 for Plausible/Matomo decisions.
+- AC4: provider wording is Plausible-first; Matomo is classified as not currently used and routed outside CS-322.
+- AC5: `git diff --name-only -- backend frontend shared` is empty, so runtime files remain unchanged.
+- AC6: the reconciliation journal exists and links each updated artifact to validation evidence.
+- AC7: active-target stale wording scans are clean; remaining matches are limited to the immutable source brief.
 
-No drafting issue remains actionable.
+## Validation Summary
 
-## Produced Artifacts
+- PASS: active-target stale wording scan excluding the immutable CS-322 brief returned no matches.
+- PASS: current plan/provider wording scans found the expected Plausible, Matomo, plan and projection terms.
+- PASS: report follow-up scan found CS-320, CS-321, CS-323, LLM/front and Plausible routing.
+- PASS: `git diff --check`.
+- PASS: journal existence check with Python after venv activation.
+- PASS: `ruff check .` after venv activation.
+- PASS: `python -B -m pytest -q --tb=short` after venv activation; 3316 passed, 1 skipped, 1216 deselected.
+- PASS: final capsule validation.
 
-- Created this review artifact at
-  `_condamad/stories/CS-322-rapports-evidence-plan-plausible-reconciliation/generated/11-code-review.md`.
+## Findings
 
-## Validation
-
-- PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-322-rapports-evidence-plan-plausible-reconciliation\00-story.md`
-- PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-322-rapports-evidence-plan-plausible-reconciliation\00-story.md`
+None.
 
 ## Propagation
 
-- no-propagation: the review produced no reusable learning beyond the local story review artifact.
+- no-propagation: this review found no reusable skill, guardrail, or AGENTS.md learning to propagate.
 
 ## Residual Risk
 
-Aucun risque restant identifie for story drafting. Implementation still must preserve historical traceability while reconciling only current-status wording.
+Aucun risque restant identifie.
