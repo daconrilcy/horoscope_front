@@ -19,6 +19,7 @@
 | `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md` | PASS | `CONDAMAD story validation: PASS`. |
 | `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md` | PASS | `CONDAMAD story lint: PASS`. |
 | `git diff --check -- _condamad\reports\calculs-interpretations-vers-prompts-llm ...` | PASS | Exit 0; Git emitted existing LF-to-CRLF working-copy warnings only. |
+| `Select-String -Path _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm\00-story.md -Pattern '^Status:'` | PASS | Story header shows `Status: done`. |
 | `Select-String -Path _condamad\stories\story-status.md -Pattern 'CS-329'` | PASS | CS-329 row shows `done` and date `2026-05-27`. |
 
 All Python commands above were executed after activating `.\.venv\Scripts\Activate.ps1`.

@@ -20,6 +20,7 @@
 - Initial `git status --short`: pre-existing untracked `_condamad/run-state.json`
 - AGENTS.md considered: repository root `AGENTS.md`
 - Source registry check: CS-329 row path and brief source match the requested story and brief
+- Story status alignment: `00-story.md`, final evidence and tracker all show `done` after alignment review
 - Source brief read: `_story_briefs/cs-329-rapport-synthese-transition-injection-prompts-llm.md`
 
 ## Review finding fixed
@@ -33,6 +34,7 @@ Correction applied:
 - Created the final report, source evidence and validation output.
 - Replaced blocked AC evidence with PASS evidence.
 - Replaced the draft-only review artifact with an implementation review artifact.
+- Aligned the story header status from `ready-to-dev` to `done` so the story, tracker and implementation evidence agree.
 
 ## Source deliverables used
 
@@ -68,6 +70,7 @@ Correction applied:
 - `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/06-validation-plan.md`
 - `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/10-final-evidence.md`
 - `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/generated/11-code-review.md`
+- `_condamad/stories/CS-329-rapport-synthese-transition-injection-prompts-llm/00-story.md`
 - `_condamad/stories/story-status.md`
 
 ## Tests added or updated
@@ -90,6 +93,7 @@ Correction applied:
 | `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md` | PASS | CONDAMAD story validation passes. |
 | `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md` | PASS | CONDAMAD story lint passes. |
 | `git diff --check -- _condamad\reports\calculs-interpretations-vers-prompts-llm ...` | PASS | Exit 0; only LF-to-CRLF working-copy warnings. |
+| `Select-String -Path _condamad\stories\CS-329-rapport-synthese-transition-injection-prompts-llm\00-story.md -Pattern '^Status:'` | PASS | Story header shows `Status: done`. |
 | `Select-String -Path _condamad\stories\story-status.md -Pattern 'CS-329'` | PASS | Tracker row is `done` with the correct story path and brief source. |
 
 All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.

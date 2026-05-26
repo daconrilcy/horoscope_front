@@ -22,6 +22,7 @@ implementation work separate from this report-only story.
 
 The previous blocker was invalid because the required upstream deliverable folders exist. The correction created the report
 and evidence files from those deliverables and replaced blocked evidence with validation-backed PASS evidence.
+The story header status was also aligned to `done`, matching the tracker and final implementation evidence.
 
 ## AC alignment
 
@@ -50,6 +51,7 @@ and evidence files from those deliverables and replaced blocked evidence with va
 - PASS: CONDAMAD strict story lint.
 - PASS: `git diff --check` over CS-329 report/story artifacts and tracker exited 0, with LF-to-CRLF warnings only.
 - PASS: CS-329 tracker row is `done`, still points to the requested story and source brief, and keeps date `2026-05-27`.
+- PASS: CS-329 `00-story.md` header status is `done`.
 
 All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 

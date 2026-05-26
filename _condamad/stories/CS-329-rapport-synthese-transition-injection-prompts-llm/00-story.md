@@ -1,5 +1,5 @@
 # Story CS-329 rapport-synthese-transition-injection-prompts-llm: Rapport Synthese Transition Injection Prompts LLM
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
