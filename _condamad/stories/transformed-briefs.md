@@ -89,3 +89,4 @@
 | cs-308 | `_story_briefs\cs-308-revoir-wording-beginner-summary-client-interpretation.md` | `_condamad\stories\cs-308-revoir-wording-beginner-summary-client-interpretation\00-story.md` |
 | cs-309 | `_story_briefs\cs-309-verifier-differenciation-free-basic-premium-projections-natal.md` | `_condamad\stories\cs-309-verifier-differenciation-free-basic-premium-projections-natal\00-story.md` |
 | cs-310 | `_story_briefs\cs-310-tests-manuels-profils-naissance-projections-natal.md` | `_condamad\stories\cs-310-tests-manuels-profils-naissance-projections-natal\00-story.md` |
+| cs-311 | `_story_briefs\cs-311-suivi-analytics-erreurs-etats-degrades-projections-natal.md` | `_condamad\stories\cs-311-suivi-analytics-erreurs-etats-degrades-projections-natal\00-story.md` |
