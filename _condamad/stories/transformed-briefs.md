@@ -106,3 +106,4 @@
 | cs-324 | `_story_briefs\cs-324-audit-surfaces-calculs-interpretations-vers-llm.md` | `_condamad\stories\cs-324-audit-calculs-interpretations-llm\00-story.md` |
 | cs-325 | `_story_briefs\cs-325-audit-pipeline-prompt-llm-natal-legacy-vs-canonique.md` | `_condamad\stories\cs-325-audit-pipeline-prompt-llm-natal\00-story.md` |
 | cs-326 | `_story_briefs\cs-326-audit-projections-interpretatives-llm-input-readiness.md` | `_condamad\stories\cs-326-audit-projections-interpretatives-llm-input-readiness\00-story.md` |
+| cs-327 | `_story_briefs\cs-327-audit-configuration-prompts-placeholders-input-schema.md` | `_condamad\stories\cs-327-audit-configuration-prompts-placeholders-input-schema\00-story.md` |
