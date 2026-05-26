@@ -86,3 +86,4 @@
 | cs-305 | `_story_briefs\cs-305-stabilize-frontend-full-vitest-suite-after-projection-wiring.md` | `_condamad\stories\cs-305-stabilize-frontend-full-vitest-suite-after-projection-wiring\00-story.md` |
 | cs-306 | `_story_briefs\cs-306-close-cs303-browser-qa-and-refresh-delivery-status.md` | `_condamad\stories\cs-306-cs303-browser-qa-delivery-status\00-story.md` |
 | cs-307 | `_story_briefs\cs-307-audit-ux-natal-apres-wiring-projections.md` | `_condamad\stories\cs-307-audit-ux-natal-apres-wiring-projections\00-story.md` |
+| cs-308 | `_story_briefs\cs-308-revoir-wording-beginner-summary-client-interpretation.md` | `_condamad\stories\cs-308-revoir-wording-beginner-summary-client-interpretation\00-story.md` |
