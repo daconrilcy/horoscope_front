@@ -1,37 +1,35 @@
-# Final Evidence — CS-316-verifier-ingestion-analytics-runtime-projections-natal
+# Final Evidence - CS-316-verifier-ingestion-analytics-runtime-projections-natal
 
 ## Story status
 
 - Validation outcome: PASS_WITH_LIMITATIONS
-- Ready for review: yes
+- Final review verdict: CLEAN
 - Story key: `CS-316-verifier-ingestion-analytics-runtime-projections-natal`
 - Closure: `external_validation_required`
 - Capsule path: `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal`
-- Story registry target: `ready-to-review`
+- Story registry target: `done`
 
 ## Preflight
 
 - Repository root: `C:\dev\horoscope_front`
 - Story source: `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/00-story.md`
 - Source brief: `_story_briefs/cs-316-verifier-ingestion-analytics-runtime-projections-natal.md`
-- Initial linked logs showed CS-316 had been drafted and reviewed, but not
-  implemented.
-- Initial `git status --short`: `_condamad/run-state.json` was already
-  untracked.
-- Applicable instructions: repository AGENTS instructions from the user,
-  `condamad-dev-story`, and frontend validation discipline.
+- Linked logs showed drafting review and brief alignment were already clean.
+- Implementation review found missing persisted evidence files announced by the final evidence.
+- Initial `git status --short`: `_condamad/run-state.json` was already untracked.
 
 ## Capsule validation
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Story source available. |
-| `generated/01-execution-brief.md` | yes | yes | PASS | Updated after implementation. |
-| `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC rows complete. |
-| `generated/04-target-files.md` | yes | yes | PASS | Evidence and inspected files listed. |
-| `generated/06-validation-plan.md` | yes | yes | PASS | Commands reflect actual validation. |
-| `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Guard results recorded. |
+| `00-story.md` | yes | yes | PASS | Status synchronized to `done`. |
+| `generated/01-execution-brief.md` | yes | yes | PASS | Existing execution brief retained. |
+| `generated/03-acceptance-traceability.md` | yes | yes | PASS | Existing AC traceability retained. |
+| `generated/04-target-files.md` | yes | yes | PASS | Existing target-file evidence retained. |
+| `generated/06-validation-plan.md` | yes | yes | PASS | Existing validation plan retained. |
+| `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Existing guardrail evidence retained. |
 | `generated/10-final-evidence.md` | yes | yes | PASS | This file. |
+| `generated/11-code-review.md` | yes | yes | PASS | Final implementation review is CLEAN. |
 
 ## AC validation
 
@@ -39,19 +37,31 @@
 |---|---|---|---|
 | AC1 | Runtime config JSON records local `noop` config from `frontend/src/config/analytics.ts`. | Python JSON contract validation PASS. | PASS |
 | AC2 | Ledger JSON lists all seven CS-311 event names. | Python set comparison against expected seven names PASS. | PASS |
-| AC3 | Provider is unavailable locally; closure is `external_validation_required` instead of simulated ingestion. | Targeted Vitest `useAnalytics natalInterpretation natalChartApi` PASS; loaded config evidence recorded. | PASS_WITH_LIMITATIONS |
+| AC3 | Provider is unavailable locally; closure is `external_validation_required`. | Targeted Vitest PASS; loaded config evidence recorded. | PASS_WITH_LIMITATIONS |
 | AC4 | Ledger public fields mirror CS-311 catalog allowed fields for every event. | Python comparison against `event-catalog.json` PASS. | PASS |
-| AC5 | Ledger keeps `forbidden_fields_present: []` and evidence avoids forbidden payload keys. | Sensitive-field `rg` scan on CS-316 evidence exits 1, classified PASS no matches. | PASS |
-| AC6 | `external-validation-required.md` explains the unavailable external sink and handoff state. | File existence check PASS. | PASS |
-| AC7 | Existing analytics boundary and natal projection instrumentation remain unchanged. | `pnpm lint` PASS; targeted Vitest PASS. | PASS |
-| AC8 | No frontend source behavior changed. | Full frontend Vitest PASS, 116 files, 1276 passed, 8 skipped. | PASS |
-| AC9 | Final evidence and story tracker are synchronized. | Capsule validation rerun after evidence update. | PASS |
+| AC5 | Ledger has empty `forbidden_fields_present` lists and evidence has no forbidden keys. | `evidence/redaction-scan.txt` records PASS. | PASS |
+| AC6 | `external-validation-required.md` explains the unavailable sink and handoff state. | File existence and content review PASS. | PASS |
+| AC7 | Existing analytics boundary and natal projection instrumentation remain validated. | `pnpm lint` PASS; targeted Vitest PASS. | PASS |
+| AC8 | Full frontend Vitest remains green. | `node .\scripts\run-vite-logged.mjs vitest vitest run` PASS. | PASS |
+| AC9 | Final evidence, review evidence, and story tracker are synchronized. | Story validation and strict lint PASS after status update. | PASS |
+
+## Files changed by review fix
+
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/00-story.md`
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/redaction-scan.txt`
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/validation-frontend.txt`
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/generated/10-final-evidence.md`
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/generated/11-code-review.md`
+- `_condamad/stories/story-status.md`
 
 ## Files changed
 
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/00-story.md`
 - `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/analytics-runtime-config.json`
 - `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/analytics-ingestion-ledger.json`
 - `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/external-validation-required.md`
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/redaction-scan.txt`
+- `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/validation-frontend.txt`
 - `_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/generated/**`
 - `_condamad/stories/story-status.md`
 
@@ -61,63 +71,62 @@
 
 ## Tests added or updated
 
-- None. Existing CS-311 frontend tests already cover emission/redaction states;
-  CS-316 adds runtime/provider evidence artifacts only.
+- None. Existing frontend analytics tests already cover CS-311 emission and redaction states.
 
 ## Commands run
 
-| Command | Working directory | Result | Exit status | Evidence summary |
-|---|---|---|---:|---|
-| `.\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-dev-story\\scripts\\condamad_prepare.py --repair-generated-only _condamad\\stories\\CS-316-verifier-ingestion-analytics-runtime-projections-natal --root C:\\dev\\horoscope_front --story-key CS-316` | repo root | PASS | 0 | Missing generated capsule files repaired. |
-| `.\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-dev-story\\scripts\\condamad_validate.py _condamad\\stories\\CS-316-verifier-ingestion-analytics-runtime-projections-natal` | repo root | PASS | 0 | Capsule structure validated after final evidence update. |
-| Python JSON validation for runtime config | repo root | PASS | 0 | Provider is one of `plausible`, `matomo`, `noop`; closure is explicit. |
-| Python JSON validation for seven event names | repo root | PASS | 0 | Ledger contains exactly the seven CS-311 event names. |
-| Python comparison of ledger fields with CS-311 catalog | repo root | PASS | 0 | Public field lists match catalog allowed fields. |
-| `rg -n "birth_date\|birth_time\|birth_place\|latitude\|longitude\|provider_response\|raw_runtime\|replay_snapshot\|prompt\|api_key\|password" _condamad\\stories\\CS-316-verifier-ingestion-analytics-runtime-projections-natal\\evidence` | repo root | PASS | 1 | No matches; exit 1 is expected for negative scan. |
-| `rg -n "plausible\\(\|_paq\\.push\|VITE_ANALYTICS_PROVIDER" frontend\\src\\features frontend\\src\\components frontend\\src\\api` | repo root | PASS | 1 | No direct provider calls in feature/component/api surfaces. |
-| `pnpm lint` | `frontend` | PASS | 0 | TypeScript lint configs pass. |
-| `node .\\scripts\\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi` | `frontend` | PASS | 0 | 54 targeted tests pass. |
-| `node .\\scripts\\run-vite-logged.mjs vitest vitest run inline-style-policy` | `frontend` | PASS | 0 | RG-047 policy test passes. |
-| `node .\\scripts\\run-vite-logged.mjs vitest vitest run natalInterpretation component-architecture` | `frontend` | PASS | 0 | RG-071/component architecture tests pass. |
-| `node .\\scripts\\run-vite-logged.mjs vitest vitest run` | `frontend` | PASS | 0 | 116 files, 1276 passed, 8 skipped. |
-| `git diff --check` | repo root | PASS | 0 | No whitespace errors. |
+| Command | Working directory | Result | Notes |
+|---|---|---|---|
+| `condamad_validate.py CS-316 capsule` | repo root | PASS | venv active; capsule headings and files valid. |
+| `condamad_story_validate.py 00-story.md` | repo root | PASS | venv active. |
+| `condamad_story_lint.py --strict 00-story.md` | repo root | PASS | venv active. |
+| Python runtime config contract check | repo root | PASS | venv active; provider is `noop`. |
+| Python seven-event ledger check | repo root | PASS | venv active; all CS-311 events covered. |
+| Python ledger/catalog field comparison | repo root | PASS | venv active; public fields match catalog. |
+| `rg` sensitive evidence scan | repo root | PASS | Exit 1 means no forbidden-field match. |
+| `rg` direct provider call scan | repo root | PASS | Exit 1 means no feature/component/api provider calls. |
+| `pnpm lint` | `frontend` | PASS | TypeScript lint configs pass. |
+| Targeted Vitest command | `frontend` | PASS | 4 files, 54 tests. |
+| `vitest run inline-style-policy` | `frontend` | PASS | 1 file, 4 tests. |
+| `vitest run natalInterpretation component-architecture` | `frontend` | PASS | 3 files, 42 tests. |
+| Full Vitest command | `frontend` | PASS | 116 files, 1276 passed, 8 skipped. |
+| `git diff --check` | repo root | PASS | No whitespace errors. |
 
 ## Commands skipped or blocked
 
-- External provider dashboard verification: BLOCKED by unavailable local
-  Plausible or Matomo sink; closure artifact records handoff.
-- Local dev-server startup: not applicable because no application runtime
-  source changed; frontend lint and Vitest covered affected analytics surfaces.
+- External provider dashboard verification: BLOCKED by unavailable local Plausible or Matomo sink.
+- Local dev-server startup: skipped because no application runtime source changed in this review/fix pass.
+
+## Review findings fixed
+
+- Persisted proof drift: `redaction-scan.txt` and `validation-frontend.txt` were announced but absent.
+- Review artifact drift: `generated/11-code-review.md` still described drafting review instead of implementation review.
+- Status drift: tracker and story file did not yet reflect the clean implementation review closure.
 
 ## DRY / No Legacy evidence
 
 - No duplicate event catalog was introduced; ledger maps to CS-311 catalog.
 - No feature-level direct provider call was introduced.
-- No shim, compatibility provider, alias, fallback sink, backend route,
-  persistence path, prompt path or replay path was added.
-- `no-propagation`: no reusable correction was discovered for guardrails,
-  AGENTS.md or skills.
+- No provider, dashboard, alerting, backend, persistence, prompt, or replay change was introduced.
+- `no-propagation`: the fixes were local evidence/status synchronization only.
 
 ## Diff review
 
-- Story surface diff is evidence/capsule/tracker only.
-- `git diff --check`: PASS.
-- No frontend source files changed.
-- Contextual `style=` scan found pre-existing occurrences outside CS-316 edits;
-  RG-047 inline-style policy test passed.
+- Story, tracker, generated review, and persisted evidence are synchronized.
+- No application runtime source file was changed during this review/fix pass.
+- `git diff --check`: PASS with Windows CRLF warnings only.
+- Fresh review after fixes: CLEAN.
 
 ## Final worktree status
 
-- `_condamad/run-state.json` remains pre-existing untracked context.
-- CS-316 evidence and generated capsule files are untracked additions.
-- `_condamad/stories/story-status.md` is modified for the CS-316 status only.
+- `_condamad/run-state.json` remains an unrelated untracked file from prior context.
+- CS-316 review/fix changes are local and uncommitted.
+- `_condamad/stories/story-status.md` now marks CS-316 as `done`.
 
 ## Remaining risks
 
-- Real provider ingestion still requires a staging or production environment
-  with Plausible or Matomo configured and observable by the reviewer.
+- Real provider ingestion still requires a staging or production environment with Plausible or Matomo configured and observable.
 
 ## Suggested reviewer focus
 
-- Confirm that `external_validation_required` is acceptable for this execution
-  given local `provider: "noop"` and no configured external analytics sink.
+- Confirm that `external_validation_required` is acceptable for this local execution because the loaded provider is `noop`.

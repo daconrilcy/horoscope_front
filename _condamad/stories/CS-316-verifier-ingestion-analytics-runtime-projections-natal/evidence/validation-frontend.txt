@@ -1,0 +1,46 @@
+Commentaire global: cette preuve resume les validations frontend relancees pendant la review d'implementation CS-316.
+
+Commande:
+pnpm lint
+Working directory:
+frontend
+Resultat:
+PASS
+Resume:
+tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
+
+Commande:
+node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi
+Working directory:
+frontend
+Resultat:
+PASS
+Resume:
+4 fichiers de tests passes, 54 tests passes.
+
+Commande:
+node .\scripts\run-vite-logged.mjs vitest vitest run inline-style-policy
+Working directory:
+frontend
+Resultat:
+PASS
+Resume:
+1 fichier de test passe, 4 tests passes.
+
+Commande:
+node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation component-architecture
+Working directory:
+frontend
+Resultat:
+PASS
+Resume:
+3 fichiers de tests passes, 42 tests passes.
+
+Commande:
+node .\scripts\run-vite-logged.mjs vitest vitest run
+Working directory:
+frontend
+Resultat:
+PASS
+Resume:
+116 fichiers de tests passes, 1276 tests passes, 8 tests skipped.

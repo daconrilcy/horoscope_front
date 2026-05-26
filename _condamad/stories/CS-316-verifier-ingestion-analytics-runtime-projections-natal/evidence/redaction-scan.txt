@@ -1,0 +1,14 @@
+Commentaire global: cette preuve conserve le resultat du scan negatif CS-316 sur les champs sensibles interdits.
+
+Commande:
+rg -n "birth_date|birth_time|birth_place|latitude|longitude|provider_response|raw_runtime|replay_snapshot|prompt|api_key|password" `
+  _condamad\stories\CS-316-verifier-ingestion-analytics-runtime-projections-natal\evidence
+
+Resultat:
+PASS
+
+Code de sortie:
+1
+
+Interpretation:
+Aucune occurrence trouvee dans le dossier evidence CS-316. Le code 1 de ripgrep est attendu pour un scan negatif sans match.

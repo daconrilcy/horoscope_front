@@ -1,5 +1,5 @@
 # Story CS-316 verifier-ingestion-analytics-runtime-projections-natal: Verify Natal Projection Analytics Runtime Ingestion
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
