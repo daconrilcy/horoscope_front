@@ -1,0 +1,41 @@
+CS-309 validation log - 2026-05-26
+
+PASS - frontend targeted:
+  cwd: frontend
+  command: node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi
+  result: 4 test files passed, 122 tests passed.
+
+PASS - frontend full:
+  cwd: frontend
+  command: node .\scripts\run-vite-logged.mjs vitest vitest run
+  result: 116 test files passed, 1274 tests passed, 8 skipped.
+
+PASS - frontend lint/typecheck:
+  cwd: frontend
+  command: pnpm lint
+  result: tsc --noEmit for lint and node configs passed.
+
+PASS - backend authorization:
+  cwd: backend, after .\.venv\Scripts\Activate.ps1
+  command: python -B -m pytest -q tests\api\test_projection_authorization.py tests\api\test_projection_endpoint.py --tb=short
+  result: 5 passed.
+
+PASS_WITH_REVIEW - hardcoded entitlement scan:
+  cwd: repo root
+  command: rg -n "free.*basic.*premium|basic.*premium|plan_code.*===" frontend/src/features/natal-chart frontend/src/components/natal-interpretation
+  result: one benign dependency-array hit, no duplicated entitlement table.
+
+PASS - direct projection fetch scan:
+  cwd: repo root
+  command: rg -n "fetch\(.*/v1/astrology/projections|axios\(.*/v1/astrology/projections" frontend/src
+  result: exit 1, no matches.
+
+PASS - inline style scan:
+  cwd: repo root
+  command: rg -n "style=" frontend/src/features/natal-chart frontend/src/components/natal-interpretation -g "*.tsx"
+  result: exit 1, no matches.
+
+PASS - diff check:
+  cwd: repo root
+  command: git diff --check
+  result: no whitespace errors; Git reported LF/CRLF warnings only.

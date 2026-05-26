@@ -14,7 +14,12 @@ import {
   previewNatalInterpretationPdf,
 } from "../api/natalChart";
 import { useAstrologers } from "../api/astrologers";
-import { useAstrologyProjections } from "../api/astrologyProjections";
+import {
+  useAstrologyProjections,
+  type AstrologyProjectionQueryState,
+  type AstrologyProjectionResponse,
+  type AstrologyProjectionType,
+} from "../api/astrologyProjections";
 import { ApiError } from "../api/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routerFutureFlags } from "./test-utils";
@@ -121,6 +126,47 @@ const mockHistory = {
   limit: 20,
   offset: 0
 };
+
+type ProjectionPlanCode = "free" | "basic" | "premium";
+
+function buildProjectionResponse({
+  projectionType,
+  planCode,
+  payload,
+}: {
+  projectionType: AstrologyProjectionType;
+  planCode: ProjectionPlanCode;
+  payload: Record<string, unknown>;
+}): AstrologyProjectionResponse {
+  return {
+    chart_id: "chart-123",
+    projection_type: projectionType,
+    projection_version: "v1",
+    persisted: false,
+    projection_hash: `hash-${projectionType}-${planCode}`,
+    payload,
+    metadata: { source: "chart_id", plan_code: planCode, request_id: `req-${projectionType}-${planCode}` },
+  };
+}
+
+function buildProjectionQuery(data: AstrologyProjectionResponse): AstrologyProjectionQueryState {
+  return {
+    type: data.projection_type,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    data,
+  };
+}
+
+function buildProjectionForbiddenQuery(projectionType: AstrologyProjectionType): AstrologyProjectionQueryState {
+  return {
+    type: projectionType,
+    isLoading: false,
+    error: new ApiError("projection.unauthorized", "user plan is not authorized for public projections", 403),
+    refetch: vi.fn(),
+  };
+}
 
 const mockAstrologers = [
   { id: "1", name: "Luna Céleste", first_name: "Luna", last_name: "Céleste", provider_type: "ai", specialties: ["Relations"], bio_short: "Bio Luna" }
@@ -688,6 +734,98 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText("Interprétation client")).toBeInTheDocument();
     expect(screen.getByText(/lecture plus suivie qui relie les éléments du thème/i)).toBeInTheDocument();
     expect(screen.getByText("Lecture client test.")).toBeInTheDocument();
+  });
+
+  it("CS-309 free: affiche le résumé autorisé et le verrou upgrade pour la projection premium refusée", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      buildProjectionQuery(
+        buildProjectionResponse({
+          projectionType: "beginner_summary_v1",
+          planCode: "free",
+          payload: {
+            state: "normal",
+            display_messages: [{ code: "FREE_VISIBLE", message: "Résumé free autorisé par le backend." }],
+            summary_items: [{ code: "free_sun", label: "Repère free visible" }],
+          },
+        }),
+      ),
+      buildProjectionForbiddenQuery("client_interpretation_projection_v1"),
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText("Repère free visible")).toBeInTheDocument();
+    expect(screen.queryByText("Lecture premium réservée")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(/formule plus avancée/i);
+    expect(screen.getByRole("link", { name: /Débloquer l'interprétation complète/i })).toHaveAttribute(
+      "href",
+      "/settings/subscription",
+    );
+  });
+
+  it("CS-309 basic: conserve le contenu autorisé et masque la projection premium refusée", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      buildProjectionQuery(
+        buildProjectionResponse({
+          projectionType: "beginner_summary_v1",
+          planCode: "basic",
+          payload: {
+            state: "normal",
+            display_messages: [{ code: "BASIC_VISIBLE", message: "Résumé basic autorisé." }],
+            summary_items: [{ code: "basic_marker", label: "Repère basic visible" }],
+          },
+        }),
+      ),
+      buildProjectionForbiddenQuery("client_interpretation_projection_v1"),
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText("Repère basic visible")).toBeInTheDocument();
+    expect(screen.queryByText("Lecture premium réservée")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(/formule plus avancée/i);
+    expect(screen.getByRole("link", { name: /Débloquer l'interprétation complète/i })).toHaveAttribute(
+      "href",
+      "/settings/subscription",
+    );
+  });
+
+  it("CS-309 premium: affiche les deux projections autorisées sans verrou", () => {
+    (useAstrologyProjections as any).mockReturnValue([
+      buildProjectionQuery(
+        buildProjectionResponse({
+          projectionType: "beginner_summary_v1",
+          planCode: "premium",
+          payload: {
+            state: "normal",
+            summary_items: [{ code: "premium_summary", label: "Résumé premium disponible" }],
+          },
+        }),
+      ),
+      buildProjectionQuery(
+        buildProjectionResponse({
+          projectionType: "client_interpretation_projection_v1",
+          planCode: "premium",
+          payload: {
+            state: "normal",
+            sections: [
+              {
+                code: "premium_orientation",
+                title: "Lecture premium réservée",
+                text: "Contenu premium autorisé par le backend.",
+              },
+            ],
+          },
+        }),
+      ),
+    ]);
+
+    renderSection();
+
+    expect(screen.getByText("Résumé premium disponible")).toBeInTheDocument();
+    expect(screen.getByText("Lecture premium réservée")).toBeInTheDocument();
+    expect(screen.getByText("Contenu premium autorisé par le backend.")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("affiche l'état loading des projections", () => {

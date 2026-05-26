@@ -1,3 +1,4 @@
+// Composant de navigation d'upgrade reutilisable par les surfaces verrouillees.
 import React from "react"
 import { Link } from "react-router-dom"
 import { useAstrologyLabels } from "../../../i18n/astrology"
@@ -12,15 +13,16 @@ interface UpgradeCTAProps {
   label?: string
 }
 
+/** Affiche un CTA d'upgrade base sur le hint d'entitlement ou sur un libelle explicite. */
 export function UpgradeCTA({ featureCode, variant = "button", to = "/subscription-guide", label }: UpgradeCTAProps) {
   const { lang } = useAstrologyLabels()
   const hint = useUpgradeHint(featureCode)
 
-  if (!hint) {
+  if (!hint && !label) {
     return null
   }
 
-  const ctaLabel = label ?? getUpgradeBenefitLabel(hint.benefit_key, lang)
+  const ctaLabel = label ?? getUpgradeBenefitLabel(hint!.benefit_key, lang)
 
   return (
     <Link

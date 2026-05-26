@@ -148,7 +148,9 @@ export function NatalInterpretationSection({
     isEntitlementError: projectionQueries.some(
       (query) => query.error instanceof ApiError && query.error.status === 403,
     ),
-    isApiError: projectionQueries.some((query) => Boolean(query.error)),
+    isApiError: projectionQueries.some(
+      (query) => Boolean(query.error) && !(query.error instanceof ApiError && query.error.status === 403),
+    ),
     projections: projectionQueries.flatMap((query) => (query.data ? [query.data] : [])),
     refetchAll: () => projectionQueries.forEach((query) => query.refetch()),
   }

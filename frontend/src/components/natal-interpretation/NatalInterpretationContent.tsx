@@ -3,6 +3,7 @@ import { useState } from "react"
 import { AlertCircle, ChevronDown, ChevronUp, Sparkles } from "lucide-react"
 
 import { LockedSection, UpgradeCTA } from "@ui"
+import { getUpgradeBenefitLabel } from "../../i18n/billing"
 import { getNatalLockedSectionCopy, getNatalSectionTeaser, natalChartTranslations } from "../../i18n/natalChart"
 import { stripLeadingNumber, stripLeadingNumbering } from "@utils/strings"
 import { EvidenceTags } from "./NatalInterpretationEvidence"
@@ -124,6 +125,7 @@ function AstrologyProjectionsPanel({
     return null
   }
   const projectionCopy = natalChartTranslations[lang].interpretation.projections
+  const upgradeLabel = getUpgradeBenefitLabel("upgrade.natal_chart_long.full_interpretation", lang)
 
   return (
     <section className="ni-projections" aria-label={projectionCopy.panelLabel}>
@@ -133,10 +135,8 @@ function AstrologyProjectionsPanel({
 
         {projectionState.isLoading ? (
           <p className="ni-projections__state">{projectionCopy.loading}</p>
-        ) : projectionState.isEntitlementError ? (
-          <p className="ni-projections__state ni-projections__state--locked" role="alert">
-            {projectionCopy.entitlement}
-          </p>
+        ) : projectionState.isEntitlementError && projectionState.projections.length === 0 ? (
+          <ProjectionLockedState copy={projectionCopy} upgradeLabel={upgradeLabel} />
         ) : projectionState.isApiError ? (
           <div className="ni-projections__state ni-projections__state--error" role="alert">
             <p>{projectionCopy.error}</p>
@@ -151,14 +151,39 @@ function AstrologyProjectionsPanel({
         ) : projectionState.projections.length === 0 ? (
           <p className="ni-projections__state">{projectionCopy.empty}</p>
         ) : (
-          <div className="ni-projections__grid">
-            {projectionState.projections.map((projection) => (
-              <ProjectionCard key={projection.projection_type} projection={projection} copy={projectionCopy} />
-            ))}
-          </div>
+          <>
+            <div className="ni-projections__grid">
+              {projectionState.projections.map((projection) => (
+                <ProjectionCard key={projection.projection_type} projection={projection} copy={projectionCopy} />
+              ))}
+            </div>
+            {projectionState.isEntitlementError && (
+              <ProjectionLockedState copy={projectionCopy} upgradeLabel={upgradeLabel} />
+            )}
+          </>
         )}
       </div>
     </section>
+  )
+}
+
+function ProjectionLockedState({
+  copy,
+  upgradeLabel,
+}: {
+  copy: typeof natalChartTranslations.fr.interpretation.projections
+  upgradeLabel: string
+}) {
+  return (
+    <div className="ni-projections__state ni-projections__state--locked" role="alert">
+      <p>{copy.entitlement}</p>
+      <UpgradeCTA
+        featureCode="natal_chart_long"
+        label={upgradeLabel}
+        variant="button"
+        to="/settings/subscription"
+      />
+    </div>
   )
 }
 
