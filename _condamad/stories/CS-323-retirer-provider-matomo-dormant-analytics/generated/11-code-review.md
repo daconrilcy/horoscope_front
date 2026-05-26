@@ -63,6 +63,12 @@ CLEAN
 
 - no-propagation: no reusable process, guardrail or skill defect found; the review produced only story-local closure evidence.
 
+## Closure refresh
+
+- 2026-05-27: fresh implementation review remained CLEAN after tracker closure to `done`.
+- Tracker row: `_condamad/stories/story-status.md` maps CS-323 to the requested story path and source brief.
+- Final CONDAMAD validation, story validation and strict lint passed after the tracker update.
+
 ## Residual risk
 
 - Aucun risque restant identifie.
