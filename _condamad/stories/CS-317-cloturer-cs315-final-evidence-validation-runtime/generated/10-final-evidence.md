@@ -4,8 +4,8 @@
 
 ## Story status
 
-- Validation outcome: PASS_WITH_LIMITATIONS
-- Ready for review: yes
+- Validation outcome: CLEAN_WITH_ROUTED_DIVERGENCE
+- Ready for review: complete
 - Story key: CS-317-cloturer-cs315-final-evidence-validation-runtime
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-317-cloturer-cs315-final-evidence-validation-runtime`
@@ -22,7 +22,7 @@
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | status set to `ready-to-review` |
+| `00-story.md` | yes | yes | PASS | status set to `done` after implementation review |
 | `generated/01-execution-brief.md` | yes | yes | PASS | repaired |
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC-by-AC evidence recorded |
 | `generated/04-target-files.md` | yes | yes | PASS | repaired |
@@ -79,6 +79,8 @@
 | `git diff --check` | repo root | PASS | Only line-ending warnings, no whitespace errors. |
 | `python -B -m pytest -q --tb=short` | `backend` with venv | PASS | 3432 passed, 1 skipped, 1216 deselected. |
 | `condamad_validate.py ...CS-317...` | repo root with venv | PASS | CS-317 capsule valid after final evidence update. |
+| `condamad_story_validate.py ...CS-317...\00-story.md` | repo root with venv | PASS | Story valid after review/status fix. |
+| `condamad_story_lint.py --strict ...CS-317...\00-story.md` | repo root with venv | PASS | Strict story lint passed. |
 
 ## Commands skipped or blocked
 
@@ -99,13 +101,17 @@
 
 ## Final worktree status
 
-- Modified tracked files: CS-315 story/evidence/review, CS-317 story, `story-status.md`.
+- Modified tracked files: CS-315 story/evidence/review, CS-317 story/evidence/review, `story-status.md`.
 - Untracked story-scoped/generated files include CS-315/CS-317 generated capsule files, delivery report, CS-315 divergence brief and pre-existing CS-317/CS-318/CS-319 briefs.
 
 ## Remaining risks
 
 - Backend/product divergence remains open for owner decision: backend accepts `client_interpretation_projection_v1` for `free`, `basic` and `premium`; CS-315 product decision expects premium-only visibility.
 
+## Final review result
+
+Fresh implementation review is clean with the backend/product divergence routed by AC9.
+
 ## Suggested reviewer focus
 
-Confirm that marking CS-315 `done` is acceptable with the divergence explicitly routed to the backend follow-up brief.
+Aucun focus de correction restant. La divergence produit/backend est volontairement routée par AC9 vers le brief backend de suivi.

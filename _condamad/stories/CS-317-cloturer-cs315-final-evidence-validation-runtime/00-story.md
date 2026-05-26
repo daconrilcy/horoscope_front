@@ -1,5 +1,5 @@
 # Story CS-317 cloturer-cs315-final-evidence-validation-runtime: Close CS-315 Final Evidence And Runtime Validation
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
