@@ -94,3 +94,4 @@
 | cs-313 | `_story_briefs\cs-313-stabiliser-validation-pnpm-lint-apres-cs308.md` | `_condamad\stories\cs-313-stabiliser-validation-pnpm-lint-apres-cs308\00-story.md` |
 | cs-314 | `_story_briefs\cs-314-capturer-pack-screenshots-profils-natal-cs310.md` | `_condamad\stories\cs-314-capturer-pack-screenshots-profils-natal-cs310\00-story.md` |
 | cs-315 | `_story_briefs\cs-315-faire-valider-matrice-produit-plans-projections-natal.md` | `_condamad\stories\cs-315-product-plan-matrix-signoff-natal-projections\00-story.md` |
+| cs-316 | `_story_briefs\cs-316-verifier-ingestion-analytics-runtime-projections-natal.md` | `_condamad\stories\cs-316-verifier-ingestion-analytics-runtime-projections-natal\00-story.md` |
