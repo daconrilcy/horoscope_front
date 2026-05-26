@@ -28,3 +28,35 @@ PASS - OpenAPI and route neutrality:
 PASS - diff whitespace:
 git diff --check -- docs\architecture\client-interpretation-projection-v1-contract.md _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping _condamad\stories\story-status.md
 Result: no whitespace errors; Git only reported LF-to-CRLF warnings.
+
+2026-05-26 ready-to-review alignment pass:
+
+PASS - capsule validation:
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping
+Result: CONDAMAD validation: PASS.
+
+PASS - backend full projection availability:
+.\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short
+Result: 12 passed.
+
+PASS - backend lint:
+.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .
+Result: All checks passed.
+
+PASS - frontend lint:
+pnpm --dir frontend lint
+Result: tsc --noEmit checks passed.
+
+PASS - frontend architecture and natal rendering tests:
+pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards natalInterpretation NatalChartPage natalChartApi
+Result: 5 files passed, 130 tests passed.
+
+PASS - JSON evidence parse:
+.\.venv\Scripts\Activate.ps1; python -B -c "import json, pathlib; base=pathlib.Path(r'_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence'); [json.loads((base/name).read_text(encoding='utf-8')) for name in ('free-sample.json','basic-sample.json','premium-sample.json')]; print('JSON samples: PASS')"
+
+PASS - OpenAPI projection route neutrality:
+.\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -c "from app.main import app; paths=app.openapi().get('paths', {}); assert '/v1/astrology/projections' in paths; assert not any('free' in p or 'basic' in p or 'premium' in p for p in paths); print('OpenAPI projection route neutrality: PASS')"
+
+PASS - negative React owner policy scan:
+rg -n "entitlement.*(free|basic|premium)|(free|basic|premium).*entitlement|planMatrix|plan_matrix|local.*(free|basic|premium)" frontend\src\components frontend\src\features --glob '!**/*.test.*' --glob '!**/__tests__/**'
+Result: PASS, no matches. Exit code 1 is expected for absence of matches.

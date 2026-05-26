@@ -3,8 +3,8 @@
 ## Story status
 
 - Validation outcome: PASS
-- Story file status: `done`
-- Ready for review: clean implementation review completed and tracker synchronized
+- Story file status: `ready-to-review`
+- Ready for review: implementation evidence complete and tracker synchronized
 - Story key: CS-320-plan-aware-projection-interpretation-shaping
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping`
@@ -81,6 +81,7 @@
 - PASS: OpenAPI and `/v1/astrology/projections` route check.
 - PASS: negative React entitlement scan returned no owner matches.
 - PASS: `git diff --check -- ...`; LF/CRLF warnings only.
+- PASS: final ready-to-review alignment validation commands recorded in `evidence/validation.txt`.
 
 ## Fresh review closure validation
 
@@ -97,12 +98,23 @@
 
 ## Resume alignment validation
 
-- PASS: story status and task list now match tracker status `done`.
+- PASS: story status and task list now match tracker status `ready-to-review`.
 - PASS: story, final evidence and review artifact line-length check.
 - PASS: `condamad_story_validate.py`, `condamad_story_lint.py --strict` and `condamad_validate.py` after venv activation.
 - PASS: JSON sample parse and contract vocabulary scan against the source brief.
 - PASS: backend projection API tests, 12 tests after venv activation.
 - PASS: backend `ruff check .`, OpenAPI route check, frontend lint and targeted Vitest suite, 130 tests.
+
+## Ready-to-review alignment validation
+
+- PASS: `condamad_validate.py` after venv activation.
+- PASS: backend projection API tests, 12 tests after venv activation.
+- PASS: backend `ruff check .` after venv activation.
+- PASS: `pnpm --dir frontend lint`.
+- PASS: targeted frontend Vitest suite, 5 files and 130 tests.
+- PASS: JSON evidence sample parse after venv activation.
+- PASS: OpenAPI projection route neutrality after venv activation.
+- PASS: negative React owner policy scan returned no matches in `frontend/src/components` and `frontend/src/features`.
 
 ## Commands skipped or blocked
 
@@ -121,10 +133,11 @@
 
 ## Final worktree status
 
-- Final closure review updated `generated/11-code-review.md` and synchronized
-  `_condamad/stories/story-status.md` to `done` after fresh validation.
-- Resume alignment pass synchronized `00-story.md` to `Status: done` and checked
-  the completed task list so the story file matches tracker and final evidence.
+- Final implementation pass synchronized `_condamad/stories/story-status.md` to
+  `ready-to-review` after fresh validation.
+- Resume alignment pass synchronized `00-story.md` to `Status: ready-to-review`
+  and checked the completed task list so the story file matches tracker and
+  final evidence.
 
 ## Remaining risks
 

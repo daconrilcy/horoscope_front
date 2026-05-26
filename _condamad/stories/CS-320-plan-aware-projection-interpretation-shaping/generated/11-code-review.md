@@ -27,8 +27,8 @@ No actionable implementation issue found in the fresh review after the evidence 
 ## Issues Fixed In This Review Loop
 
 - Evidence classification: replaced the stale pre-implementation drafting review with this implementation review artifact.
-- Closure status: synchronized the story tracker to `done` after fresh validation and a clean implementation review.
-- Story file status: synchronized `00-story.md` from `ready-to-review` to `done` and checked completed implementation tasks.
+- Closure status: synchronized the story tracker to `ready-to-review` after fresh validation and a clean implementation review.
+- Story file status: synchronized `00-story.md` to `ready-to-review` and checked completed implementation tasks.
 
 ## AC And Guardrail Review
 

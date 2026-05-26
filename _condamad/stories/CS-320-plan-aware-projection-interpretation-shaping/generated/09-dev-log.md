@@ -14,3 +14,8 @@
   route publique n'a ete modifie.
 - Worktree initial deja sale sur des briefs, docs et artefacts CONDAMAD non lies;
   aucun de ces changements n'a ete revert.
+- Reprise finale: tracker, story et preuves realignes sur `ready-to-review`
+  pour respecter la consigne d'implementation sans clore en statut review.
+- Validations relancees: capsule CONDAMAD, backend pytest projection, backend
+  `ruff check`, frontend lint, Vitest cible, JSON samples, OpenAPI neutrality et
+  scan negatif des owners React applicatifs.
