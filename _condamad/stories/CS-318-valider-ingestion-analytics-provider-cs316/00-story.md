@@ -1,5 +1,5 @@
 # Story CS-318 valider-ingestion-analytics-provider-cs316: Validate CS-316 Analytics Provider Ingestion
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
