@@ -103,3 +103,4 @@
 | cs-321 | `_story_briefs\cs-321-preparer-integration-plausible-analytics.md` | `_condamad\stories\cs-321-preparer-integration-plausible-analytics\00-story.md` |
 | cs-322 | `_story_briefs\cs-322-reconcilier-rapports-evidence-apres-decision-plan-plausible.md` | `_condamad\stories\cs-322-rapports-evidence-plan-plausible-reconciliation\00-story.md` |
 | cs-323 | `_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md` | `_condamad\stories\cs-323-retirer-provider-matomo-dormant-analytics\00-story.md` |
+| cs-324 | `_story_briefs\cs-324-audit-surfaces-calculs-interpretations-vers-llm.md` | `_condamad\stories\cs-324-audit-calculs-interpretations-llm\00-story.md` |
