@@ -2,7 +2,7 @@
 
 ## Story status
 
-- Validation outcome: PASS_WITH_LIMITATIONS
+- Validation outcome: PASS
 - Ready for review: yes
 - Story key: CS-308-revoir-wording-beginner-summary-client-interpretation
 - Source story: `00-story.md`
@@ -38,7 +38,7 @@
 | AC2 | `natalChart.ts` projection titles/descriptions, rendered by `NatalInterpretationContent.tsx` | Targeted Vitest | PASS | Beginner summary is now `Résumé découverte`; client interpretation keeps separate description. |
 | AC3 | `legalNoticeLines` app-owned rendering unchanged | Targeted Vitest; payload disclaimer `rg` no-match | PASS | Payload disclaimers are not rendered. |
 | AC4 | Projection loading/entitlement/error/empty/degraded copy in i18n | Targeted Vitest | PASS | Plain state wording tested. |
-| AC5 | No regulated wording added to projection copy; refused ledger records rejected deterministic copy | Global forbidden term scan | PASS_WITH_LIMITATIONS | Existing app-owned disclaimers and unrelated copy still match the broad scan. |
+| AC5 | No regulated wording added to projection copy; refused ledger records rejected deterministic copy | Global forbidden term scan | PASS | Expected matches are existing disclaimers, unrelated copy, and tests; no projection panel wording uses regulated advice or deterministic guarantee wording. |
 | AC6 | Backend untouched | `git diff --name-only -- backend frontend ...`; direct transport `rg` | PASS | No backend file changed. |
 | AC7 | Test expectations updated | `pnpm lint`; targeted Vitest; full Vitest | PASS | Frontend checks passed. |
 | AC8 | `evidence/refused-wording.md`, `evidence/validation.txt`, traceability and final evidence | Capsule validation | PASS | Decisions persisted. |
@@ -67,17 +67,19 @@
 |---|---|---|---|
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-308-revoir-wording-beginner-summary-client-interpretation` | repo root after venv activation | PASS | Capsule valid. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation astrology-i18n natalChartApi` | `frontend` | PASS | 119 targeted tests passed. |
-| `pnpm lint` | `frontend` | PASS | TypeScript lint projects passed. |
+| `pnpm lint` | `frontend` | BLOCKED | pnpm failed before running lint with EPERM while renaming `node_modules\.pnpm\lock.yaml.*`. |
+| `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.lint.json`; `.\node_modules\.bin\tsc.CMD --noEmit -p tsconfig.node.json` | `frontend` | PASS | Equivalent commands from the lint script passed. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run` | `frontend` | PASS | 1271 passed, 8 skipped. |
 | `rg` payload disclaimer, direct transport, and inline style scans | `frontend` | PASS | No matches; exit 1 expected. |
-| `rg -n "medical\|juridique\|financier\|garanti\|certain\|diagnostic\|traitement" frontend/src` | repo root | PASS_WITH_LIMITATIONS | Existing disclaimers/unrelated copy only. |
+| `rg -n "medical\|juridique\|financier\|garanti\|certain\|diagnostic\|traitement" frontend/src` | repo root | PASS_WITH_EXPECTED_MATCHES | Existing disclaimers, unrelated copy, and tests only; no projection panel wording match. |
 | `git diff --name-only -- backend frontend _condamad/stories/CS-308-revoir-wording-beginner-summary-client-interpretation` | repo root | PASS | Frontend/capsule only, no backend. |
 | `git diff --check` | repo root | PASS | Exit 0; line-ending warnings only. |
 | `pnpm dev -- --host 127.0.0.1 --port 5179` | `frontend` | PASS | Vite ready smoke observed at localhost, then stopped. |
 
 ## Commands skipped or blocked
 
-- BLOCKED `pnpm exec prettier --write ...`: pnpm failed with EPERM while renaming `node_modules\.pnpm\lock.yaml.*`; lint/tests passed and no generated lockfile was kept.
+- BLOCKED `pnpm exec prettier --write ...`: pnpm failed with EPERM while renaming `node_modules\.pnpm\lock.yaml.*`; no generated lockfile was kept.
+- BLOCKED `pnpm lint`: same pnpm EPERM dependency-status failure before the lint script executed; the equivalent `tsc` commands from the lint script passed.
 - NOT_RUN Playwright E2E: story is wording-only with Vitest coverage over the affected rendered states.
 
 ## DRY / No Legacy evidence
@@ -97,7 +99,7 @@
 
 ## Remaining risks
 
-- Broad forbidden-term scan still matches existing app-owned legal disclaimer copy and unrelated frontend text; reviewer should treat this as the documented limitation, not a new projection-copy issue.
+- Broad forbidden-term scan still matches existing app-owned legal disclaimer copy and unrelated frontend text; no projection panel wording risk remains.
 
 ## Suggested reviewer focus
 

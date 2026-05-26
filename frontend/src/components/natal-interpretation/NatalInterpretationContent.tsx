@@ -126,7 +126,7 @@ function AstrologyProjectionsPanel({
   const projectionCopy = natalChartTranslations[lang].interpretation.projections
 
   return (
-    <section className="ni-projections" aria-label="Projections astrologiques">
+    <section className="ni-projections" aria-label={projectionCopy.panelLabel}>
       <div className="ni-content-card ni-projections__card">
         <p className="ni-section-label ni-section-label--card">{projectionCopy.panelLabel}</p>
         <h3 className="ni-projections__title">{projectionCopy.panelTitle}</h3>

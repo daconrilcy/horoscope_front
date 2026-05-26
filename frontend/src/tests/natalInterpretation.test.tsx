@@ -681,6 +681,7 @@ describe("NatalInterpretationSection", () => {
   it("affiche les projections beginner_summary_v1 et client_interpretation_projection_v1", () => {
     renderSection();
 
+    expect(screen.getByRole("region", { name: "Lectures publiques du thème" })).toBeInTheDocument();
     expect(screen.getByText("Résumé découverte")).toBeInTheDocument();
     expect(screen.getByText(/vue simple pour comprendre les repères principaux/i)).toBeInTheDocument();
     expect(screen.getByText("Soleil en Bélier")).toBeInTheDocument();
