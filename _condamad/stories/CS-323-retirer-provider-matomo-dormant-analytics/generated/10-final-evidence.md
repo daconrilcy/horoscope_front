@@ -112,3 +112,18 @@
 ## Feedback loop routing
 
 - no-propagation: no reusable process or guardrail defect found beyond the story-local scans.
+
+## Current verification run — 2026-05-27
+
+- Tracker synchronization: CS-323 row changed from `done` to `ready-to-review` per requested implementation handoff state; `Path` and source brief matched the requested story before update.
+- Initial worktree for this run: `?? _condamad/run-state.json` only.
+- Capsule validation: `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-323-retirer-provider-matomo-dormant-analytics` PASS.
+- Frontend lint: `pnpm lint` PASS from `frontend`.
+- Targeted Vitest: `node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics` PASS, 4 tests.
+- Expanded targeted Vitest: `node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi` PASS, 56 tests.
+- Full Vitest: `node .\scripts\run-vite-logged.mjs vitest vitest run` PASS, 116 files, 1280 passed, 8 existing skips.
+- Build/startup validation: `pnpm build` PASS from `frontend`.
+- Local app availability: port 5173 was already in use; `Invoke-WebRequest http://127.0.0.1:5173` returned HTTP 200.
+- Guard scans: `rg -n "matomo|_paq" frontend/src .env.example docs`, `rg -n "matomo|_paq" backend`, and `rg -n "plausible\(" frontend/src/features frontend/src/components frontend/src/pages frontend/src/api` all returned exit 1 with no matches, classified PASS.
+- Sensitive-field scan: expected occurrences remain in the canonical hook field list and existing tests/fixtures; no duplicate active analytics provider path identified.
+- `git diff --check`: PASS.
