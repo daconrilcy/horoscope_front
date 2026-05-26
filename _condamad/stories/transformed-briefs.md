@@ -105,3 +105,4 @@
 | cs-323 | `_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md` | `_condamad\stories\cs-323-retirer-provider-matomo-dormant-analytics\00-story.md` |
 | cs-324 | `_story_briefs\cs-324-audit-surfaces-calculs-interpretations-vers-llm.md` | `_condamad\stories\cs-324-audit-calculs-interpretations-llm\00-story.md` |
 | cs-325 | `_story_briefs\cs-325-audit-pipeline-prompt-llm-natal-legacy-vs-canonique.md` | `_condamad\stories\cs-325-audit-pipeline-prompt-llm-natal\00-story.md` |
+| cs-326 | `_story_briefs\cs-326-audit-projections-interpretatives-llm-input-readiness.md` | `_condamad\stories\cs-326-audit-projections-interpretatives-llm-input-readiness\00-story.md` |
