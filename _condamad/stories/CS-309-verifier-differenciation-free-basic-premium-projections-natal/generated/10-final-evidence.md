@@ -3,7 +3,8 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Final implementation review: CLEAN
+- Story closed: yes
 - Story key: `CS-309-verifier-differenciation-free-basic-premium-projections-natal`
 - Source story: `_condamad/stories/CS-309-verifier-differenciation-free-basic-premium-projections-natal/00-story.md`
 - Brief source: `_story_briefs/cs-309-verifier-differenciation-free-basic-premium-projections-natal.md`
@@ -13,6 +14,7 @@
 - Repository root: `C:\dev\horoscope_front`
 - Initial `git status --short`: existing CS-309 frontend/evidence changes were present from the interrupted run.
 - `story-status.md` row verified: Path and brief source match CS-309.
+- Final tracker status after implementation review: `done`.
 - Capsule validation before final evidence: PASS.
 
 ## Capsule validation
@@ -71,6 +73,11 @@
 
 | Command | Working directory | Result | Evidence summary |
 |---|---|---|---|
+| `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi` | `frontend` | PASS | Fresh implementation review run: 4 files, 122 tests passed. |
+| `python -B -m pytest -q tests\api\test_projection_authorization.py tests\api\test_projection_endpoint.py --tb=short` | `backend` with venv active | PASS | Fresh implementation review run: 5 tests passed. |
+| `pnpm lint` | `frontend` | PASS | Fresh implementation review rerun passed after one transient pnpm lock rename error. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run` | `frontend` | PASS | Fresh implementation review run: 116 files, 1274 tests passed, 8 skipped. |
+| `condamad_story_validate.py` and `condamad_story_lint.py --strict` | repo root with venv active | PASS | Story contract remains valid and strict-lint clean. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-309-verifier-differenciation-free-basic-premium-projections-natal` | repo root with venv active | PASS | Capsule structure valid. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi` | `frontend` | PASS | 4 files, 122 tests passed. |
 | `pnpm lint` | `frontend` | PASS | TypeScript lint configs passed. |
@@ -82,6 +89,7 @@
 ## Commands skipped or blocked
 
 - Local app startup not launched; validation used lint, targeted tests, full Vitest, backend pytest, and static guards. Existing Vite dev command remains `cd frontend && pnpm dev`.
+- First fresh `pnpm lint` attempt hit a transient Windows EPERM rename under `frontend/node_modules/.pnpm/lock.yaml`; the immediate isolated rerun passed.
 
 ## DRY / No Legacy evidence
 
@@ -99,14 +107,8 @@
 
 ## Final worktree status
 
-- Final status expected to include only CS-309 modified/untracked files:
-  - `_condamad/stories/story-status.md`
-  - `frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx`
-  - `frontend/src/components/ui/UpgradeCTA/UpgradeCTA.tsx`
-  - `frontend/src/features/natal-chart/NatalInterpretation.tsx`
-  - `frontend/src/tests/natalInterpretation.test.tsx`
-  - `_condamad/stories/CS-309-verifier-differenciation-free-basic-premium-projections-natal/evidence/**`
-  - `_condamad/stories/CS-309-verifier-differenciation-free-basic-premium-projections-natal/generated/**`
+- Final review update touches only CS-309 story evidence/status files after implementation was already present.
+- `frontend/pnpm-lock.yaml` was removed after `pnpm lint` recreated it as an untracked, non-requested artifact.
 
 ## Remaining risks
 

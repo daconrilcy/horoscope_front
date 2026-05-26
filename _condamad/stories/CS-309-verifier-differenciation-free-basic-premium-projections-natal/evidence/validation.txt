@@ -39,3 +39,35 @@ PASS - diff check:
   cwd: repo root
   command: git diff --check
   result: no whitespace errors; Git reported LF/CRLF warnings only.
+
+Fresh implementation review validation - 2026-05-26
+
+PASS - frontend targeted:
+  cwd: frontend
+  command: node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi
+  result: 4 test files passed, 122 tests passed.
+
+PASS - backend authorization:
+  cwd: backend, after .\.venv\Scripts\Activate.ps1
+  command: python -B -m pytest -q tests\api\test_projection_authorization.py tests\api\test_projection_endpoint.py --tb=short
+  result: 5 passed.
+
+PASS - frontend lint/typecheck:
+  cwd: frontend
+  command: pnpm lint
+  result: first attempt failed on transient Windows EPERM rename in node_modules; isolated rerun passed.
+
+PASS - frontend full:
+  cwd: frontend
+  command: node .\scripts\run-vite-logged.mjs vitest vitest run
+  result: 116 test files passed, 1274 tests passed, 8 skipped.
+
+PASS - capsule validation:
+  cwd: repo root, after .\.venv\Scripts\Activate.ps1
+  command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-309-verifier-differenciation-free-basic-premium-projections-natal
+  result: PASS.
+
+PASS - story validation and strict lint:
+  cwd: repo root, after .\.venv\Scripts\Activate.ps1
+  command: condamad_story_validate.py and condamad_story_lint.py --strict
+  result: PASS.

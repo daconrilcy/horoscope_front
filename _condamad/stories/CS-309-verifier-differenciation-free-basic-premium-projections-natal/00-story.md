@@ -1,5 +1,5 @@
 # Story CS-309 verifier-differenciation-free-basic-premium-projections-natal: Verify Free Basic Premium Natal Projection Differentiation
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
