@@ -99,3 +99,4 @@
 | cs-317 | `_story_briefs\cs-317-cloturer-cs315-final-evidence-validation-runtime.md` | `_condamad\stories\cs-317-cloturer-cs315-final-evidence-validation-runtime\00-story.md` |
 | cs-318 | `_story_briefs\cs-318-valider-ingestion-analytics-provider-cs316.md` | `_condamad\stories\cs-318-valider-ingestion-analytics-provider-cs316\00-story.md` |
 | cs-319 | `_story_briefs\cs-319-ajouter-garde-react-entitlement-matrix-natal.md` | `_condamad\stories\cs-319-natal-react-entitlement-matrix-guard\00-story.md` |
+| cs-320 | `_story_briefs\cs-320-definir-differenciation-llm-front-par-plan-b2c.md` | `_condamad\stories\cs-320-plan-aware-projection-interpretation-shaping\00-story.md` |
