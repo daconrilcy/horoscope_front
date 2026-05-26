@@ -1,0 +1,42 @@
+{
+  "audit_date": "2026-05-26",
+  "route": "/natal",
+  "checks": [
+    {
+      "surface": "prompt",
+      "result": "pass",
+      "evidence": "Le rendu public est contraint aux titres, messages, sections et mentions legales; scan cible execute dans la validation."
+    },
+    {
+      "surface": "provider",
+      "result": "pass",
+      "evidence": "Aucun payload fournisseur n'est expose dans les owners /natal; scan cible execute dans la validation."
+    },
+    {
+      "surface": "replay",
+      "result": "pass",
+      "evidence": "Aucun replay payload public attendu ni rendu dans les ledgers."
+    },
+    {
+      "surface": "admin",
+      "result": "pass",
+      "evidence": "Aucune donnee admin visible dans les resultats /natal traces."
+    },
+    {
+      "surface": "debug",
+      "result": "pass",
+      "evidence": "Les erreurs visibles restent bornees; requestId n'est pas affiche pour erreurs fonctionnelles 4xx."
+    },
+    {
+      "surface": "internal_payload",
+      "result": "pass",
+      "evidence": "Les payloads internes sont exclus des cartes publiques; scan cible execute dans la validation."
+    },
+    {
+      "surface": "raw_runtime",
+      "result": "pass",
+      "evidence": "Aucun rendu brut de runtime n'est trace dans les owners /natal."
+    }
+  ]
+}
+

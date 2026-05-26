@@ -1,0 +1,42 @@
+{
+  "audit_date": "2026-05-26",
+  "route": "/natal",
+  "profiles": [
+    {
+      "profile_id": "cs310-precise-time-paris",
+      "profile_category": "precise_time",
+      "birth_input_summary": "Profil synthetique ne le 1990-01-15 a 10:30, Paris, Europe/Paris.",
+      "coverage_reason": "Couvre le chemin nominal avec heure precise et lieu resolu.",
+      "sensitive_data_policy": "synthetic_non_real"
+    },
+    {
+      "profile_id": "cs310-missing-time-paris",
+      "profile_category": "missing_time",
+      "birth_input_summary": "Profil synthetique ne le 1990-01-15 sans heure, Paris, Europe/Paris.",
+      "coverage_reason": "Couvre le mode degrade sans ascendant ni maisons detaillees.",
+      "sensitive_data_policy": "synthetic_non_real"
+    },
+    {
+      "profile_id": "cs310-foreign-location-tokyo",
+      "profile_category": "foreign_location",
+      "birth_input_summary": "Profil synthetique ne le 1988-07-04 a 22:15, Tokyo, Asia/Tokyo.",
+      "coverage_reason": "Couvre un fuseau et un lieu hors France.",
+      "sensitive_data_policy": "synthetic_non_real"
+    },
+    {
+      "profile_id": "cs310-controlled-incomplete",
+      "profile_category": "controlled_incomplete",
+      "birth_input_summary": "Profil synthetique avec donnees de naissance volontairement incompletes ou chart_id absent.",
+      "coverage_reason": "Couvre l'erreur bornee sans crash React ni affichage de payload brut.",
+      "sensitive_data_policy": "synthetic_non_real"
+    },
+    {
+      "profile_id": "cs310-standard-lyon",
+      "profile_category": "standard",
+      "birth_input_summary": "Profil synthetique ne le 1995-11-23 a 08:45, Lyon, Europe/Paris.",
+      "coverage_reason": "Couvre un profil utilisateur standard distinct du cas precise-time.",
+      "sensitive_data_policy": "synthetic_non_real"
+    }
+  ]
+}
+

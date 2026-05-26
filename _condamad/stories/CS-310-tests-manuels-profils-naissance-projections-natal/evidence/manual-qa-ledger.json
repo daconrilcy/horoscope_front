@@ -1,0 +1,89 @@
+{
+  "audit_date": "2026-05-26",
+  "route": "/natal",
+  "execution_basis": [
+    "frontend/src/tests/NatalChartPage.test.tsx",
+    "frontend/src/tests/natalInterpretation.test.tsx",
+    "frontend/src/tests/natalChartApi.test.tsx",
+    "backend/tests/api/test_projection_real_conditions.py",
+    "_condamad/stories/CS-306-cs303-browser-qa-delivery-status/evidence/browser-qa-ledger.json"
+  ],
+  "entries": [
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "profile_id": "cs310-precise-time-paris",
+      "profile_category": "precise_time",
+      "birth_input_summary": "Profil synthetique ne le 1990-01-15 a 10:30, Paris, Europe/Paris.",
+      "execution_mode": "simulated_browser",
+      "projection_types_checked": ["beginner_summary_v1", "client_interpretation_projection_v1"],
+      "visible_result": "success",
+      "disclaimer_result": "visible",
+      "sensitive_surface_result": "pass",
+      "anomaly_id": "none",
+      "evidence_path": "_condamad/stories/CS-306-cs303-browser-qa-delivery-status/evidence/browser-qa-ledger.json",
+      "visible_notes": "Baseline navigateur CS-306 affiche Resume debutant et Interpretation client sur /natal."
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "profile_id": "cs310-missing-time-paris",
+      "profile_category": "missing_time",
+      "birth_input_summary": "Profil synthetique ne le 1990-01-15 sans heure, Paris, Europe/Paris.",
+      "execution_mode": "test_fixture",
+      "projection_types_checked": ["beginner_summary_v1", "client_interpretation_projection_v1"],
+      "visible_result": "degraded",
+      "disclaimer_result": "visible",
+      "sensitive_surface_result": "pass",
+      "anomaly_id": "none",
+      "evidence_path": "frontend/src/tests/NatalChartPage.test.tsx; frontend/src/tests/natalInterpretation.test.tsx; backend/tests/api/test_projection_real_conditions.py",
+      "visible_notes": "Le bandeau heure manquante et la projection state=degraded sont couverts; l'ascendant absent est explique."
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "profile_id": "cs310-foreign-location-tokyo",
+      "profile_category": "foreign_location",
+      "birth_input_summary": "Profil synthetique ne le 1988-07-04 a 22:15, Tokyo, Asia/Tokyo.",
+      "execution_mode": "test_fixture",
+      "projection_types_checked": ["beginner_summary_v1", "client_interpretation_projection_v1"],
+      "visible_result": "success",
+      "disclaimer_result": "visible",
+      "sensitive_surface_result": "pass",
+      "anomaly_id": "none",
+      "evidence_path": "backend/tests/api/test_projection_endpoint.py; frontend/src/tests/natalChartApi.test.tsx",
+      "visible_notes": "Le contrat accepte birth_input avec lieu/fuseau explicites; le client central normalise les donnees de naissance."
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "profile_id": "cs310-controlled-incomplete",
+      "profile_category": "controlled_incomplete",
+      "birth_input_summary": "Profil synthetique avec donnees de naissance volontairement incompletes ou chart_id absent.",
+      "execution_mode": "test_fixture",
+      "projection_types_checked": ["beginner_summary_v1", "client_interpretation_projection_v1"],
+      "visible_result": "controlled_error",
+      "disclaimer_result": "not_applicable",
+      "sensitive_surface_result": "pass",
+      "anomaly_id": "none",
+      "evidence_path": "frontend/src/tests/NatalChartPage.test.tsx; frontend/src/tests/natalInterpretation.test.tsx; backend/tests/api/test_projection_real_conditions.py",
+      "visible_notes": "Les erreurs 4xx/incomplete data et l'erreur API projection affichent des messages bornes avec retry quand pertinent."
+    },
+    {
+      "audit_date": "2026-05-26",
+      "route": "/natal",
+      "profile_id": "cs310-standard-lyon",
+      "profile_category": "standard",
+      "birth_input_summary": "Profil synthetique ne le 1995-11-23 a 08:45, Lyon, Europe/Paris.",
+      "execution_mode": "simulated_browser",
+      "projection_types_checked": ["beginner_summary_v1", "client_interpretation_projection_v1"],
+      "visible_result": "success",
+      "disclaimer_result": "visible",
+      "sensitive_surface_result": "pass",
+      "anomaly_id": "none",
+      "evidence_path": "frontend/src/tests/natalInterpretation.test.tsx; _condamad/stories/CS-306-cs303-browser-qa-delivery-status/evidence/browser-qa-ledger.json",
+      "visible_notes": "Le rendu standard affiche les deux projections et les mentions legales applicatives."
+    }
+  ]
+}
+
