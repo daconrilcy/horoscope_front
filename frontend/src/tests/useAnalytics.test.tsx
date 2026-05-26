@@ -5,6 +5,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 type PlausibleMock = ReturnType<typeof vi.fn>
 
 const clearAnalyticsEnv = () => {
+  vi.resetModules()
   vi.unstubAllEnvs()
   vi.stubEnv("VITE_ANALYTICS_PROVIDER", undefined)
   vi.stubEnv("VITE_ANALYTICS_ENABLED", undefined)
@@ -50,6 +51,16 @@ describe("useAnalytics", () => {
     })
     expect(plausibleMock).not.toHaveBeenCalled()
     consoleDebug.mockRestore()
+  })
+
+  it("ramene un provider non prepare vers le noop local", async () => {
+    vi.stubEnv("VITE_ANALYTICS_PROVIDER", "legacy-provider")
+    const { ANALYTICS_CONFIG } = await import("../config/analytics")
+
+    expect(ANALYTICS_CONFIG).toMatchObject({
+      provider: "noop",
+      enabled: true,
+    })
   })
 
   it("tracks plausible events without requiring cookie consent", async () => {

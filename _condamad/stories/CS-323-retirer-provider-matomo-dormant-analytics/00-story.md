@@ -1,5 +1,5 @@
 # Story CS-323 retirer-provider-matomo-dormant-analytics: Retirer Le Provider Matomo Dormant De L'Analytics Frontend
-Status: ready-to-dev
+Status: ready-to-review
 
 ## 1. Objective
 
@@ -210,12 +210,12 @@ This story belongs to exactly one domain:
 
 ## 8. Implementation Tasks
 
-- [ ] Task 1: Capture provider baseline scan and removal audit for `matomo` and `_paq`. (AC: AC1, AC2, AC6, AC9)
-- [ ] Task 2: Remove `matomo` from `AnalyticsProvider` and keep `noop` local default behavior. (AC: AC1, AC3)
-- [ ] Task 3: Delete `_paq` typing and the Matomo branch from `useAnalytics.ts`. (AC: AC2, AC4)
-- [ ] Task 4: Update analytics tests to prove `noop`, Plausible and redaction behavior. (AC: AC3, AC4, AC7)
-- [ ] Task 5: Update `.env.example` or docs that present Matomo as an active option. (AC: AC6)
-- [ ] Task 6: Capture final scans and validation logs in the CS-323 evidence folder. (AC: AC5, AC6, AC8, AC9)
+- [x] Task 1: Capture provider baseline scan and removal audit for `matomo` and `_paq`. (AC: AC1, AC2, AC6, AC9)
+- [x] Task 2: Remove `matomo` from `AnalyticsProvider` and keep `noop` local default behavior. (AC: AC1, AC3)
+- [x] Task 3: Delete `_paq` typing and the Matomo branch from `useAnalytics.ts`. (AC: AC2, AC4)
+- [x] Task 4: Update analytics tests to prove `noop`, Plausible and redaction behavior. (AC: AC3, AC4, AC7)
+- [x] Task 5: Update `.env.example` or docs that present Matomo as an active option. (AC: AC6)
+- [x] Task 6: Capture final scans and validation logs in the CS-323 evidence folder. (AC: AC5, AC6, AC8, AC9)
 
 ## 9. Mandatory Reuse / DRY Constraints
 

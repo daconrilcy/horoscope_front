@@ -1,0 +1,13 @@
+## Provider scan after CS-323 implementation
+
+Command: rg -n "matomo|_paq" frontend/src .env.example docs
+Result: PASS (exit 1: no active matches)
+
+
+Command: rg -n "matomo|_paq" backend
+Result: PASS (exit 1: no backend matches)
+
+
+Command: rg -n "plausible\(" frontend/src/features frontend/src/components frontend/src/pages frontend/src/api
+Result: PASS (exit 1: no direct provider calls outside hook)
+

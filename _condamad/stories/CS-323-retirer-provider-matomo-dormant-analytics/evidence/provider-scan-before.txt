@@ -1,0 +1,18 @@
+## Baseline provider scan before CS-323 implementation
+
+Command: rg -n "matomo|_paq" frontend/src .env.example docs _story_briefs
+
+frontend/src\config\analytics.ts:2:export type AnalyticsProvider = 'plausible' | 'matomo' | 'noop'
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:12:- `frontend/src/config/analytics.ts` : `AnalyticsProvider = 'plausible' | 'matomo' | 'noop'`
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:13:- `frontend/src/hooks/useAnalytics.ts` : branche `_paq` Matomo
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:38:1. Retirer `matomo` du type `AnalyticsProvider`.
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:39:2. Supprimer la branche `_paq` dans `useAnalytics.ts`.
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:43:6. Ajouter une preuve de scan montrant qu'aucun `_paq` ou `matomo` actif ne reste dans `frontend/src`.
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:55:1. `AnalyticsProvider` ne contient plus `matomo`.
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:56:2. `useAnalytics.ts` ne contient plus de branche `_paq`.
+_story_briefs\cs-323-retirer-provider-matomo-dormant-analytics.md:78:rg -n "matomo|_paq" frontend/src .env.example docs _story_briefs
+_story_briefs\cs-321-preparer-integration-plausible-analytics.md:14:- `frontend/src/config/analytics.ts` expose déjà `provider: 'plausible' | 'matomo' | 'noop'`.
+frontend/src\hooks\useAnalytics.ts:41:  _paq?: Array<['trackEvent', string, AnalyticsEvent, string]>
+frontend/src\hooks\useAnalytics.ts:84:    } else if (ANALYTICS_CONFIG.provider === 'matomo') {
+frontend/src\hooks\useAnalytics.ts:86:      if (win._paq) {
+frontend/src\hooks\useAnalytics.ts:87:        win._paq.push(['trackEvent', 'Funnel', event, JSON.stringify(safeProps)])

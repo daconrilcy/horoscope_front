@@ -1,0 +1,27 @@
+# Validation frontend CS-323
+
+## Commandes executees
+
+- `Push-Location frontend; pnpm lint; Pop-Location` - PASS
+  - `tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json`
+- `Push-Location frontend; node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics; Pop-Location` - PASS
+  - 1 fichier, 4 tests passes.
+- `Push-Location frontend; node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi; Pop-Location` - PASS
+  - 4 fichiers, 56 tests passes.
+- `Push-Location frontend; node .\scripts\run-vite-logged.mjs vitest vitest run; Pop-Location` - PASS
+  - 116 fichiers, 1280 tests passes, 8 skips existants.
+- `Push-Location frontend; pnpm build; Pop-Location` - PASS
+  - `tsc -b` et build Vite termines.
+
+## Scans
+
+- `rg -n "matomo|_paq" frontend/src .env.example docs` - PASS, exit 1 attendu: aucun match actif.
+- `rg -n "matomo|_paq" backend` - PASS, exit 1 attendu: aucun match backend.
+- `rg -n "plausible\(" frontend/src/features frontend/src/components frontend/src/pages frontend/src/api` - PASS, exit 1 attendu: aucun appel provider direct hors hook.
+- `rg -n "birth_date|birth_time|birth_place|latitude|longitude|provider_response|raw_runtime|replay_snapshot|prompt|api_key|password" frontend/src/hooks frontend/src/tests` - PASS_WITH_CONTEXT: le hook conserve la liste canonique et les tests contiennent des fixtures metier existantes; aucun duplicat actif de redaction n'a ete ajoute.
+
+## Capsule
+
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-323-retirer-provider-matomo-dormant-analytics` - PASS final.
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-323-retirer-provider-matomo-dormant-analytics\00-story.md` - PASS final.
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-323-retirer-provider-matomo-dormant-analytics\00-story.md` - PASS final.

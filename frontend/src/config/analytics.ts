@@ -1,5 +1,5 @@
 // Configuration frontend de l'integration analytics cible et de son defaut local.
-export type AnalyticsProvider = 'plausible' | 'matomo' | 'noop'
+export type AnalyticsProvider = 'plausible' | 'noop'
 
 export interface AnalyticsConfig {
   provider: AnalyticsProvider
@@ -8,15 +8,16 @@ export interface AnalyticsConfig {
   apiHost?: string
 }
 
-const configuredProvider = import.meta.env.VITE_ANALYTICS_PROVIDER as AnalyticsProvider | undefined
+const requestedProvider = import.meta.env.VITE_ANALYTICS_PROVIDER
 const analyticsDomain = import.meta.env.VITE_ANALYTICS_DOMAIN
+const configuredProvider: AnalyticsProvider = requestedProvider === 'plausible' ? 'plausible' : 'noop'
 
 export const ANALYTICS_CONFIG: AnalyticsConfig = {
-  provider: configuredProvider || 'noop',
+  provider: configuredProvider,
   enabled:
     configuredProvider === 'plausible'
       ? import.meta.env.VITE_ANALYTICS_ENABLED === 'true' && Boolean(analyticsDomain)
-      : configuredProvider === 'noop' || !configuredProvider,
+      : true,
   domain: analyticsDomain,
   apiHost: import.meta.env.VITE_ANALYTICS_API_HOST || 'https://plausible.io',
 }

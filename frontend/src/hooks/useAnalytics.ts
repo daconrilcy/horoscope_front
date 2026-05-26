@@ -38,7 +38,6 @@ type AnalyticsProps = Record<string, unknown>
 
 type AnalyticsWindow = Window & {
   plausible?: (event: AnalyticsEvent, options: { props: AnalyticsProps }) => void
-  _paq?: Array<['trackEvent', string, AnalyticsEvent, string]>
 }
 
 const sensitiveAnalyticsFields = new Set<string>(SENSITIVE_ANALYTICS_FIELD_NAMES)
@@ -48,14 +47,6 @@ export function sanitizeAnalyticsProps(props: AnalyticsProps): AnalyticsProps {
   return Object.fromEntries(
     Object.entries(props).filter(([key]) => !sensitiveAnalyticsFields.has(key)),
   )
-}
-
-const hasConsent = () => {
-  if (ANALYTICS_CONFIG.provider === 'noop') return true
-  if (ANALYTICS_CONFIG.provider === 'plausible') return true
-
-  const consent = localStorage.getItem('cookie_consent')
-  return consent === 'granted'
 }
 
 /** Fournit l'API de tracking commune afin d'eviter les appels fournisseur directs. */
@@ -69,22 +60,12 @@ export const useAnalytics = () => {
       return
     }
 
-    if (!hasConsent()) {
-      console.warn(`[Analytics] Event ${event} suppressed: No consent`)
-      return
-    }
-
     if (ANALYTICS_CONFIG.provider === 'plausible') {
       const win = window as AnalyticsWindow
       if (typeof win.plausible === 'function') {
         win.plausible(event, { props: safeProps })
       } else {
         console.warn('Plausible not loaded')
-      }
-    } else if (ANALYTICS_CONFIG.provider === 'matomo') {
-      const win = window as AnalyticsWindow
-      if (win._paq) {
-        win._paq.push(['trackEvent', 'Funnel', event, JSON.stringify(safeProps)])
       }
     }
   }, [])
