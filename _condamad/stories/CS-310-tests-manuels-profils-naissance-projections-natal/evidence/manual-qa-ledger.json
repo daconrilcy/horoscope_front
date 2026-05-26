@@ -22,6 +22,7 @@
       "sensitive_surface_result": "pass",
       "anomaly_id": "none",
       "evidence_path": "_condamad/stories/CS-306-cs303-browser-qa-delivery-status/evidence/browser-qa-ledger.json",
+      "execution_trace": "Desktop and mobile CS-306 browser screenshots exercised /natal success rendering with chart_id-based B2C projections; this CS-310 profile maps that success path to a synthetic precise-time Paris input.",
       "visible_notes": "Baseline navigateur CS-306 affiche Resume debutant et Interpretation client sur /natal."
     },
     {
@@ -37,6 +38,7 @@
       "sensitive_surface_result": "pass",
       "anomaly_id": "none",
       "evidence_path": "frontend/src/tests/NatalChartPage.test.tsx; frontend/src/tests/natalInterpretation.test.tsx; backend/tests/api/test_projection_real_conditions.py",
+      "execution_trace": "NatalChartPage covers degraded_mode=no_time, natalInterpretation covers payload state=degraded, and backend pytest covers birth_input without birth_time.",
       "visible_notes": "Le bandeau heure manquante et la projection state=degraded sont couverts; l'ascendant absent est explique."
     },
     {
@@ -52,6 +54,7 @@
       "sensitive_surface_result": "pass",
       "anomaly_id": "none",
       "evidence_path": "backend/tests/api/test_projection_endpoint.py; frontend/src/tests/natalChartApi.test.tsx",
+      "execution_trace": "The API client fixture proves birth place/timezone normalization through the central client; the backend birth_input source test proves the projection endpoint accepts explicit birth input. No country-specific UI branch exists.",
       "visible_notes": "Le contrat accepte birth_input avec lieu/fuseau explicites; le client central normalise les donnees de naissance."
     },
     {
@@ -67,6 +70,7 @@
       "sensitive_surface_result": "pass",
       "anomaly_id": "none",
       "evidence_path": "frontend/src/tests/NatalChartPage.test.tsx; frontend/src/tests/natalInterpretation.test.tsx; backend/tests/api/test_projection_real_conditions.py",
+      "execution_trace": "NatalChartPage covers birth_profile_not_found and 422 alerts, natalInterpretation covers projection API error state, and backend pytest covers public 404/422 projection errors.",
       "visible_notes": "Les erreurs 4xx/incomplete data et l'erreur API projection affichent des messages bornes avec retry quand pertinent."
     },
     {
@@ -82,8 +86,8 @@
       "sensitive_surface_result": "pass",
       "anomaly_id": "none",
       "evidence_path": "frontend/src/tests/natalInterpretation.test.tsx; _condamad/stories/CS-306-cs303-browser-qa-delivery-status/evidence/browser-qa-ledger.json",
+      "execution_trace": "The standard profile reuses the same /natal success rendering path as the CS-306 browser ledger and the targeted interpretation tests for both B2C projection cards.",
       "visible_notes": "Le rendu standard affiche les deux projections et les mentions legales applicatives."
     }
   ]
 }
-

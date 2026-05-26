@@ -1,4 +1,4 @@
-# CS-310 Editorial Review
+# CS-310 Implementation Review
 
 Verdict: CLEAN
 
@@ -6,34 +6,49 @@ Verdict: CLEAN
 
 - Story: `_condamad/stories/CS-310-tests-manuels-profils-naissance-projections-natal/00-story.md`
 - Source brief: `_story_briefs/cs-310-tests-manuels-profils-naissance-projections-natal.md`
+- Implementation evidence: CS-310 `evidence/**` and `generated/10-final-evidence.md`
+- Targeted runtime evidence: frontend lint, targeted Vitest, backend pytest, scoped static scans.
 - Tracker row: `_condamad/stories/story-status.md`
-- Guardrail lookup: targeted `RG-047` lookup only.
 
-## Alignment Result
+## Iteration 1 Finding
 
-- The objective matches the source brief: manual `/natal` QA across representative non-sensitive birth profiles.
-- The five required profile categories are explicit: precise time, missing time, foreign location, controlled incomplete data, and standard profile.
-- The story requires one traced `/natal` result per profile through manual or browser-equivalent execution.
-- Degraded missing-time behavior, bounded incomplete-data errors, disclaimers, and sensitive-surface checks are explicit.
-- Reproducible anomalies must be corrected in scope or converted into explicit follow-up story briefs.
-- Frontend and backend validation commands from the brief are preserved in the validation plan.
-- Persistent evidence paths are separated from the final review artifact path.
+- AC2 evidence was too implicit for profiles backed by browser-equivalent tests and prior CS-306 browser proof.
+- Risk: a reviewer could not audit profile-to-result traceability without inferring the mapping from test names.
 
-## Issues Fixed
+## Fix Applied
 
-None. The first editorial pass found no actionable story-contract issue.
+- `evidence/manual-qa-ledger.json` now records `execution_trace` for every CS-310 profile.
+- `evidence/browser-equivalent-notes.md` now maps each profile to the exact browser-equivalent proof path.
+- `generated/03-acceptance-traceability.md` and `generated/10-final-evidence.md` now require and summarize those traces.
+
+## Fresh Review Result
+
+- AC1 PASS: five synthetic non-sensitive profile categories are present.
+- AC2 PASS: each profile has a `/natal` ledger row with visible result, evidence path, and explicit execution trace.
+- AC3 PASS: missing birth time degraded state is covered by frontend and backend targeted tests.
+- AC4 PASS: controlled incomplete data is covered by bounded UI and backend public-error tests.
+- AC5 PASS: sensitive surfaces are covered by the scoped no-match scans and ledger.
+- AC6 PASS: anomalies ledger records no reproducible anomaly and the follow-up rule.
+- AC7 PASS: frontend lint and targeted Vitest passed.
+- AC8 PASS: backend projection pytest passed with venv active.
+- AC9 PASS: CS-310 evidence and generated artifacts are persisted.
 
 ## Validation Results
 
-- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-310-tests-manuels-profils-naissance-projections-natal\00-story.md`
-- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-310-tests-manuels-profils-naissance-projections-natal\00-story.md`
-
-Both Python validation commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+- PASS: `condamad_story_validate.py`
+- PASS: `condamad_story_lint.py --strict`
+- PASS: CS-310 Python evidence assertion with `execution_trace`
+- PASS: scoped sensitive-surface scan, no matches
+- PASS: direct projection client bypass scan, no matches
+- PASS: scoped inline-style scan, no matches
+- PASS: `pnpm lint`
+- PASS: targeted Vitest, 4 files and 122 tests
+- PASS: targeted backend pytest, 12 tests
 
 ## Propagation
 
-No-propagation. The review produced only local CS-310 evidence and no reusable guardrail, AGENTS.md, or skill update.
+No-propagation. The finding was local evidence ambiguity inside CS-310 and does not require guardrail, AGENTS.md, or skill changes.
 
 ## Residual Risk
 
-No story drafting risk remains identified. Implementation risk is limited to executing the manual QA ledger without drifting into subjective astrology validation.
+No implementation review risk remains identified. The story explicitly accepts browser-equivalent simulation; no new screenshot pack was required.

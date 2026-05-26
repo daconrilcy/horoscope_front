@@ -22,7 +22,19 @@ Static guards
 - git diff --check: PASS.
 
 Evidence assertions
-- python -B -c "<CS-310 evidence assertion>": PASS; checked categories, ledger/profile parity, /natal route, visible_result enum, sensitive-surface pass rows, anomaly artifact.
+- python -B -c "<CS-310 evidence assertion>": PASS; checked categories, ledger/profile parity, /natal route, execution_trace, visible_result enum, sensitive-surface pass rows, anomaly artifact.
+
+Review/fix iteration 2026-05-26
+- Finding fixed: AC2 browser-equivalent evidence was too implicit for some profiles.
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-310-tests-manuels-profils-naissance-projections-natal\00-story.md: PASS
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-310-tests-manuels-profils-naissance-projections-natal\00-story.md: PASS
+- python -B -c "<CS-310 evidence assertion with execution_trace>": PASS
+- rg -n "prompt|provider|replay|admin|debug|internal_payload|raw_runtime" frontend/src/pages/NatalChartPage.tsx frontend/src/features/natal-chart frontend/src/components/natal-interpretation: PASS, no matches.
+- rg -n "fetch\(.*/v1/astrology/projections|axios\(.*/v1/astrology/projections" frontend/src: PASS, no matches.
+- rg -n "style=" frontend/src/pages frontend/src/features/natal-chart frontend/src/components/natal-interpretation -g "*.tsx": PASS, no matches.
+- cd frontend; pnpm lint: PASS
+- cd frontend; node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi: PASS, 4 files, 122 tests.
+- .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short: PASS, 12 tests.
 
 Not run
 - New manual browser screenshot capture: not run; story permits browser-equivalent simulation, and CS-306 browser ledger plus targeted component/API/backend tests provide the executable evidence for this QA capsule.

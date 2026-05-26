@@ -36,7 +36,7 @@
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
 | AC1 | `evidence/profile-set.json` | Python evidence assertion | PASS | Five required categories present. |
-| AC2 | `evidence/manual-qa-ledger.json` | Python evidence assertion | PASS | One traced `/natal` row per profile. |
+| AC2 | `evidence/manual-qa-ledger.json` | Python evidence assertion | PASS | One traced `/natal` row per profile with explicit execution trace. |
 | AC3 | Missing-time ledger row; existing degraded frontend/backend tests | Vitest targeted; backend pytest targeted | PASS | Degraded and missing ascendant states covered. |
 | AC4 | Controlled-incomplete ledger row; existing incomplete/error tests | Vitest targeted; backend pytest targeted | PASS | Bounded UI error, no crash proof. |
 | AC5 | `evidence/sensitive-surface-ledger.json` | Broad scan inspected; scoped `/natal` scan PASS; direct-client scan PASS | PASS | Broad matches are unrelated admin/support surfaces outside `/natal`. |
@@ -50,6 +50,12 @@
 - `_condamad/stories/CS-310-tests-manuels-profils-naissance-projections-natal/evidence/**`
 - `_condamad/stories/CS-310-tests-manuels-profils-naissance-projections-natal/generated/**`
 - `_condamad/stories/story-status.md`
+
+## Review/fix iteration evidence
+
+- Iteration 1 finding: AC2 evidence linked some CS-310 profiles to browser-equivalent tests and prior CS-306 browser proof too implicitly.
+- Fix applied: `manual-qa-ledger.json` now includes `execution_trace` per profile and `browser-equivalent-notes.md` records a profile-by-profile mapping.
+- Fresh review result: CLEAN after validation; the browser-equivalent approach is explicit and bounded by the story contract.
 
 ## Files deleted
 
@@ -73,7 +79,7 @@
 | `pnpm lint` | `frontend` | PASS | 0 | TypeScript lint script passed. |
 | `node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi` | `frontend` | PASS | 0 | 4 files, 122 tests passed. |
 | `python -B -m pytest -q tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short` | `backend`, venv active | PASS | 0 | 12 tests passed. |
-| `python -B -c "<CS-310 evidence assertion>"` | repo root, venv active | PASS | 0 | Evidence JSON and anomaly artifact checked. |
+| `python -B -c "<CS-310 evidence assertion>"` | repo root, venv active | PASS | 0 | Evidence JSON, execution traces, and anomaly artifact checked. |
 | `git diff --check` | repo root | PASS | 0 | No whitespace conflict. |
 
 ## Commands skipped or blocked
