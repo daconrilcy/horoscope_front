@@ -1,0 +1,19 @@
+# Validation frontend CS-318
+
+Date: 2026-05-26
+
+Working directory: `frontend`
+
+## Commandes
+
+| Commande | Resultat | Resume |
+|---|---|---|
+| `pnpm lint` | PASS | TypeScript lint configs pass. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi` | PASS | Targeted analytics/natal suite pass. |
+| `node .\scripts\run-vite-logged.mjs vitest vitest run` | PASS | 116 files passed; 1276 tests passed; 8 skipped. |
+
+## Note de redaction
+
+Le log brut Vitest contient des libelles de tests hors analytics qui incluent
+du vocabulaire sensible. Cette preuve conserve donc uniquement le resume des
+commandes et resultats afin que le scan sensible CS-318 reste significatif.

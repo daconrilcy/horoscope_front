@@ -1,0 +1,103 @@
+{
+  "story_key": "CS-318-valider-ingestion-analytics-provider-cs316",
+  "baseline_catalog": "_condamad/stories/CS-311-suivi-analytics-erreurs-etats-degrades-projections-natal/evidence/event-catalog.json",
+  "baseline_local_ledger": "_condamad/stories/CS-316-verifier-ingestion-analytics-runtime-projections-natal/evidence/analytics-ingestion-ledger.json",
+  "provider": "unavailable",
+  "environment": "local repository execution",
+  "captured_at": "2026-05-26",
+  "observer": "Codex local validation run",
+  "closure": "blocked_external_access",
+  "events": [
+    {
+      "provider": "unavailable",
+      "environment": "local repository execution",
+      "captured_at": "2026-05-26",
+      "event_name": "natal_projection_request_started",
+      "state": "started",
+      "observed": false,
+      "trigger_status": "blocked",
+      "observed_fields": ["route", "state"],
+      "forbidden_fields_present": [],
+      "result": "blocked_external_access",
+      "notes": "No observable Plausible or Matomo environment was available."
+    },
+    {
+      "provider": "unavailable",
+      "environment": "local repository execution",
+      "captured_at": "2026-05-26",
+      "event_name": "natal_projection_success",
+      "state": "success",
+      "observed": false,
+      "trigger_status": "blocked",
+      "observed_fields": ["route", "state", "projection_type", "plan_code", "source"],
+      "forbidden_fields_present": [],
+      "result": "blocked_external_access",
+      "notes": "No observable Plausible or Matomo environment was available."
+    },
+    {
+      "provider": "unavailable",
+      "environment": "local repository execution",
+      "captured_at": "2026-05-26",
+      "event_name": "natal_projection_api_error",
+      "state": "api_error",
+      "observed": false,
+      "trigger_status": "blocked",
+      "observed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields_present": [],
+      "result": "blocked_external_access",
+      "notes": "No observable Plausible or Matomo environment was available."
+    },
+    {
+      "provider": "unavailable",
+      "environment": "local repository execution",
+      "captured_at": "2026-05-26",
+      "event_name": "natal_projection_entitlement_denied",
+      "state": "entitlement_denied",
+      "observed": false,
+      "trigger_status": "blocked",
+      "observed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields_present": [],
+      "result": "blocked_external_access",
+      "notes": "No observable Plausible or Matomo environment was available."
+    },
+    {
+      "provider": "unavailable",
+      "environment": "local repository execution",
+      "captured_at": "2026-05-26",
+      "event_name": "natal_projection_empty",
+      "state": "empty",
+      "observed": false,
+      "trigger_status": "blocked",
+      "observed_fields": ["route", "state", "state_reason"],
+      "forbidden_fields_present": [],
+      "result": "blocked_external_access",
+      "notes": "No observable Plausible or Matomo environment was available."
+    },
+    {
+      "provider": "unavailable",
+      "environment": "local repository execution",
+      "captured_at": "2026-05-26",
+      "event_name": "natal_projection_degraded",
+      "state": "degraded",
+      "observed": false,
+      "trigger_status": "blocked",
+      "observed_fields": ["route", "state", "projection_type", "state_reason", "plan_code", "source"],
+      "forbidden_fields_present": [],
+      "result": "blocked_external_access",
+      "notes": "No observable Plausible or Matomo environment was available."
+    },
+    {
+      "provider": "unavailable",
+      "environment": "local repository execution",
+      "captured_at": "2026-05-26",
+      "event_name": "natal_projection_retry",
+      "state": "retry",
+      "observed": false,
+      "trigger_status": "blocked",
+      "observed_fields": ["route", "state", "projection_type", "public_error_code"],
+      "forbidden_fields_present": [],
+      "result": "blocked_external_access",
+      "notes": "No observable Plausible or Matomo environment was available."
+    }
+  ]
+}

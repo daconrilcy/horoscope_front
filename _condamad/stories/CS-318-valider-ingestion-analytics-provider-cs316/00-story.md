@@ -1,5 +1,5 @@
 # Story CS-318 valider-ingestion-analytics-provider-cs316: Validate CS-316 Analytics Provider Ingestion
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -105,15 +105,15 @@ or produce a bounded external blocker proving that no suitable provider environm
 
 ## Implementation Tasks
 
-- [ ] Task 1: Read CS-316 final evidence, runtime config, ingestion ledger, external handoff, and CS-311 event catalog. (AC: AC1, AC2, AC3)
-- [ ] Task 2: Identify the observable Plausible or Matomo environment and document access status. (AC: AC1)
-- [ ] Task 3: Trigger or classify the seven CS-311 event states in the selected environment. (AC: AC2)
-- [ ] Task 4: Capture provider-side observations in `evidence/provider-ingestion-ledger.json` without storing raw payload dumps. (AC: AC2, AC3)
-- [ ] Task 5: Run the sensitive-field comparison and persist the redaction scan output. (AC: AC3, AC4)
-- [ ] Task 6: Write `evidence/provider-ingestion-acceptance.md` or `evidence/external-access-blocker.md`. (AC: AC1, AC5)
-- [ ] Task 7: Correct only a proven frontend emission or redaction defect, or create a separate brief for larger work. (AC: AC7)
-- [ ] Task 8: Run and persist CS-316 frontend lint and Vitest validation after the provider validation pass. (AC: AC6)
-- [ ] Task 9: Write `generated/10-final-evidence.md` with source alignment, final provider status, and reviewer focus. (AC: AC5, AC7)
+- [x] Task 1: Read CS-316 final evidence, runtime config, ingestion ledger, external handoff, and CS-311 event catalog. (AC: AC1, AC2, AC3)
+- [x] Task 2: Identify the observable Plausible or Matomo environment and document access status. (AC: AC1)
+- [x] Task 3: Trigger or classify the seven CS-311 event states in the selected environment. (AC: AC2)
+- [x] Task 4: Capture provider-side observations in `evidence/provider-ingestion-ledger.json` without storing raw payload dumps. (AC: AC2, AC3)
+- [x] Task 5: Run the sensitive-field comparison and persist the redaction scan output. (AC: AC3, AC4)
+- [x] Task 6: Write `evidence/provider-ingestion-acceptance.md` or `evidence/external-access-blocker.md`. (AC: AC1, AC5)
+- [x] Task 7: Correct only a proven frontend emission or redaction defect, or create a separate brief for larger work. (AC: AC7)
+- [x] Task 8: Run and persist CS-316 frontend lint and Vitest validation after the provider validation pass. (AC: AC6)
+- [x] Task 9: Write `generated/10-final-evidence.md` with source alignment, final provider status, and reviewer focus. (AC: AC5, AC7)
 
 ## Files to Inspect First
 
