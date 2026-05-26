@@ -1,5 +1,5 @@
 # Story CS-321 preparer-integration-plausible-analytics: Prepare Plausible Analytics Integration
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -105,13 +105,13 @@ and proving that Plausible dispatch remains centralized and redacted before any 
 
 ## Implementation Tasks
 
-- [ ] Task 1: Read CS-316 and CS-318 final evidence plus the external access blocker before editing. (AC: AC1, AC5, AC6)
-- [ ] Task 2: Document Plausible variables in `.env.example` or the canonical operations document. (AC: AC1, AC5)
-- [ ] Task 3: Keep `ANALYTICS_CONFIG` defaulting to `noop` without Plausible variables. (AC: AC2)
-- [ ] Task 4: Add or adjust `useAnalytics` tests for configured Plausible dispatch and sanitized props. (AC: AC2, AC4)
-- [ ] Task 5: Guard against direct `plausible(` calls outside `frontend/src/hooks/useAnalytics.ts`. (AC: AC3)
-- [ ] Task 6: Document the staging and production validation procedure before real Plausible collection. (AC: AC5, AC6)
-- [ ] Task 7: Persist frontend validation output and final evidence in the CS-321 capsule. (AC: AC6, AC7)
+- [x] Task 1: Read CS-316 and CS-318 final evidence plus the external access blocker before editing. (AC: AC1, AC5, AC6)
+- [x] Task 2: Document Plausible variables in `.env.example` or the canonical operations document. (AC: AC1, AC5)
+- [x] Task 3: Keep `ANALYTICS_CONFIG` defaulting to `noop` without Plausible variables. (AC: AC2)
+- [x] Task 4: Add or adjust `useAnalytics` tests for configured Plausible dispatch and sanitized props. (AC: AC2, AC4)
+- [x] Task 5: Guard against direct `plausible(` calls outside `frontend/src/hooks/useAnalytics.ts`. (AC: AC3)
+- [x] Task 6: Document the staging and production validation procedure before real Plausible collection. (AC: AC5, AC6)
+- [x] Task 7: Persist frontend validation output and final evidence in the CS-321 capsule. (AC: AC6, AC7)
 
 ## Files to Inspect First
 

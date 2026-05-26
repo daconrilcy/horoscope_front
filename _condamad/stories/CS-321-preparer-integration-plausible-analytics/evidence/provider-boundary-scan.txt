@@ -1,0 +1,26 @@
+Direct provider boundary scan:
+
+Command:
+rg -n "plausible\(|window\.plausible|_paq" frontend\src\features frontend\src\components frontend\src\pages frontend\src\api
+
+Result: PASS
+Exit status: 1
+Interpretation: no direct provider calls were found outside `frontend/src/hooks/useAnalytics.ts`.
+
+Environment variable documentation scan:
+
+Command:
+rg -n "VITE_ANALYTICS_PROVIDER|VITE_ANALYTICS_DOMAIN|VITE_ANALYTICS_API_HOST|VITE_ANALYTICS_ENABLED" .env.example frontend docs
+
+Result: PASS
+Exit status: 0
+Interpretation: `.env.example`, `frontend/src/config/analytics.ts`, and `frontend/src/tests/useAnalytics.test.tsx` contain the expected Plausible readiness variables.
+
+Provider drift scan:
+
+Command:
+rg -n "matomo|MATOMO|_paq" .env.example docs frontend\src\config frontend\src\hooks frontend\src\tests
+
+Result: PASS_WITH_LIMITATIONS
+Exit status: 0
+Interpretation: existing Matomo type/branch references remain in `frontend/src/config/analytics.ts` and `frontend/src/hooks/useAnalytics.ts`; no Matomo variable or documentation was added by CS-321.

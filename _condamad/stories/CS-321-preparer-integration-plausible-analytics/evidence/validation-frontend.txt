@@ -1,0 +1,15 @@
+Frontend validation summary:
+
+- `node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics`: PASS, 1 file, 3 tests.
+- `pnpm lint`: PASS.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run useAnalytics natalInterpretation natalChartApi`: PASS, 4 files, 55 tests.
+- `node .\scripts\run-vite-logged.mjs vitest vitest run inline-style-policy`: PASS, 1 file, 4 tests.
+- `rg -n "style=" src -g "*.tsx"` from `frontend`: PASS_WITH_LIMITATIONS. Existing dynamic or component-forwarded style occurrences only; no modified file contains a new inline style.
+- `pnpm test`: PASS, 116 files passed, 1279 tests passed, 8 skipped.
+- `pnpm build`: PASS.
+- Local dev server startup on `http://127.0.0.1:4174`: PASS, HTTP 200, server stopped after check.
+
+Story validation summary:
+
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-321-preparer-integration-plausible-analytics\00-story.md`: PASS with venv active.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-321-preparer-integration-plausible-analytics\00-story.md`: PASS with venv active.

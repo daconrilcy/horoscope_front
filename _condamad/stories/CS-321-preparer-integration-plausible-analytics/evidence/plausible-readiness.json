@@ -1,0 +1,20 @@
+{
+  "provider": "plausible",
+  "enabled": false,
+  "domain": "VITE_ANALYTICS_DOMAIN",
+  "apiHost": "VITE_ANALYTICS_API_HOST",
+  "activation_state": "production_validation_required",
+  "redaction_status": "pass",
+  "local_default": {
+    "provider": "noop",
+    "enabled": true,
+    "evidence": "frontend/src/tests/useAnalytics.test.tsx"
+  },
+  "plausible_activation_requirements": {
+    "VITE_ANALYTICS_PROVIDER": "plausible",
+    "VITE_ANALYTICS_ENABLED": "true",
+    "VITE_ANALYTICS_DOMAIN": "approved Plausible site domain",
+    "VITE_ANALYTICS_API_HOST": "https://plausible.io or approved self-hosted Plausible host"
+  },
+  "cs318_resume_condition": "Resume CS-318 only after an observable staging or production Plausible environment is provided and external ingestion validation is approved."
+}
