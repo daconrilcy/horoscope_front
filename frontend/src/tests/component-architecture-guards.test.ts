@@ -42,7 +42,7 @@ const NATAL_PROJECTION_ACTIVE_ROOTS = [
 const LOCAL_NATAL_PLAN_POLICY_PATTERNS = [
   /\baccepted[_-]?matrix\b/i,
   /\bentitlement\s+matrix\b/i,
-  /\b(?:const|let|var)\s+\w*(?:matrix|policy|entitlement|plan|access|gate|rule)\w*\s*(?::[^=]+)?=\s*\{[\s\S]*\bfree\b[\s\S]*\bbasic\b[\s\S]*\bpremium\b/i,
+  /\b(?:const|let|var)\s+\w*(?:matrix|policy|entitlement|plan|access|gate|rule)\w*\s*(?::[^=]+)?=\s*(?:new\s+Set\s*\()?[{\[][\s\S]*\bfree\b[\s\S]*\bbasic\b[\s\S]*\bpremium\b/i,
 ]
 
 function pathPrefix(parts: string[]): string {
@@ -258,5 +258,21 @@ describe("component-architecture guards", () => {
     )
     expect(readFrontendFile("tests/natalInterpretation.test.tsx")).toContain("plan_code: planCode")
     expect(policyViolations).toEqual([])
+  })
+
+  it("classe les matrices de plans locales sans bloquer les payloads backend-shaped", () => {
+    expect(
+      hasLocalNatalPlanPolicy(
+        'const localPlanPolicy = { free: "blocked", basic: "limited", premium: "allowed" }',
+      ),
+    ).toBe(true)
+    expect(hasLocalNatalPlanPolicy('const acceptedPlans = ["free", "basic", "premium"]')).toBe(true)
+    expect(
+      hasLocalNatalPlanPolicy(
+        'if (plan_code === "free") return; if (plan_code === "basic") return; if (plan_code === "premium") return;',
+      ),
+    ).toBe(true)
+    expect(hasLocalNatalPlanPolicy('type ProjectionPlanCode = "free" | "basic" | "premium"')).toBe(false)
+    expect(hasLocalNatalPlanPolicy("const backendPayload = { plan_code: planCode }")).toBe(false)
   })
 })

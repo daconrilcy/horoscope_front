@@ -1,12 +1,16 @@
 Command: rg -n "free.*basic.*premium|accepted_matrix|entitlement matrix|plan_code.*===" frontend\src\features\natal-chart frontend\src\components\natal-interpretation frontend\src\pages\NatalChartPage.tsx frontend\src\tests
 Exit code: 0
-Classification: PASS. Active source hit is the plan_code payload type only; test hits are the architecture guard or backend-shaped fixtures allowed by AC3.
+Classification: PASS. Active source hit is the plan_code payload type only; test hits are the architecture guard, guard examples, or backend-shaped fixtures allowed by AC3.
 
 frontend\src\features\natal-chart\NatalInterpretation.tsx:105:  plan_code?: "free" | "basic" | "premium"
 frontend\src\tests\AdminEntitlementsPage.test.tsx:27:  it("renders an empty entitlement matrix from the API owner", async () => {
-frontend\src\tests\component-architecture-guards.test.ts:45:  /\b(?:const|let|var)\s+\w*(?:matrix|policy|entitlement|plan|access|gate|rule)\w*\s*(?::[^=]+)?=\s*\{[\s\S]*\bfree\b[\s\S]*\bbasic\b[\s\S]*\bpremium\b/i,
+frontend\src\tests\component-architecture-guards.test.ts:45:  /\b(?:const|let|var)\s+\w*(?:matrix|policy|entitlement|plan|access|gate|rule)\w*\s*(?::[^=]+)?=\s*(?:new\s+Set\s*\()?[{\[][\s\S]*\bfree\b[\s\S]*\bbasic\b[\s\S]*\bpremium\b/i,
 frontend\src\tests\component-architecture-guards.test.ts:70:    ...source.matchAll(/\b(?:plan_?code|planCode)\b\s*(?:={2,3}|!={1,2})\s*["'](free|basic|premium)["']/g),
 frontend\src\tests\component-architecture-guards.test.ts:73:  return ["free", "basic", "premium"].every((plan) => comparedPlans.includes(plan))
 frontend\src\tests\component-architecture-guards.test.ts:250:  it("bloque une matrice locale free basic premium dans les owners React de projection natale", () => {
 frontend\src\tests\component-architecture-guards.test.ts:257:      'type ProjectionPlanCode = "free" | "basic" | "premium"',
+frontend\src\tests\component-architecture-guards.test.ts:266:        'const localPlanPolicy = { free: "blocked", basic: "limited", premium: "allowed" }',
+frontend\src\tests\component-architecture-guards.test.ts:269:    expect(hasLocalNatalPlanPolicy('const acceptedPlans = ["free", "basic", "premium"]')).toBe(true)
+frontend\src\tests\component-architecture-guards.test.ts:272:        'if (plan_code === "free") return; if (plan_code === "basic") return; if (plan_code === "premium") return;',
+frontend\src\tests\component-architecture-guards.test.ts:275:    expect(hasLocalNatalPlanPolicy('type ProjectionPlanCode = "free" | "basic" | "premium"')).toBe(false)
 frontend\src\tests\natalInterpretation.test.tsx:144:type ProjectionPlanCode = "free" | "basic" | "premium";

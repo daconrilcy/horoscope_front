@@ -1,5 +1,5 @@
 # Story CS-319 natal-react-entitlement-matrix-guard: Add Natal React Entitlement Matrix Guard
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

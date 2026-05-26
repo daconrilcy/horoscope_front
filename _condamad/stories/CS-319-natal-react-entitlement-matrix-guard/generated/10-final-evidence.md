@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: clean; status set to done
 - Story key: CS-319-natal-react-entitlement-matrix-guard
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-319-natal-react-entitlement-matrix-guard`
@@ -35,7 +35,7 @@
 
 | AC | Implementation evidence | Validation evidence | Status |
 |---|---|---|---|
-| AC1 | Added deterministic frontend architecture guard for local natal plan policy. | `component-architecture-guards` Vitest PASS. | PASS |
+| AC1 | Added deterministic frontend architecture guard for local natal plan policy, including matrix, plan array/set, and branch-set detector examples. | `component-architecture-guards` Vitest PASS. | PASS |
 | AC2 | Scoped active roots to natal-chart feature, natal presentational components, and `NatalChartPage`. | Guard test PASS plus bounded scan evidence. | PASS |
 | AC3 | Kept `natalInterpretation.test.tsx` fixture data allowed and explicitly asserted. | Targeted natal Vitest PASS. | PASS |
 | AC4 | No runtime React plan matrix introduced; only guard code changed. | `guard-scan-after.txt` classification PASS. | PASS |
@@ -79,14 +79,16 @@
 | `git status --short` | repo root | PASS | Initial worktree clean. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py ... --repair-generated-only ...` | repo root, venv active | PASS | Required generated files repaired. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard` | repo root, venv active | PASS | Capsule valid. |
-| `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards` | repo root | PASS | 6 tests passed. |
+| `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards` | repo root | PASS | 7 tests passed. |
 | `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi` | repo root | PASS | 4 files, 123 tests passed. |
 | `pnpm --dir frontend lint` | repo root | PASS | TypeScript lint configs passed. |
-| `pnpm --dir frontend test` | repo root | PASS | 116 files passed; 1277 passed; 8 skipped. |
+| `pnpm --dir frontend test` | repo root | PASS | 116 files passed; 1278 passed; 8 skipped. |
 | `rg -n "free.*basic.*premium|accepted_matrix|entitlement matrix|plan_code.*===" ...` | repo root | PASS | Hits classified in `guard-scan-after.txt`. |
 | `git diff --check` | repo root | PASS | Exit 0; Git reported LF/CRLF warning for touched test file only. |
 | `git diff --name-only -- backend docs/architecture/natal-projection-plan-matrix-product-decision.md` | repo root | PASS | No changed backend/product decision files. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard` | repo root, venv active | PASS | Capsule valid after final evidence updates. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard\00-story.md` | repo root, venv active | PASS | Story valid after status update. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-319-natal-react-entitlement-matrix-guard\00-story.md` | repo root, venv active | PASS | Strict story lint passed. |
 
 ## Commands skipped or blocked
 
@@ -121,7 +123,7 @@
 
 ## Remaining risks
 
-- The bounded `rg` scan intentionally reports the guard implementation and allowed fixtures; reviewers should rely on the Vitest architecture guard for deterministic enforcement.
+- The bounded `rg` scan intentionally reports the guard implementation, guard examples, and allowed fixtures; reviewers should rely on the Vitest architecture guard for deterministic enforcement.
 
 ## Feedback loop routing
 
