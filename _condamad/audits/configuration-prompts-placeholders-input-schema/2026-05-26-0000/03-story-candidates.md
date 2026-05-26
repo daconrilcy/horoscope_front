@@ -8,7 +8,7 @@
 - Primary domain: backend-domain/llm-configuration
 - Required contracts: Runtime Source of Truth, Contract Shape, Ownership Routing, Reintroduction Guard, Persistent Evidence
 - Draft objective: Define one canonical structured astrology input schema that can carry facts, signals, limits and proofs without relying on `chart_json`.
-- Closure intent: full-closure
+- Closure intent: blocked full-closure candidate pending the schema ownership decision
 - Must include: exact owner decision for schema declaration; mapping for `natal_interpretation`, `natal_interpretation_short`, `natal_long_free`, and thematic natal modules; no prompt text rewrite unless explicitly scoped; no wildcard allowlist.
 - Validation hints: rerun scans for `llm_astrology_input`, `required_prompt_placeholders`, `input_schema`, `chart_json`; add or update focused orchestration guards only in the implementation story.
 - Blockers: user/architecture decision is required on whether the canonical payload is `AINarrativeInputContract`, a wrapper around it, or a smaller schema derived from it.

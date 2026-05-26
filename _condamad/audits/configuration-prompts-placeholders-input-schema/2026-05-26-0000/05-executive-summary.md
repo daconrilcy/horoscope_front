@@ -12,6 +12,6 @@ Findings by severity:
 
 Story candidates:
 
-- 3 candidates, with one closure-ready architecture candidate and two blocked follow-ups that depend on the target input schema decision.
+- 3 candidates, with one full-closure architecture candidate blocked by the target input schema decision and two dependent blocked follow-ups.
 
 No backend application or test file was changed by this audit.

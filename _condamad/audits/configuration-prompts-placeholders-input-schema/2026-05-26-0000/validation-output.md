@@ -21,6 +21,11 @@ python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audi
 
 Result: PASS - `CONDAMAD domain audit lint passed.`
 
+Review relancee apres correction des artefacts d'audit: `01-evidence-log.md`
+ne declare plus deux fois les memes IDs `E-xxx`, et les artefacts standard
+alignent le statut `blocked` / `bloquant` avec la decision d'architecture
+requise.
+
 ## Story Scans
 
 ```powershell
@@ -54,7 +59,11 @@ git status --short -- _condamad _story_briefs backend/app backend/tests
 Result: PASS for application immutability. Current scoped status shows only audit artifacts plus pre-existing `_condamad/run-state.json`:
 
 ```text
-?? _condamad/audits/configuration-prompts-placeholders-input-schema/
+ M _condamad/audits/configuration-prompts-placeholders-input-schema/2026-05-26-0000/00-audit-report.md
+ M _condamad/audits/configuration-prompts-placeholders-input-schema/2026-05-26-0000/01-evidence-log.md
+ M _condamad/audits/configuration-prompts-placeholders-input-schema/2026-05-26-0000/03-story-candidates.md
+ M _condamad/audits/configuration-prompts-placeholders-input-schema/2026-05-26-0000/05-executive-summary.md
+ M _condamad/audits/configuration-prompts-placeholders-input-schema/2026-05-26-0000/validation-output.md
 ?? _condamad/run-state.json
 ```
 

@@ -10,7 +10,7 @@
 
 ## Executive Conclusion
 
-The current natal LLM configuration is `partiel` at best for future structured injection. It can pass JSON-like astrology data through current context and placeholders, but the explicit configuration contract is still `chart_json`-centric.
+The current natal LLM configuration is `bloquant` for first-class structured injection. It can pass JSON-like astrology data through current context and placeholders, but the explicit configuration contract is still `chart_json`-centric.
 
 The blocking configuration issue is that active natal use cases declare `input_schema.required = ["chart_json"]` and required prompt placeholders based on `chart_json`, while scoped scans show no `llm_astrology_input` or equivalent facts/signals/limits/proofs contract (E-007, E-008, E-019, E-020). The data blocker is separate: current runtime assembles `chart_json`, `natal_data`, `evidence_catalog` and `astro_context`, but recent projection/narrative owners remain available-not-injected according to prior audits and current scans (E-004, E-005, E-006, E-012, E-020).
 
