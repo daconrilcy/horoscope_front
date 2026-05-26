@@ -58,7 +58,129 @@ _PLAN_SECTIONS = {
         "nuances_et_arbitrages",
     ),
 }
-_SECTION_DEPTH = {"free": "free_short", "basic": "basic", "premium": "premium"}
+_SECTION_DEPTH = {"free": "free_short", "basic": "basic_contextual", "premium": "premium_deep"}
+_PLAN_SHAPING = {
+    "free": {
+        "llm_input_selection": {
+            "contract": "LLMInputSelection",
+            "allowed_fact_groups": [
+                "dominant_themes",
+                "core_strengths",
+                "reading_limits",
+                "upgrade_context",
+            ],
+            "evidence_labels": [
+                "position principale",
+                "theme dominant",
+            ],
+        },
+        "editorial_depth_profile": {
+            "contract": "EditorialDepthProfile",
+            "depth_code": "free_short",
+            "section_budget": "short",
+            "prediction_detail_level": "orientation_only",
+        },
+        "precision_level": "orientation",
+        "frontend_visibility_rules": {
+            "contract": "FrontendVisibilityRules",
+            "visible_section_codes": list(_PLAN_SECTIONS["free"]),
+            "summarized_section_codes": [],
+            "masked_section_codes": [
+                "themes_personnels",
+                "relations_aux_autres",
+                "rythme_actuel",
+                "conseil_pratique",
+                "analyse_approfondie",
+                "tensions_et_ressources",
+                "fenetres_de_prediction",
+                "plan_d_action",
+                "nuances_et_arbitrages",
+            ],
+            "display_hints": ["short", "upgrade"],
+        },
+    },
+    "basic": {
+        "llm_input_selection": {
+            "contract": "LLMInputSelection",
+            "allowed_fact_groups": [
+                "dominant_themes",
+                "core_strengths",
+                "reading_limits",
+                "upgrade_context",
+                "personal_themes",
+                "relationship_patterns",
+                "current_rhythm",
+                "practical_guidance",
+            ],
+            "evidence_labels": [
+                "position principale",
+                "theme dominant",
+                "relation entre deux themes",
+                "contexte de maison",
+            ],
+        },
+        "editorial_depth_profile": {
+            "contract": "EditorialDepthProfile",
+            "depth_code": "basic_contextual",
+            "section_budget": "contextual",
+            "prediction_detail_level": "simple_trends",
+        },
+        "precision_level": "contextual",
+        "frontend_visibility_rules": {
+            "contract": "FrontendVisibilityRules",
+            "visible_section_codes": list(_PLAN_SECTIONS["basic"]),
+            "summarized_section_codes": [
+                "analyse_approfondie",
+                "tensions_et_ressources",
+                "fenetres_de_prediction",
+                "plan_d_action",
+                "nuances_et_arbitrages",
+            ],
+            "masked_section_codes": [],
+            "display_hints": ["short", "detailed", "upgrade"],
+        },
+    },
+    "premium": {
+        "llm_input_selection": {
+            "contract": "LLMInputSelection",
+            "allowed_fact_groups": [
+                "dominant_themes",
+                "core_strengths",
+                "reading_limits",
+                "upgrade_context",
+                "personal_themes",
+                "relationship_patterns",
+                "current_rhythm",
+                "practical_guidance",
+                "tensions_resources",
+                "prediction_windows",
+                "nuance_arbitration",
+                "action_priorities",
+            ],
+            "evidence_labels": [
+                "position principale",
+                "theme dominant",
+                "relation entre deux themes",
+                "contexte de maison",
+                "signal recurrent",
+            ],
+        },
+        "editorial_depth_profile": {
+            "contract": "EditorialDepthProfile",
+            "depth_code": "premium_deep",
+            "section_budget": "extended",
+            "prediction_detail_level": "controlled_windows",
+        },
+        "precision_level": "detailed",
+        "frontend_visibility_rules": {
+            "contract": "FrontendVisibilityRules",
+            "visible_section_codes": list(_PLAN_SECTIONS["premium"]),
+            "summarized_section_codes": [],
+            "masked_section_codes": [],
+            "display_hints": ["short", "detailed", "degraded"],
+        },
+    },
+}
 _EXCLUDED_SURFACES = (
     "audit_internals",
     "debug_traces",
@@ -190,8 +312,13 @@ def _base_payload(
         "plan": plan,
         "plan_variant": plan,
         "state": state.value,
+        "llm_input_selection": dict(_PLAN_SHAPING[plan]["llm_input_selection"]),
+        "editorial_depth_profile": dict(_PLAN_SHAPING[plan]["editorial_depth_profile"]),
+        "precision_level": _PLAN_SHAPING[plan]["precision_level"],
+        "frontend_visibility_rules": dict(_PLAN_SHAPING[plan]["frontend_visibility_rules"]),
         "sections": [],
         "support_elements": [],
+        "calculation_scope": "full_projection_available_before_shaping",
         "disclaimer_codes": sorted(set(disclaimer_codes)),
         "excluded_surfaces": sorted(_EXCLUDED_SURFACES),
     }

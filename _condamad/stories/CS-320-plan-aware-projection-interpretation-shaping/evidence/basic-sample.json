@@ -13,18 +13,23 @@
       "current_rhythm",
       "practical_guidance"
     ],
-    "evidence_refs_policy": "client_safe_labels_only"
+    "evidence_labels": [
+      "position principale",
+      "theme dominant",
+      "relation entre deux themes",
+      "contexte de maison"
+    ]
   },
   "editorial_depth_profile": {
     "contract": "EditorialDepthProfile",
     "depth_code": "basic_contextual",
-    "section_budget": "medium",
+    "section_budget": "contextual",
     "prediction_detail_level": "simple_trends"
   },
   "precision_level": "contextual",
   "frontend_visibility_rules": {
     "contract": "FrontendVisibilityRules",
-    "visible_sections": [
+    "visible_section_codes": [
       "orientation_generale",
       "points_forts",
       "limite_de_lecture",
@@ -34,16 +39,18 @@
       "rythme_actuel",
       "conseil_pratique"
     ],
-    "summarized_sections": [
+    "summarized_section_codes": [
       "analyse_approfondie",
-      "fenetres_de_prediction"
-    ],
-    "hidden_sections": [
+      "tensions_et_ressources",
+      "fenetres_de_prediction",
+      "plan_d_action",
       "nuances_et_arbitrages"
     ],
+    "masked_section_codes": [],
     "display_hints": [
-      "contextual",
-      "summary"
+      "short",
+      "detailed",
+      "upgrade"
     ]
   },
   "calculation_scope": "full_projection_available_before_shaping",

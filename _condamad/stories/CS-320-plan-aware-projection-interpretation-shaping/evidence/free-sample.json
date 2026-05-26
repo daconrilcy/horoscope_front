@@ -9,32 +9,41 @@
       "reading_limits",
       "upgrade_context"
     ],
-    "evidence_refs_policy": "client_safe_labels_only"
+    "evidence_labels": [
+      "position principale",
+      "theme dominant"
+    ]
   },
   "editorial_depth_profile": {
     "contract": "EditorialDepthProfile",
     "depth_code": "free_short",
-    "section_budget": "low",
-    "prediction_detail_level": "none"
+    "section_budget": "short",
+    "prediction_detail_level": "orientation_only"
   },
   "precision_level": "orientation",
   "frontend_visibility_rules": {
     "contract": "FrontendVisibilityRules",
-    "visible_sections": [
+    "visible_section_codes": [
       "orientation_generale",
       "points_forts",
       "limite_de_lecture",
       "upgrade_hint"
     ],
-    "summarized_sections": [],
-    "hidden_sections": [
+    "summarized_section_codes": [],
+    "masked_section_codes": [
+      "themes_personnels",
+      "relations_aux_autres",
+      "rythme_actuel",
+      "conseil_pratique",
       "analyse_approfondie",
+      "tensions_et_ressources",
       "fenetres_de_prediction",
+      "plan_d_action",
       "nuances_et_arbitrages"
     ],
     "display_hints": [
       "short",
-      "upgrade_hint"
+      "upgrade"
     ]
   },
   "calculation_scope": "full_projection_available_before_shaping",

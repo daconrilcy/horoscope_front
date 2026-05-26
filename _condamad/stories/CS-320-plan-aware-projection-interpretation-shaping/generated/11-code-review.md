@@ -22,14 +22,14 @@ Verdict: CLEAN
 
 ## Findings
 
-No actionable implementation issue found in the fresh review completed on 2026-05-26.
+No remaining actionable implementation issue found in the fresh review completed on 2026-05-26.
 
 ## Issues Fixed In This Review Loop
 
 - Evidence classification: replaced the stale pre-implementation drafting review with this implementation review artifact.
-- Closure status: synchronized the story tracker to `ready-to-review` after fresh validation and a clean implementation review.
-- Story file status: synchronized `00-story.md` to `ready-to-review` and checked completed implementation tasks.
-- Final closure status: synchronized `_condamad/stories/story-status.md` to `done` after a fresh clean implementation review.
+- Closure status: synchronized the story tracker and `00-story.md` to `done` after fresh validation and a clean implementation review.
+- Runtime contract alignment: added the missing shaping metadata fields to the builder output and focused unit assertions.
+- Evidence/sample alignment: synchronized JSON samples with the runtime shaping field names.
 
 ## AC And Guardrail Review
 
@@ -66,6 +66,14 @@ No actionable implementation issue found in the fresh review completed on 2026-0
 - `pnpm --dir frontend lint`: PASS
 - `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards natalInterpretation NatalChartPage natalChartApi`: PASS, 130 tests.
 - Resume pass after status correction: story validation, strict lint, capsule validation, JSON parse, backend/API checks and frontend checks all PASS.
+- Final implementation alignment pass after correction:
+  - backend `ruff format .`: PASS, 1685 files left unchanged.
+  - backend `ruff check .`: PASS.
+  - backend targeted pytest: PASS, 21 tests.
+  - CONDAMAD story validation, strict lint and capsule validation: PASS.
+  - frontend lint: PASS.
+  - targeted frontend Vitest suite: PASS, 5 files and 130 tests.
+  - JSON samples and OpenAPI route neutrality checks: PASS.
 
 All Python commands above were run after activating `.\.venv\Scripts\Activate.ps1`.
 

@@ -17,18 +17,24 @@
       "nuance_arbitration",
       "action_priorities"
     ],
-    "evidence_refs_policy": "client_safe_labels_only"
+    "evidence_labels": [
+      "position principale",
+      "theme dominant",
+      "relation entre deux themes",
+      "contexte de maison",
+      "signal recurrent"
+    ]
   },
   "editorial_depth_profile": {
     "contract": "EditorialDepthProfile",
     "depth_code": "premium_deep",
-    "section_budget": "high",
+    "section_budget": "extended",
     "prediction_detail_level": "controlled_windows"
   },
   "precision_level": "detailed",
   "frontend_visibility_rules": {
     "contract": "FrontendVisibilityRules",
-    "visible_sections": [
+    "visible_section_codes": [
       "orientation_generale",
       "points_forts",
       "limite_de_lecture",
@@ -43,12 +49,12 @@
       "plan_d_action",
       "nuances_et_arbitrages"
     ],
-    "summarized_sections": [],
-    "hidden_sections": [],
+    "summarized_section_codes": [],
+    "masked_section_codes": [],
     "display_hints": [
+      "short",
       "detailed",
-      "prediction_window",
-      "caveat_dense"
+      "degraded"
     ]
   },
   "calculation_scope": "full_projection_available_before_shaping",

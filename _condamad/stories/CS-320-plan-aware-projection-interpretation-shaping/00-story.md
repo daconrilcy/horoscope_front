@@ -1,5 +1,5 @@
 # Story CS-320 plan-aware-projection-interpretation-shaping: Define LLM And Front Differentiation By B2C Plan
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

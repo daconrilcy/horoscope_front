@@ -53,7 +53,14 @@ def test_free_projection_is_short_and_client_safe() -> None:
     assert payload["projection_id"] == CLIENT_INTERPRETATION_PROJECTION_V1_ID
     assert payload["source_projection_id"] == STRUCTURED_FACTS_V1_PROJECTION_ID
     assert payload["plan"] == "free"
+    assert payload["plan_variant"] == "free"
     assert payload["state"] == "normal"
+    assert payload["llm_input_selection"]["contract"] == "LLMInputSelection"
+    assert payload["editorial_depth_profile"]["contract"] == "EditorialDepthProfile"
+    assert payload["editorial_depth_profile"]["depth_code"] == "free_short"
+    assert payload["precision_level"] == "orientation"
+    assert payload["frontend_visibility_rules"]["contract"] == "FrontendVisibilityRules"
+    assert payload["calculation_scope"] == "full_projection_available_before_shaping"
     assert [section["code"] for section in payload["sections"]] == [
         "orientation_generale",
         "points_forts",
@@ -77,7 +84,17 @@ def test_basic_projection_adds_audit_ready_content() -> None:
     assert "themes_personnels" in section_codes
     assert "relations_aux_autres" in section_codes
     assert "conseil_pratique" in section_codes
-    assert {section["depth"] for section in payload["sections"]} == {"basic"}
+    assert {section["depth"] for section in payload["sections"]} == {"basic_contextual"}
+    assert "relationship_patterns" in payload["llm_input_selection"]["allowed_fact_groups"]
+    assert payload["editorial_depth_profile"]["depth_code"] == "basic_contextual"
+    assert payload["precision_level"] == "contextual"
+    assert payload["frontend_visibility_rules"]["summarized_section_codes"] == [
+        "analyse_approfondie",
+        "tensions_et_ressources",
+        "fenetres_de_prediction",
+        "plan_d_action",
+        "nuances_et_arbitrages",
+    ]
     assert payload["audit_input"]["audit_contract"] == "narrative_answer_audit_v1"
     assert payload["audit_input"]["section_codes"] == section_codes
     assert "audit_rows" in payload["audit_input"]["excluded_audit_surfaces"]
@@ -96,7 +113,11 @@ def test_premium_projection_is_deepest_without_expert_payload() -> None:
     assert "analyse_approfondie" in section_codes
     assert "fenetres_de_prediction" in section_codes
     assert "nuances_et_arbitrages" in section_codes
-    assert {section["depth"] for section in payload["sections"]} == {"premium"}
+    assert {section["depth"] for section in payload["sections"]} == {"premium_deep"}
+    assert "prediction_windows" in payload["llm_input_selection"]["allowed_fact_groups"]
+    assert payload["editorial_depth_profile"]["depth_code"] == "premium_deep"
+    assert payload["precision_level"] == "detailed"
+    assert payload["frontend_visibility_rules"]["visible_section_codes"] == section_codes
     assert any(item["code"] == "personalization_note" for item in payload["support_elements"])
     assert len(payload["interpretive_signals"]) >= 3
     assert _payload_excludes_forbidden_surfaces(payload)

@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Story file status: `ready-to-review`
+- Story file status: `done`
 - Ready for review: implementation evidence complete and tracker synchronized
 - Story key: CS-320-plan-aware-projection-interpretation-shaping
 - Source story: `00-story.md`
@@ -81,7 +81,7 @@
 - PASS: OpenAPI and `/v1/astrology/projections` route check.
 - PASS: negative React entitlement scan returned no owner matches.
 - PASS: `git diff --check -- ...`; LF/CRLF warnings only.
-- PASS: final ready-to-review alignment validation commands recorded in `evidence/validation.txt`.
+- PASS: final implementation alignment validation commands recorded in `evidence/validation.txt`.
 
 ## Fresh review closure validation
 
@@ -98,14 +98,25 @@
 
 ## Resume alignment validation
 
-- PASS: story status and task list now match tracker status `ready-to-review`.
+- PASS: story status and task list now match tracker status `done`.
 - PASS: story, final evidence and review artifact line-length check.
 - PASS: `condamad_story_validate.py`, `condamad_story_lint.py --strict` and `condamad_validate.py` after venv activation.
 - PASS: JSON sample parse and contract vocabulary scan against the source brief.
 - PASS: backend projection API tests, 12 tests after venv activation.
 - PASS: backend `ruff check .`, OpenAPI route check, frontend lint and targeted Vitest suite, 130 tests.
 
-## Ready-to-review alignment validation
+## Brief implementation alignment review
+
+- PASS: tracker row path/source match CS-320 and the source brief dated 2026-05-26.
+- FIXED: runtime builder now emits explicit `LLMInputSelection`, `EditorialDepthProfile`, `FrontendVisibilityRules`,
+  `precision_level` and `calculation_scope` fields required by the brief and ACs.
+- FIXED: builder depth codes now match the canonical contract: `free_short`, `basic_contextual`, `premium_deep`.
+- FIXED: persisted JSON samples now mirror the runtime shaping metadata field names.
+- PASS: no React-owned local `free`/`basic`/`premium` entitlement matrix found in active natal projection owners.
+- PASS: endpoint service still passes the current plan as both requested and current plan, so `free`, `basic` and `premium`
+  continue to receive HTTP 200 for `client_interpretation_projection_v1`.
+
+## Implementation alignment validation
 
 - PASS: `condamad_validate.py` after venv activation.
 - PASS: backend projection API tests, 12 tests after venv activation.
@@ -115,6 +126,17 @@
 - PASS: JSON evidence sample parse after venv activation.
 - PASS: OpenAPI projection route neutrality after venv activation.
 - PASS: negative React owner policy scan returned no matches in `frontend/src/components` and `frontend/src/features`.
+
+## Final alignment validation after correction
+
+- PASS: backend `ruff format .` after venv activation; 1685 files left unchanged.
+- PASS: backend `ruff check .` after venv activation.
+- PASS: backend targeted tests after venv activation; 21 tests passed.
+- PASS: CONDAMAD story validation, strict lint and capsule validation after venv activation.
+- PASS: frontend lint.
+- PASS: targeted frontend Vitest suite; 5 files and 130 tests passed.
+- PASS: JSON evidence samples parse after venv activation.
+- PASS: OpenAPI projection route neutrality after venv activation.
 
 ## Commands skipped or blocked
 
@@ -134,14 +156,13 @@
 ## Final worktree status
 
 - Final implementation pass synchronized `_condamad/stories/story-status.md` to
-  `ready-to-review` after fresh validation.
-- Resume alignment pass synchronized `00-story.md` to `Status: ready-to-review`
-  and checked the completed task list so the story file matches tracker and
-  final evidence.
+  `done` after fresh validation.
+- Final alignment pass synchronized `00-story.md` to `Status: done` and checked
+  the completed task list so the story file matches tracker and final evidence.
 
 ## Remaining risks
 
-- none-recorded
+- none-recorded after the implementation alignment correction.
 
 ## Suggested reviewer focus
 

@@ -60,3 +60,28 @@ PASS - OpenAPI projection route neutrality:
 PASS - negative React owner policy scan:
 rg -n "entitlement.*(free|basic|premium)|(free|basic|premium).*entitlement|planMatrix|plan_matrix|local.*(free|basic|premium)" frontend\src\components frontend\src\features --glob '!**/*.test.*' --glob '!**/__tests__/**'
 Result: PASS, no matches. Exit code 1 is expected for absence of matches.
+
+2026-05-26 final brief-vs-code alignment pass:
+
+PASS - backend format:
+.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format .
+Result: 1685 files left unchanged.
+
+PASS - backend lint:
+.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .
+Result: All checks passed.
+
+PASS - backend targeted runtime and builder tests:
+.\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py tests\api\test_projection_real_conditions.py tests\api\test_projection_endpoint.py --tb=short
+Result: 21 passed.
+
+PASS - story and capsule validation:
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping\00-story.md
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping\00-story.md
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-320-plan-aware-projection-interpretation-shaping
+Result: PASS.
+
+PASS - frontend lint and targeted Vitest:
+pnpm --dir frontend lint
+pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards natalInterpretation NatalChartPage natalChartApi
+Result: lint PASS; 5 files and 130 tests passed.
