@@ -8,6 +8,7 @@ This transition plan confines historical surfaces until the canonical `llm_astro
 - observed: `evidence_catalog` is validation-only in the current pipeline. Sources: CS-325 F-003 E-008/E-011/E-017.
 - decision: compatibility remains named and temporary; no new alias, fallback or wildcard placeholder is permitted. Sources: CS-327 F-002/F-003.
 - blocker: product owner must classify externally visible `/users`, `free_short`, schema and fallback branches before removal. Sources: CS-325 F-004.
+- missing evidence: no source audit provides a calendar retirement date for legacy surfaces. This report therefore uses condition-based withdrawal only; any calendar date must be approved by the product owner and recorded before implementation.
 
 ## Legacy Surface Register
 
@@ -30,6 +31,15 @@ This transition plan confines historical surfaces until the canonical `llm_astro
 4. Add prompt-visible versus runtime-only guards.
 5. Classify external compatibility branches.
 6. Remove or permanently document `chart_json`/`natal_data` compatibility.
+
+## Retirement Date Posture
+
+| Legacy family | Calendar date | Withdrawal condition | Owner decision required | Sources |
+| --- | --- | --- | --- | --- |
+| `chart_json` / `natal_data` carriers | not sourced | `llm_astrology_input_v1` schema, prompt-visible tests and hash audit pass | yes, before deletion | CS-324 F-002; CS-327 F-001/F-002 |
+| `astro_context` naming | not sourced | renamed or explicitly scoped as astral-point context | yes, before reuse as signal source | CS-324 F-004 E-021 |
+| `evidence_catalog` prompt role | not sourced | evidence owner chooses validation-only or prompt-visible refs plus audit-only catalog | yes, before prompt/runtime mapping | CS-325 F-003; CS-326 F-003 |
+| `/users`, `free_short`, schema/fallback branches | not sourced | every branch classified as `intentional`, `delete-candidate` or `needs-user-decision` | yes, before removal | CS-325 F-004; CS-327 F-004 |
 
 ## Non-Goals During Transition
 

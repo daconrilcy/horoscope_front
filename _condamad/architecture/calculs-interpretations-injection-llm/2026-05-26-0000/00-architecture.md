@@ -63,6 +63,19 @@ Story label caveats: all `SC-*` values are audit provenance only. They are not d
 | `AINarrativeInputContract` | observed: best candidate, available-not-injected | canonical internal LLM input owner | interpretation/narrative input builder | architecture + interpretation owners | yes | no | no | Adopt and wrap as `llm_astrology_input_v1` for LLM schema/config. Sources: CS-326 F-001 E-009/E-010/E-020 |
 | `narrative_answer_audit_v1` | observed: stores hashes/provider/model/evidence refs | audit-only output trace | audit persistence/workflow | observability/data owner | no | no | no | Persist `projection_hash`, `llm_input_hash`, `evidence_refs`; never inject raw prompt payload. Sources: CS-326 F-003 E-011/E-012/E-013/E-015/E-022; brief CS-259 |
 
+## Target Layer Owners And Runtime Mapping
+
+The following mapping answers the CS-328 requirement to connect the target contract to `NatalExecutionInput` / `ExecutionContext` without implementing or changing prompt/runtime code.
+
+| Target layer | Canonical owner | Maps from | Maps to `NatalExecutionInput` / `ExecutionContext` | Forbidden destination | Decision status | Sources |
+| --- | --- | --- | --- | --- | --- | --- |
+| Calculation facts | astrology runtime owner | `CalculationGraph`, `ChartObjectRuntimeData` | not mapped raw; only derived through `ChartInterpretationInputRuntimeData` | prompt text, provider payload, public projection | decision | CS-324 E-005/E-008/E-020; brief CS-245 |
+| Pre-narrative interpretation | interpretation/narrative owner | `ChartInterpretationInputRuntimeData`, `AINarrativeInputContract` | supplies structured facts, signals, readiness and missing-data blocks before runtime assembly | frontend labels, final LLM answer | decision | CS-324 F-001; CS-326 F-001 |
+| LLM injection schema | architecture owner + LLM runtime owner | `AINarrativeInputContract`, `structured_facts_v1`, `evidence_refs`, shaping metadata | one structured `llm_astrology_input_v1` field or equivalent schema-owned block in `NatalExecutionInput`; `ExecutionContext` carries request, use-case, locale, plan/module and prompt/runtime references only | `chart_json` as canonical modern input, wildcard placeholders | decision, owner approval required | CS-327 F-001/F-003; CS-325 F-002 |
+| Prompt runtime | LLM configuration owner | schema-declared injection block plus `ExecutionContext` controls | renders only prompt-visible blocks; keeps validation-only and audit-only fields out of prompt prose | prompt copy as source of truth | blocker until placeholder shape is decided | CS-325 F-002/F-003; CS-327 F-003 |
+| Narrative audit | observability/data owner | prompt/model/provider metadata, `projection_hash`, `llm_input_hash`, `evidence_refs` | receives trace values after runtime generation; it is not an input to `NatalExecutionInput` | prompt payload or factual source | decision | CS-326 F-003; brief CS-259 |
+| Legacy compatibility | product owner + backend LLM owner | `chart_json`, `natal_data`, `/users`, `free_short`, schema/fallback branches | may remain in `NatalExecutionInput` only under named `transition-condition`; `ExecutionContext` records branch/use-case identity | hidden fallback or duplicate factual carrier | blocker until branch classification | CS-324 F-002; CS-325 F-004; CS-327 F-002/F-004 |
+
 ## Canonical Registry Decisions
 
 ### LLM Input Contract Registry
