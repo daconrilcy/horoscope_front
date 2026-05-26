@@ -28,6 +28,7 @@ No actionable implementation issue found in the fresh review after the evidence 
 
 - Evidence classification: replaced the stale pre-implementation drafting review with this implementation review artifact.
 - Closure status: synchronized the story tracker to `done` after fresh validation and a clean implementation review.
+- Story file status: synchronized `00-story.md` from `ready-to-review` to `done` and checked completed implementation tasks.
 
 ## AC And Guardrail Review
 
@@ -52,6 +53,7 @@ No actionable implementation issue found in the fresh review after the evidence 
 - `python -B -c "...app.openapi()..."`: PASS
 - `pnpm --dir frontend lint`: PASS
 - `pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards natalInterpretation NatalChartPage natalChartApi`: PASS, 130 tests.
+- Resume pass after status correction: story validation, strict lint, capsule validation, JSON parse, backend/API checks and frontend checks all PASS.
 
 All Python commands above were run after activating `.\.venv\Scripts\Activate.ps1`.
 

@@ -3,7 +3,8 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: clean implementation review completed
+- Story file status: `done`
+- Ready for review: clean implementation review completed and tracker synchronized
 - Story key: CS-320-plan-aware-projection-interpretation-shaping
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping`
@@ -45,6 +46,7 @@
 ## Files changed
 
 - `docs/architecture/client-interpretation-projection-v1-contract.md`
+- `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/00-story.md`
 - `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/free-sample.json`
 - `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/basic-sample.json`
 - `_condamad/stories/CS-320-plan-aware-projection-interpretation-shaping/evidence/premium-sample.json`
@@ -93,6 +95,15 @@
 - PASS: `pnpm --dir frontend lint`.
 - PASS: targeted frontend Vitest suite, 5 files and 130 tests.
 
+## Resume alignment validation
+
+- PASS: story status and task list now match tracker status `done`.
+- PASS: story, final evidence and review artifact line-length check.
+- PASS: `condamad_story_validate.py`, `condamad_story_lint.py --strict` and `condamad_validate.py` after venv activation.
+- PASS: JSON sample parse and contract vocabulary scan against the source brief.
+- PASS: backend projection API tests, 12 tests after venv activation.
+- PASS: backend `ruff check .`, OpenAPI route check, frontend lint and targeted Vitest suite, 130 tests.
+
 ## Commands skipped or blocked
 
 - none
@@ -112,6 +123,8 @@
 
 - Final closure review updated `generated/11-code-review.md` and synchronized
   `_condamad/stories/story-status.md` to `done` after fresh validation.
+- Resume alignment pass synchronized `00-story.md` to `Status: done` and checked
+  the completed task list so the story file matches tracker and final evidence.
 
 ## Remaining risks
 

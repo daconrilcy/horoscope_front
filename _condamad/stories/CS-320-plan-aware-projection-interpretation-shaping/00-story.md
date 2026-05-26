@@ -1,5 +1,5 @@
 # Story CS-320 plan-aware-projection-interpretation-shaping: Define LLM And Front Differentiation By B2C Plan
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
@@ -117,19 +117,19 @@ The contract must specify LLM input subsets, editorial depth profiles, precision
 | AC3 | The contract defines `EditorialDepthProfile` by plan. | Evidence profile: json_contract_shape; `rg` checks `EditorialDepthProfile`. |
 | AC4 | The contract defines frontend visibility by plan. | Evidence profile: json_contract_shape; `rg` checks `FrontendVisibilityRules`. |
 | AC5 | The contract preserves full projection for all plans. | Evidence profile: runtime_openapi_contract; `pytest` runs real conditions tests. |
-| AC6 | The contract defines future implementation ownership. | Evidence profile: ownership_routing; `rg` checks the listed backend, LLM and frontend owner paths. |
+| AC6 | The contract defines future implementation ownership. | Evidence profile: ownership_routing; `rg` checks listed owner paths. |
 | AC7 | Future validations prevent policy drift. | Evidence profile: targeted_forbidden_symbol_scan; `pnpm` runs architecture guards. |
 | AC8 | Evidence artifacts are persisted. | Evidence profile: baseline_before_after_diff; `python` checks CS-320 evidence paths. |
 
 ## Implementation Tasks
 
-- [ ] Task 1: Re-read the CS-315 decision, existing projection contract and listed owners before finalizing the shaping contract. (AC: AC1, AC6)
-- [ ] Task 2: Define the plan-aware contract with LLM inputs, editorial depth, precision, detail and frontend visibility. (AC: AC1, AC2, AC3, AC4)
-- [ ] Task 3: Document that `client_interpretation_projection_v1` execution stays available for `free`, `basic` and `premium`. (AC: AC5)
-- [ ] Task 4: Name backend, LLM and frontend implementation owners and their forbidden destinations. (AC: AC6)
-- [ ] Task 5: Define future backend validations for full execution and plan-differentiated metadata. (AC: AC5, AC7)
-- [ ] Task 6: Define future frontend validations for backend-shaped visibility and no React local plan matrix. (AC: AC4, AC7)
-- [ ] Task 7: Persist validation and source-alignment evidence under the CS-320 evidence folder. (AC: AC8)
+- [x] Task 1: Re-read the CS-315 decision, existing projection contract and listed owners before finalizing the shaping contract. (AC: AC1, AC6)
+- [x] Task 2: Define the plan-aware contract with LLM inputs, editorial depth, precision, detail and frontend visibility. (AC: AC1, AC2, AC3, AC4)
+- [x] Task 3: Document that `client_interpretation_projection_v1` execution stays available for `free`, `basic` and `premium`. (AC: AC5)
+- [x] Task 4: Name backend, LLM and frontend implementation owners and their forbidden destinations. (AC: AC6)
+- [x] Task 5: Define future backend validations for full execution and plan-differentiated metadata. (AC: AC5, AC7)
+- [x] Task 6: Define future frontend validations for backend-shaped visibility and no React local plan matrix. (AC: AC4, AC7)
+- [x] Task 7: Persist validation and source-alignment evidence under the CS-320 evidence folder. (AC: AC8)
 
 ## Files to Inspect First
 
