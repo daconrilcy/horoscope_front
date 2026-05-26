@@ -24,6 +24,7 @@ Resolved in this review cycle:
 - Closure metadata drift: `00-story.md` still used `ready-to-dev` and unchecked implementation tasks after implementation evidence was present.
 - Review artifact drift: this file still described the pre-implementation drafting review instead of the final implementation review.
 - Traceability wording drift: AC8 still said final evidence was pending even though the implementation evidence exists.
+- Final evidence status drift: validation evidence still mentioned `ready-to-review`; it now matches story and tracker status `done`.
 
 ## Acceptance Criteria Review
 

@@ -27,7 +27,7 @@
 | `generated/04-target-files.md` | yes | yes | PASS | Generated capsule file present. |
 | `generated/06-validation-plan.md` | yes | yes | PASS | Generated capsule file present. |
 | `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Generated capsule file present. |
-| `generated/10-final-evidence.md` | yes | yes | PASS | Updated for ready-to-review closure. |
+| `generated/10-final-evidence.md` | yes | yes | PASS | Updated for done closure. |
 
 ## AC validation
 
@@ -88,22 +88,14 @@
 
 ## Diff review
 
-- `git diff --name-only -- frontend _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308 _condamad/stories/story-status.md`: tracked changes are `frontend/README.md` and `_condamad/stories/story-status.md`; CS-313 evidence/generated files are untracked additions.
-- `git diff --stat -- frontend _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308 _condamad/stories/story-status.md`: README and story-status tracked delta only; untracked generated/evidence files listed in worktree status.
-- `git diff --check -- frontend _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308 _condamad\stories\story-status.md`: PASS, exit 0 with line-ending normalization warnings only.
+- `git diff --name-only -- frontend _condamad`: no frontend or CONDAMAD implementation delta remained before this final evidence refresh.
+- `git status --short`: only `_condamad/run-state.json` was untracked before this final evidence refresh.
+- `git diff --check -- frontend _condamad\stories\CS-313-stabiliser-validation-pnpm-lint-apres-cs308 _condamad\stories\story-status.md`: PASS in closure evidence with line-ending normalization warnings only.
 
 ## Final worktree status
 
-- `M _condamad/stories/story-status.md`
-- `M frontend/README.md`
-- `?? _condamad/run-state.json` (pre-existing before implementation)
-- `?? _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/evidence/`
-- `?? _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/01-execution-brief.md`
-- `?? _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/03-acceptance-traceability.md`
-- `?? _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/04-target-files.md`
-- `?? _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/06-validation-plan.md`
-- `?? _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/07-no-legacy-dry-guardrails.md`
-- `?? _condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/10-final-evidence.md`
+- Before this final evidence refresh, the only dirty path reported by `git status --short` was `?? _condamad/run-state.json`.
+- This alignment review refreshes CS-313 evidence/review text only, to keep closure metadata aligned with story and tracker status `done`.
 
 ## Remaining risks
 

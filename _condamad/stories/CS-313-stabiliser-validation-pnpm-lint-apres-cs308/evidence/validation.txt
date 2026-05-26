@@ -31,4 +31,4 @@
 - Documentation changed: `frontend/README.md` switched quality command examples from npm to pnpm.
 - Evidence changed: `_condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/evidence/**`.
 - Capsule changed: `_condamad/stories/CS-313-stabiliser-validation-pnpm-lint-apres-cs308/generated/**`.
-- Story tracker changed: `_condamad/stories/story-status.md` moved CS-313 to `ready-to-review`.
+- Story tracker status: `_condamad/stories/story-status.md` has CS-313 at `done` with last update `2026-05-26`.
