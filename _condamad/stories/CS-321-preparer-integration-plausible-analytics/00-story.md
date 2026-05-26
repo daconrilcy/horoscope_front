@@ -1,5 +1,5 @@
 # Story CS-321 preparer-integration-plausible-analytics: Prepare Plausible Analytics Integration
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

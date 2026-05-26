@@ -24,6 +24,7 @@ explicit resume condition.
 
 - Replaced the prior editorial-only review artifact with this implementation review artifact.
 - Updated the tracker status from `ready-to-review` to `done` after the fresh implementation review found no code issue.
+- Synchronized `00-story.md` status from `ready-to-review` to `done` during final brief/code alignment.
 - Refreshed final evidence status and worktree notes to match the current post-review state.
 - Restored the required `Final worktree status` evidence section heading after capsule validation rejected the renamed heading.
 
@@ -39,6 +40,7 @@ explicit resume condition.
   returned exit 1, meaning no direct provider call outside the analytics hook.
 - PASS: readiness manifest JSON check.
 - PASS: `git diff --check`
+- PASS: final alignment rerun of story validation, strict lint, frontend lint, `useAnalytics` Vitest, provider-boundary scan, and env-variable scan.
 
 ## Closure
 

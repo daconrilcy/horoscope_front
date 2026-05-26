@@ -17,6 +17,7 @@
 - Initial `git status --short`: clean
 - Resume `git status --short` on 2026-05-26: existing CS-321 changes were already present; this run preserved them and revalidated the story.
 - Story status row matched the target path and source brief before implementation.
+- Final brief-alignment pass on 2026-05-26 synchronized `00-story.md` from `ready-to-review` to `done`.
 - AGENTS.md files considered: `AGENTS.md`
 - Capsule repaired: yes; missing generated files were created before implementation.
 - Frontend skill considered: yes; no subagent spawned because the user did not explicitly authorize delegation.
@@ -109,6 +110,7 @@
 
 ## Final worktree status
 
+- Modified by this final alignment pass: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/00-story.md`
 - Modified by this review loop: `_condamad/stories/story-status.md`
 - Modified by this review loop: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/generated/10-final-evidence.md`
 - Modified by this review loop: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/generated/11-code-review.md`
