@@ -84,6 +84,11 @@
 | `python -B -c "<CS-312 evidence assertion>"` | repo root with venv active | PASS | Required artifacts, screenshots, tracker rows, and CS-307 final evidence validated. |
 | `condamad_validate.py` on CS-312 capsule | repo root with venv active | PASS | Final CS-312 capsule validation passes. |
 | `condamad_validate.py` on CS-307 capsule | repo root with venv active | PASS | Final CS-307 capsule validation passes. |
+| Resume validation: `pnpm lint` | `frontend` | PASS | TypeScript lint configs pass in the resumed run. |
+| Resume validation: targeted Natal Vitest | `frontend` | PASS | 3 test files, 108 tests passed in the resumed run. |
+| Resume validation: `node .\scripts\run-vite-logged.mjs vitest vitest run` | `frontend` | PASS | 116 files, 1276 passed, 8 skipped in the resumed run. |
+| Resume validation: negative `rg` scans for inline styles and direct projection HTTP calls | repo root | PASS | No matches; `rg` exit code 1 is expected for absence checks. |
+| Resume validation: CS-312 capsule/story checks and `git diff --check` | repo root with venv active | PASS | Capsule, story lint, and whitespace checks pass. |
 
 ## Commands skipped or blocked
 
@@ -103,7 +108,7 @@
 
 ## Final worktree status
 
-- Dirty with story-scoped untracked capsule/evidence files plus pre-existing untracked briefs/reports.
+- Dirty only with `_condamad/run-state.json` untracked at resumed final check.
 - No commit or push performed.
 
 ## Remaining risks
