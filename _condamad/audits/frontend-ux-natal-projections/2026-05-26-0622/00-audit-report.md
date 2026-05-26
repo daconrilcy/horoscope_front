@@ -33,6 +33,22 @@ The audited implementation is visually stable for the success state and structur
 - Tests: targeted `natalInterpretation` and `NatalChartPage` tests pass; architecture/API guard tests pass; full frontend Vitest passes (E-015, E-016, E-017).
 - Static guards: no inline styles in audited TSX owners; no direct `fetch` or `axios` call to `/v1/astrology/projections`; disclaimer copy remains app-owned (E-011, E-012, E-014).
 - Typecheck: direct TypeScript lint-equivalent commands pass; `pnpm lint` hit a Windows lockfile limitation before invoking TypeScript (E-018).
+- Audit artifact contract: fresh `condamad_domain_audit_validate.py` and `condamad_domain_audit_lint.py` checks passed for this audit folder after the review correction (E-021).
+
+## CS-307 Alignment Review
+
+| Story expectation | Audit decision | Evidence | Review note |
+|---|---|---|---|
+| AC1 dated UX audit note classifies inspected issues with `corrected`, `acceptable`, or `product-decision-required` decisions | acceptable with one product-decision-required remediation | E-001, E-002, E-019, E-020 | Layout/readability issues are acceptable under current evidence; wording ownership is not corrected in this read-only audit and is routed to CS-308 as product/wording closure. |
+| AC2 projection hierarchy remains readable for `beginner_summary_v1` and `client_interpretation_projection_v1` | acceptable | E-007, E-015, E-019 | Browser QA proves both projection blocks visible on desktop, tablet, and mobile. |
+| AC3 critical text and controls do not overlap | acceptable | E-019 | Controlled browser boxes show no overlap with primary controls or disclaimer block across audited viewports. |
+| AC4 loading, success, empty, error, entitlement, and degraded messages remain understandable | acceptable | E-007, E-015 | Targeted tests cover these states; browser layout evidence covers success state only. |
+| AC5 and AC9 disclaimers remain app-owned and visible | acceptable | E-010, E-014, E-015, E-019 | Disclaimer copy comes from app i18n, is asserted by tests, and remains visible in browser QA. |
+| AC6 corrections stay in existing owners and no forbidden ownership drift appears | acceptable | E-006, E-007, E-008, E-011, E-012, E-013, E-016 | No application correction was applied by this audit; existing ownership and guards are preserved. |
+| AC7 frontend validation passes or records concrete limits | acceptable with documented limit | E-015, E-016, E-017, E-018 | Vitest and TypeScript checks pass; `pnpm lint` has a Windows lockfile limitation before TypeScript execution. |
+| AC8 story evidence artifacts are persisted | acceptable for audit-folder evidence, not a CS-307 implementation capsule | E-019, E-021 | This domain audit persists its report, ledger, screenshots, and validation evidence under the target audit folder; CS-307 story-capsule evidence remains implementation-story scope. |
+
+Review conclusion: the audit is aligned with CS-307's stakes and non-goals as an audit artifact. It must not claim CS-307 implementation closure because it did not apply UI corrections or create the story-capsule before/after evidence; the remaining in-domain remediation is correctly limited to wording ownership and routed to the existing CS-308 story.
 
 ## Findings
 
@@ -96,4 +112,5 @@ Exhaustive active surface for F-001:
 | `.\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.lint.json` | PASS | E-018 |
 | `.\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.node.json` | PASS | E-018 |
 | `pnpm lint` | LIMITATION | E-018 |
-
+| `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/frontend-ux-natal-projections/2026-05-26-0622` | PASS | E-021 |
+| `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/frontend-ux-natal-projections/2026-05-26-0622` | PASS | E-021 |
