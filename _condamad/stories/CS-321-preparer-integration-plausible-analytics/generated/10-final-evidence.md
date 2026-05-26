@@ -3,7 +3,8 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Implementation review outcome: CLEAN
+- Final status: done
 - Story key: `CS-321-preparer-integration-plausible-analytics`
 - Source story: `00-story.md`
 - Source brief: `_story_briefs/cs-321-preparer-integration-plausible-analytics.md`
@@ -24,7 +25,7 @@
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Status synchronized to `ready-to-review`. |
+| `00-story.md` | yes | yes | PASS | Status synchronized to `done`. |
 | `generated/01-execution-brief.md` | yes | yes | PASS | Generated capsule file present. |
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | Updated with AC1-AC7 evidence. |
 | `generated/04-target-files.md` | yes | yes | PASS | Updated with touched files and forbidden areas. |
@@ -85,6 +86,7 @@
 | `git diff --check` | repo root | PASS | 0 | No whitespace errors. |
 | Resume capsule validation | repo root | PASS | 0 | `condamad_validate.py` rerun with venv active on 2026-05-26. |
 | Resume targeted/frontend validation | `frontend` | PASS | 0 | `pnpm lint`, targeted Vitest, full `pnpm test`, and `pnpm build` rerun on 2026-05-26. |
+| Implementation review validation | repo root and `frontend` | PASS | 0 | Story validation, strict lint, frontend lint, targeted Vitest, provider scans, and manifest check rerun on 2026-05-26. |
 
 ## Commands skipped or blocked
 
@@ -107,14 +109,10 @@
 
 ## Final worktree status
 
-- Modified: `.env.example`
-- Modified: `frontend/src/config/analytics.ts`
-- Modified: `frontend/src/tests/useAnalytics.test.tsx`
-- Modified: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/00-story.md`
-- Modified: `_condamad/stories/story-status.md`
-- Untracked: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/evidence/**`
-- Untracked: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/generated/**`
-- Untracked: `_condamad/run-state.json`
+- Modified by this review loop: `_condamad/stories/story-status.md`
+- Modified by this review loop: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/generated/10-final-evidence.md`
+- Modified by this review loop: `_condamad/stories/CS-321-preparer-integration-plausible-analytics/generated/11-code-review.md`
+- Pre-existing untracked outside capsule: `_condamad/run-state.json`
 
 ## Remaining risks
 
