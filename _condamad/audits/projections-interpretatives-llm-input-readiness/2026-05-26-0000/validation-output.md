@@ -85,3 +85,19 @@ rg -n "AINarrativeInput|readiness_flags|evidence_refs|projection_hash|llm_input_
 PASS: hits confirm AI narrative contract, audit persistence, rejected answer workflow and associated tests.
 ```
 
+## Targeted Review Revalidation
+
+```text
+rg -n -e "AINarrativeInputBuilder" -e "AINarrativeInputContract" -e "structured_facts_v1" -e "client_interpretation_projection_v1" -e "beginner_summary_v1" .\backend\app\services\llm_generation .\backend\app\domain\llm .\backend\tests\llm_orchestration
+PASS: zero hits; command exits 1 because rg reports no match.
+```
+
+```text
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/projections-interpretatives-llm-input-readiness/2026-05-26-0000
+CONDAMAD domain audit validation passed.
+```
+
+```text
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/projections-interpretatives-llm-input-readiness/2026-05-26-0000
+CONDAMAD domain audit lint passed.
+```
