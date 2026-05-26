@@ -21,7 +21,7 @@ Review date: 2026-05-26
 
 ## Review Result
 
-No actionable implementation issue remains.
+No actionable implementation issue remains after one traceability correction.
 
 The implementation covers the brief primitives:
 
@@ -33,6 +33,7 @@ The implementation covers the brief primitives:
 - persisted CS-318 evidence and final acceptance report;
 - unchanged CS-316 frontend validation results;
 - no frontend defect fix because no provider-side anomaly was observable.
+- corrected test evidence routing to the real `frontend/src/tests/natalChartApi.test.tsx` path.
 
 ## Validation Evidence
 
@@ -50,7 +51,9 @@ All Python commands were run from the repository root after activating `.venv`.
 
 ## Issues Fixed In This Loop
 
-None. The first implementation review pass found no actionable issue.
+- Traceability path drift: `00-story.md` referenced `frontend/src/tests/natalChartApi.test.ts`,
+  but the repository test file is `frontend/src/tests/natalChartApi.test.tsx`.
+  The story now points to the real test file used by the targeted Vitest validation.
 
 ## Propagation
 

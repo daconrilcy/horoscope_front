@@ -127,7 +127,7 @@ or produce a bounded external blocker proving that no suitable provider environm
 - `frontend/src/features/natal-chart/NatalInterpretation.tsx`
 - `frontend/src/tests/useAnalytics.test.tsx`
 - `frontend/src/tests/natalInterpretation.test.tsx`
-- `frontend/src/tests/natalChartApi.test.ts`
+- `frontend/src/tests/natalChartApi.test.tsx`
 
 ## Runtime Source of Truth
 
@@ -268,7 +268,7 @@ Likely tests:
 
 - `frontend/src/tests/useAnalytics.test.tsx` - validate analytics provider boundary and redaction behavior.
 - `frontend/src/tests/natalInterpretation.test.tsx` - validate `/natal` event emission states.
-- `frontend/src/tests/natalChartApi.test.ts` - validate natal API client behavior used by projection states.
+- `frontend/src/tests/natalChartApi.test.tsx` - validate natal API client behavior used by projection states.
 
 Conditional files:
 
