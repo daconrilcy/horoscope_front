@@ -1,0 +1,11 @@
+CS-319 validation summary
+
+PASS pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run component-architecture-guards -> 6 tests passed
+PASS pnpm --dir frontend exec node .\scripts\run-vite-logged.mjs vitest vitest run natalInterpretation NatalChartPage natalChartApi -> 4 files, 123 tests passed
+PASS pnpm --dir frontend lint -> tsc lint/node configs passed
+PASS pnpm --dir frontend test -> 116 files passed, 1277 passed, 8 skipped
+PASS rg bounded entitlement scan -> only active payload type, guard implementation, admin API-owner wording, and allowed backend-shaped fixtures
+PASS git diff --check -> exit 0; Git reported LF/CRLF warning for touched test file only
+PASS python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-319-natal-react-entitlement-matrix-guard -> capsule validation passed after evidence updates
+NOT_RUN pnpm --dir frontend test:e2e -> no runtime UI flow changed; story adds a static architecture guard only
+NOT_RUN local dev startup -> no runtime UI behavior or integration changed

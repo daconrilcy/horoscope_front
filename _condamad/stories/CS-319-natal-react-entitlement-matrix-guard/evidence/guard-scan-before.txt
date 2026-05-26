@@ -1,0 +1,7 @@
+Command: rg -n "free.*basic.*premium|accepted_matrix|entitlement matrix|plan_code.*===" frontend\src\features\natal-chart frontend\src\components\natal-interpretation frontend\src\pages\NatalChartPage.tsx frontend\src\tests
+Exit code: 0
+Note: fixture hits are classified; exit code 1 means PASS/no matches only when output is empty.
+
+frontend\src\tests\AdminEntitlementsPage.test.tsx:27:  it("renders an empty entitlement matrix from the API owner", async () => {
+frontend\src\features\natal-chart\NatalInterpretation.tsx:105:  plan_code?: "free" | "basic" | "premium"
+frontend\src\tests\natalInterpretation.test.tsx:144:type ProjectionPlanCode = "free" | "basic" | "premium";

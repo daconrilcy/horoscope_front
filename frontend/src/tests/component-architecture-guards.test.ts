@@ -33,6 +33,18 @@ function frontendSourceFiles(): string[] {
   return [".ts", ".tsx"].flatMap((extension) => listFiles("", extension))
 }
 
+const NATAL_PROJECTION_ACTIVE_ROOTS = [
+  "features/natal-chart",
+  "components/natal-interpretation",
+  "pages/NatalChartPage",
+] as const
+
+const LOCAL_NATAL_PLAN_POLICY_PATTERNS = [
+  /\baccepted[_-]?matrix\b/i,
+  /\bentitlement\s+matrix\b/i,
+  /\b(?:const|let|var)\s+\w*(?:matrix|policy|entitlement|plan|access|gate|rule)\w*\s*(?::[^=]+)?=\s*\{[\s\S]*\bfree\b[\s\S]*\bbasic\b[\s\S]*\bpremium\b/i,
+]
+
 function pathPrefix(parts: string[]): string {
   return parts.join("/")
 }
@@ -40,6 +52,25 @@ function pathPrefix(parts: string[]): string {
 function isActiveModuleUnderPrefix(file: string, prefixParts: string[]): boolean {
   const prefix = pathPrefix(prefixParts)
   return file === `${prefix}.ts` || file === `${prefix}.tsx` || file.startsWith(`${prefix}/`)
+}
+
+function isNatalProjectionActiveSource(file: string): boolean {
+  return NATAL_PROJECTION_ACTIVE_ROOTS.some((root) =>
+    file === `${root}.ts` || file === `${root}.tsx` || file.startsWith(`${root}/`),
+  )
+}
+
+/** Detecte uniquement les matrices locales, pas les fixtures backend ou types de payload. */
+function hasLocalNatalPlanPolicy(source: string): boolean {
+  if (LOCAL_NATAL_PLAN_POLICY_PATTERNS.some((pattern) => pattern.test(source))) {
+    return true
+  }
+
+  const comparedPlans = [
+    ...source.matchAll(/\b(?:plan_?code|planCode)\b\s*(?:={2,3}|!={1,2})\s*["'](free|basic|premium)["']/g),
+  ].map((match) => match[1])
+
+  return ["free", "basic", "premium"].every((plan) => comparedPlans.includes(plan))
 }
 
 function extractModuleSpecifiers(source: string): string[] {
@@ -214,5 +245,18 @@ describe("component-architecture guards", () => {
     for (const file of presentationalFiles) {
       expect(hasApiOrFeatureOwnership(readFrontendFile(file))).toBe(false)
     }
+  })
+
+  it("bloque une matrice locale free basic premium dans les owners React de projection natale", () => {
+    const activeNatalProjectionFiles = frontendSourceFiles().filter(isNatalProjectionActiveSource)
+    const policyViolations = activeNatalProjectionFiles
+      .map((file) => ({ file, hasLocalPolicy: hasLocalNatalPlanPolicy(readFrontendFile(file)) }))
+      .filter((entry) => entry.hasLocalPolicy)
+
+    expect(readFrontendFile("tests/natalInterpretation.test.tsx")).toContain(
+      'type ProjectionPlanCode = "free" | "basic" | "premium"',
+    )
+    expect(readFrontendFile("tests/natalInterpretation.test.tsx")).toContain("plan_code: planCode")
+    expect(policyViolations).toEqual([])
   })
 })
