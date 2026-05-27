@@ -115,3 +115,4 @@
 | cs-333 | `_story_briefs\cs-333-aligner-hash-evidence-et-audit-entree-llm-astrologique.md` | `_condamad\stories\cs-333-aligner-hash-evidence-audit-entree-llm-astrologique\00-story.md` |
 | cs-334 | `_story_briefs\cs-334-migrer-use-cases-natals-hors-chart-json-legacy.md` | `_condamad\stories\cs-334-migrer-use-cases-natals-hors-chart-json-legacy\00-story.md` |
 | cs-335 | `_story_briefs\cs-335-ajouter-guards-non-invention-et-frontieres-payload-llm.md` | `_condamad\stories\cs-335-guards-non-invention-frontieres-payload-llm\00-story.md` |
+| cs-336 | `_story_briefs\cs-336-supprimer-surfaces-legacy-injection-llm-natale.md` | `_condamad\stories\cs-336-supprimer-surfaces-legacy-injection-llm-natale\00-story.md` |
