@@ -113,3 +113,4 @@
 | cs-331 | `_story_briefs\cs-331-mapper-richesse-astrologique-vers-llm-astrology-input.md` | `_condamad\stories\cs-331-llm-astrology-input-v1-mapper\00-story.md` |
 | cs-332 | `_story_briefs\cs-332-brancher-llm-astrology-input-dans-execution-natale.md` | `_condamad\stories\cs-332-llm-astrology-input-v1-natal-runtime\00-story.md` |
 | cs-333 | `_story_briefs\cs-333-aligner-hash-evidence-et-audit-entree-llm-astrologique.md` | `_condamad\stories\cs-333-aligner-hash-evidence-audit-entree-llm-astrologique\00-story.md` |
+| cs-334 | `_story_briefs\cs-334-migrer-use-cases-natals-hors-chart-json-legacy.md` | `_condamad\stories\cs-334-migrer-use-cases-natals-hors-chart-json-legacy\00-story.md` |
