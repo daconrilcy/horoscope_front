@@ -1,5 +1,5 @@
 # Story CS-330 llm-astrology-input-v1-contract: Define llm_astrology_input_v1 Contract
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

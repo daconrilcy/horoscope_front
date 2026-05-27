@@ -27,6 +27,7 @@ The public API, OpenAPI schema, prompt service paths, frontend, DB and migration
 ## Issue Fixed In This Review Loop
 
 - Evidence correction: replaced the previous drafting-focused review artifact with this implementation-focused review artifact.
+- Story status correction: aligned `00-story.md` status with the tracker result `done`.
 
 ## Validation Evidence
 
@@ -38,6 +39,7 @@ The public API, OpenAPI schema, prompt service paths, frontend, DB and migration
 - PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -c "from app.main import app; assert all('llm_astrology' not in getattr(r, 'path', '') for r in app.routes)"`
 - PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-330-llm-astrology-input-v1-contract\00-story.md`
 - PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-330-llm-astrology-input-v1-contract\00-story.md`
+- PASS: post-status-correction rerun of `condamad_story_validate.py` and `condamad_story_lint.py --strict` for the same story.
 
 ## Propagation
 
