@@ -1,0 +1,23 @@
+CS-352 concordance after-review evidence
+
+Review timestamp: 2026-05-27
+Scope: corrected persistent evidence for the CS-352 audit review.
+
+Produced evidence artifacts:
+- `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/concordance-baseline.txt`
+- `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/concordance-after.txt`
+- `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/validation.txt`
+
+Audit folder reviewed:
+- `_condamad/audits/prompt-generation-document-review/2026-05-27-2240`
+
+Validated report markers:
+- `02-code-document-concordance-audit.md` exists.
+- `00-audit-report.md` exists.
+- Required matrices are present: `Matrice document section -> code source -> statut`, `Matrice symbole cite -> presence -> responsabilite reelle`, `Matrice exclusions prompt-visible/backend-only`.
+
+Scope preservation:
+- No application code was changed.
+- No frontend code was changed.
+- No backend test implementation was changed.
+- The source cartography document under `_condamad/docs/prompt-generation-cartography/` was not edited.

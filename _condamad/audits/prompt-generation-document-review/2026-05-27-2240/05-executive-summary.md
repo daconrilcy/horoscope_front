@@ -15,5 +15,6 @@ Findings:
 Validation:
 
 - Targeted CS-352 pytest command passed: `24 passed, 7 deselected`.
+- Standard CONDAMAD audit validation and lint passed during targeted review.
+- CS-352 persistent evidence artifacts now exist; the baseline file records that it was reconstructed during review because the original artifact was absent.
 - Backend application code, tests, migrations and frontend remained read-only during the audit.
-- Standard CONDAMAD audit validation and lint are expected to run against this folder after artifact creation.

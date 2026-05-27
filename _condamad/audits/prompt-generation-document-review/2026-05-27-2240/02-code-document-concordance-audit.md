@@ -119,6 +119,7 @@ Deux corrections documentaires candidates restent necessaires:
 | `request_id`, `trace_id`, `use_case` wording should be provider-only metadata | erreur documentaire | E-005, E-008, E-011 | Future agents may infer these values never leave backend process memory, while source sends headers to provider adapter. | Documentation-only correction. |
 | Exact guardrail for code-document concordance is absent | risque de test coverage | E-003, E-012 | Boundary behavior is guarded, but documentation concordance drift still depends on audit process. | Dedicated documentation-governance story only if desired. |
 | Real provider call not executed | absence documentaire | E-005, E-011 | Source handoff is verified, but external provider behavior is not proven by this audit. | Keep as explicit limitation, not runtime correction. |
+| Original CS-352 persistent evidence folder was absent at review start | risque de test coverage | E-014, E-015 | AC10 evidence now exists, but the baseline is a review-time reconstruction rather than a contemporaneous pre-audit capture. | Keep the limitation visible in story evidence; do not change runtime code or source cartography document. |
 
 ## Corrections documentaires candidates
 

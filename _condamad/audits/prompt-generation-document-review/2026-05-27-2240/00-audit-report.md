@@ -38,6 +38,7 @@ Reason: the audited runtime code and tests confirm the nominal prompt-generation
 - Complete in-domain implementation surface for active findings: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` only.
 - Application files to modify for active findings: none.
 - Governance/test files to modify for active findings: none.
+- Review correction: CS-352 persistent evidence artifacts were missing at review start and were reconstructed under `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/` with an explicit baseline limitation (E-014, E-015).
 - Deferred non-domain context: output schema ownership decision, provider privacy policy, real provider-call validation and CI policy for long guards.
 
 ## Mandatory Audit Dimensions
@@ -73,6 +74,9 @@ Reason: the audited runtime code and tests confirm the nominal prompt-generation
 | `backend/tests/unit/domain/astrology/test_llm_astrology_input_hash.py` | test-only | E-010, E-012 | Unit guard for prompt-visible hash material. | none |
 | `backend/tests/unit/domain/astrology/test_llm_astrology_input_evidence.py` | test-only | E-010, E-012 | Unit guard for evidence refs. | none |
 | `backend/tests/integration/test_llm_legacy_extinction.py` | test-only | E-010, E-012 | Integration guard for legacy carrier extinction. | 7 long tests deselected by default pytest selection |
+| `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/concordance-baseline.txt` | test-only | E-014, E-015 | Review-time baseline reconstruction for missing CS-352 persistent evidence. | not a contemporaneous pre-implementation baseline |
+| `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/concordance-after.txt` | test-only | E-014, E-015 | After-review evidence confirming required persistent artifacts and report markers. | none |
+| `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/validation.txt` | test-only | E-015 | Persisted validation output for audit validate/lint and targeted CS-352 checks. | none |
 
 ## Findings Summary
 

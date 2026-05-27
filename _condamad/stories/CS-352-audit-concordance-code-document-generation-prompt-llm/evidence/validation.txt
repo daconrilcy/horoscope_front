@@ -1,0 +1,27 @@
+CS-352 audit review validation
+
+Python environment:
+- All Python commands below were run after activating `.\.venv\Scripts\Activate.ps1`.
+
+Commands and results:
+
+1. `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-document-review/2026-05-27-2240`
+   Result: `CONDAMAD domain audit validation passed.`
+
+2. `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-document-review/2026-05-27-2240`
+   Result: `CONDAMAD domain audit lint passed.`
+
+3. `pytest -q backend/tests/architecture/test_llm_astrology_input_payload_boundaries.py backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py backend/tests/unit/domain/astrology/test_llm_astrology_input_hash.py backend/tests/unit/domain/astrology/test_llm_astrology_input_evidence.py backend/tests/integration/test_llm_legacy_extinction.py`
+   Result: `24 passed, 7 deselected in 3.49s`
+
+4. `python -c "from pathlib import Path; assert Path('_condamad/audits/prompt-generation-document-review/2026-05-27-2240/02-code-document-concordance-audit.md').exists(); assert Path('_condamad/audits/prompt-generation-document-review/2026-05-27-2240/00-audit-report.md').exists(); print('CS-352 audit paths OK')"`
+   Result: `CS-352 audit paths OK`
+
+5. `rg -n "def execute_request|def _resolve_plan|def _build_messages|def _call_provider|def compose_chat_messages|def compose_structured_messages" backend/app/domain/llm/runtime/gateway.py`
+   Result: found all required gateway symbols.
+
+6. `rg -n "code-document-concordance-audit|section -> code|symbole cite|responsabilite reelle|exclusions prompt-visible" _condamad/audits/prompt-generation-document-review/2026-05-27-2240`
+   Result: found the CS-352 report path marker and required matrix headings.
+
+Known limitation:
+- The baseline artifact was reconstructed during review because the original baseline file was absent before correction.

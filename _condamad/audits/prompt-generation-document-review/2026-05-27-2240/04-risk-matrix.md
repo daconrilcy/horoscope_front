@@ -13,3 +13,7 @@
 - The highest risk is not runtime behavior; it is future story drift caused by ambiguous documentation wording.
 - The provider metadata wording deserves correction before a security or provider privacy audit consumes the cartography as a source of truth.
 - The absence of an exact code-document concordance guardrail is acceptable for this audit but should remain visible.
+
+## Review Limitation
+
+- The CS-352 persistent evidence baseline was absent at review start and was reconstructed during review. This is now documented in E-014, E-015 and the story evidence folder; it does not change the runtime concordance findings, but it remains a delivery-process limitation for AC10 traceability.

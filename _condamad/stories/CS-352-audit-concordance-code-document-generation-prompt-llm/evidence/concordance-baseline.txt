@@ -1,0 +1,18 @@
+CS-352 concordance baseline evidence
+
+Review timestamp: 2026-05-27
+Scope: code-document concordance audit artifacts for `_condamad/audits/prompt-generation-document-review/2026-05-27-2240`.
+
+Baseline limitation:
+- The original pre-audit baseline artifact required by CS-352 was absent when the targeted audit review started.
+- This file is a review-time reconstruction of the pre-correction state, not a contemporaneous pre-implementation capture.
+
+Observed pre-correction state:
+- `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/evidence/` was absent.
+- `_condamad/stories/CS-352-audit-concordance-code-document-generation-prompt-llm/generated/11-code-review.md` existed.
+- `_condamad/audits/prompt-generation-document-review/2026-05-27-2240/` existed with the standard audit artifact set and the CS-352 concordance deliverable.
+- `git status --short` showed a pre-existing untracked `_condamad/run-state.json`.
+
+Review decision:
+- The missing persistent evidence artifact set was treated as an audit-delivery gap.
+- No backend, frontend, migration, test implementation or source cartography document file was changed to correct this gap.
