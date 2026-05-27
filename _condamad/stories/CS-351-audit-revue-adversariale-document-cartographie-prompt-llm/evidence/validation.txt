@@ -79,3 +79,19 @@ Result: PASS for runtime immutability. No `backend/app/`, `backend/tests/`, `fro
 Skipped commands:
 
 - `ruff format .`, `ruff check .`, `pytest -q`: not run because this story produced documentation/audit artifacts only and did not modify Python application or test code. The applicable skill validators and targeted report checks passed.
+
+8. Review correction rerun:
+
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-document-review/2026-05-27-2305
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-document-review/2026-05-27-2305
+```
+
+Result:
+
+```text
+CONDAMAD domain audit validation passed.
+CONDAMAD domain audit lint passed.
+```

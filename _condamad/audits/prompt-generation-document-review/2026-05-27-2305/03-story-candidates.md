@@ -2,7 +2,7 @@
 
 # Story Candidates
 
-## SC-001 clarify validation-audit-provider metadata wording
+## SC-001 clarify validation-audit evidence wording
 
 - Source finding: F-001
 - Suggested story title: Clarifier les roles validation et audit dans la cartographie prompt LLM
@@ -12,7 +12,7 @@
 - Draft objective: Update only `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` so it states that `evidence`, `evidence_refs`, `grounding_status` and `validation_owner` are excluded from prompt material, validation-owned, and may feed audit persistence.
 - Closure intent: full-closure
 - Must include: cite CS-346, CS-347, CS-348 and code owners; avoid any runtime code edit; preserve the blocker wording for output schema ownership and bounded semantic grounding; no wildcard allowlist; no promotion of fallback, legacy, seed, test or audit-only paths to runtime truth.
-- Validation hints: run targeted `rg` scans for `validation-only`, `audit-only`, `runtime/provider-only`, `request_id`, `trace_id`, `evidence_refs`, `prompt-visible`, `fallback`, `legacy`, `seed`, `LLMGateway`, `PromptRenderer`, and `llm_astrology_input_v1` under `_condamad/docs/prompt-generation-cartography`.
+- Validation hints: run targeted `rg` scans for `validation-only`, `audit-only`, `evidence_refs`, `grounding_status`, `prompt-visible`, `fallback`, `legacy`, `seed`, `LLMGateway`, `PromptRenderer`, and `llm_astrology_input_v1` under `_condamad/docs/prompt-generation-cartography`.
 - Blockers: stop if product wants complete semantic proof, provider privacy policy changes, or a new canonical owner for output schemas; those are out of scope for a wording-only documentation story.
 
 ## SC-002 clarify provider metadata wording
