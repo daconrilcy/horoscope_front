@@ -3,7 +3,7 @@
 ## Story Status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Final status: done
 - Story key: CS-357-graphiques-mermaid-construction-prompts-theme-astral
 - Source story: `_condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/00-story.md`
 - Capsule path: `_condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral`
@@ -56,8 +56,8 @@ Full details are recorded in `generated/03-acceptance-traceability.md`.
 - `_condamad/docs/prompt-generation-cartography/natal-prompt-construction-mermaid.md` - new Mermaid diagram annex with 8 diagrams, legends, source citations and no-call boundary.
 - `_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md` - one annex citation.
 - `_condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/**` - capsule evidence and traceability.
-- `_condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/**` - baseline, after, guardrail and validation artifacts.
-- `_condamad/stories/story-status.md` - status synchronized to `ready-to-review`.
+- `_condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/**` - baseline, after, guardrail, source coverage and validation artifacts.
+- `_condamad/stories/story-status.md` - status synchronized to `done`.
 
 ## Files Deleted
 
@@ -76,6 +76,7 @@ Full details are recorded in `generated/03-acceptance-traceability.md`.
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only ... --with-optional` | repo root with venv active | PASS | Required generated capsule files created. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...` | repo root with venv active | PASS | Capsule structure valid. |
 | `python -B -c "...mermaid count..."` | repo root with venv active | PASS | `mermaid_blocks 8`. |
+| `python -B -c "...evidence artifact checks..."` | repo root with venv active | PASS | Contractual artifacts include `validation.txt` and `source-coverage.md`. |
 | `rg -n "...AC terms..." natal-prompt-construction-mermaid.md` | repo root | PASS | Required plan, safety, order, exclusion and no-call terms found. |
 | `rg -n "natal-prompt-construction-mermaid\.md" natal-prompt-construction-by-plan.md` | repo root | PASS | CS-356 document cites the annex. |
 | `git status --short -- backend/app backend/tests frontend/src` | repo root | PASS | No application source changes. |
@@ -85,7 +86,7 @@ Full details are recorded in `generated/03-acceptance-traceability.md`.
 
 ## Commands Skipped Or Blocked
 
-- None.
+- `python -B -m pytest -q --tb=short` was not rerun after the implementation-review evidence patch because the patch only changed Markdown evidence and tracker status; the prior full backend run remains valid for unchanged application code.
 
 ## DRY / No Legacy Evidence
 
@@ -102,12 +103,16 @@ Full details are recorded in `generated/03-acceptance-traceability.md`.
 
 ## Final Worktree Status
 
-- `M _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`
 - `M _condamad/stories/story-status.md`
-- `?? _condamad/docs/prompt-generation-cartography/natal-prompt-construction-mermaid.md`
 - `?? _condamad/run-state.json` (pre-existing, untouched)
-- `?? _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/`
-- `?? _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/validation.md`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/03-acceptance-traceability.md`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/04-target-files.md`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/06-validation-plan.md`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/10-final-evidence.md`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/11-code-review.md`
+- `?? _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/source-coverage.md`
+- `?? _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/validation.txt`
 
 ## Remaining Risks
 

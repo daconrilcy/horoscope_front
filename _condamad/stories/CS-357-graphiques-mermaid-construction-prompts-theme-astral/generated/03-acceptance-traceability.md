@@ -14,6 +14,6 @@
 | AC10 | No provider call is represented. | Intro and final diagram state the stop boundary before provider. | `rg -n "no provider call"` PASS. | PASS |
 | AC11 | CS-356 integration is explicit. | `_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md` cites the Mermaid annex. | `rg -n "natal-prompt-construction-mermaid.md"` PASS. | PASS |
 | AC12 | Application code remains unchanged. | No edits under `backend/app`, `backend/tests`, or `frontend/src`. | `git status --short -- backend/app backend/tests frontend/src` returned no entries. | PASS |
-| AC13 | Persistent evidence is stored. | `evidence/docs-baseline.txt`, `docs-after.txt`, `guardrails.txt`, `validation.md` stored. | Path checks and final evidence update PASS. | PASS |
+| AC13 | Persistent evidence is stored. | `evidence/docs-baseline.txt`, `docs-after.txt`, `guardrails.txt`, `source-coverage.md`, `validation.txt` and `validation.md` stored. | Path checks and final evidence update PASS. | PASS |
 
 Status values: `PENDING`, `PASS`, `PASS_WITH_LIMITATIONS`, `FAIL`, `BLOCKED`.
