@@ -1,0 +1,15 @@
+{
+  "snapshot": "after",
+  "source": "current gateway prompt projection",
+  "prompt_payload_keys": [
+    "evidence",
+    "facts",
+    "limits",
+    "provenance",
+    "shaping",
+    "signals"
+  ],
+  "has_rich_blocks": true,
+  "raw_surface_markers_present_in_prompt_values": false,
+  "provider_call": "mocked only in pytest"
+}

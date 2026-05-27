@@ -1,0 +1,52 @@
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:26:    assert "_prompt_visible_llm_astrology_input(llm_astrology_input)" in source
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:27:    assert "json.dumps(llm_astrology_input, ensure_ascii=False" not in source
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:31:    """La projection prompt exclut les roles runtime-only et validation-only."""
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:38:            isinstance(target, ast.Name) and target.id == "LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS"
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:49:    assert {"chart_json", "natal_data", "provider_response"}.isdisjoint(assigned_blocks)
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:57:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:130:    """Le helper public reconstruit exactement les blocs prompt-visibles."""
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:199:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:202:    assert "chart_json" not in serialized_facts
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:203:    assert "natal_data" not in serialized_facts
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:2:"""Verifie la matiere prompt-visible natale sans appeler de provider externe."""
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:16:    "ChartObjectRuntimeData",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:17:    "CalculationGraph",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:18:    "chart_json",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:19:    "natal_data",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:66:    """chart_json et natal_data restent hors prompt quand le contrat riche existe."""
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:73:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:74:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:110:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:111:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:34:    "runtime_only": ("request_id", "trace_id", "chart_json", "natal_data"),
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:41:    "CalculationGraph",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:42:    "ChartObjectRuntimeData",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:43:    "chart_json",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:44:    "natal_data",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:124:    """Construit l'unique materiau prompt-visible utilise par `llm_input_hash`."""
+app\domain\llm\runtime\gateway.py:102:LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = (
+app\domain\llm\runtime\gateway.py:111:_NATAL_TRANSITION_PROMPT_CARRIERS = frozenset({"chart_json", "natal_data"})
+app\domain\llm\runtime\gateway.py:117:def _prompt_visible_llm_astrology_input(payload: Any) -> Any:
+app\domain\llm\runtime\gateway.py:123:        block: payload[block] for block in LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS if block in payload
+app\domain\llm\runtime\gateway.py:175:        chart_json_in_prompt: bool = False,
+app\domain\llm\runtime\gateway.py:208:            prompt_payload = _prompt_visible_llm_astrology_input(llm_astrology_input)
+app\domain\llm\runtime\gateway.py:213:        elif "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
+app\domain\llm\runtime\gateway.py:214:            parts.append(f"Technical Data: {context['chart_json']}")
+app\domain\llm\runtime\gateway.py:344:                        "chart_json",
+app\domain\llm\runtime\gateway.py:350:                        "natal_data",
+app\domain\llm\runtime\gateway.py:636:            "natal_data",
+app\domain\llm\runtime\gateway.py:637:            "chart_json",
+app\domain\llm\runtime\gateway.py:653:            natal_data=context.get("natal_data"),
+app\domain\llm\runtime\gateway.py:654:            chart_json=context.get("chart_json"),
+app\domain\llm\runtime\gateway.py:1527:                    chart_json_in_prompt="{{chart_json}}" in plan.rendered_developer_prompt,
+app\domain\llm\runtime\gateway.py:1928:            if prop == "chart_json":
+app\domain\llm\runtime\gateway.py:1929:                # Transition legacy: seuls les schemas anciens peuvent encore demander chart_json.
+app\domain\llm\runtime\gateway.py:1930:                if context_dict.get("natal_data") is not None:
+app\domain\llm\runtime\gateway.py:1931:                    payload[prop] = context_dict["natal_data"]
+app\domain\llm\runtime\gateway.py:1934:                raw_chart_json = context_dict.get("chart_json")
+app\domain\llm\runtime\gateway.py:1935:                if isinstance(raw_chart_json, dict):
+app\domain\llm\runtime\gateway.py:1936:                    payload[prop] = raw_chart_json
+app\domain\llm\runtime\gateway.py:1938:                if isinstance(raw_chart_json, str):
+app\domain\llm\runtime\gateway.py:1940:                        parsed_chart_json = json.loads(raw_chart_json)
+app\domain\llm\runtime\gateway.py:1943:                    if isinstance(parsed_chart_json, dict):
+app\domain\llm\runtime\gateway.py:1944:                        payload[prop] = parsed_chart_json

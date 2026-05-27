@@ -1,0 +1,23 @@
+{
+  "snapshot": "before",
+  "source": "pre-change gateway serialized the full llm_astrology_input_v1 object after context lookup",
+  "prompt_payload_keys": [
+    "contract_id",
+    "contract_version",
+    "facts",
+    "signals",
+    "limits",
+    "evidence",
+    "shaping",
+    "provenance",
+    "exclusions",
+    "data_roles"
+  ],
+  "raw_surface_markers_present_in_serialized_prompt_metadata": [
+    "ChartObjectRuntimeData",
+    "CalculationGraph",
+    "chart_json",
+    "natal_data"
+  ],
+  "provider_call": "not required"
+}

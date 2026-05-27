@@ -1,0 +1,12 @@
+CS-335 validation summary
+PASS python -B -m pytest -q tests\llm_orchestration\test_llm_astrology_input_boundaries.py --tb=short => 4 passed
+PASS python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py --tb=short => 9 passed
+PASS python -B -m pytest -q tests\architecture\test_llm_astrology_input_payload_boundaries.py --tb=short => 3 passed
+PASS python -B -m pytest -q tests\architecture\test_llm_astrology_input_boundary.py tests\architecture\test_llm_astrology_input_runtime_boundary.py --tb=short => 7 passed
+PASS python -B -c "from pathlib import Path; assert Path(...payload-boundary-after.json).exists()"
+PASS python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"
+PASS python -B -m ruff format app\domain\llm\runtime\gateway.py tests\llm_orchestration\test_llm_astrology_input_boundaries.py tests\architecture\test_llm_astrology_input_payload_boundaries.py
+PASS python -B -m ruff check .
+PASS python -B -m pytest -q tests --tb=short => 1202 passed, 218 deselected
+PASS rg targeted boundary scan persisted in payload-boundary-scan.txt
+NOTE an earlier attempt from backend used the wrong venv activation path and was rerun correctly from repo root before evidence closure

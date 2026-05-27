@@ -99,11 +99,29 @@ _FALLBACK_USER_MSG = {
 }
 
 LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
+LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = (
+    "facts",
+    "signals",
+    "limits",
+    "evidence",
+    "shaping",
+    "provenance",
+)
 # Transition legacy: ces carriers sont uniquement lus pour les schemas non migres.
 _NATAL_TRANSITION_PROMPT_CARRIERS = frozenset({"chart_json", "natal_data"})
 
 # ComposedMessages type alias (Story 66.4 AC3)
 ComposedMessages = List[Dict[str, Any]]
+
+
+def _prompt_visible_llm_astrology_input(payload: Any) -> Any:
+    """Isole les blocs riches autorises dans la matiere de prompt natale."""
+    if not isinstance(payload, dict):
+        return payload
+
+    return {
+        block: payload[block] for block in LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS if block in payload
+    }
 
 
 class LLMGateway:
@@ -187,9 +205,10 @@ class LLMGateway:
 
         llm_astrology_input = context.get(LLM_ASTROLOGY_INPUT_V1_KEY)
         if llm_astrology_input is not None:
+            prompt_payload = _prompt_visible_llm_astrology_input(llm_astrology_input)
             parts.append(
                 "llm_astrology_input_v1: "
-                + json.dumps(llm_astrology_input, ensure_ascii=False, sort_keys=True)
+                + json.dumps(prompt_payload, ensure_ascii=False, sort_keys=True)
             )
         elif "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
             parts.append(f"Technical Data: {context['chart_json']}")
