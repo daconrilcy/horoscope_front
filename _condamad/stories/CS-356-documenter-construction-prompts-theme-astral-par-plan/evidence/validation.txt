@@ -247,3 +247,49 @@ warning: in the working copy of '_condamad/docs/prompt-generation-cartography/pr
 warning: in the working copy of '_condamad/stories/regression-guardrails.md', LF will be replaced by CRLF the next time Git touches it
 warning: in the working copy of '_condamad/stories/story-status.md', LF will be replaced by CRLF the next time Git touches it
 RESULT: PASS
+
+# Review/fix validation CS-356 2026-05-28
+
+## Implementation review finding batch
+
+- Finding 1: `generated/11-code-review.md` reviewed only the drafted story contract, not the delivered implementation.
+- Finding 2: CS-356 tracker/story status was not closed as `done`.
+- Finding 3: `RG-149` was returned by the guardrail resolver but not recorded in the story guardrail evidence.
+
+## Story validation after review fixes
+
+> . .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-356-documenter-construction-prompts-theme-astral-par-plan\00-story.md
+CONDAMAD story validation: PASS
+RESULT: PASS
+
+## Strict story lint after review fixes
+
+> . .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-356-documenter-construction-prompts-theme-astral-par-plan\00-story.md
+CONDAMAD story lint: PASS
+RESULT: PASS
+
+## Capsule validation after review fixes
+
+> . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-356-documenter-construction-prompts-theme-astral-par-plan
+CONDAMAD validation: PASS
+RESULT: PASS
+
+## Status closure check
+
+> . .\.venv\Scripts\Activate.ps1; python -B -c "from pathlib import Path; story=Path('_condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/00-story.md').read_text(encoding='utf-8'); status=Path('_condamad/stories/story-status.md').read_text(encoding='utf-8'); assert 'Status: done' in story; assert '| CS-356 | documenter-construction-prompts-theme-astral-par-plan | Document Natal Prompt Construction By Plan | done |' in status"
+RESULT: PASS
+
+## Document, review artifact and RG-149 scan
+
+> . .\.venv\Scripts\Activate.ps1; python -B -c "from pathlib import Path; doc=Path('_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md').read_text(encoding='utf-8'); assert all(t in doc for t in ['free','basic','premium','prompt-visible','backend-only','validation-only','audit-only','chart_json','natal_data','projection_hash','llm_input_hash','provider response','observability','a extraire depuis la configuration runtime']); review=Path('_condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/generated/11-code-review.md').read_text(encoding='utf-8'); assert 'Verdict: CLEAN' in review and 'RG-149' in review"
+RESULT: PASS
+
+## Application surface unchanged check
+
+> . .\.venv\Scripts\Activate.ps1; python -B -c "import subprocess; out=subprocess.check_output(['git','status','--short','--','backend/app','backend/tests','frontend/src'], text=True); assert out.strip()=='', out"
+RESULT: PASS
+
+## Diff whitespace check
+
+> git diff --check
+RESULT: PASS with line-ending warnings only.

@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: implementation review clean
 - Story key: `CS-356-documenter-construction-prompts-theme-astral-par-plan`
 - Source story: `_condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/00-story.md`
 - Brief source: `_story_briefs/cs-356-documenter-construction-prompts-theme-astral-par-plan.md`
@@ -26,7 +26,7 @@
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC1 through AC12 classified. |
 | `generated/04-target-files.md` | yes | yes | PASS | Generated during capsule repair. |
 | `generated/06-validation-plan.md` | yes | yes | PASS | Generated during capsule repair; implemented validations recorded in `evidence/validation.txt`. |
-| `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Generated during capsule repair. |
+| `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Updated during implementation review to record RG-149 evidence. |
 | `generated/10-final-evidence.md` | yes | yes | PASS | This review handoff. |
 
 ## AC validation
@@ -87,6 +87,7 @@
 - One dedicated documentation page was created; no duplicate active runtime path.
 - The document explicitly keeps `chart_json`, `natal_data`, `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` and `observability` outside the modern natal prompt-visible payload.
 - Unknown prompt text is marked `a extraire depuis la configuration runtime`.
+- RG-149 is covered: non-natal provider-capable flows remain out of `llm_astrology_input_v1`, and legacy carriers are not promoted as prompt-visible modern natal input.
 
 ## Diff review
 
@@ -95,7 +96,7 @@
 
 ## Final worktree status
 
-- CS-356 changes are ready for review.
+- CS-356 implementation review is clean after the review/fix cycle.
 - Pre-existing dirty files listed in Preflight remain outside this story.
 
 ## Remaining risks
@@ -109,4 +110,4 @@
 
 ## Feedback loop routing
 
-- no-propagation: no reusable process correction beyond the per-story PowerShell quote rerun was identified.
+- no-propagation: corrections were local to CS-356 review evidence, guardrail classification and status closure.

@@ -1,5 +1,5 @@
 # Story CS-356 documenter-construction-prompts-theme-astral-par-plan: Document Natal Prompt Construction By Plan
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -285,7 +285,7 @@ Scope vector: operation `create`, domain `documentation`, paths `_condamad/docs/
 | Guardrail | Local invariant | Evidence |
 |---|---|---|
 | RG-002 `refactor-api-v1-routers` | Backend ownership must not drift into docs or API files. | `python` status guard; source `rg`. |
-| Registry gap | No exact natal prompt construction documentation guardrail was returned by the scoped resolver. | `python` resolver output. |
+| RG-149 `CS-350` | Keep legacy carriers and non-natal flows outside the natal prompt contract. | `rg` exclusions and manual review. |
 | RG-041 non-applicable | Entitlement documentation is outside this prompt construction scope. | Manual check: plan docs only. |
 
 ## Persistent Evidence Artifacts
