@@ -1,4 +1,4 @@
-# Revue de redaction CS-337
+# Revue d'implementation CS-337
 
 Verdict: CLEAN
 
@@ -9,32 +9,33 @@ Verdict: CLEAN
 - Tracker: `_condamad/stories/story-status.md`
 - Date de revue: 2026-05-27
 
-## Alignement brief / story
+## Alignement implementation / AC
 
-- L'objectif de suppression des tests, fixtures, snapshots et mocks legacy d'injection LLM natale est explicite.
-- Les primitives du brief sont couvertes: inventaire, classification, deletion, remplacement par `llm_astrology_input_v1`,
-  conservation des guards negatifs, preuve de non-skip et evidence de livraison.
-- Les hors-perimetres du brief sont preserves: usages non-LLM de `chart_json`, CI, runtime prompt generation et API publique.
-- La dependance CS-336 et le contexte CS-335 sont cites comme sources amont.
-- Les risques principaux sont identifies: perte de couverture moderne, mauvaise classification et mocks residuels.
+- Le tracker CS-337 correspond au `Path` cible et au brief source attendu.
+- Les tests/helper legacy natals story-owned ont ete supprimes ou remplaces par des assertions `llm_astrology_input_v1`.
+- Les fixtures golden natales ne portent plus `chart_json`, `natal_data` ni `evidence_catalog` comme payload LLM attendu.
+- Les guards negatifs restent actifs pour empecher le retour de `chart_json` et `natal_data` dans le chemin LLM natal.
+- Les hits residuels des scans larges sont classes dans `evidence/test-cleanup-audit.md` comme guards, non-LLM ou owners externes.
+- Les snapshots OpenAPI before/after ont le meme hash, donc la surface API publique reste neutre.
 
-## Guardrails et preuves attendues
+## Issues corrigees pendant cette review
 
-- Guardrails cibles relus par ID uniquement: RG-002 et RG-022.
-- La story conserve RG-002 pour la neutralite API publique et RG-022 pour les chemins pytest collectes.
-- La validation exige `pytest`, scans `rg`, checks OpenAPI et preuves persistantes separees.
-- L'artefact de revue attendu est bien ce fichier:
-  `_condamad/stories/CS-337-supprimer-tests-mocks-legacy-injection-llm/generated/11-code-review.md`.
+- Remplacement de l'ancienne revue de redaction initiale par cette revue d'implementation.
+- Passage du statut story interne et du tracker a `done`.
+- Normalisation des AC3 et AC6 en `PASS`, les residus etant classes hors scope.
 
-## Validations de redaction
+## Validations
 
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`: PASS
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`: PASS
+- `ruff check .` dans `backend`: PASS.
+- Targeted pytest LLM boundaries, extinction, golden regression, execution request and gateway compose: PASS, 20 passed, 8 deselected.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`: PASS.
 
-## Issues
+## Verdict detaille
 
-Aucune issue de redaction actionnable identifiee.
+Aucune issue d'implementation actionnable ne reste ouverte. Les preuves CONDAMAD, les validations backend ciblees,
+les scans persistants et la neutralite OpenAPI soutiennent la cloture de CS-337.
 
 ## Risque residuel
 
-La story reste pre-implementation: les preuves runtime et les scans backend devront etre produits pendant l'implementation.
+Aucun risque restant identifie.

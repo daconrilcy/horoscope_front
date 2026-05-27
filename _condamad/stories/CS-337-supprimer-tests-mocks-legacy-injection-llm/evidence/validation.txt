@@ -23,3 +23,10 @@ All checks passed!
 .....                                                                    [100%]
 5 passed, 6 deselected in 0.09s
 PASS: no matches for deleted legacy natal test surfaces
+
+# Review/fix validation 2026-05-27
+ruff check . -> PASS
+targeted pytest LLM boundaries/extinction/golden/execution/gateway -> PASS, 20 passed, 8 deselected
+condamad_story_validate.py 00-story.md -> PASS
+condamad_story_lint.py --strict 00-story.md -> PASS
+condamad_validate.py capsule directory -> PASS

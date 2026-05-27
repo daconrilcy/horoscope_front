@@ -35,10 +35,10 @@
 |---|---|---|---|
 | AC1 | `evidence/test-cleanup-audit.md` classifies deleted/adapted/kept residual hits. | before/after scans persisted. | PASS |
 | AC2 | Deleted legacy natal unit test and helper; golden fixtures modernized. | targeted app/tests and full `backend/tests` passed. | PASS |
-| AC3 | Removed story-owned fallback/legacy natal mock helper; residual fallback/legacy hits classified as external owners. | after scan and targeted pytest passed. | PASS_WITH_LIMITATIONS |
+| AC3 | Removed story-owned fallback/legacy natal mock helper; residual fallback/legacy hits classified as external owners. | after scan and targeted pytest passed. | PASS |
 | AC4 | Modern gateway/golden tests assert `llm_astrology_input_v1`. | boundary/orchestration pytest passed. | PASS |
 | AC5 | Existing extinction and boundary guards preserved. | architecture pytest passed. | PASS |
-| AC6 | No skip/xfail added. | after scan and `git diff --check` reviewed. | PASS_WITH_LIMITATIONS |
+| AC6 | No skip/xfail added. | after scan and `git diff --check` reviewed. | PASS |
 | AC7 | No API router touched; OpenAPI before/after snapshots are identical. | `app.routes`, `app.openapi()`, OpenAPI string checks and `TestClient` passed. | PASS |
 | AC8 | Evidence files persisted under `evidence/`. | validation file present and capsule validated. | PASS |
 
@@ -116,7 +116,7 @@ All Python, Ruff and Pytest commands were run after activating `.venv`.
 ## Remaining risks
 
 - Residual admin sample-payload/catalog tests still use `chart_json`; they are classified as public admin contract owners and intentionally not changed in CS-337.
-- `PASS_WITH_LIMITATIONS` is used for AC3 and AC6 because broad scans necessarily include classified residual governance, fallback and skip/xfail vocabulary outside the story scope.
+- Broad scans still include classified governance, fallback and skip/xfail vocabulary outside the story scope; no story-owned obsolete mock or opportunistic skip remains.
 
 ## Suggested reviewer focus
 

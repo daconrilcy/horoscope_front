@@ -1,5 +1,5 @@
 # Story CS-337 supprimer-tests-mocks-legacy-injection-llm: Remove Legacy LLM Injection Tests And Mocks
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
