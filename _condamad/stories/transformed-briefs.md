@@ -129,3 +129,4 @@
 | cs-347 | `_story_briefs\cs-347-audit-validation-output-persistence-observabilite-prompt-llm.md` | `_condamad\stories\cs-347-audit-output-validation-persistence-observabilite-prompt-llm\00-story.md` |
 | cs-348 | `_story_briefs\cs-348-architecture-cartographie-generation-prompt-llm.md` | `_condamad\stories\cs-348-architecture-cartographie-generation-prompt-llm\00-story.md` |
 | cs-349 | `_story_briefs\cs-349-report-cartographie-generation-prompt-llm.md` | `_condamad\stories\cs-349-report-cartographie-generation-prompt-llm\00-story.md` |
+| cs-350 | `_story_briefs\cs-350-documentation-cartographie-generation-prompt-llm-mermaid.md` | `_condamad\stories\cs-350-documentation-cartographie-generation-prompt-llm-mermaid\00-story.md` |
