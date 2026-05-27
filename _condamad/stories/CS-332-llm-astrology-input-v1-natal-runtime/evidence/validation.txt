@@ -7,14 +7,24 @@ Commands:
   Result: PASS, capsule generated.
 - python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime
   Result: PASS.
-- ruff format backend\app\domain\llm\runtime\contracts.py backend\app\domain\llm\runtime\adapter.py backend\app\domain\llm\runtime\gateway.py backend\app\domain\llm\configuration\canonical_use_case_registry.py backend\app\services\llm_generation\natal\interpretation_service.py backend\app\tests\unit\test_ai_engine_adapter.py backend\app\tests\unit\legacy_services\legacy_natal_interpretation_service.py backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py backend\tests\llm_orchestration\test_placeholder_validation.py
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime\00-story.md
   Result: PASS.
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime\00-story.md
+  Result: PASS.
+- Push-Location backend; ruff format --check .; Pop-Location
+  Result: PASS, 1690 files already formatted.
 - Push-Location backend; ruff check .; Pop-Location
   Result: PASS, All checks passed.
 - Push-Location backend; python -B -m pytest -q --tb=short tests\unit\domain\llm\test_natal_llm_astrology_input.py tests\architecture\test_llm_astrology_input_runtime_boundary.py app\tests\unit\test_ai_engine_adapter.py app\tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\architecture\test_llm_astrology_input_boundary.py tests\llm_orchestration\test_placeholder_validation.py tests\llm_orchestration\test_llm_execution_request.py; Pop-Location
-  Result: PASS, 41 passed in 1.79s.
+  Result: PASS, 41 passed in 1.83s.
+- Push-Location backend; python -B -m pytest -q --tb=short tests --ignore=tests/e2e; Pop-Location
+  Result: PASS, 1180 passed, 215 deselected in 53.56s.
 - Push-Location backend; python -B -m pytest -q --tb=short; Pop-Location
-  Result: PASS, 3451 passed, 1 skipped, 1216 deselected in 231.49s.
+  Result: PASS, 3451 passed, 1 skipped, 1216 deselected in 234.28s.
+- Push-Location backend; python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi()); assert all('llm_astrology' not in getattr(route, 'path', '') for route in app.routes); print('PASS public OpenAPI/routes unchanged for llm_astrology_input_v1')"; Pop-Location
+  Result: PASS, public OpenAPI/routes unchanged.
+- rg -n "llm_astrology_input_v1|NatalExecutionInput|ExecutionContext|PromptRenderer|chart_json|natal_data|fallback" backend\app\domain\llm\runtime backend\app\domain\llm\configuration backend\app\domain\llm\governance\data backend\app\services\llm_generation\natal backend\tests\unit\domain\llm backend\tests\architecture -g "*.py" -g "*.json"
+  Result: PASS, remaining occurrences classified in transition-scan.txt.
 - git diff --check
   Result: PASS.
 - python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime

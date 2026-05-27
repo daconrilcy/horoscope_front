@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: passed
-- Ready for review: yes
+- Ready for review: clean implementation review complete
 - Story key: CS-332-llm-astrology-input-v1-natal-runtime
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-332-llm-astrology-input-v1-natal-runtime`
@@ -107,3 +107,10 @@
 ## Feedback loop routing
 
 - no-propagation: validation failures were story-local and fixed with tests; no reusable AGENTS/skill update required.
+
+## Implementation review closure
+
+- Final review artifact: `_condamad/stories/CS-332-llm-astrology-input-v1-natal-runtime/generated/11-code-review.md`
+- Final review verdict: CLEAN
+- Story tracker status: done
+- Propagation: no-propagation

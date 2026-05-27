@@ -1,4 +1,4 @@
-# CS-332 Editorial Story Review
+# CS-332 Implementation Review
 
 Verdict: CLEAN
 
@@ -6,35 +6,54 @@ Verdict: CLEAN
 
 - Story: `_condamad/stories/CS-332-llm-astrology-input-v1-natal-runtime/00-story.md`
 - Source brief: `_story_briefs/cs-332-brancher-llm-astrology-input-dans-execution-natale.md`
-- Tracker row: `_condamad/stories/story-status.md`, source matched to the brief.
-- Guardrails checked by targeted ID lookup only: `RG-002`; registry gap preserved for natal LLM runtime input.
+- Tracker row: `_condamad/stories/story-status.md`, path and source brief matched.
+- Implementation surfaces reviewed: natal service, runtime contracts, adapter, gateway, canonical LLM use-case registry,
+  prompt governance registry and CS-332 unit/architecture tests.
+- Evidence reviewed: rendered payload, transition scan, public surface guard and validation transcript.
 
 ## Review Iterations
 
-- Iteration 1: CHANGES_REQUESTED.
-- Iteration 2: CLEAN.
+- Iteration 1: CHANGES_REQUESTED for stale review/status evidence only.
+- Iteration 2: CLEAN after evidence and status alignment.
 
 ## Issues Fixed
 
-- Guardrail wording: `RG-002` was narrowed to API v1 router ownership, matching the registry row instead of generic backend ownership.
-- Transition compatibility: the legacy-behavior guardrail now preserves the required literal validator phrase while bounding chart-carrier compatibility.
+- Review evidence: replaced the prior editorial story-contract review with this implementation review artifact.
+- Status evidence: aligned the story-local status with the clean implementation review outcome.
+
+## Acceptance Criteria Review
+
+| AC | Review result |
+|---|---|
+| AC1 | PASS: `NatalExecutionInput` requires `llm_astrology_input_v1` and tests prove transport to the gateway request. |
+| AC2 | PASS: adapter places the rich contract in `ExecutionContext.extra_context` without creating a second typed owner. |
+| AC3 | PASS: `ExecutionContext` has no `llm_astrology_input_v1` field. |
+| AC4 | PASS: gateway payload rendering includes the structured `llm_astrology_input_v1` content. |
+| AC5 | PASS: when rich input exists, `chart_json` and `natal_data` are not selected as prompt-visible substitutes. |
+| AC6 | PASS: transition scan classifies remaining carrier and fallback occurrences as bounded compatibility. |
+| AC7 | PASS: OpenAPI and route guards show no public API exposure. |
+| AC8 | PASS: tests use gateway/provider doubles; no real LLM call is required. |
+| AC9 | PASS: rendered payload, transition scan, public surface guard and validation transcript exist. |
 
 ## Validation Results
 
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime\00-story.md`
+- PASS: `ruff format --check .` from `backend/`.
+- PASS: `ruff check .` from `backend/`.
+- PASS: targeted CS-332 and adjacent tests, `41 passed`.
+- PASS: full backend pytest, `3451 passed, 1 skipped, 1216 deselected`.
+- PASS: public OpenAPI/routes guard for `llm_astrology_input_v1`.
+- PASS: scoped transition scans for rich input, chart carriers and public exposure.
 - Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
-## Final Editorial Findings
+## Final Findings
 
-- The story covers every in-scope primitive from the source brief.
-- Covered primitives include runtime entry, transport, adapter propagation, context ownership, prompt rendering and fallback tests.
-- Repository structure alerts are retained as non-blocking drafting alerts and do not downgrade `ready-to-dev`.
-- No application code, frontend code, tracker status or guardrail registry content was modified.
+- No implementation issue remains against the source brief or CS-332 acceptance criteria.
+- Existing `chart_json`, `natal_data` and fallback occurrences are transition compatibility or unrelated governed runtime paths.
+- No frontend, public API, DB, migration, provider policy or dependency surface was changed by this review/fix cycle.
 
 ## Propagation
 
-- no-propagation: corrections were local wording fixes in the CS-332 story contract and generated review evidence.
+- no-propagation: corrections were local CS-332 review/status evidence updates with no reusable rule change.
 
 ## Residual Risk
 

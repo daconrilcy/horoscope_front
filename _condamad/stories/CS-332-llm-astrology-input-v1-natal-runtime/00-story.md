@@ -1,5 +1,5 @@
 # Story CS-332 llm-astrology-input-v1-natal-runtime: Wire llm_astrology_input_v1 Into Natal Runtime
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
