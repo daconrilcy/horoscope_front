@@ -119,3 +119,4 @@
 | cs-337 | `_story_briefs\cs-337-supprimer-tests-et-mocks-legacy-injection-llm.md` | `_condamad\stories\cs-337-supprimer-tests-mocks-legacy-injection-llm\00-story.md` |
 | cs-338 | `_story_briefs\cs-338-cloturer-extinction-legacy-injection-llm-natale.md` | `_condamad\stories\cs-338-cloturer-extinction-legacy-injection-llm-natale\00-story.md` |
 | cs-339 | `_story_briefs\cs-339-aligner-provenance-audit-only-hors-prompt-llm-natal.md` | `_condamad\stories\cs-339-aligner-provenance-audit-only-hors-prompt-llm-natal\00-story.md` |
+| cs-340 | `_story_briefs\cs-340-cloturer-validation-frontiere-provenance-prompt-audit-llm-natal.md` | `_condamad\stories\cs-340-frontiere-provenance-prompt-audit\00-story.md` |
