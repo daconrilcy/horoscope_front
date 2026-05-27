@@ -1,4 +1,4 @@
-# CS-330 Editorial Story Review
+# CS-330 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,31 +7,42 @@ Verdict: CLEAN
 - Story: `_condamad/stories/CS-330-llm-astrology-input-v1-contract/00-story.md`
 - Source brief: `_story_briefs/cs-330-definir-contrat-llm-astrology-input-v1.md`
 - Tracker row: `_condamad/stories/story-status.md`
-- Scoped guardrails: `RG-002`, `RG-022`
+- Implementation owner: `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`
+- Tests: `backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py`
+- Evidence: `_condamad/stories/CS-330-llm-astrology-input-v1-contract/evidence/`
+- Scoped guardrails: `RG-002`, `RG-022`, story-local public-surface and duplicate-owner guards
 
 ## Review Result
 
-No actionable drafting issue remains.
+No actionable implementation issue remains.
 
-The story explicitly carries the brief objective to define `llm_astrology_input_v1` as an internal versioned backend contract.
-It names every required top-level block: `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance` and `exclusions`.
-It preserves `structured_facts_v1` as the canonical factual source and `AINarrativeInputContract` as the narrative signal owner.
-It keeps `client_interpretation_projection_v1` as shaping metadata only, and forbids raw runtime carriers as canonical input.
-It also keeps prompt wiring, provider calls, public API routes, frontend work, DB work and migrations out of scope.
+The implementation defines one canonical backend-domain owner for `llm_astrology_input_v1` under the interpretation domain.
+The emitted contract has the required top-level blocks: `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance` and `exclusions`.
+`facts` is guarded by `STRUCTURED_FACTS_V1_PROJECTION_ID`, and `signals` is guarded by `AINarrativeInputContract`.
+The B2C projection is accepted only as shaping metadata and is not copied into the factual block.
+Raw chart carriers, public payload carriers, prompt text and provider output are declared as exclusions rather than canonical sources.
+`llm_input_hash` is deterministic and covers every prompt-influencing block listed in the provenance policy.
+The public API, OpenAPI schema, prompt service paths, frontend, DB and migration surfaces remain outside the implementation scope.
 
-## Produced Artifacts
+## Issue Fixed In This Review Loop
 
-- Created this review artifact: `_condamad/stories/CS-330-llm-astrology-input-v1-contract/generated/11-code-review.md`
+- Evidence correction: replaced the previous drafting-focused review artifact with this implementation-focused review artifact.
 
 ## Validation Evidence
 
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\llm_astrology_input_v1.py app\domain\astrology\runtime\astrology_doctrine_governance.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\llm_astrology_input_v1.py app\domain\astrology\runtime\astrology_doctrine_governance.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py --tb=short`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests --tb=short`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"`
+- PASS: `. .\.venv\Scripts\Activate.ps1; cd backend; python -c "from app.main import app; assert all('llm_astrology' not in getattr(r, 'path', '') for r in app.routes)"`
 - PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-330-llm-astrology-input-v1-contract\00-story.md`
 - PASS: `. .\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-330-llm-astrology-input-v1-contract\00-story.md`
 
 ## Propagation
 
-- no-propagation: the review found no reusable learning and required only local review evidence creation.
+- no-propagation: the only correction was local review evidence scope; no reusable guardrail, AGENTS.md or skill update is needed.
 
 ## Residual Risk
 
-No residual drafting risk identified.
+Aucun risque restant identifie.
