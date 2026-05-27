@@ -1,0 +1,12 @@
+Commentaire global: baseline de scan pour l'audit CS-346.
+
+Commandes sources:
+- rg -n "LLMAstrologyInputV1Builder|build_llm_input_hash_material|PROMPT_INFLUENCING_BLOCKS|LLM_ASTROLOGY_INPUT_DATA_ROLES" backend/app backend/tests
+- rg -n "StructuredFactsV1Builder|AINarrativeInputBuilder|ClientInterpretationProjectionV1Builder|compute_projection_hash" backend/app backend/tests
+- rg -n "chart_json|natal_data" backend/app/domain/astrology/interpretation backend/app/domain/llm/runtime backend/tests/llm_orchestration backend/tests/architecture backend/tests/integration
+
+Resultat synthetique:
+- PASS: `llm_astrology_input_v1.py` declare `PROMPT_INFLUENCING_BLOCKS` et `LLM_ASTROLOGY_INPUT_DATA_ROLES`.
+- PASS: `LLMAstrologyInputV1Builder` assemble les blocs requis et calcule `llm_input_hash` via `build_llm_input_hash_material`.
+- PASS: `StructuredFactsV1Builder`, `AINarrativeInputBuilder` et `ClientInterpretationProjectionV1Builder` sont les sources runtime tracees.
+- PASS: `chart_json` et `natal_data` sont presents comme runtime-only/excluded/test legacy guards, pas comme blocs prompt-visibles modernes.

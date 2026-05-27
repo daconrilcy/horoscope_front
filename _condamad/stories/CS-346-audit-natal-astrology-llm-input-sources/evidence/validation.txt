@@ -1,0 +1,27 @@
+Commentaire global: sortie de validation pour l'audit CS-346.
+
+Toutes les commandes Python ci-dessous ont ete executees apres activation de `.\.venv\Scripts\Activate.ps1`.
+
+PASS:
+- `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-cartography/2026-05-27-1835`
+  - CONDAMAD domain audit validation passed.
+- `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-cartography/2026-05-27-1835`
+  - CONDAMAD domain audit lint passed.
+- `pytest -q tests/unit/domain/astrology/test_llm_astrology_input_v1.py --tb=short`
+  - 9 passed.
+- `pytest -q tests/unit/domain/astrology/test_llm_astrology_input_hash.py tests/unit/domain/astrology/test_llm_astrology_input_evidence.py --tb=short`
+  - 5 passed.
+- `pytest -q tests/llm_orchestration/test_llm_astrology_input_boundaries.py tests/architecture/test_llm_astrology_input_payload_boundaries.py --tb=short`
+  - 10 passed.
+- `pytest -q tests/integration/test_llm_legacy_extinction.py --long --tb=short`
+  - 7 passed.
+- `python -S -B -c "from pathlib import Path; root=Path('_condamad/audits/prompt-generation-cartography'); assert any(root.glob('*/04-natal-astrology-input-audit.md'))"`
+  - PASS report path.
+- `python -S -B -c "import subprocess; subprocess.run(['git','diff','--quiet','--','backend/app','backend/tests','frontend/src'], check=True)"`
+  - PASS backend/app backend/tests frontend/src unchanged.
+- `ruff check .` depuis `backend`
+  - All checks passed.
+
+LIMITATION:
+- `pytest -q tests/integration/test_llm_legacy_extinction.py --tb=short` without `--long` deselects all 7 tests by repository pytest policy.
+- `ruff format .` non execute: l'audit est read-only sur le code applicatif et le skill interdit les formatters pour cette operation.

@@ -1,0 +1,10 @@
+Commentaire global: scan apres audit pour prouver que le code applicatif n'a pas ete modifie.
+
+Commandes sources:
+- git diff --quiet -- backend/app backend/tests frontend/src
+- rg -n "LLMAstrologyInputV1Builder|build_llm_input_hash_material|PROMPT_INFLUENCING_BLOCKS|LLM_ASTROLOGY_INPUT_DATA_ROLES" _condamad/audits/prompt-generation-cartography/2026-05-27-1835
+- rg -n "chart_json|natal_data|legacy carrier|forbidden carrier" _condamad/audits/prompt-generation-cartography/2026-05-27-1835
+
+Resultat:
+- PASS: aucune difference dans `backend/app`, `backend/tests`, ou `frontend/src`.
+- PASS: le rapport d'audit cite les builders, roles, hash helpers et carriers legacy requis.
