@@ -136,3 +136,4 @@
 | cs-354 | `_story_briefs\cs-354-archi-rapport-process-paralleles-legacy-generation-prompt-llm.md` | `_condamad\stories\cs-354-rapport-architecture-process-paralleles-legacy-prompt-llm\00-story.md` |
 | cs-355 | `_story_briefs\cs-355-audit-cloture-validation-document-cartographie-prompt-llm.md` | `_condamad\stories\cs-355-audit-cloture-validation-document-cartographie-prompt-llm\00-story.md` |
 | cs-356 | `_story_briefs\cs-356-documenter-construction-prompts-theme-astral-par-plan.md` | `_condamad\stories\cs-356-documenter-construction-prompts-theme-astral-par-plan\00-story.md` |
+| cs-357 | `_story_briefs\cs-357-ajouter-graphiques-mermaid-construction-prompts-theme-astral.md` | `_condamad\stories\cs-357-graphiques-mermaid-construction-prompts-theme-astral\00-story.md` |
