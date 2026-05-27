@@ -85,6 +85,17 @@ def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
     assert payload["facts"]["sign_profile_balances"]["polarities"][0]["code"] == "yang"
     assert payload["signals"]["interpretive_signal_codes"]["dignity_codes"] == ["mars"]
     assert payload["signals"]["readiness_flags"]["ready_for_narrative"] is True
+    assert payload["evidence"]["grounding_status"] == "grounded"
+    assert payload["evidence"]["evidence_refs"] == [
+        {
+            "section_id": "llm_astrology_input_v1",
+            "evidence_ref_id": "llm_astrology_input_v1.projection",
+            "source_type": "projection_version",
+            "source_id": "projection",
+            "source_version": "structured_facts_v1.contract.v1",
+            "source_hash": payload["provenance"]["projection_hash"],
+        }
+    ]
     json.dumps(payload, sort_keys=True)
 
 

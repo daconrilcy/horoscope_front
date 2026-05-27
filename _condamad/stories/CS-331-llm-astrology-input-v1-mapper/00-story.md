@@ -1,5 +1,5 @@
 # Story CS-331 llm-astrology-input-v1-mapper: Map Astrological Richness To llm_astrology_input_v1
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

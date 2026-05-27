@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: pass
-- Ready for review: yes
+- Ready for review: no; implementation review is clean and tracker is closed as done.
 - Story key: CS-331-llm-astrology-input-v1-mapper
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-331-llm-astrology-input-v1-mapper`
@@ -31,7 +31,7 @@
 | AC2 | Facts sourced from `structured_facts_v1`. | Unit assertions and AST import guard PASS. | PASS | No raw carrier source. |
 | AC3 | Signals sourced from `AINarrativeInputContract`. | Unit assertions and AST import guard PASS. | PASS | Readiness and masking included. |
 | AC4 | Limits include missing data and readiness gaps. | Missing-data unit test PASS. | PASS | Prompt-visible shape. |
-| AC5 | Evidence uses compact refs through validation owner. | Unit serialization and import guard PASS. | PASS | No verbose audit payload. |
+| AC5 | Evidence uses compact refs through validation owner. | Unit serialization and import guard PASS. | PASS | Grounded projection ref tied to structured_facts_v1 hash; no verbose audit payload. |
 | AC6 | Shaping remains metadata-only. | Disjoint ownership test PASS. | PASS | Facts exclude plan/module. |
 | AC7 | Complete natal fixture covered. | Complete mapping assertions PASS. | PASS | Positions, houses, aspects, balances, dominants. |
 | AC8 | Missing-data fixture covered. | Missing-data assertions PASS. | PASS | Empty sections explicit. |
@@ -65,7 +65,9 @@
 |---|---|---|---|
 | `ruff format app\domain\astrology\interpretation\structured_facts_v1_builder.py app\domain\astrology\interpretation\llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\architecture\test_llm_astrology_input_boundary.py` | `backend` | PASS | Scoped formatting applied. |
 | `ruff check .` | `backend` | PASS | All checks passed. |
+| `ruff check app\domain\astrology\interpretation\llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py` | `backend` | PASS | Review-fix scoped lint passed. |
 | `python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\unit\domain\astrology\test_structured_facts_v1_builder.py tests\architecture\test_llm_astrology_input_boundary.py --tb=short` | `backend` | PASS | 18 passed. |
+| `python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\architecture\test_llm_astrology_input_boundary.py --tb=short` | `backend` | PASS | 11 passed after review fix. |
 | `python -B -m pytest -q tests\architecture\test_astrology_doctrine_governance_guardrails.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py --tb=short` | `backend` | PASS | 10 passed. |
 | `python -B -m pytest -q tests --tb=short` | `backend` | PASS | 1172 passed, 215 deselected. |
 | `python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"` | `backend` | PASS | No OpenAPI exposure. |
@@ -81,6 +83,7 @@
 - One canonical mapper owner: `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`.
 - No compatibility shim, alias, fallback, public route, frontend path, DB path, migration, prompt template edit or provider integration.
 - Raw carriers remain excluded only: `ChartObjectRuntimeData`, `CalculationGraph`, `chart_json`, `natal_data`.
+- Evidence refs are no longer optional for the LLM input evidence block; the sample payload is grounded by a compact `projection_version` ref.
 
 ## Diff review
 

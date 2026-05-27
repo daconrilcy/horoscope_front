@@ -2,8 +2,17 @@
   "contract_id": "llm_astrology_input_v1",
   "contract_version": "llm_astrology_input_v1.contract.v1",
   "evidence": {
-    "evidence_refs": [],
-    "grounding_status": "not_checked",
+    "evidence_refs": [
+      {
+        "evidence_ref_id": "llm_astrology_input_v1.projection",
+        "section_id": "llm_astrology_input_v1",
+        "source_hash": "119c1484cccb03a1af0ac47fb3bf070d6f0d0854c4943d78efcaa50bca4bc19a",
+        "source_id": "projection",
+        "source_type": "projection_version",
+        "source_version": "structured_facts_v1.contract.v1"
+      }
+    ],
+    "grounding_status": "grounded",
     "validation_owner": "evidence_refs_validation.py"
   },
   "exclusions": {
@@ -209,7 +218,7 @@
         "shaping"
       ]
     },
-    "llm_input_hash": "9525c3f5ca260fc8ca69494715ddb76621036f785be82f372b43588d7a2a8e3c",
+    "llm_input_hash": "4cdd74baf69b82018e58ec5d92cf9627ac412b04f057451b9bceac432b57ac3f",
     "projection_hash": "119c1484cccb03a1af0ac47fb3bf070d6f0d0854c4943d78efcaa50bca4bc19a",
     "prompt_ref": "natal.astrology.compact.v1",
     "source_ids": {

@@ -8,3 +8,6 @@ Result: no matches; exit code 1 treated as PASS for this negative scan.
 
 PASS rg -n "ChartObjectRuntimeData|CalculationGraph|chart_json|natal_data" .\backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py .\backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py .\backend\tests\architecture\test_llm_astrology_input_boundary.py
 Result: hits only in explicit excluded_surfaces declarations and negative assertions.
+
+PASS Select-String sample-payload.json -Pattern "grounding_status|evidence_ref_id|source_hash"
+Result: sample payload contains grounded evidence with llm_astrology_input_v1.projection and the structured_facts_v1 projection hash.

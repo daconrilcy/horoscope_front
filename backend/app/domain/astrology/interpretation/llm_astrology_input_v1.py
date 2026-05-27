@@ -194,13 +194,21 @@ def _evidence_block(
     projection_hash: str,
 ) -> dict[str, Any]:
     """Valide les references de preuve sans embarquer l'audit detaille."""
+    compact_refs = tuple(evidence_refs) or (
+        {
+            "section_id": "llm_astrology_input_v1",
+            "evidence_ref_id": "llm_astrology_input_v1.projection",
+            "source_type": "projection_version",
+            "source_id": "projection",
+            "source_version": STRUCTURED_FACTS_V1_CONTRACT_VERSION,
+            "source_hash": projection_hash,
+        },
+    )
     validation = validate_evidence_refs_by_section(
         section_requirements=(
-            EvidenceSectionRequirement(
-                section_id="llm_astrology_input_v1", requires_evidence=False
-            ),
+            EvidenceSectionRequirement(section_id="llm_astrology_input_v1", requires_evidence=True),
         ),
-        evidence_refs=evidence_refs,
+        evidence_refs=compact_refs,
         authorized_sources=build_audit_source_proofs(
             projection_version=STRUCTURED_FACTS_V1_CONTRACT_VERSION,
             projection_hash=projection_hash,
@@ -209,7 +217,7 @@ def _evidence_block(
         ),
     )
     return {
-        "evidence_refs": [projection_value_to_jsonable(ref) for ref in evidence_refs],
+        "evidence_refs": [projection_value_to_jsonable(ref) for ref in compact_refs],
         "grounding_status": validation.grounding_status,
         "validation_owner": "evidence_refs_validation.py",
     }

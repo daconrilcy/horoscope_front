@@ -2,9 +2,16 @@ CS-331 validation evidence
 
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\structured_facts_v1_builder.py app\domain\astrology\interpretation\llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\architecture\test_llm_astrology_input_boundary.py
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\unit\domain\astrology\test_structured_facts_v1_builder.py tests\architecture\test_llm_astrology_input_boundary.py --tb=short
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\architecture\test_llm_astrology_input_boundary.py --tb=short
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\architecture\test_astrology_doctrine_governance_guardrails.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py --tb=short
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests --tb=short
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert all('llm_astrology' not in getattr(r, 'path', '') for r in app.routes)"
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-331-llm-astrology-input-v1-mapper\00-story.md
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-331-llm-astrology-input-v1-mapper\00-story.md
 
-Full suite result: 1172 passed, 215 deselected in 53.33s.
+Full suite result after review fix: 1172 passed, 215 deselected in 52.50s.
 Initial full suite issue: doctrine marker guard flagged sign_profile_balances constants in llm_astrology_input_v1.py; fixed by keeping emitted key stable while avoiding unclassified rule-marker AST constants/names in the domain module.
+Review fix issue: evidence block previously accepted empty refs with grounding_status not_checked; fixed by emitting a compact projection_version evidence_ref tied to the structured_facts_v1 projection hash and requiring evidence validation for llm_astrology_input_v1.
