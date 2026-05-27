@@ -14,7 +14,7 @@ Findings by severity:
 
 Story candidates:
 
-- 3 candidates: two documentation/governance corrections that can close the active document gaps, plus one guardrail candidate blocked until the matrix is accepted.
+- 4 candidates: three documentation corrections for CS-350 wording and process-matrix gaps, plus one guardrail candidate blocked until the matrix is accepted.
 
 Recommended next action:
 

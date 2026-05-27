@@ -70,7 +70,7 @@
 ### Exhaustive Files To Modify
 
 - Application files: none.
-- Governance/test files: none unless SC-003 is accepted after the matrix.
+- Governance/test files: none; the guardrail follow-up belongs to SC-004 after the matrix is accepted.
 - Documentation files: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`.
 - Before evidence artifacts required: CS-353 process audit, CS-353 story candidates, CS-354 architecture report.
 - After evidence artifacts required: process-term scan, blocker-term scan and bounded status scan.
@@ -87,7 +87,7 @@
 - Suggested archetype: governance-guardrail-hardening
 - Primary domain: prompt-generation-document-review
 - Required contracts: Reintroduction Guard, Persistent Evidence, Ownership Routing
-- Draft objective: After SC-002 or an equivalent accepted matrix exists, add one exact invariant to `_condamad/stories/regression-guardrails.md` protecting provider-capable, fallback, repair, bootstrap, admin, test, archival and debt classifications.
+- Draft objective: After SC-003 or an equivalent accepted matrix exists, add one exact invariant to `_condamad/stories/regression-guardrails.md` protecting provider-capable, fallback, repair, bootstrap, admin, test, archival and debt classifications.
 - Closure intent: full-closure after matrix acceptance.
 - Must include: exact CS-350 matrix surface, exact scan terms, no broad folder allowlist.
 - Validation hints: `rg -n "Guidance|Chat public|Horoscope daily|fallback|repair|bootstrap|admin|event_guidance|provider-capable" _condamad/docs/prompt-generation-cartography _condamad/stories/regression-guardrails.md`.
@@ -97,8 +97,8 @@
 
 - Application files: none.
 - Governance/test files: `_condamad/stories/regression-guardrails.md`.
-- Documentation files: none unless combined after SC-002.
-- Before evidence artifacts required: accepted CS-350 matrix and CS-353 F-004/SC-002.
+- Documentation files: none unless combined after SC-003.
+- Before evidence artifacts required: accepted CS-350 matrix, CS-353 F-004 and CS-353 SC-002.
 - After evidence artifacts required: exact new guardrail row and targeted scans.
 - Ownership routing decisions expected: guardrail registry remains the only durable invariant registry.
 - Mandatory no-wildcard allowlist and No Legacy checks: no wildcard allowlist; exact surface and terms only.

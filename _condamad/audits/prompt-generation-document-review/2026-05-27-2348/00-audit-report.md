@@ -79,17 +79,18 @@ Reason: the current CS-350 final document is available, but required corrections
 | Finding | Status | Story route | Evidence |
 |---|---|---|---|
 | F-001 | open | SC-001 | E-005, E-007, E-008 |
-| F-002 | open | SC-001 | E-005, E-007, E-008 |
-| F-003 | open | SC-002 | E-006, E-009, E-012 |
+| F-002 | open | SC-002 | E-005, E-007, E-008 |
+| F-003 | open | SC-003 | E-006, E-009, E-012 |
 | F-004 | blocked | needs-user-decision | E-009, E-012 |
 | F-005 | blocked | needs-user-decision | E-009, E-012 |
-| F-006 | phased-with-map | SC-003 after SC-002 | E-003, E-011, E-012 |
+| F-006 | phased-with-map | SC-004 after SC-003 | E-003, E-011, E-012 |
 
 ## Active Implementation Findings
 
 | Finding | Complete surface | Implementation files | Governance/test files | Stop condition |
 |---|---|---|---|---|
-| F-001/F-002 | CS-350 wording around prompt-visible/backend-only/provider metadata and persistence audit sections | none | `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` | Exact wording scan passes and app status stays clean. |
+| F-001 | CS-350 wording around validation-owned evidence and audit persistence sections | none | `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` | Exact `validation-owned` / `audit-only anchors` wording scan passes and app status stays clean. |
+| F-002 | CS-350 wording around runtime/provider-only metadata and prompt visibility | none | `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` | Exact `runtime/provider-only metadata` / `not prompt-visible payload` wording scan passes and app status stays clean. |
 | F-003 | CS-350 process classification matrix | none | `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` | Every CS-353 process is classified or explicitly blocked/accepted. |
 | F-006 | Guardrail registry after matrix acceptance | none | `_condamad/stories/regression-guardrails.md` | Exact invariant names accepted matrix and required scan terms. |
 
