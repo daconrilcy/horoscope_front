@@ -30,7 +30,7 @@ async def test_gateway_composes_4_layers():
     await gateway.execute(
         use_case=use_case,
         user_input={"locale": "fr"},
-        context={"chart_json": "{}"},
+        context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}},
         request_id="r1",
         trace_id="t1",
         flags={"test_fallback_active": True},

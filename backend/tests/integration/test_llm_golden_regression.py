@@ -379,7 +379,7 @@ async def test_golden_regression_campaign_invalid_when_manifest_unresolved():
 
 
 @pytest.mark.asyncio
-async def test_golden_regression_projects_chart_json_into_context():
+async def test_golden_regression_projects_llm_astrology_input_into_context():
     captured: dict[str, object] = {}
 
     mock_result = MagicMock(spec=GatewayResult)
@@ -436,4 +436,8 @@ async def test_golden_regression_projects_chart_json_into_context():
     assert captured["feature"] == "natal"
     assert captured["subfeature"] == "interpretation"
     assert captured["plan"] == "free"
-    assert captured["context"].chart_json == "{}"
+    assert captured["context"].chart_json is None
+    assert captured["context"].natal_data is None
+    assert captured["context"].extra_context["llm_astrology_input_v1"]["contract_id"] == (
+        "llm_astrology_input_v1"
+    )

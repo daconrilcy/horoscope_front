@@ -1,3 +1,4 @@
+# Service de regression golden pour rejouer les campagnes LLM avec un contexte canonique.
 from __future__ import annotations
 
 import logging
@@ -42,6 +43,7 @@ class GoldenRegressionService:
         "conversation_id",
         "persona_id",
         "evidence_catalog",
+        "llm_astrology_input_v1",
         "validation_strict",
     }
 

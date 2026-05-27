@@ -5,9 +5,14 @@
     feature: "natal"
     subfeature: "interpretation"
     plan: "free"
-    chart_json: "{}"
-    natal_data: {}
-    evidence_catalog: []
+    llm_astrology_input_v1:
+      contract_id: "llm_astrology_input_v1"
+      facts: {}
+      signals: {}
+      evidence: {}
+      limits: {}
+      shaping: {}
+      provenance: {}
     level: "short"
     user_id: 123
   baseline:

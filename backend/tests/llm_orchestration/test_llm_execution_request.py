@@ -78,7 +78,9 @@ async def test_execute_request_basic(db):
     gateway = LLMGateway()
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(use_case="test_natal", locale="fr-FR"),
-        context=ExecutionContext(chart_json='{"planets": []}'),
+        context=ExecutionContext(
+            extra_context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}}
+        ),
         request_id="test-req",
         trace_id="test-trace",
         flags={"test_fallback_active": True},

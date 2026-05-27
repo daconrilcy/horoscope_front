@@ -1,0 +1,1622 @@
+app/tests\fixtures\intraday_qa_fixtures.py:227:def get_transition_day() -> dict[str, Any]:
+app/tests\fixtures\intraday_qa_fixtures.py:229:    Scénario transition_day : un événement moon_sign_ingress priority >= 65
+app/tests\regression\helpers.py:37:        legacy_output = engine_output.to_engine_output()
+app/tests\regression\helpers.py:38:        run_metadata = dict(legacy_output.run_metadata)
+app/tests\regression\helpers.py:42:            legacy_output,
+app/tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:9:    NatalExecutionInput,
+app/tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:54:                "app.services.llm_generation.natal.interpretation_service.build_chart_json"
+app/tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:76:            assert isinstance(natal_input, NatalExecutionInput)
+app/tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:105:                "app.services.llm_generation.natal.interpretation_service.build_chart_json"
+app/tests\unit\services\test_consultation_precheck_service.py:65:    assert result.fallback_mode == "user_no_birth_time"
+app/tests\unit\services\test_consultation_precheck_service.py:97:    assert result.fallback_mode == "safeguard_reframed"
+app/tests\unit\services\test_consultation_fallback_service.py:7:from app.services.consultation.fallback_service import ConsultationFallbackService
+app/tests\unit\services\test_consultation_fallback_service.py:31:        fallback_mode=FallbackMode.user_no_birth_time,
+app/tests\unit\services\test_consultation_fallback_service.py:58:        fallback_mode=FallbackMode.relation_user_only,
+app/tests\unit\legacy_services\test_ai_engine_adapter_refacto.py:30:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+app/tests\unit\legacy_services\test_ai_engine_adapter_refacto.py:61:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+app/tests\unit\legacy_services\test_ai_engine_adapter_refacto.py:93:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+app/tests\unit\legacy_services\test_ai_engine_adapter_refacto.py:113:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+app/tests\unit\legacy_services\test_ai_engine_adapter_refacto.py:136:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+app/tests\unit\legacy_services\legacy_natal_interpretation_service.py:366:                from app.domain.llm.runtime.contracts import NatalExecutionInput
+app/tests\unit\legacy_services\legacy_natal_interpretation_service.py:368:                natal_input = NatalExecutionInput(
+app/tests\unit\legacy_services\legacy_natal_interpretation_service.py:386:            # Extract structured sections or fallback to raw
+app/tests\eval_fixtures\natal_interpretation_short\fixture_03_minimal.yaml:4:    chart_json:
+app/tests\eval_fixtures\natal_interpretation_short\fixture_03_minimal.yaml:16:        chart_json_version: "1"
+app/tests\eval_fixtures\natal_interpretation_short\fixture_02_no_time.yaml:4:    chart_json:
+app/tests\eval_fixtures\natal_interpretation_short\fixture_02_no_time.yaml:16:        chart_json_version: "1"
+app/tests\unit\prediction\test_turning_point_semantics.py:107:    # Midnight transition
+tests\architecture\test_ai_narrative_input_boundary.py:28:FORBIDDEN_PROVIDER_NAMES = {"OpenAI", "AIEngineAdapter", "LLMGateway"}
+app/tests\eval_fixtures\natal_interpretation_short\fixture_01_full_chart.yaml:4:    chart_json:
+app/tests\eval_fixtures\natal_interpretation_short\fixture_01_full_chart.yaml:16:        chart_json_version: "1"
+app/tests\golden\__init__.py:227:def get_transition_day() -> dict[str, Any]:
+app/tests\golden\__init__.py:229:    Scénario transition_day : un événement moon_sign_ingress priority >= 65
+app/tests\unit\prediction\test_public_projection_evidence.py:170:        overall_summary="legacy summary",
+app/tests\unit\prediction\test_public_projection_evidence.py:215:        overall_summary="legacy summary",
+app/tests\unit\prediction\test_public_projection_evidence.py:270:        overall_summary="legacy summary",
+tests\architecture\test_aspect_runtime_boundary.py:47:        "legacy projection",
+tests\architecture\test_api_contract_neutrality.py:128:    assert "fallback" in document
+tests\architecture\test_api_contract_neutrality.py:364:def test_aspect_public_result_schema_does_not_expose_legacy_interpretive_fields() -> None:
+tests\architecture\test_api_contract_neutrality.py:377:def test_aspect_public_result_dump_does_not_expose_legacy_interpretive_fields() -> None:
+tests\architecture\test_api_contract_neutrality.py:378:    """Les sorties `AspectResult.model_dump()` ignorent les aliases plats legacy."""
+tests\architecture\test_chart_runtime_surface_documentation.py:29:    "legacy",
+tests\architecture\test_chart_runtime_surface_documentation.py:48:    """Chaque surface de transition est classee dans l'inventaire."""
+tests\architecture\test_astrology_runtime_boundary.py:214:        "legacy projection",
+tests\architecture\test_chart_runtime_surface_guardrails.py:1:# Tests d'architecture contre le retour aux surfaces runtime legacy.
+tests\architecture\test_chart_runtime_surface_guardrails.py:27:        "Service interpretatif legacy existant; migration future vers chart_objects."
+tests\architecture\test_chart_runtime_surface_guardrails.py:56:def test_domain_code_does_not_read_legacy_surfaces_from_natal_result() -> None:
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:49:    assert {"chart_json", "natal_data", "provider_response"}.isdisjoint(assigned_blocks)
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:57:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+tests\architecture\test_llm_legacy_extinction.py:2:"""Verifie que le runtime natal ne reactive pas les surfaces d'injection legacy."""
+tests\architecture\test_llm_legacy_extinction.py:10:from app.domain.llm.runtime.contracts import NatalExecutionInput
+tests\architecture\test_llm_legacy_extinction.py:21:FORBIDDEN_NATAL_CARRIERS = {"chart_json", "natal_data", "evidence_catalog"}
+tests\architecture\test_llm_legacy_extinction.py:25:    """Collecte les constantes texte d'un fichier pour inspecter les branches legacy."""
+tests\architecture\test_llm_legacy_extinction.py:35:def test_natal_execution_input_has_no_legacy_prompt_carrier_fields() -> None:
+tests\architecture\test_llm_legacy_extinction.py:38:    assert FORBIDDEN_NATAL_CARRIERS.isdisjoint(NatalExecutionInput.model_fields)
+tests\architecture\test_llm_legacy_extinction.py:39:    assert "llm_astrology_input_v1" in NatalExecutionInput.model_fields
+tests\architecture\test_llm_legacy_extinction.py:42:def test_natal_adapter_does_not_forward_legacy_prompt_carriers() -> None:
+tests\architecture\test_llm_legacy_extinction.py:49:    assert "natal_data=" not in natal_method
+tests\architecture\test_llm_legacy_extinction.py:50:    assert "chart_json=" not in natal_method
+tests\architecture\test_llm_legacy_extinction.py:51:    assert "evidence_catalog=" not in natal_method
+tests\architecture\test_llm_legacy_extinction.py:54:def test_gateway_has_no_natal_transition_carrier_registry() -> None:
+tests\architecture\test_llm_legacy_extinction.py:55:    """Aucune branche de transition natal ne liste les anciens carriers prompt."""
+tests\architecture\test_llm_legacy_extinction.py:62:        "Transition legacy: seuls les schemas anciens peuvent encore demander chart_json."
+tests\architecture\test_llm_legacy_extinction.py:68:def test_natal_preview_variables_exclude_legacy_carriers() -> None:
+tests\architecture\test_llm_legacy_extinction.py:78:    assert '"chart_json"' not in natal_preview_block
+tests\architecture\test_llm_legacy_extinction.py:79:    assert '"natal_data"' not in natal_preview_block
+tests\architecture\test_llm_legacy_extinction.py:82:def test_natal_prompt_governance_family_excludes_legacy_carriers() -> None:
+tests\architecture\test_llm_legacy_extinction.py:91:    assert natal_placeholders.isdisjoint({"chart_json", "natal_data"})
+tests\architecture\test_llm_astrology_input_runtime_boundary.py:36:    """Le contrat type expose le champ riche uniquement sur NatalExecutionInput."""
+tests\architecture\test_llm_astrology_input_runtime_boundary.py:47:    assert "llm_astrology_input_v1" in class_fields["NatalExecutionInput"]
+app/tests\integration\test_admin_ai_api.py:204:                    use_case="legacy_chat_runtime",
+app/tests\integration\test_admin_ai_api.py:252:def test_get_use_case_detail_legacy_removed_is_explicitly_bounded(admin_token):
+app/tests\integration\test_admin_ai_api.py:267:                    request_id="req-legacy-bounded",
+app/tests\integration\test_admin_ai_api.py:268:                    trace_id="trace-legacy-bounded",
+app/tests\integration\test_admin_ai_api.py:269:                    input_hash="hash-legacy-bounded",
+app/tests\integration\test_admin_ai_api.py:283:                    request_id="req-legacy-ignored",
+app/tests\integration\test_admin_ai_api.py:284:                    trace_id="trace-legacy-ignored",
+app/tests\integration\test_admin_ai_api.py:285:                    input_hash="hash-legacy-ignored",
+app/tests\integration\test_admin_ai_api.py:293:        "/v1/admin/ai/metrics/legacy_removed?period=30d",
+app/tests\integration\test_admin_ai_api.py:299:    assert data["use_case"] == "legacy_removed"
+app/tests\eval_fixtures\natal_interpretation\fixture_04_minimal.yaml:4:    chart_json:
+app/tests\eval_fixtures\natal_interpretation\fixture_04_minimal.yaml:16:        chart_json_version: "1"
+tests\architecture\test_structural_runtime_boundary.py:33:    """AST guard: les facades structurelles ne portent plus d'alias legacy."""
+app/tests\eval_fixtures\natal_interpretation\fixture_03_no_location.yaml:4:    chart_json:
+app/tests\eval_fixtures\natal_interpretation\fixture_03_no_location.yaml:16:        chart_json_version: "1"
+app/tests\integration\test_admin_answer_audit_contract.py:105:    """Confirme qu'aucun fallback silencieux ne repond sur le chemin contractuel."""
+app/tests\eval_fixtures\natal_interpretation\fixture_02_no_time.yaml:4:    chart_json:
+app/tests\eval_fixtures\natal_interpretation\fixture_02_no_time.yaml:16:        chart_json_version: "1"
+tests\architecture\test_replay_snapshot_v1_execution_boundary.py:25:    assert "LLMGateway" not in names
+tests\evaluation\evaluation_matrix.yaml:46:  # Story 66.24: Paths with transitional governance (now canonical via Story 66.28)
+tests\llm_orchestration\test_gateway_pipeline.py:16:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_gateway_pipeline.py:22:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_pipeline.py:65:        gateway._resolve_fallback_use_case_config = AsyncMock(
+tests\llm_orchestration\test_gateway_pipeline.py:84:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_pipeline.py:142:        gateway._resolve_fallback_use_case_config = AsyncMock(
+tests\llm_orchestration\test_gateway_pipeline.py:169:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_pipeline.py:188:    gateway = LLMGateway()
+tests\evaluation\conftest.py:56:            "natal_data": {"planets": {"sun": "aries"}},
+tests\evaluation\conftest.py:57:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+tests\evaluation\conftest.py:70:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+tests\evaluation\report_generator.py:19:    transitional_failures = 0
+tests\evaluation\report_generator.py:34:        if val == "transitional_governance":
+tests\evaluation\report_generator.py:57:                transitional_failures += 1
+tests\evaluation\report_generator.py:90:        f"- **Transitional Failures**: {transitional_failures} (ALERTE)\n"
+tests\evaluation\test_differentiation.py:7:from app.domain.llm.runtime.gateway import LLMGateway
+tests\evaluation\test_differentiation.py:75:    gateway = LLMGateway()
+tests\evaluation\test_differentiation.py:172:    gateway = LLMGateway()
+app/tests\eval_fixtures\natal_interpretation\fixture_01_full.yaml:4:    chart_json:
+app/tests\eval_fixtures\natal_interpretation\fixture_01_full.yaml:16:        chart_json_version: "1"
+tests\evaluation\__init__.py:112:    logger.info("llm_registry_legacy_seed_disabled")
+tests\evaluation\__init__.py:120:    old explicit legacy reseed flag: published prompts/use-cases/personas are
+tests\evaluation\__init__.py:231:        logger.debug("canonical_llm_bootstrap_auto_heal_concurrent_skip")
+tests\llm_orchestration\test_gateway_model_override.py:7:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_gateway_model_override.py:32:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_gateway_model_override.py:41:            flags={"test_fallback_active": True},
+tests\llm_orchestration\test_gateway_model_override.py:68:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_gateway_model_override.py:77:            flags={"test_fallback_active": True},
+tests\llm_orchestration\test_gateway_model_override.py:104:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_gateway_model_override.py:113:            flags={"test_fallback_active": True},
+tests\evaluation\test_prompt_resolution.py:9:from app.domain.llm.runtime.gateway import LLMGateway
+tests\evaluation\test_prompt_resolution.py:140:        gateway = LLMGateway()
+tests\evaluation\test_prompt_resolution.py:160:            natal_data=ctx_data.get("natal_data"),
+tests\evaluation\test_prompt_resolution.py:240:                    "nominal_canonical" if is_supported_feature(feat) else "transitional_governance"
+tests\llm_orchestration\test_output_validator_pipeline.py:71:    res = validate_output(raw, schema, evidence_catalog=catalog, schema_version="v1")
+tests\llm_orchestration\test_llm_gateway_routing.py:16:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+app/tests\integration\test_admin_exports_api.py:186:                use_case="legacy_chat_alias",
+app/tests\integration\test_admin_exports_api.py:271:def test_export_generations_csv_reclassifies_legacy_use_case_to_canonical_feature(
+app/tests\integration\test_admin_exports_api.py:279:                subfeature="legacy_unknown",
+app/tests\integration\test_admin_exports_api.py:287:                request_id="req-export-legacy",
+app/tests\integration\test_admin_exports_api.py:288:                trace_id="trace-export-legacy",
+app/tests\integration\test_admin_exports_api.py:289:                input_hash="hash-export-legacy",
+app/tests\integration\test_admin_exports_api.py:303:    assert "natal,legacy_unknown,free" in response.text
+app/tests\integration\test_admin_exports_api.py:304:    assert "legacy_residual" in response.text
+tests\llm_orchestration\test_gateway_meta_enrichi.py:11:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_gateway_meta_enrichi.py:16:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_meta_enrichi.py:72:def test_build_result_test_fallback_path():
+tests\llm_orchestration\test_gateway_meta_enrichi.py:73:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_meta_enrichi.py:99:        flags=ExecutionFlags(test_fallback_active=True),
+tests\llm_orchestration\test_gateway_meta_enrichi.py:106:    assert final.meta.execution_path == "test_fallback"
+tests\llm_orchestration\test_gateway_meta_enrichi.py:109:def test_build_result_fallback_path():
+tests\llm_orchestration\test_gateway_meta_enrichi.py:110:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_meta_enrichi.py:123:    # Simulated fallback
+tests\llm_orchestration\test_gateway_meta_enrichi.py:124:    fallback_res = GatewayResult(
+tests\llm_orchestration\test_gateway_meta_enrichi.py:125:        use_case="uc-fallback",
+tests\llm_orchestration\test_gateway_meta_enrichi.py:132:    recovery = RecoveryResult(result=fallback_res, fallback_reason="schema_error")
+tests\llm_orchestration\test_gateway_meta_enrichi.py:144:    assert final.meta.execution_path == "fallback_use_case"
+tests\llm_orchestration\test_gateway_meta_enrichi.py:145:    assert final.meta.fallback_reason == "schema_error"
+tests\llm_orchestration\test_gateway_meta_enrichi.py:146:    assert final.meta.fallback_triggered is True
+tests\llm_orchestration\test_llm_unification.py:7:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_llm_unification.py:68:    gateway = LLMGateway()
+tests\llm_orchestration\test_llm_unification.py:183:    gateway = LLMGateway()
+app/tests\integration\test_admin_llm_canonical_consumption_api.py:42:        fallback_triggered=False,
+tests\llm_orchestration\test_llm_gateway_compose.py:6:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_llm_gateway_compose.py:28:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_llm_gateway_compose.py:33:        context={"chart_json": "{}"},
+tests\llm_orchestration\test_llm_gateway_compose.py:36:        flags={"test_fallback_active": True},
+tests\llm_orchestration\test_llm_gateway_compose.py:70:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_llm_gateway_compose.py:78:        flags={"test_fallback_active": True},
+tests\llm_orchestration\test_llm_gateway_compose.py:105:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_llm_gateway_compose.py:113:        flags={"test_fallback_active": True},
+tests\llm_orchestration\test_llm_legacy_extinction.py:9:    build_fallback_use_case_config,
+tests\llm_orchestration\test_llm_legacy_extinction.py:29:def test_supported_use_cases_are_absent_from_prompt_fallback_configs() -> None:
+tests\llm_orchestration\test_llm_legacy_extinction.py:36:def test_supported_use_cases_do_not_build_fallback_config(use_case_key: str) -> None:
+tests\llm_orchestration\test_llm_legacy_extinction.py:37:    """Verifie que le builder ne recree pas de config fallback supportee."""
+tests\llm_orchestration\test_llm_legacy_extinction.py:39:    assert build_fallback_use_case_config(use_case_key) is None
+tests\llm_orchestration\test_gateway_errors.py:4:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_gateway_errors.py:11:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_errors.py:22:    with patch.object(gateway, "_resolve_fallback_use_case_config", return_value=dummy_config):
+app/tests\integration\test_admin_llm_natal_prompts.py:209:    def test_publish_prompt_forbidden_for_legacy_daily_prediction(self, test_client, mock_db):
+app/tests\integration\test_admin_llm_natal_prompts.py:221:    def test_rollback_prompt_forbidden_for_legacy_daily_prediction(self, test_client, mock_db):
+app/tests\integration\test_admin_llm_config_api.py:144:def test_admin_prompt_create_draft_rejects_frozen_prompt_local_fallback():
+app/tests\integration\test_admin_llm_config_api.py:155:            "fallback_use_case_key": "legacy_fallback",
+app/tests\integration\test_admin_llm_config_api.py:171:                    use_case="legacy_chat_alias",
+app/tests\integration\test_admin_llm_config_api.py:187:                    use_case="legacy_guidance_alias",
+app/tests\integration\test_admin_llm_config_api.py:214:def test_admin_dashboard_groups_by_canonical_feature_with_bounded_legacy_bucket():
+app/tests\integration\test_admin_llm_config_api.py:223:                    use_case="legacy_chat_alias",
+app/tests\integration\test_admin_llm_config_api.py:249:                    request_id="req-dashboard-legacy",
+app/tests\integration\test_admin_llm_config_api.py:250:                    trace_id="trace-dashboard-legacy",
+app/tests\integration\test_admin_llm_config_api.py:251:                    input_hash="hash-dashboard-legacy",
+app/tests\integration\test_admin_llm_config_api.py:263:    assert "legacy_removed" in data
+app/tests\integration\test_admin_llm_config_api.py:265:    assert data["legacy_removed"]["request_count"] == 1
+tests\llm_orchestration\test_execution_profile_taxonomy.py:22:    """Test Story 66.23: AssemblyRegistry REJETTE les clés legacy (AC11)."""
+tests\llm_orchestration\test_execution_profile_taxonomy.py:35:    # Reject nominal legacy feature (AC4, AC10)
+tests\llm_orchestration\test_execution_profile_taxonomy.py:42:    # BUT tolerate legacy subfeature with canonical feature (normalization only)
+tests\llm_orchestration\test_execution_profile_taxonomy.py:60:    """Test Story 66.23: ExecutionProfileRegistry REJETTE les clés legacy (AC11)."""
+tests\llm_orchestration\test_execution_profile_taxonomy.py:71:    # Reject nominal legacy feature (AC4, AC10)
+tests\llm_orchestration\test_execution_profile_taxonomy.py:78:    # Telerate legacy subfeature
+tests\llm_orchestration\test_execution_profile_taxonomy.py:94:    """Test Story 66.23: AssemblyAdminService REJETTE les clés legacy sur create (AC11)."""
+tests\llm_orchestration\test_execution_profile_taxonomy.py:98:    # Rejette feature legacy
+tests\llm_orchestration\test_execution_profile_taxonomy.py:121:    # Normalise subfeature legacy
+tests\llm_orchestration\test_execution_profile_taxonomy.py:122:    config_sub_legacy = PromptAssemblyConfig(
+tests\llm_orchestration\test_execution_profile_taxonomy.py:138:            await service.create_draft(config_sub_legacy, "admin@test.com")
+tests\llm_orchestration\test_execution_profile_taxonomy.py:145:    """Test Story 66.23: ExecutionProfile validation REJETTE les clés legacy (AC11)."""
+tests\llm_orchestration\test_prompt_governance_registry.py:24:    build_fallback_use_case_config,
+tests\llm_orchestration\test_prompt_governance_registry.py:26:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_prompt_governance_registry.py:45:    / "classify-converge-remaining-prompt-fallbacks"
+tests\llm_orchestration\test_prompt_governance_registry.py:46:    / "fallback-classification.md"
+tests\llm_orchestration\test_prompt_governance_registry.py:127:    assert GOVERNED_LEGACY_FEATURE_ALIASES_TO_CANONICAL == reg.legacy_nominal_feature_aliases_map()
+tests\llm_orchestration\test_prompt_governance_registry.py:130:def test_prompt_fallback_config_exceptions_are_exact() -> None:
+tests\llm_orchestration\test_prompt_governance_registry.py:131:    """Verifie que les exceptions fallback restent explicites et auditees."""
+tests\llm_orchestration\test_prompt_governance_registry.py:133:    fallback_keys = frozenset(PROMPT_FALLBACK_CONFIGS)
+tests\llm_orchestration\test_prompt_governance_registry.py:134:    assert fallback_keys == _ALLOWED_PROMPT_FALLBACK_CONFIG_KEYS
+tests\llm_orchestration\test_prompt_governance_registry.py:135:    assert fallback_keys.isdisjoint(_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS)
+tests\llm_orchestration\test_prompt_governance_registry.py:139:def test_converged_prompt_fallback_keys_do_not_build_config(use_case_key: str) -> None:
+tests\llm_orchestration\test_prompt_governance_registry.py:140:    """Bloque le retour executable des prompts fallback converges."""
+tests\llm_orchestration\test_prompt_governance_registry.py:142:    assert build_fallback_use_case_config(use_case_key) is None
+tests\llm_orchestration\test_prompt_governance_registry.py:145:def test_fallback_classification_audit_covers_every_reviewed_key() -> None:
+tests\llm_orchestration\test_prompt_governance_registry.py:146:    """Verifie que l'audit persistant liste chaque decision de fallback."""
+tests\llm_orchestration\test_prompt_governance_registry.py:214:    rendered = PromptRenderer.render(
+tests\llm_orchestration\test_prompt_governance_registry.py:230:    rendered = PromptRenderer.render(
+tests\llm_orchestration\test_prompt_governance_registry.py:273:            "scope": "placeholder:legacy_only_ph;family:chat;rule:GOV_PH_NOT_IN_REGISTRY",
+tests\llm_orchestration\test_prompt_governance_registry.py:282:            "X {{legacy_only_ph}}", "guidance", source="test"
+tests\llm_orchestration\test_prompt_governance_registry.py:284:        assert invalid == ["legacy_only_ph"]
+tests\llm_orchestration\test_prompt_governance_registry.py:317:        rendered = PromptRenderer.render(
+tests\llm_orchestration\test_prompt_governance_registry.py:411:                "placeholder:legacy_only_ph;family:daily_prediction;rule:gov_ph_not_in_registry"
+tests\llm_orchestration\test_prompt_governance_registry.py:421:            placeholder="legacy_only_ph",
+tests\llm_orchestration\test_llm_execution_request.py:14:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_llm_execution_request.py:35:def test_legacy_dicts_to_request_chat():
+tests\llm_orchestration\test_llm_execution_request.py:44:    request = LLMGateway._legacy_dicts_to_request(
+tests\llm_orchestration\test_llm_execution_request.py:57:def test_legacy_dicts_to_request_visited_migration():
+tests\llm_orchestration\test_llm_execution_request.py:59:    request = LLMGateway._legacy_dicts_to_request(
+tests\llm_orchestration\test_llm_execution_request.py:78:    gateway = LLMGateway()
+tests\llm_orchestration\test_llm_execution_request.py:81:        context=ExecutionContext(chart_json='{"planets": []}'),
+tests\llm_orchestration\test_llm_execution_request.py:84:        flags={"test_fallback_active": True},
+tests\llm_orchestration\test_llm_execution_request.py:109:        "natal_data": {},
+tests\llm_orchestration\test_llm_execution_request.py:113:    request = LLMGateway._legacy_dicts_to_request("uc", {}, context, "r", "t")
+tests\llm_orchestration\test_llm_execution_request.py:116:    assert "natal_data" not in request.context.extra_context
+tests\llm_orchestration\test_execution_profiles.py:7:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_execution_profiles.py:41:    gateway = LLMGateway()
+tests\llm_orchestration\test_execution_profiles.py:55:    # Test fallback to feature (plan free not defined)
+tests\llm_orchestration\test_execution_profiles.py:110:    gateway = LLMGateway()
+tests\unit\test_replay_snapshot_v1_execution_audit.py:263:        monkeypatch.setattr("app.domain.llm.runtime.gateway.LLMGateway", _SuccessfulGateway)
+tests\unit\test_replay_snapshot_v1_execution_audit.py:286:        monkeypatch.setattr("app.domain.llm.runtime.gateway.LLMGateway", _FailingGateway)
+tests\unit\test_replay_snapshot_v1_execution_audit.py:311:        monkeypatch.setattr("app.domain.llm.runtime.gateway.LLMGateway", _SuccessfulGateway)
+tests\llm_orchestration\test_llm_convergence.py:7:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_llm_convergence.py:91:    gateway = LLMGateway()
+tests\llm_orchestration\test_llm_convergence.py:113:    gateway = LLMGateway()
+tests\llm_orchestration\test_llm_convergence.py:134:    gateway = LLMGateway()
+tests\llm_orchestration\test_llm_convergence.py:157:async def test_assembly_fallback_to_use_case(db, caplog):
+tests\llm_orchestration\test_llm_convergence.py:160:    gateway = LLMGateway()
+tests\llm_orchestration\test_llm_convergence.py:167:        request_id="req-fallback",
+tests\llm_orchestration\test_llm_convergence.py:168:        trace_id="tr-fallback",
+tests\llm_orchestration\test_llm_convergence.py:174:        gateway._resolve_fallback_use_case_config = AsyncMock(
+tests\llm_orchestration\test_llm_convergence.py:185:    # It should fallback to resolve_model (legacy behavior)
+tests\llm_orchestration\test_llm_convergence.py:186:    assert plan.model_source in ["os_granular", "os_legacy", "config", "stub"]
+tests\llm_orchestration\test_llm_convergence.py:189:    assert plan.execution_profile_source == "fallback_resolve_model"
+tests\llm_orchestration\test_placeholder_validation.py:2:"""Verifie les comportements requis, optionnels et fallback du renderer."""
+tests\llm_orchestration\test_placeholder_validation.py:6:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_placeholder_validation.py:16:        PromptRenderer.render(template, vars, feature="natal")
+tests\llm_orchestration\test_placeholder_validation.py:27:    rendered = PromptRenderer.render(template, vars, feature="chat")
+tests\llm_orchestration\test_placeholder_validation.py:39:    rendered = PromptRenderer.render(template, vars, feature="chat")
+tests\llm_orchestration\test_placeholder_validation.py:46:def test_placeholder_optional_fallback(caplog):
+tests\llm_orchestration\test_placeholder_validation.py:47:    """Test Story 66.13: Optional with fallback used."""
+tests\llm_orchestration\test_placeholder_validation.py:54:        rendered = PromptRenderer.render(template, vars, feature="chat")
+tests\llm_orchestration\test_placeholder_validation.py:57:    assert "placeholder_fallback_used" in caplog.text
+tests\llm_orchestration\test_placeholder_validation.py:65:    rendered = PromptRenderer.render(template, vars, feature="chat")
+tests\llm_orchestration\test_placeholder_validation.py:76:    rendered = PromptRenderer.render(template, vars, feature="chat")
+tests\llm_orchestration\test_length_budgets.py:7:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_length_budgets.py:62:    gateway = LLMGateway()
+tests\llm_orchestration\test_catalog_resolution.py:20:def test_resolve_model_priority_granular_vs_legacy():
+tests\llm_orchestration\test_catalog_resolution.py:24:    legacy_key = "LLM_MODEL_OVERRIDE_GUIDANCE_DAILY"
+tests\llm_orchestration\test_catalog_resolution.py:27:    legacy_model = "gpt-legacy"
+tests\llm_orchestration\test_catalog_resolution.py:29:    with patch.dict(os.environ, {granular_key: granular_model, legacy_key: legacy_model}):
+tests\llm_orchestration\test_catalog_resolution.py:34:def test_resolve_model_fallback_to_legacy():
+tests\llm_orchestration\test_catalog_resolution.py:35:    """Verify fallback to Legacy if Granular is missing."""
+tests\llm_orchestration\test_catalog_resolution.py:37:    legacy_key = "LLM_MODEL_OVERRIDE_GUIDANCE_DAILY"
+tests\llm_orchestration\test_catalog_resolution.py:38:    legacy_model = "gpt-legacy"
+tests\llm_orchestration\test_catalog_resolution.py:43:    with patch.dict(os.environ, {legacy_key: legacy_model}):
+tests\llm_orchestration\test_catalog_resolution.py:47:        assert resolved == legacy_model
+tests\llm_orchestration\test_catalog_resolution.py:50:def test_resolve_model_fallback_to_provided_fallback():
+tests\llm_orchestration\test_catalog_resolution.py:51:    """Verify fallback to provided fallback_model."""
+tests\llm_orchestration\test_catalog_resolution.py:53:    fallback_model = "gpt-fallback-from-db"
+tests\llm_orchestration\test_catalog_resolution.py:57:        resolved = resolve_model(use_case, fallback_model=fallback_model)
+tests\llm_orchestration\test_catalog_resolution.py:58:        assert resolved == fallback_model
+tests\llm_orchestration\test_catalog_resolution.py:62:    """Verify fallback to settings default."""
+tests\llm_orchestration\test_catalog_resolution.py:68:        resolved = resolve_model(use_case, fallback_model=None)
+tests\llm_orchestration\test_narrator_migration.py:45:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+tests\llm_orchestration\test_narrator_migration.py:86:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+tests\llm_orchestration\test_narrator_migration.py:126:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+tests\llm_orchestration\test_narrator_migration.py:164:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+tests\llm_orchestration\test_narrator_migration.py:212:            "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+tests\llm_orchestration\test_narrator_migration.py:248:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+tests\llm_orchestration\test_narrator_migration.py:271:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request", new_callable=AsyncMock
+tests\llm_orchestration\test_narrator_migration.py:388:    from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_narrator_migration.py:392:    rendered = PromptRenderer.render(template, vars, feature="horoscope_daily")
+tests\llm_orchestration\test_narrator_migration.py:397:    rendered_unknown = PromptRenderer.render(template_unknown, vars, feature="horoscope_daily")
+tests\unit\test_rejected_narrative_answer_workflow.py:87:def test_basic_legacy_payload_without_evidence_refs_is_not_rejected() -> None:
+tests\unit\test_rejected_narrative_answer_workflow.py:90:        answer_id="answer-basic-legacy",
+tests\llm_orchestration\test_eval_harness.py:42:    with patch("app.ops.llm.eval_harness.LLMGateway.execute", new_callable=AsyncMock) as mock_exec:
+tests\llm_orchestration\test_eval_harness.py:74:    with patch("app.ops.llm.eval_harness.LLMGateway.execute", new_callable=AsyncMock) as mock_exec:
+tests\llm_orchestration\test_llm_closure.py:9:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_llm_closure.py:38:    gateway = LLMGateway()
+tests\llm_orchestration\test_llm_closure.py:48:            feature=None,  # No feature passed (legacy style)
+tests\llm_orchestration\test_assembly_resolution.py:23:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_assembly_resolution.py:91:    gateway = LLMGateway()
+tests\llm_orchestration\test_assembly_resolution.py:114:async def test_db_prompt_resolution_does_not_require_supported_fallback_prompt(
+tests\llm_orchestration\test_assembly_resolution.py:118:    """Un prompt DB publie reste resoluble sans prompt fallback supporte."""
+tests\llm_orchestration\test_assembly_resolution.py:138:    gateway = LLMGateway()
+tests\llm_orchestration\test_assembly_resolution.py:229:    assert validate_placeholders("Theme {{chart_json}}", "natal") == ["chart_json"]
+tests\llm_orchestration\test_assembly_resolution.py:274:async def test_assembly_waterfall_fallback(db):
+tests\llm_orchestration\test_assembly_resolution.py:353:    gateway = LLMGateway()
+tests\llm_orchestration\test_assembly_resolution.py:399:    gateway = LLMGateway()
+tests\llm_orchestration\test_assembly_resolution.py:454:    gateway = LLMGateway()
+tests\llm_orchestration\test_assembly_resolution.py:594:    gateway = LLMGateway()
+tests\llm_orchestration\test_gateway_regressions_fix.py:15:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_gateway_regressions_fix.py:33:    result = validate_output(raw_output, schema, evidence_catalog=["SUN_LEO"])
+tests\llm_orchestration\test_gateway_regressions_fix.py:55:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_gateway_regressions_fix.py:67:    # Mock the bounded legacy compatibility resolver.
+tests\llm_orchestration\test_gateway_regressions_fix.py:68:    gateway._resolve_fallback_use_case_config = AsyncMock(return_value=config)
+tests\llm_orchestration\test_gateway_regressions_fix.py:122:        gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_gateway_regressions_fix.py:123:        gateway._resolve_fallback_use_case_config = AsyncMock(
+tests\llm_orchestration\test_gateway_regressions_fix.py:184:        gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_gateway_regressions_fix.py:185:        gateway._resolve_fallback_use_case_config = AsyncMock(
+tests\unit\test_natal_llm_use_case_input_contract.py:12:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\unit\test_natal_llm_use_case_input_contract.py:15:LEGACY_ASTROLOGY_INPUT_KEYS = {"chart_json", "natal_data"}
+tests\unit\test_natal_llm_use_case_input_contract.py:37:def test_modern_natal_use_case_placeholders_exclude_legacy_carriers() -> None:
+tests\unit\test_natal_llm_use_case_input_contract.py:48:def test_no_natal_prefixed_contract_can_reintroduce_legacy_carriers_as_normal_input() -> None:
+tests\unit\test_natal_llm_use_case_input_contract.py:75:    rendered = PromptRenderer.render(
+tests\unit\test_natal_llm_use_case_input_contract.py:87:    assert "chart_json" not in rendered
+tests\unit\test_natal_llm_use_case_input_contract.py:88:    assert "natal_data" not in rendered
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:12:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:18:    "chart_json",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:19:    "natal_data",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:65:def test_gateway_payload_does_not_promote_raw_or_legacy_prompt_owners() -> None:
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:66:    """chart_json et natal_data restent hors prompt quand le contrat riche existe."""
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:68:    rendered = LLMGateway().build_user_payload(
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:73:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:74:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:103:    gateway = LLMGateway(responses_client=mock_client)
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:110:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:111:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:115:        flags={"test_fallback_active": True},
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:130:    rendered = LLMGateway().build_user_payload(
+tests\llm_orchestration\test_prompt_renderer.py:8:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_prompt_renderer.py:14:    renderer = PromptRenderer()
+tests\llm_orchestration\test_prompt_renderer.py:22:    renderer = PromptRenderer()
+tests\llm_orchestration\test_prompt_renderer.py:30:    renderer = PromptRenderer()
+tests\llm_orchestration\test_prompt_renderer.py:39:    renderer = PromptRenderer()
+tests\llm_orchestration\test_prompt_renderer.py:48:    renderer = PromptRenderer()
+tests\llm_orchestration\test_prompt_renderer.py:58:    """Le prompt final natal consomme la cle riche sans carrier legacy."""
+tests\llm_orchestration\test_prompt_renderer.py:65:    result = PromptRenderer.render(
+tests\llm_orchestration\test_prompt_renderer.py:74:    assert "chart_json" not in result
+tests\llm_orchestration\test_prompt_renderer.py:75:    assert "natal_data" not in result
+tests\llm_orchestration\test_context_quality.py:3:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\llm_orchestration\test_context_quality.py:15:    rendered = PromptRenderer.render(template, {"context_quality": "minimal"})
+tests\llm_orchestration\test_context_quality.py:20:    rendered = PromptRenderer.render(template, {"context_quality": "full"})
+tests\llm_orchestration\test_context_quality.py:67:    from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_context_quality.py:69:    gateway = LLMGateway()
+tests\llm_orchestration\test_context_quality.py:72:        context=ExecutionContext(chart_json='{"planets": []}'),
+tests\llm_orchestration\test_qualified_context.py:15:    """Verifie les transitions full, partial et minimal du contexte qualifie."""
+tests\llm_orchestration\test_qualified_context.py:20:    assert QualifiedContext.compute_quality(["natal_interpretation", "natal_data"]) == "minimal"
+tests\llm_orchestration\test_qualified_context.py:21:    assert QualifiedContext.compute_quality(["astrologer_profile", "natal_data"]) == "minimal"
+tests\llm_orchestration\test_qualified_context.py:83:        assert "natal_data" in res.missing_fields
+tests\llm_orchestration\test_qualified_context.py:85:        assert res.source == "fallback"
+tests\llm_orchestration\test_prompt_registry_v2.py:174:def test_publish_prompt_forbidden_for_legacy_daily_prediction(db):
+tests\llm_orchestration\test_prompt_registry_v2.py:197:def test_rollback_prompt_forbidden_for_legacy_daily_prediction(db):
+tests\llm_orchestration\test_prompt_registry_v2.py:221:def test_rollback_supports_legacy_archived_versions(db):
+tests\llm_orchestration\test_prompt_registry_v2.py:226:    legacy_archived = LlmPromptVersionModel(
+tests\llm_orchestration\test_prompt_registry_v2.py:242:    db.add_all([legacy_archived, published])
+tests\llm_orchestration\test_prompt_registry_v2.py:248:    assert rolled_back.id == legacy_archived.id
+tests\llm_orchestration\test_resolved_execution_plan.py:14:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_resolved_execution_plan.py:19:    gateway = LLMGateway()
+tests\llm_orchestration\test_resolved_execution_plan.py:35:    gateway = LLMGateway()
+tests\llm_orchestration\test_resolved_execution_plan.py:38:        context={"chart_json": "{}"},
+tests\llm_orchestration\test_resolved_execution_plan.py:50:async def test_resolve_plan_source_os_legacy(db):
+tests\llm_orchestration\test_resolved_execution_plan.py:51:    gateway = LLMGateway()
+tests\llm_orchestration\test_resolved_execution_plan.py:58:    with patch.dict(os.environ, {"LLM_MODEL_OVERRIDE_CHAT": "gpt-legacy"}):
+tests\llm_orchestration\test_resolved_execution_plan.py:60:        assert plan.model_id == "gpt-legacy"
+tests\llm_orchestration\test_resolved_execution_plan.py:61:        assert plan.model_source == "os_legacy"
+tests\llm_orchestration\test_resolved_execution_plan.py:89:def test_supported_perimeter_plan_rejects_legacy_execution_profile_source():
+tests\llm_orchestration\test_resolved_execution_plan.py:90:    with pytest.raises(ValidationError, match="legacy execution-profile source"):
+tests\llm_orchestration\test_resolved_execution_plan.py:95:            execution_profile_source="fallback_provider_unsupported",
+tests\llm_orchestration\test_resolved_execution_plan.py:107:    gateway = LLMGateway()
+tests\llm_orchestration\test_resolved_execution_plan.py:110:        context={"chart_json": "{}"},
+tests\llm_orchestration\test_resolved_execution_plan.py:123:    gateway = LLMGateway()
+tests\llm_orchestration\test_resolved_execution_plan.py:124:    request = LLMGateway._legacy_dicts_to_request(
+tests\llm_orchestration\test_resolved_execution_plan.py:127:        context={"chart_json": "{}"},
+app/tests\unit\test_backend_db_test_harness.py:100:    Path("app/tests/unit/legacy_services/conftest.py"),
+app/tests\unit\test_backend_db_test_harness.py:195:    Path("app/tests/integration/test_migration_20260422_0073_cleanup_llm_legacy.py"),
+app/tests\unit\test_backend_db_test_harness.py:196:    Path("app/tests/integration/test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py"),
+app/tests\unit\test_backend_db_test_harness.py:210:    Path("app/tests/unit/legacy_services/conftest.py"),
+tests\llm_orchestration\test_runtime_convergence.py:13:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_runtime_convergence.py:19:    gateway = LLMGateway()
+tests\llm_orchestration\test_runtime_convergence.py:52:async def test_allow_legacy_fallback_for_deprecated_use_case():
+tests\llm_orchestration\test_runtime_convergence.py:54:    Test Story 66.20: legacy fallback is now BLOCKED for supported features (Story 66.29).
+tests\llm_orchestration\test_runtime_convergence.py:57:    gateway = LLMGateway()
+tests\llm_orchestration\test_runtime_convergence.py:67:        flags=ExecutionFlags(skip_common_context=True),
+tests\llm_orchestration\test_runtime_convergence.py:90:    gateway = LLMGateway()
+tests\llm_orchestration\test_runtime_convergence.py:122:async def test_natal_bootstrap_fallback_allowed_when_no_assembly_data_exists(db):
+tests\llm_orchestration\test_runtime_convergence.py:124:    gateway = LLMGateway()
+tests\llm_orchestration\test_runtime_convergence.py:135:        flags=ExecutionFlags(skip_common_context=True),
+tests\llm_orchestration\test_stable_profiles.py:7:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_stable_profiles.py:35:    gateway = LLMGateway()
+tests\llm_orchestration\test_stable_profiles.py:49:    assert plan.max_output_tokens_source == "verbosity_fallback"
+tests\llm_orchestration\test_stable_profiles.py:69:    gateway = LLMGateway()
+tests\llm_orchestration\test_stable_profiles.py:124:    gateway = LLMGateway()
+tests\llm_orchestration\test_stable_profiles.py:166:    gateway = LLMGateway()
+tests\llm_orchestration\test_stable_profiles.py:181:    """Unsupported providers should degrade to the stable OpenAI fallback path."""
+tests\llm_orchestration\test_stable_profiles.py:199:    gateway = LLMGateway()
+tests\llm_orchestration\test_stable_profiles.py:209:    assert plan.execution_profile_source == "fallback_provider_unsupported"
+app/tests\unit\test_b2b_usage_migration_scripts.py:8:from scripts import archive_b2b_legacy_usage_counters as archive_script
+tests\unit\test_llm_sensitive_model_validators.py:68:def test_assembly_marks_legacy_runtime_compatibility_fields() -> None:
+tests\unit\test_llm_sensitive_model_validators.py:70:    for legacy_name in (
+tests\unit\test_llm_sensitive_model_validators.py:76:        "fallback_use_case",
+tests\unit\test_llm_sensitive_model_validators.py:78:        assert not hasattr(PromptAssemblyConfigModel, legacy_name)
+tests\unit\test_llm_sensitive_model_validators.py:81:def test_prompt_models_mark_legacy_and_canonical_boundaries() -> None:
+tests\unit\test_llm_sensitive_model_validators.py:91:    assert not hasattr(LlmUseCaseConfigModel, "legacy_identity_field")
+tests\unit\test_llm_sensitive_model_validators.py:93:    assert not hasattr(LlmPromptVersionModel, "legacy_use_case_link_field")
+app/tests\unit\test_b2b_audit_service.py:64:    assert entry.resolution_source == "settings_fallback"
+app/tests\unit\test_b2b_audit_service.py:78:    enterprise_plan = EnterpriseBillingPlanModel(id=100, code="legacy", included_monthly_units=0)
+app/tests\unit\test_b2b_audit_service.py:83:    assert entry.resolution_source == "settings_fallback"
+app/tests\unit\test_b2b_audit_service.py:90:def test_audit_missing_binding_uses_settings_fallback(
+app/tests\unit\test_b2b_audit_service.py:101:    assert entry.resolution_source == "settings_fallback"
+app/tests\unit\test_b2b_audit_service.py:192:    enterprise_plan = EnterpriseBillingPlanModel(id=100, code="legacy", included_monthly_units=0)
+app/tests\unit\test_b2b_audit_service.py:208:    assert entry.resolution_source == "settings_fallback"
+app/tests\unit\test_b2b_audit_service.py:258:        fallback_entry = B2BAuditEntry(
+app/tests\unit\test_b2b_audit_service.py:266:            resolution_source="settings_fallback",
+app/tests\unit\test_b2b_audit_service.py:275:        mock_audit.side_effect = [canonical_entry, fallback_entry] * 4
+app/tests\unit\test_b2b_audit_service.py:283:            resolution_source_filter="settings_fallback",
+tests\evaluation\fixtures\llm_responses\natal_premium_full.json:28:      "content": "Vos forces principales semblent résider dans la persévérance, la lucidité et la capacité à tenir une intention dans la durée. Vous savez revenir à l'essentiel lorsque le contexte devient confus, et cette qualité vous rend précieux dans les périodes de transition ou de complexité. Votre regard est capable de capter les détails significatifs sans perdre totalement la vue d'ensemble, ce qui favorise des décisions souvent plus mûres que rapides. Vous possédez aussi une forme de densité personnelle qui peut inspirer le respect, à condition de ne pas la convertir en rigidité défensive. Quand vous faites confiance à vos compétences réelles et à votre intuition travaillée, vous devenez capable d'avancer avec une autorité simple, sans surjouer ni vous justifier constamment."
+tests\llm_orchestration\test_v2_validation.py:13:from app.domain.llm.runtime.gateway import LLMGateway
+tests\llm_orchestration\test_v2_validation.py:46:    gateway = LLMGateway()
+tests\llm_orchestration\test_v2_validation.py:91:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\unit\test_llm_model_namespace_guard.py:2:"""Vérifie que les modèles DB LLM ne régressent pas vers les chemins legacy."""
+tests\unit\test_llm_model_namespace_guard.py:76:    legacy_files = sorted(path.name for path in MODEL_ROOT.glob("llm_*.py"))
+tests\unit\test_llm_model_namespace_guard.py:77:    assert legacy_files == []
+tests\unit\test_llm_model_namespace_guard.py:83:def test_llm_db_model_imports_do_not_use_legacy_namespace() -> None:
+tests\unit\test_llm_model_namespace_guard.py:103:    """Vérifie que le barrel DB racine ne sert pas de shim legacy LLM."""
+tests\unit\test_llm_canonical_perimeter.py:40:    """Verifie la FK canonique de schema et l isolement de l alias textuel legacy."""
+app/tests\unit\test_astro_response_v2.py:117:    "level,fallback_triggered,expected_class",
+app/tests\unit\test_astro_response_v2.py:124:def test_routing_logic(level, fallback_triggered, expected_class):
+app/tests\unit\test_astro_response_v2.py:128:        if level == "complete" and not fallback_triggered → AstroResponseV2
+app/tests\unit\test_astro_response_v2.py:133:    if level == "complete" and not fallback_triggered:
+app/tests\unit\test_astro_response_v2.py:147:    v1_fallback_payload = {**VALID_V1_PAYLOAD}
+app/tests\unit\test_astro_response_v2.py:148:    AstroResponseV1(**v1_fallback_payload)
+app/tests\unit\test_backend_services_structure_guard.py:31:    "chart_json_builder.py",
+app/tests\unit\test_backend_services_structure_guard.py:34:    "consultation_fallback_service.py",
+app/tests\unit\test_backend_services_structure_guard.py:55:    "prediction_fallback_policy.py",
+app/tests\unit\test_backend_services_structure_guard.py:73:FORBIDDEN_SERVICE_SUFFIXES = ("_legacy", "_old", "_tmp", "_refacto", "_new", "_v2")
+app/tests\unit\test_backend_services_structure_guard.py:116:    """Le package services doit rester neutre et ne pas rejouer de compatibilite legacy."""
+app/tests\unit\test_backend_services_structure_guard.py:125:    """Les chemins canoniques services ne doivent pas reutiliser de suffixes de transition."""
+app/tests\unit\test_backend_services_structure_guard.py:149:        "map_b2c_reason_to_legacy",
+app/tests\unit\test_backend_services_structure_guard.py:159:def test_nominal_services_do_not_keep_story_70_23_legacy_bypasses() -> None:
+app/tests\unit\test_backend_services_structure_guard.py:160:    """Les services canoniques ne doivent plus conserver de bypass legacy nominaux."""
+app/tests\unit\test_backend_services_structure_guard.py:163:            "map_legacy_key",
+app/tests\unit\test_backend_services_structure_guard.py:164:            "support legacy",
+app/tests\unit\test_backend_services_structure_guard.py:165:            "compatibilité des clés legacy",
+app/tests\unit\test_backend_services_structure_guard.py:168:            "horoscope_daily_entitlement_fallback_full",
+app/tests\unit\test_backend_services_structure_guard.py:194:def test_root_no_longer_hosts_transitional_prediction_or_llm_helpers() -> None:
+app/tests\unit\test_b2b_entitlement_repair_service.py:85:            resolution_source="settings_fallback",
+app/tests\unit\test_b2b_entitlement_repair_service.py:146:            resolution_source="settings_fallback",
+app/tests\unit\test_b2b_entitlement_repair_service.py:229:                resolution_source="settings_fallback",
+app/tests\unit\test_b2b_entitlement_repair_service.py:246:                resolution_source="settings_fallback",
+app/tests\unit\test_b2b_entitlement_repair_service.py:267:def test_run_auto_repair_already_canonical_skipped(db, feature):
+app/tests\unit\test_b2b_entitlement_repair_service.py:319:        assert report.skipped_already_canonical == 1
+app/tests\unit\test_b2b_entitlement_repair_service.py:363:            resolution_source="settings_fallback",
+app/tests\unit\test_b2b_api_entitlement_gate.py:145:def test_check_and_consume_fallback_no_canonical(db_session):
+app/tests\unit\test_b2b_api_entitlement_gate.py:164:def test_check_and_consume_fallback_no_binding(db_session):
+app/tests\unit\test_aspect_ruleset_schema.py:75:def _legacy_aspect_payload(field_name: str, value: object) -> dict[str, object]:
+app/tests\unit\test_aspect_ruleset_schema.py:76:    """Construit un aspect complet portant un champ legacy interdit."""
+app/tests\unit\test_aspect_ruleset_schema.py:269:    """Validation du refus des overrides d'orbes legacy."""
+app/tests\unit\test_aspect_ruleset_schema.py:274:            aspects=[_legacy_aspect_payload("orb_luminaries_override_deg", 10.0)]
+app/tests\unit\test_aspect_ruleset_schema.py:294:        assert exc_info.value.details["reason"] == "legacy_orb_fields_forbidden"
+app/tests\unit\test_aspect_ruleset_schema.py:301:            aspects=[_legacy_aspect_payload("orb_luminaries_override_deg", 20.0)]
+app/tests\unit\test_aspect_ruleset_schema.py:326:            aspects=[_legacy_aspect_payload("orb_pair_overrides", {"sun-moon": 20.0})]
+app/tests\unit\test_aspect_ruleset_schema.py:351:            aspects=[_legacy_aspect_payload("orb_pair_overrides", {"sun-moon": 0.0})]
+app/tests\unit\test_aspect_ruleset_schema.py:371:        assert exc_info.value.details["reason"] == "legacy_orb_fields_forbidden"
+app/tests\unit\test_aspect_ruleset_schema.py:558:    def test_natal_result_legacy_payload_validation_compatibility(self) -> None:
+app/tests\unit\test_aspect_ruleset_schema.py:560:        legacy_payload = {
+app/tests\unit\test_aspect_ruleset_schema.py:576:        result = NatalResult.model_validate(legacy_payload)
+app/tests\unit\test_backend_services_llm_structure_guard.py:32:def test_no_legacy_llm_service_import_path_is_reintroduced() -> None:
+tests\unit\test_incident_service_user_statuses.py:33:def test_incident_status_transitions_user():
+tests\unit\test_incident_service_user_statuses.py:34:    # Valid transitions from pending
+tests\unit\test_incident_service_user_statuses.py:39:    # Valid transitions from solved
+tests\unit\test_incident_service_user_statuses.py:42:    # Invalid transition from solved
+tests\unit\test_incident_service_user_statuses.py:88:        # Note: transitions to pending are not explicitly in ALLOWED_STATUS_TRANSITIONS for users
+app/tests\unit\test_api_error_contracts.py:52:def test_api_http_error_does_not_expose_legacy_status_code_property() -> None:
+app/tests\unit\test_api_error_contracts.py:53:    """Verrouille l'abandon de l'alias legacy status_code côté erreurs API."""
+app/tests\unit\test_api_error_contracts.py:117:def test_application_error_handler_fallback_contract() -> None:
+app/tests\unit\test_backend_noop_tests.py:40:def _skip_call(statement: ast.stmt) -> ast.Call | None:
+app/tests\unit\test_backend_noop_tests.py:41:    """Retourne l'appel `pytest.skip` quand une fonction de test est volontairement vide."""
+app/tests\unit\test_backend_noop_tests.py:47:        is_skip = (
+app/tests\unit\test_backend_noop_tests.py:50:            and function.attr == "skip"
+app/tests\unit\test_backend_noop_tests.py:53:        is_skip = isinstance(function, ast.Name) and function.id == "skip"
+app/tests\unit\test_backend_noop_tests.py:54:    if not is_skip:
+app/tests\unit\test_backend_noop_tests.py:59:def _is_explicit_skip(statement: ast.stmt) -> bool:
+app/tests\unit\test_backend_noop_tests.py:60:    """Identifie un `pytest.skip` motive comme absence volontaire de comportement."""
+app/tests\unit\test_backend_noop_tests.py:61:    call = _skip_call(statement)
+app/tests\unit\test_backend_noop_tests.py:77:    if len(body) == 1 and _skip_call(body[0]) is not None:
+app/tests\unit\test_backend_noop_tests.py:78:        return not _is_explicit_skip(body[0])
+app/tests\unit\test_backend_noop_tests.py:123:def test_backend_noop_guard_requires_non_empty_skip_reason() -> None:
+app/tests\unit\test_backend_noop_tests.py:124:    """La garde refuse un skip sans raison explicite et non vide."""
+app/tests\unit\test_backend_noop_tests.py:125:    empty_reason = ast.parse('def test_placeholder():\n    pytest.skip("")\n').body[0]
+app/tests\unit\test_backend_noop_tests.py:127:        'def test_placeholder():\n    pytest.skip(reason="   ")\n'
+app/tests\unit\test_backend_noop_tests.py:130:        'def test_placeholder():\n    pytest.skip("CONDAMAD-123 decision tracked")\n'
+app/tests\integration\test_auth_api.py:205:def test_register_skips_onboarding_sequence_when_flag_disabled(
+app/tests\unit\test_api_error_architecture.py:24:def test_legacy_api_v1_error_module_is_deleted() -> None:
+app/tests\unit\test_api_error_architecture.py:29:def test_backend_does_not_import_legacy_api_error_module() -> None:
+app/tests\unit\test_api_error_architecture.py:98:def test_api_handlers_do_not_read_legacy_error_status_code() -> None:
+app/tests\unit\test_astro_calculator.py:102:def test_fallback_porphyry():
+tests\unit\test_historical_facade_transition_guards.py:20:def test_nominal_modules_do_not_import_legacy_directly() -> None:
+tests\unit\test_historical_facade_transition_guards.py:23:    the nominal perimeter must access legacy only via app.domain.llm.legacy.bridge.
+tests\unit\test_historical_facade_transition_guards.py:33:        "app.llm_orchestration.legacy_prompt_runtime",
+tests\unit\test_historical_facade_transition_guards.py:35:        "app.domain.llm.legacy.runtime_legacy",
+tests\unit\test_historical_facade_transition_guards.py:36:        "app.domain.llm.legacy.catalog_legacy",
+tests\unit\test_historical_facade_transition_guards.py:37:        "app.domain.llm.legacy.narrator_legacy",
+tests\unit\test_historical_facade_transition_guards.py:49:        "Use app.domain.llm.legacy.bridge instead.\n- " + "\n- ".join(violations)
+tests\unit\test_historical_facade_transition_guards.py:53:def test_runtime_and_bootstrap_modules_do_not_depend_on_legacy_transition_paths() -> None:
+tests\unit\test_historical_facade_transition_guards.py:56:    canonical runtime/bootstrap entrypoints must not route back through legacy script/service
+tests\unit\test_historical_facade_transition_guards.py:80:        "Canonical runtime/bootstrap modules still depend on legacy transition paths.\n- "
+tests\unit\test_historical_facade_transition_guards.py:97:def test_residual_legacy_directories_are_physically_absent() -> None:
+tests\unit\test_historical_facade_transition_guards.py:101:        root / "app" / "domain" / "llm" / "legacy",
+tests\unit\test_historical_facade_transition_guards.py:102:        root / "app" / "ops" / "llm" / "legacy",
+tests\unit\test_historical_facade_transition_guards.py:108:        "Residual legacy directories must be physically removed once decommissioned.\n- "
+app/tests\unit\test_aspect_orb_overrides.py:175:def test_build_natal_result_rejects_legacy_orb_fields(monkeypatch: pytest.MonkeyPatch) -> None:
+app/tests\integration\test_astrologers_v2.py:193:                admin_category="legacy",
+app/tests\unit\test_astrology_translation_resolver.py:108:def test_resolver_uses_user_default_then_system_fallback(db_session: Session) -> None:
+app/tests\unit\test_astrology_translation_resolver.py:115:            email="fallback@example.com",
+app/tests\unit\test_astrology_translation_resolver.py:131:    """Le fallback technique final retourne le code canonique du signe."""
+app/tests\unit\test_billing_service.py:63:def test_get_subscription_status_fallback_to_legacy_when_no_stripe_profile() -> None:
+app/tests\unit\test_billing_service.py:86:def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscription_exists() -> (
+app/tests\unit\test_backend_entitlement_structure_guard.py:146:def test_legacy_entitlement_service_files_are_absent() -> None:
+app/tests\unit\test_backend_entitlement_structure_guard.py:152:def test_no_legacy_entitlement_import_path_is_reintroduced() -> None:
+app/tests\unit\test_backend_entitlement_structure_guard.py:168:def test_services_init_does_not_reexport_entitlement_legacy_paths() -> None:
+app/tests\unit\test_backend_entitlement_structure_guard.py:169:    """Le package services ne doit pas rejouer des alias ou re-exports legacy entitlement."""
+app/tests\unit\test_ai_engine_adapter_structure.py:27:def test_legacy_services_adapter_file_does_not_exist() -> None:
+app/tests\unit\test_ai_engine_adapter_structure.py:28:    """Empêche la réintroduction du chemin legacy `app.services.ai_engine_adapter`."""
+app/tests\unit\test_ai_engine_adapter_structure.py:32:def test_backend_code_does_not_import_legacy_adapter_path() -> None:
+app/tests\unit\test_ai_engine_adapter_structure.py:33:    """Empêche tout import nominal du chemin legacy dans le backend et les tests."""
+tests\unit\test_expert_technical_projection_contract.py:79:    assert "fallback silencieux" in content
+app/tests\unit\test_backfill_plan_catalog.py:20:from scripts.backfill_plan_catalog_from_legacy import (
+app/tests\unit\test_backfill_plan_catalog.py:30:    # Setup legacy data
+app/tests\unit\test_backfill_plan_catalog.py:31:    legacy_plan = BillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:32:        code="basic-legacy",
+app/tests\unit\test_backfill_plan_catalog.py:39:    db_session.add(legacy_plan)
+app/tests\unit\test_backfill_plan_catalog.py:53:        select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "basic-legacy")
+app/tests\unit\test_backfill_plan_catalog.py:59:    assert plan.source_id == legacy_plan.id
+app/tests\unit\test_backfill_plan_catalog.py:87:    legacy_plan = BillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:88:        code="free-legacy",
+app/tests\unit\test_backfill_plan_catalog.py:95:    db_session.add(legacy_plan)
+app/tests\unit\test_backfill_plan_catalog.py:101:        select(PlanCatalogModel).where(PlanCatalogModel.plan_code == "free-legacy")
+app/tests\unit\test_backfill_plan_catalog.py:128:    legacy_plan = EnterpriseBillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:137:    db_session.add(legacy_plan)
+app/tests\unit\test_backfill_plan_catalog.py:221:    # 2. Setup matching legacy plan with DIFFERENT values
+app/tests\unit\test_backfill_plan_catalog.py:222:    legacy_plan = BillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:230:    db_session.add(legacy_plan)
+app/tests\unit\test_backfill_plan_catalog.py:240:    assert manual_plan.source_id == legacy_plan.id
+app/tests\unit\test_backfill_plan_catalog.py:246:    )  # Unlimited was overwritten by legacy Quota
+app/tests\unit\test_backfill_plan_catalog.py:263:    legacy_plan = EnterpriseBillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:272:    db_session.add(legacy_plan)
+app/tests\unit\test_backfill_plan_catalog.py:331:    # Plan legacy correspondant
+app/tests\unit\test_backfill_plan_catalog.py:332:    legacy_plan = BillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:340:    db_session.add(legacy_plan)
+app/tests\unit\test_backfill_plan_catalog.py:370:    legacy_plan = BillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:378:    db_session.add(legacy_plan)
+app/tests\unit\test_backfill_plan_catalog.py:455:    # Plan legacy correspondant avec 0 unités
+app/tests\unit\test_backfill_plan_catalog.py:456:    legacy_plan = EnterpriseBillingPlanModel(
+app/tests\unit\test_backfill_plan_catalog.py:465:    db_session.add(legacy_plan)
+app/tests\integration\test_b2b_api_entitlements.py:360:def test_b2b_astrology_disabled_binding_not_enabled_skips_settings_fallback():
+app/tests\integration\test_b2b_api_entitlements.py:382:def test_b2b_astrology_fallback_settings():
+app/tests\integration\test_b2b_api_entitlements.py:389:            email="fallback@b2b.com",
+app/tests\integration\test_b2b_api_entitlements.py:404:        headers={"X-API-Key": api_key, "X-Request-Id": "rid-fallback"},
+app/tests\unit\test_astrology_runtime_reference_guard.py:38:    r"_allows_simplified_fallback",
+app/tests\unit\test_astrology_runtime_reference_guard.py:52:def test_natal_flow_does_not_use_legacy_reference_service_or_symbols() -> None:
+app/tests\unit\test_astrology_runtime_reference_guard.py:53:    """Le flux natal ne depend plus des donnees reference legacy."""
+app/tests\unit\test_canonical_db_startup_validation.py:41:def test_startup_db_validation_off_skips_validator():
+app/tests\unit\test_calibration_job.py:103:def test_job_skips_existing_entry(db_session):
+app/tests\unit\test_astrology_reference_catalog_guard.py:139:def test_legacy_aspect_orb_shapes_are_not_used_by_runtime_sources() -> None:
+app/tests\unit\test_ai_engine_adapter.py:9:    NatalExecutionInput,
+app/tests\unit\test_ai_engine_adapter.py:30:    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
+app/tests\unit\test_ai_engine_adapter.py:58:    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
+app/tests\unit\test_ai_engine_adapter.py:86:    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
+app/tests\unit\test_ai_engine_adapter.py:115:    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
+app/tests\unit\test_ai_engine_adapter.py:139:    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
+app/tests\unit\test_ai_engine_adapter.py:156:async def test_generate_natal_interpretation_maps_free_legacy_use_case_to_canonical_subfeature(
+app/tests\unit\test_ai_engine_adapter.py:174:    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
+app/tests\unit\test_ai_engine_adapter.py:177:        NatalExecutionInput(
+app/tests\unit\test_canonical_entitlement_alert_batch_handling_service.py:116:    assert result.skipped_count == 0
+app/tests\unit\test_canonical_entitlement_alert_batch_handling_service.py:147:    assert result.skipped_count == 1
+app/tests\unit\test_canonical_entitlement_alert_batch_handling_service.py:169:    assert result.skipped_count == 0
+app/tests\unit\test_canonical_entitlement_alert_batch_handling_service.py:173:def test_batch_handle_skips_already_handled_with_same_state(db_session: Session) -> None:
+app/tests\unit\test_canonical_entitlement_alert_batch_handling_service.py:198:    assert result.skipped_count == 1
+app/tests\unit\test_canonical_entitlement_alert_batch_handling_service.py:226:    assert result.skipped_count == 0
+app/tests\unit\test_canonical_entitlement_alert_batch_handling_service.py:254:    assert result.skipped_count == 0
+app/tests\integration\test_b2b_entitlements_audit.py:200:    fallback_item = next(item for item in payload["items"] if item["company_name"] == "Fallback Co")
+app/tests\integration\test_b2b_entitlements_audit.py:201:    assert fallback_item["resolution_source"] == "settings_fallback"
+app/tests\integration\test_b2b_entitlements_audit.py:202:    assert fallback_item["reason"] == "no_binding"
+app/tests\integration\test_b2b_entitlements_audit.py:211:        "/v1/ops/b2b/entitlements/audit?resolution_source=settings_fallback",
+app/tests\integration\test_b2b_entitlements_audit.py:372:    # AC 14: Ne doit plus être en settings_fallback / admin_user_id_missing
+app/tests\unit\test_aspects_calculator.py:84:def test_calculate_major_aspects_rejects_legacy_definition_fields() -> None:
+tests\unit\test_canonical_llm_bootstrap.py:6:def test_legacy_llm_seed_is_disabled_by_default(monkeypatch) -> None:
+tests\unit\test_canonical_llm_bootstrap.py:7:    """Story 70.13: legacy LLM reseed must not run without explicit opt-in."""
+tests\unit\test_canonical_llm_bootstrap.py:10:    monkeypatch.setattr(main.settings, "dev_allow_legacy_seed", False)
+tests\unit\test_canonical_llm_bootstrap.py:15:    mock_info.assert_any_call("llm_registry_legacy_seed_disabled")
+tests\unit\test_canonical_llm_bootstrap.py:155:    legacy_seed_use_cases = Mock()
+tests\unit\test_canonical_llm_bootstrap.py:160:        legacy_seed_use_cases,
+tests\unit\test_canonical_llm_bootstrap.py:190:    legacy_seed_use_cases.assert_not_called()
+tests\unit\test_canonical_llm_bootstrap.py:194:def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) -> None:
+app/tests\unit\test_canonical_entitlement_alert_batch_retry_service.py:131:    assert result.skipped_count == 0
+app/tests\unit\test_canonical_entitlement_alert_batch_retry_service.py:183:    assert result.skipped_count == 0
+app/tests\unit\test_canonical_entitlement_alert_batch_retry_service.py:301:def test_batch_retry_skipped_count_is_zero_when_all_retried(db_session: Session) -> None:
+app/tests\unit\test_canonical_entitlement_alert_batch_retry_service.py:317:    assert result.skipped_count == 0
+app/tests\unit\test_canonical_entitlement_alert_batch_retry_service.py:334:    assert result.skipped_count == 0
+tests\unit\test_admin_manual_execute_response.py:19:            rendered_prompt="Instruction pour le chart_json suivant."
+tests\unit\test_admin_manual_execute_response.py:27:        structured_output={"provider": "openai", "chart_json": "SECRET"},
+tests\unit\test_admin_manual_execute_response.py:47:    assert payload.structured_output["chart_json"] == "[REDACTED]"
+app/tests\unit\test_api_router_architecture.py:43:    "legacy" + "_maintenance",
+app/tests\unit\test_api_router_architecture.py:44:    "legacy" + "_alias",
+app/tests\unit\test_api_router_architecture.py:45:    "legacy_registry" + "_only",
+app/tests\unit\test_api_router_architecture.py:361:def test_legacy_flat_router_modules_are_not_importable(module_name: str) -> None:
+app/tests\unit\test_api_router_architecture.py:888:def test_legacy_http_error_surfaces_are_removed() -> None:
+app/tests\unit\test_api_router_architecture.py:889:    """Les helpers d'erreur HTTP legacy ne doivent plus être actifs."""
+app/tests\unit\test_api_router_architecture.py:891:    forbidden_tokens = ("raise_http_error", "legacy_detail", 'content["detail"]')
+app/tests\unit\test_api_router_architecture.py:1073:def test_legacy_api_v1_errors_module_is_not_importable() -> None:
+tests\unit\test_astrology_full_data_contract.py:90:        "fallback silencieux",
+app/tests\integration\test_billing_api.py:166:def test_billing_subscription_status_with_legacy_fallback() -> None:
+app/tests\unit\test_astrology_localization_guardrails.py:96:def test_public_astro_legacy_vocabulary_is_removed_from_prediction_runtime() -> None:
+app/tests\unit\test_astrology_localization_guardrails.py:97:    """Le vocabulaire astro public legacy ne doit plus exister dans le runtime."""
+app/tests\integration\test_backup_restore_scripts.py:25:        pytest.skip("PowerShell is required for backup/restore script tests.")
+app/tests\integration\test_backup_restore_scripts.py:321:        pytest.skip("Set RUN_POSTGRES_BACKUP_RESTORE_E2E=1 to enable real Postgres E2E test.")
+app/tests\integration\test_backup_restore_scripts.py:323:        pytest.skip(
+app/tests\integration\test_backup_restore_scripts.py:329:        pytest.skip(
+app/tests\integration\test_backup_restore_scripts.py:334:        pytest.skip("psql and pg_dump are required for real Postgres E2E test.")
+app/tests\unit\test_canonical_entitlement_alert_service.py:91:def test_emit_skips_duplicate_dedupe_key(db_session: Session, mock_row):
+app/tests\unit\test_canonical_entitlement_alert_service.py:105:                assert result.skipped_duplicate_count == 1
+app/tests\unit\test_canonical_entitlement_alert_service.py:123:                assert result.skipped_duplicate_count == 0
+app/tests\unit\test_canonical_entitlement_alert_service.py:174:def test_emit_concurrent_insert_handled_as_skipped_duplicate(
+app/tests\unit\test_canonical_entitlement_alert_service.py:204:                    assert result.skipped_duplicate_count == 1
+tests\integration\test_admin_llm_sample_payloads.py:25:            "chart_json": {"sun": "aries", "moon": "leo"},
+tests\integration\test_admin_llm_sample_payloads.py:54:        assert item_1["payload_json"]["chart_json"] == {"sun": "aries", "moon": "leo"}
+tests\integration\test_admin_llm_sample_payloads.py:179:        legacy_subfeature = next(iter(NATAL_SUBFEATURE_MAPPING))
+tests\integration\test_admin_llm_sample_payloads.py:184:                subfeature=legacy_subfeature,
+tests\integration\test_admin_llm_sample_payloads.py:436:                payload_json={"chart_json": {"sun": "aries"}, "email": "john@doe.com"}
+tests\integration\test_admin_llm_sample_payloads.py:448:def test_admin_llm_sample_payload_requires_natal_chart_json():
+tests\integration\test_admin_llm_sample_payloads.py:466:        assert "must include chart_json" in payload["message"]
+tests\unit\prediction\test_astrologer_prompt_builder.py:74:        natal_data={
+tests\integration\test_admin_llm_catalog.py:111:        developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:156:                "chart_json": {"sun": "aries"},
+tests\integration\test_admin_llm_catalog.py:278:                fallback_triggered=False,
+tests\integration\test_admin_llm_catalog.py:353:                fallback_triggered=False,
+tests\integration\test_admin_llm_catalog.py:443:                    fallback_triggered=False,
+tests\integration\test_admin_llm_catalog.py:469:                fallback_triggered=False,
+tests\integration\test_admin_llm_catalog.py:720:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1207:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1251:                payload_json={"chart_json": {"sun": "aries"}},
+tests\integration\test_admin_llm_catalog.py:1287:            assert placeholders["chart_json"]["status"] == "resolved"
+tests\integration\test_admin_llm_catalog.py:1288:            assert placeholders["chart_json"]["resolution_source"] == "sample_payload"
+tests\integration\test_admin_llm_catalog.py:1339:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1383:                payload_json={"chart_json": {"sun": "aries"}},
+tests\integration\test_admin_llm_catalog.py:1471:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1515:                payload_json={"chart_json": {"sun": "aries"}},
+tests\integration\test_admin_llm_catalog.py:1600:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1712:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:1756:                payload_json={"chart_json": {"sun": "aries"}},
+tests\integration\test_admin_llm_catalog.py:1841:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:2157:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+tests\integration\test_admin_llm_catalog.py:2201:                payload_json={"chart_json": {"sun": "aries"}},
+tests\integration\test_admin_llm_catalog.py:2283:            structured_output={"provider": "openai", "chart_json": "secret-chart"},
+tests\integration\test_admin_llm_catalog.py:2294:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2313:        assert body["structured_output"]["chart_json"] == "[REDACTED]"
+tests\integration\test_admin_llm_catalog.py:2362:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2398:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2433:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2470:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+tests\integration\test_admin_llm_catalog.py:2505:                "app.api.v1.routers.admin.llm.prompts.LLMGateway.execute_request",
+app/tests\unit\test_chart_json_builder.py:71:    build_chart_json,
+app/tests\unit\test_chart_json_builder.py:72:    build_evidence_catalog,
+app/tests\unit\test_chart_json_builder.py:450:def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:451:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:454:    assert chart["meta"]["chart_json_version"] == "1"
+app/tests\unit\test_chart_json_builder.py:869:def test_build_chart_json_projects_enriched_profiles_from_chart_balance(
+app/tests\unit\test_chart_json_builder.py:900:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1021:def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:1043:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1073:def test_house_rulers_legacy_payload_projects_canonical_runtime_ruler(
+app/tests\unit\test_chart_json_builder.py:1085:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1098:def test_house_rulers_legacy_payload_stays_consistent_with_runtime_houses(
+app/tests\unit\test_chart_json_builder.py:1101:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1104:    for legacy_ruler in chart["house_rulers"]:
+app/tests\unit\test_chart_json_builder.py:1105:        house = houses_by_number[legacy_ruler["house_number"]]
+app/tests\unit\test_chart_json_builder.py:1106:        assert legacy_ruler["house_number"] == house["number"]
+app/tests\unit\test_chart_json_builder.py:1107:        assert legacy_ruler["cusp_sign"] == house["cusp_sign"]
+app/tests\unit\test_chart_json_builder.py:1108:        assert legacy_ruler["ruler_planet"] == house["ruler"]["planet"]
+app/tests\unit\test_chart_json_builder.py:1109:        assert legacy_ruler["ruler_planet_sign"] == house["ruler"]["sign"]
+app/tests\unit\test_chart_json_builder.py:1110:        assert legacy_ruler["ruler_planet_house"] == house["ruler"]["house"]
+app/tests\unit\test_chart_json_builder.py:1113:def test_house_rulers_legacy_payload_ignores_stale_result_when_runtime_ruler_missing(
+app/tests\unit\test_chart_json_builder.py:1126:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1130:    assert all(legacy_ruler["house_number"] != 2 for legacy_ruler in chart["house_rulers"])
+app/tests\unit\test_chart_json_builder.py:1133:def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:1180:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1215:def test_build_chart_json_no_location(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:1217:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1227:def test_build_chart_json_no_location_no_time(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:1230:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1241:def test_build_chart_json_serializes_empty_advanced_blocks(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:1251:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1262:def test_build_evidence_catalog_priority():
+app/tests\unit\test_chart_json_builder.py:1263:    chart_json = {
+app/tests\unit\test_chart_json_builder.py:1283:    evidence = build_evidence_catalog(chart_json)
+app/tests\unit\test_chart_json_builder.py:1300:def test_evidence_catalog_pattern():
+app/tests\unit\test_chart_json_builder.py:1301:    chart_json = {
+app/tests\unit\test_chart_json_builder.py:1307:    evidence = build_evidence_catalog(chart_json)
+app/tests\unit\test_chart_json_builder.py:1321:def test_build_chart_json_handles_none_speed_and_orb_used(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:1326:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1332:def test_build_chart_json_uses_resolved_sign_labels(mock_natal_result, mock_birth_profile):
+app/tests\unit\test_chart_json_builder.py:1347:    chart = build_chart_json(mock_natal_result, mock_birth_profile, labels=labels)
+app/tests\unit\test_chart_json_builder.py:1359:def test_build_chart_json_requires_aspect_interpretive_hints(
+app/tests\unit\test_chart_json_builder.py:1367:        build_chart_json(mock_natal_result, mock_birth_profile)
+app/tests\unit\test_chart_json_builder.py:1370:def test_evidence_catalog_uses_chart_sign_labels() -> None:
+app/tests\unit\test_chart_json_builder.py:1372:    from app.services.chart.json_builder import build_enriched_evidence_catalog
+app/tests\unit\test_chart_json_builder.py:1374:    chart_json = {
+app/tests\unit\test_chart_json_builder.py:1400:    catalog = build_enriched_evidence_catalog(chart_json)
+tests\integration\test_llm_doc_conformity.py:26:def test_doc_conformity_validator_fallbacks() -> None:
+tests\integration\test_llm_doc_conformity.py:29:    assert not validator.validate_fallbacks(content)
+tests\integration\test_llm_doc_conformity.py:182:def test_fallback_perimeter_mismatch_fails_validation() -> None:
+tests\integration\test_llm_doc_conformity.py:188:    errors = validator.validate_fallbacks(fake_content)
+tests\integration\test_llm_doc_conformity.py:195:        "- `strict` : `pipeline_kind`, `execution_path_kind`, `fallback_kind`, "
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:12:from app.domain.llm.prompting.prompt_renderer import PromptRenderer
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:19:    NatalExecutionInput,
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:23:from app.domain.llm.runtime.gateway import LLMGateway
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:47:    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:50:        NatalExecutionInput(
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:65:    assert captured_request.context.chart_json is None
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:66:    assert captured_request.context.natal_data is None
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:67:    assert captured_request.flags.evidence_catalog is None
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:71:def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:75:    payload = LLMGateway().build_user_payload(
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:80:            "chart_json": '{"legacy": "secret"}',
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:81:            "natal_data": {"legacy": "secret"},
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:88:    assert "legacy" not in payload
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:91:    fallback_payload = LLMGateway().build_user_payload(
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:95:            "chart_json": '{"legacy": "secret"}',
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:96:            "natal_data": {"legacy": "secret"},
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:102:    assert fallback_payload == "Interprète les données astrologiques fournies."
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:103:    assert "legacy" not in fallback_payload
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:115:    payload = LLMGateway()._build_validation_payload(
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:124:    assert "chart_json" not in payload
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:127:def test_natal_execution_input_excludes_legacy_carrier_fields() -> None:
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:130:    forbidden_fields = {"chart_json", "natal_data", "evidence_catalog"}
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:132:    assert forbidden_fields.isdisjoint(NatalExecutionInput.model_fields)
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:135:def test_natal_prompt_placeholder_registry_accepts_rich_key_without_legacy_carrier() -> None:
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:136:    """Le renderer natal peut rendre la cle riche sans chart_json ni natal_data."""
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:141:    rendered = PromptRenderer.render(
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:142:        "Payload {{llm_astrology_input_v1}} / legacy {{chart_json}}",
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:152:    assert "{{chart_json}}" not in rendered
+tests\unit\domain\llm\test_natal_llm_astrology_input.py:153:    assert "legacy " in rendered
+app/tests\unit\test_chat_guidance_service.py:161:        raw_output='{"message":"Réponse fallback"}',
+app/tests\unit\test_chat_guidance_service.py:196:    assert reply.fallback_used is False
+app/tests\unit\test_chat_guidance_service.py:459:    assert reply.fallback_used is False
+app/tests\unit\test_chat_guidance_service.py:463:def test_send_message_applies_safe_fallback_when_recovery_fails() -> None:
+app/tests\unit\test_chat_guidance_service.py:478:    assert reply.recovery.recovery_strategy == "safe_fallback"
+app/tests\unit\test_chat_guidance_service.py:479:    assert reply.fallback_used is True
+app/tests\unit\test_chat_guidance_service.py:500:    assert reply.fallback_used is False
+tests\integration\test_llm_documentation_governance.py:72:        "PromptRenderer",
+tests\integration\test_llm_documentation_governance.py:108:        "PromptRenderer",
+tests\fixtures\golden\natal_premium_test.yaml:8:    chart_json: "{}"
+tests\fixtures\golden\natal_premium_test.yaml:9:    natal_data: {}
+tests\fixtures\golden\natal_premium_test.yaml:10:    evidence_catalog: []
+tests\fixtures\golden\natal_premium_test.yaml:30:      fallback_kind: null
+tests\fixtures\golden\natal_premium_test.yaml:35:      max_output_tokens_source: "verbosity_fallback"
+tests\fixtures\golden\natal_test.yaml:8:    chart_json: "{}"
+tests\fixtures\golden\natal_test.yaml:9:    natal_data: {}
+tests\fixtures\golden\natal_test.yaml:10:    evidence_catalog: []
+tests\fixtures\golden\natal_test.yaml:21:      fallback_kind: null
+app/tests\unit\test_chat_entitlement_gate.py:107:def test_check_and_consume_skips_tokens_quota(db_session):
+app/tests\unit\test_chat_entitlement_gate.py:108:    # Quota key is 'tokens' -> should be skipped by check_and_consume
+app/tests\unit\test_chat_entitlement_gate.py:124:    assert result.usage_states == []  # Consumed states list is empty because skip
+app/tests\unit\test_chat_entitlement_gate.py:128:def test_check_and_consume_processes_legacy_quota(db_session):
+tests\integration\test_llm_db_invariants.py:213:    assert "is_legacy_residual" in columns
+tests\integration\test_llm_db_invariants.py:348:def test_call_log_no_longer_persists_legacy_provider_columns() -> None:
+tests\integration\test_llm_db_invariants.py:349:    """Verifie que le log coeur ne persiste plus aucun provider ambigu ou legacy."""
+app/tests\unit\test_common_context.py:16:    """Test transitions between full, partial, and minimal quality."""
+app/tests\unit\test_common_context.py:25:        natal_data={"planets": []},  # Added
+app/tests\unit\test_common_context.py:39:        natal_data={"planets": []},
+app/tests\unit\test_common_context.py:105:        assert ctx.payload.natal_data is None
+app/tests\unit\test_common_context.py:112:    """Test build() when no interpretation exists (fallback to raw data)."""
+app/tests\unit\test_common_context.py:147:        assert ctx.payload.natal_data == {"planets": {"sun": {"sign": "aries"}}}
+tests\integration\astrology\test_natal_public_contract_compatibility.py:41:def test_public_natal_calculate_keeps_legacy_projection_contract(
+tests\integration\test_llm_db_cleanup_registry.py:9:    scan_python_sources_for_legacy_patterns,
+tests\integration\test_llm_db_cleanup_registry.py:67:        if migration != "20260422_0072_archive_prompt_fallback_use_case.py"
+tests\integration\test_llm_db_cleanup_registry.py:82:        and "20260422_0072_archive_prompt_fallback_use_case.py" in (violation.detail or "")
+tests\integration\test_llm_db_cleanup_registry.py:87:def test_legacy_usage_allowlist_detects_reintroduced_usage(tmp_path: Path) -> None:
+tests\integration\test_llm_db_cleanup_registry.py:99:    violations = scan_python_sources_for_legacy_patterns(
+tests\integration\test_llm_db_cleanup_registry.py:103:                "rule_id": "legacy-call-log-use-case-read",
+tests\integration\test_llm_db_cleanup_registry.py:117:                "rule_id": "legacy-call-log-use-case-read",
+tests\integration\test_llm_db_cleanup_registry.py:127:def test_legacy_usage_allowlist_requires_exact_file_match(tmp_path: Path) -> None:
+tests\integration\test_llm_db_cleanup_registry.py:134:        "VALUE = 'fallback_use_case_key'\n",
+tests\integration\test_llm_db_cleanup_registry.py:138:    violations = scan_python_sources_for_legacy_patterns(
+tests\integration\test_llm_db_cleanup_registry.py:142:                "rule_id": "legacy-fallback-use-case-key",
+tests\integration\test_llm_db_cleanup_registry.py:143:                "pattern": "fallback_use_case_key",
+tests\integration\test_llm_db_cleanup_registry.py:152:def test_main_no_longer_depends_on_legacy_use_case_registry() -> None:
+app/tests\unit\test_chart_result_service.py:343:    """Une erreur d'ecriture audit remonte sans fallback silencieux."""
+app/tests\unit\test_chart_result_service.py:432:def test_persist_trace_projects_legacy_house_rulers_from_runtime_houses() -> None:
+app/tests\unit\test_chart_result_service.py:460:    for legacy_ruler in stored_payload["house_rulers"]:
+app/tests\unit\test_chart_result_service.py:461:        house = houses_by_number[legacy_ruler["house_number"]]
+app/tests\unit\test_chart_result_service.py:462:        assert legacy_ruler["cusp_sign"] == house["cusp_sign"]
+app/tests\unit\test_chart_result_service.py:463:        assert legacy_ruler["ruler_planet"] == house["ruler"]["planet"]
+app/tests\unit\test_chart_result_service.py:464:        assert legacy_ruler["ruler_planet_sign"] == house["ruler"]["sign"]
+app/tests\unit\test_chart_result_service.py:465:        assert legacy_ruler["ruler_planet_house"] == house["ruler"]["house"]
+app/tests\unit\test_chart_result_service.py:467:        legacy_ruler["ruler_planet"] != "stale_planet"
+app/tests\unit\test_chart_result_service.py:468:        for legacy_ruler in stored_payload["house_rulers"]
+tests\unit\prediction\test_public_label_catalog.py:75:def test_get_do_avoid_fallback():
+app/tests\unit\test_consultation_generation_service.py:41:                fallback_mode=FallbackMode.safeguard_refused,
+app/tests\unit\test_consultation_generation_service.py:62:    assert result.fallback_mode == FallbackMode.safeguard_refused
+tests\integration\test_email_unsubscribe.py:134:async def test_email_service_skips_marketing_when_unsubscribed(db: Session, test_user: UserModel):
+tests\integration\test_email_unsubscribe.py:145:        template_name="dummy.html",  # Won't be used as it skips
+tests\integration\test_email_unsubscribe.py:150:    assert result is True  # Returns True because it's skipped intentionally
+app/tests\unit\test_daily_prediction_service.py:152:def test_birth_coordinates_fallback_when_current_location_missing(service, db):
+app/tests\unit\test_daily_prediction_service.py:539:                        fallback_reason=None,
+app/tests\unit\test_daily_prediction_service.py:618:        assert result.run.relative_scores["love"].fallback_reason == "baseline_missing"
+app/tests\unit\test_daily_prediction_guardrails.py:78:def test_prediction_legacy_namespace_is_not_importable() -> None:
+app/tests\unit\test_daily_prediction_guardrails.py:79:    """Bloque la recreation importable du package racine legacy `app.prediction`."""
+app/tests\unit\test_daily_prediction_guardrails.py:83:def test_prediction_legacy_namespace_has_no_files() -> None:
+app/tests\unit\test_daily_prediction_guardrails.py:88:def test_prediction_legacy_import_paths_are_removed() -> None:
+app/tests\unit\test_daily_prediction_guardrails.py:89:    """Interdit le retour des imports actifs du namespace legacy."""
+app/tests\unit\test_daily_prediction_guardrails.py:110:    assert not violations, "Forbidden legacy prediction imports detected.\n- " + "\n- ".join(
+app/tests\unit\test_daily_prediction_guardrails.py:115:def test_api_prediction_routers_do_not_import_legacy_prediction_namespace() -> None:
+app/tests\unit\test_daily_prediction_guardrails.py:116:    """Interdit aux routeurs API prediction de redependre du namespace legacy."""
+app/tests\unit\test_daily_prediction_guardrails.py:138:def test_prediction_repositories_do_not_import_legacy_persisted_dtos() -> None:
+app/tests\unit\test_daily_prediction_guardrails.py:139:    """Bloque les imports DTO persisted legacy depuis les repositories DB."""
+app/tests\unit\test_daily_prediction_guardrails.py:216:def test_prediction_removed_legacy_compatibility_surfaces_stay_removed() -> None:
+app/tests\unit\test_daily_prediction_guardrails.py:334:def test_fallback_on_engine_error(service, mock_deps, db_session):
+app/tests\unit\test_daily_prediction_guardrails.py:351:    # Mock fallback to return a run
+app/tests\unit\test_daily_prediction_guardrails.py:352:    fallback_run = MagicMock(spec=DailyPredictionRunModel)
+app/tests\unit\test_daily_prediction_guardrails.py:353:    fallback_run.id = 123
+app/tests\unit\test_daily_prediction_guardrails.py:354:    fallback_run.local_date = date(2023, 12, 31)
+app/tests\unit\test_daily_prediction_guardrails.py:355:    service.fallback_policy.try_fallback = MagicMock(
+app/tests\unit\test_daily_prediction_guardrails.py:356:        return_value=SimpleNamespace(success=True, fallback_run=fallback_run)
+app/tests\unit\test_daily_prediction_guardrails.py:389:    # No fallback available so the timeout error propagates
+app/tests\unit\test_daily_prediction_guardrails.py:390:    service.fallback_policy.try_fallback = MagicMock(
+app/tests\unit\test_daily_prediction_guardrails.py:391:        return_value=SimpleNamespace(success=False, fallback_run=None)
+app/tests\unit\test_daily_prediction_guardrails.py:400:def test_latest_run_fallback_found(service, db_session):
+app/tests\unit\test_daily_prediction_guardrails.py:434:    fallback = repo.get_latest_run_before(user_id=1, date_local=date(2024, 1, 10))
+app/tests\unit\test_daily_prediction_guardrails.py:435:    assert fallback is not None
+app/tests\unit\test_daily_prediction_guardrails.py:436:    assert fallback.local_date == date(2024, 1, 5)
+app/tests\unit\test_daily_prediction_guardrails.py:439:    fallback = repo.get_latest_run_before(user_id=1, date_local=date(2024, 1, 4))
+app/tests\unit\test_daily_prediction_guardrails.py:440:    assert fallback.local_date == date(2024, 1, 1)
+app/tests\unit\test_daily_prediction_guardrails.py:443:    fallback = repo.get_latest_run_before(user_id=1, date_local=date(2024, 1, 1))
+app/tests\unit\test_daily_prediction_guardrails.py:444:    assert fallback is None
+tests\integration\test_llm_legacy_residual_governance.py:1:"""Story 66.40 — registre legacy résiduel, blocage progressif, télémétrie, alignement doc."""
+tests\integration\test_llm_legacy_residual_governance.py:9:from app.domain.llm.governance.legacy_residual_registry import (
+tests\integration\test_llm_legacy_residual_governance.py:13:    load_legacy_residual_registry,
+tests\integration\test_llm_legacy_residual_governance.py:20:from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+tests\integration\test_llm_legacy_residual_governance.py:27:def test_registry_covers_all_fallback_types_and_catalog():
+tests\integration\test_llm_legacy_residual_governance.py:28:    root = load_legacy_residual_registry()
+tests\integration\test_llm_legacy_residual_governance.py:30:    assert len(root.fallback_paths) == len(FallbackType)
+tests\integration\test_llm_legacy_residual_governance.py:47:    monkeypatch.setenv("LLM_LEGACY_PROGRESSIVE_BLOCKLIST", "fb.legacy_wrapper")
+tests\integration\test_llm_legacy_residual_governance.py:48:    assert "fb.legacy_wrapper" in effective_progressive_blocklist()
+tests\integration\test_llm_legacy_residual_governance.py:50:        FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_legacy_residual_governance.py:56:    assert "fb.legacy_wrapper" in str(exc.value)
+tests\integration\test_llm_legacy_residual_governance.py:62:    monkeypatch.setenv("LLM_LEGACY_PROGRESSIVE_BLOCKLIST", "fb.legacy_wrapper")
+tests\integration\test_llm_legacy_residual_governance.py:64:        patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_gov,
+tests\integration\test_llm_legacy_residual_governance.py:68:            FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_legacy_residual_governance.py:75:    assert "llm_legacy_residual_blocked_attempt_total" in obs_names
+tests\integration\test_llm_legacy_residual_governance.py:83:    root = load_legacy_residual_registry()
+tests\integration\test_llm_legacy_residual_governance.py:84:    dup_sid = root.fallback_paths[0].stable_id
+tests\integration\test_llm_legacy_residual_governance.py:110:def test_legacy_residual_telemetry_emitted():
+tests\integration\test_llm_legacy_residual_governance.py:112:        patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_gov,
+tests\integration\test_llm_legacy_residual_governance.py:115:        FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_legacy_residual_governance.py:124:    assert "llm_gateway_fallback_usage_total" in names
+tests\integration\test_llm_legacy_residual_governance.py:125:    assert "llm_legacy_residual_activation_total" in names
+tests\integration\test_llm_legacy_residual_governance.py:131:    from app.domain.llm.governance.legacy_residual_registry import DeprecatedUseCaseRecord
+app/tests\unit\test_consultation_request_schema.py:9:def test_precheck_request_normalizes_legacy_consultation_type() -> None:
+app/tests\unit\test_consultation_request_schema.py:10:    """Les aliases legacy doivent être convertis dès la validation du schéma."""
+app/tests\unit\test_consultation_request_schema.py:16:def test_generate_request_normalizes_legacy_consultation_type() -> None:
+app/tests\unit\test_daily_prediction_version_consistency.py:116:    # Setup: No expected reference ID provided (legacy behavior)
+tests\integration\test_llm_legacy_extinction.py:14:from app.domain.llm.runtime.gateway import LLMGateway
+tests\integration\test_llm_legacy_extinction.py:20:    return LLMGateway()
+tests\integration\test_llm_legacy_extinction.py:24:async def test_legacy_use_case_entry_is_rejected_before_stage_05(gateway):
+tests\integration\test_llm_legacy_extinction.py:26:    Issue 1: Pure legacy use_case entries (e.g., 'chat_astrologer') MUST bypass
+tests\integration\test_llm_legacy_extinction.py:33:        request_id="test-66-29-legacy-entry",
+tests\integration\test_llm_legacy_extinction.py:47:    # resolve a legacy use-case config before canonical assembly/profile resolution.
+tests\integration\test_llm_legacy_extinction.py:49:        gateway, "_resolve_fallback_use_case_config", new=AsyncMock(return_value=stage05)
+tests\integration\test_llm_legacy_extinction.py:107:async def test_recovery_blocks_legacy_fallback_for_supported_feature(gateway):
+tests\integration\test_llm_legacy_extinction.py:109:    Ensure _handle_repair_or_fallback strictly forbids legacy fallback for supported features.
+tests\integration\test_llm_legacy_extinction.py:133:    # Repair : execute_request imbriqué ; on l’interrompt pour tester le refus de fallback legacy.
+tests\integration\test_llm_legacy_extinction.py:136:            gateway, "_resolve_fallback_use_case_config", new=AsyncMock()
+tests\integration\test_llm_legacy_extinction.py:139:                await gateway._handle_repair_or_fallback(
+tests\integration\test_llm_legacy_extinction.py:143:            assert "Legacy use_case fallback is strictly forbidden" in str(exc.value)
+tests\integration\test_llm_legacy_extinction.py:148:async def test_unsupported_features_still_allow_prevalidation_and_fallback(gateway):
+tests\integration\test_llm_legacy_extinction.py:150:    AC8: Features NOT in supported perimeter still allow use_case-first pre-validation and fallback.
+tests\integration\test_llm_legacy_extinction.py:163:    mock_config.fallback_use_case = "some_fallback"
+tests\integration\test_llm_legacy_extinction.py:165:    # Stage 0.5 should call the bounded legacy compatibility resolver.
+tests\integration\test_llm_legacy_extinction.py:167:        gateway, "_resolve_fallback_use_case_config", return_value=mock_config
+tests\integration\test_narrative_answer_audit_schema.py:104:                    "ADD COLUMN answer_id VARCHAR(96) DEFAULT 'legacy' NOT NULL"
+tests\integration\test_narrative_answer_audit_schema.py:113:                        (1, 10, 'chart-1', 'short', CURRENT_TIMESTAMP, NULL, 'legacy'),
+tests\integration\test_llm_runtime_suppression.py:2:"""Verifie les suppressions runtime et les surfaces de transition natales."""
+tests\integration\test_llm_runtime_suppression.py:20:from app.domain.llm.runtime.gateway import LLMGateway
+tests\integration\test_llm_runtime_suppression.py:26:    return LLMGateway()
+tests\integration\test_llm_runtime_suppression.py:29:def test_natal_legacy_carriers_are_removed_from_runtime_surface(gateway):
+tests\integration\test_llm_runtime_suppression.py:30:    """Les anciens carriers natals ne sont plus une surface de transition runtime."""
+tests\integration\test_llm_runtime_suppression.py:41:            chart_json='{"legacy": true}',
+tests\integration\test_llm_runtime_suppression.py:42:            natal_data={"legacy": True},
+tests\integration\test_llm_runtime_suppression.py:130:    mock_resolved_assembly.execution_config.fallback_use_case = None
+tests\integration\test_llm_runtime_suppression.py:181:async def test_supported_perimeter_bypasses_stage_0_5_legacy_config(gateway):
+tests\integration\test_llm_runtime_suppression.py:183:    Story 70.13: supported canonical paths must not use the legacy compat resolver during
+tests\integration\test_llm_runtime_suppression.py:200:        gateway, "_resolve_fallback_use_case_config", new=AsyncMock()
+tests\integration\test_llm_runtime_suppression.py:219:async def test_removed_legacy_use_case_key_is_rejected(gateway):
+tests\integration\test_llm_runtime_suppression.py:229:        request_id="test-66-30-legacy-alias",
+tests\integration\test_llm_runtime_suppression.py:238:    assert excinfo.value.error_code == "removed_legacy_use_case_key"
+tests\integration\test_llm_runtime_suppression.py:282:    mock_resolved_assembly.execution_config.fallback_use_case = None
+tests\integration\test_llm_runtime_suppression.py:369:    mock_resolved_assembly.execution_config.fallback_use_case = None
+tests\integration\test_llm_runtime_suppression.py:422:async def test_fallback_is_tolerated_on_unsupported_perimeter(gateway):
+tests\integration\test_llm_runtime_suppression.py:425:    STILL tolerate resolve_model() fallback IF NOT NOMINAL.
+tests\integration\test_llm_runtime_suppression.py:433:        flags=ExecutionFlags(test_fallback_active=True),  # NOT NOMINAL
+tests\integration\test_llm_runtime_suppression.py:434:        request_id="test-66-30-fallback-tolerated",
+tests\integration\test_llm_runtime_suppression.py:459:            "_resolve_fallback_use_case_config",
+tests\integration\test_llm_runtime_suppression.py:470:                    return_value="gpt-4o-fallback",
+tests\integration\test_llm_runtime_suppression.py:474:                    assert result.execution_profile_source == "fallback_resolve_model"
+tests\integration\test_llm_runtime_suppression.py:475:                    assert result.model_id == "gpt-4o-fallback"
+tests\unit\prediction\test_public_astro_daily_events.py:91:def test_fallback_none(policy):
+app/tests\unit\test_db_bootstrap.py:6:def test_should_skip_auto_upgrade_under_pytest() -> None:
+tests\integration\test_llm_integrated_propagation.py:16:from app.domain.llm.runtime.gateway import LLMGateway
+tests\integration\test_llm_integrated_propagation.py:26:    gateway = LLMGateway()
+tests\integration\test_llm_integrated_propagation.py:55:    # We'll mock the legacy compatibility resolver to return this prompt
+tests\integration\test_llm_integrated_propagation.py:80:            LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config
+tests\integration\test_llm_integrated_propagation.py:113:    gateway = LLMGateway()
+tests\integration\test_llm_integrated_propagation.py:158:            LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config
+tests\integration\test_llm_integrated_propagation.py:192:    gateway = LLMGateway()
+tests\integration\test_llm_integrated_propagation.py:211:        natal_data={"planets": {}},
+tests\integration\test_llm_integrated_propagation.py:237:            LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config
+app/tests\unit\test_db_model_registry_guard.py:29:        "llm_prompt_version_fallback_archives",
+tests\integration\test_llm_provider_locking.py:15:from app.domain.llm.runtime.gateway import LLMGateway
+tests\integration\test_llm_provider_locking.py:41:    gateway = LLMGateway()
+tests\integration\test_llm_provider_locking.py:78:    mock_config.fallback_use_case = None
+tests\integration\test_llm_provider_locking.py:94:        fallback_use_case=None,
+tests\integration\test_llm_provider_locking.py:105:    mock_assembly_db.fallback_use_case = None
+tests\integration\test_llm_provider_locking.py:122:    mock_resolved.execution_config.fallback_use_case = None
+tests\integration\test_llm_provider_locking.py:149:        patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
+tests\integration\test_llm_provider_locking.py:164:    gateway = LLMGateway()
+tests\integration\test_llm_provider_locking.py:201:    mock_config.fallback_use_case = None
+tests\integration\test_llm_provider_locking.py:217:        fallback_use_case=None,
+tests\integration\test_llm_provider_locking.py:228:    mock_assembly_db.fallback_use_case = None
+tests\integration\test_llm_provider_locking.py:245:    mock_resolved.execution_config.fallback_use_case = None
+tests\integration\test_llm_provider_locking.py:272:        patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
+tests\integration\test_llm_provider_locking.py:282:async def test_gateway_non_nominal_accepts_fallback_and_logs():
+tests\integration\test_llm_provider_locking.py:284:    Testing that fallback to openai is triggered for anthropic if non-nominal,
+tests\integration\test_llm_provider_locking.py:287:    gateway = LLMGateway()
+tests\integration\test_llm_provider_locking.py:300:    request.flags.test_fallback_active = True
+tests\integration\test_llm_provider_locking.py:325:    mock_config.fallback_use_case = None
+tests\integration\test_llm_provider_locking.py:341:                fallback_use_case=None,
+tests\integration\test_llm_provider_locking.py:349:        patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config),
+tests\integration\test_llm_provider_locking.py:352:        patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_inc,
+tests\integration\test_llm_provider_locking.py:359:            c for c in mock_inc.call_args_list if c[0][0] == "llm_gateway_fallback_usage_total"
+tests\integration\test_llm_provider_locking.py:367:            if labels.get("fallback_type") == "provider_openai":
+tests\integration\test_llm_provider_locking.py:370:        assert found, "Expected fallback telemetry not found with is_nominal=false"
+tests\unit\prediction\test_llm_narrator_deprecation_guard.py:76:def test_prediction_runtime_does_not_reintroduce_legacy_narrator_surface() -> None:
+tests\unit\prediction\test_llm_narrator_deprecation_guard.py:77:    """Echoue si la facade runtime legacy redevient importable ou instanciable."""
+tests\unit\prediction\test_llm_narrator_deprecation_guard.py:79:    legacy_path = root / "app" / "prediction" / "llm_narrator.py"
+tests\unit\prediction\test_llm_narrator_deprecation_guard.py:81:    if legacy_path.exists():
+tests\unit\prediction\test_llm_narrator_deprecation_guard.py:82:        violations.append(f"{legacy_path.relative_to(root)} exists")
+tests\integration\test_llm_release.py:28:from app.domain.llm.runtime.gateway import LLMGateway
+tests\integration\test_llm_release.py:55:        pytest.skip("Aucune assembly en base : impossible de tester les snapshots de release.")
+tests\integration\test_llm_release.py:104:    fallback: bool = False,
+tests\integration\test_llm_release.py:113:        "forbidden_fallback_detected": fallback,
+tests\integration\test_llm_release.py:166:                "forbidden_fallback_detected": False,
+tests\integration\test_llm_release.py:248:        # Pick a target that avoids schema-heavy and known legacy prompt pitfalls when possible.
+tests\integration\test_llm_release.py:313:        gateway = LLMGateway()
+tests\integration\test_llm_release.py:411:        pytest.skip("Async SQLite integration test requires a sqlite database_url")
+tests\integration\test_llm_release.py:523:                pytest.skip("Aucune assembly de référence pour dupliquer en en-US.")
+tests\integration\test_llm_release.py:651:                "fallback_rate": 0.01,
+tests\integration\test_llm_release.py:657:            signals={"error_rate": 0.03, "p95_latency_ms": 900.0, "fallback_rate": 0.0},
+tests\integration\test_llm_governance_registry.py:13:from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+tests\integration\test_llm_governance_registry.py:14:from app.domain.llm.runtime.gateway import LLMGateway
+tests\integration\test_llm_governance_registry.py:19:    return LLMGateway()
+tests\integration\test_llm_governance_registry.py:25:    AC3: Sur les familles nominales fermées (ex: chat), le fallback use_case-first est interdit.
+tests\integration\test_llm_governance_registry.py:28:        FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:35:    assert "Usage du fallback 'use_case_first' interdit pour la famille 'chat'" in str(exc.value)
+tests\integration\test_llm_governance_registry.py:39:async def test_governance_blocks_narrator_legacy_for_horoscope_daily():
+tests\integration\test_llm_governance_registry.py:41:    AC8: Le fallback narrator legacy est interdit pour horoscope_daily.
+tests\integration\test_llm_governance_registry.py:44:        FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:46:            call_site="narrator_legacy_guard",
+tests\integration\test_llm_governance_registry.py:51:    # Message exact : "Usage du fallback 'narrator_legacy' interdit
+tests\integration\test_llm_governance_registry.py:53:    expected = "Usage du fallback 'narrator_legacy' interdit pour la famille 'horoscope_daily'"
+tests\integration\test_llm_governance_registry.py:60:    Vérifie que l'usage d'un fallback autorisé émet bien la télémétrie.
+tests\integration\test_llm_governance_registry.py:62:    with patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_increment:
+tests\integration\test_llm_governance_registry.py:64:        FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:73:        assert args[0] == "llm_gateway_fallback_usage_total"
+tests\integration\test_llm_governance_registry.py:74:        assert kwargs["labels"]["fallback_type"] == "legacy_wrapper"
+tests\integration\test_llm_governance_registry.py:79:async def test_governance_allows_transitory_fallback_on_permitted_perimeter(gateway):
+tests\integration\test_llm_governance_registry.py:81:    Vérifie qu'un fallback transitoire est autorisé s'il n'est pas sur une famille interdite.
+tests\integration\test_llm_governance_registry.py:109:        with patch.object(gateway, "_resolve_fallback_use_case_config", return_value=mock_config):
+tests\integration\test_llm_governance_registry.py:110:            # No mock on track_fallback here: we want to check it doesn't raise
+tests\integration\test_llm_governance_registry.py:123:    AC6: Les fallbacks à retirer sont interdits sur les parcours nominaux.
+tests\integration\test_llm_governance_registry.py:128:            FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:134:        msg = "Dépendance nominale au fallback 'execution_config_admin' interdite"
+tests\integration\test_llm_governance_registry.py:140:            FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:146:        msg = "Dépendance nominale au fallback 'execution_config_admin' interdite"
+tests\integration\test_llm_governance_registry.py:153:    AC9: Le fallback de test local est interdit en production.
+tests\integration\test_llm_governance_registry.py:157:            FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:163:        assert "Usage du fallback 'test_local' strictement interdit en production" in str(exc.value)
+tests\integration\test_llm_governance_registry.py:173:        from app.domain.llm.runtime.fallback_governance import logger as gov_logger
+tests\integration\test_llm_governance_registry.py:176:            FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:195:            FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:201:        expected = "Usage du fallback 'use_case_first' interdit pour la famille 'horoscope_daily'"
+tests\integration\test_llm_governance_registry.py:210:    with patch("app.domain.llm.runtime.fallback_governance.increment_counter") as mock_increment:
+tests\integration\test_llm_governance_registry.py:213:            FallbackGovernanceRegistry.track_fallback(
+tests\integration\test_llm_governance_registry.py:222:        assert args[0] == "llm_gateway_fallback_usage_total"
+tests\integration\test_llm_governance_registry.py:223:        assert kwargs["labels"]["fallback_type"] == "execution_config_admin"
+tests\integration\test_llm_observability_integration.py:19:from app.domain.llm.runtime.gateway import LLMGateway
+tests\integration\test_llm_observability_integration.py:24:    return LLMGateway()
+tests\integration\test_llm_observability_integration.py:66:    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
+tests\integration\test_llm_observability_integration.py:67:        with patch.object(LLMGateway, "_resolve_plan") as mock_resolve:
+tests\integration\test_llm_observability_integration.py:89:            with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
+tests\integration\test_llm_observability_integration.py:126:        execution_profile_source="fallback_provider_unsupported",
+tests\integration\test_llm_observability_integration.py:148:    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
+tests\integration\test_llm_observability_integration.py:149:        with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
+tests\integration\test_llm_observability_integration.py:150:            with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
+tests\integration\test_llm_observability_integration.py:154:                assert obs.pipeline_kind == "transitional_governance"
+tests\integration\test_llm_observability_integration.py:156:                assert obs.fallback_kind == FallbackType.PROVIDER_OPENAI
+tests\integration\test_llm_observability_integration.py:208:    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
+tests\integration\test_llm_observability_integration.py:209:        with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
+tests\integration\test_llm_observability_integration.py:210:            with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
+tests\integration\test_llm_observability_integration.py:268:    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
+tests\integration\test_llm_observability_integration.py:269:        with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
+tests\integration\test_llm_observability_integration.py:270:            with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
+tests\integration\test_llm_observability_integration.py:279:async def test_observability_snapshot_legacy_path_length_budget(gateway):
+tests\integration\test_llm_observability_integration.py:281:    Vérifie que le chemin legacy utilise la bonne taxonomie pour max_output_tokens_source.
+tests\integration\test_llm_observability_integration.py:285:            use_case="legacy_case",
+tests\integration\test_llm_observability_integration.py:286:            feature="legacy_feat",
+tests\integration\test_llm_observability_integration.py:301:    # Plan representing a legacy resolution with length_budget_global
+tests\integration\test_llm_observability_integration.py:303:        feature="legacy_feat",
+tests\integration\test_llm_observability_integration.py:319:        use_case="legacy_case",
+tests\integration\test_llm_observability_integration.py:327:    with patch.object(LLMGateway, "_resolve_fallback_use_case_config", return_value=mock_config):
+tests\integration\test_llm_observability_integration.py:328:        with patch.object(LLMGateway, "_resolve_plan", return_value=(plan, None)):
+tests\integration\test_llm_observability_integration.py:329:            with patch.object(LLMGateway, "_call_provider", return_value=mock_response):
+app/tests\unit\test_editorial_builder.py:266:def test_builder_supports_real_timeblock_objects_with_fallback() -> None:
+tests\integration\test_llm_provider_runtime_chaos.py:59:        fallback_kind=None,
+tests\integration\test_llm_provider_runtime_chaos.py:147:    fallback_path = Path(tempfile.gettempdir()) / "horoscope_front" / "chaos" / primary_path.name
+tests\integration\test_llm_provider_runtime_chaos.py:148:    return [primary_path, fallback_path]
+tests\integration\test_llm_provider_runtime_chaos.py:434:    # Pas de réouverture fallback: mode reste nominal et provider verrouillé.
+tests\unit\domain\astrology\test_aspect_interpretation_builder.py:71:    """Une absence de profil ne produit pas de fallback texte silencieux."""
+tests\integration\test_llm_golden_regression.py:45:        fallback_kind=None,
+tests\integration\test_llm_golden_regression.py:60:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:85:async def test_golden_regression_campaign_fail_legacy():
+tests\integration\test_llm_golden_regression.py:93:    mock_result.meta.execution_profile_source = "fallback_resolve_model"
+tests\integration\test_llm_golden_regression.py:95:        pipeline_kind="transitional_governance",
+tests\integration\test_llm_golden_regression.py:97:        fallback_kind="use_case_first",
+tests\integration\test_llm_golden_regression.py:112:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:129:        assert len(report.results[0].legacy_errors) > 0
+tests\integration\test_llm_golden_regression.py:130:        assert "Forbidden legacy execution path" in report.results[0].legacy_errors[0]
+tests\integration\test_llm_golden_regression.py:132:            "Forbidden legacy execution profile source" in error
+tests\integration\test_llm_golden_regression.py:133:            for error in report.results[0].legacy_errors
+tests\integration\test_llm_golden_regression.py:151:        fallback_kind=None,
+tests\integration\test_llm_golden_regression.py:166:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:201:        fallback_kind=None,
+tests\integration\test_llm_golden_regression.py:216:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:251:        fallback_kind=None,
+tests\integration\test_llm_golden_regression.py:266:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:296:        fallback_kind=None,
+tests\integration\test_llm_golden_regression.py:309:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:339:        fallback_kind=None,
+tests\integration\test_llm_golden_regression.py:362:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:382:async def test_golden_regression_projects_chart_json_into_context():
+tests\integration\test_llm_golden_regression.py:396:        fallback_kind=None,
+tests\integration\test_llm_golden_regression.py:419:        "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+tests\integration\test_llm_golden_regression.py:439:    assert captured["context"].chart_json == "{}"
+app/tests\unit\test_editorial_template_engine.py:155:def test_legacy_french_codes_are_normalized_for_labels_and_cautions():
+app/tests\unit\test_editorial_template_engine.py:204:def test_render_fallback_when_no_blocks(sample_editorial):
+app/tests\unit\test_editorial_template_engine.py:239:def test_render_empty_categories_impacted_uses_fallback_label():
+tests\unit\domain\astrology\test_aspect_runtime_contracts.py:95:    """Les contrats separes remplacent la definition legacy hybride."""
+tests\unit\domain\astrology\test_aspect_runtime_contracts.py:119:def test_aspect_runtime_facade_does_not_expose_legacy_interpretation() -> None:
+tests\unit\domain\astrology\test_aspect_runtime_contracts.py:120:    """La facade runtime ne declare plus l'alias legacy interpretation."""
+app/tests\unit\test_engine_orchestrator.py:425:def test_run_can_skip_editorial_generation(orchestrator, base_input):
+app/tests\unit\test_engine_orchestrator.py:684:    """AC2 - Test V3 ONLY mode with legacy-compatible V3 outputs."""
+app/tests\unit\test_engine_orchestrator.py:696:def test_run_v3_only_skips_v2_pipeline(base_input):
+app/tests\unit\test_engine_orchestrator.py:1396:def test_run_v3_keeps_extended_metrics_in_legacy_category_scores(base_input):
+app/tests\integration\test_contract_api.py:57:    assert "chart_json" in data["required_prompt_placeholders"]
+app/tests\integration\test_contract_api.py:61:def test_get_use_case_contract_hides_removed_legacy_use_case():
+app/tests\integration\test_consultation_catalogue.py:103:def test_legacy_mapping_precheck():
+app/tests\integration\test_consultation_catalogue.py:140:    assert json_data["data"]["fallback_mode"] == "relation_user_only"
+app/tests\integration\test_consultation_catalogue.py:144:def test_legacy_mapping_generate():
+app/tests\integration\test_consultation_catalogue.py:162:            "question": "Test legacy",
+app/tests\integration\test_chat_persona_prompting.py:11:- Le fallback legacy fonctionne si persona_id est None (AC4).
+app/tests\integration\test_chat_persona_prompting.py:239:def test_persona_fallback_on_none_persona_id_returns_default(
+app/tests\integration\test_chat_persona_prompting.py:270:def test_persona_fallback_on_unknown_persona_id_returns_default(
+tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:156:    """Aucune variante inconnue ne déclenche un fallback silencieux."""
+tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:158:        AstralPointCalculationResolver().resolve(_point("north_node"), "legacy")
+tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:162:    """Une variante directe sans clé DB échoue au lieu d'inférer un fallback local."""
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:45:from app.services.chart.json_builder import build_chart_json
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:187:    chart_json = build_chart_json(result, birth_profile)
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:219:                "sect": chart_json["dignities"]["sect"],
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:220:                "first_planet_sect_condition": chart_json["dignities"]["planets"][first_planet][
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:224:                    item["condition_code"] for item in chart_json["advanced_conditions"]
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:227:                    "top_planet_code": chart_json["dominant_planets"]["top_planet_code"],
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:228:                    "chart_ruler_code": chart_json["dominant_planets"]["chart_ruler_code"],
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:229:                    "most_elevated_planet_code": chart_json["dominant_planets"][
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:233:                        item["planet_code"] for item in chart_json["dominant_planets"]["planets"]
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:238:                        item["signal"] for item in chart_json["interpretation_adapter"]["signals"]
+tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:240:                    "critical_patterns": chart_json["interpretation_adapter"]["critical_patterns"],
+app/tests\unit\test_ephemeris_provider.py:329:@pytest.mark.skipif(find_spec("swisseph") is None, reason="swisseph not installed")
+app/tests\unit\test_ephemeris_provider.py:336:        pytest.skip("swisseph not fully configured or data files missing")
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:21:    validate_doctrine_status_transition,
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:22:    validate_owner_status_transition,
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:32:    "allowed_transitions",
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:56:        assert entry.allowed_transitions
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:86:def test_allowed_owner_and_doctrine_transitions_are_enforced() -> None:
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:87:    """Les transitions refusent les changements non gouvernes."""
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:88:    validate_owner_status_transition(
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:92:    validate_doctrine_status_transition(
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:98:        validate_owner_status_transition(
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:103:        validate_doctrine_status_transition(
+tests\unit\domain\astrology\test_astrology_doctrine_governance.py:148:def test_unknown_resolver_fails_without_fallback() -> None:
+app/tests\integration\test_chat_entitlement.py:68:        "fallback_used": False,
+app/tests\integration\test_chat_entitlement.py:130:        "fallback_used": False,
+app/tests\unit\test_entitlement_mutation_model_structure.py:253:def test_legacy_root_model_shims_are_removed() -> None:
+app/tests\unit\test_entitlement_mutation_model_structure.py:254:    legacy_files = [
+app/tests\unit\test_entitlement_mutation_model_structure.py:265:    assert all(not (models_root / name).exists() for name in legacy_files)
+app/tests\unit\test_entitlement_mutation_model_structure.py:269:    legacy_service_files = [
+app/tests\unit\test_entitlement_mutation_model_structure.py:311:    assert all(not (services_root / name).exists() for name in legacy_service_files)
+app/tests\integration\test_chat_api.py:410:    assert payload["fallback_used"] is False
+app/tests\integration\test_chat_api.py:1076:    assert payload["fallback_used"] is False
+app/tests\integration\test_chat_api.py:1079:def test_send_chat_message_off_scope_recovery_uses_safe_fallback() -> None:
+app/tests\integration\test_chat_api.py:1082:    _activate_entry_plan(access_token, "chat-checkout-offscope-fallback-1")
+app/tests\integration\test_chat_api.py:1096:    assert payload["recovery"]["recovery_strategy"] == "safe_fallback"
+app/tests\integration\test_chat_api.py:1097:    assert payload["fallback_used"] is True
+app/tests\unit\test_eval_harness_natal.py:11:    with patch("app.ops.llm.eval_harness.LLMGateway") as mock:
+app/tests\unit\test_event_detector.py:74:    # Mock event types for priority/weight — empty (always fallback)
+tests\unit\domain\astrology\interpretation\advanced_conditions\test_profile_runtime.py:218:def test_resolution_skips_missing_profiles_without_blocking_other_profiles() -> None:
+tests\unit\domain\astrology\test_astrology_graph_family_registry.py:111:def test_unknown_family_code_is_rejected_without_fallback() -> None:
+app/tests\integration\test_ephemeris_api.py:525:    def _simulate_natal_data_missing():
+app/tests\integration\test_gateway_gpt5_params.py:20:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\integration\test_gateway_gpt5_params.py:84:            required_prompt_placeholders=["chart_json"],
+app/tests\integration\test_gateway_gpt5_params.py:92:        developer_prompt="Analyse {{chart_json}}",
+app/tests\integration\test_gateway_gpt5_params.py:152:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\integration\test_gateway_gpt5_params.py:162:        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+app/tests\integration\test_gateway_gpt5_params.py:194:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\integration\test_gateway_gpt5_params.py:204:        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+app/tests\integration\test_guidance_api.py:584:def test_contextual_guidance_uses_safe_fallback_metadata_when_recovery_fails() -> None:
+app/tests\integration\test_guidance_api.py:600:    assert data["fallback_used"] is True
+app/tests\integration\test_guidance_api.py:603:    assert data["recovery"]["recovery_strategy"] == "safe_fallback"
+app/tests\integration\test_db_bootstrap_partial_upgrade.py:115:def test_auto_upgrade_repairs_only_legacy_llm_call_logs_provider_column(
+app/tests\integration\test_db_bootstrap_partial_upgrade.py:193:                    fallback_triggered BOOLEAN NOT NULL,
+app/tests\integration\test_db_bootstrap_partial_upgrade.py:215:                    cost_usd_estimated, validation_status, repair_attempted, fallback_triggered,
+app/tests\integration\test_db_bootstrap_partial_upgrade.py:238:                        validation_status, repair_attempted, fallback_triggered, request_id,
+app/tests\integration\test_entitlements_me_contract.py:64:    # 1. Billing Plan (legacy but required by BillingService)
+tests\unit\domain\astrology\test_calculation_graph_contracts.py:80:        "skipped",
+app/tests\integration\test_daily_prediction_qa.py:86:    get_transition_day,
+app/tests\integration\test_daily_prediction_qa.py:103:    "transition_day": get_transition_day,
+app/tests\integration\test_daily_prediction_qa.py:450:def test_legacy_ruleset_1_0_0_still_supported(
+app/tests\integration\test_daily_prediction_qa.py:563:    ["calm_day", "active_day", "transition_day", "ambiguous_day", "intense_neutral_day"],
+app/tests\integration\test_daily_prediction_qa.py:589:    for fixture_name in ["active_day", "transition_day", "ambiguous_day", "intense_neutral_day"]:
+app/tests\integration\test_llm_qa_runtime_contracts.py:18:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\integration\test_llm_qa_runtime_contracts.py:84:        required_prompt_placeholders=["locale", "chart_json"],
+app/tests\integration\test_llm_qa_runtime_contracts.py:92:        developer_prompt="Locale={{locale}}\nChart={{chart_json}}",
+app/tests\integration\test_llm_qa_runtime_contracts.py:142:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\integration\test_llm_qa_runtime_contracts.py:157:                context=ExecutionContext(chart_json='{"sun":"taurus"}'),
+app/tests\unit\test_gateway_3_roles.py:11:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\unit\test_gateway_3_roles.py:46:    """Injecte une configuration fallback minimale pour les use cases de test non registres."""
+app/tests\unit\test_gateway_3_roles.py:49:        "build_fallback_use_case_config",
+app/tests\unit\test_gateway_3_roles.py:63:async def test_chart_json_in_user_message_not_developer(
+app/tests\unit\test_gateway_3_roles.py:67:    Vérifie que chart_json est placé dans le message user si absent de required_prompt_placeholders.
+app/tests\unit\test_gateway_3_roles.py:71:    # Config WITHOUT chart_json in placeholders
+app/tests\unit\test_gateway_3_roles.py:93:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_3_roles.py:99:        context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
+app/tests\unit\test_gateway_3_roles.py:120:async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_prompt(
+app/tests\unit\test_gateway_3_roles.py:125:    Régression: si chart_json est dans required_prompt_placeholders
+app/tests\unit\test_gateway_3_roles.py:128:    use_case = "test_chart_json_required_but_not_rendered"
+app/tests\unit\test_gateway_3_roles.py:132:        display_name="Test chart_json fallback",
+app/tests\unit\test_gateway_3_roles.py:134:        required_prompt_placeholders=["locale", "use_case", "chart_json"],
+app/tests\unit\test_gateway_3_roles.py:151:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_3_roles.py:157:        context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
+app/tests\unit\test_gateway_behavioral.py:19:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\unit\test_gateway_behavioral.py:52:def _install_fallback_registry(
+app/tests\unit\test_gateway_behavioral.py:55:    """Injecte un registre fallback borne aux use cases du test."""
+app/tests\unit\test_gateway_behavioral.py:58:        "build_fallback_use_case_config",
+app/tests\unit\test_gateway_behavioral.py:64:async def test_check_1_fallback_priority(db_session, monkeypatch: pytest.MonkeyPatch):
+app/tests\unit\test_gateway_behavioral.py:65:    """Point 1: Le fallback nominal vient du contrat canonique / use-case config."""
+app/tests\unit\test_gateway_behavioral.py:75:    fallback_A = LlmUseCaseConfigModel(key="fallback_A", display_name="A", description="D")
+app/tests\unit\test_gateway_behavioral.py:76:    db_session.add_all([use_case, fallback_A])
+app/tests\unit\test_gateway_behavioral.py:85:        use_case_key="fallback_A",
+app/tests\unit\test_gateway_behavioral.py:93:    _install_fallback_registry(
+app/tests\unit\test_gateway_behavioral.py:101:                fallback_target_use_case="fallback_A",
+app/tests\unit\test_gateway_behavioral.py:103:            "fallback_A": UseCaseConfig(
+app/tests\unit\test_gateway_behavioral.py:105:                developer_prompt="registry-fallback",
+app/tests\unit\test_gateway_behavioral.py:106:                prompt_version_id="registry-fallback",
+app/tests\unit\test_gateway_behavioral.py:117:            create_mock_result("fallback_A", '{"ok": true}'),  # fallback
+app/tests\unit\test_gateway_behavioral.py:121:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_behavioral.py:133:    assert result.use_case == "fallback_A"
+app/tests\unit\test_gateway_behavioral.py:134:    assert result.meta.validation_status == "fallback"
+app/tests\unit\test_gateway_behavioral.py:154:    _install_fallback_registry(
+app/tests\unit\test_gateway_behavioral.py:174:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_behavioral.py:196:    """Point 4 & B: Une seule tentative de repair + protection anti-boucle fallback."""
+app/tests\unit\test_gateway_behavioral.py:227:    _install_fallback_registry(
+app/tests\unit\test_gateway_behavioral.py:235:                fallback_target_use_case="B",
+app/tests\unit\test_gateway_behavioral.py:242:                fallback_target_use_case="A",
+app/tests\unit\test_gateway_behavioral.py:256:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_behavioral.py:270:    assert "Infinite fallback loop detected" in str(exc.value)
+app/tests\unit\test_gateway_behavioral.py:278:    gateway = LLMGateway()
+app/tests\integration\test_entitlements_me.py:608:def test_no_legacy_fallback_reason_in_response(db_session: Session):
+app/tests\integration\test_entitlements_me.py:609:    """AC: 11 - Vérifier qu'aucun plan connu ne retourne reason_code=legacy_fallback."""
+app/tests\integration\test_entitlements_me.py:618:            assert f["reason_code"] != "legacy_fallback", (
+app/tests\integration\test_entitlements_me.py:619:                f"Plan {plan} feature {f['feature_code']} returned legacy_fallback"
+app/tests\integration\test_entitlements_me.py:623:def test_trialing_stripe_profile_opens_entitlements_without_legacy_subscription(
+app/tests\unit\test_gateway_input_validation_payload.py:2:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\unit\test_gateway_input_validation_payload.py:5:def test_build_validation_payload_does_not_rebuild_chart_json_from_natal_data() -> None:
+app/tests\unit\test_gateway_input_validation_payload.py:6:    gateway = LLMGateway()
+app/tests\unit\test_gateway_input_validation_payload.py:9:        developer_prompt="Test {{chart_json}}",
+app/tests\unit\test_gateway_input_validation_payload.py:12:            "required": ["chart_json"],
+app/tests\unit\test_gateway_input_validation_payload.py:14:                "chart_json": {"type": "object"},
+app/tests\unit\test_gateway_input_validation_payload.py:24:            natal_data={"meta": {"chart_json_version": "1"}},
+app/tests\unit\test_gateway_input_validation_payload.py:25:            chart_json='{"meta": {"chart_json_version": "legacy"}}',
+app/tests\unit\test_gateway_input_validation_payload.py:29:    assert "chart_json" not in payload
+app/tests\unit\test_gateway_input_validation_payload.py:32:def test_build_validation_payload_does_not_parse_chart_json_string_from_context() -> None:
+app/tests\unit\test_gateway_input_validation_payload.py:33:    gateway = LLMGateway()
+app/tests\unit\test_gateway_input_validation_payload.py:36:        developer_prompt="Test {{chart_json}}",
+app/tests\unit\test_gateway_input_validation_payload.py:39:            "required": ["chart_json"],
+app/tests\unit\test_gateway_input_validation_payload.py:40:            "properties": {"chart_json": {"type": "object"}},
+app/tests\unit\test_gateway_input_validation_payload.py:47:        ExecutionContext(chart_json='{"meta": {"chart_json_version": "1"}}'),
+app/tests\unit\test_gateway_input_validation_payload.py:50:    assert "chart_json" not in payload
+app/tests\integration\test_horoscope_daily_entitlement.py:45:        # Billing Plan (required for BillingService fallback in tests)
+app/tests\integration\test_horoscope_daily_entitlement.py:94:    # Subscriptions (Legacy fallback for tests)
+tests\unit\domain\astrology\test_chart_object_capability_taxonomy.py:93:def test_unknown_family_is_rejected_without_fallback() -> None:
+app/tests\unit\test_feature_scope_startup_validation.py:54:def test_startup_validation_off_skips_validator(caplog: pytest.LogCaptureFixture) -> None:
+app/tests\unit\test_feature_scope_startup_validation.py:67:    """Invalid mode: fallback to strict (failure blocks)."""
+app/tests\unit\test_gateway_modes.py:25:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\unit\test_gateway_modes.py:67:def _install_fallback_registry(
+app/tests\unit\test_gateway_modes.py:71:    """Installe un registre fallback local borne aux use cases testes."""
+app/tests\unit\test_gateway_modes.py:77:    monkeypatch.setattr(gateway_module, "build_fallback_use_case_config", _resolver)
+app/tests\unit\test_gateway_modes.py:80:def _fallback_config(
+app/tests\unit\test_gateway_modes.py:89:    """Construit un contrat fallback canonique pour un test unitaire."""
+app/tests\unit\test_gateway_modes.py:117:    _install_fallback_registry(
+app/tests\unit\test_gateway_modes.py:119:        _fallback_config("test_none", interaction_mode="structured", user_question_policy="none"),
+app/tests\unit\test_gateway_modes.py:124:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_modes.py:156:    _install_fallback_registry(
+app/tests\unit\test_gateway_modes.py:158:        _fallback_config(
+app/tests\unit\test_gateway_modes.py:167:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_modes.py:214:    _install_fallback_registry(
+app/tests\unit\test_gateway_modes.py:216:        _fallback_config(
+app/tests\unit\test_gateway_modes.py:223:    gateway = LLMGateway(responses_client=MagicMock())
+app/tests\unit\test_gateway_modes.py:251:    _install_fallback_registry(
+app/tests\unit\test_gateway_modes.py:253:        _fallback_config("test_chat", interaction_mode="chat", user_question_policy="optional"),
+app/tests\unit\test_gateway_modes.py:258:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_modes.py:321:    gateway = LLMGateway(responses_client=MagicMock())
+app/tests\unit\test_gateway_modes.py:330:        context=ExecutionContext(chart_json='{"sun_sign":"aries"}'),
+app/tests\unit\test_gateway_modes.py:359:    _install_fallback_registry(
+app/tests\unit\test_gateway_modes.py:361:        _fallback_config("test_schema", output_schema_id=str(schema.id)),
+app/tests\unit\test_gateway_modes.py:366:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_modes.py:381:async def test_catalog_schema_is_used_for_free_natal_fallback(
+app/tests\unit\test_gateway_modes.py:397:    _install_fallback_registry(monkeypatch, _fallback_config(use_case))
+app/tests\unit\test_gateway_modes.py:414:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_gateway_modes.py:418:        context=ExecutionContext(chart_json='{"meta": {"birth_date": "2017-03-14"}}'),
+tests\unit\domain\astrology\test_chart_object_house_position_rulership_runtime.py:191:def test_missing_sign_keeps_dispositor_none_without_fallback() -> None:
+app/tests\integration\test_load_smoke_critical_flows.py:159:        legacy_plan = db.scalar(
+app/tests\integration\test_load_smoke_critical_flows.py:164:        if not legacy_plan:
+app/tests\integration\test_load_smoke_critical_flows.py:165:            legacy_plan = EnterpriseBillingPlanModel(
+app/tests\integration\test_load_smoke_critical_flows.py:174:            db.add(legacy_plan)
+app/tests\integration\test_load_smoke_critical_flows.py:188:                source_id=legacy_plan.id,
+app/tests\integration\test_load_smoke_critical_flows.py:229:                enterprise_account_id=account.id, plan_id=legacy_plan.id
+app/tests\unit\test_geo_place_resolved.py:460:def test_natal_service_prioritizes_resolved_coordinates_over_legacy_conflict():
+app/tests\unit\test_geo_place_resolved.py:461:    """Conflit source: coords résolues doivent gagner sur les coords legacy."""
+app/tests\unit\test_golden_pro_dataset.py:20:requires_swisseph = pytest.mark.skipif(
+app/tests\unit\test_golden_reference_swisseph.py:72:requires_swisseph = pytest.mark.skipif(
+app/tests\unit\test_golden_reference_swisseph.py:328:        quel cas golden échoue EXPLICITEMENT en CI (pas de skip silencieux).
+app/tests\unit\test_golden_reference_swisseph.py:334:            pytest.skip(f"Cas {case.label!r} n'inclut pas de valeur golden pour 'sun'")
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:1:"""Valide la migration 0073 sans reintroduire les champs runtime legacy supprimes ensuite."""
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:19:def test_cleanup_migration_archives_and_drops_prompt_fallback_and_use_case_index(
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:46:                    fallback_use_case_key
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:80:                    fallback_use_case_key,
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:92:                    :fallback_use_case_key,
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:107:                "fallback_use_case_key": "natal_interpretation_short",
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:125:                    fallback_triggered,
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:144:                    :fallback_triggered,
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:166:                "fallback_triggered": 0,
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:188:                    SELECT prompt_version_id, fallback_use_case_key
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:189:                    FROM llm_prompt_version_fallback_archives
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:199:    assert "fallback_use_case_key" not in prompt_columns
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:201:    assert archive_row["fallback_use_case_key"] == "natal_interpretation_short"
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:217:                SELECT fallback_use_case_key
+app/tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:225:    assert "fallback_use_case_key" in prompt_columns_after_downgrade
+app/tests\unit\test_golden_zodiac_frame_invariants.py:57:requires_swisseph = pytest.mark.skipif(
+app/tests\unit\test_golden_zodiac_sidereal_ayanamsa.py:124:requires_swisseph = pytest.mark.skipif(
+app/tests\unit\test_guidance_service.py:225:    assert response.fallback_used is False
+app/tests\unit\test_guidance_service.py:261:    assert response.fallback_used is False
+app/tests\unit\test_guidance_service.py:300:    assert "profile=legacy-default" in persona_line
+app/tests\unit\test_guidance_service.py:561:    assert response.fallback_used is False
+app/tests\unit\test_guidance_service.py:567:def test_request_contextual_guidance_uses_safe_fallback_when_recovery_fails() -> None:
+app/tests\unit\test_guidance_service.py:582:    assert response.fallback_used is True
+app/tests\unit\test_guidance_service.py:585:    assert response.recovery.recovery_strategy == "safe_fallback"
+app/tests\unit\test_guidance_service.py:910:            fallback_used,
+app/tests\unit\test_guidance_service.py:920:            persona_profile_code="legacy-default",
+app/tests\unit\test_guidance_service.py:925:    assert fallback_used is False
+tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py:201:    """Une source non canonique est refusee au lieu de produire un fallback."""
+tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py:204:            {"projection_id": "legacy_projection"},
+app/tests\unit\test_house_ruler_resolver.py:84:    """Refuse un référentiel partiel au lieu d'inventer un fallback local."""
+app/tests\unit\test_incident_service.py:73:def test_update_incident_rejects_invalid_transition() -> None:
+app/tests\unit\test_incident_service.py:105:    assert error.value.code == "incident_invalid_transition"
+app/tests\unit\test_llm_cache.py:181:    """Tests for CacheService (main class with fallback)."""
+app/tests\unit\test_llm_cache.py:203:    def test_memory_fallback_cache_hit(self) -> None:
+app/tests\unit\test_llm_cache.py:204:        """Memory fallback should work for cache hit."""
+app/tests\unit\test_llm_cache.py:219:    def test_memory_fallback_cache_miss(self) -> None:
+app/tests\unit\test_llm_cache.py:220:        """Memory fallback should return None for cache miss."""
+app/tests\unit\test_llm_cache.py:225:    def test_uses_memory_fallback_on_redis_connection_error(self) -> None:
+app/tests\unit\test_llm_cache.py:226:        """Should fallback to memory when Redis connection fails."""
+app/tests\unit\test_llm_canonical_consumption_service.py:52:        fallback_triggered=False,
+app/tests\unit\test_llm_canonical_consumption_service.py:89:    assert nominal[0].is_legacy_residual is False
+app/tests\unit\test_llm_canonical_consumption_service.py:115:    assert nominal[0].is_legacy_residual is False
+app/tests\unit\test_llm_canonical_consumption_service.py:118:def test_nominal_scope_excludes_legacy_residual_and_keeps_user_dimension(db_session) -> None:
+app/tests\unit\test_llm_canonical_consumption_service.py:129:    legacy = _build_call_log(
+app/tests\unit\test_llm_canonical_consumption_service.py:131:        subfeature="legacy_unknown",
+app/tests\unit\test_llm_canonical_consumption_service.py:134:        request_id="req-legacy",
+app/tests\unit\test_llm_canonical_consumption_service.py:138:    db_session.add(legacy)
+app/tests\unit\test_llm_canonical_consumption_service.py:232:def test_unknown_feature_is_marked_legacy_residual(db_session) -> None:
+app/tests\unit\test_llm_canonical_consumption_service.py:258:    assert all_rows[0].is_legacy_residual is True
+app/tests\unit\test_llm_generation_shared_natal_context.py:24:def test_build_natal_chart_summary_with_defaults_uses_safe_fallbacks(
+app/tests\unit\test_llm_generation_shared_natal_context.py:27:    """Le resume partage doit propager les fallbacks de date, heure et lieu."""
+app/tests\unit\test_llm_rate_limiter.py:83:    """Tests for RateLimiter (main class with fallback)."""
+app/tests\unit\test_llm_rate_limiter.py:94:    def test_uses_memory_fallback_when_no_redis(self) -> None:
+app/tests\unit\test_llm_rate_limiter.py:95:        """Should use memory fallback when Redis is not configured."""
+app/tests\unit\test_llm_rate_limiter.py:107:    def test_uses_memory_fallback_on_redis_connection_error(self) -> None:
+app/tests\unit\test_llm_rate_limiter.py:108:        """Should fallback to memory when Redis connection fails."""
+app/tests\unit\test_natal_calculation_service.py:318:def test_calculate_natal_loads_runtime_reference_without_legacy_reference_cache(
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:23:from scripts.migrate_legacy_quota_to_canonical import migrate
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:48:        "scripts.migrate_legacy_quota_to_canonical.SessionLocal",
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:126:        "scripts.migrate_legacy_quota_to_canonical.BillingService.get_subscription_status",
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:130:    with caplog.at_level("WARNING", logger="scripts.migrate_legacy_quota_to_canonical"):
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:134:    assert stats["skipped_disabled"] == 0
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:138:def test_migrate_skips_disabled_bindings_without_anomaly(
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:155:        "scripts.migrate_legacy_quota_to_canonical.BillingService.get_subscription_status",
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:161:    assert stats["skipped_disabled"] == 1
+app/tests\unit\test_migrate_legacy_quota_to_canonical.py:193:        "scripts.migrate_legacy_quota_to_canonical.BillingService.get_subscription_status",
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:199:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:202:    assert "chart_json" not in serialized_facts
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:203:    assert "natal_data" not in serialized_facts
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:62:        "chart_json",
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:63:        "natal_data",
+app/tests\unit\test_natal_golden_swisseph.py:34:requires_swisseph = pytest.mark.skipif(
+app/tests\unit\test_natal_interpretation_service_v2.py:113:            fallback_triggered=False,
+app/tests\unit\test_natal_interpretation_service_v2.py:139:            fallback_triggered=False,
+app/tests\unit\test_natal_interpretation_service_v2.py:167:            fallback_triggered=False,
+app/tests\unit\test_natal_interpretation_service_v2.py:237:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+app/tests\unit\test_natal_interpretation_service_v2.py:241:                "app.domain.llm.runtime.adapter.LLMGateway",
+app/tests\unit\test_natal_interpretation_service_v2.py:290:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+app/tests\unit\test_natal_interpretation_service_v2.py:294:                "app.domain.llm.runtime.adapter.LLMGateway",
+app/tests\unit\test_natal_interpretation_service_v2.py:339:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+app/tests\unit\test_natal_interpretation_service_v2.py:343:                "app.domain.llm.runtime.adapter.LLMGateway",
+app/tests\unit\test_natal_interpretation_service_v2.py:388:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+app/tests\unit\test_natal_interpretation_service_v2.py:392:                "app.domain.llm.runtime.adapter.LLMGateway",
+app/tests\unit\test_natal_interpretation_service_v2.py:444:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+app/tests\unit\test_natal_interpretation_service_v2.py:448:                "app.domain.llm.runtime.adapter.LLMGateway",
+tests\unit\domain\astrology\test_natal_calculation_graph_execution.py:78:def test_adapters_do_not_use_dynamic_resolution_or_legacy_projection_sources() -> None:
+tests\unit\domain\astrology\test_natal_calculation_graph_execution.py:79:    """Les adapters restent explicites et ne consomment pas les projections legacy."""
+tests\unit\domain\astrology\test_natal_calculation_graph_definition.py:125:    """Les projections legacy ne servent jamais de source de calcul canonique."""
+app/tests\unit\test_natal_interpretation_service.py:100:            fallback_triggered=False,
+app/tests\unit\test_natal_interpretation_service.py:438:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+app/tests\unit\test_natal_interpretation_service.py:440:            ) as mock_build_chart_json,
+app/tests\unit\test_natal_interpretation_service.py:467:        assert mock_build_chart_json.call_args.args[2] == "no_time"
+app/tests\unit\test_natal_interpretation_service.py:531:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+app/tests\integration\test_ops_alert_events_batch_retry_api.py:53:    assert payload["skipped_count"] == 0
+app/tests\integration\test_ops_alert_events_batch_retry_api.py:93:    assert payload["skipped_count"] == 0
+app/tests\integration\test_ops_alert_events_batch_retry_api.py:323:        "skipped_count": 0,
+app/tests\unit\test_natal_metadata.py:172:def test_natal_result_model_validate_legacy_payload() -> None:
+app/tests\unit\test_natal_metadata.py:175:    legacy_payload = {
+app/tests\unit\test_natal_metadata.py:191:    result = NatalResult.model_validate(legacy_payload)
+app/tests\integration\test_ops_monitoring_api.py:101:        legacy_code = STRIPE_ENTITLEMENT_TO_PLAN_CODE.get(plan_code, plan_code)
+app/tests\integration\test_ops_monitoring_api.py:102:        plan = db.scalar(select(BillingPlanModel).where(BillingPlanModel.code == legacy_code))
+app/tests\integration\test_ops_monitoring_api.py:301:    increment_counter("conversation_messages_total|persona_profile=legacy-default", 7)
+app/tests\integration\test_ops_monitoring_api.py:302:    increment_counter("conversation_guidance_messages_total|persona_profile=legacy-default", 3)
+app/tests\integration\test_ops_monitoring_api.py:303:    increment_counter("conversation_llm_errors_total|persona_profile=legacy-default", 1)
+app/tests\integration\test_ops_monitoring_api.py:304:    increment_counter("conversation_out_of_scope_total|persona_profile=legacy-default", 2)
+app/tests\integration\test_ops_monitoring_api.py:305:    increment_counter("guidance_out_of_scope_total|persona_profile=legacy-default", 1)
+app/tests\integration\test_ops_monitoring_api.py:306:    increment_counter("conversation_recovery_success_total|persona_profile=legacy-default", 2)
+app/tests\integration\test_ops_monitoring_api.py:307:    increment_counter("guidance_recovery_success_total|persona_profile=legacy-default", 1)
+app/tests\integration\test_ops_monitoring_api.py:308:    observe_duration("conversation_latency_seconds|persona_profile=legacy-default", 0.1)
+app/tests\integration\test_ops_monitoring_api.py:309:    observe_duration("guidance_latency_seconds|persona_profile=legacy-default", 0.4)
+app/tests\integration\test_ops_monitoring_api.py:326:    assert personas[0]["persona_profile_code"] == "legacy-default"
+app/tests\integration\test_ops_monitoring_api.py:387:    assert "legacy-default" in by_code
+app/tests\integration\test_ops_monitoring_api.py:388:    persona = by_code["legacy-default"]
+app/tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:97:                    fallback_use_case_key,
+app/tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:109:                    :fallback_use_case_key,
+app/tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:124:                "fallback_use_case_key": None,
+app/tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:147:                    fallback_use_case,
+app/tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:247:                    FROM llm_assembly_config_legacy_archives
+app/tests\unit\test_natal_metrics.py:108:            evidence_catalog=catalog,
+app/tests\unit\test_natal_metrics.py:128:        validate_output(raw, schema, evidence_catalog=catalog, use_case="event_guidance")
+app/tests\integration\test_ops_alert_batch_handle_api.py:107:    assert data["skipped_count"] == 0
+app/tests\integration\test_ops_alert_batch_handle_api.py:156:def test_batch_handle_skips_already_handled_same_state() -> None:
+app/tests\integration\test_ops_alert_batch_handle_api.py:158:    ops_token = register_user_with_role_and_token("ops-batch-handle-skip@example.com", "ops")
+app/tests\integration\test_ops_alert_batch_handle_api.py:180:    assert response.json()["data"]["skipped_count"] == 1
+app/tests\integration\test_ops_alert_batch_handle_api.py:244:def test_batch_handle_no_history_event_on_skip() -> None:
+app/tests\integration\test_ops_alert_batch_handle_api.py:262:    assert response.json()["data"]["skipped_count"] == 1
+app/tests\integration\test_ops_alert_batch_handle_api.py:373:        "skipped_count",
+app/tests\integration\test_natal_interpretations_history.py:64:            was_fallback=False,
+app/tests\integration\test_natal_interpretations_history.py:88:            was_fallback=False,
+app/tests\integration\test_natal_interpretations_history.py:121:            was_fallback=False,
+app/tests\integration\test_migration_a_prediction_tables.py:300:def test_aspect_family_fk_repair_removes_legacy_table(
+app/tests\integration\test_natal_free_short_variant.py:181:            "app.services.llm_generation.natal.interpretation_service.build_chart_json"
+app/tests\integration\test_natal_free_short_variant.py:199:            fallback_triggered=False,
+app/tests\integration\test_natal_free_short_variant.py:217:        with patch("app.domain.llm.runtime.gateway.LLMGateway.execute_request") as mock_execute:
+app/tests\integration\test_ops_entitlement_mutation_audits_api.py:201:        _seed_audit(db, actor_identifier="backfill_plan_catalog_from_legacy.py")
+app/tests\integration\test_ops_entitlement_mutation_audits_api.py:1043:def test_get_review_history_chain_of_transitions() -> None:
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:1:"""Verifie la migration 20260424_0082 sur le retrait controle du legacy LLM."""
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:25:def test_migration_0082_archives_prompt_version_legacy_columns_before_drop(
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:28:    """L upgrade archive les champs runtime legacy des prompt versions avant suppression."""
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:29:    db_path = tmp_path / "migration-20260424-0082-non-empty-prompt-legacy.db"
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:53:                    fallback_use_case_key,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:134:                    FROM llm_prompt_version_legacy_archives
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:174:    assert "llm_prompt_version_legacy_archives" not in remaining_tables
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:182:    """L upgrade archive les champs legacy de use case au lieu de les effacer silencieusement."""
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:207:                    fallback_use_case_key,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:242:            for column in inspect(connection).get_columns("llm_use_case_config_legacy_archives")
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:255:                    FROM llm_use_case_config_legacy_archives
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:304:                    fallback_triggered,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:323:                    :fallback_triggered,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:345:                "fallback_triggered": 0,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:409:                    fallback_use_case_key,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:449:                    fallback_triggered,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:468:                    :fallback_triggered,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:490:                "fallback_triggered": 0,
+app/tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:596:    assert "llm_use_case_config_legacy_archives" not in remaining_tables
+app/tests\integration\test_natal_interpretation_endpoint.py:133:            fallback_triggered=False,
+app/tests\integration\test_natal_interpretation_endpoint.py:206:                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+app/tests\integration\test_natal_interpretation_endpoint.py:245:                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+app/tests\integration\test_natal_interpretation_endpoint.py:318:                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+app/tests\integration\test_natal_interpretation_endpoint.py:342:                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+app/tests\integration\test_natal_interpretation_endpoint.py:366:                "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
+app/tests\integration\test_pipeline_scripts.py:106:        pytest.skip("PowerShell is required for pipeline script tests.")
+app/tests\integration\test_pipeline_scripts.py:230:def test_quality_gate_skips_canonical_db_cli_when_db_not_marked_ready(tmp_path: Path) -> None:
+app/tests\integration\test_ops_persona_api.py:60:    assert get_default.json()["data"]["profile_code"] == "legacy-default"
+app/tests\integration\test_ops_persona_api.py:70:            "fallback_policy": "safe_fallback",
+app/tests\integration\test_ops_persona_api.py:85:            "fallback_policy": "retry_once_then_safe",
+app/tests\integration\test_ops_persona_api.py:112:            "fallback_policy": "safe_fallback",
+app/tests\integration\test_ops_persona_api.py:128:        "fallback_policy": "safe_fallback",
+app/tests\integration\test_ops_persona_api.py:158:            "fallback_policy": "safe_fallback",
+app/tests\integration\test_ops_persona_api.py:171:            "fallback_policy": "retry_once_then_safe",
+app/tests\integration\test_ops_persona_api.py:235:            "fallback_policy": "safe_fallback",
+app/tests\integration\test_ops_persona_api.py:262:            "fallback_policy": "safe_fallback",
+app/tests\integration\test_reference_data_migrations.py:1453:                VALUES (999, 'legacy-copy-test', '', 0, '2026-05-14 00:00:00')
+app/tests\integration\test_reference_data_migrations.py:1490:                    'legacy copied parent rule'
+app/tests\unit\test_natal_preparation.py:206:# Story 22.1 — Rétrocompatibilité: legacy BirthPreparedData sans jd_ut/timezone_used
+app/tests\unit\test_natal_preparation.py:210:def test_birth_prepared_data_legacy_compat_fills_canonical_fields() -> None:
+app/tests\unit\test_natal_preparation.py:211:    """Un payload legacy sans jd_ut/timezone_used est complété par le model_validator."""
+app/tests\unit\test_natal_preparation.py:212:    legacy = BirthPreparedData(
+app/tests\unit\test_natal_preparation.py:221:    assert legacy.jd_ut == 2448057.0
+app/tests\unit\test_natal_preparation.py:222:    assert legacy.timezone_used == "Europe/Paris"
+app/tests\unit\test_natal_preparation.py:321:def test_prepare_birth_data_midnight_dst_transition() -> None:
+app/tests\unit\test_natal_preparation.py:322:    """Edge case: DST transition with non-hour offset (Australia/Lord_Howe)."""
+app/tests\unit\test_natal_preparation.py:323:    # Lord Howe Island has a 30-minute DST transition.
+app/tests\unit\test_natal_preparation.py:557:def test_birth_prepared_data_legacy_compat_fills_timezone_iana() -> None:
+app/tests\unit\test_natal_preparation.py:558:    """Rétrocompatibilité: un payload legacy sans timezone_iana est complété par le validator."""
+app/tests\unit\test_natal_preparation.py:559:    legacy = BirthPreparedData(
+app/tests\unit\test_natal_preparation.py:568:    assert legacy.timezone_iana == "Europe/Paris"  # dérivé de timezone_used
+app/tests\integration\test_reference_data_api.py:170:def test_reference_seed_rejects_admin_token_fallback_by_default() -> None:
+app/tests\integration\test_reference_data_api.py:177:            "x-request-id": "rid-reference-seed-fallback-off",
+app/tests\integration\test_ops_monitoring_llm_api.py:56:        "fallback_triggered": False,
+app/tests\integration\test_ops_monitoring_llm_api.py:134:    assert "family_fallback" in dashboards
+app/tests\integration\test_ops_monitoring_llm_api.py:220:                max_output_tokens_source="verbosity_fallback",
+app/tests\integration\test_ops_monitoring_llm_api.py:227:                execution_path_kind="legacy_use_case_fallback",
+app/tests\integration\test_ops_monitoring_llm_api.py:228:                fallback_kind="legacy_wrapper",
+app/tests\integration\test_ops_monitoring_llm_api.py:229:                fallback_triggered=True,
+app/tests\integration\test_ops_review_queue_alerts_script.py:37:            pass  # fallback if still locked
+app/tests\integration\test_ops_review_queue_alerts_script.py:143:    assert "skipped_duplicate=1" in res.stdout
+app/tests\integration\test_relative_scoring_service.py:141:        assert enriched.relative_scores["love"].fallback_reason == "baseline_missing"
+tests\unit\domain\astrology\test_planet_dignity_scoring_service.py:83:    """Une planete sans profil runtime explicite ne reçoit pas de fallback local."""
+tests\unit\domain\astrology\test_sect_nature_mitigation_detector.py:128:def test_emission_skips_when_runtime_condition_type_is_absent() -> None:
+app/tests\unit\test_ops_monitoring_service.py:98:    increment_counter("conversation_messages_total|persona_profile=legacy-default", 10)
+app/tests\unit\test_ops_monitoring_service.py:99:    increment_counter("conversation_guidance_messages_total|persona_profile=legacy-default", 4)
+app/tests\unit\test_ops_monitoring_service.py:100:    increment_counter("conversation_llm_errors_total|persona_profile=legacy-default", 1)
+app/tests\unit\test_ops_monitoring_service.py:101:    increment_counter("conversation_out_of_scope_total|persona_profile=legacy-default", 3)
+app/tests\unit\test_ops_monitoring_service.py:102:    increment_counter("guidance_out_of_scope_total|persona_profile=legacy-default", 1)
+app/tests\unit\test_ops_monitoring_service.py:103:    increment_counter("conversation_recovery_success_total|persona_profile=legacy-default", 2)
+app/tests\unit\test_ops_monitoring_service.py:104:    increment_counter("guidance_recovery_success_total|persona_profile=legacy-default", 1)
+app/tests\unit\test_ops_monitoring_service.py:105:    observe_duration("conversation_latency_seconds|persona_profile=legacy-default", 0.1)
+app/tests\unit\test_ops_monitoring_service.py:106:    observe_duration("guidance_latency_seconds|persona_profile=legacy-default", 0.4)
+app/tests\unit\test_ops_monitoring_service.py:121:    assert by_code["legacy-default"].messages_total == 10
+app/tests\unit\test_ops_monitoring_service.py:122:    assert by_code["legacy-default"].guidance_messages_total == 4
+app/tests\unit\test_ops_monitoring_service.py:123:    assert by_code["legacy-default"].out_of_scope_count == 4
+app/tests\unit\test_ops_monitoring_service.py:124:    assert by_code["legacy-default"].recovery_success_count == 3
+app/tests\unit\test_ops_monitoring_service.py:125:    assert by_code["legacy-default"].recovery_success_rate == 0.75
+app/tests\unit\test_ops_monitoring_service.py:126:    assert by_code["legacy-default"].llm_error_count == 1
+app/tests\unit\test_ops_monitoring_service.py:127:    assert by_code["legacy-default"].llm_error_rate == 0.1
+app/tests\unit\test_ops_monitoring_service.py:306:    assert data.aggregation_scope == "instance_local_fallback"
+app/tests\unit\test_natal_tt.py:234:def test_birth_prepared_data_model_validate_legacy_without_tt_fields() -> None:
+app/tests\unit\test_natal_tt.py:236:    legacy = {
+app/tests\unit\test_natal_tt.py:243:    data = BirthPreparedData.model_validate(legacy)
+app/tests\unit\test_natal_tt.py:424:def test_natal_result_model_validate_legacy_without_time_scale() -> None:
+app/tests\unit\test_natal_tt.py:429:    legacy = {
+app/tests\unit\test_natal_tt.py:445:    result = NatalResult.model_validate(legacy)
+app/tests\unit\test_persona_config_service.py:45:    assert active.profile_code == "legacy-default"
+app/tests\unit\test_persona_config_service.py:46:    assert active.fallback_policy == "safe_fallback"
+app/tests\unit\test_persona_config_service.py:68:    assert updated.profile_code == "legacy-default"
+app/tests\unit\test_persona_config_service.py:213:                fallback_policy="safe_fallback",
+app/tests\integration\test_support_api.py:200:def test_support_incident_rejects_invalid_transition() -> None:
+app/tests\integration\test_support_api.py:232:    assert invalid_response.json()["error"]["code"] == "incident_invalid_transition"
+app/tests\unit\test_percentile_calibrator_provisional.py:33:def test_degenerate_day_fallback():
+app/tests\unit\test_percentile_calibrator_provisional.py:49:    # Should fallback to DEFAULT_CALIBRATION -> 10/20 for raw_day=0.0
+app/tests\integration\test_security_verification_script.py:24:        pytest.skip("PowerShell is required for security verification script tests.")
+app/tests\unit\test_output_validator_v3.py:39:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:50:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=False, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:60:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:76:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:89:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:98:            raw, _BASE_SCHEMA, evidence_catalog=None, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:108:            raw, _BASE_SCHEMA, evidence_catalog={}, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:118:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:131:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+app/tests\unit\test_output_validator_v3.py:152:            raw, schema, evidence_catalog=catalog, strict=True, schema_version="v3"
+app/tests\integration\test_secret_rotation_process_restart.py:79:        pytest.skip("ROTATION_RESTART_POSTGRES_DATABASE_URL is not set.")
+app/tests\unit\test_output_validator.py:12:    res = normalize_fields(data, evidence_catalog=catalog, use_case="test")
+app/tests\unit\test_output_validator.py:73:        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+app/tests\unit\test_output_validator.py:96:        evidence_catalog={"SUN_TAURUS": ["Soleil en Taureau"]},
+app/tests\unit\test_output_validator.py:117:        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+app/tests\unit\test_output_validator.py:135:        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+app/tests\integration\test_secret_rotation_critical_flows.py:40:        legacy_plan = db.scalar(
+app/tests\integration\test_secret_rotation_critical_flows.py:45:        if not legacy_plan:
+app/tests\integration\test_secret_rotation_critical_flows.py:46:            legacy_plan = EnterpriseBillingPlanModel(
+app/tests\integration\test_secret_rotation_critical_flows.py:55:            db.add(legacy_plan)
+app/tests\integration\test_secret_rotation_critical_flows.py:69:                source_id=legacy_plan.id,
+app/tests\integration\test_secret_rotation_critical_flows.py:78:            canonical_plan.source_id = legacy_plan.id
+app/tests\integration\test_secret_rotation_critical_flows.py:127:                enterprise_account_id=account.id, plan_id=legacy_plan.id
+app/tests\integration\test_secrets_scan_script.py:23:        pytest.skip("PowerShell is required for secrets scan script tests.")
+app/tests\integration\test_thematic_consultation_entitlement.py:244:        fallback_mode=None,
+app/tests\integration\test_user_baseline_refresh_job.py:275:def test_job_skips_users_until_a_current_natal_chart_exists(db_session):
+app/tests\integration\test_user_birth_profile_api.py:256:def test_get_birth_data_legacy_profile_returns_null_resolved_place() -> None:
+app/tests\integration\test_user_prediction_baseline.py:373:def test_baseline_service_skips_incomplete_history(
+app/tests\unit\test_persona_injection.py:2:"""Valide l injection et le fallback de persona via le contrat canonique runtime."""
+app/tests\unit\test_persona_injection.py:15:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\unit\test_persona_injection.py:51:def _install_fallback_config(
+app/tests\unit\test_persona_injection.py:57:    """Installe un contrat fallback minimal avec la strategie persona voulue."""
+app/tests\unit\test_persona_injection.py:71:    monkeypatch.setattr(gateway_module, "build_fallback_use_case_config", _resolver)
+app/tests\unit\test_persona_injection.py:100:    _install_fallback_config(monkeypatch, "test_use_case")
+app/tests\unit\test_persona_injection.py:104:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_persona_injection.py:156:    _install_fallback_config(
+app/tests\unit\test_persona_injection.py:164:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_persona_injection.py:205:    _install_fallback_config(monkeypatch, "req_use_case", persona_strategy="required")
+app/tests\unit\test_persona_injection.py:207:    gateway = LLMGateway()
+app/tests\unit\test_prediction_reference_repository.py:450:    """Un aspect activé doit toujours porter son orbe standard de fallback."""
+app/tests\unit\test_relative_scoring_calculator.py:44:def test_calculate_null_variance_fallback():
+app/tests\unit\test_relative_scoring_calculator.py:77:    assert score.fallback_reason == "variance_null"
+app/tests\unit\test_relative_scoring_calculator.py:92:    assert score.fallback_reason == "baseline_missing"
+app/tests\unit\test_request_id.py:63:    resolved = resolve_trace_id(request, fallback="safe-request")
+app/tests\unit\test_request_id.py:71:    resolved = resolve_trace_id(request, fallback="safe-request")
+app/tests\unit\test_request_id.py:79:    resolved = resolve_trace_id(request, fallback="safe-request")
+app/tests\unit\test_quota_window_resolver.py:148:def test_month_transition():
+app/tests\integration\_subprocess\secret_rotation_restart_runner.py:57:        legacy_b2b_plan = EnterpriseBillingPlanModel(
+app/tests\integration\_subprocess\secret_rotation_restart_runner.py:66:        db.add(legacy_b2b_plan)
+app/tests\integration\_subprocess\secret_rotation_restart_runner.py:68:        legacy_plan_id = legacy_b2b_plan.id
+app/tests\integration\_subprocess\secret_rotation_restart_runner.py:79:            source_id=legacy_plan_id,
+app/tests\integration\_subprocess\secret_rotation_restart_runner.py:128:                enterprise_account_id=account.id, plan_id=legacy_plan_id
+app/tests\unit\test_seed_29_prompt_contract.py:7:    assert "chart_json" not in config["required_prompt_placeholders"]
+app/tests\unit\test_seed_29_prompt_contract.py:8:    assert "{{chart_json}}" not in config["developer_prompt"]
+app/tests\unit\test_seed_29_prompt_contract.py:14:    assert "chart_json" not in config["required_prompt_placeholders"]
+app/tests\unit\test_seed_29_prompt_contract.py:15:    assert "{{chart_json}}" not in config["developer_prompt"]
+app/tests\unit\test_seed_30_8_v3_prompt_contract.py:36:def test_v3_prompt_avoids_legacy_paragraph_length_constraints() -> None:
+app/tests\unit\test_seed_30_8_v3_prompt_contract.py:65:    assert "{{chart_json}}" not in prompt
+app/tests\unit\test_settings.py:98:def test_settings_disables_seed_token_fallback_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+app/tests\unit\test_settings.py:108:    assert settings.enable_reference_seed_admin_fallback is False
+app/tests\unit\test_stripe_billing_profile_service.py:193:def test_transition_entitlement_plan(db: Session, user_id: int):
+app/tests\unit\test_stripe_client.py:1:"""Tests du client Stripe infra et gardes anti-retour du chemin legacy."""
+app/tests\unit\test_stripe_client.py:170:def test_legacy_integrations_stripe_client_module_is_absent():
+app/tests\unit\test_stripe_client.py:171:    """Empêche le retour d'une façade legacy hors de la couche infra."""
+app/tests\unit\test_stripe_client.py:172:    legacy_module = ".".join(["app", "integrations", "stripe_client"])
+app/tests\unit\test_stripe_client.py:174:        importlib.util.find_spec(legacy_module)
+app/tests\unit\test_stripe_portal_startup_validation.py:44:def test_startup_validation_skips_missing_configuration_in_test_env(
+app/tests\unit\test_stripe_portal_startup_validation.py:58:    assert "stripe_portal_startup_validation_skipped" in caplog.text
+app/tests\unit\test_stripe_portal_startup_validation.py:89:def test_startup_validation_skips_when_portal_endpoints_are_disabled(
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:115:    legacy_doc = LEGACY_DOC_PATH.read_text(encoding="utf-8")
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:118:    legacy_events = _extract_markdown_events(legacy_doc)
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:119:    legacy_statuses = _extract_markdown_event_statuses(legacy_doc)
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:122:    assert SUPPORTED_EVENTS.issubset(legacy_events)
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:123:    assert SUPPORTED_EVENTS.issubset(legacy_statuses)
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:126:    assert "rationale historique" in legacy_doc
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:127:    assert "runbook canonique" in legacy_doc
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:128:    assert "sous-ensemble standardisé" in legacy_doc
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:129:    assert "périmètre backend élargi" in legacy_doc
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:131:    assert "| `customer.subscription.trial_will_end` | ❌ Non traité |" not in legacy_doc, (
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:135:        assert legacy_statuses[event_type].startswith("✅"), (
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:140:        assert not legacy_statuses[event_type].startswith("✅")
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:141:    assert "`invoice.payment_succeeded` | ❌ Remplacé" in legacy_doc
+app/tests\unit\test_stripe_webhook_local_dev_assets.py:142:    assert "Désormais traité comme `event_ignored`" in legacy_doc
+app/tests\unit\test_stripe_webhook_service.py:302:        mock_event.id = "evt_test_legacy"
+app/tests\unit\test_temporal_kernel.py:270:# Default fallback pour event_type inconnu
+app/tests\unit\test_thematic_consultation_entitlement_gate.py:95:def test_check_and_consume_skips_tokens_quota(db_session):
+app/tests\unit\test_thematic_consultation_entitlement_gate.py:115:def test_check_and_consume_processes_legacy_quota(db_session):
+app/tests\unit\test_thematic_consultation_entitlement_gate.py:116:    legacy_state = UsageState(
+app/tests\unit\test_thematic_consultation_entitlement_gate.py:129:    snapshot = make_snapshot(access=dict(usage_states=[legacy_state]))
+app/tests\unit\test_thematic_consultation_entitlement_gate.py:139:            return_value=legacy_state,
+app/tests\unit\test_thematic_consultation_entitlement_gate.py:145:    assert result.usage_states == [legacy_state]
+app/tests\unit\test_user_astro_profile_service.py:487:def test_astro_profile_prioritizes_resolved_coordinates_over_legacy(
+app/tests\unit\test_user_birth_profile_service.py:122:def test_resolve_coordinates_prioritizes_place_resolved_over_legacy_coords() -> None:
+app/tests\unit\test_user_birth_profile_service.py:160:def test_resolve_coordinates_falls_back_to_legacy_without_place_resolved_id() -> None:
+app/tests\unit\test_user_natal_chart_service.py:176:def test_get_latest_for_user_claims_legacy_chart_without_user_id() -> None:
+app/tests\unit\test_user_natal_chart_service.py:188:        legacy_chart_id = ChartResultService.persist_trace(
+app/tests\unit\test_user_natal_chart_service.py:200:    assert latest.chart_id == legacy_chart_id
+app/tests\unit\test_use_case_contract.py:23:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\unit\test_use_case_contract.py:58:def _install_fallback_config(
+app/tests\unit\test_use_case_contract.py:67:    """Installe une definition fallback locale bornee au use case de test."""
+app/tests\unit\test_use_case_contract.py:83:    monkeypatch.setattr(gateway_module, "build_fallback_use_case_config", _resolver)
+app/tests\unit\test_use_case_contract.py:102:    _install_fallback_config(monkeypatch, "support", persona_strategy="forbidden")
+app/tests\unit\test_use_case_contract.py:106:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_use_case_contract.py:144:    _install_fallback_config(monkeypatch, "natal", persona_strategy="required")
+app/tests\unit\test_use_case_contract.py:150:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_use_case_contract.py:184:    _install_fallback_config(monkeypatch, "natal", persona_strategy="required")
+app/tests\unit\test_use_case_contract.py:190:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_use_case_contract.py:212:    required = ["{{chart_json}}"]
+app/tests\unit\test_use_case_contract.py:216:    assert "Use-case specific placeholder '{{chart_json}}' is missing." in result_fail.errors
+app/tests\unit\test_use_case_contract.py:218:    text_pass = "Hello {{locale}} {{use_case}} {{chart_json}}"
+app/tests\unit\test_use_case_contract.py:244:    _install_fallback_config(
+app/tests\unit\test_use_case_contract.py:254:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_use_cases_seed_chat_schema.py:5:    # Story 30-17 fix: minItems should be absent to avoid raw_fallback on empty suggestions
+app/tests\unit\test_v3_editorial_evidence.py:35:    # Mock CoreEngineOutput (legacy source)
+app/tests\unit\test_v3_flat_day.py:53:def test_is_flat_day_fallback_v2():
+app/tests\unit\test_v3_relative_scoring.py:85:def test_relative_scoring_rarity_fallback():
+app/tests\unit\test_validation_sequence.py:1:# Tests unitaires de reparation et fallback du gateway LLM.
+app/tests\unit\test_validation_sequence.py:2:"""Verifie la sequence de reparation puis le fallback canonique hors assembly."""
+app/tests\unit\test_validation_sequence.py:14:from app.domain.llm.runtime.gateway import LLMGateway
+app/tests\unit\test_validation_sequence.py:50:def _install_fallback_configs(
+app/tests\unit\test_validation_sequence.py:54:    """Installe un mini registre fallback borne aux use cases du test."""
+app/tests\unit\test_validation_sequence.py:60:    monkeypatch.setattr(gateway_module, "build_fallback_use_case_config", _resolver)
+app/tests\unit\test_validation_sequence.py:89:    _install_fallback_configs(
+app/tests\unit\test_validation_sequence.py:106:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_validation_sequence.py:124:async def test_gateway_fallback_sequence(
+app/tests\unit\test_validation_sequence.py:128:    """Bascule sur le fallback cible apres echec nominal puis echec repair."""
+app/tests\unit\test_validation_sequence.py:137:            key="fallback_uc",
+app/tests\unit\test_validation_sequence.py:151:                use_case_key="fallback_uc",
+app/tests\unit\test_validation_sequence.py:159:    _install_fallback_configs(
+app/tests\unit\test_validation_sequence.py:166:            fallback_target_use_case="fallback_uc",
+app/tests\unit\test_validation_sequence.py:171:            prompt_version_id="fallback_uc",
+app/tests\unit\test_validation_sequence.py:180:            _make_mock_result("fallback_uc", "Fallback Success"),
+app/tests\unit\test_validation_sequence.py:183:    gateway = LLMGateway(responses_client=mock_client)
+app/tests\unit\test_validation_sequence.py:189:        request_id="req-fallback",
+app/tests\unit\test_validation_sequence.py:190:        trace_id="trace-fallback",
+app/tests\unit\test_validation_sequence.py:196:    assert result.meta.fallback_triggered is True
