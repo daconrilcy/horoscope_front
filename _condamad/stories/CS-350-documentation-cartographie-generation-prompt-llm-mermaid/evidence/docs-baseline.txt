@@ -1,0 +1,1 @@
+BASELINE: _condamad/docs/prompt-generation-cartography absent before CS-350 implementation

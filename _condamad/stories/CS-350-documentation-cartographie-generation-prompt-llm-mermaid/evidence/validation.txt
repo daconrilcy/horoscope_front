@@ -1,0 +1,157 @@
+CS-350 validation output
+VC1 path exists
+VC2 required headings and mermaid count
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from pathlib import Path; text=Path('_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md').read_text(encoding='utf-8'); headings=['Executive summary','Scope et non-goals','Vue d''ensemble de la chaine','Glossaire','Carte des owners de code','Use case et contrats canoniques','Resolution d''assembly et developer prompt','Gouvernance des placeholders','Construction de llm_astrology_input_v1','Projection prompt-visible vs backend-only','Composition des messages provider','Modes structured et chat','Provider parameters et output schema','Validation, repair, fallback et rejet','Persistence audit et observability','Seeds/bootstrap et chemins non nominaux','Tests et guardrails','Risques residuels et open questions','How to verify']; missing=[h for h in headings if ('## '+h) not in text]; assert not missing, missing; assert text.count('`mermaid') >= 6
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ^^^^^^^^^^^
+AssertionError: ['Vue densemble de la chaine', 'Resolution dassembly et developer prompt', 'Construction de llm_astrology_input_v1', 'Modes structured et chat']
+VC3 symbols
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:7:Cette cartographie documente l'implementation actuelle de generation des prompts LLM a partir des audits CS-343 a CS-347, de l'architecture CS-348, du rapport CS-349 et des sources backend inspectees. Le flux nominal moderne pour le natal part d'un use case canonique, resout une assembly, rend le developer prompt, construit `llm_astrology_input_v1`, filtre les blocs prompt-visible, compose les messages provider, valide la sortie, puis persiste les ancres d'audit et d'observability.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:9:Les donnees prompt-visible sont limitees aux blocs prouves comme envoyables au provider. Les donnees backend-only, validation-only et audit-only restent hors prompt: `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, reponses provider, audit metadata et observability.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:35:3. `backend/app/domain/llm/configuration/assembly_resolver.py` resout l'assembly et `assemble_developer_prompt`;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:40:8. les services de persistence et d'observability stockent les ancres backend-only.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:45:  Adapter --> Gateway[LLMGateway.execute_request]
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:59:`developer prompt`: texte assemble par `assemble_developer_prompt`, puis rendu par `PromptRenderer`.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:61:`prompt-visible`: donnees autorisees dans le payload provider.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:63:`backend-only`: donnees reservees au backend, incluant runtime-only, validation-only et audit-only.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:65:`llm_astrology_input_v1`: contrat natal moderne produit par `LLMAstrologyInputV1Builder`.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:74:| Resolution assembly | `backend/app/domain/llm/configuration/assembly_resolver.py` | `resolve_assembly`, `assemble_developer_prompt` | prompt-visible developer prompt |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:75:| Rendu placeholders | `backend/app/domain/llm/prompting/prompt_renderer.py` | `PromptRenderer.render`, `extract_placeholders` | prompt-visible apres validation |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:76:| Input natal riche | `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py` | `LLMAstrologyInputV1Builder`, `build_llm_input_hash_material` | prompt-visible + backend-only |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:77:| Orchestration natale | `backend/app/services/llm_generation/natal/interpretation_service.py` | `_build_llm_astrology_input_v1`, `_apply_narrative_answer_audit` | runtime-only + audit-only |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:78:| Gateway provider | `backend/app/domain/llm/runtime/gateway.py` | `LLMGateway`, `compose_structured_messages`, `compose_chat_messages`, `execute_request` | provider handoff |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:82:`canonical_use_case_registry.py` declare les contrats canoniques, dont les use cases modernes qui exigent `llm_astrology_input_v1` dans `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA`. CS-344 classe ces contrats comme entree de configuration, pas comme unique owner final des schemas de sortie. CS-348 garde le blocker: l'output schema ownership reste partage entre contrats canoniques, assembly rows, fallback catalog, bootstrap schemas et tests.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:99:Le flux nominal CS-344 est `AssemblyRegistry.get_active_config_sync` -> `resolve_assembly` -> `assemble_developer_prompt` -> `PromptRenderer.render` -> schema resolution dans le gateway. Les seeds sous `backend/app/ops/llm/bootstrap/**` sont des entrees de provisioning et ne doivent pas etre documentees comme runtime truth.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:105:`PromptRenderer` extrait et rend les placeholders declares par famille dans la gouvernance LLM. Pour le natal moderne, `llm_astrology_input_v1` est le carrier attendu; les carriers legacy `chart_json` et `natal_data` ne sont pas autorises comme inputs prompt-visible du flux moderne. Les placeholders optionnels peuvent avoir un fallback explicite, mais les placeholders requis doivent etre fournis ou refuser le rendu.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:109:## Construction de `llm_astrology_input_v1`
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:113:`NatalInterpretationService` -> `StructuredFactsV1Builder` -> `AINarrativeInputBuilder` -> `ClientInterpretationProjectionV1Builder` -> `LLMAstrologyInputV1Builder` -> `AIEngineAdapter.generate_natal_interpretation` -> projection prompt-visible du `LLMGateway`.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:120:  StructuredFacts --> LLMInput[llm_astrology_input_v1]
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:131:## Projection prompt-visible vs backend-only
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:135:- prompt-visible: `facts`, `signals`, `limits`, `shaping`;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:136:- backend-only runtime: `request_id`, `trace_id`, profils et metadata d'execution;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:140:`backend/app/domain/llm/runtime/gateway.py` contient le filtrage avant provider, et `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py` contient les roles et le hash prompt-visible.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:144:  LLMInput[llm_astrology_input_v1 complet] --> Filter[Filtre prompt-visible gateway]
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:156:CS-345 identifie `messages` comme dernier payload gateway-owned avant provider. `LLMGateway._call_provider` transmet `messages`, modele, famille, tokens, `response_format`, `request_id`, `trace_id`, `use_case`, `reasoning_effort` et `verbosity` au `ProviderRuntimeManager`.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:161:  participant G as LLMGateway
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:162:  participant R as PromptRenderer
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:185:Les parametres provider sont runtime/provider-only: modele, temperature, tokens, `response_format`, reasoning effort, verbosity, request/trace/use case. Ils influencent l'appel mais ne sont pas des champs prompt-visible du payload utilisateur.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:212:`backend/app/services/llm_generation/natal/interpretation_service.py` enrichit la persistence avec `prompt_version`, `prompt_ref`, `projection_hash`, `llm_input_hash`, `evidence_refs` et `grounding_status`. Ces champs sont backend-only et audit-only. `llm_call_logs`, replay snapshots et admin audit contracts soutiennent l'investigation et la tracabilite, pas une preuve de justesse semantique complete.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:218:Les carriers legacy `chart_json` et `natal_data` peuvent rester dans des contextes historiques, de tests, d'admin sample ou non modernes; ils sont exclus du prompt-visible moderne lorsque `llm_astrology_input_v1` est present.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:226:- `backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py` garde la forme, les owners et les blocs disjoints;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:227:- `backend/tests/unit/domain/astrology/test_llm_astrology_input_hash.py` garde le hash prompt-visible;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:232:Validation documentaire CS-350: scans `rg` sur Mermaid, symbols LLM, prompt-visible/backend-only, chemins nominaux et non nominaux.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:255:rg -n "```mermaid|llm_astrology_input_v1|LLMGateway|PromptRenderer|assemble_developer_prompt|prompt-visible|backend-only" _condamad/docs/prompt-generation-cartography
+VC4 non nominal terms
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:7:Cette cartographie documente l'implementation actuelle de generation des prompts LLM a partir des audits CS-343 a CS-347, de l'architecture CS-348, du rapport CS-349 et des sources backend inspectees. Le flux nominal moderne pour le natal part d'un use case canonique, resout une assembly, rend le developer prompt, construit `llm_astrology_input_v1`, filtre les blocs prompt-visible, compose les messages provider, valide la sortie, puis persiste les ancres d'audit et d'observability.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:25:- pas de reecriture de prompt, schema, provider ou comportement de fallback;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:31:Le chemin nominal observe est:
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:82:`canonical_use_case_registry.py` declare les contrats canoniques, dont les use cases modernes qui exigent `llm_astrology_input_v1` dans `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA`. CS-344 classe ces contrats comme entree de configuration, pas comme unique owner final des schemas de sortie. CS-348 garde le blocker: l'output schema ownership reste partage entre contrats canoniques, assembly rows, fallback catalog, bootstrap schemas et tests.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:99:Le flux nominal CS-344 est `AssemblyRegistry.get_active_config_sync` -> `resolve_assembly` -> `assemble_developer_prompt` -> `PromptRenderer.render` -> schema resolution dans le gateway. Les seeds sous `backend/app/ops/llm/bootstrap/**` sont des entrees de provisioning et ne doivent pas etre documentees comme runtime truth.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:101:Les chemins de fallback existent mais sont non nominaux: `_resolve_fallback_use_case_config`, `catalog.build_fallback_use_case_config`, catalog output schema et bootstrap no-assembly fallback hors production. Ils ne remplacent pas l'assembly nominale.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:105:`PromptRenderer` extrait et rend les placeholders declares par famille dans la gouvernance LLM. Pour le natal moderne, `llm_astrology_input_v1` est le carrier attendu; les carriers legacy `chart_json` et `natal_data` ne sont pas autorises comme inputs prompt-visible du flux moderne. Les placeholders optionnels peuvent avoir un fallback explicite, mais les placeholders requis doivent etre fournis ou refuser le rendu.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:179:`compose_chat_messages` produit: system core, developer prompt, persona optionnelle, historique valide, puis user payload ou message de fallback locale. Les items d'historique malformes sont ignores avec log, sans devenir prompt contract nominal.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:187:Le schema de sortie est valide apres provider par `validate_output`. Le blocker CS-344/CS-348 demeure: choisir un owner nominal unique pour l'output schema avant d'en faire un contrat produit stable.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:189:## Validation, repair, fallback et rejet
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:195:- repair: nouveau prompt de repair apres output invalide;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:196:- fallback: non nominal, teste ou tolere selon le cas, jamais preuve de chemin principal;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:197:- rejet: `RejectedNarrativeAnswerOutcome` et payload client degrade quand les preuves sont partielles, invalides ou non fondees.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:203:  Schema -->|invalid| Repair[Repair ou fallback]
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:206:  Rejection -->|rejected| SafePayload[Payload client degrade]
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:216:CS-344 classe `backend/app/ops/llm/bootstrap/**` comme provisioning. Les chemins `catalog.py`, fallback config, provider fallback, test fallback et bootstrap no-assembly fallback sont separes du nominal. Les documents ne doivent pas promouvoir ces chemins en runtime truth.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:220:## Tests et guardrails
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:230:- `_condamad/stories/regression-guardrails.md` contient notamment RG-002 pour ne pas deplacer la logique metier dans les routeurs API v1 et RG-042 pour la gouvernance des docs LLM source-of-truth.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:246:- quel composant devient l'owner nominal unique des output schemas?
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:247:- les fallback catalog schemas sont-ils supportes produit ou seulement non nominaux toleres?
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:250:## How to verify
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:256:rg -n "nominal|fallback|repair|rejet|degrade|guardrails|How to verify" _condamad/docs/prompt-generation-cartography
+VC5 doc path
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:257:rg -n "prompt-generation-current-implementation" _condamad/docs/prompt-generation-cartography
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:264:python -B -c "from pathlib import Path; assert Path('_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md').exists()"
+VC6 evidence path
+VC7 ruff format skipped: no Python file modified by CS-350
+VC8 ruff check .
+All checks passed!
+VC9 python -B -m pytest -q --tb=short
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+VC9 retry python -B -m pytest -q --tb=short with extended timeout
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+................................s....................................... [ 36%]
+........................................................................ [ 38%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 60%]
+........................................................................ [ 62%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 92%]
+........................................................................ [ 94%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+.......................................                                  [100%]
+3350 passed, 1 skipped, 1222 deselected in 204.59s (0:03:24)
+CONDAMAD validation: FAIL
+- Final evidence missing section: Capsule validation
+- Final evidence missing AC validation table
+CONDAMAD validation: PASS
+Final git status --short
+ M _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/00-story.md
+ M _condamad/stories/story-status.md
+?? _condamad/docs/
+?? _condamad/run-state.json
+?? _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/evidence/
+?? _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/generated/01-execution-brief.md
+?? _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/generated/04-target-files.md
+?? _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/generated/06-validation-plan.md
+?? _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-350-documentation-cartographie-generation-prompt-llm-mermaid/generated/10-final-evidence.md
+Cache cleanup: removed .pytest_cache, .ruff_cache, backend/.ruff_cache when present.

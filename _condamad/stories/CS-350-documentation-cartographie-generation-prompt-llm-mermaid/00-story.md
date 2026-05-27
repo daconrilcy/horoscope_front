@@ -1,5 +1,5 @@
 # Story CS-350 documentation-cartographie-generation-prompt-llm-mermaid: Document Prompt Generation Cartography With Mermaid
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -106,15 +106,15 @@ Create the final detailed documentation for the current LLM prompt generation im
 
 ## Implementation Tasks
 
-- [ ] Task 1: Read CS-343 to CS-347 audit artifacts and record unavailable source blockers. (AC: AC5, AC8)
-- [ ] Task 2: Read CS-348 architecture and CS-349 report artifacts before writing final synthesis. (AC: AC5, AC8)
-- [ ] Task 3: Inspect current backend LLM source paths listed in this story before drafting technical sections. (AC: AC5, AC9)
-- [ ] Task 4: Create the main documentation file with the nineteen mandatory sections from the brief. (AC: AC1, AC2)
-- [ ] Task 5: Add the six mandatory Mermaid diagrams with maintained labels and source-aligned nodes. (AC: AC3, AC9)
-- [ ] Task 6: Document prompt-visible versus backend-only projection boundaries. (AC: AC4)
-- [ ] Task 7: Separate nominal flow, repair flow, rejection flow, degraded payloads, and residual risks. (AC: AC6, AC8)
-- [ ] Task 8: Cite tests, guardrails, and verification commands with paths or bounded source blockers. (AC: AC7)
-- [ ] Task 9: Persist validation output and final evidence for review handoff. (AC: AC10)
+- [x] Task 1: Read CS-343 to CS-347 audit artifacts and record unavailable source blockers. (AC: AC5, AC8)
+- [x] Task 2: Read CS-348 architecture and CS-349 report artifacts before writing final synthesis. (AC: AC5, AC8)
+- [x] Task 3: Inspect current backend LLM source paths listed in this story before drafting technical sections. (AC: AC5, AC9)
+- [x] Task 4: Create the main documentation file with the nineteen mandatory sections from the brief. (AC: AC1, AC2)
+- [x] Task 5: Add the six mandatory Mermaid diagrams with maintained labels and source-aligned nodes. (AC: AC3, AC9)
+- [x] Task 6: Document prompt-visible versus backend-only projection boundaries. (AC: AC4)
+- [x] Task 7: Separate nominal flow, repair flow, rejection flow, degraded payloads, and residual risks. (AC: AC6, AC8)
+- [x] Task 8: Cite tests, guardrails, and verification commands with paths or bounded source blockers. (AC: AC7)
+- [x] Task 9: Persist validation output and final evidence for review handoff. (AC: AC10)
 
 ## Files to Inspect First
 

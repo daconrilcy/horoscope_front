@@ -1,0 +1,6 @@
+
+FullName                                                                                                        Length
+--------                                                                                                        ------
+C:\dev\horoscope_front\_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md  15723
+
+
