@@ -1,5 +1,5 @@
 # Story CS-333 aligner-hash-evidence-audit-entree-llm-astrologique: Align Hash Evidence And LLM Astrology Input Audit
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

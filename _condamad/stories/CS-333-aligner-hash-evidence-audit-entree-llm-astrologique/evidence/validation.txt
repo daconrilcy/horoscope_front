@@ -19,6 +19,12 @@ Commands:
   PASS: 2 passed
 - cd backend; python -B -m pytest -q tests\architecture\test_llm_astrology_input_audit_boundary.py --tb=short
   PASS: 3 passed
+- cd backend; python -B -m pytest -q tests/unit/domain/astrology/test_llm_astrology_input_hash.py tests/unit/domain/astrology/test_llm_astrology_input_evidence.py tests/integration/llm/test_natal_llm_astrology_input_audit.py tests/architecture/test_llm_astrology_input_audit_boundary.py --tb=short
+  PASS: 8 passed, 2 deselected
+- cd backend; python -B -m pytest --long -q tests/integration/llm/test_natal_llm_astrology_input_audit.py --tb=short
+  PASS: 2 passed
+- cd backend; ruff format --check .
+  PASS: 1694 files already formatted
 - cd backend; python -B -c "from app.main import app; assert 'llm_input_hash' not in str(app.openapi())"
   PASS
 - cd backend; python -B -c "from app.main import app; assert all('llm-input' not in getattr(r, 'path', '') for r in app.routes)"
