@@ -5,11 +5,11 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: completed
 - Story key: CS-338-cloturer-extinction-legacy-injection-llm-natale
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-338-cloturer-extinction-legacy-injection-llm-natale`
-- Story registry target status: `ready-to-review`
+- Story registry target status: `done`
 
 ## Preflight
 

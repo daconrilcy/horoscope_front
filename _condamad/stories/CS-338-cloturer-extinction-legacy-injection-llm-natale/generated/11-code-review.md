@@ -1,51 +1,72 @@
 # Review CS-338 - cloturer-extinction-legacy-injection-llm-natale
 
-<!-- Commentaire global: ce fichier consigne la revue editoriale du contrat de story avant implementation. -->
+<!-- Commentaire global: ce fichier consigne la review d'implementation et de preuves de la story CS-338. -->
 
-## Verdict
+## Verdict final
 
 CLEAN
 
 ## Cycle de review
 
-- Iteration: 1
-- Mode: revue compacte pre-implementation.
+- Iterations: 2
 - Story cible: `_condamad/stories/CS-338-cloturer-extinction-legacy-injection-llm-natale/00-story.md`
 - Source brief: `_story_briefs/cs-338-cloturer-extinction-legacy-injection-llm-natale.md`
 - Tracker: `_condamad/stories/story-status.md`
+- Rapport final: `_condamad/reports/extinction-legacy-injection-llm-natale/2026-05-27-0000/validation-extinction-legacy.md`
 
-## Alignement brief / story
+## Iteration 1 - Findings corriges
 
-- L'objectif du brief est couvert: prouver que `llm_astrology_input_v1` est l'unique entree active du chemin LLM natal.
-- Les scans requis sont explicites: code applicatif, tests, prompts, schemas d'entree, registries, `_condamad` et `_story_briefs`.
-- Les termes a classer sont explicites: `chart_json`, `natal_data`, `evidence_catalog`, `legacy`, `fallback` et `transition-condition`.
-- Le rapport final attendu est defini au chemin `_condamad/reports/extinction-legacy-injection-llm-natale/2026-05-27-0000/validation-extinction-legacy.md`.
-- Les prerequis CS-336, CS-337 et le rapport de transition obligatoire sont references comme lectures avant edition.
-- Les exclusions du brief sont preservees: pas de frontend, pas de nouvelles fonctionnalites LLM, pas de compatibilite legacy.
+- F1 Medium: `generated/11-code-review.md` restait une review pre-implementation.
+  Correction: remplace par cette review d'implementation avec verdict, findings, validations et risques.
+  Preuve: cet artefact cible l'implementation et cite les validations relancees.
+- F2 Medium: le statut etait incoherent entre `00-story.md`, le rapport et le tracker.
+  Correction: statuts alignes sur `done` uniquement apres review clean et validations relancees.
+  Preuve: `00-story.md`, `story-status.md`, `10-final-evidence.md` et rapport final mis a jour.
 
-## Guardrails verifiees
+## Review fraiche - Iteration 2
 
-- RG-002 `refactor-api-v1-routers`: applicable comme garde de non-edition API; la story exclut `backend/app/api/**` sauf blocker documentaire direct.
-- RG-022 `align-prompt-generation-story-validation-paths`: applicable; le plan de validation pointe vers des chemins pytest collectables attendus.
-- Registry gap: conserve, aucun guardrail exact n'existe pour l'extinction des carriers legacy LLM natals.
+No issues actionnables.
 
-## Issues corrigees
+Alignement AC:
 
-Aucune issue actionnable trouvee dans la story, le tracker ou les guardrails cites.
-Creation de cet artefact de review uniquement.
+- AC1: rapport final present au chemin attendu.
+- AC2, AC5, AC7: guards runtime natals couvrent `llm_astrology_input_v1` et bloquent les anciens carriers.
+- AC3, AC6, AC8: occurrences restantes classees dans le rapport, sans blocker externe ouvert.
+- AC4: tests backend pertinents relances sans mock legacy natal ajoute.
 
-## Validations
+Review code:
 
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-338-cloturer-extinction-legacy-injection-llm-natale\00-story.md`: PASS.
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-338-cloturer-extinction-legacy-injection-llm-natale\00-story.md`: PASS.
+- `AIEngineAdapter.generate_natal_interpretation` construit un `NatalExecutionInput` canonique et ne forwarde pas
+  `chart_json`, `natal_data` ou `evidence_catalog` vers le contexte natal.
+- `LLMGateway.build_user_payload` prefere `llm_astrology_input_v1` et n'utilise pas `chart_json` pour les use cases
+  natals.
+- `LLMGateway._build_validation_payload` ignore `chart_json`, `natal_data` et `evidence_catalog` pour les schemas
+  natals.
+- Les contrats natals modernes exposes par `list_modern_natal_use_case_contracts()` exigent
+  `llm_astrology_input_v1`.
 
-Le venv `.venv\Scripts\Activate.ps1` etait disponible et active avant chaque commande Python.
+## Validations relancees
 
-## Risques residuels
+Les commandes Python/Ruff/Pytest ont ete lancees apres activation de `.\.venv\Scripts\Activate.ps1`.
 
-Aucun risque restant identifie pour la redaction de la story.
-Les risques d'implementation restent ceux deja declares dans le contrat de story.
+- Backend lint: `ruff check .` - PASS.
+- Legacy extinction integration: `pytest -q --long tests\integration\test_llm_legacy_extinction.py --tb=short` - PASS.
+- Runtime suppression integration: `pytest -q --long tests\integration\test_llm_runtime_suppression.py --tb=short` - PASS.
+- Gateway validation unit: `pytest -q app\tests\unit\test_gateway_input_validation_payload.py --tb=short` - PASS.
+- Backend suite complete: `pytest -q --long tests --tb=short` - PASS, 1420 passed, 9 skipped.
+- Story validate: `condamad_story_validate.py ...\00-story.md` - PASS.
+- Story strict lint: `condamad_story_lint.py --strict ...\00-story.md` - PASS.
+
+## Guardrails
+
+- RG-002 respecte: aucune edition de route API.
+- RG-022 respecte: validations pytest ciblees collectables, avec `--long` pour les tests d'integration.
+- Registry gap conserve: pas de modification de `_condamad/stories/regression-guardrails.md`.
 
 ## Propagation
 
-no-propagation: la boucle n'a produit aucun apprentissage reutilisable au-dela de cette story.
+no-propagation: les corrections sont locales aux artefacts et statuts de cette story.
+
+## Risques residuels
+
+Aucun risque restant identifie.

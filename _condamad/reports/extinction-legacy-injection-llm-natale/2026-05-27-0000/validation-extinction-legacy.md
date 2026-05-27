@@ -4,7 +4,7 @@
 
 ## Resume de l'etat final
 
-Statut: pret pour review.
+Statut: done apres review d'implementation.
 
 Le chemin LLM natal actif est ownerise par `llm_astrology_input_v1`. Les contrats natals modernes declares dans
 `canonical_use_case_registry.py` exposent uniquement `llm_astrology_input_v1` comme entree requise, et le runtime
@@ -64,7 +64,11 @@ Les commandes Python ont ete lancees apres activation de `.\.venv\Scripts\Activa
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-338-cloturer-extinction-legacy-injection-llm-natale --root . --with-optional` | PASS |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-338-cloturer-extinction-legacy-injection-llm-natale` | PASS |
 | `cd backend; ruff format tests\integration\test_llm_legacy_extinction.py` | PASS |
+| `cd backend; ruff check .` | PASS |
 | `cd backend; python -B -m pytest -q --long tests\integration\test_llm_legacy_extinction.py --tb=short` | PASS, 7 tests |
+| `cd backend; python -B -m pytest -q --long tests\integration\test_llm_runtime_suppression.py --tb=short` | PASS, 8 tests |
+| `cd backend; python -B -m pytest -q app\tests\unit\test_gateway_input_validation_payload.py --tb=short` | PASS, 2 tests |
+| `cd backend; pytest --long tests` | PASS, 1420 passed, 9 skipped |
 | `rg -n "chart_json\|natal_data\|evidence_catalog\|legacy\|fallback\|transition-condition" backend\app backend\tests _condamad _story_briefs` | PASS avec occurrences classees |
 | `rg -n "llm_astrology_input_v1" backend\app backend\tests _condamad _story_briefs` | PASS, chemin moderne present |
 

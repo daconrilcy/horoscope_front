@@ -1,5 +1,5 @@
 # Story CS-338 cloturer-extinction-legacy-injection-llm-natale: Close Natal LLM Legacy Injection Extinction
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
