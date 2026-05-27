@@ -1,0 +1,3 @@
+natal-prompt-construction-by-plan.md 14244
+natal-prompt-construction-mermaid.md 8218
+prompt-generation-current-implementation.md 23730

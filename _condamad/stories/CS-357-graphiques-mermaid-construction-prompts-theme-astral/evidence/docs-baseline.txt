@@ -1,0 +1,2 @@
+natal-prompt-construction-by-plan.md 14142
+prompt-generation-current-implementation.md 23730

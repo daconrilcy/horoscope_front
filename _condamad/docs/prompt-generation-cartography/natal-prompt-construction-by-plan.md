@@ -6,6 +6,8 @@
 
 Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.
 
+Annexe Mermaid: `_condamad/docs/prompt-generation-cartography/natal-prompt-construction-mermaid.md`.
+
 Aucun appel provider LLM reel n'a ete effectue pour produire ce document. Les textes exacts de prompt stockes en configuration runtime ne sont pas inventes: ils sont notes `a extraire depuis la configuration runtime`.
 
 ## Scope: theme astral natal, plans free, basic, premium
