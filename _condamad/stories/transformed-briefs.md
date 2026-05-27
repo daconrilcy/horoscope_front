@@ -139,3 +139,4 @@
 | cs-357 | `_story_briefs\cs-357-ajouter-graphiques-mermaid-construction-prompts-theme-astral.md` | `_condamad\stories\cs-357-graphiques-mermaid-construction-prompts-theme-astral\00-story.md` |
 | cs-358 | `_story_briefs\cs-358-generer-exemples-json-prompts-theme-astral-par-plan.md` | `_condamad\stories\cs-358-generer-exemples-json-prompts-theme-astral-par-plan\00-story.md` |
 | cs-359 | `_story_briefs\cs-359-migrer-event-guidance-hors-chart-json-legacy.md` | `_condamad\stories\cs-359-migrer-event-guidance-hors-chart-json-legacy\00-story.md` |
+| cs-360 | `_story_briefs\cs-360-audit-admin-manual-execution-provider-capable.md` | `_condamad\stories\cs-360-audit-admin-manual-execution-provider-capable\00-story.md` |
