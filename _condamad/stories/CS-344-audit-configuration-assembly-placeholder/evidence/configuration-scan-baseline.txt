@@ -1,0 +1,12 @@
+CS-344 configuration scan baseline
+
+Commands/sources:
+- rg -n "required_prompt_placeholders|assemble_developer_prompt|PromptRenderer|PLACEHOLDER|PLAN_RULES|length_budget|context_quality|llm_astrology_input_v1|output_schema_id|execution_profile_ref|fallback" backend/app/domain/llm backend/app/ops/llm/bootstrap backend/tests/evaluation
+- rg -n "run_llm_coherence_startup_validation|config_coherence_validator" backend/tests backend/app
+- git diff --quiet -- backend/app backend/tests frontend/src
+
+Result:
+- PASS: required story symbols were found in configuration, runtime, bootstrap and evaluation test paths.
+- PASS: coherence validator and startup validation references were found.
+- PASS: no diff was detected in backend/app, backend/tests or frontend/src before audit artifact creation.
+

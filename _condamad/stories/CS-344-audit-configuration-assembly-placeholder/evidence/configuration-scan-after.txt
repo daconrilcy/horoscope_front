@@ -1,0 +1,11 @@
+CS-344 configuration scan after
+
+Commands/sources:
+- rg -n "configuration-assembly-placeholder-audit" _condamad
+- rg -n "owner|source de donnees|sortie|garde|test" _condamad/audits/prompt-generation-cartography/2026-05-27-1809
+- git diff --quiet -- backend/app backend/tests frontend/src
+
+Result:
+- PASS expected after artifact creation: the audit report contains the requested story-specific marker and registry matrix fields.
+- PASS expected after artifact creation: no application, backend test, or frontend source delta is allowed.
+

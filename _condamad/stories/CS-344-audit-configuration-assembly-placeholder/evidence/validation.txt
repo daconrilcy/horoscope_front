@@ -1,0 +1,43 @@
+CS-344 validation output
+
+Python environment:
+- All Python, pytest and audit validation commands below were run after:
+  `.\.venv\Scripts\Activate.ps1`
+
+Commands run:
+
+1. `pytest -q backend/tests/evaluation/test_differentiation.py`
+   Result: PASS
+   Output: `2 passed in 0.60s`
+
+2. `pytest -q backend/tests/evaluation/test_output_contract.py`
+   Result: PASS
+   Output: `8 passed in 0.30s`
+
+3. `rg -n "configuration-assembly-placeholder-audit" _condamad`
+   Result: PASS
+   Output: report marker found in the CS-344 audit folder and story artifacts.
+
+4. `rg -n "owner|source de donnees|sortie|garde|test" _condamad/audits/prompt-generation-cartography/2026-05-27-1809`
+   Result: PASS
+   Output: registry matrix fields found in the audit folder.
+
+5. `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-cartography/2026-05-27-1809`
+   Result: PASS
+   Output: `CONDAMAD domain audit validation passed.`
+
+6. `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-cartography/2026-05-27-1809`
+   Result: PASS
+   Output: `CONDAMAD domain audit lint passed.`
+
+7. `git diff --quiet -- backend/app backend/tests frontend/src`
+   Result: PASS
+   Output: no diff in `backend/app`, `backend/tests`, or `frontend/src`.
+
+Skipped:
+
+- `pytest -q backend/tests/evaluation/test_prompt_resolution.py`
+  Reason: source inspection shows this test writes `backend/tests/evaluation/evaluation_report.md`; running it would violate the no-delta audit constraint for `backend/tests`.
+
+- `ruff format .`, `ruff check .`, and full `pytest -q`
+  Reason: this story is an audit-only documentation/evidence deliverable and no Python code was changed. The audit-specific validator/linter and targeted non-mutating pytest checks passed.

@@ -1,36 +1,25 @@
-# CS-344 Editorial Story Review
+# CS-344 Audit Review Handoff
 
-Verdict: CLEAN
+Verdict: AUDIT DELIVERED WITH FINDINGS
 
 ## Scope
 
-- Story reviewed: `_condamad/stories/CS-344-audit-configuration-assembly-placeholder/00-story.md`.
-- Source brief: `_story_briefs/cs-344-audit-configuration-assemblies-placeholders-prompts-llm.md`.
-- Tracker row: `_condamad/stories/story-status.md`, source column matched the brief.
-- Review mode: compact pre-implementation drafting review.
+- Story audited: `_condamad/stories/CS-344-audit-configuration-assembly-placeholder/00-story.md`.
+- Audit folder: `_condamad/audits/prompt-generation-cartography/2026-05-27-1809`.
+- Runtime code changes: none intended.
 
-## Review Cycle
+## Findings To Review
 
-- Iteration 1 found one drafting issue: output schema and coherence primitives from the brief were not explicit enough.
-- The story now names output schema ownership, runtime schema resolution, coherence surfaces, and related evidence.
-- Iteration 2 found no remaining actionable drafting issue.
-
-## Validation Results
-
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`
-- The Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+- F-002: output schema ownership remains split across canonical contracts, assembly IDs, fallback catalog schemas, bootstrap schemas and tests.
+- F-003: `test_prompt_resolution.py` writes `backend/tests/evaluation/evaluation_report.md`, so it is not a no-delta validation guard.
 
 ## Guardrails
 
-- RG-002 remains boundary control for backend API routing; no application code change is authorized.
-- RG-022 remains applicable; the story now lists concrete prompt-generation pytest paths through VC6.
-- RG-047 and RG-052 remain non-applicable because frontend styling and CSS namespace work are out of scope.
+- RG-002 consulted as backend boundary control.
+- RG-022 consulted for prompt-generation validation path alignment.
+- No guardrail registry update was made because the audit did not discover a new enforced invariant.
 
-## Residual Risk
+## Reviewer Focus
 
-Aucun risque restant identifie for the drafted story contract.
-
-## Propagation
-
-No propagation: the correction is local to this story contract and generated review evidence.
+- Confirm the F-002 convergence candidate should become a story before schema refactor work.
+- Confirm whether prompt-resolution report generation should be opt-in or moved outside pytest.
