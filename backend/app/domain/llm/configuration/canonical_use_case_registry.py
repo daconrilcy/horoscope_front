@@ -392,6 +392,18 @@ def list_canonical_use_case_contracts() -> list[CanonicalUseCaseContract]:
     return list(CANONICAL_USE_CASE_CONTRACTS)
 
 
+def list_modern_natal_use_case_contracts() -> list[CanonicalUseCaseContract]:
+    """Retourne les cas natals modernes proprietaires de l'entree astrologique riche."""
+
+    return [
+        contract
+        for contract in CANONICAL_USE_CASE_CONTRACTS
+        if contract.key.startswith("natal_")
+        and contract.input_schema is not None
+        and "llm_astrology_input_v1" in contract.input_schema.get("required", [])
+    ]
+
+
 def get_canonical_use_case_contract(key: str) -> CanonicalUseCaseContract | None:
     return _CONTRACTS_BY_KEY.get(key)
 
@@ -415,4 +427,5 @@ __all__ = [
     "get_canonical_output_schema_definition",
     "get_canonical_use_case_contract",
     "list_canonical_use_case_contracts",
+    "list_modern_natal_use_case_contracts",
 ]

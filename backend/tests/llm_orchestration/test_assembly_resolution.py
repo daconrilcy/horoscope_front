@@ -66,7 +66,13 @@ def _create_execution_profile(
     [
         ("chat", "astrologer", "free", "chat_astrologer", {"message": "Bonjour"}),
         ("guidance", "contextual", "free", "guidance_contextual", {"message": "Que faire ?"}),
-        ("natal", "interpretation", "premium", "natal_interpretation", {"chart_json": {}}),
+        (
+            "natal",
+            "interpretation",
+            "premium",
+            "natal_interpretation",
+            {"llm_astrology_input_v1": {}},
+        ),
         ("horoscope_daily", None, "free", "horoscope_daily", {"question": "Ma journee ?"}),
     ],
 )
@@ -218,6 +224,8 @@ def test_validate_placeholders_logic():
     assert validate_placeholders("Hello {{forbidden_var}}", "guidance") == ["forbidden_var"]
 
     # Valid for natal
+    assert validate_placeholders("Theme {{llm_astrology_input_v1}}", "natal") == []
+    # Transition legacy: les anciens placeholders restent autorises pour les prompts non migres.
     assert validate_placeholders("Theme {{chart_json}}", "natal") == []
     # Invalid for natal
     assert validate_placeholders("Theme {{situation}}", "natal") == ["situation"]

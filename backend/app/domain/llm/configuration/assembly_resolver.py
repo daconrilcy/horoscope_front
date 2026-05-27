@@ -138,6 +138,8 @@ def build_assembly_preview(
     if config.feature == "chat":
         mock_vars["last_user_msg"] = "Hello Luna!"
     if config.feature == "natal":
+        mock_vars["llm_astrology_input_v1"] = '{"contract_id": "llm_astrology_input_v1"}'
+        # Transition legacy: ces carriers restent disponibles pour les anciens prompts non migres.
         mock_vars["chart_json"] = '{"planets": {}}'
         mock_vars["natal_data"] = '{"birth_date": "1990-01-01"}'
 

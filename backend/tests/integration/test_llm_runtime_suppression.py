@@ -1,22 +1,52 @@
+# Tests d'integration du gateway LLM et de ses gardes runtime.
+"""Verifie les suppressions runtime et les surfaces de transition natales."""
+
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.domain.llm.configuration.canonical_use_case_registry import (
+    NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+)
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionFlags,
     ExecutionUserInput,
     GatewayConfigError,
     LLMExecutionRequest,
+    UseCaseConfig,
 )
-from app.domain.llm.runtime.gateway import LLMGateway
+from app.domain.llm.runtime.gateway import _NATAL_TRANSITION_PROMPT_CARRIERS, LLMGateway
 from app.domain.llm.runtime.observability_service import log_governance_event
 
 
 @pytest.fixture
 def gateway():
     return LLMGateway()
+
+
+def test_natal_legacy_carriers_are_bounded_transition_surface(gateway):
+    """Les anciens carriers natals restent bornes a la transition runtime."""
+
+    assert _NATAL_TRANSITION_PROMPT_CARRIERS == frozenset({"chart_json", "natal_data"})
+
+    payload = gateway._build_validation_payload(
+        UseCaseConfig(
+            model="test-model",
+            developer_prompt="Prompt {{llm_astrology_input_v1}}",
+            input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+            required_prompt_placeholders=["llm_astrology_input_v1"],
+        ),
+        user_input={},
+        context=ExecutionContext(
+            chart_json='{"legacy": true}',
+            natal_data={"legacy": True},
+            extra_context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}},
+        ),
+    )
+
+    assert payload == {"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}}
 
 
 def test_runtime_rejection_emits_dedicated_counter():

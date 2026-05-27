@@ -1,0 +1,156 @@
+[
+  {
+    "key": "natal_interpretation",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_interpretation_short",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "event_guidance",
+    "required_prompt_placeholders": [
+      "chart_json",
+      "event_description"
+    ],
+    "input_schema_required": [
+      "chart_json",
+      "event_description"
+    ],
+    "input_schema_properties": [
+      "chart_json",
+      "event_description"
+    ]
+  },
+  {
+    "key": "natal_psy_profile",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_shadow_integration",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_leadership_workstyle",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_creativity_joy",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_relationship_style",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_community_networks",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_values_security",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  },
+  {
+    "key": "natal_evolution_path",
+    "required_prompt_placeholders": [
+      "llm_astrology_input_v1",
+      "persona_name"
+    ],
+    "input_schema_required": [
+      "llm_astrology_input_v1"
+    ],
+    "input_schema_properties": [
+      "llm_astrology_input_v1",
+      "locale"
+    ]
+  }
+]

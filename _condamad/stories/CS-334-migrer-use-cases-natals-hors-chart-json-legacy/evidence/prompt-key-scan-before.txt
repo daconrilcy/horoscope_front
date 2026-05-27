@@ -1,0 +1,1028 @@
+backend\tests\integration\test_llm_runtime_suppression.py:93:    mock_assembly_db.input_schema = None
+backend\tests\integration\test_llm_runtime_suppression.py:102:    mock_resolved_assembly.execution_config.fallback_use_case = None
+backend\tests\integration\test_llm_runtime_suppression.py:153:async def test_supported_perimeter_bypasses_stage_0_5_legacy_config(gateway):
+backend\tests\integration\test_llm_runtime_suppression.py:155:    Story 70.13: supported canonical paths must not use the legacy compat resolver during
+backend\tests\integration\test_llm_runtime_suppression.py:172:        gateway, "_resolve_fallback_use_case_config", new=AsyncMock()
+backend\tests\integration\test_llm_runtime_suppression.py:191:async def test_removed_legacy_use_case_key_is_rejected(gateway):
+backend\tests\integration\test_llm_runtime_suppression.py:201:        request_id="test-66-30-legacy-alias",
+backend\tests\integration\test_llm_runtime_suppression.py:210:    assert excinfo.value.error_code == "removed_legacy_use_case_key"
+backend\tests\integration\test_llm_runtime_suppression.py:244:    mock_assembly_db.input_schema = None
+backend\tests\integration\test_llm_runtime_suppression.py:254:    mock_resolved_assembly.execution_config.fallback_use_case = None
+backend\tests\integration\test_llm_runtime_suppression.py:329:    mock_assembly_db.input_schema = None
+backend\tests\integration\test_llm_runtime_suppression.py:341:    mock_resolved_assembly.execution_config.fallback_use_case = None
+backend\tests\integration\test_llm_runtime_suppression.py:394:async def test_fallback_is_tolerated_on_unsupported_perimeter(gateway):
+backend\tests\integration\test_llm_runtime_suppression.py:397:    STILL tolerate resolve_model() fallback IF NOT NOMINAL.
+backend\tests\integration\test_llm_runtime_suppression.py:405:        flags=ExecutionFlags(test_fallback_active=True),  # NOT NOMINAL
+backend\tests\integration\test_llm_runtime_suppression.py:406:        request_id="test-66-30-fallback-tolerated",
+backend\tests\integration\test_llm_runtime_suppression.py:424:        mock_config.input_schema = None
+backend\tests\integration\test_llm_runtime_suppression.py:427:        mock_config.required_prompt_placeholders = []
+backend\tests\integration\test_llm_runtime_suppression.py:431:            "_resolve_fallback_use_case_config",
+backend\tests\integration\test_llm_runtime_suppression.py:442:                    return_value="gpt-4o-fallback",
+backend\tests\integration\test_llm_runtime_suppression.py:446:                    assert result.execution_profile_source == "fallback_resolve_model"
+backend\tests\integration\test_llm_runtime_suppression.py:447:                    assert result.model_id == "gpt-4o-fallback"
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:1:# Tests du transport runtime natal pour llm_astrology_input_v1.
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:32:    rich_input = {"contract_id": "llm_astrology_input_v1", "facts": {"positions": []}}
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:54:            llm_astrology_input_v1=rich_input,
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:55:            chart_json='{"legacy": true}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:56:            natal_data={"legacy": True},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:67:    assert captured_request.context.extra_context["llm_astrology_input_v1"] == rich_input
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:68:    assert "llm_astrology_input_v1" not in ExecutionContext.model_fields
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:71:def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:72:    """Le bloc utilisateur ne selectionne pas chart_json quand le contrat riche existe."""
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:73:    rich_input = {"contract_id": "llm_astrology_input_v1", "facts": {"positions": []}}
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:79:            "llm_astrology_input_v1": rich_input,
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:80:            "chart_json": '{"legacy": "secret"}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:81:            "natal_data": {"legacy": "secret"},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:87:    assert "llm_astrology_input_v1" in payload
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:88:    assert "legacy" not in payload
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:92:def test_validation_payload_uses_llm_astrology_input_v1_schema_key() -> None:
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:94:    rich_input = {"contract_id": "llm_astrology_input_v1"}
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:97:        developer_prompt="Prompt {{llm_astrology_input_v1}}",
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:98:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:105:            chart_json='{"legacy": true}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:106:            natal_data={"legacy": True},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:107:            extra_context={"llm_astrology_input_v1": rich_input},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:111:    assert payload["llm_astrology_input_v1"] == rich_input
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:112:    assert "chart_json" not in payload
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:115:def test_natal_prompt_placeholder_registry_accepts_rich_key_without_legacy_carrier() -> None:
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:116:    """Le renderer natal peut rendre la cle riche sans chart_json ni natal_data."""
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:119:    assert contract.required_prompt_placeholders == ["llm_astrology_input_v1", "persona_name"]
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:122:        "Payload {{llm_astrology_input_v1}} / legacy {{chart_json}}",
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:124:            "llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:127:        required_variables=contract.required_prompt_placeholders,
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:131:    assert "llm_astrology_input_v1" in rendered
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:132:    assert "{{chart_json}}" not in rendered
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:133:    assert "legacy " in rendered
+backend\tests\llm_orchestration\test_gateway_regressions_fix.py:67:    # Mock the bounded legacy compatibility resolver.
+backend\tests\llm_orchestration\test_gateway_regressions_fix.py:68:    gateway._resolve_fallback_use_case_config = AsyncMock(return_value=config)
+backend\tests\llm_orchestration\test_gateway_regressions_fix.py:123:        gateway._resolve_fallback_use_case_config = AsyncMock(
+backend\tests\llm_orchestration\test_gateway_regressions_fix.py:185:        gateway._resolve_fallback_use_case_config = AsyncMock(
+backend\tests\llm_orchestration\test_llm_closure.py:48:            feature=None,  # No feature passed (legacy style)
+backend\tests\llm_orchestration\test_execution_profiles.py:55:    # Test fallback to feature (plan free not defined)
+backend\tests\llm_orchestration\test_gateway_pipeline.py:65:        gateway._resolve_fallback_use_case_config = AsyncMock(
+backend\tests\llm_orchestration\test_gateway_pipeline.py:142:        gateway._resolve_fallback_use_case_config = AsyncMock(
+backend\tests\llm_orchestration\test_gateway_model_override.py:41:            flags={"test_fallback_active": True},
+backend\tests\llm_orchestration\test_gateway_model_override.py:77:            flags={"test_fallback_active": True},
+backend\tests\llm_orchestration\test_gateway_model_override.py:113:            flags={"test_fallback_active": True},
+backend\tests\llm_orchestration\test_context_quality.py:72:        context=ExecutionContext(chart_json='{"planets": []}'),
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:9:    build_fallback_use_case_config,
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:29:def test_supported_use_cases_are_absent_from_prompt_fallback_configs() -> None:
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:36:def test_supported_use_cases_do_not_build_fallback_config(use_case_key: str) -> None:
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:37:    """Verifie que le builder ne recree pas de config fallback supportee."""
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:39:    assert build_fallback_use_case_config(use_case_key) is None
+backend\app\services\llm_generation\natal\interpretation_service.py:26:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\app\services\llm_generation\natal\interpretation_service.py:62:    build_chart_json,
+backend\app\services\llm_generation\natal\interpretation_service.py:101:def _build_llm_astrology_input_v1(
+backend\app\services\llm_generation\natal\interpretation_service.py:130:        prompt_ref="natal.llm_astrology_input_v1.runtime",
+backend\app\services\llm_generation\natal\interpretation_service.py:213:        fallback = _normalize_free_short_summary(summary).split(".")[0].strip()
+backend\app\services\llm_generation\natal\interpretation_service.py:214:        normalized = fallback.strip(" .")
+backend\app\services\llm_generation\natal\interpretation_service.py:242:    llm_astrology_input_v1: dict[str, object],
+backend\app\services\llm_generation\natal\interpretation_service.py:247:    llm_input_hash = _llm_input_hash_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:248:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:254:    model.llm_input_version = _llm_input_version_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:262:        model.grounding_status = _grounding_status_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:263:        model.evidence_refs = _evidence_refs_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:281:    llm_astrology_input_v1: dict[str, object],
+backend\app\services\llm_generation\natal\interpretation_service.py:284:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:291:        llm_input_version=_llm_input_version_for_audit(llm_astrology_input_v1),
+backend\app\services\llm_generation\natal\interpretation_service.py:292:        llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
+backend\app\services\llm_generation\natal\interpretation_service.py:296:def _llm_input_provenance(llm_astrology_input_v1: dict[str, object]) -> dict[str, object]:
+backend\app\services\llm_generation\natal\interpretation_service.py:297:    """Lit la provenance canonique sans accepter de fallback silencieux invalide."""
+backend\app\services\llm_generation\natal\interpretation_service.py:298:    if not isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:299:        raise ValueError("llm_astrology_input_v1 audit payload is required")
+backend\app\services\llm_generation\natal\interpretation_service.py:300:    provenance = llm_astrology_input_v1.get("provenance")
+backend\app\services\llm_generation\natal\interpretation_service.py:302:        raise ValueError("llm_astrology_input_v1 provenance is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:306:def _llm_input_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:308:    llm_input_hash = _llm_input_provenance(llm_astrology_input_v1).get("llm_input_hash")
+backend\app\services\llm_generation\natal\interpretation_service.py:311:    raise ValueError("llm_astrology_input_v1 llm_input_hash is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:314:def _llm_input_version_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:316:    if isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:317:        contract_version = llm_astrology_input_v1.get("contract_version")
+backend\app\services\llm_generation\natal\interpretation_service.py:320:    raise ValueError("llm_astrology_input_v1 contract_version is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:323:def _projection_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:325:    projection_hash = _llm_input_provenance(llm_astrology_input_v1).get("projection_hash")
+backend\app\services\llm_generation\natal\interpretation_service.py:328:    raise ValueError("llm_astrology_input_v1 projection_hash is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:331:def _grounding_status_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:333:    if not isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:334:        raise ValueError("llm_astrology_input_v1 evidence is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:335:    evidence = llm_astrology_input_v1.get("evidence")
+backend\app\services\llm_generation\natal\interpretation_service.py:337:        raise ValueError("llm_astrology_input_v1 evidence is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:341:    raise ValueError("llm_astrology_input_v1 grounding_status is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:344:def _evidence_refs_for_audit(llm_astrology_input_v1: dict[str, object]) -> list[object]:
+backend\app\services\llm_generation\natal\interpretation_service.py:346:    if not isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:347:        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:348:    evidence = llm_astrology_input_v1.get("evidence")
+backend\app\services\llm_generation\natal\interpretation_service.py:350:        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:354:    raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:382:    def _compose_legacy_text(interpretation: object) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:394:    def _to_legacy_payload(response: NatalInterpretationResponse) -> NatalInterpretationData:
+backend\app\services\llm_generation\natal\interpretation_service.py:403:            text=NatalInterpretationService._compose_legacy_text(interpretation),
+backend\app\services\llm_generation\natal\interpretation_service.py:462:        return NatalInterpretationService._to_legacy_payload(response)
+backend\app\services\llm_generation\natal\interpretation_service.py:674:                    was_fallback=existing.was_fallback,
+backend\app\services\llm_generation\natal\interpretation_service.py:691:        chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
+backend\app\services\llm_generation\natal\interpretation_service.py:692:        evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
+backend\app\services\llm_generation\natal\interpretation_service.py:713:                chart_json_dict=chart_json_dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:739:        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
+backend\app\services\llm_generation\natal\interpretation_service.py:766:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:767:            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
+backend\app\services\llm_generation\natal\interpretation_service.py:768:            natal_data=chart_json_dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:818:        if level == "complete" and not gateway_result.meta.fallback_triggered:
+backend\app\services\llm_generation\natal\interpretation_service.py:856:            # short (gratuit) ou fallback vers short → schéma v1
+backend\app\services\llm_generation\natal\interpretation_service.py:878:            fallback_triggered=gateway_result.meta.fallback_triggered,
+backend\app\services\llm_generation\natal\interpretation_service.py:879:            was_fallback=gateway_result.meta.fallback_triggered,
+backend\app\services\llm_generation\natal\interpretation_service.py:907:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:966:                        was_fallback=gateway_result.meta.fallback_triggered,
+backend\app\services\llm_generation\natal\interpretation_service.py:977:                        llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:989:                    primary.was_fallback = gateway_result.meta.fallback_triggered
+backend\app\services\llm_generation\natal\interpretation_service.py:999:                        llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1035:        chart_json_dict: dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:1059:        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
+backend\app\services\llm_generation\natal\interpretation_service.py:1071:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1072:            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
+backend\app\services\llm_generation\natal\interpretation_service.py:1073:            natal_data=chart_json_dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:1131:            was_fallback=gateway_result.meta.fallback_triggered,
+backend\app\services\llm_generation\natal\interpretation_service.py:1147:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1202:                was_fallback=gateway_result.meta.fallback_triggered,
+backend\app\services\llm_generation\natal\interpretation_service.py:1213:                llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1221:            primary.was_fallback = gateway_result.meta.fallback_triggered
+backend\app\services\llm_generation\natal\interpretation_service.py:1231:                llm_astrology_input_v1=llm_astrology_input_v1,
+backend\tests\llm_orchestration\test_llm_gateway_compose.py:33:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_llm_gateway_compose.py:36:        flags={"test_fallback_active": True},
+backend\tests\llm_orchestration\test_llm_gateway_compose.py:78:        flags={"test_fallback_active": True},
+backend\tests\llm_orchestration\test_llm_gateway_compose.py:113:        flags={"test_fallback_active": True},
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:22:    """Test Story 66.23: AssemblyRegistry REJETTE les clés legacy (AC11)."""
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:35:    # Reject nominal legacy feature (AC4, AC10)
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:42:    # BUT tolerate legacy subfeature with canonical feature (normalization only)
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:60:    """Test Story 66.23: ExecutionProfileRegistry REJETTE les clés legacy (AC11)."""
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:71:    # Reject nominal legacy feature (AC4, AC10)
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:78:    # Telerate legacy subfeature
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:94:    """Test Story 66.23: AssemblyAdminService REJETTE les clés legacy sur create (AC11)."""
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:98:    # Rejette feature legacy
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:121:    # Normalise subfeature legacy
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:122:    config_sub_legacy = PromptAssemblyConfig(
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:138:            await service.create_draft(config_sub_legacy, "admin@test.com")
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:145:    """Test Story 66.23: ExecutionProfile validation REJETTE les clés legacy (AC11)."""
+backend\tests\llm_orchestration\test_llm_convergence.py:157:async def test_assembly_fallback_to_use_case(db, caplog):
+backend\tests\llm_orchestration\test_llm_convergence.py:167:        request_id="req-fallback",
+backend\tests\llm_orchestration\test_llm_convergence.py:168:        trace_id="tr-fallback",
+backend\tests\llm_orchestration\test_llm_convergence.py:174:        gateway._resolve_fallback_use_case_config = AsyncMock(
+backend\tests\llm_orchestration\test_llm_convergence.py:185:    # It should fallback to resolve_model (legacy behavior)
+backend\tests\llm_orchestration\test_llm_convergence.py:186:    assert plan.model_source in ["os_granular", "os_legacy", "config", "stub"]
+backend\tests\llm_orchestration\test_llm_convergence.py:189:    assert plan.execution_profile_source == "fallback_resolve_model"
+backend\tests\llm_orchestration\test_gateway_errors.py:19:        model="m", developer_prompt="Hello {{name}}", required_prompt_placeholders=["name"]
+backend\tests\llm_orchestration\test_gateway_errors.py:22:    with patch.object(gateway, "_resolve_fallback_use_case_config", return_value=dummy_config):
+backend\tests\llm_orchestration\test_placeholder_validation.py:1:# Tests de validation des placeholders gouvernes du runtime LLM.
+backend\tests\llm_orchestration\test_placeholder_validation.py:2:"""Verifie les comportements requis, optionnels et fallback du renderer."""
+backend\tests\llm_orchestration\test_placeholder_validation.py:10:def test_placeholder_required_missing_blocking(caplog):
+backend\tests\llm_orchestration\test_placeholder_validation.py:12:    template = "Hello {{llm_astrology_input_v1}}"
+backend\tests\llm_orchestration\test_placeholder_validation.py:18:    assert "Required placeholder '{{llm_astrology_input_v1}}' not resolved" in str(exc.value)
+backend\tests\llm_orchestration\test_placeholder_validation.py:21:def test_placeholder_required_missing_non_blocking(caplog):
+backend\tests\llm_orchestration\test_placeholder_validation.py:30:    assert "placeholder_not_resolved" in caplog.text
+backend\tests\llm_orchestration\test_placeholder_validation.py:34:def test_placeholder_optional_missing(caplog):
+backend\tests\llm_orchestration\test_placeholder_validation.py:42:    assert "placeholder_not_resolved" in caplog.text
+backend\tests\llm_orchestration\test_placeholder_validation.py:46:def test_placeholder_optional_fallback(caplog):
+backend\tests\llm_orchestration\test_placeholder_validation.py:47:    """Test Story 66.13: Optional with fallback used."""
+backend\tests\llm_orchestration\test_placeholder_validation.py:57:    assert "placeholder_fallback_used" in caplog.text
+backend\tests\llm_orchestration\test_placeholder_validation.py:60:def test_placeholder_unknown(caplog):
+backend\tests\llm_orchestration\test_placeholder_validation.py:61:    """Test Story 66.13: Unknown placeholder is removed and logs error."""
+backend\tests\llm_orchestration\test_placeholder_validation.py:68:    assert "placeholder_unauthorized_detected" in caplog.text
+backend\tests\llm_orchestration\test_placeholder_validation.py:71:def test_no_surviving_placeholders():
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:72:def test_build_result_test_fallback_path():
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:99:        flags=ExecutionFlags(test_fallback_active=True),
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:106:    assert final.meta.execution_path == "test_fallback"
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:109:def test_build_result_fallback_path():
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:123:    # Simulated fallback
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:124:    fallback_res = GatewayResult(
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:125:        use_case="uc-fallback",
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:132:    recovery = RecoveryResult(result=fallback_res, fallback_reason="schema_error")
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:144:    assert final.meta.execution_path == "fallback_use_case"
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:145:    assert final.meta.fallback_reason == "schema_error"
+backend\tests\llm_orchestration\test_gateway_meta_enrichi.py:146:    assert final.meta.fallback_triggered is True
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:38:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:50:async def test_resolve_plan_source_os_legacy(db):
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:58:    with patch.dict(os.environ, {"LLM_MODEL_OVERRIDE_CHAT": "gpt-legacy"}):
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:60:        assert plan.model_id == "gpt-legacy"
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:61:        assert plan.model_source == "os_legacy"
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:89:def test_supported_perimeter_plan_rejects_legacy_execution_profile_source():
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:90:    with pytest.raises(ValidationError, match="legacy execution-profile source"):
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:95:            execution_profile_source="fallback_provider_unsupported",
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:110:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:124:    request = LLMGateway._legacy_dicts_to_request(
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:127:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_catalog_resolution.py:20:def test_resolve_model_priority_granular_vs_legacy():
+backend\tests\llm_orchestration\test_catalog_resolution.py:24:    legacy_key = "LLM_MODEL_OVERRIDE_GUIDANCE_DAILY"
+backend\tests\llm_orchestration\test_catalog_resolution.py:27:    legacy_model = "gpt-legacy"
+backend\tests\llm_orchestration\test_catalog_resolution.py:29:    with patch.dict(os.environ, {granular_key: granular_model, legacy_key: legacy_model}):
+backend\tests\llm_orchestration\test_catalog_resolution.py:34:def test_resolve_model_fallback_to_legacy():
+backend\tests\llm_orchestration\test_catalog_resolution.py:35:    """Verify fallback to Legacy if Granular is missing."""
+backend\tests\llm_orchestration\test_catalog_resolution.py:37:    legacy_key = "LLM_MODEL_OVERRIDE_GUIDANCE_DAILY"
+backend\tests\llm_orchestration\test_catalog_resolution.py:38:    legacy_model = "gpt-legacy"
+backend\tests\llm_orchestration\test_catalog_resolution.py:43:    with patch.dict(os.environ, {legacy_key: legacy_model}):
+backend\tests\llm_orchestration\test_catalog_resolution.py:47:        assert resolved == legacy_model
+backend\tests\llm_orchestration\test_catalog_resolution.py:50:def test_resolve_model_fallback_to_provided_fallback():
+backend\tests\llm_orchestration\test_catalog_resolution.py:51:    """Verify fallback to provided fallback_model."""
+backend\tests\llm_orchestration\test_catalog_resolution.py:53:    fallback_model = "gpt-fallback-from-db"
+backend\tests\llm_orchestration\test_catalog_resolution.py:57:        resolved = resolve_model(use_case, fallback_model=fallback_model)
+backend\tests\llm_orchestration\test_catalog_resolution.py:58:        assert resolved == fallback_model
+backend\tests\llm_orchestration\test_catalog_resolution.py:62:    """Verify fallback to settings default."""
+backend\tests\llm_orchestration\test_catalog_resolution.py:68:        resolved = resolve_model(use_case, fallback_model=None)
+backend\tests\llm_orchestration\test_assembly_resolution.py:11:    validate_placeholders,
+backend\tests\llm_orchestration\test_assembly_resolution.py:69:        ("natal", "interpretation", "premium", "natal_interpretation", {"chart_json": {}}),
+backend\tests\llm_orchestration\test_assembly_resolution.py:108:async def test_db_prompt_resolution_does_not_require_supported_fallback_prompt(
+backend\tests\llm_orchestration\test_assembly_resolution.py:112:    """Un prompt DB publie reste resoluble sans prompt fallback supporte."""
+backend\tests\llm_orchestration\test_assembly_resolution.py:212:def test_validate_placeholders_logic():
+backend\tests\llm_orchestration\test_assembly_resolution.py:213:    # Valid placeholders for guidance
+backend\tests\llm_orchestration\test_assembly_resolution.py:214:    assert validate_placeholders("Hello {{last_user_msg}}", "guidance") == []
+backend\tests\llm_orchestration\test_assembly_resolution.py:215:    assert validate_placeholders("Hello {{locale}}", "guidance") == []
+backend\tests\llm_orchestration\test_assembly_resolution.py:217:    # Invalid placeholder
+backend\tests\llm_orchestration\test_assembly_resolution.py:218:    assert validate_placeholders("Hello {{forbidden_var}}", "guidance") == ["forbidden_var"]
+backend\tests\llm_orchestration\test_assembly_resolution.py:221:    assert validate_placeholders("Theme {{chart_json}}", "natal") == []
+backend\tests\llm_orchestration\test_assembly_resolution.py:223:    assert validate_placeholders("Theme {{situation}}", "natal") == ["situation"]
+backend\tests\llm_orchestration\test_assembly_resolution.py:266:async def test_assembly_waterfall_fallback(db):
+backend\tests\llm_orchestration\test_assembly_resolution.py:551:    with pytest.raises(ValueError, match="Invalid placeholders in subfeature template"):
+backend\tests\llm_orchestration\test_v2_validation.py:33:        required_prompt_placeholders=["messages"],
+backend\tests\llm_orchestration\test_v2_validation.py:63:    # but IS in required_prompt_placeholders
+backend\tests\llm_orchestration\test_prompt_registry_v2.py:174:def test_publish_prompt_forbidden_for_legacy_daily_prediction(db):
+backend\tests\llm_orchestration\test_prompt_registry_v2.py:197:def test_rollback_prompt_forbidden_for_legacy_daily_prediction(db):
+backend\tests\llm_orchestration\test_prompt_registry_v2.py:221:def test_rollback_supports_legacy_archived_versions(db):
+backend\tests\llm_orchestration\test_prompt_registry_v2.py:226:    legacy_archived = LlmPromptVersionModel(
+backend\tests\llm_orchestration\test_prompt_registry_v2.py:242:    db.add_all([legacy_archived, published])
+backend\tests\llm_orchestration\test_prompt_registry_v2.py:248:    assert rolled_back.id == legacy_archived.id
+backend\app\domain\llm\runtime\contracts.py:23:    LEGACY_WRAPPER = "legacy_wrapper"
+backend\app\domain\llm\runtime\contracts.py:29:    NARRATOR_LEGACY = "narrator_legacy"
+backend\app\domain\llm\runtime\contracts.py:37:    LEGACY_USE_CASE_FALLBACK = "legacy_use_case_fallback"
+backend\app\domain\llm\runtime\contracts.py:38:    LEGACY_EXECUTION_PROFILE_FALLBACK = "legacy_execution_profile_fallback"
+backend\app\domain\llm\runtime\contracts.py:54:    VERBOSITY_FALLBACK = "verbosity_fallback"
+backend\app\domain\llm\runtime\contracts.py:61:    fallback_kind: Optional[FallbackType] = None
+backend\app\domain\llm\runtime\contracts.py:116:    natal_data: Optional[Dict[str, Any]] = None
+backend\app\domain\llm\runtime\contracts.py:117:    chart_json: Optional[str] = None
+backend\app\domain\llm\runtime\contracts.py:126:    test_fallback_active: bool = False
+backend\app\domain\llm\runtime\contracts.py:144:    llm_astrology_input_v1: Dict[str, Any]
+backend\app\domain\llm\runtime\contracts.py:145:    chart_json: str
+backend\app\domain\llm\runtime\contracts.py:146:    natal_data: Dict[str, Any]
+backend\app\domain\llm\runtime\contracts.py:182:    input_schema: Optional[Dict[str, Any]] = None
+backend\app\domain\llm\runtime\contracts.py:184:    required_prompt_placeholders: List[str] = Field(default_factory=list)
+backend\app\domain\llm\runtime\contracts.py:185:    fallback_target_use_case: Optional[str] = None
+backend\app\domain\llm\runtime\contracts.py:218:    model_source: Literal["os_granular", "os_legacy", "config", "stub", "assembly"]
+backend\app\domain\llm\runtime\contracts.py:220:    is_legacy_compatibility: bool = False
+backend\app\domain\llm\runtime\contracts.py:240:    input_schema: Optional[Dict[str, Any]] = None
+backend\app\domain\llm\runtime\contracts.py:241:    required_prompt_placeholders: List[str] = Field(default_factory=list)
+backend\app\domain\llm\runtime\contracts.py:264:        legacy_execution_profile_sources = {
+backend\app\domain\llm\runtime\contracts.py:265:            "fallback_resolve_model",
+backend\app\domain\llm\runtime\contracts.py:266:            "fallback_provider_unsupported",
+backend\app\domain\llm\runtime\contracts.py:270:            and self.execution_profile_source in legacy_execution_profile_sources
+backend\app\domain\llm\runtime\contracts.py:273:                "Supported perimeter execution plans cannot use legacy execution-profile "
+backend\app\domain\llm\runtime\contracts.py:285:            "input_schema",
+backend\app\domain\llm\runtime\contracts.py:314:    fallback_triggered: bool = False
+backend\app\domain\llm\runtime\contracts.py:316:    execution_path: Literal["nominal", "repaired", "fallback_use_case", "test_fallback"] = "nominal"
+backend\app\domain\llm\runtime\contracts.py:322:    fallback_reason: Optional[str] = None
+backend\app\domain\llm\runtime\contracts.py:364:    fallback_reason: Optional[str] = None
+backend\app\domain\llm\runtime\contracts.py:442:    legacy_errors: List[str] = Field(default_factory=list)
+backend\tests\llm_orchestration\test_narrator_migration.py:395:    # Check that unknown placeholders are stripped (fix for 66.13 regression)
+backend\tests\llm_orchestration\test_qualified_context.py:20:    assert QualifiedContext.compute_quality(["natal_interpretation", "natal_data"]) == "minimal"
+backend\tests\llm_orchestration\test_qualified_context.py:21:    assert QualifiedContext.compute_quality(["astrologer_profile", "natal_data"]) == "minimal"
+backend\tests\llm_orchestration\test_qualified_context.py:83:        assert "natal_data" in res.missing_fields
+backend\tests\llm_orchestration\test_qualified_context.py:85:        assert res.source == "fallback"
+backend\app\domain\llm\runtime\observability_service.py:127:                | legacy_feature_alias_used | legacy_residual_activation
+backend\app\domain\llm\runtime\observability_service.py:128:                | legacy_residual_blocked
+backend\app\domain\llm\runtime\observability_service.py:161:def log_legacy_residual_activation(
+backend\app\domain\llm\runtime\observability_service.py:165:    fallback_type: str,
+backend\app\domain\llm\runtime\observability_service.py:174:    Télémétrie normalisée pour activation d'un chemin legacy résiduel (Story 66.40 AC3).
+backend\app\domain\llm\runtime\observability_service.py:179:        "fallback_type": fallback_type,
+backend\app\domain\llm\runtime\observability_service.py:187:    increment_counter("llm_legacy_residual_activation_total", labels=labels)
+backend\app\domain\llm\runtime\observability_service.py:189:        event_type="legacy_residual_activation",
+backend\app\domain\llm\runtime\observability_service.py:197:def log_legacy_residual_blocked_attempt(
+backend\app\domain\llm\runtime\observability_service.py:201:    fallback_type: str,
+backend\app\domain\llm\runtime\observability_service.py:216:        "fallback_type": fallback_type,
+backend\app\domain\llm\runtime\observability_service.py:225:    increment_counter("llm_legacy_residual_blocked_attempt_total", labels=labels)
+backend\app\domain\llm\runtime\observability_service.py:227:        "llm_gateway_fallback_usage_total",
+backend\app\domain\llm\runtime\observability_service.py:229:            "fallback_type": fallback_type,
+backend\app\domain\llm\runtime\observability_service.py:236:            "activation_reason": (activation_reason or "track_fallback")[:120],
+backend\app\domain\llm\runtime\observability_service.py:241:        event_type="legacy_residual_blocked",
+backend\app\domain\llm\runtime\observability_service.py:248:        "legacy_residual_blocked_attempt stable_id=%s fallback_type=%s call_site=%s feature=%s",
+backend\app\domain\llm\runtime\observability_service.py:250:        fallback_type,
+backend\app\domain\llm\runtime\observability_service.py:287:        fallback_triggered = False
+backend\app\domain\llm\runtime\observability_service.py:293:        fallback_kind = None
+backend\app\domain\llm\runtime\observability_service.py:346:            fallback_triggered = result.meta.fallback_triggered
+backend\app\domain\llm\runtime\observability_service.py:365:                fallback_kind = (
+backend\app\domain\llm\runtime\observability_service.py:366:                    obs.fallback_kind.value
+backend\app\domain\llm\runtime\observability_service.py:367:                    if obs.fallback_kind and hasattr(obs.fallback_kind, "value")
+backend\app\domain\llm\runtime\observability_service.py:368:                    else obs.fallback_kind
+backend\app\domain\llm\runtime\observability_service.py:428:                fallback_triggered=fallback_triggered,
+backend\app\domain\llm\runtime\observability_service.py:444:                    fallback_kind=fallback_kind,
+backend\tests\llm_orchestration\test_stable_profiles.py:49:    assert plan.max_output_tokens_source == "verbosity_fallback"
+backend\tests\llm_orchestration\test_stable_profiles.py:181:    """Unsupported providers should degrade to the stable OpenAI fallback path."""
+backend\tests\llm_orchestration\test_stable_profiles.py:209:    assert plan.execution_profile_source == "fallback_provider_unsupported"
+backend\tests\llm_orchestration\test_prompt_lint.py:15:def test_lint_missing_placeholders():
+backend\tests\llm_orchestration\test_prompt_lint.py:19:    assert "Mandatory placeholder '{{locale}}' is missing." in result.errors
+backend\tests\llm_orchestration\test_prompt_lint.py:20:    assert "Mandatory placeholder '{{use_case}}' is missing." in result.errors
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:15:    validate_placeholders,
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:24:    build_fallback_use_case_config,
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:45:    / "classify-converge-remaining-prompt-fallbacks"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:46:    / "fallback-classification.md"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:96:def test_horoscope_daily_family_resolves_for_placeholders() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:98:    assert reg.resolve_placeholder_family("horoscope_daily") == "horoscope_daily"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:99:    invalid, violations = reg.validate_placeholders_in_template(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:106:def test_unknown_placeholder_blocked_for_guidance() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:108:    invalid, violations = reg.validate_placeholders_in_template(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:127:    assert GOVERNED_LEGACY_FEATURE_ALIASES_TO_CANONICAL == reg.legacy_nominal_feature_aliases_map()
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:130:def test_prompt_fallback_config_exceptions_are_exact() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:131:    """Verifie que les exceptions fallback restent explicites et auditees."""
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:133:    fallback_keys = frozenset(PROMPT_FALLBACK_CONFIGS)
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:134:    assert fallback_keys == _ALLOWED_PROMPT_FALLBACK_CONFIG_KEYS
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:135:    assert fallback_keys.isdisjoint(_FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS)
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:139:def test_converged_prompt_fallback_keys_do_not_build_config(use_case_key: str) -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:140:    """Bloque le retour executable des prompts fallback converges."""
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:142:    assert build_fallback_use_case_config(use_case_key) is None
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:145:def test_fallback_classification_audit_covers_every_reviewed_key() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:146:    """Verifie que l'audit persistant liste chaque decision de fallback."""
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:163:    assert reg.resolve_placeholder_family("guidance_contextual") == "guidance"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:164:    invalid, violations = reg.validate_placeholders_in_template(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:172:            "placeholders_by_family"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:178:def test_placeholder_allowlist_is_registry_derived() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:181:        assert [d.name for d in defs] == [d.name for d in reg.get_placeholder_defs(fam)]
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:184:def test_validate_placeholders_backward_compatible_api() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:185:    assert validate_placeholders("Hello {{last_user_msg}}", "guidance") == []
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:186:    assert validate_placeholders("Hello {{forbidden_var}}", "guidance") == ["forbidden_var"]
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:207:    invalid, _v = reg.validate_placeholders_in_template(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:227:def test_renderer_universal_placeholders_follow_registry() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:229:    assert "last_user_msg" in reg.universal_placeholders
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:239:def test_governed_exception_allows_placeholder_when_scope_matches() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:246:            "scope": "placeholder:natal_chart_summary;family:chat;rule:GOV_PH_NOT_IN_REGISTRY",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:251:    base["placeholders_by_family"]["chat"] = [
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:252:        p for p in base["placeholders_by_family"]["chat"] if p["name"] != "natal_chart_summary"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:257:        invalid, violations = reg.validate_placeholders_in_template(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:273:            "scope": "placeholder:legacy_only_ph;family:chat;rule:GOV_PH_NOT_IN_REGISTRY",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:281:        invalid, _violations = reg.validate_placeholders_in_template(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:282:            "X {{legacy_only_ph}}", "guidance", source="test"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:284:        assert invalid == ["legacy_only_ph"]
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:296:            "scope": "placeholder:natal_chart_summary;family:chat;rule:GOV_PH_NOT_IN_REGISTRY",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:301:    base["placeholders_by_family"]["chat"] = [
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:302:        p for p in base["placeholders_by_family"]["chat"] if p["name"] != "natal_chart_summary"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:315:            {fam: list(defs) for fam, defs in reg._placeholder_defs_by_family.items()},
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:328:        allowed, exc_id = reg.is_placeholder_governed_for_feature(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:329:            placeholder="natal_chart_summary", feature="chat"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:344:            "scope": "placeholder:natal_chart_summary;famly:chat;rule:GOV_PH_NOT_IN_REGISTRY",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:360:            "scope": "placeholder:natal_chart_summary;rule:GOV_PH_NOT_IN_REGISTRY",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:377:                "placeholder:natal_chart_summary;family:unknown_family;rule:GOV_PH_NOT_IN_REGISTRY"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:394:            "scope": "placeholder:natal_chart_summary;family:chat;rule:GOV_PH_NOT_IN_REGSTRY",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:411:                "placeholder:legacy_only_ph;family:daily_prediction;rule:gov_ph_not_in_registry"
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:420:        allowed, exc_id = reg.is_placeholder_governed_for_feature(
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:421:            placeholder="legacy_only_ph",
+backend\app\domain\llm\runtime\gateway.py:32:    build_fallback_use_case_config,
+backend\app\domain\llm\runtime\gateway.py:64:from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+backend\app\domain\llm\runtime\gateway.py:95:# Locale-aware fallback messages for structured-data-only calls
+backend\app\domain\llm\runtime\gateway.py:101:LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
+backend\app\domain\llm\runtime\gateway.py:102:_NATAL_TRANSITION_PROMPT_CARRIERS = frozenset({"chart_json", "natal_data"})
+backend\app\domain\llm\runtime\gateway.py:120:    def _allows_nominal_bootstrap_fallback(self, db: Optional[Session]) -> bool:
+backend\app\domain\llm\runtime\gateway.py:122:        Allow a bounded fallback in non-production only when the canonical assembly
+backend\app\domain\llm\runtime\gateway.py:156:        chart_json_in_prompt: bool = False,
+backend\app\domain\llm\runtime\gateway.py:190:                "llm_astrology_input_v1: "
+backend\app\domain\llm\runtime\gateway.py:193:        elif "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
+backend\app\domain\llm\runtime\gateway.py:194:            parts.append(f"Technical Data: {context['chart_json']}")
+backend\app\domain\llm\runtime\gateway.py:252:        required_prompt_placeholders: list[str] | None = None,
+backend\app\domain\llm\runtime\gateway.py:271:            required_prompt_placeholders=list(required_prompt_placeholders or []),
+backend\app\domain\llm\runtime\gateway.py:276:            input_schema=canonical_contract.input_schema if canonical_contract else None,
+backend\app\domain\llm\runtime\gateway.py:283:            fallback_target_use_case=(
+backend\app\domain\llm\runtime\gateway.py:284:                canonical_contract.fallback_target_key if canonical_contract else None
+backend\app\domain\llm\runtime\gateway.py:288:    async def _resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:296:        """Resolve config for bounded fallback paths outside the nominal assembly flow."""
+backend\app\domain\llm\runtime\gateway.py:324:                        "chart_json",
+backend\app\domain\llm\runtime\gateway.py:330:                        "natal_data",
+backend\app\domain\llm\runtime\gateway.py:342:                    if canonical_contract and canonical_contract.required_prompt_placeholders:
+backend\app\domain\llm\runtime\gateway.py:343:                        required = list(canonical_contract.required_prompt_placeholders)
+backend\app\domain\llm\runtime\gateway.py:344:                    elif db_use_case and db_use_case.required_prompt_placeholders:
+backend\app\domain\llm\runtime\gateway.py:345:                        required = list(db_use_case.required_prompt_placeholders)
+backend\app\domain\llm\runtime\gateway.py:347:                        placeholders = re.findall(
+backend\app\domain\llm\runtime\gateway.py:350:                        required = [p for p in set(placeholders) if p in authorized_vars]
+backend\app\domain\llm\runtime\gateway.py:358:                        required_prompt_placeholders=required,
+backend\app\domain\llm\runtime\gateway.py:368:            config = build_fallback_use_case_config(use_case)
+backend\app\domain\llm\runtime\gateway.py:376:                        "input_schema": canonical_contract.input_schema,
+backend\app\domain\llm\runtime\gateway.py:380:                        "fallback_target_use_case": canonical_contract.fallback_target_key,
+backend\app\domain\llm\runtime\gateway.py:386:                # from the bounded fallback registry.
+backend\app\domain\llm\runtime\gateway.py:396:                                "input_schema": None,
+backend\app\domain\llm\runtime\gateway.py:402:            logger.warning("gateway_fallback_config_used use_case=%s", use_case)
+backend\app\domain\llm\runtime\gateway.py:407:        resolved_model = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:488:            fallback_persona = db.execute(stmt).scalars().first()
+backend\app\domain\llm\runtime\gateway.py:489:            if fallback_persona is not None:
+backend\app\domain\llm\runtime\gateway.py:490:                persona_block = compose_persona_block(fallback_persona)
+backend\app\domain\llm\runtime\gateway.py:491:                resolved_persona_id = str(fallback_persona.id)
+backend\app\domain\llm\runtime\gateway.py:492:                persona_name = fallback_persona.name
+backend\app\domain\llm\runtime\gateway.py:556:            fallback_schema = get_output_schema(use_case)
+backend\app\domain\llm\runtime\gateway.py:557:            fallback_entry = get_prompt_runtime_entry(use_case)
+backend\app\domain\llm\runtime\gateway.py:558:            if fallback_schema and fallback_entry:
+backend\app\domain\llm\runtime\gateway.py:559:                schema_dict = fallback_schema
+backend\app\domain\llm\runtime\gateway.py:560:                schema_name = re.sub(r"[^a-z0-9_-]", "_", str(fallback_entry["name"]).lower())
+backend\app\domain\llm\runtime\gateway.py:587:    def _legacy_dicts_to_request(
+backend\app\domain\llm\runtime\gateway.py:597:        """Maps legacy dict-based parameters to the canonical LLMExecutionRequest."""
+backend\app\domain\llm\runtime\gateway.py:616:            "natal_data",
+backend\app\domain\llm\runtime\gateway.py:617:            "chart_json",
+backend\app\domain\llm\runtime\gateway.py:633:            natal_data=context.get("natal_data"),
+backend\app\domain\llm\runtime\gateway.py:634:            chart_json=context.get("chart_json"),
+backend\app\domain\llm\runtime\gateway.py:650:            "test_fallback_active": context.get("test_fallback_active", False),
+backend\app\domain\llm\runtime\gateway.py:685:        FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:690:        request = self._legacy_dicts_to_request(
+backend\app\domain\llm\runtime\gateway.py:735:        is_legacy_compatibility = False
+backend\app\domain\llm\runtime\gateway.py:742:            is_legacy_compatibility = True
+backend\app\domain\llm\runtime\gateway.py:803:                    allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:807:                        and not allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:836:                        and allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:839:                            "gateway_bootstrap_no_assembly_fallback feature=%s subfeature=%s "
+backend\app\domain\llm\runtime\gateway.py:846:                        FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:862:                        # Story 66.23: Auto-detect required placeholders for assembly prompt
+backend\app\domain\llm\runtime\gateway.py:863:                        placeholders = re.findall(r"\{\{([a-zA-Z0-9_]+)\}\}", dev_prompt)
+backend\app\domain\llm\runtime\gateway.py:866:                        required = list(set(placeholders))
+backend\app\domain\llm\runtime\gateway.py:883:                            required_prompt_placeholders=required,
+backend\app\domain\llm\runtime\gateway.py:900:                            input_schema=(
+backend\app\domain\llm\runtime\gateway.py:901:                                canonical_contract.input_schema if canonical_contract else None
+backend\app\domain\llm\runtime\gateway.py:959:                    and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:960:                    and not self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:976:                        allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:977:                        config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:982:                            allow_runtime_metadata_without_prompt=allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:990:                    allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:991:                    config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:996:                        allow_runtime_metadata_without_prompt=allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:1000:                allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:1001:                fallback_is_nominal = (
+backend\app\domain\llm\runtime\gateway.py:1003:                    and not is_legacy_compatibility
+backend\app\domain\llm\runtime\gateway.py:1004:                    and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1005:                    and not allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:1007:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1009:                    call_site=f"fallback_config:{use_case}",
+backend\app\domain\llm\runtime\gateway.py:1014:                    is_nominal=fallback_is_nominal,
+backend\app\domain\llm\runtime\gateway.py:1063:        ) and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1094:                    max_output_tokens_source = "verbosity_fallback"
+backend\app\domain\llm\runtime\gateway.py:1132:                    FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1139:                        "gateway_non_nominal_provider_fallback provider=%s model=%s. "
+backend\app\domain\llm\runtime\gateway.py:1144:                    model_id = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:1145:                    profile_source = "fallback_provider_unsupported"
+backend\app\domain\llm\runtime\gateway.py:1187:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1189:                    call_site=f"provider_fallback:{provider}",
+backend\app\domain\llm\runtime\gateway.py:1198:                model_id = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:1199:                profile_source = "fallback_resolve_model"
+backend\app\domain\llm\runtime\gateway.py:1221:            allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:1224:                and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1225:                and not allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:1246:            model_id = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:1249:                if allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:1250:                else "fallback_resolve_model"
+backend\app\domain\llm\runtime\gateway.py:1253:            FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1257:                is_nominal=is_nominal and not allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:1262:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1267:                    and not is_legacy_compatibility
+backend\app\domain\llm\runtime\gateway.py:1268:                    and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1269:                    and not allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:1272:                    "gateway_legacy_execution_config_used use_case=%s reasoning=%s verbosity=%s",
+backend\app\domain\llm\runtime\gateway.py:1279:            # For legacy, we still apply LengthBudget if present
+backend\app\domain\llm\runtime\gateway.py:1305:                model_source = "os_legacy"
+backend\app\domain\llm\runtime\gateway.py:1353:            # 4. & 5. render placeholders and final validation
+backend\app\domain\llm\runtime\gateway.py:1357:            # Universal placeholders (Story 66.13 AC6) - set as defaults
+backend\app\domain\llm\runtime\gateway.py:1388:                required_variables=config.required_prompt_placeholders,
+backend\app\domain\llm\runtime\gateway.py:1419:            is_legacy_compatibility=is_legacy_compatibility,
+backend\app\domain\llm\runtime\gateway.py:1431:            model_override_active=model_source in ["os_granular", "os_legacy"],
+backend\app\domain\llm\runtime\gateway.py:1451:            input_schema=config.input_schema,
+backend\app\domain\llm\runtime\gateway.py:1452:            required_prompt_placeholders=config.required_prompt_placeholders,
+backend\app\domain\llm\runtime\gateway.py:1507:                    chart_json_in_prompt="{{chart_json}}" in plan.rendered_developer_prompt,
+backend\app\domain\llm\runtime\gateway.py:1582:    async def _handle_repair_or_fallback(
+backend\app\domain\llm\runtime\gateway.py:1590:        """Stage 5: Orchestrates repair calls or use case fallbacks on validation failure."""
+backend\app\domain\llm\runtime\gateway.py:1620:                return RecoveryResult(result=repair_result, repair_attempts=1, fallback_reason=None)
+backend\app\domain\llm\runtime\gateway.py:1626:            # Story 66.29: Ensure supported features NEVER fall back to a legacy use_case.
+backend\app\domain\llm\runtime\gateway.py:1636:                    "Legacy use_case fallback is strictly forbidden.",
+backend\app\domain\llm\runtime\gateway.py:1643:            config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:1650:            if config.fallback_target_use_case:
+backend\app\domain\llm\runtime\gateway.py:1652:                    "gateway_step:fallback_invoked use_case=%s fallback=%s",
+backend\app\domain\llm\runtime\gateway.py:1654:                    config.fallback_target_use_case,
+backend\app\domain\llm\runtime\gateway.py:1657:                    "llm_fallback_invoked_total",
+backend\app\domain\llm\runtime\gateway.py:1660:                fallback_request = request.model_copy(deep=True)
+backend\app\domain\llm\runtime\gateway.py:1661:                fallback_request.user_input.use_case = config.fallback_target_use_case
+backend\app\domain\llm\runtime\gateway.py:1662:                fallback_request.flags.visited_use_cases = request.flags.visited_use_cases + [
+backend\app\domain\llm\runtime\gateway.py:1665:                fallback_request.request_id = f"{request.request_id}-fallback"
+backend\app\domain\llm\runtime\gateway.py:1667:                fallback_result = await self.execute_request(fallback_request, db=db)
+backend\app\domain\llm\runtime\gateway.py:1669:                    result=fallback_result,
+backend\app\domain\llm\runtime\gateway.py:1671:                    fallback_reason=(
+backend\app\domain\llm\runtime\gateway.py:1705:        if request.flags.test_fallback_active:
+backend\app\domain\llm\runtime\gateway.py:1706:            execution_path = "test_fallback"
+backend\app\domain\llm\runtime\gateway.py:1707:            FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1713:        elif recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1714:            execution_path = "fallback_use_case"
+backend\app\domain\llm\runtime\gateway.py:1740:        if recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1741:            result.meta.fallback_reason = recovery.fallback_reason
+backend\app\domain\llm\runtime\gateway.py:1743:        # Synchronize legacy booleans (AC7)
+backend\app\domain\llm\runtime\gateway.py:1745:        result.meta.fallback_triggered = result.meta.fallback_reason is not None
+backend\app\domain\llm\runtime\gateway.py:1750:        elif recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1751:            result.meta.validation_status = "fallback"
+backend\app\domain\llm\runtime\gateway.py:1793:            "fallback_resolve_model",
+backend\app\domain\llm\runtime\gateway.py:1794:            "fallback_provider_unsupported",
+backend\app\domain\llm\runtime\gateway.py:1797:                "Supported perimeter plan cannot be published with a legacy "
+backend\app\domain\llm\runtime\gateway.py:1798:                "execution-profile fallback source.",
+backend\app\domain\llm\runtime\gateway.py:1809:        elif recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1813:        elif plan.execution_profile_source == "fallback_resolve_model":
+backend\app\domain\llm\runtime\gateway.py:1815:        elif plan.execution_profile_source == "fallback_provider_unsupported":
+backend\app\domain\llm\runtime\gateway.py:1820:            plan.execution_profile_source == "fallback_provider_unsupported"
+backend\app\domain\llm\runtime\gateway.py:1827:        fallback_kind = None
+backend\app\domain\llm\runtime\gateway.py:1828:        if recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1829:            fallback_kind = FallbackType.DEPRECATED_USE_CASE
+backend\app\domain\llm\runtime\gateway.py:1830:        elif plan.is_legacy_compatibility:
+backend\app\domain\llm\runtime\gateway.py:1831:            fallback_kind = FallbackType.DEPRECATED_USE_CASE
+backend\app\domain\llm\runtime\gateway.py:1833:            fallback_kind = FallbackType.TEST_LOCAL
+backend\app\domain\llm\runtime\gateway.py:1834:        elif plan.execution_profile_source == "fallback_resolve_model":
+backend\app\domain\llm\runtime\gateway.py:1835:            fallback_kind = FallbackType.RESOLVE_MODEL
+backend\app\domain\llm\runtime\gateway.py:1836:        elif plan.execution_profile_source == "fallback_provider_unsupported":
+backend\app\domain\llm\runtime\gateway.py:1837:            fallback_kind = FallbackType.PROVIDER_OPENAI
+backend\app\domain\llm\runtime\gateway.py:1858:        elif plan.max_output_tokens_source == "verbosity_fallback":
+backend\app\domain\llm\runtime\gateway.py:1864:            fallback_kind=fallback_kind,
+backend\app\domain\llm\runtime\gateway.py:1893:        if not config.input_schema or context is None:
+backend\app\domain\llm\runtime\gateway.py:1896:        declared_properties = set(config.input_schema.get("properties", {}))
+backend\app\domain\llm\runtime\gateway.py:1908:            if prop == "chart_json":
+backend\app\domain\llm\runtime\gateway.py:1909:                if context_dict.get("natal_data") is not None:
+backend\app\domain\llm\runtime\gateway.py:1910:                    payload[prop] = context_dict["natal_data"]
+backend\app\domain\llm\runtime\gateway.py:1913:                raw_chart_json = context_dict.get("chart_json")
+backend\app\domain\llm\runtime\gateway.py:1914:                if isinstance(raw_chart_json, dict):
+backend\app\domain\llm\runtime\gateway.py:1915:                    payload[prop] = raw_chart_json
+backend\app\domain\llm\runtime\gateway.py:1917:                if isinstance(raw_chart_json, str):
+backend\app\domain\llm\runtime\gateway.py:1919:                        parsed_chart_json = json.loads(raw_chart_json)
+backend\app\domain\llm\runtime\gateway.py:1922:                    if isinstance(parsed_chart_json, dict):
+backend\app\domain\llm\runtime\gateway.py:1923:                        payload[prop] = parsed_chart_json
+backend\app\domain\llm\runtime\gateway.py:1937:        """Helper to validate user input against UseCaseConfig.input_schema."""
+backend\app\domain\llm\runtime\gateway.py:1941:            config.input_schema is not None,
+backend\app\domain\llm\runtime\gateway.py:1943:        if config.input_schema:
+backend\app\domain\llm\runtime\gateway.py:1946:                res = validate_input(validation_payload, config.input_schema)
+backend\app\domain\llm\runtime\gateway.py:1972:                    error_code="removed_legacy_use_case_key",
+backend\app\domain\llm\runtime\gateway.py:1977:            # Story 66.29: Move legacy mapping here to ensure it bypasses Stage 0.5 (Issue 1)
+backend\app\domain\llm\runtime\gateway.py:1986:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:2013:                        event_type="legacy_feature_alias_used",
+backend\app\domain\llm\runtime\gateway.py:2018:                    FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:2027:                    f"Infinite fallback loop detected for use case '{use_case}'",
+backend\app\domain\llm\runtime\gateway.py:2042:            # Stage 0.5: Fast pre-validation remains best-effort for legacy-only paths.
+backend\app\domain\llm\runtime\gateway.py:2044:            # legacy use-case config resolved before assembly/profile lookup.
+backend\app\domain\llm\runtime\gateway.py:2046:                config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:2067:                    input_schema=plan.input_schema,
+backend\app\domain\llm\runtime\gateway.py:2070:                    required_prompt_placeholders=plan.required_prompt_placeholders,
+backend\app\domain\llm\runtime\gateway.py:2122:                    recovery = await self._handle_repair_or_fallback(
+backend\app\domain\llm\governance\feature_taxonomy.py:19:NATAL_SUBFEATURE_MAPPING = _reg.natal_subfeature_legacy_mapping()
+backend\tests\llm_orchestration\test_llm_execution_request.py:35:def test_legacy_dicts_to_request_chat():
+backend\tests\llm_orchestration\test_llm_execution_request.py:44:    request = LLMGateway._legacy_dicts_to_request(
+backend\tests\llm_orchestration\test_llm_execution_request.py:57:def test_legacy_dicts_to_request_visited_migration():
+backend\tests\llm_orchestration\test_llm_execution_request.py:59:    request = LLMGateway._legacy_dicts_to_request(
+backend\tests\llm_orchestration\test_llm_execution_request.py:81:        context=ExecutionContext(chart_json='{"planets": []}'),
+backend\tests\llm_orchestration\test_llm_execution_request.py:84:        flags={"test_fallback_active": True},
+backend\tests\llm_orchestration\test_llm_execution_request.py:109:        "natal_data": {},
+backend\tests\llm_orchestration\test_llm_execution_request.py:113:    request = LLMGateway._legacy_dicts_to_request("uc", {}, context, "r", "t")
+backend\tests\llm_orchestration\test_llm_execution_request.py:116:    assert "natal_data" not in request.context.extra_context
+backend\tests\llm_orchestration\test_prompt_renderer.py:28:    # Story 66.13: Unknown placeholders are now stripped (replaced by empty string)
+backend\app\domain\llm\runtime\adapter.py:80:        natal_data=normalized_context.get("natal_data"),
+backend\app\domain\llm\runtime\adapter.py:81:        chart_json=normalized_context.get("chart_json"),
+backend\app\domain\llm\runtime\adapter.py:154:                natal_data=context.get("natal_data"),
+backend\app\domain\llm\runtime\adapter.py:155:                chart_json=context.get("chart_json"),
+backend\app\domain\llm\runtime\adapter.py:181:                "chat_reply_token_fallback request_id=%s estimated_output=%d",
+backend\app\domain\llm\runtime\adapter.py:259:                natal_data=natal_input.natal_data,
+backend\app\domain\llm\runtime\adapter.py:260:                chart_json=natal_input.chart_json,
+backend\app\domain\llm\runtime\adapter.py:263:                    "llm_astrology_input_v1": natal_input.llm_astrology_input_v1,
+backend\app\domain\llm\configuration\admin_models.py:156:    input_schema: Optional[Dict[str, Any]] = None
+backend\app\domain\llm\configuration\admin_models.py:163:    required_prompt_placeholders: List[str] = Field(default_factory=list)
+backend\app\domain\llm\configuration\admin_models.py:247:            fallback_enabled=self.feature_enabled,
+backend\app\domain\llm\configuration\admin_models.py:253:            fallback_enabled=self.subfeature_enabled,
+backend\app\domain\llm\configuration\admin_models.py:259:            fallback_enabled=self.persona_enabled,
+backend\app\domain\llm\configuration\admin_models.py:265:            fallback_enabled=self.plan_rules_enabled,
+backend\app\domain\llm\configuration\admin_models.py:275:        fallback_enabled: bool,
+backend\app\domain\llm\configuration\admin_models.py:281:        if explicit_state != AssemblyComponentResolutionState.ABSENT or not fallback_enabled:
+backend\app\domain\llm\configuration\admin_models.py:282:            if not fallback_enabled:
+backend\app\domain\llm\configuration\admin_models.py:300:    template_source: Literal["explicit_subfeature", "fallback_default"]
+backend\app\domain\llm\configuration\admin_models.py:328:    status: Literal["resolved", "missing_optional", "missing_required", "fallback_used", "unknown"]
+backend\app\domain\llm\configuration\admin_models.py:343:    placeholder_resolution_status: List[PlaceholderResolutionStatus] = Field(default_factory=list)
+backend\app\domain\llm\configuration\admin_models.py:360:    fallback_profile_id: Optional[uuid.UUID] = None
+backend\app\domain\llm\configuration\admin_models.py:382:    fallback_profile_id: Optional[uuid.UUID] = None
+backend\app\domain\llm\runtime\input_validator.py:15:    user_input: dict[str, Any], input_schema: dict[str, Any] | None
+backend\app\domain\llm\runtime\input_validator.py:20:    if input_schema is None:
+backend\app\domain\llm\runtime\input_validator.py:24:        validator = Draft7Validator(input_schema)
+backend\app\domain\llm\runtime\observability.py:7:    log_legacy_residual_activation,
+backend\app\domain\llm\runtime\observability.py:8:    log_legacy_residual_blocked_attempt,
+backend\app\domain\llm\runtime\observability.py:16:    "log_legacy_residual_activation",
+backend\app\domain\llm\runtime\observability.py:17:    "log_legacy_residual_blocked_attempt",
+backend\tests\llm_orchestration\test_runtime_convergence.py:52:async def test_allow_legacy_fallback_for_deprecated_use_case():
+backend\tests\llm_orchestration\test_runtime_convergence.py:54:    Test Story 66.20: legacy fallback is now BLOCKED for supported features (Story 66.29).
+backend\tests\llm_orchestration\test_runtime_convergence.py:122:async def test_natal_bootstrap_fallback_allowed_when_no_assembly_data_exists(db):
+backend\app\domain\llm\configuration\assembly_admin_service.py:21:    validate_placeholders,
+backend\app\domain\llm\configuration\assembly_admin_service.py:67:        # AC6: Validate placeholders for BOTH templates before saving draft
+backend\app\domain\llm\configuration\assembly_admin_service.py:76:            invalid = validate_placeholders(fv.developer_prompt, config_in.feature)
+backend\app\domain\llm\configuration\assembly_admin_service.py:78:                raise ValueError(f"Invalid placeholders in feature template: {', '.join(invalid)}")
+backend\app\domain\llm\configuration\assembly_admin_service.py:88:                invalid_sub = validate_placeholders(sv.developer_prompt, config_in.feature)
+backend\app\domain\llm\configuration\assembly_admin_service.py:91:                        f"Invalid placeholders in subfeature template: {', '.join(invalid_sub)}"
+backend\app\domain\llm\configuration\assembly_resolver.py:97:def validate_placeholders(template: str, feature: str) -> list[str]:
+backend\app\domain\llm\configuration\assembly_resolver.py:99:    Extracts placeholders from template and validates them against the central registry.
+backend\app\domain\llm\configuration\assembly_resolver.py:100:    Returns a list of unknown/forbidden placeholders.
+backend\app\domain\llm\configuration\assembly_resolver.py:103:    invalid, _violations = reg.validate_placeholders_in_template(
+backend\app\domain\llm\configuration\assembly_resolver.py:104:        template, feature, source="validate_placeholders"
+backend\app\domain\llm\configuration\assembly_resolver.py:125:    found_placeholders = PromptRenderer.extract_placeholders(rendered_prompt)
+backend\app\domain\llm\configuration\assembly_resolver.py:141:        mock_vars["chart_json"] = '{"planets": {}}'
+backend\app\domain\llm\configuration\assembly_resolver.py:142:        mock_vars["natal_data"] = '{"birth_date": "1990-01-01"}'
+backend\app\domain\llm\configuration\assembly_resolver.py:145:    feat_key = reg.resolve_placeholder_family(config.feature)
+backend\app\domain\llm\configuration\assembly_resolver.py:147:    placeholder_defs = {d.name: d for d in allowlist}
+backend\app\domain\llm\configuration\assembly_resolver.py:149:    for p in found_placeholders:
+backend\app\domain\llm\configuration\assembly_resolver.py:156:        p_def = placeholder_defs.get(p)
+backend\app\domain\llm\configuration\assembly_resolver.py:168:            elif p_def.classification == "optional_with_fallback":
+backend\app\domain\llm\configuration\assembly_resolver.py:169:                status = "fallback_used"
+backend\app\domain\llm\configuration\assembly_resolver.py:170:                val_preview = (p_def.fallback or "")[:10]
+backend\app\domain\llm\configuration\assembly_resolver.py:189:        placeholder_resolution_status=resolution_statuses,
+backend\app\domain\llm\configuration\assembly_resolver.py:245:        template_source = "fallback_default"
+backend\app\domain\llm\runtime\fallback.py:1:"""Canonical runtime fallback governance helpers."""
+backend\app\domain\llm\runtime\fallback.py:3:from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+backend\app\domain\llm\runtime\fallback_governance.py:5:from app.domain.llm.governance.legacy_residual_registry import (
+backend\app\domain\llm\runtime\fallback_governance.py:11:    log_legacy_residual_activation,
+backend\app\domain\llm\runtime\fallback_governance.py:12:    log_legacy_residual_blocked_attempt,
+backend\app\domain\llm\runtime\fallback_governance.py:22:    La matrice effective est une projection du fichier ``legacy_residual_registry.json`` (AC2).
+backend\app\domain\llm\runtime\fallback_governance.py:53:    def track_fallback(
+backend\app\domain\llm\runtime\fallback_governance.py:55:        fallback_type: FallbackType,
+backend\app\domain\llm\runtime\fallback_governance.py:64:        Enregistre l'usage d'un fallback, vérifie sa conformité et émet la télémétrie.
+backend\app\domain\llm\runtime\fallback_governance.py:70:        gov = cls.GOVERNANCE_MATRIX.get(fallback_type)
+backend\app\domain\llm\runtime\fallback_governance.py:73:                "governance_unknown_fallback type=%s call_site=%s", fallback_type, call_site
+backend\app\domain\llm\runtime\fallback_governance.py:87:        if fallback_type == FallbackType.USE_CASE_FIRST:
+backend\app\domain\llm\runtime\fallback_governance.py:91:        reason = activation_reason or "track_fallback"
+backend\app\domain\llm\runtime\fallback_governance.py:95:            log_legacy_residual_blocked_attempt(
+backend\app\domain\llm\runtime\fallback_governance.py:98:                fallback_type=fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:107:                f"Chemin legacy '{stable_id}' bloqué par la politique progressive "
+backend\app\domain\llm\runtime\fallback_governance.py:111:                    "fallback_type": fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:118:            "fallback_type": fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:127:        increment_counter("llm_gateway_fallback_usage_total", labels=labels)
+backend\app\domain\llm\runtime\fallback_governance.py:129:        log_legacy_residual_activation(
+backend\app\domain\llm\runtime\fallback_governance.py:132:            fallback_type=fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:143:                "governance_violation_forbidden_fallback type=%s feature=%s call_site=%s status=%s",
+backend\app\domain\llm\runtime\fallback_governance.py:144:                fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:151:                    f"Usage du fallback '{fallback_type.value}' interdit pour "
+backend\app\domain\llm\runtime\fallback_governance.py:157:                        "fallback_type": fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:165:            if fallback_type == FallbackType.TEST_LOCAL:
+backend\app\domain\llm\runtime\fallback_governance.py:167:                    f"Usage du fallback '{fallback_type.value}' strictement interdit en production",
+backend\app\domain\llm\runtime\fallback_governance.py:168:                    details={"fallback_type": fallback_type.value, "call_site": call_site},
+backend\app\domain\llm\runtime\fallback_governance.py:172:            if fallback_type == FallbackType.NATAL_NO_DB and not is_nominal:
+backend\app\domain\llm\runtime\fallback_governance.py:175:                    fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:182:                "governance_nominal_path_dependency_on_to_remove_fallback type=%s call_site=%s",
+backend\app\domain\llm\runtime\fallback_governance.py:183:                fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:187:                f"Dépendance nominale au fallback '{fallback_type.value}' interdite "
+backend\app\domain\llm\runtime\fallback_governance.py:189:                details={"fallback_type": fallback_type.value, "call_site": call_site},
+backend\app\domain\llm\runtime\fallback_governance.py:196:            "governance_fallback_usage type=%s status=%s feature=%s call_site=%s nominal=%s "
+backend\app\domain\llm\runtime\fallback_governance.py:198:            fallback_type.value,
+backend\app\domain\llm\runtime\fallback_governance.py:207:    def get_status(cls, fallback_type: FallbackType) -> FallbackStatus:
+backend\app\domain\llm\runtime\fallback_governance.py:208:        return cls.GOVERNANCE_MATRIX.get(fallback_type, {}).get("status", FallbackStatus.TRANSITORY)
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:3:  "registry_title": "Registre résiduel legacy LLM (Story 66.40)",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:6:  "fallback_paths": [
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:8:      "stable_id": "fb.legacy_wrapper",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:9:      "path_kind": "legacy_resolution_path",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:10:      "fallback_type": "legacy_wrapper",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:12:      "fallback_status": "transitoire",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:15:      "perimeter": "Entrée legacy execute() uniquement ; parcours non nominal (is_nominal=false).",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:21:      "path_kind": "legacy_use_case",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:22:      "fallback_type": "deprecated_use_case",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:24:      "fallback_status": "transitoire",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:33:      "path_kind": "legacy_resolution_path",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:34:      "fallback_type": "use_case_first",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:36:      "fallback_status": "à retirer",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:39:      "perimeter": "Features hors SUPPORTED_FAMILIES ou tests explicites (test_fallback_active).",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:45:      "path_kind": "fallback",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:46:      "fallback_type": "resolve_model",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:48:      "fallback_status": "à retirer",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:57:      "path_kind": "fallback",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:58:      "fallback_type": "execution_config_admin",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:60:      "fallback_status": "à retirer",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:69:      "path_kind": "fallback",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:70:      "fallback_type": "provider_openai",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:72:      "fallback_status": "toléré durablement",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:80:      "stable_id": "fb.narrator_legacy",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:81:      "path_kind": "legacy_resolution_path",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:82:      "fallback_type": "narrator_legacy",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:84:      "fallback_status": "à retirer",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:93:      "path_kind": "fallback",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:94:      "fallback_type": "test_local",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:96:      "fallback_status": "toléré durablement",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:98:      "justification": "Instrumentation tests (flags test_fallback_active).",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:105:      "path_kind": "fallback",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:106:      "fallback_type": "natal_no_db",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:108:      "fallback_status": "transitoire",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:118:      "fallback_type": "deprecated_feature_alias",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:120:      "fallback_status": "transitoire",
+backend\app\domain\llm\governance\governance.py:3:from app.domain.llm.governance.legacy_residual_registry import (
+backend\app\domain\llm\governance\governance.py:6:    get_fallback_path_record,
+backend\app\domain\llm\governance\governance.py:8:    load_legacy_residual_registry,
+backend\app\domain\llm\governance\governance.py:19:    "get_fallback_path_record",
+backend\app\domain\llm\governance\governance.py:22:    "load_legacy_residual_registry",
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:4:  "universal_placeholders": ["locale", "use_case", "persona_name", "last_user_msg"],
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:5:  "legacy_nominal_feature_aliases": {
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:9:  "legacy_subfeature_aliases_by_domain": {
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:39:  "placeholders_by_family": {
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:43:        "classification": "optional_with_fallback",
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:44:        "fallback": "fr-FR"
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:53:      { "name": "chart_json", "classification": "optional" },
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:60:        "classification": "optional_with_fallback",
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:61:        "fallback": "fr-FR"
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:64:      { "name": "llm_astrology_input_v1", "classification": "required" },
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:65:      { "name": "chart_json", "classification": "optional" },
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:66:      { "name": "natal_data", "classification": "optional" },
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:74:        "classification": "optional_with_fallback",
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:75:        "fallback": "fr-FR"
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:85:        "classification": "optional_with_fallback",
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:86:        "fallback": "fr-FR"
+backend\app\domain\llm\prompting\catalog.py:1:"""Catalogue canonique des prompts et registre de fallback borne."""
+backend\app\domain\llm\prompting\catalog.py:155:        "name": "chat-legacy-v1",
+backend\app\domain\llm\prompting\catalog.py:199:        "required_prompt_placeholders": [],
+backend\app\domain\llm\prompting\catalog.py:205:        "required_prompt_placeholders": [],
+backend\app\domain\llm\prompting\catalog.py:231:def resolve_model(use_case_key: str, fallback_model: str | None = None) -> str:
+backend\app\domain\llm\prompting\catalog.py:241:    legacy_key = f"LLM_MODEL_OVERRIDE_{safe_uc_key}"
+backend\app\domain\llm\prompting\catalog.py:242:    legacy_model = os.environ.get(legacy_key)
+backend\app\domain\llm\prompting\catalog.py:243:    if legacy_model:
+backend\app\domain\llm\prompting\catalog.py:244:        return legacy_model
+backend\app\domain\llm\prompting\catalog.py:246:    if fallback_model:
+backend\app\domain\llm\prompting\catalog.py:247:        return fallback_model
+backend\app\domain\llm\prompting\catalog.py:276:def build_fallback_use_case_config(use_case_key: str) -> UseCaseConfig | None:
+backend\app\domain\llm\prompting\catalog.py:290:        required_prompt_placeholders=list(prompt_entry.get("required_prompt_placeholders", [])),
+backend\app\domain\llm\prompting\catalog.py:307:    "build_fallback_use_case_config",
+backend\app\domain\llm\configuration\assembly_registry.py:337:                    logger.warning("assembly_registry_get_sync_with_async_session_fallback")
+backend\app\domain\llm\governance\prompt_governance_registry.py:2:Registre central versionné — taxonomie canonique, aliases et placeholders (Story 66.42).
+backend\app\domain\llm\governance\prompt_governance_registry.py:20:from app.domain.llm.prompting.placeholder_policy import PlaceholderDef
+backend\app\domain\llm\governance\prompt_governance_registry.py:47:    classification: Literal["required", "optional", "optional_with_fallback"]
+backend\app\domain\llm\governance\prompt_governance_registry.py:48:    fallback: str | None = None
+backend\app\domain\llm\governance\prompt_governance_registry.py:52:    """Exception taxonomique ou placeholder : métadonnées obligatoires (AC5)."""
+backend\app\domain\llm\governance\prompt_governance_registry.py:65:    - keys allowed: placeholder, family, rule
+backend\app\domain\llm\governance\prompt_governance_registry.py:68:    allowed_keys = {"placeholder", "family", "rule"}
+backend\app\domain\llm\governance\prompt_governance_registry.py:94:    universal_placeholders: list[str]
+backend\app\domain\llm\governance\prompt_governance_registry.py:95:    legacy_nominal_feature_aliases: dict[str, str]
+backend\app\domain\llm\governance\prompt_governance_registry.py:96:    legacy_subfeature_aliases_by_domain: dict[str, dict[str, str]]
+backend\app\domain\llm\governance\prompt_governance_registry.py:99:    placeholders_by_family: dict[str, list[PlaceholderEntry]]
+backend\app\domain\llm\governance\prompt_governance_registry.py:106:        Required scope keys: placeholder + family.
+backend\app\domain\llm\governance\prompt_governance_registry.py:109:        aliases = dict(self.legacy_nominal_feature_aliases)
+backend\app\domain\llm\governance\prompt_governance_registry.py:112:            if "placeholder" not in tokens:
+backend\app\domain\llm\governance\prompt_governance_registry.py:114:                    f"Governed exception '{exc.id}' missing required scope key 'placeholder'"
+backend\app\domain\llm\governance\prompt_governance_registry.py:144:    """Rapport structuré pour AC7 (placeholder non gouverné)."""
+backend\app\domain\llm\governance\prompt_governance_registry.py:147:    placeholder: str
+backend\app\domain\llm\governance\prompt_governance_registry.py:160:        self.universal_placeholders: frozenset[str] = frozenset(data.universal_placeholders)
+backend\app\domain\llm\governance\prompt_governance_registry.py:161:        self._placeholder_defs_by_family: dict[str, list[PlaceholderDef]] = {
+backend\app\domain\llm\governance\prompt_governance_registry.py:166:                    fallback=p.fallback,
+backend\app\domain\llm\governance\prompt_governance_registry.py:170:            for fam, defs in data.placeholders_by_family.items()
+backend\app\domain\llm\governance\prompt_governance_registry.py:190:        mapped = self._data.legacy_nominal_feature_aliases.get(s)
+backend\app\domain\llm\governance\prompt_governance_registry.py:199:        domain_map = self._data.legacy_subfeature_aliases_by_domain.get(fn, {})
+backend\app\domain\llm\governance\prompt_governance_registry.py:202:    def resolve_placeholder_family(self, feature: str) -> str:
+backend\app\domain\llm\governance\prompt_governance_registry.py:204:        Résout la clé de famille pour les placeholders (corrige horoscope_daily vs split abusif).
+backend\app\domain\llm\governance\prompt_governance_registry.py:217:    def get_placeholder_defs(self, feature: str) -> list[PlaceholderDef]:
+backend\app\domain\llm\governance\prompt_governance_registry.py:218:        key = self.resolve_placeholder_family(feature)
+backend\app\domain\llm\governance\prompt_governance_registry.py:219:        return list(self._placeholder_defs_by_family.get(key, []))
+backend\app\domain\llm\governance\prompt_governance_registry.py:224:    def natal_subfeature_legacy_mapping(self) -> dict[str, str]:
+backend\app\domain\llm\governance\prompt_governance_registry.py:225:        return dict(self._data.legacy_subfeature_aliases_by_domain.get(NATAL_CANONICAL_FEATURE, {}))
+backend\app\domain\llm\governance\prompt_governance_registry.py:227:    def legacy_nominal_feature_aliases_map(self) -> dict[str, str]:
+backend\app\domain\llm\governance\prompt_governance_registry.py:228:        return dict(self._data.legacy_nominal_feature_aliases)
+backend\app\domain\llm\governance\prompt_governance_registry.py:230:    def _find_active_exception_for_placeholder(
+backend\app\domain\llm\governance\prompt_governance_registry.py:231:        self, *, placeholder: str, family_key: str, rule_id: str
+backend\app\domain\llm\governance\prompt_governance_registry.py:235:        - "placeholder:<name>"
+backend\app\domain\llm\governance\prompt_governance_registry.py:253:            if tokens.get("placeholder") and tokens["placeholder"] != placeholder:
+backend\app\domain\llm\governance\prompt_governance_registry.py:262:    def is_placeholder_governed_for_feature(
+backend\app\domain\llm\governance\prompt_governance_registry.py:265:        placeholder: str,
+backend\app\domain\llm\governance\prompt_governance_registry.py:273:        family_key = self.resolve_placeholder_family(feature)
+backend\app\domain\llm\governance\prompt_governance_registry.py:274:        allowed_names = {d.name for d in self.get_placeholder_defs(feature)}
+backend\app\domain\llm\governance\prompt_governance_registry.py:275:        if placeholder in allowed_names or placeholder in self.universal_placeholders:
+backend\app\domain\llm\governance\prompt_governance_registry.py:278:        exc = self._find_active_exception_for_placeholder(
+backend\app\domain\llm\governance\prompt_governance_registry.py:279:            placeholder=placeholder,
+backend\app\domain\llm\governance\prompt_governance_registry.py:287:    def validate_placeholders_in_template(
+backend\app\domain\llm\governance\prompt_governance_registry.py:291:        Valide les placeholders d’un template contre le registre central (AC2, AC4, AC7).
+backend\app\domain\llm\governance\prompt_governance_registry.py:294:        found = _extract_placeholders(template)
+backend\app\domain\llm\governance\prompt_governance_registry.py:295:        family_key = self.resolve_placeholder_family(feature)
+backend\app\domain\llm\governance\prompt_governance_registry.py:301:                if p in self.universal_placeholders:
+backend\app\domain\llm\governance\prompt_governance_registry.py:311:                        placeholder=p,
+backend\app\domain\llm\governance\prompt_governance_registry.py:322:            is_allowed, exception_id = self.is_placeholder_governed_for_feature(
+backend\app\domain\llm\governance\prompt_governance_registry.py:323:                placeholder=p,
+backend\app\domain\llm\governance\prompt_governance_registry.py:332:                            "id=%s placeholder=%s family=%s source=%s"
+backend\app\domain\llm\governance\prompt_governance_registry.py:342:                f"Ajoutez-le au registre central (placeholders_by_family.{family_key}) "
+backend\app\domain\llm\governance\prompt_governance_registry.py:343:                f"ou utilisez un placeholder universel autorisé."
+backend\app\domain\llm\governance\prompt_governance_registry.py:348:                    placeholder=p,
+backend\app\domain\llm\governance\prompt_governance_registry.py:359:def _extract_placeholders(template: str) -> list[str]:
+backend\app\domain\llm\governance\prompt_governance_registry.py:371:def format_placeholder_violation_report(violations: list[PlaceholderGovernanceViolation]) -> str:
+backend\app\domain\llm\governance\prompt_governance_registry.py:375:            f"[{v.rule_id}] placeholder={v.placeholder} family={v.family_key_resolved} "
+backend\app\domain\llm\governance\prompt_governance_registry.py:397:        fam: list(defs) for fam, defs in reg._placeholder_defs_by_family.items()
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:28:    fallback_target_key: str | None = None
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:29:    required_prompt_placeholders: list[str] = Field(default_factory=list)
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:32:    input_schema: dict[str, Any] | None = None
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:185:    "required": ["llm_astrology_input_v1"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:187:        "llm_astrology_input_v1": {"type": "object"},
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:199:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:200:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:201:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:208:        required_prompt_placeholders=["llm_astrology_input_v1"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:210:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:218:        required_prompt_placeholders=["persona_name", "current_datetime"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:221:        input_schema={
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:236:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:237:        required_prompt_placeholders=["chart_json", "event_description"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:240:        input_schema={
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:242:            "required": ["chart_json", "event_description"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:244:                "chart_json": {"type": "object"},
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:274:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:275:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:276:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:284:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:285:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:286:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:294:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:295:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:296:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:304:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:305:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:306:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:314:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:315:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:316:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:324:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:325:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:326:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:334:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:335:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:336:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:344:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:345:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:346:        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:353:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:354:        required_prompt_placeholders=["natal_chart_summary"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:363:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:364:        required_prompt_placeholders=["natal_chart_summary"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:372:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:373:        required_prompt_placeholders=["situation", "objective", "natal_chart_summary"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:383:        required_prompt_placeholders=["question"],
+backend\app\domain\llm\prompting\context.py:17:from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+backend\app\domain\llm\prompting\context.py:29:    """Resolve use-case display name with canonical fallback behavior."""
+backend\app\domain\llm\prompting\context.py:34:    mapping = registry.legacy_nominal_feature_aliases_map()
+backend\app\domain\llm\prompting\context.py:43:    natal_data: Optional[dict[str, Any]] = None
+backend\app\domain\llm\prompting\context.py:69:    source: str  # "db", "partial_db", "fallback"
+backend\app\domain\llm\prompting\context.py:83:            if not self.payload.natal_data:
+backend\app\domain\llm\prompting\context.py:84:                missing.append("natal_data")
+backend\app\domain\llm\prompting\context.py:93:    _CRITICAL_FIELDS = frozenset({"natal_data", "astrologer_profile"})
+backend\app\domain\llm\prompting\context.py:105:        if "natal_data" in missing_set and "natal_interpretation" in missing_set:
+backend\app\domain\llm\prompting\context.py:110:            "natal_data" in missing_set or "natal_interpretation" in missing_set
+backend\app\domain\llm\prompting\context.py:189:        natal_data = None
+backend\app\domain\llm\prompting\context.py:207:            natal_data = chart.result.model_dump(mode="json")
+backend\app\domain\llm\prompting\context.py:209:            missing_fields.append("natal_data")
+backend\app\domain\llm\prompting\context.py:211:                source = "fallback"
+backend\app\domain\llm\prompting\context.py:213:            # Story 66.21: Track Natal No DB fallback (AC9)
+backend\app\domain\llm\prompting\context.py:220:            FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\prompting\context.py:229:                    "common_context_database_error_fallback user_id=%d error=%s", user_id, e
+backend\app\domain\llm\prompting\context.py:244:            natal_data=natal_data,
+backend\app\domain\llm\prompting\context.py:253:        if missing_fields and source != "fallback":
+backend\app\domain\llm\configuration\config_coherence_validator.py:23:    format_placeholder_violation_report,
+backend\app\domain\llm\configuration\config_coherence_validator.py:96:    # AC8: No legacy dependency on nominal families
+backend\app\domain\llm\configuration\config_coherence_validator.py:100:                "legacy_dependency_forbidden",
+backend\app\domain\llm\configuration\config_coherence_validator.py:109:                    "legacy_dependency_forbidden",
+backend\app\domain\llm\configuration\config_coherence_validator.py:146:        # AC8: No legacy dependency on nominal families
+backend\app\domain\llm\configuration\config_coherence_validator.py:149:                "legacy_dependency_forbidden",
+backend\app\domain\llm\configuration\config_coherence_validator.py:187:        await self._validate_templates_placeholders(config, result)
+backend\app\domain\llm\configuration\config_coherence_validator.py:332:    async def _validate_templates_placeholders(
+backend\app\domain\llm\configuration\config_coherence_validator.py:336:        AC5: Static validation of placeholders (registre central 66.42, AC7).
+backend\app\domain\llm\configuration\config_coherence_validator.py:342:            _invalid, violations = reg.validate_placeholders_in_template(
+backend\app\domain\llm\configuration\config_coherence_validator.py:349:                    "placeholder_policy_violation",
+backend\app\domain\llm\configuration\config_coherence_validator.py:351:                    f"Détail:\n{format_placeholder_violation_report(violations)}",
+backend\app\domain\llm\configuration\config_coherence_validator.py:353:                        "placeholders": _invalid,
+backend\app\domain\llm\configuration\config_coherence_validator.py:355:                        "governance_report": format_placeholder_violation_report(violations),
+backend\app\domain\llm\configuration\config_coherence_validator.py:362:            _inv_sub, viol_sub = reg.validate_placeholders_in_template(
+backend\app\domain\llm\configuration\config_coherence_validator.py:369:                    "placeholder_policy_violation",
+backend\app\domain\llm\configuration\config_coherence_validator.py:371:                    f"Détail:\n{format_placeholder_violation_report(viol_sub)}",
+backend\app\domain\llm\configuration\config_coherence_validator.py:373:                        "placeholders": _inv_sub,
+backend\app\domain\llm\configuration\config_coherence_validator.py:375:                        "governance_report": format_placeholder_violation_report(viol_sub),
+backend\app\domain\llm\configuration\config_coherence_validator.py:483:            "placeholder_policy_violation": (
+backend\app\domain\llm\configuration\config_coherence_validator.py:484:                "Les placeholders utilisés violent la politique de la famille canonique."
+backend\app\domain\llm\configuration\config_coherence_validator.py:493:            "legacy_dependency_forbidden": (
+backend\app\domain\llm\configuration\config_coherence_validator.py:494:                "Une dépendance legacy interdite a été détectée sur une famille nominale fermée."
+backend\app\domain\llm\configuration\config_coherence_validator.py:541:        # Fallback to legacy live table scanning if no snapshot is active
+backend\app\domain\llm\governance\legacy_residual_registry.py:2:Registre central du legacy résiduel hors périmètre nominal (Story 66.40).
+backend\app\domain\llm\governance\legacy_residual_registry.py:4:Source de vérité versionnée : ``data/legacy_residual_registry.json``.
+backend\app\domain\llm\governance\legacy_residual_registry.py:28:    Path(__file__).resolve().parent / "data" / "legacy_residual_registry.json"
+backend\app\domain\llm\governance\legacy_residual_registry.py:41:    fallback_type: FallbackType
+backend\app\domain\llm\governance\legacy_residual_registry.py:43:    fallback_status: FallbackStatus
+backend\app\domain\llm\governance\legacy_residual_registry.py:71:            raise ValueError("Champ obligatoire vide dans le registre legacy (AC8).")
+backend\app\domain\llm\governance\legacy_residual_registry.py:98:            raise ValueError("Champ obligatoire vide dans le registre legacy (AC8).")
+backend\app\domain\llm\governance\legacy_residual_registry.py:115:            raise ValueError("Champ obligatoire vide dans le registre legacy (AC8).")
+backend\app\domain\llm\governance\legacy_residual_registry.py:124:    fallback_paths: list[LegacyFallbackPathRecord]
+backend\app\domain\llm\governance\legacy_residual_registry.py:129:def _parse_fallback_status(raw: str) -> FallbackStatus:
+backend\app\domain\llm\governance\legacy_residual_registry.py:134:    raise ValueError(f"Unknown fallback_status value: {raw!r}")
+backend\app\domain\llm\governance\legacy_residual_registry.py:137:def _coerce_fallback_paths(raw_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
+backend\app\domain\llm\governance\legacy_residual_registry.py:141:        row["fallback_type"] = FallbackType(row["fallback_type"])
+backend\app\domain\llm\governance\legacy_residual_registry.py:142:        row["fallback_status"] = _parse_fallback_status(row["fallback_status"])
+backend\app\domain\llm\governance\legacy_residual_registry.py:148:def load_legacy_residual_registry() -> LegacyResidualRegistryRoot:
+backend\app\domain\llm\governance\legacy_residual_registry.py:153:    raw["fallback_paths"] = _coerce_fallback_paths(raw["fallback_paths"])
+backend\app\domain\llm\governance\legacy_residual_registry.py:160:    return load_legacy_residual_registry().schema_version
+backend\app\domain\llm\governance\legacy_residual_registry.py:163:def get_fallback_path_record(fallback_type: FallbackType) -> LegacyFallbackPathRecord:
+backend\app\domain\llm\governance\legacy_residual_registry.py:164:    root = load_legacy_residual_registry()
+backend\app\domain\llm\governance\legacy_residual_registry.py:165:    for rec in root.fallback_paths:
+backend\app\domain\llm\governance\legacy_residual_registry.py:166:        if rec.fallback_type == fallback_type:
+backend\app\domain\llm\governance\legacy_residual_registry.py:168:    raise KeyError(f"No legacy registry entry for fallback_type={fallback_type!s}")
+backend\app\domain\llm\governance\legacy_residual_registry.py:176:    root = load_legacy_residual_registry()
+backend\app\domain\llm\governance\legacy_residual_registry.py:178:    for rec in root.fallback_paths:
+backend\app\domain\llm\governance\legacy_residual_registry.py:179:        matrix[rec.fallback_type] = {
+backend\app\domain\llm\governance\legacy_residual_registry.py:183:            "status": rec.fallback_status,
+backend\app\domain\llm\governance\legacy_residual_registry.py:195:            f"Registry fallback_paths must cover exactly all FallbackType values. "
+backend\app\domain\llm\governance\legacy_residual_registry.py:212:    root = root or load_legacy_residual_registry()
+backend\app\domain\llm\governance\legacy_residual_registry.py:225:    Les stable_id sont uniques sur l'ensemble fallback_paths, governed_aliases et
+backend\app\domain\llm\governance\legacy_residual_registry.py:248:    for legacy_sf, canonical in NATAL_SUBFEATURE_MAPPING.items():
+backend\app\domain\llm\governance\legacy_residual_registry.py:249:        if ("subfeature", legacy_sf, canonical) not in alias_pairs:
+backend\app\domain\llm\governance\legacy_residual_registry.py:252:                f"missing {legacy_sf!r} -> {canonical!r}"
+backend\app\domain\llm\governance\legacy_residual_registry.py:256:    for fp in root.fallback_paths:
+backend\app\domain\llm\governance\legacy_residual_registry.py:257:        sections.append((fp.stable_id, "fallback_paths"))
+backend\app\domain\llm\governance\legacy_residual_registry.py:267:                "stable_id doit être unique dans tout le registre legacy résiduel "
+backend\app\domain\llm\governance\legacy_residual_registry.py:274:    root = load_legacy_residual_registry()
+backend\app\domain\llm\governance\legacy_residual_registry.py:278:    raise KeyError(f"use_case_key {use_case_key!r} not in legacy residual registry")
+backend\app\domain\llm\governance\legacy_residual_registry.py:285:    root = load_legacy_residual_registry()
+backend\app\domain\llm\governance\legacy_residual_registry.py:287:        f"# Rapport registre legacy résiduel (schema_version={root.schema_version})",
+backend\app\domain\llm\governance\legacy_residual_registry.py:289:        "## Chemins fallback",
+backend\app\domain\llm\governance\legacy_residual_registry.py:291:    for rec in sorted(root.fallback_paths, key=lambda r: r.stable_id):
+backend\app\domain\llm\governance\legacy_residual_registry.py:293:            f"- `{rec.stable_id}` | type={rec.path_kind} | fallback={rec.fallback_type.value} | "
+backend\app\domain\llm\governance\legacy_residual_registry.py:294:            f"statut_registre={rec.registry_status} | statut_exec={rec.fallback_status.value} | "
+backend\app\domain\llm\prompting\personas.py:47:    Uses the dedicated prompt profile if available, otherwise falls back to legacy fields.
+backend\app\domain\llm\prompting\personas.py:91:    # 2. Legacy fallback
+backend\app\domain\llm\prompting\persona_composer.py:47:    Uses the dedicated prompt profile if available, otherwise falls back to legacy fields.
+backend\app\domain\llm\prompting\persona_composer.py:91:    # 2. Legacy fallback
+backend\app\domain\llm\prompting\placeholder_policy.py:1:"""Canonical placeholder policy definitions."""
+backend\app\domain\llm\prompting\placeholder_policy.py:12:    classification: Literal["required", "optional", "optional_with_fallback"]
+backend\app\domain\llm\prompting\placeholder_policy.py:13:    fallback: Optional[str] = None
+backend\app\domain\llm\prompting\prompt_renderer.py:46:        from app.domain.llm.prompting.placeholder_policy import PLACEHOLDER_POLICY
+backend\app\domain\llm\prompting\prompt_renderer.py:48:        # 1. Check legacy required_variables first
+backend\app\domain\llm\prompting\prompt_renderer.py:51:        missing_legacy = [
+backend\app\domain\llm\prompting\prompt_renderer.py:54:        if missing_legacy:
+backend\app\domain\llm\prompting\prompt_renderer.py:56:                f"Missing required legacy variables: {', '.join(missing_legacy)}",
+backend\app\domain\llm\prompting\prompt_renderer.py:57:                details={"missing_variables": missing_legacy},
+backend\app\domain\llm\prompting\prompt_renderer.py:66:        feat_key = reg.resolve_placeholder_family(effective_feature)
+backend\app\domain\llm\prompting\prompt_renderer.py:68:        placeholder_defs = {d.name: d for d in allowlist}
+backend\app\domain\llm\prompting\prompt_renderer.py:70:        found_placeholders = PromptRenderer.extract_placeholders(template)
+backend\app\domain\llm\prompting\prompt_renderer.py:73:        # Universal placeholders from central registry (Story 66.42)
+backend\app\domain\llm\prompting\prompt_renderer.py:74:        universal = set(reg.universal_placeholders)
+backend\app\domain\llm\prompting\prompt_renderer.py:76:        for p_name in found_placeholders:
+backend\app\domain\llm\prompting\prompt_renderer.py:77:            p_def = placeholder_defs.get(p_name)
+backend\app\domain\llm\prompting\prompt_renderer.py:80:                allowed_by_exception, exception_id = reg.is_placeholder_governed_for_feature(
+backend\app\domain\llm\prompting\prompt_renderer.py:81:                    placeholder=p_name,
+backend\app\domain\llm\prompting\prompt_renderer.py:89:                            "id=%s placeholder=%s feature=%s"
+backend\app\domain\llm\prompting\prompt_renderer.py:98:                # Unknown placeholder (AC4) - NOT authorized for this feature
+backend\app\domain\llm\prompting\prompt_renderer.py:105:                        "placeholder_unauthorized_detected placeholder=%s feature=%s",
+backend\app\domain\llm\prompting\prompt_renderer.py:110:                    # Story 66.13: If it was required in legacy list, we must fail even if stripped
+backend\app\domain\llm\prompting\prompt_renderer.py:113:                            f"Unauthorized required placeholder '{{{{{p_name}}}}}' "
+backend\app\domain\llm\prompting\prompt_renderer.py:115:                            details={"placeholder": p_name, "feature": effective_feature},
+backend\app\domain\llm\prompting\prompt_renderer.py:135:                    f"Required placeholder '{{{{{p_name}}}}}' not resolved for feature '{feature}'"
+backend\app\domain\llm\prompting\prompt_renderer.py:142:                        msg, details={"placeholder": p_name, "feature": feature}
+backend\app\domain\llm\prompting\prompt_renderer.py:146:                        "placeholder_not_resolved placeholder=%s feature=%s "
+backend\app\domain\llm\prompting\prompt_renderer.py:155:                    "placeholder_not_resolved placeholder=%s feature=%s classification=optional",
+backend\app\domain\llm\prompting\prompt_renderer.py:161:            elif p_def.classification == "optional_with_fallback":
+backend\app\domain\llm\prompting\prompt_renderer.py:162:                fallback_val = p_def.fallback or ""
+backend\app\domain\llm\prompting\prompt_renderer.py:164:                    "placeholder_fallback_used placeholder=%s fallback=%s", p_name, fallback_val
+backend\app\domain\llm\prompting\prompt_renderer.py:166:                effective_vars[p_name] = fallback_val
+backend\app\domain\llm\prompting\prompt_renderer.py:173:            # Preserve the placeholder if not found in effective_vars
+backend\app\domain\llm\prompting\prompt_renderer.py:182:    def extract_placeholders(template: str) -> List[str]:
+backend\app\domain\llm\prompting\tests\__init__.py:2:Registre central versionné — taxonomie canonique, aliases et placeholders (Story 66.42).
+backend\app\domain\llm\prompting\tests\__init__.py:20:from app.domain.llm.prompting.placeholder_policy import PlaceholderDef
+backend\app\domain\llm\prompting\tests\__init__.py:47:    classification: Literal["required", "optional", "optional_with_fallback"]
+backend\app\domain\llm\prompting\tests\__init__.py:48:    fallback: str | None = None
+backend\app\domain\llm\prompting\tests\__init__.py:52:    """Exception taxonomique ou placeholder : métadonnées obligatoires (AC5)."""
+backend\app\domain\llm\prompting\tests\__init__.py:65:    - keys allowed: placeholder, family, rule
+backend\app\domain\llm\prompting\tests\__init__.py:68:    allowed_keys = {"placeholder", "family", "rule"}
+backend\app\domain\llm\prompting\tests\__init__.py:94:    universal_placeholders: list[str]
+backend\app\domain\llm\prompting\tests\__init__.py:95:    legacy_nominal_feature_aliases: dict[str, str]
+backend\app\domain\llm\prompting\tests\__init__.py:96:    legacy_subfeature_aliases_by_domain: dict[str, dict[str, str]]
+backend\app\domain\llm\prompting\tests\__init__.py:99:    placeholders_by_family: dict[str, list[PlaceholderEntry]]
+backend\app\domain\llm\prompting\tests\__init__.py:106:        Required scope keys: placeholder + family.
+backend\app\domain\llm\prompting\tests\__init__.py:109:        aliases = dict(self.legacy_nominal_feature_aliases)
+backend\app\domain\llm\prompting\tests\__init__.py:112:            if "placeholder" not in tokens:
+backend\app\domain\llm\prompting\tests\__init__.py:114:                    f"Governed exception '{exc.id}' missing required scope key 'placeholder'"
+backend\app\domain\llm\prompting\tests\__init__.py:144:    """Rapport structuré pour AC7 (placeholder non gouverné)."""
+backend\app\domain\llm\prompting\tests\__init__.py:147:    placeholder: str
+backend\app\domain\llm\prompting\tests\__init__.py:160:        self.universal_placeholders: frozenset[str] = frozenset(data.universal_placeholders)
+backend\app\domain\llm\prompting\tests\__init__.py:161:        self._placeholder_defs_by_family: dict[str, list[PlaceholderDef]] = {
+backend\app\domain\llm\prompting\tests\__init__.py:166:                    fallback=p.fallback,
+backend\app\domain\llm\prompting\tests\__init__.py:170:            for fam, defs in data.placeholders_by_family.items()
+backend\app\domain\llm\prompting\tests\__init__.py:190:        mapped = self._data.legacy_nominal_feature_aliases.get(s)
+backend\app\domain\llm\prompting\tests\__init__.py:199:        domain_map = self._data.legacy_subfeature_aliases_by_domain.get(fn, {})
+backend\app\domain\llm\prompting\tests\__init__.py:202:    def resolve_placeholder_family(self, feature: str) -> str:
+backend\app\domain\llm\prompting\tests\__init__.py:204:        Résout la clé de famille pour les placeholders (corrige horoscope_daily vs split abusif).
+backend\app\domain\llm\prompting\tests\__init__.py:217:    def get_placeholder_defs(self, feature: str) -> list[PlaceholderDef]:
+backend\app\domain\llm\prompting\tests\__init__.py:218:        key = self.resolve_placeholder_family(feature)
+backend\app\domain\llm\prompting\tests\__init__.py:219:        return list(self._placeholder_defs_by_family.get(key, []))
+backend\app\domain\llm\prompting\tests\__init__.py:224:    def natal_subfeature_legacy_mapping(self) -> dict[str, str]:
+backend\app\domain\llm\prompting\tests\__init__.py:225:        return dict(self._data.legacy_subfeature_aliases_by_domain.get(NATAL_CANONICAL_FEATURE, {}))
+backend\app\domain\llm\prompting\tests\__init__.py:227:    def legacy_nominal_feature_aliases_map(self) -> dict[str, str]:
+backend\app\domain\llm\prompting\tests\__init__.py:228:        return dict(self._data.legacy_nominal_feature_aliases)
+backend\app\domain\llm\prompting\tests\__init__.py:230:    def _find_active_exception_for_placeholder(
+backend\app\domain\llm\prompting\tests\__init__.py:231:        self, *, placeholder: str, family_key: str, rule_id: str
+backend\app\domain\llm\prompting\tests\__init__.py:235:        - "placeholder:<name>"
+backend\app\domain\llm\prompting\tests\__init__.py:253:            if tokens.get("placeholder") and tokens["placeholder"] != placeholder:
+backend\app\domain\llm\prompting\tests\__init__.py:262:    def is_placeholder_governed_for_feature(
+backend\app\domain\llm\prompting\tests\__init__.py:265:        placeholder: str,
+backend\app\domain\llm\prompting\tests\__init__.py:273:        family_key = self.resolve_placeholder_family(feature)
+backend\app\domain\llm\prompting\tests\__init__.py:274:        allowed_names = {d.name for d in self.get_placeholder_defs(feature)}
+backend\app\domain\llm\prompting\tests\__init__.py:275:        if placeholder in allowed_names or placeholder in self.universal_placeholders:
+backend\app\domain\llm\prompting\tests\__init__.py:278:        exc = self._find_active_exception_for_placeholder(
+backend\app\domain\llm\prompting\tests\__init__.py:279:            placeholder=placeholder,
+backend\app\domain\llm\prompting\tests\__init__.py:287:    def validate_placeholders_in_template(
+backend\app\domain\llm\prompting\tests\__init__.py:291:        Valide les placeholders d’un template contre le registre central (AC2, AC4, AC7).
+backend\app\domain\llm\prompting\tests\__init__.py:294:        found = _extract_placeholders(template)
+backend\app\domain\llm\prompting\tests\__init__.py:295:        family_key = self.resolve_placeholder_family(feature)
+backend\app\domain\llm\prompting\tests\__init__.py:301:                if p in self.universal_placeholders:
+backend\app\domain\llm\prompting\tests\__init__.py:311:                        placeholder=p,
+backend\app\domain\llm\prompting\tests\__init__.py:322:            is_allowed, exception_id = self.is_placeholder_governed_for_feature(
+backend\app\domain\llm\prompting\tests\__init__.py:323:                placeholder=p,
+backend\app\domain\llm\prompting\tests\__init__.py:332:                            "id=%s placeholder=%s family=%s source=%s"
+backend\app\domain\llm\prompting\tests\__init__.py:342:                f"Ajoutez-le au registre central (placeholders_by_family.{family_key}) "
+backend\app\domain\llm\prompting\tests\__init__.py:343:                f"ou utilisez un placeholder universel autorisé."
+backend\app\domain\llm\prompting\tests\__init__.py:348:                    placeholder=p,
+backend\app\domain\llm\prompting\tests\__init__.py:359:def _extract_placeholders(template: str) -> list[str]:
+backend\app\domain\llm\prompting\tests\__init__.py:371:def format_placeholder_violation_report(violations: list[PlaceholderGovernanceViolation]) -> str:
+backend\app\domain\llm\prompting\tests\__init__.py:375:            f"[{v.rule_id}] placeholder={v.placeholder} family={v.family_key_resolved} "
+backend\app\domain\llm\prompting\tests\__init__.py:397:        fam: list(defs) for fam, defs in reg._placeholder_defs_by_family.items()

@@ -99,6 +99,7 @@ _FALLBACK_USER_MSG = {
 }
 
 LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
+# Transition legacy: ces carriers sont uniquement lus pour les schemas non migres.
 _NATAL_TRANSITION_PROMPT_CARRIERS = frozenset({"chart_json", "natal_data"})
 
 # ComposedMessages type alias (Story 66.4 AC3)
@@ -1906,6 +1907,7 @@ class LLMGateway:
                 continue
 
             if prop == "chart_json":
+                # Transition legacy: seuls les schemas anciens peuvent encore demander chart_json.
                 if context_dict.get("natal_data") is not None:
                     payload[prop] = context_dict["natal_data"]
                     continue
