@@ -1,0 +1,32 @@
+CS-343 validation output
+
+Command:
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw 'Missing virtual environment: .\.venv' }
+. .\.venv\Scripts\Activate.ps1
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-cartography/2026-05-27-1800
+
+Result:
+CONDAMAD domain audit validation passed.
+
+Command:
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw 'Missing virtual environment: .\.venv' }
+. .\.venv\Scripts\Activate.ps1
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-cartography/2026-05-27-1800
+
+Result:
+CONDAMAD domain audit lint passed.
+
+Command:
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw 'Missing virtual environment: .\.venv' }
+. .\.venv\Scripts\Activate.ps1
+cd backend
+pytest -q tests/architecture/test_llm_astrology_input_boundary.py tests/architecture/test_llm_astrology_input_payload_boundaries.py tests/architecture/test_llm_astrology_input_runtime_boundary.py tests/llm_orchestration/test_llm_astrology_input_boundaries.py tests/unit/domain/llm/test_natal_llm_astrology_input.py --tb=short
+
+Result:
+22 passed in 3.46s.
+
+Command:
+git status --short -- backend/app backend/tests backend/migrations frontend/src
+
+Result:
+PASS. No entries returned.

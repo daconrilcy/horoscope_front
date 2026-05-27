@@ -1,0 +1,14 @@
+CS-343 baseline scan summary
+
+Command family:
+- rg --files backend/app/domain/llm backend/app/services/llm_generation backend/app/domain/astrology/interpretation backend/app/ops/llm/bootstrap backend/app/api backend/tests
+- rg -n over prompt-generation symbols in priority backend paths
+- rg -n over archival carriers: chart_json, natal_data, evidence, evidence_refs, prompt_visible, provider
+
+Result:
+- Runtime, configuration, service, bootstrap, router, test and archival surfaces were found.
+- The baseline is represented in `_condamad/audits/prompt-generation-cartography/2026-05-27-1800/01-surface-inventory-audit.md`.
+- Full command evidence is recorded as E-004 through E-012 in `01-evidence-log.md`.
+
+Limitation:
+- The raw broad scan output is intentionally not copied here because it includes large CONDAMAD archival history. Reproducible commands and classified results are preserved in the audit evidence log.
