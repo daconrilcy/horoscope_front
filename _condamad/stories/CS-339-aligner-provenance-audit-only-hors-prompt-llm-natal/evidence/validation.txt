@@ -1,0 +1,359 @@
+CS-339 validation - 2026-05-27 13:47:42
+
+VC2 ruff check .
+All checks passed!
+
+VC3 unit contract/hash
+............                                                             [100%]
+12 passed in 3.43s
+
+VC4 evidence/boundaries
+......                                                                   [100%]
+6 passed in 2.49s
+
+VC5 architecture/legacy
+.....                                                                    [100%]
+5 passed, 7 deselected in 1.10s
+
+VC6 natal audit
+
+2 deselected in 2.24s
+
+VC6 natal audit --long
+..                                                                       [100%]
+2 passed in 2.64s
+
+VC7 full backend tests --long
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 15%]
+........................................................................ [ 20%]
+......................................sssssssss......................... [ 25%]
+........................................................................ [ 30%]
+........................................................................ [ 35%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 60%]
+........................................................................ [ 65%]
+........................................................................ [ 70%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+........................................................................ [ 95%]
+...............................................................          [100%]
+1422 passed, 9 skipped in 90.01s (0:01:30)
+
+VC1 scoped ruff format
+3 files left unchanged
+
+VC8 role/hash/provenance scan
+tests\unit\services\test_projection_endpoint_service.py:70:        return SimpleNamespace(id=42, projection_hash="b" * 64)
+tests\unit\services\test_projection_endpoint_service.py:126:    assert response.projection_hash == "b" * 64
+tests\unit\test_replay_snapshot_v1_storage_security_model.py:37:    "provenance",
+tests\unit\test_replay_snapshot_v1_storage.py:53:        "provenance",
+tests\unit\test_replay_snapshot_v1_storage.py:92:        "provenance": metadata["provenance"],
+tests\fixtures\golden\natal_test.yaml:15:      provenance: {}
+tests\unit\test_replay_snapshot_v1_service_metadata.py:55:        provenance={"request_ref": log.request_id},
+tests\unit\test_replay_snapshot_v1_service_manual_purge.py:55:        provenance={},
+tests\unit\test_replay_snapshot_v1_service_audit.py:55:            provenance={},
+tests\fixtures\golden\natal_premium_test.yaml:15:      provenance: {}
+tests\unit\test_replay_snapshot_v1_redaction.py:59:            "provenance": metadata["provenance"],
+tests\unit\test_replay_snapshot_v1_purge.py:83:                provenance={},
+tests\unit\test_replay_snapshot_v1_purge.py:95:                provenance={},
+tests\unit\test_replay_snapshot_v1_execution_audit.py:78:        provenance={"request_ref": log.request_id},
+app\core\sensitive_data.py:99:    "projection_hash",
+app\core\sensitive_data.py:101:    "llm_input_hash",
+app\core\sensitive_data.py:112:    "provenance",
+tests\unit\projections\test_projection_persistence.py:57:        assert len(row.projection_hash) == 64
+tests\unit\projections\test_projection_hash.py:6:from app.domain.astrology.projections.projection_hash import compute_projection_hash
+tests\unit\projections\test_projection_hash.py:14:    assert compute_projection_hash(left) == compute_projection_hash(right)
+tests\unit\projections\test_projection_hash.py:22:    assert compute_projection_hash(baseline) != compute_projection_hash(changed)
+tests\unit\test_rejected_narrative_answer_workflow.py:59:        projection_hash=proof_hash,
+tests\unit\test_rejected_narrative_answer_workflow.py:61:        llm_input_hash="b" * 64,
+tests\unit\test_rejected_narrative_answer_workflow.py:76:        projection_hash="a" * 64,
+tests\unit\test_rejected_narrative_answer_workflow.py:78:        llm_input_hash="b" * 64,
+tests\unit\test_rejected_narrative_answer_workflow.py:96:        projection_hash="a" * 64,
+tests\unit\test_rejected_narrative_answer_workflow.py:98:        llm_input_hash="b" * 64,
+tests\unit\test_narrative_answer_audit_sensitive_data.py:25:        "llm_input_hash",
+tests\unit\test_narrative_answer_audit_sensitive_data.py:26:        "projection_hash",
+tests\unit\projections\test_projection_access.py:28:            projection_hash="a" * 64,
+tests\unit\projections\test_projection_access.py:38:            projection_hash="b" * 64,
+tests\unit\projections\test_projection_access.py:48:            projection_hash="c" * 64,
+tests\unit\test_narrative_answer_audit_model.py:26:        "projection_hash",
+tests\unit\test_narrative_answer_audit_model.py:28:        "llm_input_hash",
+tests\unit\test_evidence_refs_validation.py:29:    projection_hash = "a" * 64
+tests\unit\test_evidence_refs_validation.py:39:                "source_hash": projection_hash,
+tests\unit\test_evidence_refs_validation.py:47:                source_hash=projection_hash,
+tests\integration\test_replay_snapshot_v1_service_purge.py:64:            provenance={},
+tests\integration\test_replay_snapshot_v1_service_non_cascade.py:63:            provenance={},
+tests\integration\test_replay_snapshot_v1_db_redaction.py:47:            "provenance": snapshot.provenance,
+tests\integration\test_rejected_narrative_answer_audit.py:46:            projection_hash="a" * 64,
+tests\integration\test_rejected_narrative_answer_audit.py:48:            llm_input_hash="b" * 64,
+tests\integration\test_projection_persistence_schema.py:27:        "projection_hash",
+tests\integration\test_projection_persistence_schema.py:36:    """La migration Alembic porte la table canonique et projection_hash."""
+tests\integration\test_projection_persistence_schema.py:43:    assert "projection_hash" in content
+tests\integration\test_narrative_answer_audit_schema.py:47:        "projection_hash",
+tests\integration\test_narrative_answer_audit_schema.py:49:        "llm_input_hash",
+tests\integration\test_narrative_answer_audit_schema.py:147:            "projection_hash",
+tests\integration\test_narrative_answer_audit_schema.py:148:            "llm_input_hash",
+tests\integration\test_narrative_answer_audit_repository.py:25:    assert loaded.projection_hash == "a" * 64
+tests\integration\test_narrative_answer_audit_repository.py:26:    assert loaded.llm_input_hash == "b" * 64
+tests\integration\test_narrative_answer_audit_repository.py:56:        projection_hash="a" * 64,
+tests\integration\test_narrative_answer_audit_repository.py:58:        llm_input_hash="b" * 64,
+tests\integration\test_narrative_answer_audit_evidence_refs.py:19:    projection_hash = "1" * 64
+tests\integration\test_narrative_answer_audit_evidence_refs.py:20:    llm_input_hash = "2" * 64
+tests\integration\test_narrative_answer_audit_evidence_refs.py:31:            projection_hash=projection_hash,
+tests\integration\test_narrative_answer_audit_evidence_refs.py:33:            llm_input_hash=llm_input_hash,
+tests\integration\test_narrative_answer_audit_evidence_refs.py:49:                    "source_hash": projection_hash,
+tests\integration\test_narrative_answer_audit_evidence_refs.py:56:                    "source_hash": llm_input_hash,
+tests\integration\test_llm_db_invariants.py:338:        "provenance",
+tests\integration\llm\test_natal_llm_astrology_input_audit.py:30:    assert model.projection_hash == llm_input["provenance"]["projection_hash"]
+tests\integration\llm\test_natal_llm_astrology_input_audit.py:31:    assert model.llm_input_hash == llm_input["provenance"]["llm_input_hash"]
+tests\integration\llm\test_natal_llm_astrology_input_audit.py:37:def test_runtime_only_request_id_does_not_change_audit_llm_input_hash() -> None:
+tests\integration\llm\test_natal_llm_astrology_input_audit.py:38:    """Un changement de request_id audit-only ne modifie pas `llm_input_hash`."""
+tests\integration\llm\test_natal_llm_astrology_input_audit.py:65:    assert first.llm_input_hash == second.llm_input_hash
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:16:PROMPT_VISIBLE_BLOCKS = set(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:18:    "provenance",
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:19:    "projection_hash",
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:20:    "llm_input_hash",
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:30:    assert "_prompt_visible_llm_astrology_input(llm_astrology_input)" in source
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:34:def test_gateway_prompt_projection_reuses_canonical_prompt_visible_roles() -> None:
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:48:            isinstance(target, ast.Name) and target.id == "LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS"
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:52:        and "prompt_visible" in ast.unparse(node.value)
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:60:def test_gateway_prompt_projection_has_no_audit_only_literal_blocks() -> None:
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:68:            isinstance(target, ast.Name) and target.id == "LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS"
+tests\architecture\test_llm_astrology_input_payload_boundaries.py:89:def test_canonical_prompt_visible_roles_exclude_audit_only_surfaces() -> None:
+app\services\transit_projection\client_projection.py:6:from app.domain.astrology.projections.projection_hash import compute_projection_hash
+app\services\transit_projection\client_projection.py:70:            projection_hash=compute_projection_hash(payload_for_hash),
+app\services\transit_projection\client_projection.py:94:            projection_hash=compute_projection_hash(payload_for_hash),
+tests\architecture\test_llm_astrology_input_audit_boundary.py:19:def test_llm_input_hash_material_has_single_owner() -> None:
+tests\architecture\test_llm_astrology_input_audit_boundary.py:20:    """Le materiau canonique de `llm_input_hash` reste dans le domaine interpretation."""
+tests\architecture\test_llm_astrology_input_audit_boundary.py:24:        if "build_llm_input_hash_material" in path.read_text(encoding="utf-8")
+tests\architecture\test_llm_astrology_input_audit_boundary.py:50:    assert "llm_input_hash" not in serialized_openapi
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:110:def test_ai_narrative_public_link_can_anchor_narrative_answer_audit_projection_hash() -> None:
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:119:            projection_hash="a" * 64,
+tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:124:    assert link.persisted_projection.projection_hash == "a" * 64
+app\services\replay_snapshot_v1_service.py:53:    provenance: dict[str, Any]
+app\services\replay_snapshot_v1_service.py:126:    provenance = {
+app\services\replay_snapshot_v1_service.py:142:        "provenance": sanitize_payload(
+app\services\replay_snapshot_v1_service.py:143:            {key: _public_meta_value(value) for key, value in provenance.items()},
+app\services\replay_snapshot_v1_service.py:185:            provenance=snapshot_metadata["provenance"],
+app\services\replay_snapshot_v1_service.py:495:            provenance=dict(snapshot.provenance or {}),
+app\infra\db\repositories\projection_repository.py:40:        projection_hash: str,
+app\infra\db\repositories\projection_repository.py:52:            projection_hash=projection_hash,
+app\infra\db\repositories\projection_repository.py:89:        projection_hash: str,
+app\infra\db\repositories\projection_repository.py:97:            .where(PersistedProjectionModel.projection_hash == projection_hash)
+tests\api\test_projection_real_conditions.py:56:        return SimpleNamespace(id=99, projection_hash="c" * 64)
+tests\api\test_projection_real_conditions.py:96:    assert body["projection_hash"]
+app\domain\llm\runtime\gateway.py:105:LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = tuple(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
+app\domain\llm\runtime\gateway.py:110:def _prompt_visible_llm_astrology_input(payload: Any) -> Any:
+app\domain\llm\runtime\gateway.py:116:        block: payload[block] for block in LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS if block in payload
+app\domain\llm\runtime\gateway.py:201:            prompt_payload = _prompt_visible_llm_astrology_input(llm_astrology_input)
+tests\api\test_projection_persistence_endpoint.py:33:            projection_hash="a" * 64,
+tests\api\test_projection_persistence_endpoint.py:52:def test_projection_endpoint_exposes_projection_hash_when_persisted() -> None:
+tests\api\test_projection_persistence_endpoint.py:68:    assert body["projection_hash"] == "a" * 64
+app\infra\db\repositories\llm\narrative_answer_audit_repository.py:39:    projection_hash: str
+app\infra\db\repositories\llm\narrative_answer_audit_repository.py:41:    llm_input_hash: str
+app\infra\db\repositories\llm\narrative_answer_audit_repository.py:86:                    projection_hash=payload.projection_hash,
+app\infra\db\repositories\llm\narrative_answer_audit_repository.py:88:                    llm_input_hash=payload.llm_input_hash,
+app\infra\db\repositories\llm\narrative_answer_audit_repository.py:117:            projection_hash=payload.projection_hash,
+app\infra\db\repositories\llm\narrative_answer_audit_repository.py:119:            llm_input_hash=payload.llm_input_hash,
+tests\api\test_projection_endpoint.py:37:            projection_hash="a" * 64,
+tests\unit\domain\astrology\test_calculation_graph_runner.py:2:"""Verifie execution, cache, provenance et garde-fous du runner CS-227."""
+tests\unit\domain\astrology\test_calculation_graph_runner.py:184:def test_provenance_exposes_node_inputs_output_and_calculator() -> None:
+tests\unit\domain\astrology\test_calculation_graph_runner.py:185:    """La provenance minimale est disponible par code de node."""
+tests\unit\domain\astrology\test_calculation_graph_runner.py:193:    assert result.provenance["double"] == {
+tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:59:    assert trace.nodes[0].provenance_ref == "provenance:double"
+tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:60:    assert trace.provenance_refs == ("provenance:double", "provenance:label")
+tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:84:    assert trace.nodes[0].provenance_ref is None
+tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:129:def test_trace_contract_keeps_trace_provenance_and_replay_terms_distinct() -> None:
+tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:141:    assert set(payload["contract_note"]) == {"trace", "provenance", "replay_snapshot"}
+tests\api\admin\test_replay_snapshot_v1_api.py:155:        provenance={"trace_ref": "trace-safe", "diagnostics_ref": "diag-safe"},
+tests\api\admin\test_replay_snapshot_v1_api.py:221:    assert payload["provenance_refs"] == {"trace_ref": "trace-safe", "diagnostics_ref": "diag-safe"}
+app\services\projection_persistence_service.py:8:from app.domain.astrology.projections.projection_hash import (
+app\services\projection_persistence_service.py:9:    compute_projection_hash,
+app\services\projection_persistence_service.py:54:        projection_hash = compute_projection_hash(payload_json)
+app\services\projection_persistence_service.py:60:            projection_hash=projection_hash,
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:1:"""Tests de provenance et priorisation semantique des aspects."""
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:5:from app.domain.astrology.interpretation.aspect_semantic_provenance import (
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:12:def test_semantic_provenance_requires_source_system() -> None:
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:13:    """La provenance conserve systeme, tradition et reference source."""
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:14:    provenance = SemanticProvenance(
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:21:    assert provenance.source_system == "modern"
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:22:    assert provenance.source_tradition == "reference_profile"
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:29:        provenance=SemanticProvenance(source_system="modern", source_tradition="profile"),
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:41:        provenance=SemanticProvenance(source_system="modern", source_tradition="profile"),
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:46:        provenance=SemanticProvenance(source_system="traditional", source_tradition="profile"),
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:59:    """Une autorite inconnue explicite n'est pas une provenance valide."""
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:73:            provenance=SemanticProvenance(source_system="modern", source_tradition="profile"),
+tests\unit\domain\astrology\test_aspect_semantic_provenance.py:84:            provenance=SemanticProvenance(source_system="modern", source_tradition="profile"),
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:25:    *LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"],
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:28:    "provenance",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:29:    "projection_hash",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:30:    "llm_input_hash",
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:36:def test_gateway_payload_projects_prompt_visible_role_blocks_only() -> None:
+tests\llm_orchestration\test_llm_astrology_input_boundaries.py:53:def test_gateway_payload_makes_missing_data_limits_prompt_visible() -> None:
+app\services\projections\projection_endpoint_service.py:26:from app.domain.astrology.projections.projection_hash import compute_projection_hash
+app\services\projections\projection_endpoint_service.py:97:    """Theme natal resolu avec sa provenance publique."""
+app\services\projections\projection_endpoint_service.py:160:        projection_hash = compute_projection_hash(built.payload)
+app\services\projections\projection_endpoint_service.py:182:            projection_hash = persisted.projection_hash
+app\services\projections\projection_endpoint_service.py:190:            projection_hash=projection_hash,
+app\services\projections\projection_endpoint_service.py:382:    """Extrait une provenance JSON stable du payload structured_facts_v1."""
+tests\unit\domain\astrology\test_aspect_interpretation_facts.py:52:    assert facts.semantic_candidates[0].provenance.source_system == "modern"
+tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:24:        == (payload["provenance"]["projection_hash"])
+app\infra\db\models\user_natal_interpretation.py:142:    projection_hash: Mapped[str] = mapped_column(
+app\infra\db\models\user_natal_interpretation.py:152:    llm_input_hash: Mapped[str] = mapped_column(
+app\infra\db\models\projection_persistence.py:2:"""Stocke les payloads de projection avec version, provenance et hash."""
+app\infra\db\models\projection_persistence.py:25:    projection_hash: Mapped[str] = mapped_column(String(64), index=True)
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:29:    build_llm_input_hash_material,
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:74:        "provenance",
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:92:    assert payload["data_roles"]["prompt_visible"] == [
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:106:            "source_hash": payload["provenance"]["projection_hash"],
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:117:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:118:    assert len(first["provenance"]["llm_input_hash"]) == 64
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:119:    assert first["provenance"]["hash_policy"]["prompt_influencing_blocks"] == [
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:126:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:133:    hash_material = build_llm_input_hash_material(
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:141:    assert tuple(hash_material) == LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"]
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:142:    assert payload["provenance"]["llm_input_hash"]
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:159:def test_llm_astrology_input_v1_missing_data_is_prompt_visible() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:185:    assert payload["provenance"]["source_ids"] == {
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:236:        "compute_projection_hash",
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:2:"""Prouve la stabilite et les invalidations de `llm_input_hash`."""
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:20:def test_llm_input_hash_is_stable_for_same_prompt_visible_material() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:25:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:26:    assert len(first["provenance"]["llm_input_hash"]) == 64
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:29:def test_prompt_visible_signal_change_alters_llm_input_hash() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:50:    assert original["provenance"]["llm_input_hash"] != changed["provenance"]["llm_input_hash"]
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:53:def test_runtime_only_request_identity_preserves_llm_input_hash() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:58:    assert first["provenance"]["prompt_ref"] == "natal.astrology.compact.v1"
+tests\unit\domain\astrology\test_llm_astrology_input_hash.py:65:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+app\infra\db\models\llm\llm_observability.py:454:    provenance: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+app\tests\integration\test_transit_projection_api.py:175:    assert payload["projection_hash"]
+app\tests\integration\test_transit_projection_api.py:236:    assert payload["projection_hash"]
+app\api\v1\routers\admin\audit.py:82:        provenance_refs=metadata.provenance or None,
+app\domain\astrology\runtime\chart_object_runtime_data.py:175:        """Valide que le payload expose une provenance calculatoire."""
+app\domain\astrology\runtime\chart_object_runtime_data.py:207:        """Valide que la contribution porte une provenance explicite."""
+app\domain\astrology\runtime\chart_object_runtime_data.py:261:        """Valide la provenance et les valeurs numeriques du contact."""
+app\services\api_contracts\admin\audit.py:59:    provenance_refs: dict[str, object] | None = None
+app\domain\astrology\runtime\calculation_graph_runner.py:2:"""Execute un graphe valide avec registry explicite, cache local et provenance."""
+app\domain\astrology\runtime\calculation_graph_runner.py:79:    provenance: Mapping[str, Mapping[str, object]]
+app\domain\astrology\runtime\calculation_graph_runner.py:88:            "provenance",
+app\domain\astrology\runtime\calculation_graph_runner.py:91:                    node_code: MappingProxyType(dict(provenance))
+app\domain\astrology\runtime\calculation_graph_runner.py:92:                    for node_code, provenance in self.provenance.items()
+app\domain\astrology\runtime\calculation_graph_runner.py:135:        provenance: dict[str, Mapping[str, object]] = {}
+app\domain\astrology\runtime\calculation_graph_runner.py:144:                provenance[node.code] = _provenance(node, input_keys, values[node.output_key])
+app\domain\astrology\runtime\calculation_graph_runner.py:154:                    provenance,
+app\domain\astrology\runtime\calculation_graph_runner.py:172:                    provenance,
+app\domain\astrology\runtime\calculation_graph_runner.py:192:                    provenance,
+app\domain\astrology\runtime\calculation_graph_runner.py:215:            provenance[node.code] = _provenance(node, input_keys, output)
+app\domain\astrology\runtime\calculation_graph_runner.py:224:            provenance=provenance,
+app\domain\astrology\runtime\calculation_graph_runner.py:241:        provenance={},
+app\domain\astrology\runtime\calculation_graph_runner.py:258:    provenance: dict[str, Mapping[str, object]],
+app\domain\astrology\runtime\calculation_graph_runner.py:282:            result.output_key: provenance[result.node_code]["output"] for result in node_results
+app\domain\astrology\runtime\calculation_graph_runner.py:287:        provenance=provenance,
+app\domain\astrology\runtime\calculation_graph_runner.py:328:def _provenance(
+app\domain\astrology\runtime\calculation_graph_runner.py:333:    """Expose la provenance minimale attendue pour un node."""
+app\domain\astrology\runtime\calculation_graph_runner.py:356:        provenance=result.provenance,
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:22:TRACE_REDACTION_POLICY = "keys-and-provenance-refs-v1"
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:52:    provenance_ref: str | None = None
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:57:    """Contrat versionne de trace distinct de la provenance et du replay."""
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:65:    provenance_refs: tuple[str, ...]
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:83:        provenance_refs=tuple(
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:84:            node.provenance_ref for node in nodes if node.provenance_ref is not None
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:105:                "provenance_ref": node.provenance_ref,
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:110:        "provenance_refs": list(trace.provenance_refs),
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:113:            "provenance": "source references owned by runner results",
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:133:        provenance_ref=(
+app\domain\astrology\runtime\calculation_graph_execution_trace.py:134:            f"provenance:{node_result.node_code}" if node_result.error is None else None
+app\domain\astrology\runtime\astrology_graph_family_registry.py:107:    "node output provenance",
+app\services\api_contracts\public\astrology_engine.py:61:    # timezone_source: provenance — "user_provided" or "derived".
+app\domain\astrology\runtime\astrology_doctrine_governance.py:357:            "backend/app/domain/astrology/interpretation/aspect_semantic_provenance.py",
+app\services\api_contracts\public\transit_projection.py:42:    projection_hash: str
+app\services\api_contracts\public\projections.py:47:    projection_hash: str
+app\domain\astrology\projections\__init__.py:4:from app.domain.astrology.projections.projection_hash import (
+app\domain\astrology\projections\__init__.py:6:    compute_projection_hash,
+app\domain\astrology\projections\__init__.py:10:__all__ = ["canonical_projection_json", "compute_projection_hash", "projection_value_to_jsonable"]
+app\domain\astrology\projections\projection_hash.py:24:def compute_projection_hash(payload: Any) -> str:
+app\services\llm_generation\natal\rejected_answer_workflow.py:91:    projection_hash: str,
+app\services\llm_generation\natal\rejected_answer_workflow.py:93:    llm_input_hash: str,
+app\services\llm_generation\natal\rejected_answer_workflow.py:110:            projection_hash=projection_hash,
+app\services\llm_generation\natal\rejected_answer_workflow.py:112:            llm_input_hash=llm_input_hash,
+app\services\llm_generation\natal\interpretation_service.py:246:    llm_input_hash = _llm_input_hash_for_audit(llm_astrology_input_v1)
+app\services\llm_generation\natal\interpretation_service.py:247:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+app\services\llm_generation\natal\interpretation_service.py:252:    model.projection_hash = projection_hash
+app\services\llm_generation\natal\interpretation_service.py:254:    model.llm_input_hash = llm_input_hash
+app\services\llm_generation\natal\interpretation_service.py:283:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+app\services\llm_generation\natal\interpretation_service.py:289:        projection_hash=projection_hash,
+app\services\llm_generation\natal\interpretation_service.py:291:        llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
+app\services\llm_generation\natal\interpretation_service.py:295:def _llm_input_provenance(llm_astrology_input_v1: dict[str, object]) -> dict[str, object]:
+app\services\llm_generation\natal\interpretation_service.py:296:    """Lit la provenance canonique sans accepter de fallback silencieux invalide."""
+app\services\llm_generation\natal\interpretation_service.py:299:    provenance = llm_astrology_input_v1.get("provenance")
+app\services\llm_generation\natal\interpretation_service.py:300:    if not isinstance(provenance, dict):
+app\services\llm_generation\natal\interpretation_service.py:301:        raise ValueError("llm_astrology_input_v1 provenance is required for audit")
+app\services\llm_generation\natal\interpretation_service.py:302:    return provenance
+app\services\llm_generation\natal\interpretation_service.py:305:def _llm_input_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+app\services\llm_generation\natal\interpretation_service.py:307:    llm_input_hash = _llm_input_provenance(llm_astrology_input_v1).get("llm_input_hash")
+app\services\llm_generation\natal\interpretation_service.py:308:    if isinstance(llm_input_hash, str) and len(llm_input_hash) == 64:
+app\services\llm_generation\natal\interpretation_service.py:309:        return llm_input_hash
+app\services\llm_generation\natal\interpretation_service.py:310:    raise ValueError("llm_astrology_input_v1 llm_input_hash is required for audit")
+app\services\llm_generation\natal\interpretation_service.py:322:def _projection_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+app\services\llm_generation\natal\interpretation_service.py:323:    """Garde `projection_hash` separe de l'identite complete du prompt LLM."""
+app\services\llm_generation\natal\interpretation_service.py:324:    projection_hash = _llm_input_provenance(llm_astrology_input_v1).get("projection_hash")
+app\services\llm_generation\natal\interpretation_service.py:325:    if isinstance(projection_hash, str) and len(projection_hash) == 64:
+app\services\llm_generation\natal\interpretation_service.py:326:        return projection_hash
+app\services\llm_generation\natal\interpretation_service.py:327:    raise ValueError("llm_astrology_input_v1 projection_hash is required for audit")
+app\domain\astrology\natal_preparation.py:254:    # timezone_source: provenance — "user_provided" when supplied by caller, "derived" when
+app\domain\astrology\interpretation\ai_narrative_input_contracts.py:77:        """Garantit une provenance versionnee minimale."""
+app\domain\astrology\interpretation\ai_narrative_input_contracts.py:105:    projection_hash: str
+app\domain\astrology\interpretation\ai_narrative_input_contracts.py:109:        for field_name in ("projection_type", "projection_version", "projection_hash"):
+app\domain\astrology\interpretation\ai_narrative_input_contracts.py:112:        if len(self.projection_hash) != 64:
+app\domain\astrology\interpretation\ai_narrative_input_contracts.py:113:            raise ValueError("AI narrative persisted projection requires sha256 projection_hash")
+app\domain\astrology\interpretation\aspect_semantic_provenance.py:24:            raise ValueError("semantic provenance requires source_system and source_tradition")
+app\domain\astrology\interpretation\aspect_semantic_provenance.py:28:                raise ValueError("semantic provenance cannot use unknown source_authority")
+app\domain\astrology\interpretation\aspect_semantic_provenance.py:33:    """Lecture semantique candidate avec confiance et provenance."""
+app\domain\astrology\interpretation\aspect_semantic_provenance.py:36:    provenance: SemanticProvenance
+app\domain\astrology\interpretation\aspect_semantic_provenance.py:67:            candidate.provenance.source_system,
+app\domain\astrology\interpretation\aspect_semantic_provenance.py:68:            candidate.provenance.source_tradition,
+app\domain\astrology\interpretation\aspect_interpretation_facts.py:14:from .aspect_semantic_provenance import (
+app\domain\astrology\interpretation\aspect_interpretation_facts.py:58:                    provenance=SemanticProvenance(
+app\domain\astrology\interpretation\evidence_refs_validation.py:131:    projection_hash: str,
+app\domain\astrology\interpretation\evidence_refs_validation.py:133:    llm_input_hash: str,
+app\domain\astrology\interpretation\evidence_refs_validation.py:141:            source_hash=projection_hash,
+app\domain\astrology\interpretation\evidence_refs_validation.py:147:            source_hash=llm_input_hash,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:23:from app.domain.astrology.projections.projection_hash import (
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:24:    compute_projection_hash,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:33:    "prompt_visible": PROMPT_INFLUENCING_BLOCKS,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:36:    "audit_only": ("projection_hash", "llm_input_hash", "provider_response", "persisted_answer"),
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:64:        projection_hash: str | None = None,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:77:        source_projection_hash = projection_hash or compute_projection_hash(structured_facts_v1)
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:80:            projection_hash=source_projection_hash,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:82:        provenance = _provenance_block(
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:86:            projection_hash=source_projection_hash,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:89:        hash_input = build_llm_input_hash_material(
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:96:        provenance["llm_input_hash"] = compute_projection_hash(hash_input)
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:105:            "provenance": provenance,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:116:def build_llm_input_hash_material(
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:124:    """Construit l'unique materiau prompt-visible utilise par `llm_input_hash`."""
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:221:    projection_hash: str,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:231:            "source_hash": projection_hash,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:241:            projection_hash=projection_hash,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:243:            llm_input_hash="0" * 64,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:278:def _provenance_block(
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:283:    projection_hash: str,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:300:        "projection_hash": projection_hash,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:301:        "llm_input_hash": None,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:304:            "canonical_json_owner": "projection_hash.py",
+app\domain\astrology\interpretation\structured_facts_v1_builder.py:37:        """Retourne une forme JSON stable pour la provenance."""
+app\domain\astrology\interpretation\__init__.py:33:    "AspectSemanticCandidate": ("app.domain.astrology.interpretation.aspect_semantic_provenance"),
+app\domain\astrology\interpretation\__init__.py:39:    "SemanticProvenance": "app.domain.astrology.interpretation.aspect_semantic_provenance",
+app\domain\astrology\interpretation\__init__.py:41:        "app.domain.astrology.interpretation.aspect_semantic_provenance"
+
+VC9 evidence directory check
+evidence artifacts present
+
+Final capsule validation
+CONDAMAD validation: PASS

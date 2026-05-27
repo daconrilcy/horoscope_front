@@ -6,16 +6,20 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+    LLM_ASTROLOGY_INPUT_DATA_ROLES,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GATEWAY_PATH = REPO_ROOT / "app/domain/llm/runtime/gateway.py"
 CONTRACT_PATH = REPO_ROOT / "app/domain/astrology/interpretation/llm_astrology_input_v1.py"
-PROMPT_VISIBLE_BLOCKS = {
-    "facts",
-    "signals",
-    "limits",
-    "evidence",
-    "shaping",
+PROMPT_VISIBLE_BLOCKS = set(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
+AUDIT_ONLY_PROMPT_SURFACES = {
     "provenance",
+    "projection_hash",
+    "llm_input_hash",
+    "provider_response",
+    "persisted_answer",
 }
 
 
@@ -27,11 +31,37 @@ def test_gateway_serializes_projected_llm_astrology_prompt_payload() -> None:
     assert "json.dumps(llm_astrology_input, ensure_ascii=False" not in source
 
 
-def test_gateway_prompt_projection_declares_only_prompt_visible_blocks() -> None:
-    """La projection prompt exclut les roles runtime-only et validation-only."""
+def test_gateway_prompt_projection_reuses_canonical_prompt_visible_roles() -> None:
+    """La projection prompt reutilise le contrat canonique au lieu d'une copie."""
+    source = GATEWAY_PATH.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    import_names = {
+        alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        and node.module == "app.domain.astrology.interpretation.llm_astrology_input_v1"
+        for alias in node.names
+    }
+    assigned_from_roles = any(
+        isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS"
+            for target in node.targets
+        )
+        and "LLM_ASTROLOGY_INPUT_DATA_ROLES" in ast.unparse(node.value)
+        and "prompt_visible" in ast.unparse(node.value)
+        for node in ast.walk(tree)
+    )
+
+    assert "LLM_ASTROLOGY_INPUT_DATA_ROLES" in import_names
+    assert assigned_from_roles
+
+
+def test_gateway_prompt_projection_has_no_audit_only_literal_blocks() -> None:
+    """La projection prompt ne declare aucun champ audit-only comme bloc prompt."""
     tree = ast.parse(GATEWAY_PATH.read_text(encoding="utf-8"))
     assigned_blocks: set[str] = set()
-    for node in tree.body:
+    for node in ast.walk(tree):
         if not isinstance(node, ast.Assign):
             continue
         if not any(
@@ -39,14 +69,10 @@ def test_gateway_prompt_projection_declares_only_prompt_visible_blocks() -> None
             for target in node.targets
         ):
             continue
-        assigned_blocks = {
-            element.value
-            for element in node.value.elts
-            if isinstance(element, ast.Constant) and isinstance(element.value, str)
-        }
+        assigned_blocks = _literal_string_values(node.value)
 
-    assert assigned_blocks == PROMPT_VISIBLE_BLOCKS
-    assert {"chart_json", "natal_data", "provider_response"}.isdisjoint(assigned_blocks)
+    assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(assigned_blocks)
+    assert {"chart_json", "natal_data"}.isdisjoint(assigned_blocks)
 
 
 def test_contract_keeps_raw_surfaces_as_declared_exclusions_not_prompt_blocks() -> None:
@@ -58,3 +84,18 @@ def test_contract_keeps_raw_surfaces_as_declared_exclusions_not_prompt_blocks() 
         constants
     )
     assert {"facts", "signals", "limits", "evidence", "shaping"}.issubset(constants)
+
+
+def test_canonical_prompt_visible_roles_exclude_audit_only_surfaces() -> None:
+    """Le contrat canonique garde les donnees audit-only hors roles prompt."""
+    assert PROMPT_VISIBLE_BLOCKS == {"facts", "signals", "limits", "evidence", "shaping"}
+    assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(PROMPT_VISIBLE_BLOCKS)
+
+
+def _literal_string_values(node: ast.AST) -> set[str]:
+    """Collecte les chaines litterales rattachees a une expression AST."""
+    return {
+        nested.value
+        for nested in ast.walk(node)
+        if isinstance(nested, ast.Constant) and isinstance(nested.value, str)
+    }

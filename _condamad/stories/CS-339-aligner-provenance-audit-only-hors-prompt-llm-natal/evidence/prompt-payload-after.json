@@ -1,0 +1,296 @@
+{
+  "evidence": {
+    "evidence_refs": [
+      {
+        "evidence_ref_id": "llm_astrology_input_v1.projection",
+        "section_id": "llm_astrology_input_v1",
+        "source_hash": "119c1484cccb03a1af0ac47fb3bf070d6f0d0854c4943d78efcaa50bca4bc19a",
+        "source_id": "projection",
+        "source_type": "projection_version",
+        "source_version": "structured_facts_v1.contract.v1"
+      }
+    ],
+    "grounding_status": "grounded",
+    "validation_owner": "evidence_refs_validation.py"
+  },
+  "facts": {
+    "dominants": [
+      {
+        "code": "mars",
+        "dominance_level": "dominant",
+        "factors": [
+          "angularity"
+        ],
+        "rank": 1,
+        "score": 0.82,
+        "source": "fixture.profile"
+      }
+    ],
+    "houses": [
+      {
+        "code": "mars",
+        "house_cusp_code": "house_1_cusp",
+        "house_cusp_longitude_deg": null,
+        "house_modality": "angular",
+        "house_number": 1,
+        "source": "houses.runtime"
+      }
+    ],
+    "major_aspects": [
+      {
+        "angle_deg": 120.0,
+        "code": "trine",
+        "family": "major",
+        "orb_deg": 1.0,
+        "orb_max_deg": 6.0,
+        "participant_codes": [
+          "moon",
+          "sun"
+        ],
+        "source": "aspect_runtime",
+        "strength_level": "dominant"
+      }
+    ],
+    "positions": [
+      {
+        "classifications": [
+          "planet"
+        ],
+        "code": "mars",
+        "degree_in_sign": 15.0,
+        "house_number": 1,
+        "latitude_deg": null,
+        "longitude_deg": 15.0,
+        "object_type": "planet",
+        "source_key": "mars",
+        "source_type": "ephemeris",
+        "zodiac_sign": "aries"
+      }
+    ],
+    "sign_profile_balances": {
+      "elements": [
+        {
+          "code": "fire",
+          "dominance_level": null,
+          "factors": [],
+          "rank": 1,
+          "score": 1.0,
+          "source": "chart_balance"
+        }
+      ],
+      "fertility": [
+        {
+          "code": "barren",
+          "dominance_level": null,
+          "factors": [],
+          "rank": 1,
+          "score": 1.0,
+          "source": "chart_balance"
+        }
+      ],
+      "forms": [
+        {
+          "code": "humane",
+          "dominance_level": null,
+          "factors": [],
+          "rank": 1,
+          "score": 1.0,
+          "source": "chart_balance"
+        }
+      ],
+      "modalities": [
+        {
+          "code": "cardinal",
+          "dominance_level": null,
+          "factors": [],
+          "rank": 1,
+          "score": 1.0,
+          "source": "chart_balance"
+        }
+      ],
+      "polarities": [
+        {
+          "code": "yang",
+          "dominance_level": null,
+          "factors": [],
+          "rank": 1,
+          "score": 1.0,
+          "source": "chart_balance"
+        }
+      ],
+      "seasonal_quadrants": [
+        {
+          "code": "spring",
+          "dominance_level": null,
+          "factors": [],
+          "rank": 1,
+          "score": 1.0,
+          "source": "chart_balance"
+        }
+      ],
+      "voices": [
+        {
+          "code": "vocal",
+          "dominance_level": null,
+          "factors": [],
+          "rank": 1,
+          "score": 1.0,
+          "source": "chart_balance"
+        }
+      ]
+    },
+    "source_contract_version": "structured_facts_v1.contract.v1",
+    "source_metadata": {
+      "aspect_count": 1,
+      "chart_id": "chart-1",
+      "chart_type": "natal",
+      "object_count": 1,
+      "source_codes": [
+        "fixture.dignity",
+        "fixture.dominance",
+        "fixture.fixed_star",
+        "fixture.motion",
+        "fixture.rulership",
+        "fixture.visibility",
+        "houses.runtime",
+        "mars"
+      ]
+    },
+    "source_projection_id": "structured_facts_v1"
+  },
+  "limits": {
+    "excluded_calculation_surfaces": [
+      "raw_runtime_payloads",
+      "calculation_graph_trace",
+      "debug_raw_traces"
+    ],
+    "masking_policy": {
+      "controlled_debug_allowed": true,
+      "include_birth_coordinates": false,
+      "include_personal_identifiers": false,
+      "redact_fields": [
+        "birth_name",
+        "birth_coordinates"
+      ]
+    },
+    "missing_data": {
+      "chart_id": "chart-1",
+      "empty_collections": [
+        "advanced_condition_facts"
+      ],
+      "sign_balances": "available"
+    },
+    "readiness_flags": {
+      "interpretive_signals_ready": true,
+      "public_projection_links_ready": true,
+      "ready_for_narrative": true,
+      "ready_for_scoring": true,
+      "structural_facts_ready": true
+    },
+    "unavailable_sections": [],
+    "uncertainty_notes": []
+  },
+  "shaping": {
+    "editorial_depth_profile": {
+      "contract": "EditorialDepthProfile",
+      "depth_code": "premium_deep",
+      "prediction_detail_level": "controlled_windows",
+      "section_budget": "extended"
+    },
+    "llm_input_selection": {
+      "allowed_fact_groups": [
+        "dominant_themes",
+        "core_strengths",
+        "reading_limits",
+        "upgrade_context",
+        "personal_themes",
+        "relationship_patterns",
+        "current_rhythm",
+        "practical_guidance",
+        "tensions_resources",
+        "prediction_windows",
+        "nuance_arbitration",
+        "action_priorities"
+      ],
+      "contract": "LLMInputSelection",
+      "evidence_labels": [
+        "position principale",
+        "theme dominant",
+        "relation entre deux themes",
+        "contexte de maison",
+        "signal recurrent"
+      ]
+    },
+    "module": null,
+    "plan": "premium",
+    "source_projection_id": "client_interpretation_projection_v1",
+    "state": "normal"
+  },
+  "signals": {
+    "interpretive_signal_codes": {
+      "advanced_condition_codes": [],
+      "dignity_codes": [
+        "mars"
+      ],
+      "dominance_codes": [
+        "mars"
+      ],
+      "fixed_star_contact_codes": [
+        "regulus:mars"
+      ],
+      "house_position_codes": [
+        "mars"
+      ],
+      "rulership_codes": [
+        "mars"
+      ]
+    },
+    "masking_policy": {
+      "controlled_debug_allowed": true,
+      "include_birth_coordinates": false,
+      "include_personal_identifiers": false,
+      "redact_fields": [
+        "birth_name",
+        "birth_coordinates"
+      ]
+    },
+    "public_projection_links": [
+      {
+        "owner": "docs/architecture/official-product-primitives-public-projections.md",
+        "primitive_id": "llm_input",
+        "projection_id": "controlled_internal_projection"
+      },
+      {
+        "owner": "docs/architecture/official-product-primitives-public-projections.md",
+        "primitive_id": "astrologer_debug_data",
+        "projection_id": "controlled_debug_projection"
+      }
+    ],
+    "readiness_flags": {
+      "interpretive_signals_ready": true,
+      "public_projection_links_ready": true,
+      "ready_for_narrative": true,
+      "ready_for_scoring": true,
+      "structural_facts_ready": true
+    },
+    "source_contract": "AINarrativeInputContract",
+    "source_contract_version": "ai_narrative_input.v1",
+    "source_versions": {
+      "graph_trace": "calculation_graph_execution_trace.v1",
+      "interpretation_input": "chart_interpretation_input.v1",
+      "public_projection": "official_product_primitives.v1",
+      "reference_versions": [
+        "mars",
+        "fixture.motion",
+        "fixture.visibility",
+        "fixture.dignity",
+        "fixture.dominance",
+        "houses.runtime",
+        "fixture.rulership",
+        "fixture.fixed_star"
+      ],
+      "rule_governance": "astrology_rule_governance.v1",
+      "runtime_contract": "chart_object_runtime_data.v1"
+    }
+  }
+}

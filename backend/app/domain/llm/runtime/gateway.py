@@ -11,6 +11,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+    LLM_ASTROLOGY_INPUT_DATA_ROLES,
+)
 from app.domain.llm.configuration.admin_models import ResolvedAssembly
 from app.domain.llm.configuration.assembly_registry import AssemblyRegistry
 from app.domain.llm.configuration.assembly_resolver import (
@@ -99,14 +102,7 @@ _FALLBACK_USER_MSG = {
 }
 
 LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
-LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = (
-    "facts",
-    "signals",
-    "limits",
-    "evidence",
-    "shaping",
-    "provenance",
-)
+LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = tuple(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
 # ComposedMessages type alias (Story 66.4 AC3)
 ComposedMessages = List[Dict[str, Any]]
 

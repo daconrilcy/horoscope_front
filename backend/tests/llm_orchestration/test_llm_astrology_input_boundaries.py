@@ -8,6 +8,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+    LLM_ASTROLOGY_INPUT_DATA_ROLES,
+)
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.domain.llm.runtime.gateway import LLMGateway
 from tests.unit.domain.astrology.test_llm_astrology_input_v1 import _build_payload
@@ -19,12 +22,14 @@ FORBIDDEN_PROMPT_SURFACES = {
     "natal_data",
 }
 PROMPT_VISIBLE_BLOCKS = {
-    "facts",
-    "signals",
-    "limits",
-    "evidence",
-    "shaping",
+    *LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"],
+}
+AUDIT_ONLY_PROMPT_SURFACES = {
     "provenance",
+    "projection_hash",
+    "llm_input_hash",
+    "provider_response",
+    "persisted_answer",
 }
 
 
@@ -42,7 +47,7 @@ def test_gateway_payload_projects_prompt_visible_role_blocks_only() -> None:
     ]
     assert prompt_payload["evidence"]["grounding_status"] == "grounded"
     assert prompt_payload["shaping"]["plan"] == "premium"
-    assert prompt_payload["provenance"]["llm_input_hash"]
+    assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(_nested_keys(prompt_payload))
 
 
 def test_gateway_payload_makes_missing_data_limits_prompt_visible() -> None:
@@ -121,6 +126,7 @@ async def test_gateway_provider_handoff_uses_local_double_and_prompt_boundary() 
     prompt_payload = _parse_rendered_llm_input(user_message["content"])
 
     assert set(prompt_payload) == PROMPT_VISIBLE_BLOCKS
+    assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(_nested_keys(prompt_payload))
     assert "LEGACY_CHART_JSON_PROMPT_OWNER" not in user_message["content"]
     assert "LEGACY_NATAL_DATA_PROMPT_OWNER" not in user_message["content"]
 
@@ -154,4 +160,15 @@ def _string_values(value: object) -> set[str]:
         return {item for nested_value in value.values() for item in _string_values(nested_value)}
     if isinstance(value, list):
         return {item for nested_value in value for item in _string_values(nested_value)}
+    return set()
+
+
+def _nested_keys(value: object) -> set[str]:
+    """Collecte les cles imbriquees pour refuser les champs audit-only au prompt."""
+    if isinstance(value, dict):
+        return set(value) | {
+            item for nested_value in value.values() for item in _nested_keys(nested_value)
+        }
+    if isinstance(value, list):
+        return {item for nested_value in value for item in _nested_keys(nested_value)}
     return set()
