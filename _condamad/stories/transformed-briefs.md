@@ -125,3 +125,4 @@
 | cs-343 | `_story_briefs\cs-343-audit-inventaire-surfaces-generation-prompt-llm.md` | `_condamad\stories\cs-343-prompt-generation-surface-inventory\00-story.md` |
 | cs-344 | `_story_briefs\cs-344-audit-configuration-assemblies-placeholders-prompts-llm.md` | `_condamad\stories\cs-344-audit-configuration-assembly-placeholder\00-story.md` |
 | cs-345 | `_story_briefs\cs-345-audit-runtime-gateway-handoff-provider-prompt-llm.md` | `_condamad\stories\cs-345-audit-runtime-gateway-handoff-provider-prompt-llm\00-story.md` |
+| cs-346 | `_story_briefs\cs-346-audit-inputs-astrologiques-natals-prompt-llm.md` | `_condamad\stories\cs-346-audit-natal-astrology-llm-input-sources\00-story.md` |
