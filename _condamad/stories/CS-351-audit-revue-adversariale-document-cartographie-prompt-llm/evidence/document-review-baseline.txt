@@ -1,0 +1,25 @@
+Commentaire global: baseline avant production des artefacts d'audit CS-351.
+
+Timestamp: 2026-05-27-2305
+
+Commands captured before audit artifact writes:
+
+- git status --short
+  Result:
+  M _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+  ?? _condamad/run-state.json
+  ?? _story_briefs/cs-351-audit-revue-adversariale-document-cartographie-prompt-llm.md
+  ?? _story_briefs/cs-352-audit-concordance-code-document-generation-prompt-llm.md
+  ?? _story_briefs/cs-353-audit-process-paralleles-legacy-generation-prompt-llm.md
+  ?? _story_briefs/cs-354-archi-rapport-process-paralleles-legacy-generation-prompt-llm.md
+  ?? _story_briefs/cs-355-audit-cloture-validation-document-cartographie-prompt-llm.md
+  ?? _story_briefs/cs-356-documenter-construction-prompts-theme-astral-par-plan.md
+  ?? _story_briefs/cs-357-ajouter-graphiques-mermaid-construction-prompts-theme-astral.md
+  ?? _story_briefs/cs-358-generer-exemples-json-prompts-theme-astral-par-plan.md
+
+- rg --files _condamad/stories/CS-351-audit-revue-adversariale-document-cartographie-prompt-llm
+  Result:
+  _condamad/stories/CS-351-audit-revue-adversariale-document-cartographie-prompt-llm/generated/11-code-review.md
+  _condamad/stories/CS-351-audit-revue-adversariale-document-cartographie-prompt-llm/00-story.md
+
+Baseline note: the target source document was already modified before this audit and was treated as user workspace state. No runtime, frontend, migration or source-document edit is authorized by this audit.

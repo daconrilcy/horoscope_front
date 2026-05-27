@@ -1,0 +1,41 @@
+Commentaire global: scan apres production des artefacts d'audit CS-351.
+
+Timestamp: 2026-05-27-2305
+
+Produced audit folder:
+
+- `_condamad/audits/prompt-generation-document-review/2026-05-27-2305/`
+
+Produced audit files:
+
+- `00-audit-report.md`
+- `01-adversarial-document-review-audit.md`
+- `01-evidence-log.md`
+- `02-finding-register.md`
+- `03-story-candidates.md`
+- `04-risk-matrix.md`
+- `05-executive-summary.md`
+
+Post-write `git status --short`:
+
+```text
+ M _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+?? _condamad/audits/prompt-generation-document-review/
+?? _condamad/run-state.json
+?? _condamad/stories/CS-351-audit-revue-adversariale-document-cartographie-prompt-llm/evidence/
+?? _story_briefs/cs-351-audit-revue-adversariale-document-cartographie-prompt-llm.md
+?? _story_briefs/cs-352-audit-concordance-code-document-generation-prompt-llm.md
+?? _story_briefs/cs-353-audit-process-paralleles-legacy-generation-prompt-llm.md
+?? _story_briefs/cs-354-archi-rapport-process-paralleles-legacy-generation-prompt-llm.md
+?? _story_briefs/cs-355-audit-cloture-validation-document-cartographie-prompt-llm.md
+?? _story_briefs/cs-356-documenter-construction-prompts-theme-astral-par-plan.md
+?? _story_briefs/cs-357-ajouter-graphiques-mermaid-construction-prompts-theme-astral.md
+?? _story_briefs/cs-358-generer-exemples-json-prompts-theme-astral-par-plan.md
+```
+
+Runtime source delta check:
+
+- `backend/app/**`: no status entry.
+- `backend/tests/**`: no status entry.
+- `frontend/src/**`: no status entry.
+- `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`: status entry existed before this audit and was not edited by this audit.

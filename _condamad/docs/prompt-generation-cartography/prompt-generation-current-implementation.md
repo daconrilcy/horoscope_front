@@ -1,4 +1,4 @@
-<!-- Commentaire global: documentation finale CS-350 de la cartographie actuelle de generation des prompts LLM. -->
+²²<!-- Commentaire global: documentation finale CS-350 de la cartographie actuelle de generation des prompts LLM. -->
 
 # Prompt Generation Current Implementation
 

@@ -1,0 +1,81 @@
+Commentaire global: resultats de validation de l'audit documentaire CS-351.
+
+All Python commands below were run after activating `.\.venv\Scripts\Activate.ps1`.
+
+1. Command:
+
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-document-review/2026-05-27-2305
+```
+
+Result:
+
+```text
+CONDAMAD domain audit validation passed.
+```
+
+2. Command:
+
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-document-review/2026-05-27-2305
+```
+
+Result:
+
+```text
+CONDAMAD domain audit lint passed.
+```
+
+3. Command:
+
+```powershell
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw "Missing virtual environment: .\.venv" }
+. .\.venv\Scripts\Activate.ps1
+python -S -B -c "from pathlib import Path; p=Path('_condamad/audits/prompt-generation-document-review/2026-05-27-2305/01-adversarial-document-review-audit.md'); text=p.read_text(encoding='utf-8'); required=['Resume executif','Methode de revue adversariale','Matrice des affirmations validees','Matrice des affirmations a corriger ou a nuancer','Omissions potentielles','Contradictions ou tensions entre document, audits et code','Corrections documentaires recommandees','Decision finale']; missing=[h for h in required if h not in text]; assert not missing, missing; print('custom report headings passed')"
+```
+
+Result:
+
+```text
+custom report headings passed
+```
+
+4. Command:
+
+```powershell
+rg -n "prompt-generation-current-implementation|adversarial-document-review|affirmation|omission|contradiction" _condamad/audits/prompt-generation-document-review/2026-05-27-2305
+```
+
+Result: PASS, required markers are present in `01-adversarial-document-review-audit.md`, `00-audit-report.md`, `01-evidence-log.md` and `03-story-candidates.md`.
+
+5. Command:
+
+```powershell
+rg -n "erreur factuelle|omission|ambiguite|contradiction|risque de formulation" _condamad/audits/prompt-generation-document-review/2026-05-27-2305
+```
+
+Result: PASS, required finding categories are present in `01-adversarial-document-review-audit.md`.
+
+6. Command:
+
+```powershell
+rg -n "llm_astrology_input_v1|LLMGateway|PromptRenderer|fallback|legacy|backend-only|prompt-visible" _condamad/audits/prompt-generation-document-review/2026-05-27-2305
+```
+
+Result: PASS, boundary and carrier-control terms are present in the audit artifacts.
+
+7. Command:
+
+```powershell
+git status --short
+```
+
+Result: PASS for runtime immutability. No `backend/app/`, `backend/tests/`, `frontend/src/` or migration path appears in the status output.
+
+Skipped commands:
+
+- `ruff format .`, `ruff check .`, `pytest -q`: not run because this story produced documentation/audit artifacts only and did not modify Python application or test code. The applicable skill validators and targeted report checks passed.
