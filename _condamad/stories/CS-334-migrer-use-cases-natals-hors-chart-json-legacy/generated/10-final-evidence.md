@@ -7,7 +7,7 @@
 - Story key: CS-334-migrer-use-cases-natals-hors-chart-json-legacy
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 
 ## Preflight
 
@@ -54,6 +54,7 @@
 - `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/evidence/**`
 - `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/generated/03-acceptance-traceability.md`
 - `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/generated/10-final-evidence.md`
+- `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/generated/11-code-review.md`
 - `_condamad/stories/story-status.md`
 
 ## Files deleted
@@ -84,6 +85,7 @@
 | `rg -n "llm_astrology_input_v1\|chart_json\|natal_data\|input_schema\|placeholder\|legacy\|fallback" app tests` | `backend` | PASS, scan persisted/classified |
 | `rg -n "chart_json_v2\|natal_data_v2\|\{\{\*\|shim\|compatibility wrapper\|fallback prompt branch" ...` | repo root | PASS: no matches, exit 1 expected |
 | `git diff --check` | repo root | PASS, line-ending warnings only |
+| `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m uvicorn app.main:app --host 127.0.0.1 --port 8765` then `GET /docs` | repo root | PASS |
 
 ## Commands skipped or blocked
 
@@ -116,3 +118,9 @@
 ## Feedback loop routing
 
 - no-propagation: no reusable skill or guardrail correction identified beyond story-local evidence and tests.
+
+## Implementation review closure
+
+- Fresh implementation review artifact: `generated/11-code-review.md`.
+- Review verdict: CLEAN.
+- Tracker closure: `story-status.md` updated to `done` on 2026-05-27.

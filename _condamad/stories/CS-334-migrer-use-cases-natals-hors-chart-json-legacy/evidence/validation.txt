@@ -1,14 +1,13 @@
 CS-334 validation summary
 
 - Capsule validation: PASS.
-- Ruff format on touched Python files: PASS.
+- Review cycle 2026-05-27: stale pre-implementation review artifact replaced with implementation review.
 - Ruff check backend: PASS.
-- Unit contract guard: 5 passed.
-- Prompt renderer tests: 6 passed.
-- Assembly resolution tests: 15 passed.
+- Unit contract guard, prompt renderer and assembly resolution tests: 26 passed.
 - Runtime transition integration tests with --long: 8 passed.
 - Backend fast test suite: 1195 passed, 218 deselected.
-- OpenAPI/routes import checks: PASS.
+- OpenAPI/routes import checks and public-schema neutrality assertion: PASS.
+- Backend startup smoke on `http://127.0.0.1:8765/docs`: PASS.
 - OpenAPI/routes before-after semantic equality: PASS.
 - Prompt key scan persisted to prompt-key-scan-after.txt.
 - Forbidden replacement scan for chart_json_v2/natal_data_v2/shim/fallback prompt branch: PASS, no matches.
