@@ -117,3 +117,4 @@
 | cs-335 | `_story_briefs\cs-335-ajouter-guards-non-invention-et-frontieres-payload-llm.md` | `_condamad\stories\cs-335-guards-non-invention-frontieres-payload-llm\00-story.md` |
 | cs-336 | `_story_briefs\cs-336-supprimer-surfaces-legacy-injection-llm-natale.md` | `_condamad\stories\cs-336-supprimer-surfaces-legacy-injection-llm-natale\00-story.md` |
 | cs-337 | `_story_briefs\cs-337-supprimer-tests-et-mocks-legacy-injection-llm.md` | `_condamad\stories\cs-337-supprimer-tests-mocks-legacy-injection-llm\00-story.md` |
+| cs-338 | `_story_briefs\cs-338-cloturer-extinction-legacy-injection-llm-natale.md` | `_condamad\stories\cs-338-cloturer-extinction-legacy-injection-llm-natale\00-story.md` |
