@@ -127,3 +127,4 @@
 | cs-345 | `_story_briefs\cs-345-audit-runtime-gateway-handoff-provider-prompt-llm.md` | `_condamad\stories\cs-345-audit-runtime-gateway-handoff-provider-prompt-llm\00-story.md` |
 | cs-346 | `_story_briefs\cs-346-audit-inputs-astrologiques-natals-prompt-llm.md` | `_condamad\stories\cs-346-audit-natal-astrology-llm-input-sources\00-story.md` |
 | cs-347 | `_story_briefs\cs-347-audit-validation-output-persistence-observabilite-prompt-llm.md` | `_condamad\stories\cs-347-audit-output-validation-persistence-observabilite-prompt-llm\00-story.md` |
+| cs-348 | `_story_briefs\cs-348-architecture-cartographie-generation-prompt-llm.md` | `_condamad\stories\cs-348-architecture-cartographie-generation-prompt-llm\00-story.md` |
