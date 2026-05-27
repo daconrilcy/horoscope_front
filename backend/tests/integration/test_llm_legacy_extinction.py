@@ -1,7 +1,12 @@
+# Commentaire global: ces tests verrouillent l'extinction des chemins legacy du runtime LLM.
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.domain.llm.configuration.canonical_use_case_registry import (
+    list_modern_natal_use_case_contracts,
+)
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
     ExecutionUserInput,
@@ -18,6 +23,82 @@ from app.domain.llm.runtime.output_validator import ValidationResult
 @pytest.fixture
 def gateway():
     return LLMGateway()
+
+
+def test_modern_natal_contracts_only_expose_llm_astrology_input_v1() -> None:
+    """Verifie que les contrats natals modernes n'exposent aucun carrier legacy."""
+
+    forbidden_carriers = {"chart_json", "natal_data", "evidence_catalog"}
+
+    for contract in list_modern_natal_use_case_contracts():
+        assert "llm_astrology_input_v1" in contract.required_prompt_placeholders
+        assert not forbidden_carriers.intersection(contract.required_prompt_placeholders)
+
+        assert contract.input_schema is not None
+        assert contract.input_schema.get("required") == ["llm_astrology_input_v1"]
+        properties = set(contract.input_schema.get("properties", {}))
+        assert "llm_astrology_input_v1" in properties
+        assert not forbidden_carriers.intersection(properties)
+
+
+def test_natal_user_payload_ignores_legacy_carriers_when_modern_input_exists(gateway) -> None:
+    """Prouve que le payload utilisateur natal ne consomme que l'entree moderne."""
+
+    payload = gateway.build_user_payload(
+        use_case="natal_interpretation",
+        user_input={},
+        context={
+            "llm_astrology_input_v1": {"facts": {"sun": "Aries"}},
+            "chart_json": '{"legacy": true}',
+            "natal_data": {"legacy": True},
+            "evidence_catalog": ["legacy-evidence"],
+        },
+        policy="none",
+        locale="fr-FR",
+    )
+
+    assert "llm_astrology_input_v1" in payload
+    assert "Aries" in payload
+    assert "chart_json" not in payload
+    assert "natal_data" not in payload
+    assert "legacy-evidence" not in payload
+
+
+def test_natal_validation_payload_ignores_declared_legacy_carriers(gateway) -> None:
+    """Bloque la reintroduction de carriers legacy via le schema de validation natal."""
+
+    config = UseCaseConfig(
+        model="gpt-5-nano",
+        developer_prompt="Prompt {{llm_astrology_input_v1}}",
+        input_schema={
+            "type": "object",
+            "required": ["llm_astrology_input_v1"],
+            "properties": {
+                "llm_astrology_input_v1": {"type": "object"},
+                "chart_json": {"type": "object"},
+                "natal_data": {"type": "object"},
+                "evidence_catalog": {"type": "array"},
+            },
+        },
+    )
+
+    payload = gateway._build_validation_payload(
+        config,
+        {"use_case": "natal_interpretation"},
+        ExecutionContext(
+            chart_json='{"legacy": true}',
+            natal_data={"legacy": True},
+            extra_context={
+                "llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"},
+                "evidence_catalog": ["legacy-evidence"],
+            },
+        ),
+    )
+
+    assert payload == {
+        "use_case": "natal_interpretation",
+        "llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"},
+    }
 
 
 @pytest.mark.asyncio
