@@ -60,7 +60,6 @@ from app.services.api_contracts.public.natal_interpretation import (
 )
 from app.services.chart.json_builder import (
     build_chart_json,
-    build_enriched_evidence_catalog,
 )
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.services.llm_generation.natal.prompt_context import (
@@ -689,7 +688,6 @@ class NatalInterpretationService:
             user_id=user_id,
         )
         chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
-        evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
         interpreted_astral_points = ()
         astral_points = getattr(natal_result, "astral_points", ())
         if astral_points:
@@ -711,7 +709,6 @@ class NatalInterpretationService:
                 natal_result=natal_result,
                 birth_profile=birth_profile,
                 chart_json_dict=chart_json_dict,
-                evidence_catalog=evidence_catalog,
                 astro_context=astro_context,
                 locale=locale,
                 request_id=request_id,
@@ -764,9 +761,6 @@ class NatalInterpretationService:
             locale=locale,
             level=level,
             llm_astrology_input_v1=llm_astrology_input_v1,
-            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
-            natal_data=chart_json_dict,
-            evidence_catalog=evidence_catalog,
             persona_id=persona_id,
             plan=user_plan,
             validation_strict=level == "complete",
@@ -1033,7 +1027,6 @@ class NatalInterpretationService:
         natal_result: NatalResult,
         birth_profile: UserBirthProfileData,
         chart_json_dict: dict,
-        evidence_catalog: list,
         astro_context: str,
         locale: str,
         request_id: str,
@@ -1069,9 +1062,6 @@ class NatalInterpretationService:
             locale=locale,
             level="complete",  # Free short is mapped to complete level in persistence
             llm_astrology_input_v1=llm_astrology_input_v1,
-            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
-            natal_data=chart_json_dict,
-            evidence_catalog=evidence_catalog,
             persona_id=None,
             plan=user_plan,
             validation_strict=False,

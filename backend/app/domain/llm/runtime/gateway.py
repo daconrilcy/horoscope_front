@@ -107,9 +107,6 @@ LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = (
     "shaping",
     "provenance",
 )
-# Transition legacy: ces carriers sont uniquement lus pour les schemas non migres.
-_NATAL_TRANSITION_PROMPT_CARRIERS = frozenset({"chart_json", "natal_data"})
-
 # ComposedMessages type alias (Story 66.4 AC3)
 ComposedMessages = List[Dict[str, Any]]
 
@@ -210,7 +207,13 @@ class LLMGateway:
                 "llm_astrology_input_v1: "
                 + json.dumps(prompt_payload, ensure_ascii=False, sort_keys=True)
             )
-        elif "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
+        elif (
+            not use_case.startswith("natal_")
+            and use_case != "natal_interpretation"
+            and "chart_json" in context
+            and context["chart_json"]
+            and not chart_json_in_prompt
+        ):
             parts.append(f"Technical Data: {context['chart_json']}")
 
         if not parts:
@@ -1385,9 +1388,9 @@ class LLMGateway:
 
             # Overlay context_dict (priority to context)
             render_vars.update(context_dict)
-            if render_vars.get(LLM_ASTROLOGY_INPUT_V1_KEY) is not None:
-                for transition_carrier in _NATAL_TRANSITION_PROMPT_CARRIERS:
-                    render_vars.pop(transition_carrier, None)
+            if use_case.startswith("natal_") or use_case == "natal_interpretation":
+                render_vars.pop("chart_json", None)
+                render_vars.pop("natal_data", None)
 
             # Preserve a stable persona label for prompts that still require it.
             render_vars.setdefault(
@@ -1920,29 +1923,14 @@ class LLMGateway:
         context_dict = context.model_dump()
         extra_context = context_dict.pop("extra_context", {})
         context_dict.update(extra_context)
+        use_case = str(user_input.get("use_case") or "")
+        is_natal_use_case = use_case.startswith("natal_") or use_case == "natal_interpretation"
 
         for prop in declared_properties:
             if prop in payload:
                 continue
-
-            if prop == "chart_json":
-                # Transition legacy: seuls les schemas anciens peuvent encore demander chart_json.
-                if context_dict.get("natal_data") is not None:
-                    payload[prop] = context_dict["natal_data"]
-                    continue
-
-                raw_chart_json = context_dict.get("chart_json")
-                if isinstance(raw_chart_json, dict):
-                    payload[prop] = raw_chart_json
-                    continue
-                if isinstance(raw_chart_json, str):
-                    try:
-                        parsed_chart_json = json.loads(raw_chart_json)
-                    except json.JSONDecodeError:
-                        continue
-                    if isinstance(parsed_chart_json, dict):
-                        payload[prop] = parsed_chart_json
-                    continue
+            if is_natal_use_case and prop in {"chart_json", "natal_data", "evidence_catalog"}:
+                continue
 
             if context_dict.get(prop) is not None:
                 payload[prop] = context_dict[prop]

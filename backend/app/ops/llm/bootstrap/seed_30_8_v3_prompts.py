@@ -42,11 +42,11 @@ technique. Tu écris en prose fluide, sans puces, avec des transitions naturelle
 entre les idées. Interdiction de lister des placements sans les relier.
 
 Données (source unique et exclusive) :
-Données techniques (JSON du thème natal) :
-{{chart_json}}
+Données astrologiques canoniques :
+{{llm_astrology_input_v1}}
 
 ═══ RÈGLES DE VÉRITÉ (inviolables) ═══
-- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{chart_json}}).
+- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{llm_astrology_input_v1}}).
 - N'invente aucun placement, aspect, maison, dominante, maître, dignité, rétrogradation, nœud,
   astéroïde ou point qui n'apparaît pas explicitement dans l'entrée.
 - Si une donnée nécessaire (ex : ascendant/maisons/heure) est absente, signale-le et adapte
@@ -173,8 +173,8 @@ technique. Tu écris en prose fluide, sans puces, avec des transitions naturelle
 entre les idées. Interdiction de lister des placements sans les relier.
 
 Données (source unique et exclusive) :
-Données techniques (JSON du thème natal) :
-{{{{chart_json}}}}
+Données astrologiques canoniques :
+{{{{llm_astrology_input_v1}}}}
 
 ═══ PÉRIMÈTRE DU MODULE ═══
 Module ciblé : {module_title}
@@ -183,7 +183,7 @@ Sections cibles prioritaires (clés) : {section_keys_csv}
 {extra_rule}
 
 ═══ RÈGLES DE VÉRITÉ (inviolables) ═══
-- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{{{chart_json}}}}).
+- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{{{llm_astrology_input_v1}}}}).
 - N'invente aucun placement, aspect, maison, dominante, maître, dignité, rétrogradation, nœud,
   astéroïde ou point qui n'apparaît pas explicitement dans l'entrée.
 - Si une donnée nécessaire est absente, signale la limite et adapte l'analyse sans invention.
@@ -399,7 +399,12 @@ ALL_PROMPT_CONFIGS = [
     ],
 ]
 
-LINT_REQUIRED_PLACEHOLDERS = ["persona_name", "locale", "use_case", "chart_json"]
+LINT_REQUIRED_PLACEHOLDERS = [
+    "persona_name",
+    "locale",
+    "use_case",
+    "llm_astrology_input_v1",
+]
 
 
 def seed() -> None:

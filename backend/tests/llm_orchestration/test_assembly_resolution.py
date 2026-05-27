@@ -225,8 +225,8 @@ def test_validate_placeholders_logic():
 
     # Valid for natal
     assert validate_placeholders("Theme {{llm_astrology_input_v1}}", "natal") == []
-    # Transition legacy: les anciens placeholders restent autorises pour les prompts non migres.
-    assert validate_placeholders("Theme {{chart_json}}", "natal") == []
+    # Les anciens placeholders natals ne sont plus autorises comme entrees prompt.
+    assert validate_placeholders("Theme {{chart_json}}", "natal") == ["chart_json"]
     # Invalid for natal
     assert validate_placeholders("Theme {{situation}}", "natal") == ["situation"]
 

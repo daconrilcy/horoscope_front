@@ -53,12 +53,8 @@ async def test_interpret_calls_adapter_canonical(db):
             patch(
                 "app.services.llm_generation.natal.interpretation_service.build_chart_json"
             ) as mock_chart,
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog"
-            ) as mock_catalog,
         ):
             mock_chart.return_value = {"planets": []}
-            mock_catalog.return_value = ["EVID"]
 
             await NatalInterpretationService.interpret(
                 db=db,
@@ -108,12 +104,8 @@ async def test_generate_free_short_calls_adapter_canonical(db):
             patch(
                 "app.services.llm_generation.natal.interpretation_service.build_chart_json"
             ) as mock_chart,
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog"
-            ) as mock_catalog,
         ):
             mock_chart.return_value = {"planets": []}
-            mock_catalog.return_value = ["EVID"]
 
             await NatalInterpretationService.interpret(
                 db=db,

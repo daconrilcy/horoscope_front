@@ -256,8 +256,6 @@ class AIEngineAdapter:
                 persona_id_override=natal_input.persona_id,
             ),
             context=ExecutionContext(
-                natal_data=natal_input.natal_data,
-                chart_json=natal_input.chart_json,
                 astro_context=natal_input.astro_context,
                 extra_context={
                     "llm_astrology_input_v1": natal_input.llm_astrology_input_v1,
@@ -268,7 +266,6 @@ class AIEngineAdapter:
             ),
             flags=ExecutionFlags(
                 validation_strict=natal_input.validation_strict,
-                evidence_catalog=natal_input.evidence_catalog,
             ),
             user_id=natal_input.user_id,
             request_id=natal_input.request_id,

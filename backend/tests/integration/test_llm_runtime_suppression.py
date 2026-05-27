@@ -17,7 +17,7 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
     UseCaseConfig,
 )
-from app.domain.llm.runtime.gateway import _NATAL_TRANSITION_PROMPT_CARRIERS, LLMGateway
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.domain.llm.runtime.observability_service import log_governance_event
 
 
@@ -26,10 +26,8 @@ def gateway():
     return LLMGateway()
 
 
-def test_natal_legacy_carriers_are_bounded_transition_surface(gateway):
-    """Les anciens carriers natals restent bornes a la transition runtime."""
-
-    assert _NATAL_TRANSITION_PROMPT_CARRIERS == frozenset({"chart_json", "natal_data"})
+def test_natal_legacy_carriers_are_removed_from_runtime_surface(gateway):
+    """Les anciens carriers natals ne sont plus une surface de transition runtime."""
 
     payload = gateway._build_validation_payload(
         UseCaseConfig(

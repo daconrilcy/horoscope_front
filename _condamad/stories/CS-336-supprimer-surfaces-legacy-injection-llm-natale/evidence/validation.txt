@@ -1,0 +1,11 @@
+# Validation CS-336
+
+- Capsule validation: PASS.
+- Ruff format scoped changed Python files: PASS.
+- Ruff check: PASS.
+- Targeted CS-336 pytest set: PASS, 34 passed, 8 deselected.
+- App unit/integration tests touched by service/seed/lint changes: PASS, 59 passed, 6 deselected.
+- Backend regression suite: PASS, 1208 passed, 218 deselected.
+- OpenAPI route/schema check: PASS.
+- Legacy carrier scan: PASS with residual hits classified in `removal-audit.md`.
+- `git diff --check`: PASS.

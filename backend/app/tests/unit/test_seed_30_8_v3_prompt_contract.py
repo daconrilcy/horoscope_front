@@ -58,10 +58,11 @@ def test_v3_prompt_embeds_thematic_section_catalog() -> None:
     assert "values_core" in prompt
 
 
-def test_v3_prompt_explicitly_embeds_chart_json() -> None:
+def test_v3_prompt_explicitly_embeds_llm_astrology_input_v1() -> None:
     prompt = NATAL_COMPLETE_PROMPT_V3
-    assert "{{chart_json}}" in prompt
-    assert "données présentes dans l'entrée ({{chart_json}})" in prompt
+    assert "{{llm_astrology_input_v1}}" in prompt
+    assert "données présentes dans l'entrée ({{llm_astrology_input_v1}})" in prompt
+    assert "{{chart_json}}" not in prompt
 
 
 def test_v3_prompt_blocks_compatibility_scope_creep() -> None:

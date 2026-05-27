@@ -1,0 +1,5 @@
+{
+  "contains_legacy_chart_json": false,
+  "contains_legacy_natal_data": false,
+  "rendered": "llm_astrology_input_v1: {\"evidence\": {}, \"facts\": {\"positions\": []}, \"limits\": {}, \"provenance\": {}, \"shaping\": {}, \"signals\": {}}"
+}

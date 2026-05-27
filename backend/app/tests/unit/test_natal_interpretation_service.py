@@ -439,10 +439,6 @@ class TestNatalInterpretationService:
                 return_value={"planets": []},
             ) as mock_build_chart_json,
             patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
-                return_value=[],
-            ),
-            patch(
                 "app.services.entitlement.effective_entitlement_resolver_service."
                 "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
                 return_value=MagicMock(plan_code="premium"),
@@ -536,10 +532,6 @@ class TestNatalInterpretationService:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
-                return_value=[],
-            ),
-            patch(
                 "app.services.llm_generation.natal.interpretation_service."
                 "AstralPointInterpretationService",
                 FakeAstralPointInterpretationService,
@@ -575,7 +567,7 @@ class TestNatalInterpretationService:
         assert astro_context == {
             "astral_point_interpretations": [FakeInterpretedPoint().to_narrative_context()]
         }
-        assert "astral_point_interpretations" not in captured_input.natal_data
+        assert "astral_point_interpretations" not in captured_input.llm_astrology_input_v1
 
     @pytest.mark.asyncio
     async def test_interpret_chart_timeout_error(self) -> None:

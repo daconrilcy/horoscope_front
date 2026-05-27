@@ -238,10 +238,6 @@ class TestNatalInterpretationServiceUserInput:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
-                return_value={"SUN_LEO": ["Soleil en Lion"]},
-            ),
-            patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
@@ -295,10 +291,6 @@ class TestNatalInterpretationServiceUserInput:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
-                return_value={"SUN_LEO": ["Soleil en Lion"]},
-            ),
-            patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
@@ -348,10 +340,6 @@ class TestNatalInterpretationServiceUserInput:
                 return_value={"planets": []},
             ),
             patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
-                return_value={"SUN_LEO": ["Soleil en Lion"]},
-            ),
-            patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
@@ -399,10 +387,6 @@ class TestNatalInterpretationServiceSchemaVersion:
             patch(
                 "app.services.llm_generation.natal.interpretation_service.build_chart_json",
                 return_value={"planets": []},
-            ),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
-                return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
@@ -459,10 +443,6 @@ class TestNatalInterpretationServiceModules:
             patch(
                 "app.services.llm_generation.natal.interpretation_service.build_chart_json",
                 return_value={"planets": []},
-            ),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
-                return_value={"SUN_LEO": ["Soleil en Lion"]},
             ),
             patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",

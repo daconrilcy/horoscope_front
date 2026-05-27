@@ -142,9 +142,6 @@ class NatalExecutionInput(BaseModel):
     locale: str = "fr-FR"
     level: Literal["short", "complete"]
     llm_astrology_input_v1: Dict[str, Any]
-    chart_json: str
-    natal_data: Dict[str, Any]
-    evidence_catalog: Union[List[str], Dict[str, List[str]]]
     persona_id: Optional[str] = None
     plan: str = "free"
     validation_strict: bool = True

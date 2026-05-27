@@ -52,9 +52,6 @@ async def test_natal_execution_input_transports_rich_contract_to_gateway(
             locale="fr-FR",
             level="complete",
             llm_astrology_input_v1=rich_input,
-            chart_json='{"legacy": true}',
-            natal_data={"legacy": True},
-            evidence_catalog=[],
             plan="premium",
             validation_strict=True,
             user_id=42,
@@ -65,11 +62,14 @@ async def test_natal_execution_input_transports_rich_contract_to_gateway(
 
     assert captured_request is not None
     assert captured_request.context.extra_context["llm_astrology_input_v1"] == rich_input
+    assert captured_request.context.chart_json is None
+    assert captured_request.context.natal_data is None
+    assert captured_request.flags.evidence_catalog is None
     assert "llm_astrology_input_v1" not in ExecutionContext.model_fields
 
 
 def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:
-    """Le bloc utilisateur ne selectionne pas chart_json quand le contrat riche existe."""
+    """Le bloc utilisateur natal ignore les anciens carriers meme sans contrat riche."""
     rich_input = {"contract_id": "llm_astrology_input_v1", "facts": {"positions": []}}
 
     payload = LLMGateway().build_user_payload(
@@ -88,6 +88,20 @@ def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:
     assert "legacy" not in payload
     assert "Technical Data" not in payload
 
+    fallback_payload = LLMGateway().build_user_payload(
+        use_case="natal_interpretation",
+        user_input={},
+        context={
+            "chart_json": '{"legacy": "secret"}',
+            "natal_data": {"legacy": "secret"},
+        },
+        policy="none",
+        locale="fr-FR",
+    )
+
+    assert fallback_payload == "Interprète les données astrologiques fournies."
+    assert "legacy" not in fallback_payload
+
 
 def test_validation_payload_uses_llm_astrology_input_v1_schema_key() -> None:
     """La validation interne lit la cle riche depuis extra_context."""
@@ -102,14 +116,20 @@ def test_validation_payload_uses_llm_astrology_input_v1_schema_key() -> None:
         config,
         user_input={"locale": "fr-FR"},
         context=ExecutionContext(
-            chart_json='{"legacy": true}',
-            natal_data={"legacy": True},
             extra_context={"llm_astrology_input_v1": rich_input},
         ),
     )
 
     assert payload["llm_astrology_input_v1"] == rich_input
     assert "chart_json" not in payload
+
+
+def test_natal_execution_input_excludes_legacy_carrier_fields() -> None:
+    """Le contrat natal ne peut plus transporter les anciens carriers prompt."""
+
+    forbidden_fields = {"chart_json", "natal_data", "evidence_catalog"}
+
+    assert forbidden_fields.isdisjoint(NatalExecutionInput.model_fields)
 
 
 def test_natal_prompt_placeholder_registry_accepts_rich_key_without_legacy_carrier() -> None:

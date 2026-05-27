@@ -55,7 +55,7 @@ class TestAdminLlmNatalPrompts:
             key=key,
             display_name="Natal",
             description="...",
-            required_prompt_placeholders=["chart_json", "persona_name"],
+            required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
         )
 
         # Patching db.add to simulate auto-assignment of fields
@@ -70,7 +70,8 @@ class TestAdminLlmNatalPrompts:
         mock_db.get.return_value = uc_mock
 
         prompt_text = (
-            "Langue: {{locale}}. UC: {{use_case}}. Persona: {{persona_name}}. Chart: {{chart_json}}"
+            "Langue: {{locale}}. UC: {{use_case}}. Persona: {{persona_name}}. "
+            "Input: {{llm_astrology_input_v1}}"
         )
         payload = {
             "developer_prompt": prompt_text,
@@ -88,14 +89,16 @@ class TestAdminLlmNatalPrompts:
             key=key,
             display_name="Natal",
             description="...",
-            required_prompt_placeholders=["chart_json", "persona_name"],
+            required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
         )
 
         mock_db.get.return_value = uc_mock
 
         # Missing {{persona_name}}
         payload = {
-            "developer_prompt": "Langue: {{locale}}. UC: {{use_case}}. Chart: {{chart_json}}",
+            "developer_prompt": (
+                "Langue: {{locale}}. UC: {{use_case}}. Input: {{llm_astrology_input_v1}}"
+            ),
         }
 
         response = test_client.post(f"/v1/admin/llm/use-cases/{key}/prompts", json=payload)

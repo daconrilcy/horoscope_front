@@ -372,9 +372,6 @@ class NatalInterpretationService:
                     trace_id=trace_id or request_id,
                     level="complete",
                     llm_astrology_input_v1={"contract_id": "llm_astrology_input_v1"},
-                    chart_json=natal_chart.chart_id,  # Should probably be the actual JSON or ID
-                    natal_data=birth_profile.model_dump(),
-                    evidence_catalog=[],
                     persona_id=persona_id,
                     plan=user_plan,
                     astro_context=str(current_context_payload),

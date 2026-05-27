@@ -1,0 +1,406 @@
+backend\tests\unit\test_admin_manual_execute_response.py:19:            rendered_prompt="Instruction pour le chart_json suivant."
+backend\tests\unit\test_admin_manual_execute_response.py:27:        structured_output={"provider": "openai", "chart_json": "SECRET"},
+backend\tests\unit\test_admin_manual_execute_response.py:47:    assert payload.structured_output["chart_json"] == "[REDACTED]"
+backend\tests\llm_orchestration\test_assembly_resolution.py:229:    assert validate_placeholders("Theme {{chart_json}}", "natal") == []
+backend\tests\llm_orchestration\test_context_quality.py:72:        context=ExecutionContext(chart_json='{"planets": []}'),
+backend\tests\llm_orchestration\test_gateway_regressions_fix.py:33:    result = validate_output(raw_output, schema, evidence_catalog=["SUN_LEO"])
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:55:            chart_json='{"legacy": true}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:56:            natal_data={"legacy": True},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:57:            evidence_catalog=[],
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:71:def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:72:    """Le bloc utilisateur ne selectionne pas chart_json quand le contrat riche existe."""
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:80:            "chart_json": '{"legacy": "secret"}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:81:            "natal_data": {"legacy": "secret"},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:105:            chart_json='{"legacy": true}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:106:            natal_data={"legacy": True},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:112:    assert "chart_json" not in payload
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:116:    """Le renderer natal peut rendre la cle riche sans chart_json ni natal_data."""
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:122:        "Payload {{llm_astrology_input_v1}} / legacy {{chart_json}}",
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:132:    assert "{{chart_json}}" not in rendered
+backend\tests\unit\prediction\test_astrologer_prompt_builder.py:74:        natal_data={
+backend\tests\llm_orchestration\test_llm_execution_request.py:81:        context=ExecutionContext(chart_json='{"planets": []}'),
+backend\tests\llm_orchestration\test_llm_execution_request.py:109:        "natal_data": {},
+backend\tests\llm_orchestration\test_llm_execution_request.py:116:    assert "natal_data" not in request.context.extra_context
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:18:    "chart_json",
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:19:    "natal_data",
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:66:    """chart_json et natal_data restent hors prompt quand le contrat riche existe."""
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:73:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:74:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:110:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:111:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:15:LEGACY_ASTROLOGY_INPUT_KEYS = {"chart_json", "natal_data"}
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:87:    assert "chart_json" not in rendered
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:88:    assert "natal_data" not in rendered
+backend\tests\llm_orchestration\test_llm_gateway_compose.py:33:        context={"chart_json": "{}"},
+backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py:49:    assert {"chart_json", "natal_data", "provider_response"}.isdisjoint(assigned_blocks)
+backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py:57:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+backend\tests\llm_orchestration\test_output_validator_pipeline.py:71:    res = validate_output(raw, schema, evidence_catalog=catalog, schema_version="v1")
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:38:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:110:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:127:        context={"chart_json": "{}"},
+backend\tests\evaluation\test_prompt_resolution.py:160:            natal_data=ctx_data.get("natal_data"),
+backend\tests\llm_orchestration\test_qualified_context.py:20:    assert QualifiedContext.compute_quality(["natal_interpretation", "natal_data"]) == "minimal"
+backend\tests\llm_orchestration\test_qualified_context.py:21:    assert QualifiedContext.compute_quality(["astrologer_profile", "natal_data"]) == "minimal"
+backend\tests\llm_orchestration\test_qualified_context.py:83:        assert "natal_data" in res.missing_fields
+backend\tests\llm_orchestration\test_prompt_renderer.py:74:    assert "chart_json" not in result
+backend\tests\llm_orchestration\test_prompt_renderer.py:75:    assert "natal_data" not in result
+backend\app\tests\eval_fixtures\natal_interpretation_short\fixture_03_minimal.yaml:4:    chart_json:
+backend\app\tests\eval_fixtures\natal_interpretation_short\fixture_03_minimal.yaml:16:        chart_json_version: "1"
+backend\app\tests\eval_fixtures\natal_interpretation_short\fixture_02_no_time.yaml:4:    chart_json:
+backend\app\tests\eval_fixtures\natal_interpretation_short\fixture_02_no_time.yaml:16:        chart_json_version: "1"
+backend\app\tests\eval_fixtures\natal_interpretation_short\fixture_01_full_chart.yaml:4:    chart_json:
+backend\app\tests\eval_fixtures\natal_interpretation_short\fixture_01_full_chart.yaml:16:        chart_json_version: "1"
+backend\tests\integration\test_llm_runtime_suppression.py:32:    assert _NATAL_TRANSITION_PROMPT_CARRIERS == frozenset({"chart_json", "natal_data"})
+backend\tests\integration\test_llm_runtime_suppression.py:43:            chart_json='{"legacy": true}',
+backend\tests\integration\test_llm_runtime_suppression.py:44:            natal_data={"legacy": True},
+backend\app\tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:54:                "app.services.llm_generation.natal.interpretation_service.build_chart_json"
+backend\app\tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:57:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog"
+backend\app\tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:109:                "app.services.llm_generation.natal.interpretation_service.build_chart_json"
+backend\app\tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py:112:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog"
+backend\tests\integration\test_llm_integrated_propagation.py:211:        natal_data={"planets": {}},
+backend\app\tests\unit\legacy_services\legacy_natal_interpretation_service.py:375:                    chart_json=natal_chart.chart_id,  # Should probably be the actual JSON or ID
+backend\app\tests\unit\legacy_services\legacy_natal_interpretation_service.py:376:                    natal_data=birth_profile.model_dump(),
+backend\app\tests\unit\legacy_services\legacy_natal_interpretation_service.py:377:                    evidence_catalog=[],
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_04_minimal.yaml:4:    chart_json:
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_04_minimal.yaml:16:        chart_json_version: "1"
+backend\tests\integration\test_llm_golden_regression.py:382:async def test_golden_regression_projects_chart_json_into_context():
+backend\tests\integration\test_llm_golden_regression.py:439:    assert captured["context"].chart_json == "{}"
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_03_no_location.yaml:4:    chart_json:
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_03_no_location.yaml:16:        chart_json_version: "1"
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_02_no_time.yaml:4:    chart_json:
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_02_no_time.yaml:16:        chart_json_version: "1"
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_01_full.yaml:4:    chart_json:
+backend\app\tests\eval_fixtures\natal_interpretation\fixture_01_full.yaml:16:        chart_json_version: "1"
+backend\tests\evaluation\conftest.py:56:            "natal_data": {"planets": {"sun": "aries"}},
+backend\tests\evaluation\conftest.py:57:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+backend\tests\evaluation\conftest.py:70:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:45:from app.services.chart.json_builder import build_chart_json
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:187:    chart_json = build_chart_json(result, birth_profile)
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:219:                "sect": chart_json["dignities"]["sect"],
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:220:                "first_planet_sect_condition": chart_json["dignities"]["planets"][first_planet][
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:224:                    item["condition_code"] for item in chart_json["advanced_conditions"]
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:227:                    "top_planet_code": chart_json["dominant_planets"]["top_planet_code"],
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:228:                    "chart_ruler_code": chart_json["dominant_planets"]["chart_ruler_code"],
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:229:                    "most_elevated_planet_code": chart_json["dominant_planets"][
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:233:                        item["planet_code"] for item in chart_json["dominant_planets"]["planets"]
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:238:                        item["signal"] for item in chart_json["interpretation_adapter"]["signals"]
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:240:                    "critical_patterns": chart_json["interpretation_adapter"]["critical_patterns"],
+backend\tests\integration\test_admin_llm_sample_payloads.py:25:            "chart_json": {"sun": "aries", "moon": "leo"},
+backend\tests\integration\test_admin_llm_sample_payloads.py:54:        assert item_1["payload_json"]["chart_json"] == {"sun": "aries", "moon": "leo"}
+backend\tests\integration\test_admin_llm_sample_payloads.py:436:                payload_json={"chart_json": {"sun": "aries"}, "email": "john@doe.com"}
+backend\tests\integration\test_admin_llm_sample_payloads.py:448:def test_admin_llm_sample_payload_requires_natal_chart_json():
+backend\tests\integration\test_admin_llm_sample_payloads.py:466:        assert "must include chart_json" in payload["message"]
+backend\tests\integration\test_admin_llm_catalog.py:111:        developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:156:                "chart_json": {"sun": "aries"},
+backend\tests\integration\test_admin_llm_catalog.py:720:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1207:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1251:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1287:            assert placeholders["chart_json"]["status"] == "resolved"
+backend\tests\integration\test_admin_llm_catalog.py:1288:            assert placeholders["chart_json"]["resolution_source"] == "sample_payload"
+backend\tests\integration\test_admin_llm_catalog.py:1339:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1383:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1471:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1515:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1600:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1712:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1756:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1841:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:2157:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:2201:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:2283:            structured_output={"provider": "openai", "chart_json": "secret-chart"},
+backend\tests\integration\test_admin_llm_catalog.py:2313:        assert body["structured_output"]["chart_json"] == "[REDACTED]"
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:199:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:202:    assert "chart_json" not in serialized_facts
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:203:    assert "natal_data" not in serialized_facts
+backend\tests\unit\domain\astrology\test_llm_astrology_input_hash.py:62:        "chart_json",
+backend\tests\unit\domain\astrology\test_llm_astrology_input_hash.py:63:        "natal_data",
+backend\tests\fixtures\golden\natal_test.yaml:8:    chart_json: "{}"
+backend\tests\fixtures\golden\natal_test.yaml:9:    natal_data: {}
+backend\tests\fixtures\golden\natal_test.yaml:10:    evidence_catalog: []
+backend\tests\fixtures\golden\natal_premium_test.yaml:8:    chart_json: "{}"
+backend\tests\fixtures\golden\natal_premium_test.yaml:9:    natal_data: {}
+backend\tests\fixtures\golden\natal_premium_test.yaml:10:    evidence_catalog: []
+backend\app\ops\llm\release\build_qualification_evidence.py:41:    "natal_data",
+backend\app\ops\llm\release\build_qualification_evidence.py:42:    "chart_json",
+backend\app\ops\llm\release\build_qualification_evidence.py:47:    "evidence_catalog",
+backend\app\ops\llm\release\build_qualification_evidence.py:183:        natal_data=context.get("natal_data"),
+backend\app\ops\llm\release\build_qualification_evidence.py:184:        chart_json=context.get("chart_json"),
+backend\app\ops\llm\release\build_qualification_evidence.py:199:                "natal_data",
+backend\app\ops\llm\release\build_qualification_evidence.py:200:                "chart_json",
+backend\app\ops\llm\release\build_qualification_evidence.py:207:        evidence_catalog=context.get("evidence_catalog"),
+backend\app\ops\llm\golden_regression_service.py:38:        "natal_data",
+backend\app\ops\llm\golden_regression_service.py:39:        "chart_json",
+backend\app\ops\llm\golden_regression_service.py:44:        "evidence_catalog",
+backend\app\ops\llm\golden_regression_service.py:486:                    natal_data=context.get("natal_data"),
+backend\app\ops\llm\golden_regression_service.py:487:                    chart_json=context.get("chart_json"),
+backend\app\ops\llm\golden_regression_service.py:496:                            "natal_data",
+backend\app\ops\llm\golden_regression_service.py:497:                            "chart_json",
+backend\app\ops\llm\golden_regression_service.py:504:                    evidence_catalog=context.get("evidence_catalog"),
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:34:    "runtime_only": ("request_id", "trace_id", "chart_json", "natal_data"),
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:43:    "chart_json",
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:44:    "natal_data",
+backend\app\ops\llm\bootstrap\seed_guidance_prompts.py:82:        "required_prompt_placeholders": ["chart_json", "event_description"],
+backend\app\ops\llm\bootstrap\seed_guidance_prompts.py:86:            "Theme natal disponible :\n{{chart_json}}\n\n"
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:46:{{chart_json}}
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:49:- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{chart_json}}).
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:177:{{{{chart_json}}}}
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:186:- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{{{chart_json}}}}).
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:402:LINT_REQUIRED_PLACEHOLDERS = ["persona_name", "locale", "use_case", "chart_json"]
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:31:{{chart_json}}
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:68:{{chart_json}}
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:121:        "required_prompt_placeholders": ["chart_json", "locale", "use_case"],
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:134:        "required_prompt_placeholders": ["chart_json", "persona_name", "locale", "use_case"],
+backend\app\domain\prediction\astrologer_prompt_builder.py:85:        if not ctx.natal_data:
+backend\app\domain\prediction\astrologer_prompt_builder.py:88:        pos = ctx.natal_data.get("planet_positions", [])
+backend\app\domain\prediction\astrologer_prompt_builder.py:102:        houses = ctx.natal_data.get("houses", [])
+backend\app\domain\llm\runtime\adapter.py:80:        natal_data=normalized_context.get("natal_data"),
+backend\app\domain\llm\runtime\adapter.py:81:        chart_json=normalized_context.get("chart_json"),
+backend\app\domain\llm\runtime\adapter.py:154:                natal_data=context.get("natal_data"),
+backend\app\domain\llm\runtime\adapter.py:155:                chart_json=context.get("chart_json"),
+backend\app\domain\llm\runtime\adapter.py:259:                natal_data=natal_input.natal_data,
+backend\app\domain\llm\runtime\adapter.py:260:                chart_json=natal_input.chart_json,
+backend\app\domain\llm\runtime\adapter.py:271:                evidence_catalog=natal_input.evidence_catalog,
+backend\app\domain\llm\runtime\contracts.py:116:    natal_data: Optional[Dict[str, Any]] = None
+backend\app\domain\llm\runtime\contracts.py:117:    chart_json: Optional[str] = None
+backend\app\domain\llm\runtime\contracts.py:128:    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]] = None
+backend\app\domain\llm\runtime\contracts.py:145:    chart_json: str
+backend\app\domain\llm\runtime\contracts.py:146:    natal_data: Dict[str, Any]
+backend\app\domain\llm\runtime\contracts.py:147:    evidence_catalog: Union[List[str], Dict[str, List[str]]]
+backend\app\domain\llm\runtime\gateway.py:111:_NATAL_TRANSITION_PROMPT_CARRIERS = frozenset({"chart_json", "natal_data"})
+backend\app\domain\llm\runtime\gateway.py:175:        chart_json_in_prompt: bool = False,
+backend\app\domain\llm\runtime\gateway.py:213:        elif "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
+backend\app\domain\llm\runtime\gateway.py:214:            parts.append(f"Technical Data: {context['chart_json']}")
+backend\app\domain\llm\runtime\gateway.py:344:                        "chart_json",
+backend\app\domain\llm\runtime\gateway.py:350:                        "natal_data",
+backend\app\domain\llm\runtime\gateway.py:636:            "natal_data",
+backend\app\domain\llm\runtime\gateway.py:637:            "chart_json",
+backend\app\domain\llm\runtime\gateway.py:645:            "evidence_catalog",
+backend\app\domain\llm\runtime\gateway.py:653:            natal_data=context.get("natal_data"),
+backend\app\domain\llm\runtime\gateway.py:654:            chart_json=context.get("chart_json"),
+backend\app\domain\llm\runtime\gateway.py:672:            "evidence_catalog": context.get("evidence_catalog"),
+backend\app\domain\llm\runtime\gateway.py:1527:                    chart_json_in_prompt="{{chart_json}}" in plan.rendered_developer_prompt,
+backend\app\domain\llm\runtime\gateway.py:1596:            evidence_catalog=request.flags.evidence_catalog,
+backend\app\domain\llm\runtime\gateway.py:1928:            if prop == "chart_json":
+backend\app\domain\llm\runtime\gateway.py:1929:                # Transition legacy: seuls les schemas anciens peuvent encore demander chart_json.
+backend\app\domain\llm\runtime\gateway.py:1930:                if context_dict.get("natal_data") is not None:
+backend\app\domain\llm\runtime\gateway.py:1931:                    payload[prop] = context_dict["natal_data"]
+backend\app\domain\llm\runtime\gateway.py:1934:                raw_chart_json = context_dict.get("chart_json")
+backend\app\domain\llm\runtime\gateway.py:1935:                if isinstance(raw_chart_json, dict):
+backend\app\domain\llm\runtime\gateway.py:1936:                    payload[prop] = raw_chart_json
+backend\app\domain\llm\runtime\gateway.py:1938:                if isinstance(raw_chart_json, str):
+backend\app\domain\llm\runtime\gateway.py:1940:                        parsed_chart_json = json.loads(raw_chart_json)
+backend\app\domain\llm\runtime\gateway.py:1943:                    if isinstance(parsed_chart_json, dict):
+backend\app\domain\llm\runtime\gateway.py:1944:                        payload[prop] = parsed_chart_json
+backend\app\domain\llm\runtime\output_validator.py:108:    evidence_catalog: Optional[Union[List[str], Dict[str, List[Union[str, List[str]]]]]],
+backend\app\domain\llm\runtime\output_validator.py:119:    if isinstance(evidence, list) and evidence_catalog is not None:
+backend\app\domain\llm\runtime\output_validator.py:122:        if isinstance(evidence_catalog, dict):
+backend\app\domain\llm\runtime\output_validator.py:123:            catalog_map = evidence_catalog
+backend\app\domain\llm\runtime\output_validator.py:124:            catalog_set = set(evidence_catalog.keys())
+backend\app\domain\llm\runtime\output_validator.py:126:            catalog_set = set(evidence_catalog)
+backend\app\domain\llm\runtime\output_validator.py:149:    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]],
+backend\app\domain\llm\runtime\output_validator.py:166:    if evidence_catalog is not None:
+backend\app\domain\llm\runtime\output_validator.py:167:        if isinstance(evidence_catalog, dict):
+backend\app\domain\llm\runtime\output_validator.py:168:            catalog_map = evidence_catalog
+backend\app\domain\llm\runtime\output_validator.py:169:            catalog_set = set(evidence_catalog.keys())
+backend\app\domain\llm\runtime\output_validator.py:171:            catalog_set = set(evidence_catalog)
+backend\app\domain\llm\runtime\output_validator.py:174:    if evidence_catalog is not None:
+backend\app\domain\llm\runtime\output_validator.py:216:    if evidence_catalog is not None:
+backend\app\domain\llm\runtime\output_validator.py:236:    evidence_catalog: Optional[Union[List[str], Dict[str, List[str]]]] = None,
+backend\app\domain\llm\runtime\output_validator.py:284:        norm_res = normalize_fields(parse_res.data, evidence_catalog, use_case)
+backend\app\domain\llm\runtime\output_validator.py:287:        sanit_res = sanitize_evidence(norm_res.data, evidence_catalog, strict)
+backend\app\domain\llm\prompting\context.py:43:    natal_data: Optional[dict[str, Any]] = None
+backend\app\domain\llm\prompting\context.py:83:            if not self.payload.natal_data:
+backend\app\domain\llm\prompting\context.py:84:                missing.append("natal_data")
+backend\app\domain\llm\prompting\context.py:93:    _CRITICAL_FIELDS = frozenset({"natal_data", "astrologer_profile"})
+backend\app\domain\llm\prompting\context.py:105:        if "natal_data" in missing_set and "natal_interpretation" in missing_set:
+backend\app\domain\llm\prompting\context.py:110:            "natal_data" in missing_set or "natal_interpretation" in missing_set
+backend\app\domain\llm\prompting\context.py:189:        natal_data = None
+backend\app\domain\llm\prompting\context.py:207:            natal_data = chart.result.model_dump(mode="json")
+backend\app\domain\llm\prompting\context.py:209:            missing_fields.append("natal_data")
+backend\app\domain\llm\prompting\context.py:244:            natal_data=natal_data,
+backend\app\services\prediction\engine_orchestrator.py:1051:                "'house_cusps' or chart_json-style 'houses'"
+backend\app\services\chart\__init__.py:3:from app.services.chart.json_builder import build_chart_json
+backend\app\services\chart\__init__.py:14:    "build_chart_json",
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:53:      { "name": "chart_json", "classification": "optional" },
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:65:      { "name": "chart_json", "classification": "optional" },
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:66:      { "name": "natal_data", "classification": "optional" },
+backend\app\services\chart\json_builder.py:754:def build_chart_json(
+backend\app\services\chart\json_builder.py:805:        "chart_json_version": "1",
+backend\app\services\chart\json_builder.py:944:def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
+backend\app\services\chart\json_builder.py:946:    enriched = build_enriched_evidence_catalog(chart_json)
+backend\app\services\chart\json_builder.py:950:def build_enriched_evidence_catalog(
+backend\app\services\chart\json_builder.py:951:    chart_json: dict[str, Any],
+backend\app\services\chart\json_builder.py:974:    for p in chart_json.get("planets", []):
+backend\app\services\chart\json_builder.py:999:    for a in chart_json.get("aspects", []):
+backend\app\services\chart\json_builder.py:1022:    angles = chart_json.get("angles", {})
+backend\app\services\chart\json_builder.py:1038:    for h in chart_json.get("houses", []):
+backend\app\services\chart\json_builder.py:1045:    for ruler in chart_json.get("house_rulers", []):
+backend\app\tests\integration\test_admin_llm_natal_prompts.py:58:            required_prompt_placeholders=["chart_json", "persona_name"],
+backend\app\tests\integration\test_admin_llm_natal_prompts.py:73:            "Langue: {{locale}}. UC: {{use_case}}. Persona: {{persona_name}}. Chart: {{chart_json}}"
+backend\app\tests\integration\test_admin_llm_natal_prompts.py:91:            required_prompt_placeholders=["chart_json", "persona_name"],
+backend\app\tests\integration\test_admin_llm_natal_prompts.py:98:            "developer_prompt": "Langue: {{locale}}. UC: {{use_case}}. Chart: {{chart_json}}",
+backend\app\tests\integration\test_gateway_gpt5_params.py:84:            required_prompt_placeholders=["chart_json"],
+backend\app\tests\integration\test_gateway_gpt5_params.py:92:        developer_prompt="Analyse {{chart_json}}",
+backend\app\tests\integration\test_gateway_gpt5_params.py:162:        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+backend\app\tests\integration\test_gateway_gpt5_params.py:204:        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+backend\app\tests\integration\test_ephemeris_api.py:525:    def _simulate_natal_data_missing():
+backend\app\tests\integration\test_contract_api.py:57:    assert "chart_json" in data["required_prompt_placeholders"]
+backend\app\core\sensitive_data.py:258:    "natal_data": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+backend\app\core\sensitive_data.py:260:    "chart_json": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:237:        required_prompt_placeholders=["chart_json", "event_description"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:242:            "required": ["chart_json", "event_description"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:244:                "chart_json": {"type": "object"},
+backend\app\tests\integration\test_llm_qa_runtime_contracts.py:84:        required_prompt_placeholders=["locale", "chart_json"],
+backend\app\tests\integration\test_llm_qa_runtime_contracts.py:92:        developer_prompt="Locale={{locale}}\nChart={{chart_json}}",
+backend\app\tests\integration\test_llm_qa_runtime_contracts.py:157:                context=ExecutionContext(chart_json='{"sun":"taurus"}'),
+backend\app\domain\llm\configuration\assembly_resolver.py:143:        mock_vars["chart_json"] = '{"planets": {}}'
+backend\app\domain\llm\configuration\assembly_resolver.py:144:        mock_vars["natal_data"] = '{"birth_date": "1990-01-01"}'
+backend\app\tests\integration\test_natal_free_short_variant.py:181:            "app.services.llm_generation.natal.interpretation_service.build_chart_json"
+backend\app\tests\unit\test_backend_services_structure_guard.py:31:    "chart_json_builder.py",
+backend\app\tests\unit\test_gateway_modes.py:330:        context=ExecutionContext(chart_json='{"sun_sign":"aries"}'),
+backend\app\tests\unit\test_gateway_modes.py:418:        context=ExecutionContext(chart_json='{"meta": {"birth_date": "2017-03-14"}}'),
+backend\app\tests\unit\test_use_case_contract.py:212:    required = ["{{chart_json}}"]
+backend\app\tests\unit\test_use_case_contract.py:216:    assert "Use-case specific placeholder '{{chart_json}}' is missing." in result_fail.errors
+backend\app\tests\unit\test_use_case_contract.py:218:    text_pass = "Hello {{locale}} {{use_case}} {{chart_json}}"
+backend\app\tests\unit\test_gateway_input_validation_payload.py:5:def test_build_validation_payload_uses_natal_data_for_chart_json_object() -> None:
+backend\app\tests\unit\test_gateway_input_validation_payload.py:9:        developer_prompt="Test {{chart_json}}",
+backend\app\tests\unit\test_gateway_input_validation_payload.py:12:            "required": ["chart_json"],
+backend\app\tests\unit\test_gateway_input_validation_payload.py:14:                "chart_json": {"type": "object"},
+backend\app\tests\unit\test_gateway_input_validation_payload.py:24:            natal_data={"meta": {"chart_json_version": "1"}},
+backend\app\tests\unit\test_gateway_input_validation_payload.py:25:            chart_json='{"meta": {"chart_json_version": "legacy"}}',
+backend\app\tests\unit\test_gateway_input_validation_payload.py:29:    assert payload["chart_json"] == {"meta": {"chart_json_version": "1"}}
+backend\app\tests\unit\test_gateway_input_validation_payload.py:32:def test_build_validation_payload_parses_chart_json_string_when_natal_data_is_absent() -> None:
+backend\app\tests\unit\test_gateway_input_validation_payload.py:36:        developer_prompt="Test {{chart_json}}",
+backend\app\tests\unit\test_gateway_input_validation_payload.py:39:            "required": ["chart_json"],
+backend\app\tests\unit\test_gateway_input_validation_payload.py:40:            "properties": {"chart_json": {"type": "object"}},
+backend\app\tests\unit\test_gateway_input_validation_payload.py:47:        ExecutionContext(chart_json='{"meta": {"chart_json_version": "1"}}'),
+backend\app\tests\unit\test_gateway_input_validation_payload.py:50:    assert payload["chart_json"] == {"meta": {"chart_json_version": "1"}}
+backend\app\tests\unit\test_chart_json_builder.py:71:    build_chart_json,
+backend\app\tests\unit\test_chart_json_builder.py:72:    build_evidence_catalog,
+backend\app\tests\unit\test_chart_json_builder.py:450:def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:451:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:454:    assert chart["meta"]["chart_json_version"] == "1"
+backend\app\tests\unit\test_chart_json_builder.py:869:def test_build_chart_json_projects_enriched_profiles_from_chart_balance(
+backend\app\tests\unit\test_chart_json_builder.py:900:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1021:def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:1043:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1085:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1101:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1126:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1133:def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:1180:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1215:def test_build_chart_json_no_location(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:1217:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1227:def test_build_chart_json_no_location_no_time(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:1230:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1241:def test_build_chart_json_serializes_empty_advanced_blocks(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:1251:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1262:def test_build_evidence_catalog_priority():
+backend\app\tests\unit\test_chart_json_builder.py:1263:    chart_json = {
+backend\app\tests\unit\test_chart_json_builder.py:1283:    evidence = build_evidence_catalog(chart_json)
+backend\app\tests\unit\test_chart_json_builder.py:1300:def test_evidence_catalog_pattern():
+backend\app\tests\unit\test_chart_json_builder.py:1301:    chart_json = {
+backend\app\tests\unit\test_chart_json_builder.py:1307:    evidence = build_evidence_catalog(chart_json)
+backend\app\tests\unit\test_chart_json_builder.py:1321:def test_build_chart_json_handles_none_speed_and_orb_used(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:1326:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1332:def test_build_chart_json_uses_resolved_sign_labels(mock_natal_result, mock_birth_profile):
+backend\app\tests\unit\test_chart_json_builder.py:1347:    chart = build_chart_json(mock_natal_result, mock_birth_profile, labels=labels)
+backend\app\tests\unit\test_chart_json_builder.py:1359:def test_build_chart_json_requires_aspect_interpretive_hints(
+backend\app\tests\unit\test_chart_json_builder.py:1367:        build_chart_json(mock_natal_result, mock_birth_profile)
+backend\app\tests\unit\test_chart_json_builder.py:1370:def test_evidence_catalog_uses_chart_sign_labels() -> None:
+backend\app\tests\unit\test_chart_json_builder.py:1372:    from app.services.chart.json_builder import build_enriched_evidence_catalog
+backend\app\tests\unit\test_chart_json_builder.py:1374:    chart_json = {
+backend\app\tests\unit\test_chart_json_builder.py:1400:    catalog = build_enriched_evidence_catalog(chart_json)
+backend\app\tests\unit\test_gateway_3_roles.py:63:async def test_chart_json_in_user_message_not_developer(
+backend\app\tests\unit\test_gateway_3_roles.py:67:    Vérifie que chart_json est placé dans le message user si absent de required_prompt_placeholders.
+backend\app\tests\unit\test_gateway_3_roles.py:71:    # Config WITHOUT chart_json in placeholders
+backend\app\tests\unit\test_gateway_3_roles.py:99:        context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
+backend\app\tests\unit\test_gateway_3_roles.py:120:async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_prompt(
+backend\app\tests\unit\test_gateway_3_roles.py:125:    Régression: si chart_json est dans required_prompt_placeholders
+backend\app\tests\unit\test_gateway_3_roles.py:128:    use_case = "test_chart_json_required_but_not_rendered"
+backend\app\tests\unit\test_gateway_3_roles.py:132:        display_name="Test chart_json fallback",
+backend\app\tests\unit\test_gateway_3_roles.py:134:        required_prompt_placeholders=["locale", "use_case", "chart_json"],
+backend\app\tests\unit\test_gateway_3_roles.py:157:        context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
+backend\app\tests\unit\test_common_context.py:25:        natal_data={"planets": []},  # Added
+backend\app\tests\unit\test_common_context.py:39:        natal_data={"planets": []},
+backend\app\tests\unit\test_common_context.py:105:        assert ctx.payload.natal_data is None
+backend\app\tests\unit\test_common_context.py:147:        assert ctx.payload.natal_data == {"planets": {"sun": {"sign": "aries"}}}
+backend\app\tests\unit\test_natal_metrics.py:108:            evidence_catalog=catalog,
+backend\app\tests\unit\test_natal_metrics.py:128:        validate_output(raw, schema, evidence_catalog=catalog, use_case="event_guidance")
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:237:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:241:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:294:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:298:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:347:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:351:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:400:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:404:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:460:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend\app\tests\unit\test_natal_interpretation_service_v2.py:464:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+backend\app\tests\unit\test_natal_interpretation_service.py:438:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend\app\tests\unit\test_natal_interpretation_service.py:440:            ) as mock_build_chart_json,
+backend\app\tests\unit\test_natal_interpretation_service.py:442:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+backend\app\tests\unit\test_natal_interpretation_service.py:471:        assert mock_build_chart_json.call_args.args[2] == "no_time"
+backend\app\tests\unit\test_natal_interpretation_service.py:535:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend\app\tests\unit\test_natal_interpretation_service.py:539:                "app.services.llm_generation.natal.interpretation_service.build_enriched_evidence_catalog",
+backend\app\tests\unit\test_natal_interpretation_service.py:578:        assert "astral_point_interpretations" not in captured_input.natal_data
+backend\app\tests\unit\test_prompt_lint_natal.py:5:    """Le prompt SHORT avec {{chart_json}}, {{locale}}, {{use_case}} passe."""
+backend\app\tests\unit\test_prompt_lint_natal.py:6:    text = "Langue: {{locale}}. UC: {{use_case}}. Chart: {{chart_json}}"
+backend\app\tests\unit\test_prompt_lint_natal.py:7:    res = PromptLint.lint_prompt(text, use_case_required_placeholders=["chart_json"])
+backend\app\tests\unit\test_prompt_lint_natal.py:12:def test_lint_short_missing_chart_json():
+backend\app\tests\unit\test_prompt_lint_natal.py:13:    """Le prompt SHORT sans {{chart_json}} échoue avec erreur."""
+backend\app\tests\unit\test_prompt_lint_natal.py:15:    res = PromptLint.lint_prompt(text, use_case_required_placeholders=["chart_json"])
+backend\app\tests\unit\test_prompt_lint_natal.py:17:    assert any("chart_json" in e for e in res.errors)
+backend\app\tests\unit\test_prompt_lint_natal.py:22:    text = "Langue: {{locale}}. UC: {{use_case}}. Persona: {{persona_name}}. Chart: {{chart_json}}"
+backend\app\tests\unit\test_prompt_lint_natal.py:24:        text, use_case_required_placeholders=["chart_json", "persona_name"]
+backend\app\tests\unit\test_prompt_lint_natal.py:32:    text = "Langue: {{locale}}. UC: {{use_case}}. Chart: {{chart_json}}"
+backend\app\tests\unit\test_prompt_lint_natal.py:34:        text, use_case_required_placeholders=["chart_json", "persona_name"]
+backend\app\tests\unit\test_prompt_lint_natal.py:42:    text = "Chart: {{chart_json}}"
+backend\app\tests\unit\test_prompt_lint_natal.py:43:    res = PromptLint.lint_prompt(text, use_case_required_placeholders=["chart_json"])
+backend\app\tests\unit\test_prompt_lint_natal.py:48:    # chart_json is present, so not in errors
+backend\app\tests\unit\test_prompt_lint_natal.py:49:    assert not any("chart_json" in e for e in res.errors)
+backend\app\tests\unit\test_prompt_lint_natal.py:54:    text = "A" * 8001 + "{{locale}} {{use_case}} {{chart_json}}"
+backend\app\tests\unit\test_prompt_lint_natal.py:55:    res = PromptLint.lint_prompt(text, use_case_required_placeholders=["chart_json"])
+backend\app\tests\unit\test_prompt_lint_natal.py:62:    text = "A" * 4001 + "{{locale}} {{use_case}} {{chart_json}}"
+backend\app\tests\unit\test_prompt_lint_natal.py:63:    res = PromptLint.lint_prompt(text, use_case_required_placeholders=["chart_json"])
+backend\app\tests\unit\test_seed_30_8_v3_prompt_contract.py:61:def test_v3_prompt_explicitly_embeds_chart_json() -> None:
+backend\app\tests\unit\test_seed_30_8_v3_prompt_contract.py:63:    assert "{{chart_json}}" in prompt
+backend\app\tests\unit\test_seed_30_8_v3_prompt_contract.py:64:    assert "données présentes dans l'entrée ({{chart_json}})" in prompt
+backend\app\tests\unit\test_output_validator_v3.py:39:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:50:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=False, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:60:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:76:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:89:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:98:            raw, _BASE_SCHEMA, evidence_catalog=None, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:108:            raw, _BASE_SCHEMA, evidence_catalog={}, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:118:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:131:            raw, _BASE_SCHEMA, evidence_catalog=catalog, strict=True, schema_version="v3"
+backend\app\tests\unit\test_output_validator_v3.py:152:            raw, schema, evidence_catalog=catalog, strict=True, schema_version="v3"
+backend\app\services\llm_generation\admin_sample_payloads.py:62:    if feature == "natal" and "chart_json" not in payload_json:
+backend\app\services\llm_generation\admin_sample_payloads.py:63:        raise ValueError("natal sample payload must include chart_json")
+backend\app\tests\unit\test_seed_29_prompt_contract.py:4:def test_seed_29_natal_complete_requires_chart_json() -> None:
+backend\app\tests\unit\test_seed_29_prompt_contract.py:6:    assert "chart_json" in config["required_prompt_placeholders"]
+backend\app\tests\unit\test_seed_29_prompt_contract.py:9:def test_seed_29_natal_short_requires_chart_json() -> None:
+backend\app\tests\unit\test_seed_29_prompt_contract.py:11:    assert "chart_json" in config["required_prompt_placeholders"]
+backend\app\tests\unit\test_output_validator.py:12:    res = normalize_fields(data, evidence_catalog=catalog, use_case="test")
+backend\app\tests\unit\test_output_validator.py:73:        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+backend\app\tests\unit\test_output_validator.py:96:        evidence_catalog={"SUN_TAURUS": ["Soleil en Taureau"]},
+backend\app\tests\unit\test_output_validator.py:117:        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+backend\app\tests\unit\test_output_validator.py:135:        raw, schema, evidence_catalog=catalog, strict=True, schema_version="v1"
+backend\app\services\llm_generation\natal\interpretation_service.py:62:    build_chart_json,
+backend\app\services\llm_generation\natal\interpretation_service.py:63:    build_enriched_evidence_catalog,
+backend\app\services\llm_generation\natal\interpretation_service.py:691:        chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
+backend\app\services\llm_generation\natal\interpretation_service.py:692:        evidence_catalog = build_enriched_evidence_catalog(chart_json_dict)
+backend\app\services\llm_generation\natal\interpretation_service.py:713:                chart_json_dict=chart_json_dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:714:                evidence_catalog=evidence_catalog,
+backend\app\services\llm_generation\natal\interpretation_service.py:767:            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
+backend\app\services\llm_generation\natal\interpretation_service.py:768:            natal_data=chart_json_dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:769:            evidence_catalog=evidence_catalog,
+backend\app\services\llm_generation\natal\interpretation_service.py:1035:        chart_json_dict: dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:1036:        evidence_catalog: list,
+backend\app\services\llm_generation\natal\interpretation_service.py:1072:            chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
+backend\app\services\llm_generation\natal\interpretation_service.py:1073:            natal_data=chart_json_dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:1074:            evidence_catalog=evidence_catalog,
+backend\app\tests\unit\test_ai_engine_adapter.py:182:            chart_json='{"meta": {"chart_json_version": "1"}}',
+backend\app\tests\unit\test_ai_engine_adapter.py:183:            natal_data={"meta": {"chart_json_version": "1"}},
+backend\app\tests\unit\test_ai_engine_adapter.py:184:            evidence_catalog=[],
