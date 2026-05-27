@@ -1,0 +1,19 @@
+Baseline capture for CS-353 parallel legacy prompt-generation audit.
+
+Repository status before audit artifact writes:
+- `git status --short` reported only `?? _condamad/run-state.json` before creating CS-353 artifacts.
+
+Source availability:
+- `_condamad/stories/CS-353-audit-process-paralleles-generation-prompt-llm/00-story.md`: read.
+- `_story_briefs/cs-353-audit-process-paralleles-legacy-generation-prompt-llm.md`: read.
+- `_condamad/stories/regression-guardrails.md`: read.
+- `_condamad/audits/prompt-generation-cartography/2026-05-27-1800` to `2026-05-27-1847`: read.
+- `_condamad/audits/prompt-generation-document-review/2026-05-27-2240` and `2026-05-27-2305`: read.
+
+Candidate source markers found:
+- Guidance route/service/adapter: provider-capable through `AIEngineAdapter.generate_guidance` and `LLMGateway.execute_request`.
+- Chat route/service/adapter: provider-capable through `AIEngineAdapter.generate_chat_reply` and `LLMGateway.execute_request`.
+- Horoscope daily narration: provider-capable through direct `LLMGateway.execute_request`.
+- Repair prompter: recovery-only, invoked after invalid output.
+- Fallback catalog/gateway: non-nominal fallback paths.
+- `chart_json`/`natal_data`: excluded from modern natal prompt by guards, present in bounded seed/admin/test/debt contexts.

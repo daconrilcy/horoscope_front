@@ -1,0 +1,31 @@
+After capture for CS-353 parallel legacy prompt-generation audit.
+
+Produced audit folder:
+- `_condamad/audits/prompt-generation-document-review/2026-05-27-2246/`
+
+Produced audit deliverables:
+- `00-audit-report.md`
+- `01-evidence-log.md`
+- `02-finding-register.md`
+- `03-story-candidates.md`
+- `03-parallel-legacy-processes-audit.md`
+- `04-risk-matrix.md`
+- `05-executive-summary.md`
+
+Persistent story evidence:
+- `evidence/parallel-processes-baseline.txt`
+- `evidence/parallel-processes-after.txt`
+- `evidence/validation.txt`
+- `generated/11-code-review.md`
+
+Validation summary:
+- `condamad_domain_audit_validate.py`: PASS.
+- `condamad_domain_audit_lint.py`: PASS.
+- Required heading scans: PASS.
+- Required process/status/provider scans: PASS.
+- `pytest -q backend/tests/integration/test_llm_legacy_extinction.py --long`: PASS, 7 passed.
+- Exact story command without `--long`: tried first and selected no tests (`7 deselected`), so the long guard variant was used.
+- Bounded git status check over `backend/app`, `backend/tests`, `frontend/src`, `backend/migrations`, and CS-350 document: PASS, no changes.
+
+Current non-audit pre-existing worktree note:
+- `_condamad/run-state.json` was already untracked before audit work and remains unrelated.
