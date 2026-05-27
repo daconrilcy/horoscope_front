@@ -132,7 +132,7 @@ Les chemins repair et fallback sont non nominaux. Les seeds/bootstrap sont des e
 | Repair prompts | provider-capable recovery-only | E-016: repair request re-enters gateway after invalid output. |
 | Fallback catalog/no-assembly/provider fallback | provider-capable only in bounded non-nominal cases | E-015: gateway fallback branches can produce executable config or resolved provider fallback. |
 
-## Processus seulement bootstrap, test, admin ou archive
+## Processus bootstrap, test, admin ou archive
 
 | process | status | proof |
 |---|---|---|
@@ -161,4 +161,3 @@ Les chemins repair et fallback sont non nominaux. Les seeds/bootstrap sont des e
 | SC-002 | F-004 | Add exact regression guardrail after the matrix is accepted as durable. | full closure for F-004 |
 | Decision item | F-002 | Decide `event_guidance`: migrate, delete, or retain as explicit debt. | blocked pending user/product decision |
 | Decision item | F-003 | Decide admin manual execution documentation/policy. | blocked pending user/product decision |
-

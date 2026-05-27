@@ -35,8 +35,8 @@ Reason: the runtime implementation was not changed, and the audit found active p
 
 - Prior same-domain findings consulted: CS-351 F-001/F-002 and CS-352 F-001/F-002 remain documentation wording corrections, not active implementation findings for CS-353.
 - Closed findings by current evidence: none; this audit is read-only.
-- Active CS-353 findings after current evidence: F-001, F-002 and F-003.
-- Complete in-domain implementation surface for active findings: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `_condamad/stories/regression-guardrails.md` if a future story accepts a new invariant, and focused backend guard tests only if a future story chooses executable protection.
+- Active CS-353 findings after current evidence: F-001 and F-004 remain documentation/governance closure items; F-002 and F-003 remain decision items; F-005 is an informational reuse note, not a remediation finding.
+- Complete in-domain implementation surface for active remediation findings: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `_condamad/stories/regression-guardrails.md` if a future story accepts a new invariant, and focused backend guard tests only if a future story chooses executable protection.
 - Application files to modify for active findings: none in this audit story.
 - Governance/test files to modify for active findings: none in this audit story.
 - Deferred non-domain context: product decision on `event_guidance`, admin manual execution policy, real external provider validation, and final CS-350 document amendment.
@@ -104,7 +104,7 @@ No application implementation finding remains for this audit story. Active findi
 - F-002: `event_guidance` remains a legacy/debt guidance seed/contract using `chart_json`, with no public trigger found in the audited route set.
 - F-003: admin manual execution can send admin sample payload context to the gateway, while natal sample payload policy still requires `chart_json`; this needs explicit documentation/policy classification.
 - F-004: exact guardrail coverage for parallel legacy prompt processes is absent.
-- F-005: modern natal legacy carrier guards remain active and should be cited by future documentation work.
+- F-005: modern natal legacy carrier guards remain active and should be cited by future documentation work; no remediation story is needed.
 
 ## Deferred Non-Domain Concerns
 

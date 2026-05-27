@@ -8,7 +8,7 @@
 | F-002 | Medium | High | legacy-surface | prompt-generation-document-review | E-014, E-015, E-018 | `event_guidance` keeps a `chart_json` prompt seed/contract surface that is not public-triggered in the audited routes but can be confused with nominal guidance. | Require a product/architecture decision to migrate, delete, or explicitly retain `event_guidance` as debt. | needs-user-decision |
 | F-003 | Medium | Medium | needs-user-decision | prompt-generation-document-review | E-017, E-018 | Admin manual execution can hand sample payload context to the gateway, while natal sample payloads require `chart_json`; future docs can understate admin-only provider capability. | Decide whether CS-350 should document admin manual execution as admin-only provider-capable, and whether additional guard wording is needed. | needs-user-decision |
 | F-004 | Low | High | missing-guard | prompt-generation-document-review | E-003, E-010 | Existing guardrails cover adjacent prompt-generation risks but not the exact requirement to keep parallel processes classified by provider capability. | Add a guardrail only when a documentation correction story creates a durable invariant. | yes |
-| F-005 | Info | High | missing-test-coverage | prompt-generation-document-review | E-008, E-018 | Existing tests already protect modern natal carrier extinction; future docs should cite them instead of rediscovering the boundary. | Reference existing carrier guards in the next documentation amendment; no implementation story needed here. | no |
+| F-005 | Info | High | runtime-contract-drift | prompt-generation-document-review | E-008, E-018 | Existing tests already protect modern natal carrier extinction; future docs should cite them instead of rediscovering the boundary. | Reference existing carrier guards in the next documentation amendment; no implementation story needed here. | no |
 
 ## Finding Details
 
@@ -72,7 +72,7 @@
 
 - Severity: Info
 - Confidence: High
-- Category: missing-test-coverage
+- Category: runtime-contract-drift
 - Domain: prompt-generation-document-review
 - Evidence: E-008, E-018
 - Expected rule: Existing guards should be reused rather than duplicated.
