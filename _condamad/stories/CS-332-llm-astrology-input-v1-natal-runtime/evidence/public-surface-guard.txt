@@ -1,0 +1,11 @@
+CS-332 public surface guard
+
+Command:
+.\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi()); assert all('llm_astrology' not in getattr(route, 'path', '') for route in app.routes); print('PASS public OpenAPI/routes unchanged for llm_astrology_input_v1')"; Pop-Location
+
+Result:
+PASS public OpenAPI/routes unchanged for llm_astrology_input_v1
+
+Additional guard:
+backend/tests/architecture/test_llm_astrology_input_runtime_boundary.py::test_llm_astrology_input_stays_out_of_public_openapi_surface
+PASS via targeted and full backend pytest runs.

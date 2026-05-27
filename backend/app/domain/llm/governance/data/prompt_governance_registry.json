@@ -61,8 +61,9 @@
         "fallback": "fr-FR"
       },
       { "name": "use_case", "classification": "optional" },
-      { "name": "chart_json", "classification": "required" },
-      { "name": "natal_data", "classification": "required" },
+      { "name": "llm_astrology_input_v1", "classification": "required" },
+      { "name": "chart_json", "classification": "optional" },
+      { "name": "natal_data", "classification": "optional" },
       { "name": "birth_date", "classification": "optional" },
       { "name": "birth_time", "classification": "optional" },
       { "name": "birth_timezone", "classification": "optional" }

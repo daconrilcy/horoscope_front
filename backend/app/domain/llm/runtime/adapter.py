@@ -260,6 +260,7 @@ class AIEngineAdapter:
                 chart_json=natal_input.chart_json,
                 astro_context=natal_input.astro_context,
                 extra_context={
+                    "llm_astrology_input_v1": natal_input.llm_astrology_input_v1,
                     "module": natal_input.module,
                     "variant_code": natal_input.variant_code,
                     "level": natal_input.level,

@@ -1,0 +1,24 @@
+CS-332 validation transcript summary
+
+All Python commands were run after activating .\.venv\Scripts\Activate.ps1.
+
+Commands:
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime\00-story.md --root . --story-key CS-332-llm-astrology-input-v1-natal-runtime
+  Result: PASS, capsule generated.
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime
+  Result: PASS.
+- ruff format backend\app\domain\llm\runtime\contracts.py backend\app\domain\llm\runtime\adapter.py backend\app\domain\llm\runtime\gateway.py backend\app\domain\llm\configuration\canonical_use_case_registry.py backend\app\services\llm_generation\natal\interpretation_service.py backend\app\tests\unit\test_ai_engine_adapter.py backend\app\tests\unit\legacy_services\legacy_natal_interpretation_service.py backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py backend\tests\llm_orchestration\test_placeholder_validation.py
+  Result: PASS.
+- Push-Location backend; ruff check .; Pop-Location
+  Result: PASS, All checks passed.
+- Push-Location backend; python -B -m pytest -q --tb=short tests\unit\domain\llm\test_natal_llm_astrology_input.py tests\architecture\test_llm_astrology_input_runtime_boundary.py app\tests\unit\test_ai_engine_adapter.py app\tests\unit\legacy_services\test_natal_interpretation_service_v2_refacto.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\architecture\test_llm_astrology_input_boundary.py tests\llm_orchestration\test_placeholder_validation.py tests\llm_orchestration\test_llm_execution_request.py; Pop-Location
+  Result: PASS, 41 passed in 1.79s.
+- Push-Location backend; python -B -m pytest -q --tb=short; Pop-Location
+  Result: PASS, 3451 passed, 1 skipped, 1216 deselected in 231.49s.
+- git diff --check
+  Result: PASS.
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-332-llm-astrology-input-v1-natal-runtime
+  Result: PASS.
+
+Skipped:
+- No frontend validation: story touched backend runtime only; RG-047/RG-052 out of scope.

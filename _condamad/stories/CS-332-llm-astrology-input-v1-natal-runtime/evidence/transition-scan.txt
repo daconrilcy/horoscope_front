@@ -1,0 +1,18 @@
+CS-332 transition scan summary
+
+Command:
+rg -n "llm_astrology_input_v1|NatalExecutionInput|ExecutionContext|PromptRenderer|chart_json|natal_data|fallback" backend\app\domain\llm\runtime backend\app\domain\llm\configuration backend\app\domain\llm\governance\data backend\app\services\llm_generation\natal backend\tests\unit\domain\llm backend\tests\architecture -g "*.py" -g "*.json"
+
+Result: PASS
+
+Classification:
+- llm_astrology_input_v1 is present in NatalExecutionInput, adapter extra_context propagation, gateway prompt/user-payload handling, canonical natal input schema and story-local tests.
+- ExecutionContext keeps only existing transition carriers chart_json/natal_data and does not define llm_astrology_input_v1 as a model field.
+- chart_json and natal_data remain bounded transition carriers for existing runtime compatibility, but prompt-visible natal schema and renderer tests now require llm_astrology_input_v1.
+- Fallback hits are pre-existing gateway governance/runtime fallback paths or existing persistence metadata; no new silent fallback path was introduced for llm_astrology_input_v1.
+
+Negative scans:
+- rg -n "required_prompt_placeholders=\[\"chart_json|\"required\": \[\"chart_json\"\]" backend\app\domain\llm\configuration\canonical_use_case_registry.py
+  Result: PASS, exit 1 means no matches.
+- rg -n "llm_astrology_input_v1\s*:|llm_astrology_input_v1\s*=" backend\app\api backend\app\services\api_contracts backend\app\infra -g "*.py"
+  Result: PASS, exit 1 means no public/API/infra exposure matches.

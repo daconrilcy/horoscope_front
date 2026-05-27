@@ -1,0 +1,13 @@
+{
+  "story": "CS-332-llm-astrology-input-v1-natal-runtime",
+  "prompt_visible_key": "llm_astrology_input_v1",
+  "sample_user_payload": {
+    "contains": ["llm_astrology_input_v1"],
+    "excludes_when_rich_input_exists": ["chart_json", "natal_data"],
+    "validated_by": "backend/tests/unit/domain/llm/test_natal_llm_astrology_input.py::test_gateway_prefers_rich_input_over_chart_json_in_user_payload"
+  },
+  "schema_contract": {
+    "required": ["llm_astrology_input_v1"],
+    "source": "backend/app/domain/llm/configuration/canonical_use_case_registry.py::NATAL_LLM_ASTROLOGY_INPUT_SCHEMA"
+  }
+}

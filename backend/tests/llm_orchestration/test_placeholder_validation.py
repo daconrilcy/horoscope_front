@@ -1,3 +1,6 @@
+# Tests de validation des placeholders gouvernes du runtime LLM.
+"""Verifie les comportements requis, optionnels et fallback du renderer."""
+
 import pytest
 
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
@@ -5,14 +8,14 @@ from app.domain.llm.runtime.contracts import PromptRenderError
 
 
 def test_placeholder_required_missing_blocking(caplog):
-    """Test Story 66.13: Required missing in blocking feature raises error."""
-    template = "Hello {{natal_data}}"
+    """Une cle requise manquante dans une feature bloquante leve une erreur."""
+    template = "Hello {{llm_astrology_input_v1}}"
     vars = {"locale": "fr-FR"}
 
     with pytest.raises(PromptRenderError) as exc:
         PromptRenderer.render(template, vars, feature="natal")
 
-    assert "Required placeholder '{{natal_data}}' not resolved" in str(exc.value)
+    assert "Required placeholder '{{llm_astrology_input_v1}}' not resolved" in str(exc.value)
 
 
 def test_placeholder_required_missing_non_blocking(caplog):

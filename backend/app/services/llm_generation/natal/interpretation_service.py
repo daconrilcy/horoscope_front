@@ -1,3 +1,4 @@
+# Service d'orchestration de la generation LLM natale.
 """Porte le service canonique de génération LLM pour le domaine natal."""
 
 from __future__ import annotations
@@ -15,8 +16,18 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
+from app.domain.astrology.interpretation.ai_narrative_input_builder import AINarrativeInputBuilder
 from app.domain.astrology.interpretation.astral_point_interpretation import (
     AstralPointInterpretationService,
+)
+from app.domain.astrology.interpretation.client_interpretation_projection_v1_builder import (
+    ClientInterpretationProjectionV1Builder,
+)
+from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+    LLMAstrologyInputV1Builder,
+)
+from app.domain.astrology.interpretation.structured_facts_v1_builder import (
+    StructuredFactsV1Builder,
 )
 from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.astrology.projections.projection_hash import compute_projection_hash
@@ -69,6 +80,12 @@ from app.services.user_profile.natal_chart_service import UserNatalChartReadData
 logger = logging.getLogger(__name__)
 
 LLM_INPUT_AUDIT_VERSION = "llm_runtime_gateway_input.v1"
+_ENTITLEMENT_TO_CLIENT_PROJECTION_PLAN = {
+    "none": "free",
+    "free": "free",
+    "basic": "basic",
+    "premium": "premium",
+}
 
 MODULE_TO_USE_CASE_KEY: dict[str, str] = {
     "NATAL_PSY_PROFILE": "natal_psy_profile",
@@ -80,6 +97,48 @@ MODULE_TO_USE_CASE_KEY: dict[str, str] = {
     "NATAL_VALUES_SECURITY": "natal_values_security",
     "NATAL_EVOLUTION_PATH": "natal_evolution_path",
 }
+
+
+def _build_llm_astrology_input_v1(
+    *,
+    natal_result: NatalResult,
+    chart_id: str,
+    locale: str,
+    current_plan: str,
+    requested_plan: str,
+) -> dict[str, object]:
+    """Construit le contrat riche consomme par le prompt natal interne."""
+    structured_facts = StructuredFactsV1Builder().build(
+        natal_result,
+        chart_id=chart_id,
+        locale=locale,
+    )
+    ai_narrative_input = AINarrativeInputBuilder().build(
+        natal_result,
+        chart_id=chart_id,
+        locale=locale,
+    )
+    client_projection = ClientInterpretationProjectionV1Builder().build(
+        structured_facts,
+        requested_plan=requested_plan,
+        current_plan=current_plan,
+    )
+    return LLMAstrologyInputV1Builder().build(
+        structured_facts_v1=structured_facts,
+        ai_narrative_input=ai_narrative_input,
+        client_interpretation_projection_v1=client_projection,
+        evidence_refs=(),
+        prompt_ref="natal.llm_astrology_input_v1.runtime",
+    )
+
+
+def _client_projection_plan_from_entitlement(plan_code: str) -> str:
+    """Convertit le plan entitlement en plan B2C supporte par la projection."""
+    normalized_plan = plan_code.strip().lower()
+    try:
+        return _ENTITLEMENT_TO_CLIENT_PROJECTION_PLAN[normalized_plan]
+    except KeyError as exc:
+        raise ValueError(f"unsupported client projection plan: {plan_code}") from exc
 
 
 class NatalInterpretationMetadata(BaseModel):
@@ -623,6 +682,14 @@ class NatalInterpretationService:
             db, app_user_id=user_id
         )
         user_plan = entitlements.plan_code
+        projection_plan = _client_projection_plan_from_entitlement(user_plan)
+        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
+            natal_result=natal_result,
+            chart_id=chart_id,
+            locale=locale,
+            current_plan=projection_plan,
+            requested_plan=projection_plan,
+        )
 
         # 4. Call AIEngineAdapter (Story 66.7)
         effective_question = question
@@ -643,6 +710,7 @@ class NatalInterpretationService:
             use_case_key=use_case_key,
             locale=locale,
             level=level,
+            llm_astrology_input_v1=llm_astrology_input_v1,
             chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
             natal_data=chart_json_dict,
             evidence_catalog=evidence_catalog,
@@ -931,11 +999,20 @@ class NatalInterpretationService:
             db, app_user_id=user_id
         )
         user_plan = entitlements.plan_code
+        projection_plan = _client_projection_plan_from_entitlement(user_plan)
+        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
+            natal_result=natal_result,
+            chart_id=chart_id,
+            locale=locale,
+            current_plan=projection_plan,
+            requested_plan="free",
+        )
 
         natal_input = NatalExecutionInput(
             use_case_key=use_case_key,
             locale=locale,
             level="complete",  # Free short is mapped to complete level in persistence
+            llm_astrology_input_v1=llm_astrology_input_v1,
             chart_json=json.dumps(chart_json_dict, ensure_ascii=False),
             natal_data=chart_json_dict,
             evidence_catalog=evidence_catalog,

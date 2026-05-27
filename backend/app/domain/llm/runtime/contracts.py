@@ -1,4 +1,5 @@
-"""Canonical runtime contracts entrypoint."""
+# Contrats canoniques du runtime LLM interne.
+"""Expose les contrats de transport entre services metier, gateway et provider LLM."""
 
 import uuid
 from datetime import datetime
@@ -140,6 +141,7 @@ class NatalExecutionInput(BaseModel):
     use_case_key: str
     locale: str = "fr-FR"
     level: Literal["short", "complete"]
+    llm_astrology_input_v1: Dict[str, Any]
     chart_json: str
     natal_data: Dict[str, Any]
     evidence_catalog: Union[List[str], Dict[str, List[str]]]

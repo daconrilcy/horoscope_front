@@ -178,6 +178,7 @@ async def test_generate_natal_interpretation_maps_free_legacy_use_case_to_canoni
             use_case_key="natal_long_free",
             locale="fr-FR",
             level="complete",
+            llm_astrology_input_v1={"contract_id": "llm_astrology_input_v1"},
             chart_json='{"meta": {"chart_json_version": "1"}}',
             natal_data={"meta": {"chart_json_version": "1"}},
             evidence_catalog=[],
@@ -195,3 +196,6 @@ async def test_generate_natal_interpretation_maps_free_legacy_use_case_to_canoni
     assert captured_request.user_input.use_case == "natal_long_free"
     assert captured_request.user_input.feature == "natal"
     assert captured_request.user_input.subfeature == "interpretation"
+    assert captured_request.context.extra_context["llm_astrology_input_v1"] == {
+        "contract_id": "llm_astrology_input_v1"
+    }

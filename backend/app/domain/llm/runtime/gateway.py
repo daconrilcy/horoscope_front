@@ -1,3 +1,4 @@
+# Le gateway assemble les prompts internes sans exposer de nouveaux contrats publics.
 import json
 import logging
 import os
@@ -97,6 +98,9 @@ _FALLBACK_USER_MSG = {
     "en": "Analyze the provided astrological data.",
 }
 
+LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
+_NATAL_TRANSITION_PROMPT_CARRIERS = frozenset({"chart_json", "natal_data"})
+
 # ComposedMessages type alias (Story 66.4 AC3)
 ComposedMessages = List[Dict[str, Any]]
 
@@ -180,7 +184,13 @@ class LLMGateway:
         if "situation" in context and context["situation"]:
             parts.append(f"Context: {context['situation']}")
 
-        if "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
+        llm_astrology_input = context.get(LLM_ASTROLOGY_INPUT_V1_KEY)
+        if llm_astrology_input is not None:
+            parts.append(
+                "llm_astrology_input_v1: "
+                + json.dumps(llm_astrology_input, ensure_ascii=False, sort_keys=True)
+            )
+        elif "chart_json" in context and context["chart_json"] and not chart_json_in_prompt:
             parts.append(f"Technical Data: {context['chart_json']}")
 
         if not parts:
@@ -605,6 +615,7 @@ class LLMGateway:
             "history",
             "natal_data",
             "chart_json",
+            LLM_ASTROLOGY_INPUT_V1_KEY,
             "precision_level",
             "astro_context",
             "locale",
@@ -623,7 +634,14 @@ class LLMGateway:
             chart_json=context.get("chart_json"),
             precision_level=context.get("precision_level"),
             astro_context=context.get("astro_context"),
-            extra_context=extra_context,
+            extra_context={
+                **extra_context,
+                **(
+                    {LLM_ASTROLOGY_INPUT_V1_KEY: context[LLM_ASTROLOGY_INPUT_V1_KEY]}
+                    if context.get(LLM_ASTROLOGY_INPUT_V1_KEY) is not None
+                    else {}
+                ),
+            },
         )
 
         flags_dict = {
@@ -1347,6 +1365,9 @@ class LLMGateway:
 
             # Overlay context_dict (priority to context)
             render_vars.update(context_dict)
+            if render_vars.get(LLM_ASTROLOGY_INPUT_V1_KEY) is not None:
+                for transition_carrier in _NATAL_TRANSITION_PROMPT_CARRIERS:
+                    render_vars.pop(transition_carrier, None)
 
             # Preserve a stable persona label for prompts that still require it.
             render_vars.setdefault(

@@ -1,3 +1,6 @@
+# Registre interne des cas d'usage LLM canoniques.
+"""Declare les contrats runtime internes consommes par le gateway LLM."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -177,6 +180,15 @@ CANONICAL_OUTPUT_SCHEMAS: tuple[CanonicalOutputSchemaDefinition, ...] = (
     ),
 )
 
+NATAL_LLM_ASTROLOGY_INPUT_SCHEMA = {
+    "type": "object",
+    "required": ["llm_astrology_input_v1"],
+    "properties": {
+        "llm_astrology_input_v1": {"type": "object"},
+        "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
+    },
+}
+
 CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
     CanonicalUseCaseContract(
         key="natal_interpretation",
@@ -185,31 +197,17 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_interpretation_short",
         display_name="Interprétation Natale Courte",
         description="Version concise de l'analyse natale.",
         output_schema_name="AstroResponse_v1",
-        required_prompt_placeholders=["chart_json"],
+        required_prompt_placeholders=["llm_astrology_input_v1"],
         user_question_policy="optional",
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="chat_astrologer",
@@ -274,15 +272,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_shadow_integration",
@@ -291,15 +282,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_leadership_workstyle",
@@ -308,15 +292,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_creativity_joy",
@@ -325,15 +302,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_relationship_style",
@@ -342,15 +312,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_community_networks",
@@ -359,15 +322,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_values_security",
@@ -376,15 +332,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="natal_evolution_path",
@@ -393,15 +342,8 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         output_schema_name="AstroResponse_v3",
         persona_strategy="required",
         fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "persona_name"],
-        input_schema={
-            "type": "object",
-            "required": ["chart_json"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
-            },
-        },
+        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     ),
     CanonicalUseCaseContract(
         key="guidance_daily",
