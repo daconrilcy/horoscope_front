@@ -1,11 +1,13 @@
 # Validation CS-336
 
-- Capsule validation: PASS.
-- Ruff format scoped changed Python files: PASS.
+- Review/fix iteration 1 capsule validation: PASS.
+- Review/fix iteration 1 story validation: PASS.
+- Review/fix iteration 1 story strict lint: PASS.
+- Ruff format check: PASS, 1700 files already formatted.
 - Ruff check: PASS.
 - Targeted CS-336 pytest set: PASS, 34 passed, 8 deselected.
-- App unit/integration tests touched by service/seed/lint changes: PASS, 59 passed, 6 deselected.
 - Backend regression suite: PASS, 1208 passed, 218 deselected.
 - OpenAPI route/schema check: PASS.
-- Legacy carrier scan: PASS with residual hits classified in `removal-audit.md`.
+- Legacy carrier scan: PASS with residual hits saved in `legacy-carrier-scan-after.txt` and classified in `removal-audit.md`.
+- Canonical key scan: PASS; `llm_astrology_input_v1` present in runtime, config, seeds and tests.
 - `git diff --check`: PASS.

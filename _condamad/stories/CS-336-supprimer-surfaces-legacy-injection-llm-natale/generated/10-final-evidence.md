@@ -7,12 +7,13 @@
 - Story key: `CS-336-supprimer-surfaces-legacy-injection-llm-natale`
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-336-supprimer-surfaces-legacy-injection-llm-natale`
-- Story registry: `ready-to-review` on 2026-05-27
+- Story registry: `done` on 2026-05-27
 
 ## Preflight
 
 - Repository root: `C:\dev\horoscope_front`
 - Story source and status row match `_story_briefs/cs-336-supprimer-surfaces-legacy-injection-llm-natale.md`.
+- Final implementation review: CLEAN; local artifact-only corrections synchronized story status and review evidence.
 - Initial worktree already contained CS-336 code/capsule changes; they were treated as in-scope existing work.
 - Capsule validation before implementation: PASS.
 - Applicable guardrails: RG-002 public API neutrality, RG-022 collected prompt-generation validation paths.
@@ -73,7 +74,14 @@
 | `python -B -m pytest -q tests/llm_orchestration/test_llm_legacy_extinction.py tests/architecture/test_llm_legacy_extinction.py tests/unit/test_natal_llm_use_case_input_contract.py tests/llm_orchestration/test_llm_astrology_input_boundaries.py tests/integration/test_llm_runtime_suppression.py app/tests/unit/test_ai_engine_adapter.py app/tests/unit/test_gateway_input_validation_payload.py --tb=short` | `backend` | PASS, 34 passed |
 | `python -B -m pytest -q app/tests/unit/test_seed_29_prompt_contract.py app/tests/unit/test_seed_30_8_v3_prompt_contract.py app/tests/unit/test_prompt_lint_natal.py app/tests/integration/test_admin_llm_natal_prompts.py app/tests/unit/test_natal_interpretation_service.py app/tests/unit/test_natal_interpretation_service_v2.py app/tests/unit/legacy_services/test_natal_interpretation_service_v2_refacto.py app/tests/unit/test_ai_engine_adapter.py app/tests/unit/test_gateway_input_validation_payload.py --tb=short` | `backend` | PASS, 59 passed, 6 deselected |
 | `python -B -m pytest -q tests --tb=short` | `backend` | PASS, 1208 passed, 218 deselected |
+| `ruff format --check .` | `backend` | PASS, 1700 files already formatted |
+| `ruff check .` | `backend` | PASS |
+| `pytest -q tests/llm_orchestration/test_llm_legacy_extinction.py tests/architecture/test_llm_legacy_extinction.py tests/unit/test_natal_llm_use_case_input_contract.py tests/llm_orchestration/test_llm_astrology_input_boundaries.py tests/integration/test_llm_runtime_suppression.py app/tests/unit/test_ai_engine_adapter.py app/tests/unit/test_gateway_input_validation_payload.py --tb=short` | `backend` | PASS, 34 passed, 8 deselected |
+| `pytest -q tests --tb=short` | `backend` | PASS, 1208 passed, 218 deselected |
 | `python -B -c "from app.main import app; assert app.routes; assert app.openapi()['paths']; assert 'chart_json' not in str(app.openapi()) and 'natal_data' not in str(app.openapi())"` | `backend` | PASS |
+| `python .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-336-supprimer-surfaces-legacy-injection-llm-natale` | repo root | PASS |
+| `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-336-supprimer-surfaces-legacy-injection-llm-natale\00-story.md` | repo root | PASS |
+| `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-336-supprimer-surfaces-legacy-injection-llm-natale\00-story.md` | repo root | PASS |
 | `rg -n "chart_json|natal_data|evidence_catalog|legacy|fallback|transition-condition" backend/app backend/tests` | repo root | PASS with classified residual hits |
 | `git diff --check` | repo root | PASS |
 
@@ -97,7 +105,7 @@
 ## Final worktree status
 
 - Final `git status --short` is recorded in chat/final handoff.
-- Remaining dirty files are scoped to CS-336 implementation, tests, generated evidence, and story status.
+- Remaining dirty files are scoped to CS-336 evidence/status updates plus unrelated `_condamad/run-state.json`.
 
 ## Remaining risks
 
@@ -109,4 +117,4 @@
 
 ## Feedback loop routing
 
-- No propagation needed: the failed full-suite test was fixed by converting an obsolete acceptance test into a negative guard already covered by this story.
+- No propagation needed: review corrections were local evidence/status synchronization; no reusable process learning was identified.

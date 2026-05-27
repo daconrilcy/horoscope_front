@@ -1,5 +1,5 @@
 # Story CS-336 supprimer-surfaces-legacy-injection-llm-natale: Remove Natal LLM Legacy Injection Surfaces
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
