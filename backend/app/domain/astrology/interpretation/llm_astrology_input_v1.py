@@ -28,11 +28,11 @@ from app.domain.astrology.projections.projection_hash import (
 LLM_ASTROLOGY_INPUT_V1_CONTRACT_ID = "llm_astrology_input_v1"
 LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION = "llm_astrology_input_v1.contract.v1"
 SHAPING_SOURCE_PROJECTION_ID = "client_interpretation_projection_v1"
-PROMPT_INFLUENCING_BLOCKS = ("facts", "signals", "limits", "evidence", "shaping")
+PROMPT_INFLUENCING_BLOCKS = ("facts", "signals", "limits", "shaping")
 LLM_ASTROLOGY_INPUT_DATA_ROLES = {
     "prompt_visible": PROMPT_INFLUENCING_BLOCKS,
     "runtime_only": ("request_id", "trace_id", "chart_json", "natal_data"),
-    "validation_only": ("grounding_status", "validation_owner"),
+    "validation_only": ("evidence", "grounding_status", "validation_owner"),
     "audit_only": ("projection_hash", "llm_input_hash", "provider_response", "persisted_answer"),
 }
 EDITORIAL_DEPTH_KEY = "editorial_depth_" + "pro" + "file"
@@ -90,7 +90,6 @@ class LLMAstrologyInputV1Builder:
             facts=facts,
             signals=signals,
             limits=limits,
-            evidence=evidence,
             shaping=shaping,
         )
         provenance["llm_input_hash"] = compute_projection_hash(hash_input)
@@ -118,7 +117,6 @@ def build_llm_input_hash_material(
     facts: Mapping[str, Any],
     signals: Mapping[str, Any],
     limits: Mapping[str, Any],
-    evidence: Mapping[str, Any],
     shaping: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Construit l'unique materiau prompt-visible utilise par `llm_input_hash`."""
@@ -126,7 +124,6 @@ def build_llm_input_hash_material(
         "facts": projection_value_to_jsonable(facts),
         "signals": projection_value_to_jsonable(signals),
         "limits": projection_value_to_jsonable(limits),
-        "evidence": projection_value_to_jsonable(evidence),
         "shaping": projection_value_to_jsonable(shaping),
     }
 

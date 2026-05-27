@@ -25,6 +25,7 @@ PROMPT_VISIBLE_BLOCKS = {
     *LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"],
 }
 AUDIT_ONLY_PROMPT_SURFACES = {
+    "evidence",
     "provenance",
     "projection_hash",
     "llm_input_hash",
@@ -49,7 +50,7 @@ def test_gateway_payload_projects_prompt_visible_role_blocks_only() -> None:
     assert prompt_payload["limits"]["missing_data"]["empty_collections"] == [
         "advanced_condition_facts"
     ]
-    assert "evidence" in prompt_payload
+    assert "evidence" not in prompt_payload
     assert prompt_payload["shaping"]["plan"] == "premium"
     assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(_nested_keys(prompt_payload))
 
@@ -131,7 +132,7 @@ async def test_gateway_provider_handoff_uses_local_double_and_prompt_boundary() 
 
     assert set(prompt_payload) == PROMPT_VISIBLE_BLOCKS
     assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(_nested_keys(prompt_payload))
-    assert prompt_payload["evidence"] == {}
+    assert "evidence" not in prompt_payload
     assert "LEGACY_CHART_JSON_PROMPT_OWNER" not in user_message["content"]
     assert "LEGACY_NATAL_DATA_PROMPT_OWNER" not in user_message["content"]
 

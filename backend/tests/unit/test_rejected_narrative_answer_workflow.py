@@ -84,6 +84,48 @@ def test_missing_evidence_refs_on_required_sections_becomes_rejected() -> None:
     assert outcome.rejection_reason["validation_errors"] == ["missing_required_evidence_ref"]
 
 
+def test_unsupported_generated_claim_becomes_rejected() -> None:
+    """Une assertion hors sources internes produit un rejet sans appel provider."""
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-unsupported-claim",
+        answer_type="premium",
+        raw_answer={
+            "sections": [{"key": "summary", "content": "texte avec invention"}],
+            "unsupported_claims": ["Maison XII dominante sans donnee maison"],
+        },
+        projection_version="v1",
+        projection_hash="a" * 64,
+        llm_input_version="llm_runtime_gateway_input.v1",
+        llm_input_hash="b" * 64,
+    )
+
+    assert outcome is not None
+    assert outcome.status == "rejected"
+    assert outcome.rejection_reason["code"] == "natal_output_policy_violation"
+    assert outcome.rejection_reason["validation_errors"] == ["unsupported_generated_claim"]
+
+
+def test_ignored_critical_limit_becomes_rejected() -> None:
+    """Une reponse qui ignore une limite critique est marquee non conforme."""
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-ignored-limit",
+        answer_type="premium",
+        raw_answer={
+            "sections": [{"key": "summary", "content": "texte sans signaler la limite"}],
+            "ignored_critical_limits": ["birth_time_missing"],
+        },
+        projection_version="v1",
+        projection_hash="a" * 64,
+        llm_input_version="llm_runtime_gateway_input.v1",
+        llm_input_hash="b" * 64,
+    )
+
+    assert outcome is not None
+    assert outcome.status == "rejected"
+    assert outcome.rejection_reason["code"] == "natal_output_policy_violation"
+    assert outcome.rejection_reason["validation_errors"] == ["critical_limit_ignored"]
+
+
 def test_basic_legacy_payload_without_evidence_refs_is_not_rejected() -> None:
     """Le format court historique reste en audit `not_checked` sans rejet client."""
     outcome = build_rejected_narrative_answer_outcome_from_payload(

@@ -341,7 +341,7 @@ def _grounding_status_for_audit(llm_astrology_input_v1: dict[str, object]) -> st
 
 
 def _evidence_refs_for_audit(llm_astrology_input_v1: dict[str, object]) -> list[object]:
-    """Persiste les `evidence_refs` prompt-visibles deja validees par le domaine."""
+    """Persiste les `evidence_refs` backend-only deja validees par le domaine."""
     if not isinstance(llm_astrology_input_v1, dict):
         raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
     evidence = llm_astrology_input_v1.get("evidence")

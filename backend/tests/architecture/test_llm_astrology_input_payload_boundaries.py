@@ -15,6 +15,7 @@ GATEWAY_PATH = REPO_ROOT / "app/domain/llm/runtime/gateway.py"
 CONTRACT_PATH = REPO_ROOT / "app/domain/astrology/interpretation/llm_astrology_input_v1.py"
 PROMPT_VISIBLE_BLOCKS = set(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
 AUDIT_ONLY_PROMPT_SURFACES = {
+    "evidence",
     "provenance",
     "projection_hash",
     "llm_input_hash",
@@ -114,7 +115,7 @@ def test_contract_keeps_raw_surfaces_as_declared_exclusions_not_prompt_blocks() 
 
 def test_canonical_prompt_visible_roles_exclude_audit_only_surfaces() -> None:
     """Le contrat canonique garde les donnees audit-only hors roles prompt."""
-    assert PROMPT_VISIBLE_BLOCKS == {"facts", "signals", "limits", "evidence", "shaping"}
+    assert PROMPT_VISIBLE_BLOCKS == {"facts", "signals", "limits", "shaping"}
     assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(PROMPT_VISIBLE_BLOCKS)
 
 

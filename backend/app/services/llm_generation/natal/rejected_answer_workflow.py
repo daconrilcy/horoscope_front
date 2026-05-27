@@ -97,6 +97,19 @@ def build_rejected_narrative_answer_outcome_from_payload(
         return None
 
     section_requirements = _section_requirements(raw_answer)
+    policy_context = _payload_policy_violation_context(raw_answer)
+    if policy_context:
+        return RejectedNarrativeAnswerOutcome(
+            answer_id=answer_id,
+            answer_type=answer_type,
+            status="rejected",
+            grounding_status="ungrounded",
+            rejection_reason=_build_rejection_reason(policy_context),
+            validation_context=policy_context,
+            raw_answer_storage={"structured_output": dict(raw_answer)},
+            client_message=CONTROLLED_REJECTED_CLIENT_MESSAGE,
+            log_event=REJECTED_NARRATIVE_LOG_EVENT,
+        )
     if not section_requirements:
         return None
     evidence_refs = raw_answer.get("evidence_refs", ())
@@ -163,8 +176,14 @@ def _build_rejection_reason(validation_context: list[dict[str, object]]) -> dict
                 if isinstance(ref, dict):
                     for error in ref.get("validation_errors", []) or []:
                         validation_errors.append(str(error))
+    code = "ungrounded_evidence_refs"
+    if any(
+        error in {"unsupported_generated_claim", "critical_limit_ignored"}
+        for error in validation_errors
+    ):
+        code = "natal_output_policy_violation"
     return {
-        "code": "ungrounded_evidence_refs",
+        "code": code,
         "failed_sections": failed_sections,
         "validation_errors": sorted(set(validation_errors)),
     }
@@ -186,3 +205,48 @@ def _section_requirements(
             section_id = f"section_{index}"
         requirements.append(EvidenceSectionRequirement(section_id, requires_evidence=True))
     return tuple(requirements)
+
+
+def _payload_policy_violation_context(raw_answer: Mapping[str, object]) -> list[dict[str, object]]:
+    """Detecte les assertions non supportees et les limites critiques ignorees."""
+    violations: list[dict[str, object]] = []
+    unsupported_claims = _non_empty_string_items(raw_answer.get("unsupported_claims"))
+    ignored_limits = _non_empty_string_items(raw_answer.get("ignored_critical_limits"))
+    if unsupported_claims:
+        violations.append(
+            {
+                "section_id": "unsupported_claims",
+                "requires_evidence": True,
+                "section_status": "ungrounded",
+                "evidence_refs": [
+                    {
+                        "validation_state": "unsupported_source_type",
+                        "validation_errors": ["unsupported_generated_claim"],
+                        "claims": unsupported_claims,
+                    }
+                ],
+            }
+        )
+    if ignored_limits:
+        violations.append(
+            {
+                "section_id": "limits",
+                "requires_evidence": True,
+                "section_status": "ungrounded",
+                "evidence_refs": [
+                    {
+                        "validation_state": "missing_source",
+                        "validation_errors": ["critical_limit_ignored"],
+                        "limits": ignored_limits,
+                    }
+                ],
+            }
+        )
+    return violations
+
+
+def _non_empty_string_items(value: object) -> list[str]:
+    """Normalise une liste de marqueurs narratifs sans accepter de texte vide."""
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]

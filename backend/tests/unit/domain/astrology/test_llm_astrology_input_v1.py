@@ -93,9 +93,9 @@ def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
         "facts",
         "signals",
         "limits",
-        "evidence",
         "shaping",
     ]
+    assert "evidence" in payload["data_roles"]["validation_only"]
     assert payload["evidence"]["evidence_refs"] == [
         {
             "section_id": "llm_astrology_input_v1",
@@ -120,7 +120,6 @@ def test_llm_astrology_input_v1_hash_is_deterministic_and_covers_prompt_blocks()
         "facts",
         "signals",
         "limits",
-        "evidence",
         "shaping",
     ]
     assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
@@ -134,7 +133,6 @@ def test_llm_astrology_input_v1_hash_material_is_canonical() -> None:
         facts=payload["facts"],
         signals=payload["signals"],
         limits=payload["limits"],
-        evidence=payload["evidence"],
         shaping=payload["shaping"],
     )
 
