@@ -132,3 +132,4 @@
 | cs-350 | `_story_briefs\cs-350-documentation-cartographie-generation-prompt-llm-mermaid.md` | `_condamad\stories\cs-350-documentation-cartographie-generation-prompt-llm-mermaid\00-story.md` |
 | cs-351 | `_story_briefs\cs-351-audit-revue-adversariale-document-cartographie-prompt-llm.md` | `_condamad\stories\cs-351-audit-revue-adversariale-document-cartographie-prompt-llm\00-story.md` |
 | cs-352 | `_story_briefs\cs-352-audit-concordance-code-document-generation-prompt-llm.md` | `_condamad\stories\cs-352-audit-concordance-code-document-generation-prompt-llm\00-story.md` |
+| cs-353 | `_story_briefs\cs-353-audit-process-paralleles-legacy-generation-prompt-llm.md` | `_condamad\stories\cs-353-audit-process-paralleles-generation-prompt-llm\00-story.md` |
