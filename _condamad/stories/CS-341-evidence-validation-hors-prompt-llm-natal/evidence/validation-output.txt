@@ -1,0 +1,21 @@
+# Validation output - CS-341 implementation review fix
+
+All Python commands were run after .\.venv\Scripts\Activate.ps1.
+
+ruff check app\services\llm_generation\natal\rejected_answer_workflow.py app\services\llm_generation\natal\interpretation_service.py tests\unit\test_rejected_narrative_answer_workflow.py
+Result: PASS. All checks passed.
+
+pytest -q tests\unit\test_rejected_narrative_answer_workflow.py --tb=short
+Result: PASS. 9 passed.
+
+python -B -c "<role check>"
+Result: PASS. prompt_visible roles are facts, signals, limits, shaping; evidence is absent.
+
+ruff check .
+Result: PASS. All checks passed.
+
+pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_hash.py tests\unit\domain\astrology\test_llm_astrology_input_evidence.py tests\llm_orchestration\test_llm_astrology_input_boundaries.py tests\architecture\test_llm_astrology_input_payload_boundaries.py tests\integration\test_llm_legacy_extinction.py tests\integration\llm\test_natal_llm_astrology_input_audit.py tests\unit\test_rejected_narrative_answer_workflow.py --tb=short
+Result: PASS. 33 passed, 9 deselected.
+
+pytest -q tests --tb=short
+Result: PASS. 1215 passed, 221 deselected.

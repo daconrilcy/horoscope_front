@@ -91,13 +91,17 @@ def build_rejected_narrative_answer_outcome_from_payload(
     projection_hash: str,
     llm_input_version: str,
     llm_input_hash: str,
+    llm_astrology_input_v1: Mapping[str, object] | None = None,
 ) -> RejectedNarrativeAnswerOutcome | None:
     """Reutilise CS-289 pour rejeter un payload porteur de `evidence_refs`."""
     if answer_type == "basic" and "evidence_refs" not in raw_answer:
         return None
 
     section_requirements = _section_requirements(raw_answer)
-    policy_context = _payload_policy_violation_context(raw_answer)
+    policy_context = _payload_policy_violation_context(
+        raw_answer,
+        llm_astrology_input_v1=llm_astrology_input_v1,
+    )
     if policy_context:
         return RejectedNarrativeAnswerOutcome(
             answer_id=answer_id,
@@ -207,11 +211,22 @@ def _section_requirements(
     return tuple(requirements)
 
 
-def _payload_policy_violation_context(raw_answer: Mapping[str, object]) -> list[dict[str, object]]:
+def _payload_policy_violation_context(
+    raw_answer: Mapping[str, object],
+    *,
+    llm_astrology_input_v1: Mapping[str, object] | None = None,
+) -> list[dict[str, object]]:
     """Detecte les assertions non supportees et les limites critiques ignorees."""
     violations: list[dict[str, object]] = []
     unsupported_claims = _non_empty_string_items(raw_answer.get("unsupported_claims"))
     ignored_limits = _non_empty_string_items(raw_answer.get("ignored_critical_limits"))
+    if llm_astrology_input_v1 is not None:
+        backend_claims, backend_limits = _backend_policy_violations(
+            raw_answer,
+            llm_astrology_input_v1,
+        )
+        unsupported_claims.extend(backend_claims)
+        ignored_limits.extend(backend_limits)
     if unsupported_claims:
         violations.append(
             {
@@ -245,8 +260,188 @@ def _payload_policy_violation_context(raw_answer: Mapping[str, object]) -> list[
     return violations
 
 
+def _backend_policy_violations(
+    raw_answer: Mapping[str, object],
+    llm_astrology_input_v1: Mapping[str, object],
+) -> tuple[list[str], list[str]]:
+    """Controle le texte genere contre les faits et limites backend disponibles."""
+    text = _answer_text(raw_answer)
+    if not text:
+        return [], []
+
+    facts = llm_astrology_input_v1.get("facts")
+    signals = llm_astrology_input_v1.get("signals")
+    limits = llm_astrology_input_v1.get("limits")
+    if not isinstance(facts, Mapping) or not isinstance(signals, Mapping):
+        return [], []
+
+    supported_terms = _supported_astrology_terms(facts, signals)
+    unsupported = [
+        term for term in _KNOWN_ASTROLOGY_TERMS if term in text and term not in supported_terms
+    ]
+    ignored = _ignored_limit_markers(text, limits if isinstance(limits, Mapping) else {})
+    return unsupported, ignored
+
+
+def _answer_text(raw_answer: Mapping[str, object]) -> str:
+    """Concatene les champs narratifs existants sans dependre d'un schema LLM nouveau."""
+    parts: list[str] = []
+    for key in ("title", "summary"):
+        value = raw_answer.get(key)
+        if isinstance(value, str):
+            parts.append(value)
+    sections = raw_answer.get("sections")
+    if isinstance(sections, Sequence) and not isinstance(sections, (str, bytes)):
+        for section in sections:
+            if not isinstance(section, Mapping):
+                continue
+            for key in ("heading", "content"):
+                value = section.get(key)
+                if isinstance(value, str):
+                    parts.append(value)
+    for key in ("highlights", "advice"):
+        values = raw_answer.get(key)
+        if isinstance(values, Sequence) and not isinstance(values, (str, bytes)):
+            parts.extend(str(value) for value in values)
+    return " ".join(parts).lower()
+
+
+def _supported_astrology_terms(
+    facts: Mapping[str, object],
+    signals: Mapping[str, object],
+) -> set[str]:
+    """Derive les termes astrologiques autorises depuis facts et signaux internes."""
+    terms: set[str] = set()
+    for collection_key in ("positions", "houses", "major_aspects", "dominants"):
+        collection = facts.get(collection_key)
+        if isinstance(collection, Sequence) and not isinstance(collection, (str, bytes)):
+            for item in collection:
+                if isinstance(item, Mapping):
+                    terms.update(_string_values_from_mapping(item))
+                    house_number = item.get("house_number")
+                    if isinstance(house_number, int):
+                        terms.add(f"maison {house_number}")
+                        terms.add(f"house {house_number}")
+
+    signal_codes = signals.get("interpretive_signal_codes")
+    if isinstance(signal_codes, Mapping):
+        terms.update(_string_values_from_mapping(signal_codes))
+    return {term.lower().replace("_", " ") for term in terms if term}
+
+
+def _string_values_from_mapping(value: Mapping[str, object]) -> set[str]:
+    """Collecte les valeurs textuelles d'un mapping pour les comparaisons de garde."""
+    values: set[str] = set()
+    for item in value.values():
+        if isinstance(item, str):
+            values.add(item)
+            values.update(part for part in item.replace(":", " ").split() if part)
+        elif isinstance(item, Sequence) and not isinstance(item, (str, bytes)):
+            values.update(str(part) for part in item if str(part).strip())
+    return values
+
+
+def _ignored_limit_markers(text: str, limits: Mapping[str, object]) -> list[str]:
+    """Repere une redaction qui affirme une surface marquee indisponible."""
+    missing_data = limits.get("missing_data")
+    empty_collections: set[str] = set()
+    if isinstance(missing_data, Mapping):
+        raw_empty_collections = missing_data.get("empty_collections")
+        if isinstance(raw_empty_collections, Sequence) and not isinstance(
+            raw_empty_collections, (str, bytes)
+        ):
+            empty_collections = {str(item) for item in raw_empty_collections}
+        if missing_data.get("sign_balances") is None and _mentions_any(
+            text,
+            ("equilibre element", "equilibre des signes", "balance des signes", "sign balance"),
+        ):
+            empty_collections.add("sign_balances")
+
+    ignored: list[str] = []
+    if "houses" in empty_collections and _mentions_any(text, ("maison", "house")):
+        ignored.append("houses")
+    if "major_aspects" in empty_collections and _mentions_any(
+        text,
+        ("aspect", "trigone", "carre", "square", "opposition", "conjonction", "sextile"),
+    ):
+        ignored.append("major_aspects")
+    if "dominants" in empty_collections and _mentions_any(text, ("dominant", "dominante")):
+        ignored.append("dominants")
+    if "sign_balances" in empty_collections:
+        ignored.append("sign_balances")
+    return ignored
+
+
+def _mentions_any(text: str, markers: Sequence[str]) -> bool:
+    """Indique si le texte contient au moins un marqueur de surface controlee."""
+    return any(marker in text for marker in markers)
+
+
 def _non_empty_string_items(value: object) -> list[str]:
     """Normalise une liste de marqueurs narratifs sans accepter de texte vide."""
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
         return []
     return [str(item).strip() for item in value if str(item).strip()]
+
+
+_KNOWN_ASTROLOGY_TERMS = frozenset(
+    {
+        "sun",
+        "moon",
+        "mercury",
+        "venus",
+        "mars",
+        "jupiter",
+        "saturn",
+        "uranus",
+        "neptune",
+        "pluto",
+        "aries",
+        "taurus",
+        "gemini",
+        "cancer",
+        "leo",
+        "virgo",
+        "libra",
+        "scorpio",
+        "sagittarius",
+        "capricorn",
+        "aquarius",
+        "pisces",
+        "trine",
+        "square",
+        "opposition",
+        "conjunction",
+        "sextile",
+        "soleil",
+        "lune",
+        "mercure",
+        "venus",
+        "vénus",
+        "jupiter",
+        "saturne",
+        "uranus",
+        "neptune",
+        "pluton",
+        "belier",
+        "bélier",
+        "taureau",
+        "gemeaux",
+        "gémeaux",
+        "cancer",
+        "lion",
+        "vierge",
+        "balance",
+        "scorpion",
+        "sagittaire",
+        "capricorne",
+        "verseau",
+        "poissons",
+        "trigone",
+        "carre",
+        "carré",
+        "opposition",
+        "conjonction",
+        "sextile",
+    }
+)

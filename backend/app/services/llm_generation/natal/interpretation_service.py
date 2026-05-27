@@ -289,6 +289,7 @@ def _build_rejected_narrative_answer_outcome(
         projection_hash=projection_hash,
         llm_input_version=_llm_input_version_for_audit(llm_astrology_input_v1),
         llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
+        llm_astrology_input_v1=llm_astrology_input_v1,
     )
 
 

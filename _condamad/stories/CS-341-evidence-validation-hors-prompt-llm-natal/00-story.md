@@ -1,5 +1,5 @@
 # Story CS-341 evidence-validation-hors-prompt-llm-natal: Move Evidence Out Of Natal LLM Prompt And Validate Output
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

@@ -1,0 +1,10 @@
+# Boundary scan - CS-341
+
+rg -n -F 'prompt_payload["evidence"] == {}' backend\app backend\tests
+Result: PASS, no matches. Exit 1 expected for negative scan.
+
+rg -n -F 'assert "evidence" in prompt_payload' backend\app backend\tests
+Result: PASS, no matches. Exit 1 expected for negative scan.
+
+rg -n "chart_json|natal_data|LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS" backend\app backend\tests
+Result: PASS. Hits are classified as guard/tests, legacy non-natal contexts, sensitive-data redaction, or allowed runtime-only declarations.

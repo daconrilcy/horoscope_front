@@ -12,6 +12,7 @@ from app.services.llm_generation.natal.rejected_answer_workflow import (
     build_rejected_narrative_answer_outcome,
     build_rejected_narrative_answer_outcome_from_payload,
 )
+from tests.unit.domain.astrology.test_llm_astrology_input_v1 import _build_payload
 
 
 def test_ungrounded_validation_becomes_rejected_outcome() -> None:
@@ -85,7 +86,7 @@ def test_missing_evidence_refs_on_required_sections_becomes_rejected() -> None:
 
 
 def test_unsupported_generated_claim_becomes_rejected() -> None:
-    """Une assertion hors sources internes produit un rejet sans appel provider."""
+    """Une assertion marquee hors sources internes produit un rejet sans appel provider."""
     outcome = build_rejected_narrative_answer_outcome_from_payload(
         answer_id="answer-unsupported-claim",
         answer_type="premium",
@@ -105,8 +106,43 @@ def test_unsupported_generated_claim_becomes_rejected() -> None:
     assert outcome.rejection_reason["validation_errors"] == ["unsupported_generated_claim"]
 
 
+def test_backend_detects_unsupported_generated_claim_without_llm_marker() -> None:
+    """Une invention lisible dans le texte est controlee contre les faits internes."""
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-backend-unsupported-claim",
+        answer_type="premium",
+        raw_answer={
+            "sections": [
+                {
+                    "key": "summary",
+                    "content": "Venus en Balance structure toute la lecture.",
+                }
+            ],
+            "evidence_refs": [
+                {
+                    "section_id": "summary",
+                    "source_type": "projection_version",
+                    "source_id": "projection",
+                    "source_version": "v1",
+                    "source_hash": "a" * 64,
+                }
+            ],
+        },
+        projection_version="v1",
+        projection_hash="a" * 64,
+        llm_input_version="llm_runtime_gateway_input.v1",
+        llm_input_hash="b" * 64,
+        llm_astrology_input_v1=_build_payload(),
+    )
+
+    assert outcome is not None
+    assert outcome.status == "rejected"
+    assert outcome.rejection_reason["code"] == "natal_output_policy_violation"
+    assert outcome.rejection_reason["validation_errors"] == ["unsupported_generated_claim"]
+
+
 def test_ignored_critical_limit_becomes_rejected() -> None:
-    """Une reponse qui ignore une limite critique est marquee non conforme."""
+    """Une reponse marquee comme ignorant une limite critique est non conforme."""
     outcome = build_rejected_narrative_answer_outcome_from_payload(
         answer_id="answer-ignored-limit",
         answer_type="premium",
@@ -118,6 +154,41 @@ def test_ignored_critical_limit_becomes_rejected() -> None:
         projection_hash="a" * 64,
         llm_input_version="llm_runtime_gateway_input.v1",
         llm_input_hash="b" * 64,
+    )
+
+    assert outcome is not None
+    assert outcome.status == "rejected"
+    assert outcome.rejection_reason["code"] == "natal_output_policy_violation"
+    assert outcome.rejection_reason["validation_errors"] == ["critical_limit_ignored"]
+
+
+def test_backend_detects_ignored_critical_limit_without_llm_marker() -> None:
+    """Une redaction sur une surface absente est controlee contre `limits`."""
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-backend-ignored-limit",
+        answer_type="premium",
+        raw_answer={
+            "sections": [
+                {
+                    "key": "summary",
+                    "content": "Les maisons relationnelles expliquent la relation.",
+                }
+            ],
+            "evidence_refs": [
+                {
+                    "section_id": "summary",
+                    "source_type": "projection_version",
+                    "source_id": "projection",
+                    "source_version": "v1",
+                    "source_hash": "a" * 64,
+                }
+            ],
+        },
+        projection_version="v1",
+        projection_hash="a" * 64,
+        llm_input_version="llm_runtime_gateway_input.v1",
+        llm_input_hash="b" * 64,
+        llm_astrology_input_v1=_build_payload(with_payloads=False),
     )
 
     assert outcome is not None

@@ -3,12 +3,12 @@
 ## Story status
 
 - Validation outcome: pass
-- Ready for review: yes
+- Ready for review: clean implementation review complete
 - Story key: `CS-341-evidence-validation-hors-prompt-llm-natal`
 - Source story: `_condamad/stories/CS-341-evidence-validation-hors-prompt-llm-natal/00-story.md`
 - Source brief: `_story_briefs/cs-341-sortir-evidence-du-prompt-et-valider-redaction-llm-natale.md`
 - Capsule path: `_condamad/stories/CS-341-evidence-validation-hors-prompt-llm-natal`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 
 ## Preflight
 
@@ -41,8 +41,8 @@
 | AC4 | Full internal contract still keeps evidence refs, grounding, validation owner, provenance, hashes. | Domain pytest PASS. | PASS |
 | AC5 | Audit persistence still stores evidence refs, grounding status, projection hash, LLM input hash. | Integration audit pytest PASS. | PASS |
 | AC6 | Grounded generated writing remains accepted. | Rejected narrative workflow pytest PASS. | PASS |
-| AC7 | Unsupported generated claims are rejected. | Added pytest `test_unsupported_generated_claim_becomes_rejected` PASS. | PASS |
-| AC8 | Ignored critical limits are rejected. | Added pytest `test_ignored_critical_limit_becomes_rejected` PASS. | PASS |
+| AC7 | Unsupported generated claims are rejected. | Backend-text pytest `test_backend_detects_unsupported_generated_claim_without_llm_marker` PASS. | PASS |
+| AC8 | Ignored critical limits are rejected. | Backend-limit pytest `test_backend_detects_ignored_critical_limit_without_llm_marker` PASS. | PASS |
 | AC9 | Audit-only prompt boundary guards remain active. | Architecture and orchestration pytest PASS. | PASS |
 | AC10 | `chart_json` and `natal_data` prompt carrier guards remain active. | Orchestration sentinel pytest PASS. | PASS |
 | AC11 | Story evidence artifacts persisted. | This file, traceability, dev log, before/after JSON, story status update. | PASS |
@@ -68,6 +68,7 @@
 - Updated provider payload boundary tests to assert `evidence` absence.
 - Updated architecture role guard to require `facts`, `signals`, `limits`, `shaping` only.
 - Added unsupported-claim and ignored-critical-limit rejection tests.
+- Added backend-driven unsupported-claim and ignored-limit rejection tests that do not depend on LLM self-declared extra fields.
 
 ## Commands run
 
@@ -88,6 +89,14 @@
 | `python -B -c <capture after payload>` | repo root, venv active | PASS | 0 | After payload keys: `facts`, `limits`, `shaping`, `signals`. |
 | `python -B -c "from app.main import app; ..."` | repo root, venv active | PASS | 0 | Backend app import/start sanity: `horoscope-backend`. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-341-evidence-validation-hors-prompt-llm-natal` | repo root, venv active | PASS | 0 | Final capsule validation passed. |
+| `ruff check app\services\llm_generation\natal\rejected_answer_workflow.py app\services\llm_generation\natal\interpretation_service.py tests\unit\test_rejected_narrative_answer_workflow.py` | `backend`, venv active | PASS | 0 | Review-fix lint passed. |
+| `pytest -q tests\unit\test_rejected_narrative_answer_workflow.py --tb=short` | `backend`, venv active | PASS | 0 | 9 passed after review fix. |
+| `python -B -c <role check>` | `backend`, venv active | PASS | 0 | Prompt-visible roles still exclude `evidence`. |
+| `ruff check .` | `backend`, venv active | PASS | 0 | All checks passed after review fix. |
+| `pytest -q <CS-341 targeted tests> --tb=short` | `backend`, venv active | PASS | 0 | 33 passed, 9 deselected after review fix. |
+| `pytest -q tests --tb=short` | `backend`, venv active | PASS | 0 | 1215 passed, 221 deselected after review fix. |
+| `rg -n -F 'prompt_payload["evidence"] == {}' backend\app backend\tests` | repo root | PASS | 1 | No matches after review fix; exit 1 expected. |
+| `rg -n -F 'assert "evidence" in prompt_payload' backend\app backend\tests` | repo root | PASS | 1 | No matches after review fix; exit 1 expected. |
 
 ## Commands skipped or blocked
 
@@ -113,9 +122,15 @@
 - Pre-existing untracked files remain: `_condamad/run-state.json`, `_story_briefs/*.md`.
 - No `.ruff_cache`, `.pytest_cache`, or touched `__pycache__` remains after cleanup.
 
+## Review-fix iteration
+
+- Iteration 1 finding: AC7 and AC8 were proven only through LLM self-declared marker fields, while existing response schemas forbid extra fields.
+- Fix: pass `llm_astrology_input_v1` to the rejection workflow and add backend-side checks over generated text, internal `facts`, and internal `limits`.
+- Fresh review result: CLEAN. The provider prompt boundary, internal evidence retention, audit persistence, and post-generation validation are aligned with the brief.
+
 ## Remaining risks
 
-- The policy rejection uses explicit structured markers from generated payloads (`unsupported_claims`, `ignored_critical_limits`); it does not attempt free-text semantic extraction.
+- The backend textual validation is intentionally conservative and rule-based; it is not a free-text semantic verifier for every possible astrology claim.
 
 ## Suggested reviewer focus
 
