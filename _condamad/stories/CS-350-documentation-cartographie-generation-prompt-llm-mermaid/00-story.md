@@ -1,5 +1,5 @@
 # Story CS-350 documentation-cartographie-generation-prompt-llm-mermaid: Document Prompt Generation Cartography With Mermaid
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
