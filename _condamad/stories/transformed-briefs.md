@@ -121,3 +121,4 @@
 | cs-339 | `_story_briefs\cs-339-aligner-provenance-audit-only-hors-prompt-llm-natal.md` | `_condamad\stories\cs-339-aligner-provenance-audit-only-hors-prompt-llm-natal\00-story.md` |
 | cs-340 | `_story_briefs\cs-340-cloturer-validation-frontiere-provenance-prompt-audit-llm-natal.md` | `_condamad\stories\cs-340-frontiere-provenance-prompt-audit\00-story.md` |
 | cs-341 | `_story_briefs\cs-341-sortir-evidence-du-prompt-et-valider-redaction-llm-natale.md` | `_condamad\stories\cs-341-evidence-validation-hors-prompt-llm-natal\00-story.md` |
+| cs-342 | `_story_briefs\cs-342-cloturer-process-evidence-hors-prompt-validation-redaction-llm-natale.md` | `_condamad\stories\cs-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md` |
