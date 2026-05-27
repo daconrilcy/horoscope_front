@@ -39,7 +39,7 @@
 | AC3 | `evidence-sources.md` contains anchored source matrix. | `rg -n "Evidence path\|Source\|Evidence gap" ...` PASS. | PASS | Important claims cite paths. |
 | AC4 | Report and source matrix label missing CS-350 documentation and semantic/provider limits as `Evidence gap`. | `rg -n "Evidence gap" ...` PASS. | PASS | Missing proof is explicit. |
 | AC5 | Section `Gaps ou contradictions` records output schema ownership split and audit-correctness distinction. | `rg -n "contradiction\|Gaps" ...` PASS. | PASS | Contradictions are visible. |
-| AC6 | `validation-output.md` records commands, PASS results and skipped checks. | `rg -n "Validation evidence\|validation" ...` PASS. | PASS | Validation evidence persisted. |
+| AC6 | `validation-output.md` records commands, PASS results and skipped checks. | Required section scan, story validators and `rg -n "Validation evidence\|validation" ...` PASS. | PASS | Validation evidence persisted. |
 | AC7 | Section `Risques residuels` lists output schema, semantic correctness, CS-350 absence and classified debt risks. | `rg -n "residual risk\|Risques residuels" ...` PASS. | PASS | Residual risks are included. |
 | AC8 | No app code changed. | `git status --short -- backend/app backend/tests frontend/src` returned no entries. | PASS | Report-only delta. |
 | AC9 | `evidence-sources.md` and `validation-output.md` exist. | Python path check PASS. | PASS | Source evidence persisted. |
@@ -53,6 +53,7 @@
 - `_condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/04-target-files.md`
 - `_condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/06-validation-plan.md`
 - `_condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/10-final-evidence.md`
+- `_condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/11-code-review.md`
 - `_condamad/stories/story-status.md`
 
 ## Files deleted
@@ -78,10 +79,13 @@
 | `rg -n "contradiction\|Gaps" .\_condamad\reports\prompt-generation-cartography\2026-05-27-0000` | `C:\dev\horoscope_front` | PASS | 0 | Contradictions found. |
 | `rg -n "Validation evidence\|validation" .\_condamad\reports\prompt-generation-cartography\2026-05-27-0000` | `C:\dev\horoscope_front` | PASS | 0 | Validation evidence found. |
 | `rg -n "residual risk\|Risques residuels" .\_condamad\reports\prompt-generation-cartography\2026-05-27-0000` | `C:\dev\horoscope_front` | PASS | 0 | Residual risks found. |
+| `rg -n "Trigger initial\|Map des stories et briefs\|Acceptance criteria par story\|Evidence paths\|Validation evidence\|Gaps ou contradictions\|Risques residuels\|Next actions" .\_condamad\reports\prompt-generation-cartography\2026-05-27-0000\report-prompt-generation-cartography.md` | `C:\dev\horoscope_front` | PASS | 0 | Required CS-349 report sections found. |
 | Python path check for report files | `C:\dev\horoscope_front` | PASS | 0 | Required report files exist. |
 | `git status --short -- backend/app backend/tests frontend/src` | `C:\dev\horoscope_front` | PASS | 0 | No application source/test/frontend changes. |
 | `python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm` | `C:\dev\horoscope_front` | PASS | 0 | Capsule validation passed after evidence updates. |
-| `rg -n "\| CS-349 \|" .\_condamad\stories\story-status.md` | `C:\dev\horoscope_front` | PASS | 0 | Story status row is `ready-to-review`. |
+| `python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm\00-story.md` | `C:\dev\horoscope_front` | PASS | 0 | Story validation passed after final status update. |
+| `python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm\00-story.md` | `C:\dev\horoscope_front` | PASS | 0 | Strict story lint passed after final status update. |
+| `rg -n "\| CS-349 \|" .\_condamad\stories\story-status.md` | `C:\dev\horoscope_front` | PASS | 0 | Story status row is `done`. |
 | `git diff --stat -- .\_condamad\reports\prompt-generation-cartography\2026-05-27-0000 .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm .\_condamad\stories\story-status.md` | `C:\dev\horoscope_front` | PASS | 0 | Tracked diff only shows `story-status.md`; report and generated capsule files are untracked new files. |
 | `git diff --name-only -- .\_condamad\reports\prompt-generation-cartography\2026-05-27-0000 .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm .\_condamad\stories\story-status.md` | `C:\dev\horoscope_front` | PASS | 0 | Tracked changed file: `_condamad/stories/story-status.md`. |
 | `git diff --check -- .\_condamad\reports\prompt-generation-cartography\2026-05-27-0000 .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm .\_condamad\stories\story-status.md` | `C:\dev\horoscope_front` | PASS | 0 | No whitespace errors; Git emitted line-ending normalization warning for `story-status.md`. |
@@ -100,20 +104,24 @@
 
 ## Diff review
 
-- `git diff --stat -- _condamad/reports/prompt-generation-cartography/2026-05-27-0000 _condamad/stories/CS-349-report-cartographie-generation-prompt-llm _condamad/stories/story-status.md`: PASS; tracked diff shows only `_condamad/stories/story-status.md` because report and generated capsule files are untracked.
+- `git diff --stat -- _condamad/reports/prompt-generation-cartography/2026-05-27-0000 _condamad/stories/CS-349-report-cartographie-generation-prompt-llm _condamad/stories/story-status.md`: PASS; tracked diff is limited to CS-349 report/evidence artifacts and story status.
 - `git diff --check -- _condamad/reports/prompt-generation-cartography/2026-05-27-0000 _condamad/stories/CS-349-report-cartographie-generation-prompt-llm _condamad/stories/story-status.md`: PASS; line-ending normalization warning only.
+
+## Review/fix loop
+
+- Iteration 1 finding: report headings did not use the exact required CS-349 section names for `Map des stories et briefs`, `Acceptance criteria par story`, `Evidence paths`, `Validation evidence` and `Next actions`.
+- Fix: renamed the final report headings to the required section names and added the dedicated required-section scan to validation evidence.
+- Fresh review verdict after fix: CLEAN.
 
 ## Final worktree status
 
+- ` M _condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md`
+- ` M _condamad/reports/prompt-generation-cartography/2026-05-27-0000/validation-output.md`
+- ` M _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/00-story.md`
+- ` M _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/10-final-evidence.md`
+- ` M _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/11-code-review.md`
 - ` M _condamad/stories/story-status.md`
-- `?? _condamad/reports/prompt-generation-cartography/`
 - `?? _condamad/run-state.json` (pre-existing before this story run)
-- `?? _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/01-execution-brief.md`
-- `?? _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/03-acceptance-traceability.md`
-- `?? _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/04-target-files.md`
-- `?? _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/06-validation-plan.md`
-- `?? _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/07-no-legacy-dry-guardrails.md`
-- `?? _condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/10-final-evidence.md`
 
 ## Remaining risks
 

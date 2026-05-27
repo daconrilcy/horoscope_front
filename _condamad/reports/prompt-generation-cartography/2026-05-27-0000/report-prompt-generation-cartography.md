@@ -19,7 +19,7 @@ Status: `Partially delivered` for the initiative chain, because CS-343 through C
 
 The evidence supports a clear chain from initial briefs to audits, architecture and residual risks. It does not support a claim that final Mermaid documentation exists; that is an `Evidence gap` anchored to the absent `_condamad/docs/prompt-generation-cartography` path and CS-350 `ready-to-dev` tracker status.
 
-## 2. Initial context and trigger
+## 2. Trigger initial
 
 Trigger initial: `_story_briefs/cs-349-report-cartographie-generation-prompt-llm.md` requires a single evidence-based synthesis proving `demande initiale -> briefs -> audits -> architecture -> documentation finale attendue -> validation -> risques residuels`.
 
@@ -35,7 +35,7 @@ The upstream demand is represented by the chained briefs CS-343 to CS-350:
 
 Source: `evidence-sources.md`.
 
-## 3. Story scope
+## 3. Map des stories et briefs
 
 | Story | Goal | AC source | Non-goals / exclusions |
 |---|---|---|---|
@@ -68,7 +68,7 @@ Report layer:
 - CS-349 creates `_condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md`, `evidence-sources.md` and `validation-output.md`.
 - CS-350 remains a downstream documentation dependency, not an implemented artifact.
 
-## 5. Traceability matrix
+## 5. Acceptance criteria par story
 
 | Story | AC / Expected outcome | Initial need source | Implemented evidence | Validation evidence | Status |
 |---|---|---|---|---|---|
@@ -81,7 +81,7 @@ Report layer:
 | CS-349 | Delivery report, source evidence and validation output exist. | `_story_briefs/cs-349-report-cartographie-generation-prompt-llm.md` | `_condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md`; `evidence-sources.md`; `validation-output.md` | `_condamad/reports/prompt-generation-cartography/2026-05-27-0000/validation-output.md` | Delivered |
 | CS-350 | Final Mermaid documentation exists. | `_story_briefs/cs-350-documentation-cartographie-generation-prompt-llm-mermaid.md` | Not implemented in CS-349. | `Test-Path .\_condamad\docs\prompt-generation-cartography` false; story-status row is `ready-to-dev`. | Not evidenced |
 
-## 6. Evidence of completion
+## 6. Evidence paths
 
 ### Code evidence
 
@@ -101,7 +101,7 @@ Report layer:
 
 - `validation-output.md`: command output and bounded app status guard for CS-349.
 
-## 7. Validation results
+## 7. Validation evidence
 
 | Command / source | Scope | Result | Evidence | Notes |
 |---|---|---|---|---|
@@ -146,7 +146,7 @@ Report layer:
 - contradiction: audit persistence gives replayable trace evidence, while CS-347 warns it is not proof that prompt output is semantically correct.
 - Gap: CS-350 is expected to consume this report, but cannot be cited as complete until its own story produces documentation.
 
-## 12. Recommended next actions
+## 12. Next actions
 
 1. Execute CS-350 to create the final Mermaid documentation under `_condamad/docs/prompt-generation-cartography`.
 2. Create or prioritize a follow-up story for canonical output schema ownership, as proposed by CS-348.
@@ -158,4 +158,3 @@ Report layer:
 `Partially delivered`
 
 CS-343 through CS-348 are delivered and evidenced, and CS-349 report artifacts are created. The initiative remains partially delivered because CS-350 final Mermaid documentation is intentionally out of scope for this story and absent in the repository.
-

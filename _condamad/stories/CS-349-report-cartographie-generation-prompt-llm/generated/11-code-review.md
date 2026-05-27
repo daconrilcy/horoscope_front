@@ -1,4 +1,4 @@
-# Editorial review CS-349
+# Implementation review CS-349
 
 Verdict: CLEAN
 
@@ -6,41 +6,44 @@ Verdict: CLEAN
 
 - Story: `CS-349-report-cartographie-generation-prompt-llm`
 - Source brief: `_story_briefs/cs-349-report-cartographie-generation-prompt-llm.md`
-- Review type: compact pre-implementation story-contract review.
-- Produced artifact: `_condamad/stories/CS-349-report-cartographie-generation-prompt-llm/generated/11-code-review.md`
+- Tracker row: `_condamad/stories/story-status.md` maps CS-349 to the expected story path and source brief.
+- Review type: implementation, report artifacts, CONDAMAD evidence, validations and guardrails.
+
+## Iteration history
+
+| Iteration | Finding | Fix | Fresh verdict |
+|---|---|---|---|
+| 1 | The report body did not use every exact required section name from the CS-349 brief. | Renamed the report headings and added a dedicated required-section scan to validation evidence. | CLEAN |
 
 ## Alignment review
 
-- The story preserves the brief objective: prove the chain from initial request to briefs, audits, architecture,
-  expected documentation, validation and residual risks.
-- The story names the mandatory delivery-report skill and keeps implementation code, audits, architecture and Mermaid
-  documentation production out of scope.
-- The story includes the named source primitives CS-343, CS-344, CS-345, CS-346, CS-347, CS-348 and CS-350.
-- The story requires the final report path under `_condamad/reports/prompt-generation-cartography`.
-- The story requires `Evidence gap`, residual risk and next-action handling instead of smoothing unavailable proof.
-- Repository structure alerts are retained as non-blocking pre-implementation alerts.
+- The report uses `condamad-delivery-report` and preserves the report-only scope.
+- The required report folder exists under `_condamad/reports/prompt-generation-cartography/2026-05-27-0000`.
+- `report-prompt-generation-cartography.md`, `evidence-sources.md` and `validation-output.md` exist.
+- The final report maps CS-343 through CS-350 and keeps CS-350 documentation absence as `Evidence gap`.
+- Audit, architecture, documentation and implementation are distinguished in the report and source evidence.
+- Residual risks, contradictions and next actions remain visible instead of being smoothed into delivered claims.
+- Guarded app surfaces remain unchanged: `backend/app`, `backend/tests`, `frontend/src` and `backend/migrations`.
 
 ## Validation evidence
 
-- Command:
-  `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py`
-  `_condamad\\stories\\CS-349-report-cartographie-generation-prompt-llm\\00-story.md`
-  - Result: PASS
-- Command:
-  `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict`
-  `_condamad\\stories\\CS-349-report-cartographie-generation-prompt-llm\\00-story.md`
-  - Result: PASS
+- `rg -n "Trigger initial|Map des stories et briefs|Acceptance criteria par story|Evidence paths|Validation evidence|Gaps ou contradictions|Risques residuels|Next actions" _condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md`: PASS.
+- `rg -n "Evidence gap|residual risk|validation|CS-343|CS-348|CS-350" _condamad/reports/prompt-generation-cartography/2026-05-27-0000`: PASS.
+- `python -B -c "<report path checks>"` after venv activation: PASS.
+- `python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm` after venv activation: PASS.
+- `python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm\00-story.md` after venv activation: PASS.
+- `python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict .\_condamad\stories\CS-349-report-cartographie-generation-prompt-llm\00-story.md` after venv activation: PASS.
+- `git status --short -- backend/app backend/tests frontend/src backend/migrations`: PASS, no entries.
+- `git diff --check -- _condamad/reports/prompt-generation-cartography/2026-05-27-0000 _condamad/stories/CS-349-report-cartographie-generation-prompt-llm _condamad/stories/story-status.md`: PASS, line-ending warnings only.
 
 ## Findings
 
-No actionable drafting issue found.
+No actionable implementation issue remains.
 
 ## Propagation
 
-No-propagation: the review only produced the local review artifact and did not reveal reusable learning for guardrails,
-AGENTS.md or skills.
+No-propagation: the corrected issue was local to the CS-349 report/evidence artifacts and does not require a reusable guardrail, AGENTS.md or skill update.
 
 ## Residual risk
 
-The future implementation depends on the availability of CS-343 to CS-350 deliverables. Missing deliverables must be
-recorded as `Evidence gap` during report creation.
+CS-350 documentation remains absent by scope and is recorded as `Evidence gap`; it is a downstream story, not a CS-349 implementation defect.

@@ -1,5 +1,5 @@
 # Story CS-349 report-cartographie-generation-prompt-llm: Report Cartographie Generation Prompt LLM
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
