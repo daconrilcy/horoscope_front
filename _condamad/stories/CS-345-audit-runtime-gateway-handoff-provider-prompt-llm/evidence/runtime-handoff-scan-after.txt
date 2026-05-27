@@ -1,0 +1,20 @@
+Commentaire global: scan apres audit CS-345 pour confirmer les surfaces runtime inchangées.
+
+Command:
+rg -n "execute_request|_resolve_plan|_build_messages|build_user_payload|compose_chat_messages|compose_structured_messages|_call_provider|_prompt_visible_llm_astrology_input" backend/app/domain/llm/runtime backend/tests
+
+Result:
+Same relevant runtime symbols remain in backend/app/domain/llm/runtime/gateway.py:
+- _prompt_visible_llm_astrology_input
+- build_user_payload
+- compose_chat_messages
+- compose_structured_messages
+- _resolve_plan
+- _build_messages
+- _call_provider
+- execute_request
+
+Read-only guard:
+git diff --quiet -- backend/app backend/tests frontend/src
+Result: PASS, no diff detected.
+

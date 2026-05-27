@@ -1,0 +1,60 @@
+Commentaire global: sorties de validation de l'audit CS-345 executees depuis le venv.
+
+Environment:
+- Repository root: C:\dev\horoscope_front
+- Python commands executed after `. .\.venv\Scripts\Activate.ps1`
+
+Commands and results:
+
+1. Domain audit validator
+Command:
+`. .\.venv\Scripts\Activate.ps1; python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-cartography/2026-05-27-1822`
+Result:
+`CONDAMAD domain audit validation passed.`
+
+2. Domain audit lint
+Command:
+`. .\.venv\Scripts\Activate.ps1; python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-cartography/2026-05-27-1822`
+Result:
+`CONDAMAD domain audit lint passed.`
+
+3. Audit report existence
+Command:
+`. .\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; p=Path('_condamad/audits/prompt-generation-cartography'); assert any(p.glob('*/03-runtime-gateway-handoff-audit.md')); print('VC1 PASS')"`
+Result:
+`VC1 PASS`
+
+4. Runtime handoff AST guard
+Command:
+`. .\.venv\Scripts\Activate.ps1; python -S -B -c "<AST guard for execute_request, _resolve_plan, _build_messages, _call_provider, build_user_payload, compose_chat_messages, compose_structured_messages>"`
+Result:
+`AST_RUNTIME_HANDOFF_PASS symbols=execute_request,_resolve_plan,_build_messages,_call_provider,build_user_payload,compose_chat_messages,compose_structured_messages`
+
+5. Boundary tests
+Command:
+`. .\.venv\Scripts\Activate.ps1; cd backend; pytest -q tests/llm_orchestration/test_llm_astrology_input_boundaries.py tests/architecture/test_llm_astrology_input_payload_boundaries.py`
+Result:
+`10 passed in 2.44s`
+
+6. Backend lint
+Command:
+`. .\.venv\Scripts\Activate.ps1; cd backend; ruff check .`
+Result:
+`All checks passed!`
+
+7. Story report section scan
+Command:
+`rg -n "runtime-gateway-handoff-audit|Last payload before provider|Structured message shape|Chat message shape" _condamad/audits/prompt-generation-cartography/2026-05-27-1822`
+Result:
+Hits found in `00-audit-report.md` and `03-runtime-gateway-handoff-audit.md`.
+
+8. Read-only app/test/frontend guard
+Command:
+`. .\.venv\Scripts\Activate.ps1; python -c "import subprocess; subprocess.run(['git','diff','--quiet','--','backend/app','backend/tests','frontend/src'], check=True); print('VC8 PASS')"`
+Result:
+`VC8 PASS`
+
+Skipped:
+- `ruff format .` was not run because the story is read-only and formatters are forbidden by the audit workflow.
+- Full `pytest -q` was not run because CS-345 requires targeted runtime handoff and payload-boundary evidence, and no application code changed.
+

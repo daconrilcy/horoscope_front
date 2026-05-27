@@ -1,0 +1,19 @@
+Commentaire global: baseline de scan CS-345 pour le handoff runtime gateway provider LLM.
+
+Command:
+rg -n "execute_request|_resolve_plan|_build_messages|build_user_payload|compose_chat_messages|compose_structured_messages|_call_provider|_prompt_visible_llm_astrology_input" backend/app/domain/llm/runtime backend/tests
+
+Key reproducible hits:
+- backend/app/domain/llm/runtime/gateway.py:119 _prompt_visible_llm_astrology_input
+- backend/app/domain/llm/runtime/gateway.py:185 build_user_payload
+- backend/app/domain/llm/runtime/gateway.py:244 compose_chat_messages
+- backend/app/domain/llm/runtime/gateway.py:271 compose_structured_messages
+- backend/app/domain/llm/runtime/gateway.py:754 _resolve_plan
+- backend/app/domain/llm/runtime/gateway.py:1515 _build_messages
+- backend/app/domain/llm/runtime/gateway.py:1570 _call_provider
+- backend/app/domain/llm/runtime/gateway.py:1986 execute_request
+- backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py proves local provider double handoff.
+- backend/tests/architecture/test_llm_astrology_input_payload_boundaries.py proves AST prompt boundary.
+
+Result: PASS.
+
