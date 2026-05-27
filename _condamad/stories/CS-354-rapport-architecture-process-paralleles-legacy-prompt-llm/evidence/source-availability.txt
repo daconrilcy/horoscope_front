@@ -1,0 +1,29 @@
+Commentaire global: preuve de disponibilite des sources lues pour le rapport d'architecture CS-354.
+
+Story: CS-354 rapport-architecture-process-paralleles-legacy-prompt-llm
+Generated at: 2026-05-27-2338
+
+Sources available and used:
+- _story_briefs/cs-354-archi-rapport-process-paralleles-legacy-generation-prompt-llm.md
+- _condamad/stories/CS-354-rapport-architecture-process-paralleles-legacy-prompt-llm/00-story.md
+- .agents/skills/condamad-product-architecture/SKILL.md
+- .agents/skills/condamad-product-architecture/workflow.md
+- .agents/skills/condamad-product-architecture/references/output-contract.md
+- .agents/skills/condamad-product-architecture/references/audit-bundle-ingestion.md
+- .agents/skills/condamad-product-architecture/references/decision-rules.md
+- .agents/skills/condamad-product-architecture/references/roadmap-rules.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2305/01-adversarial-document-review-audit.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2305/02-finding-register.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2240/02-code-document-concordance-audit.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2240/02-finding-register.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2246/03-parallel-legacy-processes-audit.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2246/02-finding-register.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2246/03-story-candidates.md
+- _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+- _condamad/architecture/prompt-generation-cartography/2026-05-27-0000/architecture-prompt-generation-llm.md
+- _condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md
+
+Source caveats:
+- CS-353 story labels SC-001 and SC-002 are provenance labels only, not final tracker IDs.
+- No product/architecture/admin owner decision was available for event_guidance or admin manual execution.
+- No application code, backend tests, frontend, migrations or CS-350 document edits are part of this story.

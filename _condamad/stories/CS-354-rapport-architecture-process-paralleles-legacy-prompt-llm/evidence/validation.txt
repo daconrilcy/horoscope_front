@@ -1,0 +1,75 @@
+Commentaire global: preuves de validation du rapport d'architecture CS-354.
+
+Generated at: 2026-05-27-2338
+
+VC1:
+Command: .\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; root=Path('_condamad/architecture/prompt-generation-document-review'); assert root.exists(); print('VC1 PASS', root)"
+Result: PASS
+Output: VC1 PASS _condamad\architecture\prompt-generation-document-review
+
+VC2:
+Command: .\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path as P; root=P('_condamad/architecture/prompt-generation-document-review'); matches=list(root.glob('*/archi-*.md')); assert matches; print('VC2 PASS', [str(p) for p in matches])"
+Result: PASS
+Output: VC2 PASS ['_condamad\\architecture\\prompt-generation-document-review\\2026-05-27-2338\\archi-parallel-legacy-prompt-generation-report.md']
+
+VC3:
+Command: rg -n "archi-parallel-legacy-prompt-generation-report|Taxonomy|Decision par processus|Guardrails|provider-capable" _condamad/architecture/prompt-generation-document-review
+Result: PASS
+Notes: matched report title, Taxonomy, Decision par processus, Guardrails requis and provider-capable process rows.
+
+VC4:
+Command: rg -n "nominal|parallele|legacy|fallback|bootstrap|test|admin" _condamad/architecture/prompt-generation-document-review
+Result: PASS
+Notes: matched taxonomy, process matrix and roadmap rows for nominal, parallele, legacy, fallback, bootstrap, test and admin.
+
+VC5:
+Command: rg -n "Executive architecture summary|Source map|Open questions produit ou technique" _condamad/architecture/prompt-generation-document-review
+Result: PASS
+Output summary:
+- line 5: Executive architecture summary
+- line 17: Source map
+- Open questions produit ou technique matched in the report.
+
+VC6:
+Command: rg -n "documenter|migrer|deprecier|supprimer|conserver|tester" _condamad/architecture/prompt-generation-document-review
+Result: PASS
+Notes: matched decision vocabulary in taxonomy, process matrix and story roadmap.
+
+VC7:
+Command: rg -n "CS-350|CS-351|CS-352|CS-353|Evidence gap|Open question" _condamad/architecture/prompt-generation-document-review
+Result: PASS
+Notes: matched audit/source references and Missing Evidence entries.
+
+VC8:
+Command: .\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; p=Path('_condamad/stories/CS-354-rapport-architecture-process-paralleles-legacy-prompt-llm/evidence/validation.txt'); assert p.exists(); print('VC8 PASS', p)"
+Result: PASS after this file was written.
+
+VC9:
+Command: git status --short -- backend/app backend/tests frontend/src backend/migrations
+Result: PASS
+Output: empty; no application, backend test, frontend or migration delta.
+
+VC10:
+Command: git status --short -- _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+Result: PASS
+Output: empty; CS-350 document unchanged.
+
+VC11:
+Command: rg -n "Executive architecture summary|Executive architecture decision summary|Ordered implementation roadmap|Stories candidates ordonnees par risque" _condamad/architecture/prompt-generation-document-review/2026-05-27-2338/archi-parallel-legacy-prompt-generation-report.md
+Result: PASS
+Output summary:
+- line 5: Executive architecture summary
+- line 7: Executive architecture decision summary
+- line 235: Ordered implementation roadmap - Stories candidates ordonnees par risque
+
+Bounded story artifact status:
+Command: git status --short -- _condamad/architecture/prompt-generation-document-review _condamad/stories/CS-354-rapport-architecture-process-paralleles-legacy-prompt-llm/evidence _condamad/stories/CS-354-rapport-architecture-process-paralleles-legacy-prompt-llm/generated
+Result: PASS
+Output at first check:
+- M _condamad/stories/CS-354-rapport-architecture-process-paralleles-legacy-prompt-llm/generated/11-code-review.md
+- ?? _condamad/architecture/prompt-generation-document-review/
+- ?? _condamad/stories/CS-354-rapport-architecture-process-paralleles-legacy-prompt-llm/evidence/
+
+Validation caveats:
+- Python commands were executed after activating .\.venv\Scripts\Activate.ps1.
+- No lint/test suite was run because CS-354 is report-only and forbids application code changes; validation uses path checks, rg scans and bounded git status guards required by the story.
