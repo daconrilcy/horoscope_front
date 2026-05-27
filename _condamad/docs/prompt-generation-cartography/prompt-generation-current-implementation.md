@@ -41,13 +41,13 @@ Le chemin nominal observe est:
 
 ```mermaid
 flowchart TD
-  Trigger[Route ou service applicatif] --> Adapter[AIEngineAdapter ou service LLM]
-  Adapter --> Gateway[LLMGateway.execute_request]
-  Gateway --> Plan[Resolution du plan]
-  Plan --> Messages[Composition des messages]
-  Messages --> Provider[Provider runtime]
-  Provider --> Validation[Validation output]
-  Validation --> Audit[Persistence audit et observability]
+  Trigger["Route ou service applicatif"] --> Adapter["AIEngineAdapter ou service LLM"]
+  Adapter --> Gateway["LLMGateway.execute_request"]
+  Gateway --> Plan["Resolution du plan"]
+  Plan --> Messages["Composition des messages"]
+  Messages --> Provider["Provider runtime"]
+  Provider --> Validation["Validation output"]
+  Validation --> Audit["Persistence audit et observability"]
 ```
 
 ## Glossaire
@@ -83,13 +83,13 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  UseCase[use_case] --> Contract[CanonicalUseCaseContract]
-  UseCase --> Assembly[PromptAssemblyConfig]
-  Assembly --> Feature[Feature template]
-  Assembly --> Subfeature[Subfeature template]
-  Assembly --> Persona[Persona]
-  Assembly --> PlanRules[Plan rules]
-  Feature --> DeveloperPrompt[Developer prompt assemble]
+  UseCase["use_case"] --> Contract["CanonicalUseCaseContract"]
+  UseCase --> Assembly["PromptAssemblyConfig"]
+  Assembly --> Feature["Feature template"]
+  Assembly --> Subfeature["Subfeature template"]
+  Assembly --> Persona["Persona"]
+  Assembly --> PlanRules["Plan rules"]
+  Feature --> DeveloperPrompt["Developer prompt assemble"]
   Subfeature --> DeveloperPrompt
   PlanRules --> DeveloperPrompt
 ```
@@ -114,18 +114,18 @@ CS-346 prouve la chaine:
 
 ```mermaid
 flowchart TD
-  NatalResult[NatalResult] --> StructuredFacts[structured_facts_v1]
-  NatalResult --> NarrativeInput[AINarrativeInputContract]
-  StructuredFacts --> ClientProjection[client_interpretation_projection_v1]
-  StructuredFacts --> LLMInput[llm_astrology_input_v1]
+  NatalResult["NatalResult"] --> StructuredFacts["structured_facts_v1"]
+  NatalResult --> NarrativeInput["AINarrativeInputContract"]
+  StructuredFacts --> ClientProjection["client_interpretation_projection_v1"]
+  StructuredFacts --> LLMInput["llm_astrology_input_v1"]
   NarrativeInput --> LLMInput
   ClientProjection --> LLMInput
-  LLMInput --> Facts[facts]
-  LLMInput --> Signals[signals]
-  LLMInput --> Limits[limits]
-  LLMInput --> Shaping[shaping]
-  LLMInput --> Evidence[evidence backend]
-  LLMInput --> Provenance[provenance audit]
+  LLMInput --> Facts["facts"]
+  LLMInput --> Signals["signals"]
+  LLMInput --> Limits["limits"]
+  LLMInput --> Shaping["shaping"]
+  LLMInput --> Evidence["evidence backend"]
+  LLMInput --> Provenance["provenance audit"]
 ```
 
 ## Projection prompt-visible vs backend-only
@@ -141,14 +141,14 @@ La frontiere est explicite:
 
 ```mermaid
 flowchart LR
-  LLMInput[llm_astrology_input_v1 complet] --> Filter[Filtre prompt-visible gateway]
-  Filter --> PromptFacts[facts]
-  Filter --> PromptSignals[signals]
-  Filter --> PromptLimits[limits]
-  Filter --> PromptShaping[shaping]
-  LLMInput -. exclu .-> Evidence[evidence]
-  LLMInput -. exclu .-> Provenance[provenance]
-  LLMInput -. exclu .-> Hashes[projection_hash et llm_input_hash]
+  LLMInput["llm_astrology_input_v1 complet"] --> Filter["Filtre prompt-visible gateway"]
+  Filter --> PromptFacts["facts"]
+  Filter --> PromptSignals["signals"]
+  Filter --> PromptLimits["limits"]
+  Filter --> PromptShaping["shaping"]
+  LLMInput -.-> Evidence["evidence"]
+  LLMInput -.-> Provenance["provenance"]
+  LLMInput -.-> Hashes["projection_hash et llm_input_hash"]
 ```
 
 ## Composition des messages provider
@@ -198,13 +198,13 @@ CS-347 separe:
 
 ```mermaid
 flowchart TD
-  Raw[Provider raw output] --> Schema[Output schema validation]
-  Schema -->|valid| Persist[Persist interpretation]
-  Schema -->|invalid| Repair[Repair ou fallback]
-  Persist --> Rejection[Rejected narrative workflow]
-  Rejection -->|accepted| Audit[Audit fields]
-  Rejection -->|rejected| SafePayload[Payload client degrade]
-  Audit --> Logs[LLM call logs et metrics]
+  Raw["Provider raw output"] --> Schema["Output schema validation"]
+  Schema -- "valid" --> Persist["Persist interpretation"]
+  Schema -- "invalid" --> Repair["Repair ou fallback"]
+  Persist --> Rejection["Rejected narrative workflow"]
+  Rejection -- "accepted" --> Audit["Audit fields"]
+  Rejection -- "rejected" --> SafePayload["Payload client degrade"]
+  Audit --> Logs["LLM call logs et metrics"]
 ```
 
 ## Persistence audit et observability
