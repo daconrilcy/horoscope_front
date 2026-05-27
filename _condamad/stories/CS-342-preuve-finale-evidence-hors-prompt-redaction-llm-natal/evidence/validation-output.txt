@@ -1,0 +1,22 @@
+CS-342 validation output evidence
+
+Date: 2026-05-27
+Environment: PowerShell, `.venv` activated before every Python, Ruff, and Pytest command.
+
+Commands and results:
+- python -B -m pytest -q backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py backend\tests\unit\test_rejected_narrative_answer_workflow.py backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py --tb=short
+  Result: PASS, 21 passed, 2 deselected in 2.53s.
+- ruff check .
+  Result: PASS, all checks passed.
+- ruff format --check .
+  Result: PASS, 1699 files already formatted.
+- python -B -m pytest -q backend\tests --tb=short
+  Result: PASS, 1215 passed, 221 deselected in 52.93s.
+- python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md
+  Result: PASS.
+- python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md
+  Result: PASS.
+
+Skipped:
+- Real provider call: skipped by explicit story non-goal.
+- Frontend validation: skipped because the story is backend-only/report-focused and no frontend files changed.

@@ -1,0 +1,26 @@
+CS-342 boundary scan evidence
+
+Date: 2026-05-27
+Scope: backend/app, backend/tests, target CS-342 story capsule, target CS-342 report, source CS-342 brief.
+
+Commands:
+- rg -n --fixed-strings '{{evidence}}' app tests
+- rg -n --fixed-strings '{{evidence_refs}}' app tests
+- rg -n --fixed-strings '{{grounding_status}}' app tests
+- rg -n --fixed-strings '"evidence": {}' app tests
+- rg -n --fixed-strings 'prompt_payload["evidence"]' app tests
+- rg -n --count-matches "evidence|evidence_refs|grounding_status|validation_owner|prompt_visible|validation_only|audit_only|llm_input_hash|projection_hash|provenance" app tests ..\_condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal ..\_condamad\reports\evidence-hors-prompt-validation-redaction-llm-natal ..\_story_briefs\cs-342-cloturer-process-evidence-hors-prompt-validation-redaction-llm-natale.md
+- rg -n "chart_json|natal_data|LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS" app tests
+
+Results:
+- Forbidden active evidence prompt placeholders: no matches in backend/app or backend/tests.
+- Evidence/audit/hash vocabulary remains present and classified in the final report.
+- Modern natal provider boundary is guarded by gateway tests and AST tests.
+- `chart_json` and `natal_data` remain present in legacy, admin, tests, guards, and runtime-only surfaces; modern natal handoff tests keep them outside the provider prompt.
+
+Classification:
+- Prompt-visible owner: `llm_astrology_input_v1.py` exposes only `facts`, `signals`, `limits`, and `shaping`.
+- Provider projection owner: `gateway.py` derives prompt blocks from `LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"]`.
+- Validation owner: `rejected_answer_workflow.py` and evidence ref validators use backend-only evidence after generation.
+- Audit owner: `interpretation_service.py` persists hashes, grounding status, and evidence refs outside the prompt.
+- Historical evidence owner: target story, report, and source brief keep vocabulary for traceability only.

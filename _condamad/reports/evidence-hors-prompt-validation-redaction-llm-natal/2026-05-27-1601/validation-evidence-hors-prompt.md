@@ -81,8 +81,9 @@ Les occurrences detectees dans `canonical_use_case_registry.py` et `prompting/co
 ## Validations
 
 - `python -B -m pytest -q backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py backend\tests\unit\test_rejected_narrative_answer_workflow.py backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py --tb=short` - PASS, 21 passed, 2 deselected.
-- `python -B -m pytest -q backend\tests --tb=short` - PASS.
+- `python -B -m pytest -q backend\tests --tb=short` - PASS, 1215 passed, 221 deselected.
 - `ruff check .` - PASS.
+- `ruff format --check .` - PASS, 1699 files already formatted.
 - `condamad_validate.py _condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal` - PASS.
 
 ## Risques residuels

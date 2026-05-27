@@ -1,5 +1,5 @@
 # Story CS-342 preuve-finale-evidence-hors-prompt-redaction-llm-natal: Prove Final Evidence Boundary And Natal LLM Validation
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

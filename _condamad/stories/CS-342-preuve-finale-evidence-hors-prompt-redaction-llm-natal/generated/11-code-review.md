@@ -1,4 +1,4 @@
-# CS-342 Editorial Story Review
+# CS-342 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,52 +7,58 @@ Verdict: CLEAN
 - Story: `_condamad/stories/CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal/00-story.md`
 - Source brief: `_story_briefs/cs-342-cloturer-process-evidence-hors-prompt-validation-redaction-llm-natale.md`
 - Tracker row: `_condamad/stories/story-status.md` row `CS-342`
-- Guardrails checked by scoped IDs: `RG-002`, `RG-022`, `RG-047`, `RG-052`
+- Final report: `_condamad/reports/evidence-hors-prompt-validation-redaction-llm-natal/2026-05-27-1601/validation-evidence-hors-prompt.md`
+- Evidence artifacts: `prompt-boundary-before.json`, `prompt-boundary-after.json`, `boundary-scan.txt`, `validation-output.txt`
+- Runtime surfaces: gateway prompt projection, LLM astrology input roles, post-generation validation, natal audit persistence, targeted backend tests.
 
-## Editorial Findings
+## Findings Fixed During Review
 
-No remaining actionable drafting issue found.
+| Finding | Severity | Fix | Validation |
+|---|---|---|---|
+| Final report filename drifted from the brief/story contract. | High | Renamed report to `validation-evidence-hors-prompt.md` and updated evidence references. | Path and story validation passed. |
+| Required persistent scan and validation artifacts were missing. | Medium | Added `boundary-scan.txt` and `validation-output.txt` under the story evidence directory. | Story validation and strict lint passed. |
 
-## Alignment Corrections Applied
+## Fresh Review Result
 
-- Made internally ungrounded generated writing explicit in the acceptance criteria and task coverage.
-- Made missing-data or limit-contradicting generated writing explicit in the acceptance criteria.
-- Made registry, schema, and fixture prompt-dependency scans explicit with runtime guard evidence.
+No remaining actionable implementation, proof, test, guardrail, or AC-alignment issue found.
 
-## Brief Alignment
+## AC Alignment
 
-- The final validation-report objective is explicit in the story objective, target state, AC1, AC10, AC12, and task 9.
-- Prompt-visible fields are constrained to `facts`, `signals`, `limits`, and `shaping`.
-- Evidence, refs, hashes, grounding status, validation owner, provenance, provider response, and persisted answer are backend-only.
-- Provider handoff exclusion is covered by AC3, task 3, VC8, and the forbidden provider prompt fields list.
-- Internal evidence availability and audit persistence are covered by AC4, AC5, tasks 4 and 9, VC7, VC10, and the evidence artifacts.
-- Post-generation validation covers one compliant case plus invented-data, missing-data or limit-contradicting, and ungrounded cases.
-- Prompt, registry, schema, fixture, and report scans are represented by AC10, AC11, AC12, VC12, VC13, task 6, and task 7.
-- The story keeps frontend, public API, database migration, real provider calls, and audit evidence deletion out of scope.
-
-## Prerequisite Handling
-
-The source brief requires CS-341 to be finished first. The tracker currently marks CS-341 as `ready-to-dev`, and the story records this as a
-prerequisite status note plus an implementation task to confirm completion or record a blocker before executing CS-342 validation. This is
-acceptable for the drafted story contract and does not require changing CS-342 away from `ready-to-dev`.
+- AC1 is satisfied by the final report at the contract path.
+- AC2 and AC3 are satisfied by the canonical prompt-visible role map, gateway projection tests, and AST guards.
+- AC4 and AC5 are satisfied by internal evidence ref and natal audit persistence tests.
+- AC6 through AC9 are satisfied by rejected narrative workflow tests covering compliant, invented, missing-data or limit-contradicting, and ungrounded outputs.
+- AC10 through AC12 are satisfied by forbidden placeholder scans and the final occurrence classification.
+- AC13 is satisfied by Ruff and full backend pytest.
+- AC14 is satisfied by persisted report, prompt-boundary snapshots, scan output, validation output, final evidence, and review output.
 
 ## Validation Results
 
-- `.\.venv\Scripts\Activate.ps1`
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md`
-  - Result: PASS
-- `.\.venv\Scripts\Activate.ps1`
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md`
-  - Result: PASS
+- `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py backend\tests\unit\test_rejected_narrative_answer_workflow.py backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py --tb=short`
+  - Result: PASS, 21 passed, 2 deselected.
+- `.\.venv\Scripts\Activate.ps1; ruff check .`
+  - Result: PASS.
+- `.\.venv\Scripts\Activate.ps1; ruff format --check .`
+  - Result: PASS.
+- `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests --tb=short`
+  - Result: PASS, 1215 passed, 221 deselected.
+- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md`
+  - Result: PASS.
+- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md`
+  - Result: PASS.
+- Targeted forbidden-placeholder scans over `backend/app` and `backend/tests`
+  - Result: PASS, no active `{{evidence}}`, `{{evidence_refs}}`, `{{grounding_status}}`, `"evidence": {}`, or `prompt_payload["evidence"]`.
 
-## Produced Artifacts
+## Tracker
 
-- `_condamad/stories/CS-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal/generated/11-code-review.md`
+- CS-341 prerequisite is `done`.
+- CS-342 story path and source brief match the tracker row.
+- CS-342 is marked `done` after clean implementation review and passing validation.
 
 ## Propagation
 
-No propagation. The review found no reusable learning requiring guardrail, AGENTS, tracker, or skill updates.
+No propagation. The corrections were local proof-artifact and contract-path fixes, with no reusable guardrail or AGENTS update required.
 
 ## Residual Risk
 
-CS-342 implementation remains dependent on CS-341 completion. This is already captured as an execution prerequisite and validation task.
+Aucun risque restant identifie.

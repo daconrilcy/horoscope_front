@@ -2,7 +2,7 @@
 
 | AC | Requirement | Status | Evidence |
 |---|---|---|---|
-| AC1 | The final validation report exists. | PASS | Final report created at `_condamad/reports/evidence-hors-prompt-validation-redaction-llm-natal/2026-05-27-1601/validation-finale-evidence-hors-prompt.md`; path check passed. |
+| AC1 | The final validation report exists. | PASS | Final report created at `_condamad/reports/evidence-hors-prompt-validation-redaction-llm-natal/2026-05-27-1601/validation-evidence-hors-prompt.md`; path check passed. |
 | AC2 | Prompt-visible blocks exclude evidence. | PASS | Runtime roles show prompt-visible blocks are only `facts`, `signals`, `limits`, `shaping`; architecture guard tests passed. |
 | AC3 | Provider user message excludes validation data. | PASS | `backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py` and architecture provider-boundary tests passed; provider message excludes validation/audit fields. |
 | AC4 | Internal LLM input keeps evidence refs. | PASS | `backend/tests/unit/domain/astrology/test_llm_astrology_input_evidence.py` passed; internal input keeps evidence refs and grounding status. |
