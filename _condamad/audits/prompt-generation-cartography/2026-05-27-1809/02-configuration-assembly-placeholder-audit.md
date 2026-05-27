@@ -40,25 +40,36 @@ request feature/subfeature/plan/locale
 
 ## Developer Prompt Block Matrix
 
-| Block | Owner | Classification |
-|---|---|---|
-| feature | `assembly_resolver.resolve_assembly` | feature block from feature template |
-| subfeature | `assembly_resolver.resolve_assembly` | optional subfeature block |
-| persona | `resolve_assembly` / gateway | persona block, not appended by `assemble_developer_prompt` |
-| plan rules | `PLAN_RULES_REGISTRY` | subscription or daily narration instruction block |
-| hard policy | `get_hard_policy("astrology")` | policy layer, visible in preview/resolved assembly |
-| length budget | `LengthBudgetInjector` | injected length constraint and token source |
-| context quality | `ContextQualityInjector` / `PromptRenderer` | degraded-context or conditional block handling |
+| Block | Owner | Source data | Output | Guard | Test |
+|---|---|---|---|---|---|
+| feature | `assembly_resolver.resolve_assembly` | `config.feature_template.developer_prompt` | first developer prompt block | `config.is_feature_template_enabled()` | E-006, E-014 |
+| subfeature | `assembly_resolver.resolve_assembly` | `config.subfeature_template.developer_prompt` | optional second prompt block | `config.is_subfeature_template_enabled()` | E-006 |
+| persona | `resolve_assembly` / gateway | `config.persona`, `compose_persona_block` | `persona_block`, not appended by `assemble_developer_prompt` | `config.is_persona_enabled()` | E-006, E-016 |
+| plan rules | `PLAN_RULES_REGISTRY` | `plan_rules_ref` | subscription or daily narration instruction block | `validate_plan_rules_content` warning | E-006, E-016 |
+| hard policy | `get_hard_policy("astrology")` | runtime hard-policy registry | policy layer in preview/resolved assembly | hard policy kept separate from prompt block in preview | E-006 |
+| length budget | `LengthBudgetInjector` | `config.length_budget` | `[CONSIGNE DE LONGUEUR]` and token source | `LengthBudget` model and gateway token source | E-006, E-014 |
+| context quality | `ContextQualityInjector` / `PromptRenderer` | `qualified_ctx.context_quality`, `{{#context_quality:*}}` blocks | degraded-context instructions or selected conditional block | conditional block regex and injector handled flag | E-007, E-014 |
 
 ## Placeholder Families
 
-| Family | Declared owner | Runtime consumer |
-|---|---|---|
-| `natal` | `prompt_governance_registry.json`; required `llm_astrology_input_v1` | `PromptRenderer.render` via gateway |
-| `guidance` | `prompt_governance_registry.json`; `situation`, `objective`, `natal_chart_summary` | guidance gateway path |
-| `chat` | `prompt_governance_registry.json`; required `last_user_msg` | chat gateway path |
-| `horoscope_daily` | `prompt_governance_registry.json`; `question` optional | daily narration gateway path |
-| universal | `locale`, `use_case`, `persona_name`, `last_user_msg` | all families |
+| Family | Declared owner | Allowed variables | Validation or replacement path | Runtime consumer |
+|---|---|---|---|---|
+| `natal` | `prompt_governance_registry.json` | `locale`, `use_case`, `llm_astrology_input_v1`, `birth_date`, `birth_time`, `birth_timezone`; universal `persona_name` | `PromptRenderer.render` checks required values and `PLACEHOLDER_POLICY` blocks unresolved required natal placeholders | `LLMGateway._resolve_plan` and renderer |
+| `guidance` | `prompt_governance_registry.json` | `locale`, `use_case`, `situation`, `objective`, `time_horizon`, `natal_chart_summary`, `context_lines`, `current_datetime`, `chart_json`, `event_description`, `last_user_msg` | required `situation`, optional fields, and `locale` fallback `fr-FR` | guidance gateway path |
+| `chat` | `prompt_governance_registry.json` | `locale`, `use_case`, `last_user_msg`, `persona_name`, `natal_chart_summary` | required `last_user_msg`; persona is optional | chat gateway path |
+| `horoscope_daily` | `prompt_governance_registry.json` | `locale`, `use_case`, `question`, `last_user_msg` | optional/fallback placeholder classification | daily narration gateway path |
+| universal | `prompt_governance_registry.json` | `locale`, `use_case`, `persona_name`, `last_user_msg` | treated as optional empty when absent unless required by the family-specific list | all renderer families |
+
+## Output Schema Owner Matrix
+
+| Surface | Role | Source data | Runtime status | Evidence |
+|---|---|---|---|---|
+| `canonical_use_case_registry.py` | canonical contract declaration | `output_schema_name`, `CanonicalOutputSchemaDefinition` | source contract owner, not the final runtime resolver | E-005 |
+| `assembly_registry.py` / assembly rows | nominal runtime selector | active snapshot or published DB `output_schema_id` | nominal when assembly schema is present | E-006, E-011 |
+| `gateway.py` / `_resolve_schema` | runtime schema resolution | snapshot bundle, DB schema ID, fallback catalog | final runtime decision point; records F-002 split ownership risk | E-011 |
+| `catalog.py` / `get_output_schema` | bounded fallback | `PROMPT_RUNTIME_DATA` output schemas | fallback only when no schema is resolved and use case is not paid | E-010, E-011 |
+| `backend/app/ops/llm/bootstrap/**` | provisioning input | seed schema constants and canonical contracts | provisioning only, not loaded runtime truth | E-013 |
+| `test_output_contract.py` | test guard | runtime schema fixtures and bootstrap schema import | proves fixture/schema validation but exposes F-002 split ownership | E-014, E-017 |
 
 ## `llm_astrology_input_v1` Trace
 
@@ -86,3 +97,11 @@ Seeds/bootstrap: `use_cases_seed.py`, `seed_66_20_taxonomy.py`, `seed_29_prompts
 - F-002: output schema ownership remains split and needs a bounded convergence story.
 - F-003: prompt-resolution evaluation should have a non-mutating guard mode.
 
+## Review Alignment Note
+
+This story-specific report intentionally mirrors the required CS-344 contract shape:
+diagram, registry matrix, prompt block matrix, placeholder family matrix,
+output schema owner matrix, nominal-versus-fallback separation, seed/bootstrap
+classification, test map and coverage gaps. The companion files in the same
+folder carry the CONDAMAD evidence log, finding register, story candidates, risk
+matrix and executive summary.

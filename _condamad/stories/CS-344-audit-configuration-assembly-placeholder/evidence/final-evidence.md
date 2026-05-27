@@ -2,7 +2,8 @@
 
 ## Status
 
-Audit delivered as documentation and evidence only.
+Audit delivered as documentation and evidence only. Targeted audit review is
+clean after artifact correction.
 
 ## Audit Artifacts
 
@@ -38,6 +39,7 @@ Audit delivered as documentation and evidence only.
 
 ## Validation Summary
 
+- PASS: targeted review confirmed the audit folder is `_condamad/audits/prompt-generation-cartography/2026-05-27-1809`.
 - PASS: `pytest -q backend/tests/evaluation/test_differentiation.py`
 - PASS: `pytest -q backend/tests/evaluation/test_output_contract.py`
 - PASS: `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-cartography/2026-05-27-1809`

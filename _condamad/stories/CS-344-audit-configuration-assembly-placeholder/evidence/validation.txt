@@ -30,6 +30,14 @@ Commands run:
    Result: PASS
    Output: `CONDAMAD domain audit lint passed.`
 
+6b. Targeted audit-review rerun after artifact correction:
+   - `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-cartography/2026-05-27-1809`
+     Result: PASS
+     Output: `CONDAMAD domain audit validation passed.`
+   - `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-cartography/2026-05-27-1809`
+     Result: PASS
+     Output: `CONDAMAD domain audit lint passed.`
+
 7. `git diff --quiet -- backend/app backend/tests frontend/src`
    Result: PASS
    Output: no diff in `backend/app`, `backend/tests`, or `frontend/src`.
