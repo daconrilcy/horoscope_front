@@ -111,7 +111,7 @@ Malformed history items are logged and skipped.
 |---|---|---|---|---|
 | Input validation | `gateway._validate_input`, `input_validation.validate_input` | validation-only pre-handoff | blocks invalid inputs before messages | E-016 |
 | Output validation | `gateway._validate_and_normalize`, `output_validator.validate_output` | validation-only post-provider | not provider prompt material | E-016 |
-| Repair | `gateway._handle_repair_or_fallback`, `repair.build_repair_prompt` | non nominal recovery | creates a new repair request only after invalid output | E-016 |
+| Repair | `gateway._handle_repair_or_fallback`, `repair.build_repair_prompt`, `repair_prompter.build_repair_prompt` | non nominal recovery | creates a new repair request only after invalid output | E-016 |
 | Legacy use-case fallback | `gateway._handle_repair_or_fallback` | non nominal recovery | forbidden on supported features | E-016 |
 | Test fallback | gateway flags and metadata | non nominal test path | never nominal provider handoff | E-016 |
 | Provider fallback | provider support and mapper branches | non nominal tolerated path outside nominal supported provider | not normal handoff | E-016 |
@@ -122,7 +122,7 @@ Observability is populated after provider return and recovery classification:
 
 - `GatewayMeta`: validation status, repair and fallback booleans, execution path, model, schema, prompt version, provider and translated params.
 - `ExecutionObservabilitySnapshot`: pipeline kind, execution path kind, fallback kind, requested/resolved/executed provider, context quality, token source, active snapshot metadata and provider hardening metadata.
-- `log_call`: call log row, operational metadata row, input hash, token usage, estimated cost, evidence warning count and replay snapshot.
+- `observability.log_call` / `observability_service.log_call`: call log row, operational metadata row, input hash, token usage, estimated cost, evidence warning count and replay snapshot.
 
 These are audit/observability fields, not provider prompt material.
 
@@ -138,4 +138,3 @@ These are audit/observability fields, not provider prompt material.
 ## Conclusion
 
 CS-345 is satisfied as an audit deliverable. The current nominal handoff is source-proven, structured and chat modes are separated, audit-only and validation-only fields are excluded from provider prompt material, and recovery paths are classified as non nominal.
-

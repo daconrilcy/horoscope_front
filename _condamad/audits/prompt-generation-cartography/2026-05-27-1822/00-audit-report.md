@@ -138,8 +138,10 @@ Observability metadata is built after validation and recovery: execution path, r
 | `backend/app/domain/llm/runtime/providers.py::is_provider_supported` | used | E-005, E-016 | Provider support gate participates in nominal versus non-nominal classification. | No provider policy change in audit. |
 | `backend/app/domain/llm/runtime/input_validation.py::validate_input` | used | E-016 | Input validation entrypoint before provider messages. | Detailed schema correctness outside CS-345. |
 | `backend/app/domain/llm/runtime/output_validator.py::validate_output` | used | E-016 | Output validation owner after provider return. | CS-347 owns deeper output audit. |
-| `backend/app/domain/llm/runtime/repair.py::build_repair_prompt` | used | E-016 | Repair path owner for invalid provider output. | Non-nominal only. |
-| `backend/app/domain/llm/runtime/observability.py::log_call` | used | E-016 | Observability entrypoint for call logs and snapshots. | Persistence completeness deferred to CS-347. |
+| `backend/app/domain/llm/runtime/repair.py::build_repair_prompt` | used | E-016 | Canonical runtime repair entrypoint imported by gateway; re-exports the repair prompt builder. | Non-nominal only; implementation lives in `repair_prompter.py`. |
+| `backend/app/domain/llm/runtime/repair_prompter.py::build_repair_prompt` | used | E-016 | Implementation owner for the repair prompt used only after invalid provider output. | Non-nominal only. |
+| `backend/app/domain/llm/runtime/observability.py::log_call` | used | E-016 | Canonical runtime observability entrypoint imported by gateway; re-exports call logging. | Persistence completeness deferred to CS-347. |
+| `backend/app/domain/llm/runtime/observability_service.py::log_call` | used | E-016 | Implementation owner for call logs, operational metadata and replay snapshots. | Persistence completeness deferred to CS-347. |
 | `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py::LLM_ASTROLOGY_INPUT_DATA_ROLES` | used | E-015 | Canonical role contract reused by gateway projection. | Production mapping deferred to CS-346. |
 | `backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py` | test-only | E-012 | Test owner for local handoff and prompt-boundary proof. | None. |
 | `backend/tests/architecture/test_llm_astrology_input_payload_boundaries.py` | test-only | E-013 | Architecture guard for prompt role reuse and exclusions. | None. |
@@ -158,4 +160,3 @@ Observability metadata is built after validation and recovery: execution path, r
 - CS-346: source production and completeness of `llm_astrology_input_v1`.
 - CS-347: output validation, persistence, repair outcomes and observability completeness.
 - Guardrail registry enrichment: explicitly not authorized by CS-345.
-

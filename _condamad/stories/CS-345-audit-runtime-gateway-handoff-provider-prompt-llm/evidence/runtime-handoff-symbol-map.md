@@ -16,6 +16,7 @@
 | `ProviderRuntimeManager.execute_with_resilience` | `backend/app/domain/llm/runtime/provider_runtime_manager.py` | Retries, timeout, breaker, provider call forwarding | provider handoff | E-009 |
 | `ResponsesClient.execute` | `backend/app/infra/providers/llm/openai_responses_client.py` | Final adapter call shape for OpenAI Responses API | provider handoff | E-010 |
 | `validate_output` | `backend/app/domain/llm/runtime/output_validator.py` | Post-provider output validation and evidence sanitization | validation-only | E-016 |
-| `build_repair_prompt` | `backend/app/domain/llm/runtime/repair_prompter.py` | Non-nominal repair prompt generation | non nominal recovery | E-016 |
-| `log_call` | `backend/app/domain/llm/runtime/observability_service.py` | Call logs, operational metadata, replay snapshot | audit-only | E-016 |
-
+| `repair.build_repair_prompt` | `backend/app/domain/llm/runtime/repair.py` | Canonical runtime repair entrypoint imported by gateway | non nominal recovery | E-016 |
+| `repair_prompter.build_repair_prompt` | `backend/app/domain/llm/runtime/repair_prompter.py` | Non-nominal repair prompt implementation | non nominal recovery | E-016 |
+| `observability.log_call` | `backend/app/domain/llm/runtime/observability.py` | Canonical runtime observability entrypoint imported by gateway | audit-only | E-016 |
+| `observability_service.log_call` | `backend/app/domain/llm/runtime/observability_service.py` | Call logs, operational metadata, replay snapshot implementation | audit-only | E-016 |
