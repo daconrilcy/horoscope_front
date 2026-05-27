@@ -1,0 +1,48 @@
+{
+  "story": "CS-342",
+  "captured_at": "2026-05-27-1601",
+  "phase": "before-final-report",
+  "prompt_blocks": [
+    "facts",
+    "signals",
+    "limits",
+    "shaping"
+  ],
+  "excluded_keys": [
+    "evidence",
+    "evidence_refs",
+    "grounding_status",
+    "llm_input_hash",
+    "llm_input_version",
+    "persisted_answer",
+    "projection_hash",
+    "provenance",
+    "provider_response",
+    "validation_owner"
+  ],
+  "roles": {
+    "prompt_visible": [
+      "facts",
+      "signals",
+      "limits",
+      "shaping"
+    ],
+    "runtime_only": [
+      "request_id",
+      "trace_id",
+      "chart_json",
+      "natal_data"
+    ],
+    "validation_only": [
+      "evidence",
+      "grounding_status",
+      "validation_owner"
+    ],
+    "audit_only": [
+      "projection_hash",
+      "llm_input_hash",
+      "provider_response",
+      "persisted_answer"
+    ]
+  }
+}

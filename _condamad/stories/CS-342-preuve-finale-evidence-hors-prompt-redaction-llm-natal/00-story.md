@@ -1,5 +1,5 @@
 # Story CS-342 preuve-finale-evidence-hors-prompt-redaction-llm-natal: Prove Final Evidence Boundary And Natal LLM Validation
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -120,15 +120,15 @@ internal evidence after generation, and that persistent audit keeps the data req
 
 ## Implementation Tasks
 
-- [ ] Task 1: Confirm CS-341 is implemented or record a blocker before running CS-342 validation. (AC: AC13)
-- [ ] Task 2: Generate or refresh baseline prompt-boundary and scan artifacts for active backend prompt surfaces. (AC: AC2, AC3, AC10)
-- [ ] Task 3: Verify the provider handoff user message excludes evidence, validation, audit, hash, and provenance fields. (AC: AC3)
-- [ ] Task 4: Verify the complete internal LLM input and persistent audit keep evidence refs, hashes, and grounding status. (AC: AC4, AC5)
-- [ ] Task 5: Verify post-generation validation with compliant, invented-data, missing-data or limit-contradiction, and ungrounded cases. (AC: AC6, AC7, AC8, AC9)
-- [ ] Task 6: Run targeted scans for evidence placeholders, empty prompt evidence blocks, schemas, registries, fixtures, and audit-only provider payload fields. (AC: AC10, AC11)
-- [ ] Task 7: Classify remaining evidence occurrences in the final report with clear ownership. (AC: AC12)
-- [ ] Task 8: Run backend format, lint, targeted tests, full backend tests, and report path checks. (AC: AC13)
-- [ ] Task 9: Persist validation output, scan output, final evidence, and review output artifacts. (AC: AC1, AC14)
+- [x] Task 1: Confirm CS-341 is implemented or record a blocker before running CS-342 validation. (AC: AC13)
+- [x] Task 2: Generate or refresh baseline prompt-boundary and scan artifacts for active backend prompt surfaces. (AC: AC2, AC3, AC10)
+- [x] Task 3: Verify the provider handoff user message excludes evidence, validation, audit, hash, and provenance fields. (AC: AC3)
+- [x] Task 4: Verify the complete internal LLM input and persistent audit keep evidence refs, hashes, and grounding status. (AC: AC4, AC5)
+- [x] Task 5: Verify post-generation validation with compliant, invented-data, missing-data or limit-contradiction, and ungrounded cases. (AC: AC6, AC7, AC8, AC9)
+- [x] Task 6: Run targeted scans for evidence placeholders, empty prompt evidence blocks, schemas, registries, fixtures, and audit-only provider payload fields. (AC: AC10, AC11)
+- [x] Task 7: Classify remaining evidence occurrences in the final report with clear ownership. (AC: AC12)
+- [x] Task 8: Run backend format, lint, targeted tests, full backend tests, and report path checks. (AC: AC13)
+- [x] Task 9: Persist validation output, scan output, final evidence, and review output artifacts. (AC: AC1, AC14)
 
 ## Files to Inspect First
 
