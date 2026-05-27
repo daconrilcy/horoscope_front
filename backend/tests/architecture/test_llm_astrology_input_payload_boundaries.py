@@ -18,6 +18,10 @@ AUDIT_ONLY_PROMPT_SURFACES = {
     "provenance",
     "projection_hash",
     "llm_input_hash",
+    "llm_input_version",
+    "grounding_status",
+    "validation_owner",
+    "evidence_refs",
     "provider_response",
     "persisted_answer",
 }
@@ -73,6 +77,28 @@ def test_gateway_prompt_projection_has_no_audit_only_literal_blocks() -> None:
 
     assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(assigned_blocks)
     assert {"chart_json", "natal_data"}.isdisjoint(assigned_blocks)
+
+
+def test_gateway_prompt_projection_removes_nested_audit_and_validation_keys() -> None:
+    """La projection retire aussi les champs audit-only imbriques."""
+    source = GATEWAY_PATH.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    constant_names = {
+        target.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Name)
+    }
+    function_names = {node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)}
+
+    assert "LLM_ASTROLOGY_INPUT_V1_PROMPT_EXCLUDED_KEYS" in constant_names
+    assert "_without_prompt_excluded_keys" in function_names
+    literal_keys = _literal_string_values(tree)
+    assert {"provenance", "evidence_refs", "llm_input_version"} <= literal_keys
+    assert "LLM_ASTROLOGY_INPUT_DATA_ROLES" in source
+    assert "validation_only" in source
+    assert "audit_only" in source
 
 
 def test_contract_keeps_raw_surfaces_as_declared_exclusions_not_prompt_blocks() -> None:

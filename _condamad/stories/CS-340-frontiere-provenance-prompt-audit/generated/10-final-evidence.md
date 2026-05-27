@@ -5,7 +5,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: clean
 - Story key: `CS-340-frontiere-provenance-prompt-audit`
 - Source story: `_condamad/stories/CS-340-frontiere-provenance-prompt-audit/00-story.md`
 - Source brief: `_story_briefs/cs-340-cloturer-validation-frontiere-provenance-prompt-audit-llm-natal.md`
@@ -38,7 +38,7 @@
 |---|---|---|---|
 | AC1 | Timestamped report created at `_condamad/reports/frontiere-provenance-prompt-audit-llm-natal/2026-05-27-1407/validation-frontiere-provenance.md`. | Report path Python check PASS. | PASS |
 | AC2 | Prompt boundary tests assert canonical prompt-visible keys only and disjoint audit-only nested keys. | Targeted pytest PASS; scan evidence saved. | PASS |
-| AC3 | Provider handoff test inspects `mock_client.execute` messages with local double. | Targeted pytest PASS. | PASS |
+| AC3 | Provider handoff test inspects `mock_client.execute` messages with local double and rejects nested audit/validation keys. | Targeted pytest PASS. | PASS |
 | AC4 | Audit integration test checks `projection_hash`, `llm_input_hash`, `llm_input_version`, `grounding_status`, `evidence_refs`. | Targeted audit pytest PASS. | PASS |
 | AC5 | Placeholder scan over `app tests` found no modern natal hash/provenance placeholders. | Negative `rg` scan returned no matches; recorded as PASS. | PASS |
 | AC6 | Backend formatting check, lint and full tests pass. | `ruff format --check app tests`, `ruff check .`, `python -B -m pytest -q tests --tb=short` PASS. | PASS |
@@ -55,7 +55,11 @@
 - `_condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/05-implementation-plan.md`
 - `_condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/09-dev-log.md`
 - `_condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/10-final-evidence.md`
+- `_condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/11-code-review.md`
 - `_condamad/stories/story-status.md`
+- `backend/app/domain/llm/runtime/gateway.py`
+- `backend/tests/architecture/test_llm_astrology_input_payload_boundaries.py`
+- `backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py`
 
 ## Files deleted
 
@@ -63,7 +67,8 @@
 
 ## Tests added or updated
 
-- none; this story is a validation/report closure and existing CS-339 guards already proved the boundary.
+- `backend/tests/architecture/test_llm_astrology_input_payload_boundaries.py` updated to guard nested audit/validation key removal.
+- `backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py` updated to reject `grounding_status`, `validation_owner`, `evidence_refs`, and `llm_input_version` in provider payload.
 
 ## Commands run
 
@@ -72,46 +77,47 @@
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py ... --story-key CS-340-frontiere-provenance-prompt-audit` | repo root | PASS | Generated required capsule files. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-340-frontiere-provenance-prompt-audit` | repo root | PASS | Capsule structure valid. |
 | `python -B -c "...CS-339..."` | `backend` | PASS | CS-339 row is `done`. |
+| `ruff format app/domain/llm/runtime/gateway.py tests/llm_orchestration/test_llm_astrology_input_boundaries.py tests/architecture/test_llm_astrology_input_payload_boundaries.py` | `backend` | PASS | 1 file reformatted, 2 unchanged. |
 | `ruff format --check app tests` | `backend` | PASS | 1465 files already formatted. |
 | `ruff check .` | `backend` | PASS | All checks passed. |
-| `python -B -m pytest -q ...targeted files... --tb=short` | `backend` | PASS | 23 passed, 9 deselected. |
-| `python -B -m pytest -q tests --tb=short` | `backend` | PASS | 1210 passed, 221 deselected. |
-| `rg -n "provenance|projection_hash|llm_input_hash|audit_only|prompt_visible" app tests ..\_condamad ..\_story_briefs` | `backend` | PASS | Results saved before/after. |
-| `rg -n "{{provenance}}|{{projection_hash}}|{{llm_input_hash}}" app tests` | `backend` | PASS | No matches. |
+| `python -B -m pytest -q ...targeted files... --tb=short` | `backend` | PASS | 24 passed, 9 deselected. |
+| `python -B -m pytest -q tests --tb=short` | `backend` | PASS | 1211 passed, 221 deselected. |
+| `rg -n "provenance|projection_hash|llm_input_hash|audit_only|prompt_visible|evidence_refs|grounding_status" app tests ..\_condamad ..\_story_briefs` | `backend` | PASS | Results saved before/after. |
+| `rg -n "\{\{provenance\}\}|\{\{projection_hash\}\}|\{\{llm_input_hash\}\}" app tests` | `backend` | PASS | No matches. |
 | `python -B -c "...report path..."` | `backend` | PASS | Timestamped report exists. |
 | `python -B -c "...report sections..."` | `backend` | PASS | Required sections present. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-340-frontiere-provenance-prompt-audit` | repo root | FAIL then fixed | First final validation found missing `Capsule validation` section; section added and validation rerun. |
 
 ## Commands skipped or blocked
 
-- `ruff format .` skipped intentionally to avoid unrelated formatting churn; no Python source files were modified. Equivalent non-mutating scoped check `ruff format --check app tests` passed.
+- `ruff format .` skipped intentionally to avoid unrelated formatting churn. Scoped `ruff format` ran on touched files and `ruff format --check app tests` passed.
 - Local app startup not run; this story changes no runtime code or public route and is validated by backend tests/report checks.
 
 ## DRY / No Legacy evidence
 
 - No new dependency, shim, alias, fallback or duplicate runtime path introduced.
-- Gateway evidence remains routed through canonical `LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"]`.
+- Gateway evidence remains routed through canonical `LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"]` and recursively excludes audit/validation keys before provider handoff.
 - Negative placeholder scan proves no `{{provenance}}`, `{{projection_hash}}` or `{{llm_input_hash}}` prompt placeholder in active backend app/tests.
 - Legacy `chart_json` / `natal_data` guards remain covered by targeted and full pytest.
 
 ## Diff review
 
 - Story surface reviewed with scoped git diff commands after evidence updates.
-- No frontend, API route, DB migration or runtime code file was modified.
+- No frontend, API route, DB migration or dependency file was modified.
 
 ## Final worktree status
 
-- Final status includes expected story evidence/report files and `_condamad/stories/story-status.md`.
+- Final status includes expected story evidence/report files, backend boundary fix files, and `_condamad/stories/story-status.md`.
 - `_condamad/run-state.json` remained pre-existing untracked context.
 
 ## Remaining risks
 
-- Historical `_condamad/**` and `_story_briefs/**` occurrences remain noisy by design and are classified in the report as historical evidence.
+- Aucun risque restant identifie.
 - Provider proof uses the local double at the provider boundary, not a real provider call, matching story non-goals.
 
 ## Suggested reviewer focus
 
-- Verify the report classification of remaining `provenance`, `projection_hash` and `llm_input_hash` occurrences against the saved after-scan.
+- Verify the report classification of remaining `provenance`, `projection_hash`, `llm_input_hash`, `evidence_refs`, and `grounding_status` occurrences against the saved after-scan.
 
 ## Feedback loop routing
 

@@ -1,5 +1,5 @@
 # Story CS-340 frontiere-provenance-prompt-audit: Close Natal LLM Prompt Audit Boundary Validation
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

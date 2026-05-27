@@ -103,6 +103,15 @@ _FALLBACK_USER_MSG = {
 
 LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
 LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = tuple(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
+LLM_ASTROLOGY_INPUT_V1_PROMPT_EXCLUDED_KEYS = frozenset(
+    (
+        "provenance",
+        "evidence_refs",
+        "llm_input_version",
+        *LLM_ASTROLOGY_INPUT_DATA_ROLES["validation_only"],
+        *LLM_ASTROLOGY_INPUT_DATA_ROLES["audit_only"],
+    )
+)
 # ComposedMessages type alias (Story 66.4 AC3)
 ComposedMessages = List[Dict[str, Any]]
 
@@ -113,8 +122,23 @@ def _prompt_visible_llm_astrology_input(payload: Any) -> Any:
         return payload
 
     return {
-        block: payload[block] for block in LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS if block in payload
+        block: _without_prompt_excluded_keys(payload[block])
+        for block in LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS
+        if block in payload
     }
+
+
+def _without_prompt_excluded_keys(value: Any) -> Any:
+    """Retire recursivement les champs d'audit avant le handoff provider."""
+    if isinstance(value, dict):
+        return {
+            key: _without_prompt_excluded_keys(nested_value)
+            for key, nested_value in value.items()
+            if key not in LLM_ASTROLOGY_INPUT_V1_PROMPT_EXCLUDED_KEYS
+        }
+    if isinstance(value, list):
+        return [_without_prompt_excluded_keys(nested_value) for nested_value in value]
+    return value
 
 
 class LLMGateway:
