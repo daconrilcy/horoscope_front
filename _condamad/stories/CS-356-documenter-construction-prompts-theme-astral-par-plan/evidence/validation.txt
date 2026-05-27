@@ -1,0 +1,249 @@
+Validation CS-356 2026-05-28T01:26:59
+
+## VC1 doc exists
+> . .\.venv\Scripts\Activate.ps1; python -B -c "from pathlib import Path; assert Path('_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md').exists()"
+RESULT: PASS
+
+## VC2 mandatory headings
+> . .\.venv\Scripts\Activate.ps1; python -B -c "from pathlib import Path; text=Path('_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md').read_text(encoding='utf-8'); headings=['Executive summary','Scope: theme astral natal, plans free, basic, premium','Vocabulaire: prompt-visible, backend-only, validation-only, audit-only','Point de depart: donnees recues par le process de prompt','Construction de llm_astrology_input_v1','Matrice des donnees injectees par bloc et par plan','Resolution use case, assembly, placeholders et plan rules','Introduction de l''astrologue/persona','Construction de la securite et des limites','Composition finale des messages provider','Frontiere exacte avant handoff provider','Differences free / basic / premium','Chemins non nominaux, repair, fallback et rejet','Tests et commandes de verification','Risques residuels et questions ouvertes']; missing=[h for h in headings if ('## '+h) not in text]; assert not missing, missing"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from pathlib import Path; text=Path('_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md').read_text(encoding='utf-8'); headings=['Executive summary','Scope: theme astral natal, plans free, basic, premium','Vocabulaire: prompt-visible, backend-only, validation-only, audit-only','Point de depart: donnees recues par le process de prompt','Construction de llm_astrology_input_v1','Matrice des donnees injectees par bloc et par plan','Resolution use case, assembly, placeholders et plan rules','Introduction de l''astrologue/persona','Construction de la securite et des limites','Composition finale des messages provider','Frontiere exacte avant handoff provider','Differences free / basic / premium','Chemins non nominaux, repair, fallback et rejet','Tests et commandes de verification','Risques residuels et questions ouvertes']; missing=[h for h in headings if ('## '+h) not in text]; assert not missing, missing
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ^^^^^^^^^^^
+AssertionError: ['Introduction de lastrologue/persona']
+RESULT: FAIL exit=1
+
+# Rerun after PowerShell quote fix 2026-05-28T01:27:28
+
+## VC2 mandatory headings rerun
+> . .\.venv\Scripts\Activate.ps1; python -B -c "from pathlib import Path; text=Path('_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md').read_text(encoding='utf-8'); headings=('Executive summary','Scope: theme astral natal, plans free, basic, premium','Vocabulaire: prompt-visible, backend-only, validation-only, audit-only','Point de depart: donnees recues par le process de prompt','Construction de llm_astrology_input_v1','Matrice des donnees injectees par bloc et par plan','Resolution use case, assembly, placeholders et plan rules','Introduction de l\'astrologue/persona','Construction de la securite et des limites','Composition finale des messages provider','Frontiere exacte avant handoff provider','Differences free / basic / premium','Chemins non nominaux, repair, fallback et rejet','Tests et commandes de verification','Risques residuels et questions ouvertes'); missing=[h for h in headings if ('## '+h) not in text]; assert not missing, missing"
+RESULT: PASS
+
+## VC3 plan/persona/safety terms
+> rg -n "free|basic|premium|persona|astrologue|hard policy|non-invention" _condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md
+11:## Scope: theme astral natal, plans free, basic, premium
+13:Le scope couvre uniquement la construction du prompt pour le theme astral natal B2C et les plans `free`, `basic`, `premium`. CS-320 fixe la regle produit: tous les plans conservent les calculs astrologiques et les interpretations; la differenciation se fait par donnees transmises au LLM, profondeur redactionnelle, sections exposees et budget de sortie. Sources: `_story_briefs/cs-320-definir-differenciation-llm-front-par-plan-b2c.md`, `backend/app/services/llm_generation/natal/interpretation_service.py`.
+49:| `free` | Prompt-visible, filtre par selection d'input et sortie courte. | Prompt-visible si autorise par la selection. | Prompt-visible pour borner les absences et exclusions. | Prompt-visible: plan `free`, profondeur courte, budget reduit. | validation-only / audit-only, jamais prompt-visible. |
+50:| `basic` | Prompt-visible avec couverture plus large que `free` selon projection. | Prompt-visible avec signaux utiles au module achete. | Prompt-visible pour eviter invention et surpromesse. | Prompt-visible: plan `basic`, profondeur intermediaire, sections controlees. | validation-only / audit-only, jamais prompt-visible. |
+51:| `premium` | Prompt-visible avec profondeur maximale autorisee par le contrat. | Prompt-visible avec signaux narratifs plus riches. | Prompt-visible pour expliciter limites et indisponibilites. | Prompt-visible: plan `premium`, profondeur haute, budget plus large. | validation-only / audit-only, jamais prompt-visible. |
+57:`canonical_use_case_registry.py` declare `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA`: les use cases natals modernes exigent `llm_astrology_input_v1`, et plusieurs use cases natals exigent aussi `persona_name`. `assembly_resolver.py` resout feature template, subfeature template, plan rules, hard policy et length budget, puis `assemble_developer_prompt` concatene feature, subfeature et plan rules. Sources: `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, `backend/app/domain/llm/configuration/assembly_resolver.py`.
+61:## Introduction de l'astrologue/persona
+63:La `persona astrologue` est resolue comme bloc separe du developer prompt. `resolve_assembly` produit `persona_block` via `compose_persona_block` si la configuration l'active; `assemble_developer_prompt` indique que la persona est geree separement; `LLMGateway.compose_structured_messages` ajoute ensuite ce bloc comme message `developer` optionnel. Sources: `assembly_resolver.py`, `backend/app/domain/llm/runtime/gateway.py`, `02-configuration-assembly-placeholder-audit.md`.
+65:Par plan, `free` peut utiliser un use case court sans persona obligatoire, tandis que les use cases natals riches `basic` et `premium` documentes dans le registre exigent `persona_name` lorsque `persona_strategy` vaut `required`. Le texte exact de persona reste `a extraire depuis la configuration runtime`.
+69:La securite est separee en couches: hard policy d'assembly, limites prompt-visible du bloc `limits`, non-invention portee par les guards CS-335 a CS-342, validation de sortie, repair, puis rejet controle. `get_hard_policy("astrology")` alimente l'assembly; `_limits_block` transporte les donnees manquantes et surfaces exclues; `validate_output` verifie la forme de sortie; le rejected workflow controle les claims non groundes. Sources: `assembly_resolver.py`, `llm_astrology_input_v1.py`, `gateway.py`, `05-output-validation-persistence-audit.md`.
+71:Les regles de non-invention ne doivent pas etre confondues avec une preuve semantique complete: les audits CS-347 et CS-350 gardent le risque residuel que le grounding soit borne.
+75:Pour le mode structure, `LLMGateway.compose_structured_messages` produit: `system_core`, developer prompt rendu, `persona_block` optionnel, puis `payload user`. Pour le mode chat, `compose_chat_messages` ajoute l'historique valide avant le message user. Source: `backend/app/domain/llm/runtime/gateway.py`.
+87:| Persona astrologue | prompt-visible message developer optionnel |
+93:## Differences free / basic / premium
+97:| `free` | Use case court possible, `llm_astrology_input_v1` requis pour le natal moderne, selection d'input reduite. | Resume ou sortie courte, budget faible. | `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, `observability`. |
+98:| `basic` | Meme pipeline, blocs prompt-visible plus fournis selon projection client et plan rules. | Profondeur intermediaire, sections controlees. | Memes exclusions; aucun carrier legacy autorise. |
+99:| `premium` | Meme pipeline, selection et shaping plus riches pour modules natals avances. | Profondeur haute, budget plus large, persona generalement requise sur les use cases riches. | Memes exclusions; aucune promotion d'audit-only en prompt-visible. |
+107:Les fallbacks de configuration, bootstrap, tests, admin samples et provider unsupported restent non nominaux ou bornes. Ils ne remplacent pas le contrat natal moderne, ne justifient pas `chart_json` ou `natal_data` comme prompt-visible moderne, et ne changent pas les plans `free`, `basic`, `premium`.
+115:- `rg -n "free|basic|premium|persona|astrologue|hard policy|non-invention" _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`
+124:- Le texte exact de `system_core`, developer prompt, plan rules et persona doit etre `a extraire depuis la configuration runtime`; ce document n'en invente pas la formulation.
+126:- Les evidence refs, la validation et les audits reduisent le risque de non-invention, mais ne prouvent pas chaque claim semantique possible.
+RESULT: PASS
+
+## VC3a visibility terms
+> rg -n "prompt-visible|backend-only|validation-only|audit-only" _condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md
+7:Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.
+17:## Vocabulaire: prompt-visible, backend-only, validation-only, audit-only
+21:| `prompt-visible` | Donnee incluse dans les messages provider ou le payload user rendu. | `gateway.py`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1822/03-runtime-gateway-handoff-audit.md` |
+22:| `backend-only` | Donnee utile au runtime, a la selection, aux metadata ou a la persistence, sans devenir matiere de prompt. | `prompt-generation-current-implementation.md` |
+23:| `validation-only` | Donnee utilisee pour valider ou rejeter la sortie, notamment `evidence`, `grounding_status`, `validation_owner`. | `llm_astrology_input_v1.py`, `05-output-validation-persistence-audit.md` |
+24:| `audit-only` | Donnee de tracabilite: `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, persistence et observability. | `05-output-validation-persistence-audit.md` |
+30:`chart_json` et `natal_data` ne sont pas des carriers prompt-visible du flux natal moderne quand `llm_astrology_input_v1` est present. Ils restent classes runtime-only, historiques, tests, admin samples ou surfaces non modernes selon CS-343 a CS-350.
+34:`LLMAstrologyInputV1Builder.build` assemble un objet complet avec `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance`, `exclusions` et `data_roles`. Le hash `llm_input_hash` est calcule depuis les seuls blocs prompt-influencing `facts`, `signals`, `limits`, `shaping`; il ne rend pas `provenance` prompt-visible. Sources: `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, stories CS-330 a CS-342.
+38:| `facts` | Positions, maisons, aspects majeurs, dominantes et metadata factuelles issues de `structured_facts_v1`. | prompt-visible | `_facts_block` |
+39:| `signals` | Signaux interpretatifs, readiness flags, masking policy et liens de projection publique. | prompt-visible | `_signals_block` |
+40:| `limits` | Donnees manquantes, sections indisponibles, incertitudes et surfaces exclues. | prompt-visible | `_limits_block` |
+41:| `shaping` | Plan, module, profondeur editoriale et selection d'input LLM. | prompt-visible | `_shaping_block` |
+42:| `evidence` | References de grounding et statut de validation. | validation-only | `_evidence_block` |
+43:| `provenance` | Versions, `projection_hash`, `llm_input_hash`, politique de hash et `prompt_ref`. | audit-only | `_provenance_block` |
+49:| `free` | Prompt-visible, filtre par selection d'input et sortie courte. | Prompt-visible si autorise par la selection. | Prompt-visible pour borner les absences et exclusions. | Prompt-visible: plan `free`, profondeur courte, budget reduit. | validation-only / audit-only, jamais prompt-visible. |
+50:| `basic` | Prompt-visible avec couverture plus large que `free` selon projection. | Prompt-visible avec signaux utiles au module achete. | Prompt-visible pour eviter invention et surpromesse. | Prompt-visible: plan `basic`, profondeur intermediaire, sections controlees. | validation-only / audit-only, jamais prompt-visible. |
+51:| `premium` | Prompt-visible avec profondeur maximale autorisee par le contrat. | Prompt-visible avec signaux narratifs plus riches. | Prompt-visible pour expliciter limites et indisponibilites. | Prompt-visible: plan `premium`, profondeur haute, budget plus large. | validation-only / audit-only, jamais prompt-visible. |
+69:La securite est separee en couches: hard policy d'assembly, limites prompt-visible du bloc `limits`, non-invention portee par les guards CS-335 a CS-342, validation de sortie, repair, puis rejet controle. `get_hard_policy("astrology")` alimente l'assembly; `_limits_block` transporte les donnees manquantes et surfaces exclues; `validate_output` verifie la forme de sortie; le rejected workflow controle les claims non groundes. Sources: `assembly_resolver.py`, `llm_astrology_input_v1.py`, `gateway.py`, `05-output-validation-persistence-audit.md`.
+77:Le `payload user` inclut `llm_astrology_input_v1` apres filtrage par `_prompt_visible_llm_astrology_input`, qui conserve uniquement `facts`, `signals`, `limits`, `shaping`, puis `_without_prompt_excluded_keys` retire recursivement les cles exclues. Les parametres modele, temperature, tokens, `response_format`, `request_id`, `trace_id` et `use_case` sont runtime/provider-only metadata, pas prompt-visible payload.
+81:La derniere charge utile gateway-owned avant provider est `messages`, transmise a `_call_provider(messages, plan, request)` puis au runtime manager. Avant ce handoff, les exclusions doivent deja etre effectives: `evidence`, `evidence_refs`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, persistence et observability ne font pas partie du payload prompt-visible. Sources: `03-runtime-gateway-handoff-audit.md`, `gateway.py`.
+85:| `system_core` | prompt-visible message system, texte exact `a extraire depuis la configuration runtime` |
+86:| Developer prompt | prompt-visible message developer rendu par assembly et placeholders |
+87:| Persona astrologue | prompt-visible message developer optionnel |
+88:| Payload user natal | prompt-visible, limite a `facts`, `signals`, `limits`, `shaping` |
+89:| Provider parameters | backend-only / provider-only metadata |
+90:| `provider response` | post-provider, audit-only ou validation-owned selon usage |
+91:| `observability` | post-provider, audit-only |
+98:| `basic` | Meme pipeline, blocs prompt-visible plus fournis selon projection client et plan rules. | Profondeur intermediaire, sections controlees. | Memes exclusions; aucun carrier legacy autorise. |
+99:| `premium` | Meme pipeline, selection et shaping plus riches pour modules natals avances. | Profondeur haute, budget plus large, persona generalement requise sur les use cases riches. | Memes exclusions; aucune promotion d'audit-only en prompt-visible. |
+101:La frontiere plan porte sur le shaping editorial et les blocs prompt-visible selectionnes, pas sur la disparition de calculs backend.
+107:Les fallbacks de configuration, bootstrap, tests, admin samples et provider unsupported restent non nominaux ou bornes. Ils ne remplacent pas le contrat natal moderne, ne justifient pas `chart_json` ou `natal_data` comme prompt-visible moderne, et ne changent pas les plans `free`, `basic`, `premium`.
+116:- `rg -n "prompt-visible|backend-only|validation-only|audit-only" _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`
+RESULT: PASS
+
+## VC3b owners
+> rg -n "LLMGateway|PromptRenderer|llm_astrology_input_v1" _condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md
+7:Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.
+23:| `validation-only` | Donnee utilisee pour valider ou rejeter la sortie, notamment `evidence`, `grounding_status`, `validation_owner`. | `llm_astrology_input_v1.py`, `05-output-validation-persistence-audit.md` |
+28:Le process natal part du service `NatalInterpretationService`: il construit `structured_facts_v1`, `AINarrativeInputContract`, une projection client par plan, puis appelle `_build_llm_astrology_input_v1`. Le gateway recoit ensuite un `LLMExecutionRequest` contenant le use case, le contexte, la locale, les metadata runtime et le bloc `llm_astrology_input_v1`. Sources: `backend/app/services/llm_generation/natal/interpretation_service.py`, `backend/app/domain/llm/runtime/gateway.py`.
+30:`chart_json` et `natal_data` ne sont pas des carriers prompt-visible du flux natal moderne quand `llm_astrology_input_v1` est present. Ils restent classes runtime-only, historiques, tests, admin samples ou surfaces non modernes selon CS-343 a CS-350.
+32:## Construction de llm_astrology_input_v1
+34:`LLMAstrologyInputV1Builder.build` assemble un objet complet avec `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance`, `exclusions` et `data_roles`. Le hash `llm_input_hash` est calcule depuis les seuls blocs prompt-influencing `facts`, `signals`, `limits`, `shaping`; il ne rend pas `provenance` prompt-visible. Sources: `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, stories CS-330 a CS-342.
+57:`canonical_use_case_registry.py` declare `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA`: les use cases natals modernes exigent `llm_astrology_input_v1`, et plusieurs use cases natals exigent aussi `persona_name`. `assembly_resolver.py` resout feature template, subfeature template, plan rules, hard policy et length budget, puis `assemble_developer_prompt` concatene feature, subfeature et plan rules. Sources: `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, `backend/app/domain/llm/configuration/assembly_resolver.py`.
+59:`PromptRenderer.render` applique la gouvernance de placeholders; les placeholders requis manquants refusent le rendu, alors que les optionnels avec fallback restent bornes. Le contenu exact de `system_core`, du developer prompt et des plan rules persiste en configuration: `a extraire depuis la configuration runtime`.
+63:La `persona astrologue` est resolue comme bloc separe du developer prompt. `resolve_assembly` produit `persona_block` via `compose_persona_block` si la configuration l'active; `assemble_developer_prompt` indique que la persona est geree separement; `LLMGateway.compose_structured_messages` ajoute ensuite ce bloc comme message `developer` optionnel. Sources: `assembly_resolver.py`, `backend/app/domain/llm/runtime/gateway.py`, `02-configuration-assembly-placeholder-audit.md`.
+69:La securite est separee en couches: hard policy d'assembly, limites prompt-visible du bloc `limits`, non-invention portee par les guards CS-335 a CS-342, validation de sortie, repair, puis rejet controle. `get_hard_policy("astrology")` alimente l'assembly; `_limits_block` transporte les donnees manquantes et surfaces exclues; `validate_output` verifie la forme de sortie; le rejected workflow controle les claims non groundes. Sources: `assembly_resolver.py`, `llm_astrology_input_v1.py`, `gateway.py`, `05-output-validation-persistence-audit.md`.
+75:Pour le mode structure, `LLMGateway.compose_structured_messages` produit: `system_core`, developer prompt rendu, `persona_block` optionnel, puis `payload user`. Pour le mode chat, `compose_chat_messages` ajoute l'historique valide avant le message user. Source: `backend/app/domain/llm/runtime/gateway.py`.
+77:Le `payload user` inclut `llm_astrology_input_v1` apres filtrage par `_prompt_visible_llm_astrology_input`, qui conserve uniquement `facts`, `signals`, `limits`, `shaping`, puis `_without_prompt_excluded_keys` retire recursivement les cles exclues. Les parametres modele, temperature, tokens, `response_format`, `request_id`, `trace_id` et `use_case` sont runtime/provider-only metadata, pas prompt-visible payload.
+97:| `free` | Use case court possible, `llm_astrology_input_v1` requis pour le natal moderne, selection d'input reduite. | Resume ou sortie courte, budget faible. | `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, `observability`. |
+105:Si la sortie provider ne valide pas le schema, `LLMGateway._handle_repair_or_fallback` tente un repair. Pour les features supportees, le fallback legacy de use case est explicitement refuse en cas d'echec de validation; le workflow de rejet peut produire `RejectedNarrativeAnswerOutcome` et un wording controle. Sources: `gateway.py`, `05-output-validation-persistence-audit.md`.
+117:- `rg -n "LLMGateway|PromptRenderer|llm_astrology_input_v1|canonical_use_case_registry.py|assembly_resolver.py|prompt_renderer.py|gateway.py|interpretation_service.py" _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`
+127:- Admin manual execution, guidance, chat public et horoscope daily sont provider-capable hors flux natal moderne; ils ne doivent pas etre absorbes dans `llm_astrology_input_v1`.
+RESULT: PASS
+
+## VC4 exclusion terms
+> rg -n "chart_json|natal_data|evidence|provenance|projection_hash|llm_input_hash" _condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md
+7:Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.
+23:| `validation-only` | Donnee utilisee pour valider ou rejeter la sortie, notamment `evidence`, `grounding_status`, `validation_owner`. | `llm_astrology_input_v1.py`, `05-output-validation-persistence-audit.md` |
+24:| `audit-only` | Donnee de tracabilite: `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, persistence et observability. | `05-output-validation-persistence-audit.md` |
+30:`chart_json` et `natal_data` ne sont pas des carriers prompt-visible du flux natal moderne quand `llm_astrology_input_v1` est present. Ils restent classes runtime-only, historiques, tests, admin samples ou surfaces non modernes selon CS-343 a CS-350.
+34:`LLMAstrologyInputV1Builder.build` assemble un objet complet avec `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance`, `exclusions` et `data_roles`. Le hash `llm_input_hash` est calcule depuis les seuls blocs prompt-influencing `facts`, `signals`, `limits`, `shaping`; il ne rend pas `provenance` prompt-visible. Sources: `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, stories CS-330 a CS-342.
+42:| `evidence` | References de grounding et statut de validation. | validation-only | `_evidence_block` |
+43:| `provenance` | Versions, `projection_hash`, `llm_input_hash`, politique de hash et `prompt_ref`. | audit-only | `_provenance_block` |
+47:| Plan | `facts` | `signals` | `limits` | `shaping` | `evidence` / `provenance` |
+81:La derniere charge utile gateway-owned avant provider est `messages`, transmise a `_call_provider(messages, plan, request)` puis au runtime manager. Avant ce handoff, les exclusions doivent deja etre effectives: `evidence`, `evidence_refs`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, persistence et observability ne font pas partie du payload prompt-visible. Sources: `03-runtime-gateway-handoff-audit.md`, `gateway.py`.
+97:| `free` | Use case court possible, `llm_astrology_input_v1` requis pour le natal moderne, selection d'input reduite. | Resume ou sortie courte, budget faible. | `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, `observability`. |
+107:Les fallbacks de configuration, bootstrap, tests, admin samples et provider unsupported restent non nominaux ou bornes. Ils ne remplacent pas le contrat natal moderne, ne justifient pas `chart_json` ou `natal_data` comme prompt-visible moderne, et ne changent pas les plans `free`, `basic`, `premium`.
+126:- Les evidence refs, la validation et les audits reduisent le risque de non-invention, mais ne prouvent pas chaque claim semantique possible.
+RESULT: PASS
+
+## VC5 audit/provider terms
+> rg -n "validation-only|audit-only|provider response|observability" _condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md
+7:Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.
+17:## Vocabulaire: prompt-visible, backend-only, validation-only, audit-only
+23:| `validation-only` | Donnee utilisee pour valider ou rejeter la sortie, notamment `evidence`, `grounding_status`, `validation_owner`. | `llm_astrology_input_v1.py`, `05-output-validation-persistence-audit.md` |
+24:| `audit-only` | Donnee de tracabilite: `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, persistence et observability. | `05-output-validation-persistence-audit.md` |
+42:| `evidence` | References de grounding et statut de validation. | validation-only | `_evidence_block` |
+43:| `provenance` | Versions, `projection_hash`, `llm_input_hash`, politique de hash et `prompt_ref`. | audit-only | `_provenance_block` |
+49:| `free` | Prompt-visible, filtre par selection d'input et sortie courte. | Prompt-visible si autorise par la selection. | Prompt-visible pour borner les absences et exclusions. | Prompt-visible: plan `free`, profondeur courte, budget reduit. | validation-only / audit-only, jamais prompt-visible. |
+50:| `basic` | Prompt-visible avec couverture plus large que `free` selon projection. | Prompt-visible avec signaux utiles au module achete. | Prompt-visible pour eviter invention et surpromesse. | Prompt-visible: plan `basic`, profondeur intermediaire, sections controlees. | validation-only / audit-only, jamais prompt-visible. |
+51:| `premium` | Prompt-visible avec profondeur maximale autorisee par le contrat. | Prompt-visible avec signaux narratifs plus riches. | Prompt-visible pour expliciter limites et indisponibilites. | Prompt-visible: plan `premium`, profondeur haute, budget plus large. | validation-only / audit-only, jamais prompt-visible. |
+81:La derniere charge utile gateway-owned avant provider est `messages`, transmise a `_call_provider(messages, plan, request)` puis au runtime manager. Avant ce handoff, les exclusions doivent deja etre effectives: `evidence`, `evidence_refs`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, persistence et observability ne font pas partie du payload prompt-visible. Sources: `03-runtime-gateway-handoff-audit.md`, `gateway.py`.
+90:| `provider response` | post-provider, audit-only ou validation-owned selon usage |
+91:| `observability` | post-provider, audit-only |
+97:| `free` | Use case court possible, `llm_astrology_input_v1` requis pour le natal moderne, selection d'input reduite. | Resume ou sortie courte, budget faible. | `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, `observability`. |
+99:| `premium` | Meme pipeline, selection et shaping plus riches pour modules natals avances. | Profondeur haute, budget plus large, persona generalement requise sur les use cases riches. | Memes exclusions; aucune promotion d'audit-only en prompt-visible. |
+116:- `rg -n "prompt-visible|backend-only|validation-only|audit-only" _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`
+RESULT: PASS
+
+## VC5b runtime extraction marker
+> rg -n "a extraire depuis la configuration runtime" _condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md
+9:Aucun appel provider LLM reel n'a ete effectue pour produire ce document. Les textes exacts de prompt stockes en configuration runtime ne sont pas inventes: ils sont notes `a extraire depuis la configuration runtime`.
+59:`PromptRenderer.render` applique la gouvernance de placeholders; les placeholders requis manquants refusent le rendu, alors que les optionnels avec fallback restent bornes. Le contenu exact de `system_core`, du developer prompt et des plan rules persiste en configuration: `a extraire depuis la configuration runtime`.
+65:Par plan, `free` peut utiliser un use case court sans persona obligatoire, tandis que les use cases natals riches `basic` et `premium` documentes dans le registre exigent `persona_name` lorsque `persona_strategy` vaut `required`. Le texte exact de persona reste `a extraire depuis la configuration runtime`.
+85:| `system_core` | prompt-visible message system, texte exact `a extraire depuis la configuration runtime` |
+124:- Le texte exact de `system_core`, developer prompt, plan rules et persona doit etre `a extraire depuis la configuration runtime`; ce document n'en invente pas la formulation.
+RESULT: PASS
+
+## VC6 source paths
+> rg -n "canonical_use_case_registry.py|assembly_resolver.py|prompt_renderer.py|gateway.py|interpretation_service.py" _condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md
+7:Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.
+13:Le scope couvre uniquement la construction du prompt pour le theme astral natal B2C et les plans `free`, `basic`, `premium`. CS-320 fixe la regle produit: tous les plans conservent les calculs astrologiques et les interpretations; la differenciation se fait par donnees transmises au LLM, profondeur redactionnelle, sections exposees et budget de sortie. Sources: `_story_briefs/cs-320-definir-differenciation-llm-front-par-plan-b2c.md`, `backend/app/services/llm_generation/natal/interpretation_service.py`.
+21:| `prompt-visible` | Donnee incluse dans les messages provider ou le payload user rendu. | `gateway.py`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1822/03-runtime-gateway-handoff-audit.md` |
+28:Le process natal part du service `NatalInterpretationService`: il construit `structured_facts_v1`, `AINarrativeInputContract`, une projection client par plan, puis appelle `_build_llm_astrology_input_v1`. Le gateway recoit ensuite un `LLMExecutionRequest` contenant le use case, le contexte, la locale, les metadata runtime et le bloc `llm_astrology_input_v1`. Sources: `backend/app/services/llm_generation/natal/interpretation_service.py`, `backend/app/domain/llm/runtime/gateway.py`.
+57:`canonical_use_case_registry.py` declare `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA`: les use cases natals modernes exigent `llm_astrology_input_v1`, et plusieurs use cases natals exigent aussi `persona_name`. `assembly_resolver.py` resout feature template, subfeature template, plan rules, hard policy et length budget, puis `assemble_developer_prompt` concatene feature, subfeature et plan rules. Sources: `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, `backend/app/domain/llm/configuration/assembly_resolver.py`.
+63:La `persona astrologue` est resolue comme bloc separe du developer prompt. `resolve_assembly` produit `persona_block` via `compose_persona_block` si la configuration l'active; `assemble_developer_prompt` indique que la persona est geree separement; `LLMGateway.compose_structured_messages` ajoute ensuite ce bloc comme message `developer` optionnel. Sources: `assembly_resolver.py`, `backend/app/domain/llm/runtime/gateway.py`, `02-configuration-assembly-placeholder-audit.md`.
+69:La securite est separee en couches: hard policy d'assembly, limites prompt-visible du bloc `limits`, non-invention portee par les guards CS-335 a CS-342, validation de sortie, repair, puis rejet controle. `get_hard_policy("astrology")` alimente l'assembly; `_limits_block` transporte les donnees manquantes et surfaces exclues; `validate_output` verifie la forme de sortie; le rejected workflow controle les claims non groundes. Sources: `assembly_resolver.py`, `llm_astrology_input_v1.py`, `gateway.py`, `05-output-validation-persistence-audit.md`.
+75:Pour le mode structure, `LLMGateway.compose_structured_messages` produit: `system_core`, developer prompt rendu, `persona_block` optionnel, puis `payload user`. Pour le mode chat, `compose_chat_messages` ajoute l'historique valide avant le message user. Source: `backend/app/domain/llm/runtime/gateway.py`.
+81:La derniere charge utile gateway-owned avant provider est `messages`, transmise a `_call_provider(messages, plan, request)` puis au runtime manager. Avant ce handoff, les exclusions doivent deja etre effectives: `evidence`, `evidence_refs`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, persistence et observability ne font pas partie du payload prompt-visible. Sources: `03-runtime-gateway-handoff-audit.md`, `gateway.py`.
+105:Si la sortie provider ne valide pas le schema, `LLMGateway._handle_repair_or_fallback` tente un repair. Pour les features supportees, le fallback legacy de use case est explicitement refuse en cas d'echec de validation; le workflow de rejet peut produire `RejectedNarrativeAnswerOutcome` et un wording controle. Sources: `gateway.py`, `05-output-validation-persistence-audit.md`.
+117:- `rg -n "LLMGateway|PromptRenderer|llm_astrology_input_v1|canonical_use_case_registry.py|assembly_resolver.py|prompt_renderer.py|gateway.py|interpretation_service.py" _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`
+RESULT: PASS
+
+## VC7 evidence exists
+> . .\.venv\Scripts\Activate.ps1; python -B -c "from pathlib import Path; r=Path('_condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/evidence'); assert r.exists(); assert (r/'validation.txt').exists(); assert (r/'source-coverage.md').exists()"
+RESULT: PASS
+
+## VC8 app source unchanged
+> . .\.venv\Scripts\Activate.ps1; python -B -c "import subprocess; out=subprocess.check_output(['git','status','--short','--','backend/app','backend/tests','frontend/src'], text=True); assert out.strip()=='', out"
+RESULT: PASS
+
+## VC9 ruff format
+SKIPPED: no Python file modified; scoped ruff format has no target.
+
+## VC10 ruff check backend
+> . .\.venv\Scripts\Activate.ps1; Push-Location backend; ruff check .; Pop-Location
+All checks passed!
+RESULT: PASS
+
+## VC11 pytest backend
+> . .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -m pytest -q --tb=short; Pop-Location
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+........................................................................ [ 16%]
+........................................................................ [ 18%]
+........................................................................ [ 20%]
+........................................................................ [ 22%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+................................s....................................... [ 35%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 61%]
+........................................................................ [ 63%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 74%]
+........................................................................ [ 76%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 92%]
+........................................................................ [ 94%]
+........................................................................ [ 97%]
+........................................................................ [ 99%]
+................................                                         [100%]
+3487 passed, 1 skipped, 1222 deselected in 240.98s (0:04:00)
+RESULT: PASS
+
+## Final capsule validation
+> . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-356-documenter-construction-prompts-theme-astral-par-plan
+CONDAMAD validation: FAIL
+- Final evidence missing section: Capsule validation
+- Final evidence missing AC validation table
+RESULT: FAIL exit=1
+
+## Final capsule validation rerun
+> . .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-356-documenter-construction-prompts-theme-astral-par-plan
+CONDAMAD validation: PASS
+RESULT: PASS
+
+## git diff check rerun
+> git diff --check
+warning: in the working copy of '_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/stories/regression-guardrails.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/stories/story-status.md', LF will be replaced by CRLF the next time Git touches it
+RESULT: PASS

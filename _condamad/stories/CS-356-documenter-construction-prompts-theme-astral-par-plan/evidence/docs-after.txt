@@ -1,0 +1,11 @@
+After CS-356 2026-05-28T01:32:09
+target_doc=exists
+ M _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+?? _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md
+?? _condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/evidence/
+?? _condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/generated/01-execution-brief.md
+?? _condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/generated/04-target-files.md
+?? _condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/generated/06-validation-plan.md
+?? _condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-356-documenter-construction-prompts-theme-astral-par-plan/generated/10-final-evidence.md

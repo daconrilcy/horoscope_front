@@ -1,4 +1,4 @@
-²²<!-- Commentaire global: documentation finale CS-350 de la cartographie actuelle de generation des prompts LLM. -->
+<!-- Commentaire global: documentation finale CS-350 de la cartographie actuelle de generation des prompts LLM. -->
 
 # Prompt Generation Current Implementation
 
@@ -6,7 +6,9 @@
 
 Cette cartographie documente l'implementation actuelle de generation des prompts LLM a partir des audits CS-343 a CS-347, de l'architecture CS-348, du rapport CS-349 et des sources backend inspectees. Le flux nominal moderne pour le natal part d'un use case canonique, resout une assembly, rend le developer prompt, construit `llm_astrology_input_v1`, filtre les blocs prompt-visible, compose les messages provider, valide la sortie, puis persiste les ancres d'audit et d'observability.
 
-Les donnees prompt-visible sont limitees aux blocs prouves comme envoyables au provider. Les donnees backend-only, validation-only et audit-only restent hors prompt: `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, reponses provider, audit metadata et observability.
+Les donnees prompt-visible sont limitees aux blocs prouves comme envoyables au provider. Les donnees validation-owned et audit-only restent hors prompt provider: `evidence`, `evidence_refs`, `provenance`, `projection_hash`, `llm_input_hash`, reponses provider, audit metadata et observability. `evidence` et `evidence_refs` peuvent alimenter des audit-only anchors en persistence, sans devenir du materiau prompt-visible.
+
+CS-351 a CS-355 ajoutent une precision importante: des processus provider-capable existent hors flux natal moderne. Guidance, guidance contextuelle, chat public et horoscope daily sont des flux paralleles supportes; repair et fallback restent non nominaux; bootstrap, tests et archives ne sont pas runtime truth. `event_guidance` ne doit pas etre conserve comme dette: il doit etre migre ou supprime dans une story dediee. Admin manual execution est admin-only et provider-capable, mais sa politique exacte reste a creuser avant migration, restriction ou decommission.
 
 Sources principales: `_condamad/audits/prompt-generation-cartography/2026-05-27-1800/01-surface-inventory-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1809/02-configuration-assembly-placeholder-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1822/03-runtime-gateway-handoff-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1835/04-natal-astrology-input-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1847/05-output-validation-persistence-audit.md`, `_condamad/architecture/prompt-generation-cartography/2026-05-27-0000/architecture-prompt-generation-llm.md`, `_condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md`.
 
@@ -17,7 +19,7 @@ Scope:
 - documenter le runtime LLM actuel sans changer le code;
 - cartographier les owners de configuration, rendu, input natal, provider handoff, validation, audit et observability;
 - exposer les chemins nominaux et non nominaux avec Mermaid;
-- garder visibles les blockers connus: output schema ownership split et semantic grounding borne.
+- garder visibles les blockers connus: output schema ownership split, semantic grounding borne, migration `event_guidance` et politique admin manual execution.
 
 Non-goals:
 
@@ -60,7 +62,9 @@ flowchart TD
 
 `prompt-visible`: donnees autorisees dans le payload provider.
 
-`backend-only`: donnees reservees au backend, incluant runtime-only, validation-only et audit-only.
+`backend-only`: donnees reservees au backend. Cette categorie ne doit pas masquer les sous-roles: runtime/provider-only metadata, validation-owned, audit-only et observability.
+
+`runtime/provider-only metadata`: identifiants et parametres transmis comme metadata d'appel ou de trace, par exemple `request_id`, `trace_id` et `use_case`; ils ne sont pas le payload prompt-visible utilisateur.
 
 `llm_astrology_input_v1`: contrat natal moderne produit par `LLMAstrologyInputV1Builder`.
 
@@ -76,6 +80,10 @@ flowchart TD
 | Input natal riche | `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py` | `LLMAstrologyInputV1Builder`, `build_llm_input_hash_material` | prompt-visible + backend-only |
 | Orchestration natale | `backend/app/services/llm_generation/natal/interpretation_service.py` | `_build_llm_astrology_input_v1`, `_apply_narrative_answer_audit` | runtime-only + audit-only |
 | Gateway provider | `backend/app/domain/llm/runtime/gateway.py` | `LLMGateway`, `compose_structured_messages`, `compose_chat_messages`, `execute_request` | provider handoff |
+| Guidance parallele | `backend/app/services/llm_generation/guidance/guidance_service.py` | `request_guidance_async`, `request_contextual_guidance_async` | provider-capable hors carrier natal moderne |
+| Chat public parallele | `backend/app/services/llm_generation/chat/chat_guidance_service.py` | `send_message_async` | provider-capable chat mode |
+| Horoscope daily parallele | `backend/app/services/llm_generation/horoscope_daily/narration_service.py` | `generate_horoscope_narration_via_gateway` | provider-capable hors carrier natal moderne |
+| Admin manual execution | `backend/app/api/v1/routers/admin/llm/prompts.py` | `execute_admin_catalog_sample_payload` | admin-only provider-capable, politique a creuser |
 
 ## Use case et contrats canoniques
 
@@ -133,11 +141,13 @@ flowchart TD
 La frontiere est explicite:
 
 - prompt-visible: `facts`, `signals`, `limits`, `shaping`;
-- backend-only runtime: `request_id`, `trace_id`, profils et metadata d'execution;
-- validation-only: `evidence`, `grounding_status`, `validation_owner`, `evidence_refs`;
+- runtime/provider-only metadata, not prompt-visible payload: `request_id`, `trace_id`, `use_case`, profils et metadata d'execution;
+- validation-owned: `evidence`, `grounding_status`, `validation_owner`, `evidence_refs`;
 - audit-only: `provenance`, `projection_hash`, `llm_input_hash`, `provider_response`, `persisted_answer`, observability metadata.
 
 `backend/app/domain/llm/runtime/gateway.py` contient le filtrage avant provider, et `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py` contient les roles et le hash prompt-visible.
+
+`evidence` et `evidence_refs` sont validation-owned, exclus du provider prompt material, et peuvent etre persistes comme audit-only anchors. Cette double utilite validation/audit ne les rend jamais prompt-visible.
 
 ```mermaid
 flowchart LR
@@ -180,9 +190,35 @@ sequenceDiagram
 
 Sources: CS-345 structured/chat message shape et `backend/app/domain/llm/runtime/gateway.py`.
 
+## Matrice des processus provider-capable et non nominaux
+
+CS-353 et CS-354 prouvent que le flux natal moderne n'est pas le seul chemin capable d'atteindre le provider. La matrice suivante est la classification canonique de cette cartographie.
+
+| Processus | Statut | Provider-capable | Input prompt-visible principal | Owner | Decision |
+|---|---|---:|---|---|---|
+| Natal moderne `llm_astrology_input_v1` | nominal | oui | `facts`, `signals`, `limits`, `shaping` | `NatalInterpretationService`, `LLMGateway` | flux de reference a conserver |
+| Guidance | parallele supporte | oui | `natal_chart_summary`, contexte guidance, persona, periode | `GuidanceService` via `AIEngineAdapter` / `LLMGateway` | documenter et conserver comme flux non-natal moderne |
+| Guidance contextuelle | parallele supporte | oui | `situation`, `objective`, `time_horizon`, `natal_chart_summary`, context lines | `GuidanceService` via `AIEngineAdapter` / `LLMGateway` | documenter et conserver comme flux non-natal moderne |
+| Chat public | parallele supporte | oui | message utilisateur, historique, persona, hint natal textuel optionnel | `ChatGuidanceService` via `AIEngineAdapter` / `LLMGateway` | documenter et conserver comme flux chat |
+| Horoscope daily narration | parallele supporte | oui | question de narration et contexte de prediction quotidienne | `generate_horoscope_narration_via_gateway` | documenter et conserver comme flux daily |
+| Legacy daily route marker | non nominal | oui, via le flux daily | meme contexte que daily narration | `narration_service.py` | migrer ou supprimer le marqueur legacy si une story le confirme |
+| Repair prompts | recovery-only | oui, second appel apres output invalide | output invalide, erreurs de validation, schema | `repair_prompter.py`, `LLMGateway` | conserver comme recovery, jamais flux nominal |
+| Fallback catalog | non nominal | seulement cas bornes | configs synthetiques `test_natal`, `test_guidance` | `backend/app/domain/llm/prompting/catalog.py` | conserver borne, ne pas promouvoir runtime truth |
+| No-assembly bootstrap fallback | bootstrap/non-production | seulement condition locale bornee | contexte de requete selon fallback | `LLMGateway` | conserver borne, ne pas documenter comme production nominale |
+| Provider unsupported fallback | non nominal | oui dans branches de fallback | messages originaux avec provider resolu | `LLMGateway` | conserver borne, ne pas promouvoir politique nominale |
+| Guidance bootstrap seeds | bootstrap/seed | non par eux-memes | prompt seed, placeholders seed | `seed_guidance_prompts.py` | provisioning only |
+| Horoscope narrator seed | bootstrap/seed | non par lui-meme | prompt/profile/assembly seed | `seed_horoscope_narrator_assembly.py` | provisioning only |
+| Admin sample payloads | admin artifact | non par eux-memes | sample payload, parfois `chart_json` | `admin_sample_payloads.py` | artefact admin, distinct de l'execution |
+| Admin manual execution | admin-only a creuser | oui | sample payload copie dans `ExecutionContext.extra_context` | `execute_admin_catalog_sample_payload` | audit/politique obligatoire avant restriction, migration ou decommission |
+| Tests legacy carrier | test-only | non | fixtures `chart_json` / `natal_data` | `backend/tests/**` | conserver comme guard, pas runtime truth |
+| Archives et docs historiques | archival | non | mentions documentaires | `_condamad/**` | source context only |
+| `event_guidance` | migration obligatoire | conditionnel si invoque via adapter/gateway | `chart_json`, `event_description` | `canonical_use_case_registry.py`, `seed_guidance_prompts.py`, `AIEngineAdapter` | ne pas garder en dette; migrer hors `chart_json` ou supprimer |
+
+Cette matrice remplace toute lecture implicite ou vague des chemins paralleles. Un chemin provider-capable non-natal ne doit pas etre decrit comme sous-cas du carrier natal moderne. Un seed, un test, une archive ou un sample admin ne doit pas etre decrit comme runtime truth.
+
 ## Provider parameters et output schema
 
-Les parametres provider sont runtime/provider-only: modele, temperature, tokens, `response_format`, reasoning effort, verbosity, request/trace/use case. Ils influencent l'appel mais ne sont pas des champs prompt-visible du payload utilisateur.
+Les parametres provider sont runtime/provider-only metadata, not prompt-visible payload: modele, temperature, tokens, `response_format`, reasoning effort, verbosity, `request_id`, `trace_id` et `use_case`. Ils influencent l'appel ou la tracabilite mais ne sont pas des champs prompt-visible du payload utilisateur.
 
 Le schema de sortie est valide apres provider par `validate_output`. Le blocker CS-344/CS-348 demeure: choisir un owner nominal unique pour l'output schema avant d'en faire un contrat produit stable.
 
@@ -209,13 +245,17 @@ flowchart TD
 
 ## Persistence audit et observability
 
-`backend/app/services/llm_generation/natal/interpretation_service.py` enrichit la persistence avec `prompt_version`, `prompt_ref`, `projection_hash`, `llm_input_hash`, `evidence_refs` et `grounding_status`. Ces champs sont backend-only et audit-only. `llm_call_logs`, replay snapshots et admin audit contracts soutiennent l'investigation et la tracabilite, pas une preuve de justesse semantique complete.
+`backend/app/services/llm_generation/natal/interpretation_service.py` enrichit la persistence avec `prompt_version`, `prompt_ref`, `projection_hash`, `llm_input_hash`, `evidence_refs` et `grounding_status`. `evidence` et `evidence_refs` sont validation-owned, exclus du provider prompt material, et peuvent alimenter des audit-only anchors. `llm_call_logs`, replay snapshots et admin audit contracts soutiennent l'investigation et la tracabilite, pas une preuve de justesse semantique complete.
 
 ## Seeds/bootstrap et chemins non nominaux
 
 CS-344 classe `backend/app/ops/llm/bootstrap/**` comme provisioning. Les chemins `catalog.py`, fallback config, provider fallback, test fallback et bootstrap no-assembly fallback sont separes du nominal. Les documents ne doivent pas promouvoir ces chemins en runtime truth.
 
 Les carriers legacy `chart_json` et `natal_data` peuvent rester dans des contextes historiques, de tests, d'admin sample ou non modernes; ils sont exclus du prompt-visible moderne lorsque `llm_astrology_input_v1` est present.
+
+`event_guidance` reste un cas a traiter: le contrat canonique et les seeds identifient encore `chart_json` avec `event_description`, sans trigger public audite. La decision produit est maintenant de ne conserver aucune dette: une story de migration doit soit migrer `event_guidance` vers un input canonique non legacy, soit supprimer le use case et ses seeds/contrats associes.
+
+Admin manual execution est admin-only mais provider-capable: `execute_admin_catalog_sample_payload` construit un `LLMExecutionRequest` depuis un sample payload et appelle `LLMGateway.execute_request`. Ce statut doit etre creuse par une story dediee pour decider s'il faut documenter comme surface admin supportee, restreindre, migrer ses samples, ou decommissionner l'execution live.
 
 ## Tests et guardrails
 
@@ -228,6 +268,7 @@ Tests et gardes cites par les sources:
 - `backend/tests/unit/domain/astrology/test_llm_astrology_input_evidence.py` garde les evidence refs;
 - `backend/tests/integration/test_llm_legacy_extinction.py` garde l'extinction des carriers legacy avec `--long`;
 - `_condamad/stories/regression-guardrails.md` contient notamment RG-002 pour ne pas deplacer la logique metier dans les routeurs API v1 et RG-042 pour la gouvernance des docs LLM source-of-truth.
+- `_condamad/stories/regression-guardrails.md` doit contenir le guardrail exact de classification des processus prompt LLM, afin de proteger la matrice provider-capable, fallback, repair, bootstrap, admin, test, archival et migration `event_guidance`.
 
 Validation documentaire CS-350: scans `rg` sur Mermaid, symbols LLM, prompt-visible/backend-only, chemins nominaux et non nominaux.
 
@@ -239,13 +280,16 @@ Risques residuels:
 - semantic grounding borne: evidence refs et policy checks ne sont pas un verificateur semantique complet;
 - observability et replay sont audit-only, pas preuve de correction;
 - certains tests legacy longs exigent `pytest --long`;
-- exact guardrail registry pour handoff provider/post-provider reste a decider dans une story dediee.
+- `event_guidance` doit etre migre hors `chart_json` ou supprime; aucune conservation en dette n'est acceptee;
+- admin manual execution doit etre audite plus profondement avant decision documenter/restrict/migrer/decommission;
+- exact guardrail registry pour handoff provider/post-provider doit proteger la matrice ci-dessus.
 
 Open questions:
 
 - quel composant devient l'owner nominal unique des output schemas?
 - les fallback catalog schemas sont-ils supportes produit ou seulement non nominaux toleres?
 - faut-il promouvoir les long guards dans la validation CI obligatoire?
+- quelle politique exacte appliquer a admin manual execution apres audit dedie?
 
 ## How to verify
 
@@ -253,6 +297,8 @@ Executer depuis la racine du repo:
 
 ```powershell
 rg -n "```mermaid|llm_astrology_input_v1|LLMGateway|PromptRenderer|assemble_developer_prompt|prompt-visible|backend-only" _condamad/docs/prompt-generation-cartography
+rg -n "runtime/provider-only metadata|validation-owned|audit-only anchors|evidence_refs|not prompt-visible payload" _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+rg -n "Guidance|Guidance contextuelle|Chat public|Horoscope daily|fallback|repair|bootstrap|admin|event_guidance|provider-capable" _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
 rg -n "nominal|fallback|repair|rejet|degrade|guardrails|How to verify" _condamad/docs/prompt-generation-cartography
 rg -n "prompt-generation-current-implementation" _condamad/docs/prompt-generation-cartography
 ```
