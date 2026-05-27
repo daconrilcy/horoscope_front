@@ -130,3 +130,4 @@
 | cs-348 | `_story_briefs\cs-348-architecture-cartographie-generation-prompt-llm.md` | `_condamad\stories\cs-348-architecture-cartographie-generation-prompt-llm\00-story.md` |
 | cs-349 | `_story_briefs\cs-349-report-cartographie-generation-prompt-llm.md` | `_condamad\stories\cs-349-report-cartographie-generation-prompt-llm\00-story.md` |
 | cs-350 | `_story_briefs\cs-350-documentation-cartographie-generation-prompt-llm-mermaid.md` | `_condamad\stories\cs-350-documentation-cartographie-generation-prompt-llm-mermaid\00-story.md` |
+| cs-351 | `_story_briefs\cs-351-audit-revue-adversariale-document-cartographie-prompt-llm.md` | `_condamad\stories\cs-351-audit-revue-adversariale-document-cartographie-prompt-llm\00-story.md` |
