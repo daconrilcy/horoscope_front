@@ -1,0 +1,1319 @@
+backend/tests\unit\test_admin_permission_matrix_contract.py:16:REQUIRED_ACTIONS = {"read", "search", "export", "replay", "correct"}
+backend/tests\unit\test_admin_permission_matrix_contract.py:17:DEBUG_CATEGORIES = {"traces", "prompts", "replay"}
+backend/tests\unit\test_admin_endpoint_segmentation_contract.py:45:    "replay_snapshot",
+backend/tests\unit\test_admin_endpoint_segmentation_contract.py:50:CLIENT_EXCLUSION_TERMS = {"debug", "replay", "trace", "prompt", "full astrology runtime"}
+backend/tests\unit\test_admin_endpoint_segmentation_contract.py:134:    assert "/v1/admin/audit/replay_snapshot_v1" in openapi_payload
+backend/tests\unit\test_admin_chart_diagnostics_policy.py:70:def test_replay_boundary_prerequisites_and_audit_fields_are_explicit() -> None:
+backend/tests\unit\test_admin_chart_diagnostics_policy.py:71:    """Controle la separation diagnostics, replay et audit de consultation."""
+backend/tests\unit\test_admin_chart_diagnostics_policy.py:75:        "Current diagnostics are not replay snapshots",
+backend/tests\unit\test_admin_chart_diagnostics_policy.py:76:        "separate from calculation replay",
+backend/tests\unit\test_astrology_full_data_contract.py:73:        "evidence_refs",
+backend/tests\unit\test_astrology_full_data_contract.py:86:        "replay payloads",
+backend/tests\unit\test_expert_technical_projection_contract.py:61:    for source in ("structured_facts_v1", "structured signals", "evidence_refs"):
+backend/tests\unit\test_expert_technical_projection_contract.py:73:        "replay payloads",
+backend/tests\unit\test_historical_facade_transition_guards.py:93:        "/v1/admin/llm/replay",
+backend/tests\unit\projections\test_projection_persistence.py:57:        assert len(row.projection_hash) == 64
+backend/tests\unit\services\test_projection_endpoint_service.py:70:        return SimpleNamespace(id=42, projection_hash="b" * 64)
+backend/tests\unit\services\test_projection_endpoint_service.py:126:    assert response.projection_hash == "b" * 64
+backend/tests\unit\projections\test_projection_hash.py:6:from app.domain.astrology.projections.projection_hash import compute_projection_hash
+backend/tests\unit\projections\test_projection_hash.py:14:    assert compute_projection_hash(left) == compute_projection_hash(right)
+backend/tests\unit\projections\test_projection_hash.py:22:    assert compute_projection_hash(baseline) != compute_projection_hash(changed)
+backend/tests\unit\test_canonical_llm_bootstrap.py:77:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+backend/tests\unit\test_canonical_llm_bootstrap.py:144:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+backend/tests\unit\test_canonical_llm_bootstrap.py:209:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+backend/tests\unit\test_canonical_llm_bootstrap.py:242:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+backend/tests\unit\test_canonical_llm_bootstrap.py:311:        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+backend/tests\unit\test_evidence_refs_validation.py:2:"""Valide les references `evidence_refs` contre des sources autorisees."""
+backend/tests\unit\test_evidence_refs_validation.py:6:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/tests\unit\test_evidence_refs_validation.py:9:    validate_evidence_refs_by_section,
+backend/tests\unit\test_evidence_refs_validation.py:15:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_validation.py:17:        evidence_refs=("voir le Soleil en Lion",),
+backend/tests\unit\test_evidence_refs_validation.py:29:    projection_hash = "a" * 64
+backend/tests\unit\test_evidence_refs_validation.py:30:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_validation.py:32:        evidence_refs=(
+backend/tests\unit\test_evidence_refs_validation.py:39:                "source_hash": projection_hash,
+backend/tests\unit\test_evidence_refs_validation.py:47:                source_hash=projection_hash,
+backend/tests\unit\test_evidence_refs_validation.py:54:    assert result.grounding_status == "grounded"
+backend/tests\unit\test_evidence_refs_validation.py:60:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_validation.py:62:        evidence_refs=(
+backend/tests\unit\test_evidence_refs_validation.py:88:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_validation.py:90:        evidence_refs=(
+backend/tests\unit\test_evidence_refs_validation.py:115:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_validation.py:117:        evidence_refs=(
+backend/tests\unit\test_evidence_refs_section_status.py:2:"""Controle l'agregation des statuts `evidence_refs` par section."""
+backend/tests\unit\test_evidence_refs_section_status.py:6:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/tests\unit\test_evidence_refs_section_status.py:9:    validate_evidence_refs_by_section,
+backend/tests\unit\test_evidence_refs_section_status.py:15:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_section_status.py:17:        evidence_refs=(),
+backend/tests\unit\test_evidence_refs_section_status.py:22:    assert result.grounding_status == "not_checked"
+backend/tests\unit\test_evidence_refs_section_status.py:27:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_section_status.py:29:        evidence_refs=(),
+backend/tests\unit\test_evidence_refs_section_status.py:35:    assert result.grounding_status == "ungrounded"
+backend/tests\unit\test_evidence_refs_section_status.py:41:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_section_status.py:47:        evidence_refs=(
+backend/tests\unit\test_evidence_refs_section_status.py:64:    assert result.grounding_status == "partial"
+backend/tests\unit\test_evidence_refs_section_status.py:70:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_section_status.py:72:        evidence_refs=(
+backend/tests\unit\test_evidence_refs_section_status.py:84:    assert result.grounding_status == "partial"
+backend/tests\unit\test_evidence_refs_section_status.py:89:    result = validate_evidence_refs_by_section(
+backend/tests\unit\test_evidence_refs_section_status.py:94:        evidence_refs=("decorative only",),
+backend/tests\unit\test_evidence_refs_section_status.py:104:    assert result.grounding_status == "ungrounded"
+backend/tests\unit\projections\test_projection_access.py:28:            projection_hash="a" * 64,
+backend/tests\unit\projections\test_projection_access.py:38:            projection_hash="b" * 64,
+backend/tests\unit\projections\test_projection_access.py:48:            projection_hash="c" * 64,
+backend/app\main.py:72:    from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+backend/app\main.py:103:                get_active_prompt_version(db, "natal_interpretation_short") is not None,
+backend/tests\unit\test_llm_sensitive_model_validators.py:35:    assert "ix_llm_prompt_version_active_unique" in prompt_indexes
+backend/tests\unit\test_llm_canonical_perimeter.py:93:    assert "llm_call_logs" in indexed
+backend/tests\unit\test_narrative_answer_audit_sensitive_data.py:20:        "prompt_version",
+backend/tests\unit\test_narrative_answer_audit_sensitive_data.py:25:        "llm_input_hash",
+backend/tests\unit\test_narrative_answer_audit_sensitive_data.py:26:        "projection_hash",
+backend/tests\unit\test_narrative_answer_audit_sensitive_data.py:27:        "evidence_refs",
+backend/tests\unit\test_narrative_answer_audit_model.py:26:        "projection_hash",
+backend/tests\unit\test_narrative_answer_audit_model.py:28:        "llm_input_hash",
+backend/tests\unit\test_narrative_answer_audit_model.py:29:        "prompt_version",
+backend/tests\unit\test_narrative_answer_audit_model.py:32:        "grounding_status",
+backend/tests\unit\test_narrative_answer_audit_model.py:33:        "evidence_refs",
+backend/tests\unit\test_narrative_answer_audit_model.py:66:    assert "ck_user_natal_interpretations_grounding_status" in constraints
+backend/tests\unit\test_narrative_answer_audit_model.py:68:    assert "not_checked" in constraints["ck_user_natal_interpretations_grounding_status"]
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:1:# Commentaire global: ces tests verrouillent l'owner canonique du stockage replay_snapshot_v1.
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:22:def test_replay_snapshot_model_is_the_only_table_owner() -> None:
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:23:    """Prouve que `llm_replay_snapshots` reste l'unique table canonique."""
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:38:                    and statement.value.value == "llm_replay_snapshots"
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:47:def test_replay_snapshot_creation_uses_canonical_owner_only() -> None:
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:49:    service_path = REPO_ROOT / "backend" / "app" / "services" / "replay_snapshot_v1_service.py"
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:62:def test_observability_delegates_replay_snapshot_creation() -> None:
+backend/tests\unit\test_replay_snapshot_v1_ownership.py:63:    """Verifie que le runtime LLM ne conserve pas de second writer replay."""
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:1:# Commentaire global: ces tests prouvent l'audit d'execution replay_snapshot_v1 sans fuite.
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:2:"""Tests unitaires CS-298 pour les audits de lecture, replay et purge."""
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:20:from app.ops.llm.replay_service import replay
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:21:from app.services.replay_snapshot_v1_service import ReplaySnapshotV1Service
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:72:        snapshot_type="replay_snapshot_v1",
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:77:        version_identity={"model": "gpt-test", "prompt_version_id": "prompt-v1"},
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:126:        assert event.action == "replay_snapshot_v1.metadata_read"
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:134:def test_replay_attempt_success_and_failure_are_audited() -> None:
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:135:    """Prouve les audits de tentative de replay succes et refus."""
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:142:        accepted = ReplaySnapshotV1Service.start_replay_attempt(
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:145:            request_id="req-replay-success",
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:149:        refused = ReplaySnapshotV1Service.start_replay_attempt(
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:152:            request_id="req-replay-expired",
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:159:        assert accepted.replay_attempt_id
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:162:            "replay_snapshot_v1.replay_attempt",
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:163:            "replay_snapshot_v1.replay_attempt",
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:188:        assert event.action == "replay_snapshot_v1.purge"
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:196:def test_incomplete_snapshot_is_refused_before_replay_payload_use() -> None:
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:208:        result = ReplaySnapshotV1Service.get_replay_payload_snapshot(
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:224:        """Retourne un resultat borne representatif d'un replay execute."""
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:229:            raw_output="provider text hidden by replay result",
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:232:            meta=GatewayMeta(latency_ms=12, prompt_version_id="prompt-v2", model="gpt-test"),
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:244:async def _replay_ready_snapshot(db: Session, *, request_id: str) -> LlmReplaySnapshotModel:
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:250:        "trace-replay-execution",
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:251:        {"question": "safe replay input"},
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:258:async def test_real_replay_execution_success_is_audited(monkeypatch: pytest.MonkeyPatch) -> None:
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:259:    """Prouve que le chemin de replay reel audite le succes sans payload provider."""
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:262:        snapshot = await _replay_ready_snapshot(db, request_id="req-real-replay-success")
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:265:        result = await replay(db, "req-real-replay-success", "prompt-v2")
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:270:        assert event.action == "replay_snapshot_v1.replay_attempt"
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:281:async def test_real_replay_execution_failure_is_audited(monkeypatch: pytest.MonkeyPatch) -> None:
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:282:    """Prouve que l'erreur provider du replay reel produit un audit failed."""
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:285:        snapshot = await _replay_ready_snapshot(db, request_id="req-real-replay-failed")
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:289:            await replay(db, "req-real-replay-failed", "prompt-v2")
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:292:        assert event.action == "replay_snapshot_v1.replay_attempt"
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:302:async def test_real_replay_canonical_hash_mismatch_is_refused(
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:308:        snapshot = await _replay_ready_snapshot(db, request_id="req-real-replay-hash-mismatch")
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:314:            await replay(db, "req-real-replay-hash-mismatch", "prompt-v2")
+backend/tests\unit\test_replay_snapshot_v1_execution_audit.py:317:        assert event.action == "replay_snapshot_v1.replay_attempt"
+backend/tests\unit\test_replay_snapshot_v1_retention.py:1:# Commentaire global: ces tests verrouillent la retention 30 jours des snapshots replay.
+backend/tests\unit\test_replay_snapshot_v1_retention.py:2:"""Tests de retention pour replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_retention.py:45:async def test_new_replay_snapshot_expires_exactly_thirty_days_after_creation(
+backend/tests\unit\test_replay_snapshot_v1_retention.py:65:    assert snapshot.snapshot_type == "replay_snapshot_v1"
+backend/tests\unit\test_replay_snapshot_v1_purge.py:1:# Commentaire global: ces tests garantissent une purge replay limitee aux snapshots expires.
+backend/tests\unit\test_replay_snapshot_v1_purge.py:2:"""Tests de purge pour replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_purge.py:77:                snapshot_type="replay_snapshot_v1",
+backend/tests\unit\test_replay_snapshot_v1_purge.py:89:                snapshot_type="replay_snapshot_v1",
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:1:# Commentaire global: ces tests verrouillent l'owner applicatif canonique replay_snapshot_v1.
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:2:"""Gardes d'architecture pour le service replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:11:SERVICE_PATH = APP_ROOT / "services" / "replay_snapshot_v1_service.py"
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:13:REPLAY_PATH = APP_ROOT / "ops" / "llm" / "replay_service.py"
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:31:def test_replay_snapshot_v1_service_is_the_only_lifecycle_owner() -> None:
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:39:        "get_replay_payload_snapshot",
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:46:def test_observability_and_replay_delegate_lifecycle_decisions() -> None:
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:49:    replay_source = REPLAY_PATH.read_text(encoding="utf-8")
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:53:    assert "ReplaySnapshotV1Service.get_replay_payload_snapshot" in replay_source
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:58:    """Prouve que seule l'API admin CS-297 expose replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_ownership.py:67:        if "replay_snapshot_v1" in path.read_text(encoding="utf-8")
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:6:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:8:    validate_evidence_refs_by_section,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:20:    validation_result = validate_evidence_refs_by_section(
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:22:        evidence_refs=(),
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:35:    assert outcome.grounding_status == "ungrounded"
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:36:    assert outcome.rejection_reason["code"] == "ungrounded_evidence_refs"
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:51:        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:52:        projection_hash=llm_input["provenance"]["projection_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:54:        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:71:        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:72:        projection_hash=llm_input["provenance"]["projection_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:74:        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:96:        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:97:        projection_hash=llm_input["provenance"]["projection_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:99:        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:117:        projection_hash="a" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:119:        llm_input_hash="b" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:138:        projection_hash="a" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:140:        llm_input_hash="b" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:164:        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:165:        projection_hash=llm_input["provenance"]["projection_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:167:        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:192:        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:193:        projection_hash=llm_input["provenance"]["projection_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:195:        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:215:        projection_hash="a" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:217:        llm_input_hash="b" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:241:        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:242:        projection_hash=llm_input["provenance"]["projection_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:244:        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:254:def test_basic_legacy_payload_without_evidence_refs_is_not_rejected() -> None:
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:263:        projection_hash="a" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:265:        llm_input_hash="b" * 64,
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:273:    validation_result = validate_evidence_refs_by_section(
+backend/tests\unit\test_rejected_narrative_answer_workflow.py:275:        evidence_refs=("texte decoratif",),
+backend/tests\unit\test_sensitive_data_non_leakage.py:78:def test_sanitize_payload_llm_call_logs():
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:1:# Commentaire global: ces tests verrouillent les etats de lecture metadata replay_snapshot_v1.
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:2:"""Tests unitaires des metadonnees controlees replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:15:from app.services.replay_snapshot_v1_service import (
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:29:    """Cree un snapshot replay minimal."""
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:49:        snapshot_type="replay_snapshot_v1",
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:112:    """Prouve que le service ne lit pas les lignes hors contrat replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:128:def test_get_replay_payload_snapshot_ignores_non_v1_snapshot_rows() -> None:
+backend/tests\unit\test_replay_snapshot_v1_service_metadata.py:137:        result = ReplaySnapshotV1Service.get_replay_payload_snapshot(
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:1:# Commentaire global: ces tests verrouillent le contrat documentaire replay_snapshot_v1
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:3:"""Tests de contrat du modele de stockage et de securite replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:15:DOC_PATH = REPO_ROOT / "docs" / "architecture" / "replay-snapshot-v1-storage-security-model.md"
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:56:    """Charge le contrat canonique replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:65:    assert "replay_snapshot_v1_storage_security_model" in document
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:66:    assert "replay_snapshot_v1" in document
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:67:    assert "Protected internal replay support and debug data" in document
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:68:    assert "production replay execution est approuvee uniquement" in document
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:118:    assert "Diagnostics remain current redacted support facts, not replay snapshots" in document
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:124:def test_runtime_routes_openapi_and_public_client_surfaces_do_not_expose_replay() -> None:
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:125:    """Prouve que le runtime replay reste absent des surfaces publiques ou client."""
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:137:    replay_route_paths = {
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:138:        route_path for route_path in route_paths if "replay_snapshot_v1" in route_path
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:140:    assert replay_route_paths == {
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:141:        "/v1/admin/audit/replay_snapshot_v1/{snapshot_id}",
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:142:        "/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt",
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:144:    assert "/v1/admin/audit/replay_snapshot_v1" in openapi_payload
+backend/tests\unit\test_replay_snapshot_v1_storage_security_model.py:145:    assert "replay_snapshot_v1" not in public_openapi_payload
+backend/tests\unit\test_replay_snapshot_v1_redaction.py:1:# Commentaire global: ces tests bloquent la persistance de donnees sensibles brutes en replay.
+backend/tests\unit\test_replay_snapshot_v1_redaction.py:2:"""Tests de redaction pour replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_redaction.py:10:from app.domain.llm.runtime.observability_service import build_replay_snapshot_v1_metadata
+backend/tests\unit\test_replay_snapshot_v1_redaction.py:13:def test_replay_sink_removes_provider_secrets_before_encryption() -> None:
+backend/tests\unit\test_replay_snapshot_v1_redaction.py:36:def test_replay_snapshot_metadata_does_not_include_forbidden_raw_values() -> None:
+backend/tests\unit\test_replay_snapshot_v1_redaction.py:38:    metadata = build_replay_snapshot_v1_metadata(
+backend/tests\unit\test_rejected_narrative_answer_logging.py:8:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/tests\unit\test_rejected_narrative_answer_logging.py:10:    validate_evidence_refs_by_section,
+backend/tests\unit\test_rejected_narrative_answer_logging.py:21:    validation_result = validate_evidence_refs_by_section(
+backend/tests\unit\test_rejected_narrative_answer_logging.py:23:        evidence_refs=(),
+backend/tests\unit\test_rejected_narrative_answer_logging.py:49:    assert record.rejection_reason["code"] == "ungrounded_evidence_refs"
+backend/tests\unit\test_replay_snapshot_v1_storage.py:1:# Commentaire global: ces tests prouvent la forme de stockage approuvee replay_snapshot_v1.
+backend/tests\unit\test_replay_snapshot_v1_storage.py:12:    build_replay_snapshot_v1_metadata,
+backend/tests\unit\test_replay_snapshot_v1_storage.py:15:from app.services.replay_snapshot_v1_service import (
+backend/tests\unit\test_replay_snapshot_v1_storage.py:16:    build_replay_snapshot_v1_payload,
+backend/tests\unit\test_replay_snapshot_v1_storage.py:17:    compute_replay_snapshot_v1_payload_hash,
+backend/tests\unit\test_replay_snapshot_v1_storage.py:33:            prompt_version_id="prompt-template-v7",
+backend/tests\unit\test_replay_snapshot_v1_storage.py:41:def test_replay_snapshot_model_contains_approved_v1_columns() -> None:
+backend/tests\unit\test_replay_snapshot_v1_storage.py:58:    assert LlmReplaySnapshotModel.__tablename__ == "llm_replay_snapshots"
+backend/tests\unit\test_replay_snapshot_v1_storage.py:61:def test_replay_snapshot_metadata_keeps_only_references_hashes_and_versions() -> None:
+backend/tests\unit\test_replay_snapshot_v1_storage.py:71:    metadata = build_replay_snapshot_v1_metadata(
+backend/tests\unit\test_replay_snapshot_v1_storage.py:78:    expected_hash = compute_replay_snapshot_v1_payload_hash(
+backend/tests\unit\test_replay_snapshot_v1_storage.py:79:        build_replay_snapshot_v1_payload(user_input)
+backend/tests\unit\test_replay_snapshot_v1_storage.py:86:    assert metadata["version_identity"]["prompt_version_id"] == "prompt-template-v7"
+backend/tests\unit\test_replay_snapshot_v1_service_manual_purge.py:1:# Commentaire global: ces tests verrouillent les resultats metier de purge manuelle replay.
+backend/tests\unit\test_replay_snapshot_v1_service_manual_purge.py:2:"""Tests unitaires de purge manuelle replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_manual_purge.py:15:from app.services.replay_snapshot_v1_service import (
+backend/tests\unit\test_replay_snapshot_v1_service_manual_purge.py:29:    """Cree un snapshot replay minimal pour la purge."""
+backend/tests\unit\test_replay_snapshot_v1_service_manual_purge.py:49:        snapshot_type="replay_snapshot_v1",
+backend/tests\unit\test_replay_snapshot_v1_service_manual_purge.py:92:        assert snapshot.input_ref["kind"] == "replay_snapshot_payload_tombstone"
+backend/tests\unit\test_replay_snapshot_v1_service_manual_purge.py:127:    """Prouve que la purge manuelle ne tombstone pas les lignes hors replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_audit.py:1:# Commentaire global: ces tests prouvent que les audits replay_snapshot_v1 restent bornes.
+backend/tests\unit\test_replay_snapshot_v1_service_audit.py:2:"""Tests unitaires des details d'audit de purge replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_audit.py:16:from app.services.replay_snapshot_v1_service import ReplaySnapshotV1Service
+backend/tests\unit\test_replay_snapshot_v1_service_audit.py:26:def test_replay_snapshot_purge_audit_details_are_bounded() -> None:
+backend/tests\unit\test_replay_snapshot_v1_service_audit.py:49:            snapshot_type="replay_snapshot_v1",
+backend/tests\unit\test_replay_snapshot_v1_service_audit.py:78:        assert event.action == "replay_snapshot_v1.purge"
+backend/tests\unit\test_replay_snapshot_v1_service_retention.py:1:# Commentaire global: ces tests verrouillent la retention portee par le service replay_snapshot_v1.
+backend/tests\unit\test_replay_snapshot_v1_service_retention.py:2:"""Tests unitaires de retention du service replay_snapshot_v1."""
+backend/tests\unit\test_replay_snapshot_v1_service_retention.py:14:from app.services.replay_snapshot_v1_service import ReplaySnapshotV1Service
+backend/app\tests\unit\test_admin_llm_observability_errors.py:16:async def test_replay_request_preserves_disabled_replay_error_contract(
+backend/app\tests\unit\test_admin_llm_observability_errors.py:21:    async def _disabled_replay(**_kwargs: Any) -> None:
+backend/app\tests\unit\test_admin_llm_observability_errors.py:24:    monkeypatch.setattr(admin_observability, "replay", _disabled_replay)
+backend/app\tests\unit\test_admin_llm_observability_errors.py:27:        await admin_observability.replay_request(
+backend/app\tests\unit\test_admin_llm_observability_errors.py:29:            payload=ReplayPayload(request_id="source-request", prompt_version_id="prompt-version"),
+backend/app\tests\unit\test_admin_llm_observability_errors.py:34:    assert raised.value.code == "replay_failed"
+backend/app\tests\unit\test_admin_llm_observability_errors.py:39:async def test_replay_request_raises_generic_replay_failure_code(
+backend/app\tests\unit\test_admin_llm_observability_errors.py:42:    """Vérifie que les autres échecs replay gardent le code applicatif historique."""
+backend/app\tests\unit\test_admin_llm_observability_errors.py:44:    async def _failing_replay(**_kwargs: Any) -> None:
+backend/app\tests\unit\test_admin_llm_observability_errors.py:47:    monkeypatch.setattr(admin_observability, "replay", _failing_replay)
+backend/app\tests\unit\test_admin_llm_observability_errors.py:50:        await admin_observability.replay_request(
+backend/app\tests\unit\test_admin_llm_observability_errors.py:52:            payload=ReplayPayload(request_id="source-request", prompt_version_id="prompt-version"),
+backend/app\tests\unit\test_admin_llm_observability_errors.py:57:    assert raised.value.code == "replay_failed"
+backend/app\tests\unit\test_api_router_architecture.py:79:    ("/v1/admin/llm/replay", "POST"),
+backend/app\tests\unit\test_api_router_architecture.py:85:    ("post", "/replay"),
+backend/app\tests\integration\test_admin_answer_audit_contract.py:35:        "evidence_refs",
+backend/app\tests\integration\test_admin_answer_audit_contract.py:38:        "prompt_version",
+backend/app\tests\integration\test_admin_answer_audit_contract.py:94:        "/v1/admin/answer-audit-replay",
+backend/app\ops\llm\services.py:8:from app.ops.llm.replay_service import replay
+backend/app\ops\llm\services.py:15:    "replay",
+backend/app\ops\llm\semantic_invariants_registry.py:95:# Marqueurs stables pour la persistance d'observabilité (llm_call_logs).
+backend/app\tests\integration\test_admin_chart_diagnostics_api.py:113:    assert payload["limits"]["replay_included"] is False
+backend/app\ops\llm\replay_service.py:2:"""Service d'execution de replay LLM adosse au cycle de vie replay_snapshot_v1."""
+backend/app\ops\llm\replay_service.py:23:from app.services.replay_snapshot_v1_service import (
+backend/app\ops\llm\replay_service.py:25:    compute_replay_snapshot_v1_payload_hash,
+backend/app\ops\llm\replay_service.py:31:def _record_replay_attempt_audit(
+backend/app\ops\llm\replay_service.py:40:    """Trace une tentative de replay reelle avec un detail d'audit borne."""
+backend/app\ops\llm\replay_service.py:42:        action="replay_snapshot_v1.replay_attempt",
+backend/app\ops\llm\replay_service.py:55:            action="replay_snapshot_v1.replay_attempt",
+backend/app\ops\llm\replay_service.py:56:            target_type="llm_replay_snapshot",
+backend/app\ops\llm\replay_service.py:64:async def replay(
+backend/app\ops\llm\replay_service.py:67:    prompt_version_id: str,
+backend/app\ops\llm\replay_service.py:86:    snapshot_result = ReplaySnapshotV1Service.get_replay_payload_snapshot(
+backend/app\ops\llm\replay_service.py:94:                LlmReplaySnapshotModel.snapshot_type == "replay_snapshot_v1",
+backend/app\ops\llm\replay_service.py:98:            _record_replay_attempt_audit(
+backend/app\ops\llm\replay_service.py:111:        _record_replay_attempt_audit(
+backend/app\ops\llm\replay_service.py:127:    recomputed_hash = compute_replay_snapshot_v1_payload_hash(user_input)
+backend/app\ops\llm\replay_service.py:130:            "replay_integrity_check_failed request_id=%s expected=%s computed=%s",
+backend/app\ops\llm\replay_service.py:135:        _record_replay_attempt_audit(
+backend/app\ops\llm\replay_service.py:143:            "Integrity check failed for replay: input hash mismatch.",
+backend/app\ops\llm\replay_service.py:147:    # 4. Execute Gateway with new prompt_version_id
+backend/app\ops\llm\replay_service.py:154:        "_override_prompt_version_id": prompt_version_id,
+backend/app\ops\llm\replay_service.py:163:            request_id=f"replay-{uuid.uuid4().hex[:8]}",
+backend/app\ops\llm\replay_service.py:164:            trace_id=f"replay-{original_log.trace_id}",
+backend/app\ops\llm\replay_service.py:168:        _record_replay_attempt_audit(
+backend/app\ops\llm\replay_service.py:190:    _record_replay_attempt_audit(
+backend/app\ops\llm\replay_service.py:200:        prompt_version_id=result.meta.prompt_version_id,
+backend/app\tests\integration\test_admin_llm_config_api.py:28:        "/v1/admin/llm/replay": "post",
+backend/app\tests\integration\test_admin_llm_natal_prompts.py:167:            prompt_version_id=version_id,
+backend/app\tests\unit\test_auth_service.py:93:def test_refresh_token_rotation_rejects_replay() -> None:
+backend/app\tests\unit\test_backend_services_structure_guard.py:15:    "replay_snapshot_v1_service.py",
+backend/app\tests\unit\test_backend_db_test_harness.py:150:    Path("tests/integration/test_replay_snapshot_v1_service_non_cascade.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:151:    Path("tests/integration/test_replay_snapshot_v1_service_purge.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:160:    Path("tests/unit/test_replay_snapshot_v1_purge.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:161:    Path("tests/unit/test_replay_snapshot_v1_retention.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:162:    Path("tests/unit/test_replay_snapshot_v1_execution_audit.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:163:    Path("tests/unit/test_replay_snapshot_v1_service_audit.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:164:    Path("tests/unit/test_replay_snapshot_v1_service_manual_purge.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:165:    Path("tests/unit/test_replay_snapshot_v1_service_metadata.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:166:    Path("tests/unit/test_replay_snapshot_v1_service_retention.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:229:    Path("tests/integration/test_replay_snapshot_v1_service_non_cascade.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:230:    Path("tests/integration/test_replay_snapshot_v1_service_purge.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:238:    Path("tests/unit/test_replay_snapshot_v1_purge.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:239:    Path("tests/unit/test_replay_snapshot_v1_retention.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:240:    Path("tests/unit/test_replay_snapshot_v1_execution_audit.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:241:    Path("tests/unit/test_replay_snapshot_v1_service_audit.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:242:    Path("tests/unit/test_replay_snapshot_v1_service_manual_purge.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:243:    Path("tests/unit/test_replay_snapshot_v1_service_metadata.py"),
+backend/app\tests\unit\test_backend_db_test_harness.py:244:    Path("tests/unit/test_replay_snapshot_v1_service_retention.py"),
+backend/app\tests\integration\test_auth_api.py:171:def test_refresh_token_replay_is_rejected() -> None:
+backend/app\tests\integration\test_auth_api.py:175:        json={"email": "replay@example.com", "password": "strong-pass-123"},
+backend/app\tests\integration\test_auth_api.py:181:    replay_refresh = client.post("/v1/auth/refresh", json={"refresh_token": refresh_token})
+backend/app\tests\integration\test_auth_api.py:184:    assert replay_refresh.status_code == 401
+backend/app\tests\integration\test_auth_api.py:185:    assert replay_refresh.json()["error"]["code"] == "invalid_token"
+backend/app\ops\llm\release\build_qualification_evidence.py:79:    prompt_version_id = assembly.get("feature_template_ref")
+backend/app\ops\llm\release\build_qualification_evidence.py:80:    if not use_case_key or not prompt_version_id:
+backend/app\ops\llm\release\build_qualification_evidence.py:81:        raise ValueError("Snapshot bundle does not expose use_case_key / prompt_version_id.")
+backend/app\ops\llm\release\build_qualification_evidence.py:82:    return str(use_case_key), str(prompt_version_id)
+backend/app\ops\llm\release\build_qualification_evidence.py:163:    prompt_version_id: str,
+backend/app\ops\llm\release\build_qualification_evidence.py:191:                "_override_prompt_version_id": prompt_version_id,
+backend/app\ops\llm\release\build_qualification_evidence.py:233:        use_case_key, prompt_version_id = _resolve_use_case_and_prompt(bundle)
+backend/app\ops\llm\release\build_qualification_evidence.py:267:                        prompt_version_id=prompt_version_id,
+backend/app\ops\llm\release\build_qualification_evidence.py:308:            "prompt_version_id": prompt_version_id,
+backend/app\ops\llm\release\build_golden_evidence.py:52:    prompt_version_id = assembly.get("feature_template_ref")
+backend/app\ops\llm\release\build_golden_evidence.py:53:    if not use_case_key or not prompt_version_id:
+backend/app\ops\llm\release\build_golden_evidence.py:54:        raise ValueError("Snapshot bundle does not expose use_case_key / prompt_version_id.")
+backend/app\ops\llm\release\build_golden_evidence.py:55:    return str(use_case_key), str(prompt_version_id)
+backend/app\ops\llm\release\build_golden_evidence.py:149:        use_case_key, prompt_version_id = _resolve_use_case_and_prompt(bundle)
+backend/app\ops\llm\release\build_golden_evidence.py:168:                prompt_version_id=prompt_version_id,
+backend/app\tests\unit\test_chat_guidance_service.py:200:    assert reply.context.prompt_version == settings.chat_prompt_version
+backend/app\ops\llm\golden_regression_service.py:376:        prompt_version_id: str,
+backend/app\ops\llm\golden_regression_service.py:468:                    "_override_prompt_version_id": prompt_version_id,
+backend/app\ops\llm\golden_regression_service.py:469:                    "is_golden_replay": True,
+backend/tests\unit\domain\astrology\test_astrology_doctrine_governance.py:33:    "evidence_refs",
+backend/tests\unit\domain\astrology\test_astrology_doctrine_governance.py:57:        assert entry.evidence_refs
+backend/app\ops\llm\eval_harness.py:31:    prompt_version_id: str,
+backend/app\ops\llm\eval_harness.py:44:            prompt_version_id=prompt_version_id,
+backend/app\ops\llm\eval_harness.py:86:            context = {"_override_prompt_version_id": prompt_version_id}
+backend/app\ops\llm\eval_harness.py:162:        prompt_version_id=prompt_version_id,
+backend/app\ops\llm\db_cleanup_validator.py:13:        "table:llm_prompt_versions",
+backend/app\ops\llm\db_cleanup_validator.py:20:        "table:llm_call_logs",
+backend/app\ops\llm\db_cleanup_validator.py:21:        "table:llm_replay_snapshots",
+backend/app\ops\llm\db_cleanup_validator.py:25:        "column:llm_prompt_versions.model",
+backend/app\ops\llm\db_cleanup_validator.py:26:        "column:llm_prompt_versions.temperature",
+backend/app\ops\llm\db_cleanup_validator.py:27:        "column:llm_prompt_versions.max_output_tokens",
+backend/app\ops\llm\db_cleanup_validator.py:28:        "column:llm_prompt_versions.fallback_use_case_key",
+backend/app\ops\llm\db_cleanup_validator.py:29:        "column:llm_prompt_versions.reasoning_effort",
+backend/app\ops\llm\db_cleanup_validator.py:30:        "column:llm_prompt_versions.verbosity",
+backend/app\ops\llm\db_cleanup_validator.py:32:        "column:llm_call_logs.use_case",
+backend/app\ops\llm\db_cleanup_validator.py:33:        "index:llm_call_logs.ix_llm_call_logs_use_case_timestamp",
+backend/app\ops\llm\bootstrap\seed_horoscope_narrator_assembly.py:116:    # breaking historical FKs in llm_call_logs.
+backend/app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:446:                for prompt_version in published_versions:
+backend/app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:447:                    if prompt_version.developer_prompt == prompt_cfg["developer_prompt"]:
+backend/app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:456:            for prompt_version in published_versions:
+backend/app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:457:                prompt_version.status = PromptStatus.ARCHIVED
+backend/app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:461:                    prompt_version.id,
+backend/tests\unit\domain\astrology\test_client_interpretation_projection_v1_builder.py:230:        "evidence_refs",
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:2:"""Verifie la trace CS-248, sa redaction et sa separation du replay."""
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:129:def test_trace_contract_keeps_trace_provenance_and_replay_terms_distinct() -> None:
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:130:    """Le module nomme explicitement les contrats sans fournir de replay snapshot."""
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:141:    assert set(payload["contract_note"]) == {"trace", "provenance", "replay_snapshot"}
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:142:    assert "replay_values" not in payload
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:143:    assert not hasattr(trace, "replay_snapshot")
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:146:def test_trace_module_does_not_define_raw_payload_or_replay_surfaces() -> None:
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:147:    """La source de trace ne reintroduit pas de champs de payload ou replay actif."""
+backend/tests\unit\domain\astrology\test_calculation_graph_execution_trace.py:163:    assert "replay_values" not in source
+backend/tests\unit\domain\astrology\test_beginner_summary_v1_builder.py:151:        "evidence_refs",
+backend/app\tests\unit\test_db_model_registry_guard.py:29:        "llm_prompt_version_fallback_archives",
+backend/tests\unit\domain\astrology\test_astrology_graph_family_registry.py:45:        assert family.trace_replay_needs
+backend/tests\unit\domain\astrology\test_astrology_graph_family_registry.py:134:        trace_replay_needs=family.trace_replay_needs,
+backend/app\services\llm_observability\monitoring_service.py:4:Agrège les données persistées de ``llm_call_logs`` pour exposer une surface
+backend/app\services\llm_observability\monitoring_service.py:91:    Source de vérité: ``llm_call_logs`` en base persistante.
+backend/app\tests\unit\test_eval_harness_natal.py:50:            prompt_version_id="v1",
+backend/app\tests\unit\test_eval_harness_natal.py:92:            prompt_version_id="v1",
+backend/app\tests\unit\test_eval_harness_natal.py:115:            prompt_version_id="v1",
+backend/app\infra\db\repositories\projection_repository.py:40:        projection_hash: str,
+backend/app\infra\db\repositories\projection_repository.py:52:            projection_hash=projection_hash,
+backend/app\infra\db\repositories\projection_repository.py:89:        projection_hash: str,
+backend/app\infra\db\repositories\projection_repository.py:97:            .where(PersistedProjectionModel.projection_hash == projection_hash)
+backend/app\services\llm_observability\admin_observability.py:17:from app.ops.llm.services import replay
+backend/app\services\llm_observability\admin_observability.py:36:    prompt_version_id: Optional[uuid.UUID] = None,
+backend/app\services\llm_observability\admin_observability.py:54:    if prompt_version_id:
+backend/app\services\llm_observability\admin_observability.py:55:        stmt = stmt.where(LlmCallLogModel.prompt_version_id == prompt_version_id)
+backend/app\services\llm_observability\admin_observability.py:174:async def replay_request(
+backend/app\services\llm_observability\admin_observability.py:182:        result = await replay(
+backend/app\services\llm_observability\admin_observability.py:183:            db=db, request_id=payload.request_id, prompt_version_id=payload.prompt_version_id
+backend/app\services\llm_observability\admin_observability.py:190:            action="llm_call_replayed",
+backend/app\services\llm_observability\admin_observability.py:194:            details={"new_prompt_version_id": payload.prompt_version_id},
+backend/app\services\llm_observability\admin_consumption.py:71:        # Filled later from raw llm_call_logs to avoid invalid math on pre-aggregated percentiles.
+backend/app\tests\unit\test_gateway_modes.py:72:    registry = {config.prompt_version_id: config for config in configs}
+backend/app\tests\unit\test_gateway_modes.py:93:        prompt_version_id=use_case,
+backend/app\tests\unit\test_gateway_behavioral.py:99:                prompt_version_id="registry-primary",
+backend/app\tests\unit\test_gateway_behavioral.py:106:                prompt_version_id="registry-fallback",
+backend/app\tests\unit\test_gateway_behavioral.py:160:                prompt_version_id="registry-test",
+backend/app\tests\unit\test_gateway_behavioral.py:233:                prompt_version_id="registry-A",
+backend/app\tests\unit\test_gateway_behavioral.py:240:                prompt_version_id="registry-B",
+backend/app\tests\unit\test_gateway_3_roles.py:54:                prompt_version_id="test-registry",
+backend/tests\evaluation\__init__.py:129:    from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+backend/tests\evaluation\__init__.py:161:                get_active_prompt_version(db, "natal_interpretation_short") is not None,
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:2:"""Prouve la stabilite et les invalidations de `llm_input_hash`."""
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:20:def test_llm_input_hash_is_stable_for_same_prompt_visible_material() -> None:
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:25:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:26:    assert len(first["provenance"]["llm_input_hash"]) == 64
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:29:def test_prompt_visible_signal_change_alters_llm_input_hash() -> None:
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:50:    assert original["provenance"]["llm_input_hash"] != changed["provenance"]["llm_input_hash"]
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:53:def test_runtime_only_request_identity_preserves_llm_input_hash() -> None:
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:65:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+backend/app\infra\db\repositories\llm\__init__.py:2:    get_active_prompt_version,
+backend/app\infra\db\repositories\llm\__init__.py:4:    get_latest_prompt_version,
+backend/app\infra\db\repositories\llm\__init__.py:8:    list_prompt_versions,
+backend/app\infra\db\repositories\llm\__init__.py:14:    "get_active_prompt_version",
+backend/app\infra\db\repositories\llm\__init__.py:16:    "get_latest_prompt_version",
+backend/app\infra\db\repositories\llm\__init__.py:20:    "list_prompt_versions",
+backend/tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:110:def test_ai_narrative_public_link_can_anchor_narrative_answer_audit_projection_hash() -> None:
+backend/tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:119:            projection_hash="a" * 64,
+backend/tests\unit\domain\astrology\interpretation\test_ai_narrative_input_contract.py:124:    assert link.persisted_projection.projection_hash == "a" * 64
+backend/app\infra\db\repositories\llm\prompting_repository.py:18:def get_active_prompt_version(db: Session, use_case_key: str) -> LlmPromptVersionModel | None:
+backend/app\infra\db\repositories\llm\prompting_repository.py:34:def list_prompt_versions(db: Session, use_case_key: str) -> list[LlmPromptVersionModel]:
+backend/app\infra\db\repositories\llm\prompting_repository.py:43:def get_latest_prompt_version(db: Session, use_case_key: str) -> LlmPromptVersionModel | None:
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:29:    build_llm_input_hash_material,
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:91:    assert payload["evidence"]["grounding_status"] == "grounded"
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:99:    assert payload["evidence"]["evidence_refs"] == [
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:106:            "source_hash": payload["provenance"]["projection_hash"],
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:117:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:118:    assert len(first["provenance"]["llm_input_hash"]) == 64
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:125:    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:132:    hash_material = build_llm_input_hash_material(
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:140:    assert payload["provenance"]["llm_input_hash"]
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:234:        "compute_projection_hash",
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:235:        "validate_evidence_refs_by_section",
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:254:        evidence_refs=(),
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:2:"""Controle la coherence des `evidence_refs` de `llm_astrology_input_v1`."""
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:12:def test_evidence_refs_match_authorized_projection_source() -> None:
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:21:    assert payload["evidence"]["grounding_status"] == "grounded"
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:23:        payload["evidence"]["evidence_refs"][0]["source_hash"]
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:24:        == (payload["provenance"]["projection_hash"])
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:36:        evidence_refs=(
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:48:    assert payload["evidence"]["grounding_status"] == "ungrounded"
+backend/tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:49:    assert payload["evidence"]["evidence_refs"][0]["source_hash"] == "f" * 64
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:13:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:16:    validate_evidence_refs_by_section,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:39:    projection_hash: str
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:41:    llm_input_hash: str
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:42:    prompt_version: str
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:45:    grounding_status: NarrativeGroundingStatus
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:48:    evidence_refs: list[dict[str, object]] = field(default_factory=list)
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:74:            "grounding_status",
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:75:            payload.grounding_status,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:78:        grounding_status = payload.grounding_status
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:79:        evidence_refs = payload.evidence_refs
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:81:            validation_result = validate_evidence_refs_by_section(
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:83:                evidence_refs=payload.evidence_refs,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:86:                    projection_hash=payload.projection_hash,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:88:                    llm_input_hash=payload.llm_input_hash,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:91:            grounding_status = validation_result.grounding_status
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:92:            evidence_refs = validation_result.to_audit_payload()
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:94:        if grounding_status == "rejected":
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:106:                evidence_refs = payload.validation_context
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:108:                evidence_refs = [payload.validation_context]
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:117:            projection_hash=payload.projection_hash,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:119:            llm_input_hash=payload.llm_input_hash,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:120:            prompt_version=payload.prompt_version,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:125:            grounding_status=grounding_status,
+backend/app\infra\db\repositories\llm\narrative_answer_audit_repository.py:126:            evidence_refs=evidence_refs,
+backend/tests\unit\domain\astrology\test_transit_chart_manifest.py:75:def test_trace_requirements_are_redacted_and_do_not_create_replay_storage() -> None:
+backend/tests\unit\domain\astrology\test_transit_chart_manifest.py:76:    """La trace reste diagnostique et separee de tout stockage replay."""
+backend/tests\unit\domain\astrology\test_transit_chart_manifest.py:93:    assert "does not create replay storage" in trace_payload
+backend/app\tests\unit\test_guidance_service.py:112:        return "[guidance_prompt_version:v1]\nSummary: Success."
+backend/app\tests\unit\test_guidance_service.py:115:        return "[guidance_prompt_version:v1]\nSummary: Success."
+backend/app\tests\unit\test_guidance_service.py:398:    assert "[guidance_prompt_version:" not in response.summary
+backend/app\tests\unit\test_guidance_service.py:626:    assert "[guidance_prompt_version:" not in response.summary
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:1:# Commentaire global: ces tests prouvent la purge automatique persistante replay_snapshot_v1.
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:2:"""Tests d'integration de purge automatique replay_snapshot_v1."""
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:16:from app.services.replay_snapshot_v1_service import ReplaySnapshotV1Service
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:52:    snapshot_type: str = "replay_snapshot_v1",
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:54:    """Ajoute un snapshot replay rattache a un journal."""
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:71:def test_purge_expired_deletes_only_expired_replay_snapshots() -> None:
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:72:    """Prouve le comptage, l'audit borne et la conservation hors replay_snapshot_v1."""
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:106:            (active_log.input_hash, "replay_snapshot_v1"),
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:110:        assert event.action == "llm_replay_snapshots_expired_purged"
+backend/tests\integration\test_replay_snapshot_v1_service_purge.py:111:        assert event.details["snapshot_type"] == "replay_snapshot_v1"
+backend/app\services\transit_projection\client_projection.py:6:from app.domain.astrology.projections.projection_hash import compute_projection_hash
+backend/app\services\transit_projection\client_projection.py:70:            projection_hash=compute_projection_hash(payload_for_hash),
+backend/app\services\transit_projection\client_projection.py:94:            projection_hash=compute_projection_hash(payload_for_hash),
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:1:# Commentaire global: ces tests verrouillent l'absence de cascade hors snapshots replay.
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:2:"""Tests d'integration de non-cascade pour replay_snapshot_v1."""
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:13:import app.services.replay_snapshot_v1_service as replay_snapshot_v1_service
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:17:from app.services.replay_snapshot_v1_service import ReplaySnapshotV1Service
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:27:def test_replay_snapshot_purge_does_not_delete_call_logs_or_release_snapshots() -> None:
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:57:            snapshot_type="replay_snapshot_v1",
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:77:        service_source = Base.metadata.tables["llm_replay_snapshots"].name + inspect.getsource(
+backend/tests\integration\test_replay_snapshot_v1_service_non_cascade.py:78:            replay_snapshot_v1_service
+backend/tests\integration\test_replay_snapshot_v1_db_redaction.py:1:# Commentaire global: ces tests inspectent les lignes DB replay_snapshot_v1 contre les
+backend/tests\integration\test_replay_snapshot_v1_db_redaction.py:3:"""Tests d'integration de redaction DB pour replay_snapshot_v1."""
+backend/tests\integration\test_replay_snapshot_v1_db_redaction.py:17:from app.services.replay_snapshot_v1_service import compute_replay_snapshot_v1_payload_hash
+backend/tests\integration\test_replay_snapshot_v1_db_redaction.py:21:async def test_persisted_replay_snapshot_metadata_excludes_raw_sensitive_values(
+backend/tests\integration\test_replay_snapshot_v1_db_redaction.py:66:    assert snapshot.input_hash == compute_replay_snapshot_v1_payload_hash(encrypted_payload)
+backend/tests\integration\test_rejected_narrative_answer_response.py:6:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/tests\integration\test_rejected_narrative_answer_response.py:8:    validate_evidence_refs_by_section,
+backend/tests\integration\test_rejected_narrative_answer_response.py:19:    validation_result = validate_evidence_refs_by_section(
+backend/tests\integration\test_rejected_narrative_answer_response.py:21:        evidence_refs=(),
+backend/tests\integration\test_rejected_narrative_answer_audit.py:8:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/tests\integration\test_rejected_narrative_answer_audit.py:10:    validate_evidence_refs_by_section,
+backend/tests\integration\test_rejected_narrative_answer_audit.py:24:    validation_result = validate_evidence_refs_by_section(
+backend/tests\integration\test_rejected_narrative_answer_audit.py:26:        evidence_refs=(),
+backend/tests\integration\test_rejected_narrative_answer_audit.py:46:            projection_hash="a" * 64,
+backend/tests\integration\test_rejected_narrative_answer_audit.py:48:            llm_input_hash="b" * 64,
+backend/tests\integration\test_rejected_narrative_answer_audit.py:49:            prompt_version="prompt-v1",
+backend/tests\integration\test_rejected_narrative_answer_audit.py:52:            grounding_status="rejected",
+backend/tests\integration\test_rejected_narrative_answer_audit.py:64:    assert persisted.grounding_status == "rejected"
+backend/tests\integration\test_rejected_narrative_answer_audit.py:67:        "ungrounded_evidence_refs"
+backend/tests\integration\test_projection_persistence_schema.py:27:        "projection_hash",
+backend/tests\integration\test_projection_persistence_schema.py:36:    """La migration Alembic porte la table canonique et projection_hash."""
+backend/tests\integration\test_projection_persistence_schema.py:43:    assert "projection_hash" in content
+backend/tests\integration\test_narrative_answer_audit_schema.py:47:        "projection_hash",
+backend/tests\integration\test_narrative_answer_audit_schema.py:49:        "llm_input_hash",
+backend/tests\integration\test_narrative_answer_audit_schema.py:50:        "prompt_version",
+backend/tests\integration\test_narrative_answer_audit_schema.py:55:        "grounding_status",
+backend/tests\integration\test_narrative_answer_audit_schema.py:56:        "evidence_refs",
+backend/tests\integration\test_narrative_answer_audit_schema.py:59:    assert "ck_user_natal_interpretations_grounding_status" in checks
+backend/tests\integration\test_narrative_answer_audit_schema.py:70:    assert "grounding_status IN" in content
+backend/tests\integration\test_narrative_answer_audit_schema.py:96:                        prompt_version_id VARCHAR(36) NULL
+backend/tests\integration\test_narrative_answer_audit_schema.py:111:                        id, user_id, chart_id, level, created_at, prompt_version_id, answer_id
+backend/tests\integration\test_narrative_answer_audit_schema.py:147:            "projection_hash",
+backend/tests\integration\test_narrative_answer_audit_schema.py:148:            "llm_input_hash",
+backend/tests\integration\test_narrative_answer_audit_schema.py:149:            "grounding_status",
+backend/tests\integration\test_narrative_answer_audit_schema.py:150:            "evidence_refs",
+backend/tests\integration\test_narrative_answer_audit_schema.py:153:        assert "ck_user_natal_interpretations_grounding_status" in checks
+backend/tests\integration\test_narrative_answer_audit_repository.py:25:    assert loaded.projection_hash == "a" * 64
+backend/tests\integration\test_narrative_answer_audit_repository.py:26:    assert loaded.llm_input_hash == "b" * 64
+backend/tests\integration\test_narrative_answer_audit_repository.py:27:    assert loaded.prompt_ref == "llm_prompt_versions:prompt-v1"
+backend/tests\integration\test_narrative_answer_audit_repository.py:30:    assert loaded.grounding_status == "grounded"
+backend/tests\integration\test_narrative_answer_audit_repository.py:31:    assert loaded.evidence_refs == [{"kind": "projection", "ref": "structured_facts_v1:hash"}]
+backend/tests\integration\test_narrative_answer_audit_repository.py:46:    grounding_status: str = "grounded",
+backend/tests\integration\test_narrative_answer_audit_repository.py:56:        projection_hash="a" * 64,
+backend/tests\integration\test_narrative_answer_audit_repository.py:58:        llm_input_hash="b" * 64,
+backend/tests\integration\test_narrative_answer_audit_repository.py:59:        prompt_version="prompt-v1",
+backend/tests\integration\test_narrative_answer_audit_repository.py:60:        prompt_ref="llm_prompt_versions:prompt-v1",
+backend/tests\integration\test_narrative_answer_audit_repository.py:64:        grounding_status=grounding_status,  # type: ignore[arg-type]
+backend/tests\integration\test_narrative_answer_audit_repository.py:65:        evidence_refs=[{"kind": "projection", "ref": "structured_facts_v1:hash"}],
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:2:"""Controle la persistance des resultats `evidence_refs` dans l'audit."""
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:8:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:19:    projection_hash = "1" * 64
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:20:    llm_input_hash = "2" * 64
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:31:            projection_hash=projection_hash,
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:33:            llm_input_hash=llm_input_hash,
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:34:            prompt_version="prompt-v1",
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:37:            grounding_status="not_checked",
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:43:            evidence_refs=[
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:49:                    "source_hash": projection_hash,
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:56:                    "source_hash": llm_input_hash,
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:66:    assert persisted.grounding_status == "grounded"
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:67:    assert [section["section_status"] for section in persisted.evidence_refs] == [
+backend/tests\integration\test_narrative_answer_audit_evidence_refs.py:71:    assert persisted.evidence_refs[0]["evidence_refs"][0]["validation_state"] == "valid"
+backend/tests\integration\test_llm_runtime_suppression.py:446:        mock_config.prompt_version_id = "test"
+backend/tests\integration\test_llm_provider_locking.py:70:    mock_config.prompt_version_id = "stub"
+backend/tests\integration\test_llm_provider_locking.py:86:        prompt_version_id="stub",
+backend/tests\integration\test_llm_provider_locking.py:193:    mock_config.prompt_version_id = "stub"
+backend/tests\integration\test_llm_provider_locking.py:209:        prompt_version_id="stub",
+backend/tests\integration\test_llm_provider_locking.py:317:    mock_config.prompt_version_id = "stub"
+backend/app\services\replay_snapshot_v1_service.py:1:# Commentaire global: ce service centralise le cycle de vie des snapshots replay.
+backend/app\services\replay_snapshot_v1_service.py:2:"""Service interne de creation, lecture de metadonnees et purge des snapshots replay."""
+backend/app\services\replay_snapshot_v1_service.py:29:REPLAY_SNAPSHOT_V1_TYPE = "replay_snapshot_v1"
+backend/app\services\replay_snapshot_v1_service.py:41:    """Metadonnees controlees exposees par le service interne replay."""
+backend/app\services\replay_snapshot_v1_service.py:58:    """Resultat metier controle pour une operation replay_snapshot_v1."""
+backend/app\services\replay_snapshot_v1_service.py:65:    replay_attempt_id: str | None = None
+backend/app\services\replay_snapshot_v1_service.py:74:def build_replay_snapshot_v1_payload(user_input: Dict[str, Any]) -> dict[str, Any]:
+backend/app\services\replay_snapshot_v1_service.py:75:    """Construit le payload canonique autorise pour le replay chiffre."""
+backend/app\services\replay_snapshot_v1_service.py:79:def compute_replay_snapshot_v1_payload_hash(replay_payload: Dict[str, Any]) -> str:
+backend/app\services\replay_snapshot_v1_service.py:80:    """Calcule le hash d'integrite sur le payload replay canonique."""
+backend/app\services\replay_snapshot_v1_service.py:81:    return _stable_hash(replay_payload)
+backend/app\services\replay_snapshot_v1_service.py:93:def build_replay_snapshot_v1_metadata(
+backend/app\services\replay_snapshot_v1_service.py:102:    replay_payload = build_replay_snapshot_v1_payload(user_input)
+backend/app\services\replay_snapshot_v1_service.py:103:    input_hash = compute_replay_snapshot_v1_payload_hash(replay_payload)
+backend/app\services\replay_snapshot_v1_service.py:104:    input_key_hashes = sorted(_stable_hash(key) for key in replay_payload)
+backend/app\services\replay_snapshot_v1_service.py:111:    if any("birth" in key.lower() for key in replay_payload):
+backend/app\services\replay_snapshot_v1_service.py:112:        input_ref["birth_data_ref_hash"] = _stable_hash(replay_payload)
+backend/app\services\replay_snapshot_v1_service.py:116:        "prompt_version_id": getattr(result.meta, "prompt_version_id", None) if result else None,
+backend/app\services\replay_snapshot_v1_service.py:135:        "replay_payload": replay_payload,
+backend/app\services\replay_snapshot_v1_service.py:151:    """Service canonique du cycle de vie interne des snapshots replay."""
+backend/app\services\replay_snapshot_v1_service.py:165:        """Cree un snapshot replay avec une retention exacte de trente jours."""
+backend/app\services\replay_snapshot_v1_service.py:170:        snapshot_metadata = build_replay_snapshot_v1_metadata(
+backend/app\services\replay_snapshot_v1_service.py:187:            input_enc=encrypt_input(snapshot_metadata["replay_payload"]),
+backend/app\services\replay_snapshot_v1_service.py:213:                action="replay_snapshot_v1.metadata_read",
+backend/app\services\replay_snapshot_v1_service.py:224:                action="replay_snapshot_v1.metadata_read",
+backend/app\services\replay_snapshot_v1_service.py:235:                action="replay_snapshot_v1.metadata_read",
+backend/app\services\replay_snapshot_v1_service.py:246:                action="replay_snapshot_v1.metadata_read",
+backend/app\services\replay_snapshot_v1_service.py:260:            action="replay_snapshot_v1.metadata_read",
+backend/app\services\replay_snapshot_v1_service.py:269:    def get_replay_payload_snapshot(
+backend/app\services\replay_snapshot_v1_service.py:275:        """Retourne le snapshot utilisable pour l'execution de replay."""
+backend/app\services\replay_snapshot_v1_service.py:344:                action="replay_snapshot_v1.purge",
+backend/app\services\replay_snapshot_v1_service.py:356:                action="replay_snapshot_v1.purge",
+backend/app\services\replay_snapshot_v1_service.py:370:            "kind": "replay_snapshot_payload_tombstone",
+backend/app\services\replay_snapshot_v1_service.py:382:                action="replay_snapshot_v1.purge",
+backend/app\services\replay_snapshot_v1_service.py:392:    def start_replay_attempt(
+backend/app\services\replay_snapshot_v1_service.py:401:        """Accepte une tentative de replay controlee sans exposer le payload chiffre."""
+backend/app\services\replay_snapshot_v1_service.py:411:                action="replay_snapshot_v1.replay_attempt",
+backend/app\services\replay_snapshot_v1_service.py:419:        replay_attempt_id = f"replay-attempt-{uuid.uuid4().hex}"
+backend/app\services\replay_snapshot_v1_service.py:421:            action="replay_snapshot_v1.replay_attempt",
+backend/app\services\replay_snapshot_v1_service.py:425:            diff_summary={"replay_attempt_id": replay_attempt_id},
+backend/app\services\replay_snapshot_v1_service.py:429:            action="replay_snapshot_v1.replay_attempt",
+backend/app\services\replay_snapshot_v1_service.py:442:            replay_attempt_id=replay_attempt_id,
+backend/app\services\replay_snapshot_v1_service.py:447:        """Retourne uniquement une ligne appartenant au contrat replay_snapshot_v1."""
+backend/app\services\replay_snapshot_v1_service.py:464:        """Indique si le payload replay a deja ete remplace par une tombstone."""
+backend/app\services\replay_snapshot_v1_service.py:566:        """Persiste un evenement admin borne pour replay_snapshot_v1."""
+backend/app\services\replay_snapshot_v1_service.py:574:                target_type="llm_replay_snapshot",
+backend/app\services\replay_snapshot_v1_service.py:597:                action="llm_replay_snapshots_expired_purged",
+backend/app\services\replay_snapshot_v1_service.py:598:                target_type="llm_replay_snapshot_batch",
+backend/app\core\config.py:306:        self.chat_prompt_version = os.getenv("CHAT_PROMPT_VERSION", "chat-v1").strip() or "chat-v1"
+backend/app\core\config.py:476:        self.llm_replay_encryption_key = os.getenv("LLM_REPLAY_ENCRYPTION_KEY", "").strip()
+backend/app\core\config.py:477:        if self.app_env == "production" and not self.llm_replay_encryption_key:
+backend/app\core\config.py:479:        if not self.llm_replay_encryption_key:
+backend/app\core\config.py:482:            self.llm_replay_encryption_key = Fernet.generate_key().decode()
+backend/tests\evaluation\conftest.py:34:        mock_settings.llm_replay_encryption_key = "test-key-test-key-test-key-test-key="
+backend/tests\integration\test_llm_governance_registry.py:101:        prompt_version_id="stub-v1",
+backend/tests\integration\test_llm_golden_regression.py:71:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_golden_regression.py:123:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_golden_regression.py:177:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_golden_regression.py:227:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_golden_regression.py:277:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_golden_regression.py:320:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_golden_regression.py:373:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_golden_regression.py:429:                prompt_version_id="test-v1",
+backend/tests\integration\test_llm_db_invariants.py:175:def test_llm_call_logs_operational_indexes_cover_story_queries() -> None:
+backend/tests\integration\test_llm_db_invariants.py:180:        indexes = _index_columns(inspector, "llm_call_logs")
+backend/tests\integration\test_llm_db_invariants.py:185:    assert indexes["ix_llm_call_logs_timestamp"] == ["timestamp"]
+backend/tests\integration\test_llm_db_invariants.py:186:    assert indexes["ix_llm_call_logs_trace_id"] == ["trace_id"]
+backend/tests\integration\test_llm_db_invariants.py:187:    assert indexes["ix_llm_call_logs_scope_timestamp"] == [
+backend/tests\integration\test_llm_db_invariants.py:231:        call_log_checks = _check_constraint_names(inspector, "llm_call_logs")
+backend/tests\integration\test_llm_db_invariants.py:253:        "ck_llm_call_logs_environment",
+backend/tests\integration\test_llm_db_invariants.py:269:        call_log_columns = _column_lengths(inspector, "llm_call_logs")
+backend/tests\integration\test_llm_db_invariants.py:320:def test_replay_snapshot_v1_schema_matches_model_metadata() -> None:
+backend/tests\integration\test_llm_db_invariants.py:321:    """Verifie que la table replay expose les colonnes approuvees par le modele."""
+backend/tests\integration\test_llm_db_invariants.py:325:        db_columns = {column["name"] for column in inspector.get_columns("llm_replay_snapshots")}
+backend/tests\integration\test_llm_db_invariants.py:352:        columns = {column["name"] for column in inspect(db.get_bind()).get_columns("llm_call_logs")}
+backend/tests\integration\test_llm_db_invariants.py:363:    """Verifie que les champs operationnels restent hors de `llm_call_logs`."""
+backend/tests\integration\test_llm_db_invariants.py:366:        columns = {column["name"] for column in inspect(db.get_bind()).get_columns("llm_call_logs")}
+backend/tests\integration\test_llm_db_cleanup_registry.py:36:        obj for obj in registry["objects"] if obj["object_id"] != "column:llm_call_logs.use_case"
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:12:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:16:    validate_evidence_refs_by_section,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:29:class RejectedNarrativeAnswerOutcome:
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:35:    grounding_status: Literal["partial", "ungrounded"]
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:68:) -> RejectedNarrativeAnswerOutcome | None:
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:70:    if validation_result.grounding_status in {"grounded", "not_checked"}:
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:73:    return RejectedNarrativeAnswerOutcome(
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:77:        grounding_status=validation_result.grounding_status,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:92:    projection_hash: str,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:94:    llm_input_hash: str,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:96:) -> RejectedNarrativeAnswerOutcome | None:
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:107:        return RejectedNarrativeAnswerOutcome(
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:111:            grounding_status="ungrounded",
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:120:    evidence_refs = _evidence_refs_for_validation(
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:125:    validation_result = validate_evidence_refs_by_section(
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:127:        evidence_refs=evidence_refs,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:130:            projection_hash=projection_hash,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:132:            llm_input_hash=llm_input_hash,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:146:    outcome: RejectedNarrativeAnswerOutcome,
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:180:        refs = section.get("evidence_refs", [])
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:186:    code = "ungrounded_evidence_refs"
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:219:    return "evidence" in raw_answer or "evidence_refs" in raw_answer
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:222:def _evidence_refs_for_validation(
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:229:    legacy_refs = raw_answer.get("evidence_refs")
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:237:    backend_refs = _backend_evidence_refs(llm_astrology_input_v1)
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:241:    allowed_refs = _backend_evidence_refs_by_output_id(backend_refs)
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:263:def _backend_evidence_refs(
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:270:    refs = evidence.get("evidence_refs")
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:276:def _backend_evidence_refs_by_output_id(
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:330:                "evidence_refs": [
+backend/app\services\llm_generation\natal\rejected_answer_workflow.py:345:                "evidence_refs": [
+backend/app\core\sensitive_data.py:22:    LLM_CALL_LOGS = "llm_call_logs"
+backend/app\core\sensitive_data.py:23:    LLM_REPLAY_SNAPSHOTS = "llm_replay_snapshots"
+backend/app\core\sensitive_data.py:92:    "prompt_version_id",
+backend/app\core\sensitive_data.py:93:    "prompt_version",
+backend/app\core\sensitive_data.py:99:    "projection_hash",
+backend/app\core\sensitive_data.py:101:    "llm_input_hash",
+backend/app\core\sensitive_data.py:102:    "grounding_status",
+backend/app\core\sensitive_data.py:103:    "evidence_refs",
+backend/app\core\sensitive_data.py:116:    "replay_attempt_id",
+backend/app\tests\unit\test_natal_metrics.py:7:from app.domain.llm.runtime.output_validator import validate_output
+backend/app\tests\unit\test_natal_metrics.py:37:        validate_output(raw, _SIMPLE_SCHEMA, use_case="natal_interpretation", schema_version="v1")
+backend/app\tests\unit\test_natal_metrics.py:49:        validate_output(raw, _SIMPLE_SCHEMA, use_case="chat_astrologer")
+backend/app\tests\unit\test_natal_metrics.py:64:        validate_output(
+backend/app\tests\unit\test_natal_metrics.py:78:        validate_output(raw, _SIMPLE_SCHEMA, use_case="natal_interpretation", schema_version="v1")
+backend/app\tests\unit\test_natal_metrics.py:86:        validate_output("BAD JSON", _SIMPLE_SCHEMA, use_case="event_guidance")
+backend/app\tests\unit\test_natal_metrics.py:105:        validate_output(
+backend/app\tests\unit\test_natal_metrics.py:128:        validate_output(raw, schema, evidence_catalog=catalog, use_case="event_guidance")
+backend/app\tests\unit\test_output_validator.py:1:from app.domain.llm.runtime.output_validator import validate_output
+backend/app\tests\unit\test_output_validator.py:17:def test_validate_output_valid():
+backend/app\tests\unit\test_output_validator.py:24:    result = validate_output(raw, schema, schema_version="v1")
+backend/app\tests\unit\test_output_validator.py:29:def test_validate_output_invalid_json():
+backend/app\tests\unit\test_output_validator.py:32:    result = validate_output(raw, schema, schema_version="v1")
+backend/app\tests\unit\test_output_validator.py:37:def test_validate_output_schema_violation():
+backend/app\tests\unit\test_output_validator.py:40:    result = validate_output(raw, schema, schema_version="v1")
+backend/app\tests\unit\test_output_validator.py:45:def test_validate_output_evidence_warning():
+backend/app\tests\unit\test_output_validator.py:51:    result = validate_output(raw, schema, schema_version="v1")
+backend/app\tests\unit\test_output_validator.py:57:def test_validate_output_evidence_aliases_strict_mode():
+backend/app\tests\unit\test_output_validator.py:72:    result = validate_output(
+backend/app\tests\unit\test_output_validator.py:82:def test_validate_output_evidence_unknown_strict_mode_filters():
+backend/app\tests\unit\test_output_validator.py:93:    result = validate_output(
+backend/app\tests\unit\test_output_validator.py:105:def test_validate_output_evidence_alias_conjunction_prefix_strict_mode():
+backend/app\tests\unit\test_output_validator.py:116:    result = validate_output(
+backend/app\tests\unit\test_output_validator.py:123:def test_validate_output_orphan_is_warning_even_in_strict():
+backend/app\tests\unit\test_output_validator.py:134:    result = validate_output(
+backend/app\services\llm_generation\natal\interpretation_service.py:34:from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+backend/app\services\llm_generation\natal\interpretation_service.py:70:    RejectedNarrativeAnswerOutcome,
+backend/app\services\llm_generation\natal\interpretation_service.py:128:        evidence_refs=(),
+backend/app\services\llm_generation\natal\interpretation_service.py:174:def _parse_prompt_version_uuid(prompt_version_id: str | None) -> uuid.UUID | None:
+backend/app\services\llm_generation\natal\interpretation_service.py:175:    if not prompt_version_id:
+backend/app\services\llm_generation\natal\interpretation_service.py:178:        return uuid.UUID(prompt_version_id)
+backend/app\services\llm_generation\natal\interpretation_service.py:242:    rejected_outcome: RejectedNarrativeAnswerOutcome | None = None,
+backend/app\services\llm_generation\natal\interpretation_service.py:245:    prompt_version = gateway_result.meta.prompt_version_id
+backend/app\services\llm_generation\natal\interpretation_service.py:246:    llm_input_hash = _llm_input_hash_for_audit(llm_astrology_input_v1)
+backend/app\services\llm_generation\natal\interpretation_service.py:247:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+backend/app\services\llm_generation\natal\interpretation_service.py:252:    model.projection_hash = projection_hash
+backend/app\services\llm_generation\natal\interpretation_service.py:254:    model.llm_input_hash = llm_input_hash
+backend/app\services\llm_generation\natal\interpretation_service.py:255:    model.prompt_version = prompt_version
+backend/app\services\llm_generation\natal\interpretation_service.py:256:    model.prompt_ref = f"llm_prompt_versions:{prompt_version}" if prompt_version else None
+backend/app\services\llm_generation\natal\interpretation_service.py:261:        model.grounding_status = _grounding_status_for_audit(llm_astrology_input_v1)
+backend/app\services\llm_generation\natal\interpretation_service.py:262:        model.evidence_refs = _evidence_refs_for_audit(llm_astrology_input_v1)
+backend/app\services\llm_generation\natal\interpretation_service.py:264:    model.grounding_status = "rejected"
+backend/app\services\llm_generation\natal\interpretation_service.py:265:    model.evidence_refs = rejected_outcome.validation_context
+backend/app\services\llm_generation\natal\interpretation_service.py:281:) -> RejectedNarrativeAnswerOutcome | None:
+backend/app\services\llm_generation\natal\interpretation_service.py:283:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+backend/app\services\llm_generation\natal\interpretation_service.py:289:        projection_hash=projection_hash,
+backend/app\services\llm_generation\natal\interpretation_service.py:291:        llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
+backend/app\services\llm_generation\natal\interpretation_service.py:306:def _llm_input_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend/app\services\llm_generation\natal\interpretation_service.py:308:    llm_input_hash = _llm_input_provenance(llm_astrology_input_v1).get("llm_input_hash")
+backend/app\services\llm_generation\natal\interpretation_service.py:309:    if isinstance(llm_input_hash, str) and len(llm_input_hash) == 64:
+backend/app\services\llm_generation\natal\interpretation_service.py:310:        return llm_input_hash
+backend/app\services\llm_generation\natal\interpretation_service.py:311:    raise ValueError("llm_astrology_input_v1 llm_input_hash is required for audit")
+backend/app\services\llm_generation\natal\interpretation_service.py:323:def _projection_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend/app\services\llm_generation\natal\interpretation_service.py:324:    """Garde `projection_hash` separe de l'identite complete du prompt LLM."""
+backend/app\services\llm_generation\natal\interpretation_service.py:325:    projection_hash = _llm_input_provenance(llm_astrology_input_v1).get("projection_hash")
+backend/app\services\llm_generation\natal\interpretation_service.py:326:    if isinstance(projection_hash, str) and len(projection_hash) == 64:
+backend/app\services\llm_generation\natal\interpretation_service.py:327:        return projection_hash
+backend/app\services\llm_generation\natal\interpretation_service.py:328:    raise ValueError("llm_astrology_input_v1 projection_hash is required for audit")
+backend/app\services\llm_generation\natal\interpretation_service.py:331:def _grounding_status_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend/app\services\llm_generation\natal\interpretation_service.py:338:    grounding_status = evidence.get("grounding_status")
+backend/app\services\llm_generation\natal\interpretation_service.py:339:    if isinstance(grounding_status, str):
+backend/app\services\llm_generation\natal\interpretation_service.py:340:        return grounding_status
+backend/app\services\llm_generation\natal\interpretation_service.py:341:    raise ValueError("llm_astrology_input_v1 grounding_status is required for audit")
+backend/app\services\llm_generation\natal\interpretation_service.py:344:def _evidence_refs_for_audit(llm_astrology_input_v1: dict[str, object]) -> list[object]:
+backend/app\services\llm_generation\natal\interpretation_service.py:345:    """Persiste les `evidence_refs` backend-only deja validees par le domaine."""
+backend/app\services\llm_generation\natal\interpretation_service.py:347:        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend/app\services\llm_generation\natal\interpretation_service.py:350:        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend/app\services\llm_generation\natal\interpretation_service.py:351:    evidence_refs = evidence.get("evidence_refs")
+backend/app\services\llm_generation\natal\interpretation_service.py:352:    if isinstance(evidence_refs, list):
+backend/app\services\llm_generation\natal\interpretation_service.py:353:        return list(evidence_refs)
+backend/app\services\llm_generation\natal\interpretation_service.py:354:    raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend/app\services\llm_generation\natal\interpretation_service.py:634:                active_prompt = get_active_prompt_version(db, existing.use_case)
+backend/app\services\llm_generation\natal\interpretation_service.py:637:                    str(existing.prompt_version_id) if existing.prompt_version_id else None
+backend/app\services\llm_generation\natal\interpretation_service.py:669:                    prompt_version_id=str(existing.prompt_version_id)
+backend/app\services\llm_generation\natal\interpretation_service.py:670:                    if existing.prompt_version_id
+backend/app\services\llm_generation\natal\interpretation_service.py:869:            prompt_version_id=gateway_result.meta.prompt_version_id,
+backend/app\services\llm_generation\natal\interpretation_service.py:947:                prompt_version_uuid = _parse_prompt_version_uuid(
+backend/app\services\llm_generation\natal\interpretation_service.py:948:                    gateway_result.meta.prompt_version_id
+backend/app\services\llm_generation\natal\interpretation_service.py:959:                        prompt_version_id=prompt_version_uuid,
+backend/app\services\llm_generation\natal\interpretation_service.py:982:                    primary.prompt_version_id = prompt_version_uuid
+backend/app\services\llm_generation\natal\interpretation_service.py:1119:            prompt_version_id=gateway_result.meta.prompt_version_id,
+backend/app\services\llm_generation\natal\interpretation_service.py:1160:        prompt_version_uuid = _parse_prompt_version_uuid(gateway_result.meta.prompt_version_id)
+backend/app\services\llm_generation\natal\interpretation_service.py:1191:                prompt_version_id=prompt_version_uuid,
+backend/app\services\llm_generation\natal\interpretation_service.py:1210:            primary.prompt_version_id = prompt_version_uuid
+backend/tests\integration\test_admin_llm_catalog.py:674:            replay_response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
+backend/tests\integration\test_admin_llm_catalog.py:675:            assert replay_response.status_code == 200
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:111:            prompt_version_id="11111111-1111-1111-1111-111111111111",
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:137:            prompt_version_id="hardcoded-v1",
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:165:            prompt_version_id="11111111-1111-1111-1111-111111111111",
+backend/app\tests\unit\test_natal_interpretation_service.py:98:            prompt_version_id="11111111-1111-1111-1111-111111111111",
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:14:def test_natal_audit_uses_llm_astrology_input_hashes_and_evidence_refs() -> None:
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:30:    assert model.projection_hash == llm_input["provenance"]["projection_hash"]
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:31:    assert model.llm_input_hash == llm_input["provenance"]["llm_input_hash"]
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:33:    assert model.grounding_status == "grounded"
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:34:    assert model.evidence_refs == llm_input["evidence"]["evidence_refs"]
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:37:def test_runtime_only_request_id_does_not_change_audit_llm_input_hash() -> None:
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:38:    """Un changement de request_id audit-only ne modifie pas `llm_input_hash`."""
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:65:    assert first.llm_input_hash == second.llm_input_hash
+backend/tests\integration\llm\test_natal_llm_astrology_input_audit.py:82:            prompt_version_id="prompt-v1",
+backend/tests\integration\conftest.py:19:        mock_settings.llm_replay_encryption_key = "test-key-test-key-test-key-test-key="
+backend/app\services\projection_persistence_service.py:8:from app.domain.astrology.projections.projection_hash import (
+backend/app\services\projection_persistence_service.py:9:    compute_projection_hash,
+backend/app\services\projection_persistence_service.py:54:        projection_hash = compute_projection_hash(payload_json)
+backend/app\services\projection_persistence_service.py:60:            projection_hash=projection_hash,
+backend/app\infra\db\models\user_natal_interpretation.py:65:    allowed_grounding_statuses: ClassVar[tuple[str, ...]] = ALLOWED_NARRATIVE_GROUNDING_STATUSES
+backend/app\infra\db\models\user_natal_interpretation.py:72:            f"grounding_status IN {ALLOWED_NARRATIVE_GROUNDING_STATUSES}",
+backend/app\infra\db\models\user_natal_interpretation.py:73:            name="ck_user_natal_interpretations_grounding_status",
+backend/app\infra\db\models\user_natal_interpretation.py:126:    prompt_version_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+backend/app\infra\db\models\user_natal_interpretation.py:142:    projection_hash: Mapped[str] = mapped_column(
+backend/app\infra\db\models\user_natal_interpretation.py:152:    llm_input_hash: Mapped[str] = mapped_column(
+backend/app\infra\db\models\user_natal_interpretation.py:157:    prompt_version: Mapped[str] = mapped_column(
+backend/app\infra\db\models\user_natal_interpretation.py:171:    grounding_status: Mapped[str] = mapped_column(
+backend/app\infra\db\models\user_natal_interpretation.py:176:    evidence_refs: Mapped[list[dict[str, object]]] = mapped_column(
+backend/app\tests\unit\test_persona_injection.py:65:            prompt_version_id=use_case,
+backend/app\services\llm_generation\guidance\guidance_service.py:279:        if "[guidance_prompt_version:" in raw_summary or "Recent context:" in raw_summary:
+backend/app\services\llm_generation\guidance\guidance_service.py:296:        if "[guidance_prompt_version:" in raw_summary or "Recent context:" in raw_summary:
+backend/tests\architecture\test_replay_snapshot_v1_execution_boundary.py:1:# Commentaire global: ces gardes verrouillent la frontiere d'execution replay_snapshot_v1.
+backend/tests\architecture\test_replay_snapshot_v1_execution_boundary.py:2:"""Gardes d'architecture CS-298 pour l'execution replay_snapshot_v1."""
+backend/tests\architecture\test_replay_snapshot_v1_execution_boundary.py:11:REPLAY_SERVICE = APP_ROOT / "ops" / "llm" / "replay_service.py"
+backend/tests\architecture\test_replay_snapshot_v1_execution_boundary.py:30:def test_replay_service_validates_snapshot_before_gateway_execution() -> None:
+backend/tests\architecture\test_replay_snapshot_v1_execution_boundary.py:34:    snapshot_check = source.index("ReplaySnapshotV1Service.get_replay_payload_snapshot")
+backend/tests\architecture\test_replay_snapshot_v1_execution_boundary.py:41:def test_replay_service_never_emits_raw_provider_output() -> None:
+backend/tests\architecture\test_replay_snapshot_v1_execution_boundary.py:42:    """Prouve que le resultat de replay reste borne a une synthese sans payload brut."""
+backend/tests\llm_orchestration\test_replay_service.py:7:from app.ops.llm.replay_service import replay
+backend/tests\llm_orchestration\test_replay_service.py:19:async def test_replay_refuses_in_prod(db):
+backend/tests\llm_orchestration\test_replay_service.py:20:    with patch("app.ops.llm.replay_service.settings") as mock_settings:
+backend/tests\llm_orchestration\test_replay_service.py:23:            await replay(db, "any-req", "any-prompt")
+backend/tests\llm_orchestration\test_replay_service.py:28:async def test_replay_not_found(db):
+backend/tests\llm_orchestration\test_replay_service.py:30:        await replay(db, "non-existent", "any-prompt")
+backend/app\tests\unit\test_output_validator_v3.py:15:from app.domain.llm.runtime.output_validator import validate_output
+backend/app\tests\unit\test_output_validator_v3.py:38:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:49:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:59:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:75:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:88:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:97:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:107:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:117:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:130:        result = validate_output(
+backend/app\tests\unit\test_output_validator_v3.py:151:        result = validate_output(
+backend/app\infra\db\models\token_usage_log.py:40:        UUID(as_uuid=True), ForeignKey("llm_call_logs.id"), nullable=True
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:30:    "projection_hash",
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:31:    "llm_input_hash",
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:33:    "grounding_status",
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:35:    "evidence_refs",
+backend/app\services\projections\projection_endpoint_service.py:26:from app.domain.astrology.projections.projection_hash import compute_projection_hash
+backend/app\services\projections\projection_endpoint_service.py:160:        projection_hash = compute_projection_hash(built.payload)
+backend/app\services\projections\projection_endpoint_service.py:182:            projection_hash = persisted.projection_hash
+backend/app\services\projections\projection_endpoint_service.py:190:            projection_hash=projection_hash,
+backend/app\infra\db\models\projection_persistence.py:25:    projection_hash: Mapped[str] = mapped_column(String(64), index=True)
+backend/app\services\llm_generation\chat\chat_guidance_service.py:99:    prompt_version: str
+backend/app\services\llm_generation\chat\chat_guidance_service.py:823:                            prompt_version=settings.chat_prompt_version,
+backend/app\services\llm_generation\chat\chat_guidance_service.py:902:            prompt_version=settings.chat_prompt_version,
+backend/tests\llm_orchestration\test_output_validator_pipeline.py:5:    validate_output,
+backend/tests\llm_orchestration\test_output_validator_pipeline.py:62:def test_validate_output_integration():
+backend/tests\llm_orchestration\test_output_validator_pipeline.py:71:    res = validate_output(raw, schema, evidence_catalog=catalog, schema_version="v1")
+backend/app\api\v1\routers\public\natal_interpretation.py:360:                    "prompt_version_id": str(item.prompt_version_id)
+backend/app\api\v1\routers\public\natal_interpretation.py:361:                    if item.prompt_version_id
+backend/app\api\v1\routers\public\natal_interpretation.py:415:        prompt_version_id=str(item.prompt_version_id) if item.prompt_version_id else None,
+backend/tests\llm_orchestration\test_observability.py:166:            prompt_version_id=str(uuid.uuid4()),
+backend/tests\llm_orchestration\test_observability.py:173:        raise IntegrityError("insert into llm_call_logs", {}, Exception("fk failure"))
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:16:from app.domain.llm.runtime.output_validator import validate_output
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:20:async def test_validate_output_with_highlights_list():
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:33:    result = validate_output(raw_output, schema, evidence_catalog=["SUN_LEO"])
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:39:async def test_prompt_version_id_propagation():
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:40:    """Verify that prompt_version_id from config is preserved in final GatewayResult."""
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:51:        meta=GatewayMeta(latency_ms=10, model="m", prompt_version_id="hardcoded-v1"),
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:57:    # Use config override to set a real prompt_version_id
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:58:    config = UseCaseConfig(model="m", developer_prompt="hello", prompt_version_id=real_prompt_id)
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:72:    # Critical: final result must carry the resolved prompt_version_id, not the provider default
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:73:    assert result.meta.prompt_version_id == real_prompt_id
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:127:                prompt_version_id=str(prompt.id),
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:150:        assert str(log_entry.prompt_version_id) == str(prompt.id)
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:180:            meta=GatewayMeta(latency_ms=12, model="m", prompt_version_id="hardcoded-v1"),
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:189:                prompt_version_id=missing_prompt_id,
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:208:        assert result.meta.prompt_version_id == missing_prompt_id
+backend/tests\llm_orchestration\test_gateway_regressions_fix.py:210:        assert log_entry.prompt_version_id is None
+backend/tests\architecture\test_llm_astrology_input_payload_boundaries.py:20:    "projection_hash",
+backend/tests\architecture\test_llm_astrology_input_payload_boundaries.py:21:    "llm_input_hash",
+backend/tests\architecture\test_llm_astrology_input_payload_boundaries.py:23:    "grounding_status",
+backend/tests\architecture\test_llm_astrology_input_payload_boundaries.py:25:    "evidence_refs",
+backend/tests\architecture\test_llm_astrology_input_payload_boundaries.py:99:    assert {"provenance", "evidence_refs", "llm_input_version"} <= literal_keys
+backend/app\tests\integration\test_transit_projection_api.py:175:    assert payload["projection_hash"]
+backend/app\tests\integration\test_transit_projection_api.py:236:    assert payload["projection_hash"]
+backend/app\services\llm_generation\admin_prompts.py:53:    get_active_prompt_version as repo_get_active_prompt_version,
+backend/app\services\llm_generation\admin_prompts.py:202:        active_prompt_version_id=active_prompt.id if active_prompt else None,
+backend/app\services\llm_generation\admin_prompts.py:250:def _serialize_prompt_version(db: Session, version: LlmPromptVersionModel) -> LlmPromptVersion:
+backend/app\services\llm_generation\admin_prompts.py:328:def _get_active_prompt_version_for_use_case(
+backend/app\services\llm_generation\admin_prompts.py:333:    return repo_get_active_prompt_version(db, use_case_key)
+backend/app\services\llm_generation\admin_prompts.py:776:    active_prompt_version = _get_active_prompt_version_for_use_case(
+backend/app\services\llm_generation\admin_prompts.py:835:                    active_prompt_version.developer_prompt
+backend/app\services\llm_generation\admin_prompts.py:836:                    if active_prompt_version
+backend/app\services\llm_generation\admin_prompts.py:841:                    if active_prompt_version
+backend/app\services\llm_generation\admin_prompts.py:847:                ref=str(active_prompt_version.id) if active_prompt_version else None,
+backend/app\services\llm_generation\admin_prompts.py:849:                    active_prompt_version.use_case_key
+backend/app\services\llm_generation\admin_prompts.py:850:                    if active_prompt_version
+backend/app\services\llm_generation\admin_prompts.py:854:                    active_prompt_version.published_at.isoformat()
+backend/app\services\llm_generation\admin_prompts.py:855:                    if active_prompt_version and active_prompt_version.published_at
+backend/app\services\llm_generation\admin_prompts.py:857:                        active_prompt_version.created_at.isoformat()
+backend/app\services\llm_generation\admin_prompts.py:858:                        if active_prompt_version
+backend/app\services\llm_generation\admin_prompts.py:867:                        str(active_prompt_version.status) if active_prompt_version else "fallback"
+backend/app\services\llm_generation\admin_prompts.py:870:                        getattr(active_prompt_version, "model", None)
+backend/app\services\llm_generation\admin_prompts.py:871:                        if active_prompt_version
+backend/app\services\llm_generation\admin_prompts.py:874:                    "fallback_to_feature_template": not bool(active_prompt_version),
+backend/tests\llm_orchestration\test_gateway_pipeline.py:69:                prompt_version_id=str(prompt.id),
+backend/tests\llm_orchestration\test_gateway_pipeline.py:139:    # let's mock _call_provider and validate_output instead.
+backend/tests\llm_orchestration\test_gateway_pipeline.py:146:                prompt_version_id=str(prompt.id),
+backend/tests\llm_orchestration\test_gateway_pipeline.py:151:        with patch("app.domain.llm.runtime.gateway.validate_output") as mock_val:
+backend/tests\architecture\test_llm_astrology_input_boundary.py:42:    assert "validate_evidence_refs_by_section" in imported_names
+backend/app\services\llm_generation\admin_manual_execution.py:88:            "prompt_version_id": meta.prompt_version_id,
+backend/tests\llm_orchestration\test_gateway_model_override.py:26:                meta=GatewayMeta(latency_ms=10, model=override_model, prompt_version_id="v1"),
+backend/tests\llm_orchestration\test_gateway_model_override.py:62:                meta=GatewayMeta(latency_ms=10, model=default_model, prompt_version_id="v1"),
+backend/tests\llm_orchestration\test_gateway_model_override.py:98:                meta=GatewayMeta(latency_ms=10, model=override_model, prompt_version_id="v1"),
+backend/tests\architecture\test_llm_astrology_input_audit_boundary.py:19:def test_llm_input_hash_material_has_single_owner() -> None:
+backend/tests\architecture\test_llm_astrology_input_audit_boundary.py:20:    """Le materiau canonique de `llm_input_hash` reste dans le domaine interpretation."""
+backend/tests\architecture\test_llm_astrology_input_audit_boundary.py:24:        if "build_llm_input_hash_material" in path.read_text(encoding="utf-8")
+backend/tests\architecture\test_llm_astrology_input_audit_boundary.py:50:    assert "llm_input_hash" not in serialized_openapi
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:2:"""Gardes d'architecture pour la validation canonique des `evidence_refs`."""
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:15:    APP_ROOT / "domain" / "astrology" / "interpretation" / "evidence_refs_validation.py"
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:20:def test_single_canonical_evidence_refs_validator() -> None:
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:23:        path for path in APP_ROOT.rglob("*.py") if _defines_validate_evidence_refs_by_section(path)
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:29:def test_evidence_refs_proof_internals_are_not_exposed_to_api_or_frontend() -> None:
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:32:    assert "evidence_refs_validation" not in openapi_payload
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:33:    assert all("evidence_refs" not in getattr(route, "path", "") for route in app.routes)
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:49:def _defines_validate_evidence_refs_by_section(path: Path) -> bool:
+backend/tests\architecture\test_evidence_refs_validation_boundary.py:53:        isinstance(node, ast.FunctionDef) and node.name == "validate_evidence_refs_by_section"
+backend/app\tests\integration\test_guidance_api.py:378:            "Guidance astrologique: [guidance_prompt_version:guidance-v1]\n"
+backend/app\tests\integration\test_guidance_api.py:390:    assert "[guidance_prompt_version:" not in summary
+backend/tests\llm_orchestration\test_assembly_resolution.py:155:    assert plan.prompt_version_id == str(prompt.id)
+backend/app\tests\unit\test_validation_sequence.py:55:    registry = {config.prompt_version_id: config for config in configs}
+backend/app\tests\unit\test_validation_sequence.py:94:            prompt_version_id="test_repair",
+backend/app\tests\unit\test_validation_sequence.py:164:            prompt_version_id="primary",
+backend/app\tests\unit\test_validation_sequence.py:171:            prompt_version_id="fallback_uc",
+backend/tests\llm_orchestration\test_admin_llm_api.py:138:    assert chat_uc["active_prompt_version_id"] == version_id
+backend/tests\llm_orchestration\conftest.py:25:        mock_settings.llm_replay_encryption_key = "test-key-test-key-test-key-test-key="
+backend/tests\architecture\test_api_contract_neutrality.py:53:    "replay_snapshot",
+backend/app\tests\unit\test_use_case_contract.py:75:            prompt_version_id=use_case,
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:68:        connection.execute(text("DROP TABLE llm_prompt_versions"))
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:78:        assert "llm_prompt_versions" in tables
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:115:def test_auto_upgrade_repairs_only_legacy_llm_call_logs_provider_column(
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:135:            row[1] for row in connection.execute(text("PRAGMA table_info(llm_call_logs)"))
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:143:                row[1] for row in connection.execute(text("PRAGMA table_info(llm_call_logs)"))
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:157:def test_auto_upgrade_repairs_stale_llm_call_logs_environment_constraint(
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:172:        connection.execute(text("ALTER TABLE llm_call_logs RENAME TO llm_call_logs__old"))
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:176:                CREATE TABLE llm_call_logs (
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:184:                    prompt_version_id NUMERIC NULL REFERENCES llm_prompt_versions (id),
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:201:                    CONSTRAINT ck_llm_call_logs_environment CHECK (
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:211:                INSERT INTO llm_call_logs
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:214:                    prompt_version_id, persona_id, model, latency_ms, tokens_in, tokens_out,
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:218:                FROM llm_call_logs__old
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:222:        connection.execute(text("DROP TABLE llm_call_logs__old"))
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:230:                    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'llm_call_logs'"
+backend/app\tests\integration\test_db_bootstrap_partial_upgrade.py:236:                    INSERT INTO llm_call_logs (
+backend/app\tests\integration\test_chat_entitlement.py:73:            "prompt_version": "v1",
+backend/app\tests\integration\test_chat_entitlement.py:135:            "prompt_version": "v1",
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:1:# Commentaire global: ces tests verrouillent l'exposition strictement admin du replay snapshot v1.
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:2:"""Gardes d'architecture pour l'API admin `replay_snapshot_v1`."""
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:13:ADMIN_REPLAY_BASE_PATH = "/v1/admin/audit/replay_snapshot_v1/{snapshot_id}"
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:14:ADMIN_REPLAY_ATTEMPT_PATH = f"{ADMIN_REPLAY_BASE_PATH}/replay-attempt"
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:16:    "/v1/replay_snapshot_v1",
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:17:    "/v1/public/replay_snapshot_v1",
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:18:    "/v1/support/replay_snapshot_v1",
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:19:    "/api/replay_snapshot_v1",
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:20:    "/replay_snapshot_v1",
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:35:def test_runtime_exposes_only_the_three_admin_replay_operations() -> None:
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:38:    replay_paths = {path for path in methods_by_path if "replay_snapshot_v1" in path}
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:40:    assert replay_paths == {ADMIN_REPLAY_BASE_PATH, ADMIN_REPLAY_ATTEMPT_PATH}
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:46:def test_openapi_exposes_replay_snapshot_only_under_admin_audit() -> None:
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:49:    replay_paths = {path for path in paths if "replay_snapshot_v1" in path}
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:51:    assert replay_paths == {ADMIN_REPLAY_BASE_PATH, ADMIN_REPLAY_ATTEMPT_PATH}
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:54:    assert all(path.startswith("/v1/admin/audit") for path in replay_paths)
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:58:def test_replay_snapshot_has_no_frontend_or_public_router_exposure() -> None:
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:64:        if "replay_snapshot_v1" in path.read_text(encoding="utf-8")
+backend/tests\architecture\test_admin_replay_snapshot_v1_public_exposure.py:72:            and "replay_snapshot_v1" in path.read_text(encoding="utf-8")
+backend/app\tests\integration\test_db_bootstrap.py:49:        assert "llm_prompt_versions" in tables
+backend/tests\architecture\test_admin_chart_diagnostics_boundaries.py:20:    "llm_" + "replay",
+backend/tests\architecture\test_admin_chart_diagnostics_boundaries.py:21:    "replay_snapshot",
+backend/tests\architecture\test_admin_chart_diagnostics_boundaries.py:43:def test_diagnostic_service_keeps_replay_and_answer_audit_separate() -> None:
+backend/tests\architecture\test_admin_chart_diagnostics_boundaries.py:44:    """Bloque les imports vers le replay ou l'audit narratif."""
+backend/app\tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:33:    prompt_version_id = str(uuid.uuid4())
+backend/app\tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:89:                INSERT INTO llm_prompt_versions (
+backend/app\tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:117:                "id": prompt_version_id,
+backend/app\tests\integration\test_migration_8b2d52442493_add_input_schema_to_assembly.py:190:                "feature_template_ref": prompt_version_id,
+backend/app\infra\db\models\llm\llm_prompt.py:65:    prompt_versions: Mapped[list["LlmPromptVersionModel"]] = relationship(
+backend/app\infra\db\models\llm\llm_prompt.py:73:    __tablename__ = "llm_prompt_versions"
+backend/app\infra\db\models\llm\llm_prompt.py:87:        "LlmUseCaseConfigModel", back_populates="prompt_versions"
+backend/app\infra\db\models\llm\llm_prompt.py:92:            "ix_llm_prompt_version_active_unique",
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:25:def test_migration_0082_archives_prompt_version_legacy_columns_before_drop(
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:82:                INSERT INTO llm_prompt_versions (
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:123:            column["name"] for column in inspect(connection).get_columns("llm_prompt_versions")
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:130:                        prompt_version_id,
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:134:                    FROM llm_prompt_version_legacy_archives
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:135:                    WHERE prompt_version_id = :prompt_version_id
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:138:                {"prompt_version_id": "11111111-1111-1111-1111-111111111111"},
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:147:    assert archive_row["prompt_version_id"] == "11111111-1111-1111-1111-111111111111"
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:160:                    FROM llm_prompt_versions
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:161:                    WHERE id = :prompt_version_id
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:164:                {"prompt_version_id": "11111111-1111-1111-1111-111111111111"},
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:174:    assert "llm_prompt_version_legacy_archives" not in remaining_tables
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:293:                INSERT INTO llm_call_logs (
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:358:            column["name"] for column in inspect(connection).get_columns("llm_call_logs")
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:438:                INSERT INTO llm_call_logs (
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:526:            column["name"] for column in inspect(connection).get_columns("llm_call_logs")
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:540:            column["name"] for column in inspect(connection).get_columns("llm_call_logs")
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:549:            for check in inspect(connection).get_check_constraints("llm_call_logs")
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:556:                FROM llm_call_logs
+backend/app\tests\integration\test_migration_20260424_0082_drop_remaining_llm_legacy_columns.py:588:    assert "ck_llm_call_logs_provider" in call_log_checks_after
+backend/tests\api\test_projection_real_conditions.py:56:        return SimpleNamespace(id=99, projection_hash="c" * 64)
+backend/tests\api\test_projection_real_conditions.py:96:    assert body["projection_hash"]
+backend/app\infra\db\models\llm\llm_observability.py:73:    __tablename__ = "llm_call_logs"
+backend/app\infra\db\models\llm\llm_observability.py:114:    prompt_version_id: Mapped[uuid.UUID | None] = mapped_column(
+backend/app\infra\db\models\llm\llm_observability.py:115:        UUID(as_uuid=True), ForeignKey("llm_prompt_versions.id"), nullable=True
+backend/app\infra\db\models\llm\llm_observability.py:150:    prompt_version = relationship("LlmPromptVersionModel")
+backend/app\infra\db\models\llm\llm_observability.py:152:    replay_snapshot = relationship(
+backend/app\infra\db\models\llm\llm_observability.py:192:            "ck_llm_call_logs_environment",
+backend/app\infra\db\models\llm\llm_observability.py:196:        Index("ix_llm_call_logs_timestamp", "timestamp"),
+backend/app\infra\db\models\llm\llm_observability.py:197:        Index("ix_llm_call_logs_trace_id", "trace_id"),
+backend/app\infra\db\models\llm\llm_observability.py:198:        Index("ix_llm_call_logs_scope_timestamp", "feature", "subfeature", "plan", "timestamp"),
+backend/app\infra\db\models\llm\llm_observability.py:199:        Index("ix_llm_call_logs_prompt_v_timestamp", "prompt_version_id", "timestamp"),
+backend/app\infra\db\models\llm\llm_observability.py:200:        Index("ix_llm_call_logs_status_timestamp", "validation_status", "timestamp"),
+backend/app\infra\db\models\llm\llm_observability.py:367:        ForeignKey("llm_call_logs.id", ondelete="CASCADE"),
+backend/app\infra\db\models\llm\llm_observability.py:436:    __tablename__ = "llm_replay_snapshots"
+backend/app\infra\db\models\llm\llm_observability.py:441:        ForeignKey("llm_call_logs.id", ondelete="CASCADE"),
+backend/app\infra\db\models\llm\llm_observability.py:448:        default="replay_snapshot_v1",
+backend/app\infra\db\models\llm\llm_observability.py:466:    call_log = relationship("LlmCallLogModel", back_populates="replay_snapshot")
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:72:                INSERT INTO llm_prompt_versions (
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:114:                INSERT INTO llm_call_logs (
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:179:            column["name"] for column in inspect(connection).get_columns("llm_prompt_versions")
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:182:            index["name"] for index in inspect(connection).get_indexes("llm_call_logs")
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:188:                    SELECT prompt_version_id, fallback_use_case_key
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:189:                    FROM llm_prompt_version_fallback_archives
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:190:                    WHERE prompt_version_id = :prompt_version_id
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:193:                {"prompt_version_id": "11111111-1111-1111-1111-111111111111"},
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:200:    assert "ix_llm_call_logs_use_case_timestamp" not in call_log_indexes
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:209:            column["name"] for column in inspect(connection).get_columns("llm_prompt_versions")
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:212:            index["name"] for index in inspect(connection).get_indexes("llm_call_logs")
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:218:                FROM llm_prompt_versions
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:219:                WHERE id = :prompt_version_id
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:222:            {"prompt_version_id": "11111111-1111-1111-1111-111111111111"},
+backend/app\tests\integration\test_migration_20260422_0073_cleanup_llm_legacy.py:226:    assert "ix_llm_call_logs_use_case_timestamp" in call_log_indexes_after_downgrade
+backend/tests\api\test_projection_persistence_endpoint.py:33:            projection_hash="a" * 64,
+backend/tests\api\test_projection_persistence_endpoint.py:52:def test_projection_endpoint_exposes_projection_hash_when_persisted() -> None:
+backend/tests\api\test_projection_persistence_endpoint.py:68:    assert body["projection_hash"] == "a" * 64
+backend/app\tests\integration\test_natal_interpretation_endpoint.py:127:            prompt_version_id=str(uuid.uuid4()),
+backend/tests\api\test_projection_endpoint.py:37:            projection_hash="a" * 64,
+backend/app\tests\integration\test_natal_free_short_variant.py:191:            prompt_version_id="00000000-0000-0000-0000-000000000000",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:1:# Commentaire global: ces tests prouvent l'exposition admin interne des snapshots replay v1.
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:2:"""Tests API admin pour le contrat `admin_replay_snapshot_v1`."""
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:14:from app.api.v1.routers.admin.audit import get_replay_snapshot_v1_service
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:18:from app.services.replay_snapshot_v1_service import (
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:53:    """Service replay controle par test pour isoler le contrat HTTP."""
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:84:    def start_replay_attempt(
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:150:        snapshot_type="replay_snapshot_v1",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:154:        version_identity={"model": "gpt-5-mini", "prompt_version_id": "prompt-v1"},
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:162:    replay_attempt_id: str | None = None,
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:169:        replay_attempt_id=replay_attempt_id,
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:199:    app.dependency_overrides[get_replay_snapshot_v1_service] = lambda: service
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:209:        f"/v1/admin/audit/replay_snapshot_v1/{SNAPSHOT_ID}",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:215:    assert payload["contract_id"] == "admin_replay_snapshot_v1"
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:220:    assert payload["version_identity"] == {"model": "gpt-5-mini", "prompt_version_id": "prompt-v1"}
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:238:def test_admin_replay_attempt_is_accepted_and_audited() -> None:
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:241:        _result(replay_attempt_id="replay-attempt-test", audit_event_id=123)
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:246:        f"/v1/admin/audit/replay_snapshot_v1/{SNAPSHOT_ID}/replay-attempt",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:247:        headers={"X-Request-Id": "req-replay-api"},
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:252:    assert payload["replay_attempt_id"] == "replay-attempt-test"
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:261:                "request_id": "req-replay-api",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:275:        f"/v1/admin/audit/replay_snapshot_v1/{SNAPSHOT_ID}",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:298:    app.dependency_overrides[get_replay_snapshot_v1_service] = lambda: service
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:301:    missing_auth = CLIENT.get(f"/v1/admin/audit/replay_snapshot_v1/{SNAPSHOT_ID}")
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:304:    forbidden_user = CLIENT.get(f"/v1/admin/audit/replay_snapshot_v1/{SNAPSHOT_ID}")
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:307:    forbidden_support = CLIENT.get(f"/v1/admin/audit/replay_snapshot_v1/{SNAPSHOT_ID}")
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:331:    response = CLIENT.get(f"/v1/admin/audit/replay_snapshot_v1/{SNAPSHOT_ID}")
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:337:def test_runtime_routes_and_openapi_expose_only_admin_replay_snapshot() -> None:
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:343:        "/v1/admin/audit/replay_snapshot_v1/{snapshot_id}",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:344:        "/v1/admin/audit/replay_snapshot_v1/{snapshot_id}/replay-attempt",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:350:        "/v1/replay_snapshot_v1",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:351:        "/v1/public/replay_snapshot_v1",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:352:        "/v1/support/replay_snapshot_v1",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:353:        "/api/replay_snapshot_v1",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:354:        "/replay_snapshot_v1",
+backend/tests\api\admin\test_replay_snapshot_v1_api.py:359:        path.startswith("/v1/admin/audit") for path in openapi_paths if "replay_snapshot_v1" in path
+backend/app\infra\db\models\llm\llm_canonical_perimeter.py:12:    "llm_call_logs",
+backend/app\infra\db\models\llm\llm_canonical_perimeter.py:17:    "llm_prompt_versions",
+backend/app\infra\db\models\llm\llm_canonical_perimeter.py:19:    "llm_replay_snapshots",
+backend/app\infra\db\models\llm\llm_canonical_perimeter.py:80:        table_name="llm_prompt_versions",
+backend/app\infra\db\models\llm\llm_canonical_perimeter.py:94:        table_name="llm_call_logs",
+backend/app\infra\db\models\llm\llm_canonical_perimeter.py:99:            "prompt_version",
+backend/app\infra\db\models\llm\llm_canonical_perimeter.py:101:            "replay_snapshot",
+backend/tests\api\admin\test_rejected_answer_review_workflow.py:101:                    "missing_evidence_refs": ["projection:moon", "structured_fact:sun"],
+backend/tests\api\admin\test_rejected_answer_review_workflow.py:102:                    "prompt_version": "prompt-v7",
+backend/tests\api\admin\test_rejected_answer_review_workflow.py:168:    assert item["missing_evidence_refs"] == ["projection:moon", "structured_fact:sun"]
+backend/tests\api\admin\test_rejected_answer_review_workflow.py:169:    assert item["prompt_version"] == "prompt-v7"
+backend/tests\api\admin\test_rejected_answer_review_workflow.py:332:    """Bloque les variantes publiques, support, replay ou client-facing."""
+backend/tests\api\admin\test_rejected_answer_review_workflow.py:343:        "/v1/admin/answer-audit-replay",
+backend/app\services\ops\rejected_answer_review.py:34:    "validation_followup_must_not_replay_rejected_answer",
+backend/app\services\ops\rejected_answer_review.py:66:def _as_missing_evidence_refs(value: object) -> list[str]:
+backend/app\services\ops\rejected_answer_review.py:162:        missing_evidence_refs=_as_missing_evidence_refs(details.get("missing_evidence_refs")),
+backend/app\services\ops\rejected_answer_review.py:163:        prompt_version=_as_string(details.get("prompt_version")),
+backend/app\infra\db\models\llm\llm_assembly.py:63:        ForeignKey("llm_prompt_versions.id", ondelete="RESTRICT")
+backend/app\infra\db\models\llm\llm_assembly.py:66:        ForeignKey("llm_prompt_versions.id", ondelete="SET NULL"), nullable=True
+backend/app\services\ops\feature_flag_service.py:80:        "llm_replay_enabled": "Autorise le rejeu manuel des appels LLM depuis l'admin",
+backend/app\infra\db\bootstrap.py:354:def _repair_llm_call_logs_columns() -> bool:
+backend/app\infra\db\bootstrap.py:355:    """Nettoie les reliquats legacy connus sur `llm_call_logs` sans les recréer."""
+backend/app\infra\db\bootstrap.py:357:    if "llm_call_logs" not in inspector.get_table_names():
+backend/app\infra\db\bootstrap.py:360:    columns = _table_columns("llm_call_logs")
+backend/app\infra\db\bootstrap.py:365:        logger.warning("local_sqlite_schema_repair_llm_call_logs legacy_provider_columns_detected")
+backend/app\infra\db\bootstrap.py:367:            connection.execute(text("ALTER TABLE llm_call_logs DROP COLUMN provider"))
+backend/app\infra\db\bootstrap.py:369:            connection.execute(text("ALTER TABLE llm_call_logs DROP COLUMN provider_compat"))
+backend/app\infra\db\bootstrap.py:373:def _repair_llm_call_logs_environment_constraint() -> bool:
+backend/app\infra\db\bootstrap.py:374:    """Reconstruit `llm_call_logs` si une ancienne contrainte d'environnement subsiste."""
+backend/app\infra\db\bootstrap.py:376:    if "llm_call_logs" not in inspector.get_table_names():
+backend/app\infra\db\bootstrap.py:381:            text("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'llm_call_logs'")
+backend/app\infra\db\bootstrap.py:386:    if "ck_llm_call_logs_environment" not in create_sql:
+backend/app\infra\db\bootstrap.py:389:    logger.warning("local_sqlite_schema_repair_llm_call_logs_environment_constraint")
+backend/app\infra\db\bootstrap.py:394:                CREATE TABLE llm_call_logs__rebuild (
+backend/app\infra\db\bootstrap.py:402:                    prompt_version_id NUMERIC NULL REFERENCES llm_prompt_versions (id),
+backend/app\infra\db\bootstrap.py:419:                    CONSTRAINT ck_llm_call_logs_environment CHECK (
+backend/app\infra\db\bootstrap.py:432:                INSERT INTO llm_call_logs__rebuild (
+backend/app\infra\db\bootstrap.py:440:                    prompt_version_id,
+backend/app\infra\db\bootstrap.py:466:                    prompt_version_id,
+backend/app\infra\db\bootstrap.py:483:                FROM llm_call_logs
+backend/app\infra\db\bootstrap.py:487:        connection.execute(text("DROP TABLE llm_call_logs"))
+backend/app\infra\db\bootstrap.py:488:        connection.execute(text("ALTER TABLE llm_call_logs__rebuild RENAME TO llm_call_logs"))
+backend/app\infra\db\bootstrap.py:491:                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_request_id "
+backend/app\infra\db\bootstrap.py:492:                "ON llm_call_logs (request_id)"
+backend/app\infra\db\bootstrap.py:497:                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_timestamp ON llm_call_logs (timestamp)"
+backend/app\infra\db\bootstrap.py:501:            text("CREATE INDEX IF NOT EXISTS ix_llm_call_logs_trace_id ON llm_call_logs (trace_id)")
+backend/app\infra\db\bootstrap.py:505:                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_scope_timestamp "
+backend/app\infra\db\bootstrap.py:506:                'ON llm_call_logs (feature, subfeature, "plan", timestamp)'
+backend/app\infra\db\bootstrap.py:511:                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_prompt_v_timestamp "
+backend/app\infra\db\bootstrap.py:512:                "ON llm_call_logs (prompt_version_id, timestamp)"
+backend/app\infra\db\bootstrap.py:517:                "CREATE INDEX IF NOT EXISTS ix_llm_call_logs_status_timestamp "
+backend/app\infra\db\bootstrap.py:518:                "ON llm_call_logs (validation_status, timestamp)"
+backend/app\infra\db\bootstrap.py:527:    repaired = _repair_llm_call_logs_columns() or repaired
+backend/app\infra\db\bootstrap.py:528:    repaired = _repair_llm_call_logs_environment_constraint() or repaired
+backend/app\api\v1\routers\admin\audit.py:33:from app.services.replay_snapshot_v1_service import (
+backend/app\api\v1\routers\admin\audit.py:45:def get_replay_snapshot_v1_service() -> type[ReplaySnapshotV1Service]:
+backend/app\api\v1\routers\admin\audit.py:46:    """Retourne le service canonique du cycle de vie replay snapshot."""
+backend/app\api\v1\routers\admin\audit.py:50:def raise_unavailable_replay_snapshot(result: ReplaySnapshotResult) -> None:
+backend/app\api\v1\routers\admin\audit.py:57:            code="replay_snapshot_unavailable",
+backend/app\api\v1\routers\admin\audit.py:68:def to_replay_snapshot_response(
+backend/app\api\v1\routers\admin\audit.py:72:    replay_attempt_id: str | None = None,
+backend/app\api\v1\routers\admin\audit.py:84:        replay_attempt_id=replay_attempt_id,
+backend/app\api\v1\routers\admin\audit.py:134:    "/replay_snapshot_v1/{snapshot_id}",
+backend/app\api\v1\routers\admin\audit.py:137:def get_replay_snapshot_v1_metadata(
+backend/app\api\v1\routers\admin\audit.py:142:    service: type[ReplaySnapshotV1Service] = Depends(get_replay_snapshot_v1_service),
+backend/app\api\v1\routers\admin\audit.py:144:    """Retourne les metadonnees admin redigees d'un snapshot replay."""
+backend/app\api\v1\routers\admin\audit.py:156:        raise_unavailable_replay_snapshot(result)
+backend/app\api\v1\routers\admin\audit.py:158:    return to_replay_snapshot_response(result.metadata, audit_event_id=result.audit_event_id)
+backend/app\api\v1\routers\admin\audit.py:162:    "/replay_snapshot_v1/{snapshot_id}/replay-attempt",
+backend/app\api\v1\routers\admin\audit.py:166:def start_replay_snapshot_v1_attempt(
+backend/app\api\v1\routers\admin\audit.py:171:    service: type[ReplaySnapshotV1Service] = Depends(get_replay_snapshot_v1_service),
+backend/app\api\v1\routers\admin\audit.py:173:    """Accepte une tentative de replay admin sans retourner le payload source."""
+backend/app\api\v1\routers\admin\audit.py:174:    result = service.start_replay_attempt(
+backend/app\api\v1\routers\admin\audit.py:181:    if result.status != "success" or result.metadata is None or result.replay_attempt_id is None:
+backend/app\api\v1\routers\admin\audit.py:184:        raise_unavailable_replay_snapshot(result)
+backend/app\api\v1\routers\admin\audit.py:186:    response = to_replay_snapshot_response(
+backend/app\api\v1\routers\admin\audit.py:189:        replay_attempt_id=result.replay_attempt_id,
+backend/app\api\v1\routers\admin\audit.py:198:    "/replay_snapshot_v1/{snapshot_id}",
+backend/app\api\v1\routers\admin\audit.py:201:def purge_replay_snapshot_v1(
+backend/app\api\v1\routers\admin\audit.py:206:    service: type[ReplaySnapshotV1Service] = Depends(get_replay_snapshot_v1_service),
+backend/app\api\v1\routers\admin\audit.py:208:    """Purge manuellement un snapshot replay via le service canonique audite."""
+backend/app\api\v1\routers\admin\audit.py:219:        raise_unavailable_replay_snapshot(result)
+backend/app\services\ops\admin_chart_diagnostics.py:105:                    "Current calculation diagnostics only; replay, public fixed stars "
+backend/app\api\v1\routers\admin\llm\observability.py:29:    replay_request as replay_request_data,
+backend/app\api\v1\routers\admin\llm\observability.py:40:    prompt_version_id: Optional[uuid.UUID] = None,
+backend/app\api\v1\routers\admin\llm\observability.py:53:        prompt_version_id=prompt_version_id,
+backend/app\api\v1\routers\admin\llm\observability.py:79:@router.post("/replay", response_model=dict)
+backend/app\api\v1\routers\admin\llm\observability.py:80:async def replay_request(
+backend/app\api\v1\routers\admin\llm\observability.py:87:    return await replay_request_data(
+backend/app\domain\llm\runtime\validation.py:3:from app.domain.llm.runtime.output_validator import ValidationResult, validate_output
+backend/app\domain\llm\runtime\validation.py:5:__all__ = ["ValidationResult", "validate_output"]
+backend/app\api\v1\routers\admin\llm\prompts.py:67:    get_latest_prompt_version,
+backend/app\api\v1\routers\admin\llm\prompts.py:71:    list_prompt_versions,
+backend/app\api\v1\routers\admin\llm\prompts.py:119:    _serialize_prompt_version,
+backend/app\api\v1\routers\admin\llm\prompts.py:1227:            active_prompt_version_id=active_prompt.id if active_prompt else None,
+backend/app\api\v1\routers\admin\llm\prompts.py:1244:            active_prompt_version_id=canonical_config.active_prompt_version_id,
+backend/app\api\v1\routers\admin\llm\prompts.py:1262:    versions = list_prompt_versions(db, key)
+backend/app\api\v1\routers\admin\llm\prompts.py:1265:        "data": [_serialize_prompt_version(db, v) for v in versions],
+backend/app\api\v1\routers\admin\llm\prompts.py:1315:    previous_version = get_latest_prompt_version(db, key)
+backend/app\api\v1\routers\admin\llm\prompts.py:1356:    return {"data": _serialize_prompt_version(db, version), "meta": {"request_id": request_id}}
+backend/app\api\v1\routers\admin\llm\prompts.py:1395:            prompt_version_id=str(version_id),
+backend/app\api\v1\routers\admin\llm\prompts.py:1416:            prompt_version_id=str(version_id),
+backend/app\api\v1\routers\admin\llm\prompts.py:1462:            "data": _serialize_prompt_version(db, version),
+backend/app\api\v1\routers\admin\llm\prompts.py:1545:            "data": _serialize_prompt_version(db, version).model_dump(mode="json"),
+backend/app\domain\llm\runtime\output_validator.py:233:def validate_output(
+backend/app\domain\llm\runtime\observability_service.py:28:from app.services.replay_snapshot_v1_service import (
+backend/app\domain\llm\runtime\observability_service.py:33:    build_replay_snapshot_v1_metadata,
+backend/app\domain\llm\runtime\observability_service.py:42:    "build_replay_snapshot_v1_metadata",
+backend/app\domain\llm\runtime\observability_service.py:279:        prompt_version_id = None
+backend/app\domain\llm\runtime\observability_service.py:336:            prompt_version_id = _resolve_existing_fk_uuid(
+backend/app\domain\llm\runtime\observability_service.py:337:                db, LlmPromptVersionModel, result.meta.prompt_version_id
+backend/app\domain\llm\runtime\observability_service.py:419:                prompt_version_id=prompt_version_id,
+backend/app\domain\llm\runtime\gateway.py:25:from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+backend/app\domain\llm\runtime\gateway.py:70:from app.domain.llm.runtime.output_validator import ValidationResult, validate_output
+backend/app\domain\llm\runtime\gateway.py:109:        "evidence_refs",
+backend/app\domain\llm\runtime\gateway.py:294:        prompt_version_id: str = "hardcoded-v1",
+backend/app\domain\llm\runtime\gateway.py:313:            prompt_version_id=prompt_version_id,
+backend/app\domain\llm\runtime\gateway.py:344:                db_prompt = get_active_prompt_version(
+backend/app\domain\llm\runtime\gateway.py:347:                    override_prompt_version_id=context.get("_override_prompt_version_id"),
+backend/app\domain\llm\runtime\gateway.py:398:                        prompt_version_id=(
+backend/app\domain\llm\runtime\gateway.py:605:        is_stub = config.prompt_version_id == "hardcoded-v1"
+backend/app\domain\llm\runtime\gateway.py:670:            "_override_prompt_version_id",
+backend/app\domain\llm\runtime\gateway.py:696:            "prompt_version_id_override": context.get("_override_prompt_version_id"),
+backend/app\domain\llm\runtime\gateway.py:813:            source_base = "config" if config.prompt_version_id != "hardcoded-v1" else "stub"
+backend/app\domain\llm\runtime\gateway.py:925:                            prompt_version_id=str(assembly_db.id),
+backend/app\domain\llm\runtime\gateway.py:1027:                        if config.prompt_version_id == "hardcoded-v1":
+backend/app\domain\llm\runtime\gateway.py:1485:            prompt_version_id=config.prompt_version_id,
+backend/app\domain\llm\runtime\gateway.py:1616:        return validate_output(
+backend/app\domain\llm\runtime\gateway.py:1805:        result.meta.prompt_version_id = plan.prompt_version_id or "hardcoded-v1"
+backend/app\domain\astrology\runtime\calculation_graph_execution_trace.py:57:    """Contrat versionne de trace distinct de la provenance et du replay."""
+backend/app\domain\astrology\runtime\calculation_graph_execution_trace.py:114:            "replay_snapshot": "not implemented by this contract",
+backend/app\domain\llm\runtime\crypto_utils.py:12:    return Fernet(settings.llm_replay_encryption_key.encode())
+backend/app\domain\llm\runtime\contracts.py:129:    prompt_version_id_override: Optional[str] = None
+backend/app\domain\llm\runtime\contracts.py:174:    prompt_version_id: str = "hardcoded-v1"
+backend/app\domain\llm\runtime\contracts.py:228:    prompt_version_id: Optional[str] = None
+backend/app\domain\llm\runtime\contracts.py:298:    prompt_version_id: str = "hardcoded-v1"
+backend/app\domain\llm\runtime\contracts.py:367:    prompt_version_id: str
+backend/app\domain\llm\runtime\contracts.py:387:    prompt_version_id: str
+backend/app\domain\astrology\runtime\astrology_graph_family_registry.py:57:    trace_replay_needs: tuple[str, ...]
+backend/app\domain\astrology\runtime\astrology_graph_family_registry.py:137:        trace_replay_needs=("graph family decision trace", "input contract trace"),
+backend/app\domain\astrology\runtime\astrology_graph_family_registry.py:154:        trace_replay_needs=_NATAL_TRACE_NEEDS,
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:140:    evidence_refs: tuple[str, ...]
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:165:    evidence_refs: tuple[str, ...],
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:181:        evidence_refs=evidence_refs,
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:195:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:209:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:224:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:238:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:252:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:266:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:280:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:294:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:308:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:323:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:337:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:351:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:368:        evidence_refs=(
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:431:        for evidence_ref in entry.evidence_refs
+backend/app\domain\astrology\runtime\astrology_doctrine_governance.py:516:    if not entry.evidence_refs:
+backend/app\domain\astrology\projections\__init__.py:4:from app.domain.astrology.projections.projection_hash import (
+backend/app\domain\astrology\projections\__init__.py:6:    compute_projection_hash,
+backend/app\domain\astrology\projections\__init__.py:10:__all__ = ["canonical_projection_json", "compute_projection_hash", "projection_value_to_jsonable"]
+backend/app\domain\astrology\projections\projection_hash.py:24:def compute_projection_hash(payload: Any) -> str:
+backend/app\domain\astrology\runtime\transit_chart_manifest.py:160:            policy="trace keys may prove execution but do not create replay storage",
+backend/app\domain\astrology\runtime\transit_chart_manifest.py:208:            evidence_ref="; ".join(entry.evidence_refs),
+backend/app\domain\astrology\runtime\transit_chart_manifest.py:226:    """Borne les traces internes sans inferer stockage replay."""
+backend/app\domain\astrology\runtime\transit_chart_manifest.py:256:            policy="output keys only; trace does not create replay storage",
+backend/app\domain\audit\safe_details.py:21:    prompt_version_id: Optional[str] = None
+backend/app\domain\audit\safe_details.py:29:    """Structure sûre pour les événements de replay LLM."""
+backend/app\domain\audit\safe_details.py:32:    replay_request_id: str
+backend/app\domain\audit\safe_details.py:39:    """Structure sûre pour les événements de purge replay_snapshot_v1."""
+backend/app\domain\audit\safe_details.py:49:    """Structure sûre pour les événements admin replay_snapshot_v1."""
+backend/app\domain\audit\safe_details.py:60:    """Structure sûre pour les événements de purge automatique replay_snapshot_v1."""
+backend/app\domain\llm\configuration\admin_models.py:167:    active_prompt_version_id: Optional[uuid.UUID] = None
+backend/app\domain\llm\configuration\config_coherence_validator.py:177:            res_contract = await self._validate_output_contract(config, profile, bundle)
+backend/app\domain\llm\configuration\config_coherence_validator.py:299:    async def _validate_output_contract(
+backend/app\domain\llm\configuration\prompt_versions.py:3:from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+backend/app\domain\llm\configuration\prompt_versions.py:5:__all__ = ["get_active_prompt_version"]
+backend/app\services\api_contracts\public\projections.py:47:    projection_hash: str
+backend/app\domain\llm\configuration\prompt_version_lookup.py:9:    get_active_prompt_version as repo_get_active_prompt_version,
+backend/app\domain\llm\configuration\prompt_version_lookup.py:13:def get_active_prompt_version(
+backend/app\domain\llm\configuration\prompt_version_lookup.py:14:    db: Session, use_case_key: str, *, override_prompt_version_id: str | None = None
+backend/app\domain\llm\configuration\prompt_version_lookup.py:22:    if override_prompt_version_id:
+backend/app\domain\llm\configuration\prompt_version_lookup.py:24:            return db.get(LlmPromptVersionModel, uuid.UUID(override_prompt_version_id))
+backend/app\domain\llm\configuration\prompt_version_lookup.py:28:    return repo_get_active_prompt_version(db, use_case_key)
+backend/app\services\api_contracts\public\natal_interpretation.py:58:    prompt_version_id: Optional[str] = None
+backend/app\services\api_contracts\public\natal_interpretation.py:115:    prompt_version_id: Optional[str] = None
+backend/app\services\api_contracts\public\transit_projection.py:42:    projection_hash: str
+backend/app\services\b2b\editorial_service.py:72:    def _validate_output_format(cls, value: str) -> str:
+backend/app\domain\astrology\interpretation\ai_narrative_input_contracts.py:105:    projection_hash: str
+backend/app\domain\astrology\interpretation\ai_narrative_input_contracts.py:109:        for field_name in ("projection_type", "projection_version", "projection_hash"):
+backend/app\domain\astrology\interpretation\ai_narrative_input_contracts.py:112:        if len(self.projection_hash) != 64:
+backend/app\domain\astrology\interpretation\ai_narrative_input_contracts.py:113:            raise ValueError("AI narrative persisted projection requires sha256 projection_hash")
+backend/app\domain\astrology\interpretation\beginner_summary_v1_builder.py:142:            "evidence_refs",
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:2:"""Validation canonique des `evidence_refs` pour l'audit narratif."""
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:112:            "evidence_refs": [reference.to_audit_payload() for reference in self.references],
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:121:    grounding_status: NarrativeGroundingStatus
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:124:        """Retourne le payload stockable dans `UserNatalInterpretationModel.evidence_refs`."""
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:131:    projection_hash: str,
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:133:    llm_input_hash: str,
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:141:            source_hash=projection_hash,
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:147:            source_hash=llm_input_hash,
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:152:def validate_evidence_refs_by_section(
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:155:    evidence_refs: Sequence[Mapping[str, object] | object],
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:163:    refs_by_section = _group_refs_by_section(evidence_refs)
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:187:        grounding_status=_aggregate_grounding_status(sections + orphan_sections),
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:293:    evidence_refs: Sequence[Mapping[str, object] | object],
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:296:    for ref in evidence_refs:
+backend/app\domain\astrology\interpretation\evidence_refs_validation.py:391:def _aggregate_grounding_status(
+backend/app\services\api_contracts\admin\ai.py:41:    # top_prompt_version: str | None = None
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:14:from app.domain.astrology.interpretation.evidence_refs_validation import (
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:17:    validate_evidence_refs_by_section,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:23:from app.domain.astrology.projections.projection_hash import (
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:24:    compute_projection_hash,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:35:    "validation_only": ("evidence", "grounding_status", "validation_owner"),
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:36:    "audit_only": ("projection_hash", "llm_input_hash", "provider_response", "persisted_answer"),
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:63:        evidence_refs: Sequence[Mapping[str, object] | object] = (),
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:64:        projection_hash: str | None = None,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:77:        source_projection_hash = projection_hash or compute_projection_hash(structured_facts_v1)
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:79:            evidence_refs=evidence_refs,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:80:            projection_hash=source_projection_hash,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:86:            projection_hash=source_projection_hash,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:89:        hash_input = build_llm_input_hash_material(
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:95:        provenance["llm_input_hash"] = compute_projection_hash(hash_input)
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:115:def build_llm_input_hash_material(
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:122:    """Construit l'unique materiau prompt-visible utilise par `llm_input_hash`."""
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:217:    evidence_refs: Sequence[Mapping[str, object] | object],
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:218:    projection_hash: str,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:221:    compact_refs = tuple(evidence_refs) or (
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:228:            "source_hash": projection_hash,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:231:    validation = validate_evidence_refs_by_section(
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:235:        evidence_refs=compact_refs,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:238:            projection_hash=projection_hash,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:240:            llm_input_hash="0" * 64,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:244:        "evidence_refs": [projection_value_to_jsonable(ref) for ref in compact_refs],
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:245:        "grounding_status": validation.grounding_status,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:246:        "validation_owner": "evidence_refs_validation.py",
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:280:    projection_hash: str,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:297:        "projection_hash": projection_hash,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:298:        "llm_input_hash": None,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:301:            "canonical_json_owner": "projection_hash.py",
+backend/app\services\api_contracts\admin\audit.py:50:    """Metadonnees admin controlees d'un snapshot replay sans payload sensible."""
+backend/app\services\api_contracts\admin\audit.py:52:    contract_id: Literal["admin_replay_snapshot_v1"] = "admin_replay_snapshot_v1"
+backend/app\services\api_contracts\admin\audit.py:61:    replay_attempt_id: str | None = None
+backend/app\services\api_contracts\admin\audit.py:65:    """Reponse d'acceptation d'une tentative de replay admin controlee."""
+backend/app\services\api_contracts\admin\audit.py:67:    replay_attempt_id: str
+backend/app\services\api_contracts\admin\audit.py:99:    missing_evidence_refs: list[str]
+backend/app\services\api_contracts\admin\audit.py:100:    prompt_version: str
+backend/app\services\api_contracts\admin\chart_diagnostics.py:30:    """Resume le diagnostic sans reconstruire un replay de calcul."""
+backend/app\services\api_contracts\admin\chart_diagnostics.py:47:    """Declare les limites de la projection pour eviter tout amalgame replay/audit."""
+backend/app\services\api_contracts\admin\chart_diagnostics.py:49:    replay_included: Literal[False] = False
+backend/app\services\api_contracts\admin\llm\error_codes.py:27:    REPLAY_FAILED = "replay_failed"
+backend/app\services\api_contracts\admin\llm\prompts.py:165:    prompt_version_id: Optional[uuid.UUID]
+backend/app\services\api_contracts\admin\llm\prompts.py:193:    prompt_version_id: str
