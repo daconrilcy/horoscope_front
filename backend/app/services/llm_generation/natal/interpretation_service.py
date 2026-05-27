@@ -24,13 +24,13 @@ from app.domain.astrology.interpretation.client_interpretation_projection_v1_bui
     ClientInterpretationProjectionV1Builder,
 )
 from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+    LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION,
     LLMAstrologyInputV1Builder,
 )
 from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     StructuredFactsV1Builder,
 )
 from app.domain.astrology.natal_calculation import NatalResult
-from app.domain.astrology.projections.projection_hash import compute_projection_hash
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
@@ -79,7 +79,6 @@ from app.services.user_profile.natal_chart_service import UserNatalChartReadData
 
 logger = logging.getLogger(__name__)
 
-LLM_INPUT_AUDIT_VERSION = "llm_runtime_gateway_input.v1"
 _ENTITLEMENT_TO_CLIENT_PROJECTION_PLAN = {
     "none": "free",
     "free": "free",
@@ -240,32 +239,28 @@ def _apply_narrative_answer_audit(
     request_id: str,
     gateway_result: GatewayResult,
     persist_payload: dict[str, object],
-    audit_source_payload: dict[str, object] | None = None,
+    llm_astrology_input_v1: dict[str, object],
     rejected_outcome: RejectedNarrativeAnswerOutcome | None = None,
 ) -> None:
     """Renseigne l'audit narratif persistant sans exposer les donnees sensibles."""
-    audit_payload = audit_source_payload or persist_payload
     prompt_version = gateway_result.meta.prompt_version_id
-    llm_input_identity = {
-        "use_case": gateway_result.use_case,
-        "prompt_version": prompt_version,
-        "request_id": request_id,
-    }
+    llm_input_hash = _llm_input_hash_for_audit(llm_astrology_input_v1)
+    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
     model.answer_id = f"{gateway_result.use_case}:{request_id}"
     model.answer_type = _answer_type_for_audit(level, variant_code)
     model.plan = gateway_result.meta.plan or "unknown"
     model.projection_version = schema_version
-    model.projection_hash = compute_projection_hash(audit_payload)
-    model.llm_input_version = LLM_INPUT_AUDIT_VERSION
-    model.llm_input_hash = compute_projection_hash(llm_input_identity)
+    model.projection_hash = projection_hash
+    model.llm_input_version = _llm_input_version_for_audit(llm_astrology_input_v1)
+    model.llm_input_hash = llm_input_hash
     model.prompt_version = prompt_version
     model.prompt_ref = f"llm_prompt_versions:{prompt_version}" if prompt_version else None
     model.prompt_snapshot_ref = None
     model.provider = gateway_result.meta.provider or "unknown"
     model.model = gateway_result.meta.model
     if rejected_outcome is None:
-        model.grounding_status = "not_checked"
-        model.evidence_refs = []
+        model.grounding_status = _grounding_status_for_audit(llm_astrology_input_v1)
+        model.evidence_refs = _evidence_refs_for_audit(llm_astrology_input_v1)
         return
     model.grounding_status = "rejected"
     model.evidence_refs = rejected_outcome.validation_context
@@ -283,22 +278,80 @@ def _build_rejected_narrative_answer_outcome(
     request_id: str,
     gateway_result: GatewayResult,
     persist_payload: dict[str, object],
+    llm_astrology_input_v1: dict[str, object],
 ) -> RejectedNarrativeAnswerOutcome | None:
     """Evalue le rejet CS-290 depuis les preuves CS-289 deja presentes."""
-    llm_input_identity = {
-        "use_case": gateway_result.use_case,
-        "prompt_version": gateway_result.meta.prompt_version_id,
-        "request_id": request_id,
-    }
+    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
     return build_rejected_narrative_answer_outcome_from_payload(
         answer_id=f"{gateway_result.use_case}:{request_id}",
         answer_type=_answer_type_for_audit(level, variant_code),
         raw_answer=persist_payload,
         projection_version=schema_version,
-        projection_hash=compute_projection_hash(persist_payload),
-        llm_input_version=LLM_INPUT_AUDIT_VERSION,
-        llm_input_hash=compute_projection_hash(llm_input_identity),
+        projection_hash=projection_hash,
+        llm_input_version=_llm_input_version_for_audit(llm_astrology_input_v1),
+        llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
     )
+
+
+def _llm_input_provenance(llm_astrology_input_v1: dict[str, object]) -> dict[str, object]:
+    """Lit la provenance canonique sans accepter de fallback silencieux invalide."""
+    if not isinstance(llm_astrology_input_v1, dict):
+        raise ValueError("llm_astrology_input_v1 audit payload is required")
+    provenance = llm_astrology_input_v1.get("provenance")
+    if not isinstance(provenance, dict):
+        raise ValueError("llm_astrology_input_v1 provenance is required for audit")
+    return provenance
+
+
+def _llm_input_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+    """Retourne le hash prompt-visible canonique requis par l'audit."""
+    llm_input_hash = _llm_input_provenance(llm_astrology_input_v1).get("llm_input_hash")
+    if isinstance(llm_input_hash, str) and len(llm_input_hash) == 64:
+        return llm_input_hash
+    raise ValueError("llm_astrology_input_v1 llm_input_hash is required for audit")
+
+
+def _llm_input_version_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+    """Aligne la version d'audit sur le contrat LLM interne quand il est present."""
+    if isinstance(llm_astrology_input_v1, dict):
+        contract_version = llm_astrology_input_v1.get("contract_version")
+        if contract_version == LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION:
+            return contract_version
+    raise ValueError("llm_astrology_input_v1 contract_version is required for audit")
+
+
+def _projection_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+    """Garde `projection_hash` separe de l'identite complete du prompt LLM."""
+    projection_hash = _llm_input_provenance(llm_astrology_input_v1).get("projection_hash")
+    if isinstance(projection_hash, str) and len(projection_hash) == 64:
+        return projection_hash
+    raise ValueError("llm_astrology_input_v1 projection_hash is required for audit")
+
+
+def _grounding_status_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+    """Reporte le statut de preuve du contrat LLM quand aucun rejet n'a eu lieu."""
+    if not isinstance(llm_astrology_input_v1, dict):
+        raise ValueError("llm_astrology_input_v1 evidence is required for audit")
+    evidence = llm_astrology_input_v1.get("evidence")
+    if not isinstance(evidence, dict):
+        raise ValueError("llm_astrology_input_v1 evidence is required for audit")
+    grounding_status = evidence.get("grounding_status")
+    if isinstance(grounding_status, str):
+        return grounding_status
+    raise ValueError("llm_astrology_input_v1 grounding_status is required for audit")
+
+
+def _evidence_refs_for_audit(llm_astrology_input_v1: dict[str, object]) -> list[object]:
+    """Persiste les `evidence_refs` prompt-visibles deja validees par le domaine."""
+    if not isinstance(llm_astrology_input_v1, dict):
+        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+    evidence = llm_astrology_input_v1.get("evidence")
+    if not isinstance(evidence, dict):
+        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+    evidence_refs = evidence.get("evidence_refs")
+    if isinstance(evidence_refs, list):
+        return list(evidence_refs)
+    raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
 
 
 class NatalInterpretationService:
@@ -851,6 +904,7 @@ class NatalInterpretationService:
             request_id=request_id,
             gateway_result=gateway_result,
             persist_payload=persist_payload,
+            llm_astrology_input_v1=llm_astrology_input_v1,
         )
         if rejected_outcome is not None:
             emit_rejected_narrative_answer_log(
@@ -920,6 +974,7 @@ class NatalInterpretationService:
                         request_id=request_id,
                         gateway_result=gateway_result,
                         persist_payload=persist_payload,
+                        llm_astrology_input_v1=llm_astrology_input_v1,
                         rejected_outcome=rejected_outcome,
                     )
                     db.add(primary)
@@ -941,6 +996,7 @@ class NatalInterpretationService:
                         request_id=request_id,
                         gateway_result=gateway_result,
                         persist_payload=persist_payload,
+                        llm_astrology_input_v1=llm_astrology_input_v1,
                         rejected_outcome=rejected_outcome,
                     )
 
@@ -1088,6 +1144,7 @@ class NatalInterpretationService:
             request_id=request_id,
             gateway_result=gateway_result,
             persist_payload=rejection_source_payload,
+            llm_astrology_input_v1=llm_astrology_input_v1,
         )
         if rejected_outcome is not None:
             emit_rejected_narrative_answer_log(
@@ -1153,7 +1210,7 @@ class NatalInterpretationService:
                 request_id=request_id,
                 gateway_result=gateway_result,
                 persist_payload=persist_payload,
-                audit_source_payload=rejection_source_payload,
+                llm_astrology_input_v1=llm_astrology_input_v1,
                 rejected_outcome=rejected_outcome,
             )
             db.add(primary)
@@ -1171,7 +1228,7 @@ class NatalInterpretationService:
                 request_id=request_id,
                 gateway_result=gateway_result,
                 persist_payload=persist_payload,
-                audit_source_payload=rejection_source_payload,
+                llm_astrology_input_v1=llm_astrology_input_v1,
                 rejected_outcome=rejected_outcome,
             )
 

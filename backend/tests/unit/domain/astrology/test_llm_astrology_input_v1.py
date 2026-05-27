@@ -22,9 +22,11 @@ from app.domain.astrology.interpretation.client_interpretation_projection_v1_bui
     ClientInterpretationProjectionV1Builder,
 )
 from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+    LLM_ASTROLOGY_INPUT_DATA_ROLES,
     LLM_ASTROLOGY_INPUT_V1_CONTRACT_ID,
     LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION,
     LLMAstrologyInputV1Builder,
+    build_llm_input_hash_material,
 )
 from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     STRUCTURED_FACTS_V1_PROJECTION_ID,
@@ -71,6 +73,7 @@ def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
         "shaping",
         "provenance",
         "exclusions",
+        "data_roles",
     }
     assert payload["facts"]["source_projection_id"] == STRUCTURED_FACTS_V1_PROJECTION_ID
     assert payload["signals"]["source_contract"] == "AINarrativeInputContract"
@@ -86,6 +89,13 @@ def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
     assert payload["signals"]["interpretive_signal_codes"]["dignity_codes"] == ["mars"]
     assert payload["signals"]["readiness_flags"]["ready_for_narrative"] is True
     assert payload["evidence"]["grounding_status"] == "grounded"
+    assert payload["data_roles"]["prompt_visible"] == [
+        "facts",
+        "signals",
+        "limits",
+        "evidence",
+        "shaping",
+    ]
     assert payload["evidence"]["evidence_refs"] == [
         {
             "section_id": "llm_astrology_input_v1",
@@ -113,6 +123,23 @@ def test_llm_astrology_input_v1_hash_is_deterministic_and_covers_prompt_blocks()
         "evidence",
         "shaping",
     ]
+    assert first["provenance"]["llm_input_hash"] == second["provenance"]["llm_input_hash"]
+
+
+def test_llm_astrology_input_v1_hash_material_is_canonical() -> None:
+    """Le helper public reconstruit exactement les blocs prompt-visibles."""
+    payload = _build_payload()
+
+    hash_material = build_llm_input_hash_material(
+        facts=payload["facts"],
+        signals=payload["signals"],
+        limits=payload["limits"],
+        evidence=payload["evidence"],
+        shaping=payload["shaping"],
+    )
+
+    assert tuple(hash_material) == LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"]
+    assert payload["provenance"]["llm_input_hash"]
 
 
 def test_llm_astrology_input_v1_rejects_raw_or_wrong_fact_source() -> None:

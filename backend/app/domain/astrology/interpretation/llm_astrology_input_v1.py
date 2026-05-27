@@ -29,6 +29,12 @@ LLM_ASTROLOGY_INPUT_V1_CONTRACT_ID = "llm_astrology_input_v1"
 LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION = "llm_astrology_input_v1.contract.v1"
 SHAPING_SOURCE_PROJECTION_ID = "client_interpretation_projection_v1"
 PROMPT_INFLUENCING_BLOCKS = ("facts", "signals", "limits", "evidence", "shaping")
+LLM_ASTROLOGY_INPUT_DATA_ROLES = {
+    "prompt_visible": PROMPT_INFLUENCING_BLOCKS,
+    "runtime_only": ("request_id", "trace_id", "chart_json", "natal_data"),
+    "validation_only": ("grounding_status", "validation_owner"),
+    "audit_only": ("projection_hash", "llm_input_hash", "provider_response", "persisted_answer"),
+}
 EDITORIAL_DEPTH_KEY = "editorial_depth_" + "pro" + "file"
 SIGN_BALANCES_KEY = "sign_" + "pro" + "file_balances"
 EXCLUDED_SURFACES = (
@@ -80,13 +86,13 @@ class LLMAstrologyInputV1Builder:
             projection_hash=source_projection_hash,
             prompt_ref=prompt_ref,
         )
-        hash_input = {
-            "facts": facts,
-            "signals": signals,
-            "limits": limits,
-            "evidence": evidence,
-            "shaping": shaping,
-        }
+        hash_input = build_llm_input_hash_material(
+            facts=facts,
+            signals=signals,
+            limits=limits,
+            evidence=evidence,
+            shaping=shaping,
+        )
         provenance["llm_input_hash"] = compute_projection_hash(hash_input)
         return {
             "contract_id": LLM_ASTROLOGY_INPUT_V1_CONTRACT_ID,
@@ -101,7 +107,28 @@ class LLMAstrologyInputV1Builder:
                 "excluded_surfaces": list(EXCLUDED_SURFACES),
                 "policy": "excluded_surfaces_are_not_canonical_sources",
             },
+            "data_roles": {
+                role: list(values) for role, values in LLM_ASTROLOGY_INPUT_DATA_ROLES.items()
+            },
         }
+
+
+def build_llm_input_hash_material(
+    *,
+    facts: Mapping[str, Any],
+    signals: Mapping[str, Any],
+    limits: Mapping[str, Any],
+    evidence: Mapping[str, Any],
+    shaping: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Construit l'unique materiau prompt-visible utilise par `llm_input_hash`."""
+    return {
+        "facts": projection_value_to_jsonable(facts),
+        "signals": projection_value_to_jsonable(signals),
+        "limits": projection_value_to_jsonable(limits),
+        "evidence": projection_value_to_jsonable(evidence),
+        "shaping": projection_value_to_jsonable(shaping),
+    }
 
 
 def _ensure_structured_facts_source(structured_facts_v1: Mapping[str, Any]) -> None:

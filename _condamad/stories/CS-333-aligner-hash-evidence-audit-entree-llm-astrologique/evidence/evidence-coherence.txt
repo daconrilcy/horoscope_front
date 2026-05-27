@@ -1,0 +1,10 @@
+CS-333 evidence coherence
+
+PASS: llm_astrology_input_v1 emits grounding_status=grounded for the default projection evidence ref.
+PASS: the emitted evidence ref source_hash equals provenance.projection_hash.
+PASS: invalid evidence refs with a mismatched source_hash are classified ungrounded.
+PASS: validation owner remains backend/app/domain/astrology/interpretation/evidence_refs_validation.py.
+
+Validation:
+- python -B -m pytest -q tests/unit/domain/astrology/test_llm_astrology_input_evidence.py --tb=short
+- python -B -m pytest --long -q tests/integration/llm/test_natal_llm_astrology_input_audit.py --tb=short

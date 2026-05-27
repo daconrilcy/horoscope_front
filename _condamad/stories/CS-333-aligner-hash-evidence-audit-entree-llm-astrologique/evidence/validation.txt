@@ -1,0 +1,33 @@
+CS-333 validation transcript
+
+Environment:
+- PowerShell, repository root C:\dev\horoscope_front
+- Python commands run after .\.venv\Scripts\Activate.ps1
+
+Commands:
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-333-aligner-hash-evidence-audit-entree-llm-astrologique
+  PASS: CONDAMAD validation PASS
+- cd backend; ruff format app\domain\astrology\interpretation\llm_astrology_input_v1.py app\services\llm_generation\natal\interpretation_service.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_hash.py tests\unit\domain\astrology\test_llm_astrology_input_evidence.py tests\integration\llm\test_natal_llm_astrology_input_audit.py tests\architecture\test_llm_astrology_input_audit_boundary.py
+  PASS
+- cd backend; ruff check .
+  PASS: All checks passed
+- cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_hash.py --tb=short
+  PASS: 3 passed
+- cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_evidence.py --tb=short
+  PASS: 2 passed
+- cd backend; python -B -m pytest --long -q tests\integration\llm\test_natal_llm_astrology_input_audit.py --tb=short
+  PASS: 2 passed
+- cd backend; python -B -m pytest -q tests\architecture\test_llm_astrology_input_audit_boundary.py --tb=short
+  PASS: 3 passed
+- cd backend; python -B -c "from app.main import app; assert 'llm_input_hash' not in str(app.openapi())"
+  PASS
+- cd backend; python -B -c "from app.main import app; assert all('llm-input' not in getattr(r, 'path', '') for r in app.routes)"
+  PASS
+- rg -n "llm_input_identity|hashlib\.sha|request_id.*llm_input_hash|llm-input|llm_input_contract.*unavailable" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal
+  PASS: no matches, rg exit code 1 expected for absence
+- cd backend; python -B -m pytest -q tests --tb=short
+  PASS: 1189 passed, 217 deselected
+
+Skipped:
+- Frontend checks: out of scope, no frontend files changed.
+- Browser validation: out of scope, no public route or UI changed.

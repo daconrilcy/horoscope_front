@@ -1,0 +1,10 @@
+{
+  "story": "CS-333-aligner-hash-evidence-audit-entree-llm-astrologique",
+  "contract": "llm_astrology_input_v1.contract.v1",
+  "stable_hash": "4cdd74baf69b82018e58ec5d92cf9627ac412b04f057451b9bceac432b57ac3f",
+  "projection_hash": "119c1484cccb03a1af0ac47fb3bf070d6f0d0854c4943d78efcaa50bca4bc19a",
+  "changed_prompt_visible_signal_hash": "c6913f56e09fb7100f2a3e89588d5e0512050d79d1ebb536c96cbed1486976d8",
+  "runtime_only_request_id_changes_hash": false,
+  "prompt_visible_blocks": ["facts", "signals", "limits", "evidence", "shaping"],
+  "validation": "backend/tests/unit/domain/astrology/test_llm_astrology_input_hash.py"
+}

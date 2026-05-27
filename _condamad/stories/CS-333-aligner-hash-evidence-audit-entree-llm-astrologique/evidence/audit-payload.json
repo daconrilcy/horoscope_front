@@ -1,0 +1,12 @@
+{
+  "story": "CS-333-aligner-hash-evidence-audit-entree-llm-astrologique",
+  "audit_contract": "narrative_answer_audit_v1",
+  "projection_hash_source": "llm_astrology_input_v1.provenance.projection_hash",
+  "llm_input_version": "llm_astrology_input_v1.contract.v1",
+  "llm_input_hash_source": "llm_astrology_input_v1.provenance.llm_input_hash",
+  "evidence_refs_source": "llm_astrology_input_v1.evidence.evidence_refs",
+  "grounding_status_source": "llm_astrology_input_v1.evidence.grounding_status",
+  "runtime_only_request_id_changes_answer_id": true,
+  "runtime_only_request_id_changes_llm_input_hash": false,
+  "validation": "backend/tests/integration/llm/test_natal_llm_astrology_input_audit.py"
+}
