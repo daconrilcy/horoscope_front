@@ -7,7 +7,7 @@
 - Story key: CS-339-aligner-provenance-audit-only-hors-prompt-llm-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-339-aligner-provenance-audit-only-hors-prompt-llm-natal`
-- Registry status: `ready-to-review`
+- Registry status: `done`
 
 ## Preflight
 
@@ -110,3 +110,9 @@
 ## Feedback loop routing
 
 - no-propagation: implementation produced no reusable correction beyond local AC guards and evidence.
+
+## Implementation review closure
+
+- Fresh implementation review: CLEAN in `generated/11-code-review.md`.
+- Tracker closure: `_condamad/stories/story-status.md` moved CS-339 to `done` on 2026-05-27.
+- Post-review validation: targeted backend checks, full backend tests, story validation, strict story lint, and capsule validation passed.

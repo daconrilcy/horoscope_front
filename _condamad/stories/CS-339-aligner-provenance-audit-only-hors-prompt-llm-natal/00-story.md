@@ -1,5 +1,5 @@
 # Story CS-339 aligner-provenance-audit-only-hors-prompt-llm-natal: Align Provenance Audit-Only Outside Natal LLM Prompt
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

@@ -357,3 +357,43 @@ evidence artifacts present
 
 Final capsule validation
 CONDAMAD validation: PASS
+
+Fresh implementation review validation - 2026-05-27
+
+Python environment:
+.\.venv\Scripts\Activate.ps1 activated before all Python commands.
+
+Targeted backend validation:
+ruff format app\domain\llm\runtime\gateway.py tests\llm_orchestration\test_llm_astrology_input_boundaries.py tests\architecture\test_llm_astrology_input_payload_boundaries.py
+PASS: 3 files left unchanged.
+
+ruff check .
+PASS: All checks passed.
+
+python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_hash.py --tb=short
+PASS: 12 passed.
+
+python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_evidence.py tests\llm_orchestration\test_llm_astrology_input_boundaries.py --tb=short
+PASS: 6 passed.
+
+python -B -m pytest -q tests\architecture\test_llm_astrology_input_payload_boundaries.py tests\integration\test_llm_legacy_extinction.py --tb=short
+PASS: 5 passed, 7 deselected.
+
+python -B -m pytest -q tests\integration\llm\test_natal_llm_astrology_input_audit.py --long --tb=short
+PASS: 2 passed.
+
+python -B -m pytest -q tests --long --tb=short
+PASS: 1422 passed, 9 skipped.
+
+rg -n "LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS|prompt_visible|audit_only|projection_hash|llm_input_hash|provenance" app tests
+PASS for review: residual hits are expected contract, audit, persistence, tests, or unrelated provenance surfaces.
+
+Story and capsule validation:
+python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-339-aligner-provenance-audit-only-hors-prompt-llm-natal\00-story.md
+PASS: CONDAMAD story validation.
+
+python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-339-aligner-provenance-audit-only-hors-prompt-llm-natal\00-story.md
+PASS: CONDAMAD story lint.
+
+python .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-339-aligner-provenance-audit-only-hors-prompt-llm-natal
+PASS: CONDAMAD validation.
