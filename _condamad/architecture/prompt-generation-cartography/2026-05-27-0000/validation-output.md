@@ -21,3 +21,19 @@ Toutes les commandes Python ont ete executees apres activation du venv avec `.\.
 ## Conclusion
 
 PASS: le livrable CS-348 est cree sous `_condamad/architecture/prompt-generation-cartography/2026-05-27-0000/`, cite CS-343 a CS-347, conserve les blockers visibles et ne modifie pas les surfaces applicatives gardees.
+
+## Review fraiche post-correction
+
+Date: 2026-05-27.
+
+Resultat: CLEAN.
+
+Comparaison effectuee:
+
+- Story cible: `_condamad/stories/CS-348-architecture-cartographie-generation-prompt-llm/00-story.md`.
+- Brief source: `_story_briefs/cs-348-architecture-cartographie-generation-prompt-llm.md`.
+- Contrat structurel: `.agents/skills/condamad-product-architecture/references/output-contract.md`.
+- Sources d'audit obligatoires: CS-343, CS-344, CS-345, CS-346 et CS-347 sous `_condamad/audits/prompt-generation-cartography/**`.
+- Rapport cible unique: `_condamad/architecture/prompt-generation-cartography/2026-05-27-0000/architecture-prompt-generation-llm.md`.
+
+Constat: le rapport couvre les dix sections obligatoires, les cinq audits attendus, les enjeux source, les criteres d'acceptation, les non-goals, les contraintes no-code, les livrables demandes, les blockers, les owners, les matrices, les registres, les decisions object/entity, les regles operationnelles et la roadmap evidence-backed. Aucune correction du rapport d'architecture n'a ete necessaire; seule cette trace de review fraiche a ete ajoutee.
