@@ -1,0 +1,67 @@
+CS-340 validation output
+
+VC1 CS-339 status
+| CS-339 | aligner-provenance-audit-only-hors-prompt-llm-natal | Align Provenance Audit-Only Outside Natal LLM Prompt | done | `_condamad/stories/CS-339-aligner-provenance-audit-only-hors-prompt-llm-natal/00-story.md` | `_story_briefs/cs-339-aligner-provenance-audit-only-hors-prompt-llm-natal.md` | 2026-05-27 |
+
+ruff format --check app tests
+1465 files already formatted
+
+ruff check .
+All checks passed!
+
+targeted pytest
+.......................                                                  [100%]
+23 passed, 9 deselected in 4.62s
+
+full pytest
+........................................................................ [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 17%]
+........................................................................ [ 23%]
+........................................................................ [ 29%]
+........................................................................ [ 35%]
+........................................................................ [ 41%]
+........................................................................ [ 47%]
+........................................................................ [ 53%]
+........................................................................ [ 59%]
+........................................................................ [ 65%]
+........................................................................ [ 71%]
+........................................................................ [ 77%]
+........................................................................ [ 83%]
+........................................................................ [ 89%]
+........................................................................ [ 95%]
+..........................................................               [100%]
+1210 passed, 221 deselected in 75.16s (0:01:15)
+
+VC6 boundary scan
+boundary scan saved: PASS
+
+VC7 forbidden placeholders
+PASS: no matches
+
+VC8 report path
+PASS
+
+VC9 report sections
+..\_condamad\reports\frontiere-provenance-prompt-audit-llm-natal\2026-05-27-1407\validation-frontiere-provenance.md
+PASS
+
+final capsule validation
+CONDAMAD validation: PASS
+
+git diff --check
+warning: in the working copy of '_condamad/stories/story-status.md', LF will be replaced by CRLF the next time Git touches it
+
+git status --short
+ M _condamad/stories/story-status.md
+?? _condamad/reports/frontiere-provenance-prompt-audit-llm-natal/
+?? _condamad/run-state.json
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/evidence/
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/01-execution-brief.md
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/04-target-files.md
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/05-implementation-plan.md
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/06-validation-plan.md
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/09-dev-log.md
+?? _condamad/stories/CS-340-frontiere-provenance-prompt-audit/generated/10-final-evidence.md
