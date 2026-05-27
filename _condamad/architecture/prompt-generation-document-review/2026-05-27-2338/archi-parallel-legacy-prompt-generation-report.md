@@ -20,6 +20,23 @@ Executive architecture decision summary:
 
 Audit source map for CS-354 synthesis:
 
+Source paths used by this report:
+
+| Source | Path | Role in review |
+| --- | --- | --- |
+| CS-354 story | `_condamad/stories/CS-354-rapport-architecture-process-paralleles-legacy-prompt-llm/00-story.md` | Acceptance criteria, non-goals, target artifact and validation checklist |
+| CS-354 brief | `_story_briefs/cs-354-archi-rapport-process-paralleles-legacy-generation-prompt-llm.md` | Source scope, mandatory sections, provider-capable decision expectations |
+| CS-351 audit | `_condamad/audits/prompt-generation-document-review/2026-05-27-2305/01-adversarial-document-review-audit.md` | CS-350 adversarial wording corrections and guardrail gap |
+| CS-351 findings | `_condamad/audits/prompt-generation-document-review/2026-05-27-2305/02-finding-register.md` | F-001 to F-003 trace for CS-350 impact decisions |
+| CS-352 audit | `_condamad/audits/prompt-generation-document-review/2026-05-27-2240/02-code-document-concordance-audit.md` | Code/document concordance for nominal flow, provider metadata and non-prompt fields |
+| CS-352 findings | `_condamad/audits/prompt-generation-document-review/2026-05-27-2240/02-finding-register.md` | F-001 to F-003 trace for documentation-only corrections |
+| CS-353 audit | `_condamad/audits/prompt-generation-document-review/2026-05-27-2246/03-parallel-legacy-processes-audit.md` | Process inventory, provider-capable classifications, blockers and candidate stories |
+| CS-353 findings | `_condamad/audits/prompt-generation-document-review/2026-05-27-2246/02-finding-register.md` | F-001 to F-005 trace for matrix, blockers and guardrails |
+| CS-353 story candidates | `_condamad/audits/prompt-generation-document-review/2026-05-27-2246/03-story-candidates.md` | SC-001/SC-002 provenance, dependencies and stop conditions |
+| CS-350 final document | `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` | Current final cartography to impact without editing in CS-354 |
+| CS-348 architecture | `_condamad/architecture/prompt-generation-cartography/2026-05-27-0000/architecture-prompt-generation-llm.md` | Upstream registry, cache/replay/schema and semantic blocker context |
+| CS-349 report | `_condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md` | Delivery context, residual risks and source chain |
+
 | Audit | Scope | Closure status | Key architecture inputs | Evidence IDs | Findings used | Blockers | Deferred context | Used for |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CS-351 adversarial document review | Revue adversariale de CS-350 | acceptable with corrections | Nuance `evidence_refs`; wording provider-only metadata; guardrail exact absent | E-003, E-004, E-006, E-007, E-008, E-009, E-010, E-011 | F-001, F-002, F-003 | Aucun blocker runtime; corrections documentaires seulement | Future documentation/guardrail story | CS-350 impacts, boundary wording |
@@ -347,6 +364,22 @@ Stop condition: implementation story requires stronger proof than audits provide
 - Run `rg` for taxonomy/process terms: `nominal`, `parallele`, `legacy`, `fallback`, `repair`, `bootstrap`, `test`, `admin`, `provider-capable`.
 - Run `rg` for source references and gaps: `CS-350`, `CS-351`, `CS-352`, `CS-353`, `Evidence gap`, `Open question`.
 - Run bounded `git status --short -- backend/app backend/tests frontend/src backend/migrations _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` to prove no app or CS-350 edit.
+
+## Fresh review result
+
+Review performed after traceability correction: clean.
+
+| Checklist item | Result | Evidence |
+| --- | --- | --- |
+| Story target artifact identified uniquely | PASS | Single report path: `_condamad/architecture/prompt-generation-document-review/2026-05-27-2338/archi-parallel-legacy-prompt-generation-report.md` |
+| Required brief/story sections present | PASS | Executive summary, Source map, Taxonomy, Matrice, Decision par processus, CS-350 impacts, Guardrails, Stories candidates, Open questions |
+| Output contract sections present | PASS | Capability Matrix, Surface Matrix, Canonical Registry Decisions, Object / Entity Decisions, Operational Rules, Blockers, Roadmap and Open Questions |
+| Every CS-353 audited process has a decision | PASS | Decision matrix and `Decision par processus` include runtime active, fallback, repair, bootstrap, test, admin, archive and `event_guidance` rows |
+| Provider-capable non-nominal paths are not hidden | PASS | Admin manual execution, repair, fallback and `event_guidance` are classified with blockers or non-nominal status |
+| CS-350 impacts are actionable without editing CS-350 here | PASS | Impact table routes documentation corrections and owner decisions to follow-up stories |
+| Guardrails are concrete and sequenced | PASS | Guardrail table defines verification proposals and delays exact classification guardrail until matrix acceptance |
+| Blockers remain blockers | PASS | `event_guidance`, admin manual execution and broader schema ownership are not converted into ordinary backlog work |
+| Report-only boundary preserved | PASS | Validation requires bounded `git status` over app, tests, frontend, migrations and CS-350 |
 
 ## Missing Evidence
 

@@ -73,3 +73,28 @@ Output at first check:
 Validation caveats:
 - Python commands were executed after activating .\.venv\Scripts\Activate.ps1.
 - No lint/test suite was run because CS-354 is report-only and forbids application code changes; validation uses path checks, rg scans and bounded git status guards required by the story.
+
+Fresh review after traceability correction:
+Command: .\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; root=Path('_condamad/architecture/prompt-generation-document-review'); assert root.exists(); matches=list(root.glob('*/archi-*.md')); assert len(matches)==1, matches; print('REPORT_OK', matches[0])"
+Result: PASS
+Output: REPORT_OK _condamad\architecture\prompt-generation-document-review\2026-05-27-2338\archi-parallel-legacy-prompt-generation-report.md
+
+Command: rg -n "Executive architecture summary|Source map|Taxonomy des chemins de prompt generation|Matrice nominal/parallele/legacy/fallback/bootstrap/test/admin|Decision par processus|Impacts sur le document final CS-350|Guardrails requis|Stories candidates ordonnees par risque|Open questions produit ou technique|Fresh review result" _condamad\architecture\prompt-generation-document-review\2026-05-27-2338\archi-parallel-legacy-prompt-generation-report.md
+Result: PASS
+Notes: all mandatory CS-354 report sections and the fresh review block are present.
+
+Command: rg -n "Capability Matrix|Surface Matrix|Canonical Registry Decisions|Object / Entity Decisions|Operational Rules|Blockers and decision owners|Ordered implementation roadmap" _condamad\architecture\prompt-generation-document-review\2026-05-27-2338\archi-parallel-legacy-prompt-generation-report.md
+Result: PASS
+Notes: output-contract.md structural checklist is covered.
+
+Command: rg -n 'Guidance contextuelle|Chat public|Horoscope daily narration|Fallback catalog|No-assembly bootstrap fallback|Provider unsupported fallback|Repair prompts|Guidance bootstrap seeds|Horoscope narrator bootstrap seed|Admin sample payloads|Admin manual execution|Legacy carriers in modern natal tests|Historical/admin/test|CS-350 narrative mentions|event_guidance' _condamad\architecture\prompt-generation-document-review\2026-05-27-2338\archi-parallel-legacy-prompt-generation-report.md
+Result: PASS
+Notes: every CS-353 audited process family remains represented in the matrix and decision sections.
+
+Command: rg -n "Source paths used by this report|01-adversarial-document-review-audit|02-code-document-concordance-audit|03-parallel-legacy-processes-audit|architecture-prompt-generation-llm|report-prompt-generation-cartography" _condamad\architecture\prompt-generation-document-review\2026-05-27-2338\archi-parallel-legacy-prompt-generation-report.md
+Result: PASS
+Notes: mandatory source artifacts are now traceable by exact path inside the report.
+
+Command: git status --short -- backend/app backend/tests frontend/src backend/migrations _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+Result: PASS
+Output: empty; report-only boundary preserved.

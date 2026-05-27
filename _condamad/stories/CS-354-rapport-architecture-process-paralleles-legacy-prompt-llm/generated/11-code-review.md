@@ -13,3 +13,8 @@ Review notes:
 - No application code change is intended.
 - Open blockers intentionally preserved: event_guidance owner decision and admin manual execution policy.
 - CS-353 candidate story labels remain source provenance and are not treated as final tracker IDs.
+
+Fresh review result:
+- Clean after traceability correction.
+- The report now includes exact source paths for the story, brief, CS-351, CS-352, CS-353, CS-350, CS-348 and CS-349 artifacts.
+- The fresh validation confirms the story sections, output-contract sections, CS-353 process decisions, provider-capable blockers, actionable CS-350 impacts and report-only boundary.
