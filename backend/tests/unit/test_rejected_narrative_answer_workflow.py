@@ -40,33 +40,73 @@ def test_ungrounded_validation_becomes_rejected_outcome() -> None:
 
 def test_grounded_validation_does_not_create_rejection() -> None:
     """Une reponse ancree reste hors du workflow de rejet."""
-    proof_hash = "a" * 64
+    llm_input = _build_payload()
     outcome = build_rejected_narrative_answer_outcome_from_payload(
         answer_id="answer-grounded",
         answer_type="premium",
         raw_answer={
             "sections": [{"key": "summary", "content": "texte prouve"}],
-            "evidence_refs": [
-                {
-                    "section_id": "summary",
-                    "source_type": "projection_version",
-                    "source_id": "projection",
-                    "source_version": "v1",
-                    "source_hash": proof_hash,
-                }
-            ],
+            "evidence": ["LLM_ASTROLOGY_INPUT_V1.PROJECTION"],
         },
-        projection_version="v1",
-        projection_hash=proof_hash,
-        llm_input_version="llm_runtime_gateway_input.v1",
-        llm_input_hash="b" * 64,
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
     )
 
     assert outcome is None
 
 
-def test_missing_evidence_refs_on_required_sections_becomes_rejected() -> None:
-    """L'absence de preuves sur une section obligatoire produit un rejet."""
+def test_unknown_output_evidence_id_becomes_rejected() -> None:
+    """Une evidence de sortie inconnue ne peut pas etre ancree par le backend."""
+    llm_input = _build_payload()
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-fake-evidence",
+        answer_type="premium",
+        raw_answer={
+            "sections": [{"key": "summary", "content": "Mars en Aries reste coherent."}],
+            "evidence": ["TOTALLY_FAKE_EVIDENCE"],
+        },
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
+    )
+
+    assert outcome is not None
+    assert outcome.status == "rejected"
+    assert outcome.rejection_reason["validation_errors"] == ["unsupported_source_type"]
+
+
+def test_single_output_evidence_does_not_ground_multiple_sections() -> None:
+    """Une evidence unique ne couvre pas implicitement plusieurs sections."""
+    llm_input = _build_payload()
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-under-evidenced",
+        answer_type="premium",
+        raw_answer={
+            "sections": [
+                {"key": "summary", "content": "Mars en Aries donne l'elan."},
+                {"key": "career", "content": "Mars en Aries colore l'action."},
+            ],
+            "evidence": ["LLM_ASTROLOGY_INPUT_V1.PROJECTION"],
+        },
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
+    )
+
+    assert outcome is not None
+    assert outcome.status == "rejected"
+    assert "missing_required_evidence_ref" in outcome.rejection_reason["validation_errors"]
+
+
+def test_missing_evidence_on_required_sections_becomes_rejected() -> None:
+    """L'absence d'evidence de sortie sur une section obligatoire produit un rejet."""
     outcome = build_rejected_narrative_answer_outcome_from_payload(
         answer_id="answer-missing-refs",
         answer_type="premium",
@@ -108,6 +148,7 @@ def test_unsupported_generated_claim_becomes_rejected() -> None:
 
 def test_backend_detects_unsupported_generated_claim_without_llm_marker() -> None:
     """Une invention lisible dans le texte est controlee contre les faits internes."""
+    llm_input = _build_payload()
     outcome = build_rejected_narrative_answer_outcome_from_payload(
         answer_id="answer-backend-unsupported-claim",
         answer_type="premium",
@@ -118,21 +159,41 @@ def test_backend_detects_unsupported_generated_claim_without_llm_marker() -> Non
                     "content": "Venus en Balance structure toute la lecture.",
                 }
             ],
-            "evidence_refs": [
+            "evidence": ["LLM_ASTROLOGY_INPUT_V1.PROJECTION"],
+        },
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
+    )
+
+    assert outcome is not None
+    assert outcome.status == "rejected"
+    assert outcome.rejection_reason["code"] == "natal_output_policy_violation"
+    assert outcome.rejection_reason["validation_errors"] == ["unsupported_generated_claim"]
+
+
+def test_backend_detects_unknown_astrology_marker_without_llm_marker() -> None:
+    """Un marqueur astrologique hors donnees internes est rejete."""
+    llm_input = _build_payload()
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-backend-unknown-marker",
+        answer_type="premium",
+        raw_answer={
+            "sections": [
                 {
-                    "section_id": "summary",
-                    "source_type": "projection_version",
-                    "source_id": "projection",
-                    "source_version": "v1",
-                    "source_hash": "a" * 64,
+                    "key": "summary",
+                    "content": "Votre kiron karmique est dominant dans cette dynamique.",
                 }
             ],
+            "evidence": ["LLM_ASTROLOGY_INPUT_V1.PROJECTION"],
         },
-        projection_version="v1",
-        projection_hash="a" * 64,
-        llm_input_version="llm_runtime_gateway_input.v1",
-        llm_input_hash="b" * 64,
-        llm_astrology_input_v1=_build_payload(),
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
     )
 
     assert outcome is not None
@@ -164,6 +225,7 @@ def test_ignored_critical_limit_becomes_rejected() -> None:
 
 def test_backend_detects_ignored_critical_limit_without_llm_marker() -> None:
     """Une redaction sur une surface absente est controlee contre `limits`."""
+    llm_input = _build_payload(with_payloads=False)
     outcome = build_rejected_narrative_answer_outcome_from_payload(
         answer_id="answer-backend-ignored-limit",
         answer_type="premium",
@@ -174,21 +236,13 @@ def test_backend_detects_ignored_critical_limit_without_llm_marker() -> None:
                     "content": "Les maisons relationnelles expliquent la relation.",
                 }
             ],
-            "evidence_refs": [
-                {
-                    "section_id": "summary",
-                    "source_type": "projection_version",
-                    "source_id": "projection",
-                    "source_version": "v1",
-                    "source_hash": "a" * 64,
-                }
-            ],
+            "evidence": ["LLM_ASTROLOGY_INPUT_V1.PROJECTION"],
         },
-        projection_version="v1",
-        projection_hash="a" * 64,
-        llm_input_version="llm_runtime_gateway_input.v1",
-        llm_input_hash="b" * 64,
-        llm_astrology_input_v1=_build_payload(with_payloads=False),
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
     )
 
     assert outcome is not None

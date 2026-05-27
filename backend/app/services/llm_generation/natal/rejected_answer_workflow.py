@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -31,7 +32,7 @@ class RejectedNarrativeAnswerOutcome:
     answer_id: str
     answer_type: str
     status: Literal["rejected"]
-    grounding_status: Literal["ungrounded"]
+    grounding_status: Literal["partial", "ungrounded"]
     rejection_reason: dict[str, object]
     validation_context: list[dict[str, object]]
     raw_answer_storage: dict[str, object]
@@ -65,15 +66,15 @@ def build_rejected_narrative_answer_outcome(
     validation_result: EvidenceRefsValidationResult,
     raw_answer: dict[str, object],
 ) -> RejectedNarrativeAnswerOutcome | None:
-    """Construit un rejet si la validation CS-289 conclut a `ungrounded`."""
-    if validation_result.grounding_status != "ungrounded":
+    """Construit un rejet si la validation CS-289 n'est pas pleinement ancree."""
+    if validation_result.grounding_status in {"grounded", "not_checked"}:
         return None
     validation_context = validation_result.to_audit_payload()
     return RejectedNarrativeAnswerOutcome(
         answer_id=answer_id,
         answer_type=answer_type,
         status="rejected",
-        grounding_status="ungrounded",
+        grounding_status=validation_result.grounding_status,
         rejection_reason=_build_rejection_reason(validation_context),
         validation_context=validation_context,
         raw_answer_storage={"structured_output": raw_answer},
@@ -93,8 +94,8 @@ def build_rejected_narrative_answer_outcome_from_payload(
     llm_input_hash: str,
     llm_astrology_input_v1: Mapping[str, object] | None = None,
 ) -> RejectedNarrativeAnswerOutcome | None:
-    """Reutilise CS-289 pour rejeter un payload porteur de `evidence_refs`."""
-    if answer_type == "basic" and "evidence_refs" not in raw_answer:
+    """Reutilise CS-289 pour rejeter un payload porteur d'`evidence`."""
+    if answer_type == "basic" and not _has_output_evidence(raw_answer):
         return None
 
     section_requirements = _section_requirements(raw_answer)
@@ -116,9 +117,11 @@ def build_rejected_narrative_answer_outcome_from_payload(
         )
     if not section_requirements:
         return None
-    evidence_refs = raw_answer.get("evidence_refs", ())
-    if not isinstance(evidence_refs, Sequence) or isinstance(evidence_refs, (str, bytes)):
-        evidence_refs = ()
+    evidence_refs = _evidence_refs_for_validation(
+        raw_answer,
+        llm_astrology_input_v1=llm_astrology_input_v1,
+        section_requirements=section_requirements,
+    )
     validation_result = validate_evidence_refs_by_section(
         section_requirements=section_requirements,
         evidence_refs=evidence_refs,
@@ -209,6 +212,97 @@ def _section_requirements(
             section_id = f"section_{index}"
         requirements.append(EvidenceSectionRequirement(section_id, requires_evidence=True))
     return tuple(requirements)
+
+
+def _has_output_evidence(raw_answer: Mapping[str, object]) -> bool:
+    """Detecte le champ de sortie courant ou l'ancien format de refs internes."""
+    return "evidence" in raw_answer or "evidence_refs" in raw_answer
+
+
+def _evidence_refs_for_validation(
+    raw_answer: Mapping[str, object],
+    *,
+    llm_astrology_input_v1: Mapping[str, object] | None,
+    section_requirements: Sequence[EvidenceSectionRequirement],
+) -> tuple[Mapping[str, object] | object, ...]:
+    """Construit les refs validees depuis le champ `evidence` de sortie."""
+    legacy_refs = raw_answer.get("evidence_refs")
+    if isinstance(legacy_refs, Sequence) and not isinstance(legacy_refs, (str, bytes)):
+        return tuple(legacy_refs)
+
+    evidence_items = _non_empty_string_items(raw_answer.get("evidence"))
+    if not evidence_items or llm_astrology_input_v1 is None:
+        return ()
+
+    backend_refs = _backend_evidence_refs(llm_astrology_input_v1)
+    if not backend_refs:
+        return ()
+
+    allowed_refs = _backend_evidence_refs_by_output_id(backend_refs)
+    validation_refs: list[Mapping[str, object]] = []
+    for index, requirement in enumerate(section_requirements):
+        if index >= len(evidence_items):
+            continue
+        evidence_id = evidence_items[index]
+        backend_ref = allowed_refs.get(_normalize_output_evidence_id(evidence_id))
+        if backend_ref is None:
+            validation_refs.append(
+                _unknown_output_evidence_ref(evidence_id, requirement.section_id)
+            )
+            continue
+        validation_refs.append(
+            {
+                **dict(backend_ref),
+                "section_id": requirement.section_id,
+                "evidence_ref_id": evidence_id,
+            }
+        )
+    return tuple(validation_refs)
+
+
+def _backend_evidence_refs(
+    llm_astrology_input_v1: Mapping[str, object],
+) -> tuple[Mapping[str, object], ...]:
+    """Lit les refs internes conservees hors prompt pour la validation."""
+    evidence = llm_astrology_input_v1.get("evidence")
+    if not isinstance(evidence, Mapping):
+        return ()
+    refs = evidence.get("evidence_refs")
+    if not isinstance(refs, Sequence) or isinstance(refs, (str, bytes)):
+        return ()
+    return tuple(ref for ref in refs if isinstance(ref, Mapping))
+
+
+def _backend_evidence_refs_by_output_id(
+    backend_refs: Sequence[Mapping[str, object]],
+) -> dict[str, Mapping[str, object]]:
+    """Construit les IDs evidence autorises sans exposer les refs au prompt."""
+    refs_by_output_id: dict[str, Mapping[str, object]] = {}
+    for ref in backend_refs:
+        for candidate in (
+            ref.get("evidence_ref_id"),
+            ref.get("source_id"),
+        ):
+            if isinstance(candidate, str) and candidate.strip():
+                refs_by_output_id.setdefault(_normalize_output_evidence_id(candidate), ref)
+    return refs_by_output_id
+
+
+def _normalize_output_evidence_id(value: str) -> str:
+    """Aligne un ID evidence LLM avec le format schema en majuscules."""
+    return re.sub(r"[^A-Z0-9_.:-]+", "_", value.strip().upper())
+
+
+def _unknown_output_evidence_ref(evidence_id: str, section_id: str) -> dict[str, object]:
+    """Produit une ref invalide explicite pour audit quand l'ID LLM est inconnu."""
+    return {
+        "section_id": section_id,
+        "evidence_ref_id": evidence_id,
+        "source_type": "unknown_output_evidence",
+        "source_id": evidence_id,
+        "source_version": "unknown",
+        "source_hash": "",
+    }
 
 
 def _payload_policy_violation_context(
@@ -408,6 +502,7 @@ _KNOWN_ASTROLOGY_TERMS = frozenset(
         "capricorn",
         "aquarius",
         "pisces",
+        "chiron",
         "trine",
         "square",
         "opposition",
@@ -437,6 +532,13 @@ _KNOWN_ASTROLOGY_TERMS = frozenset(
         "capricorne",
         "verseau",
         "poissons",
+        "kiron",
+        "karmique",
+        "karma",
+        "lilith",
+        "noeud",
+        "nœud",
+        "node",
         "trigone",
         "carre",
         "carré",
