@@ -2,7 +2,7 @@
 
 # Final Evidence - CS-347
 
-Status: audit delivered.
+Status: audit delivered and review-clean.
 
 Audit folder:
 
@@ -16,6 +16,7 @@ Validation summary:
 
 - Domain audit validation script: PASS.
 - Domain audit lint script: PASS.
+- Targeted audit review: PASS after classifying F-004 as deferred non-domain for CS-347.
 - Output validation tests: PASS, 8 passed.
 - Rejected workflow and logging tests: PASS, 13 passed.
 - Evidence refs tests: PASS, 10 passed.

@@ -57,3 +57,19 @@ _condamad/audits/prompt-generation-cartography/2026-05-27-1847\00-audit-report.m
 _condamad/audits/prompt-generation-cartography/2026-05-27-1847\00-audit-report.md:133:## Residual Risks For CS-348 And CS-350
 _condamad/audits/prompt-generation-cartography/2026-05-27-1847\00-audit-report.md:135:- CS-348: define the architecture closure map for semantic grounding limits, observability boundaries, and replay readiness.
 _condamad/audits/prompt-generation-cartography/2026-05-27-1847\00-audit-report.md:136:- CS-350: report the final prompt-generation cartography without implying that persisted audit anchors prove prompt correctness.
+
+Review correction validation, 2026-05-27:
+
+Command:
+if (-not (Test-Path -LiteralPath .\.venv\Scripts\Activate.ps1)) { throw 'Missing virtual environment: .\.venv' }
+. .\.venv\Scripts\Activate.ps1
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/prompt-generation-cartography/2026-05-27-1847
+python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/prompt-generation-cartography/2026-05-27-1847
+
+Result:
+CONDAMAD domain audit validation passed.
+CONDAMAD domain audit lint passed.
+
+Review note:
+F-004 is now classified as deferred non-domain for CS-347. The audit closure status is `closed`; no CS-347 application,
+test, schema, migration, provider, frontend, or guardrail change remains.

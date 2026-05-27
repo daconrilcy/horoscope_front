@@ -4,9 +4,9 @@
 
 ## Domain Closure Status
 
-Status: `open`
+Status: `closed`
 
-Reason: no application implementation gap was found inside the audit scope, but F-004 remains as a documentation and architecture closure risk for CS-348 and CS-350.
+Reason: no application implementation gap remains inside the CS-347 audit scope. F-004 is a deferred reporting and architecture risk for CS-348 and CS-350, not an open CS-347 implementation gap.
 
 ## Audit Target
 
@@ -30,7 +30,7 @@ Reason: no application implementation gap was found inside the audit scope, but 
 
 Active findings:
 
-- F-004 remains active as an architecture/report closure item for CS-348 and CS-350.
+- None inside the CS-347 audited domain.
 
 Closed or observation-only findings:
 
@@ -39,9 +39,13 @@ Closed or observation-only findings:
 - F-003 is observation-only; observability and replay metadata are mapped.
 - F-005 is observation-only; registry enrichment is explicitly out of scope.
 
+Deferred non-domain findings:
+
+- F-004 is deferred to CS-348 and CS-350 as an architecture/reporting closure item. It does not require CS-347 code, test, schema, migration, or guardrail changes.
+
 Implementation files remaining for active in-domain findings: none.
 
-Governance/test files remaining for active in-domain findings: CS-348 and CS-350 artifacts only.
+Governance/test files remaining for active in-domain findings: none.
 
 Deferred non-domain concerns: frontend UI, DB migrations, provider calls, schema changes, and runtime fixes.
 

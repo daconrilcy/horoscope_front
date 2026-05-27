@@ -16,6 +16,6 @@ Findings:
 - Low: 0
 - Info: 4
 
-The single Medium finding is not an implementation defect in this audit scope. It records that semantic grounding is bounded by evidence refs and policy checks, not a complete semantic verifier. This feeds CS-348 and CS-350.
+The single Medium finding is not an implementation defect in this audit scope. It records that semantic grounding is bounded by evidence refs and policy checks, not a complete semantic verifier. This is deferred to CS-348 and CS-350 and does not keep CS-347 open.
 
 Validation status: targeted pytest suites for output validation, rejection, evidence refs, persistence, DB invariants, replay audit, and admin segmentation passed after venv activation.

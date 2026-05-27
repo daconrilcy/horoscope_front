@@ -5,12 +5,13 @@
 ## SC-001 - Close Semantic Grounding Architecture And Reporting Map
 
 - Candidate ID: SC-001
-- Source finding: F-004
+- Source finding: F-004, deferred non-domain for CS-347
 - Suggested story title: Close prompt-generation semantic grounding and audit reporting map
 - Suggested archetype: prompt-generation-architecture-closure
 - Primary domain: backend-domain
 - Required contracts: Runtime Source of Truth, Contract Shape, Ownership Routing, Reintroduction Guard, Persistent Evidence
 - Draft objective: In CS-348 and CS-350, document the finite closure map that separates schema validation, semantic grounding, rejection, audit persistence, replay, and reporting proof.
+  Do not reopen CS-347 implementation work.
 - Closure intent: full-closure
 - Must include: current evidence refs checks, rejection policy checks, prompt/input/audit anchors, admin/replay visibility, and explicit semantic-proof limits.
 - Validation hints: reuse E-015 through E-021, plus report scans for `CS-348`, `CS-350`, `semantic gap`, `observability gap`, and `replay gap`.
@@ -21,7 +22,7 @@
 ### F-004
 
 - Application files: none for this audit finding.
-- Governance/test files: CS-348 and CS-350 story/report artifacts only.
+- Governance/test files: none in CS-347; CS-348 and CS-350 story/report artifacts only after those stories start.
 - Audit files: `_condamad/audits/prompt-generation-cartography/**`.
 - Stop condition: the architecture/report artifacts explicitly state which claims are schema-valid, evidence-ref-grounded, audit-only, replayable, or not semantically proven.
 - No-wildcard allowlist: no broad folder exceptions; cite exact source/test paths.

@@ -7,7 +7,7 @@
 | F-001 | Info | High | runtime-contract-drift | backend-domain | E-006, E-007, E-015 | The post-provider shape validation pipeline is traceable and test-backed. | Preserve `output_validator.py` as schema validation owner. | no |
 | F-002 | Info | High | data-integrity-risk | backend-domain | E-008, E-009, E-010, E-016, E-018 | Rejected narrative answers are mapped to controlled client output and internal audit payloads. | Preserve rejection through `rejected_answer_workflow.py` and persistence through natal service. | no |
 | F-003 | Info | High | observability-gap | backend-domain | E-011, E-012, E-013, E-019, E-020 | Call logs, token usage, operational metadata, and replay snapshots are source-backed. | Keep replay metadata redacted and audit-bound. | no |
-| F-004 | Medium | High | data-integrity-risk | backend-domain | E-008, E-009, E-017 | Semantic grounding remains bounded to evidence refs plus policy checks; it is not a general semantic verifier. | Route architecture and reporting closure to CS-348 and CS-350. | yes |
+| F-004 | Medium | High | data-integrity-risk | deferred non-domain | E-008, E-009, E-017 | Semantic grounding remains bounded to evidence refs plus policy checks; it is not a general semantic verifier. | Route architecture and reporting closure to CS-348 and CS-350; no CS-347 implementation change. | yes |
 | F-005 | Info | High | missing-guard | backend-domain | E-003, E-021 | Existing RG-002/RG-022 apply indirectly; no exact registry guard exists for post-provider output audit cartography. | Record as registry gap only; story forbids guardrail edits. | no |
 
 ## F-001 - Output Shape Validation Is Traceable
@@ -57,12 +57,12 @@
 - Severity: Medium
 - Confidence: High
 - Category: data-integrity-risk
-- Domain: backend-domain
+- Domain: deferred non-domain
 - Evidence: E-008, E-009, E-017
 - Expected rule: the audit must distinguish schema validation from semantic grounding.
 - Actual state: evidence refs and policy checks can reject missing, unsupported, or ungrounded sections, but the repository evidence does not prove a complete semantic verifier for every generated claim.
 - Impact: Semantic grounding remains bounded to evidence refs plus policy checks; it is not a general semantic verifier.
-- Recommended action: Route architecture and reporting closure to CS-348 and CS-350.
+- Recommended action: Route architecture and reporting closure to CS-348 and CS-350; no CS-347 implementation change.
 - Story candidate: yes
 - Suggested archetype: prompt-generation-architecture-closure
 
