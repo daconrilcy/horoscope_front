@@ -1,5 +1,5 @@
 # Story CS-334 migrer-use-cases-natals-hors-chart-json-legacy: Migrate Natal Use Cases To llm_astrology_input_v1
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

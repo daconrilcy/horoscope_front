@@ -8,6 +8,7 @@
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy`
 - Story registry status: `done`
+- Story source status: `done`
 
 ## Preflight
 
@@ -21,7 +22,7 @@
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Status synchronized to `ready-to-review`. |
+| `00-story.md` | yes | yes | PASS | Status synchronized to `done`. |
 | `generated/01-execution-brief.md` | yes | yes | PASS | Capsule generated before implementation. |
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC1-AC8 classified. |
 | `generated/04-target-files.md` | yes | yes | PASS | Capsule generated before implementation. |
@@ -35,7 +36,7 @@
 |---|---|---|---|---|
 | AC1 | Modern natal contracts require `llm_astrology_input_v1`. | Unit contract guard passes. | PASS | |
 | AC2 | Modern natal input schemas require `llm_astrology_input_v1`. | After snapshot persisted and unit guard passes. | PASS | |
-| AC3 | Modern natal placeholders and schema required keys reject `chart_json`; assembly nominal payload migrated. | Unit guard plus forbidden replacement scan pass. | PASS | |
+| AC3 | Modern natal placeholders and schema required keys reject `chart_json` and `natal_data`; assembly nominal payload migrated. | Unit guard plus forbidden replacement scan pass. | PASS | |
 | AC4 | Renderer tests inspect final prompt material with `llm_astrology_input_v1` and no old carrier. | Prompt renderer targeted suite passes. | PASS | |
 | AC5 | Runtime transition carriers are named and bounded; modern validation payload ignores old carriers when modern key is present. | Runtime transition integration suite passes with `--long`. | PASS | |
 | AC6 | No prompt editorial file changed; code delta limited to key migration support and tests. | Diff review and snapshots recorded. | PASS | |
@@ -52,6 +53,7 @@
 - `backend/tests/llm_orchestration/test_assembly_resolution.py`
 - `backend/tests/integration/test_llm_runtime_suppression.py`
 - `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/evidence/**`
+- `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/00-story.md`
 - `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/generated/03-acceptance-traceability.md`
 - `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/generated/10-final-evidence.md`
 - `_condamad/stories/CS-334-migrer-use-cases-natals-hors-chart-json-legacy/generated/11-code-review.md`
@@ -79,10 +81,14 @@
 | `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests/llm_orchestration/test_assembly_resolution.py --tb=short` | repo root | PASS, 15 passed |
 | `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --long tests/integration/test_llm_runtime_suppression.py --tb=short` | repo root | PASS, 8 passed |
 | `.\.venv\Scripts\Activate.ps1; cd backend; ruff check .` | repo root | PASS |
+| `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests/unit/test_natal_llm_use_case_input_contract.py --tb=short` | repo root | PASS, 5 passed |
+| `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests/llm_orchestration/test_prompt_renderer.py tests/llm_orchestration/test_assembly_resolution.py tests/integration/test_llm_runtime_suppression.py --tb=short --long` | repo root | PASS, 29 passed |
 | `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests --tb=short` | repo root | PASS, 1195 passed, 218 deselected |
 | `.\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert app.routes; assert app.openapi()['paths']"` | repo root | PASS |
 | `.\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"` | repo root | PASS |
 | `rg -n "llm_astrology_input_v1\|chart_json\|natal_data\|input_schema\|placeholder\|legacy\|fallback" app tests` | `backend` | PASS, scan persisted/classified |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py .\_condamad\stories\CS-334-migrer-use-cases-natals-hors-chart-json-legacy\00-story.md` | repo root | PASS |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict .\_condamad\stories\CS-334-migrer-use-cases-natals-hors-chart-json-legacy\00-story.md` | repo root | PASS |
 | `rg -n "chart_json_v2\|natal_data_v2\|\{\{\*\|shim\|compatibility wrapper\|fallback prompt branch" ...` | repo root | PASS: no matches, exit 1 expected |
 | `git diff --check` | repo root | PASS, line-ending warnings only |
 | `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m uvicorn app.main:app --host 127.0.0.1 --port 8765` then `GET /docs` | repo root | PASS |
@@ -94,6 +100,7 @@
 ## DRY / No Legacy evidence
 
 - One helper owns the migrated modern natal contract list: `list_modern_natal_use_case_contracts()`.
+- The natal-prefixed reintroduction guard blocks both old normal carriers: `chart_json` and `natal_data`.
 - No alias key, shim, `chart_json_v2`, `natal_data_v2`, compatibility wrapper or fallback prompt branch introduced.
 - Residual `chart_json`/`natal_data` runtime handling is explicitly labeled as legacy transition.
 - No public API route or OpenAPI surface changed.
@@ -124,3 +131,4 @@
 - Fresh implementation review artifact: `generated/11-code-review.md`.
 - Review verdict: CLEAN.
 - Tracker closure: `story-status.md` updated to `done` on 2026-05-27.
+- Alignment review closure: `00-story.md` synchronized to `Status: done`; `natal_data` guard gap fixed and validated on 2026-05-27.

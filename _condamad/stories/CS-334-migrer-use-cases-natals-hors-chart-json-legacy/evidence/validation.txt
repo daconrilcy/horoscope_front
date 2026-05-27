@@ -1,11 +1,13 @@
 CS-334 validation summary
 
 - Capsule validation: PASS.
-- Review cycle 2026-05-27: stale pre-implementation review artifact replaced with implementation review.
+- Alignment review cycle 2026-05-27: `natal_data` reintroduction guard gap fixed and story header synced to `done`.
 - Ruff check backend: PASS.
-- Unit contract guard, prompt renderer and assembly resolution tests: 26 passed.
+- Unit contract guard: 5 passed.
+- Prompt renderer, assembly resolution and runtime transition tests with --long: 29 passed.
 - Runtime transition integration tests with --long: 8 passed.
 - Backend fast test suite: 1195 passed, 218 deselected.
+- CONDAMAD story validation and strict lint on `00-story.md`: PASS.
 - OpenAPI/routes import checks and public-schema neutrality assertion: PASS.
 - Backend startup smoke on `http://127.0.0.1:8765/docs`: PASS.
 - OpenAPI/routes before-after semantic equality: PASS.

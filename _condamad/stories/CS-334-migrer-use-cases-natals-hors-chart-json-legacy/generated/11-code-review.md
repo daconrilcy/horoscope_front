@@ -41,14 +41,16 @@ CLEAN.
 - Modern natal contracts use `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA` with `llm_astrology_input_v1` as the required schema key.
 - Modern natal required placeholders exclude `chart_json` and `natal_data`.
 - Rendering tests inspect final prompt material and prove the modern payload appears without legacy carriers.
+- The global natal-prefixed reintroduction guard now rejects both legacy carriers named by the brief: `chart_json` and `natal_data`.
 - Runtime transition handling is bounded through `_NATAL_TRANSITION_PROMPT_CARRIERS` and validation payload precedence.
 - Public API neutrality is covered by route and OpenAPI checks.
 - Prompt editorial files were not changed.
 
 ## Issues Fixed In This Review Cycle
 
-- Replaced the stale pre-implementation `generated/11-code-review.md` with this implementation review artifact.
-- No application code issue was found during the fresh review.
+- Fixed the configuration guard gap where future `natal_*` contracts could reintroduce `natal_data` as a normal required input.
+- Synchronized `00-story.md` from `Status: ready-to-review` to `Status: done` to match the tracker and final evidence.
+- No runtime application code issue was found during the fresh implementation review.
 
 ## Validation Evidence
 
@@ -57,11 +59,14 @@ All Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 | Command | Working directory | Result |
 |---|---|---|
 | `ruff check .` | `backend` | PASS |
+| `python -B -m pytest -q tests/unit/test_natal_llm_use_case_input_contract.py --tb=short` | `backend` | PASS, 5 passed |
 | `python -B -m pytest -q tests/unit/test_natal_llm_use_case_input_contract.py tests/llm_orchestration/test_prompt_renderer.py tests/llm_orchestration/test_assembly_resolution.py --tb=short` | `backend` | PASS, 26 passed |
-| `python -B -m pytest -q --long tests/integration/test_llm_runtime_suppression.py --tb=short` | `backend` | PASS, 8 passed |
+| `python -B -m pytest -q tests/llm_orchestration/test_prompt_renderer.py tests/llm_orchestration/test_assembly_resolution.py tests/integration/test_llm_runtime_suppression.py --tb=short --long` | `backend` | PASS, 29 passed |
 | `python -B -c "from app.main import app; assert app.routes; assert app.openapi()['paths']; assert 'llm_astrology_input_v1' not in str(app.openapi())"` | `backend` | PASS |
 | `python -B -m pytest -q tests --tb=short` | `backend` | PASS, 1195 passed, 218 deselected |
 | `rg -n "llm_astrology_input_v1\|chart_json\|natal_data\|input_schema\|placeholder\|legacy\|fallback" app tests` | `backend` | PASS, scan reviewed |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md` | repo root | PASS |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md` | repo root | PASS |
 | `python -B -m uvicorn app.main:app --host 127.0.0.1 --port 8765` then `GET /docs` | `backend` | PASS |
 
 ## Residual Risks

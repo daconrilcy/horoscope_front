@@ -45,8 +45,8 @@ def test_modern_natal_use_case_placeholders_exclude_legacy_carriers() -> None:
         assert schema_properties.isdisjoint(LEGACY_ASTROLOGY_INPUT_KEYS)
 
 
-def test_no_natal_prefixed_contract_can_reintroduce_chart_json_as_normal_input() -> None:
-    """Un nouveau use case natal ne peut pas redevenir proprietaire de chart_json."""
+def test_no_natal_prefixed_contract_can_reintroduce_legacy_carriers_as_normal_input() -> None:
+    """Un nouveau use case natal ne peut pas redevenir proprietaire des anciens carriers."""
 
     natal_prefixed_contracts = [
         contract
@@ -59,8 +59,8 @@ def test_no_natal_prefixed_contract_can_reintroduce_chart_json_as_normal_input()
         placeholders = set(contract.required_prompt_placeholders)
         schema_required = set((contract.input_schema or {}).get("required", []))
 
-        assert "chart_json" not in placeholders
-        assert "chart_json" not in schema_required
+        assert placeholders.isdisjoint(LEGACY_ASTROLOGY_INPUT_KEYS)
+        assert schema_required.isdisjoint(LEGACY_ASTROLOGY_INPUT_KEYS)
 
 
 def test_modern_natal_prompt_rendering_uses_rich_payload_material() -> None:
