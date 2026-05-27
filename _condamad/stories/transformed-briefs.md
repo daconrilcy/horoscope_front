@@ -124,3 +124,4 @@
 | cs-342 | `_story_briefs\cs-342-cloturer-process-evidence-hors-prompt-validation-redaction-llm-natale.md` | `_condamad\stories\cs-342-preuve-finale-evidence-hors-prompt-redaction-llm-natal\00-story.md` |
 | cs-343 | `_story_briefs\cs-343-audit-inventaire-surfaces-generation-prompt-llm.md` | `_condamad\stories\cs-343-prompt-generation-surface-inventory\00-story.md` |
 | cs-344 | `_story_briefs\cs-344-audit-configuration-assemblies-placeholders-prompts-llm.md` | `_condamad\stories\cs-344-audit-configuration-assembly-placeholder\00-story.md` |
+| cs-345 | `_story_briefs\cs-345-audit-runtime-gateway-handoff-provider-prompt-llm.md` | `_condamad\stories\cs-345-audit-runtime-gateway-handoff-provider-prompt-llm\00-story.md` |
