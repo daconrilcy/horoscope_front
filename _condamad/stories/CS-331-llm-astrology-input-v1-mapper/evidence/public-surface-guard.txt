@@ -1,0 +1,7 @@
+CS-331 public-surface guard evidence
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; assert all('llm_astrology' not in getattr(r, 'path', '') for r in app.routes)"
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\architecture\test_llm_astrology_input_boundary.py --tb=short
+
+Result: 3 passed. The mapper remains internal to app.domain.astrology.interpretation and is absent from public routes and OpenAPI schemas.

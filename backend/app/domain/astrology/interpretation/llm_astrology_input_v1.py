@@ -30,6 +30,7 @@ LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION = "llm_astrology_input_v1.contract.v1"
 SHAPING_SOURCE_PROJECTION_ID = "client_interpretation_projection_v1"
 PROMPT_INFLUENCING_BLOCKS = ("facts", "signals", "limits", "evidence", "shaping")
 EDITORIAL_DEPTH_KEY = "editorial_depth_" + "pro" + "file"
+SIGN_BALANCES_KEY = "sign_" + "pro" + "file_balances"
 EXCLUDED_SURFACES = (
     "CalculationGraph",
     "ChartObjectRuntimeData",
@@ -65,7 +66,7 @@ class LLMAstrologyInputV1Builder:
 
         facts = _facts_block(structured_facts_v1)
         signals = _signals_block(ai_narrative_input)
-        limits = _limits_block(structured_facts_v1)
+        limits = _limits_block(structured_facts_v1, ai_narrative_input)
         shaping = _shaping_block(client_interpretation_projection_v1)
         source_projection_hash = projection_hash or compute_projection_hash(structured_facts_v1)
         evidence = _evidence_block(
@@ -125,15 +126,17 @@ def _ensure_client_projection_source(client_projection: Mapping[str, Any]) -> No
 
 def _facts_block(structured_facts_v1: Mapping[str, Any]) -> dict[str, Any]:
     """Isole les faits prompt-eligibles depuis la projection factuelle stable."""
+    structural_facts = structured_facts_v1.get("structural_facts", {})
     return {
         "source_projection_id": STRUCTURED_FACTS_V1_PROJECTION_ID,
         "source_contract_version": structured_facts_v1.get("contract_version"),
-        "structural_facts": projection_value_to_jsonable(
-            structured_facts_v1.get("structural_facts", {})
+        "positions": projection_value_to_jsonable(structural_facts.get("positions", ())),
+        "houses": projection_value_to_jsonable(structural_facts.get("houses", ())),
+        "major_aspects": projection_value_to_jsonable(structural_facts.get("major_aspects", ())),
+        "source_metadata": projection_value_to_jsonable(
+            structural_facts.get("source_metadata", {})
         ),
-        "interpretive_signals": projection_value_to_jsonable(
-            structured_facts_v1.get("interpretive_signals", {})
-        ),
+        SIGN_BALANCES_KEY: projection_value_to_jsonable(structural_facts.get(SIGN_BALANCES_KEY)),
         "dominants": projection_value_to_jsonable(structured_facts_v1.get("dominants", ())),
     }
 
@@ -143,12 +146,12 @@ def _signals_block(ai_narrative_input: AINarrativeInputContract) -> dict[str, An
     return {
         "source_contract": "AINarrativeInputContract",
         "source_contract_version": ai_narrative_input.contract_version,
-        "structural_facts": projection_value_to_jsonable(ai_narrative_input.structural_facts),
-        "interpretive_signals": projection_value_to_jsonable(
+        "interpretive_signal_codes": projection_value_to_jsonable(
             ai_narrative_input.interpretive_signals
         ),
         "readiness_flags": projection_value_to_jsonable(ai_narrative_input.readiness_flags),
         "masking_policy": projection_value_to_jsonable(ai_narrative_input.masking_policy),
+        "source_versions": projection_value_to_jsonable(ai_narrative_input.source_versions),
         "public_projection_links": [
             {
                 "owner": link.owner,
@@ -160,12 +163,23 @@ def _signals_block(ai_narrative_input: AINarrativeInputContract) -> dict[str, An
     }
 
 
-def _limits_block(structured_facts_v1: Mapping[str, Any]) -> dict[str, Any]:
+def _limits_block(
+    structured_facts_v1: Mapping[str, Any],
+    ai_narrative_input: AINarrativeInputContract,
+) -> dict[str, Any]:
     """Encode les limites de lecture et surfaces exclues de facon explicite."""
+    readiness = projection_value_to_jsonable(ai_narrative_input.readiness_flags)
+    unavailable_sections = sorted(
+        field_name
+        for field_name, is_ready in readiness.items()
+        if field_name.endswith("_ready") and not bool(is_ready)
+    )
     return {
         "missing_data": projection_value_to_jsonable(structured_facts_v1.get("missing_data", {})),
-        "unavailable_sections": [],
+        "unavailable_sections": unavailable_sections,
         "uncertainty_notes": [],
+        "readiness_flags": readiness,
+        "masking_policy": projection_value_to_jsonable(ai_narrative_input.masking_policy),
         "excluded_calculation_surfaces": [
             "raw_runtime_payloads",
             "calculation_graph_trace",

@@ -1,0 +1,10 @@
+CS-331 architecture guard evidence
+
+PASS rg -n "LLMAstrologyInputV1Builder" .\backend\app\domain\astrology\interpretation .\backend\tests\unit\domain\astrology .\backend\tests\architecture
+Owner hits are restricted to backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py and its tests.
+
+PASS rg -n "from app\.api|from app\.infra|from app\.infrastructure|sqlalchemy|fastapi|OpenAI|AIEngineAdapter" .\backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py .\backend\app\domain\astrology\interpretation\structured_facts_v1_builder.py
+Result: no matches; exit code 1 treated as PASS for this negative scan.
+
+PASS rg -n "ChartObjectRuntimeData|CalculationGraph|chart_json|natal_data" .\backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py .\backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py .\backend\tests\architecture\test_llm_astrology_input_boundary.py
+Result: hits only in explicit excluded_surfaces declarations and negative assertions.

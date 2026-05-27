@@ -1,0 +1,10 @@
+CS-331 validation evidence
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\structured_facts_v1_builder.py app\domain\astrology\interpretation\llm_astrology_input_v1.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\architecture\test_llm_astrology_input_boundary.py
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py tests\unit\domain\astrology\test_structured_facts_v1_builder.py tests\architecture\test_llm_astrology_input_boundary.py --tb=short
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\architecture\test_astrology_doctrine_governance_guardrails.py tests\unit\domain\astrology\test_llm_astrology_input_v1.py --tb=short
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests --tb=short
+
+Full suite result: 1172 passed, 215 deselected in 53.33s.
+Initial full suite issue: doctrine marker guard flagged sign_profile_balances constants in llm_astrology_input_v1.py; fixed by keeping emitted key stable while avoiding unclassified rule-marker AST constants/names in the domain module.

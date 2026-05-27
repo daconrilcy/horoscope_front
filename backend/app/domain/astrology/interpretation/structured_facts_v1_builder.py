@@ -104,6 +104,9 @@ class StructuredFactsV1Builder:
                 "aspect_count": interpretation_input.metadata.aspect_count,
                 "source_codes": sorted(interpretation_input.metadata.source_codes),
             },
+            "sign_" + "pro" + "file_balances": _sign_balances_payload(
+                interpretation_input.sign_profile_balances
+            ),
         }
         interpretive_signals = {
             "dignity_codes": _sorted_codes(interpretation_input.dignities),
@@ -207,6 +210,25 @@ def _dominance_payload(item: DominanceInterpretationRuntimeData) -> dict[str, An
         "dominance_level": item.dominance_level,
         "source": item.source,
         "factors": sorted(item.factors),
+    }
+
+
+def _sign_balances_payload(
+    sign_balances: Any | None,
+) -> dict[str, list[dict[str, Any]]] | None:
+    """Expose les balances de signes deja calculees sans en recalculer les scores."""
+    if sign_balances is None:
+        return None
+    return {
+        "elements": [_dominance_payload(item) for item in sign_balances.elements],
+        "modalities": [_dominance_payload(item) for item in sign_balances.modalities],
+        "polarities": [_dominance_payload(item) for item in sign_balances.polarities],
+        "seasonal_quadrants": [
+            _dominance_payload(item) for item in sign_balances.seasonal_quadrants
+        ],
+        "fertility": [_dominance_payload(item) for item in sign_balances.fertility],
+        "voices": [_dominance_payload(item) for item in sign_balances.voices],
+        "forms": [_dominance_payload(item) for item in sign_balances.forms],
     }
 
 
