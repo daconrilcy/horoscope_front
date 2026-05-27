@@ -1,5 +1,5 @@
 # Story CS-330 llm-astrology-input-v1-contract: Define llm_astrology_input_v1 Contract
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -126,17 +126,17 @@ metadata only, expose limits and evidence explicitly, and keep raw runtime paylo
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect target contract, transition report and existing builders before choosing the owner. (AC: AC3, AC4)
-- [ ] Task 2: Add or extend one canonical internal contract module for `llm_astrology_input_v1`. (AC: AC1)
-- [ ] Task 3: Define `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance` and `exclusions`. (AC: AC2)
-- [ ] Task 4: Map `facts` from `structured_facts_v1` without raw chart carrier ownership. (AC: AC3, AC6)
-- [ ] Task 5: Map `signals` from `AINarrativeInputContract` with prompt-visible role flags. (AC: AC4)
-- [ ] Task 6: Keep `client_interpretation_projection_v1` limited to shaping metadata. (AC: AC5)
-- [ ] Task 7: Define limits for missing data, unavailable sections and excluded calculation surfaces. (AC: AC2, AC6)
-- [ ] Task 8: Define evidence references and provenance including `projection_hash` and `llm_input_hash`. (AC: AC7)
-- [ ] Task 9: Add contract shape, hash and negative-source tests. (AC: AC1, AC2, AC6, AC7)
-- [ ] Task 10: Add loaded-app and targeted scan guards for public API, prompt and provider neutrality. (AC: AC8, AC9)
-- [ ] Task 11: Persist sample payload, validation and architecture evidence under the CS-330 evidence folder. (AC: AC10)
+- [x] Task 1: Inspect target contract, transition report and existing builders before choosing the owner. (AC: AC3, AC4)
+- [x] Task 2: Add or extend one canonical internal contract module for `llm_astrology_input_v1`. (AC: AC1)
+- [x] Task 3: Define `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance` and `exclusions`. (AC: AC2)
+- [x] Task 4: Map `facts` from `structured_facts_v1` without raw chart carrier ownership. (AC: AC3, AC6)
+- [x] Task 5: Map `signals` from `AINarrativeInputContract` with prompt-visible role flags. (AC: AC4)
+- [x] Task 6: Keep `client_interpretation_projection_v1` limited to shaping metadata. (AC: AC5)
+- [x] Task 7: Define limits for missing data, unavailable sections and excluded calculation surfaces. (AC: AC2, AC6)
+- [x] Task 8: Define evidence references and provenance including `projection_hash` and `llm_input_hash`. (AC: AC7)
+- [x] Task 9: Add contract shape, hash and negative-source tests. (AC: AC1, AC2, AC6, AC7)
+- [x] Task 10: Add loaded-app and targeted scan guards for public API, prompt and provider neutrality. (AC: AC8, AC9)
+- [x] Task 11: Persist sample payload, validation and architecture evidence under the CS-330 evidence folder. (AC: AC10)
 
 ## Files to Inspect First
 

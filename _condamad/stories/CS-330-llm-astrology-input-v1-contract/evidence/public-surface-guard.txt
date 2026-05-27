@@ -1,0 +1,6 @@
+COMMAND openapi neutrality
+PASS openapi has no llm_astrology_input_v1
+COMMAND route neutrality
+PASS routes have no llm_astrology path
+COMMAND TestClient health smoke
+PASS /health smoke

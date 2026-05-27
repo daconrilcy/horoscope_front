@@ -1,0 +1,138 @@
+COMMAND architecture targeted tests
+...                                                                      [100%]
+3 passed in 2.76s
+COMMAND owner and source scan
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:1:"""Tests du contrat interne llm_astrology_input_v1."""
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:24:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:29:from app.domain.astrology.interpretation.structured_facts_v1_builder import (
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:39:CONTRACT_PATH = INTERPRETATION_DIR / "llm_astrology_input_v1.py"
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:53:def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:71:    assert payload["signals"]["source_contract"] == "AINarrativeInputContract"
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:78:def test_llm_astrology_input_v1_hash_is_deterministic_and_covers_prompt_blocks() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:94:def test_llm_astrology_input_v1_rejects_raw_or_wrong_fact_source() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:100:    with pytest.raises(ValueError, match="structured_facts_v1"):
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:102:            structured_facts_v1=wrong_source,
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:108:def test_llm_astrology_input_v1_excludes_runtime_public_and_provider_surfaces() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:115:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:118:    assert "chart_json" not in serialized_facts
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:119:    assert "natal_data" not in serialized_facts
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:123:def test_llm_astrology_input_v1_stays_out_of_public_api_surface() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:133:def test_llm_astrology_input_v1_has_one_canonical_owner_and_imports_sources() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:150:        "AINarrativeInputContract",
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:162:        structured_facts_v1=structured_facts,
+app\domain\astrology\interpretation\ai_narrative_input_builder.py:11:    AINarrativeInputContract,
+app\domain\astrology\interpretation\ai_narrative_input_builder.py:61:    ) -> AINarrativeInputContract:
+app\domain\astrology\interpretation\ai_narrative_input_builder.py:84:    ) -> AINarrativeInputContract:
+app\domain\astrology\interpretation\ai_narrative_input_builder.py:106:        return AINarrativeInputContract(
+app\domain\astrology\interpretation\ai_narrative_input_contracts.py:148:class AINarrativeInputContract:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:2:"""Construit un resume debutant deterministe depuis structured_facts_v1."""
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:12:from app.domain.astrology.interpretation.structured_facts_v1_builder import (
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:54:    def build(self, structured_facts_v1: Mapping[str, Any] | None) -> dict[str, Any]:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:56:        if structured_facts_v1 is None:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:64:        _ensure_structured_facts_source(structured_facts_v1)
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:65:        positions = _positions(structured_facts_v1)
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:66:        houses = _houses(structured_facts_v1)
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:67:        dominants = _dominants(structured_facts_v1)
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:68:        no_time = _has_missing_birth_time(structured_facts_v1, houses)
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:112:def _ensure_structured_facts_source(structured_facts_v1: Mapping[str, Any]) -> None:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:113:    """Refuse toute entree qui ne vient pas de structured_facts_v1."""
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:114:    if structured_facts_v1.get("projection_id") != BEGINNER_SUMMARY_V1_SOURCE_PROJECTION_ID:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:115:        raise ValueError("beginner_summary_v1 requires structured_facts_v1 source")
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:171:def _positions(structured_facts_v1: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:173:    structural_facts = structured_facts_v1.get("structural_facts")
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:182:def _houses(structured_facts_v1: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:184:    structural_facts = structured_facts_v1.get("structural_facts")
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:193:def _dominants(structured_facts_v1: Mapping[str, Any]) -> tuple[Mapping[str, Any], ...]:
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:194:    """Lit les dominantes deja calculees par structured_facts_v1."""
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:195:    dominants = structured_facts_v1.get("dominants")
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:278:    structured_facts_v1: Mapping[str, Any],
+app\domain\astrology\interpretation\beginner_summary_v1_builder.py:282:    missing_data = structured_facts_v1.get("missing_data")
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:20:    ChartObjectRuntimeData,
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:29:    def project(self, chart_object: ChartObjectRuntimeData) -> ChartObjectInterpretationRuntimeData:
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:61:        self, chart_object: ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:70:        self, chart_object: ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:79:        self, chart_object: ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:95:        self, chart_object: ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:114:        self, chart_object: ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:133:        self, chart_object: ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:156:        self, chart_object: ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_projector.py:175:    def _source_codes(self, chart_object: ChartObjectRuntimeData) -> tuple[str, ...]:
+app\domain\astrology\interpretation\chart_object_interpretation_selector.py:9:from app.domain.astrology.runtime.chart_object_runtime_data import ChartObjectRuntimeData
+app\domain\astrology\interpretation\chart_object_interpretation_selector.py:17:        chart_objects: Iterable[ChartObjectRuntimeData],
+app\domain\astrology\interpretation\chart_object_interpretation_selector.py:18:    ) -> tuple[ChartObjectRuntimeData, ...]:
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:2:"""Construit une projection B2C par plan depuis structured_facts_v1."""
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:16:from app.domain.astrology.interpretation.structured_facts_v1_builder import (
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:211:        structured_facts_v1: Mapping[str, Any] | None,
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:223:        if structured_facts_v1 is None:
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:231:        _ensure_structured_facts_source(structured_facts_v1)
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:232:        facts = _facts(structured_facts_v1)
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:236:        dominants = _sequence(structured_facts_v1.get("dominants"))
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:237:        source_signals = _signals(structured_facts_v1)
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:238:        no_time = _has_missing_birth_time(structured_facts_v1, houses)
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:294:def _ensure_structured_facts_source(structured_facts_v1: Mapping[str, Any]) -> None:
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:295:    """Refuse toute entree qui ne vient pas de structured_facts_v1."""
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:296:    if structured_facts_v1.get("projection_id") != CLIENT_INTERPRETATION_PROJECTION_V1_SOURCE_ID:
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:297:        raise ValueError("client_interpretation_projection_v1 requires structured_facts_v1 source")
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:348:def _facts(structured_facts_v1: Mapping[str, Any]) -> Mapping[str, Any]:
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:350:    structural_facts = structured_facts_v1.get("structural_facts")
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:363:def _signals(structured_facts_v1: Mapping[str, Any]) -> Mapping[str, Any]:
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:364:    """Lit les signaux pre-narratifs deja autorises par structured_facts_v1."""
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:365:    signals = structured_facts_v1.get("interpretive_signals")
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:519:    structured_facts_v1: Mapping[str, Any],
+app\domain\astrology\interpretation\client_interpretation_projection_v1_builder.py:523:    missing_data = structured_facts_v1.get("missing_data")
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:2:"""Assemble `llm_astrology_input_v1` depuis les owners internes autorises."""
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:12:    AINarrativeInputContract,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:19:from app.domain.astrology.interpretation.structured_facts_v1_builder import (
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:28:LLM_ASTROLOGY_INPUT_V1_CONTRACT_ID = "llm_astrology_input_v1"
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:29:LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION = "llm_astrology_input_v1.contract.v1"
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:35:    "ChartObjectRuntimeData",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:36:    "chart_json",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:37:    "natal_data",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:53:        structured_facts_v1: Mapping[str, Any],
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:54:        ai_narrative_input: AINarrativeInputContract,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:61:        _ensure_structured_facts_source(structured_facts_v1)
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:66:        facts = _facts_block(structured_facts_v1)
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:68:        limits = _limits_block(structured_facts_v1)
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:70:        source_projection_hash = projection_hash or compute_projection_hash(structured_facts_v1)
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:76:            structured_facts_v1=structured_facts_v1,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:106:def _ensure_structured_facts_source(structured_facts_v1: Mapping[str, Any]) -> None:
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:107:    """Refuse un bloc factuel qui ne vient pas de `structured_facts_v1`."""
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:108:    if structured_facts_v1.get("projection_id") != STRUCTURED_FACTS_V1_PROJECTION_ID:
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:109:        raise ValueError("llm_astrology_input_v1 facts require structured_facts_v1 source")
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:112:def _ensure_ai_narrative_input_source(ai_narrative_input: AINarrativeInputContract) -> None:
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:115:        raise ValueError("llm_astrology_input_v1 signals require AINarrativeInputContract")
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:122:            "llm_astrology_input_v1 shaping requires client_interpretation_projection_v1"
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:126:def _facts_block(structured_facts_v1: Mapping[str, Any]) -> dict[str, Any]:
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:130:        "source_contract_version": structured_facts_v1.get("contract_version"),
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:132:            structured_facts_v1.get("structural_facts", {})
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:135:            structured_facts_v1.get("interpretive_signals", {})
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:137:        "dominants": projection_value_to_jsonable(structured_facts_v1.get("dominants", ())),
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:141:def _signals_block(ai_narrative_input: AINarrativeInputContract) -> dict[str, Any]:
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:144:        "source_contract": "AINarrativeInputContract",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:163:def _limits_block(structured_facts_v1: Mapping[str, Any]) -> dict[str, Any]:
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:166:        "missing_data": projection_value_to_jsonable(structured_facts_v1.get("missing_data", {})),
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:186:                section_id="llm_astrology_input_v1", requires_evidence=False
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:231:    structured_facts_v1: Mapping[str, Any],
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:232:    ai_narrative_input: AINarrativeInputContract,
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:241:            "signals": "AINarrativeInputContract",
+app\domain\astrology\interpretation\llm_astrology_input_v1.py:245:            "facts": structured_facts_v1.get("contract_version"),
+app\domain\astrology\interpretation\structured_facts_v1_builder.py:1:# Builder canonique de la projection factuelle stable structured_facts_v1.
+app\domain\astrology\interpretation\structured_facts_v1_builder.py:22:STRUCTURED_FACTS_V1_PROJECTION_ID = "structured_facts_v1"
+app\domain\astrology\interpretation\structured_facts_v1_builder.py:23:STRUCTURED_FACTS_V1_CONTRACT_VERSION = "structured_facts_v1.contract.v1"
+app\domain\astrology\interpretation\structured_facts_v1_builder.py:131:                "ChartObjectRuntimeData",
+COMMAND prompt/provider neutrality scan
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:1:"""Tests du contrat interne llm_astrology_input_v1."""
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:24:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:39:CONTRACT_PATH = INTERPRETATION_DIR / "llm_astrology_input_v1.py"
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:53:def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:78:def test_llm_astrology_input_v1_hash_is_deterministic_and_covers_prompt_blocks() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:94:def test_llm_astrology_input_v1_rejects_raw_or_wrong_fact_source() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:108:def test_llm_astrology_input_v1_excludes_runtime_public_and_provider_surfaces() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:120:    assert "provider_response" not in serialized_signals
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:123:def test_llm_astrology_input_v1_stays_out_of_public_api_surface() -> None:
+tests\unit\domain\astrology\test_llm_astrology_input_v1.py:133:def test_llm_astrology_input_v1_has_one_canonical_owner_and_imports_sources() -> None:
+app\services\llm_generation\horoscope_daily\narration_service.py:14:    ExecutionContext,
+app\services\llm_generation\horoscope_daily\narration_service.py:144:            context=ExecutionContext(
+app\services\llm_generation\natal\interpretation_service.py:33:from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
+app\services\llm_generation\natal\interpretation_service.py:642:        natal_input = NatalExecutionInput(
+app\services\llm_generation\natal\interpretation_service.py:935:        natal_input = NatalExecutionInput(
