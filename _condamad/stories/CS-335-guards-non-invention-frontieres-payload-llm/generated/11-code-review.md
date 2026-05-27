@@ -1,4 +1,4 @@
-# Editorial Review CS-335
+# Implementation Review CS-335
 
 Verdict: CLEAN
 
@@ -6,35 +6,41 @@ Verdict: CLEAN
 
 - Story reviewed: `_condamad/stories/CS-335-guards-non-invention-frontieres-payload-llm/00-story.md`.
 - Source brief: `_story_briefs/cs-335-ajouter-guards-non-invention-et-frontieres-payload-llm.md`.
-- Tracker row: `_condamad/stories/story-status.md`, source matched to the brief and status `ready-to-dev`.
+- Tracker row: `_condamad/stories/story-status.md`; `Path` and source brief match the requested story and brief.
+- Review target: implemented backend guards, CONDAMAD evidence, tests, guardrails and AC alignment.
 
 ## Review Iterations
 
-- Iteration 1 found one drafting issue: guardrail evidence cited RG-002 without classifying its applicability.
-- Fix applied in `00-story.md`: RG-002 is now explicitly non-applicable, RG-022 remains active and RG-041 remains non-applicable.
-- Iteration 2 found no remaining actionable drafting issue.
+- Iteration 1 found one evidence-closure issue: `generated/11-code-review.md` still contained the pre-implementation editorial review, and closure status was not `done`.
+- Fix applied: refreshed this artifact as an implementation review, set `00-story.md` to `done`, and set the tracker row to `done`.
+- Iteration 2 found no remaining actionable implementation issue.
 
-## Brief Alignment
+## AC Alignment
 
-- The story covers final prompt payload/message inspection, rich blocks, missing-data limits, forbidden raw runtime surfaces and legacy fallback guards.
-- The story includes non-duplication coverage between facts and signals and a representative natal regression guard.
-- The validation plan avoids external LLM calls and includes backend pytest, ruff, evidence existence checks and targeted scans.
-- Out-of-scope items from the brief remain excluded: security, CI, astrologer profiles, prompt rewrite, real LLM quality and physical legacy deletion.
+- AC1-AC3: `backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py` inspects gateway-rendered `llm_astrology_input_v1` material, including rich blocks and missing-data limits.
+- AC4-AC5: orchestration tests and `backend/tests/architecture/test_llm_astrology_input_payload_boundaries.py` guard raw runtime carriers and legacy prompt-owner fallback.
+- AC6: `backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py` keeps facts, signals and shaping owned and disjoint.
+- AC7: provider handoff is exercised with `MagicMock`/`AsyncMock`; no external LLM provider call is required.
+- AC8: `evidence/payload-boundary-before.json`, `payload-boundary-after.json`, `validation.txt` and `payload-boundary-scan.txt` exist and are referenced by final evidence.
 
 ## Validation Results
 
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md`: PASS.
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md`: PASS.
-- Both Python commands were run after `.\\.venv\\Scripts\\Activate.ps1`.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md`: PASS.
+- `python -B -m ruff check .`: PASS.
+- `python -B -m pytest -q tests\llm_orchestration\test_llm_astrology_input_boundaries.py --tb=short`: PASS.
+- `python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py --tb=short`: PASS.
+- `python -B -m pytest -q tests\architecture\test_llm_astrology_input_payload_boundaries.py --tb=short`: PASS.
+- `python -B -m pytest -q tests --tb=short`: PASS.
+- Targeted `rg` prompt-boundary scan over `backend/app` and `backend/tests`: PASS, expected scoped matches only.
 
-## Produced Artifacts
-
-- `_condamad/stories/CS-335-guards-non-invention-frontieres-payload-llm/generated/11-code-review.md`.
+All Python, pytest and ruff commands were run after `.\\.venv\\Scripts\\Activate.ps1`.
 
 ## Propagation
 
-- no-propagation: the correction is local to this story contract and does not reveal reusable workflow learning.
+- no-propagation: the correction is local to implementation review evidence and story closure state.
 
 ## Residual Risk
 
-- No residual story-contract risk identified before implementation.
+- No residual implementation risk identified.

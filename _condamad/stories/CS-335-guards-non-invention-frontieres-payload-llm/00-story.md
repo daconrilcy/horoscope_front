@@ -1,5 +1,5 @@
 # Story CS-335 guards-non-invention-frontieres-payload-llm: Add LLM Payload Boundary Non-Invention Guards
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

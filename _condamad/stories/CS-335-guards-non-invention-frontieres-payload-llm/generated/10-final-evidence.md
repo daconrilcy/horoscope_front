@@ -3,7 +3,8 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: no, final implementation review is clean
+- Final status: done
 - Story key: CS-335-guards-non-invention-frontieres-payload-llm
 - Source story: `_condamad/stories/CS-335-guards-non-invention-frontieres-payload-llm/00-story.md`
 - Capsule path: `_condamad/stories/CS-335-guards-non-invention-frontieres-payload-llm`
@@ -12,6 +13,7 @@
 
 - Repository root: `C:\dev\horoscope_front`
 - Story status row verified: `CS-335`, target `Path`, and source brief match.
+- Closure review: `generated/11-code-review.md` refreshed as implementation review after AC, tests and evidence inspection.
 - Initial `git status --short`: pre-existing `_condamad/run-state.json` untracked; no tracked story files modified before implementation.
 - AGENTS.md considered: repository root `AGENTS.md`.
 - Capsule generated/repaired: yes, missing generated files were created with `condamad_prepare.py`; `condamad_validate.py` passed.
@@ -61,6 +63,9 @@
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm` | repo root after venv activation | PASS |
 | `python -B -m ruff format app\domain\llm\runtime\gateway.py tests\llm_orchestration\test_llm_astrology_input_boundaries.py tests\architecture\test_llm_astrology_input_payload_boundaries.py` | `backend` after venv activation | PASS |
 | `python -B -m ruff check .` | `backend` after venv activation | PASS |
+| `python -B -m ruff format --check .` | `backend` after venv activation | PASS, 1697 files already formatted |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md` | repo root after venv activation | PASS |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md` | repo root after venv activation | PASS |
 | `python -B -m pytest -q tests\llm_orchestration\test_llm_astrology_input_boundaries.py --tb=short` | `backend` after venv activation | PASS, 4 passed |
 | `python -B -m pytest -q tests\unit\domain\astrology\test_llm_astrology_input_v1.py --tb=short` | `backend` after venv activation | PASS, 9 passed |
 | `python -B -m pytest -q tests\architecture\test_llm_astrology_input_payload_boundaries.py --tb=short` | `backend` after venv activation | PASS, 3 passed |
@@ -68,6 +73,7 @@
 | `python -B -m pytest -q tests --tb=short` | `backend` after venv activation | PASS, 1202 passed, 218 deselected |
 | `python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"` | `backend` after venv activation | PASS |
 | `rg -n "prompt-visible|runtime-only|validation-only|audit-only|llm_astrology_input_v1|chart_json|natal_data|ChartObjectRuntimeData|CalculationGraph" app tests` | `backend` | PASS, expected scoped matches |
+| `git diff --check` | repo root | PASS with line-ending warning only |
 | `git diff --check -- <story paths>` | repo root | PASS with line-ending warning only |
 
 ## Commands skipped or blocked
@@ -88,8 +94,7 @@
 
 ## Final worktree status
 
-- Modified tracked: `backend/app/domain/llm/runtime/gateway.py`.
-- Untracked story scope: new boundary tests, generated capsule files and evidence artifacts.
+- Modified tracked after review/fix closure: `00-story.md`, `generated/11-code-review.md`, `_condamad/stories/story-status.md`.
 - Pre-existing unrelated untracked: `_condamad/run-state.json`.
 
 ## Remaining risks

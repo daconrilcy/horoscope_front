@@ -7,6 +7,12 @@ PASS python -B -c "from pathlib import Path; assert Path(...payload-boundary-aft
 PASS python -B -c "from app.main import app; assert 'llm_astrology_input_v1' not in str(app.openapi())"
 PASS python -B -m ruff format app\domain\llm\runtime\gateway.py tests\llm_orchestration\test_llm_astrology_input_boundaries.py tests\architecture\test_llm_astrology_input_payload_boundaries.py
 PASS python -B -m ruff check .
+PASS python -B -m ruff format --check . => 1697 files already formatted
 PASS python -B -m pytest -q tests --tb=short => 1202 passed, 218 deselected
+PASS python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm
+PASS python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md
+PASS python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-335-guards-non-invention-frontieres-payload-llm\00-story.md
 PASS rg targeted boundary scan persisted in payload-boundary-scan.txt
+PASS git diff --check => line-ending warning only
 NOTE an earlier attempt from backend used the wrong venv activation path and was rerun correctly from repo root before evidence closure
+NOTE implementation review closure refreshed generated\11-code-review.md and set story/tracker status to done
