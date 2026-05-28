@@ -21,3 +21,9 @@ Commands:
 Notes:
 - The broad VC7 scan from the story also reports unrelated existing `split()` calls outside this story surface; the scoped source guard and AST test prove `_birth_context` does not parse `chart_id`.
 - The broad VC11 scan over all backend tests reports unrelated existing email/redaction fixtures; the scoped provider/runtime/example guard has no matches.
+
+Review validation refresh - 2026-05-29:
+- PASS: `ruff check .` from `backend` after `.\.venv\Scripts\Activate.ps1` -> All checks passed.
+- PASS: `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py tests/integration/test_theme_astral_prompt_contract_persistence.py tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py --tb=short` from `backend` after venv activation -> 10 passed, 9 deselected.
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-373-structurer-birth-context-theme-astral-llm-input\00-story.md` after venv activation -> CONDAMAD story validation PASS.
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-373-structurer-birth-context-theme-astral-llm-input\00-story.md` after venv activation -> CONDAMAD story lint PASS.
