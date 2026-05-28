@@ -1,5 +1,5 @@
 # Story CS-372 aligner-profils-livraison-theme-astral-db-provider: Align Theme Astral Delivery Profiles Across DB And Provider
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

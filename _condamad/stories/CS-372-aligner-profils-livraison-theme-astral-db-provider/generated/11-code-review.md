@@ -13,6 +13,7 @@ les criteres d'acceptation, les guardrails, les preuves CONDAMAD et les validati
 
 - Implementation review iteration 1: no actionable implementation issue found.
 - Evidence/status fix: this review artifact was refreshed from draft-review evidence to implementation-review evidence.
+- Alignment review iteration 2: story header status drift fixed from `ready-to-dev` to `done`.
 - Final result: no remaining material gap against the source brief or implemented acceptance criteria.
 
 ## Brief Alignment
@@ -63,6 +64,28 @@ Run from repository root on 2026-05-29 with `.\.venv\Scripts\Activate.ps1` activ
 - `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py`
   `_condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider`
   - Result: PASS.
+- Post status-fix validation on 2026-05-29:
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py`
+    `_condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider\00-story.md`
+    - Result: PASS.
+  - `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict`
+    `_condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider\00-story.md`
+    - Result: PASS.
+  - `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py`
+    `_condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider`
+    - Result: PASS.
+  - `ruff check .` from `backend`
+    - Result: PASS.
+  - `python -B -m pytest -q tests\integration\test_theme_astral_prompt_contract_persistence.py`
+    `tests\llm_orchestration\test_theme_astral_provider_payload_builder.py`
+    `tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py --tb=short`
+    - Result: PASS, 7 passed, 8 deselected.
+- Final evidence update validation:
+  - `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py`
+    `_condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider`
+    - Result: PASS.
+  - `git diff --check`
+    - Result: PASS, only CRLF normalization warnings from Git.
 
 ## Guardrail Evidence
 
