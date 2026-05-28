@@ -110,9 +110,23 @@ def test_profile_quantities_vary_without_skeleton_drift() -> None:
         key: len(payload["input_data"]["interpretation_material"]["aspect_interpretations"])
         for key, payload in payloads.items()
     }
+    fact_aspect_counts = {
+        key: len(payload["input_data"]["astrological_facts"]["aspects"])
+        for key, payload in payloads.items()
+    }
+    selected_section_counts = {
+        key: len(payload["input_data"]["selected_themes"]["section_keys"])
+        for key, payload in payloads.items()
+    }
+    output_section_limits = {
+        key: payload["output_contract"]["max_sections"] for key, payload in payloads.items()
+    }
 
     assert budgets["free"] < budgets["basic"] < budgets["premium"]
-    assert aspect_counts == {"free": 1, "basic": 3, "premium": 3}
+    assert aspect_counts == {"free": 1, "basic": 3, "premium": 6}
+    assert fact_aspect_counts == {"free": 1, "basic": 3, "premium": 6}
+    assert selected_section_counts == {"free": 4, "basic": 6, "premium": 8}
+    assert output_section_limits == {"free": 4, "basic": 6, "premium": 8}
 
 
 def test_voice_changes_style_fields_only_and_truth_stays_engine_owned() -> None:
@@ -139,7 +153,9 @@ def test_prompt_data_is_carried_once_in_user_payload_block() -> None:
 
 def _payloads_by_commercial_plan() -> dict[str, dict[str, object]]:
     """Construit les trois payloads representatifs depuis les memes sources."""
-    chart_input = _build_chart_input(aspect_codes=("trine", "square", "opposition"))
+    chart_input = _build_chart_input(
+        aspect_codes=("trine", "square", "opposition", "conjunction", "sextile", "quincunx")
+    )
     sources = _sources_for(chart_input)
     builder = ThemeAstralProviderPayloadBuilder()
     return {

@@ -1,18 +1,42 @@
 CS-366 validation evidence, 2026-05-28.
 
-PASS: .\.venv\Scripts\Activate.ps1; ruff format backend\app\domain\llm\configuration\theme_astral_contracts.py backend\app\domain\llm\runtime\theme_astral_provider_payload_builder.py backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py backend\tests\integration\llm\test_theme_astral_provider_payload_handoff.py backend\tests\integration\astrology\test_theme_astral_interpretation_material_input.py backend\tests\unit\infra\db\repositories\test_interpretation_material_source_repository.py
+Post-review alignment pass, 2026-05-28:
+
+PASS: targeted builder and handoff pytest after venv activation.
+Result: 7 passed, 1 deselected.
+Coverage: interpretation material, astrological fact, selected section, and output section quantities vary by delivery profile.
+
+PASS: .\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .
+Result: All checks passed.
+
+PASS: .\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check .
+Result: 1711 files already formatted.
+
+PASS: broad backend pytest after venv activation for tests\llm_orchestration, tests\unit\domain\astrology, tests\integration\llm.
+Result: 845 passed, 3 deselected.
+
+PASS: condamad_story_validate.py on CS-366 00-story.md after venv activation.
+Result: CONDAMAD story validation PASS.
+
+PASS: condamad_story_lint.py --strict on CS-366 00-story.md after venv activation.
+Result: CONDAMAD story lint PASS.
+
+PASS: backend app import smoke after venv activation.
+Result: app import ok.
+
+PASS: scoped ruff format on CS-366 backend files and tests after venv activation.
 Result: 2 files reformatted, 4 files left unchanged.
 
-PASS: .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py backend\tests\integration\llm\test_theme_astral_provider_payload_handoff.py --tb=short
+PASS: initial targeted builder and handoff pytest after venv activation.
 Result: 7 passed, 1 deselected.
 
-PASS: .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py backend\tests\integration\astrology\test_theme_astral_interpretation_material_input.py backend\tests\unit\infra\db\repositories\test_interpretation_material_source_repository.py --tb=short
+PASS: related material/input pytest after venv activation.
 Result: 10 passed, 3 deselected.
 
 PASS: .\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .
 Result: All checks passed.
 
-PASS: .\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q tests\llm_orchestration tests\unit\domain\astrology tests\integration\llm --tb=short
+PASS: initial broad backend pytest after venv activation.
 Result: 845 passed, 3 deselected.
 
 PASS: git diff --quiet -- frontend\src backend\migrations
@@ -23,9 +47,9 @@ PASS: git diff --check
 PASS: rg -n '"plan"|"free"|"basic"|"premium"' _condamad\stories\CS-366-provider-payload-builder-theme-astral\evidence\provider-payload-after.json
 Result: exit 1, no matches.
 
-PASS: rg -n 'ThemeAstralLLMInputV1Builder|theme_astral_llm_input_v1_builder|^_DELIVERY_PROFILES\s*=|resolve_theme_astral_delivery_profile' backend\app backend\tests -g '*.py' -g '!test_theme_astral_provider_payload_builder.py'
+PASS: legacy duplicate scan in backend\app and backend\tests, excluding the builder test.
 Result: exit 1, no matches.
 
 Excluded attempts:
-- Two checks were started from backend with a root-relative activation path that failed; their outputs are not used as evidence. Equivalent checks above were rerun from the repository root after venv activation.
-
+- Two checks were started from backend with a root-relative activation path that failed.
+- Their outputs are not used as evidence; equivalent checks above were rerun from the repository root after venv activation.

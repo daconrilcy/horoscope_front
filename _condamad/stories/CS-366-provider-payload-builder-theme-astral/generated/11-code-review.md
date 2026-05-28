@@ -19,6 +19,16 @@ Verdict: CLEAN
 
 No actionable implementation issue found.
 
+## Review/Fix Iteration
+
+- Iteration 1 found one proof alignment gap: the implementation varied delivery-profile budgets, but the targeted builder test did
+  not explicitly assert that provider-visible fact quantities, selected section quantities, and output section limits varied across
+  `free`, `basic`, and `premium`.
+- Correction applied in `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`: the representative fixture now
+  exposes enough aspect facts and the test asserts varying `interpretation_material`, `astrological_facts`, `selected_themes`, and
+  `output_contract` section quantities without changing the stable skeleton.
+- Fresh review after correction: CLEAN.
+
 ## Alignment Evidence
 
 - Tracker row matches the target story path and the requested source brief.
@@ -32,12 +42,15 @@ No actionable implementation issue found.
 
 ## Validation Results
 
-- `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py backend\tests\integration\llm\test_theme_astral_provider_payload_handoff.py --tb=short`: PASS, 7 passed, 1 deselected.
-- `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py backend\tests\integration\astrology\test_theme_astral_interpretation_material_input.py backend\tests\unit\infra\db\repositories\test_interpretation_material_source_repository.py --tb=short`: PASS, 10 passed, 3 deselected.
-- `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .`: PASS.
-- `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check .`: PASS, 1711 files already formatted.
-- `rg -n '"plan"|"free"|"basic"|"premium"' _condamad\stories\CS-366-provider-payload-builder-theme-astral\evidence\provider-payload-after.json`: PASS, exit 1 means no forbidden label match.
-- `rg -n 'ThemeAstralLLMInputV1Builder|theme_astral_llm_input_v1_builder|^_DELIVERY_PROFILES\s*=|resolve_theme_astral_delivery_profile' backend\app backend\tests -g '*.py' -g '!test_theme_astral_provider_payload_builder.py'`: PASS, exit 1 means no legacy duplicate match.
+- Targeted builder and handoff pytest after test-proof strengthening: PASS, 7 passed, 1 deselected.
+- Related material/input pytest: PASS, 10 passed, 3 deselected.
+- Backend `ruff check .`: PASS.
+- Backend `ruff format --check .`: PASS, 1711 files already formatted.
+- Broad backend LLM/domain/integration pytest: PASS, 845 passed, 3 deselected.
+- CONDAMAD story validation: PASS.
+- CONDAMAD story strict lint: PASS.
+- Commercial-label scan on `provider-payload-after.json`: PASS, exit 1 means no forbidden label match.
+- Legacy duplicate scan in `backend/app` and `backend/tests`: PASS, exit 1 means no legacy duplicate match.
 - `git diff --quiet -- frontend\src backend\migrations`: PASS.
 - `git diff --quiet -- backend\app\infra\db\models backend\app\infra\db\repositories`: PASS.
 
@@ -46,8 +59,8 @@ All Python, pytest, and Ruff commands were run after `.\.venv\Scripts\Activate.p
 ## Review Output
 
 - Produced artifact: `_condamad/stories/CS-366-provider-payload-builder-theme-astral/generated/11-code-review.md`
-- Issues fixed in this review/fix loop: none; no actionable issue was found.
-- Propagation decision: no-propagation; the review produced no reusable correction beyond this local review artifact.
+- Issues fixed in this review/fix loop: one local test-proof alignment gap; no application-code issue found.
+- Propagation decision: no-propagation; the correction is local to CS-366 evidence coverage.
 
 ## Residual Risk
 
