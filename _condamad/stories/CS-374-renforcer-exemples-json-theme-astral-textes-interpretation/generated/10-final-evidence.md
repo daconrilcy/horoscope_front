@@ -3,11 +3,11 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Final review outcome: CLEAN
 - Story key: `CS-374-renforcer-exemples-json-theme-astral-textes-interpretation`
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-374-renforcer-exemples-json-theme-astral-textes-interpretation`
-- `story-status.md`: `ready-to-review`
+- `story-status.md`: `done`
 
 ## Preflight
 
@@ -106,11 +106,12 @@
 
 ## Remaining risks
 
-- Texts are production-like local seeds, not certified production extraction; README and source coverage state this explicitly.
+- Aucun risque restant identifie.
 
-## Suggested reviewer focus
+## Review closure
 
-- Review whether the richer production-like texts and source owner wording are precise enough for future editorial quality checks.
+- Implementation review replaced the earlier drafting review artifact in `generated/11-code-review.md`.
+- Fresh validation confirmed generated examples, source labels, generic phrase guards, no-provider proof, and targeted backend tests.
 
 ## Feedback loop routing
 

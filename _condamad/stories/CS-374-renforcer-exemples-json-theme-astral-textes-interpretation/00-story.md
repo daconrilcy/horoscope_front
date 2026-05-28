@@ -1,5 +1,5 @@
 # Story CS-374 renforcer-exemples-json-theme-astral-textes-interpretation: Strengthen Theme Astral JSON Examples With Interpretation Texts
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
