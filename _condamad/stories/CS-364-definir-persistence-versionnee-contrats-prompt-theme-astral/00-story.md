@@ -1,5 +1,5 @@
 # Story CS-364 definir-persistence-versionnee-contrats-prompt-theme-astral: Define Versioned Theme Astral Prompt Contract Persistence
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

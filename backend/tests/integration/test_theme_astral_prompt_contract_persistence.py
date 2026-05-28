@@ -1,0 +1,189 @@
+"""Tests d'integration de persistance du contrat prompt theme astral."""
+
+from __future__ import annotations
+
+import pytest
+from sqlalchemy import select
+
+from app.domain.llm.configuration.theme_astral_contracts import (
+    THEME_ASTRAL_DELIVERY_PROFILES,
+    THEME_ASTRAL_FEATURE,
+    THEME_ASTRAL_INPUT_CONTRACT_ID,
+    THEME_ASTRAL_OUTPUT_SCHEMA_NAME,
+    THEME_ASTRAL_PERSONA_CODE,
+    THEME_ASTRAL_PROMPT_CONTRACT_ID,
+    THEME_ASTRAL_RESPONSE_CONTRACT_ID,
+    THEME_ASTRAL_SUBFEATURE,
+    THEME_ASTRAL_USE_CASE_KEY,
+    resolve_active_theme_astral_prompt_contract,
+)
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import (
+    LlmPromptVersionModel,
+    LlmUseCaseConfigModel,
+    PromptStatus,
+)
+from app.ops.llm.bootstrap.seed_theme_astral_prompt_contract import (
+    seed_theme_astral_prompt_contract,
+)
+from tests.integration.app_db import open_app_db_session
+
+
+def _published_count(db, model, *criteria) -> int:
+    """Compte les lignes publiees qui matchent un scope de contrat."""
+    return len(
+        db.execute(select(model).where(model.status == PromptStatus.PUBLISHED, *criteria))
+        .scalars()
+        .all()
+    )
+
+
+def test_theme_astral_seed_persists_stable_contract_family() -> None:
+    """Le seed persiste les identifiants stables dans les owners LLM existants."""
+    db = open_app_db_session()
+    try:
+        seed_theme_astral_prompt_contract(db)
+
+        use_case = db.get(LlmUseCaseConfigModel, THEME_ASTRAL_USE_CASE_KEY)
+        schema = db.execute(
+            select(LlmOutputSchemaModel).where(
+                LlmOutputSchemaModel.name == THEME_ASTRAL_OUTPUT_SCHEMA_NAME,
+                LlmOutputSchemaModel.version == 1,
+            )
+        ).scalar_one()
+        prompt = db.execute(
+            select(LlmPromptVersionModel).where(
+                LlmPromptVersionModel.use_case_key == THEME_ASTRAL_USE_CASE_KEY,
+                LlmPromptVersionModel.status == PromptStatus.PUBLISHED,
+            )
+        ).scalar_one()
+        persona = db.execute(
+            select(LlmPersonaModel).where(LlmPersonaModel.code == THEME_ASTRAL_PERSONA_CODE)
+        ).scalar_one()
+
+        assert use_case is not None
+        assert THEME_ASTRAL_INPUT_CONTRACT_ID in use_case.required_prompt_placeholders
+        assert schema.json_schema["$id"] == THEME_ASTRAL_RESPONSE_CONTRACT_ID
+        assert THEME_ASTRAL_PROMPT_CONTRACT_ID in prompt.developer_prompt
+        assert THEME_ASTRAL_INPUT_CONTRACT_ID in prompt.developer_prompt
+        assert "free" not in prompt.developer_prompt.lower()
+        assert "basic" not in prompt.developer_prompt.lower()
+        assert "premium" not in prompt.developer_prompt.lower()
+        assert "verite astrologique" in persona.disallowed_topics
+    finally:
+        db.close()
+
+
+def test_active_read_returns_canonical_family_without_plan_leakage() -> None:
+    """La lecture active retourne le contrat canonique par profondeur non commerciale."""
+    db = open_app_db_session()
+    try:
+        seed_theme_astral_prompt_contract(db)
+
+        family = resolve_active_theme_astral_prompt_contract(db, depth="deep")
+        dumped = family.model_dump()
+
+        assert family.prompt_contract_id == THEME_ASTRAL_PROMPT_CONTRACT_ID
+        assert family.input_contract_id == THEME_ASTRAL_INPUT_CONTRACT_ID
+        assert family.response_contract_id == THEME_ASTRAL_RESPONSE_CONTRACT_ID
+        assert family.delivery_profile["depth"] == "deep"
+        assert family.output_schema_ref.id == THEME_ASTRAL_RESPONSE_CONTRACT_ID
+        assert family.astrologer_voice["code"] == THEME_ASTRAL_PERSONA_CODE
+        assert "free" not in repr(dumped).lower()
+        assert "basic" not in repr(dumped).lower()
+        assert "premium" not in repr(dumped).lower()
+    finally:
+        db.close()
+
+
+def test_theme_astral_seed_is_idempotent_for_active_rows() -> None:
+    """Deux executions du seed ne créent pas de doublons actifs."""
+    db = open_app_db_session()
+    try:
+        seed_theme_astral_prompt_contract(db)
+        first_counts = {
+            "prompts": _published_count(
+                db,
+                LlmPromptVersionModel,
+                LlmPromptVersionModel.use_case_key == THEME_ASTRAL_USE_CASE_KEY,
+            ),
+            "profiles": _published_count(
+                db,
+                LlmExecutionProfileModel,
+                LlmExecutionProfileModel.feature == THEME_ASTRAL_FEATURE,
+                LlmExecutionProfileModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+            ),
+            "assemblies": _published_count(
+                db,
+                PromptAssemblyConfigModel,
+                PromptAssemblyConfigModel.feature == THEME_ASTRAL_FEATURE,
+                PromptAssemblyConfigModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+            ),
+        }
+
+        seed_theme_astral_prompt_contract(db)
+        second_counts = {
+            "prompts": _published_count(
+                db,
+                LlmPromptVersionModel,
+                LlmPromptVersionModel.use_case_key == THEME_ASTRAL_USE_CASE_KEY,
+            ),
+            "profiles": _published_count(
+                db,
+                LlmExecutionProfileModel,
+                LlmExecutionProfileModel.feature == THEME_ASTRAL_FEATURE,
+                LlmExecutionProfileModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+            ),
+            "assemblies": _published_count(
+                db,
+                PromptAssemblyConfigModel,
+                PromptAssemblyConfigModel.feature == THEME_ASTRAL_FEATURE,
+                PromptAssemblyConfigModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+            ),
+        }
+
+        assert first_counts == second_counts == {"prompts": 1, "profiles": 1, "assemblies": 2}
+        assert set(THEME_ASTRAL_DELIVERY_PROFILES) == {"essential", "deep"}
+    finally:
+        db.close()
+
+
+def test_invalid_theme_astral_version_combinations_fail_deterministically() -> None:
+    """Les profondeurs ou schemas incompatibles échouent explicitement."""
+    db = open_app_db_session()
+    try:
+        seed_theme_astral_prompt_contract(db)
+
+        with pytest.raises(ValueError, match="Unknown theme_astral delivery depth"):
+            resolve_active_theme_astral_prompt_contract(db, depth="premium")
+
+        assembly = db.execute(
+            select(PromptAssemblyConfigModel).where(
+                PromptAssemblyConfigModel.feature == THEME_ASTRAL_FEATURE,
+                PromptAssemblyConfigModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+                PromptAssemblyConfigModel.plan == "essential",
+                PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+            )
+        ).scalar_one()
+        original_schema_id = assembly.output_schema_id
+        bad_schema = LlmOutputSchemaModel(
+            name="theme_astral_response_contract_v2",
+            version=2,
+            json_schema={"type": "object"},
+        )
+        db.add(bad_schema)
+        db.flush()
+        assembly.output_schema_id = bad_schema.id
+        db.flush()
+
+        with pytest.raises(ValueError, match="incompatible output schema"):
+            resolve_active_theme_astral_prompt_contract(db, depth="essential")
+
+        assembly.output_schema_id = original_schema_id
+        db.delete(bad_schema)
+        db.commit()
+    finally:
+        db.close()

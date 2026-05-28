@@ -1,0 +1,104 @@
+{
+  "deep": {
+    "assembly_ref": {
+      "id": "a08b50b3-49b7-40fb-94d4-5c17910932a4",
+      "version": "published"
+    },
+    "astrologer_voice": {
+      "boundaries": [
+        "Ne modifie jamais les faits astrologiques.",
+        "Ne deduit aucun plan commercial depuis le profil de livraison."
+      ],
+      "code": "theme_astral_astrologer_voice_v1",
+      "persona_ref": "233ac29e-8324-4fdc-b3af-75c7d7309a5d",
+      "style_markers": [
+        "clair",
+        "symbolique",
+        "non fataliste"
+      ],
+      "tone": "warm",
+      "verbosity": "medium"
+    },
+    "delivery_profile": {
+      "delivery_profile_id": "theme_astral_delivery_profile_v1",
+      "delivery_profile_version": "v1",
+      "depth": "deep",
+      "material_budget": {
+        "max_sections": 8,
+        "max_source_items": 40
+      },
+      "output_length_policy": {
+        "max_output_tokens": 3200,
+        "target": "detailed"
+      },
+      "selection_policy": "expanded_chart_factors"
+    },
+    "execution_profile_ref": {
+      "id": "74831f4c-2794-4978-b350-aed83ad7d27a",
+      "version": "Theme Astral Contract GPT-5"
+    },
+    "input_contract_id": "theme_astral_llm_input_v1",
+    "output_schema_ref": {
+      "id": "theme_astral_response_contract_v1",
+      "version": 1
+    },
+    "prompt_contract_id": "theme_astral_prompt_contract_v1",
+    "prompt_template_ref": {
+      "id": "18cef5d8-0718-4ec7-9fdc-a009396d5644",
+      "version": "theme_astral_prompt_contract_v1"
+    },
+    "response_contract_id": "theme_astral_response_contract_v1",
+    "status": "published"
+  },
+  "essential": {
+    "assembly_ref": {
+      "id": "a2448c8a-9b33-4d47-8873-dba1469a0943",
+      "version": "published"
+    },
+    "astrologer_voice": {
+      "boundaries": [
+        "Ne modifie jamais les faits astrologiques.",
+        "Ne deduit aucun plan commercial depuis le profil de livraison."
+      ],
+      "code": "theme_astral_astrologer_voice_v1",
+      "persona_ref": "233ac29e-8324-4fdc-b3af-75c7d7309a5d",
+      "style_markers": [
+        "clair",
+        "symbolique",
+        "non fataliste"
+      ],
+      "tone": "warm",
+      "verbosity": "medium"
+    },
+    "delivery_profile": {
+      "delivery_profile_id": "theme_astral_delivery_profile_v1",
+      "delivery_profile_version": "v1",
+      "depth": "essential",
+      "material_budget": {
+        "max_sections": 4,
+        "max_source_items": 16
+      },
+      "output_length_policy": {
+        "max_output_tokens": 1400,
+        "target": "concise"
+      },
+      "selection_policy": "core_chart_factors"
+    },
+    "execution_profile_ref": {
+      "id": "74831f4c-2794-4978-b350-aed83ad7d27a",
+      "version": "Theme Astral Contract GPT-5"
+    },
+    "input_contract_id": "theme_astral_llm_input_v1",
+    "output_schema_ref": {
+      "id": "theme_astral_response_contract_v1",
+      "version": 1
+    },
+    "prompt_contract_id": "theme_astral_prompt_contract_v1",
+    "prompt_template_ref": {
+      "id": "18cef5d8-0718-4ec7-9fdc-a009396d5644",
+      "version": "theme_astral_prompt_contract_v1"
+    },
+    "response_contract_id": "theme_astral_response_contract_v1",
+    "status": "published"
+  }
+}

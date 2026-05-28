@@ -7,6 +7,13 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.domain.llm.configuration.theme_astral_contracts import (
+    THEME_ASTRAL_INPUT_CONTRACT_ID,
+    THEME_ASTRAL_INPUT_SCHEMA,
+    THEME_ASTRAL_RESPONSE_CONTRACT_ID,
+    THEME_ASTRAL_RESPONSE_SCHEMA,
+    THEME_ASTRAL_USE_CASE_KEY,
+)
 from app.domain.llm.prompting.narrator_contract import NARRATOR_OUTPUT_SCHEMA
 from app.domain.llm.prompting.schemas import _SECTION_KEY_VALUES
 from app.domain.llm.runtime.contracts import EVIDENCE_ID_REGEX
@@ -176,6 +183,11 @@ CANONICAL_OUTPUT_SCHEMAS: tuple[CanonicalOutputSchemaDefinition, ...] = (
     CanonicalOutputSchemaDefinition(
         name="NarratorResult_v1",
         json_schema=NARRATOR_OUTPUT_SCHEMA,
+        version=1,
+    ),
+    CanonicalOutputSchemaDefinition(
+        name=THEME_ASTRAL_RESPONSE_CONTRACT_ID,
+        json_schema=THEME_ASTRAL_RESPONSE_SCHEMA,
         version=1,
     ),
 )
@@ -364,6 +376,15 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         persona_strategy="required",
         required_prompt_placeholders=["question"],
     ),
+    CanonicalUseCaseContract(
+        key=THEME_ASTRAL_USE_CASE_KEY,
+        display_name="Contrat Prompt Theme Astral",
+        description="Contrat versionne de construction du prompt theme astral.",
+        output_schema_name=THEME_ASTRAL_RESPONSE_CONTRACT_ID,
+        persona_strategy="required",
+        required_prompt_placeholders=[THEME_ASTRAL_INPUT_CONTRACT_ID, "persona_name"],
+        input_schema=THEME_ASTRAL_INPUT_SCHEMA,
+    ),
 )
 
 _CONTRACTS_BY_KEY = {contract.key: contract for contract in CANONICAL_USE_CASE_CONTRACTS}
@@ -406,6 +427,7 @@ __all__ = [
     "CHAT_RESPONSE_V1",
     "CanonicalOutputSchemaDefinition",
     "CanonicalUseCaseContract",
+    "THEME_ASTRAL_RESPONSE_SCHEMA",
     "get_canonical_output_schema_definition",
     "get_canonical_use_case_contract",
     "list_canonical_use_case_contracts",

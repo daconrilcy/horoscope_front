@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "canonical_families": ["chat", "guidance", "natal", "horoscope_daily"],
+  "canonical_families": ["chat", "guidance", "natal", "horoscope_daily", "theme_astral"],
   "universal_placeholders": ["locale", "use_case", "persona_name", "last_user_msg"],
   "legacy_nominal_feature_aliases": {
     "natal_interpretation": "natal",
@@ -84,6 +84,16 @@
       { "name": "use_case", "classification": "optional" },
       { "name": "question", "classification": "optional" },
       { "name": "last_user_msg", "classification": "optional" }
+    ],
+    "theme_astral": [
+      {
+        "name": "locale",
+        "classification": "optional_with_fallback",
+        "fallback": "fr-FR"
+      },
+      { "name": "use_case", "classification": "optional" },
+      { "name": "persona_name", "classification": "required" },
+      { "name": "theme_astral_llm_input_v1", "classification": "required" }
     ]
   },
   "governed_exceptions": []
