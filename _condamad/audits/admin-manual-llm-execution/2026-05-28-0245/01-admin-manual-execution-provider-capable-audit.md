@@ -10,7 +10,7 @@ Primary recommendation: `migrate`.
 
 La surface auditee est strictement admin-only dans le backend courant et provider-capable. Elle n'est pas une simple CRUD de sample payload: `execute_admin_catalog_sample_payload` reconstruit une execution runtime depuis un sample payload admin, cree un `LLMExecutionRequest`, puis appelle `LLMGateway.execute_request`.
 
-La decision recommandee est `migrate`: conserver la capacite admin-only de test manuel, mais migrer les carriers natals de sample payload hors `chart_json` avant de documenter cette surface comme supportee durablement. `chart_json` est aujourd'hui tolerable comme carrier admin temporaire et test-only, mais c'est une cible de migration pour l'execution live provider.
+La decision recommandee est `migrate`: conserver la capacite admin-only de test manuel, mais migrer les carriers natals de sample payload hors `chart_json` avant de documenter cette surface comme supportee durablement. `chart_json` est aujourd'hui tolerable comme carrier admin temporaire dans les samples et fixtures existants, mais c'est une cible de migration pour l'execution live provider.
 
 Findings actifs: F-001, F-002, F-003, F-004. Prior finding CS-353 F-003 est `still-active`, avec evidence courante plus precise.
 
@@ -91,6 +91,7 @@ Policy after migration:
 | Candidate | Findings | Decision | Closure |
 |---|---|---|---|
 | SC-001 `migrate-admin-manual-execution-sample-payload-carriers` | F-001, F-002 | migrate | full closure if no production data blocker |
+| SC-004 `remove-chart-json-requirement-from-admin-sample-payloads` | F-002 | migrate carrier removal | full closure for the concrete validation requirement if replacement carrier is accepted |
 | SC-002 `add-admin-manual-execution-policy-audit-metadata` | F-003 | migrate follow-up | full closure after SC-001 |
 | SC-003 `guard-admin-manual-execution-admin-only-provider-capable-policy` | F-004 | guard | full closure after SC-001 |
 
@@ -119,7 +120,7 @@ Detailed candidate contracts are in `03-story-candidates.md`.
 
 ## Closure Analysis
 
-Active in-domain findings after current implementation: F-001, F-002, F-003, F-004.
+Active in-domain findings after current implementation: F-001, F-002, F-003, F-004. The audit decision is no longer blocked; the remaining work is implementation of the selected `migrate` policy and its guardrails.
 
 Closed findings: none from this audit, because the deliverable is a policy audit and no implementation changes were authorized.
 

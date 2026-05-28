@@ -4,7 +4,7 @@
 
 | Finding | Severity | Probability | Blast radius | Regression risk | Effort | Priority |
 |---|---|---|---|---|---|---|
-| F-001 | High | Medium | Admin LLM execution policy | Inconsistent documentation or behavior change | Medium | P1 |
+| F-001 | High | Medium | Admin LLM execution policy implementation | Inconsistent documentation or behavior change before migration lands | Medium | P1 |
 | F-002 | High | High | Admin live provider execution | Legacy `chart_json` remains prompt material | Medium | P1 |
 | F-003 | Medium | Medium | Audit trail interpretation | Execution audit lacks policy status | Low | P2 |
 | F-004 | Medium | Medium | Route/caller/carrier guardrails | Public promotion or carrier regression not caught exactly | Low | P2 |

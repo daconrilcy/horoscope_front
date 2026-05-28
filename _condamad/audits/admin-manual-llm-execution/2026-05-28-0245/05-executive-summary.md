@@ -12,7 +12,7 @@ Sample payload CRUD is separate from live execution. CRUD validates and persists
 
 Findings by severity:
 
-- High: 2 findings, policy not closed and `chart_json` legacy carrier in live admin execution.
+- High: 2 findings, selected migration policy not implemented and `chart_json` legacy carrier in live admin execution.
 - Medium: 2 findings, policy metadata absent from audit events and exact anti-promotion guard missing.
 
 Validation:

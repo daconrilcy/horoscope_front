@@ -8,12 +8,13 @@ Primary recommendation label: `migrate`.
 
 - Candidate ID: SC-001
 - Source finding: F-001
+- Additional mapped finding: F-002
 - Suggested story title: `migrate-admin-manual-execution-sample-payload-carriers`
 - Suggested archetype: implementation / No Legacy migration
 - Primary domain: admin-manual-llm-execution
 - Required contracts: Runtime Source of Truth, Ownership Routing, No Legacy, Contract Shape, Reintroduction Guard, Persistent Evidence
 - Draft objective: keep `execute-sample` admin-only and provider-capable, but migrate natal admin manual execution samples/templates away from prompt-visible `chart_json`.
-- Closure intent: `full-closure` for F-001 and F-002 if no production data migration blocker is found.
+- Closure intent: `full-closure` for F-001 and F-002 if no production data migration blocker is found; SC-004 is a narrower fallback only if implementation needs to split the concrete validation removal from the broader migration story.
 - Must include: inventory active sample payload templates and fixture data; introduce an explicit non-legacy carrier or `llm_astrology_input_v1`-aligned admin sample contract; update validation/tests; keep sample CRUD separate from live execution; block public promotion.
 - Validation hints: `pytest -q --long backend/tests/integration/test_admin_llm_catalog.py backend/tests/integration/test_admin_llm_sample_payloads.py`; targeted scans for `execute_admin_catalog_sample_payload`, `AdminCatalogManualExecute`, `chart_json`, `LLMGateway`; bounded status guard on `backend/app`, `backend/tests`, `frontend/src`.
 - Blockers: stop if product wants decommission instead of migration, or if production samples contain `chart_json` values that require manual data cleanup.
@@ -27,7 +28,7 @@ Primary recommendation label: `migrate`.
 - Primary domain: admin-manual-llm-execution
 - Required contracts: No Legacy, Runtime Source of Truth, Contract Shape, Reintroduction Guard
 - Draft objective: close the concrete carrier finding by replacing the natal `chart_json` requirement in admin sample payload validation and tests.
-- Closure intent: `full-closure`
+- Closure intent: `full-closure` for the concrete `chart_json` validation requirement; use this candidate only if SC-001 is split into separate implementation slices.
 - Must include: exact replacement carrier rule, update sample validation, update runtime preview tests, classify any remaining `chart_json` hit.
 - Validation hints: `pytest -q --long backend/tests/integration/test_admin_llm_catalog.py backend/tests/integration/test_admin_llm_sample_payloads.py`; `rg -n "chart_json" backend/app/services/llm_generation/admin_sample_payloads.py backend/tests/integration/test_admin_llm_sample_payloads.py backend/tests/integration/test_admin_llm_catalog.py`.
 - Blockers: stop if no replacement carrier is accepted by product/runtime owner.

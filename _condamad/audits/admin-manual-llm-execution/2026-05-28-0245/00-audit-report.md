@@ -20,7 +20,7 @@ Out of scope: runtime code changes, backend/frontend behavior changes, DB migrat
 
 The surface is backend admin-only and provider-capable. The route handler requires `require_admin_user`, builds a runtime preview from a selected sample payload, copies that sample payload into `ExecutionContext.extra_context`, constructs `LLMExecutionRequest`, and calls `LLMGateway.execute_request`.
 
-The policy should be `migrate`: do not decommission the admin tool now, and do not merely document the existing `chart_json` carrier. Migrate natal admin sample payloads away from `chart_json` before treating manual execution as a stable supported admin surface.
+The policy decision is `migrate`: do not decommission the admin tool now, and do not merely document the existing `chart_json` carrier. Migrate natal admin sample payloads away from `chart_json` before treating manual execution as a stable supported admin surface.
 
 ## Mandatory Audit Dimensions
 
@@ -30,7 +30,7 @@ The policy should be `migrate`: do not decommission the admin tool now, and do n
 | No Legacy | FAIL for carrier policy | Natal sample payloads still require `chart_json`, and live execution copies sample payload fields into gateway context. Evidence: E-007, E-010, E-015. |
 | Mono-domain ownership | PASS | Route is owned by admin LLM router; CRUD by sample payload router/service; frontend caller is out-of-domain admin UI. Evidence: E-008, E-010, E-014. |
 | Dependency direction | PASS with accepted API orchestration | API handler calls domain gateway and service helpers; services/domain dependency on `app.api` not found for this surface in targeted scans. Evidence: E-007, E-017. |
-| Security/policy | OPEN | Admin dependency and denial tests exist; policy decision remains open. Evidence: E-012, E-015. |
+| Security/policy | OPEN | Admin dependency and denial tests exist; the selected `migrate` policy remains unimplemented. Evidence: E-012, E-015. |
 | Observability | PARTIAL | Logs/audit events/redaction exist; policy classification missing. Evidence: E-013. |
 
 ## Findings
@@ -39,7 +39,7 @@ See `02-finding-register.md`.
 
 Summary:
 
-- F-001 High: policy not closed for provider-capable admin execution.
+- F-001 High: selected migration policy is not yet implemented for provider-capable admin execution.
 - F-002 High: natal sample payloads still require `chart_json`.
 - F-003 Medium: policy status missing from execution audit details.
 - F-004 Medium: no exact anti-promotion guard.

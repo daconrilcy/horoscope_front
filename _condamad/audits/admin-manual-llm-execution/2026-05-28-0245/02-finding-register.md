@@ -4,7 +4,7 @@
 
 | ID | Severity | Confidence | Category | Domain | Evidence | Impact | Recommended action | Story candidate |
 |---|---|---|---|---|---|---|---|---|
-| F-001 | High | High | needs-user-decision | admin-manual-llm-execution | E-004, E-005, E-007, E-009, E-015 | The route is intentionally admin-only and provider-capable, but the product/runtime policy is still not encoded as supported, restricted, migrated, or decommissioned. Future agents can otherwise document or change it inconsistently. | Choose and implement a single policy. This audit recommends `migrate`: keep admin-only manual execution, but migrate sample payload carriers away from natal `chart_json` before treating it as a supported admin surface. | yes |
+| F-001 | High | High | policy-implementation-gap | admin-manual-llm-execution | E-004, E-005, E-007, E-009, E-015 | The route is intentionally admin-only and provider-capable, and this audit selects `migrate`; however, the selected policy is not yet encoded in runtime behavior, audit metadata, documentation, or guards. Future agents can otherwise document or change it inconsistently. | Implement the selected `migrate` policy: keep admin-only manual execution, but migrate sample payload carriers away from natal `chart_json` before treating it as a supported admin surface. | yes |
 | F-002 | High | High | legacy-surface | admin-manual-llm-execution | E-004, E-007, E-010, E-011, E-015 | Natal admin samples require `chart_json`, and manual execution copies the sample payload into `ExecutionContext.extra_context`; therefore a legacy carrier can be prompt material for live provider execution in this admin path. | Migrate natal admin sample payloads and templates to an explicit non-legacy prompt-visible carrier; keep compatibility blocked or explicitly transitional until all samples/templates are converted. | yes |
 | F-003 | Medium | High | observability-gap | admin-manual-llm-execution | E-013, E-015 | Logs and audit events exist for start/success/failure, but the policy classification is not persisted in the audit details; future analysis must infer whether a call was `migrate`, `restricted`, `supported`, or `decommissioned`. | Add policy/status metadata to admin manual execution audit details once the policy is implemented. | yes |
 | F-004 | Medium | Medium | missing-guard | admin-manual-llm-execution | E-003, E-006, E-007, E-014, E-017 | There is coverage for admin denial and current route behavior, but no exact guardrail prevents future promotion of execute-sample outside admin-only provider-capable classification. | Add a precise regression guard after the migration/restriction policy lands; it should scan route ownership, admin dependency, frontend-only admin caller, and `chart_json` carrier absence where applicable. | yes |
@@ -15,13 +15,13 @@
 
 - Severity: High
 - Confidence: High
-- Category: needs-user-decision
+- Category: policy-implementation-gap
 - Domain: admin-manual-llm-execution
 - Evidence: E-004, E-005, E-007, E-009, E-015
 - Expected rule: a provider-capable admin execution surface must have one durable policy: document, restrict, migrate, or decommission.
-- Actual state: source and tests prove a live execution path, but CS-353 and CS-350 still classify the policy as needing a dedicated decision.
-- Impact: The route is intentionally admin-only and provider-capable, but the product/runtime policy is still not encoded as supported, restricted, migrated, or decommissioned. Future agents can otherwise document or change it inconsistently.
-- Recommended action: Choose and implement a single policy. This audit recommends `migrate`: keep admin-only manual execution, but migrate sample payload carriers away from natal `chart_json` before treating it as a supported admin surface.
+- Actual state: source and tests prove a live execution path; this audit resolves the CS-353/CS-350 policy gap by selecting `migrate`, but the selected policy is not yet implemented in runtime behavior, audit metadata, documentation, or guards.
+- Impact: The route is intentionally admin-only and provider-capable, and this audit selects `migrate`; however, the selected policy is not yet encoded in runtime behavior, audit metadata, documentation, or guards. Future agents can otherwise document or change it inconsistently.
+- Recommended action: Implement the selected `migrate` policy: keep admin-only manual execution, but migrate sample payload carriers away from natal `chart_json` before treating it as a supported admin surface.
 - Story candidate: yes
 - Suggested archetype: no-legacy-policy-migration
 
