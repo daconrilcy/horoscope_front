@@ -49,15 +49,15 @@ Story label caveats: the audits already name CS-363 through CS-368 as downstream
 
 ## Surface matrix
 
-| Surface | Current contract | Expected contract | Capabilities exposed | Consumers | Risks | Blockers | Required changes | Sources |
-|---|---|---|---|---|---|---|---|---|
-| internal | `llm_astrology_input_v1` builders and gateway filtering | domain-owned `theme_astral_llm_input_v1` builder/factories/resolver | feature context, material selection, delivery profile | backend services, tests | duplicate selection logic | CS-365 blocked by CS-363/CS-364 | add domain contract and factories in later story | CS-361 F-001/F-002/F-003 |
-| public_api | no CS-363 API change | unchanged; no plan leakage decision exposed | none in CS-363 | API clients | accidental contract drift if API starts mirroring provider payload | none | no change in CS-363 | story CS-363 non-goals |
-| admin_debug | audit evidence, examples, logs | debug can inspect trace, but not become source of truth | source reachability, validation | developers, reviewers | audit exclusion list entering provider payload | CS-366 must remove provider artifact metadata | keep debug fields backend-only | CS-362 F-004, E-007 |
-| automation_or_llm | current provider payload with `llm_astrology_input_v1:` user content | one provider-visible carrier with target skeleton | LLM generation | LLM provider | commercial plan leakage, duplicated chart material | carrier decision in CS-366 | replace prompt-visible plan with `delivery_profile` | CS-362 F-001/F-002 |
-| frontend | out of scope | unchanged | none | users | none for CS-363 | none | no change | story CS-363 non-goals |
-| data_storage | `llm_assembly_configs`, `llm_prompt_versions`, `llm_output_schemas`, `llm_personas`, releases/logs exist | versioned prompt, output, voice and execution metadata reused; input contract owner decided | persistence/versioning | backend runtime, replay, audits | new duplicate registry | CS-364 persistence owner decision | decide reuse vs new table before migration | source scan; CS-361 F-003 |
-| observability | LLM call logs/replay snapshots exist | trace contract version, delivery profile id, output schema id, assembly/prompt/persona ids | trace, replay, invalidation proof | reviewers, operators | replay incompatibility if input identity unversioned | CS-364 | record contract version and hashes in backend-only trace | source scan `llm_call_logs`, `llm_replay_snapshots` |
+| Surface | Owner | Current contract | Expected contract | Compatibility expectation | Capabilities exposed | Consumers | Risks | Blockers | Required changes | Sources |
+|---|---|---|---|---|---|---|---|---|---|---|
+| internal | domain LLM owner | `llm_astrology_input_v1` builders and gateway filtering | domain-owned `theme_astral_llm_input_v1` builder/factories/resolver | breaking provider-bound input changes require `theme_astral_llm_input_v2` or explicit bigbang story | feature context, material selection, delivery profile | backend services, tests | duplicate selection logic | CS-365 blocked by CS-363/CS-364 | add domain contract and factories in later story | CS-361 F-001/F-002/F-003 |
+| public_api | API owner | no CS-363 API change | unchanged; no plan leakage decision exposed | no public contract change in CS-363; future exposure requires separate API contract story | none in CS-363 | API clients | accidental contract drift if API starts mirroring provider payload | none | no change in CS-363 | story CS-363 non-goals |
+| admin_debug | ops/review owner | audit evidence, examples, logs | debug can inspect trace, but not become source of truth | debug fields are additive only and never canonical provider input | source reachability, validation | developers, reviewers | audit exclusion list entering provider payload | CS-366 must remove provider artifact metadata | keep debug fields backend-only | CS-362 F-004, E-007 |
+| automation_or_llm | runtime/provider payload owner | current provider payload with `llm_astrology_input_v1:` user content | one provider-visible carrier with target skeleton | stable key skeleton across `free`, `basic`, `premium`; plan values vary only through `delivery_profile` | LLM generation | LLM provider | commercial plan leakage, duplicated chart material | carrier decision in CS-366 | replace prompt-visible plan with `delivery_profile` | CS-362 F-001/F-002 |
+| frontend | frontend/API consumer owner | out of scope | unchanged | no generated type or UI dependency in CS-363 | none | users | none for CS-363 | none | no change | story CS-363 non-goals |
+| data_storage | data/LLM persistence owner | `llm_assembly_configs`, `llm_prompt_versions`, `llm_output_schemas`, `llm_personas`, releases/logs exist | versioned prompt, output, voice and execution metadata reused; input contract owner decided | persisted prompt/schema/persona/assembly changes keep version refs; new table requires CS-364 owner decision | persistence/versioning | backend runtime, replay, audits | new duplicate registry | CS-364 persistence owner decision | decide reuse vs new table before migration | source scan; CS-361 F-003 |
+| observability | runtime/ops owner | LLM call logs/replay snapshots exist | trace contract version, delivery profile id, output schema id, assembly/prompt/persona ids | replay evidence must remain self-describing across contract and profile versions | trace, replay, invalidation proof | reviewers, operators | replay incompatibility if input identity unversioned | CS-364 | record contract version and hashes in backend-only trace | source scan `llm_call_logs`, `llm_replay_snapshots` |
 
 ## Decisions d'architecture
 
@@ -404,6 +404,16 @@ Stop condition: architecture findings are closed or explicitly owner-blocked.
 | Which provider carrier is canonical? | Current developer/user duplication creates drift. | runtime/architecture owner | CS-366 | User payload owns data; developer prompt owns instructions only. | CS-362 F-002 |
 | How strict is basic-not-premium vocabulary? | Prevents product tier confusion without exposing plan. | prompt/product owner | CS-366 | Ban commercial labels; allow non-commercial depth terms. | CS-362 F-005 |
 
+## Open Questions
+
+| Question | Why it matters | Owner | Blocks | Suggested default | Sources |
+|---|---|---|---|---|---|
+| Should commercial `plan` ever be prompt-visible? | The provider payload currently exposes the commercial tier, while the target architecture requires backend-only plan handling. | product owner | CS-366 | No; resolve to `delivery_profile` before LLM handoff. | CS-362 F-001, E-004/E-005 |
+| Where is input contract metadata persisted? | Cache, replay, invalidation and audit trace need a durable `theme_astral_llm_input_v1` identity. | data/architecture owner | CS-364/CS-365 | Reuse canonical use case input schema, assembly, release, call log and replay refs first. | CS-361 F-003; story CS-363 Evidence 8/9 |
+| Which source families enter `interpretation_material` v1? | The builder must not promote dormant docs, seeds or table prose without an explicit source owner. | astrology domain/data owner | CS-365 | Include runtime-backed table/engine families; keep docs reference-only until promoted. | CS-361 F-001/F-003, E-004/E-005/E-006 |
+| Which provider carrier is canonical? | Developer/user duplication creates two possible prompt-visible owners for the same chart input. | runtime/architecture owner | CS-366 | User payload owns data; developer prompt owns instructions only. | CS-362 F-002, E-004/E-006 |
+| How strict is basic-not-premium vocabulary? | Basic currently carries premium-oriented wording and can confuse delivery depth with commercial tier. | prompt/product owner | CS-366 | Ban commercial labels; allow non-commercial depth terms in `delivery_profile`. | CS-362 F-005, E-008 |
+
 ## Validation plan
 
 1. Confirm source audits and report path exist.
@@ -411,4 +421,3 @@ Stop condition: architecture findings are closed or explicitly owner-blocked.
 3. Scan backend-only plan, `delivery_profile`, `interpretation_material`, `output_contract`, owner table names and CS-364..CS-368 references.
 4. Verify no forbidden application surfaces changed: `backend/app`, `backend/tests`, `frontend/src`, `backend/migrations`.
 5. Persist validation output under the CS-363 evidence folder.
-

@@ -25,11 +25,13 @@ Product architecture contract sections found:
 - Audit source map
 - Capability matrix
 - Surface matrix
+- Surface matrix owner and compatibility columns
 - Canonical registry decisions
 - Object/entity decisions
 - Operational rules
 - Blockers and decision owners
 - Ordered implementation roadmap
+- Open Questions
 - Validation plan
 
 Required skeleton keys found:
@@ -55,3 +57,9 @@ Roadmap IDs found:
 
 Result: PASS.
 
+Fresh review correction:
+- Added explicit surface owners and compatibility expectations to satisfy decision-rules surface requirements.
+- Added a dedicated Open Questions section matching references/output-contract.md.
+- Confirmed the story-required section Risques et decisions ouvertes remains present.
+
+Fresh review result: PASS.

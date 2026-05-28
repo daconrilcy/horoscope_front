@@ -47,3 +47,54 @@ Not executed:
 - ruff format ., ruff check ., pytest -q, and targeted pytest commands were not executed because CS-363 is architecture-only, no application code/test/migration/frontend file was modified, and running format could rewrite unrelated files.
 
 Result: PASS for CS-363 document/report validation and protected-surface guard.
+
+Fresh review after product-architecture correction:
+
+Corrections applied:
+- Added explicit `Owner` and `Compatibility expectation` columns to the report surface matrix.
+- Added a dedicated `Open Questions` section matching `references/output-contract.md`.
+- Updated CS-363 review handoff and report shape evidence.
+- Updated `_condamad/stories/story-status.md` from `ready-to-dev` to `done`.
+
+Fresh commands executed:
+
+7. rg mandatory story/product architecture headings including Open Questions
+Command:
+rg -n "^## (Executive summary|Decisions d'architecture|Non-goals|Squelette provider cible|Contrat theme_astral_llm_input_v1|Bloc interpretation_material|Bloc astrologer_voice|Bloc delivery_profile|Bloc output_contract|Persistence DB et versioning|Integration avec assembly/prompt registry existants|Bigbang migration plan|Legacy a supprimer|Tests et guardrails|Risques et decisions ouvertes|Open Questions)|^## (Executive architecture decision summary|Audit source map|Capability matrix|Surface matrix|Canonical registry decisions|Object/entity decisions|Operational rules|Blockers and decision owners|Ordered implementation roadmap|Validation plan)" _condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md
+Result:
+PASS. All mandatory story headings, product-architecture sections, and Open Questions were found.
+
+8. rg target contract keys
+Command:
+rg -n "runtime_contract|safety_contract|astrologer_voice|feature_context|delivery_profile|birth_context|astrological_facts|interpretation_material|selected_themes|limits|output_contract|theme_astral_llm_input_v1|bigbang|legacy" _condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md
+Result:
+PASS. Target skeleton keys, contract terms, bigbang and legacy terms were found.
+
+9. rg owner, compatibility, roadmap and persistence terms
+Command:
+rg -n "Owner \| Current contract|Compatibility expectation|CS-364|CS-365|CS-366|CS-367|CS-368|llm_assembly_configs|llm_prompt_versions|llm_output_schemas|llm_personas|plan commercial|backend-only" _condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md
+Result:
+PASS. Surface owner/compatibility columns, CS-364 to CS-368, persistence owners, and backend-only plan terms were found.
+
+10. story-status done check
+Command:
+rg -n "CS-363 .*\| done \|" _condamad/stories/story-status.md
+Result:
+PASS. CS-363 is marked done.
+
+11. Python fresh report contract review
+Command:
+.\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; p=Path('_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md'); text=p.read_text(encoding='utf-8'); required=['Executive summary','Decisions d\\'architecture','Non-goals','Squelette provider cible','Contrat theme_astral_llm_input_v1','Bloc interpretation_material','Bloc astrologer_voice','Bloc delivery_profile','Bloc output_contract','Persistence DB et versioning','Integration avec assembly/prompt registry existants','Bigbang migration plan','Legacy a supprimer','Tests et guardrails','Risques et decisions ouvertes','Open Questions','Surface matrix','Owner | Current contract','Compatibility expectation']; missing=[r for r in required if r not in text]; assert not missing, missing; print('PASS fresh report contract review')"
+Output:
+PASS fresh report contract review
+
+12. Protected application diff guard
+Command:
+.\.venv\Scripts\Activate.ps1; python -c "import subprocess; subprocess.run(['git','diff','--quiet','--','backend/app','backend/tests','frontend/src','backend/migrations'], check=True); print('PASS no protected application diff')"
+Output:
+PASS no protected application diff
+
+Not executed after correction:
+- ruff format ., ruff check ., pytest -q, and targeted pytest commands were not executed because this review corrected only architecture/report evidence artifacts and no application code, tests, migrations or frontend files were modified.
+
+Fresh review result: PASS. The report covers the CS-363 story, source brief, CS-361/CS-362 audit inputs, product-architecture output contract, roadmap CS-364 to CS-368, blockers, owners, trace/version/cache/replay/invalidation rules, and Open Questions without changing application surfaces.
