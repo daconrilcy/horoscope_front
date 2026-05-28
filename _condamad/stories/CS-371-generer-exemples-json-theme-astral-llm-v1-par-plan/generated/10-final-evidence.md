@@ -4,8 +4,8 @@
 
 - Story key: CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan
 - Validation outcome: PASS
-- Ready for review: yes
-- Registry status: ready-to-review
+- Ready for review: clean
+- Registry status: done
 - Source finding closure status: full-closure for story-scoped examples
 - Feedback loop routing: no-propagation
 
