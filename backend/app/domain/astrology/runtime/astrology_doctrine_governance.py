@@ -396,6 +396,8 @@ _AUXILIARY_GOVERNED_RULE_SURFACES = frozenset(
         "backend/app/domain/astrology/interpretation/advanced_conditions/contracts.py",
         "backend/app/domain/astrology/interpretation/chart_interpretation_input_contracts.py",
         "backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py",
+        "backend/app/domain/astrology/interpretation/interpretation_material_builder.py",
+        "backend/app/domain/astrology/interpretation/interpretation_material_contracts.py",
         "backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py",
         "backend/app/domain/astrology/interpretation/advanced_conditions/__init__.py",
         "backend/app/domain/astrology/interpretation_adapters/contracts.py",

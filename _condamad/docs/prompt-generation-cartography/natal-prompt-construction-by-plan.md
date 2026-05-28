@@ -2,6 +2,8 @@
 
 # Construction des prompts de theme astral natal par plan
 
+Note CS-367: ce document conserve l'historique du flux natal par plan. Pour la feature runtime `theme_astral`, le contrat actif est desormais `theme_astral_prompt_v1` avec `theme_astral_llm_input_v1`; les exemples provider actifs sous `_condamad/examples/prompt-generation-cartography/**` utilisent le squelette stable `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data`, `output_contract`.
+
 ## Executive summary
 
 Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.

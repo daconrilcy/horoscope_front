@@ -118,6 +118,11 @@ LLM_ASTROLOGY_INPUT_V1_PROMPT_EXCLUDED_KEYS = frozenset(
 ComposedMessages = List[Dict[str, Any]]
 
 
+def _is_theme_astral_use_case(use_case: str) -> bool:
+    """Identifie le flux theme_astral qui interdit les anciens carriers."""
+    return use_case == "theme_astral"
+
+
 def _prompt_visible_llm_astrology_input(payload: Any) -> Any:
     """Isole les blocs riches autorises dans la matiere de prompt natale."""
     if not isinstance(payload, dict):
@@ -222,15 +227,25 @@ class LLMGateway:
         if "situation" in context and context["situation"]:
             parts.append(f"Context: {context['situation']}")
 
-        llm_astrology_input = context.get(LLM_ASTROLOGY_INPUT_V1_KEY)
         theme_astral_payload = context.get(THEME_ASTRAL_PROVIDER_PAYLOAD_KEY)
-        if theme_astral_payload is not None:
+        if _is_theme_astral_use_case(use_case):
+            if theme_astral_payload is None:
+                raise InputValidationError(
+                    "theme_astral requires theme_astral_llm_input_v1 provider payload",
+                    details={"required_context_key": THEME_ASTRAL_PROVIDER_PAYLOAD_KEY},
+                )
             parts.append(
                 THEME_ASTRAL_PROVIDER_PAYLOAD_KEY
                 + ": "
                 + json.dumps(theme_astral_payload, ensure_ascii=False, sort_keys=True)
             )
-        elif llm_astrology_input is not None:
+        elif theme_astral_payload is not None:
+            parts.append(
+                THEME_ASTRAL_PROVIDER_PAYLOAD_KEY
+                + ": "
+                + json.dumps(theme_astral_payload, ensure_ascii=False, sort_keys=True)
+            )
+        elif (llm_astrology_input := context.get(LLM_ASTROLOGY_INPUT_V1_KEY)) is not None:
             prompt_payload = _prompt_visible_llm_astrology_input(llm_astrology_input)
             parts.append(
                 "llm_astrology_input_v1: "

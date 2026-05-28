@@ -1,0 +1,505 @@
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:7:Cette cartographie documente l'implementation actuelle de generation des prompts LLM a partir des audits CS-343 a CS-347, de l'architecture CS-348, du rapport CS-349 et des sources backend inspectees. Le flux nominal moderne pour le natal part d'un use case canonique, resout une assembly, rend le developer prompt, construit `llm_astrology_input_v1`, filtre les blocs prompt-visible, compose les messages provider, valide la sortie, puis persiste les ancres d'audit et d'observability.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:9:Depuis CS-367, la feature `theme_astral` n'utilise plus le carrier natal comme contrat prompt-visible. Son handoff provider canonique est `theme_astral_prompt_v1` avec le payload `theme_astral_llm_input_v1`: `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data` et `output_contract`. Les champs `chart_json`, `natal_data`, `llm_astrology_input_v1` et les anciens prompts natals par plan restent historiques ou propres aux autres flux natals; ils ne peuvent pas alimenter le prompt `theme_astral`.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:71:`llm_astrology_input_v1`: contrat natal moderne produit par `LLMAstrologyInputV1Builder`.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:82:| Input natal riche | `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py` | `LLMAstrologyInputV1Builder`, `build_llm_input_hash_material` | prompt-visible + backend-only |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:83:| Orchestration natale | `backend/app/services/llm_generation/natal/interpretation_service.py` | `_build_llm_astrology_input_v1`, `_apply_narrative_answer_audit` | runtime-only + audit-only |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:92:`canonical_use_case_registry.py` declare les contrats canoniques, dont les use cases modernes qui exigent `llm_astrology_input_v1` dans `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA`. CS-344 classe ces contrats comme entree de configuration, pas comme unique owner final des schemas de sortie. CS-348 garde le blocker: l'output schema ownership reste partage entre contrats canoniques, assembly rows, fallback catalog, bootstrap schemas et tests.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:115:`PromptRenderer` extrait et rend les placeholders declares par famille dans la gouvernance LLM. Pour le natal moderne, `llm_astrology_input_v1` est le carrier attendu; les carriers legacy `chart_json` et `natal_data` ne sont pas autorises comme inputs prompt-visible du flux moderne. Les placeholders optionnels peuvent avoir un fallback explicite, mais les placeholders requis doivent etre fournis ou refuser le rendu.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:119:## Construction de `llm_astrology_input_v1`
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:130:  StructuredFacts --> LLMInput["llm_astrology_input_v1"]
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:150:`backend/app/domain/llm/runtime/gateway.py` contient le filtrage avant provider, et `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py` contient les roles et le hash prompt-visible.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:156:  LLMInput["llm_astrology_input_v1 complet"] --> Filter["Filtre prompt-visible gateway"]
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:201:| Natal moderne `llm_astrology_input_v1` | nominal | oui | `facts`, `signals`, `limits`, `shaping` | `NatalInterpretationService`, `LLMGateway` | flux de reference a conserver |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:213:| Admin sample payloads | admin artifact | non par eux-memes | sample payload, parfois `chart_json` | `admin_sample_payloads.py` | artefact admin, distinct de l'execution |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:215:| Tests legacy carrier | test-only | non | fixtures `chart_json` / `natal_data` | `backend/tests/**` | conserver comme guard, pas runtime truth |
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:256:Les carriers legacy `chart_json` et `natal_data` peuvent rester dans des contextes historiques, de tests, d'admin sample ou non modernes; ils sont exclus du prompt-visible moderne lorsque `llm_astrology_input_v1` est present.
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:268:- `backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py` garde la forme, les owners et les blocs disjoints;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:285:- `event_guidance` est supprime par CS-359; aucune conservation en dette ni recreation avec `chart_json` n'est acceptee;
+_condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md:301:rg -n "```mermaid|llm_astrology_input_v1|LLMGateway|PromptRenderer|assemble_developer_prompt|prompt-visible|backend-only" _condamad/docs/prompt-generation-cartography
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:5:Note CS-367: ce document conserve l'historique du flux natal par plan. Pour la feature runtime `theme_astral`, le contrat actif est desormais `theme_astral_prompt_v1` avec `theme_astral_llm_input_v1`; les exemples provider actifs sous `_condamad/examples/prompt-generation-cartography/**` utilisent le squelette stable `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data`, `output_contract`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:9:Le flux natal moderne construit le prompt provider depuis un use case canonique, une assembly runtime, un rendu de developer prompt, le contrat `llm_astrology_input_v1`, puis le handoff `LLMGateway`. Les blocs prompt-visible du payload natal sont limites a `facts`, `signals`, `limits` et `shaping`; `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response` et `observability` restent backend-only, validation-only ou audit-only. Sources: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, `backend/app/domain/llm/runtime/gateway.py`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:27:| `validation-only` | Donnee utilisee pour valider ou rejeter la sortie, notamment `evidence`, `grounding_status`, `validation_owner`. | `llm_astrology_input_v1.py`, `05-output-validation-persistence-audit.md` |
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:32:Le process natal part du service `NatalInterpretationService`: il construit `structured_facts_v1`, `AINarrativeInputContract`, une projection client par plan, puis appelle `_build_llm_astrology_input_v1`. Le gateway recoit ensuite un `LLMExecutionRequest` contenant le use case, le contexte, la locale, les metadata runtime et le bloc `llm_astrology_input_v1`. Sources: `backend/app/services/llm_generation/natal/interpretation_service.py`, `backend/app/domain/llm/runtime/gateway.py`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:34:`chart_json` et `natal_data` ne sont pas des carriers prompt-visible du flux natal moderne quand `llm_astrology_input_v1` est present. Ils restent classes runtime-only, historiques, tests, admin samples ou surfaces non modernes selon CS-343 a CS-350.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:36:## Construction de llm_astrology_input_v1
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:38:`LLMAstrologyInputV1Builder.build` assemble un objet complet avec `facts`, `signals`, `limits`, `evidence`, `shaping`, `provenance`, `exclusions` et `data_roles`. Le hash `llm_input_hash` est calcule depuis les seuls blocs prompt-influencing `facts`, `signals`, `limits`, `shaping`; il ne rend pas `provenance` prompt-visible. Sources: `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`, stories CS-330 a CS-342.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:61:`canonical_use_case_registry.py` declare `NATAL_LLM_ASTROLOGY_INPUT_SCHEMA`: les use cases natals modernes exigent `llm_astrology_input_v1`, et plusieurs use cases natals exigent aussi `persona_name`. `assembly_resolver.py` resout feature template, subfeature template, plan rules, hard policy et length budget, puis `assemble_developer_prompt` concatene feature, subfeature et plan rules. Sources: `backend/app/domain/llm/configuration/canonical_use_case_registry.py`, `backend/app/domain/llm/configuration/assembly_resolver.py`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:73:La securite est separee en couches: hard policy d'assembly, limites prompt-visible du bloc `limits`, non-invention portee par les guards CS-335 a CS-342, validation de sortie, repair, puis rejet controle. `get_hard_policy("astrology")` alimente l'assembly; `_limits_block` transporte les donnees manquantes et surfaces exclues; `validate_output` verifie la forme de sortie; le rejected workflow controle les claims non groundes. Sources: `assembly_resolver.py`, `llm_astrology_input_v1.py`, `gateway.py`, `05-output-validation-persistence-audit.md`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:81:Le `payload user` inclut `llm_astrology_input_v1` apres filtrage par `_prompt_visible_llm_astrology_input`, qui conserve uniquement `facts`, `signals`, `limits`, `shaping`, puis `_without_prompt_excluded_keys` retire recursivement les cles exclues. Les parametres modele, temperature, tokens, `response_format`, `request_id`, `trace_id` et `use_case` sont runtime/provider-only metadata, pas prompt-visible payload.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:101:| `free` | Use case court possible, `llm_astrology_input_v1` requis pour le natal moderne, selection d'input reduite. | Resume ou sortie courte, budget faible. | `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider response`, `observability`. |
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:111:Les fallbacks de configuration, bootstrap, tests, admin samples et provider unsupported restent non nominaux ou bornes. Ils ne remplacent pas le contrat natal moderne, ne justifient pas `chart_json` ou `natal_data` comme prompt-visible moderne, et ne changent pas les plans `free`, `basic`, `premium`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:121:- `rg -n "LLMGateway|PromptRenderer|llm_astrology_input_v1|canonical_use_case_registry.py|assembly_resolver.py|prompt_renderer.py|gateway.py|interpretation_service.py" _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-by-plan.md:137:- Admin manual execution, guidance, chat public et horoscope daily sont provider-capable hors flux natal moderne; ils ne doivent pas etre absorbes dans `llm_astrology_input_v1`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-mermaid.md:5:Ce document est une annexe graphique de `_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`. Il couvre les plans `free`, `basic` et `premium` pour le flux natal moderne fonde sur `llm_astrology_input_v1`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-mermaid.md:9:Sources principales: `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `_condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1822/03-runtime-gateway-handoff-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1835/04-natal-astrology-input-audit.md`, `backend/app/domain/llm/runtime/gateway.py`, `backend/app/domain/llm/configuration/assembly_resolver.py`, `backend/app/domain/llm/prompting/prompt_renderer.py`, `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-mermaid.md:17:- Les blocs `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider_response`, `chart_json`, `natal_data` et `observability` ne sont pas des inputs prompt-visible du flux natal moderne.
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-mermaid.md:27:  NarrativeInput --> LLMInput["llm_astrology_input_v1"]
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-mermaid.md:125:  LLMInput["llm_astrology_input_v1 full object"] --> Filter["gateway prompt filter"]
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-mermaid.md:129:  LLMInput -. excluded .-> BackendOnly["backend-only: chart_json natal_data request_id trace_id"]
+_condamad\docs\prompt-generation-cartography\natal-prompt-construction-mermaid.md:136:Legende: `chart_json`, `natal_data`, `projection_hash`, `llm_input_hash`, `provider_response` et `observability` restent hors `payload user`.
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:95:    llm_astrology_input_v1: Mapping[str, object] | None = None,
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:104:        llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:122:        llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:225:    llm_astrology_input_v1: Mapping[str, object] | None,
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:234:    if not evidence_items or llm_astrology_input_v1 is None:
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:237:    backend_refs = _backend_evidence_refs(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:264:    llm_astrology_input_v1: Mapping[str, object],
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:267:    evidence = llm_astrology_input_v1.get("evidence")
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:311:    llm_astrology_input_v1: Mapping[str, object] | None = None,
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:317:    if llm_astrology_input_v1 is not None:
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:320:            llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:359:    llm_astrology_input_v1: Mapping[str, object],
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:366:    facts = llm_astrology_input_v1.get("facts")
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:367:    signals = llm_astrology_input_v1.get("signals")
+backend\app\services\llm_generation\natal\rejected_answer_workflow.py:368:    limits = llm_astrology_input_v1.get("limits")
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:34:NATAL_COMPLETE_PROMPT_V3 = """Langue : fr ({{locale}}). Context : use_case={{use_case}}.
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:46:{{llm_astrology_input_v1}}
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:49:- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{llm_astrology_input_v1}}).
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:149:    "developer_prompt": NATAL_COMPLETE_PROMPT_V3,
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:177:{{{{llm_astrology_input_v1}}}}
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:186:- Base-toi UNIQUEMENT sur les données présentes dans l'entrée ({{{{llm_astrology_input_v1}}}}).
+backend\app\ops\llm\bootstrap\seed_30_8_v3_prompts.py:406:    "llm_astrology_input_v1",
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:24:NATAL_SHORT_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:31:{{llm_astrology_input_v1}}
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:61:NATAL_COMPLETE_PROMPT = """Langue de réponse : français ({{locale}}). Contexte : use_case={{use_case}}.
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:68:{{llm_astrology_input_v1}}
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:117:        "use_case_key": "natal_interpretation_short",
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:121:        "required_prompt_placeholders": ["llm_astrology_input_v1", "locale", "use_case"],
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:122:        "developer_prompt": NATAL_SHORT_PROMPT,
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:126:        "eval_fixtures_path": "backend/app/tests/eval_fixtures/natal_interpretation_short",
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:135:            "llm_astrology_input_v1",
+backend\app\ops\llm\bootstrap\seed_29_prompts.py:140:        "developer_prompt": NATAL_COMPLETE_PROMPT,
+backend\app\ops\llm\bootstrap\seed_66_20_taxonomy.py:62:        ("natal", "interpretation", "free", "natal_interpretation_short"),
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:37:Contrat de prompt: theme_astral_prompt_v1.
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:39:Entree contractuelle: {{theme_astral_llm_input_v1}}.
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:56:    required = ["theme_astral_llm_input_v1", "persona_name"]
+backend\app\services\llm_generation\natal\interpretation_service.py:26:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\app\services\llm_generation\natal\interpretation_service.py:62:    build_chart_json,
+backend\app\services\llm_generation\natal\interpretation_service.py:100:def _build_llm_astrology_input_v1(
+backend\app\services\llm_generation\natal\interpretation_service.py:129:        prompt_ref="natal.llm_astrology_input_v1.runtime",
+backend\app\services\llm_generation\natal\interpretation_service.py:241:    llm_astrology_input_v1: dict[str, object],
+backend\app\services\llm_generation\natal\interpretation_service.py:246:    llm_input_hash = _llm_input_hash_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:247:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:253:    model.llm_input_version = _llm_input_version_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:261:        model.grounding_status = _grounding_status_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:262:        model.evidence_refs = _evidence_refs_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:280:    llm_astrology_input_v1: dict[str, object],
+backend\app\services\llm_generation\natal\interpretation_service.py:283:    projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
+backend\app\services\llm_generation\natal\interpretation_service.py:290:        llm_input_version=_llm_input_version_for_audit(llm_astrology_input_v1),
+backend\app\services\llm_generation\natal\interpretation_service.py:291:        llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
+backend\app\services\llm_generation\natal\interpretation_service.py:292:        llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:296:def _llm_input_provenance(llm_astrology_input_v1: dict[str, object]) -> dict[str, object]:
+backend\app\services\llm_generation\natal\interpretation_service.py:298:    if not isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:299:        raise ValueError("llm_astrology_input_v1 audit payload is required")
+backend\app\services\llm_generation\natal\interpretation_service.py:300:    provenance = llm_astrology_input_v1.get("provenance")
+backend\app\services\llm_generation\natal\interpretation_service.py:302:        raise ValueError("llm_astrology_input_v1 provenance is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:306:def _llm_input_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:308:    llm_input_hash = _llm_input_provenance(llm_astrology_input_v1).get("llm_input_hash")
+backend\app\services\llm_generation\natal\interpretation_service.py:311:    raise ValueError("llm_astrology_input_v1 llm_input_hash is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:314:def _llm_input_version_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:316:    if isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:317:        contract_version = llm_astrology_input_v1.get("contract_version")
+backend\app\services\llm_generation\natal\interpretation_service.py:320:    raise ValueError("llm_astrology_input_v1 contract_version is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:323:def _projection_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:325:    projection_hash = _llm_input_provenance(llm_astrology_input_v1).get("projection_hash")
+backend\app\services\llm_generation\natal\interpretation_service.py:328:    raise ValueError("llm_astrology_input_v1 projection_hash is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:331:def _grounding_status_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:333:    if not isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:334:        raise ValueError("llm_astrology_input_v1 evidence is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:335:    evidence = llm_astrology_input_v1.get("evidence")
+backend\app\services\llm_generation\natal\interpretation_service.py:337:        raise ValueError("llm_astrology_input_v1 evidence is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:341:    raise ValueError("llm_astrology_input_v1 grounding_status is required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:344:def _evidence_refs_for_audit(llm_astrology_input_v1: dict[str, object]) -> list[object]:
+backend\app\services\llm_generation\natal\interpretation_service.py:346:    if not isinstance(llm_astrology_input_v1, dict):
+backend\app\services\llm_generation\natal\interpretation_service.py:347:        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:348:    evidence = llm_astrology_input_v1.get("evidence")
+backend\app\services\llm_generation\natal\interpretation_service.py:350:        raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:354:    raise ValueError("llm_astrology_input_v1 evidence_refs are required for audit")
+backend\app\services\llm_generation\natal\interpretation_service.py:691:        chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
+backend\app\services\llm_generation\natal\interpretation_service.py:712:                chart_json_dict=chart_json_dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:724:                "natal_interpretation" if level == "complete" else "natal_interpretation_short"
+backend\app\services\llm_generation\natal\interpretation_service.py:737:        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
+backend\app\services\llm_generation\natal\interpretation_service.py:764:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:902:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:972:                        llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:994:                        llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1030:        chart_json_dict: dict,
+backend\app\services\llm_generation\natal\interpretation_service.py:1053:        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
+backend\app\services\llm_generation\natal\interpretation_service.py:1065:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1138:            llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1204:                llm_astrology_input_v1=llm_astrology_input_v1,
+backend\app\services\llm_generation\natal\interpretation_service.py:1222:                llm_astrology_input_v1=llm_astrology_input_v1,
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\README.md:3:Ces fichiers montrent le payload provider canonique `theme_astral_prompt_v1` juste avant handoff provider pour une naissance `1974-04-24`, `11:00:00`, `Paris, France`, timezone `Europe/Paris`.
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\README.md:7:- Type de donnees: `theme_astral_llm_input_v1`.
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\README.md:9:- Contrat prompt: `theme_astral_prompt_v1`.
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\README.md:30:Le payload provider contient toujours `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data` et `output_contract`. Les anciens carriers `chart_json`, `natal_data` et `llm_astrology_input_v1` ne sont pas des inputs prompt-visible pour `theme_astral`.
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\premium-provider-payload.json:3:    "contract_id": "theme_astral_llm_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\premium-provider-payload.json:5:    "prompt_contract_id": "theme_astral_prompt_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:643:  "llm_astrology_input_v1_by_plan": {
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:645:      "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:833:        "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:840:        "chart_json",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:841:        "natal_data",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:869:      "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:1275:        "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:1282:        "chart_json",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:1283:        "natal_data",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:1311:      "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:1963:        "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:1970:        "chart_json",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\intermediate-data.json:1971:        "natal_data",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\free-provider-payload.json:3:    "contract_id": "theme_astral_llm_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\free-provider-payload.json:5:    "prompt_contract_id": "theme_astral_prompt_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\basic-provider-payload.json:3:    "contract_id": "theme_astral_llm_input_v1",
+_condamad\examples\prompt-generation-cartography\1974-04-24-1100-paris\basic-provider-payload.json:5:    "prompt_contract_id": "theme_astral_prompt_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\free-provider-payload.json:3:    "contract_id": "theme_astral_llm_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\free-provider-payload.json:5:    "prompt_contract_id": "theme_astral_prompt_v1",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:19:    assert THEME_ASTRAL_PROMPT_CONTRACT_ID == "theme_astral_prompt_v1"
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:20:    assert THEME_ASTRAL_INPUT_CONTRACT_ID == "theme_astral_llm_input_v1"
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:33:    assert "theme_astral requires theme_astral_llm_input_v1 provider payload" in constants
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:46:        "chart_json",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:47:        "natal_data",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:48:        "llm_astrology_input_v1",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:49:        "natal_interpretation_short",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:50:        "NATAL_SHORT_PROMPT",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:51:        "NATAL_COMPLETE_PROMPT",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:52:        "theme_astral_prompt_contract_v1",
+backend\tests\architecture\test_theme_astral_prompt_contract_guard.py:58:    assert "theme_astral_prompt_v1" in scoped_files[1].read_text(encoding="utf-8")
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\basic-provider-payload.json:3:    "contract_id": "theme_astral_llm_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\basic-provider-payload.json:5:    "prompt_contract_id": "theme_astral_prompt_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\premium-provider-payload.json:3:    "contract_id": "theme_astral_llm_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\premium-provider-payload.json:5:    "prompt_contract_id": "theme_astral_prompt_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:643:  "llm_astrology_input_v1_by_plan": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:645:      "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:833:        "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:840:        "chart_json",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:841:        "natal_data",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:869:      "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:1275:        "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:1282:        "chart_json",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:1283:        "natal_data",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:1311:      "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:1963:        "contract_id": "llm_astrology_input_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:1970:        "chart_json",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\intermediate-data.json:1971:        "natal_data",
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\README.md:3:Ces fichiers montrent le payload provider canonique `theme_astral_prompt_v1` juste avant handoff provider pour une naissance `1974-04-24`, `11:00:00`, `Paris, France`, timezone `Europe/Paris`.
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\README.md:7:- Type de donnees: `theme_astral_llm_input_v1`.
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\README.md:9:- Contrat prompt: `theme_astral_prompt_v1`.
+_condamad\examples\prompt-generation-cartography\1973-04-24-paris\README.md:30:Le payload provider contient toujours `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data` et `output_contract`. Les anciens carriers `chart_json`, `natal_data` et `llm_astrology_input_v1` ne sont pas des inputs prompt-visible pour `theme_astral`.
+backend\tests\architecture\test_llm_legacy_extinction.py:21:FORBIDDEN_NATAL_CARRIERS = {"chart_json", "natal_data", "evidence_catalog"}
+backend\tests\architecture\test_llm_legacy_extinction.py:39:    assert "llm_astrology_input_v1" in NatalExecutionInput.model_fields
+backend\tests\architecture\test_llm_legacy_extinction.py:49:    assert "natal_data=" not in natal_method
+backend\tests\architecture\test_llm_legacy_extinction.py:50:    assert "chart_json=" not in natal_method
+backend\tests\architecture\test_llm_legacy_extinction.py:62:        "Transition legacy: seuls les schemas anciens peuvent encore demander chart_json."
+backend\tests\architecture\test_llm_legacy_extinction.py:65:    assert "llm_astrology_input_v1" in constants
+backend\tests\architecture\test_llm_legacy_extinction.py:77:    assert '"llm_astrology_input_v1"' in natal_preview_block
+backend\tests\architecture\test_llm_legacy_extinction.py:78:    assert '"chart_json"' not in natal_preview_block
+backend\tests\architecture\test_llm_legacy_extinction.py:79:    assert '"natal_data"' not in natal_preview_block
+backend\tests\architecture\test_llm_legacy_extinction.py:90:    assert "llm_astrology_input_v1" in natal_placeholders
+backend\tests\architecture\test_llm_legacy_extinction.py:91:    assert natal_placeholders.isdisjoint({"chart_json", "natal_data"})
+backend\tests\unit\test_admin_manual_execute_response.py:19:            rendered_prompt="Instruction pour le chart_json suivant."
+backend\tests\unit\test_admin_manual_execute_response.py:27:        structured_output={"provider": "openai", "chart_json": "SECRET"},
+backend\tests\unit\test_admin_manual_execute_response.py:47:    assert payload.structured_output["chart_json"] == "[REDACTED]"
+backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py:1:# Garde runtime du transport llm_astrology_input_v1 natal.
+backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py:22:    assert "llm_astrology_input_v1" not in ExecutionContext.model_fields
+backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py:31:    assert "llm_astrology_input_v1" in constants
+backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py:32:    assert "llm_astrology_input_v1" in names
+backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py:47:    assert "llm_astrology_input_v1" in class_fields["NatalExecutionInput"]
+backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py:48:    assert "llm_astrology_input_v1" not in class_fields["ExecutionContext"]
+backend\tests\architecture\test_llm_astrology_input_runtime_boundary.py:58:    assert "llm_astrology_input_v1" not in serialized_openapi
+backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py:9:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py:15:CONTRACT_PATH = REPO_ROOT / "app/domain/astrology/interpretation/llm_astrology_input_v1.py"
+backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py:47:        and node.module == "app.domain.astrology.interpretation.llm_astrology_input_v1"
+backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py:80:    assert {"chart_json", "natal_data"}.isdisjoint(assigned_blocks)
+backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py:110:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+backend\tests\architecture\test_llm_astrology_input_boundary.py:1:# Garde d'architecture du mapper interne llm_astrology_input_v1.
+backend\tests\architecture\test_llm_astrology_input_boundary.py:16:MAPPER_PATH = INTERPRETATION_DIR / "llm_astrology_input_v1.py"
+backend\tests\architecture\test_llm_astrology_input_boundary.py:54:    assert "llm_astrology_input_v1" not in serialized_openapi
+backend\tests\architecture\test_llm_astrology_input_audit_boundary.py:15:LLM_INPUT_OWNER = APP_ROOT / "domain/astrology/interpretation/llm_astrology_input_v1.py"
+backend\tests\evaluation\conftest.py:56:            "natal_data": {"planets": {"sun": "aries"}},
+backend\tests\evaluation\conftest.py:57:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+backend\tests\evaluation\conftest.py:70:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:62:      { "name": "llm_astrology_input_v1", "classification": "required" },
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:96:      { "name": "theme_astral_llm_input_v1", "classification": "required" }
+backend\tests\evaluation\__init__.py:161:                get_active_prompt_version(db, "natal_interpretation_short") is not None,
+backend\tests\evaluation\test_prompt_resolution.py:160:            natal_data=ctx_data.get("natal_data"),
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:2:"""Verrouille la migration des entrees natales modernes vers llm_astrology_input_v1."""
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:15:LEGACY_ASTROLOGY_INPUT_KEYS = {"chart_json", "natal_data"}
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:18:def test_modern_natal_use_cases_require_llm_astrology_input_v1() -> None:
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:28:def test_modern_natal_use_case_schemas_declare_llm_astrology_input_v1() -> None:
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:71:        "contract_id": "llm_astrology_input_v1",
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:76:        "Astrology input: {{llm_astrology_input_v1}}. Persona: {{persona_name}}.",
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:85:    assert "llm_astrology_input_v1" in rendered
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:87:    assert "chart_json" not in rendered
+backend\tests\unit\test_natal_llm_use_case_input_contract.py:88:    assert "natal_data" not in rendered
+backend\tests\unit\test_rejected_narrative_answer_workflow.py:15:from tests.unit.domain.astrology.test_llm_astrology_input_v1 import _build_payload
+backend\tests\unit\test_rejected_narrative_answer_workflow.py:55:        llm_astrology_input_v1=llm_input,
+backend\tests\unit\test_rejected_narrative_answer_workflow.py:75:        llm_astrology_input_v1=llm_input,
+backend\tests\unit\test_rejected_narrative_answer_workflow.py:100:        llm_astrology_input_v1=llm_input,
+backend\tests\unit\test_rejected_narrative_answer_workflow.py:168:        llm_astrology_input_v1=llm_input,
+backend\tests\unit\test_rejected_narrative_answer_workflow.py:196:        llm_astrology_input_v1=llm_input,
+backend\tests\unit\test_rejected_narrative_answer_workflow.py:245:        llm_astrology_input_v1=llm_input,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:197:    "required": ["llm_astrology_input_v1"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:199:        "llm_astrology_input_v1": {"type": "object"},
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:211:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:212:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:216:        key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:220:        required_prompt_placeholders=["llm_astrology_input_v1"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:268:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:269:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:278:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:279:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:288:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:289:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:298:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:299:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:308:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:309:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:318:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:319:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:328:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:329:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:338:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:339:        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:347:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:357:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:366:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:406:        and "llm_astrology_input_v1" in contract.input_schema.get("required", [])
+backend\app\domain\llm\configuration\assembly_resolver.py:141:        mock_vars["llm_astrology_input_v1"] = '{"contract_id": "llm_astrology_input_v1"}'
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:1:# Tests du transport runtime natal pour llm_astrology_input_v1.
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:32:    rich_input = {"contract_id": "llm_astrology_input_v1", "facts": {"positions": []}}
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:54:            llm_astrology_input_v1=rich_input,
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:64:    assert captured_request.context.extra_context["llm_astrology_input_v1"] == rich_input
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:65:    assert captured_request.context.chart_json is None
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:66:    assert captured_request.context.natal_data is None
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:68:    assert "llm_astrology_input_v1" not in ExecutionContext.model_fields
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:71:def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:73:    rich_input = {"contract_id": "llm_astrology_input_v1", "facts": {"positions": []}}
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:79:            "llm_astrology_input_v1": rich_input,
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:80:            "chart_json": '{"legacy": "secret"}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:81:            "natal_data": {"legacy": "secret"},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:87:    assert "llm_astrology_input_v1" in payload
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:95:            "chart_json": '{"legacy": "secret"}',
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:96:            "natal_data": {"legacy": "secret"},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:106:def test_validation_payload_uses_llm_astrology_input_v1_schema_key() -> None:
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:108:    rich_input = {"contract_id": "llm_astrology_input_v1"}
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:111:        developer_prompt="Prompt {{llm_astrology_input_v1}}",
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:119:            extra_context={"llm_astrology_input_v1": rich_input},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:123:    assert payload["llm_astrology_input_v1"] == rich_input
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:124:    assert "chart_json" not in payload
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:130:    forbidden_fields = {"chart_json", "natal_data", "evidence_catalog"}
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:136:    """Le renderer natal peut rendre la cle riche sans chart_json ni natal_data."""
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:139:    assert contract.required_prompt_placeholders == ["llm_astrology_input_v1", "persona_name"]
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:142:        "Payload {{llm_astrology_input_v1}} / legacy {{chart_json}}",
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:144:            "llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"},
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:151:    assert "llm_astrology_input_v1" in rendered
+backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:152:    assert "{{chart_json}}" not in rendered
+backend\app\domain\llm\configuration\theme_astral_contracts.py:18:THEME_ASTRAL_PROMPT_CONTRACT_ID = "theme_astral_prompt_v1"
+backend\app\domain\llm\configuration\theme_astral_contracts.py:19:THEME_ASTRAL_INPUT_CONTRACT_ID = "theme_astral_llm_input_v1"
+backend\app\domain\llm\configuration\theme_astral_contracts.py:177:    prompt_contract_id: Literal["theme_astral_prompt_v1"]
+backend\app\domain\llm\configuration\theme_astral_contracts.py:178:    input_contract_id: Literal["theme_astral_llm_input_v1"]
+backend\app\domain\llm\runtime\gateway.py:14:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\app\domain\llm\runtime\gateway.py:87:PAID_USE_CASES = {"natal_interpretation", "natal_interpretation_short"}
+backend\app\domain\llm\runtime\gateway.py:105:LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
+backend\app\domain\llm\runtime\gateway.py:199:        chart_json_in_prompt: bool = False,
+backend\app\domain\llm\runtime\gateway.py:234:                    "theme_astral requires theme_astral_llm_input_v1 provider payload",
+backend\app\domain\llm\runtime\gateway.py:251:                "llm_astrology_input_v1: "
+backend\app\domain\llm\runtime\gateway.py:257:            and "chart_json" in context
+backend\app\domain\llm\runtime\gateway.py:258:            and context["chart_json"]
+backend\app\domain\llm\runtime\gateway.py:259:            and not chart_json_in_prompt
+backend\app\domain\llm\runtime\gateway.py:261:            parts.append(f"Technical Data: {context['chart_json']}")
+backend\app\domain\llm\runtime\gateway.py:391:                        "chart_json",
+backend\app\domain\llm\runtime\gateway.py:397:                        "natal_data",
+backend\app\domain\llm\runtime\gateway.py:683:            "natal_data",
+backend\app\domain\llm\runtime\gateway.py:684:            "chart_json",
+backend\app\domain\llm\runtime\gateway.py:700:            natal_data=context.get("natal_data"),
+backend\app\domain\llm\runtime\gateway.py:701:            chart_json=context.get("chart_json"),
+backend\app\domain\llm\runtime\gateway.py:1436:                render_vars.pop("chart_json", None)
+backend\app\domain\llm\runtime\gateway.py:1437:                render_vars.pop("natal_data", None)
+backend\app\domain\llm\runtime\gateway.py:1574:                    chart_json_in_prompt="{{chart_json}}" in plan.rendered_developer_prompt,
+backend\app\domain\llm\runtime\gateway.py:1976:            if is_natal_use_case and prop in {"chart_json", "natal_data", "evidence_catalog"}:
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:2:"""Assemble `llm_astrology_input_v1` depuis les owners internes autorises."""
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:28:LLM_ASTROLOGY_INPUT_V1_CONTRACT_ID = "llm_astrology_input_v1"
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:29:LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION = "llm_astrology_input_v1.contract.v1"
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:34:    "runtime_only": ("request_id", "trace_id", "chart_json", "natal_data"),
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:43:    "chart_json",
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:44:    "natal_data",
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:134:        raise ValueError("llm_astrology_input_v1 facts require structured_facts_v1 source")
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:140:        raise ValueError("llm_astrology_input_v1 signals require AINarrativeInputContract")
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:147:            "llm_astrology_input_v1 shaping requires client_interpretation_projection_v1"
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:223:            "section_id": "llm_astrology_input_v1",
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:224:            "evidence_ref_id": "llm_astrology_input_v1.projection",
+backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py:233:            EvidenceSectionRequirement(section_id="llm_astrology_input_v1", requires_evidence=True),
+backend\app\domain\llm\runtime\contracts.py:116:    natal_data: Optional[Dict[str, Any]] = None
+backend\app\domain\llm\runtime\contracts.py:117:    chart_json: Optional[str] = None
+backend\app\domain\llm\runtime\contracts.py:144:    llm_astrology_input_v1: Dict[str, Any]
+backend\app\domain\llm\runtime\adapter.py:80:        natal_data=normalized_context.get("natal_data"),
+backend\app\domain\llm\runtime\adapter.py:81:        chart_json=normalized_context.get("chart_json"),
+backend\app\domain\llm\runtime\adapter.py:154:                natal_data=context.get("natal_data"),
+backend\app\domain\llm\runtime\adapter.py:155:                chart_json=context.get("chart_json"),
+backend\app\domain\llm\runtime\adapter.py:240:            "natal_interpretation_short",
+backend\app\domain\llm\runtime\adapter.py:259:                    "llm_astrology_input_v1": natal_input.llm_astrology_input_v1,
+backend\tests\integration\test_llm_golden_regression.py:439:    assert captured["context"].chart_json is None
+backend\tests\integration\test_llm_golden_regression.py:440:    assert captured["context"].natal_data is None
+backend\tests\integration\test_llm_golden_regression.py:441:    assert captured["context"].extra_context["llm_astrology_input_v1"]["contract_id"] == (
+backend\tests\integration\test_llm_golden_regression.py:442:        "llm_astrology_input_v1"
+backend\tests\integration\test_llm_legacy_extinction.py:30:def test_modern_natal_contracts_only_expose_llm_astrology_input_v1() -> None:
+backend\tests\integration\test_llm_legacy_extinction.py:33:    forbidden_carriers = {"chart_json", "natal_data", "evidence_catalog"}
+backend\tests\integration\test_llm_legacy_extinction.py:36:        assert "llm_astrology_input_v1" in contract.required_prompt_placeholders
+backend\tests\integration\test_llm_legacy_extinction.py:40:        assert contract.input_schema.get("required") == ["llm_astrology_input_v1"]
+backend\tests\integration\test_llm_legacy_extinction.py:42:        assert "llm_astrology_input_v1" in properties
+backend\tests\integration\test_llm_legacy_extinction.py:60:            "llm_astrology_input_v1": {"facts": {"sun": "Aries"}},
+backend\tests\integration\test_llm_legacy_extinction.py:61:            "chart_json": '{"legacy": true}',
+backend\tests\integration\test_llm_legacy_extinction.py:62:            "natal_data": {"legacy": True},
+backend\tests\integration\test_llm_legacy_extinction.py:69:    assert "llm_astrology_input_v1" in payload
+backend\tests\integration\test_llm_legacy_extinction.py:71:    assert "chart_json" not in payload
+backend\tests\integration\test_llm_legacy_extinction.py:72:    assert "natal_data" not in payload
+backend\tests\integration\test_llm_legacy_extinction.py:81:        developer_prompt="Prompt {{llm_astrology_input_v1}}",
+backend\tests\integration\test_llm_legacy_extinction.py:84:            "required": ["llm_astrology_input_v1"],
+backend\tests\integration\test_llm_legacy_extinction.py:86:                "llm_astrology_input_v1": {"type": "object"},
+backend\tests\integration\test_llm_legacy_extinction.py:87:                "chart_json": {"type": "object"},
+backend\tests\integration\test_llm_legacy_extinction.py:88:                "natal_data": {"type": "object"},
+backend\tests\integration\test_llm_legacy_extinction.py:98:            chart_json='{"legacy": true}',
+backend\tests\integration\test_llm_legacy_extinction.py:99:            natal_data={"legacy": True},
+backend\tests\integration\test_llm_legacy_extinction.py:101:                "llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"},
+backend\tests\integration\test_llm_legacy_extinction.py:109:        "llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"},
+backend\tests\integration\test_llm_integrated_propagation.py:211:        natal_data={"planets": {}},
+backend\tests\integration\test_admin_llm_sample_payloads.py:25:            "chart_json": {"sun": "aries", "moon": "leo"},
+backend\tests\integration\test_admin_llm_sample_payloads.py:54:        assert item_1["payload_json"]["chart_json"] == {"sun": "aries", "moon": "leo"}
+backend\tests\integration\test_admin_llm_sample_payloads.py:436:                payload_json={"chart_json": {"sun": "aries"}, "email": "john@doe.com"}
+backend\tests\integration\test_admin_llm_sample_payloads.py:448:def test_admin_llm_sample_payload_requires_natal_chart_json():
+backend\tests\integration\test_admin_llm_sample_payloads.py:466:        assert "must include chart_json" in payload["message"]
+backend\tests\llm_orchestration\test_context_quality.py:72:        context=ExecutionContext(chart_json='{"planets": []}'),
+backend\tests\integration\test_llm_runtime_suppression.py:35:            developer_prompt="Prompt {{llm_astrology_input_v1}}",
+backend\tests\integration\test_llm_runtime_suppression.py:37:            required_prompt_placeholders=["llm_astrology_input_v1"],
+backend\tests\integration\test_llm_runtime_suppression.py:41:            chart_json='{"legacy": true}',
+backend\tests\integration\test_llm_runtime_suppression.py:42:            natal_data={"legacy": True},
+backend\tests\integration\test_llm_runtime_suppression.py:43:            extra_context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}},
+backend\tests\integration\test_llm_runtime_suppression.py:47:    assert payload == {"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}}
+backend\tests\integration\test_admin_llm_catalog.py:111:        developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:156:                "chart_json": {"sun": "aries"},
+backend\tests\integration\test_admin_llm_catalog.py:705:    use_case_key = f"natal_interpretation_short_{uuid.uuid4().hex[:8]}"
+backend\tests\integration\test_admin_llm_catalog.py:720:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1207:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1251:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1287:            assert placeholders["chart_json"]["status"] == "resolved"
+backend\tests\integration\test_admin_llm_catalog.py:1288:            assert placeholders["chart_json"]["resolution_source"] == "sample_payload"
+backend\tests\integration\test_admin_llm_catalog.py:1339:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1383:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1471:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1515:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1600:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1712:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:1756:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:1841:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:2157:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend\tests\integration\test_admin_llm_catalog.py:2201:                payload_json={"chart_json": {"sun": "aries"}},
+backend\tests\integration\test_admin_llm_catalog.py:2283:            structured_output={"provider": "openai", "chart_json": "secret-chart"},
+backend\tests\integration\test_admin_llm_catalog.py:2313:        assert body["structured_output"]["chart_json"] == "[REDACTED]"
+backend\tests\unit\prediction\test_astrologer_prompt_builder.py:74:        natal_data={
+backend\tests\llm_orchestration\test_assembly_resolution.py:74:            {"llm_astrology_input_v1": {}},
+backend\tests\llm_orchestration\test_assembly_resolution.py:227:    assert validate_placeholders("Theme {{llm_astrology_input_v1}}", "natal") == []
+backend\tests\llm_orchestration\test_assembly_resolution.py:229:    assert validate_placeholders("Theme {{chart_json}}", "natal") == ["chart_json"]
+backend\app\domain\llm\prompting\catalog.py:138:    "natal_interpretation_short": {
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:1:# Guards de frontiere du payload llm_astrology_input_v1 avant appel provider.
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:11:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:16:from tests.unit.domain.astrology.test_llm_astrology_input_v1 import _build_payload
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:21:    "chart_json",
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:22:    "natal_data",
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:76:    """chart_json et natal_data restent hors prompt quand le contrat riche existe."""
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:82:            "llm_astrology_input_v1": payload,
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:83:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:84:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:119:            "llm_astrology_input_v1": payload,
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:120:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:121:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:145:        context={"llm_astrology_input_v1": payload},
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:153:    """Decode le bloc JSON `llm_astrology_input_v1` rendu par le gateway."""
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:154:    prefix = "llm_astrology_input_v1: "
+backend\tests\llm_orchestration\test_llm_gateway_compose.py:33:        context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}},
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:21:        "natal_interpretation_short",
+backend\tests\llm_orchestration\test_llm_execution_request.py:82:            extra_context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}}
+backend\tests\llm_orchestration\test_llm_execution_request.py:111:        "natal_data": {},
+backend\tests\llm_orchestration\test_llm_execution_request.py:118:    assert "natal_data" not in request.context.extra_context
+backend\app\domain\llm\prompting\context.py:43:    natal_data: Optional[dict[str, Any]] = None
+backend\app\domain\llm\prompting\context.py:83:            if not self.payload.natal_data:
+backend\app\domain\llm\prompting\context.py:84:                missing.append("natal_data")
+backend\app\domain\llm\prompting\context.py:93:    _CRITICAL_FIELDS = frozenset({"natal_data", "astrologer_profile"})
+backend\app\domain\llm\prompting\context.py:105:        if "natal_data" in missing_set and "natal_interpretation" in missing_set:
+backend\app\domain\llm\prompting\context.py:110:            "natal_data" in missing_set or "natal_interpretation" in missing_set
+backend\app\domain\llm\prompting\context.py:189:        natal_data = None
+backend\app\domain\llm\prompting\context.py:207:            natal_data = chart.result.model_dump(mode="json")
+backend\app\domain\llm\prompting\context.py:209:            missing_fields.append("natal_data")
+backend\app\domain\llm\prompting\context.py:244:            natal_data=natal_data,
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:25:    """Le provider ne recoit que theme_astral_llm_input_v1 pour theme_astral."""
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:33:            "llm_astrology_input_v1": {"legacy": True},
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:34:            "chart_json": '{"legacy": true}',
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:35:            "natal_data": {"legacy": True},
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:49:    assert THEME_ASTRAL_PROMPT_CONTRACT_ID == "theme_astral_prompt_v1"
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:50:    assert "llm_astrology_input_v1:" not in rendered
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:51:    assert "chart_json" not in serialized
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:52:    assert "natal_data" not in serialized
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:58:    """chart_json, natal_data et llm_astrology_input_v1 ne remplacent pas le contrat cible."""
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:59:    with pytest.raises(InputValidationError, match="theme_astral_llm_input_v1"):
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:64:                "llm_astrology_input_v1": {"legacy": True},
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:65:                "chart_json": '{"legacy": true}',
+backend\tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py:66:                "natal_data": {"legacy": True},
+backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py:11:from tests.unit.domain.astrology.test_llm_astrology_input_v1 import _build_payload
+backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py:27:        llm_astrology_input_v1=llm_input,
+backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py:51:        llm_astrology_input_v1=llm_input,
+backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py:61:        llm_astrology_input_v1=llm_input,
+backend\tests\llm_orchestration\test_placeholder_validation.py:12:    template = "Hello {{llm_astrology_input_v1}}"
+backend\tests\llm_orchestration\test_placeholder_validation.py:18:    assert "Required placeholder '{{llm_astrology_input_v1}}' not resolved" in str(exc.value)
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:62:        "natal_interpretation_short",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:73:        "natal_interpretation_short",
+backend\tests\llm_orchestration\test_prompt_renderer.py:57:def test_render_modern_natal_payload_consumes_llm_astrology_input_v1() -> None:
+backend\tests\llm_orchestration\test_prompt_renderer.py:61:        "contract_id": "llm_astrology_input_v1",
+backend\tests\llm_orchestration\test_prompt_renderer.py:66:        "Payload: {{llm_astrology_input_v1}}",
+backend\tests\llm_orchestration\test_prompt_renderer.py:72:    assert "llm_astrology_input_v1" in result
+backend\tests\llm_orchestration\test_prompt_renderer.py:74:    assert "chart_json" not in result
+backend\tests\llm_orchestration\test_prompt_renderer.py:75:    assert "natal_data" not in result
+backend\tests\llm_orchestration\test_qualified_context.py:20:    assert QualifiedContext.compute_quality(["natal_interpretation", "natal_data"]) == "minimal"
+backend\tests\llm_orchestration\test_qualified_context.py:21:    assert QualifiedContext.compute_quality(["astrologer_profile", "natal_data"]) == "minimal"
+backend\tests\llm_orchestration\test_qualified_context.py:83:        assert "natal_data" in res.missing_fields
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:38:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:110:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_resolved_execution_plan.py:127:        context={"chart_json": "{}"},
+backend\tests\llm_orchestration\test_runtime_convergence.py:128:            use_case="natal_interpretation_short",
+backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py:61:        REPO_ROOT / "app/domain/astrology/interpretation/theme_astral_llm_input_v1_builder.py"
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:45:from app.services.chart.json_builder import build_chart_json
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:187:    chart_json = build_chart_json(result, birth_profile)
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:219:                "sect": chart_json["dignities"]["sect"],
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:220:                "first_planet_sect_condition": chart_json["dignities"]["planets"][first_planet][
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:224:                    item["condition_code"] for item in chart_json["advanced_conditions"]
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:227:                    "top_planet_code": chart_json["dominant_planets"]["top_planet_code"],
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:228:                    "chart_ruler_code": chart_json["dominant_planets"]["chart_ruler_code"],
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:229:                    "most_elevated_planet_code": chart_json["dominant_planets"][
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:233:                        item["planet_code"] for item in chart_json["dominant_planets"]["planets"]
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:238:                        item["signal"] for item in chart_json["interpretation_adapter"]["signals"]
+backend\tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:240:                    "critical_patterns": chart_json["interpretation_adapter"]["critical_patterns"],
+backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:2:"""Controle la coherence des `evidence_refs` de `llm_astrology_input_v1`."""
+backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:6:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:9:from tests.unit.domain.astrology.test_llm_astrology_input_v1 import _build_sources
+backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:38:                "section_id": "llm_astrology_input_v1",
+backend\tests\unit\domain\astrology\test_llm_astrology_input_evidence.py:39:                "evidence_ref_id": "llm_astrology_input_v1.invalid",
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:1:"""Tests du contrat interne llm_astrology_input_v1."""
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:24:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:46:CONTRACT_PATH = INTERPRETATION_DIR / "llm_astrology_input_v1.py"
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:60:def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:101:            "section_id": "llm_astrology_input_v1",
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:102:            "evidence_ref_id": "llm_astrology_input_v1.projection",
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:112:def test_llm_astrology_input_v1_hash_is_deterministic_and_covers_prompt_blocks() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:128:def test_llm_astrology_input_v1_hash_material_is_canonical() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:143:def test_llm_astrology_input_v1_rejects_raw_or_wrong_fact_source() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:157:def test_llm_astrology_input_v1_missing_data_is_prompt_visible() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:175:def test_llm_astrology_input_v1_keeps_facts_signals_and_shaping_disjoint() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:190:def test_llm_astrology_input_v1_excludes_runtime_public_and_provider_surfaces() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:197:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:200:    assert "chart_json" not in serialized_facts
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:201:    assert "natal_data" not in serialized_facts
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:205:def test_llm_astrology_input_v1_stays_out_of_public_api_surface() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py:215:def test_llm_astrology_input_v1_has_one_canonical_owner_and_imports_sources() -> None:
+backend\tests\unit\domain\astrology\test_llm_astrology_input_hash.py:11:from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
+backend\tests\unit\domain\astrology\test_llm_astrology_input_hash.py:14:from tests.unit.domain.astrology.test_llm_astrology_input_v1 import (
+backend\tests\unit\domain\astrology\test_llm_astrology_input_hash.py:62:        "chart_json",
+backend\tests\unit\domain\astrology\test_llm_astrology_input_hash.py:63:        "natal_data",

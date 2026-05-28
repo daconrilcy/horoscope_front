@@ -1,81 +1,249 @@
 {
-  "use_case": "natal_interpretation_short",
-  "plan": "free",
-  "mode": "structured",
-  "provider_call_performed": false,
-  "generation_kind": "runtime_generated_ephemeris_prompt_fixture",
-  "model": "gpt-4o-mini",
-  "messages": [
-    {
-      "role": "system",
-      "content": "Tu appliques la hard policy astrology: base-toi uniquement sur les données fournies, nomme les limites, refuse les diagnostics et les prédictions certaines, et retourne strictement le JSON demandé."
+  "runtime_contract": {
+    "contract_id": "theme_astral_llm_input_v1",
+    "contract_version": "v1",
+    "prompt_contract_id": "theme_astral_prompt_v1",
+    "builder_owner": "ThemeAstralProviderPayloadBuilder"
+  },
+  "safety_contract": {
+    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref",
+    "truth_policy": "astrological_facts_are_engine_owned",
+    "voice_policy": "style_only_no_fact_mutation",
+    "commercial_label_policy": "backend_only"
+  },
+  "astrologer_voice": {
+    "tone": "calme",
+    "vocabulary": [
+      "symbolique"
+    ],
+    "emphases": [
+      "integration"
+    ]
+  },
+  "feature_context": {
+    "feature": "theme_astral",
+    "subfeature": "prompt_contract",
+    "locale": "fr-FR",
+    "chart_type": "natal"
+  },
+  "delivery_profile": {
+    "delivery_profile_id": "theme_astral_delivery_profile_v1",
+    "delivery_profile_version": "v1",
+    "depth": "essential",
+    "material_budget": {
+      "max_source_items": 8,
+      "max_sections": 4
     },
-    {
-      "role": "developer",
-      "content": "Langue de réponse : français (fr-FR). Contexte : use_case=natal_interpretation_short.\n\nEn tant qu’astrologue expérimenté, ton interprétation du thème natal fourni doit être claire, moderne et non fataliste.\nÉvite les phrases courtes et hachées. Privilégie un style fluide, bien écrit, avec des transitions naturelles entre les idées pour créer un portrait cohérent.\n\nFocalise-toi STRICTEMENT sur les données du thème natal fournies dans le message utilisateur.\nDonnées astrologiques canoniques :\n{\"facts\": {\"angles\": {\"ascendant\": {\"degree\": 27, \"degree_label\": \"27 deg 48 Cancer\", \"evidence_id\": \"ASCENDANT_IN_CANCER\", \"longitude\": 117.8059, \"minute\": 48, \"sign\": \"cancer\", \"sign_label_fr\": \"Cancer\"}}, \"dominants\": [{\"basis\": \"Soleil et Lune en Taureau\", \"code\": \"earth\", \"kind\": \"element\", \"label_fr\": \"Terre\"}], \"houses\": [], \"major_aspects\": [{\"angle\": 60, \"aspect\": \"sextile\", \"aspect_label_fr\": \"sextile\", \"bodies\": [\"sun\", \"mars\"], \"body_labels_fr\": [\"Soleil\", \"Mars\"], \"evidence_id\": \"SUN_SEXTILE_MARS\", \"orb_degrees\": 1.42}, {\"angle\": 60, \"aspect\": \"sextile\", \"aspect_label_fr\": \"sextile\", \"bodies\": [\"sun\", \"saturn\"], \"body_labels_fr\": [\"Soleil\", \"Saturne\"], \"evidence_id\": \"SUN_SEXTILE_SATURN\", \"orb_degrees\": 3.37}, {\"angle\": 60, \"aspect\": \"sextile\", \"aspect_label_fr\": \"sextile\", \"bodies\": [\"sun\", \"jupiter\"], \"body_labels_fr\": [\"Soleil\", \"Jupiter\"], \"evidence_id\": \"SUN_SEXTILE_JUPITER\", \"orb_degrees\": 6.24}], \"positions\": [{\"body\": \"sun\", \"body_label_fr\": \"Soleil\", \"degree\": 3, \"degree_label\": \"03 deg 51 Taureau\", \"evidence_id\": \"SUN_IN_TAURUS_HOUSE_10\", \"house\": 10, \"house_label_fr\": \"Maison 10\", \"longitude\": 33.8488, \"minute\": 51, \"retrograde\": false, \"sign\": \"taurus\", \"sign_label_fr\": \"Taureau\", \"speed\": 0.974509}, {\"body\": \"moon\", \"body_label_fr\": \"Lune\", \"degree\": 29, \"degree_label\": \"29 deg 19 Taureau\", \"evidence_id\": \"MOON_IN_TAURUS_HOUSE_11\", \"house\": 11, \"house_label_fr\": \"Maison 11\", \"longitude\": 59.3139, \"minute\": 19, \"retrograde\": false, \"sign\": \"taurus\", \"sign_label_fr\": \"Taureau\", \"speed\": 13.965274}], \"source_metadata\": {\"birth_date\": \"1974-04-24\", \"birth_latitude\": 48.8566, \"birth_longitude\": 2.3522, \"birth_place\": \"Paris, France\", \"birth_time\": \"11:00:00\", \"calculation_engine\": \"pyswisseph\", \"house_system\": \"Placidus\", \"julian_day_ut\": 2442161.91666667, \"swisseph_version\": \"2.10.03\", \"timezone\": \"Europe/Paris\", \"utc_datetime\": \"1974-04-24T10:00:00+00:00\"}, \"source_projection_id\": \"structured_facts_v1\"}, \"limits\": {\"forbidden_claims\": [\"prediction datee certaine\", \"diagnostic medical, legal, financier ou psychologique\", \"element astrologique absent des facts prompt-visible\"], \"missing_data\": {}, \"unavailable_sections\": [], \"uncertainty_notes\": [\"Aucun appel provider LLM n'a ete effectue; ce fichier s'arrete au payload pret pour handoff.\", \"Les interpretations intermediaires sont des indices de prompt, pas une reponse LLM finale.\"]}, \"shaping\": {\"editorial_depth_profile\": \"free_short\", \"llm_input_selection\": {\"allowed_fact_groups\": [\"luminaries\", \"dominants\", \"major_limits\"], \"section_codes\": [\"orientation_generale\", \"points_forts\", \"limite_de_lecture\", \"upgrade_hint\"]}, \"locale\": \"fr-FR\", \"module\": \"natal_theme\", \"output_expectations\": {\"max_output_tokens\": 4000, \"style\": \"prose fluide, non fataliste, sans prediction certaine\"}, \"plan\": \"free\", \"precision_level\": \"orientation\"}, \"signals\": {\"interpretation_hints\": [\"Double accent Taureau: stabilite, concretisation, rythme et rapport au corps.\", \"Ascendant Cancer: entree en relation protectrice et besoin de securite affective.\"], \"interpretive_signal_codes\": [\"ground_interpretation_in_visible_facts\", \"use_birth_time_dependent_angles_and_houses\", \"separate_symbolic_synthesis_from_prediction\"], \"masking_policy\": {\"suppress_audit_only_fields\": true, \"suppress_unverified_angles\": false, \"suppress_unverified_houses\": false}, \"readiness_flags\": {\"angles_ready\": true, \"birth_time_verified_by_user_input\": true, \"houses_ready\": true, \"natal_synthesis_ready\": true, \"provider_output_available\": false}, \"source_contract\": \"AINarrativeInputContract\"}}\n\nRègles impératives :\n- N’invente aucun placement planétaire, aspect ou maison non présent dans les données.\n- Parle exclusivement de tendances et potentiels, jamais de certitudes.\n- Aucun diagnostic médical, légal ou financier définitif.\n- Si incertitude ou donnée manquante, reste général.\n\nFormat de sortie : JSON strict AstroResponse_v1\n- title : titre accrocheur, 5–10 mots.\n- summary : portrait synthétique et fluide du profil natal, 4–6 phrases liées.\n- sections : au moins 3 parmi [overall, career, relationships, inner_life, daily_life]\n  - heading : titre de section percutant.\n  - content : 3–5 phrases formant un paragraphe bien construit et actionnable.\n- highlights : 3–5 points forts ou traits marquants.\n- advice : 3–5 conseils pratiques et positifs.\n- evidence : liste des identifiants UPPER_SNAKE_CASE réellement utilisés.\n- disclaimers : 1 note de prudence générale (astrologie = piste de réflexion).\n\n⚠️ IMPORTANT : Ne numérote JAMAIS les points dans les listes (highlights, advice, sections). Pas de \"1.\", \"2.\" ni de tirets \"-\" ou puces dans les chaînes de texte. Le formatage est géré par l’application.\n\n⚠️ Langage naturel (IMPÉRATIF) :\n- Dans TOUT le texte (title, summary, sections/content, highlights, advice) : emploie UNIQUEMENT les noms naturels en français (Soleil, Lune, Vénus, Taureau, Maison 10, Milieu du Ciel, Ascendant, trigone, carré, opposition, conjonction…).\n- Les codes UPPER_SNAKE_CASE (SUN, TAURUS, MAISON_10, MARS_TRINE_SATURN…) sont STRICTEMENT réservés au champ `evidence`. Ne les écris JAMAIS dans le texte.\n\nContraintes supplémentaires :\n- Si une section ou un champ obligatoire ne peut pas être renseigné faute de données, utilise une chaîne ou un tableau vide.\n- Si un champ clé d’entrée manque (ex: planets absent), retourne un message d’erreur au même format avec title=\"Erreur : Données insuffisantes\" et résume la cause dans summary.\n- Pour le champ evidence, inclure uniquement les identifiants explicitement mobilisés dans l’interprétation."
+    "astrological_facts_budget": {
+      "max_objects": 3,
+      "max_aspects": 1,
+      "max_dominants": 1
     },
-    {
-      "role": "user",
-      "content": "llm_astrology_input_v1: {\"facts\": {\"angles\": {\"ascendant\": {\"degree\": 27, \"degree_label\": \"27 deg 48 Cancer\", \"evidence_id\": \"ASCENDANT_IN_CANCER\", \"longitude\": 117.8059, \"minute\": 48, \"sign\": \"cancer\", \"sign_label_fr\": \"Cancer\"}}, \"dominants\": [{\"basis\": \"Soleil et Lune en Taureau\", \"code\": \"earth\", \"kind\": \"element\", \"label_fr\": \"Terre\"}], \"houses\": [], \"major_aspects\": [{\"angle\": 60, \"aspect\": \"sextile\", \"aspect_label_fr\": \"sextile\", \"bodies\": [\"sun\", \"mars\"], \"body_labels_fr\": [\"Soleil\", \"Mars\"], \"evidence_id\": \"SUN_SEXTILE_MARS\", \"orb_degrees\": 1.42}, {\"angle\": 60, \"aspect\": \"sextile\", \"aspect_label_fr\": \"sextile\", \"bodies\": [\"sun\", \"saturn\"], \"body_labels_fr\": [\"Soleil\", \"Saturne\"], \"evidence_id\": \"SUN_SEXTILE_SATURN\", \"orb_degrees\": 3.37}, {\"angle\": 60, \"aspect\": \"sextile\", \"aspect_label_fr\": \"sextile\", \"bodies\": [\"sun\", \"jupiter\"], \"body_labels_fr\": [\"Soleil\", \"Jupiter\"], \"evidence_id\": \"SUN_SEXTILE_JUPITER\", \"orb_degrees\": 6.24}], \"positions\": [{\"body\": \"sun\", \"body_label_fr\": \"Soleil\", \"degree\": 3, \"degree_label\": \"03 deg 51 Taureau\", \"evidence_id\": \"SUN_IN_TAURUS_HOUSE_10\", \"house\": 10, \"house_label_fr\": \"Maison 10\", \"longitude\": 33.8488, \"minute\": 51, \"retrograde\": false, \"sign\": \"taurus\", \"sign_label_fr\": \"Taureau\", \"speed\": 0.974509}, {\"body\": \"moon\", \"body_label_fr\": \"Lune\", \"degree\": 29, \"degree_label\": \"29 deg 19 Taureau\", \"evidence_id\": \"MOON_IN_TAURUS_HOUSE_11\", \"house\": 11, \"house_label_fr\": \"Maison 11\", \"longitude\": 59.3139, \"minute\": 19, \"retrograde\": false, \"sign\": \"taurus\", \"sign_label_fr\": \"Taureau\", \"speed\": 13.965274}], \"source_metadata\": {\"birth_date\": \"1974-04-24\", \"birth_latitude\": 48.8566, \"birth_longitude\": 2.3522, \"birth_place\": \"Paris, France\", \"birth_time\": \"11:00:00\", \"calculation_engine\": \"pyswisseph\", \"house_system\": \"Placidus\", \"julian_day_ut\": 2442161.91666667, \"swisseph_version\": \"2.10.03\", \"timezone\": \"Europe/Paris\", \"utc_datetime\": \"1974-04-24T10:00:00+00:00\"}, \"source_projection_id\": \"structured_facts_v1\"}, \"limits\": {\"forbidden_claims\": [\"prediction datee certaine\", \"diagnostic medical, legal, financier ou psychologique\", \"element astrologique absent des facts prompt-visible\"], \"missing_data\": {}, \"unavailable_sections\": [], \"uncertainty_notes\": [\"Aucun appel provider LLM n'a ete effectue; ce fichier s'arrete au payload pret pour handoff.\", \"Les interpretations intermediaires sont des indices de prompt, pas une reponse LLM finale.\"]}, \"shaping\": {\"editorial_depth_profile\": \"free_short\", \"llm_input_selection\": {\"allowed_fact_groups\": [\"luminaries\", \"dominants\", \"major_limits\"], \"section_codes\": [\"orientation_generale\", \"points_forts\", \"limite_de_lecture\", \"upgrade_hint\"]}, \"locale\": \"fr-FR\", \"module\": \"natal_theme\", \"output_expectations\": {\"max_output_tokens\": 4000, \"style\": \"prose fluide, non fataliste, sans prediction certaine\"}, \"plan\": \"free\", \"precision_level\": \"orientation\"}, \"signals\": {\"interpretation_hints\": [\"Double accent Taureau: stabilite, concretisation, rythme et rapport au corps.\", \"Ascendant Cancer: entree en relation protectrice et besoin de securite affective.\"], \"interpretive_signal_codes\": [\"ground_interpretation_in_visible_facts\", \"use_birth_time_dependent_angles_and_houses\", \"separate_symbolic_synthesis_from_prediction\"], \"masking_policy\": {\"suppress_audit_only_fields\": true, \"suppress_unverified_angles\": false, \"suppress_unverified_houses\": false}, \"readiness_flags\": {\"angles_ready\": true, \"birth_time_verified_by_user_input\": true, \"houses_ready\": true, \"natal_synthesis_ready\": true, \"provider_output_available\": false}, \"source_contract\": \"AINarrativeInputContract\"}}"
-    }
-  ],
-  "response_format": {
-    "type": "json_schema",
-    "json_schema": {
-      "strict": true,
-      "name": "AstroResponse_v1_free_example",
-      "schema": {
-        "type": "object",
-        "required": [
-          "title",
-          "summary",
-          "sections",
-          "highlights",
-          "advice",
-          "evidence"
-        ],
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "summary": {
-            "type": "string"
-          },
-          "sections": {
-            "type": "array"
-          },
-          "highlights": {
-            "type": "array"
-          },
-          "advice": {
-            "type": "array"
-          },
-          "evidence": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "additionalProperties": false
-      }
+    "section_budget": {
+      "max_sections": 4
+    },
+    "output_length_policy": {
+      "target": "concise",
+      "max_output_tokens": 1400
     }
   },
-  "provider_parameters": {
-    "temperature": 0.7,
-    "max_output_tokens": 4000,
-    "reasoning_effort": null,
-    "verbosity": null
+  "input_data": {
+    "birth_context": {
+      "chart_id": "chart-1",
+      "locale": "fr-FR",
+      "chart_type": "natal"
+    },
+    "astrological_facts": {
+      "source_owner": "ChartInterpretationInputBuilder",
+      "objects": [
+        {
+          "code": "mars",
+          "display_name": "Mars",
+          "sign_code": "aries",
+          "degree_in_sign": 15.0
+        }
+      ],
+      "houses": [
+        {
+          "code": "mars",
+          "house_number": 1
+        }
+      ],
+      "aspects": [
+        {
+          "code": "trine",
+          "participant_codes": [
+            "sun",
+            "moon"
+          ]
+        }
+      ],
+      "dominance": [
+        {
+          "code": "mars",
+          "score": 0.82
+        }
+      ]
+    },
+    "interpretation_material": {
+      "planet_sign_interpretations": [
+        {
+          "source_ref": "astral_planet_interpretation_profiles:mars-aries@v1",
+          "fact_ref": "object:mars:sign:aries",
+          "theme": "theme:mars-aries",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 1.07,
+          "selection_reason": "matched_calculated_fact:object:mars:sign:aries",
+          "interpretive_text": "Mars en Belier source"
+        }
+      ],
+      "planet_house_interpretations": [
+        {
+          "source_ref": "astral_house_interpretation_profiles:mars-house-1@v1",
+          "fact_ref": "object:mars:house:1",
+          "theme": "theme:mars-house-1",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 0.5,
+          "selection_reason": "matched_calculated_fact:object:mars:house:1",
+          "interpretive_text": "Mars maison 1 source"
+        }
+      ],
+      "aspect_interpretations": [
+        {
+          "source_ref": "astral_aspect_interpretation_profiles:aspect-conjunction@v1",
+          "fact_ref": "aspect:conjunction:sun-moon",
+          "theme": "theme:aspect-conjunction",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 1.5333,
+          "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
+          "interpretive_text": "Aspect source conjunction"
+        }
+      ],
+      "dominant_themes": [
+        {
+          "source_ref": "dominance_reference:dominance-mars@v1",
+          "fact_ref": "dominance:mars",
+          "theme": "theme:dominance-mars",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 1.07,
+          "selection_reason": "matched_calculated_fact:dominance:mars",
+          "interpretive_text": "Dominance Mars source"
+        }
+      ],
+      "tensions": [
+        {
+          "source_ref": "fixture_source_owner:tension-trine@v1",
+          "fact_ref": "aspect:trine:sun-moon",
+          "theme": "theme:tension-trine",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:trine:sun-moon",
+          "interpretive_text": "Texte source"
+        }
+      ],
+      "resources": [
+        {
+          "source_ref": "fixture_source_owner:resource-mars@v1",
+          "fact_ref": "aspect:conjunction:sun-moon",
+          "theme": "theme:resource-mars",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
+          "interpretive_text": "Texte source"
+        }
+      ],
+      "integration_levers": [
+        {
+          "source_ref": "fixture_source_owner:lever-mars@v1",
+          "fact_ref": "aspect:conjunction:sun-moon",
+          "theme": "theme:lever-mars",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
+          "interpretive_text": "Texte source"
+        }
+      ],
+      "warnings": [
+        {
+          "source_ref": "fixture_source_owner:warning-trine@v1",
+          "fact_ref": "aspect:trine:sun-moon",
+          "theme": "theme:warning-trine",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "risk": "surinterpretation",
+          "resource": "fact_source",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:trine:sun-moon",
+          "interpretive_text": "Texte source"
+        }
+      ]
+    },
+    "selected_themes": {
+      "selection_owner": "InterpretationMaterialBuilder",
+      "section_keys": [
+        "planet_sign_interpretations",
+        "planet_house_interpretations",
+        "aspect_interpretations",
+        "dominant_themes"
+      ],
+      "max_sections": 4
+    },
+    "limits": {
+      "missing_data": {
+        "empty_fact_groups": []
+      },
+      "unavailable_sections": [],
+      "uncertainty_policy": "state_limits_without_inventing_sources"
+    }
   },
-  "audit_excluded_from_prompt": [
-    "evidence",
-    "provenance",
-    "projection_hash",
-    "llm_input_hash",
-    "provider_response",
-    "observability",
-    "replay_snapshot",
-    "chart_json",
-    "natal_data"
-  ]
+  "output_contract": {
+    "response_contract_id": "theme_astral_response_contract_v1",
+    "response_contract_version": "v1",
+    "schema_ref": "theme_astral_response_contract_v1",
+    "required_sections": [
+      "title",
+      "summary",
+      "sections",
+      "evidence",
+      "contract_trace"
+    ],
+    "max_sections": 4
+  }
 }

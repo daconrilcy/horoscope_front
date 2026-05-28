@@ -34,7 +34,7 @@ from app.infra.db.models.llm.llm_prompt import (
 logger = logging.getLogger(__name__)
 
 THEME_ASTRAL_PROMPT_TEMPLATE = """
-Contrat de prompt: theme_astral_prompt_contract_v1.
+Contrat de prompt: theme_astral_prompt_v1.
 Langue: {{locale}}. Persona: {{persona_name}}.
 Entree contractuelle: {{theme_astral_llm_input_v1}}.
 Respecte runtime_contract, safety_contract, astrologer_voice, feature_context,

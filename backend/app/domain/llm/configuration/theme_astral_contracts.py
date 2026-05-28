@@ -15,7 +15,7 @@ from app.infra.db.models.llm.llm_prompt import PromptStatus
 THEME_ASTRAL_USE_CASE_KEY = "theme_astral"
 THEME_ASTRAL_FEATURE = "theme_astral"
 THEME_ASTRAL_SUBFEATURE = "prompt_contract"
-THEME_ASTRAL_PROMPT_CONTRACT_ID = "theme_astral_prompt_contract_v1"
+THEME_ASTRAL_PROMPT_CONTRACT_ID = "theme_astral_prompt_v1"
 THEME_ASTRAL_INPUT_CONTRACT_ID = "theme_astral_llm_input_v1"
 THEME_ASTRAL_RESPONSE_CONTRACT_ID = "theme_astral_response_contract_v1"
 THEME_ASTRAL_OUTPUT_SCHEMA_NAME = THEME_ASTRAL_RESPONSE_CONTRACT_ID
@@ -174,7 +174,7 @@ class ThemeAstralContractRef(BaseModel):
 class ThemeAstralActiveContractFamily(BaseModel):
     """Read model stable du contrat prompt theme astral actif."""
 
-    prompt_contract_id: Literal["theme_astral_prompt_contract_v1"]
+    prompt_contract_id: Literal["theme_astral_prompt_v1"]
     input_contract_id: Literal["theme_astral_llm_input_v1"]
     response_contract_id: Literal["theme_astral_response_contract_v1"]
     delivery_profile: dict[str, Any]
