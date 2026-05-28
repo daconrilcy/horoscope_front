@@ -2,7 +2,7 @@
 
 <!-- Commentaire global: ce rapport ferme les findings CS-377 par decision, correction, validation et risque residuel. -->
 
-Status: ready-to-review.
+Status: done.
 
 ## Liste des findings CS-377
 

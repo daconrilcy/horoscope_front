@@ -77,3 +77,14 @@ warning: in the working copy of '_condamad/stories/story-status.md', LF will be 
 ?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/06-validation-plan.md
 ?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/07-no-legacy-dry-guardrails.md
 ?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/10-final-evidence.md
+
+## review/fix current git status --short
+ M _condamad/reports/cs-378-corrections-review-adversariale-finale-theme-astral.md
+ M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/changed-paths.txt
+ M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/guardrails.txt
+ M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/re-review.txt
+ M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/validation.txt
+ M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/10-final-evidence.md
+ M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md
+ M _condamad/stories/story-status.md
+?? _condamad/run-state.json

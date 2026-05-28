@@ -20,3 +20,10 @@ PASS: no commercial plan label values or plan key in target provider payload dir
 
 ## Stale null birth context scan
 PASS: no stale null birth context values in target examples
+
+## Review/fix rerun placeholder scan
+PASS: no scoped stale placeholder tokens in docs/examples
+
+## Review/fix rerun target stale/carrier scan
+Initial broad scan included `intermediate-data.json`, where `free`, `basic`, and `premium` are expected profile keys.
+Corrected provider-only scan result: PASS, no commercial label values, `plan`, old carriers, or `legacy` token in the three provider payloads.

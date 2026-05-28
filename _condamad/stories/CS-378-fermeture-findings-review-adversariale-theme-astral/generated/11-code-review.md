@@ -1,10 +1,12 @@
-# Code Review Handoff - CS-378
+# Code Review - CS-378
 
-<!-- Commentaire global: ce handoff oriente la revue code sur les corrections et preuves CS-378. -->
+<!-- Commentaire global: cette revue fraiche verifie la cloture des corrections et preuves CS-378. -->
 
 ## Verdict
 
-READY FOR REVIEW.
+CLEAN.
+
+No actionable implementation issue remains open for CS-378.
 
 ## Review scope
 
@@ -20,15 +22,28 @@ READY FOR REVIEW.
 - Accepted risks: F-002 and F-003 have owner, justification and residual risk in the report.
 - Scope: no backend runtime, API, frontend, dependency, or migration change was introduced.
 
+## Findings
+
+None.
+
 ## Validation summary
 
-- `ruff check` PASS.
+- `ruff format --check . ../_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py`
+  PASS.
+- `ruff check . ../_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py`
+  PASS.
 - Targeted backend pytest PASS: 13 passed, 9 deselected.
 - Example validator PASS.
 - JSON parsing PASS for all three provider payloads.
 - Guard scans PASS/no matches on target examples and placeholders.
+- Fresh CS-378 report parser PASS: all CS-377 findings have decisions, no actionable Critical/High/Medium finding remains open, accepted risks have owner and justification.
+- `condamad_validate.py --final` PASS for the CS-378 capsule.
 
 ## Residual risks
 
 - Real provider smoke remains opt-in only.
 - Fixture-backed source families remain accepted and documented.
+
+## Propagation
+
+- no-propagation: the review/fix correction was local to CS-378 closure evidence and tracker status.

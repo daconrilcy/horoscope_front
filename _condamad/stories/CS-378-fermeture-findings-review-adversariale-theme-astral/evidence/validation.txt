@@ -1,5 +1,39 @@
 # Validation CS-378
 
+## review/fix rerun - ruff format check
+1715 files already formatted
+
+## review/fix rerun - ruff check
+All checks passed!
+
+## review/fix rerun - pytest targeted
+.............                                                            [100%]
+13 passed, 9 deselected in 1.13s
+
+## review/fix rerun - example validator
+PASS: expected deliverables present
+PASS: four JSON files parse successfully
+PASS: birth scenario 1973-04-24 11:00 Paris is present
+PASS: provider payload skeleton is shared by free/basic/premium
+PASS: interpretation_material and required blocks are non-empty
+PASS: interpretation_material includes DB-profile source refs
+PASS: source coverage documents DB and production-like fixture families
+PASS: density increases across provider profiles
+PASS: provider payload values are resolved and contain no placeholders
+PASS: generic CS-371 seeded phrases are absent
+PASS: commercial labels are absent from provider payload values
+PASS: persistent evidence files exist
+
+## review/fix rerun - JSON payload parsing
+JSON payload parsing PASS
+
+## review/fix rerun - CONDAMAD validation
+CONDAMAD validation: PASS
+
+## review/fix rerun - story validation and strict lint
+CONDAMAD story validation: PASS
+CONDAMAD story lint: PASS
+
 ## ruff check
 All checks passed!
 

@@ -5,12 +5,12 @@
 ## Story status
 
 - Validation outcome: PASS.
-- Ready for review: yes.
+- Ready for review: no; implementation review is clean.
 - Story key: CS-378-fermeture-findings-review-adversariale-theme-astral.
 - Source story: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/00-story.md`.
 - Source brief: `_story_briefs/cs-378-corriger-findings-review-adversariale-finale-theme-astral.md`.
 - Capsule path: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral`.
-- Tracker: `_condamad/stories/story-status.md` set to `ready-to-review` on 2026-05-29.
+- Tracker: `_condamad/stories/story-status.md` set to `done` on 2026-05-29 after clean implementation review.
 
 ## Preflight
 
@@ -114,6 +114,13 @@
 - Pre-existing dirty file before this run: untracked `_condamad/run-state.json`.
 - Accidental `_condamad/stories/cs-378` capsule created during preparation was removed immediately as tool-generated wrong-path output.
 - Final changed-path proof is persisted in `evidence/changed-paths.txt`.
+
+## Implementation review closure
+
+- Fresh review artifact: `generated/11-code-review.md`.
+- Verdict: CLEAN.
+- Findings: none.
+- Propagation: no-propagation; corrections are local to CS-378 closure evidence and tracker status.
 
 ## Remaining risks
 
