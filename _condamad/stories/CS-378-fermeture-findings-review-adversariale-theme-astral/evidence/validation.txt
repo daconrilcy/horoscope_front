@@ -1,0 +1,41 @@
+# Validation CS-378
+
+## ruff check
+All checks passed!
+
+## pytest targeted
+.............                                                            [100%]
+13 passed, 9 deselected in 1.12s
+
+## example validator
+PASS: expected deliverables present
+PASS: four JSON files parse successfully
+PASS: birth scenario 1973-04-24 11:00 Paris is present
+PASS: provider payload skeleton is shared by free/basic/premium
+PASS: interpretation_material and required blocks are non-empty
+PASS: interpretation_material includes DB-profile source refs
+PASS: source coverage documents DB and production-like fixture families
+PASS: density increases across provider profiles
+PASS: provider payload values are resolved and contain no placeholders
+PASS: generic CS-371 seeded phrases are absent
+PASS: commercial labels are absent from provider payload values
+PASS: persistent evidence files exist
+
+## json.tool payloads
+PASS json.tool _condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json
+PASS json.tool _condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json
+PASS json.tool _condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json
+
+## final capsule validation
+CONDAMAD validation: FAIL
+- Final evidence missing section: Preflight
+- Final evidence missing section: Capsule validation
+- Final evidence missing section: Files changed
+- Final evidence missing section: Files deleted
+- Final evidence missing section: Commands skipped or blocked
+- Final evidence missing section: Diff review
+- Final evidence missing section: Final worktree status
+- Final evidence missing AC validation table
+
+## final capsule validation rerun
+CONDAMAD validation: PASS

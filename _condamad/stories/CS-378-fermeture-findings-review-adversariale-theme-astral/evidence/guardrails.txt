@@ -1,0 +1,22 @@
+# Guardrails CS-378
+
+## RG-002 router boundary
+PASS: no theme_astral correction routed through backend/app/api
+
+## RG-022 collected paths
+PASS: targeted pytest paths collected and passed in validation.txt
+
+## Target examples commercial labels as values
+rg: _condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\*-provider-payload.json: IO error for operation on _condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\*-provider-payload.json: La syntaxe du nom de fichier, de répertoire ou de volume est incorrecte. (os error 123)
+
+## Target examples old carriers
+PASS: no old carriers or legacy token in target examples
+
+## Docs/examples placeholders
+PASS: no scoped stale placeholder tokens in docs/examples
+
+## Target examples commercial labels as values - corrected path
+PASS: no commercial plan label values or plan key in target provider payload directory
+
+## Stale null birth context scan
+PASS: no stale null birth context values in target examples

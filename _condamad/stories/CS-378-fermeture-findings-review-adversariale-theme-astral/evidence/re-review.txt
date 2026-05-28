@@ -1,0 +1,13 @@
+# Re-review CS-378
+Source CS-377 still contains the historical open verdict before correction; this artifact classifies it as baseline, not residual work.
+
+## CS-378 report scan
+11:| F-001 | Medium | bug / runtime-contract-drift | corrected | Les trois payloads provider officiels exposent maintenant `input_data.birth_context` avec `birth_date=1973-04-24`, `birth_time_local=11:00`, `Paris`, `France`, `Europe/Paris`, latitude `48.8566`, longitude `2.3522`, et `precision` vraie. Le README ne dit plus que le scenario complet reste hors payload provider. | Validateur d'exemples durci dans `_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py`; pytest provider payload builder, persistence, bigbang et guard architecture PASS. |
+12:| F-002 | Info | accepted risk / observability-gap | accepted residual risk | Aucun appel provider externe n'est lance sans opt-in explicite. La limitation reste documentee et ne bloque pas la fermeture des severites Critical/High/Medium. | Non applicable: le smoke provider credentiale reste hors scope sans opt-in et secrets. |
+19:| Critical | 0 | PASS |
+20:| High | 0 | PASS |
+21:| Medium | 0 | PASS |
+54:La re-review CS-378 ne trouve plus de finding actionable Critical, High ou Medium ouvert. F-001 est ferme par correction des exemples et validation deterministe. F-002 et F-003 restent des risques Info acceptes avec owner, justification et risque residuel.
+
+## Decision parser
+PASS: CS-377 findings have decisions, no actionable Critical/High/Medium remains open, accepted risks have owner and justification

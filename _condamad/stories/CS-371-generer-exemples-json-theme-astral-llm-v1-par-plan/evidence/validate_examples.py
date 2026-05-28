@@ -111,18 +111,22 @@ def _read_json(name: str) -> dict[str, Any]:
 def _assert_birth_context(
     intermediate: dict[str, Any], payloads: dict[str, dict[str, Any]]
 ) -> None:
-    """Verifie que le scenario de naissance est visible et auditable."""
+    """Verifie que le scenario de naissance est expose en champs structures."""
     birth_input = intermediate["birth_input"]
     assert birth_input["date"] == "1973-04-24"
     assert birth_input["time"] == "11:00"
     assert birth_input["place"] == "Paris"
     for payload in payloads.values():
-        serialized_birth_context = json.dumps(
-            payload["input_data"]["birth_context"], ensure_ascii=False
-        )
-        assert "1973-04-24" in serialized_birth_context
-        assert "11:00" in serialized_birth_context
-        assert "Paris" in serialized_birth_context
+        birth_context = payload["input_data"]["birth_context"]
+        assert birth_context["birth_date"] == birth_input["date"]
+        assert birth_context["birth_time_local"] == birth_input["time"]
+        assert birth_context["birth_place"]["city"] == birth_input["place"]
+        assert birth_context["birth_place"]["country"] == birth_input["country"]
+        assert birth_context["birth_place"]["timezone"] == birth_input["timezone"]
+        assert birth_context["birth_place"]["latitude"] == birth_input["latitude"]
+        assert birth_context["birth_place"]["longitude"] == birth_input["longitude"]
+        assert birth_context["precision"]["birth_time_known"] is True
+        assert birth_context["precision"]["coordinates_known"] is True
 
 
 def _assert_common_skeleton(payloads: dict[str, dict[str, Any]]) -> None:

@@ -1,49 +1,34 @@
-# Editorial Review - CS-378
+# Code Review Handoff - CS-378
+
+<!-- Commentaire global: ce handoff oriente la revue code sur les corrections et preuves CS-378. -->
 
 ## Verdict
 
-CLEAN.
+READY FOR REVIEW.
 
-## Review Scope
+## Review scope
 
-- Story: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/00-story.md`
-- Source brief: `_story_briefs/cs-378-corriger-findings-review-adversariale-finale-theme-astral.md`
-- Tracker row: `_condamad/stories/story-status.md`
-- Scoped guardrails: `RG-002`, `RG-022`
-- Upstream audit summary: `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1418/05-executive-summary.md`
-- Upstream finding register: `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1418/02-finding-register.md`
+- Correction report: `_condamad/reports/cs-378-corrections-review-adversariale-finale-theme-astral.md`.
+- Corrected examples: `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/*-provider-payload.json`.
+- Updated guard: `_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py`.
+- Evidence: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/**`.
 
-## Findings
+## Reviewer focus
 
-No actionable drafting issue remains.
+- F-001 closure: payloads expose structured Paris values in `input_data.birth_context`, not only in `chart_id`.
+- Validator strength: `_assert_birth_context` now checks structured values and precision booleans.
+- Accepted risks: F-002 and F-003 have owner, justification and residual risk in the report.
+- Scope: no backend runtime, API, frontend, dependency, or migration change was introduced.
 
-## Alignment Evidence
+## Validation summary
 
-- The story preserves the brief objective: close actionable CS-377 findings and prove final closure.
-- The story requires a CS-378 correction report with finding decisions, corrections, tests, commands, final result, and residual risks.
-- The story includes every in-scope primitive from the brief: CS-377 report reading, finding classification, code/tests/docs/examples corrections,
-  example regeneration when needed, lint/tests, targeted re-review, and closure note.
-- The story keeps provider LLM invocation out of scope unless explicitly opted in.
-- The latest upstream CS-377 audit has no Critical, High, Medium, or Low in-domain finding; it has one Info residual provider-runtime risk.
-- The story still requires classification and owner/justification for accepted findings, so the Info residual risk remains traceable.
-- `RG-002` and `RG-022` are applicable and cited with targeted backend and validation-path evidence.
+- `ruff check` PASS.
+- Targeted backend pytest PASS: 13 passed, 9 deselected.
+- Example validator PASS.
+- JSON parsing PASS for all three provider payloads.
+- Guard scans PASS/no matches on target examples and placeholders.
 
-## Validation Results
+## Residual risks
 
-- Command: activate venv, then run `condamad_story_validate.py` on the CS-378 story.
-  - Result: PASS.
-- Command: activate venv, then run `condamad_story_lint.py --strict` on the CS-378 story.
-  - Result: PASS.
-
-## Produced Artifacts
-
-- `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md`
-
-## Propagation
-
-No propagation required. The review created only local story-review evidence and found no reusable guardrail, AGENTS, validator, or skill update.
-
-## Residual Risk
-
-CS-378 implementation still depends on the CS-377 final audit artifact being used as the closure ledger source. Provider runtime invocation remains
-outside scope unless the user explicitly opts in, matching the source brief and CS-377 residual-risk evidence.
+- Real provider smoke remains opt-in only.
+- Fixture-backed source families remain accepted and documented.

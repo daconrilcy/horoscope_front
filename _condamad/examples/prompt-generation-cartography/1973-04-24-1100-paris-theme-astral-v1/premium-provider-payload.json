@@ -54,18 +54,18 @@
   "input_data": {
     "birth_context": {
       "chart_id": "birth:1973-04-24 11:00 Europe/Paris Paris France",
-      "birth_date": null,
-      "birth_time_local": null,
+      "birth_date": "1973-04-24",
+      "birth_time_local": "11:00",
       "birth_place": {
-        "city": null,
-        "country": null,
-        "timezone": null,
-        "latitude": null,
-        "longitude": null
+        "city": "Paris",
+        "country": "France",
+        "timezone": "Europe/Paris",
+        "latitude": 48.8566,
+        "longitude": 2.3522
       },
       "precision": {
-        "birth_time_known": false,
-        "coordinates_known": false
+        "birth_time_known": true,
+        "coordinates_known": true
       },
       "locale": "fr-FR",
       "chart_type": "natal"
@@ -927,13 +927,7 @@
     "limits": {
       "missing_data": {
         "empty_fact_groups": [],
-        "birth_context": [
-          "birth_date",
-          "birth_time_local",
-          "birth_place.city",
-          "birth_place.country",
-          "birth_place.timezone"
-        ]
+        "birth_context": []
       },
       "unavailable_sections": [],
       "uncertainty_policy": "state_limits_without_inventing_sources"
