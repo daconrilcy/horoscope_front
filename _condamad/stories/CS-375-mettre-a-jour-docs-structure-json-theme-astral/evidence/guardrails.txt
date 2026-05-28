@@ -1,0 +1,1 @@
+| RG-002 | `refactor-api-v1-routers` | Routeurs API v1 | Les routeurs API v1 doivent rester organises par responsabilite claire, sans deplacement opportuniste de logique metier dans la couche API. | Tests d'architecture routeurs + revue des imports et du diff des fichiers routeurs touches. |

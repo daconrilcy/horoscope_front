@@ -17,6 +17,8 @@
 
 The series is `Delivered` with residual risks documented. `_condamad/stories/story-status.md` marks all 11 story rows `done` as of 2026-05-28. The implemented development path moved from audit findings to architecture, persistence, material building, provider payload building, legacy-carrier removal, closure audits, documentation, and examples.
 
+Historical status after CS-372 to CS-375 corrections: this report remains the delivery record for `cs-361` to `cs-371`, but current `theme_astral` JSON documentation, depth names, structured `birth_context`, and example source-status wording are superseded by the corrected post-CS-371 documentation and examples.
+
 Audits explicitly performed in the series:
 
 - `cs-361`: read-only interpretive-text usage audit under `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1152/`; findings were 2 High and 2 Medium and produced candidates for `cs-363` through `cs-368`.

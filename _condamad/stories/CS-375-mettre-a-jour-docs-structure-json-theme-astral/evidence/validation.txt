@@ -1,0 +1,141 @@
+VALIDATION CS-375
+
+## VC1 forbidden doc scan
+PASS: no matches
+EXIT=0
+
+## VC2 required fields
+59:| `runtime_contract` | Identifie le contrat, sa version et les references prompt/assembly/schema/persona utilisables par le runtime sans exposer les details de trace. | CS-363, `theme_astral_contracts.py`, `theme_astral_provider_payload_builder.py` | LLM-visible pour le sous-ensemble contractuel; trace complete backend-only | `rg runtime_contract backend/app/domain/llm backend/tests` |
+64:| `input_data.birth_context` | Fournit le contexte de naissance normalise necessaire a la redaction: `birth_date`, `birth_time_local`, `birth_place.city`, `birth_place.country`, `birth_place.timezone`, coordonnees canoniques disponibles et flags `precision.birth_time_known` / `precision.coordinates_known`. `chart_id` reste un identifiant technique. | CS-366, CS-373, `ChartInterpretationInputRuntimeData`, `_birth_context` | LLM-visible | `rg birth_context backend/app/domain/llm backend/tests` |
+75:Le jeu canonique persiste en DB et transmis au provider est `essential`, `expanded` et `complete`. Les anciennes profondeurs de seed ne constituent pas des valeurs runtime actives.
+161:Ces liens restent la reference documentaire pour comparer `essential`, `expanded` et `complete` avec le squelette `theme_astral_llm_input_v1`.
+EXIT=0
+
+## VC3 example links
+149:Les exemples CS-371 disponibles sous `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/` sont des payloads provider locaux et sans appel LLM reel. Leur statut de source est `mixed`: les familles planetes, maisons et aspects reutilisent des sources DB locales seedees avec des textes representatifs `production-like`, tandis que les familles dominantes, tensions, ressources, leviers et avertissements restent des fixtures `production-like` explicites. Aucune fixture n'est presentee comme donnees de production reelles.
+155:- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md`
+156:- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/structure-comparison.md`
+157:- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json`
+158:- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json`
+159:- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json`
+EXIT=0
+
+## VC4 source labels
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:10:- Nature des sources: mixte. Les familles planetes, maisons et aspects proviennent de profils DB locaux seedes avec des textes production-like representatifs; les familles dominantes, tensions, ressources, leviers et avertissements restent des fixtures production-like explicites car aucune table applicative dediee ne les porte aujourd'hui.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:25:- Propriete fixture: `theme_astral_production_like_fixture` pour les sections `dominant_themes`, `tensions`, `resources`, `integration_levers`, et `warnings`.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:26:- Aucun texte fixture n'est presente comme contenu production reel; la couverture source dans `intermediate-data.json` indique le mixte DB locale seedee / production-like.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:25:  "interpretation_material",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:31:`birth_context` contient les champs structures `birth_date`, `birth_time_local` et `birth_place`; `interpretation_material` conserve les `source_ref` DB ou `production-like` selon la famille de source.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:41:La densite de `interpretation_material` suit les budgets du builder: les profils plus riches selectionnent davantage de sources et gardent les `source_ref` DB ou production-like explicites.
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:11:Sources principales: `_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1152/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1203/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1409/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1418/`, `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`, `backend/app/domain/llm/configuration/theme_astral_contracts.py`, `backend/app/domain/astrology/interpretation/interpretation_material_builder.py`, `backend/app/domain/astrology/interpretation/interpretation_material_contracts.py`, `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`, `backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py`.
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:29:| Source-traceable backend | `source_ref`, `fact_ref`, versions de source, famille de source, raison de selection | Utilise pour prouver la provenance; seuls les extraits utiles ou hints passent dans `interpretation_material` | `interpretation_material_contracts.py`, `interpretation_material_builder.py` |
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:45:    "interpretation_material": {},
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:66:| `input_data.interpretation_material` | Fournit les textes, hints ou signaux interpretatifs source-attribues depuis les tables et owners runtime. | CS-365, CS-366, `InterpretationMaterialBuilder`, contrats de materiau | LLM-visible avec provenance source-traceable backend | `rg interpretation_material backend/app/domain backend/tests` |
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:91:- reconstruire `interpretation_material` dans le prompt au lieu de reutiliser le builder source-attribue;
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:123:  SourceTrace["Source-traceable backend: source_ref, fact_ref, source versions"] --> Material["interpretation_material excerpts and hints"]
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:138:- Le squelette canonique contient `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data.birth_context`, `input_data.astrological_facts`, `input_data.interpretation_material`, `input_data.selected_themes`, `input_data.limits` et `output_contract`.
+_condamad\docs\prompt-generation-cartography\theme-astral-llm-json-structure-v1.md:149:Les exemples CS-371 disponibles sous `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/` sont des payloads provider locaux et sans appel LLM reel. Leur statut de source est `mixed`: les familles planetes, maisons et aspects reutilisent des sources DB locales seedees avec des textes representatifs `production-like`, tandis que les familles dominantes, tensions, ressources, leviers et avertissements restent des fixtures `production-like` explicites. Aucune fixture n'est presentee comme donnees de production reelles.
+EXIT=0
+
+## VC5 doc exists
+EXIT=0
+
+## VC6 example paths exist
+checked 5 example paths
+EXIT=0
+
+## VC6b mermaid block count
+mermaid blocks 2
+EXIT=0
+
+## VC8 protected app status
+protected app surfaces unchanged
+EXIT=0
+
+## VC9 payload status
+provider payload json unchanged
+EXIT=0
+
+## VC11 ruff format backend
+1713 files left unchanged
+EXIT=0
+
+## VC12 ruff check backend
+All checks passed!
+EXIT=0
+
+## VC13 pytest backend
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+........................................................................ [ 16%]
+........................................................................ [ 18%]
+........................................................................ [ 20%]
+........................................................................ [ 22%]
+........................................................................ [ 24%]
+........................................................................ [ 26%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+................................s....................................... [ 34%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 41%]
+........................................................................ [ 43%]
+........................................................................ [ 45%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 61%]
+........................................................................ [ 63%]
+........................................................................ [ 65%]
+........................................................................ [ 67%]
+........................................................................ [ 69%]
+........................................................................ [ 71%]
+........................................................................ [ 73%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 82%]
+........................................................................ [ 84%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 92%]
+........................................................................ [ 94%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+..................................................                       [100%]
+3505 passed, 1 skipped, 1235 deselected in 234.26s (0:03:54)
+EXIT=0
+
+## capsule validation
+CONDAMAD validation: PASS
+EXIT=0
+
+## VC10 validation file exists
+validation evidence exists
+EXIT=0
+
+## post-evidence capsule validation
+CONDAMAD validation: PASS
+EXIT=0
+
+## git diff check
+warning: in the working copy of '_condamad/docs/prompt-generation-cartography/theme-astral-llm-json-structure-v1.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/structure-comparison.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/reports/cs-361-cs-362-cs-363-cs-364-cs-365-cs-366-cs-367-cs-368-cs-369-cs-370-cs-371-delivery-report.md', LF will be replaced by CRLF the next time Git touches it
+EXIT=0
+
+## final capsule validation
+CONDAMAD validation: PASS
+EXIT=0

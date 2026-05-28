@@ -1,0 +1,2 @@
+PROTECTED SURFACES CS-375
+PASS: no protected surface output means unchanged.

@@ -28,6 +28,8 @@ Les trois payloads partagent les memes cles `input_data`:
 ]
 ```
 
+`birth_context` contient les champs structures `birth_date`, `birth_time_local` et `birth_place`; `interpretation_material` conserve les `source_ref` DB ou `production-like` selon la famille de source.
+
 ## Differences de densite
 
 | Profil backend | depth LLM-visible | objets | aspects | sections selectionnees | max sections sortie | max output tokens |

@@ -144,6 +144,18 @@ Source: audits CS-361/CS-362/CS-368/CS-369 and backend payload boundary tests.
 - Les preuves techniques et audits restent hors payload.
 - Aucun appel provider LLM reel n'a ete effectue.
 
+## Statut des sources d'exemple
+
+Les exemples CS-371 disponibles sous `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/` sont des payloads provider locaux et sans appel LLM reel. Leur statut de source est `mixed`: les familles planetes, maisons et aspects reutilisent des sources DB locales seedees avec des textes representatifs `production-like`, tandis que les familles dominantes, tensions, ressources, leviers et avertissements restent des fixtures `production-like` explicites. Aucune fixture n'est presentee comme donnees de production reelles.
+
 ## Liens vers les exemples complets CS-371
 
-CS-371 est le owner des exemples complets par profil de livraison. Cette page ne produit pas ces payloads complets; elle fixe seulement la lecture du squelette, des blocs, des sources et des frontieres. Quand CS-371 sera implemente, les exemples devront pointer vers ce document pour rester alignes avec `theme_astral_llm_input_v1`.
+CS-371 est le owner des exemples complets par profil de livraison. Cette page ne produit pas ces payloads complets; elle fixe seulement la lecture du squelette, des blocs, des sources et des frontieres. Les artefacts existants a verifier sont:
+
+- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md`
+- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/structure-comparison.md`
+- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json`
+- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json`
+- `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json`
+
+Ces liens restent la reference documentaire pour comparer `essential`, `expanded` et `complete` avec le squelette `theme_astral_llm_input_v1`.
