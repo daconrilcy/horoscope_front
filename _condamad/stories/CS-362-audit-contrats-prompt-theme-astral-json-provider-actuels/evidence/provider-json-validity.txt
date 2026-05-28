@@ -1,0 +1,16 @@
+CS-362 provider JSON validity evidence
+
+Result: PASS
+Command class: venv-activated JSON parser checks
+
+Validated files:
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/free-provider-payload.json: valid outer JSON
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/basic-provider-payload.json: valid outer JSON
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/premium-provider-payload.json: valid outer JSON
+
+Nested user message parsing:
+- User message prefix `llm_astrology_input_v1:` was stripped before parsing.
+- Parsed root blocks are stable across the three plans: facts, limits, shaping, signals.
+
+Limitation:
+- This evidence validates static example payloads only. No real provider call was made.

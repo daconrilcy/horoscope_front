@@ -1,0 +1,35 @@
+CS-362 provider JSON structure comparison evidence
+
+Result: PASS
+Audited files:
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/free-provider-payload.json
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/basic-provider-payload.json
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/premium-provider-payload.json
+
+Top-level keys:
+- Stable across all plans: use_case, plan, mode, provider_call_performed, generation_kind, model, messages, response_format, provider_parameters, audit_excluded_from_prompt
+
+Message envelope:
+- free: 3 messages, roles system/developer/user
+- basic: 4 messages, roles system/developer/developer/user
+- premium: 4 messages, roles system/developer/developer/user
+- Conclusion: message envelope is structurally divergent.
+
+Nested user payload:
+- Stable root blocks: facts, limits, shaping, signals
+- Stable audited key families: facts, signals, limits, shaping, response_format schema properties, provider_parameters
+
+Quantity comparison:
+- facts.positions: free 2, basic 7, premium 11
+- facts.houses: free 0, basic 4, premium 12
+- facts.major_aspects: free 3, basic 8, premium 14
+- facts.dominants: free 1, basic 2, premium 3
+- signals.interpretation_hints: free 2, basic 3, premium 4
+- signals.interpretive_signal_codes: free 3, basic 3, premium 5
+- shaping.llm_input_selection.allowed_fact_groups: free 3, basic 7, premium 8
+- shaping.llm_input_selection.section_codes: free 4, basic 5, premium 9
+
+Contract conclusion:
+- The broad claim that top-level and nested structures are not stable is invalid for the main JSON key families.
+- The claim remains valid for the `messages` envelope.
+- Plan-specific value and quantity differences must be preserved as delivery variability, not treated as structural drift.

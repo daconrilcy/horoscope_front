@@ -1,0 +1,16 @@
+CS-362 validation evidence
+
+Result: PASS
+Python execution rule: every Python validation command was executed after activating .\.venv\Scripts\Activate.ps1.
+
+Domain audit validator:
+- Command: python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/theme-astral-prompt-contract/2026-05-28-1203
+- Result: CONDAMAD domain audit validation passed.
+
+Domain audit lint:
+- Command: python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/theme-astral-prompt-contract/2026-05-28-1203
+- Result: CONDAMAD domain audit lint passed.
+
+Manual targeted review result:
+- The audit is aligned with CS-362 brief/story objectives, ACs, non-goals and constraints after evidence persistence correction.
+- No provider JSON, backend runtime, backend tests, frontend files, migrations, prompt docs, or prompt seed files were modified.

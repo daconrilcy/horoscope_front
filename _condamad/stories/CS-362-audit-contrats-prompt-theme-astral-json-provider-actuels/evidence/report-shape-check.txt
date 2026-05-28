@@ -1,0 +1,35 @@
+CS-362 report shape check evidence
+
+Result: PASS
+Reviewed audit folder: _condamad/audits/theme-astral-prompt-contract/2026-05-28-1203
+
+Specialized report:
+- _condamad/audits/theme-astral-prompt-contract/2026-05-28-1203/02-audit-json-provider-theme-astral-actuels.md: present
+
+Mandatory sections present:
+- Executive summary
+- Tableau comparatif free/basic/premium
+- Divergences structurelles
+- Divergences de quantite de donnees
+- Donnees inutiles ou backend-only
+- Donnees manquantes pour la redaction
+- Incoherences de prompt
+- Matrice keep / move backend-only / replace / drop-from-provider-payload
+- Recommandations pour CS-363
+
+Required comparison axes present:
+- Plan
+- Surface
+- Structure status
+- Value status
+- LLM visibility
+- Evidence
+- CS-363 recommendation
+
+Standard CONDAMAD domain-audit artifacts present:
+- 00-audit-report.md
+- 01-evidence-log.md
+- 02-finding-register.md
+- 03-story-candidates.md
+- 04-risk-matrix.md
+- 05-executive-summary.md

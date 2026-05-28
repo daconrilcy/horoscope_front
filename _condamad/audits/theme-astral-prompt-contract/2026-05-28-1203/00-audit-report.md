@@ -6,6 +6,8 @@ Status: `open`.
 
 The audited domain is the read-only contract shape of the current natal provider JSON payloads for plans `free`, `basic`, and `premium`. No provider JSON, backend runtime, backend tests, frontend files, migrations, prompt docs, or prompt seeds were changed.
 
+CS-362 execution status: complete. The `open` domain status means remediation findings are intentionally routed to downstream architecture/implementation stories (CS-363/CS-366), not that the CS-362 audit deliverable is incomplete.
+
 ## Prior Audit And Story History Consulted
 
 | Item | Status | Evidence | Current classification |
@@ -154,4 +156,4 @@ The current `basic` payload confirms the brief risk: its first developer message
 
 ## Validation Plan
 
-Python validation commands must run after `.\.venv\Scripts\Activate.ps1`. This audit validated the JSON examples, executed the domain-auditor validation/lint scripts, and ran targeted scans listed in `01-evidence-log.md`.
+Python validation commands must run after `.\.venv\Scripts\Activate.ps1`. This audit validated the JSON examples, executed the domain-auditor validation/lint scripts, ran targeted scans listed in `01-evidence-log.md`, and persisted CS-362 story evidence under `_condamad/stories/CS-362-audit-contrats-prompt-theme-astral-json-provider-actuels/evidence/` (E-012, E-013).

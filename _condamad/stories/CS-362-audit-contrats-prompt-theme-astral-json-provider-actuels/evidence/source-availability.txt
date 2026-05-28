@@ -1,0 +1,26 @@
+CS-362 source availability evidence
+
+Result: PASS
+Audit folder reviewed: _condamad/audits/theme-astral-prompt-contract/2026-05-28-1203
+
+Required story and brief sources:
+- _condamad/stories/CS-362-audit-contrats-prompt-theme-astral-json-provider-actuels/00-story.md: present
+- _story_briefs/cs-362-audit-contrats-prompt-theme-astral-json-provider-actuels.md: present
+
+Required provider and context sources:
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/free-provider-payload.json: present
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/basic-provider-payload.json: present
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/premium-provider-payload.json: present
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/intermediate-data.json: present
+- _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md: present
+- backend/app/domain/llm/runtime/gateway.py: present
+- backend/app/ops/llm/bootstrap/seed_29_prompts.py: present
+- backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py: present
+
+Protected application surfaces:
+- backend/app/**: not modified by CS-362 audit review
+- backend/tests/**: not modified by CS-362 audit review
+- frontend/src/**: not modified by CS-362 audit review
+- backend/migrations/**: not modified by CS-362 audit review
+- _condamad/examples/prompt-generation-cartography/**: not modified by CS-362 audit review
+- _condamad/docs/prompt-generation-cartography/**: not modified by CS-362 audit review

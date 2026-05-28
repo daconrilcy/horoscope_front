@@ -13,6 +13,8 @@
 | E-009 | test-guard-inventory | `rg --files` inventory filtered to the three LLM astrology input boundary test names | backend prompt boundary tests | PASS | Inventory only until targeted tests are executed. |
 | E-010 | json-validity | Venv command: `python -m json.tool` for `free-provider-payload.json`, `basic-provider-payload.json`, `premium-provider-payload.json` | provider payload examples | PASS | Validates outer JSON files; user content JSON was separately parsed in E-004. |
 | E-011 | status-baseline | `git status --short` before artifact creation | repository root | PASS | Pre-existing untracked `_condamad/run-state.json`; no app source delta observed before audit writing. |
+| E-012 | persistent-story-evidence | Review-created evidence files under `_condamad/stories/CS-362-audit-contrats-prompt-theme-astral-json-provider-actuels/evidence/` | source availability, JSON validity, structure comparison, report shape, validation evidence | PASS | Evidence is persisted as story governance artifacts; no application source was changed. |
+| E-013 | domain-audit-validation | Venv commands: `condamad_domain_audit_validate.py` and `condamad_domain_audit_lint.py` on this audit folder | `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1203` | PASS | `--explain-audit` was not needed because validation and lint passed. |
 
 ## Reproducible E-004/E-005 summary
 
