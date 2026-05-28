@@ -144,3 +144,4 @@
 | cs-362 | `_story_briefs\cs-362-audit-contrats-prompt-theme-astral-json-provider-actuels.md` | `_condamad\stories\cs-362-audit-contrats-prompt-theme-astral-json-provider-actuels\00-story.md` |
 | cs-363 | `_story_briefs\cs-363-archi-contrat-theme-astral-llm-input-v1-et-provider-payload.md` | `_condamad\stories\cs-363-archi-contrat-theme-astral-llm-input-v1-provider-payload\00-story.md` |
 | cs-364 | `_story_briefs\cs-364-definir-persistence-versionnee-contrats-prompt-theme-astral.md` | `_condamad\stories\cs-364-definir-persistence-versionnee-contrats-prompt-theme-astral\00-story.md` |
+| cs-365 | `_story_briefs\cs-365-implementer-interpretation-material-builder-theme-astral.md` | `_condamad\stories\cs-365-interpretation-material-builder-theme-astral\00-story.md` |
