@@ -154,3 +154,4 @@
 | cs-372 | `_story_briefs\cs-372-aligner-delivery-profiles-db-provider-theme-astral.md` | `_condamad\stories\cs-372-aligner-profils-livraison-theme-astral-db-provider\00-story.md` |
 | cs-373 | `_story_briefs\cs-373-structurer-birth-context-theme-astral-llm-input-v1.md` | `_condamad\stories\cs-373-structurer-birth-context-theme-astral-llm-input\00-story.md` |
 | cs-374 | `_story_briefs\cs-374-renforcer-exemples-json-theme-astral-avec-textes-interpretation-reels.md` | `_condamad\stories\cs-374-renforcer-exemples-json-theme-astral-textes-interpretation\00-story.md` |
+| cs-375 | `_story_briefs\cs-375-mettre-a-jour-docs-structure-json-theme-astral-apres-corrections.md` | `_condamad\stories\cs-375-mettre-a-jour-docs-structure-json-theme-astral\00-story.md` |
