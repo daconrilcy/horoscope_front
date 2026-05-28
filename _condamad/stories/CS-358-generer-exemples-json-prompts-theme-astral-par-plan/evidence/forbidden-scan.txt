@@ -56,8 +56,16 @@ _condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-
 _condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:28:      "name": "natal_theme_free_example",
 
 VC5 forbidden marker scan
-_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:69:    "provider_response",
-_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:62:    "provider_response",
-_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:69:    "provider_response",
-PASS_WITH_LIMITATIONS: matches are required audit_excluded_from_prompt labels; no provider result body, token, or key material is present.
-PASS provider_response only validated as required audit exclusion label
+Command:
+rg -n "api_key|OPENAI_API_KEY|sk-|Bearer|credential|secret" _condamad/examples/prompt-generation-cartography/1973-04-24-paris
+Result: PASS, no matches.
+
+Provider-response boundary check
+Command:
+python -B -c "<provider_response exclusion-label assertion>"
+Result: PASS.
+
+Assertion details:
+- `provider_response` is present exactly once in each `audit_excluded_from_prompt` list.
+- `provider_response` is absent from every provider `messages[*].content` field.
+- No provider result body, token, API key, Bearer marker, credential wording, or secret marker is present in the example folder.

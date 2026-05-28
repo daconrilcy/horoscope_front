@@ -1,4 +1,4 @@
-# Editorial Review - CS-358 generer-exemples-json-prompts-theme-astral-par-plan
+# Implementation Review - CS-358 generer-exemples-json-prompts-theme-astral-par-plan
 
 Verdict: CLEAN
 
@@ -6,29 +6,58 @@ Verdict: CLEAN
 
 - Target story: `_condamad/stories/CS-358-generer-exemples-json-prompts-theme-astral-par-plan/00-story.md`
 - Source brief: `_story_briefs/cs-358-generer-exemples-json-prompts-theme-astral-par-plan.md`
-- Tracker row: `_condamad/stories/story-status.md`, source column matching the brief.
+- Tracker row: `_condamad/stories/story-status.md`, path and source columns matching the target story and brief.
+- Implementation artifacts: `_condamad/examples/prompt-generation-cartography/1973-04-24-paris/**`
+- Evidence reviewed: CS-358 `generated/10-final-evidence.md` and `evidence/**`.
 - Guardrails checked by targeted ID lookup: `RG-002`, `RG-022`.
+
+## Iterations
+
+- Iteration 1: CHANGES_REQUESTED. AC10 evidence was recorded as `PASS_WITH_LIMITATIONS` because the raw forbidden scan matched the
+  required `provider_response` exclusion label.
+- Iteration 2: CLEAN. The evidence now separates forbidden secret/token markers from the provider-response boundary assertion and proves
+  `provider_response` is absent from prompt messages while present only in `audit_excluded_from_prompt`.
 
 ## Review Result
 
-No actionable drafting issue remains.
+No actionable implementation issue remains.
 
-The story explicitly covers the brief objective, included scope, out-of-scope boundaries, required files, required JSON keys,
-plan differentiation, missing birth-time convention, no-provider-call proof, forbidden provider artifacts, and validation evidence.
+The final artifacts cover the brief objective, required example files, required JSON keys, distinct plan payloads, missing birth-time
+convention, no-provider-call proof, prompt-visible boundary, audit-only exclusions, forbidden provider artifacts, guardrail evidence, and
+story-status closure.
 
 ## Validation Results
 
-- `.\.venv\Scripts\Activate.ps1`
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py <target-story>`
-  - Result: PASS
-- `.\.venv\Scripts\Activate.ps1`
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict <target-story>`
-  - Result: PASS
+- `rg -n "api_key|OPENAI_API_KEY|sk-|Bearer|credential|secret" _condamad/examples/prompt-generation-cartography/1973-04-24-paris`
+  - Result: PASS, no forbidden marker matches.
+- `python -B -c "<provider_response exclusion-label assertion>"`
+  - Result: PASS.
+- `python -B -c "<json shape, distinct payloads, roles, boundary, exclusions assertion>"`
+  - Result: PASS.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-358-generer-exemples-json-prompts-theme-astral-par-plan`
+  - Result: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-358-generer-exemples-json-prompts-theme-astral-par-plan\00-story.md`
+  - Result: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-358-generer-exemples-json-prompts-theme-astral-par-plan\00-story.md`
+  - Result: PASS.
+- `python -B -m pytest -q backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py --tb=short`
+  - Result: PASS, 4 passed.
+- `python -B -m pytest -q backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py --tb=short`
+  - Result: PASS, 9 passed.
+- `python -B -m pytest -q backend/tests/evaluation/test_differentiation.py --tb=short`
+  - Result: PASS, 2 passed.
+- `ruff check backend`
+  - Result: PASS.
+- `git status --short backend/app frontend/src`
+  - Result: PASS, no runtime or frontend source delta.
 
-## Produced Artifacts
+All Python, pytest, and ruff commands were run after activating `.\.venv\Scripts\Activate.ps1`.
 
-- `_condamad/stories/CS-358-generer-exemples-json-prompts-theme-astral-par-plan/generated/11-code-review.md`
+## Closure
+
+- `_condamad/stories/story-status.md` set to `done` for `CS-358`.
+- Propagation: no-propagation; the correction was local evidence clarification for this story.
 
 ## Residual Risk
 
-The implementation must still prove that generated examples contain no provider response, secret, or audit-only prompt-visible data.
+Aucun risque restant identifie.

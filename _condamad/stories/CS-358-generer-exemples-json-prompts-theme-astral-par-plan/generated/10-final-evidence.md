@@ -2,11 +2,11 @@
 
 ## Story status
 
-- Status: `ready-to-review`
+- Status: `done`
 - Story key: `CS-358-generer-exemples-json-prompts-theme-astral-par-plan`
 - Source story: `_condamad/stories/CS-358-generer-exemples-json-prompts-theme-astral-par-plan/00-story.md`
 - Source brief: `_story_briefs/cs-358-generer-exemples-json-prompts-theme-astral-par-plan.md`
-- Story registry: `_condamad/stories/story-status.md` updated to `ready-to-review` on `2026-05-28`.
+- Story registry: `_condamad/stories/story-status.md` updated to `done` on `2026-05-28` after a clean implementation review.
 
 ## Preflight
 
@@ -31,7 +31,7 @@
 | AC7 | Required audit exclusion labels live outside prompt content. | Python assertion confirms required `audit_excluded_from_prompt` fields. | PASS |
 | AC8 | README and JSON document `12:00:00`, `Europe/Paris`, and the missing-time convention. | Positive marker scan finds `12:00:00`, `Europe/Paris`, and `synthetic_example`. | PASS |
 | AC9 | README includes generation method and source alignment. | Positive marker scan finds `synthetic_example` in README. | PASS |
-| AC10 | No provider result body, token, API key, Bearer marker, credential wording, or access material is present; `provider_response` appears only as a required exclusion label. | Forbidden scan plus Python exclusion-label assertion in `evidence/forbidden-scan.txt`. | PASS_WITH_LIMITATIONS |
+| AC10 | No provider result body, token, API key, Bearer marker, credential wording, or access material is present; `provider_response` appears only as a required exclusion label. | Forbidden scan plus Python exclusion-label assertion in `evidence/forbidden-scan.txt`. | PASS |
 
 ## Files changed
 
@@ -98,7 +98,13 @@
 ## Remaining risks
 
 - The provider parameter/model values are placeholders, not live runtime extraction. This is documented in README because the story forbids provider access and does not require live config extraction.
-- The forbidden scan contract conflicts with AC7 on `provider_response`; evidence classifies this as required exclusion-label usage only.
+
+## Review/fix correction
+
+- Iteration 1 finding fixed: AC10 was recorded as `PASS_WITH_LIMITATIONS` because a raw forbidden scan matched the required
+  `provider_response` exclusion label.
+- Correction: `evidence/forbidden-scan.txt` now separates secret/token markers from the provider-response boundary assertion and records
+  a strict PASS proving `provider_response` is absent from prompt message content and present only as the required exclusion label.
 
 ## Suggested reviewer focus
 
