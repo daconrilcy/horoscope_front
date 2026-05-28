@@ -156,3 +156,4 @@
 | cs-374 | `_story_briefs\cs-374-renforcer-exemples-json-theme-astral-avec-textes-interpretation-reels.md` | `_condamad\stories\cs-374-renforcer-exemples-json-theme-astral-textes-interpretation\00-story.md` |
 | cs-375 | `_story_briefs\cs-375-mettre-a-jour-docs-structure-json-theme-astral-apres-corrections.md` | `_condamad\stories\cs-375-mettre-a-jour-docs-structure-json-theme-astral\00-story.md` |
 | cs-376 | `_story_briefs\cs-376-ajouter-validation-provider-smoke-theme-astral-sans-production.md` | `_condamad\stories\cs-376-validation-provider-smoke-theme-astral\00-story.md` |
+| cs-377 | `_story_briefs\cs-377-audit-review-adversariale-complete-theme-astral-prompt-contract-final.md` | `_condamad\stories\cs-377-audit-review-adversariale-complete-theme-astral-prompt-contract-final\00-story.md` |
