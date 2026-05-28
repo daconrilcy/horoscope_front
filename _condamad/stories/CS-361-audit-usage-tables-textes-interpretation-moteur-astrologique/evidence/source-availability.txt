@@ -1,0 +1,18 @@
+CS-361 source availability
+
+PASS - Required story and brief read:
+- _condamad/stories/CS-361-audit-usage-tables-textes-interpretation-moteur-astrologique/00-story.md
+- _story_briefs/cs-361-audit-usage-tables-textes-interpretation-moteur-astrologique.md
+
+PASS - Required roots inspected or scanned:
+- _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris
+- _condamad/examples/prompt-generation-cartography/1973-04-24-paris
+- _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md
+- backend/app/domain/astrology
+- backend/app/services
+- backend/app/infra/db/models
+- backend/app/infra/db/repositories
+- backend/app/ops
+- backend/migrations/versions
+- docs/recherches astro
+- backend/tests

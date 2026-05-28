@@ -1,0 +1,37 @@
+CS-361 validation output
+
+Environment:
+- PASS - `.venv\Scripts\Activate.ps1` existed and was activated before all Python and Pytest commands.
+
+Audit validator:
+- PASS - `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152`
+- Output: `CONDAMAD domain audit validation passed.`
+
+Audit lint:
+- PASS - `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152`
+- Output: `CONDAMAD domain audit lint passed.`
+
+Story shape scans:
+- PASS - `rg -n "Executive summary|Inventaire des sources de textes|Story candidates" _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152`
+- PASS - `rg -n "used|unused|legacy|test-only|seed-only|admin-only|unknown" _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152`
+- PASS - `rg -n "free|basic|premium|provider payload|interpretation_hints" _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152 _condamad/examples`
+- PASS - `rg -n "LLMAstrologyInputV1Builder|ClientInterpretationProjectionV1Builder|LLMGateway|provider" _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152`
+- PASS - `rg -n "CS-363|CS-364|CS-365|CS-366|CS-367|CS-368" _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152`
+
+Targeted tests:
+- PASS - `pytest -q backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py`
+- Output: `9 passed in 5.69s`
+- PASS - `pytest -q backend/tests/llm_orchestration/test_llm_astrology_input_boundaries.py`
+- Output: `4 passed in 2.68s`
+
+Read-only guards:
+- PASS - `git diff --quiet -- backend/app backend/tests frontend/src backend/migrations`
+- Output: `app diff guard PASS`
+
+Skipped:
+- `ruff format .` skipped because formatters modify files and are forbidden for this read-only domain audit.
+- Full `pytest -q` skipped because CS-361 did not change application code; targeted tests and audit artifact validators were run.
+- Full `ruff check .` skipped because no application code was changed and audit deliverables are Markdown/evidence artifacts.
+
+Limitation:
+- `_condamad/docs/prompt-generation-cartography/**` and `_condamad/examples/prompt-generation-cartography/**` were already dirty or untracked before this audit. They were inspected as evidence but not edited by this run.

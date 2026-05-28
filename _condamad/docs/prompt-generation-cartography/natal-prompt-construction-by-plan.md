@@ -121,6 +121,12 @@ Commandes deterministes prevues pour cette documentation:
 
 Ces commandes ne font pas d'appel provider LLM reel.
 
+## Exemple rejoue avec donnees utilisateur completes
+
+Les exemples JSON de handoff provider ont ete rejoues avec les donnees utilisateur completes: naissance le `1974-04-24` a `11:00:00`, `Paris, France`, timezone `Europe/Paris`. Les artefacts sont disponibles dans `_condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/`.
+
+Ces fichiers remplacent l'ancien scenario documentaire sans heure de naissance. Ils contiennent des valeurs calculees localement via `pyswisseph`, des prompts developer rendus avec les placeholders resolus, et `provider_call_performed=false`.
+
 ## Risques residuels et questions ouvertes
 
 - Le texte exact de `system_core`, developer prompt, plan rules et persona doit etre `a extraire depuis la configuration runtime`; ce document n'en invente pas la formulation.

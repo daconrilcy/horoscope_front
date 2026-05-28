@@ -1,0 +1,11 @@
+CS-361 provider JSON comparison
+
+Command used:
+- rg -n "free|basic|premium|provider payload|interpretation_hints|developer|user|response_format|provider_parameters" _condamad/examples/prompt-generation-cartography _condamad/docs/prompt-generation-cartography -g "*.json" -g "*.md"
+
+Summary:
+- PASS - 1974-04-24-1100-paris has free, basic and premium provider payload examples.
+- PASS - 1973-04-24-paris has free, basic and premium provider payload examples.
+- PASS - provider_call_performed=false is documented for local examples.
+- PASS - examples include llm_astrology_input_v1 and compact interpretation_hints.
+- FAIL for rich text reachability - examples do not prove table-derived house/planet/aspect/profile prose reaches provider payload.

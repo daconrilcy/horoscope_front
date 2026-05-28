@@ -2026,6 +2026,6 @@
   "data_quality_warnings": [
     "Ces fichiers ne sont pas une réponse LLM finale.",
     "Les champs evidence/provenance restent hors prompt provider.",
-    "Ce dossier est conservé comme chemin historique; le scénario actif documenté dans les contenus est la naissance du 1974-04-24 à 11:00."
+    "Le scénario actif documenté dans ce dossier est la naissance du 1974-04-24 à 11:00."
   ]
 }

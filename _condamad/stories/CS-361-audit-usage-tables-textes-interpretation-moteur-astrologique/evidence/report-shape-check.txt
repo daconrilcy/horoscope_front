@@ -1,0 +1,15 @@
+CS-361 report shape check
+
+Report path:
+- _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152/01-audit-usage-tables-textes-interpretation.md
+
+Required sections are available through the specialized report and mirrored standard report:
+- Executive summary
+- Inventaire des sources de textes
+- Matrice source -> owner -> usage runtime
+- Trace d'appel vers projections et LLM
+- Comparaison avec les JSON provider actuels
+- Tables/textes utilises
+- Tables/textes non utilises
+- Gaps et risques
+- Story candidates

@@ -1,0 +1,12 @@
+CS-361 interpretive source scan
+
+Commands used:
+- rg -n "interpret|keyword|texte|description|meaning|profile|dignit|rulership|condition|aspect|dominant" backend/app docs backend/migrations -g "*.py" -g "*.md"
+- rg -n "AstralSignProfileModel|AstralPlanet.*Interpretation|AstralHouse.*Interpretation|AspectInterpretation|InterpretationAdapter|description|keywords|meaning|text" backend/app/infra/db/models backend/app/infra/db/repositories backend/app/services/reference_data -g "*.py"
+- rg -n "description|keywords|meaning|profile|interpret" docs/db_seeder/astrology -g "*.json" -g "*.md"
+
+Summary:
+- PASS - DB models contain sign profiles, house/planet/aspect interpretation profiles, fixed-star/point keywords and dignity/reference descriptions.
+- PASS - Repositories and seed services exist for runtime reference loading and admin/seed provisioning.
+- PASS - Runtime builders consume calculated facts and compact signal codes.
+- LIMITATION - Rich table prose is not proven provider-visible in the current provider payload examples.

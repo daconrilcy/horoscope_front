@@ -4,7 +4,7 @@
 
 ## Resume
 
-Generer un exemple complet de donnees, interpretations intermediaires, prompts et JSON final pour une personne nee le 24 avril 1973 a Paris en France, pour les plans `free`, `basic` et `premium`.
+Generer un exemple complet de donnees, interpretations intermediaires, prompts et JSON final pour une personne nee le 24 avril 1974 a 11h00 du matin a Paris en France, pour les plans `free`, `basic` et `premium`.
 
 Le livrable doit montrer ce qui serait envoye au moteur LLM, mais ne doit jamais appeler le provider LLM.
 
@@ -14,20 +14,21 @@ CS-356 doit expliquer la construction des prompts. CS-357 doit fournir les diagr
 
 Cas exemple impose:
 
-- date de naissance: `1973-04-24`;
+- date de naissance: `1974-04-24`;
+- heure de naissance: `11:00:00`;
 - lieu: `Paris, France`;
-- heure de naissance: a definir explicitement dans le livrable si aucune heure n'est fournie par l'utilisateur;
 - timezone attendue: `Europe/Paris`;
 - plans: `free`, `basic`, `premium`;
 - aucun appel au moteur LLM.
 
 ## Decision obligatoire sur l'heure de naissance
 
-La demande ne fournit pas l'heure de naissance. Le livrable doit choisir une convention et l'exposer clairement:
+La demande fournit maintenant l'heure de naissance. Le livrable doit donc:
 
-- option recommandee: utiliser `12:00:00` heure locale comme heure de demonstration;
-- marquer les maisons, angles et interpretations dependantes de l'heure comme exemple non probant si l'heure est fictive;
-- ne jamais presenter les maisons, Ascendant ou MC comme verifies sans heure reelle.
+- utiliser `11:00:00` heure locale `Europe/Paris`;
+- normaliser l'instant en UTC dans les donnees intermediaires;
+- calculer ou fixture explicitement les maisons, l'Ascendant et le MC a partir de cette heure;
+- ne pas conserver l'ancien fallback documentaire sans heure.
 
 ## Objectif
 
@@ -79,7 +80,7 @@ Produire des exemples qui montrent:
 Creer un dossier:
 
 ```text
-_condamad/examples/prompt-generation-cartography/1973-04-24-paris/
+_condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/
 ```
 
 Avec au minimum:
@@ -154,7 +155,8 @@ Le fichier doit contenir:
 ## Contraintes d'exactitude
 
 - Si les positions astrologiques sont calculees par le runtime existant, citer la commande et le test de non-appel provider.
-- Si les positions sont synthetiques, les etiqueter clairement comme `synthetic_example` et ne pas les presenter comme ephemerides reelles.
+- Si les positions sont synthetiques, les etiqueter clairement comme exemple non verifie et ne pas les presenter comme ephemerides reelles.
+- Si les positions sont calculees localement, documenter le moteur, la timezone, l'UTC, les coordonnees et le systeme de maisons.
 - Ne pas mettre de donnees audit-only dans le message `user`.
 - Les champs `evidence` peuvent exister dans `intermediate-data.json`, mais doivent etre absents des messages provider.
 - Les trois plans doivent montrer des differences reelles de contenu ou de budget.
@@ -178,11 +180,11 @@ Le fichier doit contenir:
 Documentation et JSON:
 
 ```powershell
-rg -n "provider_call_performed|1973-04-24|Paris|free|basic|premium|synthetic_example|runtime-generated" _condamad/examples/prompt-generation-cartography/1973-04-24-paris
-Get-Content _condamad/examples/prompt-generation-cartography/1973-04-24-paris/free-provider-payload.json | ConvertFrom-Json | Out-Null
-Get-Content _condamad/examples/prompt-generation-cartography/1973-04-24-paris/basic-provider-payload.json | ConvertFrom-Json | Out-Null
-Get-Content _condamad/examples/prompt-generation-cartography/1973-04-24-paris/premium-provider-payload.json | ConvertFrom-Json | Out-Null
-Get-Content _condamad/examples/prompt-generation-cartography/1973-04-24-paris/intermediate-data.json | ConvertFrom-Json | Out-Null
+rg -n "provider_call_performed|1974-04-24|11:00:00|Paris|free|basic|premium|runtime_generated" _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris
+Get-Content _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/free-provider-payload.json | ConvertFrom-Json | Out-Null
+Get-Content _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/basic-provider-payload.json | ConvertFrom-Json | Out-Null
+Get-Content _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/premium-provider-payload.json | ConvertFrom-Json | Out-Null
+Get-Content _condamad/examples/prompt-generation-cartography/1974-04-24-1100-paris/intermediate-data.json | ConvertFrom-Json | Out-Null
 ```
 
 Si une commande Python est necessaire pour produire ou verifier les donnees, activer le venv avant toute commande:
