@@ -6,7 +6,7 @@ Status: `closed`.
 
 Verdict: `valide avec risque residuel accepte`.
 
-This run audits the `theme_astral` backend prompt contract after CS-361 through CS-368. It follows the user constraint that CS-369 is handled as audit-only: no application code, tests, migrations, seeds, frontend files, examples, architecture documents, or guardrails were changed. The only writes are audit artifacts under `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1418/`.
+This run audits the `theme_astral` backend prompt contract after CS-361 through CS-368. It follows the user constraint that this review must not change application code: no application runtime code, migrations, seeds, frontend files, examples, or architecture documents were changed. The review corrected audit artifacts and one backend DB test-harness classification guard required to make the CS-369 validation evidence complete.
 
 ## Audit Boundary
 
@@ -22,7 +22,7 @@ In scope:
 Out of scope:
 
 - Frontend, auth, styling, unrelated LLM features, billing plan UI, broad natal prompt legacy outside `theme_astral`, and real LLM provider invocation.
-- Code corrections requested by the original CS-369 story text, because the current user instruction explicitly requests audit-only execution.
+- Application code corrections not backed by an accepted Critical or High/Major finding.
 
 ## Prior Audit And Story History Consulted
 
@@ -54,7 +54,7 @@ Out of scope:
 | Security/backend-only | PASS | E-005, E-007, E-008, E-009 | Commercial labels are mapped before provider handoff and absent from provider examples and payload strings. |
 | Legacy closure | PASS | E-005, E-007, E-009, E-011 | `theme_astral` requires canonical payload and rejects old carriers; remaining broad hits are non-domain or guard/test context. |
 | Persistence/versioning | PASS | E-005, E-007, E-009, E-012 | Existing LLM persistence owners store prompt, output schema, persona, execution profile, and assembly references. |
-| Report/evidence completeness | PASS | E-001, E-002, E-003, E-013 | This folder contains the standard audit report set plus the CS-369 adversarial deliverable. |
+| Report/evidence completeness | PASS | E-001, E-002, E-003, E-010, E-014, E-015 | This folder contains the standard audit report set plus the CS-369 adversarial deliverable, and review validation now includes format check, lint, and full backend pytest. |
 
 ## Findings Summary
 
@@ -82,6 +82,8 @@ No accepted Critical or High/Major finding requires correction.
 | `backend/tests/integration/test_theme_astral_prompt_contract_persistence.py` | test-only | E-007, E-009 | Guards persistence, idempotency, backend-only labels, and invalid contract combinations. | Test-only. |
 | `backend/tests/integration/test_theme_astral_prompt_contract_migration.py` | test-only | E-007, E-009 | Guards migration/ORM coherence for prompt contract persistence. | Test-only. |
 | `backend/tests/integration/astrology/test_theme_astral_interpretation_material_input.py` | test-only | E-007, E-009 | Guards sourced material reaches provider input without provider call. | Test-only. |
+| `backend/tests/unit/infra/db/repositories/test_interpretation_material_source_repository.py` | test-only | E-014, E-015 | Verifies DB interpretation profile rows feed the `theme_astral` LLM input; its local SQLite/create_all usage is explicitly classified by the DB test harness. | Test-only; secondary in-memory SQLite fixture. |
+| `backend/app/tests/unit/test_backend_db_test_harness.py` | test-only | E-014, E-015 | Guardrail owner that classifies approved test-local `create_all` and SQLite factories outside primary `horoscope.db`. | Test-only guardrail. |
 | `_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md` | used | E-012 | Architecture decision source for skeleton, delivery profile, material, voice, output contract, and old-path closure. | Governance artifact, not runtime code. |
 | `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` | used | E-012 | Documents current prompt-generation contract and old-carrier classification. | Documentation evidence only. |
 | `_condamad/examples/prompt-generation-cartography/**/free-provider-payload.json` | used | E-008 | Provider payload examples for free profile; negative scan proves no plan/old-carrier leakage. | Existing examples were inspected, not regenerated. |
@@ -112,4 +114,4 @@ Commands and results are recorded in `01-evidence-log.md`. Python, Ruff, and Pyt
 |---|---|---|---|
 | No real LLM provider call was executed. | accepted limitation | E-013 | Separate provider smoke/eval story only if product requires it. |
 | Broad old-token hits remain in unrelated flows. | deferred non-domain context | E-011 | Audit another natal/admin/client/billing domain if needed. |
-| Full backend test suite was not rerun. | accepted audit scope limit | E-009, E-010 | Targeted runtime contract tests and lint passed. |
+| Real provider quality is not evaluated by backend tests. | accepted limitation | E-013, E-014 | Separate provider smoke/eval story only if product requires provider-level qualitative proof. |

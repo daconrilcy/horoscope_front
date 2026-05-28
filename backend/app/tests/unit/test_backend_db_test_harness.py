@@ -164,6 +164,7 @@ APPROVED_CREATE_ALL_PATHS = {
     Path("tests/unit/test_replay_snapshot_v1_service_manual_purge.py"),
     Path("tests/unit/test_replay_snapshot_v1_service_metadata.py"),
     Path("tests/unit/test_replay_snapshot_v1_service_retention.py"),
+    Path("tests/unit/infra/db/repositories/test_interpretation_material_source_repository.py"),
     Path("tests/unit/test_sensitive_data_non_leakage.py"),
 }
 APPROVED_SQLITE_FACTORY_PATHS = {
@@ -242,6 +243,7 @@ APPROVED_SQLITE_FACTORY_PATHS = {
     Path("tests/unit/test_replay_snapshot_v1_service_manual_purge.py"),
     Path("tests/unit/test_replay_snapshot_v1_service_metadata.py"),
     Path("tests/unit/test_replay_snapshot_v1_service_retention.py"),
+    Path("tests/unit/infra/db/repositories/test_interpretation_material_source_repository.py"),
     Path("tests/unit/test_sensitive_data_non_leakage.py"),
 }
 APPROVED_PRIMARY_DB_REFERENCE_WITH_CREATE_ALL_PATHS = {

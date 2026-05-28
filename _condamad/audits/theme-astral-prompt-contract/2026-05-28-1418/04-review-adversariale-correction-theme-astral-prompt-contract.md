@@ -4,7 +4,7 @@
 
 `valide avec risque residuel accepte`.
 
-No accepted Critical or Major/High defect was found in the current `theme_astral` prompt contract. Because this run is explicitly audit-only, no application correction was applied.
+No accepted Critical or Major/High defect was found in the current `theme_astral` prompt contract. No application runtime correction was required; the audit review only corrected audit evidence and a backend DB test-harness classification guard needed for full validation.
 
 ## Findings tries par severite
 
@@ -37,7 +37,7 @@ No Critical, Major/High, Medium, or Low real finding was accepted.
 
 ## Corrections appliquees
 
-None. This audit was executed under a read-only application-code constraint.
+No application runtime correction was applied. During this audit review, `backend/app/tests/unit/test_backend_db_test_harness.py` was updated to classify the intentional in-memory SQLite/create_all usage in `backend/tests/unit/infra/db/repositories/test_interpretation_material_source_repository.py`, then the targeted guard and full backend suite passed (E-014, E-015).
 
 ## Tests ajoutes ou modifies
 
@@ -46,11 +46,13 @@ None. Existing targeted tests were executed as evidence.
 ## Commandes executees
 
 - `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py tests/integration/llm/test_theme_astral_provider_payload_handoff.py tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py tests/architecture/test_theme_astral_prompt_contract_guard.py tests/integration/test_theme_astral_prompt_contract_persistence.py tests/integration/test_theme_astral_prompt_contract_migration.py tests/integration/astrology/test_theme_astral_interpretation_material_input.py --tb=short`
+- `.\.venv\Scripts\Activate.ps1; cd backend; ruff format --check .`
 - `.\.venv\Scripts\Activate.ps1; cd backend; ruff check .`
+- `.\.venv\Scripts\Activate.ps1; cd backend; pytest -q`
 - Targeted `rg` scans listed in `01-evidence-log.md`.
 
 ## Risques residuels
 
 - No real LLM provider call was executed. Accepted because provider invocation is out of scope.
 - Broad old-token hits remain outside `theme_astral` in natal/admin/test/billing/evaluation contexts. Deferred as non-domain.
-- Full backend pytest was not rerun; targeted contract tests passed.
+- Backend validation is complete for local contract behavior: format check, lint, targeted tests, and full `pytest -q` passed.

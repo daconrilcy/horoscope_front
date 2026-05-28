@@ -10,7 +10,7 @@ No remediation story candidate is emitted for the audited implementation domain.
 
 ## Exhaustive Files To Modify
 
-None. No application, migration, seed, test, frontend, example, architecture, story, or guardrail file is recommended for modification by this audit.
+None. No application runtime, migration, seed, frontend, example, architecture, or story file is recommended for modification by this audit. The review already corrected the only required guardrail/test-harness classification in `backend/app/tests/unit/test_backend_db_test_harness.py`.
 
 ## Deferred Non-Domain Context
 

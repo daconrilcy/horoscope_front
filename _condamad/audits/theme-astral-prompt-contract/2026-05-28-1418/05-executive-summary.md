@@ -26,7 +26,9 @@ The adversarial read-only audit found no active Critical, High, Medium, or Low i
 ## Validations
 
 - Targeted pytest: `10 passed, 10 deselected`.
+- Backend format check: `ruff format --check .` passed with `1713 files already formatted`.
 - Backend lint: `ruff check .` passed.
+- Full backend pytest: `3502 passed, 1 skipped, 1233 deselected`.
 - Provider example forbidden-token scan: no hits.
 
 ## Main Risk

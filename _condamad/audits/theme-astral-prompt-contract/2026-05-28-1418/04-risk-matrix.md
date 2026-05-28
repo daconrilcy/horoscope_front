@@ -9,4 +9,4 @@
 | Risk | Evidence | Decision |
 |---|---|---|
 | Old carrier tokens still exist in non-theme flows. | E-011 | Out of domain; current theme astral tests prove they do not replace `theme_astral_llm_input_v1`. |
-| Full backend suite was not rerun. | E-009, E-010 | Accepted for audit-only scope; targeted runtime contract tests and backend lint passed. |
+| Real provider quality is not evaluated by backend tests. | E-013, E-014 | Accepted for this scope; full backend tests prove local contract behavior, not provider-side qualitative interpretation. |
