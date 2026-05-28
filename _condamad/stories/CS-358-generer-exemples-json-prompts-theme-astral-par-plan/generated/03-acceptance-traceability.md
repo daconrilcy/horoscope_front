@@ -11,7 +11,7 @@
 | AC7 | Audit-only exclusions are listed outside prompt content. | PASS | `audit_excluded_from_prompt` lists `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider_response`, and `observability`. | Exclusion assertion in `evidence/json-validation.txt`. |
 | AC8 | Missing birth time is documented as a convention. | PASS | README and JSON document `12:00:00`, `Europe/Paris`, and `synthetic_example`, including unverified houses/Ascendant/MC. | Positive marker scan in `evidence/forbidden-scan.txt`. |
 | AC9 | README explains generation method. | PASS | README explains static synthetic generation and source alignment. | Positive marker scan in `evidence/forbidden-scan.txt`. |
-| AC10 | Forbidden provider artifacts are absent. | PASS_WITH_LIMITATIONS | No provider result body, token, API key, Bearer marker, credential wording, or access material is present. The exact string `provider_response` appears only because AC7 requires it in `audit_excluded_from_prompt`. | `evidence/forbidden-scan.txt` records the expected matches and validates they are exclusion labels only. |
+| AC10 | Forbidden provider artifacts are absent. | PASS | No provider result body, token, API key, Bearer marker, credential wording, or access material is present. The exact string `provider_response` appears only because AC7 requires it in `audit_excluded_from_prompt`. | `evidence/forbidden-scan.txt` records the expected exclusion-label assertion and validates `provider_response` is absent from prompt messages. |
 
 ## Guardrail Evidence
 

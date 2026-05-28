@@ -105,6 +105,8 @@
   `provider_response` exclusion label.
 - Correction: `evidence/forbidden-scan.txt` now separates secret/token markers from the provider-response boundary assertion and records
   a strict PASS proving `provider_response` is absent from prompt message content and present only as the required exclusion label.
+- Post-implementation alignment correction: `generated/03-acceptance-traceability.md` also now records AC10 as `PASS`, matching the final
+  clean implementation review and the strict provider-response boundary assertion.
 
 ## Suggested reviewer focus
 
