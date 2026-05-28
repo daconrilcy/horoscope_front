@@ -1,0 +1,20 @@
+CS-360 source availability evidence
+
+All mandatory sources were present and readable:
+
+- _story_briefs/cs-360-audit-admin-manual-execution-provider-capable.md
+- _condamad/stories/CS-360-audit-admin-manual-execution-provider-capable/00-story.md
+- _condamad/stories/regression-guardrails.md
+- _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+- _condamad/audits/prompt-generation-document-review/2026-05-27-2246/03-parallel-legacy-processes-audit.md
+- backend/app/api/v1/routers/admin/llm/prompts.py
+- backend/app/services/api_contracts/admin/llm/prompts.py
+- backend/app/services/llm_generation/admin_sample_payloads.py
+- backend/app/services/llm_generation/admin_manual_execution.py
+- backend/app/api/v1/routers/admin/llm/sample_payloads.py
+- backend/tests/integration/test_admin_llm_catalog.py
+- backend/tests/integration/test_admin_llm_sample_payloads.py
+
+Pre-existing worktree note:
+
+- git status --short showed untracked _condamad/run-state.json before audit writes.

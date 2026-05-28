@@ -1,0 +1,39 @@
+CS-360 report shape check
+
+Audit folder:
+
+_condamad/audits/admin-manual-llm-execution/2026-05-28-0245
+
+Required files created:
+
+- 00-audit-report.md
+- 01-admin-manual-execution-provider-capable-audit.md
+- 01-evidence-log.md
+- 02-finding-register.md
+- 03-story-candidates.md
+- 04-risk-matrix.md
+- 05-executive-summary.md
+
+Required specialized report headings present in 01-admin-manual-execution-provider-capable-audit.md:
+
+- Resume executif
+- Trace route -> sample payload -> gateway
+- Matrice permissions logs et audit
+- Matrice sample payloads et carriers legacy
+- Decision recommandee
+- Stories candidates d'implementation
+
+Primary recommendation label count:
+
+- Primary decision: migrate
+- Primary recommendation: migrate
+
+Required terms present:
+
+- admin-only
+- provider-capable
+- chart_json
+- sample payload CRUD
+- live execution
+- LLMGateway
+- execute_admin_catalog_sample_payload
