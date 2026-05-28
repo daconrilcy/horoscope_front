@@ -75,23 +75,6 @@ GUIDANCE_PROMPTS_TO_SEED = [
         "temperature": 0.7,
         "max_output_tokens": 2600,
     },
-    {
-        "use_case_key": "event_guidance",
-        "display_name": "Guidance Evenementielle",
-        "description": "Analyse d'un evenement specifique via l'astrologie.",
-        "required_prompt_placeholders": ["chart_json", "event_description"],
-        "developer_prompt": (
-            "Langue de reponse : francais ({{locale}}). Contexte : use_case={{use_case}}.\n"
-            "Tu analyses l'evenement suivant avec prudence : {{event_description}}\n\n"
-            "Theme natal disponible :\n{{chart_json}}\n\n"
-            "Reponds en JSON strict AstroResponse_v1. Le summary doit resumer la dynamique "
-            "principale. Les highlights et advice doivent rester specifiques a l'evenement, "
-            "prudents et non fatalistes. N'invente aucune donnee astrologique absente."
-        ),
-        "model": "gpt-4o",
-        "temperature": 0.7,
-        "max_output_tokens": 2600,
-    },
 ]
 
 

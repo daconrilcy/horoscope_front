@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.domain.llm.configuration.canonical_use_case_registry import (
+    get_canonical_use_case_contract,
     list_modern_natal_use_case_contracts,
 )
 from app.domain.llm.runtime.contracts import (
@@ -18,6 +19,7 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.domain.llm.runtime.output_validator import ValidationResult
+from app.ops.llm.bootstrap.seed_guidance_prompts import GUIDANCE_PROMPTS_TO_SEED
 
 
 @pytest.fixture
@@ -39,6 +41,13 @@ def test_modern_natal_contracts_only_expose_llm_astrology_input_v1() -> None:
         properties = set(contract.input_schema.get("properties", {}))
         assert "llm_astrology_input_v1" in properties
         assert not forbidden_carriers.intersection(properties)
+
+
+def test_event_guidance_contract_and_seed_are_removed() -> None:
+    """Prouve que le use case evenementiel dormant n'a plus de surface runtime."""
+
+    assert get_canonical_use_case_contract("event_guidance") is None
+    assert all(prompt["use_case_key"] != "event_guidance" for prompt in GUIDANCE_PROMPTS_TO_SEED)
 
 
 def test_natal_user_payload_ignores_legacy_carriers_when_modern_input_exists(gateway) -> None:

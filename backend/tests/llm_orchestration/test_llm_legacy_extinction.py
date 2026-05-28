@@ -14,7 +14,6 @@ SUPPORTED_FALLBACK_USE_CASE_KEYS = frozenset(
         "astrologer_selection_help",
         "chat",
         "chat_astrologer",
-        "event_guidance",
         "guidance_daily",
         "guidance_weekly",
         "guidance_contextual",
@@ -37,3 +36,10 @@ def test_supported_use_cases_do_not_build_fallback_config(use_case_key: str) -> 
     """Verifie que le builder ne recree pas de config fallback supportee."""
 
     assert build_fallback_use_case_config(use_case_key) is None
+
+
+def test_event_guidance_is_not_a_supported_fallback_surface() -> None:
+    """Verifie que le use case evenementiel supprime ne reste pas supporte."""
+
+    assert "event_guidance" not in SUPPORTED_FALLBACK_USE_CASE_KEYS
+    assert build_fallback_use_case_config("event_guidance") is None

@@ -55,7 +55,6 @@ _FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS = frozenset(
     {
         "chat",
         "chat_astrologer",
-        "event_guidance",
         "guidance_daily",
         "guidance_weekly",
         "guidance_contextual",
@@ -69,7 +68,6 @@ _FORBIDDEN_SUPPORTED_PROMPT_FALLBACK_KEYS = frozenset(
 _CLASSIFIED_FALLBACK_KEYS = frozenset(
     {
         "astrologer_selection_help",
-        "event_guidance",
         "guidance_daily",
         "guidance_weekly",
         "natal_interpretation_short",
@@ -202,12 +200,14 @@ def test_incomplete_governed_exception_rejected() -> None:
         PromptGovernanceRegistryData.model_validate(base)
 
 
-def test_event_description_allowed_for_guidance_family() -> None:
+def test_event_description_is_not_allowed_for_guidance_family() -> None:
+    """Bloque le retour du placeholder dedie a event_guidance supprime."""
+
     reg = PromptGovernanceRegistry.load()
     invalid, _v = reg.validate_placeholders_in_template(
         "Event: {{event_description}}", "guidance", source="test"
     )
-    assert invalid == []
+    assert invalid == ["event_description"]
 
 
 def test_chat_allows_natal_chart_summary_runtime_render() -> None:

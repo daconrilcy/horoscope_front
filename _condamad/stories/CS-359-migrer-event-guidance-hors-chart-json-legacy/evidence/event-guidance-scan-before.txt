@@ -1,0 +1,320 @@
+_condamad/stories/regression-guardrails.md:137:| RG-094 | `priorite-3-runtime-maisons-riches` | Projection publique des maitres de maisons | `houses[*].ruler` reste la source canonique runtime; `house_rulers[]` est uniquement une projection legacy et ne doit pas relire `NatalResult.house_rulers`, `HouseRulerResolver`, `sign_rulerships` ou un repository de maitrises dans le serializer ou la persistance. | `pytest app/tests/unit/test_chart_json_builder.py app/tests/unit/test_chart_result_service.py -q` + scans cibles `rg -n "natal_result\\.house_rulers|HouseRulerResolver|sign_rulerships|get_sign_rulerships" app/services/chart -g "*.py"` et `rg -n "house_rulers" app/services/chart app/tests/unit/test_chart_json_builder.py app/tests/unit/test_chart_result_service.py`. |
+_condamad/stories/regression-guardrails.md:142:| RG-099 | `CS-164-enrichir-aspect-result-projection-publique` | Projection publique des aspects chart | Les champs enrichis d'aspects publics doivent provenir du runtime canonique, sans recomposition locale de seuils ou lookups disperses dans `services/chart`, et les champs historiques restent presents. | `pytest -q app/tests/unit/test_chart_json_builder.py app/tests/unit/test_chart_result_service.py` + snapshot payload before/after + scan cible `rg -n "strength_level|interpretive_valence|energy_type" app/services/chart app/domain/astrology -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:152:| RG-109 | `CS-174-localiser-libelles-astrologiques-backend` | Libelles de signes astrologiques localises backend | Les libelles affichables des signes astrologiques doivent etre resolus depuis `languages` et `astral_sign_translations` via le resolver canonique; les surfaces ciblees ne doivent pas recreer `SIGN_NAMES_FR`, une liste locale de signes pour affichage, un mapping `SIGN_LABELS` concurrent, ou un fallback de langue different par consommateur. `backend/app/services/natal/pdf_export_service.py::SIGN_LABELS` reste hors perimetre de CS-174 et doit etre documente comme exception explicite. | `pytest -q app/tests/unit/test_astrology_translation_resolver.py app/tests/unit/test_chart_json_builder.py app/tests/unit/test_natal_context_localization.py` + scans `rg -n "SIGN_NAMES_FR|\\bSIGNS\\s*=\\s*\\[" app/services/chart app/services/natal/astro_context_builder.py app/services/llm_generation/shared/natal_context.py app/services/llm_generation/natal/prompt_context.py app/domain/astrology` et `rg -n "AstrologyTranslationResolver|astrology_translation_resolver|translated_name|LanguageModel" app/domain/astrology` depuis `backend`. |
+_condamad/stories/regression-guardrails.md:162:| RG-119 | `CS-192-planetary-condition-profile-v1` | Profils conditionnels planetaires natals | `PlanetConditionProfile` reste une couche de normalisation derivee de `PlanetDignityResult`; elle ne doit pas devenir un second moteur astrologique, lire la DB, importer API/services/prediction/LLM, creer une table audit dediee v1, ni porter de mappings locaux de poids conditionnels. | `pytest -q backend/tests/unit/domain/astrology/test_planet_condition_profile_service.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py` + scans ciblés `rg -n "Session|select\\(|from app\\.infra|from app\\.services|from app\\.api|from app\\.domain\\.prediction|from app\\.services\\.prediction" backend/app/domain/astrology/condition -g "*.py"`, `rg -n "OpenAI|AIEngineAdapter|chat\\.completions|prompt|interpretation|micro_note" backend/app/domain/astrology/condition -g "*.py"` et `rg -n "VISIBILITY_WEIGHTS|CONDITION_SCORES|CONDITION_LEVELS|astral_chart_planet_condition_profiles" backend/app backend/migrations backend/tests -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:163:| RG-120 | `CS-193-planetary-condition-signals` | Signaux interpretatifs types des conditions planetaires | `PlanetConditionSignal` reste une traduction gouvernee et versionnee de `PlanetConditionProfile` vers signaux exploitables; les seuils, labels, niveaux, usages, priorites et `prompt_hint` doivent provenir de `astral_planet_condition_signal_profiles` via le runtime, sans seuils locaux dans prompts, UI, JSON builder ou domaine condition, et sans narration/LLM. | `pytest -q backend/tests/unit/domain/astrology/test_planet_condition_signal_builder.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py` + scans cibles `rg -n "SIGNAL_THRESHOLDS|CONDITION_SIGNAL_RULES|CONDITION_SIGNAL_PROFILES|FUNCTIONAL_STRENGTH_THRESHOLDS|VISIBILITY_SIGNAL_LEVELS" backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"`, `rg -n "Session|select\\(|from app\\.infra|from app\\.services|from app\\.api|from app\\.domain\\.prediction|from app\\.services\\.prediction" backend/app/domain/astrology/condition -g "*.py"` et `rg -n "OpenAI|AIEngineAdapter|chat\\.completions|\\bprompt\\b|narration|micro_note" backend/app/domain/astrology/condition -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:164:| RG-121 | `CS-194-dominant-planets-engine` | Moteur factuel des dominantes planetaires | `PlanetDominanceEngine` reste l'unique moteur backend factuel des dominantes planetaires; les facteurs proviennent de `astral_dominance_factor_types`, les profils/poids de `astral_dominance_score_profiles` et `astral_dominance_score_weights` via le runtime, sans mapping local, DB/API/services/prediction/LLM dans le domaine dominance, et `json_builder.py` reste une projection stricte de `NatalResult.dominant_planets`. | `pytest -q backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py` + scans cibles `rg -n "DOMINANCE_FACTORS|DOMINANCE_WEIGHTS|CHART_RULER_WEIGHT|ANGULARITY_WEIGHT|SIGN_RULERS|PLANET_RULERS" backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"`, `rg -n "Session|select\\(|from app\\.infra|from app\\.services|from app\\.api|from app\\.domain\\.prediction|from app\\.services\\.prediction" backend/app/domain/astrology/dominance -g "*.py"` et `rg -n "OpenAI|AIEngineAdapter|chat\\.completions|\\bprompt\\b|narration|micro_note" backend/app/domain/astrology/dominance -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:165:| RG-122 | `CS-195-advanced-planetary-conditions` | Moteur factuel des conditions planetaires avancees | `AdvancedConditionEngine` reste l'unique moteur backend factuel des conditions planetaires avancees; les types, profils et poids proviennent des referentiels `astral_advanced_condition_*` via le runtime, sans mapping local, DB/API/services/prediction/LLM dans `advanced_conditions`, sans techniques reportees, et `json_builder.py` reste une projection stricte de `NatalResult.advanced_conditions`. | `pytest -q backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_mutual_reception_calculator.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_besiegement_detector.py backend/tests/unit/domain/astrology/test_heliacal_conditions.py backend/tests/unit/domain/astrology/test_speed_classifier.py backend/tests/unit/domain/astrology/test_dominance_integration.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py` + scans cibles `rg -n "ADVANCED_CONDITION_TYPES|ADVANCED_CONDITION_WEIGHTS|HAYZ_RULES|MUTUAL_RECEPTION_RULES|PLANET_SPEED_THRESHOLDS|HELIACAL_PHASES|BENEFIC_PLANETS|MALEFIC_PLANETS" backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"`, `rg -n "Session|select\\(|from app\\.infra|from app\\.services|from app\\.api|from app\\.domain\\.prediction|from app\\.services\\.prediction" backend/app/domain/astrology/advanced_conditions -g "*.py"` et `rg -n "translation_of_light|collection_of_light|planetary_war|antiscia|contra_antiscia|primary_directions|zodiacal_releasing|firdaria|annual_profections" backend/app/domain/astrology/advanced_conditions backend/app/services/chart/json_builder.py -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:166:| RG-123 | `CS-196-interpretation-adapter-layer` | Couche canonique d'adaptation interpretative non narrative | `InterpretationAdapterEngine` reste l'unique couche backend qui transforme les faits natals calcules en signaux interpretatifs, themes actives et priorites techniques; les signaux, themes, regles, poids et priorites proviennent des tables `astral_interpretation_*` via le runtime, sans mapping local, DB/API/services/prediction/LLM dans `interpretation_adapters`, sans texte narratif, et `json_builder.py` reste une projection stricte de `NatalResult.interpretation_adapter`. | `pytest -q backend/tests/unit/domain/astrology/test_signal_builder.py backend/tests/unit/domain/astrology/test_theme_aggregator.py backend/tests/unit/domain/astrology/test_priority_ranker.py backend/tests/unit/domain/astrology/test_interpretation_adapter_result.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/app/tests/unit/test_astrology_runtime_reference_repository.py backend/app/tests/unit/test_astrology_runtime_reference_guard.py` + scans cibles `rg -n "INTERPRETATION_RULES|SIGNAL_TYPES|THEME_CODES|PRIORITY_ORDER|ADAPTER_RULES|DOMINANT_MARS_SIGNATURE|HIGH_EXTERNALIZATION_THRESHOLD|CONSTRAINT_ON_ACTION_THRESHOLD" backend/app backend/tests frontend/src -g "*.py" -g "*.ts" -g "*.tsx"`, `rg -n "Session|select\\(|from app\\.infra|from app\\.services|from app\\.api|from app\\.domain\\.prediction|from app\\.services\\.prediction" backend/app/domain/astrology/interpretation_adapters -g "*.py"` et `rg -n "OpenAI|AIEngineAdapter|chat\\.completions|\\bprompt\\b|narration|persona|horoscope|matching" backend/app/domain/astrology/interpretation_adapters -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:167:| RG-124 | `CS-197-sect-audit-explicit-contract` | Contrat explicite chart-level de secte natale | La secte natale doit rester un contrat chart-level explicite derive des regles runtime `above_horizon` et `below_horizon`, expose via `dignities.sect` avec `chart_sect`, `sun_horizon_position`, `sun_above_horizon`, `calculation_basis` et `reference_system`; aucun calcul par constante locale, fallback silencieux, contrat de condition par planete, alias legacy ou recalcul dans `json_builder.py` n'est autorise. | `pytest -q backend/tests/unit/domain/astrology/test_sect_calculator.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/tests/unit/domain/astrology/test_dignity_contracts.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py` + scans cibles `rg -n "SectCalculator" backend/app/services/chart/json_builder.py`, `rg -n "\\b7,\\s*8,\\s*9,\\s*10,\\s*11,\\s*12\\b|\\b1,\\s*2,\\s*3,\\s*4,\\s*5,\\s*6\\b" backend/app/domain/astrology/dignities backend/app/services/chart -g "*.py"`, `rg -n "PlanetSectCondition|planet_sect_condition" backend/app backend/tests -g "*.py"`, `rg -n "sect_legacy|legacy_sect|sect_code|chart_sect_code" backend/app backend/tests -g "*.py"` et `rg -n "Session|select\\(|from app\\.infra|from app\\.services|from app\\.api|from app\\.domain\\.prediction|OpenAI|AIEngineAdapter|chat\\.completions|prompt" backend/app/domain/astrology/dignities -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:168:| RG-125 | `CS-198-planet-sect-condition-normalization` | Condition de secte par planete | La condition de secte par planete doit rester derivee une seule fois depuis `ChartSectResult` et les donnees runtime de secte intrinseque planetaire, exposee via `dignities.planets[planet_code].sect_condition`; aucun mapping local de planetes diurnes/nocturnes, recalcul hayz, fallback silencieux, alias legacy ou calcul dans `json_builder.py`, `condition`, `advanced_conditions`, `dominance` ou `interpretation_adapters` n'est autorise. | `pytest -q backend/tests/unit/domain/astrology/test_dignity_contracts.py backend/tests/unit/domain/astrology/test_planet_dignity_scoring_service.py backend/app/tests/unit/test_chart_json_builder.py` + scans cibles `rg -n "PlanetSectConditionCalculator|planet_sect_condition_calculator" backend/app/services/chart backend/app/domain/astrology/condition backend/app/domain/astrology/advanced_conditions backend/app/domain/astrology/dominance backend/app/domain/astrology/interpretation_adapters -g "*.py"`, `rg -n "DIURNAL_PLANETS|NOCTURNAL_PLANETS|COMMON_PLANETS|NEUTRAL_PLANETS|planet.*diurnal|planet.*nocturnal" backend/app/domain/astrology/dignities backend/app/services/chart -g "*.py"`, `rg -n "sect_legacy|legacy_sect|sect_code|chart_sect_code|planet_sect_code|planet_sect_legacy" backend/app backend/tests -g "*.py"` et preuves persistantes sous `_condamad/stories/CS-198-planet-sect-condition-normalization/evidence/`. |
+_condamad/stories/regression-guardrails.md:169:| RG-126 | `CS-199-advanced-sect-scoring-integration` | Integration avancee des faits de secte | Le scoring avance de secte peut uniquement consommer `ChartSectResult`, `PlanetSectCondition` et les poids runtime; `AdvancedConditionEngine` derive `out_of_sect` depuis `PlanetSectCondition.is_out_of_sect`, utilise `PlanetSectCondition.is_in_sect` seulement comme precondition de hayz, et les couches condition, dominance, interpretation_adapters et `json_builder.py` ne doivent pas reconstruire la secte. | `pytest -q backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_hayz_calculator.py backend/tests/unit/domain/astrology/test_planet_condition_profile_service.py backend/tests/unit/domain/astrology/test_planet_dominance_engine.py backend/tests/unit/domain/astrology/test_interpretation_adapter_engine.py backend/app/tests/unit/test_chart_json_builder.py` + snapshots sous `_condamad/stories/CS-199-advanced-sect-scoring-integration/evidence/` + scans cibles `rg -n "SectCalculator|PlanetSectConditionCalculator|planet_sect_condition_calculator" backend/app/domain/astrology/condition backend/app/domain/astrology/advanced_conditions backend/app/domain/astrology/dominance backend/app/domain/astrology/interpretation_adapters backend/app/services/chart -g "*.py"` et `rg -n "DIURNAL_PLANETS|NOCTURNAL_PLANETS|SECT_PLANETS|DAY_SECT_PLANETS|NIGHT_SECT_PLANETS|ABOVE_HORIZON_HOUSES|BELOW_HORIZON_HOUSES|sect_legacy|legacy_sect|sect_code|planet_sect_code" backend/app backend/tests -g "*.py"`. |
+_condamad/stories/regression-guardrails.md:170:| RG-127 | `CS-200-hellenistic-medieval-golden-cases` | Cas golden traditionnels hellenistiques / medievaux | Les cas golden G1-G12 doivent rester stables et curates: secte day/night, condition de secte par planete, hayz complet/incomplet, hors-secte, rejoicing, Mercure, dignites essentielles, profils, signaux, dominantes, adaptateur interpretatif et projection JSON ne peuvent changer que par decision doctrine/runtime approuvee avec snapshots attendus mis a jour. | `pytest -q backend/tests/unit/domain/astrology/test_traditional_golden_cases.py` + `pytest -q backend/app/tests/unit/test_chart_json_builder.py` + snapshots sous `_condamad/stories/CS-200-hellenistic-medieval-golden-cases/evidence/` + scans cibles des constantes/recalculs interdits et validation `golden-cases-validation.md`. |
+_condamad/stories/regression-guardrails.md:171:| RG-128 | `CS-201-natal-public-json-projection-cleanup` | Projection JSON publique du theme natal | `backend/app/services/chart/json_builder.py` doit rester une couche de projection publique: elle serialize uniquement les faits de `NatalResult` ou d'un payload deja persiste, preserve `dignities.sect` et `dignities.planets[*].sect_condition`, neutralise les blocs time-dependent selon le mode existant, et ne calcule ni secte, ni conditions, ni dominantes, ni signaux, ni maisons, ni points, ni interpretation narrative. | `pytest -q backend/app/tests/unit/test_chart_json_builder.py backend/app/tests/unit/test_chart_result_service.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py` + snapshots sous `_condamad/stories/CS-201-natal-public-json-projection-cleanup/evidence/` + scans cibles `rg -n "SectCalculator|PlanetSectConditionCalculator|PlanetDignityScoringService|EssentialDignityCalculator|AccidentalDignityCalculator|AdvancedConditionEngine|PlanetConditionProfileService|PlanetConditionSignalBuilder|PlanetDominanceEngine|InterpretationAdapterEngine|SwissEph|swe" backend/app/services/chart/json_builder.py`, `rg -n "sect_legacy|legacy_sect|sect_code|chart_sect_code|planet_sect_code|planet_sect_legacy|sect_score_legacy|legacy_planet_sect" backend/app backend/tests -g "*.py"` et validation `public-json-validation.md`. |
+_condamad/stories/regression-guardrails.md:174:| RG-131 | `CS-204-hayz-rejoicing-explicit-condition-contracts` | Contrats explicites hayz et rejoicing | `traditional_conditions` doit rester une normalisation des faits deja calcules: hayz vient de `AdvancedConditionEngine`/`HayzCalculator` et des contrats canoniques de secte, rejoicing vient des dignites accidentelles/runtime, et le bloc ne devient jamais une source de scoring, un second moteur doctrinal, une reconstruction JSON, une extension opportuniste de `advanced_conditions` public, ou une derivation frontend. | `pytest -q backend/tests/unit/domain/astrology/test_traditional_condition_normalizer.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/test_essential_dignity_calculator.py backend/app/tests/unit/test_chart_json_builder.py` + `npm run test -- NatalExpertPanel` + scans `rg -n "DIURNAL_PLANETS|NOCTURNAL_PLANETS|ABOVE_HORIZON_HOUSES|BELOW_HORIZON_HOUSES|JOY_HOUSES|PLANETARY_JOYS|HAYZ_RULES|SIGN_GENDERS" backend/app frontend -g "*.{py,ts,tsx,js,jsx}"`, `rg -n "SectCalculator|PlanetSectConditionCalculator|AdvancedConditionEngine|AccidentalDignityCalculator" backend/app/services/chart frontend -g "*.{py,ts,tsx,js,jsx}"`, `rg -n "calculation_facts" frontend/src backend/app/services/chart/json_builder.py`, scans frontend anti-derivation et evidence `_condamad/stories/CS-204-hayz-rejoicing-explicit-condition-contracts/evidence/hayz-rejoicing-validation.md`. |
+_condamad/stories/regression-guardrails.md:176:| RG-133 | `CS-206-benefic-malefic-sect-mitigation-signals` | Mitigation benefique/malefique par la secte | La modulation benefique/malefique par la secte doit consommer `AstrologyRuntimeReference.planet_natures`, `ChartSectResult` et `PlanetSectCondition`; aucun mapping local de planetes benefiques/malefiques, branche Mars/Saturne/Jupiter/Venus par nom, fallback doctrinal, recalcul dans `json_builder.py` ou derivation frontend n'est autorise, et tout impact downstream doit venir des poids/profils runtime. | `pytest -q backend/tests/unit/domain/astrology/test_sect_nature_mitigation_detector.py backend/tests/unit/domain/astrology/test_advanced_condition_engine.py backend/tests/unit/domain/astrology/test_traditional_golden_cases.py backend/tests/unit/domain/astrology/test_natal_result_contract.py backend/app/tests/unit/test_chart_json_builder.py` + snapshots sous `_condamad/stories/CS-206-benefic-malefic-sect-mitigation-signals/evidence/` + scans `rg -n "BENEFIC_PLANETS|MALEFIC_PLANETS|MIXED_PLANETS|NEUTRAL_PLANETS|DIURNAL_MALEFICS|NOCTURNAL_MALEFICS|SECT_MITIGATED_PLANETS|MARS_SECT_RULE|SATURN_SECT_RULE|JUPITER_SECT_RULE|VENUS_SECT_RULE" backend/app frontend -g "*.{py,ts,tsx,js,jsx}"`, `rg -n "if .*planet_code.*mars|if .*planet_code.*saturn|if .*planet_code.*jupiter|if .*planet_code.*venus|planet_code\\s+in" backend/app/domain/astrology frontend -g "*.{py,ts,tsx,js,jsx}"` et `rg -n "SectCalculator|PlanetSectConditionCalculator|SectNatureMitigationDetector|AdvancedConditionEngine" backend/app/services/chart frontend -g "*.{py,ts,tsx,js,jsx}"`. |
+_condamad/stories/regression-guardrails.md:192:| RG-149 | `CS-350-prompt-generation-current-implementation` | Classification des processus de generation de prompt LLM | `_condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` doit conserver une matrice explicite des processus prompt LLM: natal moderne nominal, Guidance, Guidance contextuelle, Chat public, Horoscope daily, repair, fallback, bootstrap, admin, test, archival et `event_guidance`. Les flux provider-capable non-natals ne doivent pas etre absorbes dans `llm_astrology_input_v1`; `chart_json` et `natal_data` ne doivent pas redevenir prompt-visible pour le natal moderne; `event_guidance` doit rester classe migration obligatoire jusqu'a migration/suppression; admin manual execution doit rester admin-only provider-capable et a creuser tant qu'une politique dediee n'est pas livree. | Scans documentaires `rg -n "Guidance|Guidance contextuelle|Chat public|Horoscope daily|fallback|repair|bootstrap|admin|event_guidance|provider-capable" _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `rg -n "runtime/provider-only metadata|validation-owned|audit-only anchors|evidence_refs|not prompt-visible payload" _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`, `rg -n "event_guidance.*migration obligatoire|Admin manual execution.*admin-only" _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md` et scan anti-promotion `rg -n "chart_json.*prompt-visible moderne|natal_data.*prompt-visible moderne" _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md`. |
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:11:CS-351 a CS-355 ajoutent une precision importante: des processus provider-capable existent hors flux natal moderne. Guidance, guidance contextuelle, chat public et horoscope daily sont des flux paralleles supportes; repair et fallback restent non nominaux; bootstrap, tests et archives ne sont pas runtime truth. `event_guidance` ne doit pas etre conserve comme dette: il doit etre migre ou supprime dans une story dediee. Admin manual execution est admin-only et provider-capable, mais sa politique exacte reste a creuser avant migration, restriction ou decommission.
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:22:- garder visibles les blockers connus: output schema ownership split, semantic grounding borne, migration `event_guidance` et politique admin manual execution.
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:113:`PromptRenderer` extrait et rend les placeholders declares par famille dans la gouvernance LLM. Pour le natal moderne, `llm_astrology_input_v1` est le carrier attendu; les carriers legacy `chart_json` et `natal_data` ne sont pas autorises comme inputs prompt-visible du flux moderne. Les placeholders optionnels peuvent avoir un fallback explicite, mais les placeholders requis doivent etre fournis ou refuser le rendu.
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:211:| Admin sample payloads | admin artifact | non par eux-memes | sample payload, parfois `chart_json` | `admin_sample_payloads.py` | artefact admin, distinct de l'execution |
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:213:| Tests legacy carrier | test-only | non | fixtures `chart_json` / `natal_data` | `backend/tests/**` | conserver comme guard, pas runtime truth |
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:215:| `event_guidance` | migration obligatoire | conditionnel si invoque via adapter/gateway | `chart_json`, `event_description` | `canonical_use_case_registry.py`, `seed_guidance_prompts.py`, `AIEngineAdapter` | ne pas garder en dette; migrer hors `chart_json` ou supprimer |
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:254:Les carriers legacy `chart_json` et `natal_data` peuvent rester dans des contextes historiques, de tests, d'admin sample ou non modernes; ils sont exclus du prompt-visible moderne lorsque `llm_astrology_input_v1` est present.
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:256:`event_guidance` reste un cas a traiter: le contrat canonique et les seeds identifient encore `chart_json` avec `event_description`, sans trigger public audite. La decision produit est maintenant de ne conserver aucune dette: une story de migration doit soit migrer `event_guidance` vers un input canonique non legacy, soit supprimer le use case et ses seeds/contrats associes.
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:271:- `_condamad/stories/regression-guardrails.md` doit contenir le guardrail exact de classification des processus prompt LLM, afin de proteger la matrice provider-capable, fallback, repair, bootstrap, admin, test, archival et migration `event_guidance`.
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:283:- `event_guidance` doit etre migre hors `chart_json` ou supprime; aucune conservation en dette n'est acceptee;
+_condamad/docs/prompt-generation-cartography\prompt-generation-current-implementation.md:301:rg -n "Guidance|Guidance contextuelle|Chat public|Horoscope daily|fallback|repair|bootstrap|admin|event_guidance|provider-capable" _condamad/docs/prompt-generation-cartography/prompt-generation-current-implementation.md
+_condamad/docs/prompt-generation-cartography\natal-prompt-construction-mermaid.md:17:- Les blocs `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider_response`, `chart_json`, `natal_data` et `observability` ne sont pas des inputs prompt-visible du flux natal moderne.
+_condamad/docs/prompt-generation-cartography\natal-prompt-construction-mermaid.md:129:  LLMInput -. excluded .-> BackendOnly["backend-only: chart_json natal_data request_id trace_id"]
+_condamad/docs/prompt-generation-cartography\natal-prompt-construction-mermaid.md:136:Legende: `chart_json`, `natal_data`, `projection_hash`, `llm_input_hash`, `provider_response` et `observability` restent hors `payload user`.
+_condamad/docs/prompt-generation-cartography\natal-prompt-construction-by-plan.md:32:`chart_json` et `natal_data` ne sont pas des carriers prompt-visible du flux natal moderne quand `llm_astrology_input_v1` est present. Ils restent classes runtime-only, historiques, tests, admin samples ou surfaces non modernes selon CS-343 a CS-350.
+_condamad/docs/prompt-generation-cartography\natal-prompt-construction-by-plan.md:109:Les fallbacks de configuration, bootstrap, tests, admin samples et provider unsupported restent non nominaux ou bornes. Ils ne remplacent pas le contrat natal moderne, ne justifient pas `chart_json` ou `natal_data` comme prompt-visible moderne, et ne changent pas les plans `free`, `basic`, `premium`.
+backend/tests\evaluation\test_prompt_resolution.py:160:            natal_data=ctx_data.get("natal_data"),
+backend/tests\unit\test_admin_manual_execute_response.py:19:            rendered_prompt="Instruction pour le chart_json suivant."
+backend/tests\unit\test_admin_manual_execute_response.py:27:        structured_output={"provider": "openai", "chart_json": "SECRET"},
+backend/tests\unit\test_admin_manual_execute_response.py:47:    assert payload.structured_output["chart_json"] == "[REDACTED]"
+backend/tests\unit\test_natal_llm_use_case_input_contract.py:15:LEGACY_ASTROLOGY_INPUT_KEYS = {"chart_json", "natal_data"}
+backend/tests\unit\test_natal_llm_use_case_input_contract.py:87:    assert "chart_json" not in rendered
+backend/tests\unit\test_natal_llm_use_case_input_contract.py:88:    assert "natal_data" not in rendered
+backend/tests\llm_orchestration\test_context_quality.py:72:        context=ExecutionContext(chart_json='{"planets": []}'),
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:65:    assert captured_request.context.chart_json is None
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:66:    assert captured_request.context.natal_data is None
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:71:def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:80:            "chart_json": '{"legacy": "secret"}',
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:81:            "natal_data": {"legacy": "secret"},
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:95:            "chart_json": '{"legacy": "secret"}',
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:96:            "natal_data": {"legacy": "secret"},
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:124:    assert "chart_json" not in payload
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:130:    forbidden_fields = {"chart_json", "natal_data", "evidence_catalog"}
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:136:    """Le renderer natal peut rendre la cle riche sans chart_json ni natal_data."""
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:142:        "Payload {{llm_astrology_input_v1}} / legacy {{chart_json}}",
+backend/tests\unit\domain\llm\test_natal_llm_astrology_input.py:152:    assert "{{chart_json}}" not in rendered
+backend/tests\llm_orchestration\test_assembly_resolution.py:229:    assert validate_placeholders("Theme {{chart_json}}", "natal") == ["chart_json"]
+backend/tests\unit\prediction\test_astrologer_prompt_builder.py:74:        natal_data={
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:21:    "chart_json",
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:22:    "natal_data",
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:76:    """chart_json et natal_data restent hors prompt quand le contrat riche existe."""
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:83:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:84:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:120:            "chart_json": '{"legacy": "LEGACY_CHART_JSON_PROMPT_OWNER"}',
+backend/tests\llm_orchestration\test_llm_astrology_input_boundaries.py:121:            "natal_data": {"legacy": "LEGACY_NATAL_DATA_PROMPT_OWNER"},
+backend/tests\llm_orchestration\test_llm_legacy_extinction.py:17:        "event_guidance",
+backend/tests\evaluation\conftest.py:56:            "natal_data": {"planets": {"sun": "aries"}},
+backend/tests\evaluation\conftest.py:57:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+backend/tests\evaluation\conftest.py:70:            "chart_json": '{"planets": {"sun": {"sign": "aries"}}}',
+backend/tests\llm_orchestration\test_llm_execution_request.py:111:        "natal_data": {},
+backend/tests\llm_orchestration\test_llm_execution_request.py:118:    assert "natal_data" not in request.context.extra_context
+backend/tests\llm_orchestration\test_prompt_renderer.py:74:    assert "chart_json" not in result
+backend/tests\llm_orchestration\test_prompt_renderer.py:75:    assert "natal_data" not in result
+backend/tests\llm_orchestration\test_prompt_governance_registry.py:58:        "event_guidance",
+backend/tests\llm_orchestration\test_prompt_governance_registry.py:72:        "event_guidance",
+backend/tests\llm_orchestration\test_qualified_context.py:20:    assert QualifiedContext.compute_quality(["natal_interpretation", "natal_data"]) == "minimal"
+backend/tests\llm_orchestration\test_qualified_context.py:21:    assert QualifiedContext.compute_quality(["astrologer_profile", "natal_data"]) == "minimal"
+backend/tests\llm_orchestration\test_qualified_context.py:83:        assert "natal_data" in res.missing_fields
+backend/app\tests\unit\test_backend_services_structure_guard.py:31:    "chart_json_builder.py",
+backend/tests\llm_orchestration\test_resolved_execution_plan.py:38:        context={"chart_json": "{}"},
+backend/tests\llm_orchestration\test_resolved_execution_plan.py:110:        context={"chart_json": "{}"},
+backend/tests\llm_orchestration\test_resolved_execution_plan.py:127:        context={"chart_json": "{}"},
+backend/app\ops\llm\release\build_qualification_evidence.py:41:    "natal_data",
+backend/app\ops\llm\release\build_qualification_evidence.py:42:    "chart_json",
+backend/app\ops\llm\release\build_qualification_evidence.py:183:        natal_data=context.get("natal_data"),
+backend/app\ops\llm\release\build_qualification_evidence.py:184:        chart_json=context.get("chart_json"),
+backend/app\ops\llm\release\build_qualification_evidence.py:199:                "natal_data",
+backend/app\ops\llm\release\build_qualification_evidence.py:200:                "chart_json",
+backend/app\ops\llm\golden_regression_service.py:39:        "natal_data",
+backend/app\ops\llm\golden_regression_service.py:40:        "chart_json",
+backend/app\ops\llm\golden_regression_service.py:488:                    natal_data=context.get("natal_data"),
+backend/app\ops\llm\golden_regression_service.py:489:                    chart_json=context.get("chart_json"),
+backend/app\ops\llm\golden_regression_service.py:498:                            "natal_data",
+backend/app\ops\llm\golden_regression_service.py:499:                            "chart_json",
+backend/app\tests\unit\test_chart_json_builder.py:71:    build_chart_json,
+backend/app\tests\unit\test_chart_json_builder.py:450:def test_build_chart_json_full(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:451:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:454:    assert chart["meta"]["chart_json_version"] == "1"
+backend/app\tests\unit\test_chart_json_builder.py:869:def test_build_chart_json_projects_enriched_profiles_from_chart_balance(
+backend/app\tests\unit\test_chart_json_builder.py:900:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1021:def test_build_chart_json_projects_rich_runtime_house(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:1043:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1085:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1101:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1126:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1133:def test_build_chart_json_no_time(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:1180:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1215:def test_build_chart_json_no_location(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:1217:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1227:def test_build_chart_json_no_location_no_time(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:1230:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1241:def test_build_chart_json_serializes_empty_advanced_blocks(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:1251:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1263:    chart_json = {
+backend/app\tests\unit\test_chart_json_builder.py:1283:    evidence = build_evidence_catalog(chart_json)
+backend/app\tests\unit\test_chart_json_builder.py:1301:    chart_json = {
+backend/app\tests\unit\test_chart_json_builder.py:1307:    evidence = build_evidence_catalog(chart_json)
+backend/app\tests\unit\test_chart_json_builder.py:1321:def test_build_chart_json_handles_none_speed_and_orb_used(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:1326:    chart = build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1332:def test_build_chart_json_uses_resolved_sign_labels(mock_natal_result, mock_birth_profile):
+backend/app\tests\unit\test_chart_json_builder.py:1347:    chart = build_chart_json(mock_natal_result, mock_birth_profile, labels=labels)
+backend/app\tests\unit\test_chart_json_builder.py:1359:def test_build_chart_json_requires_aspect_interpretive_hints(
+backend/app\tests\unit\test_chart_json_builder.py:1367:        build_chart_json(mock_natal_result, mock_birth_profile)
+backend/app\tests\unit\test_chart_json_builder.py:1374:    chart_json = {
+backend/app\tests\unit\test_chart_json_builder.py:1400:    catalog = build_enriched_evidence_catalog(chart_json)
+backend/tests\architecture\test_llm_legacy_extinction.py:21:FORBIDDEN_NATAL_CARRIERS = {"chart_json", "natal_data", "evidence_catalog"}
+backend/tests\architecture\test_llm_legacy_extinction.py:49:    assert "natal_data=" not in natal_method
+backend/tests\architecture\test_llm_legacy_extinction.py:50:    assert "chart_json=" not in natal_method
+backend/tests\architecture\test_llm_legacy_extinction.py:62:        "Transition legacy: seuls les schemas anciens peuvent encore demander chart_json."
+backend/tests\architecture\test_llm_legacy_extinction.py:78:    assert '"chart_json"' not in natal_preview_block
+backend/tests\architecture\test_llm_legacy_extinction.py:79:    assert '"natal_data"' not in natal_preview_block
+backend/tests\architecture\test_llm_legacy_extinction.py:91:    assert natal_placeholders.isdisjoint({"chart_json", "natal_data"})
+backend/tests\architecture\test_llm_astrology_input_payload_boundaries.py:80:    assert {"chart_json", "natal_data"}.isdisjoint(assigned_blocks)
+backend/tests\architecture\test_llm_astrology_input_payload_boundaries.py:110:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+backend/tests\integration\test_llm_golden_regression.py:439:    assert captured["context"].chart_json is None
+backend/tests\integration\test_llm_golden_regression.py:440:    assert captured["context"].natal_data is None
+backend/app\tests\unit\test_chat_guidance_service.py:216:                '"suggested_replies":["Suite 1"],"intent":"offer_event_guidance",'
+backend/app\tests\unit\test_chat_guidance_service.py:222:                "intent": "offer_event_guidance",
+backend/tests\integration\test_llm_legacy_extinction.py:31:    forbidden_carriers = {"chart_json", "natal_data", "evidence_catalog"}
+backend/tests\integration\test_llm_legacy_extinction.py:52:            "chart_json": '{"legacy": true}',
+backend/tests\integration\test_llm_legacy_extinction.py:53:            "natal_data": {"legacy": True},
+backend/tests\integration\test_llm_legacy_extinction.py:62:    assert "chart_json" not in payload
+backend/tests\integration\test_llm_legacy_extinction.py:63:    assert "natal_data" not in payload
+backend/tests\integration\test_llm_legacy_extinction.py:78:                "chart_json": {"type": "object"},
+backend/tests\integration\test_llm_legacy_extinction.py:79:                "natal_data": {"type": "object"},
+backend/tests\integration\test_llm_legacy_extinction.py:89:            chart_json='{"legacy": true}',
+backend/tests\integration\test_llm_legacy_extinction.py:90:            natal_data={"legacy": True},
+backend/tests\integration\test_llm_integrated_propagation.py:211:        natal_data={"planets": {}},
+backend/app\tests\unit\test_common_context.py:25:        natal_data={"planets": []},  # Added
+backend/app\tests\unit\test_common_context.py:39:        natal_data={"planets": []},
+backend/app\tests\unit\test_common_context.py:105:        assert ctx.payload.natal_data is None
+backend/app\tests\unit\test_common_context.py:147:        assert ctx.payload.natal_data == {"planets": {"sun": {"sign": "aries"}}}
+backend/app\ops\llm\bootstrap\seed_guidance_prompts.py:79:        "use_case_key": "event_guidance",
+backend/app\ops\llm\bootstrap\seed_guidance_prompts.py:82:        "required_prompt_placeholders": ["chart_json", "event_description"],
+backend/app\ops\llm\bootstrap\seed_guidance_prompts.py:86:            "Theme natal disponible :\n{{chart_json}}\n\n"
+backend/app\ops\llm\bootstrap\seed_66_20_taxonomy.py:62:        ("guidance", "event", "free", "event_guidance"),
+backend/app\ops\llm\bootstrap\seed_66_20_taxonomy.py:63:        ("guidance", "event", "premium", "event_guidance"),
+backend/tests\integration\test_llm_runtime_suppression.py:41:            chart_json='{"legacy": true}',
+backend/tests\integration\test_llm_runtime_suppression.py:42:            natal_data={"legacy": True},
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:197:    assert {"ChartObjectRuntimeData", "CalculationGraph", "chart_json", "natal_data"}.issubset(
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:200:    assert "chart_json" not in serialized_facts
+backend/tests\unit\domain\astrology\test_llm_astrology_input_v1.py:201:    assert "natal_data" not in serialized_facts
+backend/tests\integration\test_admin_llm_sample_payloads.py:25:            "chart_json": {"sun": "aries", "moon": "leo"},
+backend/tests\integration\test_admin_llm_sample_payloads.py:54:        assert item_1["payload_json"]["chart_json"] == {"sun": "aries", "moon": "leo"}
+backend/tests\integration\test_admin_llm_sample_payloads.py:436:                payload_json={"chart_json": {"sun": "aries"}, "email": "john@doe.com"}
+backend/tests\integration\test_admin_llm_sample_payloads.py:448:def test_admin_llm_sample_payload_requires_natal_chart_json():
+backend/tests\integration\test_admin_llm_sample_payloads.py:466:        assert "must include chart_json" in payload["message"]
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:62:        "chart_json",
+backend/tests\unit\domain\astrology\test_llm_astrology_input_hash.py:63:        "natal_data",
+backend/tests\integration\test_admin_llm_catalog.py:111:        developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:156:                "chart_json": {"sun": "aries"},
+backend/tests\integration\test_admin_llm_catalog.py:720:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:1207:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:1251:                payload_json={"chart_json": {"sun": "aries"}},
+backend/tests\integration\test_admin_llm_catalog.py:1287:            assert placeholders["chart_json"]["status"] == "resolved"
+backend/tests\integration\test_admin_llm_catalog.py:1288:            assert placeholders["chart_json"]["resolution_source"] == "sample_payload"
+backend/tests\integration\test_admin_llm_catalog.py:1339:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:1383:                payload_json={"chart_json": {"sun": "aries"}},
+backend/tests\integration\test_admin_llm_catalog.py:1471:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:1515:                payload_json={"chart_json": {"sun": "aries"}},
+backend/tests\integration\test_admin_llm_catalog.py:1600:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:1712:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:1756:                payload_json={"chart_json": {"sun": "aries"}},
+backend/tests\integration\test_admin_llm_catalog.py:1841:            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:2157:            developer_prompt="Prompt natal {{chart_json}} {{last_user_msg}} {{locale}}",
+backend/tests\integration\test_admin_llm_catalog.py:2201:                payload_json={"chart_json": {"sun": "aries"}},
+backend/tests\integration\test_admin_llm_catalog.py:2283:            structured_output={"provider": "openai", "chart_json": "secret-chart"},
+backend/tests\integration\test_admin_llm_catalog.py:2313:        assert body["structured_output"]["chart_json"] == "[REDACTED]"
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:45:from app.services.chart.json_builder import build_chart_json
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:187:    chart_json = build_chart_json(result, birth_profile)
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:219:                "sect": chart_json["dignities"]["sect"],
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:220:                "first_planet_sect_condition": chart_json["dignities"]["planets"][first_planet][
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:224:                    item["condition_code"] for item in chart_json["advanced_conditions"]
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:227:                    "top_planet_code": chart_json["dominant_planets"]["top_planet_code"],
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:228:                    "chart_ruler_code": chart_json["dominant_planets"]["chart_ruler_code"],
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:229:                    "most_elevated_planet_code": chart_json["dominant_planets"][
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:233:                        item["planet_code"] for item in chart_json["dominant_planets"]["planets"]
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:238:                        item["signal"] for item in chart_json["interpretation_adapter"]["signals"]
+backend/tests\unit\domain\astrology\fixtures\traditional_golden_cases.py:240:                    "critical_patterns": chart_json["interpretation_adapter"]["critical_patterns"],
+backend/app\domain\prediction\astrologer_prompt_builder.py:85:        if not ctx.natal_data:
+backend/app\domain\prediction\astrologer_prompt_builder.py:88:        pos = ctx.natal_data.get("planet_positions", [])
+backend/app\domain\prediction\astrologer_prompt_builder.py:102:        houses = ctx.natal_data.get("houses", [])
+backend/app\tests\unit\test_gateway_input_validation_payload.py:5:def test_build_validation_payload_does_not_rebuild_chart_json_from_natal_data() -> None:
+backend/app\tests\unit\test_gateway_input_validation_payload.py:9:        developer_prompt="Test {{chart_json}}",
+backend/app\tests\unit\test_gateway_input_validation_payload.py:12:            "required": ["chart_json"],
+backend/app\tests\unit\test_gateway_input_validation_payload.py:14:                "chart_json": {"type": "object"},
+backend/app\tests\unit\test_gateway_input_validation_payload.py:24:            natal_data={"meta": {"chart_json_version": "1"}},
+backend/app\tests\unit\test_gateway_input_validation_payload.py:25:            chart_json='{"meta": {"chart_json_version": "legacy"}}',
+backend/app\tests\unit\test_gateway_input_validation_payload.py:29:    assert "chart_json" not in payload
+backend/app\tests\unit\test_gateway_input_validation_payload.py:32:def test_build_validation_payload_does_not_parse_chart_json_string_from_context() -> None:
+backend/app\tests\unit\test_gateway_input_validation_payload.py:36:        developer_prompt="Test {{chart_json}}",
+backend/app\tests\unit\test_gateway_input_validation_payload.py:39:            "required": ["chart_json"],
+backend/app\tests\unit\test_gateway_input_validation_payload.py:40:            "properties": {"chart_json": {"type": "object"}},
+backend/app\tests\unit\test_gateway_input_validation_payload.py:47:        ExecutionContext(chart_json='{"meta": {"chart_json_version": "1"}}'),
+backend/app\tests\unit\test_gateway_input_validation_payload.py:50:    assert "chart_json" not in payload
+backend/app\tests\unit\test_gateway_3_roles.py:63:async def test_chart_json_in_user_message_not_developer(
+backend/app\tests\unit\test_gateway_3_roles.py:67:    Vérifie que chart_json est placé dans le message user si absent de required_prompt_placeholders.
+backend/app\tests\unit\test_gateway_3_roles.py:71:    # Config WITHOUT chart_json in placeholders
+backend/app\tests\unit\test_gateway_3_roles.py:99:        context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
+backend/app\tests\unit\test_gateway_3_roles.py:120:async def test_chart_json_still_in_user_when_placeholder_required_but_absent_in_prompt(
+backend/app\tests\unit\test_gateway_3_roles.py:125:    Régression: si chart_json est dans required_prompt_placeholders
+backend/app\tests\unit\test_gateway_3_roles.py:128:    use_case = "test_chart_json_required_but_not_rendered"
+backend/app\tests\unit\test_gateway_3_roles.py:132:        display_name="Test chart_json fallback",
+backend/app\tests\unit\test_gateway_3_roles.py:134:        required_prompt_placeholders=["locale", "use_case", "chart_json"],
+backend/app\tests\unit\test_gateway_3_roles.py:157:        context={"locale": "fr", "use_case": use_case, "chart_json": chart_data},
+backend/app\tests\unit\test_gateway_modes.py:330:        context=ExecutionContext(chart_json='{"sun_sign":"aries"}'),
+backend/app\tests\unit\test_gateway_modes.py:418:        context=ExecutionContext(chart_json='{"meta": {"birth_date": "2017-03-14"}}'),
+backend/app\tests\unit\test_natal_interpretation_service.py:438:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend/app\tests\unit\test_natal_interpretation_service.py:440:            ) as mock_build_chart_json,
+backend/app\tests\unit\test_natal_interpretation_service.py:467:        assert mock_build_chart_json.call_args.args[2] == "no_time"
+backend/app\tests\unit\test_natal_interpretation_service.py:531:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:237:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:290:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:339:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:388:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend/app\tests\unit\test_natal_interpretation_service_v2.py:444:                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
+backend/app\domain\llm\runtime\adapter.py:80:        natal_data=normalized_context.get("natal_data"),
+backend/app\domain\llm\runtime\adapter.py:81:        chart_json=normalized_context.get("chart_json"),
+backend/app\domain\llm\runtime\adapter.py:154:                natal_data=context.get("natal_data"),
+backend/app\domain\llm\runtime\adapter.py:155:                chart_json=context.get("chart_json"),
+backend/app\domain\llm\runtime\adapter.py:211:        elif use_case == "event_guidance":
+backend/app\domain\llm\runtime\contracts.py:116:    natal_data: Optional[Dict[str, Any]] = None
+backend/app\domain\llm\runtime\contracts.py:117:    chart_json: Optional[str] = None
+backend/app\tests\unit\test_natal_metrics.py:84:        key = "natal_validation_fail_total{reason=json_error,use_case=event_guidance}"
+backend/app\tests\unit\test_natal_metrics.py:86:        validate_output("BAD JSON", _SIMPLE_SCHEMA, use_case="event_guidance")
+backend/app\tests\unit\test_natal_metrics.py:88:        # event_guidance doesn't start with "natal" so no increment
+backend/app\tests\unit\test_natal_metrics.py:128:        validate_output(raw, schema, evidence_catalog=catalog, use_case="event_guidance")
+backend/app\tests\unit\test_natal_metrics.py:131:        assert after == before  # event_guidance doesn't start with "natal"
+backend/app\domain\llm\runtime\gateway.py:86:PAID_USE_CASES = {"natal_interpretation", "event_guidance", "natal_interpretation_short"}
+backend/app\domain\llm\runtime\gateway.py:192:        chart_json_in_prompt: bool = False,
+backend/app\domain\llm\runtime\gateway.py:233:            and "chart_json" in context
+backend/app\domain\llm\runtime\gateway.py:234:            and context["chart_json"]
+backend/app\domain\llm\runtime\gateway.py:235:            and not chart_json_in_prompt
+backend/app\domain\llm\runtime\gateway.py:237:            parts.append(f"Technical Data: {context['chart_json']}")
+backend/app\domain\llm\runtime\gateway.py:367:                        "chart_json",
+backend/app\domain\llm\runtime\gateway.py:373:                        "natal_data",
+backend/app\domain\llm\runtime\gateway.py:659:            "natal_data",
+backend/app\domain\llm\runtime\gateway.py:660:            "chart_json",
+backend/app\domain\llm\runtime\gateway.py:676:            natal_data=context.get("natal_data"),
+backend/app\domain\llm\runtime\gateway.py:677:            chart_json=context.get("chart_json"),
+backend/app\domain\llm\runtime\gateway.py:1412:                render_vars.pop("chart_json", None)
+backend/app\domain\llm\runtime\gateway.py:1413:                render_vars.pop("natal_data", None)
+backend/app\domain\llm\runtime\gateway.py:1550:                    chart_json_in_prompt="{{chart_json}}" in plan.rendered_developer_prompt,
+backend/app\domain\llm\runtime\gateway.py:1952:            if is_natal_use_case and prop in {"chart_json", "natal_data", "evidence_catalog"}:
+backend/app\services\prediction\engine_orchestrator.py:1051:                "'house_cusps' or chart_json-style 'houses'"
+backend/app\domain\llm\prompting\schemas.py:74:    "offer_event_guidance",
+backend/app\domain\llm\prompting\context.py:43:    natal_data: Optional[dict[str, Any]] = None
+backend/app\domain\llm\prompting\context.py:83:            if not self.payload.natal_data:
+backend/app\domain\llm\prompting\context.py:84:                missing.append("natal_data")
+backend/app\domain\llm\prompting\context.py:93:    _CRITICAL_FIELDS = frozenset({"natal_data", "astrologer_profile"})
+backend/app\domain\llm\prompting\context.py:105:        if "natal_data" in missing_set and "natal_interpretation" in missing_set:
+backend/app\domain\llm\prompting\context.py:110:            "natal_data" in missing_set or "natal_interpretation" in missing_set
+backend/app\domain\llm\prompting\context.py:189:        natal_data = None
+backend/app\domain\llm\prompting\context.py:207:            natal_data = chart.result.model_dump(mode="json")
+backend/app\domain\llm\prompting\context.py:209:            missing_fields.append("natal_data")
+backend/app\domain\llm\prompting\context.py:244:            natal_data=natal_data,
+backend/app\domain\llm\prompting\catalog.py:170:    "event_guidance": {
+backend/app\services\chart\__init__.py:3:from app.services.chart.json_builder import build_chart_json
+backend/app\services\chart\__init__.py:14:    "build_chart_json",
+backend/app\services\chart\json_builder.py:754:def build_chart_json(
+backend/app\services\chart\json_builder.py:805:        "chart_json_version": "1",
+backend/app\services\chart\json_builder.py:944:def build_evidence_catalog(chart_json: dict[str, Any]) -> list[str]:
+backend/app\services\chart\json_builder.py:946:    enriched = build_enriched_evidence_catalog(chart_json)
+backend/app\services\chart\json_builder.py:951:    chart_json: dict[str, Any],
+backend/app\services\chart\json_builder.py:974:    for p in chart_json.get("planets", []):
+backend/app\services\chart\json_builder.py:999:    for a in chart_json.get("aspects", []):
+backend/app\services\chart\json_builder.py:1022:    angles = chart_json.get("angles", {})
+backend/app\services\chart\json_builder.py:1038:    for h in chart_json.get("houses", []):
+backend/app\services\chart\json_builder.py:1045:    for ruler in chart_json.get("house_rulers", []):
+backend/app\domain\llm\governance\data\prompt_governance_registry.json:53:      { "name": "chart_json", "classification": "optional" },
+backend/app\domain\llm\configuration\canonical_use_case_registry.py:56:                "offer_event_guidance",
+backend/app\domain\llm\configuration\canonical_use_case_registry.py:232:        key="event_guidance",
+backend/app\domain\llm\configuration\canonical_use_case_registry.py:237:        required_prompt_placeholders=["chart_json", "event_description"],
+backend/app\domain\llm\configuration\canonical_use_case_registry.py:242:            "required": ["chart_json", "event_description"],
+backend/app\domain\llm\configuration\canonical_use_case_registry.py:244:                "chart_json": {"type": "object"},
+backend/app\tests\integration\test_natal_free_short_variant.py:181:            "app.services.llm_generation.natal.interpretation_service.build_chart_json"
+backend/app\tests\integration\test_contract_api.py:57:    assert "chart_json" in data["required_prompt_placeholders"]
+backend/app\tests\integration\test_gateway_gpt5_params.py:84:            required_prompt_placeholders=["chart_json"],
+backend/app\tests\integration\test_gateway_gpt5_params.py:92:        developer_prompt="Analyse {{chart_json}}",
+backend/app\tests\integration\test_gateway_gpt5_params.py:162:        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+backend/app\tests\integration\test_gateway_gpt5_params.py:204:        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+backend/app\tests\integration\test_llm_qa_runtime_contracts.py:84:        required_prompt_placeholders=["locale", "chart_json"],
+backend/app\tests\integration\test_llm_qa_runtime_contracts.py:92:        developer_prompt="Locale={{locale}}\nChart={{chart_json}}",
+backend/app\tests\integration\test_llm_qa_runtime_contracts.py:157:                context=ExecutionContext(chart_json='{"sun":"taurus"}'),
+backend/app\tests\integration\test_ephemeris_api.py:525:    def _simulate_natal_data_missing():
+backend/app\tests\unit\test_use_case_contract.py:212:    required = ["{{chart_json}}"]
+backend/app\tests\unit\test_use_case_contract.py:216:    assert "Use-case specific placeholder '{{chart_json}}' is missing." in result_fail.errors
+backend/app\tests\unit\test_use_case_contract.py:218:    text_pass = "Hello {{locale}} {{use_case}} {{chart_json}}"
+backend/app\core\sensitive_data.py:258:    "natal_data": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+backend/app\core\sensitive_data.py:260:    "chart_json": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+backend/app\services\llm_generation\admin_sample_payloads.py:62:    if feature == "natal" and "chart_json" not in payload_json:
+backend/app\services\llm_generation\admin_sample_payloads.py:63:        raise ValueError("natal sample payload must include chart_json")
+backend/app\tests\unit\test_seed_30_8_v3_prompt_contract.py:65:    assert "{{chart_json}}" not in prompt
+backend/app\tests\unit\test_seed_29_prompt_contract.py:7:    assert "chart_json" not in config["required_prompt_placeholders"]
+backend/app\tests\unit\test_seed_29_prompt_contract.py:8:    assert "{{chart_json}}" not in config["developer_prompt"]
+backend/app\tests\unit\test_seed_29_prompt_contract.py:14:    assert "chart_json" not in config["required_prompt_placeholders"]
+backend/app\tests\unit\test_seed_29_prompt_contract.py:15:    assert "{{chart_json}}" not in config["developer_prompt"]
+backend/app\services\llm_generation\natal\interpretation_service.py:62:    build_chart_json,
+backend/app\services\llm_generation\natal\interpretation_service.py:691:        chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
+backend/app\services\llm_generation\natal\interpretation_service.py:712:                chart_json_dict=chart_json_dict,
+backend/app\services\llm_generation\natal\interpretation_service.py:1030:        chart_json_dict: dict,
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:34:    "runtime_only": ("request_id", "trace_id", "chart_json", "natal_data"),
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:43:    "chart_json",
+backend/app\domain\astrology\interpretation\llm_astrology_input_v1.py:44:    "natal_data",

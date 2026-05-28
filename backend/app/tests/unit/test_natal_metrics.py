@@ -81,11 +81,11 @@ class TestNatalValidationFailCounter:
 
     def test_fail_counter_not_incremented_for_non_natal(self):
         """natal_validation_fail_total should NOT increment for non-natal use cases."""
-        key = "natal_validation_fail_total{reason=json_error,use_case=event_guidance}"
+        key = "natal_validation_fail_total{reason=json_error,use_case=test_guidance}"
         before = get_metrics_snapshot()["counters"].get(key, 0.0)
-        validate_output("BAD JSON", _SIMPLE_SCHEMA, use_case="event_guidance")
+        validate_output("BAD JSON", _SIMPLE_SCHEMA, use_case="test_guidance")
         after = get_metrics_snapshot()["counters"].get(key, 0.0)
-        # event_guidance doesn't start with "natal" so no increment
+        # test_guidance doesn't start with "natal" so no increment
         assert after == before
 
 
@@ -125,7 +125,7 @@ class TestNatalInvalidEvidenceCounter:
         }
         catalog = {"VALID_ID": []}
         raw = json.dumps({"evidence": ["HALLUCINATED_ID"]})
-        validate_output(raw, schema, evidence_catalog=catalog, use_case="event_guidance")
+        validate_output(raw, schema, evidence_catalog=catalog, use_case="test_guidance")
 
         after = get_metrics_snapshot()["counters"].get(key, 0.0)
-        assert after == before  # event_guidance doesn't start with "natal"
+        assert after == before  # test_guidance doesn't start with "natal"

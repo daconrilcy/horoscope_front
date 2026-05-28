@@ -229,24 +229,6 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         },
     ),
     CanonicalUseCaseContract(
-        key="event_guidance",
-        display_name="Guidance Événementielle",
-        description="Analyse d'un événement spécifique via l'astrologie.",
-        output_schema_name="AstroResponse_v1",
-        fallback_target_key="natal_interpretation_short",
-        required_prompt_placeholders=["chart_json", "event_description"],
-        interaction_mode="chat",
-        user_question_policy="required",
-        input_schema={
-            "type": "object",
-            "required": ["chart_json", "event_description"],
-            "properties": {
-                "chart_json": {"type": "object"},
-                "event_description": {"type": "string", "maxLength": 500},
-            },
-        },
-    ),
-    CanonicalUseCaseContract(
         key="astrologer_selection_help",
         display_name="Aide au Choix d'Astrologue",
         description="Assistant pour aider l'utilisateur à choisir un expert.",

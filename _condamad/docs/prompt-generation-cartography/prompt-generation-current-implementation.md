@@ -8,7 +8,7 @@ Cette cartographie documente l'implementation actuelle de generation des prompts
 
 Les donnees prompt-visible sont limitees aux blocs prouves comme envoyables au provider. Les donnees validation-owned et audit-only restent hors prompt provider: `evidence`, `evidence_refs`, `provenance`, `projection_hash`, `llm_input_hash`, reponses provider, audit metadata et observability. `evidence` et `evidence_refs` peuvent alimenter des audit-only anchors en persistence, sans devenir du materiau prompt-visible.
 
-CS-351 a CS-355 ajoutent une precision importante: des processus provider-capable existent hors flux natal moderne. Guidance, guidance contextuelle, chat public et horoscope daily sont des flux paralleles supportes; repair et fallback restent non nominaux; bootstrap, tests et archives ne sont pas runtime truth. `event_guidance` ne doit pas etre conserve comme dette: il doit etre migre ou supprime dans une story dediee. Admin manual execution est admin-only et provider-capable, mais sa politique exacte reste a creuser avant migration, restriction ou decommission.
+CS-351 a CS-355 ajoutent une precision importante: des processus provider-capable existent hors flux natal moderne. Guidance, guidance contextuelle, chat public et horoscope daily sont des flux paralleles supportes; repair et fallback restent non nominaux; bootstrap, tests et archives ne sont pas runtime truth. CS-359 a supprime le use case dormant `event_guidance`: il ne reste pas une dette active ni un chemin provider-capable supporte. Admin manual execution est admin-only et provider-capable, mais sa politique exacte reste a creuser avant migration, restriction ou decommission.
 
 Sources principales: `_condamad/audits/prompt-generation-cartography/2026-05-27-1800/01-surface-inventory-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1809/02-configuration-assembly-placeholder-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1822/03-runtime-gateway-handoff-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1835/04-natal-astrology-input-audit.md`, `_condamad/audits/prompt-generation-cartography/2026-05-27-1847/05-output-validation-persistence-audit.md`, `_condamad/architecture/prompt-generation-cartography/2026-05-27-0000/architecture-prompt-generation-llm.md`, `_condamad/reports/prompt-generation-cartography/2026-05-27-0000/report-prompt-generation-cartography.md`.
 
@@ -19,7 +19,7 @@ Scope:
 - documenter le runtime LLM actuel sans changer le code;
 - cartographier les owners de configuration, rendu, input natal, provider handoff, validation, audit et observability;
 - exposer les chemins nominaux et non nominaux avec Mermaid;
-- garder visibles les blockers connus: output schema ownership split, semantic grounding borne, migration `event_guidance` et politique admin manual execution.
+- garder visibles les blockers connus: output schema ownership split, semantic grounding borne et politique admin manual execution; `event_guidance` est clos par suppression CS-359.
 
 Non-goals:
 
@@ -212,7 +212,7 @@ CS-353 et CS-354 prouvent que le flux natal moderne n'est pas le seul chemin cap
 | Admin manual execution | admin-only a creuser | oui | sample payload copie dans `ExecutionContext.extra_context` | `execute_admin_catalog_sample_payload` | audit/politique obligatoire avant restriction, migration ou decommission |
 | Tests legacy carrier | test-only | non | fixtures `chart_json` / `natal_data` | `backend/tests/**` | conserver comme guard, pas runtime truth |
 | Archives et docs historiques | archival | non | mentions documentaires | `_condamad/**` | source context only |
-| `event_guidance` | migration obligatoire | conditionnel si invoque via adapter/gateway | `chart_json`, `event_description` | `canonical_use_case_registry.py`, `seed_guidance_prompts.py`, `AIEngineAdapter` | ne pas garder en dette; migrer hors `chart_json` ou supprimer |
+| `event_guidance` | supprime par CS-359 | non | aucun input actif | contrat, seed et branche adapter supprimes | use case dormant sans trigger produit audite; ne pas recreer |
 
 Cette matrice remplace toute lecture implicite ou vague des chemins paralleles. Un chemin provider-capable non-natal ne doit pas etre decrit comme sous-cas du carrier natal moderne. Un seed, un test, une archive ou un sample admin ne doit pas etre decrit comme runtime truth.
 
@@ -253,7 +253,7 @@ CS-344 classe `backend/app/ops/llm/bootstrap/**` comme provisioning. Les chemins
 
 Les carriers legacy `chart_json` et `natal_data` peuvent rester dans des contextes historiques, de tests, d'admin sample ou non modernes; ils sont exclus du prompt-visible moderne lorsque `llm_astrology_input_v1` est present.
 
-`event_guidance` reste un cas a traiter: le contrat canonique et les seeds identifient encore `chart_json` avec `event_description`, sans trigger public audite. La decision produit est maintenant de ne conserver aucune dette: une story de migration doit soit migrer `event_guidance` vers un input canonique non legacy, soit supprimer le use case et ses seeds/contrats associes.
+`event_guidance` est clos par CS-359: faute de trigger produit audite, le contrat canonique, les seeds, le mapping taxonomy et la branche adapter ont ete supprimes. Les mentions restantes dans les audits et stories sont historiques ou probatoires, pas une runtime truth.
 
 Admin manual execution est admin-only mais provider-capable: `execute_admin_catalog_sample_payload` construit un `LLMExecutionRequest` depuis un sample payload et appelle `LLMGateway.execute_request`. Ce statut doit etre creuse par une story dediee pour decider s'il faut documenter comme surface admin supportee, restreindre, migrer ses samples, ou decommissionner l'execution live.
 
@@ -268,7 +268,7 @@ Tests et gardes cites par les sources:
 - `backend/tests/unit/domain/astrology/test_llm_astrology_input_evidence.py` garde les evidence refs;
 - `backend/tests/integration/test_llm_legacy_extinction.py` garde l'extinction des carriers legacy avec `--long`;
 - `_condamad/stories/regression-guardrails.md` contient notamment RG-002 pour ne pas deplacer la logique metier dans les routeurs API v1 et RG-042 pour la gouvernance des docs LLM source-of-truth.
-- `_condamad/stories/regression-guardrails.md` doit contenir le guardrail exact de classification des processus prompt LLM, afin de proteger la matrice provider-capable, fallback, repair, bootstrap, admin, test, archival et migration `event_guidance`.
+- `_condamad/stories/regression-guardrails.md` doit contenir le guardrail exact de classification des processus prompt LLM, afin de proteger la matrice provider-capable, fallback, repair, bootstrap, admin, test, archival et la suppression de `event_guidance`.
 
 Validation documentaire CS-350: scans `rg` sur Mermaid, symbols LLM, prompt-visible/backend-only, chemins nominaux et non nominaux.
 
@@ -280,7 +280,7 @@ Risques residuels:
 - semantic grounding borne: evidence refs et policy checks ne sont pas un verificateur semantique complet;
 - observability et replay sont audit-only, pas preuve de correction;
 - certains tests legacy longs exigent `pytest --long`;
-- `event_guidance` doit etre migre hors `chart_json` ou supprime; aucune conservation en dette n'est acceptee;
+- `event_guidance` est supprime par CS-359; aucune conservation en dette ni recreation avec `chart_json` n'est acceptee;
 - admin manual execution doit etre audite plus profondement avant decision documenter/restrict/migrer/decommission;
 - exact guardrail registry pour handoff provider/post-provider doit proteger la matrice ci-dessus.
 

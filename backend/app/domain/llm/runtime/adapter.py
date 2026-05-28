@@ -208,8 +208,6 @@ class AIEngineAdapter:
         request.user_input.feature = "guidance"
         if use_case.startswith("guidance_"):
             request.user_input.subfeature = use_case.replace("guidance_", "")
-        elif use_case == "event_guidance":
-            request.user_input.subfeature = "event"
         else:
             request.user_input.subfeature = use_case
         request.user_input.plan = plan

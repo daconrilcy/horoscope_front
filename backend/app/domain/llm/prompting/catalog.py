@@ -167,14 +167,6 @@ PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
         "temperature": 0.7,
         "output_schema": CHAT_RESPONSE_V1,
     },
-    "event_guidance": {
-        "name": "event-guidance-v1",
-        "description": "Guidance for a specific life event",
-        "engine_env_key": "OPENAI_ENGINE_EVENT_GUIDANCE",
-        "max_tokens": 4000,
-        "temperature": 0.7,
-        "output_schema": ASTRO_RESPONSE_V1,
-    },
     "test_natal": {
         "name": "test-natal-v1",
         "description": "Synthetic natal use case for gateway/orchestration tests",

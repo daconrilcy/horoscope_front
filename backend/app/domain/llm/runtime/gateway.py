@@ -83,7 +83,7 @@ from app.infra.providers.llm.openai_responses_client import ResponsesClient
 logger = logging.getLogger("app.domain.llm.runtime.gateway")
 
 # Use cases that MUST have a valid output schema (premium paid features)
-PAID_USE_CASES = {"natal_interpretation", "event_guidance", "natal_interpretation_short"}
+PAID_USE_CASES = {"natal_interpretation", "natal_interpretation_short"}
 
 _VALID_INTERACTION_MODES = {"structured", "chat"}
 _VALID_QUESTION_POLICIES = {"none", "optional", "required"}
