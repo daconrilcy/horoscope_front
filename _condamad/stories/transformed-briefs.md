@@ -149,3 +149,4 @@
 | cs-367 | `_story_briefs\cs-367-bigbang-remplacer-ancien-contrat-prompt-theme-astral-supprimer-legacy.md` | `_condamad\stories\cs-367-bigbang-theme-astral-prompt-contract\00-story.md` |
 | cs-368 | `_story_briefs\cs-368-audit-cloture-bascule-theme-astral-prompt-contract.md` | `_condamad\stories\cs-368-audit-cloture-bascule-theme-astral-prompt-contract\00-story.md` |
 | cs-369 | `_story_briefs\cs-369-audit-review-adversariale-correction-theme-astral-prompt-contract.md` | `_condamad\stories\cs-369-audit-review-adversariale-correction-theme-astral-prompt-contract\00-story.md` |
+| cs-370 | `_story_briefs\cs-370-documenter-synthese-nouvelle-structure-json-theme-astral-llm.md` | `_condamad\stories\cs-370-documenter-synthese-json-theme-astral-llm\00-story.md` |
