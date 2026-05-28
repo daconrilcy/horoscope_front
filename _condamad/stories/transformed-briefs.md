@@ -142,3 +142,4 @@
 | cs-360 | `_story_briefs\cs-360-audit-admin-manual-execution-provider-capable.md` | `_condamad\stories\cs-360-audit-admin-manual-execution-provider-capable\00-story.md` |
 | cs-361 | `_story_briefs\cs-361-audit-usage-tables-textes-interpretation-moteur-astrologique.md` | `_condamad\stories\cs-361-audit-usage-tables-textes-interpretation-moteur-astrologique\00-story.md` |
 | cs-362 | `_story_briefs\cs-362-audit-contrats-prompt-theme-astral-json-provider-actuels.md` | `_condamad\stories\cs-362-audit-contrats-prompt-theme-astral-json-provider-actuels\00-story.md` |
+| cs-363 | `_story_briefs\cs-363-archi-contrat-theme-astral-llm-input-v1-et-provider-payload.md` | `_condamad\stories\cs-363-archi-contrat-theme-astral-llm-input-v1-provider-payload\00-story.md` |
