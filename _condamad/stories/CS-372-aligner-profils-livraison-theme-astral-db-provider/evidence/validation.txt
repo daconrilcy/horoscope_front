@@ -17,5 +17,16 @@ Toutes les commandes Python ont ete lancees apres activation de `.\.venv\Scripts
 | `rg -n '"plan"\s*:|"free"\s*:|"basic"\s*:|"premium"\s*:|:\s*"(free|basic|premium)"' .../*-provider-payload.json` | repo root | PASS, no matches |
 | `git diff --check` | repo root | PASS |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider` | repo root | PASS, final evidence-ready validation |
+| `ruff check .` | `backend` | PASS, review phase 2026-05-29 |
+| `python -B -m pytest -q tests\integration\test_theme_astral_prompt_contract_persistence.py tests\llm_orchestration\test_theme_astral_provider_payload_builder.py tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py --tb=short` | `backend` | PASS, 7 passed, 8 deselected, review phase 2026-05-29 |
+| `python -B -c "from app.main import app; print(app.title)"` | `backend` | PASS, `horoscope-backend`, review phase 2026-05-29 |
+| Runtime `deep` scans on constants and seed files | `backend` | PASS, no matches, review phase 2026-05-29 |
+| Provider JSON commercial-label value scan | repo root | PASS, no matches, review phase 2026-05-29 |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider\00-story.md` | repo root | PASS, review phase 2026-05-29 |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider\00-story.md` | repo root | PASS, review phase 2026-05-29 |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider` | repo root | PASS, review phase 2026-05-29 |
+| `ruff format app\domain\llm\configuration\theme_astral_contracts.py app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py tests\integration\test_theme_astral_prompt_contract_persistence.py tests\llm_orchestration\test_theme_astral_provider_payload_builder.py tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py` | `backend` | PASS, 5 files left unchanged, review phase 2026-05-29 |
+| `python -B -m pytest -q --tb=short` | `backend` | PASS, 3502 passed, 1 skipped, 1234 deselected, review phase 2026-05-29 |
+| `git diff --check` | repo root | PASS, review phase 2026-05-29 |
 
 Skips: aucun check applicable saute.

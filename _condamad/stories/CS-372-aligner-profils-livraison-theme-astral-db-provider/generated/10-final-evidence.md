@@ -7,7 +7,7 @@
 - Story key: CS-372-aligner-profils-livraison-theme-astral-db-provider
 - Source story: `_condamad/stories/CS-372-aligner-profils-livraison-theme-astral-db-provider/00-story.md`
 - Capsule path: `_condamad/stories/CS-372-aligner-profils-livraison-theme-astral-db-provider`
-- Tracker status: `ready-to-review`
+- Tracker status: `done`
 
 ## Preflight
 
@@ -96,6 +96,7 @@
 ## Final worktree status
 
 - Story changes are present in runtime, tests, docs, evidence, and story status.
+- Implementation review 2026-05-29: CLEAN; tracker closure set to `done`.
 - Pre-existing untracked files remain: `_condamad/run-state.json`, `_story_briefs/cs-372` to `cs-378`.
 - New CS-372 capsule/evidence files are untracked until committed.
 
