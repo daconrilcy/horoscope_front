@@ -141,3 +141,4 @@
 | cs-359 | `_story_briefs\cs-359-migrer-event-guidance-hors-chart-json-legacy.md` | `_condamad\stories\cs-359-migrer-event-guidance-hors-chart-json-legacy\00-story.md` |
 | cs-360 | `_story_briefs\cs-360-audit-admin-manual-execution-provider-capable.md` | `_condamad\stories\cs-360-audit-admin-manual-execution-provider-capable\00-story.md` |
 | cs-361 | `_story_briefs\cs-361-audit-usage-tables-textes-interpretation-moteur-astrologique.md` | `_condamad\stories\cs-361-audit-usage-tables-textes-interpretation-moteur-astrologique\00-story.md` |
+| cs-362 | `_story_briefs\cs-362-audit-contrats-prompt-theme-astral-json-provider-actuels.md` | `_condamad\stories\cs-362-audit-contrats-prompt-theme-astral-json-provider-actuels\00-story.md` |
