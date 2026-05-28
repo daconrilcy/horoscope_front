@@ -1,0 +1,72 @@
+{
+  "use_case": "natal_theme_premium_example",
+  "plan": "premium",
+  "mode": "structured",
+  "provider_call_performed": false,
+  "model": "runtime-configured-model-placeholder",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Hard policy astrology runtime placeholder: rester prudent, ne pas inventer de donnees non verifiees, signaler les limites."
+    },
+    {
+      "role": "developer",
+      "content": "Developer prompt placeholder for natal premium plan. Produire une lecture approfondie avec axes d'integration, sans transformer les limites en faits."
+    },
+    {
+      "role": "developer",
+      "content": "Persona placeholder: astrologue expert, dense, clair sur la difference entre symbole exploitable et donnee non verifiee."
+    },
+    {
+      "role": "user",
+      "content": "{\"facts\":{\"source_projection_id\":\"structured_facts_v1\",\"positions\":[{\"body\":\"sun\",\"sign\":\"taurus\",\"degree_label\":\"synthetic_example\"},{\"body\":\"moon\",\"sign\":\"unknown_without_verified_time\",\"degree_label\":\"synthetic_example\"}],\"major_aspects\":[{\"aspect\":\"synthetic_example_focus\",\"interpretation_hint\":\"stabilite, rythme, incarnation concrete\"}],\"dominants\":[\"earth\",\"fixed\"],\"source_metadata\":{\"birth_date\":\"1973-04-24\",\"birth_place\":\"Paris, France\",\"timezone\":\"Europe/Paris\",\"local_time_convention\":\"12:00:00\"}},\"signals\":{\"interpretive_signal_codes\":[\"ground_without_overclaim\",\"name_missing_time_limits\",\"separate_symbolic_hint_from_verified_fact\",\"integrate_symbolic_tensions\"],\"readiness_flags\":{\"natal_synthesis_ready\":true,\"houses_ready\":false,\"angles_ready\":false},\"masking_policy\":{\"suppress_unverified_houses\":true,\"suppress_unverified_angles\":true},\"public_projection_links\":[{\"owner\":\"synthetic_example\",\"primitive_id\":\"natal_theme\",\"projection_id\":\"structured_facts_v1\"}]},\"limits\":{\"missing_data\":{\"birth_time\":true},\"unavailable_sections\":[\"houses_ready\",\"angles_ready\"],\"uncertainty_notes\":[\"12:00:00 est une convention de demonstration; maisons, Ascendant et MC non verifies.\",\"Ne pas conclure sur les maisons, l'Ascendant ou le MC.\"]},\"shaping\":{\"plan\":\"premium\",\"module\":\"natal_theme\",\"editorial_depth_profile\":\"deep\",\"llm_input_selection\":[\"core_synthesis\",\"dominants\",\"major_aspects\",\"integration_axes\",\"limits\"]}}"
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "natal_theme_premium_example",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "synthesis",
+          "integration_axes",
+          "limits"
+        ],
+        "properties": {
+          "synthesis": {
+            "type": "string"
+          },
+          "integration_axes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "provider_parameters": {
+    "temperature": 0.3,
+    "max_output_tokens": 2200,
+    "reasoning_effort": "medium",
+    "verbosity": "high"
+  },
+  "audit_excluded_from_prompt": [
+    "evidence",
+    "provenance",
+    "projection_hash",
+    "llm_input_hash",
+    "provider_response",
+    "observability"
+  ]
+}

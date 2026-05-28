@@ -1,0 +1,9 @@
+python -B -m json.tool _condamad/examples/prompt-generation-cartography/1973-04-24-paris/intermediate-data.json
+PASS intermediate-data.json
+python -B -m json.tool _condamad/examples/prompt-generation-cartography/1973-04-24-paris/free-provider-payload.json
+PASS free-provider-payload.json
+python -B -m json.tool _condamad/examples/prompt-generation-cartography/1973-04-24-paris/basic-provider-payload.json
+PASS basic-provider-payload.json
+python -B -m json.tool _condamad/examples/prompt-generation-cartography/1973-04-24-paris/premium-provider-payload.json
+PASS premium-provider-payload.json
+PASS shape distinct roles boundary exclusions

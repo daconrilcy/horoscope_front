@@ -1,5 +1,5 @@
 # Story CS-358 generer-exemples-json-prompts-theme-astral-par-plan: Generate Natal Prompt JSON Examples By Plan
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -145,14 +145,14 @@ Named brief primitives in scope:
 
 ## Implementation Tasks
 
-- [ ] Task 1: Inspect source documents and backend owners for provider-handoff shape and prompt-visible boundaries. (AC: AC4, AC6, AC7)
-- [ ] Task 2: Decide whether runtime builders can produce local data without provider access. (AC: AC5, AC9)
-- [ ] Task 3: Create `intermediate-data.json` with birth input, assumptions, samples, plan differences, limits, and `provider_call_performed: false`. (AC: AC1, AC2, AC8)
-- [ ] Task 4: Create `free-provider-payload.json` with the final prompt payload for the free plan. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
-- [ ] Task 5: Create `basic-provider-payload.json` with a distinct final prompt payload for the basic plan. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
-- [ ] Task 6: Create `premium-provider-payload.json` with a distinct final prompt payload for the premium plan. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
-- [ ] Task 7: Create README generation notes, source citations, time convention notes, and no-provider-call proof. (AC: AC5, AC8, AC9, AC10)
-- [ ] Task 8: Persist validation evidence for path checks, JSON parsing, scans, test command output, and backend runtime unchanged proof. (AC: AC1, AC2, AC5, AC10)
+- [x] Task 1: Inspect source documents and backend owners for provider-handoff shape and prompt-visible boundaries. (AC: AC4, AC6, AC7)
+- [x] Task 2: Decide whether runtime builders can produce local data without provider access. (AC: AC5, AC9)
+- [x] Task 3: Create `intermediate-data.json` with birth input, assumptions, samples, plan differences, limits, and `provider_call_performed: false`. (AC: AC1, AC2, AC8)
+- [x] Task 4: Create `free-provider-payload.json` with the final prompt payload for the free plan. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
+- [x] Task 5: Create `basic-provider-payload.json` with a distinct final prompt payload for the basic plan. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
+- [x] Task 6: Create `premium-provider-payload.json` with a distinct final prompt payload for the premium plan. (AC: AC1, AC2, AC3, AC4, AC5, AC6, AC7)
+- [x] Task 7: Create README generation notes, source citations, time convention notes, and no-provider-call proof. (AC: AC5, AC8, AC9, AC10)
+- [x] Task 8: Persist validation evidence for path checks, JSON parsing, scans, test command output, and backend runtime unchanged proof. (AC: AC1, AC2, AC5, AC10)
 
 ## Files to Inspect First
 

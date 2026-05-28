@@ -1,0 +1,63 @@
+VC1 positive marker scan
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\README.md:3:Ces fichiers montrent le payload final juste avant handoff provider pour une naissance `1973-04-24`, `Paris, France`, timezone `Europe/Paris`, sur les plans `free`, `basic` et `premium`.
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\README.md:7:- Type de donnees: `synthetic_example`.
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\README.md:9:- Appel provider: aucun appel n'a ete effectue; `provider_call_performed` vaut `false` dans chaque fichier JSON.
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\README.md:14:Le brief ne fournit pas d'heure de naissance verifiee. Les exemples utilisent donc `12:00:00` en heure locale `Europe/Paris` comme convention de demonstration. Les maisons, l'Ascendant et le MC ne sont pas verifies et ne doivent pas etre presentes comme calcules.
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\README.md:19:- `free-provider-payload.json`: payload provider-handoff court, plan `free`.
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\README.md:20:- `basic-provider-payload.json`: payload provider-handoff intermediaire, plan `basic`.
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\README.md:21:- `premium-provider-payload.json`: payload provider-handoff approfondi, plan `premium`.
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:2:  "use_case": "natal_theme_premium_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:3:  "plan": "premium",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:5:  "provider_call_performed": false,
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:14:      "content": "Developer prompt placeholder for natal premium plan. Produire une lecture approfondie avec axes d'integration, sans transformer les limites en faits."
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:22:      "content": "{\"facts\":{\"source_projection_id\":\"structured_facts_v1\",\"positions\":[{\"body\":\"sun\",\"sign\":\"taurus\",\"degree_label\":\"synthetic_example\"},{\"body\":\"moon\",\"sign\":\"unknown_without_verified_time\",\"degree_label\":\"synthetic_example\"}],\"major_aspects\":[{\"aspect\":\"synthetic_example_focus\",\"interpretation_hint\":\"stabilite, rythme, incarnation concrete\"}],\"dominants\":[\"earth\",\"fixed\"],\"source_metadata\":{\"birth_date\":\"1973-04-24\",\"birth_place\":\"Paris, France\",\"timezone\":\"Europe/Paris\",\"local_time_convention\":\"12:00:00\"}},\"signals\":{\"interpretive_signal_codes\":[\"ground_without_overclaim\",\"name_missing_time_limits\",\"separate_symbolic_hint_from_verified_fact\",\"integrate_symbolic_tensions\"],\"readiness_flags\":{\"natal_synthesis_ready\":true,\"houses_ready\":false,\"angles_ready\":false},\"masking_policy\":{\"suppress_unverified_houses\":true,\"suppress_unverified_angles\":true},\"public_projection_links\":[{\"owner\":\"synthetic_example\",\"primitive_id\":\"natal_theme\",\"projection_id\":\"structured_facts_v1\"}]},\"limits\":{\"missing_data\":{\"birth_time\":true},\"unavailable_sections\":[\"houses_ready\",\"angles_ready\"],\"uncertainty_notes\":[\"12:00:00 est une convention de demonstration; maisons, Ascendant et MC non verifies.\",\"Ne pas conclure sur les maisons, l'Ascendant ou le MC.\"]},\"shaping\":{\"plan\":\"premium\",\"module\":\"natal_theme\",\"editorial_depth_profile\":\"deep\",\"llm_input_selection\":[\"core_synthesis\",\"dominants\",\"major_aspects\",\"integration_axes\",\"limits\"]}}"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:28:      "name": "natal_theme_premium_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:3:    "kind": "synthetic_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:11:  "provider_call_performed": false,
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:13:    "date": "1973-04-24",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:15:    "place": "Paris",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:17:    "timezone": "Europe/Paris"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:20:    "local_date": "1973-04-24",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:22:    "timezone": "Europe/Paris",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:23:    "location_label": "Paris, France",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:27:    "fixture_kind": "synthetic_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:42:          "degree_label": "synthetic_example"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:47:          "degree_label": "synthetic_example"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:53:          "aspect": "synthetic_example_focus",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:59:        "location_timezone": "Europe/Paris"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:94:      "free": [
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:98:      "basic": [
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:104:      "premium": [
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:114:    "free": {
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:117:          "sun_taurus_synthetic_example"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:139:        "plan": "free",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:147:    "basic": {
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:150:          "sun_taurus_synthetic_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:154:          "synthetic_example_focus"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:178:        "plan": "basic",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:188:    "premium": {
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:191:          "sun_taurus_synthetic_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:195:          "synthetic_example_focus"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:223:        "plan": "premium",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:237:      "plan": "free",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:241:      "plan": "basic",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\intermediate-data.json:245:      "plan": "premium",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:2:  "use_case": "natal_theme_basic_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:3:  "plan": "basic",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:5:  "provider_call_performed": false,
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:14:      "content": "Developer prompt placeholder for natal basic plan. Produire une lecture structuree avec dominantes, aspects synthetiques et limites explicites."
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:22:      "content": "{\"facts\":{\"source_projection_id\":\"structured_facts_v1\",\"positions\":[{\"body\":\"sun\",\"sign\":\"taurus\",\"degree_label\":\"synthetic_example\"},{\"body\":\"moon\",\"sign\":\"unknown_without_verified_time\",\"degree_label\":\"synthetic_example\"}],\"major_aspects\":[{\"aspect\":\"synthetic_example_focus\",\"interpretation_hint\":\"stabilite, rythme, incarnation concrete\"}],\"dominants\":[\"earth\",\"fixed\"],\"source_metadata\":{\"birth_date\":\"1973-04-24\",\"birth_place\":\"Paris, France\",\"timezone\":\"Europe/Paris\",\"local_time_convention\":\"12:00:00\"}},\"signals\":{\"interpretive_signal_codes\":[\"ground_without_overclaim\",\"name_missing_time_limits\",\"separate_symbolic_hint_from_verified_fact\"],\"readiness_flags\":{\"natal_synthesis_ready\":true,\"houses_ready\":false,\"angles_ready\":false},\"masking_policy\":{\"suppress_unverified_houses\":true,\"suppress_unverified_angles\":true}},\"limits\":{\"missing_data\":{\"birth_time\":true},\"unavailable_sections\":[\"houses_ready\",\"angles_ready\"],\"uncertainty_notes\":[\"12:00:00 est une convention de demonstration; maisons, Ascendant et MC non verifies.\"]},\"shaping\":{\"plan\":\"basic\",\"module\":\"natal_theme\",\"editorial_depth_profile\":\"standard\",\"llm_input_selection\":[\"core_synthesis\",\"dominants\",\"major_aspects\",\"limits\"]}}"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:28:      "name": "natal_theme_basic_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:2:  "use_case": "natal_theme_free_example",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:3:  "plan": "free",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:5:  "provider_call_performed": false,
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:14:      "content": "Developer prompt placeholder for natal free plan. Produire une synthese courte depuis les blocs prompt-visible uniquement."
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:22:      "content": "{\"facts\":{\"source_projection_id\":\"structured_facts_v1\",\"positions\":[{\"body\":\"sun\",\"sign\":\"taurus\",\"degree_label\":\"synthetic_example\"}],\"dominants\":[\"earth\"],\"source_metadata\":{\"birth_date\":\"1973-04-24\",\"birth_place\":\"Paris, France\",\"timezone\":\"Europe/Paris\",\"local_time_convention\":\"12:00:00\"}},\"signals\":{\"interpretive_signal_codes\":[\"ground_without_overclaim\",\"name_missing_time_limits\"],\"readiness_flags\":{\"natal_synthesis_ready\":true,\"houses_ready\":false,\"angles_ready\":false}},\"limits\":{\"missing_data\":{\"birth_time\":true},\"unavailable_sections\":[\"houses_ready\",\"angles_ready\"],\"uncertainty_notes\":[\"12:00:00 est une convention de demonstration; maisons, Ascendant et MC non verifies.\"]},\"shaping\":{\"plan\":\"free\",\"module\":\"natal_theme\",\"editorial_depth_profile\":\"short\",\"llm_input_selection\":[\"core_synthesis\",\"limits\"]}}"
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:28:      "name": "natal_theme_free_example",
+
+VC5 forbidden marker scan
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\premium-provider-payload.json:69:    "provider_response",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\free-provider-payload.json:62:    "provider_response",
+_condamad/examples/prompt-generation-cartography/1973-04-24-paris\basic-provider-payload.json:69:    "provider_response",
+PASS_WITH_LIMITATIONS: matches are required audit_excluded_from_prompt labels; no provider result body, token, or key material is present.
+PASS provider_response only validated as required audit exclusion label

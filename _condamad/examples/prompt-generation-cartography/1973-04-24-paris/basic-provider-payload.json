@@ -1,0 +1,72 @@
+{
+  "use_case": "natal_theme_basic_example",
+  "plan": "basic",
+  "mode": "structured",
+  "provider_call_performed": false,
+  "model": "runtime-configured-model-placeholder",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Hard policy astrology runtime placeholder: rester prudent, ne pas inventer de donnees non verifiees, signaler les limites."
+    },
+    {
+      "role": "developer",
+      "content": "Developer prompt placeholder for natal basic plan. Produire une lecture structuree avec dominantes, aspects synthetiques et limites explicites."
+    },
+    {
+      "role": "developer",
+      "content": "Persona placeholder: astrologue pedagogique, nuance, structure par themes et garde-fous."
+    },
+    {
+      "role": "user",
+      "content": "{\"facts\":{\"source_projection_id\":\"structured_facts_v1\",\"positions\":[{\"body\":\"sun\",\"sign\":\"taurus\",\"degree_label\":\"synthetic_example\"},{\"body\":\"moon\",\"sign\":\"unknown_without_verified_time\",\"degree_label\":\"synthetic_example\"}],\"major_aspects\":[{\"aspect\":\"synthetic_example_focus\",\"interpretation_hint\":\"stabilite, rythme, incarnation concrete\"}],\"dominants\":[\"earth\",\"fixed\"],\"source_metadata\":{\"birth_date\":\"1973-04-24\",\"birth_place\":\"Paris, France\",\"timezone\":\"Europe/Paris\",\"local_time_convention\":\"12:00:00\"}},\"signals\":{\"interpretive_signal_codes\":[\"ground_without_overclaim\",\"name_missing_time_limits\",\"separate_symbolic_hint_from_verified_fact\"],\"readiness_flags\":{\"natal_synthesis_ready\":true,\"houses_ready\":false,\"angles_ready\":false},\"masking_policy\":{\"suppress_unverified_houses\":true,\"suppress_unverified_angles\":true}},\"limits\":{\"missing_data\":{\"birth_time\":true},\"unavailable_sections\":[\"houses_ready\",\"angles_ready\"],\"uncertainty_notes\":[\"12:00:00 est une convention de demonstration; maisons, Ascendant et MC non verifies.\"]},\"shaping\":{\"plan\":\"basic\",\"module\":\"natal_theme\",\"editorial_depth_profile\":\"standard\",\"llm_input_selection\":[\"core_synthesis\",\"dominants\",\"major_aspects\",\"limits\"]}}"
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "natal_theme_basic_example",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "overview",
+          "dominants",
+          "limits"
+        ],
+        "properties": {
+          "overview": {
+            "type": "string"
+          },
+          "dominants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "provider_parameters": {
+    "temperature": 0.35,
+    "max_output_tokens": 1300,
+    "reasoning_effort": "medium",
+    "verbosity": "medium"
+  },
+  "audit_excluded_from_prompt": [
+    "evidence",
+    "provenance",
+    "projection_hash",
+    "llm_input_hash",
+    "provider_response",
+    "observability"
+  ]
+}

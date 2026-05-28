@@ -1,0 +1,65 @@
+{
+  "use_case": "natal_theme_free_example",
+  "plan": "free",
+  "mode": "structured",
+  "provider_call_performed": false,
+  "model": "runtime-configured-model-placeholder",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Hard policy astrology runtime placeholder: rester prudent, ne pas inventer de donnees non verifiees, signaler les limites."
+    },
+    {
+      "role": "developer",
+      "content": "Developer prompt placeholder for natal free plan. Produire une synthese courte depuis les blocs prompt-visible uniquement."
+    },
+    {
+      "role": "developer",
+      "content": "Persona placeholder: astrologue pedagogique, sobre, explicite sur les donnees manquantes."
+    },
+    {
+      "role": "user",
+      "content": "{\"facts\":{\"source_projection_id\":\"structured_facts_v1\",\"positions\":[{\"body\":\"sun\",\"sign\":\"taurus\",\"degree_label\":\"synthetic_example\"}],\"dominants\":[\"earth\"],\"source_metadata\":{\"birth_date\":\"1973-04-24\",\"birth_place\":\"Paris, France\",\"timezone\":\"Europe/Paris\",\"local_time_convention\":\"12:00:00\"}},\"signals\":{\"interpretive_signal_codes\":[\"ground_without_overclaim\",\"name_missing_time_limits\"],\"readiness_flags\":{\"natal_synthesis_ready\":true,\"houses_ready\":false,\"angles_ready\":false}},\"limits\":{\"missing_data\":{\"birth_time\":true},\"unavailable_sections\":[\"houses_ready\",\"angles_ready\"],\"uncertainty_notes\":[\"12:00:00 est une convention de demonstration; maisons, Ascendant et MC non verifies.\"]},\"shaping\":{\"plan\":\"free\",\"module\":\"natal_theme\",\"editorial_depth_profile\":\"short\",\"llm_input_selection\":[\"core_synthesis\",\"limits\"]}}"
+    }
+  ],
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "natal_theme_free_example",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "required": [
+          "summary",
+          "limits"
+        ],
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "limits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "provider_parameters": {
+    "temperature": 0.4,
+    "max_output_tokens": 700,
+    "reasoning_effort": "low",
+    "verbosity": "low"
+  },
+  "audit_excluded_from_prompt": [
+    "evidence",
+    "provenance",
+    "projection_hash",
+    "llm_input_hash",
+    "provider_response",
+    "observability"
+  ]
+}
