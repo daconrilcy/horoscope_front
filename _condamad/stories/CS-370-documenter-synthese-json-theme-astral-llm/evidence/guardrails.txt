@@ -1,0 +1,9 @@
+Scoped guardrails for CS-370:
+- RG-022 validation plans: applicable. Evidence is stored through deterministic rg/python checks in validation.txt.
+- RG-002 backend layout: applicable. Backend sources are read-only evidence; bounded git status checks protect backend/app and backend/tests.
+- Registry gap: no exact guardrail covers theme_astral LLM JSON synthesis documentation.
+
+Resolver basis:
+- Story CS-370 regression guardrail section.
+- Targeted tracker/story inspection.
+- No registry update performed because the story marks guardrail maintenance out of scope.

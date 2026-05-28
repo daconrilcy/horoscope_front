@@ -1,0 +1,106 @@
+# Final Evidence - cs-370-documenter-synthese-json-theme-astral-llm
+
+<!-- Commentaire global: cette evidence finale resume l'implementation documentaire, les validations et la preparation review de CS-370. -->
+
+## Story status
+
+- Validation outcome: PASS
+- Ready for review: yes
+- Story key: `CS-370-documenter-synthese-json-theme-astral-llm`
+- Source story: `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/00-story.md`
+- Source brief: `_story_briefs/cs-370-documenter-synthese-nouvelle-structure-json-theme-astral-llm.md`
+- Capsule path: `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm`
+- `story-status.md`: `ready-to-review`, row source/path verified.
+
+## Preflight
+
+- Repository root: `C:\dev\horoscope_front`
+- Initial `git status --short`: existing CS-370 capsule/doc files were untracked; no tracked runtime dirty file in story scope.
+- AGENTS.md considered: repository root `AGENTS.md`.
+- Capsule completeness: required generated files present before reading generated content; no regeneration required.
+- Scoped guardrails: RG-022, RG-002, registry gap documented in `evidence/guardrails.txt`.
+
+## Capsule validation
+
+- Required capsule files present before implementation.
+- Initial generated capsule summary loaded successfully.
+- Final `condamad_validate.py` rerun after evidence-section repair: PASS.
+
+## AC validation
+
+| AC | Implementation evidence | Validation evidence | Status | Notes |
+|---|---|---|---|---|
+| AC1 | Target synthesis document exists. | VC1, `docs-baseline.txt`, `docs-after.txt`. | PASS | |
+| AC2 | Ten mandatory sections present. | VC2 heading check. | PASS | |
+| AC3 | Canonical skeleton and keys documented. | VC3/VC4 scans. | PASS | |
+| AC4 | Every block has source evidence. | VC5 final bounded table parser. | PASS | |
+| AC5 | `delivery_profile` variation explained. | VC6 scan. | PASS | |
+| AC6 | Commercial plan labels stay backend-only. | VC7 negative scan; exit 1 means no matches. | PASS | |
+| AC7 | Interpretation material provenance explicit. | VC8 scan. | PASS | |
+| AC8 | `astrologer_voice` is style-only. | VC9 scan. | PASS | |
+| AC9 | Two Mermaid diagrams present. | VC10 parser. | PASS | |
+| AC10 | CS-371 complete example ownership linked. | VC11 scan. | PASS | |
+| AC11 | Application code unchanged. | VC12 bounded git status for `backend/app`, `backend/tests`, `frontend/src`. | PASS | |
+| AC12 | Persistent evidence stored. | VC13 path checks and capsule validation. | PASS | |
+| AC13 | Every block has a visibility rule. | VC5 final bounded table parser. | PASS | |
+
+## Files changed
+
+- `_condamad/docs/prompt-generation-cartography/theme-astral-llm-json-structure-v1.md`
+- `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/00-story.md`
+- `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/evidence/**`
+- `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/03-acceptance-traceability.md`
+- `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/10-final-evidence.md`
+- `_condamad/stories/story-status.md`
+
+## Files deleted
+
+- None.
+
+## Tests added or updated
+
+- No runtime tests added; documentation-only story.
+- Deterministic markdown and repository-boundary checks persisted in `evidence/validation.txt`.
+
+## Commands run
+
+| Command | Result | Evidence summary |
+|---|---|---|
+| `python -B ...` document/evidence checks | PASS | VC1, VC2, VC5 final, VC10, VC12, VC13. |
+| `rg ...` required key/boundary scans | PASS | VC3, VC4, VC6, VC8, VC9, VC11. |
+| `rg ...` forbidden placeholder/plan/legacy scans | PASS | VC7/VC7b exit 1 = no matches. |
+| `git diff --check` | PASS | VC14. |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...` | PASS | VC15. |
+| `ruff check .` | PASS | VC16. |
+| `python -B -m pytest -q --tb=short` | PASS | VC17 rerun: 3362 passed, 1 skipped, 1233 deselected. |
+
+## Commands skipped or blocked
+
+- `ruff format <python files>` not run: no Python files modified in this documentation-only story.
+- First full validation command timed out during `pytest`; `pytest` was rerun separately to completion and passed.
+- Early VC5 parser attempts failed because the check selected extra Markdown tables / PowerShell escaped Markdown backticks; final bounded parser passed and is the authoritative VC5 evidence.
+
+## DRY / No Legacy evidence
+
+- One canonical synthesis page created under `_condamad/docs/prompt-generation-cartography/`.
+- No compatibility page, alias, fallback document, runtime shim, duplicate active path, backend edit, frontend edit, migration, or provider call.
+- Negative scans found no placeholders, `chart_json`, `natal_data`, or plan-label-to-LLM wording in the new document.
+
+## Diff review
+
+- `git diff --check`: PASS.
+- Scoped status after implementation: target doc, CS-370 capsule evidence/generated files, `00-story.md`, and `story-status.md`.
+- Caches generated by validation were removed from fixed workspace paths.
+
+## Final worktree status
+
+- Story scope has untracked CS-370 generated/evidence/doc artifacts plus tracked status edits.
+- No application source changes in `backend/app`, `backend/tests`, or `frontend/src`.
+
+## Remaining risks
+
+- Upstream CS-368/CS-369 are treated as audit evidence, not runtime owners; reviewer should confirm that source interpretation matches their final audit intent.
+
+## Suggested reviewer focus
+
+- Check that commercial plan wording cannot be read as LLM-visible data and that CS-371 remains the only owner of complete per-profile examples.

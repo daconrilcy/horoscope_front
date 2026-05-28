@@ -1,0 +1,9 @@
+target-doc-exists=False
+scope-status-before:
+?? _condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/01-execution-brief.md
+?? _condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/04-target-files.md
+?? _condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/06-validation-plan.md
+?? _condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/generated/10-final-evidence.md
+

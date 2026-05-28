@@ -1,0 +1,251 @@
+
+## VC1 target doc exists
+exit=0
+
+## VC2 mandatory headings
+exit=0
+
+## VC3 skeleton keys
+7:`theme_astral_llm_input_v1` est le contrat de reference pour la charge utile `theme_astral` transmise au LLM. Le squelette est stable pour tous les profils de livraison: les cles ne changent pas, seules les valeurs, quantites, budgets, selections et profondeurs varient via `delivery_profile`.
+9:Le backend resout les entrees commerciales, l'assembly, la persona, les sources interpretatives et les contraintes de sortie avant le handoff. Le LLM recoit uniquement les blocs utiles a la redaction: `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data` et `output_contract`. Les preuves techniques, traces, hashes, IDs internes sensibles, migrations, replays, logs et details d'audit restent `backend-only` ou `audit-only`.
+11:Sources principales: `_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1152/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1203/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1409/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1418/`, `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`, `backend/app/domain/llm/configuration/theme_astral_contracts.py`, `backend/app/domain/astrology/interpretation/interpretation_material_builder.py`, `backend/app/domain/astrology/interpretation/interpretation_material_contracts.py`, `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`, `backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py`.
+17:1. Le backend construit un seul carrier provider-visible pour `theme_astral_llm_input_v1`; les instructions restent dans l'assembly et les donnees structurantes restent dans le payload utilisateur.
+18:2. Les profils commerciaux ne sont pas des donnees de payload. Ils sont resolus cote backend en `delivery_profile`, puis seules les valeurs non commerciales de profondeur, budget, quantite, selection et longueur sont visibles.
+20:4. `astrologer_voice` influence seulement le style, le ton, les emphases et le lexique. Il ne modifie ni les faits astrologiques, ni les sources, ni les limites, ni le contrat de sortie.
+29:| Source-traceable backend | `source_ref`, `fact_ref`, versions de source, famille de source, raison de selection | Utilise pour prouver la provenance; seuls les extraits utiles ou hints passent dans `interpretation_material` | `interpretation_material_contracts.py`, `interpretation_material_builder.py` |
+37:  "runtime_contract": {},
+38:  "safety_contract": {},
+39:  "astrologer_voice": {},
+40:  "feature_context": {},
+41:  "delivery_profile": {},
+43:    "birth_context": {},
+44:    "astrological_facts": {},
+45:    "interpretation_material": {},
+46:    "selected_themes": {},
+47:    "limits": {}
+49:  "output_contract": {}
+53:Le nom de contrat `theme_astral_llm_input_v1` identifie cette structure. `theme_astral_prompt_v1` reste le nom de famille prompt/provider associe, mais la documentation ne duplique pas le texte exact des prompts ni des payloads complets.
+59:| `runtime_contract` | Identifie le contrat, sa version et les references prompt/assembly/schema/persona utilisables par le runtime sans exposer les details de trace. | CS-363, `theme_astral_contracts.py`, `theme_astral_provider_payload_builder.py` | LLM-visible pour le sous-ensemble contractuel; trace complete backend-only | `rg runtime_contract backend/app/domain/llm backend/tests` |
+60:| `safety_contract` | Porte les regles de non-invention, de source obligatoire, de limites et de prudence editoriale. | CS-363, `_safety_contract` dans le builder, tests de payload | LLM-visible | `rg safety_contract backend/app/domain/llm backend/tests` |
+61:| `astrologer_voice` | Definit style, ton, emphases, lexique et preferences de formulation. | CS-364, CS-366, `theme_astral_contracts.py`, persona owner | LLM-visible, style-only | `rg astrologer_voice backend/app/domain/llm backend/tests` |
+62:| `feature_context` | Donne la feature, le contexte d'usage, la locale et les informations non commerciales utiles au rendu. | CS-363, CS-366, `_feature_context` | LLM-visible | `rg feature_context backend/app/domain/llm backend/tests` |
+63:| `delivery_profile` | Decrit profondeur, budgets, groupes autorises, quantites, sections et longueur attendue apres resolution backend. | CS-363, CS-364, CS-366, `resolve_theme_astral_provider_delivery_profile` | LLM-visible, derive non commercial | `rg delivery_profile backend/app/domain/llm backend/tests` |
+64:| `input_data.birth_context` | Fournit le contexte de naissance normalise necessaire a la redaction. | CS-366, `ChartInterpretationInputRuntimeData`, `_birth_context` | LLM-visible | `rg birth_context backend/app/domain/llm backend/tests` |
+65:| `input_data.astrological_facts` | Transporte les faits calcules, filtres et stabilises issus du moteur astrologique. | CS-366, `_astrological_facts`, tests de payload | LLM-visible | `rg astrological_facts backend/app/domain/llm backend/tests` |
+66:| `input_data.interpretation_material` | Fournit les textes, hints ou signaux interpretatifs source-attribues depuis les tables et owners runtime. | CS-365, CS-366, `InterpretationMaterialBuilder`, contrats de materiau | LLM-visible avec provenance source-traceable backend | `rg interpretation_material backend/app/domain backend/tests` |
+67:| `input_data.selected_themes` | Liste les themes retenus par la feature et le profil de livraison pour guider la structure de reponse. | CS-366, `_selected_themes`, tests de payload | LLM-visible | `rg selected_themes backend/app/domain/llm backend/tests` |
+68:| `input_data.limits` | Expose les donnees manquantes, incertitudes, sections indisponibles et limites de generation. | CS-363, CS-366, `_limits` dans le builder | LLM-visible | `rg limits backend/app/domain/llm backend/tests` |
+69:| `output_contract` | Fixe la version de reponse, les sections attendues, les bornes de longueur et les obligations de schema. | CS-363, CS-364, CS-366, `THEME_ASTRAL_RESPONSE_CONTRACT_ID`, `_output_contract` | LLM-visible | `rg output_contract backend/app/domain/llm backend/tests` |
+73:`delivery_profile` est resolu par la logique backend avant toute construction de payload provider. La resolution part des entrees produit et runtime, mais le payload ne contient que des valeurs non commerciales: `depth`, budgets de faits, budgets de materiau, selection de sections, politiques de longueur, contraintes de sortie et niveau de detail attendu.
+82:- exigences de structure dans `output_contract`.
+88:- laisser `astrologer_voice` modifier les faits;
+89:- reconstruire `interpretation_material` dans le prompt au lieu de reutiliser le builder source-attribue;
+94:`output_contract` demande une reponse versionnee et explicite. La profondeur peut varier par `delivery_profile`, mais le schema reste declare: identifiant de contrat de reponse, version, sections attendues, nombre maximal de sections, style d'evidence autorise, bornes de longueur et compatibilite.
+96:Le LLM doit rediger a partir de `input_data` et respecter `safety_contract`. Il ne doit pas inventer de source, transformer une limite en certitude, ni modifier les faits astrologiques. Les obligations de validation, persistence, replay et audit appartiennent au backend.
+109:  PayloadBuilder --> Skeleton["theme_astral_llm_input_v1 stable skeleton"]
+121:  SourceTrace["Source-traceable backend: source_ref, fact_ref, source versions"] --> Material["interpretation_material excerpts and hints"]
+123:  Runtime["runtime_contract safety_contract feature_context delivery_profile"] --> Payload
+124:  InputData["birth_context astrological_facts selected_themes limits"] --> Payload
+125:  Voice["astrologer_voice style tone emphases lexicon"] --> Payload
+126:  Output["output_contract versioned response shape"] --> Payload
+136:- Le squelette canonique contient `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data.birth_context`, `input_data.astrological_facts`, `input_data.interpretation_material`, `input_data.selected_themes`, `input_data.limits` et `output_contract`.
+138:- `delivery_profile` est documente comme resolution backend, sans etiquettes commerciales LLM-visibles.
+140:- `astrologer_voice` est borne au style, ton, emphases et lexique, sans mutation des facts.
+147:CS-371 est le owner des exemples complets par profil de livraison. Cette page ne produit pas ces payloads complets; elle fixe seulement la lecture du squelette, des blocs, des sources et des frontieres. Quand CS-371 sera implemente, les exemples devront pointer vers ce document pour rester alignes avec `theme_astral_llm_input_v1`.
+exit=0
+
+## VC4 delivery/material/output keys
+7:`theme_astral_llm_input_v1` est le contrat de reference pour la charge utile `theme_astral` transmise au LLM. Le squelette est stable pour tous les profils de livraison: les cles ne changent pas, seules les valeurs, quantites, budgets, selections et profondeurs varient via `delivery_profile`.
+9:Le backend resout les entrees commerciales, l'assembly, la persona, les sources interpretatives et les contraintes de sortie avant le handoff. Le LLM recoit uniquement les blocs utiles a la redaction: `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data` et `output_contract`. Les preuves techniques, traces, hashes, IDs internes sensibles, migrations, replays, logs et details d'audit restent `backend-only` ou `audit-only`.
+11:Sources principales: `_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1152/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1203/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1409/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1418/`, `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`, `backend/app/domain/llm/configuration/theme_astral_contracts.py`, `backend/app/domain/astrology/interpretation/interpretation_material_builder.py`, `backend/app/domain/astrology/interpretation/interpretation_material_contracts.py`, `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`, `backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py`.
+18:2. Les profils commerciaux ne sont pas des donnees de payload. Ils sont resolus cote backend en `delivery_profile`, puis seules les valeurs non commerciales de profondeur, budget, quantite, selection et longueur sont visibles.
+29:| Source-traceable backend | `source_ref`, `fact_ref`, versions de source, famille de source, raison de selection | Utilise pour prouver la provenance; seuls les extraits utiles ou hints passent dans `interpretation_material` | `interpretation_material_contracts.py`, `interpretation_material_builder.py` |
+41:  "delivery_profile": {},
+45:    "interpretation_material": {},
+49:  "output_contract": {}
+63:| `delivery_profile` | Decrit profondeur, budgets, groupes autorises, quantites, sections et longueur attendue apres resolution backend. | CS-363, CS-364, CS-366, `resolve_theme_astral_provider_delivery_profile` | LLM-visible, derive non commercial | `rg delivery_profile backend/app/domain/llm backend/tests` |
+66:| `input_data.interpretation_material` | Fournit les textes, hints ou signaux interpretatifs source-attribues depuis les tables et owners runtime. | CS-365, CS-366, `InterpretationMaterialBuilder`, contrats de materiau | LLM-visible avec provenance source-traceable backend | `rg interpretation_material backend/app/domain backend/tests` |
+69:| `output_contract` | Fixe la version de reponse, les sections attendues, les bornes de longueur et les obligations de schema. | CS-363, CS-364, CS-366, `THEME_ASTRAL_RESPONSE_CONTRACT_ID`, `_output_contract` | LLM-visible | `rg output_contract backend/app/domain/llm backend/tests` |
+73:`delivery_profile` est resolu par la logique backend avant toute construction de payload provider. La resolution part des entrees produit et runtime, mais le payload ne contient que des valeurs non commerciales: `depth`, budgets de faits, budgets de materiau, selection de sections, politiques de longueur, contraintes de sortie et niveau de detail attendu.
+82:- exigences de structure dans `output_contract`.
+89:- reconstruire `interpretation_material` dans le prompt au lieu de reutiliser le builder source-attribue;
+94:`output_contract` demande une reponse versionnee et explicite. La profondeur peut varier par `delivery_profile`, mais le schema reste declare: identifiant de contrat de reponse, version, sections attendues, nombre maximal de sections, style d'evidence autorise, bornes de longueur et compatibilite.
+121:  SourceTrace["Source-traceable backend: source_ref, fact_ref, source versions"] --> Material["interpretation_material excerpts and hints"]
+123:  Runtime["runtime_contract safety_contract feature_context delivery_profile"] --> Payload
+126:  Output["output_contract versioned response shape"] --> Payload
+136:- Le squelette canonique contient `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data.birth_context`, `input_data.astrological_facts`, `input_data.interpretation_material`, `input_data.selected_themes`, `input_data.limits` et `output_contract`.
+138:- `delivery_profile` est documente comme resolution backend, sans etiquettes commerciales LLM-visibles.
+exit=0
+
+## VC5 block table source and visibility
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from pathlib import Path; text=Path(r'_condamad/docs/prompt-generation-cartography/theme-astral-llm-json-structure-v1.md').read_text(encoding='utf-8'); rows=[line for line in text.splitlines() if line.startswith('| ')]; assert len(rows)==11, len(rows); bad=[]; [bad.append(row) for row in rows if len([c.strip() for c in row.strip('|').split('|')])!=5 or any(not c.strip() for c in [c.strip() for c in row.strip('|').split('|')])]; assert not bad, bad
+                                                                                                                                                                                                                                       ^^^^^^^^^^^^^
+AssertionError: 17
+exit=1
+
+## VC6 delivery backend resolution
+7:`theme_astral_llm_input_v1` est le contrat de reference pour la charge utile `theme_astral` transmise au LLM. Le squelette est stable pour tous les profils de livraison: les cles ne changent pas, seules les valeurs, quantites, budgets, selections et profondeurs varient via `delivery_profile`.
+9:Le backend resout les entrees commerciales, l'assembly, la persona, les sources interpretatives et les contraintes de sortie avant le handoff. Le LLM recoit uniquement les blocs utiles a la redaction: `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data` et `output_contract`. Les preuves techniques, traces, hashes, IDs internes sensibles, migrations, replays, logs et details d'audit restent `backend-only` ou `audit-only`.
+18:2. Les profils commerciaux ne sont pas des donnees de payload. Ils sont resolus cote backend en `delivery_profile`, puis seules les valeurs non commerciales de profondeur, budget, quantite, selection et longueur sont visibles.
+41:  "delivery_profile": {},
+62:| `feature_context` | Donne la feature, le contexte d'usage, la locale et les informations non commerciales utiles au rendu. | CS-363, CS-366, `_feature_context` | LLM-visible | `rg feature_context backend/app/domain/llm backend/tests` |
+63:| `delivery_profile` | Decrit profondeur, budgets, groupes autorises, quantites, sections et longueur attendue apres resolution backend. | CS-363, CS-364, CS-366, `resolve_theme_astral_provider_delivery_profile` | LLM-visible, derive non commercial | `rg delivery_profile backend/app/domain/llm backend/tests` |
+73:`delivery_profile` est resolu par la logique backend avant toute construction de payload provider. La resolution part des entrees produit et runtime, mais le payload ne contient que des valeurs non commerciales: `depth`, budgets de faits, budgets de materiau, selection de sections, politiques de longueur, contraintes de sortie et niveau de detail attendu.
+94:`output_contract` demande une reponse versionnee et explicite. La profondeur peut varier par `delivery_profile`, mais le schema reste declare: identifiant de contrat de reponse, version, sections attendues, nombre maximal de sections, style d'evidence autorise, bornes de longueur et compatibilite.
+123:  Runtime["runtime_contract safety_contract feature_context delivery_profile"] --> Payload
+136:- Le squelette canonique contient `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data.birth_context`, `input_data.astrological_facts`, `input_data.interpretation_material`, `input_data.selected_themes`, `input_data.limits` et `output_contract`.
+138:- `delivery_profile` est documente comme resolution backend, sans etiquettes commerciales LLM-visibles.
+exit=0
+
+## VC7 forbidden placeholders and plan labels expected no matches
+exit=1
+
+## VC7b old carrier terms expected no matches
+exit=1
+
+## VC8 interpretation provenance
+11:Sources principales: `_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1152/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1203/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1409/`, `_condamad/audits/theme-astral-prompt-contract/2026-05-28-1418/`, `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`, `backend/app/domain/llm/configuration/theme_astral_contracts.py`, `backend/app/domain/astrology/interpretation/interpretation_material_builder.py`, `backend/app/domain/astrology/interpretation/interpretation_material_contracts.py`, `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`, `backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py`.
+19:3. Les textes d'interpretation proviennent de sources table-backed ou runtime-owned, restent source-tracables cote backend, et sont selectionnes par le builder de materiau interpretatif avant le handoff.
+29:| Source-traceable backend | `source_ref`, `fact_ref`, versions de source, famille de source, raison de selection | Utilise pour prouver la provenance; seuls les extraits utiles ou hints passent dans `interpretation_material` | `interpretation_material_contracts.py`, `interpretation_material_builder.py` |
+66:| `input_data.interpretation_material` | Fournit les textes, hints ou signaux interpretatifs source-attribues depuis les tables et owners runtime. | CS-365, CS-366, `InterpretationMaterialBuilder`, contrats de materiau | LLM-visible avec provenance source-traceable backend | `rg interpretation_material backend/app/domain backend/tests` |
+89:- reconstruire `interpretation_material` dans le prompt au lieu de reutiliser le builder source-attribue;
+105:  Resolver --> Material["Build source-traceable interpretation material"]
+121:  SourceTrace["Source-traceable backend: source_ref, fact_ref, source versions"] --> Material["interpretation_material excerpts and hints"]
+139:- Les textes d'interpretation sont table-backed et source-tracables cote backend.
+exit=0
+
+## VC9 astrologer voice boundary
+20:4. `astrologer_voice` influence seulement le style, le ton, les emphases et le lexique. Il ne modifie ni les faits astrologiques, ni les sources, ni les limites, ni le contrat de sortie.
+28:| LLM-visible | Squelette canonique, faits astrologiques normalises, materiau interpretatif source, limites, profil de livraison, contrat de sortie | Visible car necessaire a la redaction bornee | `theme_astral_provider_payload_builder.py`, tests de payload |
+44:    "astrological_facts": {},
+61:| `astrologer_voice` | Definit style, ton, emphases, lexique et preferences de formulation. | CS-364, CS-366, `theme_astral_contracts.py`, persona owner | LLM-visible, style-only | `rg astrologer_voice backend/app/domain/llm backend/tests` |
+65:| `input_data.astrological_facts` | Transporte les faits calcules, filtres et stabilises issus du moteur astrologique. | CS-366, `_astrological_facts`, tests de payload | LLM-visible | `rg astrological_facts backend/app/domain/llm backend/tests` |
+77:- densite des faits astrologiques transmis;
+94:`output_contract` demande une reponse versionnee et explicite. La profondeur peut varier par `delivery_profile`, mais le schema reste declare: identifiant de contrat de reponse, version, sections attendues, nombre maximal de sections, style d'evidence autorise, bornes de longueur et compatibilite.
+96:Le LLM doit rediger a partir de `input_data` et respecter `safety_contract`. Il ne doit pas inventer de source, transformer une limite en certitude, ni modifier les faits astrologiques. Les obligations de validation, persistence, replay et audit appartiennent au backend.
+108:  Facts["Calculated astrological facts"] --> PayloadBuilder
+109:  PayloadBuilder --> Skeleton["theme_astral_llm_input_v1 stable skeleton"]
+110:  Skeleton --> Handoff["LLM-visible JSON payload"]
+124:  InputData["birth_context astrological_facts selected_themes limits"] --> Payload
+125:  Voice["astrologer_voice style tone emphases lexicon"] --> Payload
+136:- Le squelette canonique contient `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data.birth_context`, `input_data.astrological_facts`, `input_data.interpretation_material`, `input_data.selected_themes`, `input_data.limits` et `output_contract`.
+140:- `astrologer_voice` est borne au style, ton, emphases et lexique, sans mutation des facts.
+exit=0
+
+## VC10 Mermaid diagrams
+exit=0
+
+## VC11 CS-371 ownership
+53:Le nom de contrat `theme_astral_llm_input_v1` identifie cette structure. `theme_astral_prompt_v1` reste le nom de famille prompt/provider associe, mais la documentation ne duplique pas le texte exact des prompts ni des payloads complets.
+145:## Liens vers les exemples complets CS-371
+147:CS-371 est le owner des exemples complets par profil de livraison. Cette page ne produit pas ces payloads complets; elle fixe seulement la lecture du squelette, des blocs, des sources et des frontieres. Quand CS-371 sera implemente, les exemples devront pointer vers ce document pour rester alignes avec `theme_astral_llm_input_v1`.
+exit=0
+
+## VC12 app sources unchanged backend
+exit=0
+
+## VC12 app sources unchanged frontend
+exit=0
+
+## VC13 evidence files exist
+exit=0
+
+## VC14 git diff check
+exit=0
+
+## VC15 capsule validate
+CONDAMAD validation: PASS
+exit=0
+
+## VC16 ruff check
+All checks passed!
+exit=0
+
+## VC17 pytest
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+
+## VC5 rerun block table source and visibility bounded PASS
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    from pathlib import Path; text=Path(r'_condamad/docs/prompt-generation-cartography/theme-astral-llm-json-structure-v1.md').read_text(encoding='utf-8'); section=text.split('## Description des blocs',1)[1].split('## Variations par delivery profile',1)[0]; rows=[line for line in section.splitlines() if line.startswith('| ')]; assert len(rows)==11, len(rows); bad=[]; [bad.append(row) for row in rows if len([c.strip() for c in row.strip('|').split('|')])!=5 or any(not c.strip() for c in [c.strip() for c in row.strip('|').split('|')])]; assert not bad, bad
+                                                                                                                                                                                                                                                                                                                                                ^^^^^^^^^^^^^
+AssertionError: 12
+exit=1
+
+## VC10b ruff format scoped
+not-run: no Python files modified; documentation-only story uses ruff check as static gate.
+
+## VC17 rerun pytest full suite
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 12%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 29%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+................................s....................................... [ 36%]
+........................................................................ [ 38%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 44%]
+........................................................................ [ 47%]
+........................................................................ [ 49%]
+........................................................................ [ 51%]
+........................................................................ [ 53%]
+........................................................................ [ 55%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 62%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 70%]
+........................................................................ [ 72%]
+........................................................................ [ 74%]
+........................................................................ [ 77%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 87%]
+........................................................................ [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 94%]
+........................................................................ [ 96%]
+........................................................................ [ 98%]
+...................................................                      [100%]
+3362 passed, 1 skipped, 1233 deselected in 205.38s (0:03:25)
+exit=0
+
+## VC5 final block table source and visibility bounded PASS
+exit=0
+
+## VC18 final capsule validate after evidence repair
+CONDAMAD validation: PASS
+exit=0

@@ -1,5 +1,5 @@
 # Story CS-370 documenter-synthese-json-theme-astral-llm: Document Theme Astral LLM JSON Structure
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
