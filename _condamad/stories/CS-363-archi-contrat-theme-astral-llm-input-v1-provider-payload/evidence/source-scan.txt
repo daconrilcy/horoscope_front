@@ -1,0 +1,39 @@
+CS-363 source scan summary
+
+Audit bundles:
+- CS-361: _condamad/audits/theme-astral-prompt-contract/2026-05-28-1152
+  - Findings used: F-001, F-002, F-003, F-004.
+  - Evidence IDs used: E-001 through E-010.
+  - Story candidates used: SC-001 through SC-006.
+- CS-362: _condamad/audits/theme-astral-prompt-contract/2026-05-28-1203
+  - Findings used: F-001, F-002, F-003, F-004, F-005.
+  - Evidence IDs used: E-001 through E-013.
+  - Story candidates used: SC-001 through SC-005.
+
+Owner surfaces observed by targeted rg/source reads:
+- backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py: current LLM astrology input contract and prompt-visible roles.
+- backend/app/domain/llm/runtime/gateway.py: provider payload/user payload filtering and gateway handoff owner.
+- backend/app/domain/llm/runtime/contracts.py: runtime contract surface.
+- backend/app/domain/llm/configuration/canonical_use_case_registry.py: canonical use case contracts, output schema names, persona strategy, input schema and required placeholders.
+- backend/app/domain/llm/configuration/assembly_resolver.py: assembly resolution owner.
+- backend/app/domain/llm/configuration/prompt_versions.py: active prompt version lookup entrypoint.
+- backend/app/infra/db/models/llm/llm_assembly.py: llm_assembly_configs owner.
+- backend/app/infra/db/models/llm/llm_prompt.py: llm_use_case_configs and llm_prompt_versions owner.
+- backend/app/infra/db/models/llm/llm_output_schema.py: llm_output_schemas owner.
+- backend/app/infra/db/models/llm/llm_persona.py: llm_personas owner.
+- backend/app/infra/db/models/llm/llm_execution_profile.py: llm_execution_profiles owner.
+- backend/app/infra/db/models/llm/llm_release.py: llm_release_snapshots and llm_active_releases owner.
+- backend/app/infra/db/models/llm/llm_observability.py: llm_call_logs, operational metadata and llm_replay_snapshots owner.
+- backend/app/ops/llm/bootstrap/use_cases_seed.py: use case/output schema/persona seed owner.
+- backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py: assembly taxonomy seed owner.
+- backend/migrations/versions: existing LLM migration history includes prompt registry, output schemas, persona, assembly, execution profiles, release, observability and legacy cleanup migrations.
+
+Material decisions trace:
+- Stable skeleton and key policy: CS-362 F-003, E-004/E-005.
+- Backend-only commercial plan: CS-362 F-001, E-004/E-005.
+- Single provider-visible carrier: CS-362 F-002, E-004/E-006.
+- Backend-only metadata split: CS-362 F-004, E-005/E-007.
+- Basic-not-premium guard: CS-362 F-005, E-008.
+- Interpretation material owner: CS-361 F-001/F-002/F-003, E-004/E-005/E-006.
+- Reachability guard: CS-361 F-004, E-001/E-007/E-009.
+

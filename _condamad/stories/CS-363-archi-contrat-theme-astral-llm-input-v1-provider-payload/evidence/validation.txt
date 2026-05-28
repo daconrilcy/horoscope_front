@@ -1,0 +1,49 @@
+CS-363 validation output
+
+Environment:
+- Working directory: C:\dev\horoscope_front
+- Timestamp folder: 2026-05-28-1217
+- Python commands were executed after: .\.venv\Scripts\Activate.ps1
+
+Commands executed:
+
+1. rg mandatory headings
+Command:
+rg -n "^## (Executive summary|Decisions d'architecture|Non-goals|Squelette provider cible|Contrat theme_astral_llm_input_v1|Bloc interpretation_material|Bloc astrologer_voice|Bloc delivery_profile|Bloc output_contract|Persistence DB et versioning|Integration avec assembly/prompt registry existants|Bigbang migration plan|Legacy a supprimer|Tests et guardrails|Risques et decisions ouvertes)|^## (Executive architecture decision summary|Audit source map|Capability matrix|Surface matrix|Canonical registry decisions|Object/entity decisions|Operational rules|Blockers and decision owners|Ordered implementation roadmap|Validation plan)" _condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md
+Result:
+PASS. All mandatory story headings and product-architecture sections were found.
+
+2. rg target contract keys
+Command:
+rg -n "runtime_contract|safety_contract|astrologer_voice|feature_context|delivery_profile|birth_context|astrological_facts|interpretation_material|selected_themes|limits|output_contract|theme_astral_llm_input_v1|bigbang|legacy" _condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md
+Result:
+PASS. Target skeleton keys and contract terms were found.
+
+3. rg plan/backend-only/roadmap/owner terms
+Command:
+rg -n "plan commercial|backend-only|free|basic|premium|CS-364|CS-365|CS-366|CS-367|CS-368|llm_assembly_configs|llm_prompt_versions|llm_output_schemas|llm_personas" _condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md
+Result:
+PASS. Backend-only plan, free/basic/premium, roadmap IDs and LLM persistence owner names were found.
+
+4. Python report existence and mandatory heading check
+Command:
+.\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; p=Path('_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md'); assert p.exists(); text=p.read_text(encoding='utf-8'); required=['Executive summary','Decisions d\\'architecture','Non-goals','Squelette provider cible','Contrat theme_astral_llm_input_v1','Bloc interpretation_material','Bloc astrologer_voice','Bloc delivery_profile','Bloc output_contract','Persistence DB et versioning','Integration avec assembly/prompt registry existants','Bigbang migration plan','Legacy a supprimer','Tests et guardrails','Risques et decisions ouvertes']; missing=[r for r in required if r not in text]; assert not missing, missing; print('PASS report exists and mandatory story headings present')"
+Output:
+PASS report exists and mandatory story headings present
+
+5. Protected application diff guard
+Command:
+.\.venv\Scripts\Activate.ps1; python -c "import subprocess; subprocess.run(['git','diff','--quiet','--','backend/app','backend/tests','frontend/src','backend/migrations'], check=True); print('PASS no protected application diff')"
+Output:
+PASS no protected application diff
+
+6. Evidence artifact existence check
+Command:
+.\.venv\Scripts\Activate.ps1; python -c "from pathlib import Path; assert Path('_condamad/stories/CS-363-archi-contrat-theme-astral-llm-input-v1-provider-payload/evidence/validation.txt').exists(); assert Path('_condamad/stories/CS-363-archi-contrat-theme-astral-llm-input-v1-provider-payload/evidence/report-shape-check.txt').exists(); print('PASS evidence artifacts exist')"
+Output:
+PASS evidence artifacts exist
+
+Not executed:
+- ruff format ., ruff check ., pytest -q, and targeted pytest commands were not executed because CS-363 is architecture-only, no application code/test/migration/frontend file was modified, and running format could rewrite unrelated files.
+
+Result: PASS for CS-363 document/report validation and protected-surface guard.

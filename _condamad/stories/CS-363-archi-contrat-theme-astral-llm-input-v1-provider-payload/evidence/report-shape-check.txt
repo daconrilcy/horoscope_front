@@ -1,0 +1,57 @@
+CS-363 report shape check
+
+Report:
+_condamad/architecture/theme-astral-prompt-contract/2026-05-28-1217/archi-theme-astral-prompt-contract-v1.md
+
+Mandatory story headings found:
+- Executive summary
+- Decisions d'architecture
+- Non-goals
+- Squelette provider cible
+- Contrat theme_astral_llm_input_v1
+- Bloc interpretation_material
+- Bloc astrologer_voice
+- Bloc delivery_profile
+- Bloc output_contract
+- Persistence DB et versioning
+- Integration avec assembly/prompt registry existants
+- Bigbang migration plan
+- Legacy a supprimer
+- Tests et guardrails
+- Risques et decisions ouvertes
+
+Product architecture contract sections found:
+- Executive architecture decision summary
+- Audit source map
+- Capability matrix
+- Surface matrix
+- Canonical registry decisions
+- Object/entity decisions
+- Operational rules
+- Blockers and decision owners
+- Ordered implementation roadmap
+- Validation plan
+
+Required skeleton keys found:
+- runtime_contract
+- safety_contract
+- astrologer_voice
+- feature_context
+- delivery_profile
+- input_data
+- birth_context
+- astrological_facts
+- interpretation_material
+- selected_themes
+- limits
+- output_contract
+
+Roadmap IDs found:
+- CS-364
+- CS-365
+- CS-366
+- CS-367
+- CS-368
+
+Result: PASS.
+
