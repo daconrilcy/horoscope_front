@@ -45,7 +45,7 @@ Corrections requises avant cloture finale. Le runtime, la persistence et les tes
 - `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py tests/integration/test_theme_astral_prompt_contract_persistence.py tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py tests/architecture/test_theme_astral_prompt_contract_guard.py tests/llm_orchestration/test_theme_astral_provider_smoke.py --tb=short`: PASS, `16 passed, 1 skipped, 9 deselected`.
 - `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_smoke.py -m provider_smoke --tb=short`: SKIPPED, `1 skipped, 3 deselected`.
 - Scans `rg` cibles sur profils, birth context, carriers historiques et plan labels: executes et interpretes.
-- Scripts du skill `condamad_domain_audit_validate.py` et `condamad_domain_audit_lint.py`: voir statut final de validation.
+- Scripts du skill `condamad_domain_audit_validate.py` et `condamad_domain_audit_lint.py`: PASS apres review du dossier d'audit cible.
 
 ## Risques residuels
 

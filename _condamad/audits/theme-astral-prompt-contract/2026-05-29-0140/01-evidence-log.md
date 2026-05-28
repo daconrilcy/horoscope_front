@@ -16,6 +16,7 @@
 | E-012 | json_inspection | `python -S -B -c` source material summary plus `Select-String source_ref interpretive_text production-like` | PASS | target example JSON and README | interpretation material source quality | Free, basic, premium payloads have non-empty interpretation text and explicit `source_ref`; README discloses DB-seeded and production-like fixture mix. | Some families remain fixture-backed by design. |
 | E-013 | lint | `.\.venv\Scripts\Activate.ps1; cd backend; ruff check .` | PASS | `backend` | backend lint | `All checks passed!`. | Check-only lint, no formatting. |
 | E-014 | json_inspection | `python -S -B -c` JSON forbidden-value walk | PASS | target provider examples | plan and old-carrier payload values | No exact string values or keys among `plan`, `free`, `basic`, `premium`, `chart_json`, `natal_data`, `llm_astrology_input_v1` were found inside target provider payload values or keys. | Filenames and README still contain commercial labels by design. |
+| E-015 | audit_validation | `.\.venv\Scripts\Activate.ps1; python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/theme-astral-prompt-contract/2026-05-29-0140` and `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/theme-astral-prompt-contract/2026-05-29-0140` | PASS | `_condamad/audits/theme-astral-prompt-contract/2026-05-29-0140` | domain audit artifact contract | `CONDAMAD domain audit validation passed.` and `CONDAMAD domain audit lint passed.` | Validates artifact contract and lint only; it does not close F-001. |
 
 ## Evidence Interpretation Notes
 
@@ -134,3 +135,11 @@
 - Inspected surface: plan and old-carrier payload values.
 - Result: PASS. No exact string values or keys among `plan`, `free`, `basic`, `premium`, `chart_json`, `natal_data`, `llm_astrology_input_v1` were found inside target provider payload values or keys.
 - Limitation: Filenames and README still contain commercial labels by design.
+
+## E-015 Domain Audit Artifact Validation
+
+- Command/source: `.\.venv\Scripts\Activate.ps1; python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_validate.py _condamad/audits/theme-astral-prompt-contract/2026-05-29-0140` and `python -S -B .agents/skills/condamad-domain-auditor/scripts/condamad_domain_audit_lint.py _condamad/audits/theme-astral-prompt-contract/2026-05-29-0140`.
+- Repository-relative inspected path: `_condamad/audits/theme-astral-prompt-contract/2026-05-29-0140`.
+- Inspected surface: domain audit artifact contract.
+- Result: PASS. `CONDAMAD domain audit validation passed.` and `CONDAMAD domain audit lint passed.`
+- Limitation: Validates artifact contract and lint only; it does not close F-001.

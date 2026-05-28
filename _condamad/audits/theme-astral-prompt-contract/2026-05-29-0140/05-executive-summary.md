@@ -17,6 +17,6 @@ Validation:
 - `ruff check .`: PASS.
 - Targeted theme astral pytest set including provider smoke file: PASS with `16 passed, 1 skipped, 9 deselected`.
 - Provider-smoke marker run: SKIPPED by missing opt-in with `1 skipped, 3 deselected`.
-- Domain-audit validate/lint: run after artifact creation; see final response for status.
+- Domain-audit validate/lint: PASS. `condamad_domain_audit_validate.py` and `condamad_domain_audit_lint.py` passed for this folder after review; see E-015.
 
 Recommended next action: create the CS-378 remediation from SC-001 and close F-001 by regenerating or correcting the final provider example payloads plus validator coverage.
