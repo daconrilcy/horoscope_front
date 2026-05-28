@@ -9,6 +9,9 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 BACKEND_ROOT = REPO_ROOT / "backend"
 sys.path.insert(0, str(BACKEND_ROOT))
@@ -52,6 +55,22 @@ from app.domain.astrology.runtime.chart_object_runtime_data import (  # noqa: E4
 )
 from app.domain.llm.runtime.theme_astral_provider_payload_builder import (  # noqa: E402
     ThemeAstralProviderPayloadBuilder,
+)
+from app.infra.db.base import Base  # noqa: E402
+from app.infra.db.models import (  # noqa: E402
+    AspectModel,
+    AstralAspectFamilyModel,
+    AstralAspectInterpretationProfileModel,
+    AstralPlanetInterpretationProfileModel,
+    AstralSystemModel,
+    HouseInterpretationProfileModel,
+    HouseModel,
+    LanguageModel,
+    PlanetModel,
+    ReferenceVersionModel,
+)
+from app.infra.db.repositories.interpretation_material_source_repository import (  # noqa: E402
+    InterpretationMaterialSourceRepository,
 )
 
 EXAMPLE_DIR = (
@@ -287,49 +306,19 @@ def _dominant_planet(code: str, score: float, rank: int, level: str) -> PlanetDo
 
 
 def _sources_for(chart_input: Any) -> tuple[InterpretationMaterialSource, ...]:
-    """Cree les sources interpretatives rattachees aux faits calcules."""
+    """Charge les sources depuis les tables d'interpretation puis ajoute les signaux runtime."""
+    with _open_seeded_material_session() as db:
+        table_sources = InterpretationMaterialSourceRepository(db).load_sources(
+            reference_version="1.0.0",
+            language_code="fr-FR",
+            astral_system="modern",
+        )
+    return (*table_sources, *_supplemental_runtime_sources(chart_input))
+
+
+def _supplemental_runtime_sources(chart_input: Any) -> tuple[InterpretationMaterialSource, ...]:
+    """Cree uniquement les sources de sections non encore portees par le repository DB."""
     sources: list[InterpretationMaterialSource] = []
-    for item in chart_input.objects:
-        sources.append(
-            _source(
-                "planet_sign_interpretations",
-                source_owner="astral_planet_interpretation_profiles",
-                source_id=f"{item.code}-{item.zodiac_position.sign_code}",
-                planet_code=item.code,
-                sign_code=item.zodiac_position.sign_code,
-                text=f"{item.display_name} en {item.zodiac_position.sign_code}: ressource sourcee.",
-            )
-        )
-        house = next(
-            (
-                entry.house_number
-                for entry in chart_input.house_positions
-                if entry.code == item.code
-            ),
-            None,
-        )
-        if house is not None:
-            sources.append(
-                _source(
-                    "planet_house_interpretations",
-                    source_owner="astral_house_interpretation_profiles",
-                    source_id=f"{item.code}-house-{house}",
-                    planet_code=item.code,
-                    house_number=house,
-                    text=f"{item.display_name} en maison {house}: contexte source.",
-                )
-            )
-    for aspect in chart_input.aspects:
-        sources.append(
-            _source(
-                "aspect_interpretations",
-                source_owner="astral_aspect_interpretation_profiles",
-                source_id=f"aspect-{aspect.code}",
-                aspect_code=aspect.code,
-                text=f"Aspect {aspect.code}: articulation sourcee entre facteurs du theme.",
-                weight=0.4,
-            )
-        )
     for dominance in chart_input.dominance:
         sources.append(
             _source(
@@ -369,6 +358,124 @@ def _sources_for(chart_input: Any) -> tuple[InterpretationMaterialSource, ...]:
         )
     )
     return tuple(sources)
+
+
+def _open_seeded_material_session() -> Session:
+    """Ouvre une table SQLite locale representant les profils editoriaux lus par le runtime."""
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(bind=engine)
+    session = sessionmaker(bind=engine)()
+    _seed_material_profiles(session)
+    return session
+
+
+def _seed_material_profiles(db: Session) -> None:
+    """Seed les profils DB minimaux necessaires au scenario Paris 1973."""
+    version = ReferenceVersionModel(version="1.0.0", description="CS-371 example", is_locked=False)
+    language = LanguageModel(code="en", name="English")
+    system = AstralSystemModel(name="modern")
+    aspect_family = AstralAspectFamilyModel(name="major")
+    db.add_all((version, language, system, aspect_family))
+    db.flush()
+
+    planets = {
+        code: PlanetModel(code=code, name=display_name, swe_id=index)
+        for index, (code, display_name) in enumerate(
+            (
+                ("sun", "Soleil"),
+                ("moon", "Lune"),
+                ("mercury", "Mercure"),
+                ("venus", "Venus"),
+                ("mars", "Mars"),
+                ("jupiter", "Jupiter"),
+                ("saturn", "Saturne"),
+            ),
+            start=1,
+        )
+    }
+    houses = {number: HouseModel(number=number, name=f"House {number}") for number in range(1, 13)}
+    aspects = {
+        code: AspectModel(
+            code=code, name=code.title(), angle=_aspect_angle(code), family=aspect_family.id
+        )
+        for code in ASPECT_CODES
+    }
+    db.add_all((*planets.values(), *houses.values(), *aspects.values()))
+    db.flush()
+
+    db.add_all(
+        [
+            AstralPlanetInterpretationProfileModel(
+                reference_version_id=version.id,
+                planet_id=planet.id,
+                astral_system_id=system.id,
+                language_id=language.id,
+                title=f"{planet.name} source table",
+                summary=f"{planet.name}: texte source issu du profil planetaire DB.",
+                core_keywords_json=_json("force", "integration"),
+                shadow_keywords_json=_json("exces"),
+                psychological_expression_json=_json("expression consciente"),
+                growth_patterns_json=_json("maturation"),
+                prompt_hints_json=_json("Relier la planete au fait calcule."),
+            )
+            for planet in planets.values()
+        ]
+    )
+    db.add_all(
+        [
+            HouseInterpretationProfileModel(
+                reference_version_id=version.id,
+                house_id=house.id,
+                language_id=language.id,
+                astral_system_id=system.id,
+                title=f"Maison {house.number} source table",
+                summary=f"Maison {house.number}: contexte issu du profil maison DB.",
+                core_keywords_json=_json("champ de vie", "priorite"),
+                shadow_keywords_json=_json("angle mort"),
+                psychological_keywords_json=_json("experience"),
+                material_keywords_json=_json("concret"),
+                dos_json=_json("situer le contexte"),
+                prompt_hints_json=_json("Relier la maison au fait calcule."),
+            )
+            for house in houses.values()
+        ]
+    )
+    db.add_all(
+        [
+            AstralAspectInterpretationProfileModel(
+                reference_version_id=version.id,
+                aspect_id=aspect.id,
+                astral_system_id=system.id,
+                language_id=language.id,
+                title=f"Aspect {aspect.code} source table",
+                summary=f"Aspect {aspect.code}: articulation issue du profil aspect DB.",
+                core_keywords_json=_json("lien", "dynamique"),
+                shadow_keywords_json=_json("tension"),
+                psychological_keywords_json=_json("ajustement"),
+                growth_patterns_json=_json("integration"),
+                prompt_hints_json=_json("Relier l'aspect aux deux participants."),
+            )
+            for aspect in aspects.values()
+        ]
+    )
+    db.commit()
+
+
+def _aspect_angle(code: str) -> float:
+    """Retourne l'angle canonique attendu par le modele DB."""
+    return {
+        "conjunction": 0.0,
+        "sextile": 60.0,
+        "square": 90.0,
+        "trine": 120.0,
+        "quincunx": 150.0,
+        "opposition": 180.0,
+    }[code]
+
+
+def _json(*values: str) -> str:
+    """Encode les champs listes des profils DB seedes."""
+    return json.dumps(list(values), ensure_ascii=False)
 
 
 def _source(
@@ -437,6 +544,17 @@ def _intermediate_data(
         },
         "source_coverage": {
             "source_count": len(sources),
+            "table_source_count": sum(
+                1
+                for source in sources
+                if source.source_owner
+                in {
+                    "astral_planet_interpretation_profiles",
+                    "astral_house_interpretation_profiles",
+                    "astral_aspect_interpretation_profiles",
+                }
+            ),
+            "source_owners": sorted({source.source_owner for source in sources}),
             "sections": sorted({source.section for source in sources}),
         },
         "profile_density": {
@@ -468,7 +586,8 @@ def _readme() -> str:
             "- Generation locale dans le venv via le script evidence `generate_examples.py`.",
             "- Builder reutilise: `ThemeAstralProviderPayloadBuilder`.",
             "- Materiau reutilise: `InterpretationMaterialBuilder` et sources "
-            "`InterpretationMaterialSource`.",
+            "`InterpretationMaterialSource` chargees via "
+            "`InterpretationMaterialSourceRepository` depuis des tables SQLite locales seedees.",
             "- Contrats runtime: `theme_astral_prompt_v1`, `theme_astral_llm_input_v1`, "
             "`theme_astral_response_contract_v1`.",
             "- Aucun appel LLM provider n'est effectue; aucun resultat final de provider "
@@ -561,9 +680,14 @@ def _source_coverage() -> str:
             "- Synthese: `_condamad/docs/prompt-generation-cartography/"
             "theme-astral-llm-json-structure-v1.md`.",
             "- Builder: `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`.",
+            "- Repository de sources: `backend/app/infra/db/repositories/"
+            "interpretation_material_source_repository.py`.",
             "- Tests: `backend/tests/llm_orchestration/"
             "test_theme_astral_provider_payload_builder.py` et `backend/tests/"
             "integration/llm/test_theme_astral_provider_payload_handoff.py`.",
+            "- Correction d'alignement: les sources planetes, maisons et aspects ne sont "
+            "plus fabriquees directement par le script; elles sont chargees depuis "
+            "`InterpretationMaterialSourceRepository` sur des profils DB seedes en SQLite.",
             "- Source gap: le runtime `ChartInterpretationInputRuntimeData` ne porte "
             "pas de champs naissance detailles; l'exemple encode le scenario dans "
             "`chart_id` et le documente dans `intermediate-data.json`.",

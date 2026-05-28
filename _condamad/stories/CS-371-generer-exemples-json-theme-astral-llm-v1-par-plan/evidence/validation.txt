@@ -1,6 +1,18 @@
 Validation command log initialized; detailed command output follows.
 .......                                                                  [100%]
 7 passed, 1 deselected in 1.05s
+--- alignment fix rerun ---
+ruff format evidence/generate_examples.py evidence/validate_examples.py: PASS
+ruff check evidence/generate_examples.py evidence/validate_examples.py: PASS
+python -B evidence/generate_examples.py: PASS
+python -B evidence/validate_examples.py: PASS
+PASS: interpretation_material includes DB-profile source refs
+pytest targeted builder/handoff/repository: PASS, 8 passed, 1 deselected
+CONDAMAD validation: PASS
+CONDAMAD story validation: PASS
+CONDAMAD story lint: PASS
+forbidden-token/provider/secret scan: PASS, no matches
+protected backend/frontend/shared diff: PASS, no files
 --- ruff evidence scripts ---
 All checks passed!
 --- required block scan ---

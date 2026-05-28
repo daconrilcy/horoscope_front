@@ -35,6 +35,11 @@ FORBIDDEN_STRINGS = {
     "HH:MM",
 }
 COMMERCIAL_LABELS = {"plan", "free", "basic", "premium"}
+TABLE_SOURCE_OWNERS = {
+    "astral_planet_interpretation_profiles",
+    "astral_house_interpretation_profiles",
+    "astral_aspect_interpretation_profiles",
+}
 
 
 def main() -> None:
@@ -46,6 +51,7 @@ def main() -> None:
     _assert_birth_context(intermediate, payloads)
     _assert_common_skeleton(payloads)
     _assert_required_blocks(payloads)
+    _assert_table_material_sources(intermediate, payloads)
     _assert_density_increases(payloads)
     _assert_no_forbidden_tokens(payloads)
     _assert_commercial_labels_outside_payload_values(payloads)
@@ -56,6 +62,7 @@ def main() -> None:
     print("PASS: birth scenario 1973-04-24 11:00 Paris is present")
     print("PASS: provider payload skeleton is shared by free/basic/premium")
     print("PASS: interpretation_material and required blocks are non-empty")
+    print("PASS: interpretation_material includes DB-profile source refs")
     print("PASS: density increases across provider profiles")
     print("PASS: provider payload values are resolved and contain no placeholders")
     print("PASS: commercial labels are absent from provider payload values")
@@ -116,6 +123,23 @@ def _assert_required_blocks(payloads: dict[str, dict[str, Any]]) -> None:
         assert payload["output_contract"]["response_contract_id"] == (
             "theme_astral_response_contract_v1"
         )
+
+
+def _assert_table_material_sources(
+    intermediate: dict[str, Any], payloads: dict[str, dict[str, Any]]
+) -> None:
+    """Verifie que les sources principales proviennent du repository DB."""
+    source_coverage = intermediate["source_coverage"]
+    assert source_coverage["table_source_count"] > 0
+    assert TABLE_SOURCE_OWNERS <= set(source_coverage["source_owners"])
+    for payload in payloads.values():
+        material = payload["input_data"]["interpretation_material"]
+        source_refs = {
+            item["source_ref"] for section_items in material.values() for item in section_items
+        }
+        assert any(ref.startswith("astral_planet_interpretation_profiles:") for ref in source_refs)
+        assert any(ref.startswith("astral_house_interpretation_profiles:") for ref in source_refs)
+        assert any(ref.startswith("astral_aspect_interpretation_profiles:") for ref in source_refs)
 
 
 def _assert_density_increases(payloads: dict[str, dict[str, Any]]) -> None:

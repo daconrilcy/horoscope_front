@@ -6,7 +6,7 @@ Ces fichiers documentent le payload provider `theme_astral_llm_input_v1` pour un
 
 - Generation locale dans le venv via le script evidence `generate_examples.py`.
 - Builder reutilise: `ThemeAstralProviderPayloadBuilder`.
-- Materiau reutilise: `InterpretationMaterialBuilder` et sources `InterpretationMaterialSource`.
+- Materiau reutilise: `InterpretationMaterialBuilder` et sources `InterpretationMaterialSource` chargees via `InterpretationMaterialSourceRepository` depuis des tables SQLite locales seedees.
 - Contrats runtime: `theme_astral_prompt_v1`, `theme_astral_llm_input_v1`, `theme_astral_response_contract_v1`.
 - Aucun appel LLM provider n'est effectue; aucun resultat final de provider n'est produit.
 

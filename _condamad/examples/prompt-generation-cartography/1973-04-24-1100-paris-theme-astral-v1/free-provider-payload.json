@@ -112,53 +112,53 @@
     "interpretation_material": {
       "planet_sign_interpretations": [
         {
-          "source_ref": "astral_planet_interpretation_profiles:sun-taurus@v1",
+          "source_ref": "astral_planet_interpretation_profiles:planet:sun@1.0.0",
           "fact_ref": "object:sun:sign:taurus",
-          "theme": "theme:sun-taurus",
+          "theme": "Soleil source table",
           "keywords": [
             "force",
             "integration",
-            "limite"
+            "expression consciente"
           ],
-          "risk": "surinterpretation",
-          "resource": "source_factuelle",
-          "weight": 1.16,
+          "risk": "exces",
+          "resource": "maturation",
+          "weight": 1.21,
           "selection_reason": "matched_calculated_fact:object:sun:sign:taurus",
-          "interpretive_text": "Soleil en taurus: ressource sourcee."
+          "interpretive_text": "Soleil: texte source issu du profil planetaire DB."
         }
       ],
       "planet_house_interpretations": [
         {
-          "source_ref": "astral_house_interpretation_profiles:mercury-house-10@v1",
+          "source_ref": "astral_house_interpretation_profiles:house:10@1.0.0",
           "fact_ref": "object:mercury:house:10",
-          "theme": "theme:mercury-house-10",
+          "theme": "Maison 10 source table",
           "keywords": [
-            "force",
-            "integration",
-            "limite"
+            "champ de vie",
+            "priorite",
+            "experience"
           ],
-          "risk": "surinterpretation",
-          "resource": "source_factuelle",
+          "risk": "angle mort",
+          "resource": "concret; situer le contexte",
           "weight": 0.5,
           "selection_reason": "matched_calculated_fact:object:mercury:house:10",
-          "interpretive_text": "Mercure en maison 10: contexte source."
+          "interpretive_text": "Maison 10: contexte issu du profil maison DB."
         }
       ],
       "aspect_interpretations": [
         {
-          "source_ref": "astral_aspect_interpretation_profiles:aspect-conjunction@v1",
+          "source_ref": "astral_aspect_interpretation_profiles:aspect:conjunction@1.0.0",
           "fact_ref": "aspect:conjunction:sun-moon",
-          "theme": "theme:aspect-conjunction",
+          "theme": "Aspect conjunction source table",
           "keywords": [
-            "force",
-            "integration",
-            "limite"
+            "lien",
+            "dynamique",
+            "ajustement"
           ],
-          "risk": "surinterpretation",
-          "resource": "source_factuelle",
-          "weight": 1.5333,
+          "risk": "tension",
+          "resource": "integration",
+          "weight": 1.4833,
           "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
-          "interpretive_text": "Aspect conjunction: articulation sourcee entre facteurs du theme."
+          "interpretive_text": "Aspect conjunction: articulation issue du profil aspect DB."
         }
       ],
       "dominant_themes": [

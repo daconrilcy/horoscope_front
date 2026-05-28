@@ -40,7 +40,15 @@
     }
   },
   "source_coverage": {
-    "source_count": 27,
+    "source_count": 32,
+    "table_source_count": 25,
+    "source_owners": [
+      "astral_aspect_interpretation_profiles",
+      "astral_house_interpretation_profiles",
+      "astral_planet_interpretation_profiles",
+      "dominance_reference",
+      "theme_astral_example_source"
+    ],
     "sections": [
       "aspect_interpretations",
       "dominant_themes",

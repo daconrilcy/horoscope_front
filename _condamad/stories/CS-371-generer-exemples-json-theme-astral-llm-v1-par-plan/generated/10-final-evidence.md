@@ -59,6 +59,8 @@
 - Added evidence generator: `evidence/generate_examples.py`.
 - Added evidence validator: `evidence/validate_examples.py`.
 - No application tests were modified.
+- Alignment correction: `generate_examples.py` now loads planet, house, and aspect material through
+  `InterpretationMaterialSourceRepository` from seeded SQLite interpretation-profile tables instead of direct story-script fabrication.
 
 ## Commands run
 
@@ -72,7 +74,7 @@ All Python commands were run after activating `.venv`.
 | `ruff check evidence\generate_examples.py evidence\validate_examples.py` | PASS |
 | `python -B evidence\generate_examples.py` | PASS |
 | `python -B evidence\validate_examples.py` | PASS |
-| `python -B -m pytest -q tests\llm_orchestration\test_theme_astral_provider_payload_builder.py tests\integration\llm\test_theme_astral_provider_payload_handoff.py --tb=short` | PASS, 7 passed, 1 deselected |
+| `python -B -m pytest -q tests\llm_orchestration\test_theme_astral_provider_payload_builder.py tests\integration\llm\test_theme_astral_provider_payload_handoff.py tests\unit\infra\db\repositories\test_interpretation_material_source_repository.py --tb=short` | PASS, 8 passed, 1 deselected |
 | `rg -n "interpretation_material|delivery_profile|astrologer_voice|output_contract" <example-dir>` | PASS |
 | `rg -n "TODO|TBD|PLACEHOLDER|\{\{|YYYY-MM-DD|HH:MM" <example-dir> -g "*.json"` | PASS, no matches |
 | `git diff --name-only -- backend frontend shared` | PASS, no protected app diffs |
