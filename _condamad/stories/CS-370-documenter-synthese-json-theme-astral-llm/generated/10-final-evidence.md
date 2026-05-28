@@ -10,7 +10,7 @@
 - Source story: `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm/00-story.md`
 - Source brief: `_story_briefs/cs-370-documenter-synthese-nouvelle-structure-json-theme-astral-llm.md`
 - Capsule path: `_condamad/stories/CS-370-documenter-synthese-json-theme-astral-llm`
-- `story-status.md`: `ready-to-review`, row source/path verified.
+- `story-status.md`: row source/path verified; final closure review updates the row to `done`.
 
 ## Preflight
 
@@ -99,7 +99,7 @@
 
 ## Remaining risks
 
-- Upstream CS-368/CS-369 are treated as audit evidence, not runtime owners; reviewer should confirm that source interpretation matches their final audit intent.
+- None identified after implementation review. CS-368/CS-369 are `done` in the tracker and remain audit evidence, not runtime owners.
 
 ## Suggested reviewer focus
 

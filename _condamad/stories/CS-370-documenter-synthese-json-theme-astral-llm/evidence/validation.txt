@@ -249,3 +249,27 @@ exit=0
 ## VC18 final capsule validate after evidence repair
 CONDAMAD validation: PASS
 exit=0
+
+## Post-review validation after implementation evidence correction
+
+Context:
+- Correction: aligned upstream CS-364, CS-368 and CS-369 statuses in `source-coverage.md` with `_condamad/stories/story-status.md`.
+- Review artifact refreshed as an implementation review in `generated/11-code-review.md`.
+- CS-370 tracker row moved to `done` only after the fresh implementation review was clean.
+
+Commands run with `.\.venv\Scripts\Activate.ps1`:
+- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-370-documenter-synthese-json-theme-astral-llm\00-story.md`
+  - Result: PASS
+- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-370-documenter-synthese-json-theme-astral-llm\00-story.md`
+  - Result: PASS
+- `ruff check .`
+  - Result: PASS
+- `pytest -q`
+  - Result: PASS, 3362 passed, 1 skipped, 1233 deselected.
+
+Targeted review checks:
+- Target document exists, contains the ten mandatory headings, has exactly two Mermaid blocks, and the block table has source and visibility columns for every row: PASS.
+- Required key scan for `theme_astral_llm_input_v1`, skeleton keys, `delivery_profile`, `interpretation_material`, `output_contract`, and `CS-371`: PASS.
+- Forbidden scan for placeholders, commercial-plan-to-LLM wording, `chart_json`, and `natal_data`: PASS, no matches.
+- Protected source check for `backend/app`, `backend/tests`, and `frontend/src`: PASS, no scoped dirty status.
+- Tracker row path/source/status check for CS-370: PASS, row is `done` with the expected source brief.

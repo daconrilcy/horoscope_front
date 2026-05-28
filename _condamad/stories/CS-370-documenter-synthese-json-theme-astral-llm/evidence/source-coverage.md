@@ -15,11 +15,11 @@
 
 ## Statuts amont observes
 
-- CS-364: `ready-to-review`; persistence et contrats versionnes documentes.
+- CS-364: `done`; persistence et contrats versionnes documentes dans le tracker canonique.
 - CS-365: `done`; builder `interpretation_material` present.
 - CS-366: `done` dans `_condamad/stories/story-status.md`; le code et les tests du builder provider existent dans le workspace.
 - CS-367: `done`; bigbang et tests de handoff existent.
-- CS-368 et CS-369: `ready-to-dev`; les audits correspondants existent et restent sources de verification, pas owners runtime.
+- CS-368 et CS-369: `done`; les audits correspondants existent et restent sources de verification, pas owners runtime.
 
 ## Gaps et decisions de redaction
 
