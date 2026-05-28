@@ -1,5 +1,5 @@
 # Story CS-375 mettre-a-jour-docs-structure-json-theme-astral: Update Theme Astral JSON Structure Documentation
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

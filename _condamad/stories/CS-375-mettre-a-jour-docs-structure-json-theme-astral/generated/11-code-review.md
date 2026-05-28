@@ -21,6 +21,7 @@ Verdict: CLEAN
 - Iteration 1: implementation review found stale review/status evidence.
 - Corrected in cycle: this review artifact now reviews the delivered implementation, and closure evidence/status are aligned to `done`.
 - Iteration 2: fresh implementation review after corrections found no actionable issue.
+- Iteration 3: final brief/code alignment pass found only stale `00-story.md` header status; it is now aligned to `done`.
 - Propagation decision: no-propagation; corrections are local evidence/status alignment for CS-375.
 
 ## Brief and AC alignment
@@ -44,6 +45,8 @@ Resolved during this review/fix loop:
 
 - Evidence freshness: replaced the stale pre-implementation review with this implementation review.
 - Closure status: aligned final evidence and tracker status with the clean implementation review result.
+- Story header status: aligned `00-story.md` from `ready-to-dev` to `done` after verifying tracker, final evidence, and implementation
+  review were already clean.
 
 ## Validation evidence
 
@@ -76,6 +79,8 @@ Targeted review scans also passed:
 - protected app surfaces scan: unchanged;
 - provider payload JSON scan: unchanged;
 - `git diff --check`: PASS.
+- final 2026-05-29 status-alignment rerun: story validation PASS, story strict lint PASS, capsule validation PASS,
+  forbidden doc scan PASS, provider payload shape scan PASS, protected-surface status unchanged except CS-375 story evidence.
 
 Validation note: an initial `condamad_validate.py` call with the `00-story.md` file target failed because that script expects the capsule
 directory. The command was rerun against the capsule directory and passed; no story or implementation issue was exposed.
