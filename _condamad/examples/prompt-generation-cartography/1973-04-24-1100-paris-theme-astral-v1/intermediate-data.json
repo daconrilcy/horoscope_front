@@ -3,7 +3,7 @@
     "kind": "runtime_builder_replay",
     "builder": "ThemeAstralProviderPayloadBuilder",
     "provider_call_performed": false,
-    "scenario_note": "Le runtime porte les champs naissance dans input_data.birth_context; chart_id reste technique."
+    "scenario_note": "Le runtime actuel porte les champs naissance dans chart_id."
   },
   "provider_call_performed": false,
   "birth_input": {
@@ -42,13 +42,19 @@
   "source_coverage": {
     "source_count": 32,
     "table_source_count": 25,
+    "production_like_fixture_count": 7,
     "source_owners": [
       "astral_aspect_interpretation_profiles",
       "astral_house_interpretation_profiles",
       "astral_planet_interpretation_profiles",
-      "dominance_reference",
-      "theme_astral_example_source"
+      "theme_astral_production_like_fixture"
     ],
+    "source_nature": {
+      "astral_aspect_interpretation_profiles": "DB locale seedee production-like",
+      "astral_house_interpretation_profiles": "DB locale seedee production-like",
+      "astral_planet_interpretation_profiles": "DB locale seedee production-like",
+      "theme_astral_production_like_fixture": "fixture production-like hors table applicative"
+    },
     "sections": [
       "aspect_interpretations",
       "dominant_themes",
@@ -58,7 +64,17 @@
       "resources",
       "tensions",
       "warnings"
-    ]
+    ],
+    "family_owners": {
+      "planet_sign_interpretations": "astral_planet_interpretation_profiles",
+      "planet_house_interpretations": "astral_house_interpretation_profiles",
+      "aspect_interpretations": "astral_aspect_interpretation_profiles",
+      "dominant_themes": "theme_astral_production_like_fixture",
+      "tensions": "theme_astral_production_like_fixture",
+      "resources": "theme_astral_production_like_fixture",
+      "integration_levers": "theme_astral_production_like_fixture",
+      "warnings": "theme_astral_production_like_fixture"
+    }
   },
   "profile_density": {
     "free": {

@@ -85,6 +85,120 @@ EVIDENCE_DIR = (
 PLANS = ("free", "basic", "premium")
 ASPECT_CODES = ("trine", "square", "opposition", "conjunction", "sextile", "quincunx")
 CHART_ID = "birth:1973-04-24 11:00 Europe/Paris Paris France"
+TABLE_SOURCE_OWNERS = {
+    "astral_planet_interpretation_profiles",
+    "astral_house_interpretation_profiles",
+    "astral_aspect_interpretation_profiles",
+}
+SUPPLEMENTAL_SOURCE_OWNER = "theme_astral_production_like_fixture"
+SOURCE_NATURE = {
+    "astral_planet_interpretation_profiles": "DB locale seedee production-like",
+    "astral_house_interpretation_profiles": "DB locale seedee production-like",
+    "astral_aspect_interpretation_profiles": "DB locale seedee production-like",
+    SUPPLEMENTAL_SOURCE_OWNER: "fixture production-like hors table applicative",
+}
+
+PLANET_TEXTS = {
+    "sun": (
+        "Soleil en Taureau: stabilise l'identite par la presence, la continuite "
+        "et une maniere concrete d'habiter ses choix. La lecture invite a relier "
+        "ambition visible et rythme corporel pour eviter de confondre constance "
+        "et immobilisme."
+    ),
+    "moon": (
+        "Lune en Taureau: cherche une securite affective tangible, faite de "
+        "reperes sensoriels, de fidelite et de temps long. Le texte doit montrer "
+        "comment cette base apaise les variations emotionnelles sans nier le "
+        "besoin de souplesse."
+    ),
+    "mercury": (
+        "Mercure en Belier: pense vite, tranche les hypotheses et initie la "
+        "parole avant que tout soit parfaitement stabilise. L'interpretation "
+        "gagne a transformer cette impulsion mentale en clarte d'action plutot "
+        "qu'en precipitation."
+    ),
+    "venus": (
+        "Venus en Poissons: ouvre la relation par empathie, imagination et "
+        "porosite aux ambiances. La source demande de distinguer compassion "
+        "lucide et idealisation afin que le lien garde des contours habitables."
+    ),
+    "mars": (
+        "Mars en Cancer: agit depuis la protection, la memoire et les attachements "
+        "profonds. L'enjeu consiste a nommer les besoins defensifs avant qu'ils "
+        "ne deviennent indirects ou trop charges emotionnellement."
+    ),
+    "jupiter": (
+        "Jupiter en Verseau: elargit l'horizon par les reseaux, les idees "
+        "collectives et une confiance dans l'experimentation sociale. La lecture "
+        "doit relier ouverture d'esprit et responsabilite envers le groupe reel."
+    ),
+    "saturn": (
+        "Saturne en Gemeaux: structure l'intelligence par methode, verification "
+        "et apprentissage patient. Le risque n'est pas le doute en soi, mais une "
+        "retenue qui retarde la formulation d'une pensee deja assez solide."
+    ),
+}
+
+HOUSE_TEXTS = {
+    8: (
+        "Maison 8: concentre l'experience sur les transformations, les ressources "
+        "partagees et les seuils psychiques. Le commentaire doit traiter la "
+        "profondeur comme un terrain de discernement, pas comme une fatalite."
+    ),
+    9: (
+        "Maison 9: oriente la planete vers le sens, la transmission, le voyage "
+        "interieur ou culturel et les convictions qui agrandissent le cadre. "
+        "L'ecriture doit montrer comment l'ideal devient pratique vivante."
+    ),
+    10: (
+        "Maison 10: rend l'expression visible dans la vocation, la responsabilite "
+        "publique et la construction d'une place reconnue. La source demande de "
+        "relier ambition, exemplarite et limites soutenables."
+    ),
+    11: (
+        "Maison 11: inscrit le fait astrologique dans les alliances, projets "
+        "collectifs et appartenances choisies. La lecture doit faire sentir la "
+        "difference entre soutien du groupe et dilution dans ses attentes."
+    ),
+    12: (
+        "Maison 12: deplace l'energie vers l'invisible, la retraite, la memoire "
+        "inconsciente et les gestes de compassion. Le texte doit nommer un lieu "
+        "d'integration silencieuse sans installer de flou fataliste."
+    ),
+}
+
+ASPECT_TEXTS = {
+    "conjunction": (
+        "Conjonction: fusionne deux fonctions psychiques dans un meme foyer "
+        "d'intensite. L'interpretation doit montrer la puissance d'unification "
+        "et le besoin de differencier les roles pour garder du recul."
+    ),
+    "sextile": (
+        "Sextile: ouvre une cooperation disponible mais non automatique. Le texte "
+        "doit inviter a saisir l'occasion, a poser un geste concret et a ne pas "
+        "laisser le potentiel rester theorique."
+    ),
+    "square": (
+        "Carre: met deux dynamiques sous tension active et demande un ajustement "
+        "pratique. La source privilegie une lecture de friction creatrice plutot "
+        "qu'un verdict de blocage."
+    ),
+    "trine": (
+        "Trigone: facilite la circulation entre deux fonctions et donne une "
+        "ressource fluide. L'interpretation doit aussi signaler le risque de "
+        "confort passif si ce talent n'est pas mobilise consciemment."
+    ),
+    "quincunx": (
+        "Quinconce: signale un decalage subtil qui oblige a regler finement les "
+        "habitudes et les attentes. Le texte doit rester nuancé et proposer une "
+        "integration progressive."
+    ),
+    "opposition": (
+        "Opposition: place deux poles en vis-a-vis et rend necessaire une "
+        "mediation consciente. L'ecriture doit faire apparaitre le dialogue "
+        "possible plutot qu'une simple contradiction."
+    ),
+}
 
 
 class _NatalSource:
@@ -323,10 +437,9 @@ def _supplemental_runtime_sources(chart_input: Any) -> tuple[InterpretationMater
         sources.append(
             _source(
                 "dominant_themes",
-                source_owner="dominance_reference",
                 source_id=f"dominance-{dominance.code}",
                 dominance_code=dominance.code,
-                text=f"Dominance {dominance.code}: priorite de lecture sourcee.",
+                text=_dominance_text(dominance.code),
             )
         )
     sources.extend(
@@ -335,29 +448,72 @@ def _supplemental_runtime_sources(chart_input: Any) -> tuple[InterpretationMater
                 "tensions",
                 source_id="tension-major-aspects",
                 aspect_code="square",
-                writing_hint="Nuancer les tensions majeures sans dramatiser.",
+                text=(
+                    "Tensions majeures: les frictions du theme sont traitees comme des "
+                    "points d'ajustement entre besoin de securite, exposition publique "
+                    "et reactivite emotionnelle. La redaction doit nommer un conflit "
+                    "utilisable, jamais une sentence."
+                ),
             ),
             _source(
                 "resources",
                 source_id="resource-venus",
                 dominance_code="venus",
-                writing_hint="Transformer les appuis relationnels en ressource concrete.",
+                text=(
+                    "Ressource Venus: l'empathie, la qualite de lien et l'imaginaire "
+                    "relationnel peuvent soutenir la vocation si des limites simples "
+                    "protegent la disponibilite affective."
+                ),
             ),
             _source(
                 "integration_levers",
                 source_id="lever-sun",
                 dominance_code="sun",
-                writing_hint="Proposer un levier d'integration progressif.",
+                text=(
+                    "Levier Soleil: ancrer les decisions visibles dans un rythme stable, "
+                    "mesurable et corporellement soutenable permet de transformer la "
+                    "dominante solaire en presence fiable."
+                ),
             ),
             _source(
                 "warnings",
                 source_id="warning-symbolic-reading",
                 aspect_code="opposition",
-                writing_hint="Rappeler que la lecture reste symbolique et contextualisee.",
+                text=(
+                    "Avertissement de lecture: ces correspondances sont symboliques, "
+                    "contextuelles et doivent rester proportionnees aux faits calcules; "
+                    "elles ne remplacent ni choix personnel ni accompagnement specialise."
+                ),
             ),
         )
     )
     return tuple(sources)
+
+
+def _dominance_text(code: str) -> str:
+    """Retourne un texte production-like pour les dominantes sans table dediee."""
+    texts = {
+        "sun": (
+            "Dominante Soleil: la carte demande une lecture centree sur la coherence "
+            "identitaire, la visibilite des choix et la responsabilite d'incarner une "
+            "direction sans rigidifier l'image de soi."
+        ),
+        "venus": (
+            "Dominante Venus: les themes relationnels, esthetiques et conciliateurs "
+            "servent de ressource majeure, a condition de distinguer harmonie vivante "
+            "et evitement du desaccord."
+        ),
+        "mars": (
+            "Dominante Mars: l'elan d'action est present mais colore par la protection "
+            "des attachements; le texte doit orienter cette force vers une initiative "
+            "claire plutot que reactive."
+        ),
+    }
+    return texts.get(
+        code,
+        "Dominante secondaire: signal production-like conserve pour tracer une priorite "
+        "runtime non encore portee par une table applicative dediee.",
+    )
 
 
 def _open_seeded_material_session() -> Session:
@@ -411,12 +567,21 @@ def _seed_material_profiles(db: Session) -> None:
                 astral_system_id=system.id,
                 language_id=language.id,
                 title=f"{planet.name} source table",
-                summary=f"{planet.name}: texte source issu du profil planetaire DB.",
-                core_keywords_json=_json("force", "integration"),
-                shadow_keywords_json=_json("exces"),
-                psychological_expression_json=_json("expression consciente"),
-                growth_patterns_json=_json("maturation"),
-                prompt_hints_json=_json("Relier la planete au fait calcule."),
+                summary=PLANET_TEXTS[planet.code],
+                micro_note=(
+                    "Profil seed local production-like charge par le repository DB pour "
+                    "l'exemple Paris 1973."
+                ),
+                core_keywords_json=_json("presence", "rythme", "expression consciente"),
+                shadow_keywords_json=_json("fixation", "projection", "reaction defensive"),
+                psychological_expression_json=_json("discernement", "choix incarnes"),
+                spiritual_expression_json=_json("integration symbolique", "responsabilite"),
+                growth_patterns_json=_json("maturation progressive", "alignement concret"),
+                dos_json=_json("relier la planete au fait calcule et au profil de livraison"),
+                conflict_patterns_json=_json("surinterpretation", "generalisation"),
+                prompt_hints_json=_json(
+                    "Citer le fait planetaire puis formuler une nuance psychologique utile."
+                ),
             )
             for planet in planets.values()
         ]
@@ -429,13 +594,25 @@ def _seed_material_profiles(db: Session) -> None:
                 language_id=language.id,
                 astral_system_id=system.id,
                 title=f"Maison {house.number} source table",
-                summary=f"Maison {house.number}: contexte issu du profil maison DB.",
-                core_keywords_json=_json("champ de vie", "priorite"),
-                shadow_keywords_json=_json("angle mort"),
-                psychological_keywords_json=_json("experience"),
-                material_keywords_json=_json("concret"),
-                dos_json=_json("situer le contexte"),
-                prompt_hints_json=_json("Relier la maison au fait calcule."),
+                summary=HOUSE_TEXTS.get(
+                    house.number,
+                    (
+                        f"Maison {house.number}: cadre de vie production-like conserve "
+                        "pour completer la table locale lorsque le scenario ne selectionne "
+                        "pas directement cette maison."
+                    ),
+                ),
+                micro_note="Profil maison seed local, explicite comme production-like.",
+                core_keywords_json=_json("champ de vie", "contexte", "priorite"),
+                shadow_keywords_json=_json("angle mort", "projection de role"),
+                psychological_keywords_json=_json("experience situee", "besoin concret"),
+                spiritual_keywords_json=_json("sens du lieu", "integration quotidienne"),
+                material_keywords_json=_json("cadre", "habitude", "responsabilite"),
+                dos_json=_json("situer le contexte sans reduire la personne a la maison"),
+                donts_json=_json("ne pas transformer le secteur en predestination"),
+                prompt_hints_json=_json(
+                    "Relier la maison au fait calcule puis proposer une piste d'integration."
+                ),
             )
             for house in houses.values()
         ]
@@ -448,12 +625,18 @@ def _seed_material_profiles(db: Session) -> None:
                 astral_system_id=system.id,
                 language_id=language.id,
                 title=f"Aspect {aspect.code} source table",
-                summary=f"Aspect {aspect.code}: articulation issue du profil aspect DB.",
-                core_keywords_json=_json("lien", "dynamique"),
-                shadow_keywords_json=_json("tension"),
-                psychological_keywords_json=_json("ajustement"),
-                growth_patterns_json=_json("integration"),
-                prompt_hints_json=_json("Relier l'aspect aux deux participants."),
+                summary=ASPECT_TEXTS[aspect.code],
+                micro_note="Profil aspect seed local production-like charge par repository.",
+                core_keywords_json=_json("lien", "dynamique", "regulation"),
+                shadow_keywords_json=_json("automatismes", "polarisation"),
+                psychological_keywords_json=_json("ajustement", "dialogue interne"),
+                spiritual_keywords_json=_json("mise en relation", "integration des poles"),
+                growth_patterns_json=_json("cooperation consciente", "choix d'usage"),
+                dos_json=_json("nommer les deux fonctions et leur mode de relation"),
+                conflict_patterns_json=_json("fatalisme", "lecture binaire"),
+                prompt_hints_json=_json(
+                    "Relier l'aspect aux deux participants et a son orb sans dramatiser."
+                ),
             )
             for aspect in aspects.values()
         ]
@@ -482,17 +665,17 @@ def _source(
     section: str,
     *,
     source_id: str,
-    source_owner: str = "theme_astral_example_source",
+    source_owner: str = SUPPLEMENTAL_SOURCE_OWNER,
     planet_code: str | None = None,
     sign_code: str | None = None,
     house_number: int | None = None,
     aspect_code: str | None = None,
     dominance_code: str | None = None,
-    text: str | None = "Texte source verifie.",
+    text: str | None = None,
     writing_hint: str | None = None,
     weight: float = 0.25,
 ) -> InterpretationMaterialSource:
-    """Normalise une source interpretative compatible avec le builder."""
+    """Normalise une fixture production-like compatible avec le builder."""
     return InterpretationMaterialSource(
         section=section,
         source_owner=source_owner,
@@ -545,17 +728,27 @@ def _intermediate_data(
         "source_coverage": {
             "source_count": len(sources),
             "table_source_count": sum(
-                1
-                for source in sources
-                if source.source_owner
-                in {
-                    "astral_planet_interpretation_profiles",
-                    "astral_house_interpretation_profiles",
-                    "astral_aspect_interpretation_profiles",
-                }
+                1 for source in sources if source.source_owner in TABLE_SOURCE_OWNERS
+            ),
+            "production_like_fixture_count": sum(
+                1 for source in sources if source.source_owner == SUPPLEMENTAL_SOURCE_OWNER
             ),
             "source_owners": sorted({source.source_owner for source in sources}),
+            "source_nature": {
+                owner: SOURCE_NATURE[owner]
+                for owner in sorted({source.source_owner for source in sources})
+            },
             "sections": sorted({source.section for source in sources}),
+            "family_owners": {
+                "planet_sign_interpretations": "astral_planet_interpretation_profiles",
+                "planet_house_interpretations": "astral_house_interpretation_profiles",
+                "aspect_interpretations": "astral_aspect_interpretation_profiles",
+                "dominant_themes": SUPPLEMENTAL_SOURCE_OWNER,
+                "tensions": SUPPLEMENTAL_SOURCE_OWNER,
+                "resources": SUPPLEMENTAL_SOURCE_OWNER,
+                "integration_levers": SUPPLEMENTAL_SOURCE_OWNER,
+                "warnings": SUPPLEMENTAL_SOURCE_OWNER,
+            },
         },
         "profile_density": {
             plan: {
@@ -588,6 +781,11 @@ def _readme() -> str:
             "- Materiau reutilise: `InterpretationMaterialBuilder` et sources "
             "`InterpretationMaterialSource` chargees via "
             "`InterpretationMaterialSourceRepository` depuis des tables SQLite locales seedees.",
+            "- Nature des sources: mixte. Les familles planetes, maisons et aspects "
+            "proviennent de profils DB locaux seedes avec des textes production-like "
+            "representatifs; les familles dominantes, tensions, ressources, leviers "
+            "et avertissements restent des fixtures production-like explicites car "
+            "aucune table applicative dediee ne les porte aujourd'hui.",
             "- Contrats runtime: `theme_astral_prompt_v1`, `theme_astral_llm_input_v1`, "
             "`theme_astral_response_contract_v1`.",
             "- Aucun appel LLM provider n'est effectue; aucun resultat final de provider "
@@ -602,6 +800,16 @@ def _readme() -> str:
             "- `structure-comparison.md`: squelette commun et differences de densite.",
             "",
             "## Notes de source",
+            "",
+            "- Propriete DB: `astral_planet_interpretation_profiles`, "
+            "`astral_house_interpretation_profiles`, "
+            "`astral_aspect_interpretation_profiles`.",
+            f"- Propriete fixture: `{SUPPLEMENTAL_SOURCE_OWNER}` pour les sections "
+            "`dominant_themes`, `tensions`, `resources`, `integration_levers`, "
+            "et `warnings`.",
+            "- Aucun texte fixture n'est presente comme contenu production reel; "
+            "la couverture source dans `intermediate-data.json` indique le mixte "
+            "DB locale seedee / production-like.",
             "",
             "Le runtime actuel expose le contexte de naissance dans "
             "`input_data.birth_context.chart_id`. Le scenario complet est aussi persiste "
@@ -660,6 +868,10 @@ def _structure_comparison(payloads: dict[str, dict[str, Any]]) -> str:
             "|---|---:|---:|---:|---:|---:|---:|",
             "\n".join(rows),
             "",
+            "La densite de `interpretation_material` suit les budgets du builder: "
+            "les profils plus riches selectionnent davantage de sources et gardent "
+            "les `source_ref` DB ou production-like explicites.",
+            "",
             "Les differences restent portees par `delivery_profile`, les budgets, les "
             "selections et `output_contract`. Les etiquettes commerciales sont les noms "
             "de fichiers et ne sont pas presentes comme valeurs dans le contenu JSON "
@@ -688,6 +900,20 @@ def _source_coverage() -> str:
             "- Correction d'alignement: les sources planetes, maisons et aspects ne sont "
             "plus fabriquees directement par le script; elles sont chargees depuis "
             "`InterpretationMaterialSourceRepository` sur des profils DB seedes en SQLite.",
+            "- Nature des sources DB: les tables locales seedent des textes "
+            "production-like representatifs pour `astral_planet_interpretation_profiles`, "
+            "`astral_house_interpretation_profiles` et "
+            "`astral_aspect_interpretation_profiles`; elles prouvent le chemin repository "
+            "sans affirmer une extraction de contenu production reel.",
+            f"- Nature des supplements: `{SUPPLEMENTAL_SOURCE_OWNER}` fournit des fixtures "
+            "production-like pour `dominant_themes`, `tensions`, `resources`, "
+            "`integration_levers` et `warnings`, car aucune table applicative dediee "
+            "ne porte ces familles dans le runtime actuel.",
+            "- Couverture famille -> owner: `planet_sign_interpretations` -> "
+            "`astral_planet_interpretation_profiles`; `planet_house_interpretations` -> "
+            "`astral_house_interpretation_profiles`; `aspect_interpretations` -> "
+            "`astral_aspect_interpretation_profiles`; `dominant_themes`, `tensions`, "
+            f"`resources`, `integration_levers`, `warnings` -> `{SUPPLEMENTAL_SOURCE_OWNER}`.",
             "- Source gap: le runtime `ChartInterpretationInputRuntimeData` ne porte "
             "pas de champs naissance detailles; l'exemple encode le scenario dans "
             "`chart_id` et le documente dans `intermediate-data.json`.",

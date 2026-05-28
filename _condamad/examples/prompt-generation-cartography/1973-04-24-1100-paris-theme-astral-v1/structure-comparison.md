@@ -36,6 +36,6 @@ Les trois payloads partagent les memes cles `input_data`:
 | basic | expanded | 6 | 3 | 6 | 6 | 2400 |
 | premium | complete | 7 | 6 | 8 | 8 | 3600 |
 
-Les differences restent portees par `delivery_profile`, les budgets, les selections et `output_contract`. Les etiquettes commerciales sont les noms de fichiers et ne sont pas presentes comme valeurs dans le contenu JSON transmis au LLM.
+La densite de `interpretation_material` suit les budgets du builder: les profils plus riches selectionnent davantage de sources et gardent les `source_ref` DB ou production-like explicites.
 
-Les profondeurs LLM-visibles canoniques sont `essential`, `expanded` et `complete`; aucune profondeur `deep` n'est active dans ces exemples provider.
+Les differences restent portees par `delivery_profile`, les budgets, les selections et `output_contract`. Les etiquettes commerciales sont les noms de fichiers et ne sont pas presentes comme valeurs dans le contenu JSON transmis au LLM.

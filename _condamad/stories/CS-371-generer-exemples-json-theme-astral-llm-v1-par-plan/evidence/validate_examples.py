@@ -17,6 +17,12 @@ EVIDENCE_DIR = (
     REPO_ROOT
     / "_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence"
 )
+STORY_EVIDENCE_DIR = (
+    REPO_ROOT
+    / "_condamad/stories/CS-374-renforcer-exemples-json-theme-astral-textes-interpretation/evidence"
+)
+SOURCE_COVERAGE_PATH = EVIDENCE_DIR / "source-coverage.md"
+README_PATH = EXAMPLE_DIR / "README.md"
 EXPECTED_FILES = {
     "README.md",
     "intermediate-data.json",
@@ -34,11 +40,29 @@ FORBIDDEN_STRINGS = {
     "YYYY-MM-DD",
     "HH:MM",
 }
+GENERIC_SEEDED_PHRASES = {
+    "texte source issu",
+    "contexte issu",
+    "articulation issue",
+    "Texte source verifie",
+    "theme_astral_example_source",
+}
 COMMERCIAL_LABELS = {"plan", "free", "basic", "premium"}
 TABLE_SOURCE_OWNERS = {
     "astral_planet_interpretation_profiles",
     "astral_house_interpretation_profiles",
     "astral_aspect_interpretation_profiles",
+}
+SUPPLEMENTAL_SOURCE_OWNER = "theme_astral_production_like_fixture"
+EXPECTED_SECTIONS = {
+    "planet_sign_interpretations",
+    "planet_house_interpretations",
+    "aspect_interpretations",
+    "dominant_themes",
+    "tensions",
+    "resources",
+    "integration_levers",
+    "warnings",
 }
 
 
@@ -52,8 +76,10 @@ def main() -> None:
     _assert_common_skeleton(payloads)
     _assert_required_blocks(payloads)
     _assert_table_material_sources(intermediate, payloads)
+    _assert_source_nature_documented(intermediate)
     _assert_density_increases(payloads)
     _assert_no_forbidden_tokens(payloads)
+    _assert_no_generic_seeded_phrases(payloads)
     _assert_commercial_labels_outside_payload_values(payloads)
     _assert_persistent_evidence()
 
@@ -63,8 +89,10 @@ def main() -> None:
     print("PASS: provider payload skeleton is shared by free/basic/premium")
     print("PASS: interpretation_material and required blocks are non-empty")
     print("PASS: interpretation_material includes DB-profile source refs")
+    print("PASS: source coverage documents DB and production-like fixture families")
     print("PASS: density increases across provider profiles")
     print("PASS: provider payload values are resolved and contain no placeholders")
+    print("PASS: generic CS-371 seeded phrases are absent")
     print("PASS: commercial labels are absent from provider payload values")
     print("PASS: persistent evidence files exist")
 
@@ -142,6 +170,35 @@ def _assert_table_material_sources(
         assert any(ref.startswith("astral_aspect_interpretation_profiles:") for ref in source_refs)
 
 
+def _assert_source_nature_documented(intermediate: dict[str, Any]) -> None:
+    """Controle la traçabilite des familles DB et fixtures production-like."""
+    source_coverage = intermediate["source_coverage"]
+    assert EXPECTED_SECTIONS <= set(source_coverage["sections"])
+    assert source_coverage["production_like_fixture_count"] > 0
+    assert SUPPLEMENTAL_SOURCE_OWNER in source_coverage["source_owners"]
+    family_owners = source_coverage["family_owners"]
+    assert family_owners["planet_sign_interpretations"] in TABLE_SOURCE_OWNERS
+    assert family_owners["planet_house_interpretations"] in TABLE_SOURCE_OWNERS
+    assert family_owners["aspect_interpretations"] in TABLE_SOURCE_OWNERS
+    assert family_owners["dominant_themes"] == SUPPLEMENTAL_SOURCE_OWNER
+
+    docs = (
+        README_PATH.read_text(encoding="utf-8")
+        + "\n"
+        + SOURCE_COVERAGE_PATH.read_text(encoding="utf-8")
+    )
+    for expected in (
+        "production-like",
+        "mixte",
+        "fixture",
+        "astral_planet_interpretation_profiles",
+        "astral_house_interpretation_profiles",
+        "astral_aspect_interpretation_profiles",
+        SUPPLEMENTAL_SOURCE_OWNER,
+    ):
+        assert expected in docs, expected
+
+
 def _assert_density_increases(payloads: dict[str, dict[str, Any]]) -> None:
     """Verifie que les volumes augmentent avec le profil."""
     objects = [len(payloads[plan]["input_data"]["astrological_facts"]["objects"]) for plan in PLANS]
@@ -168,6 +225,15 @@ def _assert_no_forbidden_tokens(payloads: dict[str, dict[str, Any]]) -> None:
             assert token not in serialized
 
 
+def _assert_no_generic_seeded_phrases(payloads: dict[str, dict[str, Any]]) -> None:
+    """Rejette le retour des phrases seed generiques de CS-371."""
+    serialized_payloads = "\n".join(
+        json.dumps(payload, ensure_ascii=False) for payload in payloads.values()
+    )
+    for phrase in GENERIC_SEEDED_PHRASES:
+        assert phrase not in serialized_payloads, phrase
+
+
 def _assert_commercial_labels_outside_payload_values(payloads: dict[str, dict[str, Any]]) -> None:
     """Interdit les labels commerciaux comme valeurs prompt-visibles."""
     for payload in payloads.values():
@@ -177,16 +243,16 @@ def _assert_commercial_labels_outside_payload_values(payloads: dict[str, dict[st
 
 def _assert_persistent_evidence() -> None:
     """Controle les preuves persistantes attendues par la story."""
+    assert SOURCE_COVERAGE_PATH.exists(), SOURCE_COVERAGE_PATH
     for name in (
         "examples-baseline.txt",
         "examples-after.txt",
         "guardrails.txt",
-        "source-coverage.md",
         "json-validation.txt",
         "no-provider-proof.txt",
         "validation.txt",
     ):
-        assert (EVIDENCE_DIR / name).exists(), name
+        assert (STORY_EVIDENCE_DIR / name).exists(), name
 
 
 def _skeleton(value: Any) -> str:

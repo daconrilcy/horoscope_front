@@ -1,0 +1,6 @@
+basic-provider-payload.json`t19010`t2026-05-29 00:34:24
+free-provider-payload.json`t8852`t2026-05-29 00:34:24
+intermediate-data.json`t2419`t2026-05-29 00:34:35
+premium-provider-payload.json`t29475`t2026-05-29 00:34:24
+README.md`t1584`t2026-05-29 00:34:35
+structure-comparison.md`t1227`t2026-05-29 00:10:19

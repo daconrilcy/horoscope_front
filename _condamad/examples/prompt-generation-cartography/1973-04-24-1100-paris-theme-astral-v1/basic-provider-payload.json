@@ -54,18 +54,18 @@
   "input_data": {
     "birth_context": {
       "chart_id": "birth:1973-04-24 11:00 Europe/Paris Paris France",
-      "birth_date": "1973-04-24",
-      "birth_time_local": "11:00",
+      "birth_date": null,
+      "birth_time_local": null,
       "birth_place": {
-        "city": "Paris",
-        "country": "France",
-        "timezone": "Europe/Paris",
-        "latitude": 48.8566,
-        "longitude": 2.3522
+        "city": null,
+        "country": null,
+        "timezone": null,
+        "latitude": null,
+        "longitude": null
       },
       "precision": {
-        "birth_time_known": true,
-        "coordinates_known": true
+        "birth_time_known": false,
+        "coordinates_known": false
       },
       "locale": "fr-FR",
       "chart_type": "natal"
@@ -177,45 +177,57 @@
           "fact_ref": "object:sun:sign:taurus",
           "theme": "Soleil source table",
           "keywords": [
-            "force",
-            "integration",
-            "expression consciente"
+            "presence",
+            "rythme",
+            "expression consciente",
+            "discernement",
+            "choix incarnes",
+            "integration symbolique",
+            "responsabilite"
           ],
-          "risk": "exces",
-          "resource": "maturation",
+          "risk": "fixation; projection; reaction defensive; surinterpretation; generalisation",
+          "resource": "maturation progressive; alignement concret; relier la planete au fait calcule et au profil de livraison",
           "weight": 1.21,
           "selection_reason": "matched_calculated_fact:object:sun:sign:taurus",
-          "interpretive_text": "Soleil: texte source issu du profil planetaire DB."
+          "interpretive_text": "Soleil en Taureau: stabilise l'identite par la presence, la continuite et une maniere concrete d'habiter ses choix. La lecture invite a relier ambition visible et rythme corporel pour eviter de confondre constance et immobilisme."
         },
         {
           "source_ref": "astral_planet_interpretation_profiles:planet:venus@1.0.0",
           "fact_ref": "object:venus:sign:pisces",
           "theme": "Venus source table",
           "keywords": [
-            "force",
-            "integration",
-            "expression consciente"
+            "presence",
+            "rythme",
+            "expression consciente",
+            "discernement",
+            "choix incarnes",
+            "integration symbolique",
+            "responsabilite"
           ],
-          "risk": "exces",
-          "resource": "maturation",
+          "risk": "fixation; projection; reaction defensive; surinterpretation; generalisation",
+          "resource": "maturation progressive; alignement concret; relier la planete au fait calcule et au profil de livraison",
           "weight": 1.04,
           "selection_reason": "matched_calculated_fact:object:venus:sign:pisces",
-          "interpretive_text": "Venus: texte source issu du profil planetaire DB."
+          "interpretive_text": "Venus en Poissons: ouvre la relation par empathie, imagination et porosite aux ambiances. La source demande de distinguer compassion lucide et idealisation afin que le lien garde des contours habitables."
         },
         {
           "source_ref": "astral_planet_interpretation_profiles:planet:mars@1.0.0",
           "fact_ref": "object:mars:sign:cancer",
           "theme": "Mars source table",
           "keywords": [
-            "force",
-            "integration",
-            "expression consciente"
+            "presence",
+            "rythme",
+            "expression consciente",
+            "discernement",
+            "choix incarnes",
+            "integration symbolique",
+            "responsabilite"
           ],
-          "risk": "exces",
-          "resource": "maturation",
+          "risk": "fixation; projection; reaction defensive; surinterpretation; generalisation",
+          "resource": "maturation progressive; alignement concret; relier la planete au fait calcule et au profil de livraison",
           "weight": 0.92,
           "selection_reason": "matched_calculated_fact:object:mars:sign:cancer",
-          "interpretive_text": "Mars: texte source issu du profil planetaire DB."
+          "interpretive_text": "Mars en Cancer: agit depuis la protection, la memoire et les attachements profonds. L'enjeu consiste a nommer les besoins defensifs avant qu'ils ne deviennent indirects ou trop charges emotionnellement."
         }
       ],
       "planet_house_interpretations": [
@@ -225,14 +237,18 @@
           "theme": "Maison 10 source table",
           "keywords": [
             "champ de vie",
+            "contexte",
             "priorite",
-            "experience"
+            "experience situee",
+            "besoin concret",
+            "sens du lieu",
+            "integration quotidienne"
           ],
-          "risk": "angle mort",
-          "resource": "concret; situer le contexte",
+          "risk": "angle mort; projection de role; ne pas transformer le secteur en predestination",
+          "resource": "cadre; habitude; responsabilite; situer le contexte sans reduire la personne a la maison",
           "weight": 0.5,
           "selection_reason": "matched_calculated_fact:object:mercury:house:10",
-          "interpretive_text": "Maison 10: contexte issu du profil maison DB."
+          "interpretive_text": "Maison 10: rend l'expression visible dans la vocation, la responsabilite publique et la construction d'une place reconnue. La source demande de relier ambition, exemplarite et limites soutenables."
         },
         {
           "source_ref": "astral_house_interpretation_profiles:house:10@1.0.0",
@@ -240,14 +256,18 @@
           "theme": "Maison 10 source table",
           "keywords": [
             "champ de vie",
+            "contexte",
             "priorite",
-            "experience"
+            "experience situee",
+            "besoin concret",
+            "sens du lieu",
+            "integration quotidienne"
           ],
-          "risk": "angle mort",
-          "resource": "concret; situer le contexte",
+          "risk": "angle mort; projection de role; ne pas transformer le secteur en predestination",
+          "resource": "cadre; habitude; responsabilite; situer le contexte sans reduire la personne a la maison",
           "weight": 0.5,
           "selection_reason": "matched_calculated_fact:object:sun:house:10",
-          "interpretive_text": "Maison 10: contexte issu du profil maison DB."
+          "interpretive_text": "Maison 10: rend l'expression visible dans la vocation, la responsabilite publique et la construction d'une place reconnue. La source demande de relier ambition, exemplarite et limites soutenables."
         },
         {
           "source_ref": "astral_house_interpretation_profiles:house:8@1.0.0",
@@ -255,14 +275,18 @@
           "theme": "Maison 8 source table",
           "keywords": [
             "champ de vie",
+            "contexte",
             "priorite",
-            "experience"
+            "experience situee",
+            "besoin concret",
+            "sens du lieu",
+            "integration quotidienne"
           ],
-          "risk": "angle mort",
-          "resource": "concret; situer le contexte",
+          "risk": "angle mort; projection de role; ne pas transformer le secteur en predestination",
+          "resource": "cadre; habitude; responsabilite; situer le contexte sans reduire la personne a la maison",
           "weight": 0.25,
           "selection_reason": "matched_calculated_fact:object:jupiter:house:8",
-          "interpretive_text": "Maison 8: contexte issu du profil maison DB."
+          "interpretive_text": "Maison 8: concentre l'experience sur les transformations, les ressources partagees et les seuils psychiques. Le commentaire doit traiter la profondeur comme un terrain de discernement, pas comme une fatalite."
         }
       ],
       "aspect_interpretations": [
@@ -273,13 +297,17 @@
           "keywords": [
             "lien",
             "dynamique",
-            "ajustement"
+            "regulation",
+            "ajustement",
+            "dialogue interne",
+            "mise en relation",
+            "integration des poles"
           ],
-          "risk": "tension",
-          "resource": "integration",
+          "risk": "automatismes; polarisation; fatalisme; lecture binaire",
+          "resource": "cooperation consciente; choix d'usage; nommer les deux fonctions et leur mode de relation",
           "weight": 1.4833,
           "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
-          "interpretive_text": "Aspect conjunction: articulation issue du profil aspect DB."
+          "interpretive_text": "Conjonction: fusionne deux fonctions psychiques dans un meme foyer d'intensite. L'interpretation doit montrer la puissance d'unification et le besoin de differencier les roles pour garder du recul."
         },
         {
           "source_ref": "astral_aspect_interpretation_profiles:aspect:opposition@1.0.0",
@@ -288,13 +316,17 @@
           "keywords": [
             "lien",
             "dynamique",
-            "ajustement"
+            "regulation",
+            "ajustement",
+            "dialogue interne",
+            "mise en relation",
+            "integration des poles"
           ],
-          "risk": "tension",
-          "resource": "integration",
+          "risk": "automatismes; polarisation; fatalisme; lecture binaire",
+          "resource": "cooperation consciente; choix d'usage; nommer les deux fonctions et leur mode de relation",
           "weight": 1.4833,
           "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
-          "interpretive_text": "Aspect opposition: articulation issue du profil aspect DB."
+          "interpretive_text": "Opposition: place deux poles en vis-a-vis et rend necessaire une mediation consciente. L'ecriture doit faire apparaitre le dialogue possible plutot qu'une simple contradiction."
         },
         {
           "source_ref": "astral_aspect_interpretation_profiles:aspect:quincunx@1.0.0",
@@ -303,18 +335,22 @@
           "keywords": [
             "lien",
             "dynamique",
-            "ajustement"
+            "regulation",
+            "ajustement",
+            "dialogue interne",
+            "mise en relation",
+            "integration des poles"
           ],
-          "risk": "tension",
-          "resource": "integration",
+          "risk": "automatismes; polarisation; fatalisme; lecture binaire",
+          "resource": "cooperation consciente; choix d'usage; nommer les deux fonctions et leur mode de relation",
           "weight": 1.4833,
           "selection_reason": "matched_calculated_fact:aspect:quincunx:sun-moon",
-          "interpretive_text": "Aspect quincunx: articulation issue du profil aspect DB."
+          "interpretive_text": "Quinconce: signale un decalage subtil qui oblige a regler finement les habitudes et les attentes. Le texte doit rester nuancé et proposer une integration progressive."
         }
       ],
       "dominant_themes": [
         {
-          "source_ref": "dominance_reference:dominance-sun@v1",
+          "source_ref": "theme_astral_production_like_fixture:dominance-sun@v1",
           "fact_ref": "dominance:sun",
           "theme": "theme:dominance-sun",
           "keywords": [
@@ -326,10 +362,10 @@
           "resource": "source_factuelle",
           "weight": 1.16,
           "selection_reason": "matched_calculated_fact:dominance:sun",
-          "interpretive_text": "Dominance sun: priorite de lecture sourcee."
+          "interpretive_text": "Dominante Soleil: la carte demande une lecture centree sur la coherence identitaire, la visibilite des choix et la responsabilite d'incarner une direction sans rigidifier l'image de soi."
         },
         {
-          "source_ref": "dominance_reference:dominance-venus@v1",
+          "source_ref": "theme_astral_production_like_fixture:dominance-venus@v1",
           "fact_ref": "dominance:venus",
           "theme": "theme:dominance-venus",
           "keywords": [
@@ -341,10 +377,10 @@
           "resource": "source_factuelle",
           "weight": 0.99,
           "selection_reason": "matched_calculated_fact:dominance:venus",
-          "interpretive_text": "Dominance venus: priorite de lecture sourcee."
+          "interpretive_text": "Dominante Venus: les themes relationnels, esthetiques et conciliateurs servent de ressource majeure, a condition de distinguer harmonie vivante et evitement du desaccord."
         },
         {
-          "source_ref": "dominance_reference:dominance-mars@v1",
+          "source_ref": "theme_astral_production_like_fixture:dominance-mars@v1",
           "fact_ref": "dominance:mars",
           "theme": "theme:dominance-mars",
           "keywords": [
@@ -356,12 +392,12 @@
           "resource": "source_factuelle",
           "weight": 0.87,
           "selection_reason": "matched_calculated_fact:dominance:mars",
-          "interpretive_text": "Dominance mars: priorite de lecture sourcee."
+          "interpretive_text": "Dominante Mars: l'elan d'action est present mais colore par la protection des attachements; le texte doit orienter cette force vers une initiative claire plutot que reactive."
         }
       ],
       "tensions": [
         {
-          "source_ref": "theme_astral_example_source:tension-major-aspects@v1",
+          "source_ref": "theme_astral_production_like_fixture:tension-major-aspects@v1",
           "fact_ref": "aspect:square:sun-moon",
           "theme": "theme:tension-major-aspects",
           "keywords": [
@@ -373,10 +409,10 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:square:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Tensions majeures: les frictions du theme sont traitees comme des points d'ajustement entre besoin de securite, exposition publique et reactivite emotionnelle. La redaction doit nommer un conflit utilisable, jamais une sentence."
         },
         {
-          "source_ref": "theme_astral_example_source:tension-major-aspects@v1",
+          "source_ref": "theme_astral_production_like_fixture:tension-major-aspects@v1",
           "fact_ref": "dominance:sun",
           "theme": "theme:tension-major-aspects",
           "keywords": [
@@ -388,10 +424,10 @@
           "resource": "source_factuelle",
           "weight": 1.16,
           "selection_reason": "matched_calculated_fact:dominance:sun",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Tensions majeures: les frictions du theme sont traitees comme des points d'ajustement entre besoin de securite, exposition publique et reactivite emotionnelle. La redaction doit nommer un conflit utilisable, jamais une sentence."
         },
         {
-          "source_ref": "theme_astral_example_source:tension-major-aspects@v1",
+          "source_ref": "theme_astral_production_like_fixture:tension-major-aspects@v1",
           "fact_ref": "dominance:venus",
           "theme": "theme:tension-major-aspects",
           "keywords": [
@@ -403,12 +439,12 @@
           "resource": "source_factuelle",
           "weight": 0.99,
           "selection_reason": "matched_calculated_fact:dominance:venus",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Tensions majeures: les frictions du theme sont traitees comme des points d'ajustement entre besoin de securite, exposition publique et reactivite emotionnelle. La redaction doit nommer un conflit utilisable, jamais une sentence."
         }
       ],
       "resources": [
         {
-          "source_ref": "theme_astral_example_source:resource-venus@v1",
+          "source_ref": "theme_astral_production_like_fixture:resource-venus@v1",
           "fact_ref": "aspect:conjunction:sun-moon",
           "theme": "theme:resource-venus",
           "keywords": [
@@ -420,10 +456,10 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Ressource Venus: l'empathie, la qualite de lien et l'imaginaire relationnel peuvent soutenir la vocation si des limites simples protegent la disponibilite affective."
         },
         {
-          "source_ref": "theme_astral_example_source:resource-venus@v1",
+          "source_ref": "theme_astral_production_like_fixture:resource-venus@v1",
           "fact_ref": "aspect:opposition:sun-moon",
           "theme": "theme:resource-venus",
           "keywords": [
@@ -435,10 +471,10 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Ressource Venus: l'empathie, la qualite de lien et l'imaginaire relationnel peuvent soutenir la vocation si des limites simples protegent la disponibilite affective."
         },
         {
-          "source_ref": "theme_astral_example_source:resource-venus@v1",
+          "source_ref": "theme_astral_production_like_fixture:resource-venus@v1",
           "fact_ref": "aspect:quincunx:sun-moon",
           "theme": "theme:resource-venus",
           "keywords": [
@@ -450,12 +486,12 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:quincunx:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Ressource Venus: l'empathie, la qualite de lien et l'imaginaire relationnel peuvent soutenir la vocation si des limites simples protegent la disponibilite affective."
         }
       ],
       "integration_levers": [
         {
-          "source_ref": "theme_astral_example_source:lever-sun@v1",
+          "source_ref": "theme_astral_production_like_fixture:lever-sun@v1",
           "fact_ref": "aspect:conjunction:sun-moon",
           "theme": "theme:lever-sun",
           "keywords": [
@@ -467,10 +503,10 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Levier Soleil: ancrer les decisions visibles dans un rythme stable, mesurable et corporellement soutenable permet de transformer la dominante solaire en presence fiable."
         },
         {
-          "source_ref": "theme_astral_example_source:lever-sun@v1",
+          "source_ref": "theme_astral_production_like_fixture:lever-sun@v1",
           "fact_ref": "aspect:opposition:sun-moon",
           "theme": "theme:lever-sun",
           "keywords": [
@@ -482,10 +518,10 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Levier Soleil: ancrer les decisions visibles dans un rythme stable, mesurable et corporellement soutenable permet de transformer la dominante solaire en presence fiable."
         },
         {
-          "source_ref": "theme_astral_example_source:lever-sun@v1",
+          "source_ref": "theme_astral_production_like_fixture:lever-sun@v1",
           "fact_ref": "aspect:quincunx:sun-moon",
           "theme": "theme:lever-sun",
           "keywords": [
@@ -497,12 +533,12 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:quincunx:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Levier Soleil: ancrer les decisions visibles dans un rythme stable, mesurable et corporellement soutenable permet de transformer la dominante solaire en presence fiable."
         }
       ],
       "warnings": [
         {
-          "source_ref": "theme_astral_example_source:warning-symbolic-reading@v1",
+          "source_ref": "theme_astral_production_like_fixture:warning-symbolic-reading@v1",
           "fact_ref": "aspect:opposition:sun-moon",
           "theme": "theme:warning-symbolic-reading",
           "keywords": [
@@ -514,10 +550,10 @@
           "resource": "source_factuelle",
           "weight": 1.3833,
           "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Avertissement de lecture: ces correspondances sont symboliques, contextuelles et doivent rester proportionnees aux faits calcules; elles ne remplacent ni choix personnel ni accompagnement specialise."
         },
         {
-          "source_ref": "theme_astral_example_source:warning-symbolic-reading@v1",
+          "source_ref": "theme_astral_production_like_fixture:warning-symbolic-reading@v1",
           "fact_ref": "dominance:sun",
           "theme": "theme:warning-symbolic-reading",
           "keywords": [
@@ -529,10 +565,10 @@
           "resource": "source_factuelle",
           "weight": 1.16,
           "selection_reason": "matched_calculated_fact:dominance:sun",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Avertissement de lecture: ces correspondances sont symboliques, contextuelles et doivent rester proportionnees aux faits calcules; elles ne remplacent ni choix personnel ni accompagnement specialise."
         },
         {
-          "source_ref": "theme_astral_example_source:warning-symbolic-reading@v1",
+          "source_ref": "theme_astral_production_like_fixture:warning-symbolic-reading@v1",
           "fact_ref": "dominance:venus",
           "theme": "theme:warning-symbolic-reading",
           "keywords": [
@@ -544,7 +580,7 @@
           "resource": "source_factuelle",
           "weight": 0.99,
           "selection_reason": "matched_calculated_fact:dominance:venus",
-          "interpretive_text": "Texte source verifie."
+          "interpretive_text": "Avertissement de lecture: ces correspondances sont symboliques, contextuelles et doivent rester proportionnees aux faits calcules; elles ne remplacent ni choix personnel ni accompagnement specialise."
         }
       ]
     },
@@ -562,7 +598,14 @@
     },
     "limits": {
       "missing_data": {
-        "empty_fact_groups": []
+        "empty_fact_groups": [],
+        "birth_context": [
+          "birth_date",
+          "birth_time_local",
+          "birth_place.city",
+          "birth_place.country",
+          "birth_place.timezone"
+        ]
       },
       "unavailable_sections": [],
       "uncertainty_policy": "state_limits_without_inventing_sources"

@@ -7,6 +7,7 @@ Ces fichiers documentent le payload provider `theme_astral_llm_input_v1` pour un
 - Generation locale dans le venv via le script evidence `generate_examples.py`.
 - Builder reutilise: `ThemeAstralProviderPayloadBuilder`.
 - Materiau reutilise: `InterpretationMaterialBuilder` et sources `InterpretationMaterialSource` chargees via `InterpretationMaterialSourceRepository` depuis des tables SQLite locales seedees.
+- Nature des sources: mixte. Les familles planetes, maisons et aspects proviennent de profils DB locaux seedes avec des textes production-like representatifs; les familles dominantes, tensions, ressources, leviers et avertissements restent des fixtures production-like explicites car aucune table applicative dediee ne les porte aujourd'hui.
 - Contrats runtime: `theme_astral_prompt_v1`, `theme_astral_llm_input_v1`, `theme_astral_response_contract_v1`.
 - Aucun appel LLM provider n'est effectue; aucun resultat final de provider n'est produit.
 
@@ -20,4 +21,8 @@ Ces fichiers documentent le payload provider `theme_astral_llm_input_v1` pour un
 
 ## Notes de source
 
-Le runtime expose le contexte de naissance dans `input_data.birth_context` avec `birth_date`, `birth_time_local`, `birth_place.city`, `birth_place.country`, `birth_place.timezone`, les coordonnees canoniques disponibles et les flags `precision.birth_time_known` / `precision.coordinates_known`. `chart_id` reste un identifiant technique et `intermediate-data.json` sert seulement de preuve de scenario.
+- Propriete DB: `astral_planet_interpretation_profiles`, `astral_house_interpretation_profiles`, `astral_aspect_interpretation_profiles`.
+- Propriete fixture: `theme_astral_production_like_fixture` pour les sections `dominant_themes`, `tensions`, `resources`, `integration_levers`, et `warnings`.
+- Aucun texte fixture n'est presente comme contenu production reel; la couverture source dans `intermediate-data.json` indique le mixte DB locale seedee / production-like.
+
+Le runtime actuel expose le contexte de naissance dans `input_data.birth_context.chart_id`. Le scenario complet est aussi persiste dans `intermediate-data.json` pour rendre la date, l'heure et le lieu auditables sans modifier le contrat backend.

@@ -1,0 +1,2 @@
+PASS: no provider response, API key, bearer token, credential, or secret marker in final example folder
+PASS: generation script writes no-provider-proof.txt and uses ThemeAstralProviderPayloadBuilder locally

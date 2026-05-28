@@ -1,0 +1,1 @@
+PASS: no generic seeded phrase in final example folder

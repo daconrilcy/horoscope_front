@@ -1,0 +1,1 @@
+PASS: protected runtime/frontend/migration/provider-client surfaces unchanged when output above is empty.

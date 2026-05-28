@@ -1,0 +1,5 @@
+PASS: json.tool intermediate-data.json
+PASS: json.tool free-provider-payload.json
+PASS: json.tool basic-provider-payload.json
+PASS: json.tool premium-provider-payload.json
+PASS: non-empty material, explicit refs, DB refs, production-like coverage, density [8, 24, 41]
