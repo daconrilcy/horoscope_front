@@ -1,90 +1,21 @@
 # Changed paths CS-378
 
-## git status --short
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json
- M _condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py
- M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md
- M _condamad/stories/story-status.md
-?? _condamad/reports/cs-378-corrections-review-adversariale-finale-theme-astral.md
-?? _condamad/run-state.json
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/01-execution-brief.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/03-acceptance-traceability.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/04-target-files.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/06-validation-plan.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/07-no-legacy-dry-guardrails.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/10-final-evidence.md
-
-## git diff --stat scoped
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/story-status.md', LF will be replaced by CRLF the next time Git touches it
- .../README.md                                      |  2 +-
- .../basic-provider-payload.json                    | 26 ++++-----
- .../free-provider-payload.json                     | 26 ++++-----
- .../premium-provider-payload.json                  | 26 ++++-----
- .../evidence/validate_examples.py                  | 18 ++++---
- .../generated/11-code-review.md                    | 61 ++++++++--------------
- _condamad/stories/story-status.md                  |  2 +-
- 7 files changed, 66 insertions(+), 95 deletions(-)
-
-## git diff --name-only scoped
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/story-status.md', LF will be replaced by CRLF the next time Git touches it
-_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md
-_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json
-_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json
-_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json
-_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py
-_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md
-_condamad/stories/story-status.md
-
-## git diff --check
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md', LF will be replaced by CRLF the next time Git touches it
-warning: in the working copy of '_condamad/stories/story-status.md', LF will be replaced by CRLF the next time Git touches it
-
-## final git status --short
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/basic-provider-payload.json
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/free-provider-payload.json
- M _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/premium-provider-payload.json
- M _condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py
- M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md
- M _condamad/stories/story-status.md
-?? _condamad/reports/cs-378-corrections-review-adversariale-finale-theme-astral.md
-?? _condamad/run-state.json
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/01-execution-brief.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/03-acceptance-traceability.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/04-target-files.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/06-validation-plan.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/07-no-legacy-dry-guardrails.md
-?? _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/10-final-evidence.md
-
-## review/fix current git status --short
- M _condamad/reports/cs-378-corrections-review-adversariale-finale-theme-astral.md
+## final current git status --short
+ M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/00-story.md
  M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/changed-paths.txt
- M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/guardrails.txt
  M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/re-review.txt
  M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/validation.txt
  M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/10-final-evidence.md
  M _condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md
- M _condamad/stories/story-status.md
 ?? _condamad/run-state.json
+
+## final scoped git diff --name-only
+_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/00-story.md
+_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/changed-paths.txt
+_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/re-review.txt
+_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/validation.txt
+_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/10-final-evidence.md
+_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md
+
+## note
+Story status was aligned from ready-to-dev to done; implementation payload/code alignment remains unchanged and clean.

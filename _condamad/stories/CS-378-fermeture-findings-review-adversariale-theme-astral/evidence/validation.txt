@@ -73,3 +73,43 @@ CONDAMAD validation: FAIL
 
 ## final capsule validation rerun
 CONDAMAD validation: PASS
+
+## post-implementation alignment rerun - 2026-05-29
+### story validation
+CONDAMAD story validation: PASS
+### story strict lint
+CONDAMAD story lint: PASS
+### final capsule validation
+CONDAMAD validation: PASS
+### example validator
+PASS: expected deliverables present
+PASS: four JSON files parse successfully
+PASS: birth scenario 1973-04-24 11:00 Paris is present
+PASS: provider payload skeleton is shared by free/basic/premium
+PASS: interpretation_material and required blocks are non-empty
+PASS: interpretation_material includes DB-profile source refs
+PASS: source coverage documents DB and production-like fixture families
+PASS: density increases across provider profiles
+PASS: provider payload values are resolved and contain no placeholders
+PASS: generic CS-371 seeded phrases are absent
+PASS: commercial labels are absent from provider payload values
+PASS: persistent evidence files exist
+### report parser
+PASS: report decisions, severities and accepted-risk ownership are coherent
+### JSON payload parsing
+PASS: JSON payload parsing for free/basic/premium provider payloads
+### ruff check
+All checks passed!
+### targeted pytest
+.............                                                            [100%]
+13 passed, 9 deselected in 1.12s
+
+## final evidence/path proof rerun - 2026-05-29
+### story validation after evidence update
+CONDAMAD story validation: PASS
+### story strict lint after evidence update
+CONDAMAD story lint: PASS
+### final capsule validation after evidence update
+CONDAMAD validation: PASS
+### ruff format check
+1715 files already formatted

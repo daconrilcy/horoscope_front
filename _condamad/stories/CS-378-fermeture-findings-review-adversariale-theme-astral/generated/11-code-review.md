@@ -14,6 +14,7 @@ No actionable implementation issue remains open for CS-378.
 - Corrected examples: `_condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/*-provider-payload.json`.
 - Updated guard: `_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py`.
 - Evidence: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/**`.
+- Story status alignment: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/00-story.md`.
 
 ## Reviewer focus
 
@@ -21,6 +22,7 @@ No actionable implementation issue remains open for CS-378.
 - Validator strength: `_assert_birth_context` now checks structured values and precision booleans.
 - Accepted risks: F-002 and F-003 have owner, justification and residual risk in the report.
 - Scope: no backend runtime, API, frontend, dependency, or migration change was introduced.
+- Tracker/story status: tracker `done` row and source story `Status: done` are aligned with the final evidence.
 
 ## Findings
 
@@ -38,6 +40,7 @@ None.
 - Guard scans PASS/no matches on target examples and placeholders.
 - Fresh CS-378 report parser PASS: all CS-377 findings have decisions, no actionable Critical/High/Medium finding remains open, accepted risks have owner and justification.
 - `condamad_validate.py --final` PASS for the CS-378 capsule.
+- Post-implementation alignment rerun PASS: source brief, tracker row, story status, correction report, payloads, validator, and review evidence are coherent.
 
 ## Residual risks
 

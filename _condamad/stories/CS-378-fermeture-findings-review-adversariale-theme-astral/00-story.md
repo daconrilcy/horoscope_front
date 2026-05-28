@@ -1,5 +1,5 @@
 # Story CS-378 fermeture-findings-review-adversariale-theme-astral: Close Theme Astral Final Adversarial Review Findings
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

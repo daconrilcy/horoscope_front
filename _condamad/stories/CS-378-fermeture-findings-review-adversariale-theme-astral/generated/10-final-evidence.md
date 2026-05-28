@@ -11,6 +11,7 @@
 - Source brief: `_story_briefs/cs-378-corriger-findings-review-adversariale-finale-theme-astral.md`.
 - Capsule path: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral`.
 - Tracker: `_condamad/stories/story-status.md` set to `done` on 2026-05-29 after clean implementation review.
+- Source story status: `done`, aligned with tracker and final evidence after the post-implementation alignment pass.
 
 ## Preflight
 
@@ -66,6 +67,7 @@
 - Validator: `_condamad/stories/CS-371-generer-exemples-json-theme-astral-llm-v1-par-plan/evidence/validate_examples.py`.
 - Report: `_condamad/reports/cs-378-corrections-review-adversariale-finale-theme-astral.md`.
 - Evidence: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/evidence/**`, `generated/**`.
+- Story contract status: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/00-story.md`.
 - Tracker: `_condamad/stories/story-status.md`.
 
 ## Files deleted
@@ -121,6 +123,7 @@
 - Verdict: CLEAN.
 - Findings: none.
 - Propagation: no-propagation; corrections are local to CS-378 closure evidence and tracker status.
+- Alignment pass: source story status now matches the `done` tracker row and clean implementation evidence.
 
 ## Remaining risks
 

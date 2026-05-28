@@ -18,3 +18,8 @@ Findings: none.
 Parser: PASS; all CS-377 findings have decisions, no actionable Critical/High/Medium remains open, accepted risks have owner and justification.
 Review artifact: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/generated/11-code-review.md`.
 Closure status: `_condamad/stories/story-status.md` row for CS-378 is `done`.
+
+## Post-implementation brief alignment pass
+Finding: source story status still said `ready-to-dev` while tracker and final evidence were `done`.
+Correction: `_condamad/stories/CS-378-fermeture-findings-review-adversariale-theme-astral/00-story.md` now says `Status: done`.
+Verdict: CLEAN after correction; no code-vs-brief drift remains.
