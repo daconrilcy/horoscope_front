@@ -1,5 +1,5 @@
 # Story CS-359 migrer-event-guidance-hors-chart-json-legacy: Migrate Event Guidance Away From Legacy Chart Json
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

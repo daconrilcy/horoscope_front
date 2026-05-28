@@ -1,0 +1,31 @@
+# Validation CS-359
+
+<!-- Commentaire global: cette preuve regroupe les validations relancees pendant la review d'implementation CS-359. -->
+
+Review iteration 1 findings fixed:
+
+- `00-story.md` status aligned from `ready-to-dev` to `ready-to-review` before final closure.
+- Missing `evidence/validation.txt` created because `generated/10-final-evidence.md` listed it as final validation evidence.
+
+Commands rerun after this correction:
+
+- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-359-migrer-event-guidance-hors-chart-json-legacy\00-story.md`
+  - PASS: `CONDAMAD story validation: PASS`.
+- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-359-migrer-event-guidance-hors-chart-json-legacy\00-story.md`
+  - PASS: `CONDAMAD story lint: PASS`.
+- `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff format --check .`
+  - PASS: `1698 files already formatted`.
+- `.\.venv\Scripts\Activate.ps1; Set-Location backend; ruff check .`
+  - PASS: `All checks passed!`.
+- `.\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q --tb=short tests/llm_orchestration/test_llm_legacy_extinction.py tests/llm_orchestration/test_prompt_governance_registry.py tests/integration/test_llm_runtime_suppression.py tests/llm_orchestration/test_llm_astrology_input_boundaries.py tests/architecture/test_llm_legacy_extinction.py`
+  - PASS: `52 passed, 8 deselected`.
+- `.\.venv\Scripts\Activate.ps1; Set-Location backend; python -B -m pytest -q --tb=short`
+  - PASS: `3486 passed, 1 skipped, 1223 deselected`.
+- `.\.venv\Scripts\Activate.ps1; Set-Location backend; python -c "from app.main import app; assert app.routes; assert app.openapi()['paths']"`
+  - PASS.
+- `rg -n "event_guidance|chart_json|natal_data" backend/app backend/tests _condamad/docs/prompt-generation-cartography _condamad/stories/regression-guardrails.md _condamad/stories/CS-359-migrer-event-guidance-hors-chart-json-legacy`
+  - PASS: residual hits are classified as chat intent, anti-return tests, natal legacy guards, or CONDAMAD historical/evidence mentions.
+- `rg -n "event_guidance.*supprime|event_guidance" _condamad/docs/prompt-generation-cartography _condamad/stories/regression-guardrails.md`
+  - PASS: CS-350 and RG-149 classify `event_guidance` as deleted by CS-359.
+
+No applicable validation was skipped.
