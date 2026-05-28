@@ -1,0 +1,23 @@
+# CS-367 - Example Shape Proof
+
+<!-- Commentaire global: cette preuve valide le squelette JSON stable des exemples provider theme_astral. -->
+
+Date: `2026-05-28`
+
+Command:
+
+PowerShell JSON check over `_condamad/examples/prompt-generation-cartography/**/*-provider-payload.json`.
+
+Result: PASS: `checked_provider_payloads 6`.
+
+Validated invariants:
+
+- Top-level keys are exactly `runtime_contract`, `safety_contract`, `astrologer_voice`, `feature_context`, `delivery_profile`, `input_data`, `output_contract`.
+- `input_data` keys are exactly `birth_context`, `astrological_facts`, `interpretation_material`, `selected_themes`, `limits`.
+- No `"plan"` key is present in provider payload JSON.
+- No quoted commercial label value `"free"`, `"basic"`, or `"premium"` is present in provider payload JSON.
+
+Conclusion:
+
+- Example payload shapes are stable across delivery profiles.
+- Commercial plan labels remain backend-only and are not prompt-visible in examples.

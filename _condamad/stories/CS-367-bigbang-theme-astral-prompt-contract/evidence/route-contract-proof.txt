@@ -1,0 +1,24 @@
+# CS-367 - Route Contract Proof
+
+<!-- Commentaire global: cette preuve verifie que la bascule backend-domain ne modifie pas les routes publiques. -->
+
+Date: `2026-05-28`
+
+Command:
+
+`python -B -c "from app.main import app; assert isinstance(app.openapi(), dict); assert all(getattr(r, 'path', '') for r in app.routes)"`
+
+Working directory: `backend`
+
+Result: PASS.
+
+Observed values:
+
+- Route count: `230`
+- OpenAPI path count: `201`
+
+Conclusion:
+
+- `app.routes` loads successfully.
+- `app.openapi()` loads successfully as a dictionary.
+- No API router file was modified for CS-367.

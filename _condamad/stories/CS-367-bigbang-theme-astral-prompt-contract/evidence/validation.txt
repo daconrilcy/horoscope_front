@@ -1,0 +1,39 @@
+# CS-367 - Validation Output
+
+<!-- Commentaire global: cette preuve consigne les validations relancees apres review d'implementation CS-367. -->
+
+Date: `2026-05-28`
+
+All Python, Ruff, Pytest, and Uvicorn commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+
+| Command | Working directory | Result |
+|---|---|---|
+| Targeted CS-367 pytest command | `backend` | PASS: 10 passed, 3 deselected |
+| `ruff format --check .` | `backend` | PASS: 1713 files already formatted |
+| `ruff check .` | `backend` | PASS: All checks passed |
+| `python -B -m pytest -q tests --tb=short` | `backend` | PASS: 1233 passed, 232 deselected |
+| App route/OpenAPI load check | `backend` | PASS: 230 routes, 201 OpenAPI paths |
+| `condamad_story_validate.py` on CS-367 story | repo root | PASS |
+| `condamad_story_lint.py --strict` on CS-367 story | repo root | PASS |
+| Uvicorn startup command | `backend` | PASS: startup job reached Running and was stopped |
+
+Targeted CS-367 pytest command:
+
+`python -B -m pytest -q tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py`
+
+`python -B -m pytest -q tests/architecture/test_theme_astral_prompt_contract_guard.py`
+
+`python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short`
+
+App route/OpenAPI load check:
+
+`python -B -c "from app.main import app; assert isinstance(app.openapi(), dict); assert all(getattr(r, 'path', '') for r in app.routes)"`
+
+Uvicorn startup command:
+
+`python -B -m uvicorn app.main:app --host 127.0.0.1 --port 8000`
+
+Skipped validations:
+
+- Real provider LLM call: skipped by story non-goal.
+- Frontend validation: skipped because no frontend files are in scope or modified.

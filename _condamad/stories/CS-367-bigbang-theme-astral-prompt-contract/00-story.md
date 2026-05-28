@@ -1,5 +1,5 @@
 # Story CS-367 bigbang-theme-astral-prompt-contract: Bigbang Theme Astral Prompt Contract
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -156,18 +156,18 @@ Named brief primitives out of scope:
 
 ## Implementation Tasks
 
-- [ ] Task 1: Read CS-365, CS-366, and current backend owners before editing. (AC: AC1, AC10)
-- [ ] Task 2: Write the removal audit and classify every old carrier, prompt, seed, assembly, test, mock, example, and doc token. (AC: AC2, AC3, AC4, AC7)
-- [ ] Task 3: Route every active theme astral consumer to `theme_astral_prompt_v1` and `theme_astral_llm_input_v1`. (AC: AC1)
-- [ ] Task 4: Delete candidates classified `historical-facade` or `dead` after their consumers are replaced. (AC: AC4, AC7)
-- [ ] Task 5: Block `chart_json` and `natal_data` as prompt-visible inputs for theme astral. (AC: AC2, AC3)
-- [ ] Task 6: Remove or replace tests and mocks that validate the old theme astral prompt path. (AC: AC7)
-- [ ] Task 7: Add architecture tests that fail on old carriers, old prompt constants, and old use cases. (AC: AC8)
-- [ ] Task 8: Update examples so all delivery profiles share the stable provider payload shape. (AC: AC6)
-- [ ] Task 9: Update prompt-generation docs to describe the canonical theme astral path only. (AC: AC1, AC6)
-- [ ] Task 10: Prove public API routes and OpenAPI stay unchanged. (AC: AC9)
-- [ ] Task 11: Prove or document the exact local backend startup command. (AC: AC11)
-- [ ] Task 12: Run validation commands and persist output under this story evidence folder. (AC: AC10)
+- [x] Task 1: Read CS-365, CS-366, and current backend owners before editing. (AC: AC1, AC10)
+- [x] Task 2: Write the removal audit and classify every old carrier, prompt, seed, assembly, test, mock, example, and doc token. (AC: AC2, AC3, AC4, AC7)
+- [x] Task 3: Route every active theme astral consumer to `theme_astral_prompt_v1` and `theme_astral_llm_input_v1`. (AC: AC1)
+- [x] Task 4: Delete candidates classified `historical-facade` or `dead` after their consumers are replaced. (AC: AC4, AC7)
+- [x] Task 5: Block `chart_json` and `natal_data` as prompt-visible inputs for theme astral. (AC: AC2, AC3)
+- [x] Task 6: Remove or replace tests and mocks that validate the old theme astral prompt path. (AC: AC7)
+- [x] Task 7: Add architecture tests that fail on old carriers, old prompt constants, and old use cases. (AC: AC8)
+- [x] Task 8: Update examples so all delivery profiles share the stable provider payload shape. (AC: AC6)
+- [x] Task 9: Update prompt-generation docs to describe the canonical theme astral path only. (AC: AC1, AC6)
+- [x] Task 10: Prove public API routes and OpenAPI stay unchanged. (AC: AC9)
+- [x] Task 11: Prove or document the exact local backend startup command. (AC: AC11)
+- [x] Task 12: Run validation commands and persist output under this story evidence folder. (AC: AC10)
 
 ## Files to Inspect First
 

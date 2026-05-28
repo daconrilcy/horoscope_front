@@ -1,0 +1,26 @@
+# CS-367 - Canonical Scan
+
+<!-- Commentaire global: cette preuve resume les scans du contrat prompt canonique theme_astral. -->
+
+Date: `2026-05-28`
+
+Command:
+
+`rg -n "theme_astral_prompt_v1|theme_astral_llm_input_v1|interpretation_material|delivery_profile|astrologer_voice" backend/app backend/tests`
+
+Result: PASS.
+
+Observed canonical owners and guards:
+
+- `backend/app/domain/llm/configuration/theme_astral_contracts.py`
+- `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`
+- `backend/app/domain/llm/runtime/gateway.py`
+- `backend/app/ops/llm/bootstrap/seed_theme_astral_prompt_contract.py`
+- `backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py`
+- `backend/tests/architecture/test_theme_astral_prompt_contract_guard.py`
+- `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`
+
+Conclusion:
+
+- `theme_astral_prompt_v1` and `theme_astral_llm_input_v1` are present in canonical runtime/config/bootstrap/test owners.
+- `interpretation_material`, `delivery_profile`, and `astrologer_voice` are covered by runtime payload builder tests.
