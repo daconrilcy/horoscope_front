@@ -1,0 +1,16 @@
+CS-364 seed idempotency evidence
+
+Command:
+  .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\integration\test_theme_astral_prompt_contract_persistence.py --tb=short
+
+Result:
+  PASS
+
+Observed proof:
+  test_theme_astral_seed_is_idempotent_for_active_rows verifies two seed executions keep exactly:
+  - prompts: 1 published active row
+  - profiles: 1 published active row
+  - assemblies: 2 published active rows, one per non-commercial depth
+
+Risk note:
+  Duplicate published rows are archived by the seed before returning active readback evidence.

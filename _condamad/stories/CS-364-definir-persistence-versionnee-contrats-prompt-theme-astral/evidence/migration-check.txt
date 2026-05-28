@@ -1,0 +1,19 @@
+CS-364 migration evidence
+
+Command:
+  .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\integration\test_theme_astral_prompt_contract_migration.py --tb=short
+
+Result:
+  PASS
+
+Observed proof:
+  test_theme_astral_contract_reuses_existing_llm_tables_at_head verifies the active DB exposes the existing LLM tables required by CS-364:
+  - llm_use_case_configs
+  - llm_prompt_versions
+  - llm_output_schemas
+  - llm_personas
+  - llm_execution_profiles
+  - llm_assembly_configs
+
+Decision:
+  No Alembic migration was added because the existing ORM and migrated DB surface store the contract family safely.

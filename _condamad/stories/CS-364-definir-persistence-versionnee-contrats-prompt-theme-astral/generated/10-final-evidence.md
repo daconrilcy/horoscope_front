@@ -22,6 +22,11 @@
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
 | `00-story.md` | yes | yes | validated | |
+| `evidence/owner-map.md` | yes | yes | validated | |
+| `evidence/seed-idempotency.txt` | yes | yes | validated | |
+| `evidence/migration-check.txt` | yes | yes | validated | |
+| `evidence/validation.txt` | yes | yes | validated | |
+| `evidence/theme-astral-contract-manifest.json` | yes | yes | validated | |
 | `generated/01-execution-brief.md` | yes | yes | validated | |
 | `generated/03-acceptance-traceability.md` | yes | yes | validated | |
 | `generated/04-target-files.md` | yes | yes | validated | |
@@ -80,6 +85,12 @@
 | `python -B -c "from app.main import app; print(app.title)"` | `backend` | PASS | 0 | App imports and exposes `horoscope-backend`. |
 | `rg -n "theme_astral_prompt_contracts|llm_theme_astral_contracts|class .*ThemeAstral.*Model|__tablename__\s*=\s*['\"]theme_astral" backend\app backend\tests -g "*.py"` | repo root | PASS | 1 | No matches; no parallel registry/table/model. |
 | `condamad_validate.py <capsule>` | repo root | PASS | 0 | Capsule structure valid. |
+| `ruff check app\domain\llm\configuration\theme_astral_contracts.py app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py tests\integration\test_theme_astral_prompt_contract_persistence.py tests\integration\test_theme_astral_prompt_contract_migration.py tests\unit\test_canonical_llm_bootstrap.py` | `backend` | PASS | 0 | Fresh targeted implementation lint during review. |
+| `python -B -m pytest -q tests\integration\test_theme_astral_prompt_contract_persistence.py tests\integration\test_theme_astral_prompt_contract_migration.py tests\unit\test_canonical_llm_bootstrap.py --tb=short` | `backend` | PASS | 0 | Fresh targeted review validation: 6 passed, 5 deselected. |
+| `ruff format --check .` | `backend` | PASS | 0 | 1702 files already formatted. |
+| `ruff check .` | `backend` | PASS | 0 | Fresh full backend lint during review. |
+| `python -B -m pytest -q tests --tb=short` | `backend` | PASS | 0 | Fresh full backend tests: 1217 passed, 227 deselected. |
+| `python -B -c "from app.main import app; print(app.title)"` | `backend` | PASS | 0 | Fresh app import check: `horoscope-backend`. |
 
 ## Commands skipped or blocked
 
@@ -90,12 +101,12 @@
 - Reused existing LLM registry tables and canonical governance registry.
 - No new backend root folder, provider call, gateway change, frontend change, compatibility shim, alias, or fallback.
 - No migration added because existing ORM metadata covers the required contract family.
-- Plan-name scan: `free/basic/premium` hits only negative test assertions in the CS-364 test file.
+- Plan-name scan: broad repo hits are pre-existing outside CS-364; scoped CS-364 owner scan only hits negative assertions and unsupported-depth coverage.
 
 ## Diff review
 
 - `git diff --stat`: scoped diff reviewed.
-- `git diff --check`: PASS.
+- `git diff --check`: PASS after review corrections.
 
 ## Final worktree status
 

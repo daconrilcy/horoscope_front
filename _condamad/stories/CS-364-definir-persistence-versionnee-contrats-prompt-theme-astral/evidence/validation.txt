@@ -1,0 +1,35 @@
+CS-364 validation evidence
+
+Validated on:
+  2026-05-28
+
+Commands:
+  .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\llm\configuration\theme_astral_contracts.py app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py tests\integration\test_theme_astral_prompt_contract_persistence.py tests\integration\test_theme_astral_prompt_contract_migration.py tests\unit\test_canonical_llm_bootstrap.py
+  Result: PASS
+
+  .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\integration\test_theme_astral_prompt_contract_persistence.py tests\integration\test_theme_astral_prompt_contract_migration.py tests\unit\test_canonical_llm_bootstrap.py --tb=short
+  Result: PASS, 6 passed, 5 deselected
+
+  rg -n "theme_astral_prompt_contracts|llm_theme_astral_contracts|class .*ThemeAstral.*Model|__tablename__\s*=\s*['\"]theme_astral" backend\app backend\tests -g "*.py"
+  Result: PASS, no match; no parallel registry/table/model was introduced.
+
+  rg -n "free|basic|premium" backend\app\domain\llm\configuration\theme_astral_contracts.py backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py backend\tests\integration\test_theme_astral_prompt_contract_persistence.py
+  Result: PASS by review; hits are limited to negative assertions using unsupported `premium` depth and no commercial plan label is present in the seeded prompt or read model.
+
+  .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+  Result: PASS
+
+  .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests --tb=short
+  Result: PASS, 1217 passed, 227 deselected
+
+  .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; print(app.title)"
+  Result: PASS, horoscope-backend
+
+  .\.venv\Scripts\Activate.ps1; cd backend; ruff format --check .
+  Result: PASS, 1702 files already formatted
+
+  git diff --check
+  Result: PASS
+
+Skipped:
+  none for the targeted implementation review cycle.
