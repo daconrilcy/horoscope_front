@@ -75,6 +75,7 @@ markers = [
   "regression: regression tests (deselect with -m 'not regression')",
   "slow: DB migration, subprocess, full regression, or quality-gate tests excluded from fast local runs",
   "evaluation: marks tests as part of the evaluation matrix (Story 66.16)",
+  "provider_smoke: opt-in provider smoke tests requiring explicit credentials and external LLM calls",
 ]
 
 [tool.ruff]
