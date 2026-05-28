@@ -13,15 +13,23 @@ Verdict: CLEAN
 
 ## Iteration 1 Findings
 
+- medium: `evidence/source-coverage.md` and `evidence/validation.txt` were missing.
+  Fixed by adding both artifacts and AC13 traceability.
+- low: generated target-file and validation-plan artifacts still used generic placeholders.
+  Fixed with scoped files, forbidden paths and deterministic checks.
+- low: prior review artifact covered pre-implementation drafting only.
+  Fixed by replacing it with implementation review evidence.
+
+## Alignment Recheck Findings
+
 | Finding | Severity | Fix evidence | Status |
 |---|---|---|---|
-| Contractual evidence paths `evidence/source-coverage.md` and `evidence/validation.txt` were missing while the story named them as persistent artifacts. | medium | Added both artifacts and updated AC13 traceability. | fixed |
-| Generated target-file and validation-plan artifacts still contained generic placeholders instead of CS-357-specific reviewable evidence. | low | Replaced placeholders with scoped files, forbidden paths and deterministic checks. | fixed |
-| Prior review artifact was a pre-implementation editorial review and did not review the implementation outputs. | low | Replaced this file with implementation review evidence. | fixed |
+| The story header still said `Status: ready-to-dev` while final evidence and tracker row were `done`. | low | Updated `00-story.md` to `Status: done`. | fixed |
 
 ## Fresh Review Result
 
 - The tracker row matches `CS-357`, the target path and the source brief path.
+- The story header, final evidence and tracker status are synchronized to `done`.
 - The Mermaid annex exists and contains 8 Mermaid blocks, satisfying the seven mandatory diagram themes.
 - The diagrams cover `free`, `basic`, `premium`, shared calculations, injected data, persona, safety, message order and no-call boundary.
 - Prompt-visible boundaries explicitly exclude `evidence`, `provenance`, `projection_hash`, `llm_input_hash`, `provider_response`, `observability`, `chart_json` and `natal_data`.
@@ -33,11 +41,15 @@ Verdict: CLEAN
 ## Validation Summary
 
 - Venv activation check: PASS, `.venv\Scripts\Activate.ps1` exists and Python validation commands were run after activation.
+- `condamad_story_validate.py` on `00-story.md`: PASS.
+- `condamad_story_lint.py --strict` on `00-story.md`: PASS.
+- `condamad_validate.py` on the CS-357 capsule: PASS.
 - AC path, Mermaid count, plan, pipeline, injected data, persona, safety, message order, exclusion and CS-356 citation scans: PASS.
 - Evidence artifact path check for `validation.txt`, `source-coverage.md`, `docs-baseline.txt`, `docs-after.txt`, `guardrails.txt`: PASS.
 - Bounded application status check for `backend/app`, `backend/tests`, `frontend/src`: PASS.
+- `ruff format --check .` from `backend` with venv active: PASS.
 - `ruff check .` from `backend`: PASS.
-- `python -B -m pytest -q --tb=short` from `backend`: PASS, 3487 passed, 1 skipped, 1222 deselected.
+- `python -B -m pytest -q --tb=short` from `backend` with venv active: PASS, 3487 passed, 1 skipped, 1222 deselected.
 - Final tracker status: `done` in `_condamad/stories/story-status.md`.
 
 ## Residual Risk

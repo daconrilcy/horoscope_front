@@ -1,5 +1,5 @@
 # Story CS-357 graphiques-mermaid-construction-prompts-theme-astral: Add Mermaid Diagrams For Natal Prompt Construction
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

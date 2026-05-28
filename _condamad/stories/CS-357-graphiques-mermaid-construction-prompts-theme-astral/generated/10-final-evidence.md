@@ -10,6 +10,12 @@
 - Source finding closure status: full-closure for the documentation scope.
 - Feedback loop routing: no-propagation; no reusable failure remained after validation.
 
+## Alignment Recheck 2026-05-28
+
+- Brief/story/tracker/code alignment: PASS.
+- Correction applied: `00-story.md` now uses `Status: done`, matching tracker and final evidence.
+- Implementation scope remains documentation-only; backend application, backend tests and frontend source stayed unchanged.
+
 ## Preflight
 
 - Repository root: `C:\dev\horoscope_front`.
@@ -81,12 +87,16 @@ Full details are recorded in `generated/03-acceptance-traceability.md`.
 | `rg -n "natal-prompt-construction-mermaid\.md" natal-prompt-construction-by-plan.md` | repo root | PASS | CS-356 document cites the annex. |
 | `git status --short -- backend/app backend/tests frontend/src` | repo root | PASS | No application source changes. |
 | `git diff --check -- ...` | repo root | PASS | Exit 0; CRLF warning only. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...` | repo root with venv active | PASS | Story contract valid after status sync. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...` | repo root with venv active | PASS | Strict story lint passed after status sync. |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...` | repo root with venv active | PASS | Capsule validation passed after status sync. |
+| `ruff format --check .` | `backend` with venv active | PASS | 1698 files already formatted. |
 | `ruff check .` | `backend` with venv active | PASS | All checks passed. |
-| `python -B -m pytest -q --tb=short` | `backend` with venv active | PASS | 3487 passed, 1 skipped, 1222 deselected in 234.30 s. |
+| `python -B -m pytest -q --tb=short` | `backend` with venv active | PASS | 3487 passed, 1 skipped, 1222 deselected in 231.91 s. |
 
 ## Commands Skipped Or Blocked
 
-- `python -B -m pytest -q --tb=short` was not rerun after the implementation-review evidence patch because the patch only changed Markdown evidence and tracker status; the prior full backend run remains valid for unchanged application code.
+- None in the final alignment recheck.
 
 ## DRY / No Legacy Evidence
 
@@ -103,16 +113,11 @@ Full details are recorded in `generated/03-acceptance-traceability.md`.
 
 ## Final Worktree Status
 
-- `M _condamad/stories/story-status.md`
 - `?? _condamad/run-state.json` (pre-existing, untouched)
-- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/validation.md`
-- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/03-acceptance-traceability.md`
-- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/04-target-files.md`
-- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/06-validation-plan.md`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/00-story.md`
+- `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/validation.txt`
 - `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/10-final-evidence.md`
 - `M _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/generated/11-code-review.md`
-- `?? _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/source-coverage.md`
-- `?? _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral/evidence/validation.txt`
 
 ## Remaining Risks
 

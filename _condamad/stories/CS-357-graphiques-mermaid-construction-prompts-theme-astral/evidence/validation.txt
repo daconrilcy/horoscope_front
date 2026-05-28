@@ -1,11 +1,18 @@
 # Validation Evidence
 
+- Alignment recheck 2026-05-28: PASS, `00-story.md` status synchronized from `ready-to-dev` to `done`.
+- `condamad_story_validate.py` on CS-357 `00-story.md`: PASS with venv active.
+- `condamad_story_lint.py --strict` on CS-357 `00-story.md`: PASS with venv active.
+- `condamad_validate.py` on the CS-357 capsule: PASS with venv active.
+- `ruff format --check .` from `backend`: PASS with venv active, 1698 files already formatted.
+- `ruff check .` from `backend`: PASS with venv active.
+- `python -B -m pytest -q --tb=short` from `backend`: PASS with venv active, 3487 passed, 1 skipped, 1222 deselected in 231.91 s.
 - `python -B -c` path and Mermaid count: PASS, `mermaid_blocks 8`.
-- Combined `rg` over `_condamad/docs/prompt-generation-cartography/natal-prompt-construction-mermaid.md`: PASS for plans, global pipeline, injected data, persona, safety, provider order, exclusions and no-call boundary.
+- Combined `rg` over the Mermaid annex: PASS for plans, pipeline, injected data, persona, safety, order, exclusions and no-call.
 - `rg -n "natal-prompt-construction-mermaid\.md" _condamad/docs/prompt-generation-cartography/natal-prompt-construction-by-plan.md`: PASS.
 - `python -B -c` evidence artifact checks: PASS for `validation.txt`, `source-coverage.md`, `docs-baseline.txt`, `docs-after.txt`, and `guardrails.txt`.
 - `git status --short -- backend/app backend/tests frontend/src`: PASS, no entries.
-- `git diff --check -- _condamad/docs/prompt-generation-cartography _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral _condamad/stories/story-status.md`: PASS with CRLF warning only.
+- `git diff --check` over CS-357 docs and story surfaces: PASS with CRLF warning only.
 - `ruff check .` from `backend` with venv active: PASS.
 - `python -B -m pytest -q --tb=short` from `backend` with venv active: PASS, 3487 passed, 1 skipped, 1222 deselected in 234.30 s.
-- `python -B .agents/skills/condamad-dev-story/scripts/condamad_validate.py _condamad/stories/CS-357-graphiques-mermaid-construction-prompts-theme-astral`: PASS after final evidence table correction.
+- `condamad_validate.py` on the CS-357 capsule: PASS after final evidence table correction.
