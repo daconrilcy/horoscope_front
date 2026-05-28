@@ -10,11 +10,11 @@ from app.domain.astrology.interpretation.interpretation_material_contracts impor
     INTERPRETATION_MATERIAL_KEYS,
     InterpretationMaterialSource,
 )
-from app.domain.astrology.interpretation.theme_astral_llm_input_v1_builder import (
-    ThemeAstralLLMInputV1Builder,
-)
 from app.domain.astrology.natal_calculation import AspectResult
 from app.domain.llm.configuration.theme_astral_contracts import THEME_ASTRAL_INPUT_CONTRACT_ID
+from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
+    ThemeAstralProviderPayloadBuilder,
+)
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 
@@ -52,9 +52,9 @@ class _NatalSource:
 def test_theme_astral_llm_input_receives_interpretation_material_without_provider_call() -> None:
     """Le carrier theme astral embarque le bloc source sous input_data."""
     chart_input = ChartInterpretationInputBuilder().build(_NatalSource(), chart_id="chart-1")
-    payload = ThemeAstralLLMInputV1Builder().build(
+    payload = ThemeAstralProviderPayloadBuilder().build(
         chart_input=chart_input,
-        delivery_profile="premium",
+        commercial_plan="premium",
         interpretation_sources=(
             InterpretationMaterialSource(
                 section="planet_sign_interpretations",
@@ -89,7 +89,9 @@ def test_theme_astral_llm_input_receives_interpretation_material_without_provide
     material = payload["input_data"]["interpretation_material"]
 
     assert payload["runtime_contract"]["contract_id"] == THEME_ASTRAL_INPUT_CONTRACT_ID
-    assert payload["delivery_profile"]["selection_owner"] == "InterpretationMaterialBuilder"
+    assert payload["input_data"]["selected_themes"]["selection_owner"] == (
+        "InterpretationMaterialBuilder"
+    )
     assert tuple(material) == INTERPRETATION_MATERIAL_KEYS
     assert material["planet_sign_interpretations"][0]["source_ref"]
     assert material["planet_sign_interpretations"][0]["fact_ref"] == "object:mars:sign:aries"

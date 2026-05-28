@@ -23,6 +23,7 @@ from app.domain.llm.configuration.assembly_resolver import (
 from app.domain.llm.configuration.canonical_use_case_registry import get_canonical_use_case_contract
 from app.domain.llm.configuration.execution_profile_registry import ExecutionProfileRegistry
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+from app.domain.llm.configuration.theme_astral_contracts import THEME_ASTRAL_INPUT_CONTRACT_ID
 from app.domain.llm.governance.feature_taxonomy import (
     assert_nominal_feature_allowed,
     is_supported_feature,
@@ -102,6 +103,7 @@ _FALLBACK_USER_MSG = {
 }
 
 LLM_ASTROLOGY_INPUT_V1_KEY = "llm_astrology_input_v1"
+THEME_ASTRAL_PROVIDER_PAYLOAD_KEY = THEME_ASTRAL_INPUT_CONTRACT_ID
 LLM_ASTROLOGY_INPUT_V1_PROMPT_BLOCKS = tuple(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
 LLM_ASTROLOGY_INPUT_V1_PROMPT_EXCLUDED_KEYS = frozenset(
     (
@@ -221,7 +223,14 @@ class LLMGateway:
             parts.append(f"Context: {context['situation']}")
 
         llm_astrology_input = context.get(LLM_ASTROLOGY_INPUT_V1_KEY)
-        if llm_astrology_input is not None:
+        theme_astral_payload = context.get(THEME_ASTRAL_PROVIDER_PAYLOAD_KEY)
+        if theme_astral_payload is not None:
+            parts.append(
+                THEME_ASTRAL_PROVIDER_PAYLOAD_KEY
+                + ": "
+                + json.dumps(theme_astral_payload, ensure_ascii=False, sort_keys=True)
+            )
+        elif llm_astrology_input is not None:
             prompt_payload = _prompt_visible_llm_astrology_input(llm_astrology_input)
             parts.append(
                 "llm_astrology_input_v1: "

@@ -1,0 +1,8 @@
+PASS: no provider payload commercial label found.
+
+Command:
+rg -n '"plan"|"free"|"basic"|"premium"' _condamad\stories\CS-366-provider-payload-builder-theme-astral\evidence\provider-payload-after.json
+
+Result:
+exit 1, interpreted as PASS: no matches.
+

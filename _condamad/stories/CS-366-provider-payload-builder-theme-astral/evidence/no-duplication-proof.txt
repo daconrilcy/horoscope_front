@@ -1,0 +1,13 @@
+PASS: legacy builder symbols are absent outside the dedicated non-return guard.
+
+Command:
+rg -n 'ThemeAstralLLMInputV1Builder|theme_astral_llm_input_v1_builder|^_DELIVERY_PROFILES\s*=|resolve_theme_astral_delivery_profile' backend\app backend\tests -g '*.py' -g '!test_theme_astral_provider_payload_builder.py'
+
+Result:
+exit 1, interpreted as PASS: no matches.
+
+PASS: provider handoff carries interpretation_material once.
+
+Evidence:
+backend/tests/integration/llm/test_theme_astral_provider_payload_handoff.py::test_gateway_handoff_uses_theme_astral_provider_payload_once
+

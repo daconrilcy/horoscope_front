@@ -1,0 +1,1 @@
+PASS: CS-363/CS-364/CS-365 source deliverables available through theme_astral_contracts, InterpretationMaterialBuilder, and generated CS-366 capsule.

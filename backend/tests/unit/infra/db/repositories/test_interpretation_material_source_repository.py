@@ -11,10 +11,10 @@ from app.domain.astrology.dominance.contracts import DominantPlanetsResult
 from app.domain.astrology.interpretation.chart_interpretation_input_builder import (
     ChartInterpretationInputBuilder,
 )
-from app.domain.astrology.interpretation.theme_astral_llm_input_v1_builder import (
-    ThemeAstralLLMInputV1Builder,
-)
 from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
+    ThemeAstralProviderPayloadBuilder,
+)
 from app.infra.db.base import Base
 from app.infra.db.models import (
     AspectModel,
@@ -75,10 +75,10 @@ def test_repository_sources_from_db_profiles_reach_theme_astral_llm_input() -> N
         )
 
     chart_input = ChartInterpretationInputBuilder().build(_NatalSource(), chart_id="chart-1")
-    payload = ThemeAstralLLMInputV1Builder().build(
+    payload = ThemeAstralProviderPayloadBuilder().build(
         chart_input=chart_input,
         interpretation_sources=sources,
-        delivery_profile="premium",
+        commercial_plan="premium",
     )
     material = payload["input_data"]["interpretation_material"]
 

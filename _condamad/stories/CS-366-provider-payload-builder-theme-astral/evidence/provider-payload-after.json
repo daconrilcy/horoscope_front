@@ -1,0 +1,407 @@
+{
+  "astrologer_voice": {
+    "emphases": [
+      "integration"
+    ],
+    "tone": "calme",
+    "vocabulary": [
+      "symbolique"
+    ]
+  },
+  "delivery_profile": {
+    "astrological_facts_budget": {
+      "max_aspects": 6,
+      "max_dominants": 3,
+      "max_objects": 12
+    },
+    "delivery_profile_id": "theme_astral_delivery_profile_v1",
+    "delivery_profile_version": "v1",
+    "depth": "complete",
+    "material_budget": {
+      "max_sections": 8,
+      "max_source_items": 48
+    },
+    "output_length_policy": {
+      "max_output_tokens": 3600,
+      "target": "detailed"
+    },
+    "section_budget": {
+      "max_sections": 8
+    }
+  },
+  "feature_context": {
+    "chart_type": "natal",
+    "feature": "theme_astral",
+    "locale": "fr-FR",
+    "subfeature": "prompt_contract"
+  },
+  "input_data": {
+    "astrological_facts": {
+      "aspects": [
+        {
+          "code": "trine",
+          "participant_codes": [
+            "sun",
+            "moon"
+          ]
+        },
+        {
+          "code": "square",
+          "participant_codes": [
+            "sun",
+            "moon"
+          ]
+        },
+        {
+          "code": "opposition",
+          "participant_codes": [
+            "sun",
+            "moon"
+          ]
+        }
+      ],
+      "dominance": [
+        {
+          "code": "mars",
+          "score": 0.82
+        }
+      ],
+      "houses": [
+        {
+          "code": "mars",
+          "house_number": 1
+        }
+      ],
+      "objects": [
+        {
+          "code": "mars",
+          "degree_in_sign": 15.0,
+          "display_name": "Mars",
+          "sign_code": "aries"
+        }
+      ],
+      "source_owner": "ChartInterpretationInputBuilder"
+    },
+    "birth_context": {
+      "chart_id": "chart-1",
+      "chart_type": "natal",
+      "locale": "fr-FR"
+    },
+    "interpretation_material": {
+      "aspect_interpretations": [
+        {
+          "fact_ref": "aspect:opposition:sun-moon",
+          "interpretive_text": "Aspect source opposition",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
+          "source_ref": "astral_aspect_interpretation_profiles:aspect-opposition@v1",
+          "theme": "theme:aspect-opposition",
+          "weight": 1.5333
+        },
+        {
+          "fact_ref": "aspect:square:sun-moon",
+          "interpretive_text": "Aspect source square",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:square:sun-moon",
+          "source_ref": "astral_aspect_interpretation_profiles:aspect-square@v1",
+          "theme": "theme:aspect-square",
+          "weight": 1.5333
+        },
+        {
+          "fact_ref": "aspect:trine:sun-moon",
+          "interpretive_text": "Aspect source trine",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:trine:sun-moon",
+          "source_ref": "astral_aspect_interpretation_profiles:aspect-trine@v1",
+          "theme": "theme:aspect-trine",
+          "weight": 1.5333
+        }
+      ],
+      "dominant_themes": [
+        {
+          "fact_ref": "dominance:mars",
+          "interpretive_text": "Dominance Mars source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:dominance:mars",
+          "source_ref": "dominance_reference:dominance-mars@v1",
+          "theme": "theme:dominance-mars",
+          "weight": 1.07
+        }
+      ],
+      "integration_levers": [
+        {
+          "fact_ref": "aspect:opposition:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
+          "source_ref": "fixture_source_owner:lever-mars@v1",
+          "theme": "theme:lever-mars",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "aspect:square:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:square:sun-moon",
+          "source_ref": "fixture_source_owner:lever-mars@v1",
+          "theme": "theme:lever-mars",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "aspect:trine:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:trine:sun-moon",
+          "source_ref": "fixture_source_owner:lever-mars@v1",
+          "theme": "theme:lever-mars",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "dominance:mars",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:dominance:mars",
+          "source_ref": "fixture_source_owner:lever-mars@v1",
+          "theme": "theme:lever-mars",
+          "weight": 1.07
+        }
+      ],
+      "planet_house_interpretations": [
+        {
+          "fact_ref": "object:mars:house:1",
+          "interpretive_text": "Mars maison 1 source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:object:mars:house:1",
+          "source_ref": "astral_house_interpretation_profiles:mars-house-1@v1",
+          "theme": "theme:mars-house-1",
+          "weight": 0.5
+        }
+      ],
+      "planet_sign_interpretations": [
+        {
+          "fact_ref": "object:mars:sign:aries",
+          "interpretive_text": "Mars en Belier source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:object:mars:sign:aries",
+          "source_ref": "astral_planet_interpretation_profiles:mars-aries@v1",
+          "theme": "theme:mars-aries",
+          "weight": 1.07
+        }
+      ],
+      "resources": [
+        {
+          "fact_ref": "aspect:opposition:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
+          "source_ref": "fixture_source_owner:resource-mars@v1",
+          "theme": "theme:resource-mars",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "aspect:square:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:square:sun-moon",
+          "source_ref": "fixture_source_owner:resource-mars@v1",
+          "theme": "theme:resource-mars",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "aspect:trine:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:trine:sun-moon",
+          "source_ref": "fixture_source_owner:resource-mars@v1",
+          "theme": "theme:resource-mars",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "dominance:mars",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:dominance:mars",
+          "source_ref": "fixture_source_owner:resource-mars@v1",
+          "theme": "theme:resource-mars",
+          "weight": 1.07
+        }
+      ],
+      "tensions": [
+        {
+          "fact_ref": "aspect:trine:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:trine:sun-moon",
+          "source_ref": "fixture_source_owner:tension-trine@v1",
+          "theme": "theme:tension-trine",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "dominance:mars",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:dominance:mars",
+          "source_ref": "fixture_source_owner:tension-trine@v1",
+          "theme": "theme:tension-trine",
+          "weight": 1.07
+        }
+      ],
+      "warnings": [
+        {
+          "fact_ref": "aspect:trine:sun-moon",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:aspect:trine:sun-moon",
+          "source_ref": "fixture_source_owner:warning-trine@v1",
+          "theme": "theme:warning-trine",
+          "weight": 1.3833
+        },
+        {
+          "fact_ref": "dominance:mars",
+          "interpretive_text": "Texte source",
+          "keywords": [
+            "force",
+            "integration"
+          ],
+          "resource": "fact_source",
+          "risk": "surinterpretation",
+          "selection_reason": "matched_calculated_fact:dominance:mars",
+          "source_ref": "fixture_source_owner:warning-trine@v1",
+          "theme": "theme:warning-trine",
+          "weight": 1.07
+        }
+      ]
+    },
+    "limits": {
+      "missing_data": {
+        "empty_fact_groups": []
+      },
+      "unavailable_sections": [],
+      "uncertainty_policy": "state_limits_without_inventing_sources"
+    },
+    "selected_themes": {
+      "max_sections": 8,
+      "section_keys": [
+        "planet_sign_interpretations",
+        "planet_house_interpretations",
+        "aspect_interpretations",
+        "dominant_themes",
+        "tensions",
+        "resources",
+        "integration_levers",
+        "warnings"
+      ],
+      "selection_owner": "InterpretationMaterialBuilder"
+    }
+  },
+  "output_contract": {
+    "max_sections": 8,
+    "required_sections": [
+      "title",
+      "summary",
+      "sections",
+      "evidence",
+      "contract_trace"
+    ],
+    "response_contract_id": "theme_astral_response_contract_v1",
+    "response_contract_version": "v1",
+    "schema_ref": "theme_astral_response_contract_v1"
+  },
+  "runtime_contract": {
+    "builder_owner": "ThemeAstralProviderPayloadBuilder",
+    "contract_id": "theme_astral_llm_input_v1",
+    "contract_version": "v1",
+    "prompt_contract_id": "theme_astral_prompt_contract_v1"
+  },
+  "safety_contract": {
+    "commercial_label_policy": "backend_only",
+    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref",
+    "truth_policy": "astrological_facts_are_engine_owned",
+    "voice_policy": "style_only_no_fact_mutation"
+  }
+}

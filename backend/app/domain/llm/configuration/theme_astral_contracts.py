@@ -1,3 +1,4 @@
+# Contrats versionnes et profils provider du theme astral.
 """Contrats versionnes du prompt theme astral persistes via la registry LLM."""
 
 from __future__ import annotations
@@ -21,6 +22,8 @@ THEME_ASTRAL_OUTPUT_SCHEMA_NAME = THEME_ASTRAL_RESPONSE_CONTRACT_ID
 THEME_ASTRAL_PERSONA_CODE = "theme_astral_astrologer_voice_v1"
 THEME_ASTRAL_EXECUTION_PROFILE_NAME = "Theme Astral Contract GPT-5"
 
+ThemeAstralCommercialPlan = Literal["free", "basic", "premium"]
+
 THEME_ASTRAL_DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
     "essential": {
         "delivery_profile_id": "theme_astral_delivery_profile_v1",
@@ -37,6 +40,48 @@ THEME_ASTRAL_DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
         "selection_policy": "expanded_chart_factors",
         "material_budget": {"max_source_items": 40, "max_sections": 8},
         "output_length_policy": {"target": "detailed", "max_output_tokens": 3200},
+    },
+}
+
+THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES: dict[ThemeAstralCommercialPlan, dict[str, Any]] = {
+    "free": {
+        "delivery_profile_id": "theme_astral_delivery_profile_v1",
+        "delivery_profile_version": "v1",
+        "depth": "essential",
+        "material_budget": {"max_source_items": 8, "max_sections": 4},
+        "astrological_facts_budget": {
+            "max_objects": 3,
+            "max_aspects": 1,
+            "max_dominants": 1,
+        },
+        "section_budget": {"max_sections": 4},
+        "output_length_policy": {"target": "concise", "max_output_tokens": 1400},
+    },
+    "basic": {
+        "delivery_profile_id": "theme_astral_delivery_profile_v1",
+        "delivery_profile_version": "v1",
+        "depth": "expanded",
+        "material_budget": {"max_source_items": 24, "max_sections": 6},
+        "astrological_facts_budget": {
+            "max_objects": 6,
+            "max_aspects": 3,
+            "max_dominants": 2,
+        },
+        "section_budget": {"max_sections": 6},
+        "output_length_policy": {"target": "balanced", "max_output_tokens": 2400},
+    },
+    "premium": {
+        "delivery_profile_id": "theme_astral_delivery_profile_v1",
+        "delivery_profile_version": "v1",
+        "depth": "complete",
+        "material_budget": {"max_source_items": 48, "max_sections": 8},
+        "astrological_facts_budget": {
+            "max_objects": 12,
+            "max_aspects": 6,
+            "max_dominants": 3,
+        },
+        "section_budget": {"max_sections": 8},
+        "output_length_policy": {"target": "detailed", "max_output_tokens": 3600},
     },
 }
 
@@ -209,6 +254,16 @@ def resolve_active_theme_astral_prompt_contract(
     )
 
 
+def resolve_theme_astral_provider_delivery_profile(
+    commercial_plan: ThemeAstralCommercialPlan,
+) -> dict[str, Any]:
+    """Convertit un plan commercial backend en profil provider non commercial."""
+    try:
+        return dict(THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES[commercial_plan])
+    except KeyError as exc:
+        raise ValueError("unsupported theme_astral commercial plan") from exc
+
+
 __all__ = [
     "THEME_ASTRAL_DELIVERY_PROFILES",
     "THEME_ASTRAL_EXECUTION_PROFILE_NAME",
@@ -222,6 +277,8 @@ __all__ = [
     "THEME_ASTRAL_RESPONSE_SCHEMA",
     "THEME_ASTRAL_SUBFEATURE",
     "THEME_ASTRAL_USE_CASE_KEY",
+    "ThemeAstralCommercialPlan",
     "ThemeAstralActiveContractFamily",
     "resolve_active_theme_astral_prompt_contract",
+    "resolve_theme_astral_provider_delivery_profile",
 ]

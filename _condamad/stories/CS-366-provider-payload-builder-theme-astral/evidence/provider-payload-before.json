@@ -1,0 +1,29 @@
+{
+  "astrologer_voice": {},
+  "delivery_profile": {
+    "depth": "premium",
+    "selection_owner": "InterpretationMaterialBuilder"
+  },
+  "feature_context": {
+    "chart_type": "natal",
+    "feature": "theme_astral",
+    "locale": "fr-FR",
+    "subfeature": "prompt_contract"
+  },
+  "input_data": {
+    "chart_id": "chart-1",
+    "interpretation_material": "<CS-365 material payload>"
+  },
+  "output_contract": {
+    "response_contract_id": "theme_astral_response_contract_v1"
+  },
+  "runtime_contract": {
+    "contract_id": "theme_astral_llm_input_v1",
+    "contract_version": "v1",
+    "prompt_contract_id": "theme_astral_prompt_contract_v1"
+  },
+  "safety_contract": {
+    "provider_calls": "out_of_scope",
+    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref"
+  }
+}
