@@ -51,6 +51,19 @@ def test_theme_astral_handoff_uses_only_canonical_prompt_contract() -> None:
     assert "chart_json" not in serialized
     assert "natal_data" not in serialized
     assert '"plan"' not in serialized
+    assert rendered_payload["input_data"]["birth_context"]["birth_date"] == "1973-04-24"
+    assert rendered_payload["input_data"]["birth_context"]["birth_time_local"] == "11:00"
+    assert rendered_payload["input_data"]["birth_context"]["birth_place"] == {
+        "city": "Paris",
+        "country": "France",
+        "timezone": "Europe/Paris",
+        "latitude": 48.8566,
+        "longitude": 2.3522,
+    }
+    assert rendered_payload["input_data"]["birth_context"]["precision"] == {
+        "birth_time_known": True,
+        "coordinates_known": True,
+    }
     assert {"free", "basic", "premium"}.isdisjoint(_json_strings(rendered_payload))
 
 

@@ -21,6 +21,7 @@ from app.domain.astrology.interpretation.interpretation_material_contracts impor
     InterpretationMaterialSource,
 )
 from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.astrology.natal_preparation import BirthPreparedData
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 REPO_ROOT = Path(__file__).resolve().parents[5]
@@ -30,9 +31,16 @@ INTERPRETATION_DIR = REPO_ROOT / "app/domain/astrology/interpretation"
 class _NatalSource:
     """Source runtime minimale pour alimenter le builder de faits."""
 
-    def __init__(self, *, chart_objects: tuple[object, ...], aspects: tuple[object, ...]) -> None:
+    def __init__(
+        self,
+        *,
+        chart_objects: tuple[object, ...],
+        aspects: tuple[object, ...],
+        prepared_input: BirthPreparedData | None = None,
+    ) -> None:
         self.chart_objects = chart_objects
         self.aspects = aspects
+        self.prepared_input = prepared_input or _prepared_paris_birth()
         self.dominant_planets = DominantPlanetsResult(
             score_profile_code="fixture.profile",
             tradition_code="fixture",
@@ -166,7 +174,11 @@ def test_interpretation_material_builder_has_one_domain_owner() -> None:
     assert all(".infra." not in module for module in imported_modules)
 
 
-def _build_chart_input(*, aspect_codes: tuple[str, ...]) -> object:
+def _build_chart_input(
+    *,
+    aspect_codes: tuple[str, ...],
+    prepared_input: BirthPreparedData | None = None,
+) -> object:
     """Construit un input interpretatif representatif depuis les builders existants."""
     aspects = tuple(
         AspectResult(
@@ -187,9 +199,32 @@ def _build_chart_input(*, aspect_codes: tuple[str, ...]) -> object:
         _NatalSource(
             chart_objects=(interpretable_chart_object("mars"),),
             aspects=aspects,
+            prepared_input=prepared_input,
         ),
         chart_id="chart-1",
         locale="fr-FR",
+    )
+
+
+def _prepared_paris_birth(*, birth_time_local: str | None = "11:00") -> BirthPreparedData:
+    """Construit le contexte de naissance canonique utilise par les payloads tests."""
+    return BirthPreparedData(
+        birth_datetime_local="1973-04-24T11:00:00+01:00",
+        birth_datetime_utc="1973-04-24T10:00:00+00:00",
+        timestamp_utc=104580000,
+        julian_day=2441796.916666667,
+        birth_timezone="Europe/Paris",
+        birth_date="1973-04-24",
+        birth_time_local=birth_time_local,
+        birth_place="Paris",
+        birth_city="Paris",
+        birth_country="France",
+        birth_lat=48.8566,
+        birth_lon=2.3522,
+        jd_ut=2441796.916666667,
+        timezone_used="Europe/Paris",
+        timezone_iana="Europe/Paris",
+        timezone_source="user_provided",
     )
 
 

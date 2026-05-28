@@ -1,0 +1,14 @@
+## source chart_id parsing guard
+Command: rg -n "chart_id.*(split|fromisoformat)|birth.*chart_id|chart_id.*birth" app/domain/llm/runtime/theme_astral_provider_payload_builder.py app/domain/astrology/interpretation/chart_interpretation_input_builder.py
+Working directory: backend
+Status: PASS: no matches
+
+## personal field guard
+Command: rg -n "first_name|last_name|email|phone|address|birth_name" backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1
+Working directory: repository root
+Status: PASS: no matches
+
+## legacy docs wording guard
+Command: rg -n "scenario complet.*intermediate|date.*heure.*lieu.*auditables|seulement.*intermediate" _condamad/docs/prompt-generation-cartography/theme-astral-llm-json-structure-v1.md _condamad/examples/prompt-generation-cartography/1973-04-24-1100-paris-theme-astral-v1/README.md
+Working directory: repository root
+Status: PASS: no matches

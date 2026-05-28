@@ -10,6 +10,9 @@ from app.domain.astrology.dominance.contracts import DominantPlanetsResult
 from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
     AdvancedConditionInterpretationRuntimeData,
     AspectInterpretationRuntimeData,
+    BirthContextInterpretationRuntimeData,
+    BirthPlaceInterpretationRuntimeData,
+    BirthPrecisionInterpretationRuntimeData,
     ChartInterpretationInputRuntimeData,
     ChartInterpretationMetadataRuntimeData,
     DominanceInterpretationRuntimeData,
@@ -77,6 +80,7 @@ class ChartInterpretationInputBuilder:
             dominance=dominance,
             sign_profile_balances=sign_profile_balances,
             advanced_condition_facts=advanced_condition_facts,
+            birth_context=_project_birth_context(getattr(natal_result, "prepared_input", None)),
             fixed_star_contacts=fixed_star_contacts,
             metadata=ChartInterpretationMetadataRuntimeData(
                 source_codes=source_codes,
@@ -84,6 +88,46 @@ class ChartInterpretationInputBuilder:
                 aspect_count=len(aspects),
             ),
         )
+
+
+def _project_birth_context(prepared_input: Any) -> BirthContextInterpretationRuntimeData:
+    """Projette les donnees de naissance depuis l'entree preparee canonique."""
+    if prepared_input is None:
+        return BirthContextInterpretationRuntimeData()
+    birth_time = _clean_optional(getattr(prepared_input, "birth_time_local", None))
+    latitude = getattr(prepared_input, "birth_lat", None)
+    longitude = getattr(prepared_input, "birth_lon", None)
+    coordinates_known = latitude is not None and longitude is not None
+    return BirthContextInterpretationRuntimeData(
+        birth_date=_clean_optional(getattr(prepared_input, "birth_date", None)),
+        birth_time_local=birth_time,
+        birth_place=BirthPlaceInterpretationRuntimeData(
+            city=_clean_optional(
+                getattr(prepared_input, "birth_city", None)
+                or getattr(prepared_input, "birth_place", None)
+            ),
+            country=_clean_optional(getattr(prepared_input, "birth_country", None)),
+            timezone=_clean_optional(
+                getattr(prepared_input, "timezone_iana", None)
+                or getattr(prepared_input, "timezone_used", None)
+                or getattr(prepared_input, "birth_timezone", None)
+            ),
+            latitude=latitude if coordinates_known else None,
+            longitude=longitude if coordinates_known else None,
+        ),
+        precision=BirthPrecisionInterpretationRuntimeData(
+            birth_time_known=birth_time is not None,
+            coordinates_known=coordinates_known,
+        ),
+    )
+
+
+def _clean_optional(value: object) -> str | None:
+    """Normalise une chaine optionnelle sans creer de valeur de remplacement."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
 
 
 def _project_aspects(aspects: tuple[Any, ...]) -> tuple[AspectInterpretationRuntimeData, ...]:

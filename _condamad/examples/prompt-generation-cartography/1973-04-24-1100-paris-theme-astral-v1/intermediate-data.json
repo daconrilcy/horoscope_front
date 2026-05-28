@@ -3,7 +3,7 @@
     "kind": "runtime_builder_replay",
     "builder": "ThemeAstralProviderPayloadBuilder",
     "provider_call_performed": false,
-    "scenario_note": "Le runtime actuel porte les champs naissance dans chart_id."
+    "scenario_note": "Le runtime porte les champs naissance dans input_data.birth_context; chart_id reste technique."
   },
   "provider_call_performed": false,
   "birth_input": {

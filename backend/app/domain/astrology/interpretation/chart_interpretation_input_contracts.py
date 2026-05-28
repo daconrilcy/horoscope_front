@@ -217,6 +217,39 @@ class ChartInterpretationMetadataRuntimeData:
 
 
 @dataclass(frozen=True, slots=True)
+class BirthPlaceInterpretationRuntimeData:
+    """Lieu de naissance minimal expose au contrat LLM."""
+
+    city: str | None = None
+    country: str | None = None
+    timezone: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class BirthPrecisionInterpretationRuntimeData:
+    """Indique quelles donnees de naissance sont connues sans les inventer."""
+
+    birth_time_known: bool = False
+    coordinates_known: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class BirthContextInterpretationRuntimeData:
+    """Projection canonique du contexte de naissance pour le payload LLM."""
+
+    birth_date: str | None = None
+    birth_time_local: str | None = None
+    birth_place: BirthPlaceInterpretationRuntimeData = field(
+        default_factory=BirthPlaceInterpretationRuntimeData
+    )
+    precision: BirthPrecisionInterpretationRuntimeData = field(
+        default_factory=BirthPrecisionInterpretationRuntimeData
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class SignProfileBalancesInterpretationRuntimeData:
     """Profils structurels de signes deja agreges au niveau du theme."""
 
@@ -245,6 +278,9 @@ class ChartInterpretationInputRuntimeData:
     fixed_star_contacts: tuple[FixedStarContactInterpretationRuntimeData, ...]
     sign_profile_balances: SignProfileBalancesInterpretationRuntimeData | None = None
     advanced_condition_facts: tuple[AdvancedConditionInterpretationRuntimeData, ...] = ()
+    birth_context: BirthContextInterpretationRuntimeData = field(
+        default_factory=BirthContextInterpretationRuntimeData
+    )
     metadata: ChartInterpretationMetadataRuntimeData = field(
         default_factory=lambda: ChartInterpretationMetadataRuntimeData(
             source_codes=(),

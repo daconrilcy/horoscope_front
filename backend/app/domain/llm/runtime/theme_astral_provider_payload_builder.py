@@ -119,8 +119,24 @@ def _feature_context(chart_input: ChartInterpretationInputRuntimeData) -> dict[s
 
 def _birth_context(chart_input: ChartInterpretationInputRuntimeData) -> dict[str, object]:
     """Normalise le contexte de naissance utile au LLM."""
+    birth_context = chart_input.birth_context
+    birth_place = birth_context.birth_place
+    precision = birth_context.precision
     return {
         "chart_id": chart_input.chart_id,
+        "birth_date": birth_context.birth_date,
+        "birth_time_local": birth_context.birth_time_local,
+        "birth_place": {
+            "city": birth_place.city,
+            "country": birth_place.country,
+            "timezone": birth_place.timezone,
+            "latitude": birth_place.latitude,
+            "longitude": birth_place.longitude,
+        },
+        "precision": {
+            "birth_time_known": precision.birth_time_known,
+            "coordinates_known": precision.coordinates_known,
+        },
         "locale": chart_input.locale,
         "chart_type": chart_input.chart_type,
     }
@@ -185,8 +201,23 @@ def _limits(
         empty_facts.append("aspects")
     if not chart_input.dominance:
         empty_facts.append("dominance")
+    missing_birth_context = []
+    birth_context = chart_input.birth_context
+    if birth_context.birth_date is None:
+        missing_birth_context.append("birth_date")
+    if birth_context.birth_time_local is None:
+        missing_birth_context.append("birth_time_local")
+    if birth_context.birth_place.city is None:
+        missing_birth_context.append("birth_place.city")
+    if birth_context.birth_place.country is None:
+        missing_birth_context.append("birth_place.country")
+    if birth_context.birth_place.timezone is None:
+        missing_birth_context.append("birth_place.timezone")
     return {
-        "missing_data": {"empty_fact_groups": empty_facts},
+        "missing_data": {
+            "empty_fact_groups": empty_facts,
+            "birth_context": missing_birth_context,
+        },
         "unavailable_sections": missing_sections,
         "uncertainty_policy": "state_limits_without_inventing_sources",
     }

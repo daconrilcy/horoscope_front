@@ -7,6 +7,9 @@ from dataclasses import FrozenInstanceError, fields, is_dataclass
 import pytest
 
 from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
+    BirthContextInterpretationRuntimeData,
+    BirthPlaceInterpretationRuntimeData,
+    BirthPrecisionInterpretationRuntimeData,
     ChartInterpretationInputRuntimeData,
     ChartObjectInterpretationRuntimeData,
     DignityInterpretationRuntimeData,
@@ -30,10 +33,16 @@ def test_chart_interpretation_input_contracts_are_immutable_dataclasses() -> Non
     )
 
     assert is_dataclass(ChartInterpretationInputRuntimeData)
+    assert is_dataclass(BirthContextInterpretationRuntimeData)
     assert is_dataclass(ChartObjectInterpretationRuntimeData)
     assert hasattr(ChartInterpretationInputRuntimeData, "__slots__")
     with pytest.raises(FrozenInstanceError):
         input_data.chart_type = "transit"  # type: ignore[misc]
+    assert isinstance(input_data.birth_context.birth_place, BirthPlaceInterpretationRuntimeData)
+    assert isinstance(
+        input_data.birth_context.precision,
+        BirthPrecisionInterpretationRuntimeData,
+    )
 
 
 def test_subcontracts_do_not_expose_forbidden_text_fields() -> None:

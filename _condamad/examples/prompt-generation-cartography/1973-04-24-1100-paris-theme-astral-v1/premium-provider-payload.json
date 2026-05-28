@@ -54,6 +54,19 @@
   "input_data": {
     "birth_context": {
       "chart_id": "birth:1973-04-24 11:00 Europe/Paris Paris France",
+      "birth_date": "1973-04-24",
+      "birth_time_local": "11:00",
+      "birth_place": {
+        "city": "Paris",
+        "country": "France",
+        "timezone": "Europe/Paris",
+        "latitude": 48.8566,
+        "longitude": 2.3522
+      },
+      "precision": {
+        "birth_time_known": true,
+        "coordinates_known": true
+      },
       "locale": "fr-FR",
       "chart_type": "natal"
     },

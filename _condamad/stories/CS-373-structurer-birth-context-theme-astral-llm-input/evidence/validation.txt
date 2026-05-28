@@ -1,0 +1,23 @@
+Validation CS-373 - 2026-05-29
+
+Python environment:
+- PASS: all Python commands were run after `.\.venv\Scripts\Activate.ps1`.
+
+Commands:
+- PASS: `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-373-structurer-birth-context-theme-astral-llm-input\00-story.md --root . --story-key CS-373-structurer-birth-context-theme-astral-llm-input`
+- PASS: `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-373-structurer-birth-context-theme-astral-llm-input`
+- PASS: `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py tests/unit/domain/astrology/interpretation/test_chart_interpretation_input_contracts.py --tb=short` -> 12 passed.
+- PASS: `ruff format <10 modified Python files>` -> 2 files reformatted, 8 unchanged.
+- PASS: `ruff check .` -> All checks passed.
+- PASS: `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py tests/integration/test_theme_astral_prompt_contract_persistence.py tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py --tb=short` -> 10 passed, 9 deselected.
+- PASS: `python -B -m pytest -q --tb=short` -> 3505 passed, 1 skipped, 1235 deselected.
+- PASS: `python -B -c "from app.main import app; print(app.title)"` -> horoscope-backend.
+- PASS: source parsing guard in `reintroduction-guard.txt`.
+- PASS: scoped personal field guard in `reintroduction-guard.txt`.
+- PASS: docs legacy wording guard in `reintroduction-guard.txt`.
+- PASS: `git diff --check` -> no whitespace errors.
+- PASS: final `condamad_validate.py` -> CONDAMAD validation PASS.
+
+Notes:
+- The broad VC7 scan from the story also reports unrelated existing `split()` calls outside this story surface; the scoped source guard and AST test prove `_birth_context` does not parse `chart_id`.
+- The broad VC11 scan over all backend tests reports unrelated existing email/redaction fixtures; the scoped provider/runtime/example guard has no matches.

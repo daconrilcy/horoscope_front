@@ -19,6 +19,7 @@ from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
 )
 from tests.unit.domain.astrology.interpretation.test_interpretation_material_builder import (
     _build_chart_input,
+    _prepared_paris_birth,
     _sources_for,
 )
 
@@ -100,6 +101,71 @@ def test_delivery_material_voice_and_output_contract_are_emitted() -> None:
     assert payload["output_contract"]["response_contract_version"] == "v1"
 
 
+def test_birth_context_exposes_structured_birth_data() -> None:
+    """Le provider recoit les champs de naissance normalises du runtime."""
+    payload = _payloads_by_commercial_plan()["premium"]
+
+    assert payload["input_data"]["birth_context"] == {
+        "chart_id": "chart-1",
+        "birth_date": "1973-04-24",
+        "birth_time_local": "11:00",
+        "birth_place": {
+            "city": "Paris",
+            "country": "France",
+            "timezone": "Europe/Paris",
+            "latitude": 48.8566,
+            "longitude": 2.3522,
+        },
+        "precision": {
+            "birth_time_known": True,
+            "coordinates_known": True,
+        },
+        "locale": "fr-FR",
+        "chart_type": "natal",
+    }
+
+
+def test_birth_context_marks_missing_precision_without_reconstructing_values() -> None:
+    """Les donnees absentes restent nulles et signalees dans les limites."""
+    chart_input = _build_chart_input_without_birth_time_or_coordinates()
+    payload = ThemeAstralProviderPayloadBuilder().build(
+        chart_input=chart_input,
+        interpretation_sources=_sources_for(chart_input),
+        commercial_plan="free",
+    )
+
+    birth_context = payload["input_data"]["birth_context"]
+
+    assert birth_context["birth_time_local"] is None
+    assert birth_context["birth_place"]["latitude"] is None
+    assert birth_context["birth_place"]["longitude"] is None
+    assert birth_context["precision"] == {
+        "birth_time_known": False,
+        "coordinates_known": False,
+    }
+    assert payload["input_data"]["limits"]["missing_data"]["birth_context"] == ["birth_time_local"]
+
+
+def test_birth_context_does_not_parse_chart_id() -> None:
+    """AST guard: `chart_id` reste un identifiant technique non parse."""
+    builder_source = (RUNTIME_DIR / "theme_astral_provider_payload_builder.py").read_text(
+        encoding="utf-8"
+    )
+    tree = ast.parse(builder_source)
+    birth_context_function = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_birth_context"
+    )
+    call_names = {
+        node.func.attr if isinstance(node.func, ast.Attribute) else node.func.id
+        for node in ast.walk(birth_context_function)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute | ast.Name)
+    }
+
+    assert {"split", "fromisoformat"}.isdisjoint(call_names)
+
+
 def test_profile_quantities_vary_without_skeleton_drift() -> None:
     """Les budgets resolus varient par profil sans creer de cles specifiques."""
     payloads = _payloads_by_commercial_plan()
@@ -174,6 +240,16 @@ def _payloads_by_commercial_plan() -> dict[str, dict[str, object]]:
         )
         for plan in ("free", "basic", "premium")
     }
+
+
+def _build_chart_input_without_birth_time_or_coordinates() -> object:
+    """Construit un input sans precision horaire ni coordonnees canoniques."""
+    return _build_chart_input(
+        aspect_codes=("trine",),
+        prepared_input=_prepared_paris_birth(birth_time_local=None).model_copy(
+            update={"birth_lat": None, "birth_lon": None}
+        ),
+    )
 
 
 def _json_strings(value: object) -> set[str]:

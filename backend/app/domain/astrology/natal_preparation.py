@@ -228,6 +228,13 @@ class BirthPreparedData(BaseModel):
     timestamp_utc: int
     julian_day: float
     birth_timezone: str
+    birth_date: str | None = None
+    birth_time_local: str | None = None
+    birth_place: str | None = None
+    birth_city: str | None = None
+    birth_country: str | None = None
+    birth_lat: float | None = None
+    birth_lon: float | None = None
     # Canonical fields for the standardized temporal pipeline (story 22.1).
     # jd_ut: Julian Day in Universal Time (UT1 approximation via POSIX timestamp).
     # timezone_used: IANA timezone identifier actually applied for local→UTC conversion.
@@ -512,6 +519,13 @@ def prepare_birth_data(
         timestamp_utc=timestamp_utc,
         julian_day=julian_day,
         birth_timezone=effective_timezone_iana,
+        birth_date=payload.birth_date.isoformat(),
+        birth_time_local=payload.birth_time,
+        birth_place=payload.birth_place,
+        birth_city=payload.birth_city,
+        birth_country=payload.birth_country,
+        birth_lat=payload.birth_lat,
+        birth_lon=payload.birth_lon,
         jd_ut=julian_day,
         timezone_used=effective_timezone_iana,
         timezone_iana=effective_timezone_iana,

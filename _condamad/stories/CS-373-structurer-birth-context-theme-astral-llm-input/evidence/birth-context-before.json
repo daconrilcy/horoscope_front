@@ -1,0 +1,8 @@
+{
+  "source": "_condamad\\examples\\prompt-generation-cartography\\1973-04-24-1100-paris-theme-astral-v1\\free-provider-payload.json",
+  "birth_context": {
+    "chart_id": "birth:1973-04-24 11:00 Europe/Paris Paris France",
+    "locale": "fr-FR",
+    "chart_type": "natal"
+  }
+}

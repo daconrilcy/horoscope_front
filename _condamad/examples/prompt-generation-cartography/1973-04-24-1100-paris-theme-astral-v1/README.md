@@ -20,4 +20,4 @@ Ces fichiers documentent le payload provider `theme_astral_llm_input_v1` pour un
 
 ## Notes de source
 
-Le runtime actuel expose le contexte de naissance dans `input_data.birth_context.chart_id`. Le scenario complet est aussi persiste dans `intermediate-data.json` pour rendre la date, l'heure et le lieu auditables sans modifier le contrat backend.
+Le runtime expose le contexte de naissance dans `input_data.birth_context` avec `birth_date`, `birth_time_local`, `birth_place.city`, `birth_place.country`, `birth_place.timezone`, les coordonnees canoniques disponibles et les flags `precision.birth_time_known` / `precision.coordinates_known`. `chart_id` reste un identifiant technique et `intermediate-data.json` sert seulement de preuve de scenario.

@@ -9,6 +9,7 @@ from app.domain.llm.configuration.theme_astral_contracts import (
     THEME_ASTRAL_DELIVERY_PROFILES,
     THEME_ASTRAL_FEATURE,
     THEME_ASTRAL_INPUT_CONTRACT_ID,
+    THEME_ASTRAL_INPUT_SCHEMA,
     THEME_ASTRAL_OUTPUT_SCHEMA_NAME,
     THEME_ASTRAL_PERSONA_CODE,
     THEME_ASTRAL_PROMPT_CONTRACT_ID,
@@ -78,6 +79,35 @@ def test_theme_astral_seed_persists_stable_contract_family() -> None:
         assert "verite astrologique" in persona.disallowed_topics
     finally:
         db.close()
+
+
+def test_theme_astral_input_schema_declares_birth_context_shape() -> None:
+    """Le schema versionne expose les champs de naissance visibles provider."""
+    input_properties = THEME_ASTRAL_INPUT_SCHEMA["properties"][THEME_ASTRAL_INPUT_CONTRACT_ID][
+        "properties"
+    ]
+    birth_context = input_properties["input_data"]["properties"]["birth_context"]
+
+    assert birth_context["required"] == [
+        "chart_id",
+        "birth_date",
+        "birth_time_local",
+        "birth_place",
+        "precision",
+        "locale",
+        "chart_type",
+    ]
+    assert set(birth_context["properties"]["birth_place"]["properties"]) == {
+        "city",
+        "country",
+        "timezone",
+        "latitude",
+        "longitude",
+    }
+    assert set(birth_context["properties"]["precision"]["properties"]) == {
+        "birth_time_known",
+        "coordinates_known",
+    }
 
 
 def test_active_read_returns_canonical_family_without_plan_leakage() -> None:
