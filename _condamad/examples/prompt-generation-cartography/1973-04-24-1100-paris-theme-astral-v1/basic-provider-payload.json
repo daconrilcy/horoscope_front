@@ -1,0 +1,571 @@
+{
+  "runtime_contract": {
+    "contract_id": "theme_astral_llm_input_v1",
+    "contract_version": "v1",
+    "prompt_contract_id": "theme_astral_prompt_v1",
+    "builder_owner": "ThemeAstralProviderPayloadBuilder"
+  },
+  "safety_contract": {
+    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref",
+    "truth_policy": "astrological_facts_are_engine_owned",
+    "voice_policy": "style_only_no_fact_mutation",
+    "commercial_label_policy": "backend_only"
+  },
+  "astrologer_voice": {
+    "tone": "calme",
+    "vocabulary": [
+      "symbolique",
+      "clair",
+      "nuance"
+    ],
+    "emphases": [
+      "integration",
+      "limites explicites",
+      "sources"
+    ]
+  },
+  "feature_context": {
+    "feature": "theme_astral",
+    "subfeature": "prompt_contract",
+    "locale": "fr-FR",
+    "chart_type": "natal"
+  },
+  "delivery_profile": {
+    "delivery_profile_id": "theme_astral_delivery_profile_v1",
+    "delivery_profile_version": "v1",
+    "depth": "expanded",
+    "material_budget": {
+      "max_source_items": 24,
+      "max_sections": 6
+    },
+    "astrological_facts_budget": {
+      "max_objects": 6,
+      "max_aspects": 3,
+      "max_dominants": 2
+    },
+    "section_budget": {
+      "max_sections": 6
+    },
+    "output_length_policy": {
+      "target": "balanced",
+      "max_output_tokens": 2400
+    }
+  },
+  "input_data": {
+    "birth_context": {
+      "chart_id": "birth:1973-04-24 11:00 Europe/Paris Paris France",
+      "locale": "fr-FR",
+      "chart_type": "natal"
+    },
+    "astrological_facts": {
+      "source_owner": "ChartInterpretationInputBuilder",
+      "objects": [
+        {
+          "code": "sun",
+          "display_name": "Soleil",
+          "sign_code": "taurus",
+          "degree_in_sign": 3.87
+        },
+        {
+          "code": "moon",
+          "display_name": "Lune",
+          "sign_code": "taurus",
+          "degree_in_sign": 29.32
+        },
+        {
+          "code": "mercury",
+          "display_name": "Mercure",
+          "sign_code": "aries",
+          "degree_in_sign": 22.61
+        },
+        {
+          "code": "venus",
+          "display_name": "Venus",
+          "sign_code": "pisces",
+          "degree_in_sign": 18.59
+        },
+        {
+          "code": "mars",
+          "display_name": "Mars",
+          "sign_code": "cancer",
+          "degree_in_sign": 2.43
+        },
+        {
+          "code": "jupiter",
+          "display_name": "Jupiter",
+          "sign_code": "aquarius",
+          "degree_in_sign": 9.98
+        }
+      ],
+      "houses": [
+        {
+          "code": "sun",
+          "house_number": 10
+        },
+        {
+          "code": "moon",
+          "house_number": 11
+        },
+        {
+          "code": "mercury",
+          "house_number": 10
+        },
+        {
+          "code": "venus",
+          "house_number": 9
+        },
+        {
+          "code": "mars",
+          "house_number": 12
+        },
+        {
+          "code": "jupiter",
+          "house_number": 8
+        }
+      ],
+      "aspects": [
+        {
+          "code": "trine",
+          "participant_codes": [
+            "sun",
+            "moon"
+          ]
+        },
+        {
+          "code": "square",
+          "participant_codes": [
+            "sun",
+            "moon"
+          ]
+        },
+        {
+          "code": "opposition",
+          "participant_codes": [
+            "sun",
+            "moon"
+          ]
+        }
+      ],
+      "dominance": [
+        {
+          "code": "sun",
+          "score": 0.91
+        },
+        {
+          "code": "venus",
+          "score": 0.74
+        }
+      ]
+    },
+    "interpretation_material": {
+      "planet_sign_interpretations": [
+        {
+          "source_ref": "astral_planet_interpretation_profiles:sun-taurus@v1",
+          "fact_ref": "object:sun:sign:taurus",
+          "theme": "theme:sun-taurus",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.16,
+          "selection_reason": "matched_calculated_fact:object:sun:sign:taurus",
+          "interpretive_text": "Soleil en taurus: ressource sourcee."
+        },
+        {
+          "source_ref": "astral_planet_interpretation_profiles:venus-pisces@v1",
+          "fact_ref": "object:venus:sign:pisces",
+          "theme": "theme:venus-pisces",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.99,
+          "selection_reason": "matched_calculated_fact:object:venus:sign:pisces",
+          "interpretive_text": "Venus en pisces: ressource sourcee."
+        },
+        {
+          "source_ref": "astral_planet_interpretation_profiles:mars-cancer@v1",
+          "fact_ref": "object:mars:sign:cancer",
+          "theme": "theme:mars-cancer",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.87,
+          "selection_reason": "matched_calculated_fact:object:mars:sign:cancer",
+          "interpretive_text": "Mars en cancer: ressource sourcee."
+        }
+      ],
+      "planet_house_interpretations": [
+        {
+          "source_ref": "astral_house_interpretation_profiles:mercury-house-10@v1",
+          "fact_ref": "object:mercury:house:10",
+          "theme": "theme:mercury-house-10",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.5,
+          "selection_reason": "matched_calculated_fact:object:mercury:house:10",
+          "interpretive_text": "Mercure en maison 10: contexte source."
+        },
+        {
+          "source_ref": "astral_house_interpretation_profiles:sun-house-10@v1",
+          "fact_ref": "object:sun:house:10",
+          "theme": "theme:sun-house-10",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.5,
+          "selection_reason": "matched_calculated_fact:object:sun:house:10",
+          "interpretive_text": "Soleil en maison 10: contexte source."
+        },
+        {
+          "source_ref": "astral_house_interpretation_profiles:jupiter-house-8@v1",
+          "fact_ref": "object:jupiter:house:8",
+          "theme": "theme:jupiter-house-8",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.25,
+          "selection_reason": "matched_calculated_fact:object:jupiter:house:8",
+          "interpretive_text": "Jupiter en maison 8: contexte source."
+        }
+      ],
+      "aspect_interpretations": [
+        {
+          "source_ref": "astral_aspect_interpretation_profiles:aspect-conjunction@v1",
+          "fact_ref": "aspect:conjunction:sun-moon",
+          "theme": "theme:aspect-conjunction",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.5333,
+          "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
+          "interpretive_text": "Aspect conjunction: articulation sourcee entre facteurs du theme."
+        },
+        {
+          "source_ref": "astral_aspect_interpretation_profiles:aspect-opposition@v1",
+          "fact_ref": "aspect:opposition:sun-moon",
+          "theme": "theme:aspect-opposition",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.5333,
+          "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
+          "interpretive_text": "Aspect opposition: articulation sourcee entre facteurs du theme."
+        },
+        {
+          "source_ref": "astral_aspect_interpretation_profiles:aspect-quincunx@v1",
+          "fact_ref": "aspect:quincunx:sun-moon",
+          "theme": "theme:aspect-quincunx",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.5333,
+          "selection_reason": "matched_calculated_fact:aspect:quincunx:sun-moon",
+          "interpretive_text": "Aspect quincunx: articulation sourcee entre facteurs du theme."
+        }
+      ],
+      "dominant_themes": [
+        {
+          "source_ref": "dominance_reference:dominance-sun@v1",
+          "fact_ref": "dominance:sun",
+          "theme": "theme:dominance-sun",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.16,
+          "selection_reason": "matched_calculated_fact:dominance:sun",
+          "interpretive_text": "Dominance sun: priorite de lecture sourcee."
+        },
+        {
+          "source_ref": "dominance_reference:dominance-venus@v1",
+          "fact_ref": "dominance:venus",
+          "theme": "theme:dominance-venus",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.99,
+          "selection_reason": "matched_calculated_fact:dominance:venus",
+          "interpretive_text": "Dominance venus: priorite de lecture sourcee."
+        },
+        {
+          "source_ref": "dominance_reference:dominance-mars@v1",
+          "fact_ref": "dominance:mars",
+          "theme": "theme:dominance-mars",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.87,
+          "selection_reason": "matched_calculated_fact:dominance:mars",
+          "interpretive_text": "Dominance mars: priorite de lecture sourcee."
+        }
+      ],
+      "tensions": [
+        {
+          "source_ref": "theme_astral_example_source:tension-major-aspects@v1",
+          "fact_ref": "aspect:square:sun-moon",
+          "theme": "theme:tension-major-aspects",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:square:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:tension-major-aspects@v1",
+          "fact_ref": "dominance:sun",
+          "theme": "theme:tension-major-aspects",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.16,
+          "selection_reason": "matched_calculated_fact:dominance:sun",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:tension-major-aspects@v1",
+          "fact_ref": "dominance:venus",
+          "theme": "theme:tension-major-aspects",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.99,
+          "selection_reason": "matched_calculated_fact:dominance:venus",
+          "interpretive_text": "Texte source verifie."
+        }
+      ],
+      "resources": [
+        {
+          "source_ref": "theme_astral_example_source:resource-venus@v1",
+          "fact_ref": "aspect:conjunction:sun-moon",
+          "theme": "theme:resource-venus",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:resource-venus@v1",
+          "fact_ref": "aspect:opposition:sun-moon",
+          "theme": "theme:resource-venus",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:resource-venus@v1",
+          "fact_ref": "aspect:quincunx:sun-moon",
+          "theme": "theme:resource-venus",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:quincunx:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        }
+      ],
+      "integration_levers": [
+        {
+          "source_ref": "theme_astral_example_source:lever-sun@v1",
+          "fact_ref": "aspect:conjunction:sun-moon",
+          "theme": "theme:lever-sun",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:conjunction:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:lever-sun@v1",
+          "fact_ref": "aspect:opposition:sun-moon",
+          "theme": "theme:lever-sun",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:lever-sun@v1",
+          "fact_ref": "aspect:quincunx:sun-moon",
+          "theme": "theme:lever-sun",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:quincunx:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        }
+      ],
+      "warnings": [
+        {
+          "source_ref": "theme_astral_example_source:warning-symbolic-reading@v1",
+          "fact_ref": "aspect:opposition:sun-moon",
+          "theme": "theme:warning-symbolic-reading",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.3833,
+          "selection_reason": "matched_calculated_fact:aspect:opposition:sun-moon",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:warning-symbolic-reading@v1",
+          "fact_ref": "dominance:sun",
+          "theme": "theme:warning-symbolic-reading",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 1.16,
+          "selection_reason": "matched_calculated_fact:dominance:sun",
+          "interpretive_text": "Texte source verifie."
+        },
+        {
+          "source_ref": "theme_astral_example_source:warning-symbolic-reading@v1",
+          "fact_ref": "dominance:venus",
+          "theme": "theme:warning-symbolic-reading",
+          "keywords": [
+            "force",
+            "integration",
+            "limite"
+          ],
+          "risk": "surinterpretation",
+          "resource": "source_factuelle",
+          "weight": 0.99,
+          "selection_reason": "matched_calculated_fact:dominance:venus",
+          "interpretive_text": "Texte source verifie."
+        }
+      ]
+    },
+    "selected_themes": {
+      "selection_owner": "InterpretationMaterialBuilder",
+      "section_keys": [
+        "planet_sign_interpretations",
+        "planet_house_interpretations",
+        "aspect_interpretations",
+        "dominant_themes",
+        "tensions",
+        "resources"
+      ],
+      "max_sections": 6
+    },
+    "limits": {
+      "missing_data": {
+        "empty_fact_groups": []
+      },
+      "unavailable_sections": [],
+      "uncertainty_policy": "state_limits_without_inventing_sources"
+    }
+  },
+  "output_contract": {
+    "response_contract_id": "theme_astral_response_contract_v1",
+    "response_contract_version": "v1",
+    "schema_ref": "theme_astral_response_contract_v1",
+    "required_sections": [
+      "title",
+      "summary",
+      "sections",
+      "evidence",
+      "contract_trace"
+    ],
+    "max_sections": 6
+  }
+}

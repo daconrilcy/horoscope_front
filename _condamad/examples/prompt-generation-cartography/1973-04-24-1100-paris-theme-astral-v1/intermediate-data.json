@@ -1,0 +1,78 @@
+{
+  "generation_method": {
+    "kind": "runtime_builder_replay",
+    "builder": "ThemeAstralProviderPayloadBuilder",
+    "provider_call_performed": false,
+    "scenario_note": "Le runtime actuel porte les champs naissance dans chart_id."
+  },
+  "provider_call_performed": false,
+  "birth_input": {
+    "date": "1973-04-24",
+    "time": "11:00",
+    "place": "Paris",
+    "country": "France",
+    "timezone": "Europe/Paris",
+    "latitude": 48.8566,
+    "longitude": 2.3522
+  },
+  "runtime_input": {
+    "chart_id": "birth:1973-04-24 11:00 Europe/Paris Paris France",
+    "locale": "fr-FR",
+    "chart_type": "natal",
+    "metadata": {
+      "source_codes": [
+        "example_1973_paris:sun",
+        "theme_astral_example.ephemeris_snapshot",
+        "theme_astral_example.visibility_snapshot",
+        "theme_astral_example.dignity_snapshot",
+        "theme_astral_example.dominance_snapshot",
+        "houses.runtime",
+        "theme_astral_example.rulership_snapshot",
+        "example_1973_paris:moon",
+        "example_1973_paris:mercury",
+        "example_1973_paris:venus",
+        "example_1973_paris:mars",
+        "example_1973_paris:jupiter",
+        "example_1973_paris:saturn"
+      ],
+      "object_count": 7,
+      "aspect_count": 6
+    }
+  },
+  "source_coverage": {
+    "source_count": 27,
+    "sections": [
+      "aspect_interpretations",
+      "dominant_themes",
+      "integration_levers",
+      "planet_house_interpretations",
+      "planet_sign_interpretations",
+      "resources",
+      "tensions",
+      "warnings"
+    ]
+  },
+  "profile_density": {
+    "free": {
+      "objects": 3,
+      "aspects": 1,
+      "material_budget": 8,
+      "selected_sections": 4,
+      "output_max_sections": 4
+    },
+    "basic": {
+      "objects": 6,
+      "aspects": 3,
+      "material_budget": 24,
+      "selected_sections": 6,
+      "output_max_sections": 6
+    },
+    "premium": {
+      "objects": 7,
+      "aspects": 6,
+      "material_budget": 48,
+      "selected_sections": 8,
+      "output_max_sections": 8
+    }
+  }
+}

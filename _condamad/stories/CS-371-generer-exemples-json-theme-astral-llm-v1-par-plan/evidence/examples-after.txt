@@ -1,0 +1,6 @@
+C:\dev\horoscope_front\_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json
+C:\dev\horoscope_front\_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json
+C:\dev\horoscope_front\_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\intermediate-data.json
+C:\dev\horoscope_front\_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json
+C:\dev\horoscope_front\_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md
+C:\dev\horoscope_front\_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md

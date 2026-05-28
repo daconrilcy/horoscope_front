@@ -1,0 +1,1 @@
+PASS: generation locale via ThemeAstralProviderPayloadBuilder; aucun client provider, LLMGateway.generate ou appel reseau n'est invoque.

@@ -1,0 +1,9 @@
+PASS: expected deliverables present
+PASS: four JSON files parse successfully
+PASS: birth scenario 1973-04-24 11:00 Paris is present
+PASS: provider payload skeleton is shared by free/basic/premium
+PASS: interpretation_material and required blocks are non-empty
+PASS: density increases across provider profiles
+PASS: provider payload values are resolved and contain no placeholders
+PASS: commercial labels are absent from provider payload values
+PASS: persistent evidence files exist

@@ -1,5 +1,5 @@
 # Story CS-371 generer-exemples-json-theme-astral-llm-v1-par-plan: Generate Theme Astral LLM V1 JSON Examples By Plan
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

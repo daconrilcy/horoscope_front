@@ -1,0 +1,48 @@
+Validation command log initialized; detailed command output follows.
+.......                                                                  [100%]
+7 passed, 1 deselected in 1.05s
+--- ruff evidence scripts ---
+All checks passed!
+--- required block scan ---
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:9:    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:14:  "astrologer_voice": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:33:  "delivery_profile": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:34:    "delivery_profile_id": "theme_astral_delivery_profile_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:35:    "delivery_profile_version": "v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:112:    "interpretation_material": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:268:  "output_contract": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:9:    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:14:  "astrologer_voice": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:33:  "delivery_profile": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:34:    "delivery_profile_id": "theme_astral_delivery_profile_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:35:    "delivery_profile_version": "v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:195:    "interpretation_material": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:850:  "output_contract": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:9:    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:14:  "astrologer_voice": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:33:  "delivery_profile": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:34:    "delivery_profile_id": "theme_astral_delivery_profile_v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:35:    "delivery_profile_version": "v1",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:160:    "interpretation_material": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:558:  "output_contract": {
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:11:  "astrologer_voice",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:13:  "delivery_profile",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:15:  "output_contract"
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:25:  "interpretation_material",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:39:Les differences restent portees par `delivery_profile`, les budgets, les selections et `output_contract`. Les etiquettes commerciales sont les noms de fichiers et ne sont pas presentes comme valeurs dans le contenu JSON transmis au LLM.
+--- readme and comparison scan ---
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:3:Ces fichiers documentent le payload provider `theme_astral_llm_input_v1` pour une naissance le `1973-04-24` a `11:00` a Paris, France.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:8:- Builder reutilise: `ThemeAstralProviderPayloadBuilder`.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:11:- Aucun appel LLM provider n'est effectue; aucun resultat final de provider n'est produit.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:15:- `intermediate-data.json`: scenario, entree runtime, couverture source et densite.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\README.md:19:- `structure-comparison.md`: squelette commun et differences de densite.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:13:  "delivery_profile",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:31:## Differences de densite
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:39:Les differences restent portees par `delivery_profile`, les budgets, les selections et `output_contract`. Les etiquettes commerciales sont les noms de fichiers et ne sont pas presentes comme valeurs dans le contenu JSON transmis au LLM.
+--- placeholder negative scan ---
+PASS: no placeholder matches
+--- protected surface git diff ---
+PASS: no protected runtime/frontend/shared diffs listed above when empty
+--- git diff check ---
+--- final capsule validation ---
+CONDAMAD validation: PASS
