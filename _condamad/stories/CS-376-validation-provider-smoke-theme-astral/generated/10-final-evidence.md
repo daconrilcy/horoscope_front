@@ -5,7 +5,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: clean implementation review completed
 - Story key: CS-376-validation-provider-smoke-theme-astral
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-376-validation-provider-smoke-theme-astral`
@@ -107,6 +107,13 @@
 ## Remaining risks
 
 - The real external provider call was not executed because `RUN_THEME_ASTRAL_PROVIDER_SMOKE=1` was not enabled. The opt-in test path is ready for a credentialed manual smoke run.
+
+## Review closure
+
+- Implementation review artifact: `generated/11-code-review.md`
+- Fresh review verdict: CLEAN
+- Story tracker status after review: `done`
+- Final review/fix iteration count: 2
 
 ## Suggested reviewer focus
 

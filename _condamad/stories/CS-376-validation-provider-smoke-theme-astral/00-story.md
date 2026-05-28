@@ -1,5 +1,5 @@
 # Story CS-376 validation-provider-smoke-theme-astral: Add Theme Astral Provider Smoke Validation
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
