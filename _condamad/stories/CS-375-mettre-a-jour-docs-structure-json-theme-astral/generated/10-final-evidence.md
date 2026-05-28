@@ -7,7 +7,7 @@
 - Story key: `CS-375-mettre-a-jour-docs-structure-json-theme-astral`
 - Source story: `_condamad/stories/CS-375-mettre-a-jour-docs-structure-json-theme-astral/00-story.md`
 - Source brief: `_story_briefs/cs-375-mettre-a-jour-docs-structure-json-theme-astral-apres-corrections.md`
-- Story registry: `ready-to-review`, updated `2026-05-29`
+- Story registry: `done`, updated `2026-05-29`
 
 ## Preflight
 
@@ -82,7 +82,8 @@
 | `ruff format .` | `backend` with venv active | PASS | `evidence/validation.txt` |
 | `ruff check .` | `backend` with venv active | PASS | `evidence/validation.txt` |
 | `python -B -m pytest -q --tb=short` | `backend` with venv active | PASS | `evidence/validation.txt` |
-| `python -B .agents\skills\condamad-dev-story\scripts\condamad_update_story_status.py ...` | repo root with venv active | PASS | story row updated to `ready-to-review` |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_update_story_status.py ...` | repo root with venv active | PASS | story row updated to `ready-to-review` before review handoff. |
+| Implementation review/fix closure | repo root with venv active | PASS | `generated/11-code-review.md` CLEAN; story row updated to `done`. |
 | `git diff --check` | repo root | PASS | `evidence/validation.txt` |
 
 ## Commands skipped or blocked
@@ -104,7 +105,7 @@
 
 ## Final worktree status
 
-- Expected modified/tracked story files plus untracked CS-375 evidence/generated capsule files.
+- Expected modified review/status evidence for CS-375 closure plus untracked `_condamad/run-state.json`.
 - Pre-existing untracked `_condamad/run-state.json` remains untouched.
 
 ## Remaining risks

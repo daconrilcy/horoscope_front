@@ -139,3 +139,17 @@ EXIT=0
 ## final capsule validation
 CONDAMAD validation: PASS
 EXIT=0
+
+## implementation review closure validation
+CONDAMAD capsule validation: PASS
+CONDAMAD story validation: PASS
+CONDAMAD story strict lint: PASS
+Target doc forbidden wording scan: PASS, no matches.
+Target doc required fields and example links scans: PASS, expected matches present.
+Protected app surfaces and provider payload JSON status: PASS, unchanged.
+Backend ruff format: PASS, 1713 files left unchanged.
+Backend ruff check: PASS, All checks passed.
+Backend pytest: PASS, 3505 passed, 1 skipped, 1235 deselected in 233.53s.
+git diff --check: PASS with line-ending normalization warnings only.
+Note: one initial capsule validation command targeted `00-story.md` and failed because `condamad_validate.py` expects the capsule directory;
+it was immediately rerun with the capsule directory and passed.
