@@ -146,3 +146,4 @@
 | cs-364 | `_story_briefs\cs-364-definir-persistence-versionnee-contrats-prompt-theme-astral.md` | `_condamad\stories\cs-364-definir-persistence-versionnee-contrats-prompt-theme-astral\00-story.md` |
 | cs-365 | `_story_briefs\cs-365-implementer-interpretation-material-builder-theme-astral.md` | `_condamad\stories\cs-365-interpretation-material-builder-theme-astral\00-story.md` |
 | cs-366 | `_story_briefs\cs-366-implementer-provider-payload-builder-theme-astral-stable-par-feature.md` | `_condamad\stories\cs-366-provider-payload-builder-theme-astral\00-story.md` |
+| cs-367 | `_story_briefs\cs-367-bigbang-remplacer-ancien-contrat-prompt-theme-astral-supprimer-legacy.md` | `_condamad\stories\cs-367-bigbang-theme-astral-prompt-contract\00-story.md` |
