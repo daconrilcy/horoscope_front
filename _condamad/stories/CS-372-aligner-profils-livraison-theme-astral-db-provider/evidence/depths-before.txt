@@ -1,0 +1,25 @@
+# depths-before
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:9:    THEME_ASTRAL_DELIVERY_PROFILES,
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:86:        family = resolve_active_theme_astral_prompt_contract(db, depth="deep")
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:92:        assert family.delivery_profile["depth"] == "deep"
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:149:        assert set(THEME_ASTRAL_DELIVERY_PROFILES) == {"essential", "deep"}
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:183:            resolve_active_theme_astral_prompt_contract(db, depth="essential")
+backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py:91:    assert payload["delivery_profile"]["depth"] == "complete"
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:11:    THEME_ASTRAL_DELIVERY_PROFILES,
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:212:    for depth, delivery_profile in THEME_ASTRAL_DELIVERY_PROFILES.items():
+backend\app\domain\llm\configuration\theme_astral_contracts.py:27:THEME_ASTRAL_DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
+backend\app\domain\llm\configuration\theme_astral_contracts.py:31:        "depth": "essential",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:36:    "deep": {
+backend\app\domain\llm\configuration\theme_astral_contracts.py:39:        "depth": "deep",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:46:THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES: dict[ThemeAstralCommercialPlan, dict[str, Any]] = {
+backend\app\domain\llm\configuration\theme_astral_contracts.py:50:        "depth": "essential",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:63:        "depth": "expanded",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:76:        "depth": "complete",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:191:        if self.delivery_profile.get("depth") not in THEME_ASTRAL_DELIVERY_PROFILES:
+backend\app\domain\llm\configuration\theme_astral_contracts.py:205:    if depth not in THEME_ASTRAL_DELIVERY_PROFILES:
+backend\app\domain\llm\configuration\theme_astral_contracts.py:234:        delivery_profile=THEME_ASTRAL_DELIVERY_PROFILES[depth],
+backend\app\domain\llm\configuration\theme_astral_contracts.py:262:        return dict(THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES[commercial_plan])
+backend\app\domain\llm\configuration\theme_astral_contracts.py:268:    "THEME_ASTRAL_DELIVERY_PROFILES",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:36:    "depth": "complete",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:36:    "depth": "essential",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:36:    "depth": "expanded",

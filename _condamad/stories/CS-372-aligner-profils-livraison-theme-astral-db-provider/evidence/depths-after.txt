@@ -1,0 +1,33 @@
+# depths-after
+_condamad\reports\cs-361-cs-362-cs-363-cs-364-cs-365-cs-366-cs-367-cs-368-cs-369-cs-370-cs-371-delivery-report.md:199:CS-372 follow-up alignment: the `theme_astral` persisted delivery-depth contract is now expected to match the provider examples with the canonical non-commercial set `essential`, `expanded`, and `complete`; active `deep` belongs only to pre-CS-372 history and is not part of the current DB/provider contract.
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:9:    THEME_ASTRAL_DELIVERY_PROFILES,
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:89:        for depth in ("essential", "expanded", "complete"):
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:153:        assert set(THEME_ASTRAL_DELIVERY_PROFILES) == {"essential", "expanded", "complete"}
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:158:def test_theme_astral_seed_archives_stale_deep_assembly() -> None:
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:159:    """Le seed retire `deep` des assemblies actives sans mapping de compatibilite."""
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:174:            plan="deep",
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:218:            resolve_active_theme_astral_prompt_contract(db, depth="deep")
+backend\tests\integration\test_theme_astral_prompt_contract_persistence.py:242:            resolve_active_theme_astral_prompt_contract(db, depth="essential")
+backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py:13:    THEME_ASTRAL_DELIVERY_PROFILES,
+backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py:92:    assert payload["delivery_profile"]["depth"] == "complete"
+backend\tests\llm_orchestration\test_theme_astral_provider_payload_builder.py:127:    assert provider_depths == set(THEME_ASTRAL_DELIVERY_PROFILES)
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:11:    THEME_ASTRAL_DELIVERY_PROFILES,
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:218:                PromptAssemblyConfigModel.plan.not_in(tuple(THEME_ASTRAL_DELIVERY_PROFILES)),
+backend\app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py:227:    for depth, delivery_profile in THEME_ASTRAL_DELIVERY_PROFILES.items():
+backend\app\domain\llm\configuration\theme_astral_contracts.py:27:THEME_ASTRAL_DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
+backend\app\domain\llm\configuration\theme_astral_contracts.py:32:        "depth": "essential",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:43:        "depth": "expanded",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:54:        "depth": "complete",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:63:THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES: dict[ThemeAstralCommercialPlan, dict[str, Any]] = {
+backend\app\domain\llm\configuration\theme_astral_contracts.py:67:        "depth": "essential",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:80:        "depth": "expanded",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:93:        "depth": "complete",
+backend\app\domain\llm\configuration\theme_astral_contracts.py:208:        if self.delivery_profile.get("depth") not in THEME_ASTRAL_DELIVERY_PROFILES:
+backend\app\domain\llm\configuration\theme_astral_contracts.py:222:    if depth not in THEME_ASTRAL_DELIVERY_PROFILES:
+backend\app\domain\llm\configuration\theme_astral_contracts.py:251:        delivery_profile=THEME_ASTRAL_DELIVERY_PROFILES[depth],
+backend\app\domain\llm\configuration\theme_astral_contracts.py:279:        return dict(THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES[commercial_plan])
+backend\app\domain\llm\configuration\theme_astral_contracts.py:285:    "THEME_ASTRAL_DELIVERY_PROFILES",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\structure-comparison.md:41:Les profondeurs LLM-visibles canoniques sont `essential`, `expanded` et `complete`; aucune profondeur `deep` n'est active dans ces exemples provider.
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\premium-provider-payload.json:36:    "depth": "complete",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\free-provider-payload.json:36:    "depth": "essential",
+_condamad\examples\prompt-generation-cartography\1973-04-24-1100-paris-theme-astral-v1\basic-provider-payload.json:36:    "depth": "expanded",

@@ -209,6 +209,21 @@ def seed_theme_astral_prompt_contract(db: Session) -> None:
     persona = _ensure_persona(db)
     profile = _ensure_execution_profile(db)
 
+    stale_assemblies = list(
+        db.execute(
+            select(PromptAssemblyConfigModel).where(
+                PromptAssemblyConfigModel.feature == THEME_ASTRAL_FEATURE,
+                PromptAssemblyConfigModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+                PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                PromptAssemblyConfigModel.plan.not_in(tuple(THEME_ASTRAL_DELIVERY_PROFILES)),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for stale_assembly in stale_assemblies:
+        stale_assembly.status = PromptStatus.ARCHIVED
+
     for depth, delivery_profile in THEME_ASTRAL_DELIVERY_PROFILES.items():
         assemblies = list(
             db.execute(

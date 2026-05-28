@@ -1,0 +1,21 @@
+# Validation CS-372
+
+Toutes les commandes Python ont ete lancees apres activation de `.\.venv\Scripts\Activate.ps1`.
+
+| Commande | Repertoire | Resultat |
+|---|---|---|
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py _condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider\00-story.md --root . --story-key CS-372-aligner-profils-livraison-theme-astral-db-provider` | repo root | PASS |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider` | repo root | PASS |
+| `ruff format app\domain\llm\configuration\theme_astral_contracts.py app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py tests\integration\test_theme_astral_prompt_contract_persistence.py tests\llm_orchestration\test_theme_astral_provider_payload_builder.py tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py` | `backend` | PASS, 5 files unchanged |
+| `python -B -m pytest -q tests\integration\test_theme_astral_prompt_contract_persistence.py tests\llm_orchestration\test_theme_astral_provider_payload_builder.py tests\integration\llm\test_theme_astral_prompt_contract_bigbang.py --tb=short` | `backend` | PASS, 7 passed, 8 deselected |
+| `ruff check .` | `backend` | PASS |
+| `python -B -m pytest -q --tb=short` | `backend` | PASS, 3502 passed, 1 skipped, 1234 deselected |
+| `python -B -c "from app.main import app; print(app.title)"` | `backend` | PASS, `horoscope-backend` |
+| `rg -n "deep" app\domain\llm\configuration\theme_astral_contracts.py` | `backend` | PASS, no matches |
+| `rg -n "deep" app\ops\llm\bootstrap\seed_theme_astral_prompt_contract.py` | `backend` | PASS, no matches |
+| `rg -n "deep" tests\integration\test_theme_astral_prompt_contract_persistence.py` | `backend` | PASS, only rejection/archive guard mentions |
+| `rg -n '"plan"\s*:|"free"\s*:|"basic"\s*:|"premium"\s*:|:\s*"(free|basic|premium)"' .../*-provider-payload.json` | repo root | PASS, no matches |
+| `git diff --check` | repo root | PASS |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-372-aligner-profils-livraison-theme-astral-db-provider` | repo root | PASS, final evidence-ready validation |
+
+Skips: aucun check applicable saute.

@@ -94,6 +94,11 @@ def test_example_payload_shapes_are_stable() -> None:
             "limits",
         )
     }
+    assert {payload["delivery_profile"]["depth"] for payload in payloads.values()} == {
+        "essential",
+        "expanded",
+        "complete",
+    }
 
 
 def _build_provider_payload(plan: str) -> dict[str, object]:

@@ -10,6 +10,7 @@ from app.domain.astrology.interpretation.interpretation_material_contracts impor
     INTERPRETATION_MATERIAL_KEYS,
 )
 from app.domain.llm.configuration.theme_astral_contracts import (
+    THEME_ASTRAL_DELIVERY_PROFILES,
     THEME_ASTRAL_INPUT_CONTRACT_ID,
     THEME_ASTRAL_RESPONSE_CONTRACT_ID,
 )
@@ -102,6 +103,7 @@ def test_delivery_material_voice_and_output_contract_are_emitted() -> None:
 def test_profile_quantities_vary_without_skeleton_drift() -> None:
     """Les budgets resolus varient par profil sans creer de cles specifiques."""
     payloads = _payloads_by_commercial_plan()
+    provider_depths = {payload["delivery_profile"]["depth"] for payload in payloads.values()}
     budgets = {
         key: payload["delivery_profile"]["material_budget"]["max_source_items"]
         for key, payload in payloads.items()
@@ -122,6 +124,7 @@ def test_profile_quantities_vary_without_skeleton_drift() -> None:
         key: payload["output_contract"]["max_sections"] for key, payload in payloads.items()
     }
 
+    assert provider_depths == set(THEME_ASTRAL_DELIVERY_PROFILES)
     assert budgets["free"] < budgets["basic"] < budgets["premium"]
     assert aspect_counts == {"free": 1, "basic": 3, "premium": 6}
     assert fact_aspect_counts == {"free": 1, "basic": 3, "premium": 6}

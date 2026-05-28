@@ -72,6 +72,8 @@ Le nom de contrat `theme_astral_llm_input_v1` identifie cette structure. `theme_
 
 `delivery_profile` est resolu par la logique backend avant toute construction de payload provider. La resolution part des entrees produit et runtime, mais le payload ne contient que des valeurs non commerciales: `depth`, budgets de faits, budgets de materiau, selection de sections, politiques de longueur, contraintes de sortie et niveau de detail attendu.
 
+Le jeu canonique persiste en DB et transmis au provider est `essential`, `expanded` et `complete`. Les anciennes profondeurs de seed ne constituent pas des valeurs runtime actives.
+
 Les variations autorisees sont:
 
 - densite des faits astrologiques transmis;

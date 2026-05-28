@@ -196,4 +196,6 @@ Closure and documentation:
 
 `Delivered`
 
+CS-372 follow-up alignment: the `theme_astral` persisted delivery-depth contract is now expected to match the provider examples with the canonical non-commercial set `essential`, `expanded`, and `complete`; active `deep` belongs only to pre-CS-372 history and is not part of the current DB/provider contract.
+
 The series has evidence-backed delivery across audit, architecture, backend implementation, closure audit, documentation, and examples. All story rows are `done` in `_condamad/stories/story-status.md`; `cs-364`, `cs-365`, `cs-366`, `cs-367`, `cs-370`, and `cs-371` have story final evidence with PASS validations; `cs-361`, `cs-362`, `cs-368`, and `cs-369` have audit artifacts and validation logs; `cs-363` has an architecture artifact and review handoff. Delivery remains bounded by the documented gaps: no real provider invocation, no report-time test rerun, missing uniform final-evidence files for non-dev stories, and an unrelated untracked `_condamad/run-state.json`.

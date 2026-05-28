@@ -17,7 +17,10 @@ from app.domain.llm.configuration.theme_astral_contracts import (
     THEME_ASTRAL_USE_CASE_KEY,
     resolve_active_theme_astral_prompt_contract,
 )
-from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_assembly import (
+    AssemblyComponentResolutionState,
+    PromptAssemblyConfigModel,
+)
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
@@ -83,18 +86,19 @@ def test_active_read_returns_canonical_family_without_plan_leakage() -> None:
     try:
         seed_theme_astral_prompt_contract(db)
 
-        family = resolve_active_theme_astral_prompt_contract(db, depth="deep")
-        dumped = family.model_dump()
+        for depth in ("essential", "expanded", "complete"):
+            family = resolve_active_theme_astral_prompt_contract(db, depth=depth)
+            dumped = family.model_dump()
 
-        assert family.prompt_contract_id == THEME_ASTRAL_PROMPT_CONTRACT_ID
-        assert family.input_contract_id == THEME_ASTRAL_INPUT_CONTRACT_ID
-        assert family.response_contract_id == THEME_ASTRAL_RESPONSE_CONTRACT_ID
-        assert family.delivery_profile["depth"] == "deep"
-        assert family.output_schema_ref.id == THEME_ASTRAL_RESPONSE_CONTRACT_ID
-        assert family.astrologer_voice["code"] == THEME_ASTRAL_PERSONA_CODE
-        assert "free" not in repr(dumped).lower()
-        assert "basic" not in repr(dumped).lower()
-        assert "premium" not in repr(dumped).lower()
+            assert family.prompt_contract_id == THEME_ASTRAL_PROMPT_CONTRACT_ID
+            assert family.input_contract_id == THEME_ASTRAL_INPUT_CONTRACT_ID
+            assert family.response_contract_id == THEME_ASTRAL_RESPONSE_CONTRACT_ID
+            assert family.delivery_profile["depth"] == depth
+            assert family.output_schema_ref.id == THEME_ASTRAL_RESPONSE_CONTRACT_ID
+            assert family.astrologer_voice["code"] == THEME_ASTRAL_PERSONA_CODE
+            assert "free" not in repr(dumped).lower()
+            assert "basic" not in repr(dumped).lower()
+            assert "premium" not in repr(dumped).lower()
     finally:
         db.close()
 
@@ -145,8 +149,61 @@ def test_theme_astral_seed_is_idempotent_for_active_rows() -> None:
             ),
         }
 
-        assert first_counts == second_counts == {"prompts": 1, "profiles": 1, "assemblies": 2}
-        assert set(THEME_ASTRAL_DELIVERY_PROFILES) == {"essential", "deep"}
+        assert first_counts == second_counts == {"prompts": 1, "profiles": 1, "assemblies": 3}
+        assert set(THEME_ASTRAL_DELIVERY_PROFILES) == {"essential", "expanded", "complete"}
+    finally:
+        db.close()
+
+
+def test_theme_astral_seed_archives_stale_deep_assembly() -> None:
+    """Le seed retire `deep` des assemblies actives sans mapping de compatibilite."""
+    db = open_app_db_session()
+    try:
+        seed_theme_astral_prompt_contract(db)
+        canonical = db.execute(
+            select(PromptAssemblyConfigModel).where(
+                PromptAssemblyConfigModel.feature == THEME_ASTRAL_FEATURE,
+                PromptAssemblyConfigModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+                PromptAssemblyConfigModel.plan == "essential",
+                PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+            )
+        ).scalar_one()
+        stale = PromptAssemblyConfigModel(
+            feature=THEME_ASTRAL_FEATURE,
+            subfeature=THEME_ASTRAL_SUBFEATURE,
+            plan="deep",
+            locale="fr-FR",
+            feature_template_ref=canonical.feature_template_ref,
+            persona_ref=canonical.persona_ref,
+            execution_profile_ref=canonical.execution_profile_ref,
+            output_schema_id=canonical.output_schema_id,
+            plan_rules_ref="theme_astral_delivery_profile_v1",
+            length_budget={"target": "legacy", "max_output_tokens": 3200},
+            plan_rules_state=AssemblyComponentResolutionState.ENABLED.value,
+            persona_state=AssemblyComponentResolutionState.ENABLED.value,
+            status=PromptStatus.PUBLISHED,
+            created_by="test",
+        )
+        db.add(stale)
+        db.commit()
+
+        seed_theme_astral_prompt_contract(db)
+
+        active_plans = {
+            assembly.plan
+            for assembly in db.execute(
+                select(PromptAssemblyConfigModel).where(
+                    PromptAssemblyConfigModel.feature == THEME_ASTRAL_FEATURE,
+                    PromptAssemblyConfigModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+                    PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+                )
+            )
+            .scalars()
+            .all()
+        }
+        db.refresh(stale)
+        assert active_plans == {"essential", "expanded", "complete"}
+        assert stale.status == PromptStatus.ARCHIVED
     finally:
         db.close()
 
@@ -157,6 +214,8 @@ def test_invalid_theme_astral_version_combinations_fail_deterministically() -> N
     try:
         seed_theme_astral_prompt_contract(db)
 
+        with pytest.raises(ValueError, match="Unknown theme_astral delivery depth"):
+            resolve_active_theme_astral_prompt_contract(db, depth="deep")
         with pytest.raises(ValueError, match="Unknown theme_astral delivery depth"):
             resolve_active_theme_astral_prompt_contract(db, depth="premium")
 

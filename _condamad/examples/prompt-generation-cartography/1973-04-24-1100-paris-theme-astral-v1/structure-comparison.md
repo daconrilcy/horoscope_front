@@ -37,3 +37,5 @@ Les trois payloads partagent les memes cles `input_data`:
 | premium | complete | 7 | 6 | 8 | 8 | 3600 |
 
 Les differences restent portees par `delivery_profile`, les budgets, les selections et `output_contract`. Les etiquettes commerciales sont les noms de fichiers et ne sont pas presentes comme valeurs dans le contenu JSON transmis au LLM.
+
+Les profondeurs LLM-visibles canoniques sont `essential`, `expanded` et `complete`; aucune profondeur `deep` n'est active dans ces exemples provider.
