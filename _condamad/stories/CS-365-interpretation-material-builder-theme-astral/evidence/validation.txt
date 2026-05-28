@@ -1,0 +1,22 @@
+# CS-365 Validation Evidence
+
+<!-- Commentaire global: cet artefact conserve les validations lancees pendant la review/fix d'implementation CS-365. -->
+
+## Commands
+
+| Command | Result |
+|---|---|
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff format app\\domain\\astrology\\interpretation\\interpretation_material_contracts.py app\\domain\\astrology\\interpretation\\interpretation_material_builder.py app\\infra\\db\\repositories\\interpretation_material_source_repository.py tests\\unit\\infra\\db\\repositories\\test_interpretation_material_source_repository.py tests\\unit\\domain\\astrology\\interpretation\\test_interpretation_material_builder.py tests\\integration\\astrology\\test_theme_astral_interpretation_material_input.py` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff check app\\domain\\astrology\\interpretation\\interpretation_material_contracts.py app\\domain\\astrology\\interpretation\\interpretation_material_builder.py app\\infra\\db\\repositories\\interpretation_material_source_repository.py tests\\unit\\infra\\db\\repositories\\test_interpretation_material_source_repository.py tests\\unit\\domain\\astrology\\interpretation\\test_interpretation_material_builder.py tests\\integration\\astrology\\test_theme_astral_interpretation_material_input.py` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; python -B -m pytest -q tests\\unit\\domain\\astrology\\interpretation\\test_interpretation_material_builder.py tests\\integration\\astrology\\test_theme_astral_interpretation_material_input.py tests\\unit\\infra\\db\\repositories\\test_interpretation_material_source_repository.py --long --tb=short` | PASS, `7 passed` |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; python -B -c "import subprocess; subprocess.run(['git','diff','--quiet','--','app/domain/llm/runtime','app/infra/db/models','../frontend/src','migrations'], check=True)"` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; python -B -c "from app.main import app; print('app import ok', len(app.routes))"` | PASS, `app import ok 230` |
+| `.\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-dev-story\\scripts\\condamad_validate.py _condamad\\stories\\CS-365-interpretation-material-builder-theme-astral` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_validate.py _condamad\\stories\\CS-365-interpretation-material-builder-theme-astral\\00-story.md` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; python .agents\\skills\\condamad-story-writer\\scripts\\condamad_story_lint.py --strict _condamad\\stories\\CS-365-interpretation-material-builder-theme-astral\\00-story.md` | PASS |
+| `git diff --check` | PASS |
+
+## Targeted scans
+
+- `rg -n "InterpretationMaterialBuilder|InterpretationMaterialSourceRepository|interpretation_material|planet_sign_interpretations|aspect_interpretations|integration_levers|source_ref|fact_ref" app tests`: PASS.
+- `rg -n "sqlalchemy|from sqlalchemy|Session\\b|execute\\(" app\\domain\\astrology\\interpretation\\interpretation_material_builder.py app\\domain\\astrology\\interpretation\\theme_astral_llm_input_v1_builder.py app\\domain\\astrology\\interpretation\\interpretation_material_contracts.py`: PASS, no matches.

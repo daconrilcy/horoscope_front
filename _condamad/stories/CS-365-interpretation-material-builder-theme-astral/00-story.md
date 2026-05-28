@@ -1,5 +1,5 @@
 # Story CS-365 interpretation-material-builder-theme-astral: Implement Interpretation Material Builder For Theme Astral
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

@@ -38,14 +38,28 @@
 | AC12 | Capsule evidence and story-status row updated. | Capsule validation PASS. | PASS |
 | AC13 | Payload emits `interpretive_text` or `writing_hint`. | Payload provenance test PASS. | PASS |
 
+## Review/fix implementation update
+
+- Iteration 1 finding: implementation selected explicit `InterpretationMaterialSource` fixtures but did not prove DB/reference text
+  owners could feed `theme_astral_llm_input_v1`.
+- Fix: added `InterpretationMaterialSourceRepository` under infra DB repositories to adapt existing planet, house, and aspect
+  interpretation profile tables into `InterpretationMaterialSource`.
+- Fix: added controlled wildcard matching for repository-backed sources whose DB owner is broader than the calculated axis, while
+  preserving `fact_ref`, `source_ref`, and the no-text/no-item rule.
+- Fix: added repository-to-LLM input coverage proving DB profile rows reach `input_data.interpretation_material` without provider call.
+- Fresh review result after fixes: CLEAN.
+
 ## Files changed
 
 - `backend/app/domain/astrology/interpretation/interpretation_material_contracts.py`
 - `backend/app/domain/astrology/interpretation/interpretation_material_builder.py`
+- `backend/app/infra/db/repositories/interpretation_material_source_repository.py`
 - `backend/app/domain/astrology/interpretation/theme_astral_llm_input_v1_builder.py`
 - `backend/tests/unit/domain/astrology/interpretation/test_interpretation_material_builder.py`
 - `backend/tests/integration/astrology/test_theme_astral_interpretation_material_input.py`
+- `backend/tests/unit/infra/db/repositories/test_interpretation_material_source_repository.py`
 - `_condamad/stories/CS-365-interpretation-material-builder-theme-astral/generated/**`
+- `_condamad/stories/CS-365-interpretation-material-builder-theme-astral/evidence/validation.txt`
 - `_condamad/stories/story-status.md`
 
 ## Files deleted
@@ -65,6 +79,12 @@
 | `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff format <modified python files>` | PASS |
 | `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff check <modified python files>` | PASS |
 | `.\\.venv\\Scripts\\Activate.ps1; cd backend; python -B -m pytest -q tests\\unit\\domain\\astrology\\interpretation\\test_interpretation_material_builder.py tests\\integration\\astrology\\test_theme_astral_interpretation_material_input.py --long --tb=short` | PASS, `6 passed` |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff format app\\domain\\astrology\\interpretation\\interpretation_material_contracts.py app\\domain\\astrology\\interpretation\\interpretation_material_builder.py app\\infra\\db\\repositories\\interpretation_material_source_repository.py tests\\unit\\infra\\db\\repositories\\test_interpretation_material_source_repository.py tests\\unit\\domain\\astrology\\interpretation\\test_interpretation_material_builder.py tests\\integration\\astrology\\test_theme_astral_interpretation_material_input.py` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; ruff check app\\domain\\astrology\\interpretation\\interpretation_material_contracts.py app\\domain\\astrology\\interpretation\\interpretation_material_builder.py app\\infra\\db\\repositories\\interpretation_material_source_repository.py tests\\unit\\infra\\db\\repositories\\test_interpretation_material_source_repository.py tests\\unit\\domain\\astrology\\interpretation\\test_interpretation_material_builder.py tests\\integration\\astrology\\test_theme_astral_interpretation_material_input.py` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; python -B -m pytest -q tests\\unit\\domain\\astrology\\interpretation\\test_interpretation_material_builder.py tests\\integration\\astrology\\test_theme_astral_interpretation_material_input.py tests\\unit\\infra\\db\\repositories\\test_interpretation_material_source_repository.py --long --tb=short` | PASS, `7 passed` |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; python -B -c "import subprocess; subprocess.run(['git','diff','--quiet','--','app/domain/llm/runtime','app/infra/db/models','../frontend/src','migrations'], check=True)"` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; cd backend; python -B -c "from app.main import app; print('app import ok', len(app.routes))"` | PASS |
+| `.\\.venv\\Scripts\\Activate.ps1; python -B .agents\\skills\\condamad-dev-story\\scripts\\condamad_validate.py _condamad\\stories\\CS-365-interpretation-material-builder-theme-astral` | PASS |
 | `rg -n "class InterpretationMaterialBuilder" backend\\app backend\\tests -g "*.py"` | PASS: single production owner plus guard test reference |
 | `rg -n "\\bsqlalchemy\\b|\\bselect\\s*\\(|\\bSession\\b|\\btext\\s*\\(" <modified files>` | PASS for production files; only the test assertion mentions `sqlalchemy` as forbidden import |
 | `git diff --check` | PASS |
@@ -95,7 +115,8 @@
 
 ## Remaining risks
 
-- Production DB loading for planet/house/aspect source rows is intentionally not added here because the story forbids migrations and new source text. The builder contract is ready for existing repositories to provide `InterpretationMaterialSource` rows.
+- Residual DB source breadth: existing planet and house interpretation tables are broader than sign/planet-house combinations, so
+  matching allows a source axis to be absent only when the emitted item still has the calculated `fact_ref`.
 
 ## Suggested reviewer focus
 

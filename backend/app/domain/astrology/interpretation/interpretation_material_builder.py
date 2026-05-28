@@ -102,7 +102,10 @@ class _SourceIndex:
             source
             for source in self._sources
             if source.section == section
-            and all(getattr(source, field_name) == value for field_name, value in criteria.items())
+            and all(
+                _matches_optional(getattr(source, field_name), value)
+                for field_name, value in criteria.items()
+            )
             and _source_has_text(source)
             and source.source_ref.strip()
         )
@@ -224,6 +227,11 @@ def _clean_optional(value: str | None) -> str | None:
         return None
     cleaned = value.strip()
     return cleaned or None
+
+
+def _matches_optional(source_value: object, fact_value: object) -> bool:
+    """Autorise une source plus large seulement quand la DB ne porte pas l'axe calcule."""
+    return source_value is None or source_value == fact_value
 
 
 def _planet_sign_fact_ref(item: ChartObjectInterpretationRuntimeData) -> str:

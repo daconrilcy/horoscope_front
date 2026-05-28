@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
 INTERPRETATION_MATERIAL_KEYS = (
     "planet_sign_interpretations",
@@ -111,3 +111,10 @@ class InterpretationMaterialBlock:
             key: [item.to_payload() for item in getattr(self, key)]
             for key in INTERPRETATION_MATERIAL_KEYS
         }
+
+
+def interpretation_material_key(value: str) -> InterpretationMaterialKey:
+    """Valide une cle de section dynamique avant de la typer pour le domaine."""
+    if value not in INTERPRETATION_MATERIAL_KEYS:
+        raise ValueError(f"unsupported interpretation material key: {value}")
+    return cast(InterpretationMaterialKey, value)
