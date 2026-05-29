@@ -66,7 +66,8 @@ export function NatalChartPage() {
     level: "short" | "complete";
     personaName: string | null;
     canSwitchPersona: boolean;
-  }>({ level: "short", personaName: null, canSwitchPersona: false })
+    isBasicCompleteLimitReached: boolean;
+  }>({ level: "short", personaName: null, canSwitchPersona: false, isBasicCompleteLimitReached: false })
   const [headerActionRequest, setHeaderActionRequest] = useState<{
     kind: "upgrade" | "switch_persona";
     nonce: number;
@@ -80,6 +81,7 @@ export function NatalChartPage() {
   const isLongQuotaExhausted = Boolean(
     !isLockedFree &&
       (
+        activeInterpretation.isBasicCompleteLimitReached ||
         natalAccess?.reason_code === "quota_exhausted" ||
         natalAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0)
       ),
@@ -314,10 +316,6 @@ export function NatalChartPage() {
                 className="natal-page-header__cta"
                 onClick={() => {
                   if (isLockedFree) {
-                    navigate("/settings/subscription")
-                    return
-                  }
-                  if (isLongQuotaExhausted) {
                     navigate("/settings/subscription")
                     return
                   }

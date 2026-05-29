@@ -301,6 +301,23 @@ describe("AstrologersPage", () => {
       expect(screen.getByText("Recommandé pour commencer")).toBeInTheDocument()
     })
 
+    it("expose un bouton de selection quand selectionMode est actif", () => {
+      const onSelectAstrologer = vi.fn()
+
+      render(
+        <AstrologerGrid
+          experts={mockAstrologersList}
+          onSelectAstrologer={onSelectAstrologer}
+          selectionMode
+          selectionLabel="Demander l'interprétation complète"
+        />,
+      )
+
+      fireEvent.click(screen.getAllByRole("button", { name: "Demander l'interprétation complète" })[0])
+
+      expect(onSelectAstrologer).toHaveBeenCalledWith(mockAstrologersList[0])
+    })
+
     it("shows loading state while fetching", () => {
       mockUseAstrologers.mockReturnValue({
         data: undefined,

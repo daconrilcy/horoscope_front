@@ -377,6 +377,53 @@ describe("NatalInterpretationSection", () => {
     );
   });
 
+  it("selectionne un astrologue dans le modal et lance la generation complete", async () => {
+    ;(useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [mockHistory.items[0]],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+      refetch: vi.fn(),
+    })
+    ;(useNatalInterpretationById as any).mockReturnValue({
+      isLoading: false,
+      data: mockInterpretationData,
+    })
+
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [{ exhausted: false, remaining: 1 }],
+      } as any,
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: /Obtenir le thème natal complet/i }))
+
+    expect(screen.getByText(/Choisissez votre astrologue/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole("button", { name: /Demander l'interprétation complète/i })[0])
+
+    await waitFor(() => {
+      expect(useNatalInterpretation).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          enabled: true,
+          useCaseLevel: "complete",
+          personaId: "1",
+          forceRefresh: true,
+        }),
+      )
+    })
+
+    expect(screen.queryByText(/Choisissez votre astrologue/i)).not.toBeInTheDocument()
+  })
+
   it("ouvre le sélecteur d'astrologues au clic sur l'action autre astrologue quand short+complete existent", async () => {
     (useNatalInterpretationById as any).mockReturnValue({
       isLoading: false,
@@ -483,7 +530,12 @@ describe("NatalInterpretationSection", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("redirige vers l'abonnement quand le quota Basic complet est déjà consommé", () => {
+  it("affiche un message explicite quand le quota Basic complet est deja consomme", () => {
+    (useNatalInterpretationById as any).mockReturnValue({
+      isLoading: false,
+      data: mockInterpretationData,
+    })
+
     renderSection({
       longFeatureAccess: {
         feature_code: "natal_chart_long",
@@ -495,13 +547,48 @@ describe("NatalInterpretationSection", () => {
       },
     });
 
-    const actionButton = screen.getByRole("button", { name: /Passer à Premium pour plus d'interprétations/i });
+    fireEvent.click(screen.getByRole("button", { name: /Passer à Premium pour plus d'interprétations/i }));
 
-    fireEvent.click(actionButton);
-
-    expect(screen.getByText(/Subscription page/i)).toBeInTheDocument();
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Le plan Basic inclut une seule interprétation complète/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Choisissez votre astrologue/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Subscription page/i)).not.toBeInTheDocument();
   });
+
+  it("reutilise l'interpretation short persistee en Basic sans relancer la generation", async () => {
+    (useNatalInterpretationById as any).mockReturnValue({
+      isLoading: false,
+      data: mockInterpretationData,
+    })
+
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [{ exhausted: false, remaining: 1 }],
+      } as any,
+    })
+
+    await waitFor(() => {
+      expect(useNatalInterpretationById).toHaveBeenCalledWith(
+        expect.objectContaining({
+          enabled: true,
+          interpretationId: 101,
+        }),
+      )
+    })
+
+    expect(useNatalInterpretation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: false,
+      }),
+    )
+    expect(screen.getByText("Votre Thème Test")).toBeInTheDocument()
+  })
 
   it("n'arme pas une requête complete sans persona quand on demande le thème complet", async () => {
     (useNatalInterpretationsList as any).mockReturnValue({

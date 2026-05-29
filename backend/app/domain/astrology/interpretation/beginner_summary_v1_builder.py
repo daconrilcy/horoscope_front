@@ -11,6 +11,7 @@ from typing import Any
 
 from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     STRUCTURED_FACTS_V1_PROJECTION_ID,
+    birth_time_missing_from_structured_facts,
 )
 
 BEGINNER_SUMMARY_V1_PROJECTION_ID = "beginner_summary_v1"
@@ -65,7 +66,7 @@ class BeginnerSummaryV1Builder:
         positions = _positions(structured_facts_v1)
         houses = _houses(structured_facts_v1)
         dominants = _dominants(structured_facts_v1)
-        no_time = _has_missing_birth_time(structured_facts_v1, houses)
+        no_time = birth_time_missing_from_structured_facts(structured_facts_v1, houses)
 
         main_signs = _main_signs(positions)
         dominant_themes = _dominant_themes(dominants, no_time=no_time)
@@ -272,27 +273,3 @@ def _summary_items(
         if item.get("code") and item.get("label")
     )
     return items
-
-
-def _has_missing_birth_time(
-    structured_facts_v1: Mapping[str, Any],
-    houses: Sequence[Mapping[str, Any]],
-) -> bool:
-    """Detecte le mode no_time depuis les absences publiques de la source."""
-    missing_data = structured_facts_v1.get("missing_data")
-    if not isinstance(missing_data, Mapping):
-        return False
-
-    reasons = missing_data.get("reasons")
-    if isinstance(reasons, Sequence) and not isinstance(reasons, str):
-        if "no_time" in {str(reason) for reason in reasons}:
-            return True
-
-    birth_time = missing_data.get("birth_time")
-    if birth_time in {"missing", "unknown", "no_time"}:
-        return True
-
-    empty_collections = missing_data.get("empty_collections")
-    if isinstance(empty_collections, Sequence) and not isinstance(empty_collections, str):
-        return not houses and "houses" in {str(item) for item in empty_collections}
-    return False

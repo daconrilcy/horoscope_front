@@ -16,6 +16,8 @@ type AstrologerGridProps = {
   defaultAstrologerId?: string | null
   selectedIntent?: AstrologerIntentKey | null
   showProfileCta?: boolean
+  selectionMode?: boolean
+  selectionLabel?: string
 }
 
 /** Rend la liste catalogue ou son etat vide actionnable selon les donnees disponibles. */
@@ -26,6 +28,8 @@ export function AstrologerGrid({
   defaultAstrologerId,
   selectedIntent = null,
   showProfileCta = false,
+  selectionMode = false,
+  selectionLabel,
 }: AstrologerGridProps) {
   const lang = detectLang()
 
@@ -51,6 +55,8 @@ export function AstrologerGrid({
           isDefault={expert.id === defaultAstrologerId || isAstrologerRecommendedStarter(expert)}
           isIntentMatch={selectedIntent !== null && isAstrologerMatchingIntent(expert, selectedIntent)}
           showProfileCta={showProfileCta}
+          selectionMode={selectionMode}
+          selectionLabel={selectionLabel}
           onClick={() => onSelectAstrologer(expert)}
           onStart={onStartAstrologer === undefined ? undefined : () => onStartAstrologer(expert)}
         />

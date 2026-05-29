@@ -15,6 +15,7 @@ from app.domain.astrology.interpretation.beginner_summary_v1_builder import (
 )
 from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     STRUCTURED_FACTS_V1_PROJECTION_ID,
+    birth_time_missing_from_structured_facts,
 )
 
 CLIENT_INTERPRETATION_PROJECTION_V1_ID = "client_interpretation_projection_v1"
@@ -235,7 +236,7 @@ class ClientInterpretationProjectionV1Builder:
         aspects = _sequence(facts.get("major_aspects"))
         dominants = _sequence(structured_facts_v1.get("dominants"))
         source_signals = _signals(structured_facts_v1)
-        no_time = _has_missing_birth_time(structured_facts_v1, houses)
+        no_time = birth_time_missing_from_structured_facts(structured_facts_v1, houses)
 
         state = (
             ClientInterpretationProjectionV1State.DEGRADED
@@ -513,27 +514,3 @@ def _audit_input(
             "review_internals",
         ],
     }
-
-
-def _has_missing_birth_time(
-    structured_facts_v1: Mapping[str, Any],
-    houses: Sequence[Mapping[str, Any]],
-) -> bool:
-    """Detecte le mode degrade depuis les absences publiques de la source."""
-    missing_data = structured_facts_v1.get("missing_data")
-    if not isinstance(missing_data, Mapping):
-        return False
-
-    reasons = missing_data.get("reasons")
-    if isinstance(reasons, Sequence) and not isinstance(reasons, str):
-        if "no_time" in {str(reason) for reason in reasons}:
-            return True
-
-    birth_time = missing_data.get("birth_time")
-    if birth_time in {"missing", "unknown", "no_time"}:
-        return True
-
-    empty_collections = missing_data.get("empty_collections")
-    if isinstance(empty_collections, Sequence) and not isinstance(empty_collections, str):
-        return not houses and "houses" in {str(item) for item in empty_collections}
-    return False

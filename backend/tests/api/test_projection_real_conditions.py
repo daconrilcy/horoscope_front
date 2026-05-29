@@ -19,13 +19,15 @@ from app.domain.astrology.dominance.contracts import (
     PlanetDominanceFactor,
     PlanetDominanceResult,
 )
-from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.astrology.natal_calculation import AspectResult, NatalResult, build_natal_result
+from app.domain.astrology.natal_preparation import BirthInput
 from app.main import app
 from app.services.entitlement.entitlement_types import EffectiveEntitlementsSnapshot
 from app.services.projections.projection_endpoint_service import (
     ProjectionEndpointService,
     _ResolvedChart,
 )
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 
@@ -46,6 +48,17 @@ class _ChartRepository:
     def get_by_chart_id(self, _chart_id: str) -> None:
         """Retourne une absence explicite de theme persiste."""
         return None
+
+
+class _PersistedChartRepository:
+    """Depot factice qui simule un theme persiste sans chart_objects internes."""
+
+    def __init__(self, natal_result: NatalResult) -> None:
+        self._payload = natal_result.model_dump(mode="json")
+
+    def get_by_chart_id(self, chart_id: str) -> SimpleNamespace:
+        """Retourne le payload stocke pour un chart_id connu."""
+        return SimpleNamespace(user_id=10, result_payload=self._payload)
 
 
 class _PersistenceService:
@@ -191,6 +204,54 @@ def test_projection_endpoint_exposes_degraded_birth_input_without_time() -> None
     assert body["payload"]["state"] == "degraded"
     assert body["payload"]["degraded_reason"] == "no_time"
     assert body["payload"]["missing_data"] == ["no_time"]
+
+
+def test_projection_endpoint_persisted_chart_returns_normal_state() -> None:
+    """Un chart_id persiste complet ne doit plus retourner state=degraded."""
+    result = build_natal_result(
+        birth_input=BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        ),
+        runtime_reference=complete_reference(),
+        ruleset_version="test",
+        house_system="equal",
+    )
+    persisted = NatalResult.model_validate(result.model_dump(mode="json"))
+    assert persisted.chart_objects == []
+
+    service = ProjectionEndpointService(
+        SimpleNamespace(),
+        chart_repository=_PersistedChartRepository(persisted),  # type: ignore[arg-type]
+        persistence_service=_PersistenceService(),  # type: ignore[arg-type]
+        entitlement_resolver=lambda _db, user_id: EffectiveEntitlementsSnapshot(
+            subject_type="b2c_user",
+            subject_id=user_id,
+            plan_code="basic",
+            billing_status="active",
+            entitlements={},
+        ),
+    )
+    app.dependency_overrides[require_authenticated_user] = _authenticated_user
+    app.dependency_overrides[get_projection_endpoint_service] = lambda: service
+    client = TestClient(app)
+
+    response = client.post(
+        "/v1/astrology/projections",
+        json={
+            "chart_id": "chart-persisted",
+            "projection_type": "beginner_summary_v1",
+            "projection_version": "v1",
+        },
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["metadata"]["source"] == "chart_id"
+    assert body["metadata"]["plan_code"] == "basic"
+    assert body["payload"]["state"] == "normal"
 
 
 def _client_with_service(

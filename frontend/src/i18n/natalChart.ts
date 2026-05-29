@@ -124,6 +124,7 @@ type NatalChartTranslations = {
     summaryBadge: string
     shortBadge: string
     quotaExhaustedCta: string
+    basicCompleteLimitMessage: string
     historyTitle: string
     deleteConfirm: string
     deleteConfirmSub: string
@@ -274,6 +275,8 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       summaryBadge: "Résumé",
       shortBadge: "Short",
       quotaExhaustedCta: "Passer à Premium pour plus d'interprétations",
+      basicCompleteLimitMessage:
+        "Le plan Basic inclut une seule interprétation complète de votre thème natal. Passez à Premium pour en demander d'autres.",
       historyTitle: "Versions disponibles",
       deleteConfirm: "Supprimer cette version ?",
       deleteConfirmSub: "Cette interprétation sera définitivement supprimée de votre historique.",
@@ -506,6 +509,8 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       summaryBadge: "Summary",
       shortBadge: "Short",
       quotaExhaustedCta: "Upgrade to Premium for more readings",
+      basicCompleteLimitMessage:
+        "The Basic plan includes one complete natal chart interpretation. Upgrade to Premium to request additional readings.",
       historyTitle: "Available versions",
       deleteConfirm: "Delete this version?",
       deleteConfirmSub: "This interpretation will be permanently removed from your history.",
@@ -736,6 +741,8 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       summaryBadge: "Resumen",
       shortBadge: "Short",
       quotaExhaustedCta: "Pasar a Premium para más interpretaciones",
+      basicCompleteLimitMessage:
+        "El plan Basic incluye una sola interpretación completa de tu carta natal. Pasa a Premium para solicitar otras.",
       historyTitle: "Versiones disponibles",
       deleteConfirm: "¿Eliminar esta versión?",
       deleteConfirmSub: "Esta interpretación se eliminará permanentemente de tu historial.",

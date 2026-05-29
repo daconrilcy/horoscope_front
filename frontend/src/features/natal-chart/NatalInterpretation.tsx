@@ -1,6 +1,6 @@
 // Container React orchestrant les donnees d'interpretation de theme natal.
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
 
 import { useAstrologyProjections, type AstrologyProjectionQueryState } from "../../api/astrologyProjections"
@@ -47,6 +47,7 @@ interface Props {
     level: "short" | "complete"
     personaName: string | null
     canSwitchPersona: boolean
+    isBasicCompleteLimitReached: boolean
   }) => void
   actionRequest?: {
     kind: "upgrade" | "switch_persona"
@@ -207,17 +208,57 @@ export function NatalInterpretationSection({
   const [selectedTemplateKey, setSelectedTemplateKey] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showBasicLimitNotice, setShowBasicLimitNotice] = useState(false)
 
   const historyQuery = useNatalInterpretationsList({
     enabled: chartLoaded && !!chartId,
     chartId,
   })
+  const historyItems = historyQuery.data?.items ?? []
+  const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems)
+  const latestShortInterpretation = findLatestShortInterpretation(historyItems)
+  const isQuotaUsageExhausted = Boolean(
+    longFeatureAccess?.reason_code === "quota_exhausted" ||
+      longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
+  )
+  const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer"
+  const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer"
+  const shouldPreferLatestCompleteByDefault = isLockedFree || isPremiumPlan
+  const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation)
+  const shouldRefreshShortAfterBasicUpgrade =
+    isSingleAstrologerPlan &&
+    !isLockedFree &&
+    hasPersistedFreeShortInterpretation &&
+    latestShortInterpretation === null
+  const shouldResolveInterpretationFromHistory =
+    shouldPreferLatestCompleteByDefault || isSingleAstrologerPlan
+  const hasPersistedInterpretationCandidate =
+    !shouldRefreshShortAfterBasicUpgrade &&
+    (
+      (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation !== null) ||
+      (isSingleAstrologerPlan && latestShortInterpretation !== null)
+    )
+  const isResolvingPersistedInterpretation =
+    !selectedInterpretationId &&
+    shouldResolveInterpretationFromHistory &&
+    (historyQuery.isLoading || historyQuery.isFetching)
+  const isBasicCompleteLimitReached =
+    isSingleAstrologerPlan && latestCompleteInterpretation !== null
+  const isExplicitCompleteGenerationRequest =
+    useCaseLevel === "complete" &&
+    !selectedInterpretationId &&
+    !isBasicCompleteLimitReached &&
+    (Boolean(selectedPersonaId) || forceRefresh || isLockedFree)
   const pdfTemplatesQuery = useNatalPdfTemplates({
     enabled: chartLoaded,
     locale: pdfLocaleFromLang(lang),
   })
   const mainQuery = useNatalInterpretation({
-    enabled: chartLoaded && !selectedInterpretationId,
+    enabled:
+      chartLoaded &&
+      !selectedInterpretationId &&
+      !isResolvingPersistedInterpretation &&
+      (!hasPersistedInterpretationCandidate || isExplicitCompleteGenerationRequest),
     useCaseLevel,
     personaId: selectedPersonaId,
     allowCompleteWithoutPersona: isLockedFree,
@@ -317,29 +358,19 @@ export function NatalInterpretationSection({
 
   const activeQuery = selectedInterpretationId ? idQuery : mainQuery
   const { data, isLoading, error, refetch } = activeQuery
-  const historyItems = historyQuery.data?.items ?? []
-  const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems)
-  const latestShortInterpretation = findLatestShortInterpretation(historyItems)
   const hasCompleteInterpretation = latestCompleteInterpretation !== null
-  const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation)
-  const isQuotaUsageExhausted = Boolean(
-    longFeatureAccess?.reason_code === "quota_exhausted" ||
-      longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
-  )
-  const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer"
-  const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer"
   const canSwitchPersona = isPremiumPlan && hasCompleteInterpretation
-  const shouldPreferLatestCompleteByDefault = isLockedFree || isPremiumPlan
-  const shouldRefreshShortAfterBasicUpgrade =
-    isSingleAstrologerPlan &&
-    !isLockedFree &&
-    hasPersistedFreeShortInterpretation &&
-    latestShortInterpretation === null
   const isCompleteGenerationBlocked = !isLockedFree && isQuotaUsageExhausted
+  const shouldShowBasicLimitNotice =
+    showBasicLimitNotice ||
+    (
+      error instanceof ApiError &&
+      (error.code === "natal_chart_long_quota_exceeded" || error.status === 429)
+    )
   const primaryActionLabel = hasCompleteInterpretation
     ? isLockedFree
       ? t.upgradeToBasicCta
-      : isCompleteGenerationBlocked
+      : isBasicCompleteLimitReached || isCompleteGenerationBlocked
         ? t.quotaExhaustedCta
         : canSwitchPersona
           ? pageT.requestAnotherAstrologer
@@ -348,18 +379,42 @@ export function NatalInterpretationSection({
       ? t.upgradeToBasicCta
       : pageT.unlockCompleteInterpretation
 
+  const revealBasicCompleteLimitNotice = () => {
+    setShowBasicLimitNotice(true)
+    setIsUpsellOpen(false)
+  }
+
   useEffect(() => {
     onActiveInterpretationChange?.({
       level: isLockedFree ? "short" : (data?.meta.level ?? "short"),
       personaName: data?.meta.persona_name ?? null,
       canSwitchPersona,
+      isBasicCompleteLimitReached,
     })
-  }, [canSwitchPersona, data?.meta.level, data?.meta.persona_name, isLockedFree, onActiveInterpretationChange])
+  }, [
+    canSwitchPersona,
+    data?.meta.level,
+    data?.meta.persona_name,
+    isBasicCompleteLimitReached,
+    isLockedFree,
+    onActiveInterpretationChange,
+  ])
 
   useEffect(() => {
     if (!actionRequest) return
     if (actionRequest.kind === "upgrade" && isLockedFree) {
       navigate(basicUpgradePath)
+      return
+    }
+    if (
+      actionRequest.kind === "upgrade" &&
+      (isBasicCompleteLimitReached || isCompleteGenerationBlocked)
+    ) {
+      if (isBasicCompleteLimitReached || isSingleAstrologerPlan) {
+        revealBasicCompleteLimitNotice()
+        return
+      }
+      navigate(premiumUpgradePath)
       return
     }
     if (actionRequest.kind === "switch_persona" && isCompleteGenerationBlocked) {
@@ -370,7 +425,16 @@ export function NatalInterpretationSection({
     setSelectedPersonaId(null)
     setForceRefresh(false)
     setIsUpsellOpen(true)
-  }, [actionRequest, basicUpgradePath, isCompleteGenerationBlocked, isLockedFree, navigate, premiumUpgradePath])
+  }, [
+    actionRequest,
+    basicUpgradePath,
+    isBasicCompleteLimitReached,
+    isCompleteGenerationBlocked,
+    isLockedFree,
+    isSingleAstrologerPlan,
+    navigate,
+    premiumUpgradePath,
+  ])
 
   useEffect(() => {
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
@@ -407,17 +471,31 @@ export function NatalInterpretationSection({
     }
 
     if (isSingleAstrologerPlan) {
-      setSelectedInterpretationId(null)
+      if (useCaseLevel === "complete" && (selectedPersonaId || forceRefresh)) {
+        return
+      }
+      if (latestShortInterpretation && !shouldRefreshShortAfterBasicUpgrade) {
+        setSelectedInterpretationId((current) =>
+          current === latestShortInterpretation.id ? current : latestShortInterpretation.id,
+        )
+      } else if (!shouldRefreshShortAfterBasicUpgrade) {
+        setSelectedInterpretationId(null)
+      }
       setSelectedPersonaId(null)
       setUseCaseLevel("short")
     }
   }, [
+    forceRefresh,
     historyItems,
     initialInterpretationId,
     initialPersonaId,
     isSingleAstrologerPlan,
     latestCompleteInterpretation,
+    latestShortInterpretation,
+    selectedPersonaId,
     shouldPreferLatestCompleteByDefault,
+    shouldRefreshShortAfterBasicUpgrade,
+    useCaseLevel,
   ])
 
   useEffect(() => {
@@ -459,6 +537,10 @@ export function NatalInterpretationSection({
   ])
 
   const handleUpgrade = (personaId: string) => {
+    if (isBasicCompleteLimitReached) {
+      revealBasicCompleteLimitNotice()
+      return
+    }
     setSelectedPersonaId(personaId)
     setUseCaseLevel("complete")
     setIsUpsellOpen(false)
@@ -472,7 +554,15 @@ export function NatalInterpretationSection({
       navigate(basicUpgradePath)
       return
     }
+    if (isBasicCompleteLimitReached) {
+      revealBasicCompleteLimitNotice()
+      return
+    }
     if (isCompleteGenerationBlocked) {
+      if (isSingleAstrologerPlan) {
+        revealBasicCompleteLimitNotice()
+        return
+      }
       navigate(premiumUpgradePath)
       return
     }
@@ -641,10 +731,18 @@ export function NatalInterpretationSection({
       </div>
 
       <ErrorBoundary onReset={() => refetch()}>
-        {isLoading ? (
+        {shouldShowBasicLimitNotice ? (
+          <div className="ni-quota-notice" role="note">
+            <p className="ni-quota-notice__message">{t.basicCompleteLimitMessage}</p>
+            <Link to={premiumUpgradePath} className="btn-link ni-quota-notice__cta">
+              {t.quotaExhaustedCta}
+            </Link>
+          </div>
+        ) : null}
+        {isLoading || isResolvingPersistedInterpretation ? (
           <InterpretationSkeleton t={t} isComplete={useCaseLevel === "complete"} />
-        ) : error ? (
-          <InterpretationError t={t} onRetry={() => refetch()} />
+        ) : error && !shouldShowBasicLimitNotice ? (
+          <InterpretationError t={t} onRetry={() => refetch()} error={error} />
         ) : data ? (
           <>
             <InterpretationContent

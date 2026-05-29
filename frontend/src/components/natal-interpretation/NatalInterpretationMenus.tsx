@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { AlertCircle, ChevronDown, Download, Eye, History, RefreshCw, Trash2 } from "lucide-react"
 
 import { Button } from "@ui/Button"
+import { ApiError } from "../../api/client"
 import type { InterpretationTranslations, NatalInterpretationHistoryItemView } from "./NatalInterpretationTypes"
 
 export function PdfActionsMenu({
@@ -235,7 +236,27 @@ export function InterpretationSkeleton({ t, isComplete }: { t: InterpretationTra
   )
 }
 
-export function InterpretationError({ t, onRetry }: { t: InterpretationTranslations; onRetry: () => void }) {
+export function InterpretationError({
+  t,
+  onRetry,
+  error,
+}: {
+  t: InterpretationTranslations
+  onRetry: () => void
+  error?: unknown
+}) {
+  const isQuotaExceeded =
+    error instanceof ApiError &&
+    (error.code === "natal_chart_long_quota_exceeded" || error.status === 429)
+
+  if (isQuotaExceeded) {
+    return (
+      <div className="ni-quota-notice" role="note">
+        <p className="ni-quota-notice__message">{t.basicCompleteLimitMessage}</p>
+      </div>
+    )
+  }
+
   return (
     <div className="ni-error">
       <div className="ni-error__icon">

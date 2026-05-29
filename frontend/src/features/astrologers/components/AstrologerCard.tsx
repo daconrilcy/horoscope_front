@@ -17,6 +17,8 @@ type AstrologerCardProps = {
   onClick: () => void
   onStart?: () => void
   showProfileCta?: boolean
+  selectionMode?: boolean
+  selectionLabel?: string
 }
 
 /** Localise le libelle du type de fournisseur affiche comme metadata secondaire. */
@@ -32,6 +34,8 @@ export function AstrologerCard({
   onClick,
   onStart,
   showProfileCta = false,
+  selectionMode = false,
+  selectionLabel,
 }: AstrologerCardProps) {
   const [imgError, setImgError] = useState(false)
   const lang = detectLang()
@@ -105,6 +109,17 @@ export function AstrologerCard({
         ))}
       </div>
       <p className="person-card-bio">{expert.bio_short}</p>
+      {selectionMode && (
+        <div className="person-card-actions">
+          <button
+            type="button"
+            className="person-card-primary-cta"
+            onClick={onClick}
+          >
+            {selectionLabel ?? startLabel}
+          </button>
+        </div>
+      )}
       {showProfileCta && (
         <div className="person-card-actions">
           {onStart && (

@@ -1731,7 +1731,7 @@ describe("NatalChartPage", () => {
       expect(screen.queryByText(/Votre vue d'ensemble astrologique complète/i)).not.toBeInTheDocument()
     })
 
-    it("redirige le CTA d'en-tête vers l'abonnement quand le quota Basic complet est déjà consommé", () => {
+    it("affiche un message explicite depuis l'en-tete quand le quota Basic complet est deja consomme", () => {
       mockUseFeatureAccess.mockReturnValue({
         feature_code: "natal_chart_long",
         granted: true,
@@ -1754,6 +1754,36 @@ describe("NatalChartPage", () => {
         },
         refetch: vi.fn(),
       })
+      mockUseNatalInterpretationsList.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          items: [
+            {
+              id: 101,
+              chart_id: "chart-123",
+              level: "short",
+              persona_id: null,
+              persona_name: null,
+              created_at: "2026-03-04T10:00:00Z",
+              use_case: "natal_interpretation_short",
+            },
+            {
+              id: 102,
+              chart_id: "chart-123",
+              level: "complete",
+              persona_id: "1",
+              persona_name: "Luna Céleste",
+              created_at: "2026-03-04T11:00:00Z",
+              use_case: "natal_interpretation",
+            },
+          ],
+          total: 2,
+          limit: 20,
+          offset: 0,
+        },
+        refetch: vi.fn(),
+      })
 
       render(
         <MemoryRouter
@@ -1769,7 +1799,10 @@ describe("NatalChartPage", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /Passer à Premium pour plus d'interprétations/i }))
 
-      expect(screen.getByText(/Subscription page/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/Le plan Basic inclut une seule interprétation complète/i),
+      ).toBeInTheDocument()
+      expect(screen.queryByText(/Subscription page/i)).not.toBeInTheDocument()
     })
 
   it("garde le CTA d'interprétation complète en Basic tant que le quota n'est pas épuisé", () => {

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -232,14 +233,42 @@ def _sign_balances_payload(
     }
 
 
+def birth_time_missing_from_structured_facts(
+    structured_facts_v1: Mapping[str, Any],
+    houses: Sequence[Mapping[str, Any]],
+) -> bool:
+    """Detecte un mode no_time depuis la precision explicite ou les absences publiques."""
+    missing_data = structured_facts_v1.get("missing_data")
+    if not isinstance(missing_data, Mapping):
+        return False
+
+    birth_time = missing_data.get("birth_time")
+    if birth_time == "available":
+        return False
+    if birth_time in {"missing", "unknown", "no_time"}:
+        return True
+
+    reasons = missing_data.get("reasons")
+    if isinstance(reasons, Sequence) and not isinstance(reasons, str):
+        if "no_time" in {str(reason) for reason in reasons}:
+            return True
+
+    empty_collections = missing_data.get("empty_collections")
+    if isinstance(empty_collections, Sequence) and not isinstance(empty_collections, str):
+        return not houses and "houses" in {str(item) for item in empty_collections}
+    return False
+
+
 def _missing_data_payload(
     interpretation_input: ChartInterpretationInputRuntimeData,
 ) -> dict[str, Any]:
     """Expose les absences optionnelles avec une forme stable."""
     sign_balances = interpretation_input.sign_profile_balances
-    return {
+    birth_time_known = interpretation_input.birth_context.precision.birth_time_known
+    payload: dict[str, Any] = {
         "chart_id": interpretation_input.chart_id,
         "sign_balances": None if sign_balances is None else "available",
+        "birth_time": "available" if birth_time_known else "missing",
         "empty_collections": sorted(
             name
             for name, values in (
@@ -256,6 +285,9 @@ def _missing_data_payload(
             if not values
         ),
     }
+    if not birth_time_known:
+        payload["reasons"] = ["no_time"]
+    return payload
 
 
 def _sort_dominance(

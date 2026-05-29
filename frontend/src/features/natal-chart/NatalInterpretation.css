@@ -653,6 +653,29 @@
   text-align: center;
 }
 
+.ni-quota-notice {
+  padding: 32px;
+  background: color-mix(in srgb, var(--color-token-rgb-255-193-7) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-193-7) 24%, transparent);
+  border-radius: var(--radius-section);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.ni-quota-notice__message {
+  font-size: var(--font-size-15);
+  color: var(--premium-text-strong);
+  max-width: 560px;
+  margin: 0;
+}
+
+.ni-quota-notice__cta {
+  font-weight: var(--font-weight-semibold);
+}
+
 .ni-error__icon {
   width: 64px;
   height: 64px;

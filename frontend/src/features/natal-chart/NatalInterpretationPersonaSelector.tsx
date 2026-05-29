@@ -48,6 +48,8 @@ export function PersonaSelector({
           ) : availableAstrologers.length > 0 ? (
             <AstrologerGrid
               experts={availableAstrologers}
+              selectionMode
+              selectionLabel={t.personaSelectorConfirm}
               onSelectAstrologer={(expert: Astrologer) => {
                 if (isSubmitting) return
                 onConfirm(expert.id)

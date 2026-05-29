@@ -18,9 +18,12 @@ from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     STRUCTURED_FACTS_V1_CONTRACT_VERSION,
     STRUCTURED_FACTS_V1_PROJECTION_ID,
     StructuredFactsV1Builder,
+    birth_time_missing_from_structured_facts,
 )
-from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.astrology.natal_calculation import AspectResult, NatalResult, build_natal_result
+from app.domain.astrology.natal_preparation import BirthInput
 from app.main import app
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -89,6 +92,8 @@ def test_structured_facts_v1_missing_runtime_data_is_deterministic() -> None:
     assert payload["missing_data"] == {
         "chart_id": None,
         "sign_balances": None,
+        "birth_time": "missing",
+        "reasons": ["no_time"],
         "empty_collections": [
             "advanced_condition_facts",
             "dominants",
@@ -149,6 +154,58 @@ def test_structured_facts_v1_has_one_canonical_builder_owner() -> None:
     ]
 
     assert builder_files == [INTERPRETATION_DIR / "structured_facts_v1_builder.py"]
+
+
+def test_structured_facts_v1_persisted_complete_rehydrates_chart_objects() -> None:
+    """Un theme deserialise sans chart_objects retrouve positions et maisons."""
+    result = build_natal_result(
+        birth_input=BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        ),
+        runtime_reference=complete_reference(),
+        ruleset_version="test",
+        house_system="equal",
+    )
+    persisted = NatalResult.model_validate(result.model_dump(mode="json"))
+
+    assert persisted.chart_objects == []
+    assert persisted.planet_positions
+    assert len(persisted.houses) == 12
+
+    payload = StructuredFactsV1Builder().build(persisted, chart_id="chart-persisted")
+
+    assert payload["structural_facts"]["positions"]
+    assert payload["structural_facts"]["houses"]
+    assert payload["missing_data"]["birth_time"] == "available"
+    assert payload["missing_data"].get("reasons") is None
+    assert "houses" not in payload["missing_data"]["empty_collections"]
+    assert "positions" not in payload["missing_data"]["empty_collections"]
+
+
+def test_birth_time_missing_ignores_empty_house_proxy_when_birth_time_available() -> None:
+    """La precision explicite prime sur empty_collections houses."""
+    source = StructuredFactsV1Builder().build(
+        _NatalSource(
+            chart_objects=(interpretable_chart_object("mars", with_payloads=False),),
+            aspects=(),
+        ),
+        chart_id="chart-1",
+    )
+    source["structural_facts"]["houses"] = []
+    source["missing_data"] = {
+        "chart_id": "chart-1",
+        "sign_balances": None,
+        "birth_time": "available",
+        "empty_collections": ["houses"],
+    }
+
+    assert (
+        birth_time_missing_from_structured_facts(source, source["structural_facts"]["houses"])
+        is False
+    )
 
 
 def _build_payload() -> dict[str, object]:

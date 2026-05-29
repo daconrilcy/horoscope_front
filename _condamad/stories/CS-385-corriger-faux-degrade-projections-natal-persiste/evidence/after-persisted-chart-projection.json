@@ -1,0 +1,28 @@
+{
+  "scenario": "persisted_natal_chart_complete_birth_time",
+  "chart_id": "chart-persisted",
+  "chart_objects_count": 0,
+  "planet_positions_count": 10,
+  "houses_count": 12,
+  "structured_facts": {
+    "positions_count": 0,
+    "houses_count": 0,
+    "missing_data": {
+      "chart_id": "chart-persisted",
+      "sign_balances": "available",
+      "birth_time": "available",
+      "empty_collections": [
+        "advanced_condition_facts",
+        "fixed_star_contacts"
+      ]
+    }
+  },
+  "beginner_summary_v1": {
+    "state": "normal",
+    "missing_data": null
+  },
+  "client_interpretation_projection_v1": {
+    "state": "normal",
+    "missing_data": null
+  }
+}

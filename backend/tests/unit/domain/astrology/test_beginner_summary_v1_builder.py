@@ -24,9 +24,11 @@ from app.domain.astrology.interpretation.beginner_summary_v1_builder import (
 from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     StructuredFactsV1Builder,
 )
-from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.astrology.natal_calculation import AspectResult, NatalResult, build_natal_result
+from app.domain.astrology.natal_preparation import BirthInput
 from app.domain.astrology.runtime.chart_object_runtime_data import ZodiacPositionRuntimeData
 from app.main import app
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 BACKEND_ROOT = Path(__file__).resolve().parents[4]
@@ -207,6 +209,29 @@ def test_beginner_summary_v1_has_one_canonical_builder_owner() -> None:
     ]
 
     assert builder_files == [INTERPRETATION_DIR / "beginner_summary_v1_builder.py"]
+
+
+def test_beginner_summary_v1_persisted_complete_returns_normal() -> None:
+    """Un theme persiste complet ne doit pas retomber en degraded."""
+    result = build_natal_result(
+        birth_input=BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        ),
+        runtime_reference=complete_reference(),
+        ruleset_version="test",
+        house_system="equal",
+    )
+    persisted = NatalResult.model_validate(result.model_dump(mode="json"))
+    structured = StructuredFactsV1Builder().build(persisted, chart_id="chart-persisted")
+
+    payload = BeginnerSummaryV1Builder().build(structured)
+
+    assert payload["state"] == "normal"
+    assert payload.get("degraded_reason") is None
+    assert payload.get("missing_data") is None
 
 
 def _structured_facts() -> dict[str, Any]:

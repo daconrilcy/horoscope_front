@@ -6,6 +6,9 @@ from __future__ import annotations
 from typing import Any
 
 from app.domain.astrology.advanced_conditions import AdvancedPlanetaryCondition
+from app.domain.astrology.builders.chart_object_runtime_builder import (
+    build_chart_object_runtime_data,
+)
 from app.domain.astrology.dominance.contracts import DominantPlanetsResult
 from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
     AdvancedConditionInterpretationRuntimeData,
@@ -24,6 +27,7 @@ from app.domain.astrology.interpretation.chart_object_interpretation_projector i
 from app.domain.astrology.interpretation.chart_object_interpretation_selector import (
     ChartObjectInterpretationSelector,
 )
+from app.domain.astrology.runtime.chart_object_runtime_data import ChartObjectRuntimeData
 
 
 class ChartInterpretationInputBuilder:
@@ -46,15 +50,16 @@ class ChartInterpretationInputBuilder:
         locale: str | None = None,
     ) -> ChartInterpretationInputRuntimeData:
         """Assemble un input natal sans changer les collections historiques."""
+        chart_objects = _resolve_chart_objects_for_interpretation(natal_result)
+        selected_chart_objects = self.selector.select(chart_objects)
         objects = tuple(
-            self.projector.project(chart_object)
-            for chart_object in self.selector.select(tuple(natal_result.chart_objects))
+            self.projector.project(chart_object) for chart_object in selected_chart_objects
         )
         aspects = _project_aspects(tuple(natal_result.aspects))
         dignity_items = tuple(item.dignity for item in objects if item.dignity is not None)
         house_positions = tuple(
             self.projector.project_house_position(chart_object)
-            for chart_object in self.selector.select(tuple(natal_result.chart_objects))
+            for chart_object in selected_chart_objects
         )
         rulerships = tuple(item.rulership for item in objects if item.rulership is not None)
         fixed_star_contacts = tuple(
@@ -88,6 +93,34 @@ class ChartInterpretationInputBuilder:
                 aspect_count=len(aspects),
             ),
         )
+
+
+def _resolve_chart_objects_for_interpretation(
+    natal_result: Any,
+) -> tuple[ChartObjectRuntimeData, ...]:
+    """Rehydrate les chart objects internes absents apres deserialisation persistee."""
+    chart_objects = tuple(getattr(natal_result, "chart_objects", ()) or ())
+    if chart_objects:
+        return chart_objects
+
+    planet_positions = tuple(getattr(natal_result, "planet_positions", ()) or ())
+    houses = tuple(getattr(natal_result, "houses", ()) or ())
+    astral_points = tuple(getattr(natal_result, "astral_points", ()) or ())
+    if not planet_positions and not houses and not astral_points:
+        return ()
+
+    advanced_planetary_conditions = getattr(
+        natal_result,
+        "advanced_planetary_conditions",
+        None,
+    )
+    return build_chart_object_runtime_data(
+        planet_positions=planet_positions,
+        astral_points=astral_points,
+        houses=houses,
+        fixed_stars=(),
+        advanced_planetary_conditions=advanced_planetary_conditions,
+    )
 
 
 def _project_birth_context(prepared_input: Any) -> BirthContextInterpretationRuntimeData:

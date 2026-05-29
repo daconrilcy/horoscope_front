@@ -22,8 +22,10 @@ from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     STRUCTURED_FACTS_V1_PROJECTION_ID,
     StructuredFactsV1Builder,
 )
-from app.domain.astrology.natal_calculation import AspectResult
+from app.domain.astrology.natal_calculation import AspectResult, NatalResult, build_natal_result
+from app.domain.astrology.natal_preparation import BirthInput
 from app.main import app
+from tests.factories.astrology_runtime_reference_factory import complete_reference
 from tests.unit.domain.astrology.interpretation.support import interpretable_chart_object
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -185,6 +187,32 @@ def test_client_interpretation_projection_v1_has_one_canonical_builder() -> None
     ]
 
     assert builder_files == [BUILDER_PATH]
+
+
+def test_client_interpretation_projection_v1_persisted_basic_returns_normal() -> None:
+    """Un theme persiste complet reste normal pour le plan basic."""
+    result = build_natal_result(
+        birth_input=BirthInput(
+            birth_date="1990-06-15",
+            birth_time="10:30",
+            birth_place="Paris",
+            birth_timezone="Europe/Paris",
+        ),
+        runtime_reference=complete_reference(),
+        ruleset_version="test",
+        house_system="equal",
+    )
+    persisted = NatalResult.model_validate(result.model_dump(mode="json"))
+    structured = StructuredFactsV1Builder().build(persisted, chart_id="chart-persisted")
+
+    payload = ClientInterpretationProjectionV1Builder().build(
+        structured,
+        requested_plan="basic",
+        current_plan="basic",
+    )
+
+    assert payload["state"] == "normal"
+    assert payload.get("missing_data") is None
 
 
 def test_client_interpretation_projection_v1_stays_out_of_public_api_surface() -> None:
