@@ -161,3 +161,4 @@
 | cs-379 | `_story_briefs\cs-379-stabiliser-contrat-public-generation-theme-natal-apres-enrichissement-prompts.md` | `_condamad\stories\cs-379-stabiliser-contrat-public-generation-theme-natal\00-story.md` |
 | cs-380 | `_story_briefs\cs-380-durcir-natal-expert-panel-contre-payloads-partiels-sans-masquer-contrat.md` | `_condamad\stories\cs-380-durcir-natal-expert-panel-contre-payloads-partiels\00-story.md` |
 | cs-381 | `_story_briefs\cs-381-non-regression-generation-theme-natal-et-enrichissement-prompts.md` | `_condamad\stories\cs-381-non-regression-generation-theme-natal-prompts\00-story.md` |
+| cs-382 | `_story_briefs\cs-382-review-adversariale-generation-theme-natal-apres-corrections.md` | `_condamad\stories\cs-382-review-adversariale-generation-theme-natal\00-story.md` |
