@@ -7,6 +7,7 @@
 - Story key: CS-383-fermeture-findings-generation-theme-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal`
+- Final status alignment: `00-story.md` status and task checklist now match tracker `done` and final evidence.
 
 ## Preflight
 
@@ -90,6 +91,16 @@
 | `condamad_validate.py <capsule>` | repo root | PASS | 0 | Capsule valid after evidence creation. |
 | `condamad_story_validate.py <story>` | repo root | PASS | 0 | Story contract valid. |
 | `condamad_story_lint.py --strict <story>` | repo root | PASS | 0 | Story lint clean. |
+| `condamad_story_validate.py <story>` | repo root | PASS | 0 | Final status-alignment rerun after `done` sync. |
+| `condamad_story_lint.py --strict <story>` | repo root | PASS | 0 | Final status-alignment rerun after `done` sync. |
+| `condamad_validate.py <capsule>` | repo root | FAIL | 1 | Section name `Final review focus` was non-canonical. |
+| `condamad_validate.py <capsule>` | repo root | PASS | 0 | Final capsule validation after section rename. |
+| `ruff check .` | `backend` | PASS | 0 | Current brief-alignment rerun. |
+| `python -B -m pytest -q tests --tb=short -k "natal_chart or traditional_conditions or theme_astral or llm_astrology_input"` | `backend` | PASS | 0 | Current brief-alignment rerun: 67 passed, 1 skipped. |
+| `pnpm --dir frontend lint` | repo root | PASS | 0 | Current brief-alignment rerun. |
+| `pnpm --dir frontend test -- NatalExpertPanel BirthProfilePage natalChartApi` | repo root | PASS | 0 | Current brief-alignment rerun: 63 tests passed. |
+| `pnpm --dir frontend build` | repo root | PASS | 0 | Current brief-alignment rerun. |
+| `python -B -c ... app.routes/app.openapi() ...` | repo root | PASS | 0 | Current brief-alignment rerun. |
 | `git diff --check` | repo root | PASS | 0 | Whitespace clean; CRLF warnings only. |
 
 ## Commands skipped or blocked
@@ -125,7 +136,7 @@
 - No real LLM provider call was made; this is explicitly out of scope.
 - Existing untracked `_condamad/critical-errors.jsonl` and `_condamad/run-state.json` are unrelated and left untouched.
 
-## Final review focus
+## Suggested reviewer focus
 
 - Confirmed: CS-383 correctly closes with no applicative change because CS-382 is CLEAN and validations passed.
 

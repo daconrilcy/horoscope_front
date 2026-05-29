@@ -1,5 +1,5 @@
 # Story CS-383 fermeture-findings-generation-theme-natal: Close Natal Generation Adversarial Review Findings
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 
@@ -110,15 +110,15 @@ The story must prove corrected natal generation behavior, frontend tolerance, an
 
 ## Implementation Tasks
 
-- [ ] Task 1: Read the CS-382 report, CS-382 story, and the CS-379 through CS-381 implementation evidence. (AC: AC1)
-- [ ] Task 2: Classify each CS-382 finding as corrected, accepted, false positive, or out of scope. (AC: AC1, AC2)
-- [ ] Task 3: Correct actionable backend natal payload findings with focused tests. (AC: AC3, AC4, AC5, AC6)
-- [ ] Task 4: Correct actionable frontend rendering or API-client findings with focused tests. (AC: AC3, AC7, AC8)
-- [ ] Task 5: Correct actionable prompt payload enrichment findings with focused tests. (AC: AC3, AC9, AC10)
-- [ ] Task 6: Preserve `POST /v1/users/me/natal-chart` route evidence through the loaded app. (AC: AC4, AC13)
-- [ ] Task 7: Persist validation output, guardrail output, and before/after evidence for the correction set. (AC: AC11, AC12)
-- [ ] Task 8: Rerun CS-382 or a targeted equivalent re-review against changed files. (AC: AC2, AC11)
-- [ ] Task 9: Write the CS-383 closure report with findings, decisions, fixes, tests, commands, re-review, and risks. (AC: AC1, AC11)
+- [x] Task 1: Read the CS-382 report, CS-382 story, and the CS-379 through CS-381 implementation evidence. (AC: AC1)
+- [x] Task 2: Classify each CS-382 finding as corrected, accepted, false positive, or out of scope. (AC: AC1, AC2)
+- [x] Task 3: Correct actionable backend natal payload findings with focused tests. (AC: AC3, AC4, AC5, AC6)
+- [x] Task 4: Correct actionable frontend rendering or API-client findings with focused tests. (AC: AC3, AC7, AC8)
+- [x] Task 5: Correct actionable prompt payload enrichment findings with focused tests. (AC: AC3, AC9, AC10)
+- [x] Task 6: Preserve `POST /v1/users/me/natal-chart` route evidence through the loaded app. (AC: AC4, AC13)
+- [x] Task 7: Persist validation output, guardrail output, and before/after evidence for the correction set. (AC: AC11, AC12)
+- [x] Task 8: Rerun CS-382 or a targeted equivalent re-review against changed files. (AC: AC2, AC11)
+- [x] Task 9: Write the CS-383 closure report with findings, decisions, fixes, tests, commands, re-review, and risks. (AC: AC1, AC11)
 
 ## Files to Inspect First
 

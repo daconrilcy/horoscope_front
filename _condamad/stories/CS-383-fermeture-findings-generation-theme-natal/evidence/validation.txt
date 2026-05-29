@@ -61,3 +61,34 @@ Final implementation-review rerun:
   Result: PASS_WITH_CLASSIFIED_HITS.
 - Command: git diff --check
   Result: PASS; CRLF warnings only.
+
+Final status-alignment rerun:
+- Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-383-fermeture-findings-generation-theme-natal\00-story.md
+  Result: PASS.
+- Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-383-fermeture-findings-generation-theme-natal\00-story.md
+  Result: PASS.
+- Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-383-fermeture-findings-generation-theme-natal
+  Result: FAIL; final evidence section used `Final review focus` instead of required `Suggested reviewer focus`.
+- Fix: renamed the section to `Suggested reviewer focus`.
+- Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-383-fermeture-findings-generation-theme-natal
+  Result: PASS.
+
+Current brief-alignment rerun:
+- Command: .\.venv\Scripts\Activate.ps1; Push-Location backend; ruff check .; Pop-Location
+  Result: PASS, All checks passed.
+- Command: .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -m pytest -q tests --tb=short -k "natal_chart or traditional_conditions or theme_astral or llm_astrology_input"; Pop-Location
+  Result: PASS, 67 passed, 1 skipped, 1407 deselected.
+- Command: pnpm --dir frontend lint
+  Result: PASS.
+- Command: pnpm --dir frontend test -- NatalExpertPanel BirthProfilePage natalChartApi
+  Result: PASS, 3 files passed, 63 tests passed.
+- Command: pnpm --dir frontend build
+  Result: PASS.
+- Command: .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; assert any('/v1/users/me/natal-chart' == getattr(r, 'path', '') for r in app.routes); assert '/v1/users/me/natal-chart' in app.openapi()['paths']; assert 'post' in app.openapi()['paths']['/v1/users/me/natal-chart']"
+  Result: PASS.
+- Command: rg -n "style=" frontend/src/features/natal-chart/NatalExpertPanel.tsx
+  Result: PASS, no matches, exit 1 expected for negative scan.
+- Command: rg -n "<frontend derivation tokens>" frontend/src/features/natal-chart/NatalExpertPanel.tsx
+  Result: PASS, no matches, exit 1 expected for negative scan.
+- Command: rg -n "<closure tokens>" _condamad/reports/cs-382-review-adversariale-generation-theme-natal.md _condamad/reports/cs-383-corrections-findings-generation-theme-natal.md
+  Result: PASS_WITH_CLASSIFIED_HITS.

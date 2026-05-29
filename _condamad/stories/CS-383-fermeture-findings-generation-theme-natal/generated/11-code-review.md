@@ -36,6 +36,11 @@ classified residual scan hits, re-review verdict, and accepted residual risks.
   closure artifacts.
 - Validation: story validation, strict story lint, backend lint/tests, frontend lint/tests/build, route inventory,
   and targeted scans are recorded in `evidence/validation.txt` and were rerun where required for this closure.
+- Follow-up: synchronized `00-story.md` from `ready-to-dev` to `done` and checked completed implementation tasks
+  so the story file matches the tracker and final evidence.
+- Follow-up: renamed final evidence section `Final review focus` to the validator-required
+  `Suggested reviewer focus`.
+- Validation: final story validation, strict lint, and capsule validation passed after this status alignment.
 
 ## Guardrail Result
 
