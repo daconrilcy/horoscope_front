@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: no; final implementation review is clean and tracker is `done`.
 - Story key: CS-383-fermeture-findings-generation-theme-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal`
@@ -112,11 +112,12 @@
 
 ## Final worktree status
 
-- Modified: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/00-story.md`
+- Modified: `_condamad/reports/cs-383-corrections-findings-generation-theme-natal.md`
+- Modified: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/re-review.md`
+- Modified: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/validation.txt`
+- Modified: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/generated/10-final-evidence.md`
+- Modified: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/generated/11-code-review.md`
 - Modified: `_condamad/stories/story-status.md`
-- Untracked: `_condamad/reports/cs-383-corrections-findings-generation-theme-natal.md`
-- Untracked: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/**`
-- Untracked: generated CS-383 capsule files created by repair.
 - Pre-existing untracked left untouched: `_condamad/critical-errors.jsonl`, `_condamad/run-state.json`
 
 ## Remaining risks
@@ -124,9 +125,9 @@
 - No real LLM provider call was made; this is explicitly out of scope.
 - Existing untracked `_condamad/critical-errors.jsonl` and `_condamad/run-state.json` are unrelated and left untouched.
 
-## Suggested reviewer focus
+## Final review focus
 
-- Confirm that CS-383 correctly closes with no applicative change because CS-382 is CLEAN and validations passed.
+- Confirmed: CS-383 correctly closes with no applicative change because CS-382 is CLEAN and validations passed.
 
 ## Feedback loop routing
 

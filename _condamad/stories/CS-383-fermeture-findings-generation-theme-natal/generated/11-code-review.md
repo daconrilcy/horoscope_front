@@ -1,4 +1,4 @@
-# CS-383 Editorial Story Review
+# CS-383 Implementation Review
 
 Verdict: CLEAN
 
@@ -7,45 +7,70 @@ Verdict: CLEAN
 - Story: `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/00-story.md`
 - Source brief: `_story_briefs/cs-383-corriger-findings-review-adversariale-generation-theme-natal.md`
 - Tracker row: `_condamad/stories/story-status.md` entry for `CS-383`
-- Guardrails cited by the story: `RG-002`, `RG-003`, `RG-047`, `RG-129`, `RG-131`
+- Source findings report: `_condamad/reports/cs-382-review-adversariale-generation-theme-natal.md`
+- Closure report: `_condamad/reports/cs-383-corrections-findings-generation-theme-natal.md`
+- Evidence reviewed:
+  - `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/findings-before.md`
+  - `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/findings-after.md`
+  - `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/guardrails.txt`
+  - `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/validation.txt`
+  - `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/re-review.md`
 
 ## Review Result
 
-No actionable drafting issue remains.
+No actionable implementation issue remains.
 
-The story preserves the brief objective: close every actionable CS-382 finding, keep major findings from
-remaining open, trace low-severity acceptances, prove `POST /v1/users/me/natal-chart`, preserve complete
-`traditional_conditions` when calculable, keep frontend rendering tolerant without local fact invention,
-and protect prompt-visible `theme_astral_llm_input_v1` enrichment.
+CS-382 is now present and reports an empty finding register after deduplication:
+no `Critical`, `High`, `Medium`, or `Low` finding is open. CS-383 therefore correctly closes with no
+application-code change, while preserving validation evidence for the natal runtime, frontend tolerance, and
+prompt enrichment guardrails.
 
-The story explicitly maps the brief primitives into target state, domain boundary, tasks, acceptance criteria,
-expected report shape, validation commands, non-goals, guardrails, and persistent evidence.
+The closure report records the finding decision ledger, no-code-change rationale, validation commands,
+classified residual scan hits, re-review verdict, and accepted residual risks.
 
-## Important Dependency
+## Issue Fixed In This Review Loop
 
-`_condamad/reports/cs-382-review-adversariale-generation-theme-natal.md` is currently absent in the workspace.
-The story already records this as current-state evidence and instructs implementation to read CS-382 before code
-changes. This is not a drafting blocker because the story is a pre-implementation contract and validation passes.
+- Finding: this generated review artifact still described the earlier pre-implementation drafting review and
+  stale CS-382 absence.
+- Fix: refreshed this artifact as the final implementation review evidence after reading CS-382 and CS-383
+  closure artifacts.
+- Validation: story validation, strict story lint, backend lint/tests, frontend lint/tests/build, route inventory,
+  and targeted scans are recorded in `evidence/validation.txt` and were rerun where required for this closure.
+
+## Guardrail Result
+
+- `RG-002`: no API router code changed; backend targeted validation passed.
+- `RG-003`: `app.routes` and `app.openapi()` prove `POST /v1/users/me/natal-chart`.
+- `RG-047`: `NatalExpertPanel.tsx` has no `style=` hit.
+- `RG-129`: frontend derivation-token scan on `NatalExpertPanel.tsx` has no hit.
+- `RG-131`: targeted backend `traditional_conditions` tests passed.
 
 ## Validation Results
 
-- `.\.venv\Scripts\Activate.ps1`
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py <story>`
-  - Result: PASS
-- `.\.venv\Scripts\Activate.ps1`
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict <story>`
-  - Result: PASS
+- `condamad_story_validate.py <story>`: PASS.
+- `condamad_story_lint.py --strict <story>`: PASS.
+- `ruff check .` from `backend` after venv activation: PASS.
+- `python -B -m pytest -q tests --tb=short -k "natal_chart or traditional_conditions or theme_astral or llm_astrology_input"`: PASS.
+- `pnpm --dir frontend lint`: PASS.
+- `pnpm --dir frontend test -- NatalExpertPanel BirthProfilePage natalChartApi`: PASS.
+- `pnpm --dir frontend build`: PASS.
+- Runtime `app.routes` and `app.openapi()` checks for `/v1/users/me/natal-chart`: PASS.
 
 ## Produced Artifacts
 
-- `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/generated/11-code-review.md`
+- `_condamad/reports/cs-383-corrections-findings-generation-theme-natal.md`
+- `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/findings-before.md`
+- `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/findings-after.md`
+- `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/guardrails.txt`
+- `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/validation.txt`
+- `_condamad/stories/CS-383-fermeture-findings-generation-theme-natal/evidence/re-review.md`
 
 ## Propagation
 
-No propagation. The review produced only local story-review evidence and did not reveal reusable learning for
-guardrails, AGENTS.md, or skills.
+No propagation. The stale generated review artifact was local to CS-383 evidence and did not reveal reusable
+learning for guardrails, AGENTS.md, or skills.
 
 ## Residual Risk
 
-The implementation remains blocked in practice until the CS-382 report exists and can be used as the finding
-ledger. The story contract already captures that dependency and forbids code changes before reading CS-382.
+No remaining actionable CS-382 finding is identified. The only accepted residual risk is that no real external
+LLM provider call was made, which remains outside the brief scope.

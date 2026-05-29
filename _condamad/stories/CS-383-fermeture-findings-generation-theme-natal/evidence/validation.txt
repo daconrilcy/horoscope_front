@@ -33,3 +33,31 @@ Scans:
 Skipped:
 - ruff format was not run because no Python file was modified.
 - A local dev server was not started because no applicative code changed; backend import and frontend build prove local startup prerequisites.
+
+Final implementation-review rerun:
+- Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-383-fermeture-findings-generation-theme-natal\00-story.md
+  Result: PASS.
+- Command: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-383-fermeture-findings-generation-theme-natal\00-story.md
+  Result: PASS.
+- Command: .\.venv\Scripts\Activate.ps1; Push-Location backend; ruff check .; Pop-Location
+  Result: PASS.
+- Command: .\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -m pytest -q tests --tb=short -k "natal_chart or traditional_conditions or theme_astral or llm_astrology_input"; Pop-Location
+  Result: PASS, 67 passed, 1 skipped, 1407 deselected.
+- Command: pnpm --dir frontend lint
+  Result: PASS.
+- Command: pnpm --dir frontend test -- NatalExpertPanel BirthProfilePage natalChartApi
+  Result: PASS, 3 files passed, 63 tests passed.
+- Command: pnpm --dir frontend build
+  Result: PASS.
+- Command: .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; assert any('/v1/users/me/natal-chart' == getattr(r, 'path', '') for r in app.routes); assert '/v1/users/me/natal-chart' in app.openapi()['paths']; assert 'post' in app.openapi()['paths']['/v1/users/me/natal-chart']"
+  Result: PASS.
+- Command: rg -n "style=" frontend/src/features/natal-chart/NatalExpertPanel.tsx
+  Result: PASS, no matches, exit 1 expected for negative scan.
+- Command: rg -n "<frontend derivation tokens>" frontend/src/features/natal-chart/NatalExpertPanel.tsx
+  Result: PASS, no matches, exit 1 expected for negative scan.
+- Command: rg -n "<carrier tokens>" backend/app backend/tests frontend/src
+  Result: PASS_WITH_CLASSIFIED_HITS.
+- Command: rg -n "<closure tokens>" _condamad/reports/cs-382-review-adversariale-generation-theme-natal.md _condamad/reports/cs-383-corrections-findings-generation-theme-natal.md
+  Result: PASS_WITH_CLASSIFIED_HITS.
+- Command: git diff --check
+  Result: PASS; CRLF warnings only.

@@ -2,7 +2,7 @@
 
 ## Synthese
 
-Verdict: ready-to-review.
+Verdict: done.
 
 CS-382 ne contient aucun finding `Critical`, `High`, `Medium` ou `Low` apres deduplication. Aucune correction de code applicatif n'etait donc requise pour CS-383.
 
@@ -67,6 +67,7 @@ La re-review CS-383 confirme que:
 - les validations backend et frontend ciblees passent;
 - `NatalExpertPanel` ne contient pas de style inline ni de derivation astrologique locale;
 - les carriers `chart_json` et `natal_data` restent des hits classes, pas une source de verite pour `theme_astral_llm_input_v1`.
+- le tracker CS-383 est clos en `done` apres review finale propre.
 
 ## Risques residuels acceptes
 

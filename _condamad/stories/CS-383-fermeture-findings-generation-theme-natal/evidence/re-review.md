@@ -23,4 +23,4 @@ The CS-382 finding register is empty after deduplication. CS-383 therefore corre
 
 ## Decision
 
-Ready for human review. Reviewer focus: validate that "no code change" remains acceptable because CS-382 is CLEAN and the CS-383 validations passed.
+Done. The final implementation review confirms that "no code change" remains acceptable because CS-382 is CLEAN and the CS-383 validations passed.
