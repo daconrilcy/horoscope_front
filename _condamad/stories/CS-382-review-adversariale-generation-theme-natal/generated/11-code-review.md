@@ -1,45 +1,39 @@
-# Editorial Review CS-382
+# Implementation Review CS-382
 
 Verdict: CLEAN
 
-## Review Scope
+## Scope
 
 - Story: `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/00-story.md`
-- Source brief: `_story_briefs/cs-382-review-adversariale-generation-theme-natal-apres-corrections.md`
-- Tracker row: `_condamad/stories/story-status.md` entry `CS-382`
-- Guardrails checked by targeted ID lookup: `RG-002`, `RG-003`, `RG-007`, `RG-047`, `RG-052`
+- Report: `_condamad/reports/cs-382-review-adversariale-generation-theme-natal.md`
+- Evidence: `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/evidence/**`
 
-## Review Cycle
+## Review Findings
 
-- Iteration 1: CHANGES_REQUESTED.
-  - Finding: `RG-007` was listed as an applied guardrail with a generic API/OpenAPI invariant.
-  - Impact: the story misattributed an admin LLM observability guardrail to natal chart endpoint proof.
-  - Fix: removed `RG-007` from applied guardrails and recorded it as non-applicable for this story.
-- Iteration 2: CLEAN.
-  - No remaining actionable drafting issue found in objective, scope, ACs, validation plan, non-goals, or artifacts.
+- none
 
-## Brief Alignment
+## Closure checks
 
-- The story requires inspection of CS-379, CS-380, and CS-381 diffs, tests, evidence, and reviews.
-- The story names direct `POST /v1/users/me/natal-chart` proof before accepting `GET /latest`.
-- Known-time and `no_time` cases are explicit in target state, acceptance criteria, tasks, and validation plan.
-- Plan-tier coupling, React non-invention, strict frontend types, and prompt-visible enrichment are explicit checks.
-- The expected report path is `_condamad/reports/cs-382-review-adversariale-generation-theme-natal.md`.
-- The story keeps application corrections out of scope and routes findings to future correction work.
+- The report inspects CS-379, CS-380, and CS-381 generated traceability, final evidence, and review handoffs.
+- Direct POST proof exists in backend integration tests and targeted backend pytest passes.
+- Known-time `traditional_conditions` are complete; `no_time` absence is bounded and not plan-tier driven.
+- `NatalExpertPanel` renders API-owned facts after runtime narrowing and degrades partial runtime data without inventing hayz/rejoicing facts.
+- `theme_astral_llm_input_v1` provider payload remains enriched and separate from public UI payload carriers.
+- Static scan hits are classified in `evidence/guardrails.txt`; no active legacy provider path is accepted as proof.
 
-## Validation Results
+## Validation
 
-- `condamad_story_validate.py`: PASS after the guardrail correction.
-- `condamad_story_lint.py --strict`: PASS after the guardrail correction.
+- `ruff check backend`: PASS.
+- `python -B -m pytest -q backend/tests --tb=short -k "natal_chart or traditional_conditions or theme_astral or llm_astrology_input"`: PASS.
+- `pnpm --dir frontend lint`: PASS.
+- `pnpm --dir frontend test -- NatalExpertPanel BirthProfilePage natalChartApi`: PASS.
+- `pnpm --dir frontend build`: PASS.
+- Runtime `app.routes` and `app.openapi()` natal checks: PASS.
+- `git diff --check`: PASS.
 
-## Produced Artifacts
+## Final
 
-- Created this review artifact: `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/generated/11-code-review.md`.
-
-## Propagation
-
-- no-propagation: the correction is local to the CS-382 story contract and does not reveal reusable process learning.
-
-## Residual Risk
-
-- None identified for the drafted story contract.
+- Review status: CLEAN.
+- Correction count: 0.
+- Remaining issue count: 0.
+- no-propagation: the implementation produced only report/evidence updates and no reusable process correction.

@@ -1,0 +1,20 @@
+Final implementation-pass status:
+
+- Adversarial report created:
+  - `_condamad/reports/cs-382-review-adversariale-generation-theme-natal.md`
+- Story evidence created:
+  - `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/evidence/review-baseline-before.txt`
+  - `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/evidence/review-baseline-after.txt`
+  - `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/evidence/guardrails.txt`
+  - `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/evidence/validation.txt`
+- Generated capsule evidence updated:
+  - `generated/03-acceptance-traceability.md`
+  - `generated/09-dev-log.md`
+  - `generated/10-final-evidence.md`
+  - `generated/11-code-review.md`
+- Story registry updated to `ready-to-review`.
+
+Scope invariant:
+
+- No backend runtime, backend test, frontend runtime, frontend test, migration, dependency, or source brief file was modified.
+

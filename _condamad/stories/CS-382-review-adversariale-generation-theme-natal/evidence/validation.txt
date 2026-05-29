@@ -1,0 +1,47 @@
+Validation evidence for CS-382.
+
+All Python commands were run from the repository root after activating `.\.venv\Scripts\Activate.ps1`.
+
+1. Command: `ruff check backend`
+   Status: PASS
+   Output: `All checks passed!`
+
+2. Command: `python -B -m pytest -q backend/tests --tb=short -k "natal_chart or traditional_conditions or theme_astral or llm_astrology_input"`
+   Status: PASS
+   Output: `67 passed, 1 skipped, 1407 deselected in 8.50s`
+
+3. Command: `pnpm --dir frontend lint`
+   Status: PASS
+   Output: `tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json`
+
+4. Command: `pnpm --dir frontend test -- NatalExpertPanel BirthProfilePage natalChartApi`
+   Status: PASS
+   Output: `3 passed (3), 63 passed (63)`
+
+5. Command: `pnpm --dir frontend build`
+   Status: PASS
+   Output: `vite v7.3.2 building client environment for production... built in 4.12s`
+
+6. Command: `$env:PYTHONPATH='backend'; python -B -c "from app.main import app; assert any('natal-chart' in getattr(r, 'path', '') for r in app.routes)"`
+   Status: PASS
+   Output: `['/v1/users/me/natal-chart/latest', '/v1/users/me/natal-chart/interpretation', '/v1/users/{user_id}/natal-chart/consistency', '/v1/users/me/natal-chart']`
+
+7. Command: `$env:PYTHONPATH='backend'; python -B -c "from app.main import app; paths=app.openapi()['paths']; assert '/v1/users/me/natal-chart' in paths"`
+   Status: PASS
+   Output: `['/v1/users/me/natal-chart', '/v1/users/me/natal-chart/interpretation', '/v1/users/me/natal-chart/latest', '/v1/users/{user_id}/natal-chart/consistency']`
+
+8. Command: `rg -n "is_hayz|is_rejoicing|traditional_conditions|chart_json|natal_data|llm_astrology_input_v1|theme_astral_llm_input_v1" backend/app backend/tests frontend/src`
+   Status: PASS_WITH_CLASSIFIED_HITS
+   Output: Hits persisted and classified in `guardrails.txt`.
+
+9. Command: `git diff --check`
+   Status: PASS
+   Output: no whitespace errors; Git emitted CRLF normalization warnings for tracked markdown files only.
+
+10. Command: `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-382-review-adversariale-generation-theme-natal`
+    Status: PASS
+    Output: `CONDAMAD validation: PASS`
+
+11. Cleanup: `frontend/test-results`
+    Status: PASS
+    Output: removed after verifying the resolved path stays inside the workspace.

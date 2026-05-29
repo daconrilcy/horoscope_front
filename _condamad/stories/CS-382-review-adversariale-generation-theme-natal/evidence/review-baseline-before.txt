@@ -1,0 +1,15 @@
+Initial implementation-pass status:
+
+- Existing untracked files before CS-382 implementation:
+  - `_condamad/critical-errors.jsonl`
+  - `_condamad/run-state.json`
+- The CS-382 capsule `generated/` directory was incomplete at resume time and contained only `11-code-review.md`.
+- `condamad_prepare.py` repaired the capsule after explicit `--capsule` selection.
+- `condamad_validate.py _condamad/stories/CS-382-review-adversariale-generation-theme-natal`: PASS.
+
+Resume conclusion:
+
+- Previous logs covered story drafting/review only.
+- No runtime backend/frontend source changes were present for CS-382.
+- Implementation scope remained report and CONDAMAD evidence only.
+

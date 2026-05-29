@@ -1,0 +1,29 @@
+Guardrail evidence for CS-382.
+
+Scoped guardrails:
+
+- RG-002 `refactor-api-v1-routers`: PASS. No router or API business logic file changed; runtime route inventory confirms the canonical loaded app exposes natal endpoints.
+- RG-003 `converge-api-v1-route-architecture`: PASS. `app.routes` and `app.openapi()` both expose `/v1/users/me/natal-chart` and `/v1/users/me/natal-chart/latest`.
+- RG-047 `CS-029-encadrer-styles-inline-statiques-frontend`: PASS. No frontend TSX file changed in this story; `pnpm --dir frontend lint` passed. Existing inline-style policy hits are unrelated to the reviewed natal panel.
+- RG-052 `CS-075-converger-namespaces-css-migration-only-restants`: PASS. No frontend CSS file changed in this story.
+
+Targeted scan:
+
+Command:
+`rg -n "is_hayz|is_rejoicing|traditional_conditions|chart_json|natal_data|llm_astrology_input_v1|theme_astral_llm_input_v1" backend/app backend/tests frontend/src`
+
+Result:
+PASS_WITH_CLASSIFIED_HITS.
+
+Classification:
+
+- `frontend/src/features/natal-chart/NatalExpertPanel.tsx`: displays backend-owned fields after runtime shape narrowing; it does not calculate `hayz`, `rejoicing`, dignities, or scores locally.
+- `frontend/src/api/natal-chart/index.ts`: nominal API types keep `is_hayz`, `is_rejoicing`, and `traditional_conditions` strict.
+- `frontend/src/tests/NatalExpertPanel.test.tsx`: verifies no `chart_json` or `natal_data` appears in the expert traditional section and verifies degraded display for partial runtime data.
+- `frontend/src/features/admin-prompts/AdminSamplePayloadsAdmin.tsx` and `frontend/src/pages/admin/AdminLogsPage.tsx`: admin prompt/log surfaces, not public natal chart generation proof.
+- `backend/app/services/chart/json_builder.py`: canonical public projection owner for `traditional_conditions`; rejects absent boolean hayz/rejoicing for reliable known-time results.
+- `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`: canonical provider payload builder; inspected lines 48-87 show `theme_astral_llm_input_v1`-owned payload structure distinct from public UI payload.
+- `backend/tests/architecture/*llm*` and `backend/tests/integration/llm/*`: architecture and regression guards that reject legacy carriers as provider proof.
+
+No legacy shim, compatibility alias, fallback React calculation, duplicate active path, or route alias was introduced by CS-382.
+
