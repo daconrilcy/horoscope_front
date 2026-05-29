@@ -160,3 +160,4 @@
 | cs-378 | `_story_briefs\cs-378-corriger-findings-review-adversariale-finale-theme-astral.md` | `_condamad\stories\cs-378-fermeture-findings-review-adversariale-theme-astral\00-story.md` |
 | cs-379 | `_story_briefs\cs-379-stabiliser-contrat-public-generation-theme-natal-apres-enrichissement-prompts.md` | `_condamad\stories\cs-379-stabiliser-contrat-public-generation-theme-natal\00-story.md` |
 | cs-380 | `_story_briefs\cs-380-durcir-natal-expert-panel-contre-payloads-partiels-sans-masquer-contrat.md` | `_condamad\stories\cs-380-durcir-natal-expert-panel-contre-payloads-partiels\00-story.md` |
+| cs-381 | `_story_briefs\cs-381-non-regression-generation-theme-natal-et-enrichissement-prompts.md` | `_condamad\stories\cs-381-non-regression-generation-theme-natal-prompts\00-story.md` |
