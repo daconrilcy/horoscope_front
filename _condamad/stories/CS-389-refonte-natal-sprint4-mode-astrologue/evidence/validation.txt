@@ -1,0 +1,22 @@
+CS-389 implementation validation - 2026-05-29
+
+Commands run from repository/frontend unless noted:
+
+- npm test -- NatalAstrologicalDna NatalLifeDomains NatalStrengths NatalChallenges NatalMajorAspects NatalKarmicSignature NatalHiddenTalents NatalRelationshipPotential NatalCareerPotential NatalAstrologerMode NatalChartPage natalInterpretation
+  Result: PASS, 13 files, 123 tests.
+
+- npm run lint
+  Result: PASS.
+
+- npm run build
+  Result: PASS.
+
+- Select-String -Path frontend\src\features\natal-chart\*.tsx,frontend\src\pages\NatalChartPage.tsx -Pattern "style="
+  Result: PASS, no match.
+
+Applicable guardrails: RG-047, RG-052, RG-071, RG-073, RG-122, RG-124, RG-129.
+Non-applicable guardrails for this sprint: RG-115, RG-116.
+
+Review fix validation:
+- `NatalAstrologerMode` now requires `access.granted === true` and a premium variant before rendering expert children.
+- Tests cover unknown access, denied access and `free_short` page-level non-leak.

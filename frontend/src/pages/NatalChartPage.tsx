@@ -13,9 +13,20 @@ import { formatDateTime } from "../utils/formatDate"
 import { useAccessTokenSnapshot } from "../utils/authToken"
 import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
 import { NatalChartGuide } from "../components/NatalChartGuide"
-import { NatalInterpretationSection } from "../features/natal-chart/NatalInterpretation"
 import { NatalExpertPanel } from "../features/natal-chart/NatalExpertPanel"
-import { getZodiacIcon } from "../components/zodiacSignIconMap"
+import { NatalProfileHero } from "../features/natal-chart/NatalProfileHero"
+import { NatalThemeSynthesis } from "../features/natal-chart/NatalThemeSynthesis"
+import { NatalAstrologicalDna } from "../features/natal-chart/NatalAstrologicalDna"
+import { NatalLifeDomains } from "../features/natal-chart/NatalLifeDomains"
+import { NatalStrengths } from "../features/natal-chart/NatalStrengths"
+import { NatalChallenges } from "../features/natal-chart/NatalChallenges"
+import { NatalMajorAspects } from "../features/natal-chart/NatalMajorAspects"
+import { NatalKarmicSignature } from "../features/natal-chart/NatalKarmicSignature"
+import { NatalHiddenTalents } from "../features/natal-chart/NatalHiddenTalents"
+import { NatalRelationshipPotential } from "../features/natal-chart/NatalRelationshipPotential"
+import { NatalCareerPotential } from "../features/natal-chart/NatalCareerPotential"
+import { NatalAstrologerMode } from "../features/natal-chart/NatalAstrologerMode"
+import { NatalTechnicalDetails } from "../features/natal-chart/NatalTechnicalDetails"
 import "./NatalChartPage.css"
 import "../components/prediction/DailyPageHeader.css"
 
@@ -60,6 +71,8 @@ export function NatalChartPage() {
   const latestChart = useLatestNatalChart()
   const { lang, translatePlanet, translateSign, translateHouse, translateAspect } = useAstrologyLabels()
   const t = natalChartTranslations[lang]
+  const placementIn = lang === "en" || lang === "de" ? " in " : " en "
+  const publicLabels = { translatePlanet, translateSign, translateHouse, placementIn }
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [activeInterpretation, setActiveInterpretation] = useState<{
@@ -246,14 +259,10 @@ export function NatalChartPage() {
           ? t.kochHouseSystem
           : houseSystemKey === "regiomontanus"
             ? t.regiomontanusHouseSystem
-            : houseSystemKey
-  const sunSignName = astroProfile?.sun_sign_code ? translateSign(astroProfile.sun_sign_code.toUpperCase()) : null
-  const ascendantSignName = astroProfile?.ascendant_sign_code ? translateSign(astroProfile.ascendant_sign_code.toUpperCase()) : null
+          : houseSystemKey
   const missingBirthTime = astroProfile?.missing_birth_time ?? false
-  const SunSignIcon = getZodiacIcon(astroProfile?.sun_sign_code)
-  const AscendantSignIcon = getZodiacIcon(astroProfile?.ascendant_sign_code)
   const pageTitle =
-    !isLockedFree && activeInterpretation.level === "complete" ? t.completeTitle : t.basicTitle
+    !isLockedFree && activeInterpretation.level === "complete" ? t.completeTitle : t.astroProfile.title
   const headerActionLabel =
     isLockedFree
       ? t.interpretation.upgradeToBasicCta
@@ -262,7 +271,6 @@ export function NatalChartPage() {
       : activeInterpretation.canSwitchPersona
       ? t.requestAnotherAstrologer
       : t.unlockCompleteInterpretation
-  const sortedHouses = [...houses].sort((a, b) => a.number - b.number)
   const fallbackEvidence = Array.from(
     new Set([
       astroProfile?.sun_sign_code ? `SUN_${astroProfile.sun_sign_code.toUpperCase()}` : null,
@@ -359,149 +367,49 @@ export function NatalChartPage() {
         </div>
       )}
 
-      {astroProfile && (
-        <article className="natal-card natal-astro-summary">
-          <h2>{t.astroProfile.title}</h2>
-          <dl className="natal-astro-summary__list">
-            <div className="natal-astro-summary__item">
-              <dt>{t.astroProfile.sunSign}</dt>
-              <dd>
-                {SunSignIcon ? <SunSignIcon className="natal-astro-summary__icon" aria-hidden="true" /> : null}
-                <span>{sunSignName ?? "—"}</span>
-              </dd>
-            </div>
-            <div className="natal-astro-summary__item">
-              <dt>{t.astroProfile.ascendant}</dt>
-              <dd>
-                {AscendantSignIcon ? <AscendantSignIcon className="natal-astro-summary__icon" aria-hidden="true" /> : null}
-                <span>
-                  {ascendantSignName ?? (
-                    missingBirthTime
-                      ? `— (${t.astroProfile.missingTime})`
-                      : "—"
-                  )}
-                </span>
-              </dd>
-            </div>
-          </dl>
-        </article>
-      )}
-
-      <div className="natal-grid">
-        <article className="natal-card">
-          <h2>{t.sections.planets}</h2>
-          <p className="natal-card__intro">{t.planetsLead}</p>
-          <ul className="natal-data-list">
-            {planetPositions.map((item) => {
-              const houseInterval = getHouseIntervalLabel(item.house_number)
-              const planetLabel = `${translatePlanet(item.planet_code)}${item.is_retrograde === true ? " ℞" : ""}:`
-              return (
-                <li key={item.planet_code} className="natal-data-card">
-                  <div className="natal-data-card__head">
-                    <strong className="natal-data-card__title">{planetLabel}</strong>
-                    <span className="natal-data-card__value">
-                      {formatDegreeMinuteFromSignLongitude(item.longitude)}
-                    </span>
-                  </div>
-                  <p className="natal-data-card__reading">
-                    {translateSign(item.sign_code)} {formatDegreeMinuteFromSignLongitude(item.longitude)} ({item.longitude.toFixed(2)}°)
-                  </p>
-                  <div className="natal-data-card__meta">
-                    <span className="natal-data-pill">{t.positionLabel} {item.longitude.toFixed(2)}°</span>
-                    <span className="natal-data-pill">{t.houseLabel} {translateHouse(item.house_number)}</span>
-                    <span className="natal-data-pill">{t.longitudeLabel} {item.longitude.toFixed(2)}°</span>
-                  </div>
-                  {houseInterval ? (
-                    <p className="natal-data-card__support">
-                      {translateHouse(item.house_number)} {houseInterval}
-                    </p>
-                  ) : null}
-                </li>
-              )
-            })}
-          </ul>
-        </article>
-
-        <article className="natal-card">
-          <h2>{t.sections.houses}</h2>
-          <p className="natal-card__intro">{t.housesLead}</p>
-          <ul className="natal-data-list">
-            {sortedHouses.map((item) => (
-              <li key={item.number} className="natal-data-card natal-data-card--house">
-                <div className="natal-data-card__head">
-                  <strong className="natal-data-card__title">{translateHouse(item.number)}</strong>
-                  <span className="natal-data-card__value">
-                    {translateSign(getSignCodeFromLongitude(item.cusp_longitude))} {formatDegreeMinuteFromSignLongitude(item.cusp_longitude)}
-                  </span>
-                </div>
-                <div className="natal-data-card__meta">
-                  <span className="natal-data-pill">{t.cuspLongitudeLabel} {item.cusp_longitude.toFixed(2)}°</span>
-                  <span className="natal-data-pill">{t.houseSignLabel} {translateSign(getSignCodeFromLongitude(item.cusp_longitude))}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </article>
-      </div>
-
-      <article className="natal-card natal-aspects-card">
-        <h2>{t.sections.aspects}</h2>
-        <p className="natal-card__intro">{t.aspectsLead}</p>
-        {aspects.length === 0 ? (
-          <p>{t.noAspects}</p>
-        ) : (
-          <ul className="natal-aspects-list">
-            {aspects.map((item, index) => (
-              <li key={`${item.aspect_code}-${item.planet_a}-${item.planet_b}-${index}`} className="natal-aspect-item">
-                <div className="natal-aspect-item__head">
-                  <span className="natal-aspect-badge">{translateAspect(item.aspect_code)}</span>
-                  <h3 className="natal-aspect-title">
-                    {translatePlanet(item.planet_a)} — {translatePlanet(item.planet_b)}
-                  </h3>
-                </div>
-                <p className="natal-aspect-meaning">
-                  {t.aspectMeaningMap[item.aspect_code] ?? t.aspectMeaningMap.CONJUNCTION}
-                </p>
-                <dl className="natal-aspect-meta">
-                  <div className="natal-aspect-meta__item">
-                    <dt>{t.aspectExactAngleLabel}</dt>
-                    <dd>{item.angle.toFixed(2)}°</dd>
-                </div>
-                <div className="natal-aspect-meta__item">
-                  <dt>{t.orb}</dt>
-                  <dd>{t.orb} {item.orb.toFixed(2)}°</dd>
-                </div>
-                {typeof item.orb_used === "number" ? (
-                  <div className="natal-aspect-meta__item">
-                    <dt>{t.orbUsed}</dt>
-                    <dd>{t.orbUsed} {item.orb_used.toFixed(2)}°</dd>
-                  </div>
-                ) : null}
-              </dl>
-              </li>
-            ))}
-          </ul>
-        )}
-      </article>
-
-      <NatalExpertPanel chart={chart} />
-
-      <NatalChartGuide lang={lang} missingBirthTime={missingBirthTime} />
-      
-      <div className="natal-interpretation-container">
-        <NatalInterpretationSection
-          chartLoaded={Boolean(chart)}
-          chartId={chart.chart_id}
-          lang={lang}
-          fallbackEvidence={fallbackEvidence}
-          initialPersonaId={initialPersonaId}
-          initialInterpretationId={initialInterpretationId}
-          isLockedFree={isLockedFree}
-          longFeatureAccess={natalAccess}
-          onActiveInterpretationChange={setActiveInterpretation}
-          actionRequest={headerActionRequest}
+      <NatalProfileHero chart={chart} labels={publicLabels} lang={lang} />
+      <NatalThemeSynthesis
+        chartId={chart.chart_id}
+        lang={lang}
+        fallbackEvidence={fallbackEvidence}
+        initialPersonaId={initialPersonaId}
+        initialInterpretationId={initialInterpretationId}
+        isLockedFree={isLockedFree}
+        longFeatureAccess={natalAccess}
+        onActiveInterpretationChange={setActiveInterpretation}
+        actionRequest={headerActionRequest}
+      />
+      <NatalAstrologicalDna chart={chart} labels={publicLabels} />
+      <NatalLifeDomains chart={chart} labels={publicLabels} />
+      <NatalStrengths chart={chart} labels={publicLabels} />
+      <NatalChallenges chart={chart} labels={publicLabels} />
+      <NatalMajorAspects
+        dominantAspects={chart.result.chart_balance?.dominant_aspects}
+        aspects={aspects}
+        translatePlanet={translatePlanet}
+        translateAspect={translateAspect}
+      />
+      <NatalKarmicSignature chart={chart} labels={publicLabels} />
+      <NatalHiddenTalents chart={chart} labels={publicLabels} />
+      <NatalRelationshipPotential chart={chart} labels={publicLabels} />
+      <NatalCareerPotential chart={chart} labels={publicLabels} />
+      <NatalAstrologerMode access={natalAccess}>
+        <NatalTechnicalDetails
+          planetPositions={planetPositions}
+          houses={houses}
+          aspects={aspects}
+          translatePlanet={translatePlanet}
+          translateSign={translateSign}
+          translateHouse={translateHouse}
+          translateAspect={translateAspect}
+          getHouseIntervalLabel={getHouseIntervalLabel}
+          formatDegreeMinuteFromSignLongitude={formatDegreeMinuteFromSignLongitude}
+          getSignCodeFromLongitude={getSignCodeFromLongitude}
+          t={t}
         />
-      </div>
+        <NatalExpertPanel chart={chart} />
+      </NatalAstrologerMode>
+      <NatalChartGuide lang={lang} missingBirthTime={missingBirthTime} />
     </PageLayout>
   )
 }

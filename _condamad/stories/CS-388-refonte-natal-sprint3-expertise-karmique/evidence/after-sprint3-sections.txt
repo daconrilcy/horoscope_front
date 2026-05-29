@@ -1,0 +1,7 @@
+Apres CS-388:
+
+- `NatalKarmicSignature` cite noeuds, Saturne et Pluton depuis `astral_points` et `planet_positions`.
+- `NatalHiddenTalents` cite Maison XII, Neptune et signaux publics.
+- `NatalRelationshipPotential` cite Venus, Maison VII et signaux relationnels publics.
+- `NatalCareerPotential` cite Maison X, planete culminante et signaux metier publics.
+- Le scan des constantes astrologiques interdites ne remonte rien dans les sections publiques.

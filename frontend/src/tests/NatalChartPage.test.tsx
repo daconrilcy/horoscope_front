@@ -201,6 +201,14 @@ function buildChartWithExpertPayload() {
 beforeEach(() => {
   vi.stubGlobal("navigator", { ...navigator, language: "fr-FR" })
   localStorage.clear()
+  mockUseFeatureAccess.mockReturnValue({
+    feature_code: "natal_chart_long",
+    granted: true,
+    reason_code: "granted",
+    access_mode: "quota",
+    variant_code: "multi_astrologer",
+    usage_states: [],
+  } as ReturnType<typeof useFeatureAccess>)
   mockUseUpgradeHint.mockReturnValue(undefined)
   mockUseNatalInterpretation.mockReturnValue({
     isLoading: false,
@@ -237,6 +245,10 @@ afterEach(() => {
   vi.clearAllMocks()
   vi.unstubAllGlobals()
 })
+
+function openTechnicalDetails() {
+  fireEvent.click(screen.getByRole("button", { name: /Afficher les details techniques/i }))
+}
 
 describe("NatalChartPage", () => {
   it("renders loading state", () => {
@@ -301,6 +313,30 @@ describe("NatalChartPage", () => {
         allowCompleteWithoutPersona: true,
       }),
     )
+  })
+
+  it("bloque les details experts de page pour un acces free_short", () => {
+    mockUseFeatureAccess.mockReturnValue({
+      variant_code: "free_short",
+      granted: true,
+    } as ReturnType<typeof useFeatureAccess>)
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: buildChartWithExpertPayload(),
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>,
+    )
+
+    openTechnicalDetails()
+
+    expect(screen.getByText("Mode astrologue reserve")).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Panneau expert natal" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Planètes" })).not.toBeInTheDocument()
   })
 
   it("redirects locked free header CTA to subscription instead of requesting a complete reading", async () => {
@@ -544,7 +580,11 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
-    expect(screen.getByRole("heading", { name: /Thème natal/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Profil astrologique", level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /Votre profil astrologique/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /Ce que votre theme raconte/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /ADN astrologique/i })).toBeInTheDocument()
+    openTechnicalDetails()
     expect(screen.getByRole("heading", { name: "Planètes" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Maisons" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: /Les aspects/i, level: 2 })).toBeInTheDocument()
@@ -565,6 +605,23 @@ describe("NatalChartPage", () => {
     expect(getByTextInAspects(/Lune/)).toBeInTheDocument()
   })
 
+  it("masque le panneau expert tant que le mode astrologue est ferme", () => {
+    mockUseLatestNatalChart.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: buildChartWithExpertPayload(),
+    })
+
+    render(
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <NatalChartPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByRole("heading", { name: "Panneau expert natal" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Planètes" })).not.toBeInTheDocument()
+  })
+
   it("renders NatalExpertPanel from latestChart data on the natal page", () => {
     mockUseLatestNatalChart.mockReturnValue({
       isLoading: false,
@@ -578,6 +635,7 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
 
+    openTechnicalDetails()
     const expertPanel = screen.getByRole("heading", { name: "Panneau expert natal" }).closest("article")
     expect(expertPanel).not.toBeNull()
     expect(within(expertPanel as HTMLElement).getByRole("region", { name: "Secte du theme" })).toHaveTextContent("day")
@@ -613,6 +671,7 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
 
+    openTechnicalDetails()
     expect(screen.getByText(/Taureau 4°05′ \(34\.08°\)/)).toBeInTheDocument()
     expect(screen.getByText(/Maison I.+18\.46° -> 48\.46°/)).toBeInTheDocument()
   })
@@ -646,6 +705,7 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
 
+    openTechnicalDetails()
     expect(screen.getByText(/Mercure ℞:/i)).toBeInTheDocument()
   })
 
@@ -670,6 +730,7 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
 
+    openTechnicalDetails()
     expect(screen.queryByText(/Mercure ℞:/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Mercure:/i)).toBeInTheDocument()
   })
@@ -719,6 +780,7 @@ describe("NatalChartPage", () => {
       </MemoryRouter>
     )
 
+    openTechnicalDetails()
     expect(screen.getByText(/Bélier 29°59′ \(30\.00°\)/)).toBeInTheDocument()
     expect(screen.queryByText(/30°00′/)).not.toBeInTheDocument()
   })
@@ -815,6 +877,7 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
+    openTechnicalDetails()
     const planetSection = screen.getByRole("heading", { name: "Planètes" }).parentElement!
     expect(within(planetSection).getByText(/Soleil/)).toBeInTheDocument()
     expect(screen.queryByText(/SUN/)).not.toBeInTheDocument()
@@ -837,6 +900,7 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
+    openTechnicalDetails()
     const planetSection = screen.getByRole("heading", { name: "Planètes" }).parentElement!
     expect(within(planetSection).getByText(/Gémeaux/)).toBeInTheDocument()
     expect(screen.queryByText(/GEMINI/)).not.toBeInTheDocument()
@@ -859,6 +923,7 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
+    openTechnicalDetails()
     expect(screen.getByText(/Maison I — Identité/)).toBeInTheDocument()
   })
 
@@ -879,6 +944,7 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
+    openTechnicalDetails()
     expect(screen.getByText(/Trigone/)).toBeInTheDocument()
     expect(screen.queryByText(/TRINE/)).not.toBeInTheDocument()
   })
@@ -902,7 +968,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
-      expect(screen.getByRole("heading", { name: /Profil astrologique/i })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Votre profil astrologique/i })).toBeInTheDocument()
       expect(screen.getByText("Lion")).toBeInTheDocument()
       expect(screen.getByText("Scorpion")).toBeInTheDocument()
     })
@@ -925,7 +991,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
-      expect(screen.getByText(/heure de naissance manquante/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/Donnee indisponible/i).length).toBeGreaterThan(0)
     })
 
     it("affiche '—' pour l'ascendant quand missing_birth_time=false et pas d'ascendant", () => {
@@ -946,8 +1012,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
-      // "—" should appear as the ascendant value
-      expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText(/Donnee indisponible/i).length).toBeGreaterThan(0)
       expect(screen.queryByText(/heure de naissance manquante/i)).not.toBeInTheDocument()
     })
 
@@ -962,7 +1027,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
-      expect(screen.queryByRole("heading", { name: /Profil astrologique/i })).not.toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: /Votre profil astrologique/i })).toBeInTheDocument()
     })
   })
 
@@ -1276,6 +1341,7 @@ describe("NatalChartPage", () => {
         </MemoryRouter>
       )
       // House 12 interval: 348.46° -> 360° puis 0° -> 18.46°
+      openTechnicalDetails()
       expect(screen.getByText(/348\.46° -> 360° puis 0° -> 18\.46°/)).toBeInTheDocument()
     })
 
@@ -1305,6 +1371,7 @@ describe("NatalChartPage", () => {
         </MemoryRouter>
       )
       // House 1: 18.46° -> 48.46° (normal format, no wrap)
+      openTechnicalDetails()
       const planetLi = screen.getByText(/Maison I.+18\.46° -> 48\.46°/)
       expect(planetLi).toBeInTheDocument()
       // The planet list item itself should NOT contain the wrap notation "puis 0°"
@@ -1339,6 +1406,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
+      openTechnicalDetails()
       expect(screen.getByText(/orbe 2\.50°/i)).toBeInTheDocument()
       expect(screen.getByText(/orbe effective 1\.80°/i)).toBeInTheDocument()
     })
@@ -1357,6 +1425,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
+      openTechnicalDetails()
       expect(screen.getByText(/Aucun aspect majeur détecté/i)).toBeInTheDocument()
     })
 
@@ -1395,6 +1464,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
+      openTechnicalDetails()
       expect(screen.getByText(/Mercure ℞:/i)).toBeInTheDocument()
       expect(screen.getByText(/orbe effective 1\.00°/i)).toBeInTheDocument()
     })
@@ -1424,6 +1494,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
+      openTechnicalDetails()
       expect(screen.getByText(/Opposition/i)).toBeInTheDocument()
       expect(screen.getByText(/orbe 3\.00°/i)).toBeInTheDocument()
       
@@ -1457,6 +1528,7 @@ describe("NatalChartPage", () => {
           <NatalChartPage />
         </MemoryRouter>
       )
+      openTechnicalDetails()
       expect(screen.getByText(/Sextile/i)).toBeInTheDocument()
       expect(screen.getByText(/orbe 2\.00°/i)).toBeInTheDocument()
       
@@ -1484,7 +1556,8 @@ describe("NatalChartPage", () => {
         <NatalChartPage />
       </MemoryRouter>
     )
-    expect(screen.getByRole("heading", { name: /Thème natal/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Profil astrologique", level: 1 })).toBeInTheDocument()
+    openTechnicalDetails()
     expect(screen.getByRole("heading", { name: "Planètes" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Maisons" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: /Les aspects/i, level: 2 })).toBeInTheDocument()

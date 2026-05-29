@@ -1,0 +1,5 @@
+Avant CS-388:
+
+- La page `/natal` ne proposait pas de sections publiques dediees a la trajectoire karmique et aux potentiels.
+- Les noeuds, Saturne, Pluton, Maison XII, Venus et Maison X n'etaient pas exposes dans des composants publics separes.
+- La frontiere entre faits payload et interpretation locale devait rester protegee pour eviter des constantes astrologiques UI.

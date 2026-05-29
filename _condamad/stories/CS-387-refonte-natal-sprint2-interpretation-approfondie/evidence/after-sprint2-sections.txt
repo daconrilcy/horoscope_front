@@ -1,0 +1,6 @@
+Apres CS-387:
+
+- `NatalThemeSynthesis` reutilise l'interpretation existante au lieu de creer une seconde orchestration.
+- `NatalStrengths` et `NatalChallenges` affichent au moins trois items derives du payload public ou de fallbacks de placements.
+- `NatalMajorAspects` lit `chart_balance.dominant_aspects`, limite a dix aspects publics et masque les champs expert-only.
+- Les champs `orb_used`, `raw_score`, `weighted_score` et `aspect_centrality` restent absents des sections publiques scannees.

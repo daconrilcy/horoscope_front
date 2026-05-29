@@ -5,7 +5,7 @@ import { API_BASE_URL, apiFetch, ApiError, parseApiErrorDetails, type ApiRespons
 import { getSubjectFromAccessToken, useAccessTokenSnapshot } from "../../utils/authToken"
 import { ANONYMOUS_SUBJECT } from "../../utils/constants"
 
-type PlanetPosition = {
+export type PlanetPosition = {
   planet_code: string
   longitude: number
   sign_code: string
@@ -14,12 +14,12 @@ type PlanetPosition = {
   speed_longitude?: number
 }
 
-type HouseResult = {
+export type HouseResult = {
   number: number
   cusp_longitude: number
 }
 
-type AspectResult = {
+export type AspectResult = {
   aspect_code: string
   planet_a: string
   planet_b: string
@@ -177,6 +177,47 @@ export type DominantPlanetsResult = {
   planets?: DominantPlanet[]
 }
 
+export type DominantAspect = {
+  /** Code de dominance public (`chart_balance.dominant_aspects[].code`). */
+  code?: string
+  score?: number
+  source?: string
+  aspect_code?: string
+  planet_a?: string
+  planet_b?: string
+  rank?: number
+  dominance_score?: number
+  reasons?: string[]
+  meaning?: string
+  manifestation?: string
+  positive_expression?: string
+  attention_point?: string
+}
+
+export type ChartSignature = {
+  primary_element?: string | null
+  primary_modality?: string | null
+  primary_polarity?: string | null
+}
+
+export type ChartBalance = {
+  dominant_aspects?: DominantAspect[]
+}
+
+export type AstralPoint = {
+  /** Forme publique backend (`json_builder._serialize_astral_points`). */
+  code?: string
+  sign?: string | null
+  house?: number | null
+  variant_code?: string | null
+  longitude?: number | null
+  degree_in_sign?: number | null
+  /** Alias legacy/tests. */
+  point_code?: string
+  sign_code?: string | null
+  house_number?: number | null
+}
+
 export type InterpretationAdapterSignal = {
   signal?: string
   theme?: string
@@ -239,6 +280,9 @@ type NatalResult = {
   traditional_conditions?: TraditionalConditionsPayload | null
   dominant_planets?: DominantPlanetsResult | null
   interpretation_adapter?: InterpretationAdapterResult | null
+  chart_signature?: ChartSignature | null
+  chart_balance?: ChartBalance | null
+  astral_points?: AstralPoint[]
 }
 
 export type LatestNatalChart = {

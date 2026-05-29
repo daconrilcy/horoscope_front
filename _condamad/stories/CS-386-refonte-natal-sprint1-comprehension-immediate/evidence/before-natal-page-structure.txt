@@ -1,0 +1,6 @@
+Avant CS-386:
+
+- La page `/natal` exposait rapidement des sections techniques de theme natal: positions planetaires, maisons et aspects.
+- La comprehension immediate n'etait pas structuree autour d'un triptyque Soleil / Lune / Ascendant.
+- Les reperes lisibles comme ADN astrologique et domaines de vie n'avaient pas de composants publics dedies.
+- Les details experts etaient proches du flux principal et pouvaient produire du bruit pour un utilisateur non astrologue.

@@ -1,0 +1,5 @@
+Avant CS-389:
+
+- Les details techniques du theme natal etaient rendus dans le flux principal de `/natal`.
+- Le panneau expert existant n'etait pas encapsule dans un mode astrologue explicite au sein de la refonte.
+- Les assertions historiques de page lisaient les details bruts sans action utilisateur.

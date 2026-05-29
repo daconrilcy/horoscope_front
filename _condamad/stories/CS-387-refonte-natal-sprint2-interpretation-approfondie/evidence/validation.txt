@@ -1,0 +1,21 @@
+CS-387 implementation validation - 2026-05-29
+
+Commands run from repository/frontend unless noted:
+
+- npm test -- NatalAstrologicalDna NatalLifeDomains NatalStrengths NatalChallenges NatalMajorAspects NatalKarmicSignature NatalHiddenTalents NatalRelationshipPotential NatalCareerPotential NatalAstrologerMode NatalChartPage natalInterpretation
+  Result: PASS, 13 files, 123 tests.
+
+- npm run lint
+  Result: PASS.
+
+- npm run build
+  Result: PASS.
+
+- Get-ChildItem frontend\src\features\natal-chart -Filter *.tsx excluding NatalExpertPanel.tsx and NatalTechnicalDetails.tsx | Select-String expert-only aspect fields
+  Result: PASS, no public-section match.
+
+Applicable guardrails: RG-047, RG-052, RG-071, RG-073, RG-121, RG-123, RG-129, RG-150.
+Non-applicable guardrails for this sprint: RG-115, RG-116, RG-122, RG-124.
+
+Review fix validation:
+- `NatalMajorAspects` no longer renders local interpretation fallbacks when meaning fields are absent.

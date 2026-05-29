@@ -1,0 +1,5 @@
+Avant CS-387:
+
+- L'interpretation publique existait mais n'etait pas reorganisee en synthese lisible dans le nouveau flux `/natal`.
+- Les forces, defis et aspects majeurs n'avaient pas de sections publiques dediees dans la refonte.
+- Les aspects techniques et scores experts risquaient de rester visibles hors mode specialise.

@@ -1,0 +1,6 @@
+Apres CS-389:
+
+- `NatalAstrologerMode` rend un bouton d'ouverture avec `aria-expanded` et `aria-controls`.
+- `NatalTechnicalDetails` et `NatalExpertPanel` sont enfants du mode astrologue et ne sont plus visibles par defaut.
+- `free_short` affiche une invitation a mettre a niveau sans exposer les details experts.
+- Les tests existants ouvrent explicitement le mode avant de verifier les details bruts.

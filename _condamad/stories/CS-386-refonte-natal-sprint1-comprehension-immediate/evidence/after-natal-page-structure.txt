@@ -1,0 +1,7 @@
+Apres CS-386:
+
+- Le haut de `/natal` commence par `NatalProfileHero`, avec triptyque Soleil / Lune / Ascendant.
+- `NatalAstrologicalDna` affiche les dominantes et signatures deja fournies par le payload.
+- `NatalLifeDomains` organise six domaines de vie depuis les placements et maisons publiques.
+- Les listes planetes/maisons/aspects brutes sont sorties du flux par defaut et placees dans `NatalTechnicalDetails`.
+- Le styling passe par `NatalChartPage.css`, sans style inline.
