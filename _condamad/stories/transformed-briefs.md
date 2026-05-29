@@ -162,3 +162,4 @@
 | cs-380 | `_story_briefs\cs-380-durcir-natal-expert-panel-contre-payloads-partiels-sans-masquer-contrat.md` | `_condamad\stories\cs-380-durcir-natal-expert-panel-contre-payloads-partiels\00-story.md` |
 | cs-381 | `_story_briefs\cs-381-non-regression-generation-theme-natal-et-enrichissement-prompts.md` | `_condamad\stories\cs-381-non-regression-generation-theme-natal-prompts\00-story.md` |
 | cs-382 | `_story_briefs\cs-382-review-adversariale-generation-theme-natal-apres-corrections.md` | `_condamad\stories\cs-382-review-adversariale-generation-theme-natal\00-story.md` |
+| cs-383 | `_story_briefs\cs-383-corriger-findings-review-adversariale-generation-theme-natal.md` | `_condamad\stories\cs-383-fermeture-findings-generation-theme-natal\00-story.md` |
