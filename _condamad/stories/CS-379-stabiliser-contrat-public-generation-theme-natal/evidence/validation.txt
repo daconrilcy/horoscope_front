@@ -10,6 +10,11 @@ PASS: runtime app.routes/app.openapi() assertion for /v1/users/me/natal-chart an
 PASS: scoped prompt-carrier rg returned no matches for theme_astral_provider_payload_builder.py and its test.
 PASS: git diff --check on story paths.
 PASS: condamad_validate.py after final evidence update.
+PASS: implementation review artifact refreshed after clean review.
+PASS: tracker row source/path verified and status moved to done.
+PASS: condamad_story_validate.py after implementation review artifact refresh.
+PASS: condamad_story_lint.py --strict after implementation review artifact refresh.
+PASS: condamad-dev-story condamad_validate.py on the capsule directory after tracker closure.
 
 Skipped: full backend pytest suite; targeted story checks were run because the suite includes long integration/regression coverage.
 Skipped: frontend checks; no frontend files changed and frontend was witness-only for this story.
