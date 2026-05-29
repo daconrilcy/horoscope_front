@@ -742,7 +742,7 @@ export function NatalInterpretationSection({
         {isLoading || isResolvingPersistedInterpretation ? (
           <InterpretationSkeleton t={t} isComplete={useCaseLevel === "complete"} />
         ) : error && !shouldShowBasicLimitNotice ? (
-          <InterpretationError t={t} onRetry={() => refetch()} error={error} />
+          <InterpretationError t={t} onRetry={() => refetch()} />
         ) : data ? (
           <>
             <InterpretationContent
