@@ -28,6 +28,7 @@ def test_natal_audit_uses_llm_astrology_input_hashes_and_evidence_refs() -> None
     )
 
     assert model.projection_hash == llm_input["provenance"]["projection_hash"]
+    assert model.projection_version == llm_input["evidence"]["evidence_refs"][0]["source_version"]
     assert model.llm_input_hash == llm_input["provenance"]["llm_input_hash"]
     assert model.llm_input_version == llm_input["contract_version"]
     assert model.grounding_status == "grounded"

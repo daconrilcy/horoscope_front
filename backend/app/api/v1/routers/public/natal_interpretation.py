@@ -39,7 +39,10 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementGate,
     NatalChartLongQuotaExceededError,
 )
-from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
+from app.services.llm_generation.natal.interpretation_service import (
+    NatalInterpretationService,
+    NatalInterpretationServiceError,
+)
 from app.services.llm_generation.natal.public_interpretation import (
     _build_natal_entitlement_info,
     _raise_error,
@@ -230,6 +233,17 @@ async def interpret_natal_chart(
     except ApplicationError:
         db.rollback()
         raise
+    except NatalInterpretationServiceError as e:
+        db.rollback()
+        if e.code == "interpretation_rejected":
+            return _raise_error(
+                422,
+                "natal_interpretation_rejected",
+                e.message,
+                request_id,
+                details=e.details or None,
+            )
+        return _raise_error(500, e.code, e.message, request_id, details=e.details or None)
     except Exception as e:
         db.rollback()
         logger.exception(

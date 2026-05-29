@@ -1,0 +1,37 @@
+---
+description: Registre CONDAMAD regression guardrails — invariants inter-stories obligatoires
+globs: _condamad/**/*.md, backend/**/*.py, frontend/**/*.{ts,tsx}
+alwaysApply: true
+---
+
+# CONDAMAD Regression Guardrails
+
+Registre canonique: `_condamad/stories/regression-guardrails.md`
+
+## Quand appliquer
+
+- Création, implémentation, audit, review ou refactor d'une story CONDAMAD (`CS-*`, `_condamad/stories/`).
+- Tout changement touchant une surface déjà protégée par un `RG-XXX` existant.
+
+## Workflow obligatoire
+
+1. Lire `_condamad/stories/regression-guardrails.md` avant de définir le scope ou modifier le code.
+2. Classer chaque invariant: **applicable**, **non applicable**, ou **à investiguer**.
+3. Dans la story / le récap de travail, documenter:
+   - les `RG-XXX` applicables et pourquoi;
+   - les AC de non-régression;
+   - la preuve exécutable (pytest, scans `rg`).
+4. Après implémentation, exécuter la preuve de régression des invariants touchés.
+5. Si la story crée un invariant durable, ajouter une ligne `RG-XXX` au registre (ID suivant disponible).
+
+## Règles non négociables
+
+- Ne pas affaiblir ni supprimer un invariant sans demande explicite de l'utilisateur.
+- Pas d'invariants vagues: nommer route, module, contrat, comportement ou surface interdite.
+- Ne pas contourner un garde-fou (ex. `extra="ignore"` sur un schéma strict protégé par RG-379 / RG-150).
+- Les rejets LLM narratifs (`status="rejected"`) ne sont jamais deserialisés en `AstroResponseV1` / `AstroFreeResponseV1` (RG-150): audit via `narrative_answer_audit_v1`, exclusion des endpoints publics.
+
+## Références
+
+- Skill: `.agents/skills/condamad-regression-guardrails/SKILL.md`
+- AGENTS.md section 16

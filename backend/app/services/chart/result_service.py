@@ -10,7 +10,10 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
+from dataclasses import asdict, is_dataclass
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel
 from sqlalchemy.exc import SQLAlchemyError
@@ -112,7 +115,7 @@ class ChartResultService:
                 details={"field": "ruleset_version"},
             )
 
-        result_payload = natal_result.model_dump()
+        result_payload = ChartResultService._build_storage_payload(natal_result)
         houses_payload = result_payload.get("houses", [])
         labels = AstrologyTranslationResolver(db).resolve_labels(user_id=user_id)
         result_payload["house_rulers"] = (
@@ -162,6 +165,40 @@ class ChartResultService:
                 details={"chart_id": chart_id},
             ) from exc
         return chart_id
+
+    @staticmethod
+    def _build_storage_payload(natal_result: NatalResult) -> dict[str, Any]:
+        """Construit le payload persiste en conservant les faits internes requis."""
+        result_payload = natal_result.model_dump()
+        aspects_payload = result_payload.get("aspects")
+        if not isinstance(aspects_payload, list):
+            return result_payload
+
+        for index, aspect in enumerate(natal_result.aspects):
+            if index >= len(aspects_payload) or not isinstance(aspects_payload[index], dict):
+                continue
+            hints = aspect.aspect_interpretive_hints
+            if hints is not None:
+                aspects_payload[index]["aspect_interpretive_hints"] = (
+                    ChartResultService._to_storage_primitive(hints)
+                )
+        return result_payload
+
+    @staticmethod
+    def _to_storage_primitive(value: Any) -> Any:
+        """Convertit enums et dataclasses runtime en primitives JSON persistables."""
+        if isinstance(value, Enum):
+            return value.value
+        if is_dataclass(value) and not isinstance(value, type):
+            return ChartResultService._to_storage_primitive(asdict(value))
+        if isinstance(value, dict):
+            return {
+                str(key): ChartResultService._to_storage_primitive(item)
+                for key, item in value.items()
+            }
+        if isinstance(value, list | tuple):
+            return [ChartResultService._to_storage_primitive(item) for item in value]
+        return value
 
     @staticmethod
     def get_audit_record(db: Session, chart_id: str) -> ChartResultAuditRecord:

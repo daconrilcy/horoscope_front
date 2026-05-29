@@ -1408,3 +1408,21 @@ def test_run_v3_keeps_extended_metrics_in_legacy_category_scores(base_input):
     assert "intensity_20" in score_data
     assert "confidence_20" in score_data
     assert "rarity_percentile" in score_data
+
+
+def test_extract_runtime_strength_accepts_persisted_internal_score_name() -> None:
+    """Le moteur relit les maisons stockees par `NatalResult.model_dump`."""
+    orchestrator = EngineOrchestrator(prediction_context_loader=lambda *_: _build_loaded_context())
+
+    strength = orchestrator._extract_runtime_strength(
+        {
+            "normalized_score": 0.81,
+            "level": "dominant",
+            "dominant": True,
+            "reasons": ("angular_house",),
+        }
+    )
+
+    assert strength is not None
+    assert strength.score == 0.81
+    assert strength.level.value == "dominant"

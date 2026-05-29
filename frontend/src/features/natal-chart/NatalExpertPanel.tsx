@@ -287,7 +287,7 @@ function AdvancedConditionsBlock({ conditions }: { conditions?: AdvancedConditio
       <ul className="natal-expert-list natal-expert-list--grid">
         {facts.map((condition, index) => (
           <li
-            key={`${condition.planet_code ?? "planet"}-${condition.condition_code ?? index}`}
+            key={`${condition.planet_code ?? "planet"}-${condition.condition_code ?? "condition"}-${index}`}
             className="natal-expert-item natal-expert-item--stacked"
           >
             <strong>

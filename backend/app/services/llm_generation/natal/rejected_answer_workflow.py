@@ -270,7 +270,64 @@ def _backend_evidence_refs(
     refs = evidence.get("evidence_refs")
     if not isinstance(refs, Sequence) or isinstance(refs, (str, bytes)):
         return ()
-    return tuple(ref for ref in refs if isinstance(ref, Mapping))
+    backend_refs = tuple(ref for ref in refs if isinstance(ref, Mapping))
+    return backend_refs + _fact_evidence_refs(llm_astrology_input_v1, backend_refs)
+
+
+def _fact_evidence_refs(
+    llm_astrology_input_v1: Mapping[str, object],
+    backend_refs: Sequence[Mapping[str, object]],
+) -> tuple[Mapping[str, object], ...]:
+    """Expose les IDs de faits du theme comme alias de la projection hashee."""
+    projection_ref = next(
+        (
+            ref
+            for ref in backend_refs
+            if ref.get("source_type") == "projection_version"
+            and ref.get("source_id") == "projection"
+        ),
+        None,
+    )
+    if projection_ref is None:
+        return ()
+    facts = llm_astrology_input_v1.get("facts")
+    if not isinstance(facts, Mapping):
+        return ()
+    fact_ids = _fact_evidence_ids(facts)
+    return tuple(
+        {
+            **dict(projection_ref),
+            "evidence_ref_id": fact_id,
+        }
+        for fact_id in sorted(fact_ids)
+    )
+
+
+def _fact_evidence_ids(facts: Mapping[str, object]) -> set[str]:
+    """Collecte les identifiants courts que le LLM peut citer en evidence."""
+    ids: set[str] = set()
+    for collection_key in ("positions", "major_aspects", "dominants"):
+        collection = facts.get(collection_key)
+        if not isinstance(collection, Sequence) or isinstance(collection, (str, bytes)):
+            continue
+        for item in collection:
+            if not isinstance(item, Mapping):
+                continue
+            for key in ("code", "planet_code", "object_code", "source_key"):
+                value = item.get(key)
+                if isinstance(value, str) and value.strip():
+                    ids.add(_normalize_output_evidence_id(value))
+            participant_codes = item.get("participant_codes")
+            if isinstance(participant_codes, Sequence) and not isinstance(
+                participant_codes, (str, bytes)
+            ):
+                ids.update(_normalize_output_evidence_id(str(code)) for code in participant_codes)
+    houses = facts.get("houses")
+    if isinstance(houses, Sequence) and not isinstance(houses, (str, bytes)):
+        for item in houses:
+            if isinstance(item, Mapping) and isinstance(item.get("house_number"), int):
+                ids.add(f"HOUSE_{item['house_number']}")
+    return ids
 
 
 def _backend_evidence_refs_by_output_id(
@@ -370,8 +427,13 @@ def _backend_policy_violations(
         return [], []
 
     supported_terms = _supported_astrology_terms(facts, signals)
+    canonical_supported_terms = {
+        _canonical_astrology_term(term) for term in supported_terms if term
+    }
     unsupported = [
-        term for term in _KNOWN_ASTROLOGY_TERMS if term in text and term not in supported_terms
+        term
+        for term in _KNOWN_ASTROLOGY_TERMS
+        if term in text and _canonical_astrology_term(term) not in canonical_supported_terms
     ]
     ignored = _ignored_limit_markers(text, limits if isinstance(limits, Mapping) else {})
     return unsupported, ignored
@@ -471,11 +533,43 @@ def _mentions_any(text: str, markers: Sequence[str]) -> bool:
     return any(marker in text for marker in markers)
 
 
+def _canonical_astrology_term(term: str) -> str:
+    """Aligne les libelles astrologiques francais sur les codes runtime."""
+    normalized = term.lower().replace("_", " ").strip()
+    return _ASTROLOGY_TERM_ALIASES.get(normalized, normalized)
+
+
 def _non_empty_string_items(value: object) -> list[str]:
     """Normalise une liste de marqueurs narratifs sans accepter de texte vide."""
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
         return []
     return [str(item).strip() for item in value if str(item).strip()]
+
+
+_ASTROLOGY_TERM_ALIASES = {
+    "soleil": "sun",
+    "lune": "moon",
+    "mercure": "mercury",
+    "vénus": "venus",
+    "saturne": "saturn",
+    "belier": "aries",
+    "bélier": "aries",
+    "taureau": "taurus",
+    "gemeaux": "gemini",
+    "gémeaux": "gemini",
+    "lion": "leo",
+    "vierge": "virgo",
+    "balance": "libra",
+    "scorpion": "scorpio",
+    "sagittaire": "sagittarius",
+    "capricorne": "capricorn",
+    "verseau": "aquarius",
+    "poissons": "pisces",
+    "trigone": "trine",
+    "carre": "square",
+    "carré": "square",
+    "conjonction": "conjunction",
+}
 
 
 _KNOWN_ASTROLOGY_TERMS = frozenset(

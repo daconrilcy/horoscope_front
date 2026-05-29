@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.domain.astrology.natal_calculation import NatalAstralPointPosition
+from app.domain.astrology.runtime.aspect_calculation_contracts import (
+    AspectInterpretiveProfileRuntimeData,
+)
 from app.domain.llm.prompting.schemas import AstroResponseV1
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.services.api_contracts.public.natal_interpretation import (
@@ -21,6 +24,7 @@ from app.services.api_contracts.public.natal_interpretation import (
 from app.services.llm_generation.natal.interpretation_service import (
     NatalInterpretationService,
     NatalInterpretationServiceError,
+    _restore_missing_aspect_interpretive_hints,
 )
 from app.services.llm_generation.natal.prompt_context import (
     AstrologyLabels,
@@ -101,6 +105,31 @@ def _make_gateway_result(use_case: str) -> GatewayResult:
             repair_attempted=False,
         ),
     )
+
+
+def test_restore_missing_aspect_interpretive_hints_repairs_legacy_chart() -> None:
+    """La generation natale repare les anciens themes stockes sans hints d'aspects."""
+    natal_result = _make_natal_result()
+    natal_result.aspects[0].aspect_interpretive_hints = None
+
+    _restore_missing_aspect_interpretive_hints(
+        natal_result,
+        (
+            AspectInterpretiveProfileRuntimeData(
+                aspect_code="conjunction",
+                default_valence="contextual",
+                interpretive_valence="amplifying",
+                energy_type="fusion_intensification",
+                source_profile_code="conjunction",
+                reference_version="v1.0",
+                system_code="modern",
+            ),
+        ),
+    )
+
+    hints = natal_result.aspects[0].aspect_interpretive_hints
+    assert hints is not None
+    assert hints.interpretive_valence == "amplifying"
 
 
 class TestLongitudeToSign:

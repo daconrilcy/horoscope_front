@@ -139,3 +139,11 @@ Commandes standard (exemples PowerShell, toujours après activation venv):
 
 15) Utilisateur test
 - tu peux utiliser l'utilisateur test : daconrilcy@hotmail.com password : admin123
+
+16) Registre CONDAMAD regression guardrails (obligatoire sur stories CONDAMAD)
+- Registre canonique: `_condamad/stories/regression-guardrails.md`.
+- Avant toute story CONDAMAD (écriture, implémentation, audit, review, refactor): lire le registre et classer les invariants applicables / non applicables.
+- Une story qui touche une surface protégée doit citer les `RG-XXX` concernés, inclure des AC de non-régression et une preuve exécutable (pytest, scans `rg`).
+- Une story qui crée un invariant durable doit ajouter une ligne `RG-XXX` au registre (ne pas affaiblir un invariant existant sans demande explicite).
+- Skill de référence: `.agents/skills/condamad-regression-guardrails/SKILL.md`.
+- Règle Cursor associée: `.cursor/rules/condamad-regression-guardrails.mdc`.

@@ -247,6 +247,9 @@ def test_persist_and_get_audit_record() -> None:
     assert "occupants" in first_house
     assert "axis" in first_house
     assert "strength" in first_house
+    first_aspect = stored_payload.result_payload["aspects"][0]
+    assert first_aspect["aspect_interpretive_hints"]["interpretive_valence"]
+    assert record.result.aspects[0].aspect_interpretive_hints is not None
 
 
 def test_persist_trace_writes_dignity_audit_rows_from_precomputed_result() -> None:

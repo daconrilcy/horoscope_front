@@ -261,6 +261,37 @@ function buildExpertChart(): LatestNatalChart {
 }
 
 describe("NatalExpertPanel", () => {
+  it("affiche toutes les conditions avancees quand plusieurs planetes partagent le meme code", () => {
+    const expertChart = buildExpertChart()
+    render(
+      <NatalExpertPanel
+        chart={{
+          ...expertChart,
+          result: {
+            ...expertChart.result,
+            advanced_conditions: [
+              {
+                planet_code: null,
+                condition_code: "besiegement",
+                condition_type: "besiegement",
+                score_effect: -1,
+              },
+              {
+                planet_code: null,
+                condition_code: "besiegement",
+                condition_type: "besiegement",
+                score_effect: -0.5,
+              },
+            ],
+          },
+        }}
+      />,
+    )
+
+    const advancedSection = screen.getByRole("region", { name: "Conditions avancees" })
+    expect(within(advancedSection).getAllByRole("listitem")).toHaveLength(2)
+  })
+
   it("rend les blocs experts du payload public sans calcul local", () => {
     render(<NatalExpertPanel chart={buildExpertChart()} />)
 
@@ -275,6 +306,7 @@ describe("NatalExpertPanel", () => {
     const advancedSection = screen.getByRole("region", { name: "Conditions avancees" })
     expect(within(advancedSection).getByText(/alpha \/ hayz/)).toBeInTheDocument()
     expect(within(advancedSection).getByText(/beta \/ out_of_sect/)).toBeInTheDocument()
+    expect(within(advancedSection).getAllByRole("listitem")).toHaveLength(2)
 
     const traditionalSection = screen.getByRole("region", { name: "Contrats traditionnels" })
     expect(within(traditionalSection).queryByText("chart_json")).not.toBeInTheDocument()

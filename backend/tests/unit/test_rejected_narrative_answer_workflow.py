@@ -58,6 +58,26 @@ def test_grounded_validation_does_not_create_rejection() -> None:
     assert outcome is None
 
 
+def test_known_fact_output_evidence_id_is_grounded() -> None:
+    """Un ID de fait du theme cite par le LLM reste rattache a la projection hashee."""
+    llm_input = _build_payload()
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-fact-evidence",
+        answer_type="premium",
+        raw_answer={
+            "sections": [{"key": "summary", "content": "Mars en Aries donne l'elan."}],
+            "evidence": ["MARS"],
+        },
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
+    )
+
+    assert outcome is None
+
+
 def test_unknown_output_evidence_id_becomes_rejected() -> None:
     """Une evidence de sortie inconnue ne peut pas etre ancree par le backend."""
     llm_input = _build_payload()
@@ -172,6 +192,56 @@ def test_backend_detects_unsupported_generated_claim_without_llm_marker() -> Non
     assert outcome.status == "rejected"
     assert outcome.rejection_reason["code"] == "natal_output_policy_violation"
     assert outcome.rejection_reason["validation_errors"] == ["unsupported_generated_claim"]
+
+
+def test_backend_accepts_supported_french_astrology_aliases() -> None:
+    """Les libelles astrologiques francais supportes ne sont pas des inventions."""
+    llm_input = _build_payload()
+    llm_input["facts"]["positions"].extend(
+        [
+            {
+                "code": "venus",
+                "object_type": "planet",
+                "zodiac_sign": "taurus",
+                "house_number": 2,
+            },
+            {
+                "code": "saturn",
+                "object_type": "planet",
+                "zodiac_sign": "capricorn",
+                "house_number": 10,
+            },
+        ]
+    )
+    llm_input["facts"]["major_aspects"].extend(
+        [
+            {"code": "square", "participant_codes": ["sun", "saturn"], "family": "major"},
+            {"code": "conjunction", "participant_codes": ["sun", "venus"], "family": "major"},
+        ]
+    )
+    outcome = build_rejected_narrative_answer_outcome_from_payload(
+        answer_id="answer-supported-french-aliases",
+        answer_type="premium",
+        raw_answer={
+            "sections": [
+                {
+                    "key": "summary",
+                    "content": (
+                        "Le Soleil, Vénus et Saturne dialoguent avec un trigone, "
+                        "un carré et une conjonction."
+                    ),
+                }
+            ],
+            "evidence": ["LLM_ASTROLOGY_INPUT_V1.PROJECTION"],
+        },
+        projection_version=llm_input["evidence"]["evidence_refs"][0]["source_version"],
+        projection_hash=llm_input["provenance"]["projection_hash"],
+        llm_input_version=llm_input["contract_version"],
+        llm_input_hash=llm_input["provenance"]["llm_input_hash"],
+        llm_astrology_input_v1=llm_input,
+    )
+
+    assert outcome is None
 
 
 def test_backend_detects_unknown_astrology_marker_without_llm_marker() -> None:

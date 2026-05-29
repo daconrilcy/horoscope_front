@@ -16,6 +16,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
+from app.domain.astrology.builders.aspect_runtime_builder import (
+    build_aspect_structural_runtime_data,
+)
 from app.domain.astrology.interpretation.ai_narrative_input_builder import AINarrativeInputBuilder
 from app.domain.astrology.interpretation.astral_point_interpretation import (
     AstralPointInterpretationService,
@@ -31,6 +34,10 @@ from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     StructuredFactsV1Builder,
 )
 from app.domain.astrology.natal_calculation import NatalResult
+from app.domain.astrology.runtime.aspect_calculation_contracts import (
+    AspectInterpretiveProfileRuntimeData,
+)
+from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintResolver
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
 from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
@@ -49,6 +56,13 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.infra.db.repositories.astral_point_interpretation_repository import (
     AstralPointInterpretationRepository,
+)
+from app.infra.db.repositories.astrology_runtime_reference_repository import (
+    AstrologyRuntimeReferenceRepository,
+)
+from app.infra.db.repositories.llm.narrative_answer_audit_repository import (
+    NarrativeAnswerAuditCreate,
+    NarrativeAnswerAuditRepository,
 )
 from app.infra.observability.metrics import observe_duration
 from app.services.api_contracts.public.natal_interpretation import (
@@ -70,6 +84,13 @@ from app.services.llm_generation.natal.rejected_answer_workflow import (
     RejectedNarrativeAnswerOutcome,
     build_rejected_narrative_answer_outcome_from_payload,
     emit_rejected_narrative_answer_log,
+)
+from app.services.llm_generation.natal.stored_interpretation_payload import (
+    NARRATIVE_ANSWER_AUDIT_USE_CASE,
+    extract_accepted_interpretation_payload,
+    is_public_natal_interpretation,
+    is_rejected_interpretation,
+    is_rejected_stored_payload,
 )
 from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
@@ -95,6 +116,39 @@ MODULE_TO_USE_CASE_KEY: dict[str, str] = {
     "NATAL_VALUES_SECURITY": "natal_values_security",
     "NATAL_EVOLUTION_PATH": "natal_evolution_path",
 }
+
+
+def _restore_missing_aspect_interpretive_hints(
+    natal_result: NatalResult,
+    profiles: tuple[AspectInterpretiveProfileRuntimeData, ...],
+) -> None:
+    """Restaure les hints d'aspects absents sur les themes stockes avant CS-380."""
+    aspect_school = str(
+        getattr(natal_result.aspect_school, "value", natal_result.aspect_school)
+    ).strip()
+    profiles_by_code = {
+        profile.aspect_code: profile for profile in profiles if profile.system_code == aspect_school
+    }
+    resolver = AspectInterpretiveHintResolver()
+    for aspect in natal_result.aspects:
+        if aspect.aspect_interpretive_hints is not None:
+            continue
+        profile = profiles_by_code.get(aspect.aspect_code)
+        if profile is None:
+            continue
+        structural = build_aspect_structural_runtime_data(aspect)
+        aspect.aspect_interpretive_hints = resolver.resolve(structural, profile)
+
+
+def _repair_legacy_natal_result_for_interpretation(db: Session, natal_result: NatalResult) -> None:
+    """Complete les faits runtime manquants avant projection LLM stricte."""
+    if all(aspect.aspect_interpretive_hints is not None for aspect in natal_result.aspects):
+        return
+    runtime_reference = AstrologyRuntimeReferenceRepository(db).load(natal_result.reference_version)
+    _restore_missing_aspect_interpretive_hints(
+        natal_result,
+        runtime_reference.aspects.interpretive_profiles,
+    )
 
 
 def _build_llm_astrology_input_v1(
@@ -239,16 +293,16 @@ def _apply_narrative_answer_audit(
     gateway_result: GatewayResult,
     persist_payload: dict[str, object],
     llm_astrology_input_v1: dict[str, object],
-    rejected_outcome: RejectedNarrativeAnswerOutcome | None = None,
 ) -> None:
     """Renseigne l'audit narratif persistant sans exposer les donnees sensibles."""
     prompt_version = gateway_result.meta.prompt_version_id
     llm_input_hash = _llm_input_hash_for_audit(llm_astrology_input_v1)
+    projection_version = _projection_version_for_audit(llm_astrology_input_v1)
     projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
     model.answer_id = f"{gateway_result.use_case}:{request_id}"
     model.answer_type = _answer_type_for_audit(level, variant_code)
     model.plan = gateway_result.meta.plan or "unknown"
-    model.projection_version = schema_version
+    model.projection_version = projection_version
     model.projection_hash = projection_hash
     model.llm_input_version = _llm_input_version_for_audit(llm_astrology_input_v1)
     model.llm_input_hash = llm_input_hash
@@ -257,16 +311,49 @@ def _apply_narrative_answer_audit(
     model.prompt_snapshot_ref = None
     model.provider = gateway_result.meta.provider or "unknown"
     model.model = gateway_result.meta.model
-    if rejected_outcome is None:
-        model.grounding_status = _grounding_status_for_audit(llm_astrology_input_v1)
-        model.evidence_refs = _evidence_refs_for_audit(llm_astrology_input_v1)
-        return
-    model.grounding_status = "rejected"
-    model.evidence_refs = rejected_outcome.validation_context
-    model.interpretation_payload = {
-        **persist_payload,
-        **rejected_outcome.to_persisted_payload(),
-    }
+    model.grounding_status = _grounding_status_for_audit(llm_astrology_input_v1)
+    model.evidence_refs = _evidence_refs_for_audit(llm_astrology_input_v1)
+
+
+def _persist_rejected_narrative_answer_audit(
+    db: Session,
+    *,
+    user_id: int,
+    chart_id: str,
+    level: str,
+    variant_code: str | None,
+    gateway_result: GatewayResult,
+    llm_astrology_input_v1: dict[str, object],
+    rejected_outcome: RejectedNarrativeAnswerOutcome,
+) -> None:
+    """Persiste un rejet LLM via le repository audit sans l'exposer comme interpretation."""
+    prompt_version_id = gateway_result.meta.prompt_version_id
+    prompt_version = str(prompt_version_id) if prompt_version_id else "legacy_unavailable"
+    repository = NarrativeAnswerAuditRepository(db)
+    repository.create(
+        NarrativeAnswerAuditCreate(
+            answer_id=rejected_outcome.answer_id,
+            answer_type=_answer_type_for_audit(level, variant_code),
+            chart_id=chart_id,
+            user_id=user_id,
+            plan=gateway_result.meta.plan or "unknown",
+            projection_version=_projection_version_for_audit(llm_astrology_input_v1),
+            projection_hash=_projection_hash_for_audit(llm_astrology_input_v1),
+            llm_input_version=_llm_input_version_for_audit(llm_astrology_input_v1),
+            llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
+            prompt_version=prompt_version,
+            provider=gateway_result.meta.provider or "unknown",
+            model=gateway_result.meta.model or "unknown",
+            grounding_status="rejected",
+            interpretation_payload={"client_message": rejected_outcome.client_message},
+            use_case=NARRATIVE_ANSWER_AUDIT_USE_CASE,
+            rejection_reason=rejected_outcome.rejection_reason,
+            validation_context=rejected_outcome.validation_context,
+            raw_answer_storage=rejected_outcome.raw_answer_storage,
+            client_message=rejected_outcome.client_message,
+        )
+    )
+    db.commit()
 
 
 def _build_rejected_narrative_answer_outcome(
@@ -280,12 +367,13 @@ def _build_rejected_narrative_answer_outcome(
     llm_astrology_input_v1: dict[str, object],
 ) -> RejectedNarrativeAnswerOutcome | None:
     """Evalue le rejet CS-290 depuis les preuves CS-289 deja presentes."""
+    projection_version = _projection_version_for_audit(llm_astrology_input_v1)
     projection_hash = _projection_hash_for_audit(llm_astrology_input_v1)
     return build_rejected_narrative_answer_outcome_from_payload(
         answer_id=f"{gateway_result.use_case}:{request_id}",
         answer_type=_answer_type_for_audit(level, variant_code),
         raw_answer=persist_payload,
-        projection_version=schema_version,
+        projection_version=projection_version,
         projection_hash=projection_hash,
         llm_input_version=_llm_input_version_for_audit(llm_astrology_input_v1),
         llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
@@ -326,6 +414,27 @@ def _projection_hash_for_audit(llm_astrology_input_v1: dict[str, object]) -> str
     if isinstance(projection_hash, str) and len(projection_hash) == 64:
         return projection_hash
     raise ValueError("llm_astrology_input_v1 projection_hash is required for audit")
+
+
+def _projection_version_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
+    """Retourne la version de source qui porte le hash de projection."""
+    evidence = (
+        llm_astrology_input_v1.get("evidence") if isinstance(llm_astrology_input_v1, dict) else None
+    )
+    if not isinstance(evidence, dict):
+        raise ValueError("llm_astrology_input_v1 projection evidence is required for audit")
+    evidence_refs = evidence.get("evidence_refs")
+    if not isinstance(evidence_refs, list):
+        raise ValueError("llm_astrology_input_v1 projection evidence refs are required for audit")
+    for ref in evidence_refs:
+        if not isinstance(ref, dict):
+            continue
+        if ref.get("source_type") != "projection_version" or ref.get("source_id") != "projection":
+            continue
+        source_version = ref.get("source_version")
+        if isinstance(source_version, str) and source_version.strip():
+            return source_version
+    raise ValueError("llm_astrology_input_v1 projection source_version is required for audit")
 
 
 def _grounding_status_for_audit(llm_astrology_input_v1: dict[str, object]) -> str:
@@ -496,6 +605,23 @@ class NatalInterpretationService:
         )
 
     @staticmethod
+    def _purge_rejected_interpretation(
+        db: Session,
+        model: UserNatalInterpretationModel,
+    ) -> bool:
+        """Supprime une interpretation rejetee qui ne doit pas etre relue cote public."""
+        if not is_rejected_interpretation(model):
+            return False
+        logger.warning(
+            "Deleting rejected persisted natal interpretation user_id=%s id=%s use_case=%s",
+            model.user_id,
+            model.id,
+            model.use_case,
+        )
+        db.delete(model)
+        return True
+
+    @staticmethod
     def _deserialize_persisted_interpretation(
         model: UserNatalInterpretationModel,
         *,
@@ -509,10 +635,28 @@ class NatalInterpretationService:
         | AstroFreeResponseV1,
         str,
     ]:
+        if is_rejected_interpretation(model):
+            raise NatalInterpretationServiceError(
+                code="interpretation_rejected",
+                message=(
+                    "Stored interpretation was rejected by output policy and "
+                    "cannot be exposed as a valid natal interpretation"
+                ),
+            )
+
         disclaimers = get_disclaimers(locale)
-        base_payload = (
+        raw_payload = (
             model.interpretation_payload if isinstance(model.interpretation_payload, dict) else {}
         )
+        if is_rejected_stored_payload(raw_payload):
+            raise NatalInterpretationServiceError(
+                code="interpretation_rejected",
+                message=(
+                    "Stored interpretation payload contains rejection metadata and "
+                    "cannot be deserialized as AstroResponse"
+                ),
+            )
+        base_payload = extract_accepted_interpretation_payload(raw_payload)
         full_payload = {**base_payload, "disclaimers": disclaimers}
 
         if level == "complete" and model.variant_code == "free_short":
@@ -604,6 +748,7 @@ class NatalInterpretationService:
 
             existing_rows = list(db.execute(stmt).scalars().all())
             valid_existing_rows: list[UserNatalInterpretationModel] = []
+            deleted_any = False
             for row in existing_rows:
                 if NatalInterpretationService._is_invalid_complete_interpretation(row):
                     logger.warning(
@@ -616,8 +761,15 @@ class NatalInterpretationService:
                         row.use_case,
                     )
                     db.delete(row)
+                    deleted_any = True
+                    continue
+                if NatalInterpretationService._purge_rejected_interpretation(db, row):
+                    deleted_any = True
                     continue
                 valid_existing_rows.append(row)
+
+            if deleted_any:
+                db.commit()
 
             existing = valid_existing_rows[0] if valid_existing_rows else None
             if len(existing_rows) > 1:
@@ -688,6 +840,7 @@ class NatalInterpretationService:
             language_code=locale,
             user_id=user_id,
         )
+        _repair_legacy_natal_result_for_interpretation(db, natal_result)
         chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
         interpreted_astral_points = ()
         astral_points = getattr(natal_result, "astral_points", ())
@@ -909,6 +1062,26 @@ class NatalInterpretationService:
                 trace_id=trace_id,
                 use_case=gateway_result.use_case,
             )
+            try:
+                _persist_rejected_narrative_answer_audit(
+                    db,
+                    user_id=user_id,
+                    chart_id=chart_id,
+                    level=level,
+                    variant_code=variant_code,
+                    gateway_result=gateway_result,
+                    llm_astrology_input_v1=llm_astrology_input_v1,
+                    rejected_outcome=rejected_outcome,
+                )
+            except Exception as audit_exc:
+                db.rollback()
+                logger.exception(
+                    "Failed to persist rejected natal interpretation audit "
+                    "request_id=%s use_case=%s error=%s",
+                    request_id,
+                    gateway_result.use_case,
+                    audit_exc,
+                )
             interpretation = AstroFreeResponseV1(
                 title="",
                 summary=rejected_outcome.client_message,
@@ -919,6 +1092,16 @@ class NatalInterpretationService:
                 disclaimers=disclaimers,
             )
             meta.validation_status = "rejected"
+            return NatalInterpretationResponse(
+                data=NatalGatewayInterpretationData(
+                    chart_id=chart_id,
+                    use_case=gateway_result.use_case,
+                    interpretation=interpretation,
+                    meta=meta,
+                    degraded_mode=degraded_mode_str,
+                ),
+                disclaimers=disclaimers,
+            )
 
         try:
             if not is_thematic_module:
@@ -970,7 +1153,6 @@ class NatalInterpretationService:
                         gateway_result=gateway_result,
                         persist_payload=persist_payload,
                         llm_astrology_input_v1=llm_astrology_input_v1,
-                        rejected_outcome=rejected_outcome,
                     )
                     db.add(primary)
                 else:
@@ -992,7 +1174,6 @@ class NatalInterpretationService:
                         gateway_result=gateway_result,
                         persist_payload=persist_payload,
                         llm_astrology_input_v1=llm_astrology_input_v1,
-                        rejected_outcome=rejected_outcome,
                     )
 
                 db.commit()
@@ -1145,6 +1326,24 @@ class NatalInterpretationService:
                 trace_id=trace_id,
                 use_case=gateway_result.use_case,
             )
+            try:
+                _persist_rejected_narrative_answer_audit(
+                    db,
+                    user_id=user_id,
+                    chart_id=chart_id,
+                    level="complete",
+                    variant_code="free_short",
+                    gateway_result=gateway_result,
+                    llm_astrology_input_v1=llm_astrology_input_v1,
+                    rejected_outcome=rejected_outcome,
+                )
+            except Exception as audit_exc:
+                db.rollback()
+                logger.exception(
+                    "Failed to persist rejected free_short natal audit request_id=%s error=%s",
+                    request_id,
+                    audit_exc,
+                )
             interpretation = AstroFreeResponseV1(
                 title="",
                 summary=rejected_outcome.client_message,
@@ -1154,8 +1353,17 @@ class NatalInterpretationService:
                 evidence=[],
                 disclaimers=disclaimers,
             )
-            persist_payload = interpretation.model_dump()
             meta.validation_status = "rejected"
+            return NatalInterpretationResponse(
+                data=NatalGatewayInterpretationData(
+                    chart_id=chart_id,
+                    use_case=use_case_key,
+                    interpretation=interpretation,
+                    meta=meta,
+                    degraded_mode=degraded_mode_str,
+                ),
+                disclaimers=disclaimers,
+            )
 
         prompt_version_uuid = _parse_prompt_version_uuid(gateway_result.meta.prompt_version_id)
 
@@ -1202,7 +1410,6 @@ class NatalInterpretationService:
                 gateway_result=gateway_result,
                 persist_payload=persist_payload,
                 llm_astrology_input_v1=llm_astrology_input_v1,
-                rejected_outcome=rejected_outcome,
             )
             db.add(primary)
         else:
@@ -1220,7 +1427,6 @@ class NatalInterpretationService:
                 gateway_result=gateway_result,
                 persist_payload=persist_payload,
                 llm_astrology_input_v1=llm_astrology_input_v1,
-                rejected_outcome=rejected_outcome,
             )
 
         db.flush()
@@ -1250,7 +1456,8 @@ class NatalInterpretationService:
         offset: int = 0,
     ) -> tuple[list[UserNatalInterpretationModel], int]:
         stmt = select(UserNatalInterpretationModel).where(
-            UserNatalInterpretationModel.user_id == user_id
+            UserNatalInterpretationModel.user_id == user_id,
+            UserNatalInterpretationModel.use_case != NARRATIVE_ANSWER_AUDIT_USE_CASE,
         )
         if chart_id:
             stmt = stmt.where(UserNatalInterpretationModel.chart_id == chart_id)
@@ -1280,6 +1487,11 @@ class NatalInterpretationService:
             if NatalInterpretationService._is_invalid_complete_interpretation(row):
                 db.delete(row)
                 deleted_any = True
+                continue
+            if NatalInterpretationService._purge_rejected_interpretation(db, row):
+                deleted_any = True
+                continue
+            if not is_public_natal_interpretation(row):
                 continue
             valid_rows.append(row)
 
@@ -1348,6 +1560,11 @@ class NatalInterpretationService:
             UserNatalInterpretationModel.user_id == user_id,
         )
         item = db.execute(stmt).scalar_one_or_none()
+        if item and not is_public_natal_interpretation(item):
+            if is_rejected_interpretation(item):
+                NatalInterpretationService._purge_rejected_interpretation(db, item)
+                db.commit()
+            return None
         if item and NatalInterpretationService._is_invalid_complete_interpretation(item):
             db.delete(item)
             db.commit()

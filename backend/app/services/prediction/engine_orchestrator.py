@@ -1219,19 +1219,16 @@ class EngineOrchestrator:
             return raw_strength
         if not isinstance(raw_strength, dict):
             return None
-        if (
-            "score" not in raw_strength
-            or "level" not in raw_strength
-            or "reasons" not in raw_strength
-        ):
+        score = raw_strength.get("score", raw_strength.get("normalized_score"))
+        if score is None or "level" not in raw_strength or "reasons" not in raw_strength:
             raise ValueError("Serialized house strength is incomplete")
         reasons = raw_strength["reasons"]
-        if not isinstance(reasons, list):
+        if not isinstance(reasons, list | tuple):
             raise ValueError("Serialized house strength reasons must be a list")
         return HouseStrengthRuntimeData.from_serialized(
-            score=float(raw_strength["score"]),
+            score=float(score),
             level=str(raw_strength["level"]),
-            reasons=reasons,
+            reasons=list(reasons),
         )
 
     def _compute_natal_aspects(
