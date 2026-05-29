@@ -67,7 +67,7 @@ try {
   if (!(Test-Path node_modules)) {
     npm ci | Out-Null
   }
-  $frontendProcess = Start-Process npm.cmd -ArgumentList "run", "dev", "--", "--host", "127.0.0.1", "--port", "5173" -PassThru
+  $frontendProcess = Start-Process npm.cmd -ArgumentList "run", "dev", "--", "--host", "127.0.0.1", "--port", "5173", "--strictPort" -PassThru
   Set-Location ..
 
   $timeoutSeconds = 60

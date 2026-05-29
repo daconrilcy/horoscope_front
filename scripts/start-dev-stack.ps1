@@ -119,7 +119,7 @@ Set-Location -LiteralPath '$frontendPath'
 if (-not (Test-Path -LiteralPath 'node_modules')) {
   npm ci
 }
-npm run dev -- --host $FrontendHost --port $FrontendPort
+npm run dev -- --host $FrontendHost --port $FrontendPort --strictPort
 "@
 
 $stripeCommand = @"
