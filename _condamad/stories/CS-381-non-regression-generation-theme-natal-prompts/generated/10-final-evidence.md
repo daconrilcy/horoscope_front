@@ -35,12 +35,12 @@
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
 | AC1 | `frontend/e2e/natal-generation-regression.spec.ts` covers saved Paris birth data, POST generation and latest reload. | E2E with explicit Vite server PASS after review fix. | PASS | Real provider not called. |
-| AC2 | `backend/tests/integration/astrology/test_natal_generation_regression.py` asserts known-time traditions. | Targeted backend pytest PASS. | PASS | `traditional_conditions` complete. |
+| AC2 | `backend/tests/integration/astrology/test_natal_generation_regression.py` asserts known-time traditions. | Targeted backend pytest with `--long` PASS. | PASS | `traditional_conditions` complete. |
 | AC3 | Backend integration and E2E assert latest reload preserves `chart_id` and traditional contract. | Pytest plus reviewed E2E PASS. | PASS | Public contract preserved. |
 | AC4 | E2E asserts `/natal` renders `Panneau expert natal`; unit tests cover UI projection. | Vitest targeted PASS and reviewed E2E PASS. | PASS | No `NatalExpertPanel` console error in E2E. |
-| AC5 | Provider handoff test asserts structured `birth_context`. | Targeted backend pytest PASS. | PASS | Paris fixture preserved. |
+| AC5 | Route regression also checks rendered provider `birth_context` beside the generated public payload. | Targeted backend pytest with `--long` PASS. | PASS | Paris fixture preserved. |
 | AC6 | Provider builder test asserts selected enriched blocks and limits. | Targeted backend pytest PASS. | PASS | Prompt-visible enrichment covered. |
-| AC7 | Architecture guard and tests separate UI/provider payloads. | Architecture pytest PASS. | PASS | No payload merge path added. |
+| AC7 | Architecture guard and route/provider coexistence assertions separate UI/provider payloads. | Backend pytest with `--long` PASS. | PASS | No payload merge path added. |
 | AC8 | Public and provider tests assert no `chart_json`/`natal_data` primary source. | Classified `rg` scan plus tests PASS. | PASS | Existing legacy terms remain guarded. |
 | AC9 | E2E and backend tests are mocked/fixture based. | Provider-smoke scan classified opt-in only. | PASS | No external credentials required. |
 | AC10 | Runtime route inventory asserted in test and commands. | `app.routes` and `app.openapi()` commands PASS. | PASS | Natal endpoints registered. |
@@ -65,7 +65,7 @@
 
 ## Tests added or updated
 
-- Added backend route integration regression for `POST /v1/users/me/natal-chart` and `/latest`.
+- Added backend route integration regression for `POST /v1/users/me/natal-chart`, `/latest`, and provider-payload coexistence.
 - Updated provider handoff and provider builder tests for enriched prompt payload assertions.
 - Added Playwright natal generation regression scenario.
 - Updated BirthProfilePage and NatalExpertPanel tests for generated public payload proof.
@@ -78,6 +78,9 @@
 | `ruff format <changed python tests>` | repo | PASS | 3 files unchanged. |
 | `ruff check backend` | repo | PASS | Backend lint clean. |
 | `python -B -m pytest -q backend\tests --tb=short -k "natal_chart or theme_astral or llm_astrology_input"` | repo | PASS | 67 passed, 1 skipped. |
+| `python -B -m pytest -q backend\tests --tb=short -k "natal_chart or theme_astral or llm_astrology_input" --long` | repo | PASS | 85 passed, 1 skipped. |
+| `python -B -m pytest -q backend\tests\integration\astrology\test_natal_generation_regression.py --long --tb=short` | repo | PASS | 1 passed. |
+| `ruff check backend\tests\integration\astrology\test_natal_generation_regression.py` | repo | PASS | Coexistence test lint clean. |
 | `python -B -m pytest -q backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py --tb=short` | repo | PASS | 6 passed. |
 | `python -B -c` app route inventory | repo | PASS | `app.routes` includes natal chart. |
 | `python -B -c` OpenAPI inventory | repo | PASS | `app.openapi()` includes natal chart. |
@@ -99,11 +102,15 @@
   Compensating evidence: same Playwright scenario PASS against an explicit Vite server with `PLAYWRIGHT_SKIP_WEBSERVER=1`.
 - Review wrapper attempts before the successful E2E rerun failed before test execution due to PowerShell redirect/shim syntax and
   `pnpm dev -- --host` port forwarding; the final wrapper used `pnpm.cmd` and no extra separator.
+- A direct pytest run without `--long` selected no integration test because repository collection excludes integration tests
+  from the fast suite; the corrected validation command uses `--long`.
+- One retry from `backend` used the wrong relative venv activation path and failed before useful validation; all accepted
+  Python validation commands were rerun from the repository root after activating `.\.venv\Scripts\Activate.ps1`.
 
 ## DRY / No Legacy evidence
 
 - No production code path, compatibility wrapper, alias, shim, or fallback was added.
-- Public UI payload tests and provider payload tests stay separate.
+- Public UI payload tests and provider payload tests stay separate, with one route regression proving their coexistence.
 - `chart_json` and `natal_data` scans show existing guarded runtime surfaces, not a new primary prompt handoff.
 - Frontend inline-style scan on touched files has no matches.
 - Provider smoke remains opt-in and outside standard validation.

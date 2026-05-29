@@ -6,6 +6,12 @@ PASS:
 - `ruff format` sur les trois fichiers Python modifiés ou ajoutés
 - `ruff check backend`
 - `python -B -m pytest -q backend\tests --tb=short -k "natal_chart or theme_astral or llm_astrology_input"`
+- Review final brief alignment fix:
+  `python -B -m pytest -q backend\tests\integration\astrology\test_natal_generation_regression.py --long --tb=short`
+- Review final brief alignment fix:
+  `python -B -m pytest -q backend\tests --tb=short -k "natal_chart or theme_astral or llm_astrology_input" --long`
+- Review final brief alignment fix:
+  `ruff check backend\tests\integration\astrology\test_natal_generation_regression.py`
 - `python -B -m pytest -q backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py --tb=short`
 - `python -B -c` pour `app.routes`
 - `python -B -c` pour `app.openapi()`
@@ -30,6 +36,10 @@ Initial failures:
 - `pnpm --dir frontend test:e2e -- --grep "natal"` sur port `4173`: FAIL, port occupé.
 - Relance avec `PLAYWRIGHT_PORT=4174`: TIMEOUT dans la gestion Playwright `webServer`.
 - Correction: ajout de `PLAYWRIGHT_SKIP_WEBSERVER=1` et validation contre un serveur Vite explicite.
+- Review final brief alignment: le premier pytest ciblé sans `--long` a désélectionné le test d'intégration.
+  La validation acceptée utilise `--long`.
+- Review final brief alignment: une relance depuis `backend` a utilisé un chemin venv relatif invalide et a échoué avant
+  validation utile. Les commandes Python acceptées ont été relancées depuis la racine avec le venv activé.
 - Review wrapper attempts:
   - same stdout/stderr redirect rejected by `Start-Process` before tests ran;
   - `pnpm` shim rejected by `Start-Process` before tests ran;

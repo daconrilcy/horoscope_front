@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from typing import Any
 
@@ -10,8 +11,17 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies.auth import require_authenticated_user
 from app.core.auth_context import AuthenticatedUser
+from app.domain.llm.configuration.theme_astral_contracts import THEME_ASTRAL_INPUT_CONTRACT_ID
+from app.domain.llm.runtime.gateway import LLMGateway
+from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
+    ThemeAstralProviderPayloadBuilder,
+)
 from app.infra.db.session import get_db_session
 from app.main import app
+from tests.unit.domain.astrology.interpretation.test_interpretation_material_builder import (
+    _build_chart_input,
+    _sources_for,
+)
 
 
 class _DumpableNatalChart:
@@ -135,6 +145,7 @@ def test_post_and_latest_natal_chart_keep_public_contract_and_runtime_inventory(
     assert latest["astro_profile"]["sun_sign_code"] == "taurus"
     _assert_known_time_traditional_contract(generated["result"])
     _assert_known_time_traditional_contract(latest["result"])
+    _assert_provider_payload_coexists_with_public_contract(generated)
 
     route_paths = {getattr(route, "path", "") for route in app.routes}
     assert "/v1/users/me/natal-chart" in route_paths
@@ -236,3 +247,39 @@ def _assert_known_time_traditional_contract(result: dict[str, Any]) -> None:
     assert "planets" not in conditions
     assert conditions["sun"]["hayz"]["is_hayz"] is True
     assert conditions["sun"]["rejoicing"]["is_rejoicing"] is False
+
+
+def _assert_provider_payload_coexists_with_public_contract(public_chart: dict[str, Any]) -> None:
+    """Prouve que le payload provider enrichi reste distinct du payload public genere."""
+    chart_input = _build_chart_input(aspect_codes=("trine", "square", "opposition"))
+    provider_payload = ThemeAstralProviderPayloadBuilder().build(
+        chart_input=chart_input,
+        interpretation_sources=_sources_for(chart_input),
+        commercial_plan="premium",
+        astrologer_voice={"tone": "sobre"},
+    )
+
+    rendered = LLMGateway().build_user_payload(
+        use_case="theme_astral",
+        user_input={"locale": "fr-FR"},
+        context={THEME_ASTRAL_INPUT_CONTRACT_ID: provider_payload},
+        policy="none",
+        locale="fr-FR",
+    )
+
+    prefix = f"{THEME_ASTRAL_INPUT_CONTRACT_ID}: "
+    rendered_provider_payload = json.loads(rendered.removeprefix(prefix))
+    birth_context = rendered_provider_payload["input_data"]["birth_context"]
+    public_input = public_chart["result"]["prepared_input"]
+
+    assert rendered.startswith(prefix)
+    assert public_input["birth_datetime_local"].startswith(birth_context["birth_date"])
+    assert birth_context["birth_time_local"] == "11:00"
+    assert birth_context["birth_place"]["city"] == "Paris"
+    assert birth_context["birth_place"]["timezone"] == public_input["birth_timezone"]
+    assert rendered_provider_payload["input_data"]["selected_themes"]["section_keys"]
+    assert rendered_provider_payload["input_data"]["interpretation_material"]
+    assert not rendered_provider_payload["input_data"]["limits"]["missing_data"]["birth_context"]
+    assert "traditional_conditions" not in rendered_provider_payload["input_data"]
+    assert "chart_json" not in rendered
+    assert "natal_data" not in rendered
