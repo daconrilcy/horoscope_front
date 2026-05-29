@@ -896,6 +896,43 @@ def test_project_public_natal_result_contract_indexes_traditional_conditions(
     assert payload["traditional_conditions"]["sun"]["rejoicing"]["is_rejoicing"] is False
 
 
+def test_project_public_natal_result_contract_rejects_missing_reliable_traditional_conditions(
+    mock_natal_result,
+) -> None:
+    """Un contexte fiable ne peut pas publier un contrat traditionnel absent."""
+    mock_natal_result.model_dump.return_value = {"traditional_conditions": None}
+    mock_natal_result.traditional_conditions = None
+    mock_natal_result.prepared_input.birth_time_local = "14:30"
+    mock_natal_result.prepared_input.birth_lat = 48.8566
+    mock_natal_result.prepared_input.birth_lon = 2.3522
+
+    with pytest.raises(ValueError, match="traditional_conditions is required"):
+        project_public_natal_result_contract(mock_natal_result)
+
+
+def test_serialize_traditional_conditions_rejects_empty_public_contract() -> None:
+    """Un bloc traditionnel vide ne doit pas devenir une reponse publique valide."""
+    traditional_conditions = SimpleNamespace(planets=())
+
+    with pytest.raises(ValueError, match="planets must not be empty"):
+        _serialize_traditional_conditions(traditional_conditions)
+
+
+def test_project_public_natal_result_contract_allows_no_time_without_traditional_conditions(
+    mock_natal_result,
+) -> None:
+    """Le mode sans heure conserve la neutralisation publique du bloc traditionnel."""
+    mock_natal_result.model_dump.return_value = {"traditional_conditions": None}
+    mock_natal_result.traditional_conditions = None
+    mock_natal_result.prepared_input.birth_time_local = None
+    mock_natal_result.prepared_input.birth_lat = 48.8566
+    mock_natal_result.prepared_input.birth_lon = 2.3522
+
+    payload = project_public_natal_result_contract(mock_natal_result)
+
+    assert payload["traditional_conditions"] is None
+
+
 def test_build_chart_json_projects_enriched_profiles_from_chart_balance(
     mock_natal_result,
     mock_birth_profile,

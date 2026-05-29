@@ -7,13 +7,16 @@ Verdict: CLEAN
 - Story: `_condamad/stories/CS-379-stabiliser-contrat-public-generation-theme-natal/00-story.md`.
 - Source brief: `_story_briefs/cs-379-stabiliser-contrat-public-generation-theme-natal-apres-enrichissement-prompts.md`.
 - Tracker row: `_condamad/stories/story-status.md`, path and source brief matched before closure.
-- Implementation commit reviewed: `f6cf0750 CONDAMAD implementation dev-story: cs-379`.
+- Implementation baseline reviewed: `f6cf0750 CONDAMAD implementation dev-story: cs-379`.
+- Alignment correction reviewed: working tree guard update after brief/code alignment pass.
 - Guardrails reviewed: API projection ownership, runtime route/OpenAPI proof, prompt-provider boundary, and no React masking.
 
 ## Review Findings
 
 - No actionable implementation finding remains.
 - The previous `generated/11-code-review.md` was story-drafting evidence only and is replaced by this implementation review.
+- Fixed during this pass: reliable full birth contexts now reject absent or empty public `traditional_conditions`
+  instead of allowing a successful response with a non-displayable traditional block.
 
 ## AC Alignment
 
@@ -28,13 +31,14 @@ Verdict: CLEAN
 ## Validation Results
 
 - `ruff check .` from `backend`: PASS.
-- `python -B -m pytest -q app/tests/unit/test_chart_json_builder.py -k "traditional_conditions or no_time or public_natal_result_contract" --tb=short`: PASS, 7 passed.
+- `python -B -m pytest -q app/tests/unit/test_chart_json_builder.py -k "traditional_conditions or no_time or public_natal_result_contract" --tb=short`: PASS, 10 passed.
 - Integration targeted command with `--long` on:
   `test_generate_natal_chart_success`, `test_get_latest_natal_chart_success`,
   `test_generate_natal_chart_plan_does_not_null_reliable_traditional_contract`,
   and `test_generate_natal_chart_public_contract_error_uses_standard_error_envelope`: PASS, 4 passed.
 - `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short`: PASS, 10 passed.
 - Runtime `app.routes` and `app.openapi()` assertion for `/v1/users/me/natal-chart` and `/v1/users/me/natal-chart/latest`: PASS.
+- Scoped prompt-carrier scan on provider builder and test: PASS, no matches.
 
 All Python commands above were run after activating `.\.venv\Scripts\Activate.ps1`.
 
@@ -44,4 +48,4 @@ All Python commands above were run after activating `.\.venv\Scripts\Activate.ps
 
 ## Residual Risk
 
-- Full backend pytest suite was not rerun in this review cycle; targeted API, unit, provider, route, and OpenAPI checks are clean.
+- Full backend pytest suite was not rerun in this review cycle; targeted API, unit, provider, route, OpenAPI, and story checks are clean.

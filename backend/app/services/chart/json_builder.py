@@ -667,7 +667,9 @@ def serialize_public_traditional_conditions(
         return None
     planets = getattr(traditional_conditions, "planets", ())
     if not isinstance(planets, (list, tuple)):
-        return {}
+        raise ValueError("traditional_conditions planets must be a sequence")
+    if not planets:
+        raise ValueError("traditional_conditions planets must not be empty")
     result: dict[str, Any] = {}
     for planet in planets:
         hayz = getattr(planet, "hayz", None)
@@ -727,10 +729,24 @@ def serialize_public_traditional_conditions(
 def project_public_natal_result_contract(natal_result: Any) -> dict[str, Any]:
     """Retourne le resultat natal API avec le contrat public traditionnel stabilise."""
     payload = natal_result.model_dump(mode="json")
-    payload["traditional_conditions"] = serialize_public_traditional_conditions(
+    projected_conditions = serialize_public_traditional_conditions(
         getattr(natal_result, "traditional_conditions", None)
     )
+    if projected_conditions is None and _requires_public_traditional_conditions(natal_result):
+        raise ValueError("traditional_conditions is required for reliable public natal result")
+    payload["traditional_conditions"] = projected_conditions
     return payload
+
+
+def _requires_public_traditional_conditions(natal_result: Any) -> bool:
+    """Indique si le contexte natal fiable impose le bloc traditionnel public."""
+    prepared_input = getattr(natal_result, "prepared_input", None)
+    if prepared_input is None:
+        return False
+    birth_time = getattr(prepared_input, "birth_time_local", None)
+    birth_lat = getattr(prepared_input, "birth_lat", None)
+    birth_lon = getattr(prepared_input, "birth_lon", None)
+    return birth_time is not None and birth_lat is not None and birth_lon is not None
 
 
 def _serialize_interpretation_adapter(adapter: Any) -> dict[str, Any] | None:

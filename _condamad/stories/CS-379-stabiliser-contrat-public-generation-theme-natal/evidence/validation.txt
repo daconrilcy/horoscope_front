@@ -15,6 +15,14 @@ PASS: tracker row source/path verified and status moved to done.
 PASS: condamad_story_validate.py after implementation review artifact refresh.
 PASS: condamad_story_lint.py --strict after implementation review artifact refresh.
 PASS: condamad-dev-story condamad_validate.py on the capsule directory after tracker closure.
+PASS: brief/code alignment review found and fixed one residual public-contract guard gap.
+PASS: ruff format on json_builder.py and test_chart_json_builder.py after alignment fix.
+PASS: app/tests/unit/test_chart_json_builder.py -k "traditional_conditions or no_time or public_natal_result_contract": 10 passed.
+PASS: app/tests/integration/test_user_natal_chart_api.py targeted POST/latest/plan/contract tests with --long: 4 passed.
+PASS: tests/llm_orchestration/test_theme_astral_provider_payload_builder.py: 10 passed.
+PASS: ruff check . after alignment fix.
+PASS: runtime app.routes/app.openapi() assertion after alignment fix.
+PASS: scoped prompt-carrier rg returned no matches after alignment fix.
 
 Skipped: full backend pytest suite; targeted story checks were run because the suite includes long integration/regression coverage.
 Skipped: frontend checks; no frontend files changed and frontend was witness-only for this story.

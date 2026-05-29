@@ -43,6 +43,9 @@
 | AC8 | Invalid traditional public contract maps to `invalid_natal_chart_public_contract`, not HTTP success. | Integration contract-error test PASS; unit missing-boolean test PASS. | PASS |
 | AC9 | Required story evidence artifacts persisted. | Evidence files present; capsule validation PASS. | PASS |
 
+Alignment addendum 2026-05-29: reliable full birth contexts now also reject absent or empty public
+`traditional_conditions`; `no_time` still allows `null` neutralization.
+
 ## Files changed
 
 - `backend/app/services/chart/json_builder.py`
@@ -77,6 +80,8 @@
 | `ruff check .` | `backend` | PASS |
 | Runtime `app.routes` / `app.openapi()` assertion | `backend` | PASS |
 | Scoped prompt-carrier `rg` on provider builder/test | repo root | PASS: no matches |
+| `condamad_story_validate.py` after alignment fix | repo root | PASS |
+| `condamad_story_lint.py --strict` after alignment fix | repo root | PASS |
 
 ## Commands skipped or blocked
 
