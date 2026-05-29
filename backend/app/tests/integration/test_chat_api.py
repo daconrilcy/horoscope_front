@@ -1,4 +1,8 @@
+# Tests d'integration du chat et de ses compteurs d'usage.
+import atexit
+from contextlib import ExitStack
 from datetime import datetime, timezone
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -49,7 +53,35 @@ from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageSer
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 from app.tests.helpers.llm_adapter_stub import reset_test_generators, set_test_chat_generator
 
-client = TestClient(app)
+
+class _LazyPersistentTestClient:
+    """Ouvre un TestClient partage a la premiere requete pour limiter les sockets Windows."""
+
+    def __init__(self) -> None:
+        self._stack = ExitStack()
+        self._client: TestClient | None = None
+        atexit.register(self._stack.close)
+
+    def _get_client(self) -> TestClient:
+        """Retourne le client initialise apres la preparation des tables de test."""
+        if self._client is None:
+            self._client = self._stack.enter_context(TestClient(app))
+        return self._client
+
+    def get(self, *args: Any, **kwargs: Any) -> Any:
+        """Delegue les requetes GET au client persistant."""
+        return self._get_client().get(*args, **kwargs)
+
+    def post(self, *args: Any, **kwargs: Any) -> Any:
+        """Delegue les requetes POST au client persistant."""
+        return self._get_client().post(*args, **kwargs)
+
+    def put(self, *args: Any, **kwargs: Any) -> Any:
+        """Delegue les requetes PUT au client persistant."""
+        return self._get_client().put(*args, **kwargs)
+
+
+client = _LazyPersistentTestClient()
 
 
 def _cleanup_tables() -> None:

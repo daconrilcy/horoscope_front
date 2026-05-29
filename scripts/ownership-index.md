@@ -38,6 +38,7 @@ Ce registre est la source canonique d'ownership des fichiers racine sous
 | `scripts/security-findings-allowlist.txt` | security | Security operations | Allowlist des constats security verification. | `pytest -q app/tests/integration/test_security_verification_script.py` | supported | keep |
 | `scripts/security-verification.ps1` | security | Security operations | Verifie les surfaces de securite applicative. | `pytest -q app/tests/integration/test_security_verification_script.py` | supported | keep |
 | `scripts/start-dev-stack.ps1` | dev | Local development stack | Demarre la stack locale de developpement. | `pytest -q app/tests/unit/test_start_dev_stack_script.py` | supported | keep |
+| `scripts/stop-dev-services.ps1` | dev | Local development stack | Arrete les services locaux de developpement. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported | keep |
 | `scripts/startup-smoke.ps1` | quality | Quality pipeline | Verifie le demarrage local apres lancement. | `pytest -q app/tests/unit/test_scripts_ownership.py` | supported | keep |
 | `scripts/stripe-listen-webhook.ps1` | dev | Local Stripe webhook development | Lance l'ecoute Stripe locale sous PowerShell. | `pytest -q app/tests/unit/test_stripe_webhook_local_dev_assets.py` | supported | keep |
 
