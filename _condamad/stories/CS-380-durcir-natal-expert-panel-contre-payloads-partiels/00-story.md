@@ -1,5 +1,5 @@
 # Story CS-380 durcir-natal-expert-panel-contre-payloads-partiels: Harden Natal Expert Panel Against Partial Payloads
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

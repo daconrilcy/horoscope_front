@@ -36,6 +36,26 @@ type NatalExpertPanelProps = {
 
 const EMPTY_MARK = "-"
 
+const REQUIRED_HAYZ_FIELDS = [
+  "planet_code",
+  "is_hayz",
+  "sect_match",
+  "chart_sect",
+  "intrinsic_sect",
+  "planet_sect_condition",
+  "planet_horizon_position",
+  "sign_gender",
+  "calculation_basis",
+  "reference_system",
+] as const
+
+const REQUIRED_REJOICING_FIELDS = [
+  "planet_code",
+  "is_rejoicing",
+  "calculation_basis",
+  "reference_system",
+] as const
+
 function formatValue(value: string | number | boolean | null | undefined): string {
   if (value === null || value === undefined || value === "") return EMPTY_MARK
   if (typeof value === "boolean") return value ? "true" : "false"
@@ -51,10 +71,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
 
+function hasDefinedFields(value: Record<string, unknown>, fields: readonly string[]): boolean {
+  return fields.every((field) => value[field] !== null && value[field] !== undefined)
+}
+
 function hasTraditionalConditionBlocks(
   condition: unknown,
 ): condition is { hayz: TraditionalHayzCondition; rejoicing: TraditionalRejoicingCondition } {
-  return isRecord(condition) && isRecord(condition.hayz) && isRecord(condition.rejoicing)
+  if (!isRecord(condition) || !isRecord(condition.hayz) || !isRecord(condition.rejoicing)) {
+    return false
+  }
+
+  return (
+    hasDefinedFields(condition.hayz, REQUIRED_HAYZ_FIELDS) &&
+    hasDefinedFields(condition.rejoicing, REQUIRED_REJOICING_FIELDS)
+  )
 }
 
 function groupSectConditions(planets: Record<string, DignityPlanetPayload> | undefined): SectGroup[] {

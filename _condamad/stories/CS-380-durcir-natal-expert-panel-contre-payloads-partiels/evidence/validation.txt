@@ -296,3 +296,59 @@ PASS: no added forbidden terms including score
 - Earlier broad capsule scans intentionally show pre-existing matches outside the touched added-line scope; corrected touched-file scans are PASS.
 - The failed Select-String VC6 attempt is superseded by the final rg added-line scan including score, which returns exit 1 and PASS: no added forbidden terms.
 - Startup via pnpm dev is blocked by port 5173 already in use and by the wrapper ignoring the retry port; direct project Vite smoke on 127.0.0.1:5174 is PASS.
+
+## Review/fix iteration 1 hardening - 2026-05-29
+
+- Implementation review finding: `hasTraditionalConditionBlocks` treated present-but-incomplete `hayz` and `rejoicing`
+  objects as complete expert blocks. This could render missing required facts as empty values instead of a localized
+  contract-drift state.
+- Code fix: `NatalExpertPanel.tsx` now requires the mandatory `hayz` and `rejoicing` fields before rendering the complete
+  traditional facts branch.
+- Test fix: `NatalExpertPanel.test.tsx` adds coverage for a present-but-incomplete `hayz` sub-block and verifies the valid
+  neighboring `beta` entry remains visible.
+
+Validation rerun:
+
+- `pnpm --dir frontend test -- NatalExpertPanel`: PASS, 1 file / 6 tests.
+- `pnpm --dir frontend lint`: PASS.
+- `pnpm --dir frontend build`: PASS.
+- `pnpm --dir frontend test -- BirthProfilePage NatalChartPage natalInterpretation`: PASS, 4 files / 149 tests.
+- `pnpm --dir frontend test -- inline-style`: PASS, 1 file / 4 tests.
+- `pnpm --dir frontend test -- design-system theme-tokens legacy-style`: PASS, 3 files / 141 tests.
+- Touched-file `style=` scan: PASS, no matches.
+- Added-line derivation scan: PASS, no added `calculate|score|infer|derive|doctrine|fallback`.
+- Touched-file `trackEvent|console\.` scan: PASS, no matches.
+- RG-052 CSS stale-token scan: PASS, no `migration-only` or `--default_dropshadow`.
+- API nominal type guard with venv active: PASS, required `hayz` and `rejoicing` fields remain strict.
+- `condamad_validate.py` with venv active: PASS.
+- `condamad_story_validate.py` and `condamad_story_lint.py --strict` with venv active: PASS.
+- `git diff --check`: PASS.
+- Local startup smoke: first PowerShell `Start-Process pnpm` attempt failed because the shim was not a Win32 executable;
+  direct Node-spawned Vite smoke then returned `HTTP 200` on `http://127.0.0.1:5178` and was stopped.
+
+## Review/fix iteration 2 null-required-field hardening - 2026-05-29
+
+- Implementation review finding: `hasTraditionalConditionBlocks` only checked required key presence. A runtime payload with
+  a required traditional fact set to `null` could still render as an empty complete fact row and hide contract drift.
+- Code fix: `NatalExpertPanel.tsx` now requires mandatory `hayz` and `rejoicing` fields to be non-null and non-undefined
+  before rendering the complete traditional facts branch.
+- Test fix: `NatalExpertPanel.test.tsx` adds coverage for `hayz.is_hayz: null` and verifies the valid neighboring `beta`
+  entry remains visible.
+
+Validation rerun:
+
+- `pnpm --dir frontend test -- NatalExpertPanel`: PASS, 1 file / 7 tests.
+- `pnpm --dir frontend lint`: PASS.
+- `pnpm --dir frontend build`: PASS.
+- `pnpm --dir frontend test -- BirthProfilePage NatalChartPage natalInterpretation`: PASS, 4 files / 149 tests.
+- `pnpm --dir frontend test -- inline-style`: PASS, 1 file / 4 tests.
+- `pnpm --dir frontend test -- design-system theme-tokens legacy-style`: PASS, 3 files / 141 tests.
+- Touched-file `style=` scan: PASS, no matches.
+- Added-line derivation scan: PASS, no added `calculate|score|infer|derive|doctrine|fallback`.
+- Touched-file `trackEvent|console\.` scan: PASS, no matches.
+- RG-052 CSS stale-token scan: PASS, no `migration-only` or `--default_dropshadow`.
+- API nominal type guard: PASS, required `hayz` and `rejoicing` fields remain strict.
+- `condamad_validate.py` with venv active: PASS.
+- `condamad_story_validate.py` and `condamad_story_lint.py --strict` with venv active: PASS.
+- `git diff --check`: PASS.
+- Local startup smoke: Vite job on `http://127.0.0.1:5181` returned `HTTP 200` and was stopped.

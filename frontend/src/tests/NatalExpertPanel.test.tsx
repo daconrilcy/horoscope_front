@@ -328,6 +328,81 @@ describe("NatalExpertPanel", () => {
     expect(within(betaCard as HTMLElement).getByText("rejoicing.rejoicing_house")).toBeInTheDocument()
   })
 
+  it("affiche l'etat degrade quand un sous-bloc traditionnel runtime est incomplet", () => {
+    const expertChart = buildExpertChart()
+    const partialTraditionalConditions = {
+      ...expertChart.result.traditional_conditions,
+      alpha: {
+        planet_code: "alpha",
+        hayz: {
+          planet_code: "alpha",
+          sect_match: true,
+        },
+        rejoicing: expertChart.result.traditional_conditions?.alpha.rejoicing,
+      },
+    } as unknown as LatestNatalChart["result"]["traditional_conditions"]
+
+    render(
+      <NatalExpertPanel
+        chart={{
+          ...expertChart,
+          result: {
+            ...expertChart.result,
+            traditional_conditions: partialTraditionalConditions,
+          },
+        }}
+      />,
+    )
+
+    const traditionalSection = screen.getByRole("region", { name: "Contrats traditionnels" })
+    const alphaCard = within(traditionalSection).getByRole("heading", { name: "alpha" }).closest("article")
+    const betaCard = within(traditionalSection).getByRole("heading", { name: "beta" }).closest("article")
+
+    expect(alphaCard).not.toBeNull()
+    expect(betaCard).not.toBeNull()
+    expect(within(alphaCard as HTMLElement).getByText(/Contrat expert partiel/i)).toBeInTheDocument()
+    expect(within(alphaCard as HTMLElement).queryByText("hayz.is_hayz")).not.toBeInTheDocument()
+    expect(within(betaCard as HTMLElement).getByText("hayz.is_hayz")).toBeInTheDocument()
+    expect(within(betaCard as HTMLElement).getByText("rejoicing.rejoicing_house")).toBeInTheDocument()
+  })
+
+  it("affiche l'etat degrade quand un fait requis traditionnel vaut null au runtime", () => {
+    const expertChart = buildExpertChart()
+    const partialTraditionalConditions = {
+      ...expertChart.result.traditional_conditions,
+      alpha: {
+        ...expertChart.result.traditional_conditions?.alpha,
+        hayz: {
+          ...expertChart.result.traditional_conditions?.alpha.hayz,
+          is_hayz: null,
+        },
+      },
+    } as unknown as LatestNatalChart["result"]["traditional_conditions"]
+
+    render(
+      <NatalExpertPanel
+        chart={{
+          ...expertChart,
+          result: {
+            ...expertChart.result,
+            traditional_conditions: partialTraditionalConditions,
+          },
+        }}
+      />,
+    )
+
+    const traditionalSection = screen.getByRole("region", { name: "Contrats traditionnels" })
+    const alphaCard = within(traditionalSection).getByRole("heading", { name: "alpha" }).closest("article")
+    const betaCard = within(traditionalSection).getByRole("heading", { name: "beta" }).closest("article")
+
+    expect(alphaCard).not.toBeNull()
+    expect(betaCard).not.toBeNull()
+    expect(within(alphaCard as HTMLElement).getByText(/Contrat expert partiel/i)).toBeInTheDocument()
+    expect(within(alphaCard as HTMLElement).queryByText("hayz.is_hayz")).not.toBeInTheDocument()
+    expect(within(betaCard as HTMLElement).getByText("hayz.is_hayz")).toBeInTheDocument()
+    expect(within(betaCard as HTMLElement).getByText("rejoicing.rejoicing_house")).toBeInTheDocument()
+  })
+
   it("groupe les conditions de secte uniquement depuis les booleens et codes explicites", () => {
     render(<NatalExpertPanel chart={buildExpertChart()} />)
 
