@@ -45,3 +45,19 @@ All Python commands were run from the repository root after activating `.\.venv\
 11. Cleanup: `frontend/test-results`
     Status: PASS
     Output: removed after verifying the resolved path stays inside the workspace.
+
+12. Command: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-382-review-adversariale-generation-theme-natal\00-story.md`
+    Status: PASS after tracker closure to `done`
+    Output: `CONDAMAD story validation: PASS`
+
+13. Command: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-382-review-adversariale-generation-theme-natal\00-story.md`
+    Status: PASS after tracker closure to `done`
+    Output: `CONDAMAD story lint: PASS`
+
+14. Command: `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-382-review-adversariale-generation-theme-natal`
+    Status: PASS after tracker closure to `done`
+    Output: `CONDAMAD validation: PASS`
+
+15. Command: `git diff --check`
+    Status: PASS after tracker closure to `done`
+    Output: no whitespace errors; Git emitted CRLF normalization warnings for tracked markdown files only.

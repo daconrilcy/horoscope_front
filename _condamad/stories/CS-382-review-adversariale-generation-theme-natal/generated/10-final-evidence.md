@@ -3,11 +3,11 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: completed
 - Story key: CS-382-review-adversariale-generation-theme-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-382-review-adversariale-generation-theme-natal`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 - Source finding closure status: `full-closure`
 
 ## Preflight
@@ -83,6 +83,7 @@
 | Runtime `app.openapi()` natal inventory | repo | PASS | 0 | Natal paths present. |
 | Targeted carrier scan | repo | PASS_WITH_CLASSIFIED_HITS | 0 | Hits classified in `evidence/guardrails.txt`. |
 | `git diff --check` | repo | PASS | 0 | No whitespace errors; CRLF normalization warnings only. |
+| Final tracker closure validation | repo | PASS | 0 | Story validation, strict lint, capsule validation, and diff check passed after `done`. |
 
 ## Commands skipped or blocked
 
@@ -104,7 +105,7 @@
 
 ## Final worktree status
 
-- Expected CS-382 changes: report, story evidence, generated capsule evidence, and `story-status.md`.
+- Expected CS-382 changes: report, story evidence, generated capsule evidence, and final `story-status.md` closure to `done`.
 - Pre-existing untracked files left untouched: `_condamad/critical-errors.jsonl`, `_condamad/run-state.json`.
 - Cleanup: `frontend/test-results` removed after validation; no validation cache is intentionally kept as evidence.
 
