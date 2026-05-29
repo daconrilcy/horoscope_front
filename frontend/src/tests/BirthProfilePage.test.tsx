@@ -370,15 +370,42 @@ describe("BirthProfilePage", () => {
 
   it("generates natal chart successfully and triggers navigation", async () => {
     setupToken()
+    let generationRequestBody: Record<string, unknown> | null = null
     const SUCCESS_GENERATE_RESPONSE = {
       ok: true,
       status: 200,
-      json: async () => ({ data: { chart_id: "c1" }, meta: { request_id: "r3" } }),
+      json: async () => ({
+        data: {
+          chart_id: "chart-cs-381-paris-1973",
+          metadata: { reference_version: "1.0.0", ruleset_version: "1.0.0", degraded_mode: null },
+          result: {
+            prepared_input: {
+              birth_datetime_local: "1973-04-24T11:00:00",
+              birth_timezone: "Europe/Paris",
+            },
+            traditional_conditions: {
+              sun: {
+                hayz: { is_hayz: true },
+                rejoicing: { is_rejoicing: false },
+              },
+            },
+          },
+        },
+        meta: { request_id: "r3" },
+      }),
     }
 
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes("/natal-chart") && init?.method === "POST") {
+        generationRequestBody = JSON.parse(init.body as string)
+        return SUCCESS_GENERATE_RESPONSE
+      }
+      return SUCCESS_GET_RESPONSE
+    })
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValueOnce(SUCCESS_GET_RESPONSE).mockResolvedValue(SUCCESS_GENERATE_RESPONSE),
+      fetchMock,
     )
     renderBirthProfilePage()
 
@@ -391,6 +418,7 @@ describe("BirthProfilePage", () => {
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: /Générer mon thème astral/i })).not.toBeInTheDocument()
     })
+    expect(generationRequestBody).toEqual({ accurate: true })
   })
 
   it("shows specific error message and requestId on natal generation timeout", async () => {

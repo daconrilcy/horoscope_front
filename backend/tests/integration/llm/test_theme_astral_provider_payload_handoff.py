@@ -38,4 +38,12 @@ def test_gateway_handoff_uses_theme_astral_provider_payload_once() -> None:
     rendered_payload = json.loads(rendered.removeprefix(prefix))
     assert rendered_payload == payload
     assert rendered.count('"interpretation_material":') == 1
+    assert rendered_payload["input_data"]["birth_context"]["birth_date"] == "1973-04-24"
+    assert rendered_payload["input_data"]["birth_context"]["birth_time_local"] == "11:00"
+    assert rendered_payload["input_data"]["birth_context"]["birth_place"]["city"] == "Paris"
+    assert rendered_payload["input_data"]["selected_themes"]["section_keys"]
+    assert not rendered_payload["input_data"]["limits"]["missing_data"]["birth_context"]
+    assert not rendered_payload["input_data"]["limits"]["missing_data"]["empty_fact_groups"]
     assert '"plan"' not in rendered
+    assert '"chart_json"' not in rendered
+    assert '"natal_data"' not in rendered

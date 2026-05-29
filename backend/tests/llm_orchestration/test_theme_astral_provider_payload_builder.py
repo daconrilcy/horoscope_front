@@ -97,6 +97,14 @@ def test_delivery_material_voice_and_output_contract_are_emitted() -> None:
         "emphases": ["integration"],
     }
     assert payload["input_data"]["interpretation_material"]["planet_sign_interpretations"]
+    assert payload["input_data"]["selected_themes"]["selection_owner"] == (
+        "InterpretationMaterialBuilder"
+    )
+    assert set(payload["input_data"]["selected_themes"]["section_keys"]).issubset(
+        set(INTERPRETATION_MATERIAL_KEYS)
+    )
+    assert not payload["input_data"]["limits"]["missing_data"]["birth_context"]
+    assert not payload["input_data"]["limits"]["missing_data"]["empty_fact_groups"]
     assert payload["output_contract"]["response_contract_id"] == THEME_ASTRAL_RESPONSE_CONTRACT_ID
     assert payload["output_contract"]["response_contract_version"] == "v1"
 

@@ -277,6 +277,8 @@ describe("NatalExpertPanel", () => {
     expect(within(advancedSection).getByText(/beta \/ out_of_sect/)).toBeInTheDocument()
 
     const traditionalSection = screen.getByRole("region", { name: "Contrats traditionnels" })
+    expect(within(traditionalSection).queryByText("chart_json")).not.toBeInTheDocument()
+    expect(within(traditionalSection).queryByText("natal_data")).not.toBeInTheDocument()
     expect(within(traditionalSection).getAllByText("hayz.is_hayz").length).toBeGreaterThan(0)
     expect(within(traditionalSection).getAllByText("hayz.hemisphere_match").length).toBeGreaterThan(0)
     expect(within(traditionalSection).getAllByText("hayz.chart_sect").length).toBeGreaterThan(0)

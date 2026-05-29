@@ -1,0 +1,29 @@
+# Validation CS-381
+
+PASS:
+
+- `condamad_validate.py _condamad\stories\CS-381-non-regression-generation-theme-natal-prompts`
+- `ruff format` sur les trois fichiers Python modifiés ou ajoutés
+- `ruff check backend`
+- `python -B -m pytest -q backend\tests --tb=short -k "natal_chart or theme_astral or llm_astrology_input"`
+- `python -B -m pytest -q backend\tests\architecture\test_llm_astrology_input_payload_boundaries.py --tb=short`
+- `python -B -c` pour `app.routes`
+- `python -B -c` pour `app.openapi()`
+- `pnpm --dir frontend test -- NatalExpertPanel BirthProfilePage`
+- `pnpm --dir frontend lint`
+- `pnpm --dir frontend build`
+- `$env:PLAYWRIGHT_PORT='4193'; $env:PLAYWRIGHT_SKIP_WEBSERVER='1'; pnpm --dir frontend test:e2e -- --grep "natal"`
+- `git diff --check`
+- `rg -n "style="` sur les fichiers frontend touchés: exit 1, PASS no matches
+
+Classified scans:
+
+- `rg -n "chart_json|natal_data"` retourne des occurrences existantes dans adapters/gateway/tests, mais les tests
+  CS-381 et les guards d'architecture prouvent que ces carriers ne pilotent pas le prompt provider ciblé.
+- `rg -n "provider_smoke|OPENAI_API_KEY|ANTHROPIC_API_KEY"` retourne uniquement la suite smoke provider opt-in existante.
+
+Initial failures:
+
+- `pnpm --dir frontend test:e2e -- --grep "natal"` sur port `4173`: FAIL, port occupé.
+- Relance avec `PLAYWRIGHT_PORT=4174`: TIMEOUT dans la gestion Playwright `webServer`.
+- Correction: ajout de `PLAYWRIGHT_SKIP_WEBSERVER=1` et validation contre un serveur Vite explicite.
