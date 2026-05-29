@@ -14,6 +14,8 @@ import type {
   PlanetConditionSignal,
   PlanetSectCondition,
   TraditionalConditionsPayload,
+  TraditionalHayzCondition,
+  TraditionalRejoicingCondition,
 } from "../../api/natalChart"
 import { classNames } from "../../utils/classNames"
 import "./NatalExpertPanel.css"
@@ -43,6 +45,16 @@ function formatValue(value: string | number | boolean | null | undefined): strin
 
 function hasItems<T>(items: T[] | undefined): items is T[] {
   return Array.isArray(items) && items.length > 0
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function hasTraditionalConditionBlocks(
+  condition: unknown,
+): condition is { hayz: TraditionalHayzCondition; rejoicing: TraditionalRejoicingCondition } {
+  return isRecord(condition) && isRecord(condition.hayz) && isRecord(condition.rejoicing)
 }
 
 function groupSectConditions(planets: Record<string, DignityPlanetPayload> | undefined): SectGroup[] {
@@ -268,35 +280,55 @@ function TraditionalConditionsBlock({
 }: {
   conditions?: TraditionalConditionsPayload | null
 }) {
-  const planets = entriesByPlanet(conditions ?? undefined)
+  const planets = entriesByPlanet(conditions as Record<string, unknown> | undefined)
   return (
     <SectionShell title="Contrats traditionnels" isEmpty={planets.length === 0}>
       <div className="natal-expert-card-grid">
-        {planets.map(([planetCode, condition]) => (
-          <article key={planetCode} className="natal-expert-data-card">
-            <h4>{planetCode}</h4>
-            <dl className="natal-expert-facts natal-expert-facts--compact">
-              <FactRow label="hayz.is_hayz" value={condition.hayz.is_hayz} />
-              <FactRow label="hayz.sect_match" value={condition.hayz.sect_match} />
-              <FactRow label="hayz.hemisphere_match" value={condition.hayz.hemisphere_match} />
-              <FactRow label="hayz.sign_gender_match" value={condition.hayz.sign_gender_match} />
-              <FactRow label="hayz.chart_sect" value={condition.hayz.chart_sect} />
-              <FactRow label="hayz.intrinsic_sect" value={condition.hayz.intrinsic_sect} />
-              <FactRow
-                label="hayz.planet_sect_condition"
-                value={condition.hayz.planet_sect_condition}
-              />
-              <FactRow
-                label="hayz.planet_horizon_position"
-                value={condition.hayz.planet_horizon_position}
-              />
-              <FactRow label="hayz.sign_gender" value={condition.hayz.sign_gender} />
-              <FactRow label="rejoicing.is_rejoicing" value={condition.rejoicing.is_rejoicing} />
-              <FactRow label="rejoicing.current_house" value={condition.rejoicing.current_house} />
-              <FactRow label="rejoicing.rejoicing_house" value={condition.rejoicing.rejoicing_house} />
-            </dl>
-          </article>
-        ))}
+        {planets.map(([planetCode, condition]) => {
+          const hasCompleteBlocks = hasTraditionalConditionBlocks(condition)
+
+          return (
+            <article
+              key={planetCode}
+              className={classNames(
+                "natal-expert-data-card",
+                !hasCompleteBlocks && "natal-expert-data-card--contract-drift",
+              )}
+            >
+              <h4>{planetCode}</h4>
+              {hasCompleteBlocks ? (
+                <dl className="natal-expert-facts natal-expert-facts--compact">
+                  <FactRow label="hayz.is_hayz" value={condition.hayz.is_hayz} />
+                  <FactRow label="hayz.sect_match" value={condition.hayz.sect_match} />
+                  <FactRow label="hayz.hemisphere_match" value={condition.hayz.hemisphere_match} />
+                  <FactRow label="hayz.sign_gender_match" value={condition.hayz.sign_gender_match} />
+                  <FactRow label="hayz.chart_sect" value={condition.hayz.chart_sect} />
+                  <FactRow label="hayz.intrinsic_sect" value={condition.hayz.intrinsic_sect} />
+                  <FactRow
+                    label="hayz.planet_sect_condition"
+                    value={condition.hayz.planet_sect_condition}
+                  />
+                  <FactRow
+                    label="hayz.planet_horizon_position"
+                    value={condition.hayz.planet_horizon_position}
+                  />
+                  <FactRow label="hayz.sign_gender" value={condition.hayz.sign_gender} />
+                  <FactRow label="rejoicing.is_rejoicing" value={condition.rejoicing.is_rejoicing} />
+                  <FactRow label="rejoicing.current_house" value={condition.rejoicing.current_house} />
+                  <FactRow
+                    label="rejoicing.rejoicing_house"
+                    value={condition.rejoicing.rejoicing_house}
+                  />
+                </dl>
+              ) : (
+                <p className="natal-expert-contract-drift">
+                  <strong>Contrat expert partiel</strong>
+                  <span>Faits hayz ou joie manquants dans le payload public.</span>
+                </p>
+              )}
+            </article>
+          )
+        })}
       </div>
     </SectionShell>
   )

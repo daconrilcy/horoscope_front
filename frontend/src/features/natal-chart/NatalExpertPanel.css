@@ -120,6 +120,28 @@
   background: var(--premium-glass-surface-1);
 }
 
+.natal-expert-data-card--contract-drift {
+  border-color: var(--premium-glass-border-strong);
+}
+
+.natal-expert-contract-drift {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: var(--premium-text-main);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.natal-expert-contract-drift strong {
+  color: var(--premium-text-strong);
+}
+
+.natal-expert-contract-drift span {
+  color: var(--premium-text-muted);
+  overflow-wrap: anywhere;
+}
+
 .natal-expert-sect-group h4,
 .natal-expert-data-card h4,
 .natal-expert-string-list h4,

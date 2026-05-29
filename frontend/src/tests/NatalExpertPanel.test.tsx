@@ -294,6 +294,40 @@ describe("NatalExpertPanel", () => {
     expect(screen.getByText("critical_patterns")).toBeInTheDocument()
   })
 
+  it("affiche un etat degrade localise quand une condition traditionnelle runtime est partielle", () => {
+    const expertChart = buildExpertChart()
+    const partialTraditionalConditions = {
+      ...expertChart.result.traditional_conditions,
+      alpha: {
+        planet_code: "alpha",
+        rejoicing: expertChart.result.traditional_conditions?.alpha.rejoicing,
+      },
+    } as unknown as LatestNatalChart["result"]["traditional_conditions"]
+
+    render(
+      <NatalExpertPanel
+        chart={{
+          ...expertChart,
+          result: {
+            ...expertChart.result,
+            traditional_conditions: partialTraditionalConditions,
+          },
+        }}
+      />,
+    )
+
+    const traditionalSection = screen.getByRole("region", { name: "Contrats traditionnels" })
+    const alphaCard = within(traditionalSection).getByRole("heading", { name: "alpha" }).closest("article")
+    const betaCard = within(traditionalSection).getByRole("heading", { name: "beta" }).closest("article")
+
+    expect(alphaCard).not.toBeNull()
+    expect(betaCard).not.toBeNull()
+    expect(within(alphaCard as HTMLElement).getByText(/Contrat expert partiel/i)).toBeInTheDocument()
+    expect(within(alphaCard as HTMLElement).getByText(/faits hayz ou joie manquants/i)).toBeInTheDocument()
+    expect(within(betaCard as HTMLElement).getByText("hayz.is_hayz")).toBeInTheDocument()
+    expect(within(betaCard as HTMLElement).getByText("rejoicing.rejoicing_house")).toBeInTheDocument()
+  })
+
   it("groupe les conditions de secte uniquement depuis les booleens et codes explicites", () => {
     render(<NatalExpertPanel chart={buildExpertChart()} />)
 

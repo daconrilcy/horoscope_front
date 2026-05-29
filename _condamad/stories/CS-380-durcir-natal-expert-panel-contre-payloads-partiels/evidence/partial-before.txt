@@ -1,0 +1,41 @@
+$ node ./scripts/run-vite-logged.mjs vitest vitest run "NatalExpertPanel"
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ❯ src/tests/NatalExpertPanel.test.tsx (5 tests | 1 failed) 299ms
+     ✓ rend les blocs experts du payload public sans calcul local 226ms
+     × affiche un etat degrade localise quand une condition traditionnelle runtime est partielle 9ms
+     ✓ groupe les conditions de secte uniquement depuis les booleens et codes explicites 37ms
+     ✓ distingue les payloads anciens, vides et sans heure fiable 21ms
+     ✓ rend les etats loading, error et absence de chart 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/NatalExpertPanel.test.tsx > NatalExpertPanel > affiche un etat degrade localise quand une condition traditionnelle runtime est partielle
+TypeError: Cannot read properties of undefined (reading 'is_hayz')
+ ❯ src/features/natal-chart/NatalExpertPanel.tsx:279:67
+    277|             <h4>{planetCode}</h4>
+    278|             <dl className="natal-expert-facts natal-expert-facts--comp…
+    279|               <FactRow label="hayz.is_hayz" value={condition.hayz.is_h…
+       |                                                                   ^
+    280|               <FactRow label="hayz.sect_match" value={condition.hayz.s…
+    281|               <FactRow label="hayz.hemisphere_match" value={condition.…
+ ❯ TraditionalConditionsBlock src/features/natal-chart/NatalExpertPanel.tsx:275:18
+ ❯ Object.react_stack_bottom_frame node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+ ❯ runWithFiberInDEV node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js:874:13
+ ❯ performUnitOfWork node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js:17641:22
+ ❯ workLoopSync node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js:17469:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  10:29:10
+   Duration  1.34s (transform 67ms, setup 243ms, import 52ms, tests 299ms, environment 594ms)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+[ELIFECYCLE] Test failed. See above for more details.

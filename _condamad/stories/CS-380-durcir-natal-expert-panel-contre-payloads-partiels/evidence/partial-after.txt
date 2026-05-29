@@ -1,0 +1,12 @@
+$ node ./scripts/run-vite-logged.mjs vitest vitest run "NatalExpertPanel"
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/NatalExpertPanel.test.tsx (5 tests) 323ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  10:30:06
+   Duration  1.26s (transform 68ms, setup 214ms, import 52ms, tests 323ms, environment 553ms)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
