@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from threading import Lock
 from time import monotonic
 from typing import Any
@@ -19,8 +20,7 @@ from app.services.user_profile.birth_profile_service import (
 )
 from app.services.user_profile.natal_chart_service import (
     UserNatalChartConsistencyData,
-    UserNatalChartGenerationData,
-    UserNatalChartReadData,
+    UserNatalChartMetadata,
 )
 
 _INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
@@ -86,21 +86,38 @@ class NatalChartGenerateRequest(BaseModel):
     altitude_m: float | None = None
 
 
+class UserNatalChartPublicGenerationData(BaseModel):
+    """Contrat Pydantic public du theme natal genere."""
+
+    chart_id: str
+    result: dict[str, Any]
+    metadata: UserNatalChartMetadata
+
+
+class UserNatalChartPublicReadData(BaseModel):
+    """Contrat Pydantic public du theme natal recharge."""
+
+    chart_id: str
+    result: dict[str, Any]
+    metadata: UserNatalChartMetadata
+    created_at: datetime
+
+
 class UserNatalChartApiResponse(BaseModel):
     """Contrat Pydantic exposé par l'API."""
 
-    data: UserNatalChartGenerationData
+    data: UserNatalChartPublicGenerationData
     meta: ResponseMeta
 
 
 class UserNatalChartReadApiResponse(BaseModel):
     """Contrat Pydantic exposé par l'API."""
 
-    data: UserNatalChartReadData
+    data: UserNatalChartPublicReadData
     meta: ResponseMeta
 
 
-class UserNatalChartLatestData(UserNatalChartReadData):
+class UserNatalChartLatestData(UserNatalChartPublicReadData):
     """Contrat Pydantic exposé par l'API."""
 
     interpretation: NatalInterpretationData | None = None

@@ -115,6 +115,18 @@ def _build_valid_natal_result_payload(db: Session) -> dict[str, object]:
     return result.model_dump(mode="json")
 
 
+def _assert_public_traditional_conditions_contract(result: dict[str, object]) -> None:
+    """Verifie la forme publique stable des conditions traditionnelles."""
+    conditions = result["traditional_conditions"]
+
+    assert isinstance(conditions, dict)
+    assert "planets" not in conditions
+    assert conditions
+    for condition in conditions.values():
+        assert isinstance(condition["hayz"]["is_hayz"], bool)
+        assert isinstance(condition["rejoicing"]["is_rejoicing"], bool)
+
+
 def _seed_reference_data() -> None:
     response = client.post(
         "/v1/reference-data/seed?version=1.0.0",
@@ -199,6 +211,7 @@ def test_generate_natal_chart_success() -> None:
     assert "birth_place" not in data["result"]["prepared_input"]
     assert "birth_city" not in data["result"]["prepared_input"]
     assert "birth_country" not in data["result"]["prepared_input"]
+    _assert_public_traditional_conditions_contract(data["result"])
 
 
 def test_generate_natal_chart_does_not_trigger_background_baseline_refresh() -> None:
@@ -263,6 +276,35 @@ def test_get_latest_natal_chart_success() -> None:
     assert payload["metadata"]["reference_version"] == "1.0.0"
     assert payload["metadata"]["house_system"] == "placidus"
     assert "created_at" in payload
+    _assert_public_traditional_conditions_contract(payload["result"])
+
+
+def test_generate_natal_chart_plan_does_not_null_reliable_traditional_contract() -> None:
+    """Le contrat traditionnel fiable reste expose sans dependance au plan commercial."""
+    _cleanup_tables()
+    _seed_reference_data()
+    place_id = _seed_resolved_place()
+    access_token = _register_and_get_access_token()
+    client.put(
+        "/v1/users/me/birth-data",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "birth_date": "1990-06-15",
+            "birth_time": "10:30",
+            "birth_place": "Paris",
+            "birth_timezone": "Europe/Paris",
+            "place_resolved_id": place_id,
+        },
+    )
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0", "accurate": True},
+    )
+
+    assert response.status_code == 200
+    _assert_public_traditional_conditions_contract(response.json()["data"]["result"])
 
 
 def test_generate_natal_chart_fails_when_profile_missing() -> None:
@@ -519,6 +561,37 @@ def test_generate_natal_chart_invalid_payload_uses_standard_error_envelope() -> 
     payload = response.json()
     assert "error" in payload
     assert payload["error"]["code"] == "invalid_natal_chart_request"
+
+
+def test_generate_natal_chart_public_contract_error_uses_standard_error_envelope(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Un contrat public traditionnel invalide ne produit pas de succes HTTP."""
+    _cleanup_tables()
+    access_token = _register_and_get_access_token()
+
+    def _raise_public_contract_error(*args: object, **kwargs: object) -> None:
+        raise UserNatalChartServiceError(
+            code="invalid_natal_chart_public_contract",
+            message="natal chart public contract is invalid",
+            details={"chart_id": "chart-invalid"},
+        )
+
+    monkeypatch.setattr(
+        "app.api.v1.routers.public.users.UserNatalChartService.generate_for_user",
+        _raise_public_contract_error,
+    )
+
+    response = client.post(
+        "/v1/users/me/natal-chart",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"reference_version": "1.0.0", "accurate": True},
+    )
+
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["error"]["code"] == "invalid_natal_chart_public_contract"
+    assert payload["error"]["request_id"]
 
 
 def test_generate_natal_chart_sidereal_without_ayanamsa_returns_422_missing_ayanamsa(

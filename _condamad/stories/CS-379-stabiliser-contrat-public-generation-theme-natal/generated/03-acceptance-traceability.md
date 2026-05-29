@@ -1,0 +1,15 @@
+# Acceptance Traceability
+
+| AC | Requirement | Implementation evidence | Validation evidence | Status |
+|---|---|---|---|---|
+| AC1 | POST publishes complete traditional entries. | `backend/app/services/chart/json_builder.py` projects `traditional_conditions` as a planet-keyed public dict and rejects missing boolean flags; `UserNatalChartGenerationData` serializes `result` through that projection. | `python -B -m pytest --long -q app/tests/integration/test_user_natal_chart_api.py::test_generate_natal_chart_success ...`; `evidence/post-after.json` contains keyed entries with `hayz.is_hayz` and `rejoicing.is_rejoicing`. | PASS |
+| AC2 | Latest reload preserves the same public shape. | `UserNatalChartReadData` uses the same projection as POST, preserving one public contract after persistence reload. | `python -B -m pytest --long -q app/tests/integration/test_user_natal_chart_api.py::test_get_latest_natal_chart_success ...`; `evidence/latest-after.json`. | PASS |
+| AC3 | Plan tier never nulls reliable traditional data. | Projection has no plan input and no plan branching; API test proves reliable birth context remains populated. | `test_generate_natal_chart_plan_does_not_null_reliable_traditional_contract` PASS. | PASS |
+| AC4 | No-time modes keep time-dependent blocks neutral. | Existing `build_chart_json` no-time policy remains unchanged. | `python -B -m pytest -q app/tests/unit/test_chart_json_builder.py -k "traditional_conditions or no_time or public_natal_result_contract" --tb=short` PASS. | PASS |
+| AC5 | Runtime route metadata remains unchanged. | No route path or handler registration changed; public response schema now accepts the projected result. | Runtime `app.routes` and `app.openapi()` check PASS; `evidence/openapi-before.json` and `evidence/openapi-after.json` persisted. | PASS |
+| AC6 | Prompt enrichment remains present. | No provider payload builder code changed. | `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short` PASS. | PASS |
+| AC7 | Prompt carriers are not reintroduced. | Public projection remains in chart/user-profile service boundary; no prompt runtime file changed. | Scoped `rg -n "chart_json\|natal_data\|legacy" backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py` returned no matches. | PASS |
+| AC8 | Invalid public contract stops success evidence. | `UserNatalChartService._ensure_public_contract` raises `invalid_natal_chart_public_contract` when projection validation fails. | `test_generate_natal_chart_public_contract_error_uses_standard_error_envelope` PASS; unit missing-boolean test PASS. | PASS |
+| AC9 | Story evidence artifacts are persisted. | `evidence/post-before.json`, `latest-before.json`, `openapi-before.json`, `post-after.json`, `latest-after.json`, `openapi-after.json`, and `validation.txt` created. | Capsule validation PASS after evidence update. | PASS |
+
+Status values: `PENDING`, `PASS`, `PASS_WITH_LIMITATIONS`, `FAIL`, `BLOCKED`.

@@ -1,0 +1,15 @@
+Validation summary for CS-379.
+
+PASS: capsule repaired and validated after missing generated files.
+PASS: ruff format on modified Python files.
+PASS: app/tests/unit/test_chart_json_builder.py -k "traditional_conditions or no_time or public_natal_result_contract".
+PASS: app/tests/integration/test_user_natal_chart_api.py targeted POST/latest/plan/contract tests with --long.
+PASS: tests/llm_orchestration/test_theme_astral_provider_payload_builder.py.
+PASS: ruff check .
+PASS: runtime app.routes/app.openapi() assertion for /v1/users/me/natal-chart and /v1/users/me/natal-chart/latest.
+PASS: scoped prompt-carrier rg returned no matches for theme_astral_provider_payload_builder.py and its test.
+PASS: git diff --check on story paths.
+PASS: condamad_validate.py after final evidence update.
+
+Skipped: full backend pytest suite; targeted story checks were run because the suite includes long integration/regression coverage.
+Skipped: frontend checks; no frontend files changed and frontend was witness-only for this story.

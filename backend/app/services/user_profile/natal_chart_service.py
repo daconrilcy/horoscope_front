@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from time import perf_counter
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_serializer
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -22,6 +22,7 @@ from app.domain.astrology.natal_preparation import BirthInput
 from app.infra.db.repositories.chart_result_repository import ChartResultRepository
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.infra.observability.metrics import increment_counter
+from app.services.chart.json_builder import project_public_natal_result_contract
 from app.services.chart.result_service import ChartResultService, ChartResultServiceError
 from app.services.natal.calculation_service import NatalCalculationService
 from app.services.reference_data_service import ReferenceDataService
@@ -76,6 +77,11 @@ class UserNatalChartGenerationData(BaseModel):
     result: NatalResult
     metadata: UserNatalChartMetadata
 
+    @field_serializer("result")
+    def _serialize_result(self, result: NatalResult) -> dict[str, object]:
+        """Expose le resultat natal selon le contrat JSON public stable."""
+        return project_public_natal_result_contract(result)
+
 
 class UserNatalChartReadData(BaseModel):
     """Données d'un thème natal récupéré avec date de création."""
@@ -84,6 +90,11 @@ class UserNatalChartReadData(BaseModel):
     result: NatalResult
     metadata: UserNatalChartMetadata
     created_at: datetime
+
+    @field_serializer("result")
+    def _serialize_result(self, result: NatalResult) -> dict[str, object]:
+        """Expose le resultat natal recharge selon le contrat JSON public stable."""
+        return project_public_natal_result_contract(result)
 
 
 class UserNatalChartConsistencyData(BaseModel):
@@ -122,6 +133,18 @@ class UserNatalChartService:
             raise UserNatalChartServiceError(
                 code="invalid_chart_result_payload",
                 message="stored chart payload is invalid",
+                details={"chart_id": chart_id},
+            ) from error
+
+    @staticmethod
+    def _ensure_public_contract(result: NatalResult, chart_id: str) -> None:
+        """Bloque la reponse succes si la projection publique serait invalide."""
+        try:
+            project_public_natal_result_contract(result)
+        except ValueError as error:
+            raise UserNatalChartServiceError(
+                code="invalid_natal_chart_public_contract",
+                message="natal chart public contract is invalid",
                 details={"chart_id": chart_id},
             ) from error
 
@@ -343,6 +366,7 @@ class UserNatalChartService:
                 details=error.details,
             ) from error
 
+        UserNatalChartService._ensure_public_contract(result, chart_id)
         return UserNatalChartGenerationData(
             chart_id=chart_id,
             result=result,
@@ -435,6 +459,7 @@ class UserNatalChartService:
                 result_value=str(result.engine),
             )
 
+        UserNatalChartService._ensure_public_contract(result, model.chart_id)
         return UserNatalChartReadData(
             chart_id=model.chart_id,
             result=result,

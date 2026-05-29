@@ -656,6 +656,13 @@ def _time_safe_advanced_conditions(
 
 def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, Any] | None:
     """Projette le contrat traditionnel deja normalise par le domaine."""
+    return serialize_public_traditional_conditions(traditional_conditions)
+
+
+def serialize_public_traditional_conditions(
+    traditional_conditions: Any,
+) -> dict[str, Any] | None:
+    """Projette les conditions traditionnelles publiques sous forme indexee par planete."""
     if traditional_conditions is None:
         return None
     planets = getattr(traditional_conditions, "planets", ())
@@ -663,31 +670,37 @@ def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, 
         return {}
     result: dict[str, Any] = {}
     for planet in planets:
+        hayz = getattr(planet, "hayz", None)
+        rejoicing = getattr(planet, "rejoicing", None)
+        if not isinstance(getattr(hayz, "is_hayz", None), bool):
+            raise ValueError("traditional_conditions hayz.is_hayz must be boolean")
+        if not isinstance(getattr(rejoicing, "is_rejoicing", None), bool):
+            raise ValueError("traditional_conditions rejoicing.is_rejoicing must be boolean")
         payload = {
             "planet_code": planet.planet_code,
             "hayz": {
-                "planet_code": planet.hayz.planet_code,
-                "is_hayz": planet.hayz.is_hayz,
-                "sect_match": planet.hayz.sect_match,
-                "hemisphere_match": planet.hayz.hemisphere_match,
-                "sign_gender_match": planet.hayz.sign_gender_match,
-                "chart_sect": planet.hayz.chart_sect,
-                "intrinsic_sect": planet.hayz.intrinsic_sect,
-                "planet_sect_condition": planet.hayz.planet_sect_condition,
-                "planet_horizon_position": planet.hayz.planet_horizon_position,
-                "sign_gender": planet.hayz.sign_gender,
-                "calculation_basis": planet.hayz.calculation_basis,
-                "reference_system": planet.hayz.reference_system,
-                "evidence": list(planet.hayz.evidence),
+                "planet_code": hayz.planet_code,
+                "is_hayz": hayz.is_hayz,
+                "sect_match": hayz.sect_match,
+                "hemisphere_match": hayz.hemisphere_match,
+                "sign_gender_match": hayz.sign_gender_match,
+                "chart_sect": hayz.chart_sect,
+                "intrinsic_sect": hayz.intrinsic_sect,
+                "planet_sect_condition": hayz.planet_sect_condition,
+                "planet_horizon_position": hayz.planet_horizon_position,
+                "sign_gender": hayz.sign_gender,
+                "calculation_basis": hayz.calculation_basis,
+                "reference_system": hayz.reference_system,
+                "evidence": list(hayz.evidence),
             },
             "rejoicing": {
-                "planet_code": planet.rejoicing.planet_code,
-                "is_rejoicing": planet.rejoicing.is_rejoicing,
-                "current_house": planet.rejoicing.current_house,
-                "rejoicing_house": planet.rejoicing.rejoicing_house,
-                "calculation_basis": planet.rejoicing.calculation_basis,
-                "reference_system": planet.rejoicing.reference_system,
-                "evidence": list(planet.rejoicing.evidence),
+                "planet_code": rejoicing.planet_code,
+                "is_rejoicing": rejoicing.is_rejoicing,
+                "current_house": rejoicing.current_house,
+                "rejoicing_house": rejoicing.rejoicing_house,
+                "calculation_basis": rejoicing.calculation_basis,
+                "reference_system": rejoicing.reference_system,
+                "evidence": list(rejoicing.evidence),
             },
         }
         mitigation = getattr(planet, "sect_nature_mitigation", None)
@@ -709,6 +722,15 @@ def _serialize_traditional_conditions(traditional_conditions: Any) -> dict[str, 
             }
         result[planet.planet_code] = payload
     return result
+
+
+def project_public_natal_result_contract(natal_result: Any) -> dict[str, Any]:
+    """Retourne le resultat natal API avec le contrat public traditionnel stabilise."""
+    payload = natal_result.model_dump(mode="json")
+    payload["traditional_conditions"] = serialize_public_traditional_conditions(
+        getattr(natal_result, "traditional_conditions", None)
+    )
+    return payload
 
 
 def _serialize_interpretation_adapter(adapter: Any) -> dict[str, Any] | None:

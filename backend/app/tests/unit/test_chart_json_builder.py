@@ -70,6 +70,7 @@ from app.services.chart.json_builder import (
     _time_safe_advanced_conditions,
     build_chart_json,
     build_evidence_catalog,
+    project_public_natal_result_contract,
 )
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from tests.factories.astrology_runtime_reference_factory import complete_reference
@@ -864,6 +865,35 @@ def test_serialize_traditional_conditions_exposes_rejoicing_contract() -> None:
         "reference_system": "traditional",
         "evidence": ["moon matches planetary_joy: house_code=3"],
     }
+
+
+def test_serialize_traditional_conditions_rejects_missing_boolean_contract() -> None:
+    """Une entree traditionnelle partielle ne peut pas devenir une reponse publique."""
+    traditional_conditions = SimpleNamespace(
+        planets=(
+            SimpleNamespace(
+                planet_code="sun",
+                hayz=SimpleNamespace(planet_code="sun"),
+                rejoicing=SimpleNamespace(planet_code="sun", is_rejoicing=False),
+            ),
+        )
+    )
+
+    with pytest.raises(ValueError, match="hayz.is_hayz must be boolean"):
+        _serialize_traditional_conditions(traditional_conditions)
+
+
+def test_project_public_natal_result_contract_indexes_traditional_conditions(
+    mock_natal_result,
+) -> None:
+    """Le contrat API remplace la liste interne par un dictionnaire par planete."""
+    mock_natal_result.model_dump.return_value = {"traditional_conditions": {"planets": []}}
+
+    payload = project_public_natal_result_contract(mock_natal_result)
+
+    assert "planets" not in payload["traditional_conditions"]
+    assert payload["traditional_conditions"]["sun"]["hayz"]["is_hayz"] is True
+    assert payload["traditional_conditions"]["sun"]["rejoicing"]["is_rejoicing"] is False
 
 
 def test_build_chart_json_projects_enriched_profiles_from_chart_balance(
