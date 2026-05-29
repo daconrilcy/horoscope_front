@@ -32,7 +32,7 @@ The story must prove corrected natal generation behavior, frontend tolerance, an
 - Evidence 1: `_story_briefs/cs-383-corriger-findings-review-adversariale-generation-theme-natal.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign story number `CS-383`.
 - Evidence 3: `_condamad/stories/CS-382-review-adversariale-generation-theme-natal/00-story.md` - source review story read.
-- Evidence 4: `_condamad/reports/cs-382-review-adversariale-generation-theme-natal.md` - report path checked and currently absent.
+- Evidence 4: `_condamad/reports/cs-382-review-adversariale-generation-theme-natal.md` - report read; finding register is empty.
 - Evidence 5: backend and frontend target roots exist in this workspace.
 - Evidence 6: required backend and frontend files named by the brief exist in this workspace.
 - Evidence 7: `resolve_guardrails.py` selected backend API, frontend, and local validation guardrails for this scope.
@@ -323,7 +323,7 @@ Files not expected to change:
 - A backend change could make `traditional_conditions` plan-dependent or silently partial.
 - A frontend guard could invent values while appearing tolerant to partial payloads.
 - Prompt enrichment could regress while public payload tests still pass.
-- The CS-382 report absence at story-writing time means implementation must wait for CS-382 evidence before code edits.
+- The CS-382 report was absent at story-writing time; implementation must use the now-present CS-382 evidence before code edits.
 
 ## Dev Agent Instructions
 

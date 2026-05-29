@@ -1,0 +1,14 @@
+CS-383 guardrails evidence
+
+Applicable guardrails:
+- RG-002: no API router code changed; backend targeted tests pass.
+- RG-003: app.routes and app.openapi() confirm /v1/users/me/natal-chart POST.
+- RG-047: rg -n "style=" frontend/src/features/natal-chart/NatalExpertPanel.tsx => PASS, no matches.
+- RG-129: frontend derivation-token scan on NatalExpertPanel.tsx => PASS, no matches.
+- RG-131: backend targeted traditional_conditions tests pass.
+
+Classified hits:
+- chart_json/natal_data hits remain in tests, admin sample tooling, architecture guards, runtime-only role metadata, or legacy-extinction assertions.
+- NatalExpertPanel hits for hayz/rejoicing are display of backend-provided facts, not local calculation.
+
+No new durable guardrail was added because no applicative invariant changed.
