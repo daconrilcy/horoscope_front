@@ -38,7 +38,7 @@
       "justification": "Résolution par use_case sans assembly ; interdite sur familles supportées.",
       "perimeter": "Features hors SUPPORTED_FAMILIES ou tests explicites (test_fallback_active).",
       "review_or_extinction_date": "2026-06-30",
-      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily"]
+      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily", "theme_astral"]
     },
     {
       "stable_id": "fb.resolve_model",
@@ -50,7 +50,7 @@
       "justification": "Résolution modèle via catalogue lorsque ExecutionProfile manque.",
       "perimeter": "Chemins sans profil explicite ; interdit sur familles supportées en nominal.",
       "review_or_extinction_date": "2026-06-30",
-      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily"]
+      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily", "theme_astral"]
     },
     {
       "stable_id": "fb.execution_config_admin",
@@ -74,7 +74,7 @@
       "justification": "Runtime nominalement OpenAI-only ; repli provider non supporté.",
       "perimeter": "Provider non listé dans supported_providers sur chemins non strictement nominaux.",
       "review_or_extinction_date": "2027-03-31",
-      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily"]
+      "forbidden_families": ["chat", "guidance", "natal", "horoscope_daily", "theme_astral"]
     },
     {
       "stable_id": "fb.narrator_legacy",

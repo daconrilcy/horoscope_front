@@ -17,7 +17,7 @@ Les objectifs de ce pipeline sont :
 
 - avoir une seule chaîne de construction du prompt ;
 - éviter les variations concurrentes entre `use_case`, assembly, persona et paramètres provider ;
-- garantir que les familles canoniques (`chat`, `guidance`, `natal`, `horoscope_daily`) passent par une configuration publiable et vérifiable ;
+- garantir que les familles canoniques (`chat`, `guidance`, `natal`, `horoscope_daily`, `theme_astral`) passent par une configuration publiable et vérifiable ;
 - rendre le comportement observable, testable et rollbackable via les release snapshots.
 
 Le document suit le code réel, pas une architecture cible théorique.
@@ -94,6 +94,7 @@ Référence des étapes nommées côté `LLMGateway` (alignement contrôles 66.2
 | `guidance` | `AIEngineAdapter.generate_guidance()` | `feature="guidance"`, `subfeature` dérivée du `use_case` | `nominal_canonical` |
 | `natal` | `AIEngineAdapter.generate_natal_interpretation()` | `feature="natal"`, `subfeature` normalisée | `nominal_canonical` |
 | `horoscope_daily` | `AIEngineAdapter.generate_horoscope_narration()` | `feature="horoscope_daily"`, `subfeature="narration"` | `nominal_canonical` |
+| `theme_astral` | `theme_astral_provider_payload_builder` via `LLMGateway` | `feature="theme_astral"`, `subfeature="interpretation"` | `nominal_canonical` |
 
 Les consultations spécifiques ne constituent pas une famille LLM distincte. Elles sont un sous-cas produit de `guidance_contextual` : `ConsultationGenerationService` prépare le contexte métier, puis délègue l'exécution LLM à `GuidanceService.request_contextual_guidance_async()`, qui appelle `AIEngineAdapter.generate_guidance()` avec `use_case="guidance_contextual"`, `feature="guidance"` et `subfeature="contextual"`. Les champs `situation`, `objective` et `natal_chart_summary` restent donc les placeholders canoniques du prompt ; le contexte tiers relationnel est injecté comme résumé natal de guidance quand il existe.
 
@@ -199,7 +200,7 @@ Le flux réel dans `LLMGateway.execute_request()` est :
 10. tenter une réparation, puis éventuellement un `fallback_use_case` legacy ;
 11. construire le `GatewayResult` final et le snapshot d'observabilité.
 
-Point important : la Stage 0.5 n'est plus la source de vérité pour les familles supportées. Sur `chat`, `guidance`, `natal` et `horoscope_daily`, la validation d'entrée utile doit partir du plan canonique résolu depuis l'assembly et l'`ExecutionProfile`, pas d'un `use_case` legacy ou d'un catalogue Python.
+Point important : la Stage 0.5 n'est plus la source de vérité pour les familles supportées. Sur `chat`, `guidance`, `natal`, `horoscope_daily` et `theme_astral`, la validation d'entrée utile doit partir du plan canonique résolu depuis l'assembly et l'`ExecutionProfile`, pas d'un `use_case` legacy ou d'un catalogue Python.
 
 ## Lecture admin de référence
 
@@ -375,7 +376,7 @@ flowchart LR
 
 Règles centrales :
 
-- `SUPPORTED_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily"}`
+- `SUPPORTED_FAMILIES = {"chat", "guidance", "natal", "horoscope_daily", "theme_astral"}`
 - aucune famille `consultation` n'est canonique ; les consultations thématiques restent routées par `guidance_contextual`
 - `natal_interpretation` en tant que feature est un alias normalisé vers `natal`
 - `normalize_subfeature("natal", "natal_interpretation")` retourne `interpretation`
@@ -439,8 +440,8 @@ Les règles de gouvernance viennent du **registre résiduel versionné**
 
 Sur le périmètre supporté :
 
-- `USE_CASE_FIRST` est `à retirer` sur `chat`, `guidance`, `horoscope_daily`, `natal`
-- `RESOLVE_MODEL` est `à retirer` sur `chat`, `guidance`, `horoscope_daily`, `natal`
+- `USE_CASE_FIRST` est `à retirer` sur `chat`, `guidance`, `horoscope_daily`, `natal`, `theme_astral`
+- `RESOLVE_MODEL` est `à retirer` sur `chat`, `guidance`, `horoscope_daily`, `natal`, `theme_astral`
 
 En pratique :
 

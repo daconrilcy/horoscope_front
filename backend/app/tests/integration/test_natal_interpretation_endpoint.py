@@ -94,7 +94,10 @@ def _make_gateway_result(use_case: str, persona_id: str | None = None) -> Gatewa
             ],
             "highlights": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
             "advice": ["Conseil 1", "Conseil 2", "Conseil 3", "Conseil 4", "Conseil 5"],
-            "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
+            "evidence": [
+                "LLM_ASTROLOGY_INPUT_V1.PROJECTION",
+                "LLM_ASTROLOGY_INPUT_V1.PROJECTION",
+            ],
             # NB: AstroResponseV3 DOES NOT have disclaimers
         }
     else:
@@ -108,7 +111,10 @@ def _make_gateway_result(use_case: str, persona_id: str | None = None) -> Gatewa
             ],
             "highlights": ["Point 1", "Point 2", "Point 3"],
             "advice": ["Conseil 1", "Conseil 2", "Conseil 3"],
-            "evidence": ["SUN_TAURUS", "MOON_SCORPIO"],
+            "evidence": [
+                "LLM_ASTROLOGY_INPUT_V1.PROJECTION",
+                "LLM_ASTROLOGY_INPUT_V1.PROJECTION",
+            ],
             "disclaimers": ["Mock disclaimer"],
         }
     raw_output = json.dumps(structured_output)
@@ -206,6 +212,11 @@ class TestNatalInterpretationEndpointV2:
                 "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=_make_gateway_result(use_case),
+            ),
+            patch(
+                "app.services.llm_generation.natal.interpretation_service."
+                "_build_rejected_narrative_answer_outcome",
+                return_value=None,
             ),
         ):
             response = test_client.post(

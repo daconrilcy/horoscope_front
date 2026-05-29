@@ -230,9 +230,10 @@ class BirthPreparedData(BaseModel):
     birth_timezone: str
     birth_date: str | None = None
     birth_time_local: str | None = None
-    birth_place: str | None = None
-    birth_city: str | None = None
-    birth_country: str | None = None
+    # Le libelle utilisateur reste disponible en memoire mais absent du payload public.
+    birth_place: str | None = Field(default=None, exclude=True)
+    birth_city: str | None = Field(default=None, exclude=True)
+    birth_country: str | None = Field(default=None, exclude=True)
     birth_lat: float | None = None
     birth_lon: float | None = None
     # Canonical fields for the standardized temporal pipeline (story 22.1).

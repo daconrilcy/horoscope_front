@@ -81,7 +81,7 @@ def _seed_runtime_artifacts(
             key=use_case_key,
             display_name=use_case_key,
             description="Test runtime canonique",
-            required_prompt_placeholders=["chart_json"],
+            required_prompt_placeholders=["llm_astrology_input_v1"],
         )
     )
 
@@ -89,7 +89,7 @@ def _seed_runtime_artifacts(
         id=uuid.uuid4(),
         use_case_key=use_case_key,
         status=PromptStatus.PUBLISHED,
-        developer_prompt="Analyse {{chart_json}}",
+        developer_prompt="Analyse {{llm_astrology_input_v1}}",
         created_by="test",
     )
     db_session.add(prompt)
@@ -159,7 +159,9 @@ async def test_gateway_transmits_gpt5_params_from_execution_profile(db_session: 
             plan="free",
             locale="fr-FR",
         ),
-        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+        context=ExecutionContext(
+            extra_context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}}
+        ),
         request_id="test-req",
         trace_id="test-trace",
         user_id=1,
@@ -201,7 +203,9 @@ async def test_gateway_transmits_gpt4o_without_reasoning_effort(db_session: Sess
             plan="free",
             locale="fr-FR",
         ),
-        context=ExecutionContext(chart_json='{"sun":"aries"}'),
+        context=ExecutionContext(
+            extra_context={"llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}}
+        ),
         request_id="test-req-4o",
         trace_id="test-trace-4o",
         user_id=1,

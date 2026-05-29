@@ -62,6 +62,7 @@
         "backend/app/ops/llm/bootstrap/seed_30_14_chat_prompt.py",
         "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
         "backend/app/ops/llm/bootstrap/seed_guidance_prompts.py",
+        "backend/app/ops/llm/bootstrap/seed_theme_astral_prompt_contract.py",
         "backend/app/ops/llm/bootstrap/use_cases_seed.py",
         "backend/app/ops/llm/prompt_registry_v2.py",
         "backend/app/ops/llm/release/build_golden_evidence.py",

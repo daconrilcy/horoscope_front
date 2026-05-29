@@ -54,7 +54,8 @@ def test_get_use_case_contract():
     assert data["output_schema"]["type"] == "object"
     assert "title" in data["output_schema"]["properties"]
     assert data["persona_strategy"] == "optional"
-    assert "chart_json" in data["required_prompt_placeholders"]
+    assert "llm_astrology_input_v1" in data["required_prompt_placeholders"]
+    assert "chart_json" not in data["required_prompt_placeholders"]
     assert data["use_case_audit"] is None
 
 

@@ -81,7 +81,7 @@ async def test_llm_qa_runtime_contract_proves_prompt_persona_and_output_validati
         key=use_case_key,
         display_name="QA Runtime Contract",
         description="Verifies canonical QA runtime proofs",
-        required_prompt_placeholders=["locale", "chart_json"],
+        required_prompt_placeholders=["locale", "llm_astrology_input_v1"],
     )
     db_session.add(use_case)
 
@@ -89,7 +89,7 @@ async def test_llm_qa_runtime_contract_proves_prompt_persona_and_output_validati
         id=uuid.uuid4(),
         use_case_key=use_case_key,
         status=PromptStatus.PUBLISHED,
-        developer_prompt="Locale={{locale}}\nChart={{chart_json}}",
+        developer_prompt="Locale={{locale}}\nChart={{llm_astrology_input_v1}}",
         created_by="qa",
     )
     db_session.add(prompt)
@@ -154,7 +154,11 @@ async def test_llm_qa_runtime_contract_proves_prompt_persona_and_output_validati
                     plan="premium",
                     locale="fr-FR",
                 ),
-                context=ExecutionContext(chart_json='{"sun":"taurus"}'),
+                context=ExecutionContext(
+                    extra_context={
+                        "llm_astrology_input_v1": {"contract_id": "llm_astrology_input_v1"}
+                    }
+                ),
                 request_id="req-qa-runtime",
                 trace_id="trace-qa-runtime",
                 user_id=1,
@@ -167,7 +171,7 @@ async def test_llm_qa_runtime_contract_proves_prompt_persona_and_output_validati
     developer_messages = [message for message in messages if message["role"] == "developer"]
 
     assert any("Locale=fr-FR" in message["content"] for message in developer_messages)
-    assert any('Chart={"sun":"taurus"}' in message["content"] for message in developer_messages)
+    assert any("llm_astrology_input_v1" in message["content"] for message in developer_messages)
     assert any(
         "## Directives de persona : Luna QA" in message["content"] for message in developer_messages
     )

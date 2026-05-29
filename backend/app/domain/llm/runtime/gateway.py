@@ -1432,7 +1432,12 @@ class LLMGateway:
 
             # Overlay context_dict (priority to context)
             render_vars.update(context_dict)
-            if use_case.startswith("natal_") or use_case == "natal_interpretation":
+            is_natal_use_case = use_case.startswith("natal_") or use_case == "natal_interpretation"
+            uses_modern_natal_input = (
+                LLM_ASTROLOGY_INPUT_V1_KEY in config.required_prompt_placeholders
+                or f"{{{{{LLM_ASTROLOGY_INPUT_V1_KEY}}}}}" in current_prompt
+            )
+            if is_natal_use_case and uses_modern_natal_input:
                 render_vars.pop("chart_json", None)
                 render_vars.pop("natal_data", None)
 

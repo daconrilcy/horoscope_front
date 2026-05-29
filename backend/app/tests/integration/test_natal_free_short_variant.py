@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.domain.astrology.natal_calculation import NatalResult
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.infra.db.base import Base
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
@@ -27,6 +26,7 @@ from app.services.user_profile.natal_chart_service import (
     UserNatalChartMetadata,
     UserNatalChartReadData,
 )
+from app.tests.helpers.natal_result_factory import make_natal_result
 
 
 @pytest.fixture
@@ -123,40 +123,9 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
 
     client = TestClient(app)
 
-    mock_natal_result = MagicMock(spec=NatalResult)
-    mock_natal_result.reference_version = "2.0.0"
-    mock_natal_result.ruleset_version = "2.0.0"
-    mock_natal_result.zodiac = "tropical"
-    mock_natal_result.house_system = "placidus"
-    mock_natal_result.engine = "simplified"
-    mock_natal_result.frame = "geocentric"
-    mock_natal_result.ayanamsa = None
-    mock_natal_result.aspect_school = "modern"
-    mock_natal_result.altitude_m = 0.0
-    mock_natal_result.prepared_input = MagicMock()
-    mock_natal_result.sun = MagicMock()
-    mock_natal_result.moon = MagicMock()
-    mock_natal_result.mercury = MagicMock()
-    mock_natal_result.venus = MagicMock()
-    mock_natal_result.mars = MagicMock()
-    mock_natal_result.jupiter = MagicMock()
-    mock_natal_result.saturn = MagicMock()
-    mock_natal_result.uranus = MagicMock()
-    mock_natal_result.neptune = MagicMock()
-    mock_natal_result.pluto = MagicMock()
-    mock_natal_result.chiron = MagicMock()
-    mock_natal_result.lilith = MagicMock()
-    mock_natal_result.node = MagicMock()
-    mock_natal_result.planet_positions = []
-    mock_natal_result.houses = []
-    mock_natal_result.aspects = []
-    mock_natal_result.ephemeris_path_version = None
-    mock_natal_result.ephemeris_path_hash = None
-    mock_natal_result.model_dump.return_value = {}
-
     mock_chart_data = UserNatalChartReadData(
         chart_id="chart-123",
-        result=mock_natal_result,
+        result=make_natal_result(),
         metadata=MagicMock(spec=UserNatalChartMetadata),
         created_at=datetime.now(UTC),
     )
