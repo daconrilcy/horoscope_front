@@ -15,6 +15,9 @@ PASS:
 - `$env:PLAYWRIGHT_PORT='4193'; $env:PLAYWRIGHT_SKIP_WEBSERVER='1'; pnpm --dir frontend test:e2e -- --grep "natal"`
 - `git diff --check`
 - `rg -n "style="` sur les fichiers frontend touchés: exit 1, PASS no matches
+- Review fix: `pnpm --dir frontend test:e2e -- --grep "natal"` with explicit Vite server on `4193`: PASS after adding
+  assertions for `GET /v1/users/me/natal-chart/latest` and visible `Panneau expert natal`.
+- Review fix: `pnpm --dir frontend lint`: PASS.
 
 Classified scans:
 
@@ -27,3 +30,8 @@ Initial failures:
 - `pnpm --dir frontend test:e2e -- --grep "natal"` sur port `4173`: FAIL, port occupé.
 - Relance avec `PLAYWRIGHT_PORT=4174`: TIMEOUT dans la gestion Playwright `webServer`.
 - Correction: ajout de `PLAYWRIGHT_SKIP_WEBSERVER=1` et validation contre un serveur Vite explicite.
+- Review wrapper attempts:
+  - same stdout/stderr redirect rejected by `Start-Process` before tests ran;
+  - `pnpm` shim rejected by `Start-Process` before tests ran;
+  - `pnpm dev -- --host ...` ignored the requested port and hit occupied `5173`.
+  Final review command used `pnpm.cmd --dir frontend dev --host 127.0.0.1 --port 4193 --strictPort`.

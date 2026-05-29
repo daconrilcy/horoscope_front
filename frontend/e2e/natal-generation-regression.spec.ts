@@ -171,6 +171,11 @@ test.describe("Natal generation regression", () => {
         !response.url().includes("/latest") &&
         response.request().method() === "POST",
     )
+    const latestNatalChart = page.waitForResponse(
+      (response) =>
+        response.url().includes("/v1/users/me/natal-chart/latest") &&
+        response.request().method() === "GET",
+    )
 
     await page.goto("/profile")
     await page.getByLabel(LABELS.birthDate).fill("1973-04-24")
@@ -184,11 +189,18 @@ test.describe("Natal generation regression", () => {
     await page.getByRole("button", { name: LABELS.generate }).click()
     const response = await postNatalChart
     const body = await response.json()
+    const latestResponse = await latestNatalChart
+    const latestBody = await latestResponse.json()
 
     expect(response.status()).toBe(200)
+    expect(latestResponse.status()).toBe(200)
     expect(body.data.chart_id).toBe("chart-cs-381-paris-1973")
     expect(body.data.result.prepared_input.birth_datetime_local).toBe("1973-04-24T11:00:00")
     expect(body.data.result.traditional_conditions.sun.hayz.is_hayz).toBe(true)
+    expect(latestBody.data.chart_id).toBe(body.data.chart_id)
+    expect(latestBody.data.result.traditional_conditions.sun.rejoicing.is_rejoicing).toBe(false)
+    await expect(page).toHaveURL(/\/natal/)
+    await expect(page.getByRole("heading", { name: "Panneau expert natal" })).toBeVisible()
     expect(reactConsoleErrors).toEqual([])
   })
 })

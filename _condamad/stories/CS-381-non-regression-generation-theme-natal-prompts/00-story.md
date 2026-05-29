@@ -1,5 +1,5 @@
 # Story CS-381 non-regression-generation-theme-natal-prompts: Prove Natal Generation And Enriched Prompt Regression
-Status: ready-to-dev
+Status: done
 
 ## Trigger / Source
 

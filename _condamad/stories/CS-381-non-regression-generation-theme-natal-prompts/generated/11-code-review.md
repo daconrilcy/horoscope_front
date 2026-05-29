@@ -1,51 +1,54 @@
-# Editorial Review CS-381
+# Implementation Review CS-381
 
 Verdict: CLEAN
 
 ## Scope
 
-- Story reviewed:
+- Story:
   `_condamad/stories/CS-381-non-regression-generation-theme-natal-prompts/00-story.md`
-- Source brief:
+- Brief:
   `_story_briefs/cs-381-non-regression-generation-theme-natal-et-enrichissement-prompts.md`
-- Tracker row:
-  `_condamad/stories/story-status.md`
+- Implementation surfaces reviewed:
+  backend route/provider tests, frontend unit tests, Playwright E2E, validation evidence and tracker row.
 
-## Review Summary
+## Iteration 1 Findings
 
-- The story preserves the brief objective: prove natal chart generation, latest reload, expert UI rendering, and enriched
-  `theme_astral_llm_input_v1` prompt payload in one bounded regression slice.
-- The expected route assertions for `POST /v1/users/me/natal-chart` and `GET /v1/users/me/natal-chart/latest` are explicit.
-- The known-time Paris fixture, complete `traditional_conditions`, controlled `no_time` degradation, and provider-public
-  payload separation are explicit.
-- The story keeps real LLM provider execution optional and outside standard validation.
-- Guardrails are scoped to API routing, prompt validation paths, frontend inline-style prevention, and the local registry gap.
+### F1 - E2E did not assert latest reload after generation
 
-## Validation Results
+- Severity: medium.
+- Evidence: `frontend/e2e/natal-generation-regression.spec.ts` mocked `/v1/users/me/natal-chart/latest`, but only asserted
+  the `POST /v1/users/me/natal-chart` response before the review fix.
+- Risk: the browser scenario could pass while the post-generation reload path stayed broken, contrary to the brief.
+- Fix: the E2E now waits for `GET /v1/users/me/natal-chart/latest`, asserts status `200`, checks `chart_id` consistency,
+  verifies the traditional contract on the reloaded payload, and waits for `Panneau expert natal` on `/natal`.
+- Validation: explicit Vite server plus `pnpm --dir frontend test:e2e -- --grep "natal"` PASS.
 
-- Command:
-  `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py`
-  Target:
-  `_condamad\stories\CS-381-non-regression-generation-theme-natal-prompts\00-story.md`
-  - Result: PASS
-- Command:
-  `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict`
-  Target:
-  `_condamad\stories\CS-381-non-regression-generation-theme-natal-prompts\00-story.md`
-  - Result: PASS
+## Fresh Review
 
-## Findings
+- AC1: PASS. The browser path saves Paris birth data, generates the chart, and reloads latest.
+- AC2: PASS. Backend integration asserts complete `traditional_conditions` for known time.
+- AC3: PASS. Backend and E2E both cover `/latest` after creation.
+- AC4: PASS. Unit tests and E2E prove expert panel rendering for the public payload.
+- AC5: PASS. Provider handoff test asserts structured `birth_context`.
+- AC6: PASS. Provider builder test asserts prompt-visible enriched blocks.
+- AC7: PASS. Architecture guard and separated tests keep UI/provider payloads distinct.
+- AC8: PASS. Legacy carrier scan is classified and guarded by tests.
+- AC9: PASS. Standard tests remain fixture/mocked and do not call a real provider.
+- AC10: PASS. Route/OpenAPI inventory is covered by backend tests and commands.
+- AC11: PASS. Evidence files are present and updated.
 
-No actionable drafting issue found.
+## Validation Summary
 
-## Produced Artifacts
-
-- `_condamad/stories/CS-381-non-regression-generation-theme-natal-prompts/generated/11-code-review.md`
+- `pnpm --dir frontend test:e2e -- --grep "natal"` with explicit Vite server on port `4193`: PASS.
+- `pnpm --dir frontend lint`: PASS.
+- Prior implementation validations remain recorded in `generated/10-final-evidence.md`.
+- Story and capsule validations were rerun after evidence/status updates.
 
 ## Propagation
 
-- no-propagation: the review only confirmed local story-contract alignment and produced the review artifact.
+- no-propagation: the issue was local to this story's E2E assertion coverage and evidence.
 
 ## Residual Risk
 
-Implementation still depends on deterministic local test setup for backend, frontend, and any geocoding fixture or mock.
+- Direct Playwright-managed `webServer` remains unreliable in this Windows session; the accepted local validation uses an
+  explicit Vite server with `PLAYWRIGHT_SKIP_WEBSERVER=1`.

@@ -7,7 +7,7 @@
 - Story key: CS-381-non-regression-generation-theme-natal-prompts
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-381-non-regression-generation-theme-natal-prompts`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 
 ## Preflight
 
@@ -34,10 +34,10 @@
 
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
-| AC1 | `frontend/e2e/natal-generation-regression.spec.ts` covers saved Paris birth data and POST generation. | E2E with explicit Vite server PASS. | PASS | Real provider not called. |
+| AC1 | `frontend/e2e/natal-generation-regression.spec.ts` covers saved Paris birth data, POST generation and latest reload. | E2E with explicit Vite server PASS after review fix. | PASS | Real provider not called. |
 | AC2 | `backend/tests/integration/astrology/test_natal_generation_regression.py` asserts known-time traditions. | Targeted backend pytest PASS. | PASS | `traditional_conditions` complete. |
-| AC3 | Same test asserts latest reload and route/OpenAPI inventory. | Pytest plus `app.routes`/`app.openapi()` PASS. | PASS | Public contract preserved. |
-| AC4 | `BirthProfilePage.test.tsx` and `NatalExpertPanel.test.tsx` cover UI projection. | Vitest targeted PASS. | PASS | No `NatalExpertPanel` console error in E2E. |
+| AC3 | Backend integration and E2E assert latest reload preserves `chart_id` and traditional contract. | Pytest plus reviewed E2E PASS. | PASS | Public contract preserved. |
+| AC4 | E2E asserts `/natal` renders `Panneau expert natal`; unit tests cover UI projection. | Vitest targeted PASS and reviewed E2E PASS. | PASS | No `NatalExpertPanel` console error in E2E. |
 | AC5 | Provider handoff test asserts structured `birth_context`. | Targeted backend pytest PASS. | PASS | Paris fixture preserved. |
 | AC6 | Provider builder test asserts selected enriched blocks and limits. | Targeted backend pytest PASS. | PASS | Prompt-visible enrichment covered. |
 | AC7 | Architecture guard and tests separate UI/provider payloads. | Architecture pytest PASS. | PASS | No payload merge path added. |
@@ -85,6 +85,8 @@
 | `pnpm --dir frontend lint` | repo | PASS | TypeScript lint configs pass. |
 | `pnpm --dir frontend build` | repo | PASS | Production build pass. |
 | `$env:PLAYWRIGHT_SKIP_WEBSERVER='1'; pnpm --dir frontend test:e2e -- --grep "natal"` | repo | PASS | 1 Playwright test passed. |
+| Review fix E2E command with explicit Vite server on `4193` | repo | PASS | `/latest` and expert panel assertions pass. |
+| `pnpm --dir frontend lint` after review fix | repo | PASS | TypeScript lint configs pass after E2E patch. |
 | `git diff --check` | repo | PASS | Whitespace clean. |
 | `rg -n "style=" <touched frontend files>` | repo | PASS | Exit 1, no matches. |
 | `rg -n "chart_json|natal_data" <scoped backend paths>` | repo | PASS_WITH_CLASSIFICATION | Existing guarded terms only. |
@@ -95,6 +97,8 @@
 - Direct `pnpm --dir frontend test:e2e -- --grep "natal"` with Playwright-managed `webServer` did not complete in this Windows session.
   It first failed on occupied port `4173`, then timed out on alternate ports while the Vite URL was reachable.
   Compensating evidence: same Playwright scenario PASS against an explicit Vite server with `PLAYWRIGHT_SKIP_WEBSERVER=1`.
+- Review wrapper attempts before the successful E2E rerun failed before test execution due to PowerShell redirect/shim syntax and
+  `pnpm dev -- --host` port forwarding; the final wrapper used `pnpm.cmd` and no extra separator.
 
 ## DRY / No Legacy evidence
 
@@ -119,6 +123,7 @@
 
 - Direct Playwright-managed `webServer` remains unreliable in this local Windows session; validation uses an explicit Vite server.
 - Scoped `chart_json`/`natal_data` terms remain in existing legacy/adapter/guard areas and are classified by architecture tests.
+- No remaining implementation finding is open after the fresh review.
 
 ## Suggested reviewer focus
 
