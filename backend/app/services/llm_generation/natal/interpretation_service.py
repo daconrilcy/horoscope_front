@@ -39,6 +39,10 @@ from app.domain.astrology.runtime.aspect_calculation_contracts import (
 )
 from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintResolver
 from app.domain.llm.configuration.prompt_version_lookup import get_active_prompt_version
+from app.domain.llm.prompting.narrative_natal_reading_v1 import (
+    NARRATIVE_NATAL_READING_PAYLOAD_KEY,
+    NarrativeNatalReadingV1,
+)
 from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
@@ -76,6 +80,13 @@ from app.services.chart.json_builder import (
     build_chart_json,
 )
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
+from app.services.llm_generation.natal.narrative_natal_reading_builder import (
+    build_narrative_natal_reading_v1,
+)
+from app.services.llm_generation.natal.narrative_natal_reading_validator import (
+    build_technical_leak_rejection_outcome,
+    validate_narrative_reading_public_text,
+)
 from app.services.llm_generation.natal.prompt_context import (
     _detect_degraded_mode,
     build_astral_point_interpretation_context,
@@ -91,6 +102,7 @@ from app.services.llm_generation.natal.stored_interpretation_payload import (
     is_public_natal_interpretation,
     is_rejected_interpretation,
     is_rejected_stored_payload,
+    load_narrative_reading_from_payload,
 )
 from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
@@ -354,6 +366,46 @@ def _persist_rejected_narrative_answer_audit(
         )
     )
     db.commit()
+
+
+def _attach_narrative_reading_to_complete_v3(
+    *,
+    interpretation: AstroResponseV3,
+    persist_payload: dict[str, object],
+    llm_astrology_input_v1: dict[str, object],
+    level: str,
+    variant_code: str | None,
+    answer_id: str,
+    answer_type: str,
+) -> tuple[
+    NarrativeNatalReadingV1 | None,
+    RejectedNarrativeAnswerOutcome | None,
+    dict[str, object],
+]:
+    """Construit et valide la lecture narrative publique pour une sortie V3 complete."""
+    reading = build_narrative_natal_reading_v1(
+        response=interpretation,
+        llm_astrology_input_v1=llm_astrology_input_v1,
+        level=level,
+        variant_code=variant_code,
+    )
+    violations = validate_narrative_reading_public_text(reading)
+    if violations:
+        return (
+            None,
+            build_technical_leak_rejection_outcome(
+                answer_id=answer_id,
+                answer_type=answer_type,
+                raw_answer=persist_payload,
+                violations=violations,
+            ),
+            persist_payload,
+        )
+    merged_payload = {
+        **persist_payload,
+        NARRATIVE_NATAL_READING_PAYLOAD_KEY: reading.model_dump(),
+    }
+    return reading, None, merged_payload
 
 
 def _build_rejected_narrative_answer_outcome(
@@ -1006,6 +1058,9 @@ class NatalInterpretationService:
             # short (gratuit) ou fallback vers short → schéma v1
             interpretation = AstroResponseV1(**full_output)
 
+        narrative_reading: NarrativeNatalReadingV1 | None = None
+        narrative_rejection: RejectedNarrativeAnswerOutcome | None = None
+
         # Observe metrics
         if hasattr(interpretation, "summary"):
             observe_duration("natal_summary_len", float(len(interpretation.summary)))
@@ -1047,7 +1102,24 @@ class NatalInterpretationService:
             persist_payload = persist_payload.copy()
             persist_payload.pop("disclaimers", None)
 
-        rejected_outcome = _build_rejected_narrative_answer_outcome(
+        if (
+            level == "complete"
+            and variant_code != "free_short"
+            and isinstance(interpretation, AstroResponseV3)
+        ):
+            narrative_reading, narrative_rejection, persist_payload = (
+                _attach_narrative_reading_to_complete_v3(
+                    interpretation=interpretation,
+                    persist_payload=persist_payload,
+                    llm_astrology_input_v1=llm_astrology_input_v1,
+                    level=level,
+                    variant_code=variant_code,
+                    answer_id=f"{gateway_result.use_case}:{request_id}",
+                    answer_type=_answer_type_for_audit(level, variant_code),
+                )
+            )
+
+        rejected_outcome = narrative_rejection or _build_rejected_narrative_answer_outcome(
             level=level,
             variant_code=variant_code,
             schema_version=schema_version,
@@ -1199,6 +1271,7 @@ class NatalInterpretationService:
                 interpretation=interpretation,
                 meta=meta,
                 degraded_mode=degraded_mode_str,
+                narrative_natal_reading_v1=narrative_reading,
             ),
             disclaimers=disclaimers,
         )
@@ -1595,6 +1668,10 @@ class NatalInterpretationService:
         )
 
         meta.schema_version = schema_version
+        raw_payload = (
+            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else {}
+        )
+        narrative_reading = load_narrative_reading_from_payload(raw_payload)
 
         return NatalInterpretationResponse(
             data=NatalGatewayInterpretationData(
@@ -1603,6 +1680,7 @@ class NatalInterpretationService:
                 interpretation=interpretation,
                 meta=meta,
                 degraded_mode=model.degraded_mode,
+                narrative_natal_reading_v1=narrative_reading,
             ),
             disclaimers=disclaimers,
         )

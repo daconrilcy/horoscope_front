@@ -19,7 +19,6 @@ type ActiveInterpretation = {
 type NatalThemeSynthesisProps = {
   chartId: string
   lang: AstrologyLang
-  fallbackEvidence: string[]
   initialPersonaId: string | null
   initialInterpretationId: number | null
   isLockedFree: boolean
@@ -32,7 +31,6 @@ type NatalThemeSynthesisProps = {
 export function NatalThemeSynthesis({
   chartId,
   lang,
-  fallbackEvidence,
   initialPersonaId,
   initialInterpretationId,
   isLockedFree,
@@ -51,7 +49,6 @@ export function NatalThemeSynthesis({
         chartLoaded
         chartId={chartId}
         lang={lang}
-        fallbackEvidence={fallbackEvidence}
         initialPersonaId={initialPersonaId}
         initialInterpretationId={initialInterpretationId}
         isLockedFree={isLockedFree}

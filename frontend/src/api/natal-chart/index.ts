@@ -411,6 +411,32 @@ export type AstroInterpretation = {
   disclaimers?: string[]
 }
 
+export type NarrativeChapterKey =
+  | "personality"
+  | "emotional_world"
+  | "relationships"
+  | "vocation"
+  | "evolution_path"
+
+export type NarrativeNatalReadingChapterV1 = {
+  key: NarrativeChapterKey
+  title: string
+  narrative: string
+  key_points: string[]
+}
+
+export type UsedAstrologicalElementV1 = {
+  astrological_label: string
+  consequence: string
+}
+
+export type NarrativeNatalReadingV1 = {
+  contract_version: "narrative_natal_reading_v1"
+  editorial_profile: "free" | "basic" | "premium"
+  chapters: NarrativeNatalReadingChapterV1[]
+  used_astrological_elements: UsedAstrologicalElementV1[]
+}
+
 export type InterpretationMeta = {
   id?: number | null
   level: "short" | "complete"
@@ -443,6 +469,7 @@ export type NatalInterpretationResult = {
   interpretation: AstroInterpretation
   meta: InterpretationMeta
   degraded_mode: string | null
+  narrative_natal_reading_v1?: NarrativeNatalReadingV1 | null
   disclaimers?: string[]
 }
 

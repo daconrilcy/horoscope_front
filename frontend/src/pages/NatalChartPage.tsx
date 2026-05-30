@@ -16,15 +16,6 @@ import { NatalChartGuide } from "../components/NatalChartGuide"
 import { NatalExpertPanel } from "../features/natal-chart/NatalExpertPanel"
 import { NatalProfileHero } from "../features/natal-chart/NatalProfileHero"
 import { NatalThemeSynthesis } from "../features/natal-chart/NatalThemeSynthesis"
-import { NatalAstrologicalDna } from "../features/natal-chart/NatalAstrologicalDna"
-import { NatalLifeDomains } from "../features/natal-chart/NatalLifeDomains"
-import { NatalStrengths } from "../features/natal-chart/NatalStrengths"
-import { NatalChallenges } from "../features/natal-chart/NatalChallenges"
-import { NatalMajorAspects } from "../features/natal-chart/NatalMajorAspects"
-import { NatalKarmicSignature } from "../features/natal-chart/NatalKarmicSignature"
-import { NatalHiddenTalents } from "../features/natal-chart/NatalHiddenTalents"
-import { NatalRelationshipPotential } from "../features/natal-chart/NatalRelationshipPotential"
-import { NatalCareerPotential } from "../features/natal-chart/NatalCareerPotential"
 import { NatalAstrologerMode } from "../features/natal-chart/NatalAstrologerMode"
 import { NatalTechnicalDetails } from "../features/natal-chart/NatalTechnicalDetails"
 import "./NatalChartPage.css"
@@ -271,18 +262,6 @@ export function NatalChartPage() {
       : activeInterpretation.canSwitchPersona
       ? t.requestAnotherAstrologer
       : t.unlockCompleteInterpretation
-  const fallbackEvidence = Array.from(
-    new Set([
-      astroProfile?.sun_sign_code ? `SUN_${astroProfile.sun_sign_code.toUpperCase()}` : null,
-      astroProfile?.ascendant_sign_code ? `ASC_${astroProfile.ascendant_sign_code.toUpperCase()}` : null,
-      ...planetPositions
-        .slice(0, 6)
-        .map((item) => `${item.planet_code.toUpperCase()}_${item.sign_code.toUpperCase()}_H${item.house_number}`),
-      ...aspects
-        .slice(0, 4)
-        .map((item) => `ASPECT_${item.planet_a.toUpperCase()}_${item.planet_b.toUpperCase()}_${item.aspect_code.toUpperCase()}`),
-    ].filter(Boolean) as string[]),
-  )
   const interpretationIdParam = searchParams.get("interpretationId")
   const parsedInterpretationId = interpretationIdParam
     ? Number.parseInt(interpretationIdParam, 10)
@@ -371,7 +350,6 @@ export function NatalChartPage() {
       <NatalThemeSynthesis
         chartId={chart.chart_id}
         lang={lang}
-        fallbackEvidence={fallbackEvidence}
         initialPersonaId={initialPersonaId}
         initialInterpretationId={initialInterpretationId}
         isLockedFree={isLockedFree}
@@ -379,21 +357,6 @@ export function NatalChartPage() {
         onActiveInterpretationChange={setActiveInterpretation}
         actionRequest={headerActionRequest}
       />
-      <NatalAstrologicalDna chart={chart} labels={publicLabels} lang={lang} />
-      <NatalLifeDomains chart={chart} labels={publicLabels} lang={lang} />
-      <NatalStrengths chart={chart} labels={publicLabels} lang={lang} />
-      <NatalChallenges chart={chart} labels={publicLabels} lang={lang} />
-      <NatalMajorAspects
-        dominantAspects={chart.result.chart_balance?.dominant_aspects}
-        aspects={aspects}
-        translatePlanet={translatePlanet}
-        translateAspect={translateAspect}
-        lang={lang}
-      />
-      <NatalKarmicSignature chart={chart} labels={publicLabels} lang={lang} />
-      <NatalHiddenTalents chart={chart} labels={publicLabels} lang={lang} />
-      <NatalRelationshipPotential chart={chart} labels={publicLabels} lang={lang} />
-      <NatalCareerPotential chart={chart} labels={publicLabels} lang={lang} />
       <NatalAstrologerMode access={natalAccess} lang={lang}>
         <NatalTechnicalDetails
           planetPositions={planetPositions}

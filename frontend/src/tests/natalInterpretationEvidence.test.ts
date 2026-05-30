@@ -60,6 +60,36 @@ describe("natalInterpretation evidence helpers", () => {
     expect(container.querySelector(".evidence-tags__list")).toBeNull()
   })
 
+  it("n expose pas d identifiant technique dans title des pills", () => {
+    const { container } = render(
+      createElement(EvidenceTags, {
+        evidence: ["SUN_ARIES_H1", "ASPECT_SUN_MOON_TRINE"],
+        title: "Preuves",
+        t: {
+          evidenceIntro: "Sources utilisees",
+          evidenceEmpty: "Aucune preuve",
+          showEvidence: "Afficher",
+          hideEvidence: "Masquer",
+          dedupedCount: (count: number) => `${count} preuves`,
+          evidenceCategories: {
+            angles: "Angles",
+            personalPlanets: "Personnelles",
+            slowPlanets: "Lentes",
+            dominantHouses: "Maisons",
+            majorAspects: "Aspects",
+            other: "Autres",
+          },
+        },
+      }),
+    )
+
+    container.querySelectorAll(".ni-evidence-pill").forEach((pill) => {
+      const title = pill.getAttribute("title")
+      expect(title).toBeTruthy()
+      expect(title).not.toMatch(/SUN_|ASPECT_|_H\d/)
+    })
+  })
+
   it("rend le badge de precision avec les classes canoniques consultation", () => {
     const { container } = render(
       createElement(ConsultationPrecisionBadge, { precisionLevel: "high" }, "Precision haute"),

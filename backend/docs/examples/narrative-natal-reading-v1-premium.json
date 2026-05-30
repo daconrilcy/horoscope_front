@@ -1,0 +1,46 @@
+{
+  "contract_version": "narrative_natal_reading_v1",
+  "editorial_profile": "premium",
+  "chapters": [
+    {
+      "key": "personality",
+      "title": "Votre personnalite",
+      "narrative": "Vous avancez avec une presence solide et une volonte de vous affirmer sans brusquerie. Votre maniere d'exister invite les autres a vous prendre au serieux, tout en gardant une chaleur relationnelle qui adoucit votre determination. Cette combinaison vous permet d'incarner un leadership naturel dans les situations qui demandent clarte et constance.",
+      "key_points": ["Presence affirmee", "Chaleur relationnelle"]
+    },
+    {
+      "key": "emotional_world",
+      "title": "Votre monde emotionnel",
+      "narrative": "Vos emotions cherchent avant tout la stabilite et la continuite. Vous avez besoin de temps pour integrer ce que vous ressentez avant de le partager. Lorsque vous vous sentez en securite affective, votre sensibilite devient une force de fidélite et d'attention aux besoins des proches.",
+      "key_points": []
+    },
+    {
+      "key": "relationships",
+      "title": "Vos relations",
+      "narrative": "Dans vos liens, vous privilegiez la loyaute et les gestes concrets plutot que les promesses rapides. Vous attendez une reciprocite claire et pouvez vous refermer si la confiance est mise a mal. Une relation nourrissante pour vous est celle ou l'affection se traduit par des actes reguliers.",
+      "key_points": []
+    },
+    {
+      "key": "vocation",
+      "title": "Votre vocation",
+      "narrative": "Votre chemin professionnel gagne a valoriser l'autonomie et l'initiative. Vous progressez lorsque vous pouvez poser un cadre, prendre des decisions et voir l'impact concret de votre travail. Les environnements qui melangent responsabilite et marge de manoeuvre vous stimulent durablement.",
+      "key_points": []
+    },
+    {
+      "key": "evolution_path",
+      "title": "Votre chemin d'evolution",
+      "narrative": "Votre evolution passe par l'equilibre entre assurance et ouverture au changement. Apprendre a deleguer ou a accepter l'imprevisible sans perdre votre cap vous permet de grandir sans vous raidir. Les periodes de transition sont des opportunites de clarifier ce qui compte vraiment pour vous.",
+      "key_points": []
+    }
+  ],
+  "used_astrological_elements": [
+    {
+      "astrological_label": "Soleil en Taureau en Maison 10",
+      "consequence": "Votre expression personnelle et votre place sociale se renforcent mutuellement."
+    },
+    {
+      "astrological_label": "Lune en Cancer",
+      "consequence": "Vos besoins affectifs orientent la maniere dont vous construisez la confiance."
+    }
+  ]
+}

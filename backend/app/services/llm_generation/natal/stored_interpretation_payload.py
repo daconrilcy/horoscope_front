@@ -5,8 +5,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from app.domain.llm.prompting.narrative_natal_reading_v1 import (
+    NARRATIVE_NATAL_READING_PAYLOAD_KEY,
+    NarrativeNatalReadingV1,
+)
 from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
 
 NARRATIVE_ANSWER_AUDIT_USE_CASE = "narrative_answer_audit_v1"
@@ -68,4 +72,31 @@ def extract_accepted_interpretation_payload(payload: dict[str, object]) -> dict[
     """Retire les metadonnees de rejet avant instanciation AstroResponseV1/V2/V3."""
     if is_rejected_stored_payload(payload):
         raise ValueError("Cannot extract accepted payload from rejected stored interpretation")
-    return {key: value for key, value in payload.items() if key not in REJECTED_PAYLOAD_MARKER_KEYS}
+    excluded = set(REJECTED_PAYLOAD_MARKER_KEYS) | {NARRATIVE_NATAL_READING_PAYLOAD_KEY}
+    return {key: value for key, value in payload.items() if key not in excluded}
+
+
+def extract_narrative_reading_payload(payload: dict[str, object]) -> dict[str, object] | None:
+    """Lit le fragment narratif public stocke a cote du schema AstroResponse."""
+    nested = payload.get(NARRATIVE_NATAL_READING_PAYLOAD_KEY)
+    return nested if isinstance(nested, dict) else None
+
+
+def load_narrative_reading_from_payload(
+    payload: dict[str, object],
+) -> NarrativeNatalReadingV1 | None:
+    """Deserialise la lecture narrative publique si elle est presente et valide."""
+    nested = extract_narrative_reading_payload(payload)
+    if nested is None:
+        return None
+    try:
+        reading = NarrativeNatalReadingV1.model_validate(nested)
+    except ValidationError:
+        return None
+    from app.services.llm_generation.natal.narrative_natal_reading_validator import (
+        validate_narrative_reading_public_text,
+    )
+
+    if validate_narrative_reading_public_text(reading):
+        return None
+    return reading

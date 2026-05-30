@@ -114,6 +114,8 @@ type NatalChartTranslations = {
     error: string
     retry: string
     regenerate: string
+    narrativeMissingTitle: string
+    narrativeMissingBody: string
     degradedNotice: string
     requestingComplete: string
     personaSelectorTitle: string
@@ -265,6 +267,9 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       error: "L'interprétation n'est pas disponible pour le moment.",
       retry: "Réessayer",
       regenerate: "Nouvelle interprétation",
+      narrativeMissingTitle: "Lecture complète à régénérer",
+      narrativeMissingBody:
+        "Cette interprétation utilise un format obsolète. Demandez une nouvelle interprétation complète pour afficher la lecture en cinq chapitres.",
       degradedNotice: "Interprétation partielle (données de naissance incomplètes)",
       requestingComplete: "Votre astrologue interprète votre thème...",
       personaSelectorTitle: "Choisissez votre astrologue",
@@ -499,6 +504,9 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       error: "Interpretation is not available at the moment.",
       retry: "Retry",
       regenerate: "New interpretation",
+      narrativeMissingTitle: "Full reading needs regeneration",
+      narrativeMissingBody:
+        "This interpretation uses an outdated format. Request a new complete interpretation to display the five-chapter reading.",
       degradedNotice: "Partial interpretation (incomplete birth data)",
       requestingComplete: "Your astrologer is interpreting your chart...",
       personaSelectorTitle: "Choose your astrologer",
@@ -731,6 +739,9 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       error: "La interpretación no está disponible en este momento.",
       retry: "Reintentar",
       regenerate: "Nueva interpretación",
+      narrativeMissingTitle: "Lectura completa por regenerar",
+      narrativeMissingBody:
+        "Esta interpretación usa un formato obsoleto. Solicite una nueva interpretación completa para ver la lectura en cinco capítulos.",
       degradedNotice: "Interpretación parcial (datos de nacimiento incompletos)",
       requestingComplete: "Tu astrólogo está interpretando tu carta...",
       personaSelectorTitle: "Elige a tu astrólogo",

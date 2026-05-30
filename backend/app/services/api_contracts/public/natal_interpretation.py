@@ -7,6 +7,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from app.domain.llm.prompting.narrative_natal_reading_v1 import NarrativeNatalReadingV1
 from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
@@ -82,6 +83,7 @@ class NatalInterpretationData(BaseModel):
     )
     meta: InterpretationMeta
     degraded_mode: Optional[str] = None
+    narrative_natal_reading_v1: Optional[NarrativeNatalReadingV1] = None
 
 
 class NatalChartLongEntitlementInfo(BaseModel):

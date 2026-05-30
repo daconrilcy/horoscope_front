@@ -223,7 +223,7 @@ export function EvidenceTags({
                     return (
                       <span
                         key={`${item.evidenceId}-${index}`}
-                        title={item.evidenceId}
+                        title={item.humanText}
                         className={`ni-evidence-pill ni-evidence-pill--${modifier}`}
                       >
                         <span className="ni-evidence-pill-dot" />

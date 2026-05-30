@@ -583,7 +583,8 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: "Profil astrologique", level: 1 })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: /Votre profil astrologique/i })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: /Ce que votre theme raconte/i })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: /ADN astrologique/i })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /Details techniques/i })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: /ADN astrologique/i })).not.toBeInTheDocument()
     openTechnicalDetails()
     expect(screen.getByRole("heading", { name: "Planètes" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Maisons" })).toBeInTheDocument()
@@ -1690,9 +1691,9 @@ describe("NatalChartPage", () => {
       expect(screen.queryByText("Comment lire ton thème natal")).not.toBeInTheDocument()
       expect(screen.getByRole("heading", { name: "Your astrological profile" })).toBeInTheDocument()
       expect(screen.getByRole("heading", { name: "What your chart reveals" })).toBeInTheDocument()
-      expect(screen.getByRole("heading", { name: "Astrological DNA" })).toBeInTheDocument()
-      expect(screen.getByRole("heading", { name: "Major life domains" })).toBeInTheDocument()
       expect(screen.getByRole("heading", { name: "Technical details" })).toBeInTheDocument()
+      expect(screen.queryByRole("heading", { name: "Astrological DNA" })).not.toBeInTheDocument()
+      expect(screen.queryByRole("heading", { name: "Major life domains" })).not.toBeInTheDocument()
       expect(screen.queryByRole("heading", { name: "Les grands domaines de vie" })).not.toBeInTheDocument()
     })
   })
@@ -1730,7 +1731,7 @@ describe("NatalChartPage", () => {
       },
     }
 
-    it("AC2/AC3 — utilisateur free : sections thématiques wrappées dans LockedSection", () => {
+    it("AC2/AC3 — utilisateur free : affiche le résumé sans sections legacy", () => {
       mockUseFeatureAccess.mockReturnValue({ variant_code: "free_short", granted: true } as ReturnType<typeof useFeatureAccess>)
       mockUseUpgradeHint.mockReturnValue({
         feature_code: "natal_chart_long",
@@ -1749,23 +1750,9 @@ describe("NatalChartPage", () => {
         </MemoryRouter>
       )
 
-      // Titres de sections toujours visibles (ni-accordion-title)
-      expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument()
-      expect(screen.getByText("Carrière et vocation")).toBeInTheDocument()
-
-      // Contenu réel des sections non visible
-      expect(screen.queryByText("Contenu vue d'ensemble")).not.toBeInTheDocument()
-      expect(screen.queryByText("Contenu carrière")).not.toBeInTheDocument()
-
-      // Teaser flouté fixe affiché dans LockedSection
-      expect(screen.getAllByText(/Votre vue d'ensemble astrologique complète/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/Dans la version Basic, cette section déroule une lecture ample/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/Dans la version Basic, ce bloc transforme votre thème en conseils opérationnels/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByRole("link", { name: /Débloquer l'interprétation complète/i }).length).toBe(3)
-      expect(screen.getAllByRole("link", { name: /Débloquer l'interprétation complète/i })[0]).toHaveAttribute(
-        "href",
-        "/settings/subscription",
-      )
+      expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
+      expect(screen.queryByText("Vue d'ensemble")).not.toBeInTheDocument()
+      expect(screen.queryByText("Carrière et vocation")).not.toBeInTheDocument()
     })
 
     it("AC1 — utilisateur free : summary affiché normalement", () => {
@@ -1787,7 +1774,7 @@ describe("NatalChartPage", () => {
       ).toBeInTheDocument()
     })
 
-    it("AC4/AC5 — utilisateur basic : sections rendues normalement sans verrouillage", () => {
+    it("AC4/AC5 — utilisateur basic : résumé visible sans sections legacy", () => {
       mockUseFeatureAccess.mockReturnValue({ variant_code: "full", granted: true } as ReturnType<typeof useFeatureAccess>)
       mockUseLatestNatalChart.mockReturnValue({ isLoading: false, isError: false, data: { ...CHART_BASE } })
       mockUseNatalInterpretation.mockReturnValue({ isLoading: false, isError: false, data: INTERPRETATION_DATA, refetch: vi.fn() })
@@ -1798,15 +1785,8 @@ describe("NatalChartPage", () => {
         </MemoryRouter>
       )
 
-      // Summary visible
       expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
-      expect(
-        screen.getByText(
-          "Votre thème révèle une sensibilité vive portée par un vrai besoin d'harmonie.",
-        ),
-      ).toBeInTheDocument()
-
-      // Aucun teaser de locked section
+      expect(screen.queryByText("Vue d'ensemble")).not.toBeInTheDocument()
       expect(screen.queryByText(/Votre vue d'ensemble astrologique complète/i)).not.toBeInTheDocument()
     })
 
@@ -2032,6 +2012,148 @@ describe("NatalChartPage", () => {
       expect(
         screen.getAllByRole("button", { name: /Choisir un autre astrologue/i }).length,
       ).toBeGreaterThan(0)
+    })
+  })
+
+  describe("CS-395 — lecture narrative publique sur /natal", () => {
+    const NARRATIVE_INTERPRETATION = {
+      chart_id: "abc",
+      use_case: "natal_interpretation",
+      degraded_mode: null,
+      narrative_natal_reading_v1: {
+        contract_version: "narrative_natal_reading_v1" as const,
+        editorial_profile: "premium" as const,
+        chapters: [
+          {
+            key: "personality" as const,
+            title: "Votre personnalite",
+            narrative:
+              "Paragraphe narratif suffisamment long pour le test page sans fuite technique.",
+            key_points: [],
+          },
+          {
+            key: "emotional_world" as const,
+            title: "Votre monde emotionnel",
+            narrative: "Deuxieme chapitre narratif lisible.",
+            key_points: [],
+          },
+          {
+            key: "relationships" as const,
+            title: "Vos relations",
+            narrative: "Troisieme chapitre narratif lisible.",
+            key_points: [],
+          },
+          {
+            key: "vocation" as const,
+            title: "Votre vocation",
+            narrative: "Quatrieme chapitre narratif lisible.",
+            key_points: [],
+          },
+          {
+            key: "evolution_path" as const,
+            title: "Votre chemin d evolution",
+            narrative: "Cinquieme chapitre narratif lisible.",
+            key_points: [],
+          },
+        ],
+        used_astrological_elements: [
+          {
+            astrological_label: "Soleil en Taureau",
+            consequence: "Votre expression personnelle recherche la stabilite.",
+          },
+        ],
+      },
+      meta: {
+        id: 99,
+        level: "complete" as const,
+        use_case: "natal_interpretation",
+        persona_id: "persona-1",
+        persona_name: "Luna Celeste",
+        prompt_version_id: "v1",
+        validation_status: "valid",
+        repair_attempted: false,
+        fallback_triggered: false,
+        was_fallback: false,
+        latency_ms: null,
+        request_id: null,
+        persisted_at: "2026-05-30T10:00:00Z",
+      },
+      interpretation: {
+        title: "Theme complet narratif",
+        summary: "Resume de lecture narrative.",
+        sections: [],
+        highlights: [],
+        advice: [],
+        evidence: [],
+      },
+    }
+
+    function renderNatalWithInterpretation() {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      mockUseNatalInterpretationsList.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          items: [
+            {
+              id: 99,
+              chart_id: "abc",
+              level: "complete",
+              persona_id: "persona-1",
+              persona_name: "Luna Celeste",
+              module: null,
+              created_at: "2026-05-30T10:00:00Z",
+              use_case: "natal_interpretation",
+              prompt_version_id: "v1",
+              was_fallback: false,
+            },
+          ],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        },
+        refetch: vi.fn(),
+      })
+      mockUseNatalInterpretationById.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: NARRATIVE_INTERPRETATION,
+        refetch: vi.fn(),
+      })
+
+      const { container } = render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>,
+      )
+      return container
+    }
+
+    it("affiche les cinq chapitres et les sources sans fuite technique dans le DOM public", async () => {
+      const container = renderNatalWithInterpretation()
+
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { name: "Votre personnalite" })).toBeInTheDocument()
+      })
+      expect(screen.getByRole("heading", { name: "Votre chemin d evolution" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /Ce que nous avons utilise/i })).toBeInTheDocument()
+      expect(container.textContent).not.toMatch(
+        /visibility_expression|audit_input|condition_axis:|interpretive_signal_ids/i,
+      )
+      expect(screen.queryByRole("button", { name: /Afficher les details techniques/i })).toBeInTheDocument()
+    })
+
+    it("masque les details experts tant que le mode astrologue est replie", async () => {
+      renderNatalWithInterpretation()
+
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { name: "Votre personnalite" })).toBeInTheDocument()
+      })
+      expect(screen.queryByText("dominant_topics")).not.toBeInTheDocument()
     })
   })
 })

@@ -100,6 +100,8 @@ Avant de finaliser ta réponse, effectue ce contrôle en trois étapes :
   dominantes + le fil rouge + une tension + une promesse d'intégration. Pas de résumé bref.
 - sections : Couvrir idéalement [overall, inner_life,
   relationships, career, daily_life, strengths, challenges].
+  Pour alimenter la lecture publique narrative, inclure explicitement les cinq clés
+  [self_image, emotions, relationships, career, growth_direction].
   Puis intégrer des angles thématiques additionnels en utilisant AU MOINS 4 clés
   parmi : [self_image, emotions, mind_communication, motivations,
   stress_patterns, growth_levers, patterns, triggers, protection_strategies,

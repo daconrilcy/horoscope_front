@@ -1,7 +1,7 @@
 // Hero public du theme natal: il expose les trois reperes lisibles sans details techniques.
 import type { LatestNatalChart } from "../../api/natalChart"
 import type { AstrologyLabelers, PublicCopyLang } from "./natalPublicFacts"
-import { firstAvailable, formatPlacement, getPlanetPosition } from "./natalPublicFacts"
+import { formatPlacement, getPlanetPosition } from "./natalPublicFacts"
 import { getNatalPublicCopy } from "./natalPublicCopy"
 
 type NatalProfileHeroProps = {
@@ -17,13 +17,6 @@ export function NatalProfileHero({ chart, labels, lang }: NatalProfileHeroProps)
   const moon = getPlanetPosition(chart.result.planet_positions, "MOON")
   const sunProfileCode = chart.astro_profile?.sun_sign_code
   const ascendantCode = chart.astro_profile?.ascendant_sign_code
-  const adapter = chart.result.interpretation_adapter
-  const traits = [
-    ...(adapter?.dominant_topics ?? []),
-    ...(adapter?.dominant_axes ?? []),
-    ...(adapter?.narrative_priorities ?? []),
-  ].slice(0, 4)
-
   const ascendantLabel = ascendantCode ? labels.translateSign(ascendantCode.toUpperCase()) : copy.missing
 
   return (
@@ -50,10 +43,6 @@ export function NatalProfileHero({ chart, labels, lang }: NatalProfileHeroProps)
           <p>{ascendantLabel}</p>
         </article>
       </div>
-      <p className="natal-hero__traits">
-        <strong>{copy.traits}</strong>
-        {firstAvailable([traits.join(" · ")], copy.missing)}
-      </p>
     </section>
   )
 }

@@ -58,6 +58,12 @@ def test_v3_prompt_embeds_thematic_section_catalog() -> None:
     assert "values_core" in prompt
 
 
+def test_v3_prompt_requires_public_narrative_chapter_sources() -> None:
+    prompt = NATAL_COMPLETE_PROMPT_V3
+    assert "lecture publique narrative" in prompt
+    assert "[self_image, emotions, relationships, career, growth_direction]" in prompt
+
+
 def test_v3_prompt_explicitly_embeds_llm_astrology_input_v1() -> None:
     prompt = NATAL_COMPLETE_PROMPT_V3
     assert "{{llm_astrology_input_v1}}" in prompt

@@ -1,4 +1,5 @@
 // Types de rendu locaux pour isoler les enfants presentational de l'API natale.
+import type { NarrativeNatalReadingV1 } from "../../api/natal-chart"
 import type { AstrologyLang } from "../../i18n/astrology"
 import type { natalChartTranslations } from "../../i18n/natalChart"
 
@@ -12,6 +13,7 @@ export type NatalInterpretationSectionView = {
 
 export type NatalInterpretationViewData = {
   degraded_mode?: string | null
+  narrative_natal_reading_v1?: NarrativeNatalReadingV1 | null
   meta: {
     id?: number | null
     level?: "short" | "complete"

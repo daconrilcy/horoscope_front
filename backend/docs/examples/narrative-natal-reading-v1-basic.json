@@ -1,0 +1,46 @@
+{
+  "contract_version": "narrative_natal_reading_v1",
+  "editorial_profile": "basic",
+  "chapters": [
+    {
+      "key": "personality",
+      "title": "Votre personnalite",
+      "narrative": "Vous combinez determination et sensibilite relationnelle. Votre presence peut rassurer autant qu'inspirer. Vous avancez mieux lorsque vos valeurs sont alignees avec vos actions quotidiennes.",
+      "key_points": ["Determination", "Sensibilite"]
+    },
+    {
+      "key": "emotional_world",
+      "title": "Votre monde emotionnel",
+      "narrative": "Vos emotions demandent du temps et de la continuite pour se deployer. Vous avez besoin de cadres affectifs stables. Lorsque vous vous sentez compris, votre empathie devient un atout majeur.",
+      "key_points": []
+    },
+    {
+      "key": "relationships",
+      "title": "Vos relations",
+      "narrative": "Vous investissez dans des relations fiables et explicites. Les malentendus vous fatiguent si personne ne clarifie les attentes. Vous cherchez un equilibre entre proximite et respect des limites.",
+      "key_points": []
+    },
+    {
+      "key": "vocation",
+      "title": "Votre vocation",
+      "narrative": "Votre parcours professionnel progresse lorsque vous pouvez structurer et responsabiliser. Vous aimez voir des resultats tangibles. Les contextes qui valorisent l'autonomie vous conviennent.",
+      "key_points": []
+    },
+    {
+      "key": "evolution_path",
+      "title": "Votre chemin d'evolution",
+      "narrative": "Votre evolution invite a assouplir parfois votre besoin de controle. Faire confiance au processus peut elargir vos possibilites. Les transitions sont des moments pour redefinir vos priorites.",
+      "key_points": []
+    }
+  ],
+  "used_astrological_elements": [
+    {
+      "astrological_label": "Soleil en Taureau en Maison 10",
+      "consequence": "Votre expression personnelle nourrit votre direction de vie."
+    },
+    {
+      "astrological_label": "Lune en Cancer",
+      "consequence": "Vos besoins affectifs colorent vos choix relationnels."
+    }
+  ]
+}

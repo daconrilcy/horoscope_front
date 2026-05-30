@@ -1,0 +1,42 @@
+{
+  "contract_version": "narrative_natal_reading_v1",
+  "editorial_profile": "free",
+  "chapters": [
+    {
+      "key": "personality",
+      "title": "Votre personnalite",
+      "narrative": "Vous donnez une impression de calme et de constance. Votre maniere d'aborder la vie invite a la confiance, meme si vous preferez avancer a votre rythme. Cette base stable vous aide a tenir cap dans les periodes mouvementees.",
+      "key_points": []
+    },
+    {
+      "key": "emotional_world",
+      "title": "Votre monde emotionnel",
+      "narrative": "Vos emotions ont besoin de securite pour s'exprimer pleinement. Vous ressentez profondement lorsque l'environnement est fiable. Prendre le temps de vous recentrer vous permet de retrouver une clarte affective.",
+      "key_points": []
+    },
+    {
+      "key": "relationships",
+      "title": "Vos relations",
+      "narrative": "Vous recherchez des liens simples, loyaux et previsibles. La confiance se construit lentement mais durablement. Vous donnez beaucoup lorsque vous sentez une reciprocite sincere.",
+      "key_points": []
+    },
+    {
+      "key": "vocation",
+      "title": "Votre vocation",
+      "narrative": "Votre energie professionnelle gagne a etre canalisee vers des objectifs concrets. Vous progressez lorsque les attentes sont claires. La regularite compte autant que l'elan initial.",
+      "key_points": []
+    },
+    {
+      "key": "evolution_path",
+      "title": "Votre chemin d'evolution",
+      "narrative": "Votre croissance passe par l'acceptation du changement sans perdre vos repères. Ouvrir un peu plus votre cadre habituel peut liberer de nouvelles ressources. Chaque pas mesure renforce votre assurance.",
+      "key_points": []
+    }
+  ],
+  "used_astrological_elements": [
+    {
+      "astrological_label": "Soleil en Taureau",
+      "consequence": "Votre identite s'exprime avec constance et pragmatisme."
+    }
+  ]
+}

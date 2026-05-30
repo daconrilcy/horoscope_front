@@ -48,6 +48,16 @@ export type NatalPublicCopy = {
     upsell: string
     offers: string
   }
+  narrativeReading: {
+    eyebrow: string
+    title: string
+    chapterOrder: Array<
+      "personality" | "emotional_world" | "relationships" | "vocation" | "evolution_path"
+    >
+  }
+  readingSources: {
+    title: string
+  }
 }
 
 const COPY: Record<PublicCopyLang, NatalPublicCopy> = {
@@ -75,6 +85,12 @@ const COPY: Record<PublicCopyLang, NatalPublicCopy> = {
     relationship: { eyebrow: "Lien", title: "Potentiel relationnel" },
     career: { eyebrow: "Vocation", title: "Potentiel professionnel", elevatedPlanet: "Planete culminante", unavailable: "Planete culminante indisponible" },
     astrologerMode: { eyebrow: "Mode astrologue", title: "Details techniques", show: "Afficher les details techniques", hide: "Masquer les details techniques", reserved: "Mode astrologue reserve", upsell: "Passez a Premium pour consulter le panneau expert et les donnees techniques completes.", offers: "Voir les offres" },
+    narrativeReading: {
+      eyebrow: "Lecture",
+      title: "Votre lecture natale",
+      chapterOrder: ["personality", "emotional_world", "relationships", "vocation", "evolution_path"],
+    },
+    readingSources: { title: "Ce que nous avons utilise" },
   },
   en: {
     hero: { title: "Your astrological profile", lead: "The three entry points of your chart: vitality, emotional world, and the way you meet life.", sun: "Sun", moon: "Moon", ascendant: "Ascendant", missing: "Unavailable data", traits: "Dominant traits" },
@@ -89,6 +105,12 @@ const COPY: Record<PublicCopyLang, NatalPublicCopy> = {
     relationship: { eyebrow: "Connection", title: "Relationship potential" },
     career: { eyebrow: "Vocation", title: "Career potential", elevatedPlanet: "Most elevated planet", unavailable: "Most elevated planet unavailable" },
     astrologerMode: { eyebrow: "Astrologer mode", title: "Technical details", show: "Show technical details", hide: "Hide technical details", reserved: "Astrologer mode reserved", upsell: "Upgrade to Premium to view the expert panel and complete technical data.", offers: "View plans" },
+    narrativeReading: {
+      eyebrow: "Reading",
+      title: "Your natal reading",
+      chapterOrder: ["personality", "emotional_world", "relationships", "vocation", "evolution_path"],
+    },
+    readingSources: { title: "What we used" },
   },
   es: {
     hero: { title: "Tu perfil astrologico", lead: "Las tres puertas de entrada de tu carta: impulso vital, mundo emocional y forma de relacionarte con el mundo.", sun: "Sol", moon: "Luna", ascendant: "Ascendente", missing: "Dato no disponible", traits: "Rasgos dominantes" },
@@ -103,6 +125,12 @@ const COPY: Record<PublicCopyLang, NatalPublicCopy> = {
     relationship: { eyebrow: "Vinculo", title: "Potencial relacional" },
     career: { eyebrow: "Vocacion", title: "Potencial profesional", elevatedPlanet: "Planeta culminante", unavailable: "Planeta culminante no disponible" },
     astrologerMode: { eyebrow: "Modo astrologo", title: "Detalles tecnicos", show: "Mostrar detalles tecnicos", hide: "Ocultar detalles tecnicos", reserved: "Modo astrologo reservado", upsell: "Pasa a Premium para consultar el panel experto y los datos tecnicos completos.", offers: "Ver ofertas" },
+    narrativeReading: {
+      eyebrow: "Lectura",
+      title: "Tu lectura natal",
+      chapterOrder: ["personality", "emotional_world", "relationships", "vocation", "evolution_path"],
+    },
+    readingSources: { title: "Lo que hemos utilizado" },
   },
   de: {
     hero: { title: "Dein astrologisches Profil", lead: "Die drei Einstiegspunkte deines Horoskops: Lebenskraft, Gefuhlswelt und deine Art, der Welt zu begegnen.", sun: "Sonne", moon: "Mond", ascendant: "Aszendent", missing: "Daten nicht verfugbar", traits: "Dominante Eigenschaften" },
@@ -117,6 +145,12 @@ const COPY: Record<PublicCopyLang, NatalPublicCopy> = {
     relationship: { eyebrow: "Verbindung", title: "Beziehungspotenzial" },
     career: { eyebrow: "Berufung", title: "Berufliches Potenzial", elevatedPlanet: "Hochster Planet", unavailable: "Hochster Planet nicht verfugbar" },
     astrologerMode: { eyebrow: "Astrologenmodus", title: "Technische Details", show: "Technische Details anzeigen", hide: "Technische Details ausblenden", reserved: "Astrologenmodus reserviert", upsell: "Wechsle zu Premium, um das Expertenpanel und die vollstandigen technischen Daten zu sehen.", offers: "Angebote ansehen" },
+    narrativeReading: {
+      eyebrow: "Lesung",
+      title: "Deine Geburtshoroskop-Lesung",
+      chapterOrder: ["personality", "emotional_world", "relationships", "vocation", "evolution_path"],
+    },
+    readingSources: { title: "Was wir verwendet haben" },
   },
 }
 
