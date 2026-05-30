@@ -11,11 +11,17 @@ from app.infra.db.models.billing import (
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.dignity_reference import AstralChartPlanetDignityResultModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+from app.infra.db.repositories.dignity_reference_repository import (
+    ChartPlanetDignityResultInput,
+    DignityReferenceRepository,
+)
 from app.services.auth_service import AuthService
 from app.services.privacy_service import PrivacyService, PrivacyServiceError
+from app.services.reference_data_service import ReferenceDataService
 from app.tests.helpers.db_session import app_test_engine, open_app_test_db_session
 
 
@@ -163,3 +169,64 @@ def test_request_export_marks_request_failed_on_processing_error(
         assert failed is not None
         assert failed.status == "failed"
         assert failed.error_reason == "privacy_request_failed"
+
+
+def test_request_delete_removes_chart_with_dignity_audit_rows() -> None:
+    """La suppression doit retirer les audits de dignité avant les thèmes astraux."""
+    Base.metadata.drop_all(bind=app_test_engine())
+    Base.metadata.create_all(bind=app_test_engine())
+
+    user_id = _create_user_id()
+    chart_result_id: int
+    with open_app_test_db_session() as db:
+        ReferenceDataService.seed_reference_version(db, version="1.0.0")
+        chart_result = ChartResultModel(
+            user_id=user_id,
+            chart_id="privacy-delete-dignity-chart",
+            reference_version="1.0.0",
+            ruleset_version="test",
+            input_hash="hash",
+            result_payload={},
+        )
+        db.add(chart_result)
+        db.flush()
+        chart_result_id = chart_result.id
+        DignityReferenceRepository(db).upsert_chart_planet_dignity_result(
+            ChartPlanetDignityResultInput(
+                chart_result_id=chart_result.id,
+                planet_code="mars",
+                score_profile_code="traditional_standard",
+                astral_system_code="traditional",
+                reference_version="1.0.0",
+                essential_score=5,
+                accidental_score=3,
+                total_score=8,
+                functional_strength_score=1.2,
+                expression_quality_score=0.8,
+                intensity_score=0.7,
+                essential_breakdown_json=[{"type": "domicile"}],
+                accidental_breakdown_json=[{"type": "angular_house"}],
+                condition_summary_json={"detected": 2},
+                calculation_context_json={"engine": "unit"},
+            )
+        )
+        db.commit()
+
+    with open_app_test_db_session() as db:
+        result = PrivacyService.request_delete(
+            db, user_id=user_id, request_id="privacy-delete-dignity"
+        )
+        db.commit()
+        dignity_count = db.scalar(
+            select(func.count(AstralChartPlanetDignityResultModel.id)).where(
+                AstralChartPlanetDignityResultModel.chart_result_id == chart_result_id
+            )
+        )
+        chart_count = db.scalar(
+            select(func.count(ChartResultModel.id)).where(ChartResultModel.user_id == user_id)
+        )
+
+    assert result.status == "completed"
+    assert dignity_count == 0
+    assert chart_count == 0
+    assert "astral_chart_planet_dignity_results" in result.result_data["deleted_entities"]

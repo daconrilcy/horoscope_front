@@ -110,6 +110,7 @@ _EXPLICIT_STATUS_BY_CODE.update(
         "persona_profile_archive_forbidden": 422,
         "plan_price_not_configured": 422,
         "privacy_evidence_incomplete": 422,
+        "privacy_request_failed": 503,
         "revoked_api_key": 403,
         "runtime_preview_incomplete_for_execution": 422,
         "sample_payload_inactive": 422,

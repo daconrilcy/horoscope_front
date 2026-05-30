@@ -28,9 +28,21 @@ from app.infra.db.models.billing import (
 from app.infra.db.models.chart_result import ChartResultModel
 from app.infra.db.models.chat_conversation import ChatConversationModel
 from app.infra.db.models.chat_message import ChatMessageModel
+from app.infra.db.models.consultation_third_party import (
+    ConsultationThirdPartyProfileModel,
+    ConsultationThirdPartyUsageModel,
+)
+from app.infra.db.models.daily_prediction import DailyPredictionRunModel
+from app.infra.db.models.dignity_reference import AstralChartPlanetDignityResultModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
+from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
+from app.infra.db.models.stripe_billing import StripeBillingProfileModel
+from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
+from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
+from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 from app.infra.observability.metrics import increment_counter, observe_duration
 
 logger = logging.getLogger(__name__)
@@ -372,6 +384,120 @@ class PrivacyService:
         return PrivacyService._to_request_data(request)
 
     @staticmethod
+    def _purge_user_owned_data(db: Session, *, user_id: int) -> list[str]:
+        """
+        Supprime les données personnelles rattachées à un compte avant anonymisation.
+
+        L'ordre respecte les contraintes de clés étrangères SQLite (PRAGMA foreign_keys=ON).
+        """
+        deleted_entities: list[str] = []
+
+        conversation_ids = db.scalars(
+            select(ChatConversationModel.id).where(ChatConversationModel.user_id == user_id)
+        ).all()
+        if conversation_ids:
+            db.execute(
+                delete(ChatMessageModel).where(
+                    ChatMessageModel.conversation_id.in_(conversation_ids)
+                )
+            )
+            deleted_entities.append("chat_messages")
+        db.execute(delete(ChatConversationModel).where(ChatConversationModel.user_id == user_id))
+        deleted_entities.append("chat_conversations")
+
+        db.execute(
+            delete(UserNatalInterpretationModel).where(
+                UserNatalInterpretationModel.user_id == user_id
+            )
+        )
+        deleted_entities.append("user_natal_interpretations")
+
+        third_party_profile_ids = db.scalars(
+            select(ConsultationThirdPartyProfileModel.id).where(
+                ConsultationThirdPartyProfileModel.user_id == user_id
+            )
+        ).all()
+        if third_party_profile_ids:
+            db.execute(
+                delete(ConsultationThirdPartyUsageModel).where(
+                    ConsultationThirdPartyUsageModel.third_party_profile_id.in_(
+                        third_party_profile_ids
+                    )
+                )
+            )
+            deleted_entities.append("consultation_third_party_usages")
+        db.execute(
+            delete(ConsultationThirdPartyProfileModel).where(
+                ConsultationThirdPartyProfileModel.user_id == user_id
+            )
+        )
+        deleted_entities.append("consultation_third_party_profiles")
+
+        db.execute(
+            delete(DailyPredictionRunModel).where(DailyPredictionRunModel.user_id == user_id)
+        )
+        deleted_entities.append("daily_prediction_runs")
+
+        db.execute(
+            delete(UserPredictionBaselineModel).where(
+                UserPredictionBaselineModel.user_id == user_id
+            )
+        )
+        deleted_entities.append("user_prediction_baselines")
+
+        db.execute(delete(UserTokenUsageLogModel).where(UserTokenUsageLogModel.user_id == user_id))
+        deleted_entities.append("user_token_usage_logs")
+
+        db.execute(
+            delete(FeatureUsageCounterModel).where(FeatureUsageCounterModel.user_id == user_id)
+        )
+        deleted_entities.append("feature_usage_counters")
+
+        db.execute(delete(UserRefreshTokenModel).where(UserRefreshTokenModel.user_id == user_id))
+        deleted_entities.append("user_refresh_tokens")
+
+        db.execute(
+            delete(StripeBillingProfileModel).where(StripeBillingProfileModel.user_id == user_id)
+        )
+        deleted_entities.append("stripe_billing_profiles")
+
+        db.execute(delete(UserBirthProfileModel).where(UserBirthProfileModel.user_id == user_id))
+        deleted_entities.append("user_birth_profiles")
+
+        chart_result_ids = db.scalars(
+            select(ChartResultModel.id).where(ChartResultModel.user_id == user_id)
+        ).all()
+        if chart_result_ids:
+            db.execute(
+                delete(AstralChartPlanetDignityResultModel).where(
+                    AstralChartPlanetDignityResultModel.chart_result_id.in_(chart_result_ids)
+                )
+            )
+            deleted_entities.append("astral_chart_planet_dignity_results")
+        db.execute(delete(ChartResultModel).where(ChartResultModel.user_id == user_id))
+        deleted_entities.append("chart_results")
+
+        db.execute(
+            delete(UserDailyQuotaUsageModel).where(UserDailyQuotaUsageModel.user_id == user_id)
+        )
+        deleted_entities.append("user_daily_quota_usages")
+
+        db.execute(delete(PaymentAttemptModel).where(PaymentAttemptModel.user_id == user_id))
+        deleted_entities.append("payment_attempts")
+
+        db.execute(
+            delete(SubscriptionPlanChangeModel).where(
+                SubscriptionPlanChangeModel.user_id == user_id
+            )
+        )
+        deleted_entities.append("subscription_plan_changes")
+
+        db.execute(delete(UserSubscriptionModel).where(UserSubscriptionModel.user_id == user_id))
+        deleted_entities.append("user_subscriptions")
+
+        return deleted_entities
+
+    @staticmethod
     def request_delete(db: Session, *, user_id: int, request_id: str) -> PrivacyRequestData:
         """
         Exécute une demande de suppression de données RGPD.
@@ -429,55 +555,23 @@ class PrivacyService:
                     details={"user_id": str(user_id)},
                 )
 
-            conversation_ids = db.scalars(
-                select(ChatConversationModel.id).where(ChatConversationModel.user_id == user_id)
-            ).all()
-            if conversation_ids:
-                db.execute(
-                    delete(ChatMessageModel).where(
-                        ChatMessageModel.conversation_id.in_(conversation_ids)
-                    )
-                )
-            db.execute(
-                delete(ChatConversationModel).where(ChatConversationModel.user_id == user_id)
-            )
-            db.execute(
-                delete(UserBirthProfileModel).where(UserBirthProfileModel.user_id == user_id)
-            )
-            db.execute(delete(ChartResultModel).where(ChartResultModel.user_id == user_id))
-            db.execute(
-                delete(UserDailyQuotaUsageModel).where(UserDailyQuotaUsageModel.user_id == user_id)
-            )
-            db.execute(delete(PaymentAttemptModel).where(PaymentAttemptModel.user_id == user_id))
-            db.execute(
-                delete(SubscriptionPlanChangeModel).where(
-                    SubscriptionPlanChangeModel.user_id == user_id
-                )
-            )
-            db.execute(
-                delete(UserSubscriptionModel).where(UserSubscriptionModel.user_id == user_id)
-            )
+            deleted_entities = PrivacyService._purge_user_owned_data(db, user_id=user_id)
 
             deleted_timestamp = int(datetime_provider.utcnow().timestamp())
             anonymized_email = f"deleted-user-{user_id}-{deleted_timestamp}@deleted.local"
             user.email = anonymized_email
             user.password_hash = hash_password(uuid4().hex)
             user.role = "user"
+            user.default_astrologer_id = None
+            user.detected_locale = None
+            user.detected_country_code = None
+            user.detected_timezone = None
 
             request.status = "completed"
             request.completed_at = datetime_provider.utcnow()
             request.result_data = {
                 "account_anonymized": True,
-                "deleted_entities": [
-                    "user_birth_profiles",
-                    "chart_results",
-                    "chat_conversations",
-                    "chat_messages",
-                    "user_daily_quota_usages",
-                    "payment_attempts",
-                    "subscription_plan_changes",
-                    "user_subscriptions",
-                ],
+                "deleted_entities": deleted_entities,
             }
             db.flush()
         except PrivacyServiceError as error:
