@@ -217,14 +217,22 @@ def test_persist_rejected_audit_uses_audit_use_case(db: Session) -> None:
         ),
     )
     llm_input = {
-        "contract_version": "llm_astrology_input.v1",
+        "contract_version": "llm_astrology_input_v1.contract.v1",
         "provenance": {
             "llm_input_hash": "a" * 64,
             "projection_hash": "b" * 64,
         },
         "evidence": {
             "grounding_status": "grounded",
-            "evidence_refs": [],
+            "evidence_refs": [
+                {
+                    "section_id": "llm_astrology_input_v1",
+                    "source_type": "projection_version",
+                    "source_id": "projection",
+                    "source_version": "structured_facts_v1.contract.v1",
+                    "source_hash": "b" * 64,
+                }
+            ],
         },
     }
 

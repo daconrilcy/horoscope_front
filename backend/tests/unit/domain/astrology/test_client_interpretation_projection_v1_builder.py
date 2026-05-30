@@ -6,6 +6,7 @@ import ast
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
@@ -42,6 +43,7 @@ class _NatalSource:
     dominant_planets: DominantPlanetsResult | None = None
     advanced_condition_facts: tuple[object, ...] = ()
     chart_balance: object | None = None
+    prepared_input: object | None = None
 
 
 def test_free_projection_is_short_and_client_safe() -> None:
@@ -313,6 +315,7 @@ def _structured_facts(*, no_time: bool = False) -> dict[str, object]:
             chart_ruler_code=None,
             most_elevated_planet_code=None,
         ),
+        prepared_input=None if no_time else SimpleNamespace(birth_time_local="10:30"),
     )
     payload = StructuredFactsV1Builder().build(source, chart_id="chart-1", locale="fr")
     if no_time:

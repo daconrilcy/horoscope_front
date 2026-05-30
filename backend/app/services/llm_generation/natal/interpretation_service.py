@@ -610,6 +610,8 @@ class NatalInterpretationService:
         model: UserNatalInterpretationModel,
     ) -> bool:
         """Supprime une interpretation rejetee qui ne doit pas etre relue cote public."""
+        if model.use_case == NARRATIVE_ANSWER_AUDIT_USE_CASE:
+            return False
         if not is_rejected_interpretation(model):
             return False
         logger.warning(

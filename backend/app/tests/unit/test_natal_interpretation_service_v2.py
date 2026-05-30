@@ -18,8 +18,13 @@ from app.domain.astrology.natal_calculation import (
     PlanetPosition,
 )
 from app.domain.astrology.natal_preparation import BirthPreparedData
+from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
+from app.services.llm_generation.natal.stored_interpretation_payload import (
+    NARRATIVE_ANSWER_AUDIT_USE_CASE,
+)
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
 
@@ -60,6 +65,13 @@ def _make_natal_result() -> NatalResult:
                 default_valence="positive",
                 interpretive_valence="harmonious",
                 energy_type="harmonious_flow",
+                aspect_interpretive_hints=AspectInterpretiveHintsRuntimeData(
+                    aspect_code="trine",
+                    default_valence="positive",
+                    interpretive_valence="harmonious",
+                    energy_type="harmonious_flow",
+                    source_codes=("aspect:trine", "aspect_profile:trine"),
+                ),
             )
         ],
     )
@@ -469,5 +481,13 @@ class TestNatalInterpretationServiceModules:
         assert request_sent.user_input.use_case == "natal_psy_profile"
         assert request_sent.context.extra_context["module"] == "NATAL_PSY_PROFILE"
         assert resp.data.meta.cached is False
-        db.commit.assert_not_called()
-        assert db.add.call_count == 1
+        db.commit.assert_called_once()
+        persisted_interpretations = [
+            call.args[0]
+            for call in db.add.call_args_list
+            if isinstance(call.args[0], UserNatalInterpretationModel)
+        ]
+        assert persisted_interpretations
+        assert all(
+            item.use_case == NARRATIVE_ANSWER_AUDIT_USE_CASE for item in persisted_interpretations
+        )

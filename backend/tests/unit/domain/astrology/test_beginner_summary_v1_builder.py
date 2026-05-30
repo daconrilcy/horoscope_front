@@ -6,6 +6,7 @@ import ast
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -44,6 +45,7 @@ class _NatalSource:
     dominant_planets: DominantPlanetsResult | None = None
     advanced_condition_facts: tuple[object, ...] = ()
     chart_balance: object | None = None
+    prepared_input: object | None = None
 
 
 def test_beginner_summary_v1_shape_is_json_serializable_and_deterministic() -> None:
@@ -301,5 +303,6 @@ def _structured_facts() -> dict[str, Any]:
             chart_ruler_code=None,
             most_elevated_planet_code=None,
         ),
+        prepared_input=SimpleNamespace(birth_time_local="10:30"),
     )
     return StructuredFactsV1Builder().build(source, chart_id="chart-1", locale="fr")
