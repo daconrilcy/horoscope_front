@@ -265,8 +265,10 @@ class ClientInterpretationProjectionV1Builder:
         payload["support_elements"] = _support_elements(
             plan=plan,
             positions=positions,
+            houses=houses,
             aspects=aspects,
             dominants=dominants,
+            interpretive_signals=_signals(structured_facts_v1),
             no_time=no_time,
         )
         payload["interpretive_signals"] = _authorized_signals(plan, source_signals)
@@ -456,28 +458,143 @@ def _display_hint(*, code: str, no_time: bool) -> str:
     return "detailed"
 
 
+_PLAN_SUPPORT_ELEMENT_LIMITS = {"free": 3, "basic": 6, "premium": 12}
+_BIG_THREE_CODES = frozenset({"sun", "moon", "asc"})
+_ANGULAR_HOUSE_NUMBERS = frozenset({1, 4, 7, 10})
+
+
+def _readable_position_label(position: Mapping[str, Any]) -> str | None:
+    """Produit un libelle vulgarise pour une position planetaire."""
+    code = str(position.get("code", "")).strip().lower()
+    sign = str(position.get("zodiac_sign", "")).strip()
+    house_number = position.get("house_number")
+    if not code or not sign:
+        return None
+    readable_code = code.replace("_", " ")
+    label = f"{readable_code} en {sign.replace('_', ' ')}"
+    if isinstance(house_number, int):
+        label = f"{label}, maison {house_number}"
+    return label
+
+
+def _readable_aspect_label(aspect: Mapping[str, Any]) -> str | None:
+    """Produit un libelle vulgarise pour un aspect majeur."""
+    participants = aspect.get("participant_codes")
+    family = str(aspect.get("family", "")).strip().lower().replace("_", " ")
+    if not isinstance(participants, Sequence) or isinstance(participants, str):
+        return None
+    codes = [str(item).strip().lower().replace("_", " ") for item in participants if item]
+    if len(codes) < 2 or not family:
+        return None
+    return f"{codes[0]} {family} {codes[1]}"
+
+
+def _readable_house_label(house: Mapping[str, Any]) -> str | None:
+    """Produit un libelle de maison angulaire ou dominante."""
+    house_number = house.get("house_number")
+    sign = str(house.get("house_cusp_code", "")).strip()
+    if not isinstance(house_number, int) or house_number not in _ANGULAR_HOUSE_NUMBERS:
+        return None
+    if sign:
+        return f"maison {house_number} ({sign.replace('_', ' ')})"
+    return f"maison {house_number}"
+
+
 def _support_elements(
     *,
     plan: str,
     positions: Sequence[Mapping[str, Any]],
+    houses: Sequence[Mapping[str, Any]],
     aspects: Sequence[Mapping[str, Any]],
     dominants: Sequence[Mapping[str, Any]],
+    interpretive_signals: Mapping[str, Any],
     no_time: bool,
 ) -> list[dict[str, str]]:
-    """Construit les appuis vulgarises autorises par le plan."""
-    elements = [
+    """Construit des appuis vulgarises equilibres par familles astrologiques."""
+    elements: list[dict[str, str]] = [
         {
             "code": "confidence_wording",
             "value": "lecture limitee par les donnees disponibles" if no_time else "lecture forte",
         }
     ]
-    for label in _position_labels(positions)[:2]:
-        elements.append({"code": "source_label", "value": label})
-    for label in _dominant_labels(dominants)[: 1 if plan == "free" else 3]:
-        elements.append({"code": "highlight", "value": label})
-    if plan == "premium" and aspects:
-        elements.append({"code": "personalization_note", "value": "liens entre themes disponibles"})
-    return elements
+    limit = _PLAN_SUPPORT_ELEMENT_LIMITS[plan]
+
+    families: list[list[dict[str, str]]] = []
+
+    big_three: list[dict[str, str]] = []
+    for position in positions:
+        code = str(position.get("code", "")).strip().lower()
+        if code not in _BIG_THREE_CODES:
+            continue
+        label = _readable_position_label(position)
+        if label:
+            big_three.append({"code": "source_label", "value": label})
+    families.append(big_three)
+
+    ruler_labels: list[dict[str, str]] = []
+    dispositor_codes = interpretive_signals.get("dispositor_codes")
+    if isinstance(dispositor_codes, Sequence) and not isinstance(dispositor_codes, str):
+        for code in dispositor_codes[:3]:
+            normalized = str(code).strip().replace("_", " ")
+            if normalized:
+                ruler_labels.append(
+                    {"code": "highlight", "value": f"regence {normalized}"},
+                )
+    families.append(ruler_labels)
+
+    dominant_labels = [
+        {"code": "highlight", "value": label} for label in _dominant_labels(dominants)
+    ]
+    families.append(dominant_labels)
+
+    house_labels: list[dict[str, str]] = []
+    if not no_time:
+        for house in houses:
+            label = _readable_house_label(house)
+            if label:
+                house_labels.append({"code": "source_label", "value": label})
+    families.append(house_labels)
+
+    aspect_labels: list[dict[str, str]] = []
+    for aspect in aspects[:4]:
+        label = _readable_aspect_label(aspect)
+        if label:
+            aspect_labels.append({"code": "personalization_note", "value": label})
+    families.append(aspect_labels)
+
+    other_positions: list[dict[str, str]] = []
+    for position in positions:
+        code = str(position.get("code", "")).strip().lower()
+        if code in _BIG_THREE_CODES:
+            continue
+        label = _readable_position_label(position)
+        if label:
+            other_positions.append({"code": "source_label", "value": label})
+    families.append(other_positions)
+
+    seen_values: set[str] = set()
+    max_family_length = max((len(family) for family in families), default=0)
+    for item_index in range(max_family_length):
+        for family in families:
+            if item_index >= len(family):
+                continue
+            item = family[item_index]
+            normalized = item["value"].casefold()
+            if normalized in seen_values:
+                continue
+            if len(elements) >= limit:
+                return elements
+            seen_values.add(normalized)
+            elements.append(item)
+
+    if plan == "premium" and aspects and len(elements) < limit:
+        elements.append(
+            {
+                "code": "personalization_note",
+                "value": "liens entre themes disponibles",
+            }
+        )
+    return elements[:limit]
 
 
 def _authorized_signals(plan: str, signals: Mapping[str, Any]) -> list[str]:

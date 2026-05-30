@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import argparse
-import sys
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.db.models.billing import BillingPlanModel, UserSubscriptionModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.user import UserModel
@@ -28,7 +28,7 @@ def set_user_plan_basic(email: str) -> None:
         if basic_plan is None:
             raise SystemExit("Plan billing 'basic' introuvable après ensure_default_plans")
 
-        now = datetime.now(timezone.utc)
+        now = datetime_provider.utcnow()
         period_end = now + timedelta(days=30)
 
         profile = db.scalar(

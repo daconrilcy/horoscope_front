@@ -14,6 +14,7 @@ from app.domain.llm.prompting.narrative_natal_reading_v1 import (
 from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
 
 NARRATIVE_ANSWER_AUDIT_USE_CASE = "narrative_answer_audit_v1"
+CORRECTIVE_REGENERATION_PENDING_USE_CASE = "natal_corrective_regeneration_pending"
 
 REJECTED_PAYLOAD_MARKER_KEYS = frozenset(
     {
@@ -56,7 +57,10 @@ def is_rejected_interpretation(model: UserNatalInterpretationModel) -> bool:
 
 def is_public_natal_interpretation(model: UserNatalInterpretationModel) -> bool:
     """Indique si une ligne peut etre exposee comme interpretation utilisateur."""
-    if model.use_case == NARRATIVE_ANSWER_AUDIT_USE_CASE:
+    if model.use_case in {
+        NARRATIVE_ANSWER_AUDIT_USE_CASE,
+        CORRECTIVE_REGENERATION_PENDING_USE_CASE,
+    }:
         return False
     return not is_rejected_interpretation(model)
 

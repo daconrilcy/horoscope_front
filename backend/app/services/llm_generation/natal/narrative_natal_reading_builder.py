@@ -14,6 +14,9 @@ from app.domain.llm.prompting.narrative_natal_reading_v1 import (
     UsedAstrologicalElementV1,
 )
 from app.domain.llm.prompting.schemas import AstroResponseV1, AstroResponseV2, AstroResponseV3
+from app.services.llm_generation.natal.narrative_semantic_integrity import (
+    NarrativeChapterSourceMissingError,
+)
 
 AcceptedCompleteAstroResponse = AstroResponseV1 | AstroResponseV2 | AstroResponseV3
 
@@ -22,7 +25,16 @@ _CHAPTER_SECTION_PRIORITY: dict[NarrativeChapterKey, tuple[str, ...]] = {
     "emotional_world": ("emotions", "inner_life", "daily_life"),
     "relationships": ("relationships", "needs_in_love", "romance_vibe"),
     "vocation": ("career", "work_environment", "leadership_signature"),
-    "evolution_path": ("growth_levers", "growth_direction", "integration_path", "integration"),
+    # V2 fallback (seed_29) expose surtout challenges/comfort_zone pour l'evolution.
+    "evolution_path": (
+        "growth_levers",
+        "growth_direction",
+        "integration_path",
+        "integration",
+        "challenges",
+        "comfort_zone",
+        "integration_steps",
+    ),
 }
 
 _CHAPTER_DEFAULT_TITLES: dict[NarrativeChapterKey, str] = {
@@ -44,16 +56,19 @@ def _section_content_by_key(
 
 
 def _pick_section_content(
-    response: AcceptedCompleteAstroResponse, priority: Sequence[str]
+    response: AcceptedCompleteAstroResponse,
+    priority: Sequence[str],
+    *,
+    chapter_key: NarrativeChapterKey,
 ) -> tuple[str, str]:
+    """Retourne le contenu source d'un chapitre ou leve si aucune section n'est disponible."""
     for key in priority:
         content = _section_content_by_key(response, key)
         if content:
             for section in response.sections:
                 if section.key == key:
                     return section.heading or key, content
-    fallback = response.sections[0]
-    return fallback.heading, fallback.content
+    raise NarrativeChapterSourceMissingError(chapter_key, tuple(priority))
 
 
 def _editorial_profile(level: str, variant_code: str | None) -> Literal["free", "basic", "premium"]:
@@ -121,7 +136,11 @@ def build_narrative_natal_reading_v1(
     limits = {"free": 3, "basic": 6, "premium": 10}[profile]
     chapters: list[NarrativeNatalReadingChapterV1] = []
     for chapter_key in NARRATIVE_CHAPTER_ORDER:
-        heading, content = _pick_section_content(response, _CHAPTER_SECTION_PRIORITY[chapter_key])
+        heading, content = _pick_section_content(
+            response,
+            _CHAPTER_SECTION_PRIORITY[chapter_key],
+            chapter_key=chapter_key,
+        )
         title = heading if heading else _CHAPTER_DEFAULT_TITLES[chapter_key]
         highlights = [
             str(item).strip() for item in (response.highlights or [])[:2] if str(item).strip()

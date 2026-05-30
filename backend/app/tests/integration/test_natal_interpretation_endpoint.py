@@ -58,38 +58,45 @@ def _make_birth_profile() -> UserBirthProfileData:
     )
 
 
+def _long_text(label: str, count: int) -> str:
+    """Construit un texte long sans padding semantique repetitif."""
+    return " ".join(
+        f"{label} apporte une nuance narrative distincte numero {index}." for index in range(count)
+    )
+
+
 def _make_gateway_result(use_case: str, persona_id: str | None = None) -> GatewayResult:
     """Crée un GatewayResult de test."""
     if use_case == "natal_interpretation":
         # Story 30-8: Premium V3 data
         structured_output = {
             "title": "Thème natal test V3",
-            "summary": "Résumé de test long..." * 100,  # > 900 chars
+            "summary": _long_text("Le resume", 30),
             "sections": [
                 {
                     "key": "overall",
                     "heading": "Vue d'ensemble",
-                    "content": "Contenu très long et dense pour la section overall..." * 50,
+                    "content": _long_text("La personnalite", 12),
                 },
                 {
                     "key": "career",
                     "heading": "Carrière",
-                    "content": "Contenu très long et dense pour la section career..." * 50,
+                    "content": _long_text("La vocation", 12),
                 },
                 {
                     "key": "relationships",
                     "heading": "Relations",
-                    "content": "Contenu très long et dense pour la section relationships..." * 50,
+                    "content": _long_text("Les relations", 12),
                 },
                 {
                     "key": "inner_life",
                     "heading": "Vie intérieure",
-                    "content": "Contenu très long et dense pour la section inner_life..." * 50,
+                    "content": _long_text("Le monde emotionnel", 12),
                 },
                 {
-                    "key": "daily_life",
-                    "heading": "Vie quotidienne",
-                    "content": "Contenu très long et dense pour la section daily_life..." * 50,
+                    "key": "growth_direction",
+                    "heading": "Chemin d'évolution",
+                    "content": _long_text("Le chemin d evolution", 12),
                 },
             ],
             "highlights": ["Point 1", "Point 2", "Point 3", "Point 4", "Point 5"],
@@ -178,7 +185,7 @@ def test_client(mock_db):
 
     with (
         patch(
-            "app.api.v1.routers.public.natal_interpretation.NatalChartLongEntitlementGate.check_and_consume",
+            "app.api.v1.routers.public.natal_interpretation.NatalChartLongEntitlementGate.check_access_for_complete_generation",
             return_value=result,
         ),
         patch(
@@ -257,6 +264,11 @@ class TestNatalInterpretationEndpointV2:
                 "app.domain.llm.runtime.gateway.LLMGateway.execute_request",
                 new_callable=AsyncMock,
                 return_value=_make_gateway_result(use_case, persona_id=persona_id),
+            ),
+            patch(
+                "app.services.llm_generation.natal.interpretation_service."
+                "_build_rejected_narrative_answer_outcome",
+                return_value=None,
             ),
         ):
             response = test_client.post(

@@ -15,7 +15,11 @@ from app.services.entitlement.effective_entitlement_gate_helpers import (
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
 )
-from app.services.entitlement.entitlement_types import QuotaDefinition, UsageState
+from app.services.entitlement.entitlement_types import (
+    EffectiveEntitlementsSnapshot,
+    QuotaDefinition,
+    UsageState,
+)
 from app.services.quota.usage_service import QuotaExhaustedError, QuotaUsageService
 
 
@@ -29,6 +33,14 @@ class B2CAccessSnapshot:
     usage_states: list[UsageState]
 
 
+def resolve_b2c_entitlement_snapshot(db: Session, *, user_id: int) -> EffectiveEntitlementsSnapshot:
+    """Charge le snapshot B2C canonique pour les variantes de gate specialisees."""
+    return EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
+        db,
+        app_user_id=user_id,
+    )
+
+
 def resolve_b2c_access(
     db: Session,
     *,
@@ -38,10 +50,7 @@ def resolve_b2c_access(
     quota_error_factory: Callable[[str, int, int, datetime | None], Exception],
 ) -> B2CAccessSnapshot:
     """Resout l acces B2C et normalise les erreurs d acces ou de quota."""
-    snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
-        db,
-        app_user_id=user_id,
-    )
+    snapshot = resolve_b2c_entitlement_snapshot(db, user_id=user_id)
     access = snapshot.entitlements.get(feature_code)
 
     if not access or not access.granted:

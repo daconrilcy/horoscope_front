@@ -15,16 +15,73 @@
   background: var(--color-surface-elevated);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
-  padding: var(--space-lg);
+  overflow: hidden;
 }
 
-.natal-narrative-reading__card h3 {
-  margin: 0 0 var(--space-sm);
+.natal-narrative-reading__chapter-heading {
+  margin: 0;
+}
+
+.natal-narrative-reading__toggle {
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: space-between;
+  padding: var(--space-lg);
+  text-align: left;
+  width: 100%;
+}
+
+.natal-narrative-reading__toggle:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.natal-narrative-reading__toggle-label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.natal-narrative-reading__toggle-title {
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.natal-narrative-reading__preview {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.natal-narrative-reading__chevron {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  margin-top: var(--space-2xs);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.natal-narrative-reading__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.natal-narrative-reading__panel {
+  border-top: 1px solid var(--color-border-subtle);
+  padding: 0 var(--space-lg) var(--space-lg);
+}
+
+.natal-narrative-reading__panel.is-collapsed {
+  display: none;
 }
 
 .natal-narrative-reading__body {
-  margin: 0;
+  margin: var(--space-md) 0 0;
   line-height: var(--line-height-relaxed);
   color: var(--color-text-primary);
 }
@@ -33,4 +90,11 @@
   margin: var(--space-md) 0 0;
   padding-left: var(--space-lg);
   color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .natal-narrative-reading__toggle,
+  .natal-narrative-reading__panel {
+    padding-inline: var(--space-md);
+  }
 }

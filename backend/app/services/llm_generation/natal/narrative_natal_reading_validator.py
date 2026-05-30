@@ -10,6 +10,9 @@ from app.domain.llm.prompting.narrative_natal_reading_v1 import (
     NARRATIVE_CHAPTER_ORDER,
     NarrativeNatalReadingV1,
 )
+from app.services.llm_generation.natal.narrative_semantic_integrity import (
+    validate_narrative_semantic_integrity,
+)
 from app.services.llm_generation.natal.rejected_answer_workflow import (
     CONTROLLED_REJECTED_CLIENT_MESSAGE,
     REJECTED_NARRATIVE_LOG_EVENT,
@@ -60,7 +63,38 @@ def validate_narrative_reading_public_text(reading: NarrativeNatalReadingV1) -> 
             violations.append(leak)
     if [chapter.key for chapter in reading.chapters] != list(NARRATIVE_CHAPTER_ORDER):
         violations.append("chapter_order_invalid")
+    violations.extend(validate_narrative_semantic_integrity(reading))
     return sorted(set(violations))
+
+
+def build_semantic_integrity_rejection_outcome(
+    *,
+    answer_id: str,
+    answer_type: str,
+    raw_answer: dict[str, object],
+    violations: list[str],
+) -> RejectedNarrativeAnswerOutcome:
+    """Construit un rejet interne lorsque la lecture narrative manque d'integrite semantique."""
+    return RejectedNarrativeAnswerOutcome(
+        answer_id=answer_id,
+        answer_type=answer_type,
+        status="rejected",
+        grounding_status="ungrounded",
+        rejection_reason={
+            "code": "narrative_semantic_integrity",
+            "violations": violations,
+        },
+        validation_context=[
+            {
+                "section_id": "narrative_semantic_integrity",
+                "section_status": "rejected",
+                "validation_errors": violations,
+            }
+        ],
+        raw_answer_storage={"structured_output": raw_answer},
+        client_message=CONTROLLED_REJECTED_CLIENT_MESSAGE,
+        log_event=REJECTED_NARRATIVE_LOG_EVENT,
+    )
 
 
 def build_technical_leak_rejection_outcome(

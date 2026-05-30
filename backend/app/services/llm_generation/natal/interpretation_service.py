@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -84,8 +84,13 @@ from app.services.llm_generation.natal.narrative_natal_reading_builder import (
     build_narrative_natal_reading_v1,
 )
 from app.services.llm_generation.natal.narrative_natal_reading_validator import (
+    build_semantic_integrity_rejection_outcome,
     build_technical_leak_rejection_outcome,
     validate_narrative_reading_public_text,
+)
+from app.services.llm_generation.natal.narrative_semantic_integrity import (
+    NarrativeChapterSourceMissingError,
+    is_narratively_invalid_complete_payload,
 )
 from app.services.llm_generation.natal.prompt_context import (
     _detect_degraded_mode,
@@ -97,6 +102,7 @@ from app.services.llm_generation.natal.rejected_answer_workflow import (
     emit_rejected_narrative_answer_log,
 )
 from app.services.llm_generation.natal.stored_interpretation_payload import (
+    CORRECTIVE_REGENERATION_PENDING_USE_CASE,
     NARRATIVE_ANSWER_AUDIT_USE_CASE,
     extract_accepted_interpretation_payload,
     is_public_natal_interpretation,
@@ -394,6 +400,18 @@ def _attach_narrative_reading_to_complete(
             level=level,
             variant_code=variant_code,
         )
+    except NarrativeChapterSourceMissingError as exc:
+        violations = [f"chapter_source_missing:{exc.chapter_key}"]
+        return (
+            None,
+            build_semantic_integrity_rejection_outcome(
+                answer_id=answer_id,
+                answer_type=answer_type,
+                raw_answer=persist_payload,
+                violations=violations,
+            ),
+            persist_payload,
+        )
     except ValidationError as exc:
         logger.warning(
             "Narrative natal reading unavailable for accepted complete response "
@@ -404,9 +422,23 @@ def _attach_narrative_reading_to_complete(
         return None, None, persist_payload
     violations = validate_narrative_reading_public_text(reading)
     if violations:
+        rejection_builder = (
+            build_semantic_integrity_rejection_outcome
+            if any(
+                marker in violation
+                for violation in violations
+                for marker in (
+                    "duplicate_chapter",
+                    "empty_used_astrological",
+                    "chapter_empty:",
+                    "chapter_source_missing",
+                )
+            )
+            else build_technical_leak_rejection_outcome
+        )
         return (
             None,
-            build_technical_leak_rejection_outcome(
+            rejection_builder(
                 answer_id=answer_id,
                 answer_type=answer_type,
                 raw_answer=persist_payload,
@@ -670,9 +702,84 @@ class NatalInterpretationService:
             return False
         if model.variant_code == "free_short" or model.use_case == "natal_long_free":
             return False
-        return NatalInterpretationService._is_empty_complete_payload(
+        payload = (
             model.interpretation_payload if isinstance(model.interpretation_payload, dict) else None
         )
+        if NatalInterpretationService._is_empty_complete_payload(payload):
+            return True
+        if isinstance(payload, dict) and is_narratively_invalid_complete_payload(payload):
+            return True
+        return False
+
+    @staticmethod
+    def claim_corrective_regeneration_eligibility(
+        db: Session,
+        *,
+        user_id: int,
+        variant_code: str | None,
+    ) -> tuple[int, str] | None:
+        """Reserve atomiquement une lecture invalide pour une regeneration corrective."""
+        stmt = (
+            select(UserNatalInterpretationModel)
+            .where(
+                UserNatalInterpretationModel.user_id == user_id,
+                UserNatalInterpretationModel.level == InterpretationLevel.COMPLETE,
+                UserNatalInterpretationModel.variant_code == variant_code,
+            )
+            .order_by(
+                UserNatalInterpretationModel.created_at.desc(),
+                UserNatalInterpretationModel.id.desc(),
+            )
+        )
+        rows = list(db.execute(stmt).scalars().all())
+        invalid_rows = [
+            row
+            for row in rows
+            if NatalInterpretationService._is_invalid_complete_interpretation(row)
+            and is_public_natal_interpretation(row)
+        ]
+        valid_rows = [
+            row
+            for row in rows
+            if not NatalInterpretationService._is_invalid_complete_interpretation(row)
+            and is_public_natal_interpretation(row)
+        ]
+        if not invalid_rows or valid_rows:
+            return None
+
+        candidate = invalid_rows[0]
+        original_use_case = candidate.use_case
+        claimed = db.execute(
+            update(UserNatalInterpretationModel)
+            .where(
+                UserNatalInterpretationModel.id == candidate.id,
+                UserNatalInterpretationModel.use_case == original_use_case,
+            )
+            .values(use_case=CORRECTIVE_REGENERATION_PENDING_USE_CASE)
+        )
+        if claimed.rowcount != 1:
+            db.rollback()
+            return None
+        db.commit()
+        return candidate.id, original_use_case
+
+    @staticmethod
+    def release_corrective_regeneration_claim(
+        db: Session,
+        *,
+        interpretation_id: int,
+        original_use_case: str,
+    ) -> None:
+        """Restaure une reservation corrective si la generation n'aboutit pas."""
+        db.execute(
+            update(UserNatalInterpretationModel)
+            .where(
+                UserNatalInterpretationModel.id == interpretation_id,
+                UserNatalInterpretationModel.use_case == CORRECTIVE_REGENERATION_PENDING_USE_CASE,
+            )
+            .values(use_case=original_use_case)
+        )
+        db.commit()
 
     @staticmethod
     def _purge_rejected_interpretation(
@@ -822,6 +929,8 @@ class NatalInterpretationService:
             valid_existing_rows: list[UserNatalInterpretationModel] = []
             deleted_any = False
             for row in existing_rows:
+                if row.use_case == CORRECTIVE_REGENERATION_PENDING_USE_CASE:
+                    continue
                 if NatalInterpretationService._is_invalid_complete_interpretation(row):
                     logger.warning(
                         (
@@ -1268,12 +1377,11 @@ class NatalInterpretationService:
                         llm_astrology_input_v1=llm_astrology_input_v1,
                     )
 
-                db.commit()
+                db.flush()
                 db.refresh(primary)
                 meta.id = primary.id
                 meta.persisted_at = primary.created_at
         except Exception as persist_exc:
-            # Best-effort persistence: do not fail user response when DB write fails.
             db.rollback()
             logger.exception(
                 "Failed to persist natal interpretation request_id=%s use_case=%s error=%s",
@@ -1281,6 +1389,7 @@ class NatalInterpretationService:
                 gateway_result.use_case,
                 persist_exc,
             )
+            raise
 
         return NatalInterpretationResponse(
             data=NatalGatewayInterpretationData(
@@ -1577,6 +1686,8 @@ class NatalInterpretationService:
         valid_rows: list[UserNatalInterpretationModel] = []
         deleted_any = False
         for row in rows:
+            if row.use_case == CORRECTIVE_REGENERATION_PENDING_USE_CASE:
+                continue
             if NatalInterpretationService._is_invalid_complete_interpretation(row):
                 db.delete(row)
                 deleted_any = True

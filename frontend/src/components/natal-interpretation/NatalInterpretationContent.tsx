@@ -59,7 +59,7 @@ export function InterpretationContent({
           <p className="ni-section-label">{t.narrativeMissingTitle}</p>
           <p className="ni-summary">{t.narrativeMissingBody}</p>
         </div>
-      ) : hasLegacyBody ? (
+      ) : hasLegacyBody && isCompleteLevel && isFreeLongInterpretation ? (
         <NatalInterpretationLegacyBody interpretation={interpretation} lang={lang} />
       ) : null}
 

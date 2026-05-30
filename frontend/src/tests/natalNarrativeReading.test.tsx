@@ -51,9 +51,28 @@ const READING = {
 describe("NatalNarrativeReading", () => {
   it("affiche les cinq chapitres sans identifiants techniques", () => {
     const { container } = render(<NatalNarrativeReading reading={READING} lang="fr" />)
-    expect(screen.getByRole("heading", { name: "Votre personnalite" })).toBeInTheDocument()
-    expect(screen.getByRole("heading", { name: "Votre chemin d evolution" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Votre personnalite/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Votre chemin d evolution/i })).toBeInTheDocument()
     expect(container.textContent).not.toMatch(/visibility_expression|audit_input|condition_axis:/i)
+  })
+
+  it("ouvre le premier chapitre par defaut et replie les autres", () => {
+    render(<NatalNarrativeReading reading={READING} lang="fr" />)
+    const firstToggle = screen.getByRole("button", { name: /Votre personnalite/i })
+    const secondToggle = screen.getByRole("button", { name: /Votre monde emotionnel/i })
+    expect(firstToggle).toHaveAttribute("aria-expanded", "true")
+    expect(secondToggle).toHaveAttribute("aria-expanded", "false")
+    expect(screen.getByText(READING.chapters[0].narrative)).toBeVisible()
+  })
+
+  it("bascule un chapitre au clic et expose aria-controls", () => {
+    render(<NatalNarrativeReading reading={READING} lang="fr" />)
+    const secondToggle = screen.getByRole("button", { name: /Votre monde emotionnel/i })
+    const panelId = secondToggle.getAttribute("aria-controls")
+    expect(panelId).toBeTruthy()
+    fireEvent.click(secondToggle)
+    expect(secondToggle).toHaveAttribute("aria-expanded", "true")
+    expect(document.getElementById(panelId!)).toBeVisible()
   })
 })
 

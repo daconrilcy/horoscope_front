@@ -37,6 +37,7 @@ from app.services.api_contracts.public.natal_interpretation import (
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongAccessDeniedError,
     NatalChartLongEntitlementGate,
+    NatalChartLongEntitlementResult,
     NatalChartLongQuotaExceededError,
 )
 from app.services.llm_generation.natal.interpretation_service import (
@@ -89,18 +90,29 @@ async def interpret_natal_chart(
     current_step = "init"
     debug_errors_enabled = request.headers.get("x-debug-errors") == "1"
 
-    # Gate entitlement — uniquement pour use_case_level="complete" (natal_chart_long)
+    # Gate entitlement — verification sans consommation avant generation complete.
     entitlement_info: NatalChartLongEntitlementInfo | None = None
     variant_code: str | None = None
+    pending_entitlement: NatalChartLongEntitlementResult | None = None
+
+    def rollback_and_release_corrective_claim() -> None:
+        """Annule la transaction courante et libere une reservation corrective eventuelle."""
+        db.rollback()
+        NatalChartLongEntitlementGate.release_corrective_regeneration_claim(
+            db,
+            access_result=pending_entitlement,
+        )
+
     if body.use_case_level == "complete":
         try:
-            entitlement_result = NatalChartLongEntitlementGate.check_and_consume(
+            entitlement_result = NatalChartLongEntitlementGate.check_access_for_complete_generation(
                 db, user_id=current_user.id
             )
+            pending_entitlement = entitlement_result
             entitlement_info = _build_natal_entitlement_info(entitlement_result)
             variant_code = entitlement_result.variant_code
         except NatalChartLongQuotaExceededError as error:
-            db.rollback()
+            rollback_and_release_corrective_claim()
             return _raise_error(
                 status_code=429,
                 code="natal_chart_long_quota_exceeded",
@@ -115,7 +127,7 @@ async def interpret_natal_chart(
                 },
             )
         except NatalChartLongAccessDeniedError as error:
-            db.rollback()
+            rollback_and_release_corrective_claim()
             return _raise_error(
                 status_code=403,
                 code="natal_chart_long_access_denied",
@@ -135,7 +147,7 @@ async def interpret_natal_chart(
             chart = UserNatalChartService.get_latest_for_user(db, current_user.id)
             profile = UserBirthProfileService.get_for_user(db, current_user.id)
         except (UserNatalChartServiceError, UserBirthProfileServiceError) as e:
-            db.rollback()
+            rollback_and_release_corrective_claim()
             if e.code == "natal_chart_not_found" or e.code == "birth_profile_not_found":
                 return _raise_error(
                     status_code=404,
@@ -159,7 +171,8 @@ async def interpret_natal_chart(
             question=body.question,
             request_id=request_id,
             trace_id=trace_id,
-            force_refresh=body.force_refresh,
+            force_refresh=body.force_refresh
+            or bool(pending_entitlement and pending_entitlement.corrective_regeneration),
             module=body.module,
             variant_code=variant_code,
         )
@@ -168,14 +181,30 @@ async def interpret_natal_chart(
         response.disclaimers = get_disclaimers(body.locale)
         response.entitlement_info = entitlement_info
 
-        # Persist quota consumption and interpretation
+        if (
+            pending_entitlement is not None
+            and response.data.meta.validation_status != "rejected"
+            and not response.data.meta.cached
+        ):
+            entitlement_result = NatalChartLongEntitlementGate.consume_on_acceptance(
+                db,
+                user_id=current_user.id,
+                access_result=pending_entitlement,
+            )
+            response.entitlement_info = _build_natal_entitlement_info(entitlement_result)
+        elif response.data.meta.validation_status == "rejected":
+            NatalChartLongEntitlementGate.release_corrective_regeneration_claim(
+                db,
+                access_result=pending_entitlement,
+            )
+
         db.commit()
 
         current_step = "return_response"
         return response
 
     except AIEngineAdapterError as e:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         # Map internal codes to status codes
         code = e.code or "interpretation_failed"
         status_code = 500
@@ -194,47 +223,47 @@ async def interpret_natal_chart(
 
         return _raise_error(status_code, code, str(e), request_id)
     except UnknownUseCaseError as e:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         logger.error(f"Unknown use case error: {e}")
         return _raise_error(404, "unknown_use_case", str(e), request_id)
     except GatewayConfigError as e:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         logger.error(f"Gateway configuration error: {e}")
         code = "gateway_config_error"
         if e.error_code:
             code = e.error_code
         return _raise_error(500, code, str(e), request_id)
     except InputValidationError as e:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         # Note: Local catch here to ensure 422 response for natal interpretation,
         # overriding the global 400 handler in main.py.
         return _raise_error(422, "natal_input_invalid", str(e), request_id)
     except OutputValidationError:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         return _raise_error(
             502, "interpretation_failed", "Failed to generate a valid interpretation.", request_id
         )
     except RuntimeError as e:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         if "no structured output" in str(e) or "empty complete interpretation" in str(e):
             return _raise_error(502, "interpretation_failed", str(e), request_id)
         raise
     except UpstreamRateLimitError:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         return _raise_error(429, "llm_rate_limit", "Upstream rate limit reached.", request_id)
     except UpstreamTimeoutError:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         return _raise_error(504, "llm_upstream_timeout", "Upstream request timed out.", request_id)
     except UpstreamError:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         return _raise_error(
             503, "llm_upstream_error", "LLM provider is currently unavailable.", request_id
         )
     except ApplicationError:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         raise
     except NatalInterpretationServiceError as e:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         if e.code == "interpretation_rejected":
             return _raise_error(
                 422,
@@ -245,7 +274,7 @@ async def interpret_natal_chart(
             )
         return _raise_error(500, e.code, e.message, request_id, details=e.details or None)
     except Exception as e:
-        db.rollback()
+        rollback_and_release_corrective_claim()
         logger.exception(
             "Unexpected error during natal interpretation request_id=%s step=%s error=%s",
             request_id,

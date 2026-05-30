@@ -535,7 +535,7 @@ export function NatalInterpretationSection({
           )}
         </div>
 
-        <div className="ni-actions">
+        <div className="ni-actions ni-actions--compact">
           {data && !isLoading && (
             <button
               type="button"

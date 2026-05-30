@@ -20,7 +20,10 @@ La lecture publique est **projétée côté backend** depuis une `AstroResponseV
 LLM natal nominal reste centré sur `AstroResponseV3`, mais demande explicitement les sections
 sources `self_image`, `emotions`, `relationships`, `career` et `growth_direction`. La projection
 post-acceptation reste le owner canonique du contrat produit public, validée par
-`validate_narrative_reading_public_text` avant persistance.
+`validate_narrative_reading_public_text` et `validate_narrative_semantic_integrity` avant
+persistance. Aucun padding silencieux : une section source manquante déclenche un rejet
+`narrative_semantic_integrity` / `chapter_source_missing`, jamais une recopie de
+`response.sections[0]`.
 
 ## Chapitres (ordre fixe)
 

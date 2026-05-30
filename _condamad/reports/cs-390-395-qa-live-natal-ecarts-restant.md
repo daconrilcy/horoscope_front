@@ -1,5 +1,7 @@
 # QA live `/natal` — CS-390 à CS-395 — écarts restants
 
+> **Mise à jour 2026-05-30 (CS-400)** : les écarts P0 padding/quota et P1 accordéons sont traités par CS-396→399. Voir le rapport de clôture `_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md`. Le constat « narrative absente » ci-dessous reste valable pour les **payloads historiques V1** tant qu'une régénération V3 n'a pas été exécutée.
+
 Date : 2026-05-30  
 Compte : `daconrilcy@hotmail.com` / `admin123`  
 Environnement : stack locale (`frontend` :5173, `backend` :8001)  

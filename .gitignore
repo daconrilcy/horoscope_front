@@ -39,6 +39,7 @@ artifacts/cross-tool/
 
 # Local CONDAMAD execution logs
 _condamad/codex-runs/
+_condamad/critical-errors.jsonl
 
 # Local pytest temp artifacts
 .pytest_cache/

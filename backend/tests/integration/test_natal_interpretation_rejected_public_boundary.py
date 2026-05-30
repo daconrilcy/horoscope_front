@@ -26,6 +26,7 @@ from app.services.llm_generation.natal.rejected_answer_workflow import (
     build_rejected_narrative_answer_outcome,
 )
 from app.services.llm_generation.natal.stored_interpretation_payload import (
+    CORRECTIVE_REGENERATION_PENDING_USE_CASE,
     NARRATIVE_ANSWER_AUDIT_USE_CASE,
 )
 
@@ -259,3 +260,46 @@ def test_persist_rejected_audit_uses_audit_use_case(db: Session) -> None:
     persisted = repository.get_by_answer_id(outcome.answer_id)
     assert persisted is not None
     assert persisted.use_case == NARRATIVE_ANSWER_AUDIT_USE_CASE
+
+
+def test_corrective_regeneration_claim_is_idempotent_and_hidden(db: Session) -> None:
+    """Une lecture invalide ne peut porter qu'une reservation corrective publique invisible."""
+    invalid = UserNatalInterpretationModel(
+        user_id=389,
+        chart_id="chart-389",
+        level=InterpretationLevel.COMPLETE,
+        use_case="natal_interpretation",
+        variant_code="single_astrologer",
+        interpretation_payload=_accepted_payload(),
+        grounding_status="grounded",
+        created_at=datetime(2026, 5, 29, tzinfo=timezone.utc),
+    )
+    db.add(invalid)
+    db.commit()
+
+    first_claim = NatalInterpretationService.claim_corrective_regeneration_eligibility(
+        db,
+        user_id=389,
+        variant_code="single_astrologer",
+    )
+    second_claim = NatalInterpretationService.claim_corrective_regeneration_eligibility(
+        db,
+        user_id=389,
+        variant_code="single_astrologer",
+    )
+    rows, total = NatalInterpretationService.list_interpretations(db, user_id=389)
+
+    assert first_claim == (invalid.id, "natal_interpretation")
+    assert second_claim is None
+    assert rows == []
+    assert total == 0
+    assert db.get(UserNatalInterpretationModel, invalid.id).use_case == (
+        CORRECTIVE_REGENERATION_PENDING_USE_CASE
+    )
+
+    NatalInterpretationService.release_corrective_regeneration_claim(
+        db,
+        interpretation_id=invalid.id,
+        original_use_case="natal_interpretation",
+    )
+    assert db.get(UserNatalInterpretationModel, invalid.id).use_case == "natal_interpretation"

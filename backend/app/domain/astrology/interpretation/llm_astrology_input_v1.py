@@ -269,6 +269,7 @@ def _shaping_block(client_projection: Mapping[str, Any] | None) -> dict[str, Any
         "llm_input_selection": projection_value_to_jsonable(
             client_projection.get("llm_input_selection")
         ),
+        "support_elements": projection_value_to_jsonable(client_projection.get("support_elements")),
     }
 
 

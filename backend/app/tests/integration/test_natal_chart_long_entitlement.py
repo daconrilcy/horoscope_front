@@ -382,7 +382,7 @@ def test_short_level_bypasses_gate(mock_user_and_chart):
     """use_case_level=short → gate non appelé, entitlement_info=None."""
     with (
         patch(
-            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume"
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation"
         ) as mock_gate,
         patch(
             "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret"
@@ -405,7 +405,11 @@ def test_complete_canonical_quota_ok(mock_user_and_chart):
 
     with (
         patch(
-            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
+            return_value=result,
+        ),
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.consume_on_acceptance",
             return_value=result,
         ),
         patch(
@@ -430,7 +434,7 @@ def test_complete_canonical_unlimited_ok(mock_user_and_chart):
 
     with (
         patch(
-            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
             return_value=result,
         ),
         patch(
@@ -449,7 +453,7 @@ def test_complete_canonical_unlimited_ok(mock_user_and_chart):
 
 def test_complete_no_plan_rejected(mock_user_and_chart):
     with patch(
-        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
         side_effect=NatalChartLongAccessDeniedError(
             reason="no_plan", billing_status="none", plan_code=""
         ),
@@ -463,7 +467,7 @@ def test_complete_no_plan_rejected(mock_user_and_chart):
 
 def test_complete_quota_exhausted_rejected(mock_user_and_chart):
     with patch(
-        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
         side_effect=NatalChartLongQuotaExceededError(
             quota_key="interpretations", used=1, limit=1, window_end=None
         ),
@@ -477,7 +481,7 @@ def test_complete_quota_exhausted_rejected(mock_user_and_chart):
 
 def test_complete_disabled_binding_returns_disabled_by_plan(mock_user_and_chart):
     with patch(
-        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
         side_effect=NatalChartLongAccessDeniedError(
             reason="disabled_by_plan", billing_status="active", plan_code="free"
         ),
@@ -490,7 +494,7 @@ def test_complete_disabled_binding_returns_disabled_by_plan(mock_user_and_chart)
 
 def test_complete_no_canonical_binding_returns_no_binding(mock_user_and_chart):
     with patch(
-        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
         side_effect=NatalChartLongAccessDeniedError(
             reason="canonical_no_binding", billing_status="active", plan_code="basic"
         ),
@@ -507,7 +511,7 @@ def test_complete_rolls_back_on_access_denied(mock_user_and_chart, db_session):
     app.dependency_overrides[get_db_session] = lambda: db_session
 
     with patch(
-        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_and_consume",
+        "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
         side_effect=NatalChartLongAccessDeniedError(
             reason="no_plan", billing_status="none", plan_code=""
         ),
@@ -629,7 +633,7 @@ def test_variant_code_in_response(plan_code: str, variant_code: str) -> None:
     assert response.json()["entitlement_info"]["variant_code"] == variant_code
 
 
-def test_complete_consumes_before_cached_response() -> None:
+def test_complete_cached_response_does_not_consume_quota() -> None:
     _reset_database()
     email = "cached-response@example.com"
     headers = _auth_headers(email)
@@ -641,22 +645,13 @@ def test_complete_consumes_before_cached_response() -> None:
         quota_limit=1,
     )
 
-    async def _assert_counter_before_interpret(**kwargs):
-        db = kwargs["db"]
-        counter = db.scalar(
-            select(FeatureUsageCounterModel).where(
-                FeatureUsageCounterModel.user_id == user_id,
-                FeatureUsageCounterModel.feature_code == FEATURE_CODE,
-            )
-        )
-        assert counter is not None
-        assert counter.used_count == 1
+    async def _return_cached_response(**_kwargs):
         response = _make_valid_interpretation_response(level="complete")
         response.data.meta.cached = True
         return response
 
     chart_patch, profile_patch, interpret_patch = _patch_interpretation_dependencies(
-        side_effect=_assert_counter_before_interpret
+        side_effect=_return_cached_response
     )
     with (
         patch.object(
@@ -674,5 +669,4 @@ def test_complete_consumes_before_cached_response() -> None:
 
     assert response.status_code == 200
     assert response.json()["data"]["meta"]["cached"] is True
-    assert counter is not None
-    assert counter.used_count == 1
+    assert counter is None

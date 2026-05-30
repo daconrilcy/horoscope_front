@@ -1751,7 +1751,7 @@ describe("NatalChartPage", () => {
       )
 
       expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
-      expect(screen.queryByText("Vue d'ensemble")).not.toBeInTheDocument()
+      expect(document.querySelector(".ni-accordion-title")).not.toBeInTheDocument()
       expect(screen.queryByText("Carrière et vocation")).not.toBeInTheDocument()
     })
 
@@ -1786,7 +1786,7 @@ describe("NatalChartPage", () => {
       )
 
       expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
-      expect(screen.queryByText("Vue d'ensemble")).not.toBeInTheDocument()
+      expect(document.querySelector(".ni-accordion-title")).not.toBeInTheDocument()
       expect(screen.queryByText(/Votre vue d'ensemble astrologique complète/i)).not.toBeInTheDocument()
     })
 
@@ -2137,9 +2137,9 @@ describe("NatalChartPage", () => {
       const container = renderNatalWithInterpretation()
 
       await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Votre personnalite" })).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: /Votre personnalite/i })).toBeInTheDocument()
       })
-      expect(screen.getByRole("heading", { name: "Votre chemin d evolution" })).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /Votre chemin d evolution/i })).toBeInTheDocument()
       expect(screen.getByRole("button", { name: /Ce que nous avons utilise/i })).toBeInTheDocument()
       expect(container.textContent).not.toMatch(
         /visibility_expression|audit_input|condition_axis:|interpretive_signal_ids/i,
@@ -2151,7 +2151,7 @@ describe("NatalChartPage", () => {
       renderNatalWithInterpretation()
 
       await waitFor(() => {
-        expect(screen.getByRole("heading", { name: "Votre personnalite" })).toBeInTheDocument()
+        expect(screen.getByRole("button", { name: /Votre personnalite/i })).toBeInTheDocument()
       })
       expect(screen.queryByText("dominant_topics")).not.toBeInTheDocument()
     })
