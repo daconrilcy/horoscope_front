@@ -123,7 +123,7 @@ def test_internal_llm_qa_routes_run_canonical_flows(
     client = TestClient(app)
 
     admin = _create_user(test_db, email="admin@test.com", role="admin")
-    target = _create_user(test_db, email="cyril-test@test.com", role="user")
+    target = _create_user(test_db, email="daconrilcy@hotmail.com", role="user")
     admin_token = create_access_token(subject=str(admin.id), role=admin.role)
 
     async def fake_guidance(*args, **kwargs):

@@ -1,10 +1,18 @@
-// Rendu presentational du contenu d'une interpretation natale (lecture narrative uniquement).
+// Rendu presentational du contenu d'une interpretation natale (narratif v1 ou legacy).
 import { AlertCircle } from "lucide-react"
 
 import { natalChartTranslations } from "../../i18n/natalChart"
 import { NatalNarrativeReading } from "../../features/natal-chart/NatalNarrativeReading"
 import { NatalReadingSources } from "../../features/natal-chart/NatalReadingSources"
+import {
+  hasRenderableLegacyInterpretationBody,
+  NatalInterpretationLegacyBody,
+} from "./NatalInterpretationLegacyBody"
 import type { NatalInterpretationLocale, NatalInterpretationViewData } from "./NatalInterpretationTypes"
+
+function resolveUseCase(data: NatalInterpretationViewData): string | null {
+  return data.use_case ?? data.meta.use_case ?? null
+}
 
 export function InterpretationContent({
   data,
@@ -16,6 +24,13 @@ export function InterpretationContent({
   const t = natalChartTranslations[lang].interpretation
   const { interpretation, meta, degraded_mode, narrative_natal_reading_v1: narrativeReading } = data
   const isCompleteLevel = meta.level === "complete"
+  const useCase = resolveUseCase(data)
+  const isFreeLongInterpretation = useCase === "natal_long_free"
+  const hasLegacyBody = hasRenderableLegacyInterpretationBody(interpretation)
+  const shouldShowSummaryCard =
+    !isCompleteLevel || (!narrativeReading && isFreeLongInterpretation)
+  const shouldShowNarrativeMissing =
+    isCompleteLevel && !narrativeReading && !isFreeLongInterpretation && !hasLegacyBody
   const legalNoticeLines = t.legalNoticeLines
 
   return (
@@ -27,26 +42,25 @@ export function InterpretationContent({
         </div>
       )}
 
-      <div className="ni-content-card ni-content-card--summary">
-        <h3 className="ni-interpretation-title">{interpretation.title}</h3>
-        {meta.persona_name && (
-          <p className="ni-persona-text">
-            {t.completeBy} <strong>{meta.persona_name}</strong>
-          </p>
-        )}
-        <p className="ni-summary">{interpretation.summary}</p>
-      </div>
+      {shouldShowSummaryCard && (
+        <div className="ni-content-card ni-content-card--summary">
+          <h3 className="ni-interpretation-title">{interpretation.title}</h3>
+          <p className="ni-summary">{interpretation.summary}</p>
+        </div>
+      )}
 
       {narrativeReading ? (
         <>
           <NatalNarrativeReading reading={narrativeReading} lang={lang} />
           <NatalReadingSources elements={narrativeReading.used_astrological_elements} lang={lang} />
         </>
-      ) : isCompleteLevel ? (
+      ) : shouldShowNarrativeMissing ? (
         <div className="ni-content-card ni-content-card--missing-narrative" role="note">
           <p className="ni-section-label">{t.narrativeMissingTitle}</p>
           <p className="ni-summary">{t.narrativeMissingBody}</p>
         </div>
+      ) : hasLegacyBody ? (
+        <NatalInterpretationLegacyBody interpretation={interpretation} lang={lang} />
       ) : null}
 
       {legalNoticeLines.length > 0 && (

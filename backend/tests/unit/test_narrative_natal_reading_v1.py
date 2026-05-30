@@ -4,7 +4,11 @@
 from __future__ import annotations
 
 from app.domain.llm.prompting.narrative_natal_reading_v1 import NarrativeNatalReadingV1
-from app.domain.llm.prompting.schemas import AstroResponseV3
+from app.domain.llm.prompting.schemas import AstroResponseV1, AstroResponseV3
+from app.services.api_contracts.public.natal_interpretation import (
+    InterpretationMeta,
+    NatalInterpretationData,
+)
 from app.services.llm_generation.natal.narrative_natal_reading_builder import (
     build_narrative_natal_reading_v1,
 )
@@ -76,6 +80,46 @@ def test_build_narrative_reading_has_five_ordered_chapters() -> None:
         "evolution_path",
     ]
     assert reading.used_astrological_elements[0].astrological_label == "Soleil en Taureau"
+
+
+def test_build_narrative_reading_supports_accepted_v1_complete_payload() -> None:
+    response = AstroResponseV1(
+        title="Theme",
+        summary="Synthese",
+        sections=[
+            {"key": "overall", "heading": "Vue d'ensemble", "content": _NARRATIVE_BODY},
+            {"key": "career", "heading": "Vocation", "content": _NARRATIVE_BODY},
+        ],
+        highlights=["Point 1", "Point 2", "Point 3"],
+        advice=["Conseil 1", "Conseil 2", "Conseil 3"],
+        evidence=["SUN", "VENUS"],
+        disclaimers=[],
+    )
+
+    reading = build_narrative_natal_reading_v1(
+        response=response,
+        llm_astrology_input_v1=None,
+        level="complete",
+        variant_code="single_astrologer",
+    )
+
+    assert len(reading.chapters) == 5
+    assert reading.editorial_profile == "basic"
+
+
+def test_public_contract_removes_internal_evidence_codes() -> None:
+    data = NatalInterpretationData(
+        chart_id="chart-1",
+        use_case="natal_interpretation",
+        interpretation=_astro_v3(),
+        meta=InterpretationMeta(
+            level="complete",
+            use_case="natal_interpretation",
+            validation_status="valid",
+        ),
+    )
+
+    assert "evidence" not in data.model_dump()["interpretation"]
 
 
 def test_technical_leak_in_narrative_is_rejected() -> None:

@@ -25,7 +25,7 @@ from app.services.user_profile.natal_chart_service import UserNatalChartService
 
 logger = logging.getLogger(__name__)
 
-LLM_QA_TEST_USER_EMAIL = "cyril-test@test.com"
+LLM_QA_TEST_USER_EMAIL = "daconrilcy@hotmail.com"
 LLM_QA_TEST_USER_PASSWORD = "admin123"
 LLM_QA_TEST_BIRTH_PLACE = "Paris, France"
 LLM_QA_TEST_BIRTH_DATE = date(1973, 4, 24)

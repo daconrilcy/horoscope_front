@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SerializerFunctionWrapHandler, model_serializer
 
 from app.domain.llm.prompting.narrative_natal_reading_v1 import NarrativeNatalReadingV1
 from app.domain.llm.prompting.schemas import (
@@ -84,6 +84,19 @@ class NatalInterpretationData(BaseModel):
     meta: InterpretationMeta
     degraded_mode: Optional[str] = None
     narrative_natal_reading_v1: Optional[NarrativeNatalReadingV1] = None
+
+    @model_serializer(mode="wrap")
+    def serialize_without_internal_evidence(
+        self, handler: SerializerFunctionWrapHandler
+    ) -> dict[str, object]:
+        """Retire les codes evidence backend-only du JSON d'interpretation public."""
+        payload = handler(self)
+        if not isinstance(payload, dict):
+            raise TypeError("Natal interpretation public payload must be a dictionary")
+        interpretation = payload.get("interpretation")
+        if isinstance(interpretation, dict):
+            interpretation.pop("evidence", None)
+        return payload
 
 
 class NatalChartLongEntitlementInfo(BaseModel):

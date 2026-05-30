@@ -227,6 +227,7 @@ class TestNatalInterpretationEndpointV2:
         data = response.json()["data"]
         assert data["use_case"] == use_case
         assert data["interpretation"]["title"] == "Thème natal test"
+        assert "evidence" not in data["interpretation"]
         assert data["meta"]["level"] == "short"
 
     def test_complete_success(self, test_client, mock_db) -> None:
@@ -273,6 +274,12 @@ class TestNatalInterpretationEndpointV2:
         assert data["meta"]["level"] == "complete"
         assert data["meta"]["persona_name"] == "Test Persona"
         assert data["meta"]["persona_id"] == persona_id
+        assert "evidence" not in data["interpretation"]
+        assert (
+            data["narrative_natal_reading_v1"]["contract_version"] == "narrative_natal_reading_v1"
+        )
+        assert len(data["narrative_natal_reading_v1"]["chapters"]) == 5
+        assert data["narrative_natal_reading_v1"]["used_astrological_elements"]
 
     def test_complete_persona_missing(self, test_client, mock_db) -> None:
         # mock_db.execute.return_value.scalar_one_or_none.return_value = None (from fixture)

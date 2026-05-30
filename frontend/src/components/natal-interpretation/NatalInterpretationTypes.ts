@@ -17,9 +17,11 @@ export type NatalInterpretationViewData = {
   meta: {
     id?: number | null
     level?: "short" | "complete"
+    use_case?: string | null
     persona_name?: string | null
     persisted_at?: string | null
   }
+  use_case?: string | null
   interpretation: {
     title: string
     summary: string

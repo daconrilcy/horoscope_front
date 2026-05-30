@@ -235,8 +235,8 @@ export function translateAspect(code: string, lang: AstrologyLang): string {
 /**
  * Détecte la langue de l'utilisateur selon la priorité:
  * 1. choix explicite de session si valide
- * 2. navigator.language (préfixe 2 lettres) si supporté
- * 3. localStorage.getItem("lang") si valide comme cache de dernier recours
+ * 2. localStorage.getItem("lang") si valide comme préférence persistée
+ * 3. navigator.language (préfixe 2 lettres) si supporté
  * 4. Fallback sur "fr"
  * 
  * @returns Langue détectée parmi "fr" | "en" | "es", avec "fr" comme fallback par défaut
@@ -249,6 +249,7 @@ export function detectLang(): AstrologyLang {
   const stored = readStoredLang()
   const activeLang = resolveActiveLangOverride(stored)
   if (activeLang) return activeLang
+  if (stored) return stored
 
   const navLang = typeof navigator !== "undefined" ? navigator.language : null
   if (navLang && navLang.length >= 2) {
@@ -257,7 +258,6 @@ export function detectLang(): AstrologyLang {
       return prefix as AstrologyLang
     }
   }
-  if (stored) return stored
   return "fr"
 }
 

@@ -157,6 +157,16 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText(/Standard/i)).toBeInTheDocument();
   });
 
+  it("affiche les sections legacy pour une interpretation short", () => {
+    renderSection();
+
+    expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();
+    expect(screen.getByText("Vue d'ensemble")).toBeInTheDocument();
+    expect(screen.getByText("Contenu global.")).toBeInTheDocument();
+    expect(screen.getByText("Point 1")).toBeInTheDocument();
+    expect(screen.getByText("Conseil 1")).toBeInTheDocument();
+  });
+
   it("masque le bloc des autres interprétations quand une seule version existe", () => {
     (useNatalInterpretationsList as any).mockReturnValue({
       isLoading: false,
@@ -447,6 +457,14 @@ describe("NatalInterpretationSection", () => {
   });
 
   it("reutilise l'interpretation short persistee en Basic sans relancer la generation", async () => {
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockHistory,
+        items: [mockHistory.items[0]],
+        total: 1,
+      },
+    });
     (useNatalInterpretationById as any).mockReturnValue({
       isLoading: false,
       data: mockInterpretationData,
@@ -554,6 +572,26 @@ describe("NatalInterpretationSection", () => {
     );
   });
 
+  it("affiche par défaut la dernière interprétation complète en Basic", () => {
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "single_astrologer",
+        usage_states: [{ exhausted: true, remaining: 0 }],
+      } as any,
+    });
+
+    expect(useNatalInterpretationById).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interpretationId: 102,
+        enabled: true,
+      }),
+    );
+  });
+
   it("affiche par défaut la dernière interprétation complète en free", () => {
     renderSection({
       isLockedFree: true,
@@ -571,6 +609,62 @@ describe("NatalInterpretationSection", () => {
       expect.objectContaining({
         interpretationId: 102,
         enabled: true,
+      }),
+    );
+  });
+
+  it("reutilise l'historique free sans relancer la generation quand short et free_long existent", async () => {
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [
+          {
+            id: 5,
+            chart_id: "chart-123",
+            level: "short",
+            persona_id: null,
+            persona_name: null,
+            created_at: "2026-05-30T15:42:06.794888Z",
+            use_case: "natal_interpretation_short",
+          },
+          {
+            id: 6,
+            chart_id: "chart-123",
+            level: "complete",
+            persona_id: null,
+            persona_name: null,
+            created_at: "2026-05-30T15:42:11.640598Z",
+            use_case: "natal_long_free",
+          },
+        ],
+        total: 2,
+        limit: 20,
+        offset: 0,
+      },
+      refetch: vi.fn(),
+    });
+    (useNatalInterpretationById as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        ...mockInterpretationData,
+        meta: { ...mockInterpretationData.meta, id: 5 },
+      },
+    });
+
+    renderSection({ isLockedFree: true });
+
+    await waitFor(() => {
+      expect(useNatalInterpretationById).toHaveBeenCalledWith(
+        expect.objectContaining({
+          enabled: true,
+          interpretationId: 5,
+        }),
+      );
+    });
+
+    expect(useNatalInterpretation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: false,
       }),
     );
   });

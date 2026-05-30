@@ -70,6 +70,18 @@ function findLatestShortInterpretation(
   return items.find((item) => item.level === "short") ?? null
 }
 
+function findLatestFreeCompleteInterpretation(
+  items: NatalInterpretationListItem[],
+): NatalInterpretationListItem | null {
+  return items.find((item) => item.use_case === "natal_long_free") ?? null
+}
+
+function findPreferredFreeInterpretation(
+  items: NatalInterpretationListItem[],
+): NatalInterpretationListItem | null {
+  return findLatestShortInterpretation(items) ?? findLatestFreeCompleteInterpretation(items)
+}
+
 function localeFromLang(lang: AstrologyLang): "fr-FR" | "en-US" | "es-ES" | "de-DE" {
   if (lang === "en") return "en-US"
   if (lang === "es") return "es-ES"
@@ -101,7 +113,7 @@ export function NatalInterpretationSection({
   const premiumUpgradePath = "/settings/subscription"
 
   const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">(
-    initialPersonaId || isLockedFree ? "complete" : "short",
+    initialPersonaId ? "complete" : "short",
   )
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(initialPersonaId)
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
@@ -120,13 +132,16 @@ export function NatalInterpretationSection({
   const historyItems = historyQuery.data?.items ?? []
   const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems)
   const latestShortInterpretation = findLatestShortInterpretation(historyItems)
+  const latestFreeCompleteInterpretation = findLatestFreeCompleteInterpretation(historyItems)
+  const preferredFreeInterpretation = findPreferredFreeInterpretation(historyItems)
   const isQuotaUsageExhausted = Boolean(
     longFeatureAccess?.reason_code === "quota_exhausted" ||
       longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
   )
   const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer"
   const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer"
-  const shouldPreferLatestCompleteByDefault = isLockedFree || isPremiumPlan
+  const shouldPreferLatestCompleteByDefault =
+    isSingleAstrologerPlan || isPremiumPlan || (isLockedFree && latestCompleteInterpretation !== null)
   const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation)
   const shouldRefreshShortAfterBasicUpgrade =
     isSingleAstrologerPlan &&
@@ -139,6 +154,7 @@ export function NatalInterpretationSection({
     !shouldRefreshShortAfterBasicUpgrade &&
     (
       (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation !== null) ||
+      (isLockedFree && preferredFreeInterpretation !== null) ||
       (isSingleAstrologerPlan && latestShortInterpretation !== null)
     )
   const isResolvingPersistedInterpretation =
@@ -147,11 +163,17 @@ export function NatalInterpretationSection({
     (historyQuery.isLoading || historyQuery.isFetching)
   const isBasicCompleteLimitReached =
     isSingleAstrologerPlan && latestCompleteInterpretation !== null
+  const shouldBootstrapFreeComplete =
+    isLockedFree &&
+    preferredFreeInterpretation === null &&
+    !historyQuery.isLoading &&
+    !historyQuery.isFetching &&
+    historyItems.length === 0
   const isExplicitCompleteGenerationRequest =
     useCaseLevel === "complete" &&
     !selectedInterpretationId &&
     !isBasicCompleteLimitReached &&
-    (Boolean(selectedPersonaId) || forceRefresh || isLockedFree)
+    (Boolean(selectedPersonaId) || forceRefresh || shouldBootstrapFreeComplete)
   const pdfTemplatesQuery = useNatalPdfTemplates({
     enabled: chartLoaded,
     locale: pdfLocaleFromLang(lang),
@@ -271,9 +293,20 @@ export function NatalInterpretationSection({
     if (isLockedFree) {
       setSelectedInterpretationId(null)
       setSelectedPersonaId(null)
-      setUseCaseLevel("complete")
+      setUseCaseLevel(preferredFreeInterpretation?.level ?? "short")
     }
-  }, [initialInterpretationId, initialPersonaId, isLockedFree])
+  }, [initialInterpretationId, initialPersonaId, isLockedFree, preferredFreeInterpretation?.level])
+
+  useEffect(() => {
+    if (!shouldBootstrapFreeComplete) return
+    if (selectedInterpretationId || initialPersonaId || initialInterpretationId) return
+    setUseCaseLevel("complete")
+  }, [
+    initialInterpretationId,
+    initialPersonaId,
+    selectedInterpretationId,
+    shouldBootstrapFreeComplete,
+  ])
 
   useEffect(() => {
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) return
@@ -286,6 +319,15 @@ export function NatalInterpretationSection({
       )
       setSelectedPersonaId(null)
       setUseCaseLevel("complete")
+      return
+    }
+
+    if (isLockedFree && preferredFreeInterpretation) {
+      setSelectedInterpretationId((current) =>
+        current === preferredFreeInterpretation.id ? current : preferredFreeInterpretation.id,
+      )
+      setSelectedPersonaId(null)
+      setUseCaseLevel(preferredFreeInterpretation.level)
       return
     }
 
@@ -308,9 +350,11 @@ export function NatalInterpretationSection({
     historyItems,
     initialInterpretationId,
     initialPersonaId,
+    isLockedFree,
     isSingleAstrologerPlan,
     latestCompleteInterpretation,
     latestShortInterpretation,
+    preferredFreeInterpretation,
     selectedPersonaId,
     shouldPreferLatestCompleteByDefault,
     shouldRefreshShortAfterBasicUpgrade,
@@ -395,6 +439,13 @@ export function NatalInterpretationSection({
     setSelectedInterpretationId(id)
     if (id === null) {
       setUseCaseLevel("short")
+      setSelectedPersonaId(null)
+      setForceRefresh(false)
+      return
+    }
+    const selectedItem = historyItems.find((item) => item.id === id)
+    if (selectedItem) {
+      setUseCaseLevel(selectedItem.level)
       setSelectedPersonaId(null)
       setForceRefresh(false)
     }

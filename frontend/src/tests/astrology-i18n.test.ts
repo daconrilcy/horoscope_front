@@ -175,10 +175,10 @@ describe("detectLang", () => {
     expect(detectLang()).toBe("fr")
   })
 
-  it("prefers supported navigator language over cached localStorage lang", () => {
+  it("prefers persisted user language over supported navigator language", () => {
     vi.stubGlobal("navigator", { language: "en-US" })
     localStorage.setItem("lang", "es")
-    expect(detectLang()).toBe("en")
+    expect(detectLang()).toBe("es")
   })
 
   it("uses cached localStorage lang when navigator.language is unsupported", () => {

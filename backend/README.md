@@ -35,6 +35,22 @@ Note:
 - En environnement local SQLite, le bootstrap runtime répare désormais le schéma manquant au démarrage et ré-amorce automatiquement la référence/ruleset actifs si `2.0.0` est absent ou partiellement seedé.
 - Si `/dashboard` ou `/v1/predictions/daily` échouait auparavant avec `version_missing`, `ruleset_missing` ou `compute_failed` sur une base locale partiellement seedée, un simple redémarrage du backend suffit maintenant dans la majorité des cas pour remettre la base locale en état.
 
+### Compte QA natal local
+
+Pour préparer le compte QA documenté `daconrilcy@hotmail.com` / `admin123`, activer
+temporairement le seed de démarrage dans `backend/.env` :
+
+```env
+LLM_QA_SEED_USER_ENABLED=true
+```
+
+Au prochain démarrage backend en environnement local ou de développement, le bootstrap
+crée ou remet à niveau l'utilisateur, résout Paris, persiste son profil naissance
+`1973-04-24 11:00 Europe/Paris` et génère son thème natal. Le seed est idempotent et reste
+bloqué en production sauf opt-in explicite. Il conserve le plan Free par défaut afin de
+permettre la QA Free ; les variantes Basic et Premium doivent être attribuées explicitement
+pour leur scénario de test.
+
 ### Transition de versioning (Ruleset 2.0.0)
 
 Le ruleset `2.0.0` est désormais la version canonique alignée sur la référence `2.0.0`.

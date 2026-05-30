@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -368,9 +368,13 @@ def _persist_rejected_narrative_answer_audit(
     db.commit()
 
 
-def _attach_narrative_reading_to_complete_v3(
+AcceptedCompleteAstroResponse = AstroResponseV1 | AstroResponseV2 | AstroResponseV3
+PublicAstroResponse = AcceptedCompleteAstroResponse | AstroErrorResponseV3 | AstroFreeResponseV1
+
+
+def _attach_narrative_reading_to_complete(
     *,
-    interpretation: AstroResponseV3,
+    interpretation: AcceptedCompleteAstroResponse,
     persist_payload: dict[str, object],
     llm_astrology_input_v1: dict[str, object],
     level: str,
@@ -382,13 +386,22 @@ def _attach_narrative_reading_to_complete_v3(
     RejectedNarrativeAnswerOutcome | None,
     dict[str, object],
 ]:
-    """Construit et valide la lecture narrative publique pour une sortie V3 complete."""
-    reading = build_narrative_natal_reading_v1(
-        response=interpretation,
-        llm_astrology_input_v1=llm_astrology_input_v1,
-        level=level,
-        variant_code=variant_code,
-    )
+    """Construit et valide la lecture narrative publique pour une sortie complete acceptee."""
+    try:
+        reading = build_narrative_natal_reading_v1(
+            response=interpretation,
+            llm_astrology_input_v1=llm_astrology_input_v1,
+            level=level,
+            variant_code=variant_code,
+        )
+    except ValidationError as exc:
+        logger.warning(
+            "Narrative natal reading unavailable for accepted complete response "
+            "answer_id=%s error=%s",
+            answer_id,
+            exc,
+        )
+        return None, None, persist_payload
     violations = validate_narrative_reading_public_text(reading)
     if violations:
         return (
@@ -406,6 +419,11 @@ def _attach_narrative_reading_to_complete_v3(
         NARRATIVE_NATAL_READING_PAYLOAD_KEY: reading.model_dump(),
     }
     return reading, None, merged_payload
+
+
+def _without_public_evidence(interpretation: PublicAstroResponse) -> PublicAstroResponse:
+    """Retire les identifiants evidence internes de la projection publique."""
+    return interpretation.model_copy(update={"evidence": []})
 
 
 def _build_rejected_narrative_answer_outcome(
@@ -1105,10 +1123,10 @@ class NatalInterpretationService:
         if (
             level == "complete"
             and variant_code != "free_short"
-            and isinstance(interpretation, AstroResponseV3)
+            and isinstance(interpretation, (AstroResponseV1, AstroResponseV2, AstroResponseV3))
         ):
             narrative_reading, narrative_rejection, persist_payload = (
-                _attach_narrative_reading_to_complete_v3(
+                _attach_narrative_reading_to_complete(
                     interpretation=interpretation,
                     persist_payload=persist_payload,
                     llm_astrology_input_v1=llm_astrology_input_v1,
@@ -1268,7 +1286,7 @@ class NatalInterpretationService:
             data=NatalGatewayInterpretationData(
                 chart_id=chart_id,
                 use_case=gateway_result.use_case,
-                interpretation=interpretation,
+                interpretation=_without_public_evidence(interpretation),
                 meta=meta,
                 degraded_mode=degraded_mode_str,
                 narrative_natal_reading_v1=narrative_reading,
@@ -1512,7 +1530,7 @@ class NatalInterpretationService:
             data=NatalGatewayInterpretationData(
                 chart_id=chart_id,
                 use_case=use_case_key,
-                interpretation=interpretation,
+                interpretation=_without_public_evidence(interpretation),
                 meta=meta,
                 degraded_mode=degraded_mode_str,
             ),
@@ -1677,7 +1695,7 @@ class NatalInterpretationService:
             data=NatalGatewayInterpretationData(
                 chart_id=model.chart_id,
                 use_case=model.use_case,
-                interpretation=interpretation,
+                interpretation=_without_public_evidence(interpretation),
                 meta=meta,
                 degraded_mode=model.degraded_mode,
                 narrative_natal_reading_v1=narrative_reading,

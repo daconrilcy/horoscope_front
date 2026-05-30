@@ -1,4 +1,4 @@
-# Commentaire global: construction de narrative_natal_reading_v1 depuis AstroResponseV3.
+# Commentaire global: construction de narrative_natal_reading_v1 depuis une reponse natale acceptee.
 """Projette une lecture narrative publique sans exposer les carriers techniques."""
 
 from __future__ import annotations
@@ -13,7 +13,9 @@ from app.domain.llm.prompting.narrative_natal_reading_v1 import (
     NarrativeNatalReadingV1,
     UsedAstrologicalElementV1,
 )
-from app.domain.llm.prompting.schemas import AstroResponseV3
+from app.domain.llm.prompting.schemas import AstroResponseV1, AstroResponseV2, AstroResponseV3
+
+AcceptedCompleteAstroResponse = AstroResponseV1 | AstroResponseV2 | AstroResponseV3
 
 _CHAPTER_SECTION_PRIORITY: dict[NarrativeChapterKey, tuple[str, ...]] = {
     "personality": ("self_image", "overall", "strengths"),
@@ -32,14 +34,18 @@ _CHAPTER_DEFAULT_TITLES: dict[NarrativeChapterKey, str] = {
 }
 
 
-def _section_content_by_key(response: AstroResponseV3, section_key: str) -> str | None:
+def _section_content_by_key(
+    response: AcceptedCompleteAstroResponse, section_key: str
+) -> str | None:
     for section in response.sections:
         if section.key == section_key:
             return section.content
     return None
 
 
-def _pick_section_content(response: AstroResponseV3, priority: Sequence[str]) -> tuple[str, str]:
+def _pick_section_content(
+    response: AcceptedCompleteAstroResponse, priority: Sequence[str]
+) -> tuple[str, str]:
     for key in priority:
         content = _section_content_by_key(response, key)
         if content:
@@ -105,12 +111,12 @@ def build_used_astrological_elements(
 
 def build_narrative_natal_reading_v1(
     *,
-    response: AstroResponseV3,
+    response: AcceptedCompleteAstroResponse,
     llm_astrology_input_v1: Mapping[str, Any] | None,
     level: str,
     variant_code: str | None,
 ) -> NarrativeNatalReadingV1:
-    """Assemble le contrat narratif public depuis une interpretation V3 acceptee."""
+    """Assemble le contrat narratif public depuis une interpretation complete acceptee."""
     profile = _editorial_profile(level, variant_code)
     limits = {"free": 3, "basic": 6, "premium": 10}[profile]
     chapters: list[NarrativeNatalReadingChapterV1] = []
