@@ -53,6 +53,8 @@ const ALL_PLANETS = [
   ["uranus", "Uranus", "Uranus", "Urano"],
   ["neptune", "Neptune", "Neptune", "Neptuno"],
   ["pluto", "Pluton", "Pluto", "Plutón"],
+  ["north_node", "Nœud Nord", "North Node", "Nodo Norte"],
+  ["south_node", "Nœud Sud", "South Node", "Nodo Sur"],
 ] as const
 
 describe("translatePlanet", () => {

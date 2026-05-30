@@ -2,10 +2,13 @@
 import { useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import type { FeatureEntitlementResponse } from "../../api/billing"
+import type { PublicCopyLang } from "./natalPublicFacts"
+import { getNatalPublicCopy } from "./natalPublicCopy"
 
 type NatalAstrologerModeProps = {
   access: FeatureEntitlementResponse | undefined
   children: ReactNode
+  lang?: PublicCopyLang
 }
 
 function canSeeAstrologerMode(access: FeatureEntitlementResponse | undefined): boolean {
@@ -14,7 +17,8 @@ function canSeeAstrologerMode(access: FeatureEntitlementResponse | undefined): b
 }
 
 /** Controle l'affichage des donnees techniques sans les exposer par defaut. */
-export function NatalAstrologerMode({ access, children }: NatalAstrologerModeProps) {
+export function NatalAstrologerMode({ access, children, lang }: NatalAstrologerModeProps) {
+  const copy = getNatalPublicCopy(lang).astrologerMode
   const [isOpen, setIsOpen] = useState(false)
   const hasAccess = canSeeAstrologerMode(access)
 
@@ -22,8 +26,8 @@ export function NatalAstrologerMode({ access, children }: NatalAstrologerModePro
     <section className="natal-astrologer-mode" aria-labelledby="natal-astrologer-mode-title">
       <div className="natal-astrologer-mode__header">
         <div>
-          <span className="natal-section-eyebrow">Mode astrologue</span>
-          <h2 id="natal-astrologer-mode-title">Details techniques</h2>
+          <span className="natal-section-eyebrow">{copy.eyebrow}</span>
+          <h2 id="natal-astrologer-mode-title">{copy.title}</h2>
         </div>
         <button
           type="button"
@@ -32,7 +36,7 @@ export function NatalAstrologerMode({ access, children }: NatalAstrologerModePro
           aria-controls={isOpen ? "natal-astrologer-mode-panel" : undefined}
           onClick={() => setIsOpen((current) => !current)}
         >
-          {isOpen ? "Masquer les details techniques" : "Afficher les details techniques"}
+          {isOpen ? copy.hide : copy.show}
         </button>
       </div>
       {isOpen ? (
@@ -41,10 +45,10 @@ export function NatalAstrologerMode({ access, children }: NatalAstrologerModePro
             children
           ) : (
             <article className="natal-card natal-astrologer-mode__upsell">
-              <h3>Mode astrologue reserve</h3>
-              <p>Passez a Premium pour consulter le panneau expert et les donnees techniques completes.</p>
+              <h3>{copy.reserved}</h3>
+              <p>{copy.upsell}</p>
               <Link className="btn-link" to="/settings/subscription">
-                Voir les offres
+                {copy.offers}
               </Link>
             </article>
           )}

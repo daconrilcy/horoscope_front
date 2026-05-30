@@ -1688,6 +1688,12 @@ describe("NatalChartPage", () => {
       // Le titre du guide doit être en anglais
       expect(screen.getByText("How to read your natal chart")).toBeInTheDocument()
       expect(screen.queryByText("Comment lire ton thème natal")).not.toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Your astrological profile" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "What your chart reveals" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Astrological DNA" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Major life domains" })).toBeInTheDocument()
+      expect(screen.getByRole("heading", { name: "Technical details" })).toBeInTheDocument()
+      expect(screen.queryByRole("heading", { name: "Les grands domaines de vie" })).not.toBeInTheDocument()
     })
   })
 

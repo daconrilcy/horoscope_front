@@ -3,34 +3,28 @@
 ## Review target
 
 - Story: `CS-389-refonte-natal-sprint4-mode-astrologue`
-- Scope: toggle mode astrologue, gate entitlement, réintégration panneau expert
+- Scope: astrologer-mode toggle, entitlement gate, expert panel
+- Review date: `2026-05-30`
 
-## Inputs reviewed
+## Applicable guardrails
 
-- `00-story.md`, `NatalAstrologerMode.tsx`, `NatalTechnicalDetails.tsx`, tests CS-380
+- Applicable: `RG-047`, `RG-052`, `RG-071`, `RG-073`, `RG-129`, `RG-150`
+- Not applicable: unrelated backend persistence and migration guardrails
 
 ## Findings
 
-| ID | Sévérité | Catégorie | Finding | Statut |
+| ID | Severity | Category | Finding | Status |
 |---|---|---|---|---|
-| F-389-1 | Medium | UX / a11y | CTA upgrade en `<a href>` au lieu de `Link` React Router | Corrigé |
-| F-389-2 | Low | Tests | Tests unitaires sans `MemoryRouter` après passage à `Link` | Corrigé |
-| F-389-3 | Low | Produit | Gate limité à `multi_astrologer` \| `full` (pas `single_astrologer`) | Accepté — conforme story |
-
-## Acceptance audit
-
-| AC | Statut | Preuve |
-|---|---|---|
-| AC1–AC4 | Pass | `NatalAstrologerMode.test.tsx`, `NatalChartPage` free_short |
-| AC2 | Pass | test « masque le panneau expert tant que le mode est fermé » |
-| AC5–AC6 | Pass | `NatalExpertPanel.test.tsx` |
-| AC7–AC9 | Pass | scan `style=` + evidence |
+| F-389-4 | Medium | AC / i18n | Astrologer-mode public copy was hardcoded in French. | Fixed with centralized localized copy and propagated `lang`. |
+| F-389-5 | Low | Product residual risk | Entitlement gate remains limited to `multi_astrologer` and `full`; exact plan mapping is a product contract to preserve explicitly. | Accepted, already aligned with the story contract. |
 
 ## Validation audit
 
-- `pnpm --dir frontend test -- NatalAstrologerMode NatalExpertPanel NatalChartPage` — PASS
-- `rg -n "DIURNAL_PLANETS|HAYZ_RULES|SECT_PLANETS" frontend/src/features/natal-chart` — 0 hit
+- `npm test -- astrology-i18n NatalLifeDomains NatalKarmicSignature NatalChartPage` - PASS (`148` tests)
+- `npm run lint` - PASS
+- `npm run build` - PASS
+- Guardrail scan for `style=` and frontend astrology recomputation constants - PASS (`0` hit)
 
 ## Verdict
 
-**CLEAN** (après correction F-389-1 / F-389-2)
+**CLEAN** after fixes.

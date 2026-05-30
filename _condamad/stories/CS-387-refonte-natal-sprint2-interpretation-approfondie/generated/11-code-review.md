@@ -3,42 +3,35 @@
 ## Review target
 
 - Story: `CS-387-refonte-natal-sprint2-interpretation-approfondie`
-- Scope: domaines de vie, forces, défis, aspects majeurs
+- Scope: life domains, strengths, challenges, major aspects
+- Review date: `2026-05-30`
 
-## Inputs reviewed
+## Applicable guardrails
 
-- `00-story.md`, composants Sprint 2, contrat `chart_balance.dominant_aspects` backend (`json_builder._serialize_dominance`)
+- Applicable: `RG-047`, `RG-052`, `RG-071`, `RG-073`, `RG-129`, `RG-150`, `RG-151`
+- Not applicable: unrelated backend persistence and migration guardrails
 
 ## Findings
 
-| ID | Sévérité | Catégorie | Finding | Statut |
+| ID | Severity | Category | Finding | Status |
 |---|---|---|---|---|
-| F-387-1 | **High** | AC5 / RG-129 | `NatalMajorAspects` attendait `planet_a`/`aspect_code` sur `dominant_aspects`, alors que l'API ne publie que `{ code, score, rank, source }` → section vide en prod | **Corrigé** (`resolveMajorAspects` joint le ranking public à `result.aspects`) |
-| F-387-2 | Medium | i18n | Connecteur de placement français hardcodé dans `formatPlacement` | Corrigé (voir CS-386) |
-| F-387-3 | Low | RG-121 | Bandes d'impact dérivées du `rank` public (seuils 1–3 / 4–7 / 8+) — pas de rescoring, mais seuils UI non fournis par l'API | Accepté — aligné brief produit |
+| F-387-4 | **High** | AC5 / public contract | `chart_balance.dominant_aspects` serializes only `{ code, score, rank, source }`. `resolveMajorAspects` therefore reattaches a ranked aspect type to the first unused raw aspect of that type. With repeated `TRINE`, `SQUARE`, etc., the UI can display the wrong planet pair as a top-ranked aspect. | **Open**. Backend must publish a stable aspect identity (`planet_a`, `planet_b`, `aspect_code` or equivalent identifier) in the ranking contract. |
+| F-387-5 | Medium | AC / i18n | Public Sprint 2 copy was hardcoded in French. | Fixed with centralized localized copy and propagated `lang`. |
+| F-387-6 | Low | UX | Missing life-domain anchors could look like factual values. | Fixed with explicit localized unavailable copy. |
 
-## Acceptance audit
+## Contract evidence
 
-| AC | Statut | Preuve |
-|---|---|---|
-| AC1–AC4 | Pass | Vitest composants dédiés |
-| AC5–AC7 | Pass | `NatalMajorAspects.test.tsx` + jointure ranking |
-| AC8 | Pass | `pnpm build` |
-| AC9 | Pass | `evidence/` |
+- Ranking construction: `backend/app/domain/astrology/interpretation/chart_signature.py`
+- Ranking serialization: `backend/app/services/chart/json_builder.py`
+- Ambiguous frontend reattachment: `frontend/src/features/natal-chart/natalPublicFacts.ts`
 
 ## Validation audit
 
-- `pnpm --dir frontend test -- NatalLifeDomains NatalMajorAspects NatalStrengths NatalChallenges` — PASS
-- `pnpm --dir frontend build` — PASS
-- `rg -n "orb_used|raw_score" frontend/src/features/natal-chart` — hits limités à `NatalTechnicalDetails` (mode astrologue)
-
-## Commands run by reviewer
-
-```powershell
-pnpm --dir frontend test -- NatalLifeDomains NatalMajorAspects NatalStrengths NatalChallenges NatalChartPage
-pnpm --dir frontend build
-```
+- `npm test -- astrology-i18n NatalLifeDomains NatalKarmicSignature NatalChartPage` - PASS (`148` tests)
+- `npm run lint` - PASS
+- `npm run build` - PASS
+- Validation cannot prove AC5 with repeated same-type aspects until the backend contract carries identity.
 
 ## Verdict
 
-**CLEAN** (après correction F-387-1)
+**CHANGES_REQUESTED**. CS-387 must remain open until ranked aspects retain stable identity end to end.

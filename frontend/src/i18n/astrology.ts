@@ -108,6 +108,8 @@ const PLANETS: Record<string, Record<AstrologyLang, string>> = {
   uranus: { fr: "Uranus", en: "Uranus", es: "Urano", de: "Uranus" },
   neptune: { fr: "Neptune", en: "Neptune", es: "Neptuno", de: "Neptun" },
   pluto: { fr: "Pluton", en: "Pluto", es: "Plutón", de: "Pluto" },
+  north_node: { fr: "Nœud Nord", en: "North Node", es: "Nodo Norte", de: "Nordknoten" },
+  south_node: { fr: "Nœud Sud", en: "South Node", es: "Nodo Sur", de: "Südknoten" },
 }
 
 const HOUSES: Record<number, Record<AstrologyLang, string>> = {

@@ -2,6 +2,7 @@
 import type { LatestNatalChart } from "../../api/natalChart"
 import type { AstrologyLabelers, PublicCopyLang } from "./natalPublicFacts"
 import { firstAvailable, formatPlacement, getPlanetPosition } from "./natalPublicFacts"
+import { getNatalPublicCopy } from "./natalPublicCopy"
 
 type NatalProfileHeroProps = {
   chart: LatestNatalChart
@@ -9,48 +10,9 @@ type NatalProfileHeroProps = {
   lang: PublicCopyLang
 }
 
-const COPY = {
-  fr: {
-    title: "Votre profil astrologique",
-    lead: "Les trois portes d'entree de votre theme: elan vital, monde emotionnel et facon d'entrer en relation avec le monde.",
-    sun: "Soleil",
-    moon: "Lune",
-    ascendant: "Ascendant",
-    missing: "Donnee indisponible",
-    traits: "Traits dominants",
-  },
-  en: {
-    title: "Your astrological profile",
-    lead: "The three entry points of your chart: vitality, emotional world, and the way you meet life.",
-    sun: "Sun",
-    moon: "Moon",
-    ascendant: "Ascendant",
-    missing: "Unavailable data",
-    traits: "Dominant traits",
-  },
-  es: {
-    title: "Tu perfil astrologico",
-    lead: "Las tres puertas de entrada de tu carta: impulso vital, mundo emocional y forma de entrar en relacion.",
-    sun: "Sol",
-    moon: "Luna",
-    ascendant: "Ascendente",
-    missing: "Dato no disponible",
-    traits: "Rasgos dominantes",
-  },
-  de: {
-    title: "Your astrological profile",
-    lead: "The three entry points of your chart: vitality, emotional world, and the way you meet life.",
-    sun: "Sun",
-    moon: "Moon",
-    ascendant: "Ascendant",
-    missing: "Unavailable data",
-    traits: "Dominant traits",
-  },
-} as const
-
 /** Affiche Soleil, Lune et Ascendant depuis le payload public existant. */
 export function NatalProfileHero({ chart, labels, lang }: NatalProfileHeroProps) {
-  const copy = COPY[lang] ?? COPY.fr
+  const copy = getNatalPublicCopy(lang).hero
   const sun = getPlanetPosition(chart.result.planet_positions, "SUN")
   const moon = getPlanetPosition(chart.result.planet_positions, "MOON")
   const sunProfileCode = chart.astro_profile?.sun_sign_code

@@ -379,21 +379,22 @@ export function NatalChartPage() {
         onActiveInterpretationChange={setActiveInterpretation}
         actionRequest={headerActionRequest}
       />
-      <NatalAstrologicalDna chart={chart} labels={publicLabels} />
-      <NatalLifeDomains chart={chart} labels={publicLabels} />
-      <NatalStrengths chart={chart} labels={publicLabels} />
-      <NatalChallenges chart={chart} labels={publicLabels} />
+      <NatalAstrologicalDna chart={chart} labels={publicLabels} lang={lang} />
+      <NatalLifeDomains chart={chart} labels={publicLabels} lang={lang} />
+      <NatalStrengths chart={chart} labels={publicLabels} lang={lang} />
+      <NatalChallenges chart={chart} labels={publicLabels} lang={lang} />
       <NatalMajorAspects
         dominantAspects={chart.result.chart_balance?.dominant_aspects}
         aspects={aspects}
         translatePlanet={translatePlanet}
         translateAspect={translateAspect}
+        lang={lang}
       />
-      <NatalKarmicSignature chart={chart} labels={publicLabels} />
-      <NatalHiddenTalents chart={chart} labels={publicLabels} />
-      <NatalRelationshipPotential chart={chart} labels={publicLabels} />
-      <NatalCareerPotential chart={chart} labels={publicLabels} />
-      <NatalAstrologerMode access={natalAccess}>
+      <NatalKarmicSignature chart={chart} labels={publicLabels} lang={lang} />
+      <NatalHiddenTalents chart={chart} labels={publicLabels} lang={lang} />
+      <NatalRelationshipPotential chart={chart} labels={publicLabels} lang={lang} />
+      <NatalCareerPotential chart={chart} labels={publicLabels} lang={lang} />
+      <NatalAstrologerMode access={natalAccess} lang={lang}>
         <NatalTechnicalDetails
           planetPositions={planetPositions}
           houses={houses}

@@ -2,6 +2,7 @@
 import type { FeatureEntitlementResponse } from "../../api/billing"
 import type { AstrologyLang } from "../../i18n/astrology"
 import { NatalInterpretationSection } from "./NatalInterpretation"
+import { getNatalPublicCopy } from "./natalPublicCopy"
 
 type HeaderActionRequest = {
   kind: "upgrade" | "switch_persona"
@@ -39,11 +40,12 @@ export function NatalThemeSynthesis({
   actionRequest,
   onActiveInterpretationChange,
 }: NatalThemeSynthesisProps) {
+  const copy = getNatalPublicCopy(lang).synthesis
   return (
     <section className="natal-theme-synthesis" aria-labelledby="natal-theme-synthesis-title">
       <div className="natal-section-heading">
-        <span className="natal-section-eyebrow">Synthese IA</span>
-        <h2 id="natal-theme-synthesis-title">Ce que votre theme raconte</h2>
+        <span className="natal-section-eyebrow">{copy.eyebrow}</span>
+        <h2 id="natal-theme-synthesis-title">{copy.title}</h2>
       </div>
       <NatalInterpretationSection
         chartLoaded
