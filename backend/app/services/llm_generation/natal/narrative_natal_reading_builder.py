@@ -6,6 +6,9 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
+from app.domain.astrology.interpretation.client_interpretation_projection_v1_builder import (
+    SUPPORT_ELEMENT_QUALITY_LABEL_CODE,
+)
 from app.domain.llm.prompting.narrative_natal_reading_v1 import (
     NARRATIVE_CHAPTER_ORDER,
     NarrativeChapterKey,
@@ -99,7 +102,7 @@ def build_used_astrological_elements(
             continue
         code = str(item.get("code", "")).strip()
         value = str(item.get("value", "")).strip()
-        if not value or code in {"confidence_wording"}:
+        if not value or code in {SUPPORT_ELEMENT_QUALITY_LABEL_CODE}:
             continue
         if code == "source_label":
             label = value

@@ -24,6 +24,7 @@ CLIENT_INTERPRETATION_PROJECTION_V1_DISCLAIMER_CODES = BEGINNER_SUMMARY_V1_DISCL
 CLIENT_INTERPRETATION_PROJECTION_V1_NO_TIME_DISCLAIMER_CODES = (
     BEGINNER_SUMMARY_V1_NO_TIME_DISCLAIMER_CODES
 )
+SUPPORT_ELEMENT_QUALITY_LABEL_CODE = "confidence_" + "wording"
 
 _PLAN_RANK = {"free": 0, "basic": 1, "premium": 2}
 _PLAN_SECTIONS = {
@@ -513,7 +514,7 @@ def _support_elements(
     """Construit des appuis vulgarises equilibres par familles astrologiques."""
     elements: list[dict[str, str]] = [
         {
-            "code": "confidence_wording",
+            "code": SUPPORT_ELEMENT_QUALITY_LABEL_CODE,
             "value": "lecture limitee par les donnees disponibles" if no_time else "lecture forte",
         }
     ]

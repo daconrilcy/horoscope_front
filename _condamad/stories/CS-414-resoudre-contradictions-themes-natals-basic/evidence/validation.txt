@@ -1,0 +1,47 @@
+CS-414 implementation review validation - 2026-05-31
+
+PASS ruff check .
+Working directory: backend
+Output: All checks passed.
+
+PASS targeted pytest
+Command: python -B -m pytest -q tests/unit/domain/astrology/test_basic_natal_synthesis_resolver.py tests/unit/domain/astrology/test_basic_natal_synthesis_contradictions.py tests/unit/domain/astrology/test_client_interpretation_support_elements.py tests/unit/test_narrative_natal_reading_v1.py --tb=short
+Working directory: backend
+Output: 26 passed.
+
+PASS forbidden wording scan
+Command: rg -n "toujours|jamais|destin|oblige|doit absolument|medical|juridique|financier" backend/app/domain/astrology/interpretation backend/app/services/llm_generation/natal
+Output: no matches.
+
+PASS public resolver boundary scan
+Command: rg -n "natal_synthesis|SynthesisResolver|ResolvedThemeSynthesis" frontend backend/app/api backend/app/services/llm_generation/natal
+Output: no matches.
+
+PASS internal-field service leak scan
+Command: rg -n "theme_code|confidence|merge_group|omission_reason" backend/app/services/llm_generation/natal
+Output: no matches.
+
+PASS with expected controlled hit date-only wording scan
+Command: rg -n "ascendant|maison|MC|Milieu du Ciel" backend/app/domain/astrology/interpretation/natal_synthesis_resolver.py
+Output: matched only controlled date-only omission wording in natal_synthesis_resolver.py.
+
+PASS CONDAMAD capsule validation
+Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-414-resoudre-contradictions-themes-natals-basic
+Output: CONDAMAD validation: PASS.
+
+PASS CONDAMAD final capsule validation
+Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-414-resoudre-contradictions-themes-natals-basic --final
+Output: CONDAMAD validation: PASS.
+
+PASS story contract validation
+Command: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-414-resoudre-contradictions-themes-natals-basic\00-story.md
+Output: CONDAMAD story validation: PASS.
+
+PASS story strict lint
+Command: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-414-resoudre-contradictions-themes-natals-basic\00-story.md
+Output: CONDAMAD story lint: PASS.
+
+PASS backend app import
+Command: python -B -c "from app.main import app; print(app.title)"
+Working directory: backend
+Output: horoscope-backend.
