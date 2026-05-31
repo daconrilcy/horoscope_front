@@ -11,6 +11,10 @@ from app.domain.llm.runtime.contracts import (
     LLMExecutionRequest,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
+from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
+from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
 
 
 @pytest.mark.asyncio
@@ -145,3 +149,63 @@ async def test_natal_bootstrap_fallback_allowed_when_no_assembly_data_exists(db)
     assert plan.plan == "free"
     assert plan.model_source != "assembly"
     assert plan.execution_profile_source == "bootstrap_no_execution_profile"
+
+
+def test_natal_basic_interpretation_seed_uses_complete_v3_contract(db) -> None:
+    """Le bootstrap publie Basic sur le contrat complet, jamais sur l'assembly Free."""
+    from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
+
+    db.add(
+        LlmPersonaModel(
+            name="Persona test",
+            description="Persona de test",
+            tone="direct",
+            verbosity="medium",
+            enabled=True,
+        )
+    )
+    db.add_all(
+        [
+            LlmPromptVersionModel(
+                use_case_key="natal_interpretation",
+                developer_prompt="Theme complet {{llm_astrology_input_v1}}",
+                status=PromptStatus.PUBLISHED,
+                created_by="test",
+            ),
+            LlmPromptVersionModel(
+                use_case_key="natal_interpretation_short",
+                developer_prompt="Theme court {{llm_astrology_input_v1}}",
+                status=PromptStatus.PUBLISHED,
+                created_by="test",
+            ),
+            LlmOutputSchemaModel(
+                name="AstroResponse_v1",
+                json_schema={"type": "object"},
+                version=1,
+            ),
+            LlmOutputSchemaModel(
+                name="AstroResponse_v3",
+                json_schema={"type": "object"},
+                version=3,
+            ),
+        ]
+    )
+    db.commit()
+
+    seed_66_20_taxonomy(db)
+
+    basic = (
+        db.query(PromptAssemblyConfigModel)
+        .filter(
+            PromptAssemblyConfigModel.feature == "natal",
+            PromptAssemblyConfigModel.subfeature == "interpretation",
+            PromptAssemblyConfigModel.plan == "basic",
+            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+        )
+        .one()
+    )
+
+    assert basic.feature_template.use_case_key == "natal_interpretation"
+    assert basic.output_schema is not None
+    assert basic.output_schema.name == "AstroResponse_v3"
+    assert basic.output_schema.version == 3

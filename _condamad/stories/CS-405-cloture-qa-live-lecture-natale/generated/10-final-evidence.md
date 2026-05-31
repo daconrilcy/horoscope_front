@@ -7,7 +7,7 @@
 | Story key | `CS-405-cloture-qa-live-lecture-natale` |
 | Implementation outcome | `BLOCKED` |
 | Registry decision | Kept in development queue because live closure is incomplete |
-| Reason | Basic `complete` still returns a V2 payload without `narrative_natal_reading_v1`; Free/Basic/Premium closure cannot be honestly handed to review. |
+| Reason | Review/fix iteration corrected the missing Basic V3 assembly, but Free/Basic/Premium live QA has not been replayed after that correction; closure cannot be honestly marked `done`. |
 
 ## Preflight
 
@@ -15,7 +15,7 @@
 - Initial dirty file observed before edits: `_condamad/run-state.json`.
 - `AGENTS.md`, target story and scoped guardrails were read.
 - `story-status.md` row `CS-405` matches the target path and source brief.
-- Existing `generated/11-code-review.md` was read and classified as obsolete pre-implementation review evidence.
+- Existing `generated/11-code-review.md` was replaced by a fresh implementation review after the Basic assembly correction.
 
 ## Capsule validation
 
@@ -32,12 +32,12 @@
 | AC1 | CS-390/395 before/after report evidence. | `cs-390-395-report-before.md`, `cs-390-395-report-after.md` | PASS |
 | AC2 | CS-400/CS-405 report exists and contains the current blocked verdict. | Artifact checks PASS | PASS |
 | AC3 | Free QA not available because the local test account is `basic`. | `api-snapshot.json` | BLOCKED |
-| AC4 | Basic `complete` has no `narrative_natal_reading_v1`. | `api-complete-generation-response.json` | FAIL |
+| AC4 | Previous Basic live evidence had no `narrative_natal_reading_v1`; the missing Basic V3 assembly was fixed, but live QA was not replayed. | `generated/11-code-review.md` | BLOCKED |
 | AC5 | Premium browser QA not replayed after Basic blocker. | `frontend-targeted-tests.txt` only | BLOCKED |
-| AC6 | Desktop/mobile captures exist but show no narrative accordions. | `browser-qa-basic.json`, screenshots | FAIL |
-| AC7 | Vitest PASS, live `accordionCount = 0`. | `frontend-targeted-tests.txt`, `browser-qa-basic.json` | FAIL |
-| AC8 | Backend tests PASS, live narrative sources absent. | `backend-targeted-tests.txt`, API response | FAIL |
-| AC9 | Long entitlement tests PASS, live Basic regeneration does not produce narrative. | `backend-long-entitlement.txt`, API response | FAIL |
+| AC6 | Desktop/mobile captures exist but belong to the pre-fix blocked run and must be replaced. | `browser-qa-basic.json`, screenshots | BLOCKED |
+| AC7 | Vitest PASS; live accordions must be replayed after Basic assembly fix. | `frontend-targeted-tests.txt`, `generated/11-code-review.md` | BLOCKED |
+| AC8 | Backend tests PASS; live narrative sources must be replayed after Basic assembly fix. | `backend-targeted-tests.txt`, `generated/11-code-review.md` | BLOCKED |
+| AC9 | Long entitlement tests PASS; live Basic regeneration must be replayed after Basic assembly fix. | `backend-long-entitlement.txt`, `generated/11-code-review.md` | BLOCKED |
 | AC10 | Quota/rejection tests PASS; not replayed as browser flow. | `backend-targeted-tests.txt`, `backend-long-entitlement.txt` | PASS_WITH_LIMITATIONS |
 | AC11 | Coverage tests PASS; not confirmed in live payload. | `backend-targeted-tests.txt` | PASS_WITH_LIMITATIONS |
 | AC12 | RG-155 to RG-158 listed; RG-155/RG-158 fail live. | `guard-rg155-158-report.txt` | PASS_WITH_LIMITATIONS |
@@ -52,6 +52,8 @@
 - `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/09-dev-log.md`
 - `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/10-final-evidence.md`
 - `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/11-code-review.md`
+- `backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py`
+- `backend/tests/llm_orchestration/test_runtime_convergence.py`
 - `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/evidence/**`
 - `output/playwright/cs-400-basic-desktop.png`
 - `output/playwright/cs-400-basic-mobile.png`
@@ -79,13 +81,20 @@ No application tests were added or updated. This story is a QA/reporting closure
 | `rg -n "RG-155|RG-156|RG-157|RG-158" _condamad\reports\cs-400-cloture-qa-live-lecture-natale.md` | PASS |
 | `rg -n "fallback = response\.sections\[0\]" backend\app\services\llm_generation\natal` | PASS: no matches |
 | `rg -n "check_and_consume" backend\app\api\v1\routers\public\natal_interpretation.py` | PASS: no matches |
+| `.\.venv\Scripts\Activate.ps1; Push-Location backend; ruff check .; Pop-Location` | PASS after Basic assembly correction |
+| `.\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -m pytest -q tests\llm_orchestration\test_runtime_convergence.py; Pop-Location` | PASS, 5 passed |
+| `.\.venv\Scripts\Activate.ps1; Push-Location backend; python -B -m pytest -q --long app\tests\integration\test_natal_chart_long_entitlement.py app\tests\integration\test_natal_interpretation_endpoint.py --tb=short; Pop-Location` | PASS, 24 passed |
+| `pnpm --dir frontend test -- NatalChartPage natalNarrativeReading natalPublicDomGuard NatalAstrologerMode` | PASS, 90 passed |
+| `pnpm --dir frontend lint` | PASS |
+| `pnpm --dir frontend build` | PASS |
 
 ## Commands skipped or blocked
 
 | Command/Check | Status | Reason/Risk |
 |---|---|---|
 | Free browser QA | BLOCKED | Local test account is `basic`; changing plan after Basic live failure would not resolve the narrative blocker. |
-| Premium browser QA | BLOCKED | Basic complete V3 runtime failed first; Premium closure would be misleading without the shared narrative pipeline. |
+| Fresh Basic browser/API QA after assembly correction | BLOCKED | Not replayed in this review/fix iteration; persisted screenshots still come from the pre-fix blocked run. |
+| Premium browser QA | BLOCKED | Not replayed after the Basic assembly correction; Premium closure would be misleading without fresh shared pipeline proof. |
 | `ruff format` | NOT_RUN | No Python file was modified. |
 | Full backend `pytest -q` | NOT_RUN | Targeted and long natal suites passed; live browser/API already identified a blocking product failure. |
 

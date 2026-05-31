@@ -1,46 +1,78 @@
-# Editorial Review - CS-405 cloture-qa-live-lecture-natale
+# Implementation Review - CS-405 cloture-qa-live-lecture-natale
 
-> Classification CS-405 implementation run 2026-05-31: obsolete pre-implementation review.
-> This file reviewed the story draft only. It is not final implementation review evidence and must not be used to mark the story `done` or `ready-to-review`.
-
-Verdict: CLEAN
+Verdict: BLOCKED
 
 ## Review Scope
 
-- Story reviewed: `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/00-story.md`
+- Story: `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/00-story.md`
 - Source brief: `_story_briefs/cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md`
 - Tracker row: `_condamad/stories/story-status.md` row `CS-405`
-- Guardrails checked by targeted ID lookup only: `RG-047`, `RG-052`, `RG-071`, `RG-073`, `RG-129`, `RG-149` to `RG-158`
+- Guardrails: `RG-047`, `RG-052`, `RG-071`, `RG-073`, `RG-129`, `RG-149` to `RG-158`
+- Implementation evidence: generated final evidence, closure report, backend/frontend validations, browser QA artifacts and runtime assembly configuration.
 
 ## Findings
 
-No actionable drafting issue found.
+### F-001 - Basic live runtime resolved the Free/V1 assembly
 
-## Brief Alignment
+Status: FIXED
 
-- The story maps the old CS-390/395 report update and new CS-400 closure report to AC1, AC2, Task 1 and Task 2.
-- Free, Basic and Premium QA are explicit in the objective, target state, AC3 to AC5 and Tasks 3 to 5.
-- Desktop and mobile matrices, modern accordions and screenshots under `output/playwright/` are explicit in AC6, AC7, AC13 and Tasks 6 to 7.
-- Basic five chapters, non-empty sources and coverage metrics are explicit in AC4, AC8, AC11 and Tasks 4 and 9.
-- Corrective Basic regeneration and editorial rejection quota behavior are explicit in AC9, AC10 and Task 8.
-- `RG-155` to `RG-158` plus related local guardrails are listed with executable evidence.
-- The story keeps provider production calls, feature changes, calculations, dependency changes and registry enrichment out of scope.
+The previous CS-405 evidence showed Basic `complete` returning `schema_version = "v2"` without
+`narrative_natal_reading_v1`. The local runtime had no published `natal/interpretation/basic`
+assembly, so Basic could fall through to the Free assembly instead of the complete V3 contract.
 
-## Validation Evidence
+Fix:
 
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...` -> PASS
-- Target: `_condamad\stories\CS-405-cloture-qa-live-lecture-natale\00-story.md`
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...` -> PASS
-- Target: `_condamad\stories\CS-405-cloture-qa-live-lecture-natale\00-story.md`
+- Added `natal/interpretation/basic -> natal_interpretation` to
+  `backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py`.
+- Added regression coverage in `backend/tests/llm_orchestration/test_runtime_convergence.py`.
+- Applied the seed locally; the active SQLite DB now reports:
+  - `basic published natal_interpretation AstroResponse_v3 3`
+  - `free published natal_interpretation_short AstroResponse_v1 1`
+  - `premium published natal_interpretation AstroResponse_v3 3`
 
-## Produced Artifacts
+Validation:
 
-- `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/11-code-review.md`
+- `.\.venv\Scripts\Activate.ps1; Push-Location backend; ruff check .; ...` -> PASS.
+- `python -B -m pytest -q tests/llm_orchestration/test_runtime_convergence.py` -> PASS, 5 passed.
+- `python -B -m pytest -q tests --tb=short -k "natal and (narrative or rejected or quota or theme_astral)"` -> PASS, 30 passed.
+- `python -B -m pytest -q --long app/tests/integration/test_natal_chart_long_entitlement.py app/tests/integration/test_natal_interpretation_endpoint.py --tb=short` -> PASS, 24 passed.
+
+### F-002 - Closure evidence is still not clean after the config fix
+
+Status: BLOCKED
+
+The story requires live QA closure for Free, Basic and Premium, desktop/mobile screenshots and a
+positive CS-400 report. Current persisted evidence still contains the earlier blocked browser/API
+run: Basic screenshots have `accordionCount = 0`, Free/Premium live QA are absent, and the report is
+intentionally `BLOCKED`.
+
+Required next proof before `done`:
+
+- Restart local backend/frontend after the Basic assembly correction.
+- Re-run authenticated Free, Basic and Premium QA.
+- Regenerate screenshots under `output/playwright/`.
+- Replace the blocked API/browser evidence with passing evidence showing Basic V3 narrative
+  accordions, five chapters and non-empty sources.
+- Update `_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md` only after the live proof is
+  clean.
+
+## Validation Summary
+
+- Backend lint: PASS.
+- Backend targeted natal regression tests: PASS.
+- Backend long entitlement/endpoint tests: PASS.
+- Frontend targeted tests: PASS, 90 passed.
+- Frontend lint: PASS.
+- Frontend build: PASS.
+- Fresh browser/API live QA after the seed correction: NOT RUN, so AC3, AC4, AC5, AC6, AC7, AC8,
+  AC9, AC11 and AC13 cannot be marked clean.
+
+## Tracker Decision
+
+`_condamad/stories/story-status.md` is not updated to `done` because this fresh implementation review
+is not clean.
 
 ## Propagation Decision
 
-No propagation: the review produced no reusable learning and required no story-text correction.
-
-## Residual Risk
-
-No drafting residual risk identified. Implementation risk remains intentionally owned by the future dev story execution and live QA evidence.
+No-propagation. The reusable guard is local to the seed and covered by the new regression test; no
+new registry invariant is needed.

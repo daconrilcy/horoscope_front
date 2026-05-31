@@ -60,6 +60,7 @@ def seed_66_20_taxonomy(db: Session) -> None:
         ("guidance", "contextual", "free", "guidance_contextual"),
         ("guidance", "contextual", "premium", "guidance_contextual"),
         ("natal", "interpretation", "free", "natal_interpretation_short"),
+        ("natal", "interpretation", "basic", "natal_interpretation"),
         ("natal", "interpretation", "premium", "natal_interpretation"),
         ("natal", "psy_profile", "premium", "natal_psy_profile"),
         ("natal", "shadow_integration", "premium", "natal_shadow_integration"),
