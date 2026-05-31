@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: implementation review clean after iteration 1
+- Ready for review: implementation review clean after iteration 2
 - Story key: CS-412-prioriser-faits-natals-basic-salience-calibree
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-412-prioriser-faits-natals-basic-salience-calibree`

@@ -27,7 +27,21 @@ Review/fix iteration 1:
 - Test proof: added explicit Fire/Water repetition and dominant planet / strong constraint coverage.
 
 Final closure:
-- PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-412-prioriser-faits-natals-basic-salience-calibree\00-story.md
+- PASS .\.venv\Scripts\Activate.ps1; python -B condamad_story_validate.py CS-412 00-story.md
   Result: CONDAMAD story validation PASS.
 - PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-412-prioriser-faits-natals-basic-salience-calibree\00-story.md
+  Result: CONDAMAD story lint PASS.
+
+Post-implementation alignment pass 2026-05-31:
+- PASS brief/story/tracker/code/tests/final-evidence comparison.
+- FIX evidence consistency: final evidence now states review clean after iteration 2, matching generated/11-code-review.md.
+- PASS .\.venv\Scripts\Activate.ps1; ruff format/check scoped salience files.
+- PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q targeted salience model and archetype tests.
+  Result: 13 passed.
+- PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q targeted fact graph plus salience tests.
+  Result: 18 passed.
+- PASS recalculation, public leak and forbidden-signal scans.
+- PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-412-prioriser-faits-natals-basic-salience-calibree\00-story.md
+  Result: CONDAMAD story validation PASS.
+- PASS .\.venv\Scripts\Activate.ps1; python -B condamad_story_lint.py --strict CS-412 00-story.md
   Result: CONDAMAD story lint PASS.

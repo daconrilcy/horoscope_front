@@ -28,6 +28,10 @@ Verdict: CLEAN
   - Proof: added tests for Fire/Water repetition, dominant planet and strong constraint coverage.
 - Iteration 2 verdict: CLEAN.
   - No remaining actionable implementation, evidence, AC, guardrail or validation issue found.
+- Post-alignment verification verdict: CLEAN.
+  - Evidence consistency fix: `generated/10-final-evidence.md` now says the implementation review became clean after
+    iteration 2, matching this review artifact.
+  - No code, AC, scope or source brief change was required.
 
 ## AC And Guardrail Result
 
@@ -44,6 +48,8 @@ Verdict: CLEAN
 - PASS: `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short` -> 13 passed.
 - PASS: `.\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_fact_graph.py backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short` -> 18 passed.
 - PASS: recalculation, public leak and forbidden-signal `rg` scans in `evidence/validation.txt`.
+- PASS: post-alignment rerun on 2026-05-31 of scoped Ruff, targeted salience/fact-graph pytests, story validation,
+  strict story lint and bounded scans.
 
 ## Closure
 
