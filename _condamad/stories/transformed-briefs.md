@@ -176,3 +176,4 @@
 | cs-394 | `_story_briefs\cs-394-ajouter-ce-que-nous-avons-utilise-fin-lecture-natale.md` | `_condamad\stories\cs-394-ajouter-ce-que-nous-avons-utilise-fin-lecture-natale\00-story.md` |
 | cs-395 | `_story_briefs\cs-395-verrouiller-non-regression-lecture-natale-publique.md` | `_condamad\stories\cs-395-verrouiller-non-regression-lecture-natale-publique\00-story.md` |
 | cs-396 | `_story_briefs\cs-396-refuser-padding-semantique-lecture-natale-et-sources-vides.md` | `_condamad\stories\cs-401-refuser-padding-sources-vides\00-story.md` |
+| cs-397 | `_story_briefs\cs-397-enrichir-matiere-editoriale-basic-lecture-natale.md` | `_condamad\stories\cs-402-couverture-editoriale-basic-natal\00-story.md` |
