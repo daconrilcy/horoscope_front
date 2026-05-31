@@ -1,11 +1,15 @@
 # CONDAMAD Story Draft Review - CS-416
 
+Classification: drafting-stage editorial review. This file is obsolete as
+final implementation review evidence for CS-416; use `generated/10-final-evidence.md`
+and fresh validation output instead.
+
 Verdict: CLEAN
 
 ## Scope
 - Target story: `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/00-story.md`
 - Source brief: `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`
-- Review type: compact pre-implementation editorial review.
+- Review type: compact drafting-stage editorial review.
 
 ## Review Cycle
 - Iteration 1 found guardrail alignment issues:

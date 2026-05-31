@@ -13,6 +13,9 @@ from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GATEWAY_PATH = REPO_ROOT / "app/domain/llm/runtime/gateway.py"
 CONTRACT_PATH = REPO_ROOT / "app/domain/astrology/interpretation/llm_astrology_input_v1.py"
+THEME_ASTRAL_PROVIDER_BUILDER_PATH = (
+    REPO_ROOT / "app/domain/llm/runtime/theme_astral_provider_payload_builder.py"
+)
 PROMPT_VISIBLE_BLOCKS = set(LLM_ASTROLOGY_INPUT_DATA_ROLES["prompt_visible"])
 AUDIT_ONLY_PROMPT_SURFACES = {
     "evidence",
@@ -117,6 +120,17 @@ def test_canonical_prompt_visible_roles_exclude_audit_only_surfaces() -> None:
     """Le contrat canonique garde les donnees audit-only hors roles prompt."""
     assert PROMPT_VISIBLE_BLOCKS == {"facts", "signals", "limits", "shaping"}
     assert AUDIT_ONLY_PROMPT_SURFACES.isdisjoint(PROMPT_VISIBLE_BLOCKS)
+
+
+def test_basic_natal_provider_payload_uses_reading_plan_not_raw_runtime() -> None:
+    """Le payload provider Basic depend du plan et non des carriers natals bruts."""
+    tree = ast.parse(THEME_ASTRAL_PROVIDER_BUILDER_PATH.read_text(encoding="utf-8"))
+    source = ast.unparse(tree)
+
+    assert "BasicNatalReadingPlan" in source
+    assert "_basic_natal_prompt_payload" in source
+    assert "NatalResult" not in source
+    assert "build_chart_json" not in source
 
 
 def _literal_string_values(node: ast.AST) -> set[str]:

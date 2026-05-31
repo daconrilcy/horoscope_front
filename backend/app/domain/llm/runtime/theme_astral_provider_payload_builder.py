@@ -6,6 +6,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any, cast
 
+from app.domain.astrology.interpretation.basic_natal_reading_plan import (
+    BasicNatalPublicEvidence,
+    BasicNatalReadingPlan,
+)
 from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
     ChartInterpretationInputRuntimeData,
 )
@@ -43,6 +47,22 @@ _INPUT_DATA_KEYS = (
     "selected_themes",
     "limits",
 )
+_BASIC_INPUT_DATA_KEYS = ("basic_natal_prompt_payload",)
+_BASIC_NATAL_PROMPT_PAYLOAD_KEYS = (
+    "sections",
+    "resolved_syntheses",
+    "editorial_evidence",
+    "limitations",
+    "disclaimers",
+    "style_constraints",
+)
+_BASIC_STYLE_CONSTRAINTS = {
+    "word_count": {"minimum": 900, "maximum": 1300},
+    "section_count": {"minimum": 6, "maximum": 8},
+    "tone": "vous",
+    "prediction_policy": "no_firm_prediction",
+    "advice_policy": "no_prescriptive_advice",
+}
 _NARRATIVE_SOURCE_FAMILY_SECTIONS: dict[str, tuple[str, ...]] = {
     "personnalite": ("planet_sign_interpretations", "dominant_themes"),
     "emotions": ("planet_sign_interpretations", "resources"),
@@ -66,9 +86,27 @@ class ThemeAstralProviderPayloadBuilder:
         interpretation_sources: Iterable[InterpretationMaterialSource],
         commercial_plan: CommercialPlan,
         astrologer_voice: Mapping[str, Any] | None = None,
+        basic_reading_plan: BasicNatalReadingPlan | None = None,
     ) -> dict[str, Any]:
         """Assemble le squelette provider sans exposer le libelle commercial."""
         delivery_profile = resolve_theme_astral_provider_delivery_profile(commercial_plan)
+        if commercial_plan == "basic":
+            if basic_reading_plan is None:
+                raise ValueError("Basic provider payload requires BasicNatalReadingPlan")
+            payload = {
+                "runtime_contract": _runtime_contract(),
+                "safety_contract": _safety_contract(),
+                "astrologer_voice": dict(astrologer_voice or {}),
+                "feature_context": _feature_context(chart_input),
+                "delivery_profile": delivery_profile,
+                "input_data": {
+                    "basic_natal_prompt_payload": _basic_natal_prompt_payload(basic_reading_plan),
+                },
+                "output_contract": _output_contract(delivery_profile),
+            }
+            _assert_payload_skeleton(payload, commercial_plan=commercial_plan)
+            return payload
+
         material = self.material_builder.build(
             chart_input,
             sources=interpretation_sources,
@@ -90,7 +128,7 @@ class ThemeAstralProviderPayloadBuilder:
             },
             "output_contract": _output_contract(delivery_profile),
         }
-        _assert_payload_skeleton(payload)
+        _assert_payload_skeleton(payload, commercial_plan=commercial_plan)
         return payload
 
 
@@ -270,6 +308,63 @@ def _limits(
     }
 
 
+def _basic_natal_prompt_payload(reading_plan: BasicNatalReadingPlan) -> dict[str, object]:
+    """Projette le plan Basic en payload prompt sans carriers bruts ni identifiants."""
+    evidence_by_section = _editorial_evidence_by_section(reading_plan.public_evidence)
+    payload: dict[str, object] = {
+        "sections": [
+            {
+                "section_code": section.section_code,
+                "heading_intent": section.heading_intent,
+                "target_length_words": section.target_length_words,
+                "theme_codes": list(section.theme_codes),
+                "editorial_evidence_labels": evidence_by_section.get(section.section_code, []),
+            }
+            for section in reading_plan.sections
+        ],
+        "resolved_syntheses": [
+            {
+                "section_code": section.section_code,
+                "heading_intent": section.heading_intent,
+                "theme_codes": list(section.theme_codes),
+            }
+            for section in reading_plan.sections
+        ],
+        "editorial_evidence": [
+            _provider_editorial_evidence(evidence) for evidence in reading_plan.public_evidence
+        ],
+        "limitations": list(reading_plan.limitations),
+        "disclaimers": list(reading_plan.disclaimers),
+        "style_constraints": {
+            **_BASIC_STYLE_CONSTRAINTS,
+            "plan_constraints": list(reading_plan.style_constraints),
+        },
+    }
+    if tuple(payload) != _BASIC_NATAL_PROMPT_PAYLOAD_KEYS:
+        raise ValueError("Basic natal prompt payload skeleton drift")
+    return payload
+
+
+def _provider_editorial_evidence(evidence: BasicNatalPublicEvidence) -> dict[str, object]:
+    """Expose une preuve editoriale lisible sans ID brut ni chemin interne."""
+    return {
+        "label": evidence.label,
+        "explanation": evidence.explanation,
+        "section_codes": list(evidence.source_section_codes),
+    }
+
+
+def _editorial_evidence_by_section(
+    evidence_items: Iterable[BasicNatalPublicEvidence],
+) -> dict[str, list[str]]:
+    """Indexe les libelles de preuves publiques par section du plan."""
+    by_section: dict[str, list[str]] = {}
+    for evidence in evidence_items:
+        for section_code in evidence.source_section_codes:
+            by_section.setdefault(section_code, []).append(evidence.label)
+    return by_section
+
+
 def _output_contract(delivery_profile: Mapping[str, object]) -> dict[str, object]:
     """Reference le contrat de sortie versionne et ses obligations."""
     max_sections = cast(Mapping[str, int], delivery_profile["section_budget"])["max_sections"]
@@ -282,12 +377,15 @@ def _output_contract(delivery_profile: Mapping[str, object]) -> dict[str, object
     }
 
 
-def _assert_payload_skeleton(payload: Mapping[str, object]) -> None:
+def _assert_payload_skeleton(
+    payload: Mapping[str, object], *, commercial_plan: CommercialPlan
+) -> None:
     """Verifie localement le squelette avant handoff provider."""
     if tuple(payload) != _TOP_LEVEL_KEYS:
         raise ValueError("theme_astral provider payload top-level skeleton drift")
     input_data = payload.get("input_data")
-    if not isinstance(input_data, dict) or tuple(input_data) != _INPUT_DATA_KEYS:
+    expected_input_keys = _BASIC_INPUT_DATA_KEYS if commercial_plan == "basic" else _INPUT_DATA_KEYS
+    if not isinstance(input_data, dict) or tuple(input_data) != expected_input_keys:
         raise ValueError("theme_astral provider payload input_data skeleton drift")
 
 

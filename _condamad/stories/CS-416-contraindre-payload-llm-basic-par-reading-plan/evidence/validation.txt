@@ -1,0 +1,12 @@
+CS-416 validation evidence 2026-05-31
+PASS ruff format scoped: 5 files left unchanged after formatting
+PASS ruff check .: All checks passed
+PASS python -B -m pytest -q tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py --tb=short: 5 passed
+PASS python -B -m pytest -q tests/architecture/test_llm_astrology_input_payload_boundaries.py --tb=short: 7 passed
+PASS python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py -k "natal or basic" --tb=short: 4 passed, 10 deselected
+PASS app import: from app.main import app
+SCAN VC8 rg chart_json/natal_data/PII roots: matches remain in non-Basic/non-prompt-visible runtime, schema and service owner surfaces; Basic prompt payload tests prove absence from basic_natal_prompt_payload.
+SCAN VC9 rg scoring/prompt_hint roots: one existing validator denylist literal condition_axis; Basic prompt payload tests prove absence from basic_natal_prompt_payload.
+PASS evidence snapshots: basic-payload-before.json and basic-payload-after.json written.
+PASS final capsule validation: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py <capsule> --final
+PASS git diff --check scoped story/code paths.

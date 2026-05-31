@@ -9,6 +9,8 @@ from pathlib import Path
 from app.domain.astrology.interpretation.interpretation_material_contracts import (
     INTERPRETATION_MATERIAL_KEYS,
 )
+from app.domain.astrology.interpretation.natal_fact_graph import NatalFactFamily
+from app.domain.astrology.interpretation.natal_theme_taxonomy import BasicThemeCode
 from app.domain.llm.configuration.theme_astral_contracts import (
     THEME_ASTRAL_DELIVERY_PROFILES,
     THEME_ASTRAL_INPUT_CONTRACT_ID,
@@ -18,6 +20,11 @@ from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
     ThemeAstralProviderPayloadBuilder,
 )
 from app.ops.llm.bootstrap.seed_30_8_v3_prompts import NATAL_COMPLETE_PROMPT_V3
+from tests.unit.domain.astrology.basic_natal_reading_plan_helpers import (
+    build_plan,
+    fact,
+    theme,
+)
 from tests.unit.domain.astrology.interpretation.test_interpretation_material_builder import (
     _build_chart_input,
     _prepared_paris_birth,
@@ -42,6 +49,7 @@ INPUT_DATA_KEYS = (
     "selected_themes",
     "limits",
 )
+BASIC_INPUT_DATA_KEYS = ("basic_natal_prompt_payload",)
 COMMERCIAL_LABELS = {"plan", "free", "basic", "premium"}
 
 
@@ -72,9 +80,14 @@ def test_provider_payload_skeleton_is_stable_for_all_commercial_plans() -> None:
     payloads = _payloads_by_commercial_plan()
 
     assert {tuple(payload) for payload in payloads.values()} == {TOP_LEVEL_KEYS}
-    assert {tuple(payload["input_data"]) for payload in payloads.values()} == {INPUT_DATA_KEYS}
+    assert tuple(payloads["basic"]["input_data"]) == BASIC_INPUT_DATA_KEYS
     assert {
-        tuple(payload["input_data"]["interpretation_material"]) for payload in payloads.values()
+        tuple(payload["input_data"]) for key, payload in payloads.items() if key != "basic"
+    } == {INPUT_DATA_KEYS}
+    assert {
+        tuple(payload["input_data"]["interpretation_material"])
+        for payload in payloads.values()
+        if "interpretation_material" in payload["input_data"]
     } == {INTERPRETATION_MATERIAL_KEYS}
 
 
@@ -111,13 +124,13 @@ def test_delivery_material_voice_and_output_contract_are_emitted() -> None:
 
 
 def test_basic_payload_exposes_private_narrative_source_family_metrics() -> None:
-    """Le payload Basic audite cinq familles narratives sans changer les budgets."""
-    payload = _payloads_by_commercial_plan()["basic"]
+    """Le payload Premium garde les metriques privees hors contrat Basic."""
+    payload = _payloads_by_commercial_plan()["premium"]
     selected_themes = payload["input_data"]["selected_themes"]
     family_metrics = selected_themes["narrative_source_families"]
 
-    assert selected_themes["selected_source_count"] <= selected_themes["max_source_items"] == 24
-    assert selected_themes["section_keys"] == list(INTERPRETATION_MATERIAL_KEYS[:6])
+    assert selected_themes["selected_source_count"] <= selected_themes["max_source_items"] == 48
+    assert selected_themes["section_keys"] == list(INTERPRETATION_MATERIAL_KEYS[:8])
     assert {item["family"] for item in family_metrics} == {
         "personnalite",
         "emotions",
@@ -127,6 +140,38 @@ def test_basic_payload_exposes_private_narrative_source_family_metrics() -> None
     }
     assert all(item["covered"] for item in family_metrics)
     assert all(item["source_count"] > 0 for item in family_metrics)
+
+
+def test_basic_payload_uses_reading_plan_contract_only() -> None:
+    """Le payload Basic expose uniquement le contrat prompt issu du plan."""
+    payload = _payloads_by_commercial_plan()["basic"]
+    prompt_payload = payload["input_data"]["basic_natal_prompt_payload"]
+
+    assert tuple(prompt_payload) == (
+        "sections",
+        "resolved_syntheses",
+        "editorial_evidence",
+        "limitations",
+        "disclaimers",
+        "style_constraints",
+    )
+    assert prompt_payload["sections"]
+    assert prompt_payload["resolved_syntheses"]
+    assert prompt_payload["editorial_evidence"]
+    assert prompt_payload["style_constraints"] == {
+        "word_count": {"minimum": 900, "maximum": 1300},
+        "section_count": {"minimum": 6, "maximum": 8},
+        "tone": "vous",
+        "prediction_policy": "no_firm_prediction",
+        "advice_policy": "no_prescriptive_advice",
+        "plan_constraints": [
+            "Employer un ton clair, nuance et non fataliste.",
+            "Ne pas ajouter de fait astrologique absent du plan.",
+            "Garder les preuves publiques lisibles sans scores ni traces techniques.",
+        ],
+    }
+    serialized = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    assert "BasicNatalReadingPlan" not in serialized
 
 
 def test_nominal_natal_prompt_requests_five_source_families() -> None:
@@ -162,6 +207,40 @@ def test_birth_context_exposes_structured_birth_data() -> None:
         "locale": "fr-FR",
         "chart_type": "natal",
     }
+
+
+def test_basic_payload_excludes_birth_context_and_internal_prompt_tokens() -> None:
+    """Le payload prompt Basic ne transporte ni donnees personnelles ni IDs bruts."""
+    payload = _payloads_by_commercial_plan()["basic"]
+    prompt_payload = payload["input_data"]["basic_natal_prompt_payload"]
+    serialized = json.dumps(prompt_payload, ensure_ascii=False, sort_keys=True)
+
+    forbidden_tokens = {
+        "birth_context",
+        "astrological_facts",
+        "interpretation_material",
+        "selected_themes",
+        "chart_json",
+        "natal_data",
+        "email",
+        "user_id",
+        "place_id",
+        "latitude",
+        "longitude",
+        "audit_input",
+        "ranking_score",
+        "weighted_score",
+        "score_profile",
+        "condition_axis",
+        "prompt_hint",
+        "required_fact_ids",
+        "forbidden_fact_ids",
+        "supporting_evidence_ids",
+        "runtime.fact",
+    }
+
+    assert forbidden_tokens.isdisjoint(_json_strings(prompt_payload))
+    assert all(token not in serialized for token in forbidden_tokens)
 
 
 def test_birth_context_marks_missing_precision_without_reconstructing_values() -> None:
@@ -276,6 +355,7 @@ def _payloads_by_commercial_plan() -> dict[str, dict[str, object]]:
                 "vocabulary": ["symbolique"],
                 "emphases": ["integration"],
             },
+            basic_reading_plan=_basic_reading_plan() if plan == "basic" else None,
         )
         for plan in ("free", "basic", "premium")
     }
@@ -300,3 +380,28 @@ def _json_strings(value: object) -> set[str]:
     if isinstance(value, list):
         return {item for nested in value for item in _json_strings(nested)}
     return set()
+
+
+def _basic_reading_plan() -> object:
+    """Construit un plan Basic representatif avec plusieurs sections publiques."""
+    facts = (
+        fact("sun.aries", NatalFactFamily.LUMINARY, ("sun",)),
+        fact("moon.cancer", NatalFactFamily.LUMINARY, ("moon",)),
+        fact("mercury.gemini", NatalFactFamily.PLANET_POSITION, ("mercury",)),
+        fact("venus.taurus", NatalFactFamily.PLANET_POSITION, ("venus",)),
+        fact("mars.leo", NatalFactFamily.PLANET_POSITION, ("mars",)),
+        fact("jupiter.libra", NatalFactFamily.PLANET_POSITION, ("jupiter",)),
+        fact("saturn.capricorn", NatalFactFamily.PLANET_POSITION, ("saturn",)),
+        fact("node.virgo", NatalFactFamily.NODE, ("north_node",)),
+    )
+    themes = (
+        theme(BasicThemeCode.CORE_IDENTITY, ("sun.aries",), objects=("sun",)),
+        theme(BasicThemeCode.EMOTIONAL_PATTERN, ("moon.cancer",), objects=("moon",)),
+        theme(BasicThemeCode.MENTAL_STYLE, ("mercury.gemini",), objects=("mercury",)),
+        theme(BasicThemeCode.RESOURCES_AND_VALUES, ("venus.taurus",), objects=("venus",)),
+        theme(BasicThemeCode.ACTION_AND_DRIVE, ("mars.leo",), objects=("mars",)),
+        theme(BasicThemeCode.RELATIONSHIP_PATTERN, ("jupiter.libra",), objects=("jupiter",)),
+        theme(BasicThemeCode.GROWTH_DIRECTION, ("node.virgo",), objects=("north_node",)),
+        theme(BasicThemeCode.TENSION_TO_INTEGRATE, ("saturn.capricorn",), objects=("saturn",)),
+    )
+    return build_plan(facts, themes)
