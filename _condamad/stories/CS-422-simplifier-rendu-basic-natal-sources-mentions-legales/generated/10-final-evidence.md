@@ -5,10 +5,10 @@
 ## Story status
 
 - Story: `CS-422-simplifier-rendu-basic-natal-sources-mentions-legales`
-- Status: `ready-to-review`
+- Status: `done`
 - Source story: `_condamad/stories/CS-422-simplifier-rendu-basic-natal-sources-mentions-legales/00-story.md`
 - Source brief: `_story_briefs/cs-422-simplifier-rendu-basic-natal-sources-mentions-legales.md`
-- Tracker row: `CS-422` path and brief source verified, status updated to `ready-to-review`.
+- Tracker row: `CS-422` path and brief source verified, status updated to `done` after clean implementation review.
 
 ## Preflight
 
@@ -16,7 +16,7 @@
 - Git repository: yes.
 - Pre-existing dirty file: `_condamad/run-state.json`; not touched.
 - Capsule initially incomplete; repaired with helper before reading generated files.
-- Existing `generated/11-code-review.md`: classified as handoff-only pre-implementation editorial review.
+- `generated/11-code-review.md`: refreshed as final implementation review evidence with verdict `CLEAN`.
 
 ## Capsule validation
 
@@ -25,6 +25,8 @@
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales --root .` | PASS |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales` | PASS |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales --final` | PASS |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS |
 
 ## AC validation
 
@@ -74,7 +76,9 @@
 | `rg -n "ni-evidence-tags\|ni-projections\|LockedSection\|NatalAstrologicalDna\|NatalLifeDomains\|NatalStrengths\|NatalChallenges\|NatalMajorAspects" ...` | PASS no matches |
 | `rg -n "visibility_expression\|audit_input\|condition_axis:\|interpretive_signal_ids\|projection_version\|ranking_score\|weighted_score\|prompt_hint" ...` | PASS no matches |
 | `rg -n "var\\(--[^,)]+," frontend/src/features/natal-chart/NatalInterpretation.css` | PASS no matches |
+| `rg -n "var\\(--[^,)]+," frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/styles` | PASS with one pre-existing allowlisted hit in `frontend/src/styles/app/base.css:94` |
 | `git diff --check -- <fichiers touches>` | PASS |
+| `git diff --check` | PASS |
 | Controlled local startup with `pnpm.cmd --dir frontend dev` | PASS, Vite responded on `http://127.0.0.1:5173/`; process stopped |
 
 ## Commands skipped or blocked
@@ -94,14 +98,16 @@
 
 ## Diff review
 
-- `git diff --stat` limited to expected frontend runtime/tests and capsule/status files.
+- Final review of current implementation found no actionable issue.
 - `git diff --check` PASS.
 - Story brief not modified.
 - Registry `RG-170` already present; no new registry row needed.
+- Propagation decision: `no-propagation`.
 
 ## Final worktree status
 
-- Expected modified files: frontend runtime/tests, capsule evidence, `00-story.md`, `story-status.md`, `generated/11-code-review.md`.
+- Expected modified files after final review closure: `generated/10-final-evidence.md`, `generated/11-code-review.md`,
+  `_condamad/stories/story-status.md`.
 - Pre-existing unrelated dirty file remains: `_condamad/run-state.json`.
 
 ## Remaining risks

@@ -1,33 +1,48 @@
-# Editorial Review CS-422
+# Implementation Review CS-422
 
-Post-implementation classification: handoff-only / pre-implementation editorial review. This file is not final code review evidence for the implemented frontend diff; use `generated/10-final-evidence.md` and a fresh reviewer pass for code review.
+<!-- Commentaire global: ce fichier consigne la review finale de l'implementation CS-422. -->
 
 Verdict: CLEAN
 
 ## Review Scope
 - Story: `_condamad/stories/CS-422-simplifier-rendu-basic-natal-sources-mentions-legales/00-story.md`
 - Brief: `_story_briefs/cs-422-simplifier-rendu-basic-natal-sources-mentions-legales.md`
-- Tracker row source: `_story_briefs/cs-422-simplifier-rendu-basic-natal-sources-mentions-legales.md`
-- Guardrail IDs checked by targeted lookup: `RG-048`, `RG-073`, `RG-153`, `RG-154`, `RG-158`, `RG-168`, `RG-170`
+- Tracker row: `CS-422` path and brief source verified.
+- Reviewed implementation surfaces:
+  - `frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx`
+  - `frontend/src/components/natal-interpretation/NatalInterpretationTypes.ts`
+  - `frontend/src/features/natal-chart/NatalInterpretation.css`
+  - `frontend/src/tests/natalInterpretation.test.tsx`
+  - `frontend/src/tests/natalPublicDomGuard.test.tsx`
+- Guardrail IDs checked: `RG-048`, `RG-073`, `RG-153`, `RG-154`, `RG-158`, `RG-168`, `RG-170`
 
-## Findings Fixed
-- Registry enrichment mismatch: the brief expects `RG-170` when a durable Basic V2 anti-duplication guard is created.
-  The story previously called this a registry gap. Fixed by adding `RG-170` and citing it in the story guardrails.
+## Findings
+- No actionable implementation finding remains.
 
-## Alignment Result
-- Objective, target state, domain boundary, ACs, tasks, expected files and validations cover the brief primitives.
-- In-scope Basic V2 work is explicit: inline evidence removal, source appendix, dedupe key, usage metadata and legal merge.
-- Non-goals remain explicit for backend contract, quotas, PDF exports, offers, new UI dependencies and other rendering branches.
-- Review artifact path is present and matches this file.
+## AC Alignment
+- AC1 through AC7: Basic V2 now renders a continuous report, removes inline theme evidence, keeps one deduplicated source appendix,
+  preserves compact usage metadata and merges legal lines once.
+- AC8 and AC9: free short, complete obsolete and `narrative_natal_reading_v1` behavior remain covered by targeted tests.
+- AC10 and AC11: inline style and public technical marker reintroduction guards are clean.
 
 ## Validation Results
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md`:
-  PASS before fixes and after fixes.
-- `.\.venv\Scripts\Activate.ps1; python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md`:
-  PASS before fixes and after fixes.
+| Command | Result |
+|---|---|
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS |
+| `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading` | PASS, 119 tests |
+| `pnpm --dir frontend lint` | PASS |
+| `pnpm --dir frontend build` | PASS |
+| `rg -n "style=\\{" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx` | PASS, no matches |
+| `rg -n "ni-evidence-tags\|ni-projections\|LockedSection\|NatalAstrologicalDna\|NatalLifeDomains\|NatalStrengths\|NatalChallenges\|NatalMajorAspects" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx` | PASS, no matches |
+| `rg -n "visibility_expression\|audit_input\|condition_axis:\|interpretive_signal_ids\|projection_version\|ranking_score\|weighted_score\|prompt_hint" frontend/src/components/natal-interpretation frontend/src/features/natal-chart` | PASS, no matches |
+| `rg -n "var\\(--[^,)]+," frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/styles` | PASS with one pre-existing allowlisted hit: `frontend/src/styles/app/base.css:94` |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales --final` | PASS |
+| `git diff --check` | PASS |
 
 ## Propagation
-- Guardrail propagation completed locally: `_condamad/stories/regression-guardrails.md` now contains `RG-170`.
+- `no-propagation`: this review found no reusable learning beyond the already registered `RG-170` invariant.
 
 ## Residual Risk
-- Implementation must still produce executable DOM, lint, build, scan and responsive QA evidence.
+- Browser responsive QA was not rerun during this final review pass; risk remains low because DOM tests, lint, build, scans and prior Vite
+  startup evidence pass.
