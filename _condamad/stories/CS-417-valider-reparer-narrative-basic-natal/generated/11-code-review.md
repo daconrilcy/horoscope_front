@@ -1,5 +1,7 @@
 # Editorial Review CS-417
 
+Implementation handoff note: this file is an obsolete pre-implementation story drafting review. It is not final code review evidence for CS-417 implementation readiness; use `generated/10-final-evidence.md` and fresh reviewer checks instead.
+
 Verdict: CLEAN
 
 ## Scope
@@ -25,7 +27,7 @@ Verdict: CLEAN
 - PASS: `rg -n "RG-166|BasicNatalReadingPlan" _condamad\stories\regression-guardrails.md`.
 
 ## Closure
-- Final status: ready-to-dev.
+- Final status: obsolete-preimplementation-review.
 - Produced artifact: `_condamad/stories/CS-417-valider-reparer-narrative-basic-natal/generated/11-code-review.md`.
 - Feedback propagation: no-propagation; corrections are local to this story and the requested guardrail registry entry.
 - Residual risk: none identified for story drafting.

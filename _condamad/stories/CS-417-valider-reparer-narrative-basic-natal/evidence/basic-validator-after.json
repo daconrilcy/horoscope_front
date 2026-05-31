@@ -1,0 +1,18 @@
+{
+  "story": "CS-417",
+  "snapshot": "after",
+  "implemented_state": {
+    "basic_plan_backed_validator": "present",
+    "validator_entrypoint": "validate_basic_natal_draft_against_plan",
+    "repair_orchestrator": "validate_repair_or_fallback_basic_natal_draft",
+    "rejection_builder": "build_basic_natal_rejection_outcome",
+    "fallback_builder": "build_basic_natal_deterministic_fallback",
+    "test_file": "backend/tests/unit/test_basic_natal_narrative_validator.py"
+  },
+  "validation": {
+    "targeted_validator_pytest": "8 passed",
+    "targeted_existing_pytests": "31 passed",
+    "integration_rejected_boundary": "8 passed with --long",
+    "ruff_check": "PASS"
+  }
+}

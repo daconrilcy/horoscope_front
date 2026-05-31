@@ -1,5 +1,5 @@
 # Story CS-417 valider-reparer-narrative-basic-natal: Valider Et Reparer Narrative Basic Natal
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`.
@@ -125,17 +125,17 @@ Validate each Basic natal `NarrativeDraft` against `BasicNatalReadingPlan`, repa
 | AC18 | Valid Basic draft keeps public sources. | Evidence profile: json_contract_shape; validator `pytest`. |
 
 ## Implementation Tasks
-- [ ] Task 1: Locate the final `BasicNatalReadingPlan` owner from CS-410/CS-411 before validator work starts. (AC: AC1, AC2, AC3, AC4)
-- [ ] Task 2: Extend or create Basic `NarrativeValidator` checks for sections, facts, tone, length, limitations, disclaimers, sources and advice. (AC: AC1, AC8, AC17, AC18)
-- [ ] Task 3: Add date-only rejection for Ascendant, MC, houses and house rulers when the plan does not authorize time-based facts. (AC: AC4)
-- [ ] Task 4: Reject scores, engine fields, unsupported jargon, raw audit markers and unsupported vocation sections. (AC: AC5, AC16)
-- [ ] Task 5: Emit structured `validation_errors` with `request_id`, `engine_version` and `schema_version` for invalid drafts. (AC: AC9)
-- [ ] Task 6: Add one constrained repair attempt that receives validation errors and the original reading plan. (AC: AC10)
-- [ ] Task 7: Add short deterministic fallback output only when it can satisfy the validator without semantic padding. (AC: AC11)
-- [ ] Task 8: Preserve rejected outputs in audit storage and outside public interpretation responses. (AC: AC12)
-- [ ] Task 9: Keep quota consumption after valid acceptance by extending existing quota-on-acceptance tests. (AC: AC13)
-- [ ] Task 10: Persist before and after validation examples plus validation output under the story evidence directory. (AC: AC14)
-- [ ] Task 11: Add the Basic plan-backed validation invariant to the regression guardrail registry. (AC: AC15)
+- [x] Task 1: Locate the final `BasicNatalReadingPlan` owner from CS-410/CS-411 before validator work starts. (AC: AC1, AC2, AC3, AC4)
+- [x] Task 2: Extend or create Basic `NarrativeValidator` checks for sections, facts, tone, length, limitations, disclaimers, sources and advice. (AC: AC1, AC8, AC17, AC18)
+- [x] Task 3: Add date-only rejection for Ascendant, MC, houses and house rulers when the plan does not authorize time-based facts. (AC: AC4)
+- [x] Task 4: Reject scores, engine fields, unsupported jargon, raw audit markers and unsupported vocation sections. (AC: AC5, AC16)
+- [x] Task 5: Emit structured `validation_errors` with `request_id`, `engine_version` and `schema_version` for invalid drafts. (AC: AC9)
+- [x] Task 6: Add one constrained repair attempt that receives validation errors and the original reading plan. (AC: AC10)
+- [x] Task 7: Add short deterministic fallback output only when it can satisfy the validator without semantic padding. (AC: AC11)
+- [x] Task 8: Preserve rejected outputs in audit storage and outside public interpretation responses. (AC: AC12)
+- [x] Task 9: Keep quota consumption after valid acceptance by extending existing quota-on-acceptance tests. (AC: AC13)
+- [x] Task 10: Persist before and after validation examples plus validation output under the story evidence directory. (AC: AC14)
+- [x] Task 11: Add the Basic plan-backed validation invariant to the regression guardrail registry. (AC: AC15)
 
 ## Files to Inspect First
 - `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`

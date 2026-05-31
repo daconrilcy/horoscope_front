@@ -1,0 +1,16 @@
+{
+  "story": "CS-417",
+  "snapshot": "before",
+  "observed_state": {
+    "basic_plan_backed_validator": "absent",
+    "target_module": "backend/app/services/llm_generation/natal/narrative_natal_reading_validator.py",
+    "existing_scope": [
+      "narrative_natal_reading_v1 public technical leak validation",
+      "semantic integrity rejection builders"
+    ]
+  },
+  "evidence": [
+    "Initial targeted search found no backend/tests/unit/test_basic_natal_narrative_validator.py.",
+    "Initial target module exposed validate_narrative_reading_public_text but no BasicNatalReadingPlan-backed draft validator."
+  ]
+}
