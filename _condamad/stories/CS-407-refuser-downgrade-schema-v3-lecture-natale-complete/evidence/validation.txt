@@ -1,5 +1,7 @@
 Validation summary:
 
+- `.\.venv\Scripts\Activate.ps1`: PASS.
+- `ruff format --check .`: PASS.
 - `ruff check .`: PASS.
 - `python -B -m pytest -q tests\unit\test_natal_interpretation_service_v3_schema_guard.py --tb=short`: PASS, 5 passed.
 - `python -B -m pytest -q tests\unit\test_natal_interpretation_stored_payload.py --tb=short`: PASS, 10 passed.
@@ -9,6 +11,8 @@ Validation summary:
 - `rg -n "AstroResponseV2\(\*\*full_output\)|AstroResponseV1\(\*\*full_output\)" app\services\llm_generation\natal\interpretation_service.py`: PASS, no matches.
 - `python -B -c "from app.main import app; schema=app.openapi(); assert schema['paths']; assert any('/natal' in path for path in schema['paths'])"`: PASS.
 - `python -B -m pytest -q --tb=short`: PASS, 3572 passed, 2 skipped, 1250 deselected.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-407-refuser-downgrade-schema-v3-lecture-natale-complete\00-story.md`: PASS.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-407-refuser-downgrade-schema-v3-lecture-natale-complete\00-story.md`: PASS.
 
 Note:
 
