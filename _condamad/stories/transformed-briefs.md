@@ -1,5 +1,11 @@
 | Story key | Brief path | Story path |
 |---|---|---|
+| CS-384 | `_(brief source absent)_` | `_condamad\stories\cs-384-separer-interpretations-natales-acceptees-rejets-llm\00-story.md` |
+| CS-385 | `_(brief source absent)_` | `_condamad\stories\cs-385-corriger-faux-degrade-projections-natal-persiste\00-story.md` |
+| CS-386 | `_(brief source absent)_` | `_condamad\stories\cs-386-refonte-natal-sprint1-comprehension-immediate\00-story.md` |
+| CS-387 | `_(brief source absent)_` | `_condamad\stories\cs-387-refonte-natal-sprint2-interpretation-approfondie\00-story.md` |
+| CS-388 | `_(brief source absent)_` | `_condamad\stories\cs-388-refonte-natal-sprint3-expertise-karmique\00-story.md` |
+| CS-389 | `_(brief source absent)_` | `_condamad\stories\cs-389-refonte-natal-sprint4-mode-astrologue\00-story.md` |
 | CS-222-fixed-star-conjunction-runtime-from-chart-objects | `_story_briefs\cs-222-fixed-star-conjunction-runtime-from-chart-objects.md` | `_condamad\stories\cs-222-fixed-star-conjunction-runtime-from-chart-objects\00-story.md` |
 | CS-223-chart-object-interpretation-input-adapter | `_story_briefs\cs-223-chart-object-interpretation-input-adapter.md` | `_condamad\stories\cs-223-chart-object-interpretation-input-adapter\00-story.md` |
 | CS-224-legacy-runtime-surface-cleanup-guardrails | `_story_briefs\cs-224-legacy-runtime-surface-cleanup-guardrails.md` | `_condamad\stories\cs-224-legacy-runtime-surface-cleanup-guardrails\00-story.md` |
@@ -163,3 +169,10 @@
 | cs-381 | `_story_briefs\cs-381-non-regression-generation-theme-natal-et-enrichissement-prompts.md` | `_condamad\stories\cs-381-non-regression-generation-theme-natal-prompts\00-story.md` |
 | cs-382 | `_story_briefs\cs-382-review-adversariale-generation-theme-natal-apres-corrections.md` | `_condamad\stories\cs-382-review-adversariale-generation-theme-natal\00-story.md` |
 | cs-383 | `_story_briefs\cs-383-corriger-findings-review-adversariale-generation-theme-natal.md` | `_condamad\stories\cs-383-fermeture-findings-generation-theme-natal\00-story.md` |
+| cs-390 | `_story_briefs\cs-390-audit-fuites-techniques-et-architecture-lecture-natale.md` | `_condamad\stories\cs-390-audit-fuites-techniques-et-architecture-lecture-natale\00-story.md` |
+| cs-391 | `_story_briefs\cs-391-definir-contrat-narrative-natal-reading-v1.md` | `_condamad\stories\cs-391-definir-contrat-narrative-natal-reading-v1\00-story.md` |
+| cs-392 | `_story_briefs\cs-392-implementer-generation-narrative-natal-reading-v1.md` | `_condamad\stories\cs-392-implementer-generation-narrative-natal-reading-v1\00-story.md` |
+| cs-393 | `_story_briefs\cs-393-refondre-page-natal-autour-lecture-narrative.md` | `_condamad\stories\cs-393-refondre-page-natal-autour-lecture-narrative\00-story.md` |
+| cs-394 | `_story_briefs\cs-394-ajouter-ce-que-nous-avons-utilise-fin-lecture-natale.md` | `_condamad\stories\cs-394-ajouter-ce-que-nous-avons-utilise-fin-lecture-natale\00-story.md` |
+| cs-395 | `_story_briefs\cs-395-verrouiller-non-regression-lecture-natale-publique.md` | `_condamad\stories\cs-395-verrouiller-non-regression-lecture-natale-publique\00-story.md` |
+| cs-396 | `_story_briefs\cs-396-refuser-padding-semantique-lecture-natale-et-sources-vides.md` | `_condamad\stories\cs-401-refuser-padding-sources-vides\00-story.md` |
