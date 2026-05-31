@@ -32,3 +32,43 @@ PASS local startup:
 
 PASS final capsule validation:
 - `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-406-router-basic-complete-assembly-natale-v3 --final`
+
+Fresh implementation review validation, executed from `C:\dev\horoscope_front` on 2026-05-31 with `.venv` activated.
+
+PASS `python -B -m ruff format --check backend\app\domain\llm\runtime\gateway.py backend\app\ops\llm\bootstrap\seed_66_20_taxonomy.py backend\tests\llm_orchestration\test_assembly_resolution.py backend\tests\unit\test_seed_66_20_taxonomy_basic_natal.py backend\tests\integration\test_admin_llm_catalog.py`
+Result: 5 files already formatted.
+
+PASS `python -B -m ruff check backend\app\domain\llm\runtime\gateway.py backend\app\ops\llm\bootstrap\seed_66_20_taxonomy.py backend\tests\llm_orchestration\test_assembly_resolution.py backend\tests\unit\test_seed_66_20_taxonomy_basic_natal.py backend\tests\integration\test_admin_llm_catalog.py`
+Result: All checks passed.
+
+PASS `python -B -m pytest -q backend\tests\llm_orchestration\test_assembly_resolution.py -k "basic or natal" --tb=short`
+Result: 6 passed, 13 deselected.
+
+PASS `python -B -m pytest -q backend\tests\unit\test_seed_66_20_taxonomy_basic_natal.py --tb=short`
+Result: 2 passed.
+
+PASS `python -B -m pytest -q backend\tests\llm_orchestration\test_execution_profile_taxonomy.py --tb=short`
+Result: 4 passed.
+
+PASS `python -B -m pytest -q --long backend\tests\integration\test_admin_llm_catalog.py -k "natal and basic" --tb=short`
+Result: 1 passed, 27 deselected.
+
+PASS targeted scans:
+- Basic seed tuple present.
+- No `fallback = response.sections[0]` under `backend/app/services/llm_generation/natal`.
+- No `check_and_consume` in public natal interpretation router.
+- `support_elements` carrier remains present in the natal LLM input and projection builder.
+
+PASS `python -B -m pytest -q backend\tests\unit\test_narrative_natal_reading_v1.py backend\tests\unit\domain\astrology\test_client_interpretation_support_elements.py --tb=short`
+Result: 16 passed.
+
+PASS OpenAPI route check:
+- `python -B -c "from app.main import app; assert '/v1/natal/interpretation' in app.openapi()['paths']"`
+
+PASS final capsule validation:
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-406-router-basic-complete-assembly-natale-v3 --final`
+
+PASS local startup:
+- from `backend`, `python -B -m uvicorn app.main:app --host 127.0.0.1 --port 8765`
+- `GET http://127.0.0.1:8765/docs` returned HTTP 200.
+- Process stopped.
