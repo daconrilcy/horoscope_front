@@ -7,6 +7,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, SerializerFunctionWrapHandler, model_serializer
 
+from app.domain.astrology.reading import BasicNatalInterpretationV2
 from app.domain.llm.prompting.narrative_natal_reading_v1 import NarrativeNatalReadingV1
 from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
@@ -84,6 +85,7 @@ class NatalInterpretationData(BaseModel):
     meta: InterpretationMeta
     degraded_mode: Optional[str] = None
     narrative_natal_reading_v1: Optional[NarrativeNatalReadingV1] = None
+    basic_natal_interpretation_v2: Optional[BasicNatalInterpretationV2] = None
 
     @model_serializer(mode="wrap")
     def serialize_without_internal_evidence(

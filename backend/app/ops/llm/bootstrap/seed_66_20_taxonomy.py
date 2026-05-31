@@ -17,6 +17,28 @@ from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStat
 
 logger = logging.getLogger(__name__)
 
+TARGET_ASSEMBLIES: tuple[tuple[str, str, str, str], ...] = (
+    ("chat", "astrologer", "free", "chat_astrologer"),
+    ("chat", "astrologer", "premium", "chat_astrologer"),
+    ("guidance", "daily", "free", "guidance_daily"),
+    ("guidance", "daily", "premium", "guidance_daily"),
+    ("guidance", "weekly", "free", "guidance_weekly"),
+    ("guidance", "weekly", "premium", "guidance_weekly"),
+    ("guidance", "contextual", "free", "guidance_contextual"),
+    ("guidance", "contextual", "premium", "guidance_contextual"),
+    ("natal", "interpretation", "free", "natal_interpretation_short"),
+    ("natal", "interpretation", "basic", "natal_interpretation"),
+    ("natal", "interpretation", "premium", "natal_interpretation"),
+    ("natal", "psy_profile", "premium", "natal_psy_profile"),
+    ("natal", "shadow_integration", "premium", "natal_shadow_integration"),
+    ("natal", "leadership_workstyle", "premium", "natal_leadership_workstyle"),
+    ("natal", "creativity_joy", "premium", "natal_creativity_joy"),
+    ("natal", "relationship_style", "premium", "natal_relationship_style"),
+    ("natal", "community_networks", "premium", "natal_community_networks"),
+    ("natal", "values_security", "premium", "natal_values_security"),
+    ("natal", "evolution_path", "premium", "natal_evolution_path"),
+)
+
 
 def _resolve_output_schema_id(db: Session, schema_name: str | None) -> uuid.UUID | None:
     if not schema_name:
@@ -52,27 +74,7 @@ def seed_66_20_taxonomy(db: Session) -> None:
         return
     persona_id = persona.id
 
-    target_assemblies = [
-        ("chat", "astrologer", "free", "chat_astrologer"),
-        ("chat", "astrologer", "premium", "chat_astrologer"),
-        ("guidance", "daily", "free", "guidance_daily"),
-        ("guidance", "daily", "premium", "guidance_daily"),
-        ("guidance", "weekly", "free", "guidance_weekly"),
-        ("guidance", "weekly", "premium", "guidance_weekly"),
-        ("guidance", "contextual", "free", "guidance_contextual"),
-        ("guidance", "contextual", "premium", "guidance_contextual"),
-        ("natal", "interpretation", "free", "natal_interpretation_short"),
-        ("natal", "interpretation", "basic", "natal_interpretation"),
-        ("natal", "interpretation", "premium", "natal_interpretation"),
-        ("natal", "psy_profile", "premium", "natal_psy_profile"),
-        ("natal", "shadow_integration", "premium", "natal_shadow_integration"),
-        ("natal", "leadership_workstyle", "premium", "natal_leadership_workstyle"),
-        ("natal", "creativity_joy", "premium", "natal_creativity_joy"),
-        ("natal", "relationship_style", "premium", "natal_relationship_style"),
-        ("natal", "community_networks", "premium", "natal_community_networks"),
-        ("natal", "values_security", "premium", "natal_values_security"),
-        ("natal", "evolution_path", "premium", "natal_evolution_path"),
-    ]
+    target_assemblies = TARGET_ASSEMBLIES
 
     for feature, subfeature, plan, template_key in target_assemblies:
         stmt_template = (

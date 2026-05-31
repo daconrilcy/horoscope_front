@@ -19,6 +19,8 @@ def _target_assembly_tuples() -> set[tuple[str, str, str, str]]:
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id == "target_assemblies":
+                    if isinstance(node.value, ast.Name) and node.value.id == "TARGET_ASSEMBLIES":
+                        return set(seed_66_20_taxonomy.TARGET_ASSEMBLIES)
                     return {tuple(item) for item in ast.literal_eval(node.value)}
     raise AssertionError("target_assemblies introuvable dans le seed")
 

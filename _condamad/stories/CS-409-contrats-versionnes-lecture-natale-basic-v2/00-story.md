@@ -1,5 +1,5 @@
 # Story CS-409 contrats-versionnes-lecture-natale-basic-v2: Definir Les Contrats Versionnes De Lecture Natale Basic V2
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 - Source type: product-contract

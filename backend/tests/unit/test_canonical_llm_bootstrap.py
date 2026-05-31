@@ -59,6 +59,14 @@ class _FakeSessionLocal:
 def _patch_startup_db_session(monkeypatch, counts: dict[str, int]) -> None:
     """Branche le bootstrap LLM sur une session factice locale au test."""
     monkeypatch.setattr(main, "_open_startup_db_session", _FakeSessionLocal(counts))
+    monkeypatch.setattr(
+        main,
+        "_count_published_target_llm_assemblies",
+        lambda _db: counts.get(
+            "published_target_assemblies",
+            counts.get("PromptAssemblyConfigModel", 0),
+        ),
+    )
 
 
 def test_canonical_llm_bootstrap_seeds_blank_local_db(monkeypatch) -> None:
@@ -216,6 +224,7 @@ def test_canonical_llm_bootstrap_skips_when_nominal_tables_exist(monkeypatch) ->
             "LlmPersonaModel.filtered": 1,
             "PromptAssemblyConfigModel": 4,
             "PromptAssemblyConfigModel.filtered": 0,
+            "published_target_assemblies": main._expected_target_llm_assembly_count(),
             "LlmExecutionProfileModel": 2,
         },
     )
@@ -325,6 +334,79 @@ def test_canonical_llm_bootstrap_reseeds_when_published_assembly_lacks_execution
             "PromptAssemblyConfigModel": 2,
             "PromptAssemblyConfigModel.filtered": 2,
             "LlmExecutionProfileModel": 2,
+        },
+    )
+    monkeypatch.setattr(
+        "app.domain.llm.configuration.prompt_version_lookup.get_active_prompt_version",
+        lambda *_args, **_kwargs: object(),
+    )
+
+    seed_prompts = Mock()
+    seed_bootstrap_contracts = Mock()
+    seed_natal_v3_prompts = Mock()
+    seed_chat_prompt_v2 = Mock()
+    seed_guidance_prompts = Mock()
+    seed_horoscope_narrator_assembly = Mock()
+    seed_66_20_taxonomy = Mock()
+    seed_theme_astral_prompt_contract = Mock()
+
+    monkeypatch.setattr("app.ops.llm.bootstrap.seed_29_prompts.seed_prompts", seed_prompts)
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.use_cases_seed.seed_bootstrap_contracts",
+        seed_bootstrap_contracts,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_30_8_v3_prompts.seed",
+        seed_natal_v3_prompts,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_30_14_chat_prompt.seed",
+        seed_chat_prompt_v2,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_guidance_prompts.seed_guidance_prompts",
+        seed_guidance_prompts,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_horoscope_narrator_assembly.seed_horoscope_narrator_assembly",
+        seed_horoscope_narrator_assembly,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_66_20_taxonomy.seed_66_20_taxonomy",
+        seed_66_20_taxonomy,
+    )
+    monkeypatch.setattr(
+        "app.ops.llm.bootstrap.seed_theme_astral_prompt_contract.seed_theme_astral_prompt_contract",
+        seed_theme_astral_prompt_contract,
+    )
+
+    main._ensure_canonical_llm_bootstrap_seeded()
+
+    seed_bootstrap_contracts.assert_not_called()
+    seed_prompts.assert_not_called()
+    seed_natal_v3_prompts.assert_not_called()
+    seed_chat_prompt_v2.assert_not_called()
+    seed_guidance_prompts.assert_not_called()
+    seed_horoscope_narrator_assembly.assert_called_once()
+    seed_66_20_taxonomy.assert_called_once()
+    seed_theme_astral_prompt_contract.assert_called_once()
+
+
+def test_canonical_llm_bootstrap_reseeds_when_target_assemblies_are_archived(monkeypatch) -> None:
+    """Le bootstrap republie les targets attendues meme si des assemblies archivees existent."""
+
+    monkeypatch.setattr(main.settings, "app_env", "development")
+    _patch_startup_db_session(
+        monkeypatch,
+        {
+            "LlmOutputSchemaModel": 3,
+            "LlmPromptVersionModel": 5,
+            "LlmPersonaModel": 1,
+            "LlmPersonaModel.filtered": 1,
+            "PromptAssemblyConfigModel": 19,
+            "PromptAssemblyConfigModel.filtered": 0,
+            "published_target_assemblies": 0,
+            "LlmExecutionProfileModel": 19,
         },
     )
     monkeypatch.setattr(

@@ -1,0 +1,17 @@
+# Acceptance Traceability
+
+<!-- Commentaire global: trace AC par AC de l'implementation CS-409. -->
+
+| AC | Requirement | Code evidence | Validation evidence | Status |
+|---|---|---|---|---|
+| AC1 | Basic engine version constants are centralized. | `backend/app/domain/astrology/reading/basic_natal_contracts.py` centralise les constantes Basic facts, salience, themes, plan, prompt, validator, engine et public schema. | `python -B -m pytest -q backend\tests\unit\test_basic_natal_reading_contracts.py --tb=short` PASS; test `test_basic_versions_are_centralized_and_serialized`. | PASS |
+| AC2 | Contract models separate internal proof levels. | `InternalEvidence`, `EditorialEvidence`, `PublicEvidence` et les contrats pipeline exposent `internal_evidence`, `editorial_evidence`, `public_evidence` selon leur responsabilite. | `python -B -m pytest -q backend\tests\unit\test_basic_natal_reading_contracts.py --tb=short` PASS; test `test_contract_models_separate_internal_editorial_and_public_evidence`. | PASS |
+| AC3 | Public V2 rejects unknown fields. | `BasicNatalInterpretationV2` herite de `_StrictContract` avec `extra="forbid"`. | `python -B -m pytest -q backend\tests\unit\test_basic_natal_reading_contracts.py --tb=short` PASS; test `test_public_v2_rejects_unknown_fields`. | PASS |
+| AC4 | Public V2 blocks technical markers. | Validation recursive `reject_technical_keys` sur `BasicNatalInterpretationV2`, `NatalSynthesis` et `PublicEvidence`. | `python -B -m pytest -q backend\tests\unit\test_basic_natal_reading_contracts.py --tb=short` PASS; scan denylist public Basic V2 PASS avec hits limites aux denylist/validator. | PASS |
+| AC5 | Basic public identity is serialized. | `BasicNatalInterpretationV2` serialise `locale`, `level=basic`, `engine_version=basic-natal-reading-v1`, `schema_version=basic_natal_interpretation_v2`. | `python -B -m pytest -q backend\tests\unit\test_basic_natal_reading_contracts.py --tb=short` PASS; tests versions et `EligibilityContext`. | PASS |
+| AC6 | Existing public schemas remain strict. | `backend/app/domain/llm/prompting/narrative_natal_reading_v1.py` et `schemas.py` non modifies; le pont public ajoute seulement un champ optionnel Basic V2. | `python -B -m pytest -q backend\tests\unit\test_narrative_natal_reading_v1.py --tb=short` PASS. | PASS |
+| AC7 | Contracts avoid runtime imports. | Owner pur `backend/app/domain/astrology/reading/basic_natal_contracts.py`; aucun import API, DB, repositories, provider ou service runtime. | `python -B -m pytest -q backend\tests\architecture\test_basic_natal_reading_contract_boundaries.py --tb=short` PASS; garde AST cwd-independent. | PASS |
+| AC8 | Technical documentation defines LLM as writer. | `backend/docs/basic-natal-reading-v2-contract.md` decrit le LLM comme `redacteur controle`, pas `source d'intelligence astrologique`; index docs mis a jour. | Scan documentaire des termes attendus PASS; `python -B -m pytest -q backend\app\tests\unit\test_backend_docs_ownership.py --tb=short` PASS. | PASS |
+| AC9 | Evidence artifacts are persisted. | `evidence/baseline-before.md`, `evidence/baseline-after.md`, `evidence/validation.txt`, traceabilite, final evidence et review handoff sont persistés. | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-409-contrats-versionnes-lecture-natale-basic-v2 --final` PASS. | PASS |
+
+Status values: `PENDING`, `PASS`, `PASS_WITH_LIMITATIONS`, `FAIL`, `BLOCKED`.

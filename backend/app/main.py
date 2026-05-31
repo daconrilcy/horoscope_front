@@ -55,6 +55,38 @@ def _open_startup_db_session() -> Session:
     return SessionLocal()
 
 
+def _count_published_target_llm_assemblies(db: Session) -> int:
+    """Compte les assemblies canoniques publiees que le gateway doit pouvoir resoudre."""
+
+    from sqlalchemy import and_, or_
+
+    from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
+    from app.infra.db.models.llm.llm_prompt import PromptStatus
+    from app.ops.llm.bootstrap.seed_66_20_taxonomy import TARGET_ASSEMBLIES
+
+    target_predicates = [
+        and_(
+            PromptAssemblyConfigModel.feature == feature,
+            PromptAssemblyConfigModel.subfeature == subfeature,
+            PromptAssemblyConfigModel.plan == plan,
+            PromptAssemblyConfigModel.locale == "fr-FR",
+            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+        )
+        for feature, subfeature, plan, _template_key in TARGET_ASSEMBLIES
+    ]
+    if not target_predicates:
+        return 0
+    return db.query(PromptAssemblyConfigModel).filter(or_(*target_predicates)).count()
+
+
+def _expected_target_llm_assembly_count() -> int:
+    """Retourne le nombre de cibles canoniques maintenues par le seed LLM."""
+
+    from app.ops.llm.bootstrap.seed_66_20_taxonomy import TARGET_ASSEMBLIES
+
+    return len(TARGET_ASSEMBLIES)
+
+
 def _ensure_canonical_llm_bootstrap_seeded() -> None:
     """
     Auto-heal the canonical LLM bootstrap locally when nominal tables are empty.
@@ -90,7 +122,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.ops.llm.bootstrap.use_cases_seed import seed_bootstrap_contracts
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
-    def collect_state() -> tuple[int, int, int, int, int, int, bool, bool]:
+    def collect_state() -> tuple[int, int, int, int, int, int, int, bool, bool]:
         with _open_startup_db_session() as db:
             return (
                 db.query(LlmOutputSchemaModel).count(),
@@ -98,6 +130,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
                 db.query(LlmPersonaModel).filter(LlmPersonaModel.enabled == True).count(),  # noqa: E712
                 db.query(PromptAssemblyConfigModel).count(),
                 db.query(LlmExecutionProfileModel).count(),
+                _count_published_target_llm_assemblies(db),
                 db.query(PromptAssemblyConfigModel)
                 .filter(
                     PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
@@ -115,6 +148,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             enabled_personas,
             assembly_count,
             profile_count,
+            published_target_assembly_count,
             missing_execution_profile_count,
             has_active_short_prompt,
             has_active_theme_astral_prompt,
@@ -131,6 +165,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             enabled_personas,
             assembly_count,
             profile_count,
+            published_target_assembly_count,
             missing_execution_profile_count,
             has_active_short_prompt,
             has_active_theme_astral_prompt,
@@ -144,7 +179,10 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         or not has_active_theme_astral_prompt
     )
     needs_canonical_seed = (
-        assembly_count == 0 or profile_count == 0 or missing_execution_profile_count > 0
+        assembly_count == 0
+        or profile_count == 0
+        or missing_execution_profile_count > 0
+        or published_target_assembly_count < _expected_target_llm_assembly_count()
     )
 
     if not needs_registry_seed and not needs_canonical_seed:
@@ -153,14 +191,15 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     logger.warning(
         (
             "canonical_llm_bootstrap_auto_heal schemas=%s prompts=%s personas=%s "
-            "assemblies=%s profiles=%s missing_execution_profiles=%s active_short=%s "
-            "active_theme_astral=%s"
+            "assemblies=%s profiles=%s published_target_assemblies=%s "
+            "missing_execution_profiles=%s active_short=%s active_theme_astral=%s"
         ),
         output_schema_count,
         prompt_count,
         enabled_personas,
         assembly_count,
         profile_count,
+        published_target_assembly_count,
         missing_execution_profile_count,
         has_active_short_prompt,
         has_active_theme_astral_prompt,
