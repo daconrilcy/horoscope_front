@@ -1,0 +1,5 @@
+Baseline before implementation:
+
+- `interpretation_service.py` accepted local downgrade after V3 failure.
+- Previous code path attempted `AstroResponseV3(**base_output)`, then `AstroErrorResponseV3(**base_output)`, then `AstroResponseV2(**full_output)`, then `AstroResponseV1(**full_output)`.
+- This baseline was also encoded by `app/tests/unit/test_natal_interpretation_service_v2.py::TestNatalInterpretationServiceSchemaVersion::test_complete_level_sets_v2`, which expected `schema_version == "v2"` for complete output.

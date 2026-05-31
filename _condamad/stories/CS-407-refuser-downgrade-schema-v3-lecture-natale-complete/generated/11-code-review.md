@@ -1,5 +1,7 @@
 # Editorial Review - CS-407
 
+Implementation evidence note: this file is handoff-only / obsolete as final implementation review evidence. It was produced before implementation and must not be used as the final code review verdict for CS-407.
+
 Verdict: CLEAN
 Date: 2026-05-31
 

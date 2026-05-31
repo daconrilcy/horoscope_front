@@ -1,0 +1,6 @@
+After implementation:
+
+- Non-fallback complete Basic/Premium V3 failure returns `schema_version == "v3_schema_mismatch"`.
+- The rejection cause is `natal_complete_schema_mismatch`.
+- The rejection reason and validation context include `request_id`.
+- `rg -n "AstroResponseV2\(\*\*full_output\)|AstroResponseV1\(\*\*full_output\)" app\services\llm_generation\natal\interpretation_service.py` returns exit 1, interpreted as PASS: no matches.

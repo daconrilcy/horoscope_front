@@ -1,0 +1,7 @@
+OpenAPI runtime contract evidence:
+
+- Command: `python -B -c "from app.main import app; schema=app.openapi(); assert schema['paths']; assert any('/natal' in path for path in schema['paths']); print('openapi natal paths ok')"`
+- Working directory: `backend`
+- Result: PASS
+- Output: `openapi natal paths ok`
+- No router or public API schema file was modified for CS-407.

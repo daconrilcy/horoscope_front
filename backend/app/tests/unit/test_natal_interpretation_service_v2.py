@@ -21,7 +21,10 @@ from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
 from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
-from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
+from app.services.llm_generation.natal.interpretation_service import (
+    NATAL_COMPLETE_SCHEMA_MISMATCH,
+    NatalInterpretationService,
+)
 from app.services.llm_generation.natal.stored_interpretation_payload import (
     NARRATIVE_ANSWER_AUDIT_USE_CASE,
 )
@@ -382,7 +385,7 @@ class TestNatalInterpretationServiceUserInput:
 
 class TestNatalInterpretationServiceSchemaVersion:
     @pytest.mark.asyncio
-    async def test_complete_level_sets_v2(self):
+    async def test_complete_level_rejects_local_v2_downgrade(self):
         natal_result = _make_natal_result()
         birth_profile = _make_birth_profile()
         gw_result = _make_gateway_result("natal_interpretation")
@@ -424,7 +427,13 @@ class TestNatalInterpretationServiceSchemaVersion:
                 trace_id="trace-test",
             )
 
-        assert resp.data.meta.schema_version == "v2"
+        assert resp.data.meta.schema_version == "v3_schema_mismatch"
+        assert resp.data.meta.validation_status == "rejected"
+        audit_row = db.add.call_args.args[0]
+        assert audit_row.interpretation_payload["rejection_reason"]["code"] == (
+            NATAL_COMPLETE_SCHEMA_MISMATCH
+        )
+        assert audit_row.interpretation_payload["rejection_reason"]["request_id"] == "req-test"
 
 
 class TestNatalInterpretationServiceModules:

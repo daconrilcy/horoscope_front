@@ -1,0 +1,15 @@
+Validation summary:
+
+- `ruff check .`: PASS.
+- `python -B -m pytest -q tests\unit\test_natal_interpretation_service_v3_schema_guard.py --tb=short`: PASS, 5 passed.
+- `python -B -m pytest -q tests\unit\test_natal_interpretation_stored_payload.py --tb=short`: PASS, 10 passed.
+- `python -B -m pytest -q tests\integration\test_natal_interpretation_rejected_public_boundary.py --tb=short --long`: PASS, 8 passed.
+- `python -B -m pytest -q tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short`: PASS, 4 passed.
+- `python -B -m pytest -q app\tests\unit\test_natal_interpretation_service_v2.py::TestNatalInterpretationServiceSchemaVersion::test_complete_level_rejects_local_v2_downgrade --tb=short`: PASS.
+- `rg -n "AstroResponseV2\(\*\*full_output\)|AstroResponseV1\(\*\*full_output\)" app\services\llm_generation\natal\interpretation_service.py`: PASS, no matches.
+- `python -B -c "from app.main import app; schema=app.openapi(); assert schema['paths']; assert any('/natal' in path for path in schema['paths'])"`: PASS.
+- `python -B -m pytest -q --tb=short`: PASS, 3572 passed, 2 skipped, 1250 deselected.
+
+Note:
+
+- `tests\integration\test_natal_interpretation_rejected_public_boundary.py` requires `--long` because `backend/conftest.py` deselects `tests/integration/**` by default.

@@ -1,5 +1,5 @@
 # Story CS-407 refuser-downgrade-schema-v3-lecture-natale-complete: Refuser Downgrade Schema V3 Lecture Natale Complete
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

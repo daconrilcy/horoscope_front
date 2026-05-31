@@ -97,6 +97,8 @@ from app.services.llm_generation.natal.prompt_context import (
     build_astral_point_interpretation_context,
 )
 from app.services.llm_generation.natal.rejected_answer_workflow import (
+    CONTROLLED_REJECTED_CLIENT_MESSAGE,
+    REJECTED_NARRATIVE_LOG_EVENT,
     RejectedNarrativeAnswerOutcome,
     build_rejected_narrative_answer_outcome_from_payload,
     emit_rejected_narrative_answer_log,
@@ -377,6 +379,8 @@ def _persist_rejected_narrative_answer_audit(
 AcceptedCompleteAstroResponse = AstroResponseV1 | AstroResponseV2 | AstroResponseV3
 PublicAstroResponse = AcceptedCompleteAstroResponse | AstroErrorResponseV3 | AstroFreeResponseV1
 
+NATAL_COMPLETE_SCHEMA_MISMATCH = "natal_complete_schema_mismatch"
+
 
 def _attach_narrative_reading_to_complete(
     *,
@@ -490,6 +494,122 @@ def _build_rejected_narrative_answer_outcome(
         llm_input_hash=_llm_input_hash_for_audit(llm_astrology_input_v1),
         llm_astrology_input_v1=llm_astrology_input_v1,
     )
+
+
+def _build_complete_schema_mismatch_rejection_outcome(
+    *,
+    answer_id: str,
+    answer_type: str,
+    request_id: str,
+    raw_answer: dict[str, object],
+    validation_errors: list[str],
+) -> RejectedNarrativeAnswerOutcome:
+    """Construit le rejet audit-only d'un payload complete non conforme au schema V3."""
+    return RejectedNarrativeAnswerOutcome(
+        answer_id=answer_id,
+        answer_type=answer_type,
+        status="rejected",
+        grounding_status="ungrounded",
+        rejection_reason={
+            "code": NATAL_COMPLETE_SCHEMA_MISMATCH,
+            "failed_sections": ["astro_response_v3"],
+            "validation_errors": validation_errors,
+            "request_id": request_id,
+        },
+        validation_context=[
+            {
+                "section_id": "astro_response_v3",
+                "section_status": "ungrounded",
+                "request_id": request_id,
+                "validation_errors": validation_errors,
+            }
+        ],
+        raw_answer_storage={"structured_output": raw_answer},
+        client_message=CONTROLLED_REJECTED_CLIENT_MESSAGE,
+        log_event=REJECTED_NARRATIVE_LOG_EVENT,
+    )
+
+
+def _reject_complete_schema_mismatch_response(
+    *,
+    answer_id: str,
+    answer_type: str,
+    request_id: str,
+    raw_answer: dict[str, object],
+    validation_errors: list[str],
+    disclaimers: list[str],
+) -> tuple[AstroFreeResponseV1, str, RejectedNarrativeAnswerOutcome]:
+    """Prepare une reponse controlee pendant que le payload brut part en audit."""
+    outcome = _build_complete_schema_mismatch_rejection_outcome(
+        answer_id=answer_id,
+        answer_type=answer_type,
+        request_id=request_id,
+        raw_answer=raw_answer,
+        validation_errors=validation_errors,
+    )
+    return (
+        AstroFreeResponseV1(
+            title="",
+            summary=outcome.client_message,
+            sections=[],
+            highlights=[],
+            advice=[],
+            evidence=[],
+            disclaimers=disclaimers,
+        ),
+        "v3_schema_mismatch",
+        outcome,
+    )
+
+
+def _deserialize_non_fallback_complete_interpretation(
+    *,
+    base_output: dict[str, object],
+    gateway_result: GatewayResult,
+    level: str,
+    variant_code: str | None,
+    request_id: str,
+    disclaimers: list[str],
+) -> tuple[
+    AstroResponseV3 | AstroErrorResponseV3 | AstroFreeResponseV1,
+    str,
+    RejectedNarrativeAnswerOutcome | None,
+]:
+    """Deserialise une lecture complete nominale sans downgrade local V2/V1."""
+    try:
+        return AstroResponseV3(**base_output), "v3", None
+    except ValidationError as v3_exc:
+        logger.debug("AstroResponseV3 deserialization failed: %s", v3_exc)
+        try:
+            return AstroErrorResponseV3(**base_output), "v3_error", None
+        except ValidationError as error_v3_exc:
+            logger.debug(
+                "AstroErrorResponseV3 deserialization failed: %s",
+                error_v3_exc,
+            )
+            logger.warning(
+                "Complete natal schema mismatch rejected request_id=%s use_case=%s",
+                request_id,
+                gateway_result.use_case,
+            )
+            return _reject_complete_schema_mismatch_response(
+                answer_id=f"{gateway_result.use_case}:{request_id}",
+                answer_type=_answer_type_for_audit(level, variant_code),
+                request_id=request_id,
+                raw_answer=base_output,
+                validation_errors=[
+                    str(v3_exc),
+                    str(error_v3_exc),
+                ],
+                disclaimers=disclaimers,
+            )
+
+
+def _deserialize_short_or_gateway_fallback_interpretation(
+    payload: dict[str, object],
+) -> AstroResponseV1:
+    """Deserialise le schema court autorise hors lecture complete nominale."""
+    return AstroResponseV1(**payload)
 
 
 def _llm_input_provenance(llm_astrology_input_v1: dict[str, object]) -> dict[str, object]:
@@ -1151,51 +1271,27 @@ class NatalInterpretationService:
 
         # Mapping structured_output to AstroResponseV1/V2/V3 (Story 30-8 T7.4)
         schema_version = "v1"
-        use_v3 = settings.natal_schema_version == "v3"
+        narrative_rejection: RejectedNarrativeAnswerOutcome | None = None
 
         if level == "complete" and not gateway_result.meta.fallback_triggered:
-            if use_v3:
-                # complete + v3 flag → try v3 first, then v3_error, then v2, then v1
-                try:
-                    # AstroResponseV3 does NOT have disclaimers in schema
-                    interpretation: (  # noqa: E501
-                        AstroResponseV3 | AstroErrorResponseV3 | AstroResponseV2 | AstroResponseV1
-                    ) = AstroResponseV3(**base_output)
-                    schema_version = "v3"
-                except Exception as exc:
-                    logger.debug(f"AstroResponseV3 deserialization failed: {exc}")
-                    try:
-                        interpretation = AstroErrorResponseV3(**base_output)
-                        schema_version = "v3_error"
-                    except Exception as exc2:
-                        logger.debug(f"AstroErrorResponseV3 deserialization failed: {exc2}")
-                        logger.warning(
-                            "V3 deserialization failed, falling back to V2 for request_id=%s",
-                            request_id,
-                        )
-                        try:
-                            interpretation = AstroResponseV2(**full_output)
-                            schema_version = "v2"
-                        except Exception:
-                            interpretation = AstroResponseV1(**full_output)
-            else:
-                # complete (payant) → schéma v2
-                try:
-                    interpretation = AstroResponseV2(**full_output)
-                    schema_version = "v2"
-                except Exception as exc:
-                    logger.warning(
-                        "V2 deserialization failed (%s), falling back to V1 for request_id=%s",
-                        exc,
-                        request_id,
+            if variant_code != "free_short":
+                interpretation, schema_version, narrative_rejection = (
+                    _deserialize_non_fallback_complete_interpretation(
+                        base_output=base_output,
+                        gateway_result=gateway_result,
+                        level=level,
+                        variant_code=variant_code,
+                        request_id=request_id,
+                        disclaimers=disclaimers,
                     )
-                    interpretation = AstroResponseV1(**full_output)
+                )
+            else:
+                interpretation = _deserialize_short_or_gateway_fallback_interpretation(full_output)
         else:
             # short (gratuit) ou fallback vers short → schéma v1
-            interpretation = AstroResponseV1(**full_output)
+            interpretation = _deserialize_short_or_gateway_fallback_interpretation(full_output)
 
         narrative_reading: NarrativeNatalReadingV1 | None = None
-        narrative_rejection: RejectedNarrativeAnswerOutcome | None = None
 
         # Observe metrics
         if hasattr(interpretation, "summary"):
