@@ -30,7 +30,7 @@ export function InterpretationContent({
   const shouldShowSummaryCard =
     !isCompleteLevel || (!narrativeReading && isFreeLongInterpretation)
   const shouldShowNarrativeMissing =
-    isCompleteLevel && !narrativeReading && !isFreeLongInterpretation && !hasLegacyBody
+    isCompleteLevel && !narrativeReading && !isFreeLongInterpretation
   const legalNoticeLines = t.legalNoticeLines
 
   return (

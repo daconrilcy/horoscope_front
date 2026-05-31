@@ -1,7 +1,8 @@
 CS-404 validation summary - 2026-05-31
 
 PASS pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard NatalChartPage
-- 3 files passed; 85 tests passed.
+- 3 files passed; 86 tests passed.
+- Added regression coverage: obsolete complete interpretations with legacy body content render only the regeneration message, not legacy accordions.
 
 PASS pnpm --dir frontend lint
 - tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
@@ -21,6 +22,23 @@ PASS rg -n "natal-narrative-reading__toggle|aria-expanded|aria-controls" fronten
 PASS rg -n "ni-actions--compact" frontend/src/features/natal-chart/NatalInterpretation.tsx frontend/src/features/natal-chart/NatalInterpretation.css
 - compact action owner and CSS rules found.
 
+PASS targeted RG-129 anti-derivation scan
+- exit 1 expected: no forbidden astrology derivation constants or rule patterns found in frontend TypeScript/JavaScript files.
+
+PASS python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-404-accordeons-narratifs-actions-compactes-natal --final
+- CONDAMAD validation passed with venv activated.
+
+PASS python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-404-accordeons-narratifs-actions-compactes-natal\00-story.md
+- CONDAMAD story validation passed with venv activated.
+
+PASS python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-404-accordeons-narratifs-actions-compactes-natal\00-story.md
+- CONDAMAD story lint passed with venv activated.
+
+PARTIAL PASS Playwright authenticated /natal QA
+- In-app browser unavailable; terminal Playwright logged in with the test user and reached `http://127.0.0.1:5173/natal`.
+- Live page showed compact actions and astrologer mode collapsed; no forbidden public technical marker was found.
+- Current test account state did not expose narrative accordions, so accordion browser QA remains covered by Vitest/Testing Library.
+
 PASS git diff --check -- scoped story paths
 - whitespace check passed; Git warned only about LF to CRLF normalization on natalNarrativeReading.test.tsx.
 
@@ -28,4 +46,4 @@ RG-129 note:
 - targeted anti-derivation scan found existing NatalChartPage chart field reads only: planet_positions, aspects, house_system. No astrology calculation logic was added or changed.
 
 Skipped:
-- Manual browser QA with authenticated backend session was not run in this non-interactive pass; runtime DOM behavior is covered by Vitest/Testing Library for the story ACs.
+- Full narrative-accordion browser QA on authenticated live data was not possible because the test account did not expose a current narrative accordion surface.

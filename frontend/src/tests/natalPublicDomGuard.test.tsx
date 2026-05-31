@@ -110,4 +110,32 @@ describe("natalPublicDomGuard", () => {
     expect(container.querySelector(".ni-evidence-tags")).toBeNull()
     expect(container.querySelector(".ni-projections")).toBeNull()
   })
+
+  it("affiche le message de regeneration meme si une complete obsolete garde un corps legacy", () => {
+    const legacyBodyData: NatalInterpretationViewData = {
+      ...NARRATIVE_DATA,
+      narrative_natal_reading_v1: null,
+      meta: { level: "complete", persona_name: "Luna" },
+      interpretation: {
+        title: "Ancienne lecture complete",
+        summary: "Resume legacy qui ne doit pas remplacer le message de regeneration.",
+        highlights: ["Ancien point fort"],
+        sections: [
+          {
+            key: "legacy-section",
+            heading: "Ancienne section legacy",
+            content: "Contenu legacy interdit dans la lecture complete publique.",
+          },
+        ],
+        advice: [],
+        evidence: [],
+      },
+    }
+
+    const { container } = render(<InterpretationContent data={legacyBodyData} lang="fr" />)
+
+    expect(screen.getByText(/Lecture complète à régénérer/i)).toBeInTheDocument()
+    expect(screen.queryByText("Ancienne section legacy")).not.toBeInTheDocument()
+    expect(container.querySelector(".ni-accordion")).toBeNull()
+  })
 })
