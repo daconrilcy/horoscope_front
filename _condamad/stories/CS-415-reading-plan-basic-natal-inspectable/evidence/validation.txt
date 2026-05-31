@@ -2,6 +2,7 @@ CS-415 implementation review validation - 2026-05-31
 
 Issue fixed:
 - Public evidence IDs no longer reuse raw internal fact IDs. The builder now assigns opaque IDs (`pe-001`, `pe-002`, ...).
+- Alignment pass: `00-story.md` status synced from `ready-to-review` to `done` to match tracker and final evidence.
 
 Commands:
 - `. .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\basic_natal_reading_plan.py tests\unit\domain\astrology\test_basic_natal_public_evidence.py` -> PASS
@@ -13,6 +14,13 @@ Commands:
 - `rg -n "ranking_score|condition_axis|score_profile|weighted_score|prompt_hint|audit_input|source_paths|SUN_H10_INTERNAL|MOON_SOURCE_PATH_INTERNAL" backend\app\domain\astrology\interpretation\basic_natal_reading_plan.py` -> PASS, no matches
 - `rg -n "BasicNatalReadingPlanBuilder|class BasicNatalReadingPlan" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal -g "*.py"` -> PASS, single canonical implementation owner
 - `rg -n "legacy|compat|shim|fallback|deprecated|alias" backend\app\domain\astrology\interpretation\basic_natal_reading_plan.py` -> PASS, no matches
+- `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-415-reading-plan-basic-natal-inspectable\00-story.md` -> PASS
+- `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-415-reading-plan-basic-natal-inspectable\00-story.md` -> PASS
+- `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-415-reading-plan-basic-natal-inspectable --final` -> PASS
+- `. .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\basic_natal_reading_plan.py tests\unit\domain\astrology\test_basic_natal_reading_plan_builder.py tests\unit\domain\astrology\test_basic_natal_reading_plan_archetypes.py tests\unit\domain\astrology\test_basic_natal_public_evidence.py tests\unit\domain\astrology\basic_natal_reading_plan_helpers.py` -> PASS
+- `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_reading_plan_builder.py tests\unit\domain\astrology\test_basic_natal_reading_plan_archetypes.py tests\unit\domain\astrology\test_basic_natal_public_evidence.py --tb=short` -> PASS, 14 passed
+- `rg -n "ranking_score|condition_axis|score_profile|weighted_score|prompt_hint|audit_input|source_paths|SUN_H10_INTERNAL|MOON_SOURCE_PATH_INTERNAL" backend\app\domain\astrology\interpretation\basic_natal_reading_plan.py` -> PASS, no matches
+- `rg -n "BasicNatalReadingPlanBuilder|class BasicNatalReadingPlan" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal -g "*.py"` -> PASS, single canonical implementation owner
 
 Skipped:
 - Full repository pytest was not run; backend astrology domain unit suite and app import were run for the story surface.

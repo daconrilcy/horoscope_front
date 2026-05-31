@@ -20,6 +20,7 @@ Verdict: CLEAN
 - Date-only plans keep house, angle, ASC, MC and house-ruler surfaces out of selected sections.
 - Public evidence now has readable labels and explanations without scores, source paths, prompt hints or raw fact IDs.
 - No frontend, API, persistence, provider call or LLM prose generation was introduced.
+- Story status is synced: `00-story.md`, tracker and final evidence all report `done`.
 
 ## Validation Evidence
 - PASS: `ruff check .` from `backend` after venv activation.
@@ -29,6 +30,7 @@ Verdict: CLEAN
 - PASS: public leak scan over `basic_natal_reading_plan.py`, no forbidden technical or fixture raw-ID matches.
 - PASS: owner scan returns only `backend/app/domain/astrology/interpretation/basic_natal_reading_plan.py`.
 - PASS: no `legacy|compat|shim|fallback|deprecated|alias` match in the plan owner.
+- PASS: CONDAMAD story validation, strict lint and capsule `--final` rerun after status sync.
 
 ## Closure
 - Final status recommendation: done.

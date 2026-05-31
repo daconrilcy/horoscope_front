@@ -16,6 +16,7 @@
 - Added public evidence, limitations, disclaimers, style constraints, section ordering, date-only gates and house archetype routing.
 - Added runtime tests and an AST guard for domain ownership.
 - Review correction: public evidence IDs are now opaque and no longer reuse raw internal fact IDs.
+- Alignment correction: `00-story.md` now carries `Status: done`, matching the tracker row and final evidence.
 
 ## Preflight
 
@@ -97,6 +98,11 @@ Detailed traceability is in `generated/03-acceptance-traceability.md`.
 | `rg -n "legacy|compat|shim|fallback|deprecated|alias" backend\app\domain\astrology\interpretation\basic_natal_reading_plan.py` | PASS: no matches |
 | `rg -n "BasicNatalReadingPlanBuilder|class BasicNatalReadingPlan" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal -g "*.py"` | PASS: single canonical owner |
 | `git diff --check` | PASS with existing CRLF warning on `_condamad/run-state.json` |
+| `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-415-reading-plan-basic-natal-inspectable\00-story.md` | PASS after status sync |
+| `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-415-reading-plan-basic-natal-inspectable\00-story.md` | PASS after status sync |
+| `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-415-reading-plan-basic-natal-inspectable --final` | PASS after status sync |
+| `. .\.venv\Scripts\Activate.ps1; cd backend; ruff check <CS-415 python files>` | PASS after alignment pass |
+| `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q <CS-415 targeted tests> --tb=short` | PASS, 14 passed after alignment pass |
 
 ## Commands skipped or blocked
 
