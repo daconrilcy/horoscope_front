@@ -2,12 +2,12 @@
 
 ## Story status
 
-- Validation outcome: ready-to-review
-- Ready for review: yes
+- Validation outcome: done
+- Ready for review: clean
 - Story key: CS-413-definir-taxonomie-themes-narratifs-basic
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-413-definir-taxonomie-themes-narratifs-basic`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 
 ## Preflight
 
@@ -22,7 +22,7 @@
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Status synchronized to `ready-to-review`. |
+| `00-story.md` | yes | yes | PASS | Status synchronized to `done`. |
 | `generated/01-execution-brief.md` | yes | yes | PASS | Repaired by helper. |
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC1-AC16 classified. |
 | `generated/04-target-files.md` | yes | yes | PASS | Repaired by helper. |
@@ -34,6 +34,7 @@
 
 - Added canonical owner `backend/app/domain/astrology/interpretation/natal_theme_taxonomy.py`.
 - Added `NatalNarrativeThemeTaxonomy`, `ThemeDefinition`, `ThemeModel` and ten `BasicThemeCode` values.
+- Aligned taxonomy version with `BASIC_NATAL_THEME_TAXONOMY_VERSION`.
 - Activation consumes `NatalFactGraph`, `NatalSalienceAudit` and `EligibilityContext`; no astrology recalculation path was added.
 - Added hierarchy/availability rules for date-only, house/angle themes, weak signals, tensions and redundant supports.
 
@@ -41,7 +42,7 @@
 
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
-| AC1 | Version constant and `NatalNarrativeThemeTaxonomy.version`. | Taxonomy pytest + after snapshot. | PASS | |
+| AC1 | Version constant and `NatalNarrativeThemeTaxonomy.version`. | Taxonomy pytest + after snapshot. | PASS | Reuses canonical Basic contract version. |
 | AC2 | `BasicThemeCode` and single `_default_theme_definitions()` catalog. | Taxonomy pytest. | PASS | |
 | AC3 | `ThemeModel.selected_fact_ids`. | Activation pytest. | PASS | |
 | AC4 | `ThemeModel.activation_metadata`. | Activation pytest. | PASS | |
@@ -54,7 +55,7 @@
 | AC11 | Tension facts flow into constraints/tensions and `must_mention`. | Activation pytest. | PASS | |
 | AC12 | Weak signals depend on CS-412 salience exclusions and activation floor. | Activation pytest. | PASS | |
 | AC13 | `advised_vocabulary` on every theme. | Taxonomy pytest. | PASS | |
-| AC14 | Forbidden formulations declared and standalone generic wording absent. | Boundary `rg` scan. | PASS_WITH_LIMITATIONS | Literal scan has pre-existing substring false positives. |
+| AC14 | Forbidden formulations declared and standalone generic wording absent. | Boundary `rg` scan. | PASS | Standalone forbidden wording scan passes. |
 | AC15 | Public boundary files unchanged and raw internals absent. | Public-boundary pytest + bounded `rg`. | PASS | |
 | AC16 | `RG-162` exists in registry. | `rg -n "RG-162" ...`. | PASS | |
 
@@ -90,6 +91,7 @@
 | `rg -n "RG-162" _condamad\stories\regression-guardrails.md` | repo root | PASS | Guardrail row present. |
 | `rg -n "calculate_.*aspect\|calculate_.*house\|calculate_.*dignity\|SwissEph\|\bswe\b\|HouseRulerResolver\(" backend\app\domain\astrology\interpretation\natal_theme_taxonomy.py` | repo root | PASS | No recalculation markers. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-413-definir-taxonomie-themes-narratifs-basic --final` | repo root | PASS | Final capsule validation passed. |
+| `python -B -m pytest -q tests\unit\test_basic_natal_reading_contracts.py tests\unit\test_narrative_natal_reading_v1.py tests\architecture\test_narrative_natal_reading_public_boundary.py --tb=short` | `backend` | PASS | 33 passed after version alignment. |
 | `python -B -m pytest -q --tb=short` | `backend` | FAIL (pre-existing scope) | 2 failed, 3626 passed, 2 skipped, 1253 deselected; failures are existing architecture guards on `natal_fact_graph_builder.py` / doctrine-governance surfaces outside CS-413 touched files. |
 
 ## Commands skipped or blocked

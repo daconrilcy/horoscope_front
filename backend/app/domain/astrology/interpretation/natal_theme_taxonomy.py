@@ -22,8 +22,11 @@ from app.domain.astrology.interpretation.natal_salience_model import (
     NatalSalienceDecision,
     NatalSalienceLevel,
 )
+from app.domain.astrology.reading.basic_natal_contracts import (
+    BASIC_NATAL_THEME_TAXONOMY_VERSION,
+)
 
-NATAL_NARRATIVE_THEME_TAXONOMY_VERSION = "natal_theme_taxonomy.basic.v1"
+NATAL_NARRATIVE_THEME_TAXONOMY_VERSION = BASIC_NATAL_THEME_TAXONOMY_VERSION
 MIN_THEME_FACTS = 2
 MIN_AUTONOMOUS_THEME_SCORE = 60.0
 

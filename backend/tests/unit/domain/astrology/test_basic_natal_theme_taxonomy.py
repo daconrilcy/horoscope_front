@@ -11,6 +11,9 @@ from app.domain.astrology.interpretation.natal_theme_taxonomy import (
     BasicThemeCode,
     NatalNarrativeThemeTaxonomy,
 )
+from app.domain.astrology.reading.basic_natal_contracts import (
+    BASIC_NATAL_THEME_TAXONOMY_VERSION,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 TAXONOMY_MODULE = REPO_ROOT / "app/domain/astrology/interpretation/natal_theme_taxonomy.py"
@@ -31,6 +34,7 @@ def test_taxonomy_exposes_version_and_ten_canonical_basic_codes() -> None:
     """Le catalogue Basic expose uniquement les dix codes versionnes attendus."""
     payload = NatalNarrativeThemeTaxonomy().to_contract_payload()
 
+    assert NATAL_NARRATIVE_THEME_TAXONOMY_VERSION == BASIC_NATAL_THEME_TAXONOMY_VERSION
     assert payload["taxonomy_version"] == NATAL_NARRATIVE_THEME_TAXONOMY_VERSION
     assert payload["theme_codes"] == [theme_code.value for theme_code in BasicThemeCode]
     assert len(payload["themes"]) == 10

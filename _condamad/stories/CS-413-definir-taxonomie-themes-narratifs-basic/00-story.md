@@ -1,5 +1,5 @@
 # Story CS-413 definir-taxonomie-themes-narratifs-basic: Definir Taxonomie Themes Narratifs Basic
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`.

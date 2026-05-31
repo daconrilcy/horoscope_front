@@ -1,5 +1,27 @@
 2026-05-31 CS-413 validation summary
 
+2026-05-31 review/fix iteration 1 update
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short -> 9 passed
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_reading_contracts.py tests\unit\test_narrative_natal_reading_v1.py tests\architecture\test_narrative_natal_reading_public_boundary.py --tb=short -> 33 passed
+PASS rg -n "theme_code|activation_score|must_mention|may_mention|do_not_mention" backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py -> no raw theme internals
+PASS rg -n "calculate_.*aspect|calculate_.*house|calculate_.*dignity|SwissEph|\bswe\b|HouseRulerResolver\(" backend\app\domain\astrology\interpretation\natal_theme_taxonomy.py -> no recalculation markers
+PASS rg -n "\b(spirituel|creatif|harmonieux|profond)\b" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal -> no standalone forbidden generic wording
+PASS rg -n "basic-natal-theme-taxonomy-v1|natal_theme_taxonomy.basic.v1|BASIC_NATAL_THEME_TAXONOMY_VERSION" backend\app\domain\astrology\interpretation\natal_theme_taxonomy.py backend\app\domain\astrology\reading\basic_natal_contracts.py backend\tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py _condamad\stories\CS-413-definir-taxonomie-themes-narratifs-basic\evidence\theme-taxonomy-after.json -> no obsolete local version
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-413-definir-taxonomie-themes-narratifs-basic --final
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-413-definir-taxonomie-themes-narratifs-basic\00-story.md
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-413-definir-taxonomie-themes-narratifs-basic\00-story.md
+PASS git diff --check
+PASS final fresh review rerun: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short -> 9 passed
+PASS final fresh review rerun: .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py
+PASS final fresh review rerun: .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+
+Fixed issue: taxonomy version now reuses BASIC_NATAL_THEME_TAXONOMY_VERSION from the
+canonical Basic contract owner; taxonomy tests guard the alignment.
+
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
