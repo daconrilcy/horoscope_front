@@ -1,0 +1,39 @@
+CS-423 validation summary - 2026-06-01 Europe/Paris
+
+PASS - Capsule prepare/repair:
+  python -B .agents/skills/condamad-dev-story/scripts/condamad_prepare.py --root . --repair-generated-only _condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible
+  python -B .agents/skills/condamad-dev-story/scripts/condamad_validate.py _condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible
+
+PASS - Backend format/lint/tests:
+  ruff format backend/tests/integration/test_basic_natal_v2_pipeline.py backend/tests/unit/test_basic_natal_narrative_validator.py
+  ruff check backend/tests/integration/test_basic_natal_v2_pipeline.py backend/tests/unit/test_basic_natal_narrative_validator.py
+  python -B -m pytest -q backend/tests/integration/test_basic_natal_v2_pipeline.py backend/tests/unit/test_basic_natal_narrative_validator.py --tb=short
+  Result: 14 passed, 1 deselected.
+  ruff check backend
+
+PASS - Frontend tests/lint/build:
+  pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage
+  Result: 3 files passed, 113 tests passed.
+  pnpm --dir frontend lint
+  pnpm --dir frontend build
+
+PASS - Browser QA evidence:
+  PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_PORT=4175 pnpm --dir frontend exec playwright test e2e/cs-423-natal-basic-readable.spec.ts --project chromium-mobile --workers=1 --reporter=line --timeout=60000
+  Result: 1 passed.
+  Note: a first Playwright run using the configured webServer created the artifacts but timed out during Windows teardown; the server-managed rerun passed.
+
+PASS - Evidence files:
+  basic-readable-api-after.json exists.
+  basic-readable-dom-text-after.txt exists.
+  basic-readable-desktop-after.png exists and is non-empty.
+  basic-readable-mobile-after.png exists and is non-empty.
+  qa-report.md exists and contains introduction, conclusion, three themes and origin classification.
+
+PASS - Final capsule validation:
+  python -B .agents/skills/condamad-dev-story/scripts/condamad_validate.py _condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible --final
+
+PASS - Negative scans:
+  Baseline/degraded token scan over persisted evidence: no matches.
+  Basic public DOM unaccented/raw-label scan in the rendered reading body: enforced by Playwright and natalPublicDomGuard.
+  Technical marker scan over runtime roots: expected internal/API type hits only; public DOM tests and persisted evidence are clean.
+  Broad source scans include expected denylist definitions in tests and validators, not public output.

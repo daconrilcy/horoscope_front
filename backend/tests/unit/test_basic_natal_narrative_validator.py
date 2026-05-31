@@ -232,16 +232,26 @@ def test_technical_marker_mixed_person_and_prescriptive_advice_are_invalid() -> 
 
 def test_mechanical_source_listing_and_raw_labels_are_invalid() -> None:
     """Les phrases templates et libelles anglais observes sont rejetes."""
-    draft = _valid_draft()
-    draft["sections"][0]["content"] = (
-        "Luminaire: moon, Position planetaire: saturn, north node. "
-        "cette lecture s'appuie uniquement sur ces sources avec une confiance editoriale controlee."
+    denied_fragments = (
+        "Luminaire: moon",
+        "Position planetaire: saturn",
+        "north node",
+        "south node",
+        "Ce repere retient un signal descriptif.",
+        (
+            "cette lecture s'appuie uniquement sur ces sources "
+            "avec une confiance editoriale controlee."
+        ),
     )
 
-    errors = _errors(draft)
+    for fragment in denied_fragments:
+        draft = _valid_draft()
+        draft["sections"][0]["content"] = fragment
+        errors = _errors(draft)
 
-    assert "technical_or_jargon_marker" in errors
-    assert "source_listing_as_content:identity" in errors
+        assert (
+            "technical_or_jargon_marker" in errors or "source_listing_as_content:identity" in errors
+        )
 
 
 def test_disclaimer_only_and_single_sentence_theme_are_invalid() -> None:

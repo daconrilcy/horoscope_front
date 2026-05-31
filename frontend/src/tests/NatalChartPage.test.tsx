@@ -1,3 +1,4 @@
+// Commentaire global: tests de la page natale publique et de ses garde-fous QA.
 import { cleanup, render, screen, within, fireEvent, waitFor } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -2154,6 +2155,135 @@ describe("NatalChartPage", () => {
         expect(screen.getByRole("button", { name: /Votre personnalite/i })).toBeInTheDocument()
       })
       expect(screen.queryByText("dominant_topics")).not.toBeInTheDocument()
+    })
+  })
+
+  describe("CS-423 — lecture Basic V2 lisible sur /natal", () => {
+    const BASIC_INTERPRETATION = {
+      chart_id: "abc",
+      use_case: "natal_interpretation",
+      degraded_mode: null,
+      narrative_natal_reading_v1: null,
+      meta: {
+        id: 423,
+        level: "complete" as const,
+        use_case: "natal_interpretation",
+        persona_id: null,
+        persona_name: null,
+        prompt_version_id: "basic-natal-draft-prompt-v1",
+        validation_status: "valid",
+        repair_attempted: false,
+        fallback_triggered: false,
+        was_fallback: false,
+        latency_ms: null,
+        request_id: "req-cs-423",
+        persisted_at: "2026-06-01T08:00:00Z",
+        schema_version: "basic_natal_interpretation_v2",
+      },
+      interpretation: {
+        title: "Ancien titre ignore",
+        summary: "Ancien resume ignore",
+        sections: [],
+        highlights: [],
+        advice: [],
+        evidence: [],
+      },
+      basic_natal_interpretation_v2: {
+        locale: "fr-FR",
+        level: "basic" as const,
+        engine_version: "basic-natal-reading-v1",
+        schema_version: "basic_natal_interpretation_v2",
+        taxonomy_version: "basic-natal-theme-taxonomy-v1",
+        salience_version: "basic-natal-salience-v1",
+        prompt_version: "basic-natal-draft-prompt-v1",
+        validator_version: "basic-natal-validator-v1",
+        interpretation: {
+          title: "Lecture Basic publique",
+          introduction: "Introduction publique claire pour la lecture Basic.",
+          themes: [
+            {
+              title: "Identité relationnelle",
+              narrative: "Votre élan central cherche une cohérence accessible dans les liens.",
+              public_evidence: [],
+            },
+            {
+              title: "Ressources émotionnelles",
+              narrative: "Votre stabilité intérieure aide à installer un rythme fiable.",
+              public_evidence: [],
+            },
+            {
+              title: "Chemin d'évolution",
+              narrative: "Votre progression gagne à rester simple, concrète et incarnée.",
+              public_evidence: [],
+            },
+          ],
+          conclusion: "Conclusion publique claire sans message de régénération.",
+          public_evidence: [
+            { label: "Soleil en Balance", meaning: "Votre expression privilégie les équilibres." },
+          ],
+        },
+        public_evidence: [
+          { label: "Lune en Taureau", meaning: "Votre sensibilité recherche la stabilité." },
+        ],
+        limitations: ["Lecture symbolique non prédictive."],
+        disclaimers: ["Contenu de réflexion personnelle."],
+      },
+    }
+
+    function renderNatalWithBasicInterpretation() {
+      mockUseLatestNatalChart.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: { ...CHART_BASE },
+      })
+      mockUseNatalInterpretationsList.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: {
+          items: [
+            {
+              id: 423,
+              chart_id: "abc",
+              level: "complete",
+              persona_id: null,
+              persona_name: null,
+              module: null,
+              created_at: "2026-06-01T08:00:00Z",
+              use_case: "natal_interpretation",
+              prompt_version_id: "basic-natal-draft-prompt-v1",
+              was_fallback: false,
+            },
+          ],
+          total: 1,
+          limit: 20,
+          offset: 0,
+        },
+        refetch: vi.fn(),
+      })
+      mockUseNatalInterpretationById.mockReturnValue({
+        isLoading: false,
+        isError: false,
+        data: BASIC_INTERPRETATION,
+        refetch: vi.fn(),
+      })
+
+      return render(
+        <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <NatalChartPage />
+        </MemoryRouter>,
+      ).container
+    }
+
+    it("affiche une Basic V2 valide sans message de regeneration", async () => {
+      const container = renderNatalWithBasicInterpretation()
+
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { name: "Lecture Basic publique" })).toBeInTheDocument()
+      })
+      expect(screen.getByText("Introduction publique claire pour la lecture Basic.")).toBeInTheDocument()
+      expect(screen.getByText("Conclusion publique claire sans message de régénération.")).toBeInTheDocument()
+      expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument()
+      expect(container.textContent).not.toMatch(/cette lecture s'appuie uniquement|Ce repere retient/i)
     })
   })
 })

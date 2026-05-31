@@ -1,0 +1,88 @@
+{
+  "chart_id": "chart-cs-423-readable-basic",
+  "use_case": "natal_interpretation",
+  "degraded_mode": null,
+  "narrative_natal_reading_v1": null,
+  "meta": {
+    "id": 423,
+    "level": "complete",
+    "use_case": "natal_interpretation",
+    "persona_id": null,
+    "persona_name": null,
+    "prompt_version_id": "basic-natal-draft-prompt-v1",
+    "validation_status": "valid",
+    "repair_attempted": false,
+    "fallback_triggered": false,
+    "was_fallback": false,
+    "latency_ms": 20,
+    "request_id": "req-cs-423-browser",
+    "persisted_at": "2026-06-01T08:00:00Z",
+    "schema_version": "basic_natal_interpretation_v2"
+  },
+  "interpretation": {
+    "title": "Ancien titre non public",
+    "summary": "Ancien résumé non public.",
+    "sections": [],
+    "highlights": [],
+    "advice": [],
+    "evidence": []
+  },
+  "basic_natal_interpretation_v2": {
+    "locale": "fr-FR",
+    "level": "basic",
+    "engine_version": "basic-natal-reading-v1",
+    "schema_version": "basic_natal_interpretation_v2",
+    "taxonomy_version": "basic-natal-theme-taxonomy-v1",
+    "salience_version": "basic-natal-salience-v1",
+    "prompt_version": "basic-natal-draft-prompt-v1",
+    "validator_version": "basic-natal-validator-v1",
+    "interpretation": {
+      "title": "Lecture Basic publique",
+      "introduction": "Introduction lisible: cette lecture synthétise les appuis majeurs du thème sans jargon technique.",
+      "themes": [
+        {
+          "title": "Identité relationnelle",
+          "narrative": "Votre manière d'avancer cherche des équilibres clairs et une expression personnelle apaisée.",
+          "public_evidence": []
+        },
+        {
+          "title": "Ressources émotionnelles",
+          "narrative": "Votre sensibilité gagne en stabilité quand les repères sont simples, concrets et réguliers.",
+          "public_evidence": []
+        },
+        {
+          "title": "Chemin d'évolution",
+          "narrative": "Votre progression devient plus fluide lorsque vous reliez vos choix quotidiens à une intention durable.",
+          "public_evidence": []
+        }
+      ],
+      "conclusion": "Conclusion: la lecture met en avant des pistes compréhensibles, non prédictives et directement lisibles.",
+      "public_evidence": [
+        {
+          "label": "Soleil en Balance",
+          "meaning": "Expression personnelle orientée vers l'équilibre."
+        },
+        {
+          "label": "Lune en Taureau",
+          "meaning": "Besoin émotionnel de stabilité et de rythme."
+        }
+      ]
+    },
+    "public_evidence": [
+      {
+        "label": "Soleil en Balance",
+        "meaning": "Expression personnelle orientée vers l'équilibre."
+      },
+      {
+        "label": "Lune en Taureau",
+        "meaning": "Besoin émotionnel de stabilité et de rythme."
+      }
+    ],
+    "limitations": [
+      "Lecture symbolique, non scientifique et non prédictive."
+    ],
+    "disclaimers": [
+      "Contenu de réflexion personnelle, sans promesse de résultat."
+    ]
+  }
+}

@@ -1,5 +1,8 @@
 # Revue redactionnelle CS-423
 
+Classification CONDAMAD Dev Story: handoff-only / pre-implementation editorial review.
+This file is not final code-review evidence for the implementation completed on 2026-06-01.
+
 Verdict: CLEAN
 
 ## Cible

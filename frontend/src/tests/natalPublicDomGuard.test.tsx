@@ -8,7 +8,10 @@ import { NatalNarrativeReading } from "../features/natal-chart/NatalNarrativeRea
 import { NatalReadingSources } from "../features/natal-chart/NatalReadingSources"
 
 const FORBIDDEN_DOM_PATTERN =
-  /visibility_expression|audit_input|condition_axis:|interpretive_signal_ids|projection_version/i
+  /visibility_expression|audit_input|condition_axis:|interpretive_signal_ids|projection_version|cette lecture s'appuie uniquement|Ce repere retient|avec une confiance editoriale controlee|Luminaire: moon|Position planetaire:|north node|south node/i
+
+const FORBIDDEN_BASIC_PUBLIC_LABEL_PATTERN =
+  /\b(moon|sun|saturn|north node|south node|Synthese|theme|themes|repere|planetaire|a integrer)\b/i
 
 const NARRATIVE_DATA: NatalInterpretationViewData = {
   degraded_mode: null,
@@ -206,8 +209,8 @@ describe("natalPublicDomGuard", () => {
           introduction: "Introduction publique sans trace technique.",
           themes: [
             {
-              title: "Vie interieure",
-              narrative: "Narration publique centree sur la coherence personnelle.",
+              title: "Vie intérieure",
+              narrative: "Narration publique centrée sur la cohérence personnelle.",
               public_evidence: [
                 {
                   source_id: "moon-cancer",
@@ -218,7 +221,7 @@ describe("natalPublicDomGuard", () => {
             },
             {
               title: "Vie relationnelle",
-              narrative: "Narration publique centree sur les liens.",
+              narrative: "Narration publique centrée sur les liens.",
               public_evidence: [
                 {
                   source_id: "moon-cancer",
@@ -264,6 +267,7 @@ describe("natalPublicDomGuard", () => {
     expect(screen.getAllByText("Lecture symbolique.")).toHaveLength(1)
     expect(within(container.querySelector(".ni-basic-theme-list")!).queryByText("Lune en Cancer")).not.toBeInTheDocument()
     expect(container.textContent).not.toMatch(FORBIDDEN_DOM_PATTERN)
+    expect(container.textContent).not.toMatch(FORBIDDEN_BASIC_PUBLIC_LABEL_PATTERN)
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d|ranking_score|weighted_score/i)
   })
 })

@@ -1,5 +1,5 @@
 # Story CS-423 qa-live-lecture-basic-natal-lisible: QA Live Lecture Basic Natal Lisible
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

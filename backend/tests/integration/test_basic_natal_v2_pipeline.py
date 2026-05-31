@@ -25,6 +25,16 @@ from tests.integration.basic_natal_v2_helpers import (
     valid_basic_draft,
 )
 
+CS423_FORBIDDEN_PUBLIC_TOKENS = (
+    "cette lecture s'appuie uniquement",
+    "Ce repere retient",
+    "avec une confiance editoriale controlee",
+    "Luminaire: moon",
+    "Position planetaire:",
+    "north node",
+    "south node",
+)
+
 
 @pytest.mark.asyncio
 async def test_basic_complete_builds_plan_payload_validates_and_persists_versions(db) -> None:
@@ -109,3 +119,6 @@ async def test_basic_complete_builds_plan_payload_validates_and_persists_version
     assert basic_payload["salience_version"] == "basic-natal-salience-v1"
     assert basic_payload["prompt_version"] == "basic-natal-draft-prompt-v1"
     assert basic_payload["validator_version"] == "basic-natal-validator-v1"
+    serialized_basic_payload = json.dumps(basic_payload, ensure_ascii=False)
+    for token in CS423_FORBIDDEN_PUBLIC_TOKENS:
+        assert token not in serialized_basic_payload
