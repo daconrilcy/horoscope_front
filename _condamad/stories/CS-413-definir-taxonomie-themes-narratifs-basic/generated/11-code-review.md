@@ -16,7 +16,14 @@ Verdict: CLEAN
   while `basic_natal_contracts.py` already owns `BASIC_NATAL_THEME_TAXONOMY_VERSION`.
 - Fix: `NATAL_NARRATIVE_THEME_TAXONOMY_VERSION` now reuses the canonical Basic contract
   constant and the taxonomy test guards that alignment.
-- Iteration 2 reviewed the corrected code, evidence, tracker and validations with no
+- Iteration 2 found one actionable brief-alignment issue after code-vs-brief review.
+- Finding: the hierarchy rule removed `talents_and_supports` whenever
+  `tension_to_integrate` was active, even when both themes came from unrelated
+  astrological material.
+- Fix: child suppression now requires shared matched source objects, and the activation
+  tests cover both an unrelated support theme that remains active and a redundant support
+  theme that is hierarchized.
+- Iteration 3 reviewed the corrected code, evidence, tracker and validations with no
   remaining actionable issue.
 
 ## AC and guardrail review
@@ -26,6 +33,7 @@ Verdict: CLEAN
 - Brief alignment: all ten requested theme codes are present; triggers, exclusions,
   compatible sections, vocabulary, forbidden formulations, birth-time availability,
   hierarchy and weak-signal blocking are implemented in the canonical taxonomy owner.
+  Redundant neighboring themes are hierarchized without masking distinct talent material.
 - Guardrails: `RG-149`, `RG-152`, `RG-154`, `RG-156`, `RG-022` and `RG-162` remain aligned;
   `RG-162` is present in the registry.
 
@@ -34,7 +42,7 @@ Verdict: CLEAN
 - PASS: `.\.venv\Scripts\Activate.ps1; cd backend; ruff format ...`
 - PASS: `.\.venv\Scripts\Activate.ps1; cd backend; ruff check ...`
 - PASS: `.\.venv\Scripts\Activate.ps1; cd backend; ruff check .`
-- PASS: `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short`
+- PASS: `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short` -> 10 passed
 - PASS: `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_reading_contracts.py tests\unit\test_narrative_natal_reading_v1.py tests\architecture\test_narrative_natal_reading_public_boundary.py --tb=short`
 - PASS: bounded `rg` scans for public theme internals, recalculation markers and standalone
   forbidden generic wording.

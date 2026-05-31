@@ -94,6 +94,25 @@ def test_tension_theme_preserves_tension_and_do_not_mention_facts() -> None:
     assert "venus-soft-aspect" in tension.do_not_mention
 
 
+def test_distinct_talent_theme_stays_active_next_to_unrelated_tension() -> None:
+    """Un appui non voisin ne doit pas etre masque par une tension active."""
+    themes = _activate(
+        _graph(
+            _fact("sun", NatalFactFamily.LUMINARY, ("sun",)),
+            _fact("venus-detriment", NatalFactFamily.CONDITION, ("venus", "detriment")),
+            _fact("venus-square-mars", NatalFactFamily.ASPECT, ("venus", "mars", "square")),
+            _fact("jupiter-trine-saturn", NatalFactFamily.ASPECT, ("jupiter", "saturn", "trine")),
+            _fact("jupiter-exaltation", NatalFactFamily.CONDITION, ("jupiter", "exaltation")),
+            _fact("saturn-domicile", NatalFactFamily.CONDITION, ("saturn", "domicile")),
+        ),
+        _full_birth_time_context(),
+    )
+    codes = set(_themes_by_code(themes))
+
+    assert BasicThemeCode.TENSION_TO_INTEGRATE in codes
+    assert BasicThemeCode.TALENTS_AND_SUPPORTS in codes
+
+
 def test_redundant_support_theme_is_hierarchized_below_tension_theme() -> None:
     """Un theme d'appui voisin ne double pas le theme de tension actif."""
     themes = _activate(

@@ -259,6 +259,9 @@ class NatalNarrativeThemeTaxonomy:
             forbidden_formulations=definition.forbidden_formulations,
             activation_metadata={
                 "matched_fact_count": len(matched_ids),
+                "matched_objects": sorted(
+                    {matched_object for fact in matched_facts for matched_object in fact.objects}
+                ),
                 "highest_salience_level": min(
                     decision.salience_level.value for decision in decisions
                 ),
@@ -460,15 +463,39 @@ def _ids_for_tensions(
 
 def _drop_redundant_children(themes: Sequence[ThemeModel]) -> tuple[ThemeModel, ...]:
     """Supprime un theme enfant quand le parent couvre deja la meme matiere."""
-    active_codes = {theme.theme_code for theme in themes}
+    theme_by_code = {theme.theme_code: theme for theme in themes}
     definition_by_code = {
         definition.theme_code: definition for definition in _default_theme_definitions()
     }
     return tuple(
         theme
         for theme in themes
-        if definition_by_code[theme.theme_code].hierarchy_parent not in active_codes
+        if not _covered_by_redundant_parent(
+            theme,
+            theme_by_code=theme_by_code,
+            definition_by_code=definition_by_code,
+        )
     )
+
+
+def _covered_by_redundant_parent(
+    theme: ThemeModel,
+    *,
+    theme_by_code: Mapping[BasicThemeCode, ThemeModel],
+    definition_by_code: Mapping[BasicThemeCode, ThemeDefinition],
+) -> bool:
+    """Detecte uniquement les themes enfants qui partagent la matiere du parent."""
+    parent_code = definition_by_code[theme.theme_code].hierarchy_parent
+    if parent_code is None or parent_code not in theme_by_code:
+        return False
+    return _themes_share_surface(theme, theme_by_code[parent_code])
+
+
+def _themes_share_surface(theme: ThemeModel, parent_theme: ThemeModel) -> bool:
+    """Compare les objets source pour eviter de masquer un appui distinct."""
+    theme_objects = set(theme.activation_metadata.get("matched_objects", ()))
+    parent_objects = set(parent_theme.activation_metadata.get("matched_objects", ()))
+    return bool(theme_objects.intersection(parent_objects))
 
 
 def _theme_sort_key(theme: ThemeModel) -> tuple[int, float, str]:

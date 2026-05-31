@@ -36,7 +36,11 @@
 - Added `NatalNarrativeThemeTaxonomy`, `ThemeDefinition`, `ThemeModel` and ten `BasicThemeCode` values.
 - Aligned taxonomy version with `BASIC_NATAL_THEME_TAXONOMY_VERSION`.
 - Activation consumes `NatalFactGraph`, `NatalSalienceAudit` and `EligibilityContext`; no astrology recalculation path was added.
-- Added hierarchy/availability rules for date-only, house/angle themes, weak signals, tensions and redundant supports.
+- Added hierarchy/availability rules for date-only, house/angle themes, weak signals,
+  tensions and redundant supports.
+- Corrected hierarchy so `talents_and_supports` is suppressed only when it shares source
+  material with `tension_to_integrate`, preserving distinct talent material required by the
+  brief.
 
 ## AC validation
 
@@ -51,7 +55,7 @@
 | AC7 | `PUBLIC_VOCATION` timed availability and house/angle requirements. | Activation pytest. | PASS | |
 | AC8 | `_definition_available()` applies date-only `EligibilityContext`. | Activation pytest. | PASS | |
 | AC9 | `compatible_sections` on every theme. | Taxonomy pytest. | PASS | |
-| AC10 | Parent hierarchy suppresses redundant support theme. | Activation pytest. | PASS | |
+| AC10 | Parent hierarchy suppresses redundant support theme without masking distinct talent material. | Activation pytest. | PASS | |
 | AC11 | Tension facts flow into constraints/tensions and `must_mention`. | Activation pytest. | PASS | |
 | AC12 | Weak signals depend on CS-412 salience exclusions and activation floor. | Activation pytest. | PASS | |
 | AC13 | `advised_vocabulary` on every theme. | Taxonomy pytest. | PASS | |
@@ -84,7 +88,8 @@
 | `ruff check app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py` | `backend` | PASS | Targeted lint clean. |
 | `ruff check .` | `backend` | PASS | Backend lint clean. |
 | `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py --tb=short` | `backend` | PASS | 4 passed. |
-| `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short` | `backend` | PASS | 5 passed. |
+| `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short` | `backend` | PASS | 6 passed after hierarchy alignment fix. |
+| `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short` | `backend` | PASS | 10 passed after brief-alignment review/fix. |
 | `python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py tests\architecture\test_narrative_natal_reading_public_boundary.py --tb=short` | `backend` | PASS | 17 passed. |
 | `rg -n "\b(spirituel\|creatif\|harmonieux\|profond)\b" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal` | repo root | PASS | No standalone forbidden generic wording. |
 | `rg -n "theme_code\|activation_score\|must_mention\|may_mention\|do_not_mention" backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py` | repo root | PASS | No raw theme internals in public/prompt boundaries. |
