@@ -2,9 +2,17 @@
 
 - PASS: `python -B -m pytest -q --tb=short backend\tests\unit\domain\astrology\test_basic_natal_fact_graph.py backend\tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py backend\tests\unit\domain\astrology\test_chart_object_runtime_architecture.py` -> `18 passed`.
 - PASS: `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` -> `18 passed` after date-only angle leak fix.
+- PASS: `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` -> `19 passed` after brief-alignment coverage fix for MC and partial runtime data.
 - PASS: `ruff check .` -> `All checks passed!`.
 - PASS: `ruff check app\domain\astrology\interpretation\natal_fact_graph_builder.py tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py` -> `All checks passed!`.
 - PASS: `ruff check .` after review fix -> `All checks passed!`.
 - PASS: `ruff format --check .` after review fix -> `1743 files already formatted`.
+- PASS: `ruff check .` after brief-alignment fix -> `All checks passed!`.
+- PASS: `ruff format --check .` after brief-alignment fix -> `1743 files already formatted`.
+- PASS: recalculation scan after brief-alignment fix -> no matches.
+- PASS: prose-generation scan after brief-alignment fix -> no matches.
+- PASS: public `source_paths` scan after brief-alignment fix -> no API/frontend matches.
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-411-natal-fact-graph-basic-tracable\00-story.md`.
+- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-411-natal-fact-graph-basic-tracable\00-story.md`.
 - PASS: `git diff --check -- <story paths>` -> no whitespace errors; CRLF warning only.
 - PASS: `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-411-natal-fact-graph-basic-tracable --final`.

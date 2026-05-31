@@ -22,30 +22,34 @@ Verdict: CLEAN
 - Fix: `natal_fact_graph_builder._object_facts` now suppresses all angle-derived object material when `EligibilityContext.can_use_angles`
   is false, and `test_basic_natal_fact_graph_date_only.py` asserts that `asc` is absent from emitted facts.
 - Iteration 2 verdict: CLEAN.
+- Brief-alignment pass verdict: CHANGES_REQUESTED.
+- Finding F2: the implementation tests did not explicitly prove the brief primitives `MC` and partial runtime data coverage.
+- Fix: `test_basic_natal_fact_graph.py` now asserts both `asc` and `mc` angle facts and adds a partial runtime data test proving no invented families.
+- Fresh brief-alignment verdict: CLEAN.
 
 ## Acceptance Alignment
 
-- AC1: all required families are covered by the rich fixture and graph contract.
+- AC1: all required families are covered by the rich fixture and graph contract; explicit `asc` and `mc` angle coverage is tested.
 - AC2/AC3: every fact has source paths and deterministic IDs.
 - AC4/AC5: date-only gating now excludes angle-derived facts while keeping non-time families.
 - AC6: aspect pair identity stays sorted and stable.
 - AC7: builder consumes runtime projections and has no local recalculation calls.
 - AC8/AC9: internal payload keeps `source_paths`; editorial candidates and public/API/frontend scans do not expose them.
-- AC10: story evidence artifacts are present and validated.
+- AC10: story evidence artifacts are present and validated; partial runtime data coverage is now evidenced.
 
 ## Validation Results
 
 - PASS: `ruff check app\domain\astrology\interpretation\natal_fact_graph_builder.py tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py`
 - PASS: `ruff check .` -> `All checks passed!`.
 - PASS: `ruff format --check .` -> `1743 files already formatted`.
-- PASS: `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` -> `18 passed`.
+- PASS: `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` -> `19 passed`.
 - PASS: recalculation scan returned zero hits for the fact graph modules and tests.
 - PASS: prose-generation scan returned zero hits for the fact graph modules and tests.
 - PASS: public `source_paths` scan returned zero hits in `backend\app\api` and `frontend\src`.
 
 ## Propagation
 
-- no-propagation: the accepted finding was local to this builder/test surface and is now covered by the date-only regression test.
+- no-propagation: the accepted findings were local to this builder/test surface and are now covered by date-only, MC and partial-data tests.
 
 ## Residual Risk
 

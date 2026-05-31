@@ -35,7 +35,7 @@
 
 - Added internal fact graph contract in `backend/app/domain/astrology/interpretation/natal_fact_graph.py`.
 - Added canonical builder in `backend/app/domain/astrology/interpretation/natal_fact_graph_builder.py`.
-- Added rich and date-only unit tests under `backend/tests/unit/domain/astrology/`.
+- Added rich, date-only and partial-data unit tests under `backend/tests/unit/domain/astrology/`.
 - Extended chart-object architecture guard for the new fact graph owner.
 
 ## Files changed
@@ -64,7 +64,7 @@
 
 | AC | Implementation evidence | Validation evidence | Status |
 |---|---|---|---|
-| AC1 | All `NatalFactFamily` values emitted by rich fixture. | Targeted pytest PASS. | PASS |
+| AC1 | All `NatalFactFamily` values emitted by rich fixture; `asc` and `mc` angle facts explicitly covered. | Targeted pytest PASS. | PASS |
 | AC2 | Required `source_paths` on every `NatalFact`. | Contract test PASS. | PASS |
 | AC3 | Stable fact and graph ids. | Determinism test PASS. | PASS |
 | AC4 | Date-only gates angle, house, rulership and angle-derived sign facts. | Date-only pytest PASS after review fix. | PASS |
@@ -89,15 +89,19 @@
 | `rg -n "source_paths" backend\app\api frontend\src -g "*.py" -g "*.ts" -g "*.tsx"` | PASS | Exit 1: no public/API/frontend matches. |
 | `git diff --check -- <story paths>` | PASS | No whitespace errors; CRLF warning only on touched test file. |
 | `ruff check app\domain\astrology\interpretation\natal_fact_graph_builder.py tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py` | PASS | Review-fix lint passed. |
-| `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` | PASS | Review-fix targeted tests: `18 passed`. |
+| `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` | PASS | Brief-alignment targeted tests: `19 passed`. |
 | `ruff check .` | PASS | Full backend lint after review fix: `All checks passed!`. |
 | `ruff format --check .` | PASS | Full backend format check after review fix: `1743 files already formatted`. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-411-natal-fact-graph-basic-tracable\00-story.md` | PASS | Story contract validation passed after evidence update. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-411-natal-fact-graph-basic-tracable\00-story.md` | PASS | Strict story lint passed after evidence update. |
 
 ## Review-fix evidence
 
 - Iteration 1 finding: date-only charts still emitted `sign_emphasis_fact` for `asc`, leaking angle-derived material under a non-time family.
 - Fix applied: `natal_fact_graph_builder._object_facts` suppresses angle-derived object material when `can_use_angles` is false.
 - Regression test: `test_date_only_gates_time_dependent_facts` asserts that `asc` is absent from all emitted facts.
+- Brief-alignment finding: tests did not explicitly prove MC coverage or the partial-data fixture requested by the source brief.
+- Alignment fix: rich fixture asserts `asc` and `mc`; partial runtime data test proves no invented families.
 - Fresh review result: `generated/11-code-review.md` verdict `CLEAN`.
 
 ## Commands skipped or blocked

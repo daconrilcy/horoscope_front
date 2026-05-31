@@ -41,8 +41,10 @@ def test_fact_graph_emits_required_families_and_traceable_contract() -> None:
     """Le graphe riche expose toutes les familles minimales avec source."""
     graph = build_basic_natal_fact_graph(_rich_input(), _full_birth_time_context())
     families = {fact.family for fact in graph.facts}
+    angle_objects = {fact.objects for fact in graph.facts if fact.family is NatalFactFamily.ANGLE}
 
     assert families == set(NatalFactFamily)
+    assert angle_objects == {("asc",), ("mc",)}
     assert graph.graph_id.startswith("graph:")
     assert all(fact.source_paths for fact in graph.facts)
     assert all(fact.confidence == "runtime_confirmed" for fact in graph.facts)
@@ -71,6 +73,16 @@ def test_internal_sources_do_not_leak_to_editorial_candidates() -> None:
     assert candidate_payload["facts"]
     assert all("source_paths" not in item for item in candidate_payload["facts"])
     assert len(candidate_payload["facts"]) < len(internal_payload["facts"])
+
+
+def test_partial_runtime_data_emits_only_available_fact_families() -> None:
+    """Les donnees partielles ne declenchent pas de recalcul ni de faits inventes."""
+    graph = build_basic_natal_fact_graph(_partial_input(), _full_birth_time_context())
+    families = {fact.family for fact in graph.facts}
+
+    assert families == {NatalFactFamily.LUMINARY, NatalFactFamily.SIGN_EMPHASIS}
+    assert all(fact.source_paths for fact in graph.facts)
+    assert all(fact.objects for fact in graph.facts)
 
 
 def test_fact_graph_builder_uses_runtime_inputs_without_local_recalculation() -> None:
@@ -213,7 +225,29 @@ def _objects() -> tuple[ChartObjectInterpretationRuntimeData, ...]:
         _object("moon", ChartObjectType.LUMINARY, "aries", ("luminary",)),
         _object("mars", ChartObjectType.PLANET, "aries", ("planet",)),
         _object("asc", ChartObjectType.ANGLE, "libra", ("angle",)),
+        _object("mc", ChartObjectType.ANGLE, "cancer", ("angle",)),
         _object("north_node", ChartObjectType.ASTRAL_POINT, "taurus", ("astral_point",)),
+    )
+
+
+def _partial_input() -> ChartInterpretationInputRuntimeData:
+    """Construit une projection minimale pour les donnees runtime partielles."""
+    return ChartInterpretationInputRuntimeData(
+        chart_id="partial-411",
+        chart_type="natal",
+        locale="fr",
+        objects=(_object("sun", ChartObjectType.LUMINARY, "leo", ("luminary",)),),
+        aspects=(),
+        dignities=(),
+        house_positions=(),
+        rulerships=(),
+        dominance=(),
+        fixed_star_contacts=(),
+        metadata=ChartInterpretationMetadataRuntimeData(
+            source_codes=("chart_objects",),
+            object_count=1,
+            aspect_count=0,
+        ),
     )
 
 
