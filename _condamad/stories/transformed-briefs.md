@@ -180,3 +180,4 @@
 | cs-398 | `_story_briefs\cs-398-rendre-quota-natal-complete-transactionnel-et-remedier-lectures-invalides.md` | `_condamad\stories\cs-403-quota-natal-transactionnel-remediation\00-story.md` |
 | cs-399 | `_story_briefs\cs-399-ajouter-accordeons-narratifs-modernes-et-compacter-actions-natal.md` | `_condamad\stories\cs-404-accordeons-narratifs-actions-compactes-natal\00-story.md` |
 | cs-400 | `_story_briefs\cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md` | `_condamad\stories\cs-405-cloture-qa-live-lecture-natale\00-story.md` |
+| cs-401 | `_story_briefs\cs-401-router-basic-complete-vers-assembly-natale-v3.md` | `_condamad\stories\cs-406-router-basic-complete-assembly-natale-v3\00-story.md` |
