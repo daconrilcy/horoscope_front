@@ -1,0 +1,19 @@
+CS-403 after implementation pass
+
+- Added endpoint regression tests in
+  `backend/app/tests/integration/test_natal_chart_long_entitlement.py`:
+  - rejected complete response does not call `consume_on_acceptance` and releases corrective claim;
+  - provider `AIEngineAdapterError` does not call `consume_on_acceptance` and releases corrective claim;
+  - commit failure after accepted response calls rollback after the acceptance debit step.
+- Added durable policy artifact:
+  `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/evidence/remediation-policy.md`.
+- Validation highlights:
+  - `python -B -m pytest -q backend/tests/unit/test_natal_chart_long_quota_on_acceptance.py --tb=short` PASS.
+  - `python -B -m pytest -q --long backend/app/tests/integration/test_natal_chart_long_entitlement.py --tb=short` PASS.
+  - `python -B -m pytest -q --long backend/tests/integration -k "natal and (quota or interpretation or rejected)" --tb=short` PASS.
+  - `python -B -m pytest -q --long backend/tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short` PASS.
+  - `python -B -m pytest -q --long backend/app/tests/integration/test_natal_interpretation_endpoint.py --tb=short` PASS.
+  - `ruff check .` PASS.
+  - route/openapi runtime check PASS.
+  - `rg -n "check_and_consume" backend/app/api/v1/routers/public/natal_interpretation.py` PASS: no matches.
+- Intended behavior delta: stronger regression proof and persisted remediation evidence; no frontend or API contract shape change.

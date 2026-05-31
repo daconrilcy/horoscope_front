@@ -1,5 +1,5 @@
 # Story CS-403 quota-natal-transactionnel-remediation: Quota Natal Transactionnel Et Remediation
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

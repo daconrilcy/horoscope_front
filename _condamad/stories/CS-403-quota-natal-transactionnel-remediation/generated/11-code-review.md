@@ -1,5 +1,10 @@
 # Editorial Review - CS-403 quota-natal-transactionnel-remediation
 
+Implementation evidence classification: obsolete pre-implementation review.
+This artifact reviewed the story draft before implementation. It is retained as
+editorial context only and is handoff-only, not final implementation review
+evidence for `ready-to-review`.
+
 Verdict: CLEAN
 
 ## Review Scope

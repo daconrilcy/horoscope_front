@@ -1,0 +1,14 @@
+CS-403 baseline before implementation pass
+
+- Story status row: CS-403 was `ready-to-dev` and pointed to
+  `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/00-story.md`.
+- Source brief row: `_story_briefs/cs-398-rendre-quota-natal-complete-transactionnel-et-remedier-lectures-invalides.md`.
+- Initial git status: pre-existing `_condamad/run-state.json` modified.
+- Capsule state: required generated files were missing except `generated/11-code-review.md`;
+  repaired with `condamad_prepare.py --repair-generated-only`.
+- Code state inspected:
+  - public router already used `check_access_for_complete_generation` before generation;
+  - public router already called `consume_on_acceptance` after non-cached, non-rejected accepted response;
+  - entitlement gate already skipped consumption for corrective regeneration;
+  - invalid reading classifier already covered missing/invalid narrative, duplicate content and empty sources.
+- Evidence gap before this pass: no explicit endpoint tests for rejected/provider/commit-failure no-debit paths and no persisted remediation policy artifact in this story capsule.

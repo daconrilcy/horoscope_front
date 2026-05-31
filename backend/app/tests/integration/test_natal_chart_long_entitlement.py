@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 import app.infra.db.models  # noqa: F401
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
 from app.domain.llm.prompting.schemas import AstroResponseV3
+from app.domain.llm.runtime.adapter import AIEngineAdapterError
 from app.infra.db.base import Base
 from app.infra.db.models.product_entitlements import (
     AccessMode,
@@ -216,6 +217,13 @@ def _make_valid_interpretation_response(level="complete"):
         ),
         disclaimers=[],
     )
+
+
+def _make_rejected_interpretation_response(level="complete"):
+    """Construit une reponse rejetee pour prouver l'absence de debit quota."""
+    response = _make_valid_interpretation_response(level=level)
+    response.data.meta.validation_status = "rejected"
+    return response
 
 
 def _reset_database() -> None:
@@ -427,6 +435,79 @@ def test_complete_canonical_quota_ok(mock_user_and_chart):
     assert data["entitlement_info"]["variant_code"] == "single_astrologer"
 
 
+def test_complete_rejected_response_does_not_consume_and_releases_claim(mock_user_and_chart):
+    """Une sortie rejetee libere la reservation corrective sans consommer de quota."""
+    result = NatalChartLongEntitlementResult(
+        path="corrective_regeneration",
+        variant_code="single_astrologer",
+        corrective_regeneration=True,
+        corrective_interpretation_id=123,
+        corrective_original_use_case="natal_interpretation",
+    )
+
+    with (
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
+            return_value=result,
+        ),
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.consume_on_acceptance",
+        ) as mock_consume,
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.release_corrective_regeneration_claim",
+        ) as mock_release,
+        patch(
+            "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret"
+        ) as mock_interpret,
+    ):
+        mock_interpret.return_value = _make_rejected_interpretation_response(level="complete")
+
+        response = client.post("/v1/natal/interpretation", json=COMPLETE_PAYLOAD)
+
+    assert response.status_code == 200
+    assert response.json()["data"]["meta"]["validation_status"] == "rejected"
+    mock_consume.assert_not_called()
+    mock_release.assert_called_once()
+
+
+def test_complete_provider_error_does_not_consume_and_releases_claim(mock_user_and_chart):
+    """Une erreur provider conserve le quota et restaure la reservation corrective."""
+    result = NatalChartLongEntitlementResult(
+        path="corrective_regeneration",
+        variant_code="single_astrologer",
+        corrective_regeneration=True,
+        corrective_interpretation_id=124,
+        corrective_original_use_case="natal_interpretation",
+    )
+
+    with (
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
+            return_value=result,
+        ),
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.consume_on_acceptance",
+        ) as mock_consume,
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.release_corrective_regeneration_claim",
+        ) as mock_release,
+        patch(
+            "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret",
+            side_effect=AIEngineAdapterError(
+                code="timeout",
+                message="provider timeout",
+                status_code=504,
+            ),
+        ),
+    ):
+        response = client.post("/v1/natal/interpretation", json=COMPLETE_PAYLOAD)
+
+    assert response.status_code == 504
+    assert response.json()["error"]["code"] == "llm_upstream_timeout"
+    mock_consume.assert_not_called()
+    mock_release.assert_called_once()
+
+
 def test_complete_canonical_unlimited_ok(mock_user_and_chart):
     result = NatalChartLongEntitlementResult(
         path="canonical_unlimited", variant_code="multi_astrologer", usage_states=[]
@@ -520,6 +601,42 @@ def test_complete_rolls_back_on_access_denied(mock_user_and_chart, db_session):
             response = client.post("/v1/natal/interpretation", json=COMPLETE_PAYLOAD)
 
     assert response.status_code == 403
+    mock_rollback.assert_called()
+
+
+def test_complete_commit_failure_rolls_back_after_acceptance(mock_user_and_chart, db_session):
+    """Un echec DB apres acceptation annule la transaction qui porte le debit."""
+    from app.infra.db.session import get_db_session
+
+    app.dependency_overrides[get_db_session] = lambda: db_session
+    result = NatalChartLongEntitlementResult(
+        path="canonical_quota",
+        variant_code="single_astrologer",
+        usage_states=[_make_usage_state(used=0, limit=1, remaining=1)],
+    )
+
+    with (
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.check_access_for_complete_generation",
+            return_value=result,
+        ),
+        patch(
+            "app.services.entitlement.natal_chart_long_entitlement_gate.NatalChartLongEntitlementGate.consume_on_acceptance",
+            return_value=result,
+        ) as mock_consume,
+        patch.object(db_session, "commit", side_effect=Exception("db commit failed")),
+        patch.object(db_session, "rollback") as mock_rollback,
+        patch(
+            "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret"
+        ) as mock_interpret,
+    ):
+        mock_interpret.return_value = _make_valid_interpretation_response(level="complete")
+
+        response = client.post("/v1/natal/interpretation", json=COMPLETE_PAYLOAD)
+
+    assert response.status_code == 500
+    assert response.json()["error"]["code"] == "internal_error"
+    mock_consume.assert_called_once()
     mock_rollback.assert_called()
 
 
