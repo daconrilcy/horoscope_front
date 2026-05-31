@@ -74,6 +74,36 @@ describe("natalPublicDomGuard", () => {
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d/i)
   })
 
+  it("affiche seulement le resume free_long sans fallback legacy", () => {
+    const freeLongData: NatalInterpretationViewData = {
+      ...NARRATIVE_DATA,
+      use_case: "natal_long_free",
+      narrative_natal_reading_v1: null,
+      meta: { level: "complete", use_case: "natal_long_free", persona_name: null },
+      interpretation: {
+        title: "Portrait astrologique",
+        summary: "Resume free long visible.",
+        highlights: ["Ancien point fort free long"],
+        sections: [
+          {
+            key: "legacy-free-long-section",
+            heading: "Ancienne section free long",
+            content: "Contenu legacy free long interdit dans le DOM public.",
+          },
+        ],
+        advice: [],
+        evidence: [],
+      },
+    }
+
+    const { container } = render(<InterpretationContent data={freeLongData} lang="fr" />)
+
+    expect(screen.getByText("Resume free long visible.")).toBeInTheDocument()
+    expect(screen.queryByText("Ancienne section free long")).not.toBeInTheDocument()
+    expect(container.querySelector(".ni-accordion")).toBeNull()
+    expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument()
+  })
+
   it("affiche le resume free_long sans message de regeneration obsolete", () => {
     const freeLongData: NatalInterpretationViewData = {
       ...NARRATIVE_DATA,

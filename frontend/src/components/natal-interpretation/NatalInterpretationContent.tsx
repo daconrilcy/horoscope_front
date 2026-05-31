@@ -4,10 +4,6 @@ import { AlertCircle } from "lucide-react"
 import { natalChartTranslations } from "../../i18n/natalChart"
 import { NatalNarrativeReading } from "../../features/natal-chart/NatalNarrativeReading"
 import { NatalReadingSources } from "../../features/natal-chart/NatalReadingSources"
-import {
-  hasRenderableLegacyInterpretationBody,
-  NatalInterpretationLegacyBody,
-} from "./NatalInterpretationLegacyBody"
 import type { NatalInterpretationLocale, NatalInterpretationViewData } from "./NatalInterpretationTypes"
 
 function resolveUseCase(data: NatalInterpretationViewData): string | null {
@@ -26,7 +22,6 @@ export function InterpretationContent({
   const isCompleteLevel = meta.level === "complete"
   const useCase = resolveUseCase(data)
   const isFreeLongInterpretation = useCase === "natal_long_free"
-  const hasLegacyBody = hasRenderableLegacyInterpretationBody(interpretation)
   const shouldShowSummaryCard =
     !isCompleteLevel || (!narrativeReading && isFreeLongInterpretation)
   const shouldShowNarrativeMissing =
@@ -59,8 +54,6 @@ export function InterpretationContent({
           <p className="ni-section-label">{t.narrativeMissingTitle}</p>
           <p className="ni-summary">{t.narrativeMissingBody}</p>
         </div>
-      ) : hasLegacyBody && isCompleteLevel && isFreeLongInterpretation ? (
-        <NatalInterpretationLegacyBody interpretation={interpretation} lang={lang} />
       ) : null}
 
       {legalNoticeLines.length > 0 && (

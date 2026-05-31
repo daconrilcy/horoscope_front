@@ -1,8 +1,9 @@
 CS-404 validation summary - 2026-05-31
 
 PASS pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard NatalChartPage
-- 3 files passed; 86 tests passed.
+- 3 files passed; 87 tests passed.
 - Added regression coverage: obsolete complete interpretations with legacy body content render only the regeneration message, not legacy accordions.
+- Added regression coverage: `natal_long_free` complete payloads keep the summary but do not render legacy sections/highlights accordions.
 
 PASS pnpm --dir frontend lint
 - tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
@@ -15,6 +16,9 @@ PASS rg -n "NatalInterpretationLegacyBody|style=" frontend/src/features/natal-ch
 
 PASS rg -n "ni-evidence-tags|ni-projections|LockedSection" frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx
 - exit 1 expected: no matches.
+
+PASS rg -n "NatalInterpretationLegacyBody|hasRenderableLegacyInterpretationBody" frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx frontend/src/tests/natalPublicDomGuard.test.tsx
+- exit 1 expected: no public content fallback import or test dependency remains.
 
 PASS rg -n "natal-narrative-reading__toggle|aria-expanded|aria-controls" frontend/src/features/natal-chart/NatalNarrativeReading.tsx
 - required modern accordion markers found.

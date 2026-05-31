@@ -14,10 +14,17 @@ Verdict: CLEAN
 - Fixed: obsolete complete interpretations with renderable legacy body content skipped the regeneration message. This did not re-expose legacy UI, but it failed `RG-154` because a complete interpretation without `narrative_natal_reading_v1` must show only the regeneration message.
 - Fixed: previous `11-code-review.md` was a handoff-only artifact, not a final independent implementation review.
 
+## Iteration 2 findings
+
+- Fixed: `natal_long_free` complete payloads without `narrative_natal_reading_v1` could still render
+  `sections/highlights` through `NatalInterpretationLegacyBody`. This contradicted the source brief's no-legacy public DOM objective.
+
 ## Corrections verified
 
 - `InterpretationContent` now shows the regeneration message for any non-free-long complete interpretation missing `narrative_natal_reading_v1`.
+- `InterpretationContent` no longer imports or renders `NatalInterpretationLegacyBody`; free-long complete payloads keep the summary only.
 - `natalPublicDomGuard.test.tsx` covers obsolete complete legacy body data and asserts no legacy accordion renders.
+- `natalPublicDomGuard.test.tsx` covers free-long legacy body data and asserts no legacy accordion renders.
 - AC9 evidence now names this obsolete-complete case explicitly.
 - Story tracker and story header are set to `done` only after fresh validations passed.
 
@@ -25,11 +32,12 @@ Verdict: CLEAN
 
 | Command | Result | Notes |
 |---|---|---|
-| `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard NatalChartPage` | PASS | 3 files, 86 tests. |
+| `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard NatalChartPage` | PASS | 3 files, 87 tests. |
 | `pnpm --dir frontend lint` | PASS | TypeScript lint projects passed. |
 | `pnpm --dir frontend build` | PASS | Vite production build passed. |
 | `rg -n "NatalInterpretationLegacyBody|style=" frontend/src/features/natal-chart/NatalNarrativeReading.tsx` | PASS | Exit 1 expected; no forbidden matches. |
 | `rg -n "ni-evidence-tags|ni-projections|LockedSection" frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx` | PASS | Exit 1 expected; no forbidden matches. |
+| `rg -n "NatalInterpretationLegacyBody|hasRenderableLegacyInterpretationBody" frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx frontend/src/tests/natalPublicDomGuard.test.tsx` | PASS | Exit 1 expected; no public fallback dependency remains. |
 | `rg -n "natal-narrative-reading__toggle|aria-expanded|aria-controls" frontend/src/features/natal-chart/NatalNarrativeReading.tsx` | PASS | Required modern accordion markers found. |
 | `rg -n "ni-actions--compact" frontend/src/features/natal-chart/NatalInterpretation.tsx frontend/src/features/natal-chart/NatalInterpretation.css` | PASS | Compact action owner and CSS rules found. |
 | Targeted `RG-129` anti-derivation scan | PASS | Exit 1 expected; no forbidden frontend astrology derivation patterns. |

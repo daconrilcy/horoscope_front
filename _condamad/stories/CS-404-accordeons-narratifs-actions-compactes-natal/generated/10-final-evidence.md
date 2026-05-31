@@ -40,7 +40,7 @@
 | AC6 | Sources render after narrative and remain collapsed. | Targeted Vitest suite. | PASS | |
 | AC7 | Astrologer mode remains under page composition. | `NatalChartPage` targeted suite. | PASS | |
 | AC8 | Compact action surface remains in `NatalInterpretation`. | `NatalChartPage` suite and positive `rg`. | PASS | |
-| AC9 | Technical public DOM markers remain absent; obsolete complete legacy bodies show only the regeneration message. | DOM guard suite and negative `rg`. | PASS | Review/fix iteration added coverage. |
+| AC9 | Technical public DOM markers remain absent; obsolete complete legacy bodies show only the regeneration message; free-long legacy body data keeps summary only. | DOM guard suite and negative `rg`. | PASS | Review/fix iterations added coverage. |
 | AC10 | No inline style drift in touched narrative component. | Lint and negative `rg`. | PASS | |
 | AC11 | Existing page states remain covered. | `NatalChartPage` targeted suite. | PASS | |
 | AC12 | Evidence artifacts persisted. | Capsule final validation. | PASS | |
@@ -67,7 +67,7 @@ Detailed mapping is in `generated/03-acceptance-traceability.md`.
 ## Tests added or updated
 
 - `natalNarrativeReading.test.tsx`: five chapter buttons, first-open default, ARIA panel linkage, mouse toggle, keyboard Enter/Space toggle, and short collapsed preview guard.
-- `natalPublicDomGuard.test.tsx`: obsolete complete legacy body data renders the regeneration message without legacy accordions.
+- `natalPublicDomGuard.test.tsx`: obsolete complete legacy body data renders the regeneration message without legacy accordions; free-long legacy body data keeps the summary without legacy accordions.
 
 ## Commands run
 
@@ -75,11 +75,12 @@ Detailed mapping is in `generated/03-acceptance-traceability.md`.
 |---|---|---|
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py ... --capsule ...` | PASS | Required generated capsule files repaired. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-404-accordeons-narratifs-actions-compactes-natal` | PASS | Capsule structure valid before implementation. |
-| `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard NatalChartPage` | PASS | 3 files, 86 tests passed. |
+| `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard NatalChartPage` | PASS | 3 files, 87 tests passed. |
 | `pnpm --dir frontend lint` | PASS | TypeScript lint projects passed. |
 | `pnpm --dir frontend build` | PASS | Production build completed. |
 | `rg -n "NatalInterpretationLegacyBody|style=" frontend/src/features/natal-chart/NatalNarrativeReading.tsx` | PASS | Exit 1 expected: no forbidden matches. |
 | `rg -n "ni-evidence-tags|ni-projections|LockedSection" frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx` | PASS | Exit 1 expected: no forbidden matches. |
+| `rg -n "NatalInterpretationLegacyBody|hasRenderableLegacyInterpretationBody" frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx frontend/src/tests/natalPublicDomGuard.test.tsx` | PASS | Exit 1 expected: no public fallback dependency remains. |
 | `rg -n "natal-narrative-reading__toggle|aria-expanded|aria-controls" frontend/src/features/natal-chart/NatalNarrativeReading.tsx` | PASS | Required accordion markers found. |
 | `rg -n "ni-actions--compact" frontend/src/features/natal-chart/NatalInterpretation.tsx frontend/src/features/natal-chart/NatalInterpretation.css` | PASS | Compact action owner and styles found. |
 | `git diff --check -- <story paths>` | PASS | No whitespace error; Git warned only about LF to CRLF normalization. |
@@ -104,7 +105,7 @@ Detailed mapping is in `generated/03-acceptance-traceability.md`.
 ## Diff review
 
 - Scoped diff contains one implementation correction plus test/evidence/status updates.
-- Review/fix iteration corrected obsolete complete legacy-body handling so `RG-154` regeneration messaging is explicit and executable.
+- Review/fix iterations corrected obsolete complete and free-long legacy-body handling so `RG-154` and the source brief's no-legacy public DOM objective are explicit and executable.
 
 ## Final worktree status
 
