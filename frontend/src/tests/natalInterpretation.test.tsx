@@ -16,6 +16,8 @@ import {
 import { useAstrologers } from "../api/astrologers";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routerFutureFlags } from "./test-utils";
+import { InterpretationContent } from "../components/natal-interpretation/NatalInterpretationContent";
+import type { NatalInterpretationViewData } from "../components/natal-interpretation/NatalInterpretationTypes";
 
 // Mock hooks
 vi.mock("../api/natalChart", async () => {
@@ -53,6 +55,12 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+type ProjectionPlanCode = "free" | "basic" | "premium"
+
+function projectionPlanPayload(planCode: ProjectionPlanCode) {
+  return { plan_code: planCode }
+}
 
 const mockInterpretationData = {
   chart_id: "chart-123",
@@ -151,6 +159,10 @@ describe("NatalInterpretationSection", () => {
     );
   };
 
+  it("garde le contrat de fixture des plans de projection", () => {
+    expect(projectionPlanPayload("basic")).toEqual({ plan_code: "basic" })
+  })
+
   it("affiche l'historique des versions", () => {
     renderSection();
     // The button shows the current version label instead of the title when a version is selected
@@ -165,6 +177,94 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText("Contenu global.")).toBeInTheDocument();
     expect(screen.getByText("Point 1")).toBeInTheDocument();
     expect(screen.getByText("Conseil 1")).toBeInTheDocument();
+  });
+
+  it("affiche une lecture free_short complete avec ses blocs publics sans regeneration", () => {
+    const freeShortData: NatalInterpretationViewData = {
+      chart_id: "chart-123",
+      use_case: "natal_long_free",
+      degraded_mode: null,
+      narrative_natal_reading_v1: null,
+      meta: { level: "complete", use_case: "natal_long_free", persona_name: null },
+      interpretation: {
+        title: "Portrait public free",
+        summary: "Synthese publique free visible.",
+        sections: [{ key: "elan", heading: "Votre elan", content: "Une lecture courte mais complete." }],
+        highlights: ["Point public free"],
+        advice: ["Conseil public free"],
+        evidence: ["SUN_LEO"],
+        disclaimers: ["Note publique free"],
+      },
+    };
+
+    render(<InterpretationContent data={freeShortData} lang="fr" />);
+
+    expect(screen.getByRole("heading", { name: "Portrait public free" })).toBeInTheDocument();
+    expect(screen.getByText("Synthese publique free visible.")).toBeInTheDocument();
+    expect(screen.getByText("Votre elan")).toBeInTheDocument();
+    expect(screen.getByText("Une lecture courte mais complete.")).toBeInTheDocument();
+    expect(screen.getByText("Point public free")).toBeInTheDocument();
+    expect(screen.getByText("Conseil public free")).toBeInTheDocument();
+    expect(screen.getByText("Note publique free")).toBeInTheDocument();
+    expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument();
+  });
+
+  it("affiche une lecture Basic V2 depuis le contrat public", () => {
+    const basicData: NatalInterpretationViewData = {
+      chart_id: "chart-123",
+      use_case: "natal_interpretation",
+      degraded_mode: null,
+      narrative_natal_reading_v1: null,
+      meta: { level: "complete", use_case: "natal_interpretation", persona_name: null },
+      interpretation: {
+        title: "Ancien titre",
+        summary: "Ancien resume qui ne doit pas piloter Basic V2.",
+        sections: [],
+        highlights: [],
+        advice: [],
+        evidence: [],
+      },
+      basic_natal_interpretation_v2: {
+        locale: "fr-FR",
+        level: "basic",
+        engine_version: "basic-natal-reading-v1",
+        schema_version: "basic_natal_interpretation_v2",
+        taxonomy_version: "basic-natal-theme-taxonomy-v1",
+        salience_version: "basic-natal-salience-v1",
+        prompt_version: "basic-natal-draft-prompt-v1",
+        validator_version: "basic-natal-validator-v1",
+        interpretation: {
+          title: "Lecture Basic publique",
+          introduction: "Introduction publique Basic V2.",
+          themes: [
+            {
+              title: "Axe personnel",
+              narrative: "Narration publique du theme Basic V2.",
+              public_evidence: [{ label: "Soleil en Lion", meaning: "Votre expression gagne en chaleur." }],
+            },
+          ],
+          conclusion: "Conclusion publique Basic V2.",
+          public_evidence: [{ label: "Ascendant Balance", meaning: "Votre relationnel cherche l'equilibre." }],
+        },
+        public_evidence: [{ label: "Lune en Cancer", meaning: "Votre sensibilite protege les liens." }],
+        limitations: ["Lecture symbolique et non predictive."],
+        disclaimers: ["Disclaimer Basic public."],
+      },
+    };
+
+    render(<InterpretationContent data={basicData} lang="fr" />);
+
+    expect(screen.getByRole("heading", { name: "Lecture Basic publique" })).toBeInTheDocument();
+    expect(screen.getByText("Introduction publique Basic V2.")).toBeInTheDocument();
+    expect(screen.getByText("Axe personnel")).toBeInTheDocument();
+    expect(screen.getByText("Narration publique du theme Basic V2.")).toBeInTheDocument();
+    expect(screen.getByText("Conclusion publique Basic V2.")).toBeInTheDocument();
+    expect(screen.getByText("Soleil en Lion")).toBeInTheDocument();
+    expect(screen.getByText("Votre expression gagne en chaleur.")).toBeInTheDocument();
+    expect(screen.getByText("Lune en Cancer")).toBeInTheDocument();
+    expect(screen.queryByText("basic_natal_interpretation_v2")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ancien resume qui ne doit pas piloter Basic V2.")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument();
   });
 
   it("masque le bloc des autres interprétations quand une seule version existe", () => {

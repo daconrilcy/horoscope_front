@@ -1,9 +1,13 @@
-# CS-420 Draft Review - CLEAN
+# CS-420 Draft Review - CLEAN (OBSOLETE PRE-IMPLEMENTATION)
 
 <!-- Commentaire global: cet artefact consigne la revue editoriale de la story CS-420 avant implementation. -->
 
 Date: 2026-05-31
-Verdict: CLEAN
+Verdict: OBSOLETE_FOR_FINAL_EVIDENCE
+
+Handoff note 2026-05-31: this review was a pre-implementation story drafting
+review. It is retained for history only and must not be cited as final code
+review evidence for the implementation completed in this run.
 
 ## Scope Reviewed
 - Story: `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/00-story.md`

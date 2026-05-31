@@ -103,6 +103,9 @@ type NatalChartTranslations = {
     completeBadge: string
     highlightsTitle: string
     adviceTitle: string
+    themesTitle: string
+    conclusionTitle: string
+    limitationsTitle: string
     lockedAdviceBullets: string[]
     lockedAdviceBody: string
     evidenceTitle: string
@@ -247,6 +250,9 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       completeBadge: "Complet",
       highlightsTitle: "Points clés",
       adviceTitle: "Conseils",
+      themesTitle: "Thèmes de lecture",
+      conclusionTitle: "Conclusion",
+      limitationsTitle: "Limites de cette lecture",
       lockedAdviceBullets: [
         "Des axes d'action concrets reliés à vos placements majeurs",
         "Des repères pour mieux canaliser vos élans et vos priorités",
@@ -484,6 +490,9 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       completeBadge: "Complete",
       highlightsTitle: "Key Points",
       adviceTitle: "Advice",
+      themesTitle: "Reading themes",
+      conclusionTitle: "Conclusion",
+      limitationsTitle: "Reading limitations",
       lockedAdviceBullets: [
         "Concrete action angles connected to your strongest placements",
         "Clear markers to channel your momentum and priorities better",
@@ -719,6 +728,9 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       completeBadge: "Completo",
       highlightsTitle: "Puntos clave",
       adviceTitle: "Consejos",
+      themesTitle: "Temas de lectura",
+      conclusionTitle: "Conclusión",
+      limitationsTitle: "Límites de esta lectura",
       lockedAdviceBullets: [
         "Ángulos de acción concretos conectados con tus posiciones más fuertes",
         "Referencias claras para canalizar mejor tu impulso y tus prioridades",

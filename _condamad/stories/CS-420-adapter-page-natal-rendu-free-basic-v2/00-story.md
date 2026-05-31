@@ -1,5 +1,5 @@
 # Story CS-420 adapter-page-natal-rendu-free-basic-v2: Adapter Page Natal Au Rendu Free Et Basic V2
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-420-adapter-page-natal-rendu-free-basic-v2.md`.

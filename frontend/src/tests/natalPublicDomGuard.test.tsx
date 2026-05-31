@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest"
 
 import { InterpretationContent } from "../components/natal-interpretation/NatalInterpretationContent"
 import type { NatalInterpretationViewData } from "../components/natal-interpretation/NatalInterpretationTypes"
+import { NatalNarrativeReading } from "../features/natal-chart/NatalNarrativeReading"
+import { NatalReadingSources } from "../features/natal-chart/NatalReadingSources"
 
 const FORBIDDEN_DOM_PATTERN =
   /visibility_expression|audit_input|condition_axis:|interpretive_signal_ids|projection_version/i
@@ -66,7 +68,14 @@ const NARRATIVE_DATA: NatalInterpretationViewData = {
 
 describe("natalPublicDomGuard", () => {
   it("n expose pas de motifs techniques dans la branche narrative publique", () => {
-    const { container } = render(<InterpretationContent data={NARRATIVE_DATA} lang="fr" />)
+    const { container } = render(
+      <InterpretationContent
+        data={NARRATIVE_DATA}
+        lang="fr"
+        renderNarrativeReading={(reading, lang) => <NatalNarrativeReading reading={reading} lang={lang} />}
+        renderReadingSources={(elements, lang) => <NatalReadingSources elements={elements} lang={lang} />}
+      />,
+    )
 
     expect(screen.getByRole("heading", { name: "Votre personnalite" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Ce que nous avons utilise/i })).toBeInTheDocument()
@@ -74,7 +83,7 @@ describe("natalPublicDomGuard", () => {
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d/i)
   })
 
-  it("affiche seulement le resume free_long sans fallback legacy", () => {
+  it("affiche le rendu public free_short sans fallback legacy", () => {
     const freeLongData: NatalInterpretationViewData = {
       ...NARRATIVE_DATA,
       use_case: "natal_long_free",
@@ -99,8 +108,9 @@ describe("natalPublicDomGuard", () => {
     const { container } = render(<InterpretationContent data={freeLongData} lang="fr" />)
 
     expect(screen.getByText("Resume free long visible.")).toBeInTheDocument()
-    expect(screen.queryByText("Ancienne section free long")).not.toBeInTheDocument()
-    expect(container.querySelector(".ni-accordion")).toBeNull()
+    expect(screen.getByText("Ancienne section free long")).toBeInTheDocument()
+    expect(screen.getByText("Contenu legacy free long interdit dans le DOM public.")).toBeInTheDocument()
+    expect(container.querySelector(".ni-evidence-tags")).toBeNull()
     expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument()
   })
 
@@ -167,5 +177,55 @@ describe("natalPublicDomGuard", () => {
     expect(screen.getByText(/Lecture complète à régénérer/i)).toBeInTheDocument()
     expect(screen.queryByText("Ancienne section legacy")).not.toBeInTheDocument()
     expect(container.querySelector(".ni-accordion")).toBeNull()
+  })
+
+  it("affiche les preuves Basic V2 sans identifiants ni champs techniques", () => {
+    const basicData: NatalInterpretationViewData = {
+      ...NARRATIVE_DATA,
+      narrative_natal_reading_v1: null,
+      meta: { level: "complete", use_case: "natal_interpretation", persona_name: null },
+      interpretation: {
+        title: "Ancien titre",
+        summary: "Ancien resume masque par Basic V2.",
+        highlights: [],
+        sections: [],
+        advice: [],
+        evidence: ["SUN_TAURUS_H10"],
+      },
+      basic_natal_interpretation_v2: {
+        locale: "fr-FR",
+        level: "basic",
+        engine_version: "basic-natal-reading-v1",
+        schema_version: "basic_natal_interpretation_v2",
+        taxonomy_version: "basic-natal-theme-taxonomy-v1",
+        salience_version: "basic-natal-salience-v1",
+        prompt_version: "basic-natal-draft-prompt-v1",
+        validator_version: "basic-natal-validator-v1",
+        interpretation: {
+          title: "Lecture Basic publique",
+          introduction: "Introduction publique sans trace technique.",
+          themes: [
+            {
+              title: "Vie interieure",
+              narrative: "Narration publique centree sur la coherence personnelle.",
+              public_evidence: [{ label: "Lune en Cancer", meaning: "Votre sensibilite soutient les liens." }],
+            },
+          ],
+          conclusion: "Conclusion publique sans score ni identifiant brut.",
+          public_evidence: [{ label: "Soleil en Taureau", meaning: "Votre expression cherche la stabilite." }],
+        },
+        public_evidence: [{ label: "Ascendant Balance", meaning: "Votre presence cherche l'equilibre." }],
+        limitations: ["Lecture symbolique."],
+        disclaimers: ["Contenu de reflexion personnelle."],
+      },
+    }
+
+    const { container } = render(<InterpretationContent data={basicData} lang="fr" />)
+
+    expect(screen.getByText("Lecture Basic publique")).toBeInTheDocument()
+    expect(screen.getByText("Lune en Cancer")).toBeInTheDocument()
+    expect(screen.getByText("Votre sensibilite soutient les liens.")).toBeInTheDocument()
+    expect(container.textContent).not.toMatch(FORBIDDEN_DOM_PATTERN)
+    expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d|ranking_score|weighted_score/i)
   })
 })

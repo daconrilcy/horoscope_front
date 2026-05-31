@@ -482,6 +482,13 @@
   gap: 10px;
 }
 
+.ni-content-card--public-list,
+.ni-content-card--disclaimers,
+.ni-content-card--public-evidence,
+.ni-content-card--basic-themes {
+  margin-top: 18px;
+}
+
 .ni-interpretation-title {
   margin: 0 0 6px;
   font-size: var(--font-size-lg);
@@ -507,6 +514,35 @@
   flex-direction: column;
   gap: 12px;
   margin: 42px 0;
+}
+
+.ni-public-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.ni-public-section {
+  background: var(--premium-glass-surface-1);
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 20px 24px;
+}
+
+.ni-public-section__title {
+  margin: 0 0 10px;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--premium-text-strong);
+}
+
+.ni-public-section__content {
+  font-size: var(--font-size-15);
+  line-height: var(--line-height-prose-loose);
+  color: var(--premium-text-main);
+  margin: 0;
 }
 
 .ni-accordion-item {
@@ -618,6 +654,72 @@
 .ni-advice-text--locked {
   margin-top: 4px;
   line-height: var(--line-height-prose-3xl);
+}
+
+.ni-public-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.ni-public-list__item {
+  font-size: var(--font-size-15);
+  line-height: var(--line-height-relaxed);
+  color: var(--premium-text-main);
+}
+
+.ni-highlights--public {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.ni-basic-theme-list,
+.ni-public-evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ni-basic-theme {
+  border-top: 1px solid var(--premium-glass-border-soft);
+  padding-top: 16px;
+}
+
+.ni-basic-theme:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.ni-basic-theme__title,
+.ni-public-evidence-item__label {
+  margin: 0 0 8px;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--premium-text-strong);
+}
+
+.ni-basic-theme__narrative,
+.ni-public-evidence-item__meaning {
+  margin: 0;
+  font-size: var(--font-size-15);
+  line-height: var(--line-height-prose-loose);
+  color: var(--premium-text-main);
+}
+
+.ni-basic-theme .ni-content-card--public-evidence {
+  margin-top: 14px;
+  padding: 18px 20px;
+}
+
+.ni-public-evidence-inline {
+  margin-top: 14px;
+  border-top: 1px solid var(--premium-glass-border-soft);
+  padding-top: 14px;
 }
 
 /* Skeleton Loading */

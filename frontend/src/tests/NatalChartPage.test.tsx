@@ -1731,7 +1731,7 @@ describe("NatalChartPage", () => {
       },
     }
 
-    it("AC2/AC3 — utilisateur free : affiche le résumé sans sections legacy", () => {
+    it("AC2/AC3 — utilisateur free : affiche le résumé et les sections publiques sans accordéon legacy", () => {
       mockUseFeatureAccess.mockReturnValue({ variant_code: "free_short", granted: true } as ReturnType<typeof useFeatureAccess>)
       mockUseUpgradeHint.mockReturnValue({
         feature_code: "natal_chart_long",
@@ -1752,7 +1752,7 @@ describe("NatalChartPage", () => {
 
       expect(screen.getByText("Résumé de votre thème natal unique")).toBeInTheDocument()
       expect(document.querySelector(".ni-accordion-title")).not.toBeInTheDocument()
-      expect(screen.queryByText("Carrière et vocation")).not.toBeInTheDocument()
+      expect(screen.getByText("Carrière et vocation")).toBeInTheDocument()
     })
 
     it("AC1 — utilisateur free : summary affiché normalement", () => {

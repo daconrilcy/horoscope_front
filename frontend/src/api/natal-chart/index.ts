@@ -430,6 +430,41 @@ export type UsedAstrologicalElementV1 = {
   consequence: string
 }
 
+export type BasicNatalPublicEvidenceV2 = {
+  label: string
+  meaning: string
+  theme?: string
+}
+
+export type BasicNatalPublicThemeV2 = {
+  title: string
+  narrative: string
+  public_evidence: BasicNatalPublicEvidenceV2[]
+}
+
+export type BasicNatalSynthesisV2 = {
+  title: string
+  introduction: string
+  themes: BasicNatalPublicThemeV2[]
+  conclusion: string
+  public_evidence: BasicNatalPublicEvidenceV2[]
+}
+
+export type BasicNatalInterpretationV2 = {
+  locale: string
+  level: "basic"
+  engine_version: "basic-natal-reading-v1"
+  schema_version: "basic_natal_interpretation_v2"
+  taxonomy_version: "basic-natal-theme-taxonomy-v1"
+  salience_version: "basic-natal-salience-v1"
+  prompt_version: "basic-natal-draft-prompt-v1"
+  validator_version: "basic-natal-validator-v1"
+  interpretation: BasicNatalSynthesisV2
+  limitations: string[]
+  disclaimers: string[]
+  public_evidence: BasicNatalPublicEvidenceV2[]
+}
+
 export type NarrativeNatalReadingV1 = {
   contract_version: "narrative_natal_reading_v1"
   editorial_profile: "free" | "basic" | "premium"
@@ -470,6 +505,7 @@ export type NatalInterpretationResult = {
   meta: InterpretationMeta
   degraded_mode: string | null
   narrative_natal_reading_v1?: NarrativeNatalReadingV1 | null
+  basic_natal_interpretation_v2?: BasicNatalInterpretationV2 | null
   disclaimers?: string[]
 }
 

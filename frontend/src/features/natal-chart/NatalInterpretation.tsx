@@ -27,6 +27,8 @@ import {
   PdfActionsMenu,
   VersionSelector,
 } from "../../components/natal-interpretation/NatalInterpretationMenus"
+import { NatalNarrativeReading } from "./NatalNarrativeReading"
+import { NatalReadingSources } from "./NatalReadingSources"
 import { PersonaSelector } from "./NatalInterpretationPersonaSelector"
 import "./NatalInterpretation.css"
 
@@ -615,7 +617,16 @@ export function NatalInterpretationSection({
           <InterpretationError t={t} onRetry={() => refetch()} />
         ) : data ? (
           <>
-            <InterpretationContent data={data} lang={lang} />
+            <InterpretationContent
+              data={data}
+              lang={lang}
+              renderNarrativeReading={(reading, readingLang) => (
+                <NatalNarrativeReading reading={reading} lang={readingLang} />
+              )}
+              renderReadingSources={(elements, sourcesLang) => (
+                <NatalReadingSources elements={elements} lang={sourcesLang} />
+              )}
+            />
             {isUpsellOpen && (
               <PersonaSelector
                 t={t}

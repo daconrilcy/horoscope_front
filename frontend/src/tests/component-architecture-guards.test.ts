@@ -238,7 +238,6 @@ describe("component-architecture guards", () => {
 
     const presentationalFiles = [
       "components/natal-interpretation/NatalInterpretationContent.tsx",
-      "components/natal-interpretation/NatalInterpretationEvidence.tsx",
       "components/natal-interpretation/NatalInterpretationMenus.tsx",
     ]
 

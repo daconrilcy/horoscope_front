@@ -1,0 +1,19 @@
+CS-420 validation summary
+
+PASS: python capsule validation after venv activation.
+PASS: pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard natalNarrativeReading NatalChartPage component-architecture-guards component-usage-guards
+PASS: pnpm --dir frontend test (second full run: 118 files, 1301 passed, 8 skipped)
+PASS: pnpm --dir frontend build
+PASS: pnpm --dir frontend lint
+PASS: python -B -m pytest backend Basic V2 contract guards after venv activation (18 passed)
+PASS: no inline style syntax in touched natal TSX surfaces.
+PASS: no forbidden legacy public rendering symbols/classes in public surfaces.
+PASS: deleted legacy components have no references.
+PASS: no forbidden technical markers in public reading surfaces.
+PASS: narrative accordion toggle scan.
+PASS: git diff --check, with CRLF warnings only.
+
+Notes:
+- First Vitest full run failed once on router.test.tsx; isolated router rerun passed and the second full suite passed.
+- First dev server startup on 5173 failed because the port was already in use; startup on 5174 passed.
+- Browser plugin iab unavailable; Playwright CLI fallback used for local QA.
