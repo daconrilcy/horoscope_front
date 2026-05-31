@@ -1,0 +1,6 @@
+# Validation — CS-411
+
+- PASS: `python -B -m pytest -q --tb=short backend\tests\unit\domain\astrology\test_basic_natal_fact_graph.py backend\tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py backend\tests\unit\domain\astrology\test_chart_object_runtime_architecture.py` -> `18 passed`.
+- PASS: `ruff check .` -> `All checks passed!`.
+- PASS: `git diff --check -- <story paths>` -> no whitespace errors; CRLF warning only.
+- PASS: `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-411-natal-fact-graph-basic-tracable --final`.

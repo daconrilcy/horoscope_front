@@ -10,6 +10,8 @@ NEW_MODULES = (
     REPO_ROOT / "app/domain/astrology/runtime/chart_object_runtime_data.py",
     REPO_ROOT / "app/domain/astrology/builders/chart_object_runtime_builder.py",
     REPO_ROOT / "app/domain/astrology/builders/chart_object_house_runtime_enricher.py",
+    REPO_ROOT / "app/domain/astrology/interpretation/natal_fact_graph.py",
+    REPO_ROOT / "app/domain/astrology/interpretation/natal_fact_graph_builder.py",
     REPO_ROOT / "app/domain/astrology/fixed_stars/contracts.py",
     REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_conjunction_calculator.py",
     REPO_ROOT / "app/domain/astrology/fixed_stars/fixed_star_selectors.py",
@@ -90,6 +92,28 @@ FIXED_STAR_MODULES = (
 FORBIDDEN_FIXED_STAR_BUILDERS = (
     "FixedStar" + "ConjunctionBuilder",
     "PlanetFixedStar" + "ConjunctionBuilder",
+)
+NATAL_FACT_GRAPH_BUILDER = (
+    REPO_ROOT / "app/domain/astrology/interpretation/natal_fact_graph_builder.py"
+)
+FORBIDDEN_FACT_GRAPH_MARKERS = (
+    "".join(
+        (
+            "calculate_",
+            "aspect",
+        )
+    ),
+    "".join(
+        (
+            "calculate_",
+            "dignity",
+        )
+    ),
+    "calculate_house",
+    "calculate_rulership",
+    "HouseRulerResolver",
+    "Swiss" + "Eph",
+    "s" + "we",
 )
 
 
@@ -223,6 +247,13 @@ def test_fixed_star_runtime_does_not_reintroduce_parallel_builders() -> None:
                 offenders.append(f"{module_path}:{builder_name}")
 
     assert offenders == []
+
+
+def test_natal_fact_graph_builder_reuses_runtime_sources_without_local_calculation() -> None:
+    """Le fact graph Basic consomme les projections runtime sans owner parallele."""
+    source = NATAL_FACT_GRAPH_BUILDER.read_text(encoding="utf-8")
+
+    assert not any(marker in source for marker in FORBIDDEN_FACT_GRAPH_MARKERS)
 
 
 def _branches_on_object_type(node: ast.AST) -> bool:

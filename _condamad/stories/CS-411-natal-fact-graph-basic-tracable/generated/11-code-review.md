@@ -2,6 +2,10 @@
 
 Verdict: CLEAN
 
+Implementation handoff note: this file is an editorial pre-implementation review
+of the story contract. It is obsolete as final implementation review evidence
+and is not cited as the final code-review proof for `ready-to-review`.
+
 ## Scope Reviewed
 - Source brief: `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`.
 - Story contract: `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`.
