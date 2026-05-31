@@ -16,12 +16,14 @@ CLEAN
 
 - Iteration 1 found missing final validation evidence: `evidence/validation.txt` was required by AC14/VC18 but absent.
 - Iteration 1 found stale review evidence: this file still described a pre-implementation drafting review as obsolete.
+- Iteration 2 found a status synchronization gap: `00-story.md` still said `ready-to-review` while the tracker and final review state were `done`.
 - No actionable implementation defect remains after correction and validation.
 
 ## Resolution evidence
 
 - Added `evidence/validation.txt` with the relaunch results for backend lint/tests, frontend tests/lint/build, scans and story validators.
 - Replaced this review artifact with final implementation review evidence.
+- Updated `00-story.md` to `Status: done`; tracker already mapped CS-418 to `done` with the current local date.
 - No reusable learning propagation needed: corrections were local evidence/review hygiene only.
 
 ## Fresh review result

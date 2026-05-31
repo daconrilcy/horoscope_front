@@ -1,5 +1,5 @@
 # Story CS-418 integrer-basic-natal-v2-persistance-cache-qa: Integrer Basic Natal V2 Persistance Cache Et QA
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-413-integrer-basic-natal-v2-persistance-cache-qa.md`.

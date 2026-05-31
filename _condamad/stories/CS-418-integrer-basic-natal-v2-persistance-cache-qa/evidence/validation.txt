@@ -13,6 +13,7 @@ Implementation review iteration 1 findings:
 Corrections:
 - Created evidence/validation.txt with fresh validation results.
 - Replaced generated/11-code-review.md with final CLEAN implementation review.
+- Synchronized `00-story.md` status from `ready-to-review` to `done` after final review evidence and tracker already agreed on `done`.
 
 Backend validations:
 - Command: cd backend; ruff check app\services\llm_generation\natal\interpretation_service.py
@@ -61,6 +62,34 @@ CONDAMAD validations:
   _condamad\stories\CS-418-integrer-basic-natal-v2-persistance-cache-qa\00-story.md
   Result: PASS.
 - Command: python -c "from pathlib import Path; base=Path('_condamad/stories/CS-418-integrer-basic-natal-v2-persistance-cache-qa'); assert (base/'evidence/qa-report.md').exists(); assert (base/'evidence/basic-v2-runtime-after.json').exists()"
+  Result: PASS.
+
+Post-status-sync relaunch:
+- Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py
+  _condamad\stories\CS-418-integrer-basic-natal-v2-persistance-cache-qa --final
+  Result: PASS.
+- Command: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py
+  _condamad\stories\CS-418-integrer-basic-natal-v2-persistance-cache-qa\00-story.md
+  Result: PASS.
+- Command: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict
+  _condamad\stories\CS-418-integrer-basic-natal-v2-persistance-cache-qa\00-story.md
+  Result: PASS.
+- Command: cd backend; ruff check story-relevant backend runtime and test files
+  Result: PASS.
+- Command: cd backend; python -B -m pytest -q --long tests\integration\test_basic_natal_v2_pipeline.py
+  tests\integration\test_basic_natal_v2_cache_invalidation.py
+  tests\integration\test_natal_interpretation_rejected_public_boundary.py --tb=short
+  Result: PASS, 11 passed.
+- Command: cd backend; python -B -m pytest -q tests\unit\test_natal_chart_long_quota_on_acceptance.py
+  tests\unit\test_basic_natal_reading_contracts.py tests\unit\test_basic_natal_narrative_validator.py
+  tests\llm_orchestration\test_basic_natal_prompt_payload_builder.py
+  tests\architecture\test_llm_astrology_input_payload_boundaries.py --tb=short
+  Result: PASS, 43 passed.
+- Command: pnpm --dir frontend test -- NatalChartPage natalNarrativeReading natalPublicDomGuard
+  Result: PASS, 87 passed.
+- Command: pnpm --dir frontend lint
+  Result: PASS.
+- Command: pnpm --dir frontend build
   Result: PASS.
 
 Skipped:
