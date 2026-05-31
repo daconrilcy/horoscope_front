@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: passed after implementation review/fix iteration 1
-- Ready for review: no; final implementation review is clean
+- Final status: done; final implementation review is clean
 - Story key: `CS-420-adapter-page-natal-rendu-free-basic-v2`
 - Source story: `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/00-story.md`
 - Capsule path: `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2`
@@ -24,7 +24,7 @@
 |---|---|---|
 | Required generated files present | PASS | Capsule repaired before generated files were read. |
 | `condamad_validate.py <capsule>` | PASS | Initial capsule validation passed. |
-| Final consistency gate | PASS | Story/status/traceability/final evidence synchronized to `ready-to-review`. |
+| Final consistency gate | PASS | Story/status/traceability/final evidence synchronized to `done`. |
 
 ## AC validation
 

@@ -7,7 +7,7 @@
 | Generated at | 2026-05-31 21:52:43 +02:00 |
 | Repository | `C:\dev\horoscope_front` |
 | Branch | `main` |
-| Commit range | Not evidenced; current HEAD observed as `b1ad4516` |
+| Commit range | Not evidenced for the implementation series; report artifact is present on current HEAD `37931575` |
 | Stories covered | `CS-419`, `CS-420` |
 | Source documents | `_story_briefs/cs-419-stabiliser-contrat-public-interpretation-natale-free-basic.md`; `_story_briefs/cs-420-adapter-page-natal-rendu-free-basic-v2.md` |
 | Story capsules | `_condamad/stories/CS-419-stabiliser-contrat-public-interpretation-natale-free-basic`; `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2` |
@@ -19,7 +19,7 @@
 
 The series covers one backend contract story and one frontend rendering story for public natal interpretations. `CS-419` stabilized `/v1/natal/interpretation` so free short responses are public `short` readings and Basic complete responses expose canonical `basic_natal_interpretation_v2`; evidence is in `_condamad/stories/CS-419-stabiliser-contrat-public-interpretation-natale-free-basic/generated/10-final-evidence.md`. `CS-420` adapted `/natal` to render free short, Basic V2, narrative v1 and obsolete complete branches; evidence is in `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/generated/10-final-evidence.md`.
 
-Final initiative status: `Requires business/QA validation`. Implementation and targeted validation evidence exist for both stories, final implementation reviews are `CLEAN`, and `_condamad/stories/story-status.md` marks both rows `done`. The remaining material gap is authenticated browser QA for the real `/natal` flow, explicitly not completed in `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/evidence/browser-qa.md`.
+Final initiative status: `Requires business/QA validation`. Implementation and targeted validation evidence exist for both stories, final implementation reviews are `CLEAN`, and both `_condamad/stories/story-status.md` and story source headers mark `CS-419` and `CS-420` as `done`. The remaining material gap is authenticated browser QA for the real `/natal` flow, explicitly not completed in `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/evidence/browser-qa.md`.
 
 ## 2. Initial context and trigger
 
@@ -86,6 +86,7 @@ No audit story is part of this series. The requested audit section is therefore 
 ### Documentation evidence
 
 - `_condamad/stories/story-status.md` rows `CS-419` and `CS-420`: both marked `done` with paths and source briefs dated 2026-05-31.
+- `_condamad/stories/CS-419-stabiliser-contrat-public-interpretation-natale-free-basic/00-story.md` and `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/00-story.md`: both source story headers are aligned to `Status: done`.
 - `_condamad/stories/CS-419-stabiliser-contrat-public-interpretation-natale-free-basic/generated/03-acceptance-traceability.md`: all CS-419 ACs `PASS`.
 - `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/generated/03-acceptance-traceability.md`: all CS-420 ACs `PASS`.
 
@@ -130,7 +131,7 @@ No audit story is part of this series. The requested audit section is therefore 
 
 ### Assumptions
 
-- The report treats `_condamad/stories/story-status.md` rows `done` and final review verdicts `CLEAN` as completion provenance, but not as substitutes for the explicit command evidence listed above.
+- The report treats `_condamad/stories/story-status.md` rows `done`, source story headers `Status: done`, and final review verdicts `CLEAN` as completion provenance, but not as substitutes for the explicit command evidence listed above.
 - The report treats the user's statement "Aucun audit dans cette serie" as authoritative for audit coverage.
 
 ## 9. Residual risks
@@ -141,7 +142,7 @@ No audit story is part of this series. The requested audit section is therefore 
 
 ## 10. Evidence gaps
 
-- Commit range for the implementation series is `Not evidenced`; only current branch `main` and HEAD `b1ad4516` were observed during report generation.
+- Commit range for the implementation series is `Not evidenced`; current branch `main` contains the report artifact at HEAD `37931575`, but the implementation commit range remains undocumented.
 - No CI run URL or external CI log was provided.
 - Authenticated browser QA is `NOT RUN`; only local route startup and login redirect are evidenced.
 - No audit findings, risks or candidates are linked because the series explicitly has no audit stories.
@@ -156,4 +157,4 @@ No audit story is part of this series. The requested audit section is therefore 
 
 `Requires business/QA validation`
 
-Both stories have implementation evidence, AC traceability, targeted validation, `CLEAN` final reviews, and `done` tracker rows. The initiative is not marked simply `Delivered` because the expected authenticated `/natal` Browser QA is explicitly absent, and backend full-suite validation has a documented unrelated failure. Those gaps are visible and bounded, but they require QA/business acceptance or follow-up validation before final release confidence.
+Both stories have implementation evidence, AC traceability, targeted validation, `CLEAN` final reviews, `done` tracker rows, and source story headers aligned to `Status: done`. The initiative is not marked simply `Delivered` because the expected authenticated `/natal` Browser QA is explicitly absent, and backend full-suite validation has a documented unrelated failure. Those gaps are visible and bounded, but they require QA/business acceptance or follow-up validation before final release confidence.
