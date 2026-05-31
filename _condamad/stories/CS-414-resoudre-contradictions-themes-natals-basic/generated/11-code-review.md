@@ -30,6 +30,12 @@ Verdict: CLEAN
 - Date-only context downgrades birth-time surfaces and avoids public interpretation of unavailable houses or angles.
 - Public-boundary scans do not expose resolver symbols in frontend, API or natal LLM service surfaces.
 
+## Brief Alignment Addendum
+
+- PASS: source brief, story objective, ACs, implementation, tests and final evidence remain aligned.
+- FIXED: story status and final evidence status now match tracker status `done` dated `2026-05-31`.
+- No code change was required during this alignment pass.
+
 ## Validation
 
 - PASS: `ruff check .` from `backend`.

@@ -3,11 +3,12 @@
 ## Story status
 
 - Validation outcome: pass
-- Ready for review: yes
+- Ready for review: no
+- Implementation status: done
 - Story key: CS-414-resoudre-contradictions-themes-natals-basic
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-414-resoudre-contradictions-themes-natals-basic`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 
 ## Preflight
 
