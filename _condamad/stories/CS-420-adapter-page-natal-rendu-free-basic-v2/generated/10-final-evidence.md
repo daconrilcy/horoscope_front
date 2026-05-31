@@ -2,8 +2,8 @@
 
 ## Story status
 
-- Validation outcome: passed
-- Ready for review: yes
+- Validation outcome: passed after implementation review/fix iteration 1
+- Ready for review: no; final implementation review is clean
 - Story key: `CS-420-adapter-page-natal-rendu-free-basic-v2`
 - Source story: `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/00-story.md`
 - Capsule path: `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2`
@@ -110,7 +110,7 @@
 
 - Modified/deleted frontend files are limited to the CS-420 natal rendering and guard/test surface.
 - Capsule evidence and generated files under `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/**` were added/updated.
-- `_condamad/stories/story-status.md` row `CS-420` updated to `ready-to-review`.
+- `_condamad/stories/story-status.md` row `CS-420` updated to `done`.
 - Pre-existing `_condamad/run-state.json` remains modified and was not touched intentionally.
 
 ## Commands skipped or blocked
@@ -119,7 +119,25 @@
 
 ## Remaining risks
 
-- Browser QA did not authenticate with the test user; runtime rendering of real API payloads remains covered by mocked Vitest fixtures and backend contract tests.
+- Browser QA was not rerun after the review/fix patch because backend/auth services were not started.
+- Runtime rendering of real API payloads remains covered by mocked Vitest fixtures and backend contract tests.
+
+## Implementation review/fix addendum
+
+- Final review artifact: `generated/11-code-review.md`.
+- Iterations: 1 review/fix iteration, followed by a fresh clean review.
+- Issues fixed:
+  - free short `meta.level=short` payload disclaimers now render;
+  - Basic V2 renders merged public evidence from `interpretation.public_evidence` and root `public_evidence`;
+  - stale legacy CSS selectors `.ni-evidence-tags` and `.ni-projections` were removed;
+  - exact forbidden technical marker strings were removed from scoped frontend source.
+- Fresh validations:
+  - `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading`: PASS, 119 tests;
+  - `pnpm --dir frontend build`: PASS;
+  - `pnpm --dir frontend lint`: PASS;
+  - story validation and strict lint after venv activation: PASS;
+  - VC4, VC5 and VC6 scans: PASS zero-hit;
+  - full `pnpm --dir frontend test`: PASS_WITH_RERUN because unrelated `router.test.tsx` failed in full and passed isolated.
 
 ## Suggested reviewer focus
 

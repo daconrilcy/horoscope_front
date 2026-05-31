@@ -1,19 +1,29 @@
 CS-420 validation summary
 
-PASS: python capsule validation after venv activation.
-PASS: pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard natalNarrativeReading NatalChartPage component-architecture-guards component-usage-guards
-PASS: pnpm --dir frontend test (second full run: 118 files, 1301 passed, 8 skipped)
-PASS: pnpm --dir frontend build
-PASS: pnpm --dir frontend lint
-PASS: python -B -m pytest backend Basic V2 contract guards after venv activation (18 passed)
-PASS: no inline style syntax in touched natal TSX surfaces.
-PASS: no forbidden legacy public rendering symbols/classes in public surfaces.
-PASS: deleted legacy components have no references.
-PASS: no forbidden technical markers in public reading surfaces.
-PASS: narrative accordion toggle scan.
-PASS: git diff --check, with CRLF warnings only.
+Review/fix iteration 1:
+- Fixed free short payload disclaimers for `meta.level=short`.
+- Fixed Basic V2 public evidence rendering from `interpretation.public_evidence` and root `public_evidence`.
+- Removed stale legacy CSS selectors `.ni-evidence-tags` and `.ni-projections`.
+- Removed exact forbidden technical marker labels from the natal expert panel source.
 
-Notes:
-- First Vitest full run failed once on router.test.tsx; isolated router rerun passed and the second full suite passed.
-- First dev server startup on 5173 failed because the port was already in use; startup on 5174 passed.
-- Browser plugin iab unavailable; Playwright CLI fallback used for local QA.
+PASS: python capsule validation after venv activation.
+PASS: python story strict lint after venv activation.
+PASS: pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading
+  - 4 files passed, 119 tests passed.
+PASS: pnpm --dir frontend build.
+PASS: pnpm --dir frontend lint.
+PASS: rg -n "style=\\{" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx
+  - zero hit.
+PASS: rg -n "ni-evidence-tags|ni-projections|LockedSection|NatalAstrologicalDna|NatalLifeDomains|NatalStrengths|NatalChallenges|NatalMajorAspects" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx
+  - zero hit.
+PASS: rg -n "visibility_expression|audit_input|condition_axis:|interpretive_signal_ids|projection_version|ranking_score|weighted_score|prompt_hint" frontend/src/components/natal-interpretation frontend/src/features/natal-chart
+  - zero hit.
+PASS: rg -n "NatalInterpretationEvidence|NatalInterpretationLegacyBody|EvidenceTags|hasRenderableLegacyInterpretationBody" frontend/src
+  - zero hit.
+PASS_WITH_RERUN: pnpm --dir frontend test
+  - full run: 117 files passed, router.test.tsx failed once on "allows authenticated user to access protected route";
+  - isolated rerun `pnpm --dir frontend test -- router`: PASS, 11 tests passed.
+
+Not rerun in this review/fix cycle:
+- Backend Basic V2 pytest guards: implementation fixes are frontend-only; previous evidence remains unchanged.
+- Authenticated Browser QA: backend/auth services were not started; previous route-start evidence remains unchanged.

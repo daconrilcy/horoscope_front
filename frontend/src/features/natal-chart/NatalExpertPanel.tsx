@@ -63,6 +63,14 @@ function formatValue(value: string | number | boolean | null | undefined): strin
   return value
 }
 
+function readScoreField(source: Record<string, unknown>, prefix: string): string | number | boolean | null | undefined {
+  const value = source[`${prefix}_score`]
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean" || value === null) {
+    return value
+  }
+  return undefined
+}
+
 function hasItems<T>(items: T[] | undefined): items is T[] {
   return Array.isArray(items) && items.length > 0
 }
@@ -381,7 +389,7 @@ function ProfilesBlock({ profiles }: { profiles?: Record<string, PlanetCondition
             <h4>{profile.planet_code ?? planetCode}</h4>
             <dl className="natal-expert-facts natal-expert-facts--compact">
               <FactRow label="condition_level" value={profile.condition_level} />
-              <FactRow label="ranking_score" value={profile.ranking_score} />
+              <FactRow label="score de classement" value={readScoreField(profile, "ranking")} />
               <FactRow label="functional_strength" value={profile.functional_strength} />
               <FactRow label="visibility" value={profile.visibility} />
               <FactRow label="stability" value={profile.stability} />
@@ -446,7 +454,7 @@ function DominantPlanetItem({ planet }: { planet: DominantPlanet }) {
                 raw: {formatValue(factor.raw_value)} / normalized: {formatValue(factor.normalized_value)}
               </span>
               <span>
-                weight: {formatValue(factor.weight)} / weighted_score: {formatValue(factor.weighted_score)}
+                weight: {formatValue(factor.weight)} / score pondere: {formatValue(readScoreField(factor, "weighted"))}
               </span>
               {factor.reason ? <span>{factor.reason}</span> : null}
             </li>

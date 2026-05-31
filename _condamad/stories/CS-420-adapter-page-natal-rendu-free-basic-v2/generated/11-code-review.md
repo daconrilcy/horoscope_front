@@ -1,41 +1,47 @@
-# CS-420 Draft Review - CLEAN (OBSOLETE PRE-IMPLEMENTATION)
+# CS-420 Implementation Review - CLEAN
 
-<!-- Commentaire global: cet artefact consigne la revue editoriale de la story CS-420 avant implementation. -->
+<!-- Commentaire global: cet artefact consigne la revue finale de l'implementation CS-420. -->
 
 Date: 2026-05-31
-Verdict: OBSOLETE_FOR_FINAL_EVIDENCE
-
-Handoff note 2026-05-31: this review was a pre-implementation story drafting
-review. It is retained for history only and must not be cited as final code
-review evidence for the implementation completed in this run.
+Verdict: CLEAN
 
 ## Scope Reviewed
 - Story: `_condamad/stories/CS-420-adapter-page-natal-rendu-free-basic-v2/00-story.md`
-- Tracker: `_condamad/stories/story-status.md`
 - Source brief: `_story_briefs/cs-420-adapter-page-natal-rendu-free-basic-v2.md`
-- Guardrails scoped by ID: `RG-153`, `RG-154`, `RG-158`, `RG-168`
+- Tracker row: `_condamad/stories/story-status.md` row `CS-420`
+- Guardrails: `RG-153`, `RG-154`, `RG-158`, `RG-168`
+- Implementation surfaces: natal interpretation API/view types, render branches, CSS, tests and evidence.
 
-## Review Result
-No remaining actionable drafting issue was found after the line-length cleanup.
+## Fresh Review Result
+No remaining actionable implementation issue was found after review/fix iteration 1.
 
-The story covers the brief objective and named work items:
-- free short rendering from `AstroFreeResponseV1`;
-- Basic V2 frontend types, view data transport and public rendering;
-- explicit branch selection for free short, Basic V2, narrative v1 and obsolete complete legacy;
-- public evidence rendering through `label` and `meaning`;
-- DOM leak guards, no inline style, Vitest coverage, lint, build, scans and Browser QA evidence.
+The implementation now satisfies the brief and ACs:
+- free short readings render title, summary, sections, highlights, advice and payload disclaimers;
+- Basic V2 renders title, introduction, themes, conclusion, limitations, disclaimers and public evidence;
+- Basic V2 evidence is rendered only through public `label` and `meaning` values;
+- narrative v1 rendering remains delegated to `NatalNarrativeReading`;
+- complete legacy readings without modern public contracts keep the regeneration message;
+- forbidden legacy classes, old factual symbols, technical markers and inline styles are absent from scoped surfaces.
 
-## Issues Fixed In This Loop
-- Shortened three Markdown table rows to keep table lines below 160 characters.
+## Issues Fixed In This Review/Fix Loop
+- Free short `meta.level=short` payload disclaimers were not rendered.
+- Basic V2 root evidence rendered, but `interpretation.public_evidence` was ignored.
+- Stale legacy CSS selectors `.ni-evidence-tags` and `.ni-projections` made the required legacy scan fail.
+- Exact technical marker strings remained in the natal expert panel source and made the required marker scan fail.
 
 ## Validation Results
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-420-adapter-page-natal-rendu-free-basic-v2\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-420-adapter-page-natal-rendu-free-basic-v2\00-story.md`
-
-Both Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+- PASS: `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading`
+- PASS: `pnpm --dir frontend build`
+- PASS: `pnpm --dir frontend lint`
+- PASS: story validation after activating `.\.venv\Scripts\Activate.ps1`
+- PASS: story strict lint after activating `.\.venv\Scripts\Activate.ps1`
+- PASS: inline style scan VC4, zero hit.
+- PASS: legacy symbol/class scan VC5, zero hit.
+- PASS: technical marker scan VC6, zero hit.
+- PASS_WITH_RERUN: full `pnpm --dir frontend test` failed once on unrelated `router.test.tsx`; isolated `pnpm --dir frontend test -- router` passed.
 
 ## Residual Risk
-The story is pre-implementation. Runtime behavior remains to be proven by the implementation evidence planned in the story.
+Authenticated Browser QA was not rerun because backend/auth services were not started. The route-start evidence remains in `evidence/browser-qa.md`.
 
 ## Propagation
-No-propagation: the correction was local to this story contract and did not reveal reusable learning for guardrails, AGENTS.md or skills.
+No-propagation: all corrections were local to CS-420 implementation and evidence.

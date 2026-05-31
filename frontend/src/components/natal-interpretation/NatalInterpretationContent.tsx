@@ -22,6 +22,25 @@ function hasItems<T>(items: T[] | null | undefined): items is T[] {
   return Array.isArray(items) && items.length > 0
 }
 
+function mergePublicEvidence(
+  primary?: BasicNatalPublicEvidenceView[] | null,
+  secondary?: BasicNatalPublicEvidenceView[] | null,
+): BasicNatalPublicEvidenceView[] {
+  const merged: BasicNatalPublicEvidenceView[] = []
+  const seen = new Set<string>()
+
+  for (const item of [...(primary ?? []), ...(secondary ?? [])]) {
+    const key = `${item.label}\u0000${item.meaning}`
+    if (seen.has(key)) {
+      continue
+    }
+    seen.add(key)
+    merged.push(item)
+  }
+
+  return merged
+}
+
 function PublicList({ className, items }: { className?: string; items: string[] }) {
   return (
     <ul className={className ?? "ni-public-list"}>
@@ -79,11 +98,9 @@ function PublicEvidenceList({
 
 function FreePublicReading({
   data,
-  includePayloadDisclaimers,
   t,
 }: {
   data: NatalInterpretationViewData
-  includePayloadDisclaimers: boolean
   t: InterpretationTranslations
 }) {
   const { interpretation } = data
@@ -123,13 +140,14 @@ function FreePublicReading({
         </section>
       )}
 
-      {includePayloadDisclaimers && <PublicDisclaimers disclaimers={interpretation.disclaimers} t={t} />}
+      <PublicDisclaimers disclaimers={interpretation.disclaimers} t={t} />
     </>
   )
 }
 
 function BasicV2Reading({ reading, t }: { reading: BasicNatalInterpretationView; t: InterpretationTranslations }) {
   const { interpretation } = reading
+  const publicEvidence = mergePublicEvidence(interpretation.public_evidence, reading.public_evidence)
 
   return (
     <>
@@ -156,7 +174,7 @@ function BasicV2Reading({ reading, t }: { reading: BasicNatalInterpretationView;
         <p className="ni-summary">{interpretation.conclusion}</p>
       </div>
 
-      <PublicEvidenceList evidence={reading.public_evidence} t={t} />
+      <PublicEvidenceList evidence={publicEvidence} t={t} />
 
       {hasItems(reading.limitations) && (
         <section className="ni-content-card ni-content-card--public-list">
@@ -200,7 +218,7 @@ export function InterpretationContent({
       )}
 
       {shouldShowFreePublicReading && (
-        <FreePublicReading data={data} includePayloadDisclaimers={isFreeLongInterpretation} t={t} />
+        <FreePublicReading data={data} t={t} />
       )}
 
       {narrativeReading ? (

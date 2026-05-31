@@ -177,6 +177,7 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText("Contenu global.")).toBeInTheDocument();
     expect(screen.getByText("Point 1")).toBeInTheDocument();
     expect(screen.getByText("Conseil 1")).toBeInTheDocument();
+    expect(screen.getByText("Note test")).toBeInTheDocument();
   });
 
   it("affiche une lecture free_short complete avec ses blocs publics sans regeneration", () => {
@@ -261,6 +262,8 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText("Conclusion publique Basic V2.")).toBeInTheDocument();
     expect(screen.getByText("Soleil en Lion")).toBeInTheDocument();
     expect(screen.getByText("Votre expression gagne en chaleur.")).toBeInTheDocument();
+    expect(screen.getByText("Ascendant Balance")).toBeInTheDocument();
+    expect(screen.getByText("Votre relationnel cherche l'equilibre.")).toBeInTheDocument();
     expect(screen.getByText("Lune en Cancer")).toBeInTheDocument();
     expect(screen.queryByText("basic_natal_interpretation_v2")).not.toBeInTheDocument();
     expect(screen.queryByText("Ancien resume qui ne doit pas piloter Basic V2.")).not.toBeInTheDocument();
@@ -913,7 +916,7 @@ describe("NatalInterpretationSection", () => {
   it("affiche systématiquement les mentions légales applicatives", () => {
     renderSection();
 
-    expect(screen.getByText(/Mentions légales/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Mentions légales/i).length).toBeGreaterThan(0);
     expect(
       screen.getByText(/Cette interprétation astrologique est un contenu de réflexion personnelle/i),
     ).toBeInTheDocument();
@@ -925,7 +928,7 @@ describe("NatalInterpretationSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("n'utilise plus les mentions légales provenant du payload LLM", () => {
+  it("affiche les mentions applicatives et le disclaimer public du payload", () => {
     (useNatalInterpretation as any).mockReturnValue({
       isLoading: false,
       data: {
@@ -941,8 +944,8 @@ describe("NatalInterpretationSection", () => {
     renderSection();
 
     expect(screen.queryByText(/Disclaimer API spécifique/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Disclaimer LLM spécifique/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/Mentions légales/i)).toBeInTheDocument();
+    expect(screen.getByText(/Disclaimer LLM spécifique/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Mentions légales/i).length).toBeGreaterThan(0);
   });
 
   it("gère l'erreur d'interprétation", () => {
