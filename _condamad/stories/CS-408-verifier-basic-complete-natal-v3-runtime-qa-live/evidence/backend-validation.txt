@@ -1,0 +1,26 @@
+CS-408 backend validation - 2026-05-31
+
+Review iteration: implementation review/fix iteration 1.
+Python environment: .\.venv\Scripts\Activate.ps1 used before every Python command.
+
+Commands:
+
+1. Push-Location backend; ruff format --check tests\integration\test_natal_basic_complete_v3_runtime.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py tests\integration\test_natal_interpretation_rejected_public_boundary.py; Pop-Location
+Result: PASS - 4 files already formatted.
+
+2. Push-Location backend; ruff check tests\integration\test_natal_basic_complete_v3_runtime.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py tests\integration\test_natal_interpretation_rejected_public_boundary.py; Pop-Location
+Result: PASS - All checks passed.
+
+3. Push-Location backend; python -B -m pytest --long -q tests\integration\test_natal_basic_complete_v3_runtime.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py tests\integration\test_natal_interpretation_rejected_public_boundary.py --tb=short; Pop-Location
+Result: PASS - 20 passed in 4.73s.
+
+4. Push-Location backend; python -B -c "from app.main import app; assert app.routes; assert app.openapi(); print('routes_openapi_ok')"; Pop-Location
+Result: PASS - routes_openapi_ok.
+
+5. Push-Location backend; rg -n "natal_interpretation_short|natal/interpretation/free|schema_version.*v2" app tests; Pop-Location
+Result: PASS_WITH_CLASSIFIED_HITS.
+Classification: hits are existing short/free tests, catalog/bootstrap references, route cleanup logic, explicit rejected fixtures, and gateway fallback schema branches.
+No hit shows the new Basic complete runtime proof resolving to free/V1 or accepting schema v2.
+
+Guardrail coverage:
+RG-149, RG-150, RG-152, RG-155, RG-156 and RG-157 are covered by targeted pytest, OpenAPI load, and classified scans.

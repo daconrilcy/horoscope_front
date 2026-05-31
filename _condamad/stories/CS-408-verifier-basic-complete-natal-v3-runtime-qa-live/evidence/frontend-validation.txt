@@ -1,0 +1,22 @@
+CS-408 frontend validation - 2026-05-31
+
+Review iteration: implementation review/fix iteration 1.
+
+Commands:
+
+1. pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard
+Result: PASS - 2 files passed, 12 tests passed.
+
+2. pnpm --dir frontend lint
+Result: PASS - TypeScript lint/typecheck completed without errors.
+
+3. pnpm --dir frontend build
+Result: PASS - Vite production build completed.
+
+4. rg -n "visibility_expression|audit_input|interpretive_signal_ids|projection_version|ni-evidence-tags|ni-projections" frontend\src
+Result: PASS_WITH_CLASSIFIED_HITS.
+Classification: hits are API projection contracts, CSS/classes for non-public evidence components, and denylist test assertions.
+The public DOM guard confirms `NatalNarrativeReading` and the public `/natal` branch do not render these technical tokens.
+
+Guardrail coverage:
+RG-153, RG-154 and RG-158 are covered by Vitest, lint, build, and classified DOM denylist scans.

@@ -1,39 +1,35 @@
 # Validation Plan
 
-## Targeted checks
+## Backend
 
-```bash
-# Replace with the smallest relevant test command after repository inspection.
-python -B -m pytest -q --tb=short
+```powershell
+.\.venv\Scripts\Activate.ps1
+Push-Location backend
+ruff check tests\integration\test_natal_basic_complete_v3_runtime.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py tests\integration\test_natal_interpretation_rejected_public_boundary.py
+python -B -m pytest --long -q tests\integration\test_natal_basic_complete_v3_runtime.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py tests\integration\test_natal_interpretation_rejected_public_boundary.py --tb=short
+python -B -c "from app.main import app; assert app.routes; assert app.openapi(); print('routes_openapi_ok')"
+rg -n "natal_interpretation_short|natal/interpretation/free|schema_version.*v2" app tests
+Pop-Location
 ```
 
-## Early guard scans
+Expected: lint and pytest pass; scans may return classified legacy/test/catalog hits only.
 
-Run these before expensive test suites and fix failures first.
+## Frontend
 
-```bash
-rg "legacy|compat|shim|fallback|deprecated|alias" .
-rg "<<forbidden symbol/import patterns from story guardrails>>" .
-git diff --check
+```powershell
+pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard
+pnpm --dir frontend lint
+pnpm --dir frontend build
+rg -n "visibility_expression|audit_input|interpretive_signal_ids|projection_version|ni-evidence-tags|ni-projections" frontend\src
 ```
 
-## Lint / static checks
+Expected: tests, lint and build pass; scans may return classified API/CSS/test guard hits only.
 
-```bash
-ruff check .
+## Story evidence
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-408-verifier-basic-complete-natal-v3-runtime-qa-live\00-story.md
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-408-verifier-basic-complete-natal-v3-runtime-qa-live\00-story.md
+python -B -c "from pathlib import Path; assert Path('_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md').exists(); assert Path('_condamad/stories/CS-408-verifier-basic-complete-natal-v3-runtime-qa-live/evidence/qa-live-report.md').exists()"
 ```
-
-## Full regression checks
-
-```bash
-python -B -m pytest -q --tb=short
-```
-
-## Rule for skipped commands
-
-If a command cannot be run, record:
-
-- exact command;
-- reason not run;
-- risk created;
-- compensating evidence, if any.

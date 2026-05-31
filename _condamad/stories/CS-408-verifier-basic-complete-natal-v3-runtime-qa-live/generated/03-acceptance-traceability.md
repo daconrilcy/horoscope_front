@@ -12,10 +12,10 @@
 | AC8 | Quota is consumed only after acceptance. | Existing quota gate tests cover deferred debit, corrective regeneration and rejection path. | `test_natal_chart_long_quota_on_acceptance.py` PASS. | PASS |
 | AC9 | `/natal` renders modern narrative. | Existing `NatalNarrativeReading` component tests render accessible narrative accordions. | `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard` PASS. | PASS |
 | AC10 | `/natal` public DOM has no leak. | Existing public DOM guard asserts denylist absence and no legacy evidence/projection blocks in public branch. | `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard` PASS. | PASS |
-| AC11 | Authenticated QA evidence is recorded. | QA report addendum records controlled local proof and test account context from existing natal QA report; no real provider call used. | Report path and evidence JSON persisted. | PASS_WITH_LIMITATIONS |
+| AC11 | Authenticated QA evidence is recorded. | QA report addendum and story-local QA report record controlled local proof and test account context; no real provider call used. | Report path, `qa-live-report.md` and evidence JSON persisted. | PASS_WITH_LIMITATIONS |
 | AC12 | QA report names the root cause. | `_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md` addendum names the Basic V3 runtime proof gap. | Evidence file path exists; final capsule validation PASS. | PASS |
 | AC13 | App runtime contracts remain loadable. | Structured route/OpenAPI test and command check `app.routes` and `app.openapi()`. | `routes_openapi_ok` PASS; backend runtime test PASS. | PASS |
-| AC14 | Story evidence artifacts are persisted. | `evidence/basic-complete-before.json`, `evidence/basic-complete-after.json`, generated traceability/final evidence. | Capsule validation PASS. | PASS |
+| AC14 | Story evidence artifacts are persisted. | `basic-complete-before.json`, `basic-complete-after.json`, backend/frontend validation files, QA report and generated review evidence. | Capsule validation PASS. | PASS |
 | AC15 | QA report names changed files. | QA report addendum lists backend test, evidence artifacts and capsule files. | Final evidence consistency check PASS. | PASS |
 
 Status values: `PASS`, `PASS_WITH_LIMITATIONS`, `FAIL`, `BLOCKED`.

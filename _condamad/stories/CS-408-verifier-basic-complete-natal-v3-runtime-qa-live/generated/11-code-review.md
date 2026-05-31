@@ -1,21 +1,19 @@
 # Review CS-408 - verifier-basic-complete-natal-v3-runtime-qa-live
 
-<!-- Commentaire global: cette revue redactionnelle verifie l'alignement du contrat de story CS-408 avec son brief source. -->
+<!-- Commentaire global: cette revue verifie l'implementation CS-408 et ses preuves CONDAMAD. -->
 
 ## Verdict
 
-obsolete - pre-implementation review only.
+CLEAN.
 
-Cette revue est une revue redactionnelle pre-implementation. Elle ne doit pas
-etre citee comme review finale de code ni comme preuve de validation
-post-implementation.
+La review fraiche d'implementation ne trouve plus d'issue actionnable apres correction des preuves manquantes.
 
 ## Scope
 
 - Story: `_condamad/stories/CS-408-verifier-basic-complete-natal-v3-runtime-qa-live/00-story.md`
 - Source brief: `_story_briefs/cs-403-verifier-basic-complete-natal-v3-en-runtime-et-qa-live.md`
-- Tracker row: `_condamad/stories/story-status.md`, source matching the brief.
-- Guardrails checked by targeted ID lookup only: `RG-149`, `RG-150`, `RG-152`, `RG-153`, `RG-154`, `RG-155`, `RG-156`, `RG-157`, `RG-158`.
+- Tracker row: `_condamad/stories/story-status.md`, path et brief source conformes.
+- Guardrails: `RG-149`, `RG-150`, `RG-152`, `RG-153`, `RG-154`, `RG-155`, `RG-156`, `RG-157`, `RG-158`.
 
 ## Review Loop
 
@@ -23,36 +21,44 @@ post-implementation.
 
 Verdict: CHANGES_REQUESTED.
 
-Findings fixed:
+Findings:
 
-- Catalogue/seed proof was present as a task but not explicit enough in the AC and validation plan.
-- The QA closure report target was ambiguous against the brief requirement to update the natal QA closure report.
+- `generated/11-code-review.md` etait encore une revue pre-implementation obsolete, pas une review finale d'implementation.
+- Les artefacts persistants annonces par la story manquaient dans `evidence/`: `backend-validation.txt`, `frontend-validation.txt`,
+  `qa-live-report.md`.
 
-Fixes applied:
+Fixes:
 
-- AC2 now ties the runtime test to VC6, the explicit catalogue/seed scan.
-- VC6 records the catalogue/seed proof for `natal/interpretation/basic`.
-- Persistent evidence now distinguishes the existing natal QA closure report from story-local QA notes.
-- Expected modified paths now include `_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md`.
+- Remplacement de cette review par une review finale d'implementation `CLEAN`.
+- Ajout de `evidence/backend-validation.txt`, `evidence/frontend-validation.txt` et `evidence/qa-live-report.md`.
+- Classification des scans backend/frontend a hits attendus.
 
 ### Iteration 2
 
-Verdict: obsolete after implementation.
+Verdict: CLEAN.
 
-No remaining actionable drafting issue found. The story maps every in-scope primitive from the brief:
-fake gateway runtime proof, Basic complete V3 assembly resolution, public metas, V1/V2 rejection,
-quota-on-acceptance, public DOM guard, authenticated QA evidence and QA closure reporting.
+No remaining actionable issue.
+
+## AC / guardrails
+
+- AC1 a AC8 et AC13: couverts par le test runtime fake gateway, schema guard, quota guard, public boundary et OpenAPI.
+- AC9 a AC10: couverts par Vitest `natalNarrativeReading` et `natalPublicDomGuard`.
+- AC11 a AC15: couverts par le rapport QA CS-400, les preuves `before/after`, les fichiers validation et cette review.
+- Guardrails applicables: preuves executees ou scans classes pour `RG-149`, `RG-150`, `RG-152`, `RG-153`, `RG-154`,
+  `RG-155`, `RG-156`, `RG-157`, `RG-158`.
 
 ## Validation
 
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-408-verifier-basic-complete-natal-v3-runtime-qa-live\00-story.md`
-- PASS: `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-408-verifier-basic-complete-natal-v3-runtime-qa-live\00-story.md`
-
-Both Python commands were run after `.\.venv\Scripts\Activate.ps1`.
+- PASS: backend `ruff check` cible.
+- PASS: backend targeted pytest `--long`, 20 tests passed.
+- PASS: backend `app.routes` et `app.openapi()` loadables.
+- PASS_WITH_CLASSIFIED_HITS: scan backend short/free/v2; aucun hit ne prouve un downgrade Basic complete accepte.
+- PASS: `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard`, 12 tests passed.
+- PASS: `pnpm --dir frontend lint`.
+- PASS: `pnpm --dir frontend build`.
+- PASS_WITH_CLASSIFIED_HITS: scan frontend denylist; hits limites aux contrats API, CSS non public et tests de garde.
 
 ## Closure
 
-- Tracker status a ete mis a jour a `ready-to-review` par l'execution CS-408.
-- No regression guardrail change required.
-- Propagation decision: no-propagation; corrections are local story-contract clarifications.
-- Residual risk post-implementation: la preuve est runtime controlee par fake gateway, pas un smoke provider externe.
+- Propagation decision: no-propagation; les corrections sont locales aux preuves CS-408.
+- Residual risk: preuve controlee localement, pas smoke provider externe, conforme au hors perimetre de la story.
