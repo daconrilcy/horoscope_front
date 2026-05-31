@@ -39,6 +39,40 @@
       "reason_codes": [],
       "salience_level": "supporting",
       "salience_score": 0.0
+    },
+    {
+      "fact_id": "fire-balance",
+      "reason_codes": [
+        "thematic_repetition"
+      ],
+      "salience_level": "supporting",
+      "salience_score": 15.0
+    },
+    {
+      "fact_id": "water-balance",
+      "reason_codes": [
+        "thematic_repetition"
+      ],
+      "salience_level": "supporting",
+      "salience_score": 15.0
+    },
+    {
+      "fact_id": "venus-position",
+      "reason_codes": [
+        "dominant_planet",
+        "thematic_repetition"
+      ],
+      "salience_level": "thematic",
+      "salience_score": 43.0
+    },
+    {
+      "fact_id": "venus-condition",
+      "reason_codes": [
+        "strong_dignity_or_constraint",
+        "thematic_repetition"
+      ],
+      "salience_level": "thematic",
+      "salience_score": 33.0
     }
   ],
   "graph_id": "graph:evidence",

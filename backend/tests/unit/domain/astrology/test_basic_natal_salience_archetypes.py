@@ -66,6 +66,46 @@ def test_dominant_house_is_thematic_without_becoming_fixed_global_priority() -> 
     assert house.salience_score < _decision(audit, "sun").salience_score
 
 
+def test_fire_and_water_repetition_stays_supporting_below_pillars() -> None:
+    """Les dominantes elementaires repetes restent utiles sans devenir piliers."""
+    for element in ("fire", "water"):
+        audit = NatalSalienceModel().score(
+            _graph(
+                _fact(f"{element}-sun", NatalFactFamily.LUMINARY, ("sun", element)),
+                _fact(f"{element}-moon", NatalFactFamily.LUMINARY, ("moon", element)),
+                _fact(f"{element}-balance", NatalFactFamily.ELEMENT_BALANCE, (element,)),
+            ),
+            _full_birth_time_context(),
+        )
+
+        balance = _decision(audit, f"{element}-balance")
+        assert balance.included
+        assert "thematic_repetition" in balance.reason_codes
+        assert balance.salience_score < _decision(audit, f"{element}-sun").salience_score
+        assert balance.salience_score < _decision(audit, f"{element}-moon").salience_score
+
+
+def test_dominant_planet_and_strong_constraint_are_named_without_overtaking_pillars() -> None:
+    """Les facteurs planetaire et contrainte forte restent calibres sous les piliers."""
+    audit = NatalSalienceModel().score(
+        _graph(
+            _fact("sun", NatalFactFamily.LUMINARY, ("sun",)),
+            _fact("moon", NatalFactFamily.LUMINARY, ("moon",)),
+            _fact("venus-position", NatalFactFamily.PLANET_POSITION, ("venus", "taurus")),
+            _fact("venus-condition", NatalFactFamily.CONDITION, ("venus", "detriment")),
+            _fact("venus-house", NatalFactFamily.HOUSE_EMPHASIS, ("venus", "house:7")),
+        ),
+        _full_birth_time_context(),
+    )
+
+    venus_position = _decision(audit, "venus-position")
+    venus_condition = _decision(audit, "venus-condition")
+    assert "dominant_planet" in venus_position.reason_codes
+    assert "strong_dignity_or_constraint" in venus_condition.reason_codes
+    assert venus_position.salience_score < _decision(audit, "sun").salience_score
+    assert venus_condition.salience_score < _decision(audit, "moon").salience_score
+
+
 def test_single_weak_signal_is_blocked_from_autonomous_section_material() -> None:
     """Un signal isole non pilier ne peut pas devenir central seul."""
     audit = NatalSalienceModel().score(

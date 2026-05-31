@@ -7,10 +7,10 @@ PASS .\.venv\Scripts\Activate.ps1; ruff check backend\app\domain\astrology\inter
 Result: All checks passed.
 
 PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short
-Result: 11 passed in 0.39s
+Result: 13 passed in 0.40s
 
 PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_fact_graph.py backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short
-Result: 16 passed in 0.49s
+Result: 18 passed in 0.48s
 
 PASS rg -n "calculate_.*aspect|calculate_.*dignity|SwissEph|\bswe\b|HouseRulerResolver\(" backend/app/domain/astrology/interpretation/natal_salience_model.py
 Result: no matches, exit 1 expected for negative scan
@@ -20,3 +20,14 @@ Result: no matches, exit 1 expected for negative scan
 
 PASS rg -n "lilith|hayz|voices|forms|fertility|ranking_score|weighted_score" backend/app/domain/astrology/interpretation/natal_salience_model.py backend/tests/unit/domain/astrology/test_basic_natal_salience_model.py backend/tests/unit/domain/astrology/test_basic_natal_salience_archetypes.py
 Result: no matches, exit 1 expected for negative scan
+
+Review/fix iteration 1:
+- Issue fixed: repeated Fire/Water balance facts were excluded as single weak signals, leaving brief-required archetypes declared but not scored.
+- Code proof: `_exclusion_reason` now allows repeated element/sign/modality/node facts while still blocking isolated weak signals.
+- Test proof: added explicit Fire/Water repetition and dominant planet / strong constraint coverage.
+
+Final closure:
+- PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-412-prioriser-faits-natals-basic-salience-calibree\00-story.md
+  Result: CONDAMAD story validation PASS.
+- PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-412-prioriser-faits-natals-basic-salience-calibree\00-story.md
+  Result: CONDAMAD story lint PASS.

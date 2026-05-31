@@ -201,7 +201,7 @@ class NatalSalienceModel:
         repetitions: Mapping[str, int],
     ) -> NatalSalienceDecision:
         """Calibre un fait en combinant famille, eligibilite et raisons nommees."""
-        exclusion_reason = _exclusion_reason(fact, eligibility_context)
+        exclusion_reason = _exclusion_reason(fact, eligibility_context, repetitions)
         reason_codes = _reason_codes(fact, repetitions)
         score = 0.0 if exclusion_reason is not None else self._score(fact, reason_codes)
         return NatalSalienceDecision(
@@ -222,6 +222,7 @@ class NatalSalienceModel:
 def _exclusion_reason(
     fact: NatalFact,
     eligibility_context: EligibilityContext,
+    repetitions: Mapping[str, int],
 ) -> NatalSalienceExclusionReason | None:
     """Detecte les faits qui ne doivent pas devenir centraux en Basic."""
     objects = set(fact.objects)
@@ -231,13 +232,16 @@ def _exclusion_reason(
         return NatalSalienceExclusionReason.MINOR_OR_TECHNICAL_SIGNAL
     if not fact.editorial_candidate:
         return NatalSalienceExclusionReason.NOT_EDITORIAL_CANDIDATE
+    if fact.family is NatalFactFamily.CONDITION and not objects.intersection(
+        _STRONG_CONDITION_CODES
+    ):
+        return NatalSalienceExclusionReason.SINGLE_WEAK_SIGNAL
     if fact.family in {
         NatalFactFamily.NODE,
-        NatalFactFamily.CONDITION,
         NatalFactFamily.SIGN_EMPHASIS,
         NatalFactFamily.ELEMENT_BALANCE,
         NatalFactFamily.MODALITY_BALANCE,
-    } and not objects.intersection(_STRONG_CONDITION_CODES):
+    } and not _has_repetition(fact, repetitions):
         return NatalSalienceExclusionReason.SINGLE_WEAK_SIGNAL
     return None
 

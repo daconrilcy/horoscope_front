@@ -13,7 +13,7 @@
 | AC9 | Exact luminary aspect ranks higher. | `exact_aspect` marker consumed from runtime source path, no orb recalculation. | `test_exact_luminary_aspect_ranks_above_wide_transpersonal_aspect`. | PASS |
 | AC10 | Dominant house stays thematic. | `dominant_house` reason and `thematic` level threshold. | `test_dominant_house_is_thematic_without_becoming_fixed_global_priority`. | PASS |
 | AC11 | Single weak signal is blocked. | `SINGLE_WEAK_SIGNAL` exclusion. | `test_single_weak_signal_is_blocked_from_autonomous_section_material`. | PASS |
-| AC12 | Required profiles are covered. | `basic_natal_salience_archetypes.json` declares ten required archetypes. | `test_required_archetype_corpus_and_golden_metadata_are_declared`. | PASS |
+| AC12 | Required profiles are covered. | `basic_natal_salience_archetypes.json` declares ten required archetypes; the model names dominant planet, repeated Fire/Water balance and strong constraint factors. | `test_required_archetype_corpus_and_golden_metadata_are_declared`, `test_fire_and_water_repetition_stays_supporting_below_pillars`, `test_dominant_planet_and_strong_constraint_are_named_without_overtaking_pillars`. | PASS |
 | AC13 | Golden metadata is declared. | Fixture declares expected facts, themes, sections, forbidden facts and quality assertions. | archetype pytest + `evidence/salience-after.json`. | PASS |
 | AC14 | Public contracts expose no salience score. | Salience remains in internal domain model only; public projection builder unchanged. | AST public projection test + bounded public negative scan PASS. | PASS |
 

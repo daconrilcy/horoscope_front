@@ -17,6 +17,8 @@
 - Added canonical internal owner `backend/app/domain/astrology/interpretation/natal_salience_model.py`.
 - Added targeted salience model tests and archetype corpus tests.
 - Added golden archetype metadata fixture for house 10, house 4, house 7, house 12, date-only, Fire, Water, strong Moon, dominant Saturn and constrained Venus.
+- Review/fix iteration 1 corrected repeated Fire/Water balance handling so repeated elemental profiles are scored as supporting material instead of excluded weak signals.
+- Added explicit tests for repeated Fire/Water, dominant planet and strong constraint coverage.
 - No frontend, API, DB, prompt or public projection changes.
 
 ## Commands run
@@ -27,8 +29,8 @@
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...` | PASS | Capsule structure valid. |
 | `ruff format <changed python files>` | PASS | Scoped format. |
 | `ruff check <changed python files>` | PASS | Scoped lint. |
-| `python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short` | PASS | 11 passed. |
-| `python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_fact_graph.py backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short` | PASS | 16 passed. |
+| `python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short` | PASS | 13 passed. |
+| `python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_fact_graph.py backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short` | PASS | 18 passed. |
 | scoped `rg` recalculation/public-leak/forbidden-signal scans | PASS | Exit 1 means no matches for negative scans. |
 
 ## Decisions made
