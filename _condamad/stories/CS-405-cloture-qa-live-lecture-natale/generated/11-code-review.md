@@ -46,6 +46,15 @@ positive CS-400 report. Current persisted evidence still contains the earlier bl
 run: Basic screenshots have `accordionCount = 0`, Free/Premium live QA are absent, and the report is
 intentionally `BLOCKED`.
 
+Fresh Basic API replay on 2026-05-31 after the Basic assembly correction still returns:
+
+- `schema = "v2"`
+- `validation_status = "rejected"`
+- `narrative_natal_reading_v1 = false`
+- `chapter_count = 0`
+- `sources_count = 0`
+- `remaining = 1`
+
 Required next proof before `done`:
 
 - Restart local backend/frontend after the Basic assembly correction.
@@ -64,13 +73,17 @@ Required next proof before `done`:
 - Frontend targeted tests: PASS, 90 passed.
 - Frontend lint: PASS.
 - Frontend build: PASS.
-- Fresh browser/API live QA after the seed correction: NOT RUN, so AC3, AC4, AC5, AC6, AC7, AC8,
-  AC9, AC11 and AC13 cannot be marked clean.
+- Fresh Basic API live QA after the seed correction: FAIL product assertion, still `v2`/`rejected`
+  without `narrative_natal_reading_v1`.
+- Fresh browser live QA and Free/Premium replay after the seed correction: NOT RUN because the
+  Basic API runtime path remains blocked, so AC3, AC4, AC5, AC6, AC7, AC8, AC9, AC11 and AC13
+  cannot be marked clean.
 
 ## Tracker Decision
 
-`_condamad/stories/story-status.md` is not updated to `done` because this fresh implementation review
-is not clean.
+`_condamad/stories/story-status.md` remains `ready-to-dev` because the CONDAMAD tracker only accepts
+`ready-to-dev`, `ready-to-review` and `done`; this fresh implementation review is not clean enough
+for `done`.
 
 ## Propagation Decision
 

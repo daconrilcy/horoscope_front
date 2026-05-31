@@ -11,7 +11,7 @@ Environnement : backend local `127.0.0.1:8001`, frontend local `127.0.0.1:5173`
 
 `BLOCKED` : la cloture live Free / Basic / Premium ne peut pas etre validee dans cette execution.
 
-Les corrections automatisees CS-396 a CS-399 restent prouvees par tests backend et frontend. Le rejeu live authentifie initial a expose un ecart produit majeur : une generation Basic `complete` forcee retournait `meta.schema_version = "v2"` sans `narrative_natal_reading_v1`, sans cinq chapitres et sans `used_astrological_elements`. La review/fix a corrige la configuration locale manquante `natal/interpretation/basic -> AstroResponse_v3`, mais la QA live Free / Basic / Premium n'a pas encore ete rejouee apres cette correction.
+Les corrections automatisees CS-396 a CS-399 restent prouvees par tests backend et frontend. Le rejeu live authentifie initial a expose un ecart produit majeur : une generation Basic `complete` forcee retournait `meta.schema_version = "v2"` sans `narrative_natal_reading_v1`, sans cinq chapitres et sans `used_astrological_elements`. La review/fix a corrige la configuration locale manquante `natal/interpretation/basic -> AstroResponse_v3`, mais un rejeu API Basic post-correction retourne encore `schema_version = "v2"`, `validation_status = "rejected"` et aucune narrative. La QA live Free / Basic / Premium reste donc non cloturee.
 
 ## Baseline du defaut
 
@@ -29,7 +29,7 @@ Les corrections automatisees CS-396 a CS-399 restent prouvees par tests backend 
 | Profil | Source de preuve | Resultat | Statut |
 |---|---|---|---|
 | Free | Non rejoue completement : le compte local est actuellement `basic` | La preuve Free authentifiee n'est pas disponible dans cette session | `BLOCKED` |
-| Basic | API + navigateur desktop/mobile + review/fix config | L'assembly Basic manquant a ete corrige vers `natal_interpretation` + `AstroResponse_v3`; les captures/API existantes restent pre-correction | `BLOCKED` |
+| Basic | API + navigateur desktop/mobile + review/fix config | L'assembly Basic manquant a ete corrige vers `natal_interpretation` + `AstroResponse_v3`; le rejeu API post-correction reste `v2` rejete | `BLOCKED` |
 | Premium | Non rejoue : aucun passage controle `premium` n'a ete execute apres l'echec Basic bloquant | Le mode astrologue reste prouve par Vitest cible, pas par QA live Premium | `BLOCKED` |
 
 ## Matrice desktop / mobile
@@ -114,7 +114,7 @@ node _condamad\stories\CS-405-cloture-qa-live-lecture-natale\evidence\capture-br
 
 | Risque | Severite | Suivi |
 |---|---|---|
-| Basic `complete` doit etre rejoue en live apres correction assembly V3 | Critique | CS-405 reste non done tant que la preuve API/navigateur post-correction n'existe pas |
+| Basic `complete` reste rejete en live apres correction assembly V3 | Critique | CS-405 reste non done tant qu'une preuve API/navigateur V3 avec narrative n'existe pas |
 | Free et Premium non rejoues completement apres l'echec Basic bloquant | Majeur | A rejouer apres preuve Basic V3 post-correction |
 | La cloture live positive serait trompeuse si elle s'appuyait seulement sur Vitest/Pytest | Majeur | Ce rapport garde le verdict `BLOCKED` |
 

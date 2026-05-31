@@ -7,7 +7,7 @@
 | Story key | `CS-405-cloture-qa-live-lecture-natale` |
 | Implementation outcome | `BLOCKED` |
 | Registry decision | Kept in development queue because live closure is incomplete |
-| Reason | Review/fix iteration corrected the missing Basic V3 assembly, but Free/Basic/Premium live QA has not been replayed after that correction; closure cannot be honestly marked `done`. |
+| Reason | Review/fix iteration corrected the missing Basic V3 assembly, but a fresh Basic API replay still returns `schema_version = "v2"` with `validation_status = "rejected"` and no `narrative_natal_reading_v1`; closure cannot be honestly marked `done`. |
 
 ## Preflight
 
@@ -15,7 +15,7 @@
 - Initial dirty file observed before edits: `_condamad/run-state.json`.
 - `AGENTS.md`, target story and scoped guardrails were read.
 - `story-status.md` row `CS-405` matches the target path and source brief.
-- Existing `generated/11-code-review.md` was replaced by a fresh implementation review after the Basic assembly correction.
+- Existing `generated/11-code-review.md` was updated by a fresh implementation review after the Basic assembly correction and Basic API replay.
 
 ## Capsule validation
 
@@ -32,7 +32,7 @@
 | AC1 | CS-390/395 before/after report evidence. | `cs-390-395-report-before.md`, `cs-390-395-report-after.md` | PASS |
 | AC2 | CS-400/CS-405 report exists and contains the current blocked verdict. | Artifact checks PASS | PASS |
 | AC3 | Free QA not available because the local test account is `basic`. | `api-snapshot.json` | BLOCKED |
-| AC4 | Previous Basic live evidence had no `narrative_natal_reading_v1`; the missing Basic V3 assembly was fixed, but live QA was not replayed. | `generated/11-code-review.md` | BLOCKED |
+| AC4 | Previous and fresh Basic live evidence have no `narrative_natal_reading_v1`; the missing Basic V3 assembly was fixed, but runtime still returns `v2` rejected. | `generated/11-code-review.md` | BLOCKED |
 | AC5 | Premium browser QA not replayed after Basic blocker. | `frontend-targeted-tests.txt` only | BLOCKED |
 | AC6 | Desktop/mobile captures exist but belong to the pre-fix blocked run and must be replaced. | `browser-qa-basic.json`, screenshots | BLOCKED |
 | AC7 | Vitest PASS; live accordions must be replayed after Basic assembly fix. | `frontend-targeted-tests.txt`, `generated/11-code-review.md` | BLOCKED |
@@ -93,7 +93,7 @@ No application tests were added or updated. This story is a QA/reporting closure
 | Command/Check | Status | Reason/Risk |
 |---|---|---|
 | Free browser QA | BLOCKED | Local test account is `basic`; changing plan after Basic live failure would not resolve the narrative blocker. |
-| Fresh Basic browser/API QA after assembly correction | BLOCKED | Not replayed in this review/fix iteration; persisted screenshots still come from the pre-fix blocked run. |
+| Fresh Basic browser QA after assembly correction | BLOCKED | Not replayed because fresh Basic API replay still returns `v2` rejected; persisted screenshots still come from the pre-fix blocked run. |
 | Premium browser QA | BLOCKED | Not replayed after the Basic assembly correction; Premium closure would be misleading without fresh shared pipeline proof. |
 | `ruff format` | NOT_RUN | No Python file was modified. |
 | Full backend `pytest -q` | NOT_RUN | Targeted and long natal suites passed; live browser/API already identified a blocking product failure. |
@@ -117,7 +117,7 @@ Captured after validation in local git status. Pre-existing `_condamad/run-state
 
 ## Remaining risks
 
-- Critical: Basic complete live generation downgrades to V2 and does not expose `narrative_natal_reading_v1`.
+- Critical: Basic complete live generation still downgrades to V2 and does not expose `narrative_natal_reading_v1`.
 - Major: Free and Premium live QA remain unproven until the Basic complete V3 runtime path is fixed.
 - Major: A positive closure report would be misleading if it cited only tests while browser QA fails.
 
