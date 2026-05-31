@@ -5,7 +5,7 @@ Verdict: CLEAN
 ## Scope
 
 - Story reviewed: `_condamad/stories/CS-413-definir-taxonomie-themes-narratifs-basic/00-story.md`.
-- Source brief: `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`.
+- Source brief: `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`.
 - Tracker row: path and source brief match `CS-413`.
 - Review type: implementation, evidence, tests, guardrails and AC alignment.
 

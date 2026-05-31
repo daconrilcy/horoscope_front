@@ -4,7 +4,7 @@ Verdict: CLEAN
 
 ## Scope Reviewed
 
-- Source brief: `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`.
+- Source brief: `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`.
 - Story contract: `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`.
 - Tracker row: `_condamad/stories/story-status.md` entry `CS-411`.
 - Implementation files:

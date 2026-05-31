@@ -6,7 +6,7 @@ Date: 2026-05-31
 ## Target
 
 - Story: `_condamad/stories/CS-410-classifier-eligibilite-heure-naissance-basic/00-story.md`
-- Source brief: `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md`
+- Source brief: `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md`
 - Tracker row: `CS-410` matches target path and source brief.
 
 ## Review Cycle

@@ -1,4 +1,4 @@
-# CS-409 - Resoudre Les Contradictions Des Themes Natals Basic
+# CS-414 - Resoudre Les Contradictions Des Themes Natals Basic
 
 <!-- Commentaire global: ce brief cadre le resolver qui transforme des signaux mixtes en syntheses nuancees. -->
 
@@ -52,7 +52,7 @@ deviennent pas automatiquement du texte public sans validation.
 ## Sources Obligatoires
 
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`
+- `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`
 - `backend/app/services/llm_generation/natal/narrative_semantic_integrity.py`
 - `backend/app/services/llm_generation/natal/narrative_natal_reading_validator.py`
 - `backend/tests/unit/domain/astrology/test_traditional_golden_cases.py`

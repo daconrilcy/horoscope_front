@@ -5,7 +5,7 @@ Verdict: CLEAN
 ## Scope Reviewed
 
 - Story: `_condamad/stories/CS-412-prioriser-faits-natals-basic-salience-calibree/00-story.md`
-- Source brief: `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
+- Source brief: `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
 - Tracker row: `_condamad/stories/story-status.md`
 - Implementation:
   - `backend/app/domain/astrology/interpretation/natal_salience_model.py`

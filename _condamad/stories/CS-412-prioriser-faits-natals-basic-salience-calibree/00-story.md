@@ -2,7 +2,7 @@
 Status: done
 
 ## Trigger / Source
-- Source brief: `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`.
+- Source brief: `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`.
 - Selected mode: Repo-informed story.
 - Source dependency: CS-411 `NatalFactGraph` must be implemented before this story is executed.
 - Bounded problem: Basic needs deterministic salience so spectacular secondary facts cannot outrank natal pillars.
@@ -22,7 +22,7 @@ Create `NatalSalienceModel` for Basic natal facts so each eligible `NatalFactGra
 - Internal audit evidence records salience decisions without exposing scores in public contracts.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-412`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-144` to `RG-148`, `RG-151`, `RG-156`, `RG-160`, `RG-161` read.
 - Evidence 4: `python -B .agents\skills\condamad-story-writer\scripts\resolve_guardrails.py` - scoped resolver executed.
@@ -139,7 +139,7 @@ Additional validation rules:
 - [ ] Task 9: Add bounded scans preventing minor signals and internal score names from becoming public. (AC: AC8, AC14)
 
 ## Files to Inspect First
-- `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
+- `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
 - `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`
 - `backend/app/domain/astrology/interpretation/natal_fact_graph.py`
 - `backend/app/domain/astrology/interpretation/natal_fact_graph_builder.py`
@@ -333,9 +333,9 @@ Files not expected to change:
 - Preserve CS-411 fact graph ownership and do not weaken `RG-160`.
 
 ## References
-- `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
+- `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`
+- `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`
 - `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`
 - `_condamad/stories/regression-guardrails.md`
 - `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py`

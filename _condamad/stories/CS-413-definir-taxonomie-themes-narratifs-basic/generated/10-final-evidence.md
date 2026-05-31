@@ -12,7 +12,7 @@
 ## Preflight
 
 - Repository root: `C:\dev\horoscope_front`
-- Story source and status row verified against `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`.
+- Story source and status row verified against `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`.
 - Initial `git status --short`: pre-existing `_condamad/run-state.json` modified.
 - AGENTS.md considered: repository root `AGENTS.md`.
 - Capsule generated files were missing, then repaired with `condamad_prepare.py --repair-generated-only ... --story-key CS-413`; `condamad_validate.py` PASS.

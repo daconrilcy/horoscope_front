@@ -3,7 +3,7 @@ Status: ready-to-review
 
 ## Trigger / Source
 
-- Source brief: `_story_briefs/cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md`.
+- Source brief: `_story_briefs/cs-407-refuser-downgrade-schema-v3-lecture-natale-complete.md`.
 - Selected mode: Repo-informed story in Fast Story Writer Mode.
 - Source problem: une lecture natale `complete` Basic/Premium peut devenir publique apres echec V3 puis acceptation locale V2/V1.
 - Source stakes: mismatch schema visible, rejet audite, free short preserve, gateway fallback explicite preserve, quota preserve.
@@ -28,7 +28,7 @@ ou un rejet audite `natal_complete_schema_mismatch`, sans conversion locale V2/V
 
 ## Current State Evidence
 
-- Evidence 1: `_story_briefs/cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-407-refuser-downgrade-schema-v3-lecture-natale-complete.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted; next available story number is `CS-407`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted lookup found `RG-150`, `RG-152`, `RG-155`, and `RG-157`.
 - Evidence 4: guardrail resolver ran for backend runtime scope; unrelated frontend universal IDs were rejected from the local scope.
@@ -366,7 +366,7 @@ Files not expected to change:
 
 ## References
 
-- `_story_briefs/cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md`
+- `_story_briefs/cs-407-refuser-downgrade-schema-v3-lecture-natale-complete.md`
 - `_condamad/stories/regression-guardrails.md#RG-150`
 - `_condamad/stories/regression-guardrails.md#RG-152`
 - `_condamad/stories/regression-guardrails.md#RG-155`

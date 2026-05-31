@@ -6,7 +6,7 @@
 - Ready for review: yes
 - Story key: `CS-415-reading-plan-basic-natal-inspectable`
 - Source story: `_condamad/stories/CS-415-reading-plan-basic-natal-inspectable/00-story.md`
-- Source brief verified: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
+- Source brief verified: `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
 - Story registry status: `done`
 
 ## Implementation summary

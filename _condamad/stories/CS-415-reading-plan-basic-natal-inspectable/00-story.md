@@ -2,7 +2,7 @@
 Status: done
 
 ## Trigger / Source
-- Source brief: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`.
+- Source brief: `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`.
 - Selected mode: Repo-informed story.
 - Source dependency: CS-409 through CS-414 define the contracts, eligibility, facts, salience, themes and syntheses consumed here.
 - Bounded problem: Basic natal generation lacks an inspectable `BasicNatalReadingPlan` before any LLM drafting.
@@ -25,17 +25,17 @@ Create a deterministic `BasicNatalReadingPlan` builder that defines the Basic na
 - Archetype tests prove that house 10 does not become the only Basic narrative model.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-415`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-149`, `RG-152`, `RG-154`, `RG-155`, `RG-156`, `RG-164` read.
 - Evidence 4: `python -B .agents\skills\condamad-story-writer\scripts\resolve_guardrails.py` - scoped resolver executed.
 - Evidence 5: `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md` - ReadingPlan source inspected.
-- Evidence 6: `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md` - contract dependency inspected.
-- Evidence 7: `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md` - eligibility dependency inspected.
-- Evidence 8: `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md` - fact graph dependency inspected.
-- Evidence 9: `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md` - salience dependency inspected.
-- Evidence 10: `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md` - theme dependency inspected.
-- Evidence 11: `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md` - synthesis dependency inspected.
+- Evidence 6: `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md` - contract dependency inspected.
+- Evidence 7: `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md` - eligibility dependency inspected.
+- Evidence 8: `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md` - fact graph dependency inspected.
+- Evidence 9: `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md` - salience dependency inspected.
+- Evidence 10: `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md` - theme dependency inspected.
+- Evidence 11: `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md` - synthesis dependency inspected.
 - Evidence 12: `backend/app/services/llm_generation/natal/narrative_natal_reading_builder.py` - current narrative builder inspected.
 
 Repository structure alert:
@@ -161,7 +161,7 @@ Additional validation rules:
 - [ ] Task 13: Add bounded scans for technical internals in public evidence and plan-facing text. (AC: AC23)
 
 ## Files to Inspect First
-- `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
+- `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
 - `_condamad/stories/CS-409-contrats-versionnes-lecture-natale-basic-v2/00-story.md`
 - `_condamad/stories/CS-410-classifier-eligibilite-heure-naissance-basic/00-story.md`
 - `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`
@@ -377,13 +377,13 @@ Files not expected to change:
 - Do not modify `_condamad/stories/regression-guardrails.md` during normal implementation.
 
 ## References
-- `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
+- `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
-- `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md`
-- `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`
-- `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
-- `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`
-- `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`
+- `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
+- `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md`
+- `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`
+- `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
+- `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`
+- `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md`
 - `_condamad/stories/regression-guardrails.md`
 - `backend/app/services/llm_generation/natal/narrative_natal_reading_builder.py`

@@ -4,7 +4,7 @@ Verdict: CLEAN
 
 ## Scope
 - Story: `_condamad/stories/CS-415-reading-plan-basic-natal-inspectable/00-story.md`.
-- Source brief: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`.
+- Source brief: `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`.
 - Tracker row verified: CS-415 path and source brief match `_condamad/stories/story-status.md`.
 - Review type: implementation, AC alignment, tests, CONDAMAD evidence and guardrails.
 

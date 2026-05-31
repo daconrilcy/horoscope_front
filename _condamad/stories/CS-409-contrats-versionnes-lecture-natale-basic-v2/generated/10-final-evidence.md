@@ -8,7 +8,7 @@
 - Ready for review: yes
 - Story key: `CS-409-contrats-versionnes-lecture-natale-basic-v2`
 - Source story: `_condamad/stories/CS-409-contrats-versionnes-lecture-natale-basic-v2/00-story.md`
-- Brief source: `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
+- Brief source: `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
 - Capsule path: `_condamad/stories/CS-409-contrats-versionnes-lecture-natale-basic-v2`
 - Tracker status: `done`
 

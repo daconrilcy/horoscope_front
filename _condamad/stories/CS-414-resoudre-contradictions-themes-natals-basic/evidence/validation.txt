@@ -50,7 +50,7 @@ CS-414 brief-alignment verification - 2026-05-31
 
 PASS tracker alignment
 Checked: _condamad/stories/story-status.md
-Output: CS-414 path matches _condamad/stories/CS-414-resoudre-contradictions-themes-natals-basic/00-story.md and source brief matches _story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md.
+Output: CS-414 path matches _condamad/stories/CS-414-resoudre-contradictions-themes-natals-basic/00-story.md and source brief matches _story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md.
 
 PASS status synchronization
 Checked: 00-story.md and generated/10-final-evidence.md

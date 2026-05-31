@@ -2,7 +2,7 @@
 Status: done
 
 ## Trigger / Source
-- Source brief: `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`.
+- Source brief: `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md`.
 - Source dependency: CS-410/CS-415 define `BasicNatalReadingPlan` as the upstream Basic narrative selection contract.
 - Bounded problem: Basic natal provider payload can still be assembled from broad natal runtime data instead of the resolved reading plan.
 - Source-alignment evidence: objectives, stakes, ACs, tasks, validations, non-goals and guardrails map to the brief without scope drift.
@@ -19,7 +19,7 @@ Make `BasicNatalReadingPlan` the only narrative selection source for the Basic n
 - Existing Basic and Premium routes, provider calls and assemblies remain unchanged outside the Basic natal payload handoff.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md` - source brief read for this story.
+- Evidence 1: `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md` - source brief read for this story.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-416` after existing `CS-415`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - local IDs `RG-149`, `RG-152`, `RG-154`, `RG-156`, `RG-164`, `RG-165` were checked.
 - Evidence 4: `.agents/skills/condamad-story-writer/references/writer-contract-cheatsheet.md` - Fast Story Writer contract applied.
@@ -123,8 +123,8 @@ Make `BasicNatalReadingPlan` the only narrative selection source for the Basic n
 - [ ] Task 10: Persist before and after payload evidence plus validation output under the story evidence directory. (AC: AC12)
 
 ## Files to Inspect First
-- `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`
-- `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
+- `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md`
+- `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `_condamad/stories/CS-415-reading-plan-basic-natal-inspectable/00-story.md`
 - `_condamad/stories/regression-guardrails.md`
@@ -332,8 +332,8 @@ Files not expected to change:
 - Persist validation evidence under `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/evidence/`.
 
 ## References
-- `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`
-- `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
+- `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md`
+- `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `_condamad/stories/CS-415-reading-plan-basic-natal-inspectable/00-story.md`
 - `_condamad/stories/regression-guardrails.md`

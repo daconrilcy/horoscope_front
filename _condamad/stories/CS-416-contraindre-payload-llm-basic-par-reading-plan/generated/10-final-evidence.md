@@ -7,7 +7,7 @@
 - Story key: CS-416-contraindre-payload-llm-basic-par-reading-plan
 - Source story: `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/00-story.md`
 - Capsule path: `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan`
-- Story registry target row verified against source brief: `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`
+- Story registry target row verified against source brief: `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md`
 
 ## Preflight
 

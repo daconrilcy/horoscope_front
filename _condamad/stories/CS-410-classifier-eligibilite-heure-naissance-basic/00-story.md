@@ -3,7 +3,7 @@ Status: ready-to-review
 
 ## Trigger / Source
 - Source type: product-risk brief.
-- Source reference: `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md`.
+- Source reference: `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md`.
 - Reason for change: une lecture Basic doit rester juste avec heure complete, heure approximative ou date seule.
 - Selected mode: Repo-informed story with Fast Story Writer Mode.
 - Source-alignment evidence: objectif, AC, taches, preuves et guardrails couvrent l'heure fiable, approximative et absente.
@@ -20,7 +20,7 @@ Creer un `EligibilityContext` canonique pour piloter les familles maisons, angle
 - Les composants aval consomment `EligibilityContext` au lieu de redecider localement l'usage des maisons.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md` - source brief read for this story.
+- Evidence 1: `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md` - source brief read for this story.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign the story number.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-144` to `RG-148`, `RG-152`, `RG-154`, `RG-156` and `RG-159` consulted.
 - Evidence 4: `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md` - source plan inspected.
@@ -125,7 +125,7 @@ Creer un `EligibilityContext` canonique pour piloter les familles maisons, angle
 - [ ] Task 8: Persist validation and before-after evidence under this story evidence directory. (AC: AC10)
 
 ## Files to Inspect First
-- `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md`
+- `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `backend/app/services/user_profile/natal_chart_service.py`
 - `backend/app/services/natal/calculation_service.py`
@@ -318,7 +318,7 @@ Files not expected to change:
 - Do not update `_condamad/stories/regression-guardrails.md` during implementation of this story.
 
 ## References
-- `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md`
+- `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `_condamad/stories/regression-guardrails.md#RG-144`
 - `_condamad/stories/regression-guardrails.md#RG-145`

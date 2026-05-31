@@ -1,4 +1,4 @@
-# CS-408 - Definir La Taxonomie Des Themes Narratifs Basic
+# CS-413 - Definir La Taxonomie Des Themes Narratifs Basic
 
 <!-- Commentaire global: ce brief cadre la taxonomie narrative versionnee qui regroupe les faits natals en themes Basic. -->
 
@@ -58,7 +58,7 @@ formulations interdites et disponibilite selon l'heure de naissance.
 ## Sources Obligatoires
 
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
+- `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
 - `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`
 - `backend/app/domain/llm/configuration/theme_astral_contracts.py`
 - `backend/app/services/llm_generation/natal/narrative_natal_reading_builder.py`

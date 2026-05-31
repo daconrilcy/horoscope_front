@@ -5,7 +5,7 @@ Verdict: CLEAN
 ## Portee
 
 - Story: `_condamad/stories/CS-406-router-basic-complete-assembly-natale-v3/00-story.md`
-- Brief source: `_story_briefs/cs-401-router-basic-complete-vers-assembly-natale-v3.md`
+- Brief source: `_story_briefs/cs-406-router-basic-complete-assembly-natale-v3.md`
 - Tracker: `_condamad/stories/story-status.md`
 - Classification: review implementation finale, remplace la review de redaction initiale.
 

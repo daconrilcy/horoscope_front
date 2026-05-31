@@ -12,7 +12,7 @@ preuves persistantes.
 ## Scope
 
 - Story: `_condamad/stories/CS-408-verifier-basic-complete-natal-v3-runtime-qa-live/00-story.md`
-- Source brief: `_story_briefs/cs-403-verifier-basic-complete-natal-v3-en-runtime-et-qa-live.md`
+- Source brief: `_story_briefs/cs-408-verifier-basic-complete-natal-v3-runtime-qa-live.md`
 - Tracker row: `_condamad/stories/story-status.md`, path et brief source conformes.
 - Guardrails: `RG-149`, `RG-150`, `RG-152`, `RG-153`, `RG-154`, `RG-155`, `RG-156`, `RG-157`, `RG-158`.
 

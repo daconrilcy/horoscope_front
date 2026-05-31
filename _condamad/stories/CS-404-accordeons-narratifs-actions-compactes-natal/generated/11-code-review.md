@@ -5,7 +5,7 @@ Verdict: CLEAN
 ## Scope reviewed
 
 - Story: `_condamad/stories/CS-404-accordeons-narratifs-actions-compactes-natal/00-story.md`
-- Source brief: `_story_briefs/cs-399-ajouter-accordeons-narratifs-modernes-et-compacter-actions-natal.md`
+- Source brief: `_story_briefs/cs-404-accordeons-narratifs-actions-compactes-natal.md`
 - Tracker row: `_condamad/stories/story-status.md` maps `CS-404` to the target path and source brief.
 - Guardrails: `RG-047`, `RG-052`, `RG-071`, `RG-073`, `RG-129`, `RG-153`, `RG-154`, `RG-158`.
 

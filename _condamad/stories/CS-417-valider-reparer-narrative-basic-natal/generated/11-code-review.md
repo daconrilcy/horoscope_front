@@ -4,7 +4,7 @@ Verdict: CLEAN
 
 ## Scope
 - Story: `_condamad/stories/CS-417-valider-reparer-narrative-basic-natal/00-story.md`.
-- Source brief: `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`.
+- Source brief: `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md`.
 - Tracker row: path and source brief matched; status set to `done` after clean review.
 - Guardrails reviewed: `RG-022`, `RG-150`, `RG-152`, `RG-154`, `RG-155`, `RG-157`, `RG-166`.
 

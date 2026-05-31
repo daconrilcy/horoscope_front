@@ -3,7 +3,7 @@ Status: ready-to-dev
 
 ## Trigger / Source
 
-- Source brief: `_story_briefs/cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md`.
+- Source brief: `_story_briefs/cs-405-cloture-qa-live-lecture-natale.md`.
 - Selected mode: Repo-informed story in Fast Story Writer Mode.
 - Source problem: le rapport live CS-390/395 conserve un constat obsolète alors que CS-396 a CS-399 changent les risques de clôture.
 - Source stakes: preuve authentifiée Free, Basic, Premium, richesse éditoriale, quota, rendu moderne, absence de fuite technique publique.
@@ -26,7 +26,7 @@ Remplacer le constat obsolète par des preuves reproductibles backend, frontend 
 
 ## Current State Evidence
 
-- Evidence 1: `_story_briefs/cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-405-cloture-qa-live-lecture-natale.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted; next available story number is `CS-405`.
 - Evidence 3: `_condamad/reports/cs-390-395-qa-live-natal-ecarts-restant.md` - current live report still carries the historical QA context.
 - Evidence 4: `backend/docs/narrative-natal-reading-v1-contract.md` - public narrative contract consulted.
@@ -383,7 +383,7 @@ Files not expected to change:
 
 ## References
 
-- `_story_briefs/cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md`
+- `_story_briefs/cs-405-cloture-qa-live-lecture-natale.md`
 - `_condamad/reports/cs-390-395-qa-live-natal-ecarts-restant.md`
 - `_condamad/stories/regression-guardrails.md#RG-047`
 - `_condamad/stories/regression-guardrails.md#RG-052`

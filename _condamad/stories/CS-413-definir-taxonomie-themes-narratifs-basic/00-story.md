@@ -2,7 +2,7 @@
 Status: done
 
 ## Trigger / Source
-- Source brief: `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`.
+- Source brief: `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`.
 - Selected mode: Repo-informed story.
 - Source dependency: CS-405 remains a QA dependency named by the brief.
 - Source dependency: CS-412 implements the salience brief referenced by the source as CS-407.
@@ -23,12 +23,12 @@ Create a versioned Basic natal narrative theme taxonomy that groups prioritized 
 - Single weak signals cannot create an autonomous Basic section later in the pipeline.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-413`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-149`, `RG-152`, `RG-154`, `RG-156`, `RG-002`, `RG-022` and `RG-162` read.
 - Evidence 4: `python -B .agents\skills\condamad-story-writer\scripts\resolve_guardrails.py` - scoped resolver executed.
 - Evidence 5: `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md` - source plan inspected.
-- Evidence 6: `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md` - salience dependency inspected.
+- Evidence 6: `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md` - salience dependency inspected.
 - Evidence 7: `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py` - prompt-visible boundary inspected.
 - Evidence 8: `backend/app/domain/llm/configuration/theme_astral_contracts.py` - existing theme astral contract style inspected.
 - Evidence 9: `backend/app/services/llm_generation/natal/narrative_natal_reading_builder.py` - public narrative projection boundary inspected.
@@ -148,8 +148,8 @@ Additional validation rules:
 - [ ] Task 11: Preserve `RG-162` as the durable guardrail for Basic theme taxonomy contracts. (AC: AC16)
 
 ## Files to Inspect First
-- `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`
-- `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
+- `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`
+- `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
 - `_condamad/stories/CS-412-prioriser-faits-natals-basic-salience-calibree/00-story.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`
@@ -350,9 +350,9 @@ Files not expected to change:
 - Preserve CS-412 salience ownership and do not weaken public narrative guardrails.
 
 ## References
-- `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`
+- `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
+- `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
 - `_condamad/stories/CS-412-prioriser-faits-natals-basic-salience-calibree/00-story.md`
 - `_condamad/stories/regression-guardrails.md`
 - `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`

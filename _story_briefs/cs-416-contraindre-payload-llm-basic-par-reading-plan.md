@@ -1,4 +1,4 @@
-# CS-411 - Contraindre Le Payload LLM Basic Par Le Reading Plan
+# CS-416 - Contraindre Le Payload LLM Basic Par Le Reading Plan
 
 <!-- Commentaire global: ce brief cadre le handoff LLM controle par le plan de lecture Basic. -->
 
@@ -52,7 +52,7 @@ editoriales, les limitations, les disclaimers et les contraintes de style.
 ## Sources Obligatoires
 
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
+- `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
 - `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`
 - `backend/app/domain/llm/configuration/theme_astral_contracts.py`
 - `backend/app/domain/llm/runtime/adapter.py`

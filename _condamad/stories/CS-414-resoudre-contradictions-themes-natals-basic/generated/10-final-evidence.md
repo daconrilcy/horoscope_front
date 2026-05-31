@@ -14,7 +14,7 @@
 
 - Repository root: `C:\dev\horoscope_front`
 - Story source: `_condamad/stories/CS-414-resoudre-contradictions-themes-natals-basic/00-story.md`
-- Source brief: `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`
+- Source brief: `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md`
 - Tracker row: matched `CS-414`, target path and source brief.
 - Initial `git status --short`: `_condamad/run-state.json` modified before this run.
 - AGENTS.md considered: repository root `AGENTS.md`.

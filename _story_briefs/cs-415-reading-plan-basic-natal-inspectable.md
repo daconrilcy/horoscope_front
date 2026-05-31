@@ -1,4 +1,4 @@
-# CS-410 - Construire Un Reading Plan Basic Natal Inspectable
+# CS-415 - Construire Un Reading Plan Basic Natal Inspectable
 
 <!-- Commentaire global: ce brief cadre la construction du plan de lecture Basic avant toute generation narrative. -->
 
@@ -58,12 +58,12 @@ aspects majeurs et croissance par signes.
 ## Sources Obligatoires
 
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
-- `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md`
-- `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`
-- `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`
-- `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`
-- `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`
+- `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
+- `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md`
+- `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`
+- `_story_briefs/cs-412-prioriser-faits-natals-basic-salience-calibree.md`
+- `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`
+- `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md`
 - `backend/app/services/llm_generation/natal/narrative_natal_reading_builder.py`
 
 ## Regression Guardrails

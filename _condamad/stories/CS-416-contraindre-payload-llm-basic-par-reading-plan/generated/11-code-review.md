@@ -5,7 +5,7 @@ Verdict: CLEAN
 ## Scope
 
 - Target story: `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/00-story.md`
-- Source brief: `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`
+- Source brief: `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md`
 - Tracker row: verified path and source brief match CS-416.
 - Review type: implementation, tests, evidence, guardrails and AC alignment.
 

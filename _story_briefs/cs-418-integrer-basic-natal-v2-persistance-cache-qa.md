@@ -1,4 +1,4 @@
-# CS-413 - Integrer Basic Natal V2 Avec Persistance Cache Et QA
+# CS-418 - Integrer Basic Natal V2 Avec Persistance Cache Et QA
 
 <!-- Commentaire global: ce brief cadre l'integration finale du moteur Basic natal versionne, de la persistance et de la QA. -->
 
@@ -53,10 +53,10 @@ politique existante, sans consommer le quota avant acceptation.
 ## Sources Obligatoires
 
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
-- `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
-- `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`
-- `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`
+- `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
+- `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
+- `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md`
+- `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md`
 - `backend/app/services/llm_generation/natal/interpretation_service.py`
 - `backend/app/api/v1/routers/public/natal_interpretation.py`
 - `backend/app/services/llm_generation/natal/stored_interpretation_payload.py`

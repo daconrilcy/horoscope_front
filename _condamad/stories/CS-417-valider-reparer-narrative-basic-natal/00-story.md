@@ -2,7 +2,7 @@
 Status: ready-to-review
 
 ## Trigger / Source
-- Source brief: `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`.
+- Source brief: `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md`.
 - Source dependencies: CS-410, CS-411, CS-402 and CS-398 must provide the upstream Basic reading inputs and quota contract.
 - Bounded problem: Basic natal LLM output can be accepted before proving that the draft matches the reading plan and public narrative rules.
 - Source-alignment evidence: objectives, stakes, ACs, tasks, validations, non-goals and guardrails map to the brief without scope drift.
@@ -21,7 +21,7 @@ Validate each Basic natal `NarrativeDraft` against `BasicNatalReadingPlan`, repa
 - Quota is consumed only after a valid accepted reading is persisted.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md` - source brief read for this story.
+- Evidence 1: `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md` - source brief read for this story.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-417` after existing `CS-416`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - local IDs `RG-150`, `RG-152`, `RG-154`, `RG-155`, `RG-157` were checked.
 - Evidence 4: `.agents/skills/condamad-story-writer/references/writer-contract-cheatsheet.md` - Fast Story Writer contract applied.
@@ -138,7 +138,7 @@ Validate each Basic natal `NarrativeDraft` against `BasicNatalReadingPlan`, repa
 - [x] Task 11: Add the Basic plan-backed validation invariant to the regression guardrail registry. (AC: AC15)
 
 ## Files to Inspect First
-- `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`
+- `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md`
 - `_condamad/stories/CS-410-classifier-eligibilite-heure-naissance-basic/00-story.md`
 - `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`
 - `_condamad/stories/CS-415-reading-plan-basic-natal-inspectable/00-story.md`
@@ -347,7 +347,7 @@ Files not expected to change:
 - Persist validation evidence under `_condamad/stories/CS-417-valider-reparer-narrative-basic-natal/evidence/`.
 
 ## References
-- `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`
+- `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `_condamad/stories/CS-410-classifier-eligibilite-heure-naissance-basic/00-story.md`
 - `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`

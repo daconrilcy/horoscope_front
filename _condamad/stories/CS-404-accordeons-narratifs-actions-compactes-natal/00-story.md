@@ -3,7 +3,7 @@ Status: done
 
 ## Trigger / Source
 
-- Source brief: `_story_briefs/cs-399-ajouter-accordeons-narratifs-modernes-et-compacter-actions-natal.md`.
+- Source brief: `_story_briefs/cs-404-accordeons-narratifs-actions-compactes-natal.md`.
 - Selected mode: Repo-informed story in Fast Story Writer Mode.
 - Source problem: la refonte `/natal` affiche les cinq chapitres narratifs trop deroules et place les actions secondaires avant le contenu.
 - Source stakes: lisibilite progressive, accessibilite clavier, contrat `NatalNarrativeReading`, absence de rendu public legacy, preservation des parcours.
@@ -28,7 +28,7 @@ Compacter les actions PDF, historique et options secondaires avant la lecture sa
 
 ## Current State Evidence
 
-- Evidence 1: `_story_briefs/cs-399-ajouter-accordeons-narratifs-modernes-et-compacter-actions-natal.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-404-accordeons-narratifs-actions-compactes-natal.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted; next available story number is `CS-404`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted lookup found `RG-047`, `RG-052`, `RG-071`, `RG-073`, `RG-129`, `RG-153`, `RG-154`, and `RG-158`.
 - Evidence 4: guardrail resolver ran for frontend natal scope; exact local IDs were confirmed by targeted registry lookup.
@@ -366,7 +366,7 @@ Files not expected to change:
 
 ## References
 
-- `_story_briefs/cs-399-ajouter-accordeons-narratifs-modernes-et-compacter-actions-natal.md`
+- `_story_briefs/cs-404-accordeons-narratifs-actions-compactes-natal.md`
 - `_condamad/stories/regression-guardrails.md#RG-047`
 - `_condamad/stories/regression-guardrails.md#RG-052`
 - `_condamad/stories/regression-guardrails.md#RG-071`

@@ -6,7 +6,7 @@
 - Ready for review: yes
 - Story key: CS-407-refuser-downgrade-schema-v3-lecture-natale-complete
 - Source story: `_condamad/stories/CS-407-refuser-downgrade-schema-v3-lecture-natale-complete/00-story.md`
-- Source brief: `_story_briefs/cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md`
+- Source brief: `_story_briefs/cs-407-refuser-downgrade-schema-v3-lecture-natale-complete.md`
 - Capsule path: `_condamad/stories/CS-407-refuser-downgrade-schema-v3-lecture-natale-complete`
 
 ## Preflight

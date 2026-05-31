@@ -2,7 +2,7 @@
 Status: done
 
 ## Trigger / Source
-- Source brief: `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`.
+- Source brief: `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md`.
 - Selected mode: Repo-informed story.
 - Source dependency: CS-413 defines the Basic theme taxonomy referenced by this resolver story.
 - Bounded problem: Basic themes can contain mixed astrological signals without a deterministic synthesis contract.
@@ -23,12 +23,12 @@ Create a deterministic `SynthesisResolver` that turns active Basic natal themes 
 - Resolved syntheses stay editorial inputs for plan or LLM use, not direct public text.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-414`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-152`, `RG-154`, `RG-155`, `RG-156`, `RG-022`, `RG-163` read.
 - Evidence 4: `python -B .agents\skills\condamad-story-writer\scripts\resolve_guardrails.py` - scoped resolver executed.
 - Evidence 5: `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md` - source plan inspected.
-- Evidence 6: `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md` - taxonomy dependency inspected.
+- Evidence 6: `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md` - taxonomy dependency inspected.
 - Evidence 7: `backend/app/services/llm_generation/natal/narrative_semantic_integrity.py` - semantic validator inspected.
 - Evidence 8: `backend/app/services/llm_generation/natal/narrative_natal_reading_validator.py` - public text denylist inspected.
 - Evidence 9: `backend/tests/unit/domain/astrology/test_traditional_golden_cases.py` - existing golden-case pattern inspected.
@@ -149,7 +149,7 @@ Additional validation rules:
 - [ ] Task 11: Add bounded denylist scans for absolute, fatalistic and prescriptive formulations. (AC: AC20, AC21)
 
 ## Files to Inspect First
-- `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`
+- `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md`
 - `_condamad/stories/CS-413-definir-taxonomie-themes-narratifs-basic/00-story.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `backend/app/domain/astrology/interpretation/natal_theme_taxonomy.py`
@@ -348,8 +348,8 @@ Files not expected to change:
 - Preserve CS-413 taxonomy ownership and do not weaken public narrative guardrails.
 
 ## References
-- `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`
-- `_story_briefs/cs-408-definir-taxonomie-themes-narratifs-basic.md`
+- `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md`
+- `_story_briefs/cs-413-definir-taxonomie-themes-narratifs-basic.md`
 - `_condamad/stories/CS-413-definir-taxonomie-themes-narratifs-basic/00-story.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `_condamad/stories/regression-guardrails.md`

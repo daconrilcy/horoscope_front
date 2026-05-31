@@ -3,7 +3,7 @@ Status: done
 
 ## Trigger / Source
 - Source type: product-contract
-- Source reference: `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
+- Source reference: `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
 - Reason for change: le moteur Basic doit fixer ses contrats versionnes avant toute nouvelle generation LLM.
 - Selected mode: Repo-informed story with Fast Story Writer Mode.
 - Source-alignment evidence: le contrat couvre le pipeline cible, les preuves, les versions, la denylist publique et la purete backend.
@@ -20,7 +20,7 @@ Creer le socle contractuel minimal de lecture natale Basic V2 sans brancher de n
   et `schema_version=basic_natal_interpretation_v2`.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md` - source brief read for this story.
+- Evidence 1: `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md` - source brief read for this story.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign the story number.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-149`, `RG-150`, `RG-152`, `RG-154`, `RG-155`, `RG-156` consulted.
 - Evidence 4: `backend/app/domain/llm/prompting/narrative_natal_reading_v1.py` - existing public narrative contract inspected.
@@ -97,7 +97,7 @@ Additional validation rules:
 - [x] Task 8: Persist validation and baseline artifacts under this story evidence directory. (AC: AC9)
 
 ## Files to Inspect First
-- `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
+- `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `backend/app/domain/llm/prompting/narrative_natal_reading_v1.py`
 - `backend/app/domain/llm/prompting/schemas.py`
@@ -292,7 +292,7 @@ Files not expected to change:
 - Do not preserve legacy behavior.
 
 ## References
-- `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
+- `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `_condamad/stories/regression-guardrails.md`
 - `backend/app/domain/llm/prompting/narrative_natal_reading_v1.py`

@@ -1,4 +1,4 @@
-# CS-407 - Prioriser Les Faits Natals Basic Par Salience Calibree
+# CS-412 - Prioriser Les Faits Natals Basic Par Salience Calibree
 
 <!-- Commentaire global: ce brief cadre le modele de salience qui priorise les faits natals sans produire de narration. -->
 
@@ -55,7 +55,7 @@ thematique et disponibilite selon `EligibilityContext`.
 ## Sources Obligatoires
 
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`
+- `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`
 - `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py`
 - `backend/app/domain/astrology/interpretation_adapters/signal_builder.py`
 - `backend/tests/fixtures/golden/natal_test.yaml`

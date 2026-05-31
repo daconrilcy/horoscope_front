@@ -5,7 +5,7 @@ Verdict: CLEAN
 ## Scope
 
 - Reviewed story: `_condamad/stories/CS-414-resoudre-contradictions-themes-natals-basic/00-story.md`.
-- Source brief: `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`.
+- Source brief: `_story_briefs/cs-414-resoudre-contradictions-themes-natals-basic.md`.
 - Tracker row: `CS-414`, target path and source brief matched before closure.
 - Guardrails reviewed: `RG-152`, `RG-154`, `RG-155`, `RG-156`, `RG-022`, `RG-163`.
 

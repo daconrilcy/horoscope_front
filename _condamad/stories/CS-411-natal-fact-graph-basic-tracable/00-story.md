@@ -3,7 +3,7 @@ Status: done
 
 ## Trigger / Source
 - Source type: implementation brief.
-- Source reference: `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`.
+- Source reference: `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`.
 - Reason for change: le backend Basic doit extraire des faits astrologiques atomiques, types et tracables avant scoring ou narration.
 - Selected mode: Repo-informed story with Fast Story Writer Mode.
 - Source-alignment evidence: objectif, AC, taches, preuves et guardrails couvrent extraction, tracabilite, eligibilite et anti-recalcul.
@@ -20,7 +20,7 @@ Creer `NatalFactGraph`, une couche backend factuelle qui extrait des faits natal
 - Le builder consomme les projections runtime existantes sans recalculer aspects, dignites, maisons, rulers ou conditions avancees.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md` - source brief read for this story.
+- Evidence 1: `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md` - source brief read for this story.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign the story number.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-144` to `RG-148`, `RG-156` and `RG-160` consulted.
 - Evidence 4: `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md` - source plan inspected.
@@ -133,7 +133,7 @@ Creer `NatalFactGraph`, une couche backend factuelle qui extrait des faits natal
 - [ ] Task 9: Persist before-after, validation and guard evidence under this story directory. (AC: AC10)
 
 ## Files to Inspect First
-- `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`
+- `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py`
 - `backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py`
@@ -332,7 +332,7 @@ Files not expected to change:
 - Preserve `RG-160`; do not weaken the `NatalFactGraph` ownership or anti-recalculation invariant during implementation.
 
 ## References
-- `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`
+- `_story_briefs/cs-411-natal-fact-graph-basic-tracable.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
 - `_condamad/stories/regression-guardrails.md#RG-144`
 - `_condamad/stories/regression-guardrails.md#RG-145`

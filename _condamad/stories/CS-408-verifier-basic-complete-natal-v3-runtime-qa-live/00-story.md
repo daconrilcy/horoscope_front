@@ -3,7 +3,7 @@ Status: done
 
 ## Trigger / Source
 
-- Source brief: `_story_briefs/cs-403-verifier-basic-complete-natal-v3-en-runtime-et-qa-live.md`.
+- Source brief: `_story_briefs/cs-408-verifier-basic-complete-natal-v3-runtime-qa-live.md`.
 - Selected mode: Repo-informed story in Fast Story Writer Mode.
 - Source problem: Basic complete doit prouver en runtime qu'il utilise le pipeline natal V3, sans provider reel non controle.
 - Source stakes: resolution d'assembly, metas gateway, persistance, rejet V1/V2, quota, DOM public et rapport QA.
@@ -28,7 +28,7 @@ Produire une preuve runtime et QA authentifiee que Basic complete utilise `natal
 
 ## Current State Evidence
 
-- Evidence 1: `_story_briefs/cs-403-verifier-basic-complete-natal-v3-en-runtime-et-qa-live.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-408-verifier-basic-complete-natal-v3-runtime-qa-live.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted; next available story number is `CS-408`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted lookup found `RG-149` to `RG-158` for natal V3 scope.
 - Evidence 4: `resolve_guardrails.py` ran with backend runtime, frontend QA, quota and public DOM scope vectors.
@@ -152,8 +152,8 @@ Produire une preuve runtime et QA authentifiee que Basic complete utilise `natal
 
 ## Files to Inspect First
 
-- `_story_briefs/cs-401-router-basic-complete-vers-assembly-natale-v3.md`
-- `_story_briefs/cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md`
+- `_story_briefs/cs-406-router-basic-complete-assembly-natale-v3.md`
+- `_story_briefs/cs-407-refuser-downgrade-schema-v3-lecture-natale-complete.md`
 - `backend/app/domain/llm/runtime/gateway.py`
 - `backend/app/domain/llm/runtime/adapter.py`
 - `backend/app/services/llm_generation/natal/interpretation_service.py`
@@ -395,9 +395,9 @@ Files not expected to change:
 
 ## References
 
-- `_story_briefs/cs-403-verifier-basic-complete-natal-v3-en-runtime-et-qa-live.md`
-- `_story_briefs/cs-401-router-basic-complete-vers-assembly-natale-v3.md`
-- `_story_briefs/cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md`
+- `_story_briefs/cs-408-verifier-basic-complete-natal-v3-runtime-qa-live.md`
+- `_story_briefs/cs-406-router-basic-complete-assembly-natale-v3.md`
+- `_story_briefs/cs-407-refuser-downgrade-schema-v3-lecture-natale-complete.md`
 - `_condamad/stories/regression-guardrails.md#RG-149`
 - `_condamad/stories/regression-guardrails.md#RG-150`
 - `_condamad/stories/regression-guardrails.md#RG-152`

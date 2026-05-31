@@ -12,7 +12,7 @@
 ## Preflight
 
 - Repository root: `C:\dev\horoscope_front`
-- Story/status alignment: row `CS-410` matches the target path and brief `_story_briefs/cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md`.
+- Story/status alignment: row `CS-410` matches the target path and brief `_story_briefs/cs-410-classifier-eligibilite-heure-naissance-basic.md`.
 - Initial `git status --short`: pre-existing `_condamad/run-state.json` modified.
 - AGENTS.md considered: repository root instructions.
 - Scoped guardrails: `RG-144`, `RG-145`, `RG-146`, `RG-147`, `RG-148`, `RG-152`, `RG-154`, `RG-156`, `RG-159`, `RG-002`.

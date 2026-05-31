@@ -3,7 +3,7 @@ Status: ready-to-review
 
 ## Trigger / Source
 
-- Source brief: `_story_briefs/cs-401-router-basic-complete-vers-assembly-natale-v3.md`.
+- Source brief: `_story_briefs/cs-406-router-basic-complete-assembly-natale-v3.md`.
 - Selected mode: Repo-informed story in Fast Story Writer Mode.
 - Source problem: `POST /natal/interpretation` avec `plan=basic` et `level=complete` resout aujourd'hui l'assembly free courte.
 - Source stakes: lecture Basic complete V3, taxonomie ciblee, free short preserve, premium preserve, absence de promotion globale Basic.
@@ -27,7 +27,7 @@ Garantir que la lecture natale `basic` complete resout une assembly `natal/inter
 
 ## Current State Evidence
 
-- Evidence 1: `_story_briefs/cs-401-router-basic-complete-vers-assembly-natale-v3.md` - source brief read.
+- Evidence 1: `_story_briefs/cs-406-router-basic-complete-assembly-natale-v3.md` - source brief read.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted; next available story number is `CS-406`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted lookup found `RG-149`, `RG-150`, `RG-152`, `RG-155`, `RG-156`, and `RG-157`.
 - Evidence 4: guardrail resolver ran for backend LLM runtime scope; unrelated frontend universal IDs were rejected from the local scope.
@@ -363,7 +363,7 @@ Files not expected to change:
 
 ## References
 
-- `_story_briefs/cs-401-router-basic-complete-vers-assembly-natale-v3.md`
+- `_story_briefs/cs-406-router-basic-complete-assembly-natale-v3.md`
 - `_condamad/stories/regression-guardrails.md#RG-149`
 - `_condamad/stories/regression-guardrails.md#RG-150`
 - `_condamad/stories/regression-guardrails.md#RG-152`

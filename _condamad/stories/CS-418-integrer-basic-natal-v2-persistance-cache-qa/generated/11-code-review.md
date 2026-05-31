@@ -7,7 +7,7 @@ CLEAN
 ## Review scope
 
 - Story: `_condamad/stories/CS-418-integrer-basic-natal-v2-persistance-cache-qa/00-story.md`.
-- Brief source: `_story_briefs/cs-413-integrer-basic-natal-v2-persistance-cache-qa.md`.
+- Brief source: `_story_briefs/cs-418-integrer-basic-natal-v2-persistance-cache-qa.md`.
 - Tracker row: `_condamad/stories/story-status.md` maps `CS-418` to the target path and source brief.
 - Implementation evidence: `generated/10-final-evidence.md`, `generated/03-acceptance-traceability.md`, `evidence/qa-report.md`.
 - Guardrails reviewed: `RG-149`, `RG-150`, `RG-152` through `RG-158`, `RG-164` through `RG-167`.

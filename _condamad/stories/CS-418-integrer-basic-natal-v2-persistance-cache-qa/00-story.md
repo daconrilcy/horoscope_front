@@ -2,10 +2,10 @@
 Status: done
 
 ## Trigger / Source
-- Source brief: `_story_briefs/cs-413-integrer-basic-natal-v2-persistance-cache-qa.md`.
+- Source brief: `_story_briefs/cs-418-integrer-basic-natal-v2-persistance-cache-qa.md`.
 - Selected mode: Repo-informed story.
 - Source dependencies:
-  - Source brief declares CS-398 through CS-412.
+  - Source brief declares CS-403 through CS-417 after brief-number realignment.
   - Tracker mapping makes Basic V2 upstream stories CS-409 through CS-417.
 - Bounded problem: Basic complete natal generation is not yet wired end to end through the V2 plan, payload, validator and versioned cache policy.
 - Source-alignment evidence: objectives, stakes, ACs, tasks, validations, non-goals and guardrails map to the brief without scope drift.
@@ -24,15 +24,15 @@ Wire Basic complete natal generation through `basic-natal-reading-v1`, persist `
 - QA evidence distinguishes fixture data, cached read, fake gateway regeneration and controlled provider-live scope.
 
 ## Current State Evidence
-- Evidence 1: `_story_briefs/cs-413-integrer-basic-natal-v2-persistance-cache-qa.md` - source brief read for this story.
+- Evidence 1: `_story_briefs/cs-418-integrer-basic-natal-v2-persistance-cache-qa.md` - source brief read for this story.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-418` after existing `CS-417`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs `RG-149`, `RG-150`, `RG-152` through `RG-158`, `RG-164` through `RG-167` checked.
 - Evidence 4: `.agents/skills/condamad-story-writer/references/writer-contract-cheatsheet.md` - Fast Story Writer contract applied.
 - Evidence 5: `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md` - replacement and cache strategy inspected.
-- Evidence 6: `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md` - versioned contract dependency inspected.
-- Evidence 7: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md` - plan builder dependency inspected.
-- Evidence 8: `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md` - constrained payload dependency inspected.
-- Evidence 9: `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md` - validator dependency inspected.
+- Evidence 6: `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md` - versioned contract dependency inspected.
+- Evidence 7: `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md` - plan builder dependency inspected.
+- Evidence 8: `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md` - constrained payload dependency inspected.
+- Evidence 9: `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md` - validator dependency inspected.
 - Evidence 10: `backend/app/services/llm_generation/natal/interpretation_service.py` - current generation and persistence owner inspected.
 - Evidence 11: `backend/app/api/v1/routers/public/natal_interpretation.py` - quota acceptance boundary inspected.
 - Evidence 12: `backend/app/services/llm_generation/natal/stored_interpretation_payload.py` - accepted and rejected storage boundary inspected.
@@ -153,7 +153,7 @@ Repository structure alert:
 - [ ] Task 11: Persist QA artifacts that separate fixture, cache, fake gateway and controlled provider-live evidence. (AC: AC12, AC14)
 
 ## Files to Inspect First
-- `_story_briefs/cs-413-integrer-basic-natal-v2-persistance-cache-qa.md`
+- `_story_briefs/cs-418-integrer-basic-natal-v2-persistance-cache-qa.md`
 - `_condamad/stories/CS-409-contrats-versionnes-lecture-natale-basic-v2/00-story.md`
 - `_condamad/stories/CS-410-classifier-eligibilite-heure-naissance-basic/00-story.md`
 - `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`
@@ -406,12 +406,12 @@ Files not expected to change:
 - Do not further modify `_condamad/stories/regression-guardrails.md` unless implementation creates another durable invariant.
 
 ## References
-- `_story_briefs/cs-413-integrer-basic-natal-v2-persistance-cache-qa.md`
+- `_story_briefs/cs-418-integrer-basic-natal-v2-persistance-cache-qa.md`
 - `docs/recherches astro/2026-05-31-review-adversariale-refacto-interpretation-natale-basic.md`
-- `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`
-- `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
-- `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`
-- `_story_briefs/cs-412-valider-et-reparer-narrative-basic-natal.md`
+- `_story_briefs/cs-409-contrats-versionnes-lecture-natale-basic-v2.md`
+- `_story_briefs/cs-415-reading-plan-basic-natal-inspectable.md`
+- `_story_briefs/cs-416-contraindre-payload-llm-basic-par-reading-plan.md`
+- `_story_briefs/cs-417-valider-reparer-narrative-basic-natal.md`
 - `_condamad/stories/regression-guardrails.md`
 - `backend/app/services/llm_generation/natal/interpretation_service.py`
 - `backend/app/api/v1/routers/public/natal_interpretation.py`

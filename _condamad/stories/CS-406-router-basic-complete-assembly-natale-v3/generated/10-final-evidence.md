@@ -6,7 +6,7 @@
 - Ready for review: yes
 - Story key: CS-406-router-basic-complete-assembly-natale-v3
 - Source story: `_condamad/stories/CS-406-router-basic-complete-assembly-natale-v3/00-story.md`
-- Source brief: `_story_briefs/cs-401-router-basic-complete-vers-assembly-natale-v3.md`
+- Source brief: `_story_briefs/cs-406-router-basic-complete-assembly-natale-v3.md`
 - Tracker row: `CS-406` path/source checked and updated to `ready-to-review`
 
 ## Preflight

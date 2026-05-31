@@ -5,7 +5,7 @@ Verdict: BLOCKED
 ## Review Scope
 
 - Story: `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/00-story.md`
-- Source brief: `_story_briefs/cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md`
+- Source brief: `_story_briefs/cs-405-cloture-qa-live-lecture-natale.md`
 - Tracker row: `_condamad/stories/story-status.md` row `CS-405`
 - Guardrails: `RG-047`, `RG-052`, `RG-071`, `RG-073`, `RG-129`, `RG-149` to `RG-158`
 - Implementation evidence: generated final evidence, closure report, backend/frontend validations, browser QA artifacts and runtime assembly configuration.

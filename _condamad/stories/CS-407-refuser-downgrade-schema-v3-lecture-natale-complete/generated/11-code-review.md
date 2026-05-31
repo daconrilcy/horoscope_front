@@ -6,7 +6,7 @@ Date: 2026-05-31
 ## Scope
 
 - Story reviewed: `_condamad/stories/CS-407-refuser-downgrade-schema-v3-lecture-natale-complete/00-story.md`
-- Source brief: `_story_briefs/cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md`
+- Source brief: `_story_briefs/cs-407-refuser-downgrade-schema-v3-lecture-natale-complete.md`
 - Tracker row: `_condamad/stories/story-status.md` entry `CS-407`
 - Review target: implementation, CONDAMAD evidence, tests, guardrails and AC alignment.
 
