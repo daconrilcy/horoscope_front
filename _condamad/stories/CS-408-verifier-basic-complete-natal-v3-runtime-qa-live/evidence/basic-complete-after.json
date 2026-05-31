@@ -1,0 +1,23 @@
+{
+  "story": "CS-408-verifier-basic-complete-natal-v3-runtime-qa-live",
+  "captured_at": "2026-05-31",
+  "source": "backend/tests/integration/test_natal_basic_complete_v3_runtime.py",
+  "state": "runtime_controlled_pass",
+  "basic_complete": {
+    "use_case": "natal_interpretation",
+    "assembly_target": "natal/interpretation/basic/fr-FR",
+    "output_schema": "AstroResponse_v3",
+    "schema_version": "v3",
+    "validation_status": "valid",
+    "repair_attempted": false,
+    "fallback_triggered": false,
+    "narrative_natal_reading_v1": true,
+    "used_astrological_elements_non_empty": true,
+    "provider": "fake-basic-v3"
+  },
+  "validation": {
+    "backend_runtime": "python -B -m pytest --long -q backend/tests/integration/test_natal_basic_complete_v3_runtime.py --tb=short",
+    "frontend_dom": "pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard",
+    "openapi": "python -B -c routes_openapi_ok"
+  }
+}

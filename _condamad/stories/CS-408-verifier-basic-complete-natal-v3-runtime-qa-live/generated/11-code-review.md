@@ -4,7 +4,11 @@
 
 ## Verdict
 
-CLEAN.
+obsolete - pre-implementation review only.
+
+Cette revue est une revue redactionnelle pre-implementation. Elle ne doit pas
+etre citee comme review finale de code ni comme preuve de validation
+post-implementation.
 
 ## Scope
 
@@ -33,7 +37,7 @@ Fixes applied:
 
 ### Iteration 2
 
-Verdict: CLEAN.
+Verdict: obsolete after implementation.
 
 No remaining actionable drafting issue found. The story maps every in-scope primitive from the brief:
 fake gateway runtime proof, Basic complete V3 assembly resolution, public metas, V1/V2 rejection,
@@ -48,7 +52,7 @@ Both Python commands were run after `.\.venv\Scripts\Activate.ps1`.
 
 ## Closure
 
-- Tracker status remains `ready-to-dev`; last update was already `2026-05-31`.
+- Tracker status a ete mis a jour a `ready-to-review` par l'execution CS-408.
 - No regression guardrail change required.
 - Propagation decision: no-propagation; corrections are local story-contract clarifications.
-- Residual risk: implementation must still prove the browser QA only when a controlled local runtime is available.
+- Residual risk post-implementation: la preuve est runtime controlee par fake gateway, pas un smoke provider externe.

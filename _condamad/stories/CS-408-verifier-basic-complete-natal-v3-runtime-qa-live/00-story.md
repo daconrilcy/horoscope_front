@@ -1,5 +1,5 @@
 # Story CS-408 verifier-basic-complete-natal-v3-runtime-qa-live: Verifier Basic Complete Natal V3 Runtime Et QA Live
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

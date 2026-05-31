@@ -1,0 +1,15 @@
+{
+  "story": "CS-408-verifier-basic-complete-natal-v3-runtime-qa-live",
+  "captured_at": "2026-05-31",
+  "source": "_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md",
+  "state": "blocked_baseline",
+  "basic_complete": {
+    "use_case": "natal_interpretation",
+    "observed_schema_version": "v2",
+    "validation_status": "rejected",
+    "narrative_natal_reading_v1": false,
+    "used_astrological_elements_non_empty": false,
+    "assembly_target_proven": false
+  },
+  "root_cause": "La preuve live CS-400/CS-405 indiquait une sortie Basic complete downgradee/rejetee sans preuve runtime locale du pipeline natal V3 basic."
+}

@@ -121,3 +121,37 @@ node _condamad\stories\CS-405-cloture-qa-live-lecture-natale\evidence\capture-br
 ## Feedback loop
 
 No-propagation : l'echec correspond a une story runtime deja presente dans le registre (`CS-406`, `CS-407`, `CS-408`). Aucune nouvelle regle durable n'est ajoutee a `_condamad/stories/regression-guardrails.md`.
+
+## Addendum CS-408 - preuve runtime Basic complete V3
+
+Date : 2026-05-31
+Story d'execution : `_condamad/stories/CS-408-verifier-basic-complete-natal-v3-runtime-qa-live/00-story.md`
+
+Verdict : `READY-TO-REVIEW` pour la preuve automatisee controlee, sans appel provider reel.
+
+Cause racine confirmee : la baseline CS-400/CS-405 bloquait parce que Basic `complete` etait observe sans preuve runtime locale du chemin `natal_interpretation` -> `natal/interpretation/basic/fr-FR` -> `AstroResponse_v3` -> `narrative_natal_reading_v1`.
+
+Avant/apres :
+
+| Controle | Avant | Apres CS-408 |
+|---|---|---|
+| Use case Basic complete | `natal_interpretation`, non prouve V3 | `natal_interpretation` capture par fake gateway |
+| Assembly | Basic V3 a rejouer | `natal/interpretation/basic/fr-FR` prouve par `AIEngineAdapter` |
+| Schema | `v2` rejete dans la baseline | `schema_version = "v3"`, `validation_status = "valid"` |
+| Narrative | absente | `narrative_natal_reading_v1` persiste avec `used_astrological_elements` non vide |
+| Public DOM | captures pre-correction invalides | Vitest `natalNarrativeReading` + `natalPublicDomGuard` PASS |
+
+Fichiers touches : `backend/tests/integration/test_natal_basic_complete_v3_runtime.py`, `_condamad/stories/CS-408-verifier-basic-complete-natal-v3-runtime-qa-live/evidence/basic-complete-before.json`, `_condamad/stories/CS-408-verifier-basic-complete-natal-v3-runtime-qa-live/evidence/basic-complete-after.json`, capsule CS-408.
+
+Commandes CS-408 :
+
+```text
+.\.venv\Scripts\Activate.ps1; python -B -m pytest --long -q backend\tests\integration\test_natal_basic_complete_v3_runtime.py backend\tests\unit\test_natal_interpretation_service_v3_schema_guard.py backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py backend\tests\integration\test_natal_interpretation_rejected_public_boundary.py --tb=short
+# PASS: 20 passed
+
+pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard
+# PASS: 12 passed
+
+pnpm --dir frontend lint
+# PASS
+```
