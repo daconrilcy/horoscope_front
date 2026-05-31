@@ -183,3 +183,4 @@
 | cs-401 | `_story_briefs\cs-401-router-basic-complete-vers-assembly-natale-v3.md` | `_condamad\stories\cs-406-router-basic-complete-assembly-natale-v3\00-story.md` |
 | cs-402 | `_story_briefs\cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md` | `_condamad\stories\cs-407-refuser-downgrade-schema-v3-lecture-natale-complete\00-story.md` |
 | cs-403 | `_story_briefs\cs-403-verifier-basic-complete-natal-v3-en-runtime-et-qa-live.md` | `_condamad\stories\cs-408-verifier-basic-complete-natal-v3-runtime-qa-live\00-story.md` |
+| cs-404 | `_story_briefs\cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md` | `_condamad\stories\cs-409-contrats-versionnes-lecture-natale-basic-v2\00-story.md` |
