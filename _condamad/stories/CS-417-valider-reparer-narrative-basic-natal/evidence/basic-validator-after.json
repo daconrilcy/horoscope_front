@@ -7,10 +7,12 @@
     "repair_orchestrator": "validate_repair_or_fallback_basic_natal_draft",
     "rejection_builder": "build_basic_natal_rejection_outcome",
     "fallback_builder": "build_basic_natal_deterministic_fallback",
+    "runtime_handoff": "interpretation_service detects Basic NarrativeDraft outputs and invokes validator",
+    "public_contract_projection": "accepted Basic draft projects to basic_natal_interpretation_v2",
     "test_file": "backend/tests/unit/test_basic_natal_narrative_validator.py"
   },
   "validation": {
-    "targeted_validator_pytest": "9 passed",
+    "targeted_validator_pytest": "11 passed",
     "targeted_existing_pytests": "23 passed",
     "integration_rejected_boundary": "8 passed with --long",
     "ruff_check": "PASS"

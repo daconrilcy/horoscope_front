@@ -35,6 +35,7 @@
 - Added structured Basic rejection metadata carrying `request_id`, `engine_version`, `schema_version`, `validation_errors`, and `fallback_used`.
 - Added one-shot repair orchestration plus deterministic fallback generated only from `BasicNatalReadingPlan` public evidence.
 - Review fix: malformed section entries are now rejected instead of being ignored when all requested sections are present.
+- Brief-alignment fix: `interpretation_service.py` now routes provider outputs shaped as Basic `NarrativeDraft` through the post-generation validator before exposing a Basic V2 public contract, fallback or audit-only rejection.
 - Added `backend/tests/unit/test_basic_natal_narrative_validator.py` covering missing/extra sections, unsupported facts, date-only surfaces, technical markers, person, advice, audit metadata, repair, fallback, limitations, disclaimers, sources, and vocation rejection.
 
 ## AC validation
@@ -63,6 +64,7 @@
 ## Files changed
 
 - `backend/app/services/llm_generation/natal/narrative_natal_reading_validator.py`
+- `backend/app/services/llm_generation/natal/interpretation_service.py`
 - `backend/tests/unit/test_basic_natal_narrative_validator.py`
 - `_condamad/stories/CS-417-valider-reparer-narrative-basic-natal/generated/**`
 - `_condamad/stories/CS-417-valider-reparer-narrative-basic-natal/evidence/**`
@@ -83,8 +85,10 @@
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --root . --repair-generated-only _condamad\stories\CS-417-valider-reparer-narrative-basic-natal` | repo root | PASS | Capsule generated files repaired. |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-417-valider-reparer-narrative-basic-natal` | repo root | PASS | Capsule structure valid before implementation. |
 | `ruff format app\services\llm_generation\natal\narrative_natal_reading_validator.py tests\unit\test_basic_natal_narrative_validator.py` | `backend` | PASS | Scoped Python formatting. |
+| `ruff format app\services\llm_generation\natal\interpretation_service.py tests\unit\test_basic_natal_narrative_validator.py` | `backend` | PASS | Runtime alignment formatting. |
+| `ruff check --fix app\services\llm_generation\natal\interpretation_service.py tests\unit\test_basic_natal_narrative_validator.py` | `backend` | PASS | Import ordering fixed. |
 | `ruff check .` | `backend` | PASS | Backend lint passes. |
-| `python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short` | `backend` | PASS | 9 passed. |
+| `python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short` | `backend` | PASS | 11 passed. |
 | `python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py --tb=short` | `backend` | PASS | 14 passed. |
 | `python -B -m pytest -q tests\unit\test_natal_interpretation_service_v3_schema_guard.py --tb=short` | `backend` | PASS | 5 passed. |
 | `python -B -m pytest -q tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short` | `backend` | PASS | 4 passed. |
@@ -111,6 +115,7 @@
 ## DRY / No Legacy evidence
 
 - Canonical owner reused: `BasicNatalReadingPlan` from `app.domain.astrology.interpretation.basic_natal_reading_plan`.
+- Runtime handoff now uses the same Basic plan-backed validator for provider draft payloads before Basic V2 exposure.
 - No frontend, migration, schema, quota, or public route changes.
 - No compatibility shim, alias, duplicate active path, or fallback padding (`fallback = response.sections[0]`) introduced.
 - `RG-166` already exists and remains the durable invariant for Basic plan-backed validation.

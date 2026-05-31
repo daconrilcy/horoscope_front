@@ -3,10 +3,19 @@
 
 from __future__ import annotations
 
+import inspect
+
 from app.domain.astrology.interpretation.basic_natal_reading_plan import (
     BasicNatalPlanSection,
     BasicNatalPublicEvidence,
     BasicNatalReadingPlan,
+)
+from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
+from app.services.llm_generation.natal import interpretation_service
+from app.services.llm_generation.natal.interpretation_service import (
+    _basic_natal_contract_from_draft,
+    _is_basic_natal_draft_payload,
+    _validate_basic_natal_draft_output,
 )
 from app.services.llm_generation.natal.narrative_natal_reading_validator import (
     build_basic_natal_rejection_outcome,
@@ -97,6 +106,25 @@ def _errors(draft: dict[str, object]) -> list[str]:
         reading_plan=_date_only_plan(),
         request_id="req-basic-validator",
     ).validation_errors
+
+
+def _gateway_result(payload: dict[str, object]) -> GatewayResult:
+    """Construit une sortie gateway minimale pour les helpers runtime Basic."""
+    return GatewayResult(
+        use_case="natal_interpretation",
+        request_id="req-basic-runtime",
+        trace_id="trace-basic-runtime",
+        raw_output="{}",
+        structured_output=payload,
+        usage=UsageInfo(),
+        meta=GatewayMeta(
+            latency_ms=10,
+            model="gpt-test",
+            prompt_version_id="11111111-1111-1111-1111-111111111111",
+            plan="basic",
+            provider="openai",
+        ),
+    )
 
 
 def test_valid_basic_draft_keeps_plan_limitations_disclaimers_and_sources() -> None:
@@ -254,3 +282,34 @@ def test_second_invalid_draft_uses_valid_short_deterministic_fallback() -> None:
     assert outcome.validation_result.fallback_used is True
     assert outcome.accepted_draft is not None
     assert outcome.rejection_outcome is None
+
+
+def test_interpretation_service_routes_basic_draft_to_post_generation_validator() -> None:
+    """Le service runtime applique le validateur quand le provider renvoie un draft Basic."""
+    source = inspect.getsource(interpretation_service.NatalInterpretationService.interpret)
+
+    assert "_is_basic_natal_draft_payload(base_output)" in source
+    assert "_validate_basic_natal_draft_output(" in source
+
+
+def test_basic_draft_runtime_helper_builds_public_v2_contract_after_validation() -> None:
+    """Un draft provider valide est converti en contrat public Basic V2 controle."""
+    draft = _valid_draft()
+
+    assert _is_basic_natal_draft_payload(draft) is True
+    outcome = _validate_basic_natal_draft_output(
+        base_output=draft,
+        reading_plan=_date_only_plan(),
+        gateway_result=_gateway_result(draft),
+        request_id="req-basic-runtime",
+    )
+    assert outcome.accepted_draft is not None
+
+    contract = _basic_natal_contract_from_draft(
+        accepted_draft=outcome.accepted_draft,
+        reading_plan=_date_only_plan(),
+    )
+
+    assert contract.schema_version == "basic_natal_interpretation_v2"
+    assert contract.interpretation.themes
+    assert contract.public_evidence

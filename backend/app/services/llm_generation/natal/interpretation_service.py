@@ -23,6 +23,16 @@ from app.domain.astrology.interpretation.ai_narrative_input_builder import AINar
 from app.domain.astrology.interpretation.astral_point_interpretation import (
     AstralPointInterpretationService,
 )
+from app.domain.astrology.interpretation.basic_natal_eligibility import (
+    build_basic_natal_eligibility_context,
+)
+from app.domain.astrology.interpretation.basic_natal_reading_plan import (
+    BasicNatalReadingPlan,
+    BasicNatalReadingPlanBuilder,
+)
+from app.domain.astrology.interpretation.chart_interpretation_input_builder import (
+    ChartInterpretationInputBuilder,
+)
 from app.domain.astrology.interpretation.client_interpretation_projection_v1_builder import (
     ClientInterpretationProjectionV1Builder,
 )
@@ -30,10 +40,23 @@ from app.domain.astrology.interpretation.llm_astrology_input_v1 import (
     LLM_ASTROLOGY_INPUT_V1_CONTRACT_VERSION,
     LLMAstrologyInputV1Builder,
 )
+from app.domain.astrology.interpretation.natal_fact_graph_builder import (
+    build_basic_natal_fact_graph,
+)
+from app.domain.astrology.interpretation.natal_salience_model import NatalSalienceModel
+from app.domain.astrology.interpretation.natal_synthesis_resolver import SynthesisResolver
+from app.domain.astrology.interpretation.natal_theme_taxonomy import NatalNarrativeThemeTaxonomy
 from app.domain.astrology.interpretation.structured_facts_v1_builder import (
     StructuredFactsV1Builder,
 )
 from app.domain.astrology.natal_calculation import NatalResult
+from app.domain.astrology.reading.basic_natal_contracts import (
+    BASIC_NATAL_PUBLIC_SCHEMA_VERSION,
+    BasicNatalInterpretationV2,
+    NatalPublicTheme,
+    NatalSynthesis,
+    PublicEvidence,
+)
 from app.domain.astrology.runtime.aspect_calculation_contracts import (
     AspectInterpretiveProfileRuntimeData,
 )
@@ -84,9 +107,11 @@ from app.services.llm_generation.natal.narrative_natal_reading_builder import (
     build_narrative_natal_reading_v1,
 )
 from app.services.llm_generation.natal.narrative_natal_reading_validator import (
+    BasicNatalDraftRepairOutcome,
     build_semantic_integrity_rejection_outcome,
     build_technical_leak_rejection_outcome,
     validate_narrative_reading_public_text,
+    validate_repair_or_fallback_basic_natal_draft,
 )
 from app.services.llm_generation.natal.narrative_semantic_integrity import (
     NarrativeChapterSourceMissingError,
@@ -201,6 +226,150 @@ def _build_llm_astrology_input_v1(
         client_interpretation_projection_v1=client_projection,
         evidence_refs=(),
         prompt_ref="natal.llm_astrology_input_v1.runtime",
+    )
+
+
+def _build_basic_natal_reading_plan_for_runtime(
+    *,
+    natal_result: NatalResult,
+    chart_id: str,
+    locale: str,
+) -> BasicNatalReadingPlan:
+    """Reconstruit le plan Basic canonique utilise pour valider le draft provider."""
+    chart_input = ChartInterpretationInputBuilder().build(
+        natal_result,
+        chart_id=chart_id,
+        locale=locale,
+    )
+    structured_facts = StructuredFactsV1Builder().build(
+        natal_result,
+        chart_id=chart_id,
+        locale=locale,
+    )
+    eligibility_context = build_basic_natal_eligibility_context(structured_facts)
+    fact_graph = build_basic_natal_fact_graph(chart_input, eligibility_context)
+    salience_model = NatalSalienceModel()
+    salience_audit = salience_model.score(fact_graph, eligibility_context)
+    themes = NatalNarrativeThemeTaxonomy().activate(
+        graph=fact_graph,
+        salience_audit=salience_audit,
+        eligibility_context=eligibility_context,
+    )
+    return BasicNatalReadingPlanBuilder().build(
+        eligibility_context=eligibility_context,
+        fact_graph=fact_graph,
+        salience_model=salience_model,
+        themes=themes,
+        synthesis_resolver=SynthesisResolver(),
+        locale=locale,
+    )
+
+
+def _is_basic_natal_draft_payload(payload: dict[str, object]) -> bool:
+    """Detecte la forme `NarrativeDraft` Basic avant toute projection publique."""
+    sections = payload.get("sections")
+    if not isinstance(sections, list):
+        return False
+    return any(isinstance(section, dict) and "section_code" in section for section in sections)
+
+
+def _basic_public_evidence(
+    reading_plan: BasicNatalReadingPlan,
+) -> dict[str, PublicEvidence]:
+    """Convertit les preuves du plan inspectable vers le contrat public Basic V2."""
+    section_by_evidence_id: dict[str, str] = {}
+    for section in reading_plan.sections:
+        for evidence_id in section.supporting_evidence_ids:
+            section_by_evidence_id.setdefault(evidence_id, section.section_code)
+    return {
+        evidence.id: PublicEvidence(
+            label=evidence.label,
+            meaning=evidence.explanation,
+            theme=section_by_evidence_id.get(evidence.id, "synthesis"),
+        )
+        for evidence in reading_plan.public_evidence
+    }
+
+
+def _basic_natal_contract_from_draft(
+    *,
+    accepted_draft: dict[str, object],
+    reading_plan: BasicNatalReadingPlan,
+) -> BasicNatalInterpretationV2:
+    """Projette un draft Basic valide vers le contrat public versionne."""
+    evidence_by_id = _basic_public_evidence(reading_plan)
+    sections = accepted_draft.get("sections")
+    theme_items: list[NatalPublicTheme] = []
+    used_public_evidence: dict[str, PublicEvidence] = {}
+    if isinstance(sections, list):
+        for section in sections:
+            if not isinstance(section, dict):
+                continue
+            evidence_ids = section.get("evidence_ids")
+            section_evidence = (
+                [
+                    evidence_by_id[evidence_id]
+                    for evidence_id in evidence_ids
+                    if isinstance(evidence_id, str) and evidence_id in evidence_by_id
+                ]
+                if isinstance(evidence_ids, list)
+                else []
+            )
+            for evidence in section_evidence:
+                used_public_evidence.setdefault(evidence.label, evidence)
+            theme_items.append(
+                NatalPublicTheme(
+                    title=str(section.get("heading") or section.get("section_code") or ""),
+                    narrative=str(section.get("content") or ""),
+                    public_evidence=section_evidence,
+                )
+            )
+    public_evidence = list(used_public_evidence.values())[:12]
+    return BasicNatalInterpretationV2(
+        locale=reading_plan.locale,
+        interpretation=NatalSynthesis(
+            title="Lecture natale Basic",
+            introduction=theme_items[0].narrative if theme_items else "Lecture Basic valide.",
+            themes=theme_items,
+            conclusion="Cette synthese reste symbolique et doit etre lue avec nuance.",
+            public_evidence=public_evidence,
+        ),
+        limitations=list(reading_plan.limitations),
+        disclaimers=list(reading_plan.disclaimers),
+        public_evidence=public_evidence,
+    )
+
+
+def _basic_natal_summary_response(
+    basic_contract: BasicNatalInterpretationV2,
+    disclaimers: list[str],
+) -> AstroFreeResponseV1:
+    """Expose un conteneur public court sans dupliquer le contrat Basic V2."""
+    return AstroFreeResponseV1(
+        title=basic_contract.interpretation.title,
+        summary=basic_contract.interpretation.introduction,
+        sections=[],
+        highlights=[],
+        advice=[],
+        evidence=[],
+        disclaimers=disclaimers,
+    )
+
+
+def _validate_basic_natal_draft_output(
+    *,
+    base_output: dict[str, object],
+    reading_plan: BasicNatalReadingPlan,
+    gateway_result: GatewayResult,
+    request_id: str,
+) -> BasicNatalDraftRepairOutcome:
+    """Applique la validation post-generation Basic sur le draft provider."""
+    return validate_repair_or_fallback_basic_natal_draft(
+        draft=base_output,
+        reading_plan=reading_plan,
+        request_id=request_id,
+        answer_id=f"{gateway_result.use_case}:{request_id}",
+        repair_callback=None,
     )
 
 
@@ -1272,8 +1441,49 @@ class NatalInterpretationService:
         # Mapping structured_output to AstroResponseV1/V2/V3 (Story 30-8 T7.4)
         schema_version = "v1"
         narrative_rejection: RejectedNarrativeAnswerOutcome | None = None
+        basic_natal_interpretation_v2: BasicNatalInterpretationV2 | None = None
 
-        if level == "complete" and not gateway_result.meta.fallback_triggered:
+        if (
+            level == "complete"
+            and user_plan == "basic"
+            and variant_code != "free_short"
+            and _is_basic_natal_draft_payload(base_output)
+        ):
+            basic_reading_plan = _build_basic_natal_reading_plan_for_runtime(
+                natal_result=natal_result,
+                chart_id=chart_id,
+                locale=locale,
+            )
+            basic_outcome = _validate_basic_natal_draft_output(
+                base_output=base_output,
+                reading_plan=basic_reading_plan,
+                gateway_result=gateway_result,
+                request_id=request_id,
+            )
+            if basic_outcome.accepted_draft is None:
+                narrative_rejection = basic_outcome.rejection_outcome
+                interpretation = AstroFreeResponseV1(
+                    title="",
+                    summary=CONTROLLED_REJECTED_CLIENT_MESSAGE,
+                    sections=[],
+                    highlights=[],
+                    advice=[],
+                    evidence=[],
+                    disclaimers=disclaimers,
+                )
+            else:
+                basic_natal_interpretation_v2 = _basic_natal_contract_from_draft(
+                    accepted_draft=basic_outcome.accepted_draft,
+                    reading_plan=basic_reading_plan,
+                )
+                interpretation = _basic_natal_summary_response(
+                    basic_natal_interpretation_v2,
+                    disclaimers,
+                )
+            schema_version = BASIC_NATAL_PUBLIC_SCHEMA_VERSION
+            gateway_result.meta.repair_attempted = basic_outcome.repair_attempted
+            gateway_result.meta.fallback_triggered = basic_outcome.fallback_used
+        elif level == "complete" and not gateway_result.meta.fallback_triggered:
             if variant_code != "free_short":
                 interpretation, schema_version, narrative_rejection = (
                     _deserialize_non_fallback_complete_interpretation(
@@ -1330,6 +1540,11 @@ class NatalInterpretationService:
             if isinstance(gateway_result.structured_output, dict)
             else {}
         )
+        if basic_natal_interpretation_v2 is not None:
+            persist_payload = {
+                **persist_payload,
+                "basic_natal_interpretation_v2": basic_natal_interpretation_v2.model_dump(),
+            }
         if schema_version.startswith("v3") and "disclaimers" in persist_payload:
             persist_payload = persist_payload.copy()
             persist_payload.pop("disclaimers", None)
@@ -1504,6 +1719,7 @@ class NatalInterpretationService:
                 meta=meta,
                 degraded_mode=degraded_mode_str,
                 narrative_natal_reading_v1=narrative_reading,
+                basic_natal_interpretation_v2=basic_natal_interpretation_v2,
             ),
             disclaimers=disclaimers,
         )

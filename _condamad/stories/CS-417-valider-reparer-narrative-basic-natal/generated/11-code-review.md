@@ -11,16 +11,21 @@ Verdict: CLEAN
 ## Review Iterations
 - Iteration 1 found one implementation issue: malformed entries in `sections` could be ignored by the Basic validator.
 - Iteration 2 found no remaining actionable implementation, evidence, guardrail, AC, or tracker issue.
+- Brief-alignment pass found one implementation issue: the Basic validator was implemented and tested directly but was not called by the post-generation runtime path.
+- Brief-alignment re-review found no remaining code-vs-brief issue after the runtime draft handoff correction.
 
 ## Issues Fixed
 - Contract shape / AC2: added explicit rejection for non-sequence `sections` and non-mapping section entries.
 - Regression coverage: added a unit test proving a raw section entry is invalid even when required sections are present.
+- Runtime alignment / brief objective: `interpretation_service.py` now detects provider outputs shaped as Basic `NarrativeDraft`, validates them against `BasicNatalReadingPlan`, and exposes a controlled `basic_natal_interpretation_v2` contract or fallback/rejection path.
+- Regression coverage: added unit coverage proving the runtime service routes Basic drafts to the post-generation validator and converts accepted drafts to the Basic V2 public contract.
 - Evidence freshness: updated validation evidence, after snapshot, final evidence, and this implementation review artifact.
 
 ## Validation Evidence
-- PASS: `.\.venv\Scripts\Activate.ps1; cd backend; ruff format app\services\llm_generation\natal\narrative_natal_reading_validator.py tests\unit\test_basic_natal_narrative_validator.py`.
+- PASS: `.\.venv\Scripts\Activate.ps1; cd backend; ruff format app\services\llm_generation\natal\interpretation_service.py tests\unit\test_basic_natal_narrative_validator.py`.
+- PASS: `.\.venv\Scripts\Activate.ps1; cd backend; ruff check --fix app\services\llm_generation\natal\interpretation_service.py tests\unit\test_basic_natal_narrative_validator.py`.
 - PASS: `.\.venv\Scripts\Activate.ps1; cd backend; ruff check .`.
-- PASS: `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short` (`9 passed`).
+- PASS: `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short` (`11 passed`).
 - PASS: `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short` (`23 passed`).
 - PASS: `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\integration\test_natal_interpretation_rejected_public_boundary.py --long --tb=short` (`8 passed`).
 - PASS_WITH_EXPECTED_HITS: Basic forbidden-marker `rg` scan; hits are validator denylist constants only.

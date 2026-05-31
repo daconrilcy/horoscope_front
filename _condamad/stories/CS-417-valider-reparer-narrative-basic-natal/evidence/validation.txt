@@ -2,9 +2,13 @@ CS-417 validation evidence
 
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\services\llm_generation\natal\narrative_natal_reading_validator.py tests\unit\test_basic_natal_narrative_validator.py
   1 file reformatted, 1 file left unchanged during implementation review correction.
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\services\llm_generation\natal\interpretation_service.py tests\unit\test_basic_natal_narrative_validator.py
+  1 file reformatted, 1 file left unchanged during brief-alignment correction.
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check --fix app\services\llm_generation\natal\interpretation_service.py tests\unit\test_basic_natal_narrative_validator.py
+  2 import-order issues fixed.
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short
-  9 passed
+  11 passed
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py --tb=short
   14 passed
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_natal_interpretation_service_v3_schema_guard.py --tb=short
@@ -14,7 +18,9 @@ PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\integration\test_natal_interpretation_rejected_public_boundary.py --long --tb=short
   8 passed
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py tests\unit\test_narrative_natal_reading_v1.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short
-  Not rerun as a combined command after review correction; equivalent targeted commands passed as 9 + 23 tests.
+  Not rerun as a combined command after brief-alignment correction; equivalent targeted commands passed as 11 + 23 tests.
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short
+  23 passed
 PASS_WITH_EXPECTED_HITS cd backend; rg -n "fallback = response\.sections\[0\]|ranking_score|condition_axis|audit_input" app\services\llm_generation\natal
   No fallback padding hit; hits are validator denylist constants.
 PASS_WITH_EXPECTED_HITS cd backend; rg -n "Ascendant|MC|maison|maisons|angularite" app\services\llm_generation\natal tests\unit\test_basic_natal_narrative_validator.py
