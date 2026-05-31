@@ -1,0 +1,3 @@
+CONDAMAD validation: FAIL
+- 00-story.md Status is not synchronized for final gate: ready-to-dev
+- Story status row is not synchronized for final gate: | CS-405 | cloture-qa-live-lecture-natale | Cloture QA Live Lecture Natale | ready-to-dev | `_condamad/stories/CS-405-cloture-qa-live-lecture-natale/00-story.md` | `_story_briefs/cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md` | 2026-05-31 |

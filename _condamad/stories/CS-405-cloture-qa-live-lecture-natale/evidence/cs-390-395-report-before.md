@@ -2,8 +2,6 @@
 
 > **Mise à jour 2026-05-30 (CS-400)** : les écarts P0 padding/quota et P1 accordéons sont traités par CS-396→399. Voir le rapport de clôture `_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md`. Le constat « narrative absente » ci-dessous reste valable pour les **payloads historiques V1** tant qu'une régénération V3 n'a pas été exécutée.
 
-> **Mise à jour 2026-05-31 (CS-405)** : le rejeu QA live authentifié invalide la clôture positive. Une génération Basic `complete` locale retourne encore `meta.schema_version: "v2"` sans `narrative_natal_reading_v1`, sans cinq chapitres, sans sources publiques et sans accordéons visibles (`output/playwright/cs-400-basic-desktop.png`, `output/playwright/cs-400-basic-mobile.png`). La clôture reste `BLOCKED` jusqu'aux corrections runtime CS-406 à CS-408.
-
 Date : 2026-05-30  
 Compte : `daconrilcy@hotmail.com` / `admin123`  
 Environnement : stack locale (`frontend` :5173, `backend` :8001)  

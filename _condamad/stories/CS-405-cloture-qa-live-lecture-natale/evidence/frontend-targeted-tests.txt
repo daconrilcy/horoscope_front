@@ -1,0 +1,19 @@
+$ node ./scripts/run-vite-logged.mjs vitest vitest run "NatalChartPage" "natalNarrativeReading" "natalPublicDomGuard" "NatalAstrologerMode"
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+stderr | src/tests/NatalAstrologerMode.test.tsx > NatalAstrologerMode > masque le contenu technique par defaut puis l'affiche pour un acces premium
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath.
+
+ ✓ src/tests/NatalAstrologerMode.test.tsx (3 tests) 156ms
+ ✓ src/tests/natalPublicDomGuard.test.tsx (5 tests) 184ms
+ ✓ src/tests/natalNarrativeReading.test.tsx (7 tests) 488ms
+ ✓ src/tests/NatalChartPage.test.tsx (75 tests) 2188ms
+
+ Test Files  4 passed (4)
+      Tests  90 passed (90)
+   Start at  10:59:31
+   Duration  4.14s (transform 1.12s, setup 1.01s, import 1.51s, tests 3.02s, environment 2.45s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json

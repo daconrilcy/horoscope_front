@@ -1,0 +1,4 @@
+98:| RG-155 | `backend-targeted-tests.txt` + generation live | Tests PASS, live FAIL car narrative absente. |
+99:| RG-156 | `backend-targeted-tests.txt` | PASS automatise, non confirme live. |
+100:| RG-157 | `backend-long-entitlement.txt`, `backend-targeted-tests.txt` | PASS automatise. |
+101:| RG-158 | `frontend-targeted-tests.txt` + captures live | Tests PASS, live FAIL car accordions absents du payload rendu. |

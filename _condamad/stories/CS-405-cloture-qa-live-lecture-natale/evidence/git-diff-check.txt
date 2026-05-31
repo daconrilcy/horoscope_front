@@ -1,0 +1,4 @@
+warning: in the working copy of '_condamad/reports/cs-390-395-qa-live-natal-ecarts-restant.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/reports/cs-400-cloture-qa-live-lecture-natale.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/run-state.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/11-code-review.md', LF will be replaced by CRLF the next time Git touches it

@@ -1,0 +1,14 @@
+ M _condamad/reports/cs-390-395-qa-live-natal-ecarts-restant.md
+ M _condamad/reports/cs-400-cloture-qa-live-lecture-natale.md
+ M _condamad/run-state.json
+ M _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/11-code-review.md
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/evidence/
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/01-execution-brief.md
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/03-acceptance-traceability.md
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/04-target-files.md
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/06-validation-plan.md
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/07-no-legacy-dry-guardrails.md
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/09-dev-log.md
+?? _condamad/stories/CS-405-cloture-qa-live-lecture-natale/generated/10-final-evidence.md
+?? output/playwright/cs-400-basic-desktop.png
+?? output/playwright/cs-400-basic-mobile.png

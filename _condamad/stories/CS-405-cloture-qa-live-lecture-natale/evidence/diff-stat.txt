@@ -1,0 +1,4 @@
+ .../cs-390-395-qa-live-natal-ecarts-restant.md     |   2 +
+ .../cs-400-cloture-qa-live-lecture-natale.md       | 158 +++++++++++----------
+ .../generated/11-code-review.md                    |   3 +
+ 3 files changed, 91 insertions(+), 72 deletions(-)

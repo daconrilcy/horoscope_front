@@ -1,5 +1,8 @@
 # Editorial Review - CS-405 cloture-qa-live-lecture-natale
 
+> Classification CS-405 implementation run 2026-05-31: obsolete pre-implementation review.
+> This file reviewed the story draft only. It is not final implementation review evidence and must not be used to mark the story `done` or `ready-to-review`.
+
 Verdict: CLEAN
 
 ## Review Scope

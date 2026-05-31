@@ -1,0 +1,14 @@
+frontend\src\tests\natalPublicDomGuard.test.tsx:140:    expect(container.querySelector(".ni-evidence-tags")).toBeNull()
+frontend\src\tests\natalPublicDomGuard.test.tsx:141:    expect(container.querySelector(".ni-projections")).toBeNull()
+frontend\src\features\natal-chart\NatalInterpretation.css:746:.ni-evidence-tags {
+frontend\src\features\natal-chart\NatalInterpretation.css:766:.ni-evidence-tags-title {
+frontend\src\features\natal-chart\NatalInterpretation.css:815:.ni-evidence-tags-list {
+frontend\src\features\natal-chart\NatalInterpretation.css:887:.ni-projections {
+frontend\src\features\natal-chart\NatalInterpretation.css:891:.ni-projections__card {
+frontend\src\features\natal-chart\NatalInterpretation.css:896:.ni-projections__title {
+frontend\src\features\natal-chart\NatalInterpretation.css:902:.ni-projections__state {
+frontend\src\features\natal-chart\NatalInterpretation.css:907:.ni-projections__state--error,
+frontend\src\features\natal-chart\NatalInterpretation.css:908:.ni-projections__state--locked {
+frontend\src\features\natal-chart\NatalInterpretation.css:912:.ni-projections__state--degraded {
+frontend\src\features\natal-chart\NatalInterpretation.css:916:.ni-projections__grid {
+CLASSIFIED: existing CSS/test legacy marker references only; public DOM denylist covered by natalPublicDomGuard and browser body scan.

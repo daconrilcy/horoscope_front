@@ -1,0 +1,49 @@
+{
+  "data": {
+    "chart_id": "9376012e-3ea4-4b17-b031-42ebfeeb5944",
+    "use_case": "natal_interpretation",
+    "interpretation": {
+      "title": "",
+      "summary": "Nous n'avons pas assez de preuves fiables pour afficher cette interpretation. Votre demande reste enregistree pour analyse interne.",
+      "sections": [],
+      "highlights": [],
+      "advice": [],
+      "disclaimers": [
+        "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+        "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.",
+        "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre."
+      ]
+    },
+    "meta": {
+      "id": null,
+      "level": "complete",
+      "use_case": "natal_interpretation",
+      "persona_id": "c0a80101-8edb-4e1a-8f1a-8f1a8f1a8f1a",
+      "persona_name": null,
+      "prompt_version_id": "99d6e057-9922-4510-b7fe-11e1718513ac",
+      "schema_version": "v2",
+      "validation_status": "rejected",
+      "repair_attempted": false,
+      "fallback_triggered": false,
+      "was_fallback": false,
+      "latency_ms": 9637,
+      "request_id": "869d32917dd44d518c96a33fab6c9ae3",
+      "cached": false,
+      "persisted_at": null,
+      "module": null
+    },
+    "degraded_mode": null,
+    "narrative_natal_reading_v1": null
+  },
+  "disclaimers": [
+    "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+    "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.",
+    "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre."
+  ],
+  "entitlement_info": {
+    "remaining": 1,
+    "limit": 1,
+    "window_end": null,
+    "variant_code": "single_astrologer"
+  }
+}

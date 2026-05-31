@@ -1,0 +1,16 @@
+INFO:     Started server process [102972]
+INFO:     Waiting for application startup.
+INFO: llm_qa_seed_startup_disabled
+INFO: feature_scope_registry_startup_validation_ok
+INFO: message='Request to Stripe api' method=get url=https://api.stripe.com/v1/billing_portal/configurations/bpc_1TGlBGHwm9IxTbGyDzlUqULq
+INFO: message='Stripe API response' path=https://api.stripe.com/v1/billing_portal/configurations/bpc_1TGlBGHwm9IxTbGyDzlUqULq response_code=200
+INFO: stripe_portal_startup_validation_advisory error=Stripe Customer Portal configuration is missing subscription_update prices for configured plans: price_1TElbnHwm9IxTbGyy2748MMF, price_1TH5gcHwm9IxTbGy8ibEAxDx
+INFO: canonical_db_startup_validation_ok
+INFO: llm_coherence_startup_validation mode=strict - scanning active snapshot or published configurations
+INFO: llm_coherence_startup_validation success - all active configurations are coherent
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8001): [winerror 10048] une seule utilisation de chaque adresse de socket (protocole/adresse réseau/port) est habituellement autorisée
+INFO:     Waiting for application shutdown.
+INFO: Shutting down APScheduler...
+INFO: Scheduler has been shut down
+INFO:     Application shutdown complete.

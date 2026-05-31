@@ -1,0 +1,210 @@
+{
+  "me": {
+    "data": {
+      "id": 10,
+      "role": "user",
+      "email": "daconrilcy@hotmail.com",
+      "created_at": "2026-05-30T20:18:47.687475"
+    },
+    "meta": {
+      "request_id": "a0b3465a5caa4e58bb6a27dbcbf6e932"
+    }
+  },
+  "entitlements": {
+    "data": {
+      "plan_code": "basic",
+      "billing_status": "active",
+      "features": [
+        {
+          "feature_code": "astrologer_chat",
+          "granted": true,
+          "reason_code": "granted",
+          "access_mode": "quota",
+          "quota_remaining": 10000,
+          "quota_limit": 10000,
+          "variant_code": null,
+          "usage_states": [
+            {
+              "quota_key": "tokens",
+              "quota_limit": 10000,
+              "used": 0,
+              "remaining": 10000,
+              "exhausted": false,
+              "period_unit": "day",
+              "period_value": 1,
+              "reset_mode": "calendar",
+              "window_start": "2026-05-30T20:22:17.117463Z",
+              "window_end": "2026-05-31T20:22:17.117463Z"
+            },
+            {
+              "quota_key": "tokens",
+              "quota_limit": 50000,
+              "used": 0,
+              "remaining": 50000,
+              "exhausted": false,
+              "period_unit": "week",
+              "period_value": 1,
+              "reset_mode": "calendar",
+              "window_start": "2026-05-30T20:22:17.117463Z",
+              "window_end": "2026-06-06T20:22:17.117463Z"
+            },
+            {
+              "quota_key": "tokens",
+              "quota_limit": 200000,
+              "used": 0,
+              "remaining": 200000,
+              "exhausted": false,
+              "period_unit": "month",
+              "period_value": 1,
+              "reset_mode": "calendar",
+              "window_start": "2026-05-30T20:22:17.117463Z",
+              "window_end": "2026-06-29T20:22:17.117463Z"
+            }
+          ]
+        },
+        {
+          "feature_code": "thematic_consultation",
+          "granted": true,
+          "reason_code": "granted",
+          "access_mode": "quota",
+          "quota_remaining": 20000,
+          "quota_limit": 20000,
+          "variant_code": null,
+          "usage_states": [
+            {
+              "quota_key": "tokens",
+              "quota_limit": 20000,
+              "used": 0,
+              "remaining": 20000,
+              "exhausted": false,
+              "period_unit": "week",
+              "period_value": 1,
+              "reset_mode": "calendar",
+              "window_start": "2026-05-25T00:00:00Z",
+              "window_end": "2026-06-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "feature_code": "natal_chart_long",
+          "granted": true,
+          "reason_code": "granted",
+          "access_mode": "quota",
+          "quota_remaining": 1,
+          "quota_limit": 1,
+          "variant_code": "single_astrologer",
+          "usage_states": [
+            {
+              "quota_key": "interpretations",
+              "quota_limit": 1,
+              "used": 0,
+              "remaining": 1,
+              "exhausted": false,
+              "period_unit": "lifetime",
+              "period_value": 1,
+              "reset_mode": "lifetime",
+              "window_start": "1970-01-01T00:00:00Z",
+              "window_end": null
+            }
+          ]
+        },
+        {
+          "feature_code": "natal_chart_short",
+          "granted": true,
+          "reason_code": "granted",
+          "access_mode": "unlimited",
+          "quota_remaining": null,
+          "quota_limit": null,
+          "variant_code": null,
+          "usage_states": []
+        },
+        {
+          "feature_code": "horoscope_daily",
+          "granted": true,
+          "reason_code": "granted",
+          "access_mode": "unlimited",
+          "quota_remaining": null,
+          "quota_limit": null,
+          "variant_code": "full",
+          "usage_states": []
+        }
+      ],
+      "upgrade_hints": []
+    },
+    "meta": {
+      "request_id": "6d65ceb50afb48aca84c981854fb1a10"
+    }
+  },
+  "natalChart": {
+    "error": "Response status code does not indicate success: 405 (Method Not Allowed)."
+  },
+  "birthData": {
+    "data": {
+      "birth_date": "1973-04-24",
+      "birth_time": "11:00",
+      "birth_place": "Paris, Île-de-France, France métropolitaine, France",
+      "birth_place_text": "Paris, Île-de-France, France métropolitaine, France",
+      "birth_timezone": "Europe/Paris",
+      "birth_city": "Paris",
+      "birth_country": "France",
+      "birth_lat": 48.8588897,
+      "birth_lon": 2.320041,
+      "birth_place_resolved_id": 3,
+      "birth_place_resolved": {
+        "id": 3,
+        "provider": "nominatim",
+        "provider_place_id": 97644102,
+        "display_name": "Paris, Île-de-France, France métropolitaine, France",
+        "latitude": 48.8588897,
+        "longitude": 2.320041,
+        "timezone_iana": null
+      },
+      "geolocation_consent": true,
+      "current_city": "Paris",
+      "current_country": "France",
+      "current_lat": 48.87723035793645,
+      "current_lon": 2.2921628324044776,
+      "current_location_display": "2, Rue d'Armaillé, Quartier des Ternes, Paris 17e Arrondissement, Paris, Île-de-France, France métropolitaine, 75017, France",
+      "current_timezone": "Europe/Paris",
+      "astro_profile": {
+        "sun_sign_code": "taurus",
+        "ascendant_sign_code": "cancer",
+        "missing_birth_time": false
+      }
+    },
+    "meta": {
+      "request_id": "31fc0c027001495c81243897ffe93eda"
+    }
+  },
+  "natalInterpretations": {
+    "items": [
+      {
+        "id": 7,
+        "chart_id": "9376012e-3ea4-4b17-b031-42ebfeeb5944",
+        "level": "short",
+        "persona_id": null,
+        "persona_name": null,
+        "module": null,
+        "created_at": "2026-05-30T20:19:20.400411",
+        "use_case": "natal_interpretation_short",
+        "prompt_version_id": "99d6e057-9922-4510-b7fe-11e1718513ac",
+        "was_fallback": false
+      },
+      {
+        "id": 6,
+        "chart_id": "9376012e-3ea4-4b17-b031-42ebfeeb5944",
+        "level": "complete",
+        "persona_id": null,
+        "persona_name": null,
+        "module": "natal_long_free",
+        "created_at": "2026-05-30T20:19:17.347087",
+        "use_case": "natal_long_free",
+        "prompt_version_id": "99d6e057-9922-4510-b7fe-11e1718513ac",
+        "was_fallback": false
+      }
+    ],
+    "total": 2,
+    "limit": 20,
+    "offset": 0
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "data": {
+    "user": {
+      "id": 10,
+      "email": "daconrilcy@hotmail.com",
+      "role": "user"
+    },
+    "tokens": {
+      "access_token": "<redacted>",
+      "refresh_token": "<redacted>"
+    }
+  },
+  "meta": {
+    "request_id": "9a4c67ba416e4165857d513437c4bda0"
+  }
+}
