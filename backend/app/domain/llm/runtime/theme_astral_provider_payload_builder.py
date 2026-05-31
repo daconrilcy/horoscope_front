@@ -47,7 +47,8 @@ _INPUT_DATA_KEYS = (
     "selected_themes",
     "limits",
 )
-_BASIC_INPUT_DATA_KEYS = ("basic_natal_prompt_payload",)
+BASIC_NATAL_PROMPT_PAYLOAD_KEY = "basic_natal_prompt_payload"
+_BASIC_INPUT_DATA_KEYS = (BASIC_NATAL_PROMPT_PAYLOAD_KEY,)
 _BASIC_NATAL_PROMPT_PAYLOAD_KEYS = (
     "sections",
     "resolved_syntheses",
@@ -345,6 +346,11 @@ def _basic_natal_prompt_payload(reading_plan: BasicNatalReadingPlan) -> dict[str
     return payload
 
 
+def build_basic_natal_prompt_payload(reading_plan: BasicNatalReadingPlan) -> dict[str, object]:
+    """Expose le payload prompt Basic canonique sans dupliquer le builder provider."""
+    return _basic_natal_prompt_payload(reading_plan)
+
+
 def _provider_editorial_evidence(evidence: BasicNatalPublicEvidence) -> dict[str, object]:
     """Expose une preuve editoriale lisible sans ID brut ni chemin interne."""
     return {
@@ -390,6 +396,8 @@ def _assert_payload_skeleton(
 
 
 __all__ = [
+    "BASIC_NATAL_PROMPT_PAYLOAD_KEY",
     "CommercialPlan",
     "ThemeAstralProviderPayloadBuilder",
+    "build_basic_natal_prompt_payload",
 ]

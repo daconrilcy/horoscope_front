@@ -76,6 +76,9 @@ from app.domain.llm.prompting.schemas import (
 )
 from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
+from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
+    build_basic_natal_prompt_payload,
+)
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
@@ -129,12 +132,15 @@ from app.services.llm_generation.natal.rejected_answer_workflow import (
     emit_rejected_narrative_answer_log,
 )
 from app.services.llm_generation.natal.stored_interpretation_payload import (
+    BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY,
     CORRECTIVE_REGENERATION_PENDING_USE_CASE,
     NARRATIVE_ANSWER_AUDIT_USE_CASE,
     extract_accepted_interpretation_payload,
+    has_compatible_basic_natal_interpretation_v2,
     is_public_natal_interpretation,
     is_rejected_interpretation,
     is_rejected_stored_payload,
+    load_basic_natal_interpretation_v2_from_payload,
     load_narrative_reading_from_payload,
 )
 from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
@@ -265,14 +271,6 @@ def _build_basic_natal_reading_plan_for_runtime(
     )
 
 
-def _is_basic_natal_draft_payload(payload: dict[str, object]) -> bool:
-    """Detecte la forme `NarrativeDraft` Basic avant toute projection publique."""
-    sections = payload.get("sections")
-    if not isinstance(sections, list):
-        return False
-    return any(isinstance(section, dict) and "section_code" in section for section in sections)
-
-
 def _basic_public_evidence(
     reading_plan: BasicNatalReadingPlan,
 ) -> dict[str, PublicEvidence]:
@@ -354,6 +352,19 @@ def _basic_natal_summary_response(
         evidence=[],
         disclaimers=disclaimers,
     )
+
+
+def _coerce_stored_payload(payload: object) -> dict[str, object]:
+    """Normalise les payloads JSON relus depuis SQLite ou le modele ORM."""
+    if isinstance(payload, dict):
+        return payload
+    if isinstance(payload, str):
+        try:
+            decoded = json.loads(payload)
+        except json.JSONDecodeError:
+            return {}
+        return decoded if isinstance(decoded, dict) else {}
+    return {}
 
 
 def _validate_basic_natal_draft_output(
@@ -974,6 +985,8 @@ class NatalInterpretationService:
     def _is_empty_complete_payload(payload: dict[str, object] | None) -> bool:
         if not isinstance(payload, dict):
             return True
+        if has_compatible_basic_natal_interpretation_v2(payload):
+            return False
 
         summary = payload.get("summary")
         has_summary = isinstance(summary, str) and bool(summary.strip())
@@ -1000,14 +1013,32 @@ class NatalInterpretationService:
             return False
         if model.variant_code == "free_short" or model.use_case == "natal_long_free":
             return False
-        payload = (
-            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else None
-        )
+        payload = _coerce_stored_payload(model.interpretation_payload)
         if NatalInterpretationService._is_empty_complete_payload(payload):
             return True
+        if has_compatible_basic_natal_interpretation_v2(payload):
+            return False
         if isinstance(payload, dict) and is_narratively_invalid_complete_payload(payload):
             return True
+        if NatalInterpretationService._is_incompatible_basic_complete_cache(model, payload):
+            return True
         return False
+
+    @staticmethod
+    def _is_incompatible_basic_complete_cache(
+        model: UserNatalInterpretationModel,
+        payload: dict[str, object] | None,
+    ) -> bool:
+        """Detecte les anciennes lignes Basic complete sans contrat V2 compatible."""
+        if model.level != InterpretationLevel.COMPLETE:
+            return False
+        if model.use_case != "natal_interpretation":
+            return False
+        if model.variant_code == "free_short" or model.persona_id is not None:
+            return False
+        if not isinstance(payload, dict):
+            return True
+        return not has_compatible_basic_natal_interpretation_v2(payload)
 
     @staticmethod
     def claim_corrective_regeneration_eligibility(
@@ -1122,9 +1153,7 @@ class NatalInterpretationService:
             )
 
         disclaimers = get_disclaimers(locale)
-        raw_payload = (
-            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else {}
-        )
+        raw_payload = _coerce_stored_payload(model.interpretation_payload)
         if is_rejected_stored_payload(raw_payload):
             raise NatalInterpretationServiceError(
                 code="interpretation_rejected",
@@ -1138,6 +1167,13 @@ class NatalInterpretationService:
 
         if level == "complete" and model.variant_code == "free_short":
             return AstroFreeResponseV1(**full_payload), "v1"
+        if level == "complete":
+            basic_contract = load_basic_natal_interpretation_v2_from_payload(raw_payload)
+            if basic_contract is not None:
+                return (
+                    _basic_natal_summary_response(basic_contract, disclaimers),
+                    BASIC_NATAL_PUBLIC_SCHEMA_VERSION,
+                )
 
         schema_version = "v1"
         if level == "complete":
@@ -1373,6 +1409,15 @@ class NatalInterpretationService:
             current_plan=projection_plan,
             requested_plan=projection_plan,
         )
+        basic_reading_plan: BasicNatalReadingPlan | None = None
+        basic_natal_prompt_payload: dict[str, object] | None = None
+        if level == "complete" and user_plan == "basic" and variant_code != "free_short":
+            basic_reading_plan = _build_basic_natal_reading_plan_for_runtime(
+                natal_result=natal_result,
+                chart_id=chart_id,
+                locale=locale,
+            )
+            basic_natal_prompt_payload = build_basic_natal_prompt_payload(basic_reading_plan)
 
         # 4. Call AIEngineAdapter (Story 66.7)
         effective_question = question
@@ -1394,6 +1439,7 @@ class NatalInterpretationService:
             locale=locale,
             level=level,
             llm_astrology_input_v1=llm_astrology_input_v1,
+            basic_natal_prompt_payload=basic_natal_prompt_payload,
             persona_id=persona_id,
             plan=user_plan,
             validation_strict=level == "complete",
@@ -1443,17 +1489,13 @@ class NatalInterpretationService:
         narrative_rejection: RejectedNarrativeAnswerOutcome | None = None
         basic_natal_interpretation_v2: BasicNatalInterpretationV2 | None = None
 
-        if (
-            level == "complete"
-            and user_plan == "basic"
-            and variant_code != "free_short"
-            and _is_basic_natal_draft_payload(base_output)
-        ):
-            basic_reading_plan = _build_basic_natal_reading_plan_for_runtime(
-                natal_result=natal_result,
-                chart_id=chart_id,
-                locale=locale,
-            )
+        if level == "complete" and user_plan == "basic" and variant_code != "free_short":
+            if basic_reading_plan is None:
+                basic_reading_plan = _build_basic_natal_reading_plan_for_runtime(
+                    natal_result=natal_result,
+                    chart_id=chart_id,
+                    locale=locale,
+                )
             basic_outcome = _validate_basic_natal_draft_output(
                 base_output=base_output,
                 reading_plan=basic_reading_plan,
@@ -1543,7 +1585,9 @@ class NatalInterpretationService:
         if basic_natal_interpretation_v2 is not None:
             persist_payload = {
                 **persist_payload,
-                "basic_natal_interpretation_v2": basic_natal_interpretation_v2.model_dump(),
+                BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY: (
+                    basic_natal_interpretation_v2.model_dump()
+                ),
             }
         if schema_version.startswith("v3") and "disclaimers" in persist_payload:
             persist_payload = persist_payload.copy()
@@ -1566,14 +1610,18 @@ class NatalInterpretationService:
                 )
             )
 
-        rejected_outcome = narrative_rejection or _build_rejected_narrative_answer_outcome(
-            level=level,
-            variant_code=variant_code,
-            schema_version=schema_version,
-            request_id=request_id,
-            gateway_result=gateway_result,
-            persist_payload=persist_payload,
-            llm_astrology_input_v1=llm_astrology_input_v1,
+        rejected_outcome = narrative_rejection or (
+            None
+            if basic_natal_interpretation_v2 is not None
+            else _build_rejected_narrative_answer_outcome(
+                level=level,
+                variant_code=variant_code,
+                schema_version=schema_version,
+                request_id=request_id,
+                gateway_result=gateway_result,
+                persist_payload=persist_payload,
+                llm_astrology_input_v1=llm_astrology_input_v1,
+            )
         )
         if rejected_outcome is not None:
             emit_rejected_narrative_answer_log(
@@ -2118,10 +2166,9 @@ class NatalInterpretationService:
         )
 
         meta.schema_version = schema_version
-        raw_payload = (
-            model.interpretation_payload if isinstance(model.interpretation_payload, dict) else {}
-        )
+        raw_payload = _coerce_stored_payload(model.interpretation_payload)
         narrative_reading = load_narrative_reading_from_payload(raw_payload)
+        basic_natal_interpretation_v2 = load_basic_natal_interpretation_v2_from_payload(raw_payload)
 
         return NatalInterpretationResponse(
             data=NatalGatewayInterpretationData(
@@ -2131,6 +2178,7 @@ class NatalInterpretationService:
                 meta=meta,
                 degraded_mode=model.degraded_mode,
                 narrative_natal_reading_v1=narrative_reading,
+                basic_natal_interpretation_v2=basic_natal_interpretation_v2,
             ),
             disclaimers=disclaimers,
         )

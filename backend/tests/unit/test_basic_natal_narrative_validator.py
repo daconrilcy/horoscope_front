@@ -14,7 +14,6 @@ from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageIn
 from app.services.llm_generation.natal import interpretation_service
 from app.services.llm_generation.natal.interpretation_service import (
     _basic_natal_contract_from_draft,
-    _is_basic_natal_draft_payload,
     _validate_basic_natal_draft_output,
 )
 from app.services.llm_generation.natal.narrative_natal_reading_validator import (
@@ -285,10 +284,10 @@ def test_second_invalid_draft_uses_valid_short_deterministic_fallback() -> None:
 
 
 def test_interpretation_service_routes_basic_draft_to_post_generation_validator() -> None:
-    """Le service runtime applique le validateur quand le provider renvoie un draft Basic."""
+    """Le service runtime applique le validateur au chemin Basic complet."""
     source = inspect.getsource(interpretation_service.NatalInterpretationService.interpret)
 
-    assert "_is_basic_natal_draft_payload(base_output)" in source
+    assert 'user_plan == "basic"' in source
     assert "_validate_basic_natal_draft_output(" in source
 
 
@@ -296,7 +295,6 @@ def test_basic_draft_runtime_helper_builds_public_v2_contract_after_validation()
     """Un draft provider valide est converti en contrat public Basic V2 controle."""
     draft = _valid_draft()
 
-    assert _is_basic_natal_draft_payload(draft) is True
     outcome = _validate_basic_natal_draft_output(
         base_output=draft,
         reading_plan=_date_only_plan(),

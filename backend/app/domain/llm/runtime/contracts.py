@@ -142,6 +142,7 @@ class NatalExecutionInput(BaseModel):
     locale: str = "fr-FR"
     level: Literal["short", "complete"]
     llm_astrology_input_v1: Dict[str, Any]
+    basic_natal_prompt_payload: Optional[Dict[str, Any]] = None
     persona_id: Optional[str] = None
     plan: str = "free"
     validation_strict: bool = True

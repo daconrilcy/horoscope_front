@@ -202,6 +202,10 @@ class BasicNatalInterpretationV2(_StrictContract):
     level: Literal["basic"] = BASIC_NATAL_LEVEL
     engine_version: Literal["basic-natal-reading-v1"] = BASIC_NATAL_ENGINE_VERSION
     schema_version: Literal["basic_natal_interpretation_v2"] = BASIC_NATAL_PUBLIC_SCHEMA_VERSION
+    taxonomy_version: Literal["basic-natal-theme-taxonomy-v1"] = BASIC_NATAL_THEME_TAXONOMY_VERSION
+    salience_version: Literal["basic-natal-salience-v1"] = BASIC_NATAL_SALIENCE_MODEL_VERSION
+    prompt_version: Literal["basic-natal-draft-prompt-v1"] = BASIC_NATAL_PROMPT_VERSION
+    validator_version: Literal["basic-natal-validator-v1"] = BASIC_NATAL_VALIDATOR_VERSION
     interpretation: NatalSynthesis
     limitations: list[str] = Field(default_factory=list, max_length=8)
     disclaimers: list[str] = Field(default_factory=list, max_length=8)

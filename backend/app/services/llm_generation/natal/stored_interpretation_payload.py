@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from app.domain.astrology.reading.basic_natal_contracts import BasicNatalInterpretationV2
 from app.domain.llm.prompting.narrative_natal_reading_v1 import (
     NARRATIVE_NATAL_READING_PAYLOAD_KEY,
     NarrativeNatalReadingV1,
@@ -15,6 +16,7 @@ from app.infra.db.models.user_natal_interpretation import UserNatalInterpretatio
 
 NARRATIVE_ANSWER_AUDIT_USE_CASE = "narrative_answer_audit_v1"
 CORRECTIVE_REGENERATION_PENDING_USE_CASE = "natal_corrective_regeneration_pending"
+BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY = "basic_natal_interpretation_v2"
 
 REJECTED_PAYLOAD_MARKER_KEYS = frozenset(
     {
@@ -104,3 +106,21 @@ def load_narrative_reading_from_payload(
     if validate_narrative_reading_public_text(reading):
         return None
     return reading
+
+
+def load_basic_natal_interpretation_v2_from_payload(
+    payload: dict[str, object],
+) -> BasicNatalInterpretationV2 | None:
+    """Deserialise la lecture Basic V2 compatible depuis le payload accepte."""
+    nested = payload.get(BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY)
+    if not isinstance(nested, dict):
+        return None
+    try:
+        return BasicNatalInterpretationV2.model_validate(nested)
+    except ValidationError:
+        return None
+
+
+def has_compatible_basic_natal_interpretation_v2(payload: dict[str, object]) -> bool:
+    """Indique si le cache Basic porte les versions publiques V2 attendues."""
+    return load_basic_natal_interpretation_v2_from_payload(payload) is not None

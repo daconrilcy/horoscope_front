@@ -24,6 +24,9 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.errors import AIEngineError
 from app.domain.llm.runtime.gateway import LLMGateway
+from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
+    BASIC_NATAL_PROMPT_PAYLOAD_KEY,
+)
 from app.services.llm_generation.horoscope_daily.narration_service import (
     generate_horoscope_narration_via_gateway,
 )
@@ -257,6 +260,7 @@ class AIEngineAdapter:
                 astro_context=natal_input.astro_context,
                 extra_context={
                     "llm_astrology_input_v1": natal_input.llm_astrology_input_v1,
+                    BASIC_NATAL_PROMPT_PAYLOAD_KEY: natal_input.basic_natal_prompt_payload,
                     "module": natal_input.module,
                     "variant_code": natal_input.variant_code,
                     "level": natal_input.level,

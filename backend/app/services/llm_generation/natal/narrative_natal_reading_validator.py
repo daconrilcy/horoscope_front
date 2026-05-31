@@ -229,7 +229,14 @@ def validate_basic_natal_draft_against_plan(
     ):
         errors.append("missing_public_sources")
 
-    serialized = json.dumps(draft, ensure_ascii=False, sort_keys=True)
+    serialized = json.dumps(
+        {
+            "sections": draft.get("sections"),
+            "public_sources": draft.get("public_sources"),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
     errors.extend(_basic_public_text_errors(serialized, reading_plan, expected_codes))
     errors = sorted(set(errors))
     return BasicNatalDraftValidationResult(

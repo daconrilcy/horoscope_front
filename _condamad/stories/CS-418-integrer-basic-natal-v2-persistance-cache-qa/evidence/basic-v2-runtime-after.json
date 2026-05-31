@@ -1,0 +1,15 @@
+{
+  "story": "CS-418",
+  "phase": "after",
+  "engine_version": "basic-natal-reading-v1",
+  "schema_version": "basic_natal_interpretation_v2",
+  "taxonomy_version": "basic-natal-theme-taxonomy-v1",
+  "salience_version": "basic-natal-salience-v1",
+  "prompt_version": "basic-natal-draft-prompt-v1",
+  "validator_version": "basic-natal-validator-v1",
+  "runtime_evidence": [
+    "backend/tests/integration/test_basic_natal_v2_pipeline.py",
+    "backend/tests/integration/test_basic_natal_v2_cache_invalidation.py"
+  ],
+  "provider_live": "not-run"
+}

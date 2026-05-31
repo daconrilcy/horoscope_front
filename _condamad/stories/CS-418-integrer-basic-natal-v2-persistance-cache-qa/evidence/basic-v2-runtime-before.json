@@ -1,0 +1,7 @@
+{
+  "story": "CS-418",
+  "phase": "before",
+  "observed_gap": "Basic complete could build/validate Basic V2 only after provider output shape detection and did not pass a plan-derived Basic prompt payload before provider generation.",
+  "cache_policy_gap": "Compatible Basic V2 cache metadata was not the canonical cache reuse criterion.",
+  "provider_live": "not-run"
+}
