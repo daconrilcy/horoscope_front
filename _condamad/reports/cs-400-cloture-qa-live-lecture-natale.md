@@ -127,7 +127,7 @@ No-propagation : l'echec correspond a une story runtime deja presente dans le re
 Date : 2026-05-31
 Story d'execution : `_condamad/stories/CS-408-verifier-basic-complete-natal-v3-runtime-qa-live/00-story.md`
 
-Verdict : `READY-TO-REVIEW` pour la preuve automatisee controlee, sans appel provider reel.
+Verdict : `DONE` pour la preuve automatisee controlee CS-408, sans appel provider reel.
 
 Cause racine confirmee : la baseline CS-400/CS-405 bloquait parce que Basic `complete` etait observe sans preuve runtime locale du chemin `natal_interpretation` -> `natal/interpretation/basic/fr-FR` -> `AstroResponse_v3` -> `narrative_natal_reading_v1`.
 

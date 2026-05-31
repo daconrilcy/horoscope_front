@@ -6,7 +6,8 @@
 
 CLEAN.
 
-La review fraiche d'implementation ne trouve plus d'issue actionnable apres correction des preuves manquantes.
+La review fraiche d'implementation ne trouve plus d'issue actionnable apres correction de la trace catalogue manquante dans les
+preuves persistantes.
 
 ## Scope
 
@@ -39,6 +40,26 @@ Verdict: CLEAN.
 
 No remaining actionable issue.
 
+### Iteration 3
+
+Verdict: CHANGES_REQUESTED.
+
+Finding:
+
+- `evidence/backend-validation.txt` ne consignait pas explicitement la preuve seed/catalogue publiee de
+  `natal/interpretation/basic`, alors que le brief la rend obligatoire.
+
+Fix:
+
+- Ajout de la commande ciblee `test_admin_llm_catalog_exposes_basic_natal_assembly_from_active_snapshot` dans
+  `evidence/backend-validation.txt`.
+
+### Iteration 4
+
+Verdict: CLEAN.
+
+No remaining actionable issue after rerunning backend, frontend and story validations.
+
 ## AC / guardrails
 
 - AC1 a AC8 et AC13: couverts par le test runtime fake gateway, schema guard, quota guard, public boundary et OpenAPI.
@@ -51,6 +72,7 @@ No remaining actionable issue.
 
 - PASS: backend `ruff check` cible.
 - PASS: backend targeted pytest `--long`, 20 tests passed.
+- PASS: backend admin catalog proof, 1 test passed for published `natal/interpretation/basic`.
 - PASS: backend `app.routes` et `app.openapi()` loadables.
 - PASS_WITH_CLASSIFIED_HITS: scan backend short/free/v2; aucun hit ne prouve un downgrade Basic complete accepte.
 - PASS: `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard`, 12 tests passed.

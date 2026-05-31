@@ -88,7 +88,7 @@
 | `ruff format --check backend\tests\integration\test_natal_basic_complete_v3_runtime.py ...` | PASS | 4 files already formatted. |
 | `ruff check backend\tests\integration\test_natal_basic_complete_v3_runtime.py backend\tests\unit\test_natal_interpretation_service_v3_schema_guard.py backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py backend\tests\integration\test_natal_interpretation_rejected_public_boundary.py` | PASS | Python lint for touched/relevant files. |
 | `python -B -m pytest --long -q backend\tests\integration\test_natal_basic_complete_v3_runtime.py ... --tb=short` | PASS | 20 passed. |
-| `python -B -m pytest --long -q backend\tests\integration\test_admin_llm_catalog.py::test_admin_llm_catalog_exposes_basic_natal_assembly_from_active_snapshot --tb=short` | PASS | 1 passed. |
+| `python -B -m pytest --long -q backend\tests\integration\test_admin_llm_catalog.py::test_admin_llm_catalog_exposes_basic_natal_assembly_from_active_snapshot --tb=short` | PASS | 1 passed; proves published Basic natal assembly. |
 | `pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard` | PASS | 12 passed. |
 | `pnpm --dir frontend lint` | PASS | TypeScript lint/typecheck passed. |
 | `pnpm --dir frontend build` | PASS | Vite production build completed. |
