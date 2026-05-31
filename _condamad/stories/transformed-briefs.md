@@ -202,3 +202,4 @@
 | cs-420 | `_story_briefs\cs-420-adapter-page-natal-rendu-free-basic-v2.md` | `_condamad\stories\cs-420-adapter-page-natal-rendu-free-basic-v2\00-story.md` |
 | cs-421 | `_story_briefs\cs-421-renforcer-contrat-redactionnel-basic-natal.md` | `_condamad\stories\cs-421-renforcer-contrat-redactionnel-basic-natal\00-story.md` |
 | cs-422 | `_story_briefs\cs-422-simplifier-rendu-basic-natal-sources-mentions-legales.md` | `_condamad\stories\cs-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` |
+| cs-423 | `_story_briefs\cs-423-qa-live-lecture-basic-natal-lisible.md` | `_condamad\stories\cs-423-qa-live-lecture-basic-natal-lisible\00-story.md` |
