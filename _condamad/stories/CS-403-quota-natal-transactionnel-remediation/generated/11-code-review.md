@@ -12,7 +12,8 @@ Verdict: CLEAN
 
 ## Findings
 
-No actionable implementation issue found.
+No actionable implementation issue found. One evidence synchronization gap was found and fixed:
+`evidence/validation.txt` was declared by the story but missing from the capsule.
 
 The implementation aligns with the brief and ACs:
 
@@ -42,6 +43,7 @@ All commands below were run after activating `.\.venv\Scripts\Activate.ps1`.
 - PASS: `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-403-quota-natal-transactionnel-remediation --final`
 - PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-403-quota-natal-transactionnel-remediation\00-story.md`
 - PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-403-quota-natal-transactionnel-remediation\00-story.md`
+- PASS: `evidence/validation.txt` now exists and records the final alignment validation commands.
 
 ## Guardrail Evidence
 
@@ -53,6 +55,7 @@ All commands below were run after activating `.\.venv\Scripts\Activate.ps1`.
 ## Review Output
 
 - Produced artifact: `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/generated/11-code-review.md`
+- Produced artifact: `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/evidence/validation.txt`
 - Propagation decision: no-propagation; this review found no reusable process or guardrail correction to propagate.
 
 ## Residual Risk

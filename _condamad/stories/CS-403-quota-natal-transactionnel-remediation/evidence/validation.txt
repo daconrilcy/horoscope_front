@@ -1,0 +1,35 @@
+CS-403 validation evidence - 2026-05-31
+
+All Python commands below were run after activating:
+.\.venv\Scripts\Activate.ps1
+
+Alignment target:
+- Story: _condamad/stories/CS-403-quota-natal-transactionnel-remediation/00-story.md
+- Source brief: _story_briefs/cs-398-rendre-quota-natal-complete-transactionnel-et-remedier-lectures-invalides.md
+- Tracker row: CS-403 path and source match the requested story and brief.
+
+Validation results:
+- PASS: cd backend; ruff check .
+  Output: All checks passed!
+- PASS: cd backend; python -B -m pytest -q tests/unit/test_natal_chart_long_quota_on_acceptance.py --tb=short
+  Output: 4 passed.
+- PASS: cd backend; python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short
+  Output: 14 passed.
+- PASS: cd backend; python -B -m pytest -q --long app/tests/integration/test_natal_chart_long_entitlement.py --tb=short
+  Output: 16 passed.
+- PASS: cd backend; python -B -m pytest -q --long tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short
+  Output: 8 passed.
+- PASS: cd backend; python -B -c "from app.main import app; assert '/v1/natal/interpretation' in app.openapi()['paths']; assert '/v1/natal/interpretation' in {getattr(r, 'path', '') for r in app.routes}"
+  Output: no assertion failure.
+- PASS: cd backend; rg -n "check_and_consume" app/api/v1/routers/public/natal_interpretation.py
+  Output: no matches.
+- PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-403-quota-natal-transactionnel-remediation\00-story.md
+  Output: CONDAMAD story validation: PASS.
+- PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-403-quota-natal-transactionnel-remediation\00-story.md
+  Output: CONDAMAD story lint: PASS.
+- PASS: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-403-quota-natal-transactionnel-remediation --final
+  Output: CONDAMAD validation: PASS.
+
+Alignment conclusion:
+- The implemented code matches the brief objective: quota is consumed only after an accepted complete reading, and invalid historical readings have a free corrective path.
+- The only correction made during this alignment pass was proof synchronization: this missing validation artifact was created.

@@ -33,6 +33,7 @@
 | `generated/06-validation-plan.md` | yes | yes | PASS | Present. |
 | `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Present. |
 | `generated/10-final-evidence.md` | yes | yes | PASS | This file. |
+| `evidence/validation.txt` | yes | yes | PASS | Added during final code-vs-brief alignment pass. |
 
 ## Implementation summary
 
@@ -56,7 +57,7 @@
 | AC9 | Public replay excludes rejected and corrective-reserved rows. | Rejected public boundary suite PASS. | PASS |
 | AC10 | Public router has no `check_and_consume` path. | Targeted `rg` scan PASS with no matches; `ruff check .` PASS. | PASS |
 | AC11 | Runtime route and OpenAPI still register `POST /v1/natal/interpretation`. | Runtime `app.routes` / `app.openapi()` check PASS. | PASS |
-| AC12 | Remediation policy and before/after evidence are persisted under story evidence. | Capsule final validation PASS after this update. | PASS |
+| AC12 | Remediation policy, validation output and before/after evidence are persisted under story evidence. | Capsule final validation PASS after this update. | PASS |
 
 ## Files changed
 
@@ -71,6 +72,7 @@
 - `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/generated/11-code-review.md`
 - `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/evidence/quota-remediation-before.txt`
 - `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/evidence/quota-remediation-after.txt`
+- `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/evidence/validation.txt`
 - `_condamad/stories/CS-403-quota-natal-transactionnel-remediation/evidence/remediation-policy.md`
 - `_condamad/stories/story-status.md`
 
@@ -102,6 +104,8 @@
 | `python -B -c "from app.main import app; ..."` | PASS | Runtime route and OpenAPI contain `POST /v1/natal/interpretation`. |
 | `rg -n "check_and_consume" backend\app\api\v1\routers\public\natal_interpretation.py` | PASS | No matches; router has no direct check-and-consume path. |
 | `git diff --check` | PASS | No whitespace errors; warning only for pre-existing `_condamad/run-state.json` line endings. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-403-quota-natal-transactionnel-remediation\00-story.md` | PASS | Final strict story lint rerun after alignment pass. |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-403-quota-natal-transactionnel-remediation --final` | PASS | Final capsule validation rerun after validation artifact creation. |
 
 ## Commands skipped or blocked
 
@@ -140,6 +144,6 @@
 
 ## Implementation review closure
 
-- Final fresh review verdict: CLEAN.
+- Final fresh review verdict: CLEAN; final code-vs-brief alignment pass found only a missing validation evidence artifact.
 - Tracker row `CS-403` moved from `ready-to-review` to `done` on `2026-05-31`.
 - No implementation issue remained after story-specific lint, tests, route checks, guardrail scans and CONDAMAD validation.
