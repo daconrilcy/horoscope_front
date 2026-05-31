@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: clean implementation review complete
 - Story key: CS-401-refuser-padding-sources-vides
 - Source story: `_condamad/stories/CS-401-refuser-padding-sources-vides/00-story.md`
 - Source brief: `_story_briefs/cs-396-refuser-padding-semantique-lecture-natale-et-sources-vides.md`
@@ -36,9 +36,18 @@
 | AC8 | Contract doc states no padding, distinct chapters and required sources. | Documentation scan PASS. | PASS |
 | AC9 | Evidence artifacts persisted. | Capsule final validation PASS. | PASS |
 
+## Implementation review correction
+
+- Iteration 1 finding: Pydantic `ValidationError` during narrative contract projection could continue as an accepted
+  complete response without audited semantic rejection.
+- Fix: `interpretation_service.py` converts that path to `narrative_semantic_integrity` with
+  `narrative_contract_invalid`.
+- Proof: unit test `test_complete_response_with_invalid_narrative_contract_is_rejected` plus fresh targeted validations.
+
 ## Files changed
 
 - `backend/tests/unit/test_narrative_natal_reading_v1.py`
+- `backend/app/services/llm_generation/natal/interpretation_service.py`
 - `backend/tests/integration/test_natal_interpretation_rejected_public_boundary.py`
 - `backend/tests/architecture/test_narrative_semantic_integrity_guard.py`
 - `backend/docs/narrative-natal-reading-v1-contract.md`
@@ -51,7 +60,8 @@
 
 ## Tests added or updated
 
-- Unit tests for duplicate titles, canonical order through public validation, and empty Basic/Premium sources.
+- Unit tests for duplicate titles, canonical order through public validation, empty Basic/Premium sources, and invalid
+  narrative contract rejection.
 - Integration test for a persisted complete reading with duplicate narrative chapters staying out of public GET/LIST.
 - Architecture guard preventing reintroduction of first-section source padding.
 
@@ -61,16 +71,18 @@
 |---|---|---|
 | `ruff format tests\unit\test_narrative_natal_reading_v1.py tests\integration\test_natal_interpretation_rejected_public_boundary.py tests\architecture\test_narrative_semantic_integrity_guard.py` | `backend` | PASS |
 | `ruff check .` | `backend` | PASS |
-| `python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short` | `backend` | PASS, 12 passed |
+| `python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short` | `backend` | PASS, 13 passed |
 | `python -B -m pytest -q --long tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short` | `backend` | PASS, 8 passed |
 | `python -B -m pytest -q tests/architecture/test_narrative_semantic_integrity_guard.py tests/architecture/test_narrative_natal_reading_public_boundary.py --tb=short` | `backend` | PASS, 4 passed |
-| `python -B -m pytest -q --long tests/unit/test_narrative_natal_reading_v1.py tests/integration/test_natal_interpretation_rejected_public_boundary.py tests/architecture/test_narrative_natal_reading_public_boundary.py tests/architecture/test_narrative_semantic_integrity_guard.py --tb=short` | `backend` | PASS, 24 passed |
+| `python -B -m pytest -q --long tests/unit/test_narrative_natal_reading_v1.py tests/integration/test_natal_interpretation_rejected_public_boundary.py tests/architecture/test_narrative_natal_reading_public_boundary.py tests/architecture/test_narrative_semantic_integrity_guard.py --tb=short` | `backend` | PASS, 25 passed |
 | `python -B -c "from app.main import app; print(f'app_routes={len(app.routes)}')"` | `backend` | PASS, `app_routes=230` |
 | `rg -n "response\\.sections\\[0\\]" backend/app backend/tests backend/docs` | repo root | PASS, exit 1 no matches |
 | `rg -n "response\\.sections\\[0\\]" backend/app/services/llm_generation/natal` | repo root | PASS, exit 1 no matches |
 | `rg -n "fallback = response\\.sections\\[0\\]" backend/app/services/llm_generation/natal` | repo root | PASS, exit 1 no matches |
 | `rg -n "padding\|used_astrological_elements\|RG-155" backend/docs/narrative-natal-reading-v1-contract.md` | repo root | PASS |
 | `condamad_validate.py _condamad/stories/CS-401-refuser-padding-sources-vides --final` | repo root | PASS |
+| `condamad_story_validate.py _condamad/stories/CS-401-refuser-padding-sources-vides/00-story.md` | repo root | PASS |
+| `condamad_story_lint.py --strict _condamad/stories/CS-401-refuser-padding-sources-vides/00-story.md` | repo root | PASS |
 
 ## Commands skipped or blocked
 
@@ -93,7 +105,8 @@
 
 ## Code review artifact
 
-- Existing `generated/11-code-review.md` is classified as obsolete pre-implementation editorial review, not final implementation review evidence.
+- `generated/11-code-review.md` refreshed as final implementation review evidence.
+- Fresh review verdict after correction: CLEAN.
 
 ## Final worktree status
 

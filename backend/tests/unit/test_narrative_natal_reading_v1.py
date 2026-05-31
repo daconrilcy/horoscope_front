@@ -11,6 +11,9 @@ from app.services.api_contracts.public.natal_interpretation import (
     InterpretationMeta,
     NatalInterpretationData,
 )
+from app.services.llm_generation.natal.interpretation_service import (
+    _attach_narrative_reading_to_complete,
+)
 from app.services.llm_generation.natal.narrative_natal_reading_builder import (
     build_narrative_natal_reading_v1,
 )
@@ -160,6 +163,47 @@ def test_incomplete_v1_response_rejects_missing_chapter_sources() -> None:
             level="complete",
             variant_code="single_astrologer",
         )
+
+
+def test_complete_response_with_invalid_narrative_contract_is_rejected() -> None:
+    """Une projection complete non conforme doit passer par le rejet audite."""
+    response = AstroResponseV1(
+        title="Theme",
+        summary="Synthese",
+        sections=[
+            {"key": "overall", "heading": "Vue", "content": "Court."},
+            {"key": "daily_life", "heading": "Emotion", "content": "Court."},
+            {"key": "relationships", "heading": "Relations", "content": "Court."},
+            {"key": "career", "heading": "Vocation", "content": "Court."},
+            {"key": "challenges", "heading": "Evolution", "content": "Court."},
+        ],
+        highlights=["Point 1", "Point 2", "Point 3"],
+        advice=["Conseil 1", "Conseil 2", "Conseil 3"],
+        evidence=["SUN", "VENUS"],
+        disclaimers=[],
+    )
+
+    reading, rejection, payload = _attach_narrative_reading_to_complete(
+        interpretation=response,
+        persist_payload=response.model_dump(),
+        llm_astrology_input_v1={
+            "shaping": {
+                "support_elements": [
+                    {"code": "highlight", "value": "Soleil en Taureau"},
+                ]
+            }
+        },
+        level="complete",
+        variant_code="single_astrologer",
+        answer_id="natal:invalid-contract",
+        answer_type="basic",
+    )
+
+    assert reading is None
+    assert rejection is not None
+    assert rejection.rejection_reason["code"] == "narrative_semantic_integrity"
+    assert rejection.rejection_reason["violations"] == ["narrative_contract_invalid"]
+    assert payload == response.model_dump()
 
 
 def test_duplicate_chapter_narratives_are_rejected() -> None:

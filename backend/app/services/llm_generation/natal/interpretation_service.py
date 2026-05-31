@@ -414,12 +414,21 @@ def _attach_narrative_reading_to_complete(
         )
     except ValidationError as exc:
         logger.warning(
-            "Narrative natal reading unavailable for accepted complete response "
+            "Narrative natal reading contract invalid for accepted complete response "
             "answer_id=%s error=%s",
             answer_id,
             exc,
         )
-        return None, None, persist_payload
+        return (
+            None,
+            build_semantic_integrity_rejection_outcome(
+                answer_id=answer_id,
+                answer_type=answer_type,
+                raw_answer=persist_payload,
+                violations=["narrative_contract_invalid"],
+            ),
+            persist_payload,
+        )
     violations = validate_narrative_reading_public_text(reading)
     if violations:
         rejection_builder = (

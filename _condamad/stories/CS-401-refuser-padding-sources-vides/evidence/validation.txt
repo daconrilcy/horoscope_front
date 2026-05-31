@@ -11,7 +11,7 @@ ruff check .
 All checks passed!
 
 python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short
-12 passed in 1.16s
+13 passed in 1.15s
 
 python -B -m pytest -q --long tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short
 8 passed in 1.72s
@@ -20,7 +20,7 @@ python -B -m pytest -q tests/architecture/test_narrative_semantic_integrity_guar
 4 passed in 0.36s
 
 python -B -m pytest -q --long tests/unit/test_narrative_natal_reading_v1.py tests/integration/test_natal_interpretation_rejected_public_boundary.py tests/architecture/test_narrative_natal_reading_public_boundary.py tests/architecture/test_narrative_semantic_integrity_guard.py --tb=short
-24 passed in 1.79s
+25 passed in 1.72s
 
 python -B -c "from app.main import app; print(f'app_routes={len(app.routes)}')"
 app_routes=230
@@ -39,4 +39,10 @@ PASS: matched contract integrity wording
 
 python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-401-refuser-padding-sources-vides --final
 CONDAMAD validation: PASS
+
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-401-refuser-padding-sources-vides\00-story.md
+CONDAMAD story validation: PASS
+
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-401-refuser-padding-sources-vides\00-story.md
+CONDAMAD story lint: PASS
 ```

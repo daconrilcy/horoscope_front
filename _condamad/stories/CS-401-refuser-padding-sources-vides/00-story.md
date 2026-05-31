@@ -1,5 +1,5 @@
 # Story CS-401 refuser-padding-sources-vides: Refuser Padding Semantique Lecture Natale Sources Vides
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
