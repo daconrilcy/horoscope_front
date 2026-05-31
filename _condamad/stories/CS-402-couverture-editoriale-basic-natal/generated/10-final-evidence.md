@@ -33,7 +33,7 @@
 | AC5 | Prompt V3 explicitly requests `personnalite`, `emotions`, `relations`, `vocation`, `evolution`. | Prompt test + targeted `rg` -> PASS. | PASS |
 | AC6 | V3 remains preferred and V1/V2 are not padded silently. | Orchestration tests + `test_narrative_natal_reading_v1.py` -> PASS. | PASS |
 | AC7 | Provider metrics expose selected families privately. | Provider payload tests -> PASS. | PASS |
-| AC8 | Basic rich fixture exposes five covered chapter-source groups. | Provider payload tests -> PASS. | PASS |
+| AC8 | Basic rich fixture exposes five covered chapter-source groups. | Provider payload tests + `test_narrative_natal_reading_v1.py` -> PASS. | PASS |
 | AC9 | Public prompt/narrative surfaces do not expose `chart_json` or `natal_data`. | Targeted negative scan -> PASS no matches. | PASS |
 | AC10 | Capsule evidence and baseline/after artifacts persisted. | Capsule final validation -> PASS. | PASS |
 
@@ -41,6 +41,7 @@
 
 - `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`
 - `backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py`
+- `backend/tests/unit/test_narrative_natal_reading_v1.py`
 - `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`
 - `backend/tests/unit/domain/astrology/test_client_interpretation_support_elements.py`
 - `_condamad/stories/CS-402-couverture-editoriale-basic-natal/generated/03-acceptance-traceability.md`
@@ -60,6 +61,7 @@
 
 - `backend/tests/unit/domain/astrology/test_client_interpretation_support_elements.py`
 - `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`
+- `backend/tests/unit/test_narrative_natal_reading_v1.py`
 
 ## Commands run
 
@@ -73,6 +75,13 @@
 | `python -B -m pytest -q tests/unit/domain/astrology/test_client_interpretation_support_elements.py --tb=short` | `backend` | PASS | 2 passed. |
 | `python -B -m pytest -q tests/llm_orchestration -k "natal or theme_astral" --tb=short` | `backend` | PASS | 27 passed, 1 skipped, 213 deselected. |
 | `python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short` | `backend` | PASS | 13 passed. |
+| `ruff format tests\unit\test_narrative_natal_reading_v1.py` | `backend` | PASS | AC8 proof test formatted. |
+| `ruff check tests\unit\test_narrative_natal_reading_v1.py` | `backend` | PASS | AC8 proof test lint clean. |
+| `python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py --tb=short` | `backend` | PASS | 14 passed after AC8 proof correction. |
+| `ruff check .` | `backend` | PASS | Backend lint clean after review fix. |
+| `python -B -m pytest -q tests\unit\domain\astrology\test_client_interpretation_support_elements.py --tb=short` | `backend` | PASS | 2 passed after review fix. |
+| `python -B -m pytest -q tests\llm_orchestration -k "natal or theme_astral" --tb=short` | `backend` | PASS | 27 passed, 1 skipped, 213 deselected after review fix. |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-402-couverture-editoriale-basic-natal --final` | repo root | PASS | Capsule final validation after review fix. |
 | `rg -n "chart_json\|natal_data" <public prompt/narrative roots>` | repo root | PASS | Exit 1 means no matches. |
 | `git diff --check -- <story paths>` | repo root | PASS | Whitespace clean; Git warned about future CRLF normalization only. |
 | `python -B -c "from app.main import app; print(app.title)"` | `backend` | PASS | App imports; title `horoscope-backend`. |
@@ -93,6 +102,7 @@
 - `git diff --stat` for story paths: 4 backend files, 94 insertions before evidence/status updates.
 - No unrelated backend files changed.
 - Existing dirty `_condamad/run-state.json` was not touched.
+- Review fix: added a Basic V3 narrative fixture proving five public chapters, closing the AC8 proof gap found in `generated/11-code-review.md`.
 
 ## Final worktree status
 

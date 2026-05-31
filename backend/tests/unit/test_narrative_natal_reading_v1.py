@@ -70,6 +70,7 @@ def _astro_v3() -> AstroResponseV3:
 
 
 def test_build_narrative_reading_has_five_ordered_chapters() -> None:
+    """Une reponse V3 complete alimente les cinq chapitres publics attendus."""
     reading = build_narrative_natal_reading_v1(
         response=_astro_v3(),
         llm_astrology_input_v1={
@@ -90,6 +91,41 @@ def test_build_narrative_reading_has_five_ordered_chapters() -> None:
         "evolution_path",
     ]
     assert reading.used_astrological_elements[0].astrological_label == "Soleil en Taureau"
+
+
+def test_basic_v3_rich_response_feeds_five_distinct_public_chapters() -> None:
+    """Une fixture Basic riche relie cinq sections sources V3 aux chapitres publics."""
+    reading = build_narrative_natal_reading_v1(
+        response=_astro_v3(),
+        llm_astrology_input_v1={
+            "shaping": {
+                "support_elements": [
+                    {"code": "highlight", "value": "Soleil en Taureau"},
+                    {"code": "highlight", "value": "Lune en Cancer"},
+                    {"code": "source_label", "value": "Ascendant en Cancer"},
+                    {"code": "source_label", "value": "Venus en Maison 10"},
+                    {"code": "personalization_note", "value": "Carre Mars Saturne"},
+                    {"code": "highlight", "value": "Jupiter en Maison 7"},
+                ]
+            }
+        },
+        level="complete",
+        variant_code="single_astrologer",
+    )
+
+    expected_chapter_sources = {
+        "personality": "self_image",
+        "emotional_world": "emotions",
+        "relationships": "relationships",
+        "vocation": "career",
+        "evolution_path": "growth_direction",
+    }
+
+    assert reading.editorial_profile == "basic"
+    assert len(reading.used_astrological_elements) == 6
+    assert [chapter.key for chapter in reading.chapters] == list(expected_chapter_sources)
+    for chapter in reading.chapters:
+        assert f"Chapitre source {expected_chapter_sources[chapter.key]}." in chapter.narrative
 
 
 def test_v2_response_maps_to_five_distinct_chapters() -> None:

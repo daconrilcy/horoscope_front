@@ -7,6 +7,14 @@ PASS cd backend; ruff check .
 PASS cd backend; python -B -m pytest -q tests/unit/domain/astrology/test_client_interpretation_support_elements.py --tb=short
 PASS cd backend; python -B -m pytest -q tests/llm_orchestration -k "natal or theme_astral" --tb=short
 PASS cd backend; python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short
+PASS cd backend; ruff format tests\unit\test_narrative_natal_reading_v1.py
+PASS cd backend; ruff check tests\unit\test_narrative_natal_reading_v1.py
+PASS cd backend; python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py --tb=short (14 passed)
+PASS cd backend; ruff check .
+PASS cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_client_interpretation_support_elements.py --tb=short (2 passed)
+PASS cd backend; python -B -m pytest -q tests\llm_orchestration -k "natal or theme_astral" --tb=short (27 passed, 1 skipped, 213 deselected)
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-402-couverture-editoriale-basic-natal --final
+PASS cd backend; python -B -c "from app.main import app; print(app.title)" (horoscope-backend)
 PASS targeted prompt family scan
 PASS targeted public carrier scan: no `chart_json` or `natal_data` matches in prompt/narrative public roots
 PASS git diff --check over story paths
