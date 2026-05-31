@@ -18,6 +18,14 @@ FORBIDDEN_PUBLIC_TERMS = {
     "audit_input",
     "source_paths",
 }
+FORBIDDEN_UNACCENTED_PUBLIC_FORMS = (
+    "Synthese",
+    "theme",
+    "themes",
+    "repere",
+    "planetaire",
+    "a integrer",
+)
 
 
 def test_public_evidence_is_user_readable_and_linked_to_sections() -> None:
@@ -44,6 +52,29 @@ def test_public_evidence_is_user_readable_and_linked_to_sections() -> None:
     assert "sun" not in serialized
     assert "ce repere retient" not in serialized
     assert "position planetaire" not in serialized
+
+
+def test_public_evidence_uses_accented_french_forms() -> None:
+    """Les textes publics du plan n'exposent pas de formes francaises non accentuees."""
+    plan = build_plan(
+        (
+            fact("sun", NatalFactFamily.LUMINARY, ("sun",)),
+            fact("saturn", NatalFactFamily.PLANET_POSITION, ("saturn", "earth")),
+        ),
+        (
+            theme(BasicThemeCode.CORE_IDENTITY, ("sun",)),
+            theme(BasicThemeCode.TENSION_TO_INTEGRATE, ("saturn",)),
+        ),
+    )
+    public_payload = {
+        "public_evidence": plan.to_payload()["public_evidence"],
+        "limitations": plan.to_payload()["limitations"],
+        "disclaimers": plan.to_payload()["disclaimers"],
+        "style_constraints": plan.to_payload()["style_constraints"],
+    }
+    serialized = str(public_payload)
+
+    assert not any(term in serialized for term in FORBIDDEN_UNACCENTED_PUBLIC_FORMS)
 
 
 def test_public_evidence_ids_are_opaque_and_do_not_reuse_fact_ids() -> None:
@@ -87,7 +118,7 @@ def test_limitations_and_disclaimers_are_emitted() -> None:
 
     assert plan.limitations
     assert plan.disclaimers
-    assert "prediction certaine" in plan.disclaimers[0]
+    assert "prédiction certaine" in plan.disclaimers[0]
 
 
 def test_public_evidence_does_not_expose_internal_scoring_or_prompt_hints() -> None:

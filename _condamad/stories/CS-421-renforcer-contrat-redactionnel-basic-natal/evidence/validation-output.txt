@@ -4,7 +4,7 @@ All Python commands were run after activating .\.venv\Scripts\Activate.ps1 from 
 
 Backend checks:
 - cd backend; ruff format .
-  Result: PASS - 1764 files left unchanged.
+  Result: PASS - 1764 files left unchanged after the final patch.
 - cd backend; ruff check .
   Result: PASS - All checks passed.
 - cd backend; python -B -m pytest -q tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py --tb=short
@@ -12,7 +12,7 @@ Backend checks:
 - cd backend; python -B -m pytest -q tests/unit/test_basic_natal_narrative_validator.py tests/unit/test_basic_natal_reading_contracts.py --tb=short
   Result: PASS - 30 passed.
 - cd backend; python -B -m pytest -q tests/unit/domain/astrology/test_basic_natal_public_evidence.py --tb=short
-  Result: PASS - 4 passed.
+  Result: PASS - 5 passed.
 - cd backend; python -B -m pytest -q --long tests/integration/test_basic_natal_v2_pipeline.py --tb=short
   Result: PASS - 1 passed.
 - cd backend; python -B -m pytest -q app/tests/unit/test_astrology_translation_resolver.py --tb=short
@@ -30,12 +30,15 @@ CONDAMAD checks:
 
 Scans:
 - Mechanical phrase scan: PASS/classified. Hits are provider denylist constants, validator regexes, and negative tests.
-- Unaccented/form scan: PASS/classified. Hits are expected tests, domain terminology, denylist constants, or non-public code.
+- Unaccented/form scan: PASS/classified. Hits are expected tests, domain terminology, denylist constants, contract keys, or non-public code.
+- Snapshot unaccented/form scan: PASS/classified. Remaining hits are contract keys `theme`/`themes` and denylist entries only.
 - Technical marker scan: PASS/classified. Hits are runtime carriers outside public Basic payload, validator denylist, and contract guards.
 - Local astrology reference table scan: PASS/no scoped hits.
 
 Evidence files:
 - basic-payload-before.json: present.
-- basic-payload-after.json: present.
+- basic-payload-after.json: present and refreshed after AC11 correction.
 - basic-public-contract-before.json: present.
-- basic-public-contract-after.json: present.
+- basic-public-contract-after.json: present and refreshed after AC11 correction.
+- scan-classification.md: present.
+- generated/11-code-review.md: present and refreshed.

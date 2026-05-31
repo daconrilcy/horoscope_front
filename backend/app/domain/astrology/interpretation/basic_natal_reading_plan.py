@@ -43,15 +43,15 @@ _DATE_ONLY_FORBIDDEN_FAMILIES = frozenset(
 _HOUSE_MARKERS = ("house:",)
 _ANGLE_OBJECTS = frozenset({"asc", "mc", "desc"})
 _PUBLIC_LIMITATION = (
-    "Cette lecture Basic reste une synthese symbolique: elle ne remplace pas un avis "
-    "medical, juridique, financier ou psychologique."
+    "Cette lecture Basic reste une synthèse symbolique: elle ne remplace pas un avis "
+    "médical, juridique, financier ou psychologique."
 )
 _PUBLIC_DISCLAIMER = (
-    "Le plan organise des themes astrologiques a titre de lecture personnelle, sans "
-    "prediction certaine ni decision obligatoire."
+    "Le plan organise des thèmes astrologiques à titre de lecture personnelle, sans "
+    "prédiction certaine ni décision obligatoire."
 )
 _STYLE_CONSTRAINTS = (
-    "Employer un ton clair, nuance et non fataliste.",
+    "Employer un ton clair, nuancé et non fataliste.",
     "Ne pas ajouter de fait astrologique absent du plan.",
     "Garder les preuves publiques lisibles sans scores ni traces techniques.",
 )
@@ -254,12 +254,12 @@ def build_basic_natal_editorial_briefs(
                     "dans le fil de lecture, sans enumerer les donnees sources."
                 ),
                 possible_manifestation=(
-                    "Decrire une facon concrete dont ce theme peut se vivre au quotidien, "
-                    "en restant conditionnel et relie aux preuves du plan."
+                    "Décrire une façon concrète dont ce thème peut se vivre au quotidien, "
+                    "en restant conditionnel et relié aux preuves du plan."
                 ),
                 nuance=(
-                    "Presenter ce repere comme une tendance symbolique modulable, jamais "
-                    "comme une obligation, un diagnostic ou une prediction certaine."
+                    "Présenter ce repère comme une tendance symbolique modulable, jamais "
+                    "comme une obligation, un diagnostic ou une prédiction certaine."
                 ),
                 allowed_section_role=_section_editorial_role(section.section_code),
                 forbidden_claims=(
@@ -621,7 +621,7 @@ def _public_explanation(fact: NatalFact, section_codes: Sequence[str]) -> str:
     family_label = _FAMILY_LABELS[fact.family].casefold()
     section_label = _section_group_label(section_codes)
     return (
-        f"Cette annexe indique qu'un repere de {family_label} soutient {section_label}. "
+        f"Cette annexe indique qu'un repère de {family_label} soutient {section_label}. "
         "Elle sert de source courte et ne remplace pas l'explication narrative."
     )
 
@@ -634,7 +634,7 @@ def _readable_object(value: str) -> str:
 def _section_group_label(section_codes: Sequence[str]) -> str:
     """Retourne un libelle de section public sans exposer les objets runtime."""
     first_code = next((code for code in section_codes if code), "")
-    label = _SECTION_LABELS.get(first_code, "le theme choisi")
+    label = _SECTION_LABELS.get(first_code, "le thème choisi")
     return label.casefold()
 
 

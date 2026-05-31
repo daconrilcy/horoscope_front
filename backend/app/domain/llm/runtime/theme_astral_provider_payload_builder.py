@@ -399,11 +399,11 @@ def _basic_report_arc(reading_plan: BasicNatalReadingPlan) -> str:
     """Resume le fil narratif autorise depuis les sections du plan."""
     labels = [section.heading_intent for section in reading_plan.sections[:4]]
     if not labels:
-        return "Relier les reperes disponibles en une lecture courte, nuancee et non prescriptive."
+        return "Relier les repères disponibles en une lecture courte, nuancée et non prescriptive."
     return (
         "Relier "
         + ", ".join(label.lower() for label in labels)
-        + " en une lecture progressive: introduction, themes explicatifs, conclusion "
+        + " en une lecture progressive: introduction, thèmes explicatifs, conclusion "
         "et annexes sources."
     )
 
@@ -420,9 +420,9 @@ def _plain_language_glossary(reading_plan: BasicNatalReadingPlan) -> list[dict[s
         {
             "term": term,
             "meaning": (
-                "Vocabulaire public derive du plan Basic canonique pour guider la redaction."
+                "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction."
             ),
-            "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources.",
+            "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources.",
         }
         for term in terms
         if term

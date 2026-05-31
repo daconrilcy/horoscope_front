@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: clean
+- Final status: done
 - Story key: CS-421-renforcer-contrat-redactionnel-basic-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-421-renforcer-contrat-redactionnel-basic-natal`
@@ -37,18 +37,18 @@
 | AC8 | Two informative sentence minimum. | Validator pytest PASS. | PASS | |
 | AC9 | Mechanical phrase denylist. | Validator pytest and scan classified PASS. | PASS | |
 | AC10 | Raw English label rejection. | Validator/public evidence tests PASS. | PASS | |
-| AC11 | Unaccented French form rejection. | Validator pytest PASS. | PASS | |
+| AC11 | Unaccented French form rejection. | Validator/public evidence pytest and refreshed snapshots PASS. | PASS | |
 | AC12 | Fallback prose non-mechanical. | Validator and integration pytest PASS. | PASS | |
 | AC13 | Disclaimer-only content rejection. | Validator pytest PASS. | PASS | |
 | AC14 | Runtime fixture produces accepted Basic V2 contract. | Integration pytest with `--long` PASS. | PASS | |
 | AC15 | CS-409 to CS-418 guards preserved. | Contract/provider/translation tests and scans PASS/classified. | PASS | |
-| AC16 | Before/after snapshots persisted. | Evidence file check PASS. | PASS | |
+| AC16 | Before/after snapshots and scan classification persisted. | Evidence file check PASS. | PASS | |
 
 ## Files changed
 
-- `backend/app/domain/astrology/interpretation/basic_natal_reading_plan.py`: added `BasicNatalEditorialBrief`, localized public evidence labels/explanations, and section-derived editorial brief builder.
-- `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`: added `report_arc`, `section_editorial_briefs`, `plain_language_glossary`, `forbidden_template_phrases`, and `source_usage_policy`.
-- `backend/app/services/llm_generation/natal/narrative_natal_reading_validator.py`: rejects mechanical templates, raw English labels, unaccented French forms, source listings, one-sentence themes, and disclaimer-only content; fallback now produces two explanatory sentences.
+- `backend/app/domain/astrology/interpretation/basic_natal_reading_plan.py`: added `BasicNatalEditorialBrief`, localized public evidence labels/explanations, section-derived editorial brief builder, and corrected public French accents.
+- `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`: added `report_arc`, `section_editorial_briefs`, `plain_language_glossary`, `forbidden_template_phrases`, and `source_usage_policy`; corrected provider-visible French accents.
+- `backend/app/services/llm_generation/natal/narrative_natal_reading_validator.py`: rejects mechanical templates, raw English labels, unaccented French forms, source listings, one-sentence themes, and disclaimer-only content; fallback now produces two explanatory accented sentences.
 - `backend/app/services/llm_generation/natal/interpretation_service.py`: `synthesis` / `Fil conducteur` feeds introduction and is not duplicated as a public theme.
 - `backend/tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py`
 - `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`
@@ -67,12 +67,13 @@
 - `evidence/basic-public-contract-before.json`
 - `evidence/basic-payload-after.json`
 - `evidence/basic-public-contract-after.json`
+- `evidence/scan-classification.md`
 - `evidence/validation-output.txt`
 
 ## Tests added or updated
 
 - Payload shape and no raw-carrier tests updated.
-- Public evidence localization test updated.
+- Public evidence localization and accented public-form tests updated.
 - Validator tests added for mechanical phrases, source listings, weak themes, disclaimers, fallback prose and synthesis projection.
 
 ## Commands run
@@ -83,11 +84,11 @@
 | `ruff check .` | `backend` | PASS | All checks passed. |
 | `python -B -m pytest -q tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py --tb=short` | `backend` | PASS | 6 passed. |
 | `python -B -m pytest -q tests/unit/test_basic_natal_narrative_validator.py tests/unit/test_basic_natal_reading_contracts.py --tb=short` | `backend` | PASS | 30 passed. |
-| `python -B -m pytest -q tests/unit/domain/astrology/test_basic_natal_public_evidence.py --tb=short` | `backend` | PASS | 4 passed. |
+| `python -B -m pytest -q tests/unit/domain/astrology/test_basic_natal_public_evidence.py --tb=short` | `backend` | PASS | 5 passed. |
 | `python -B -m pytest -q --long tests/integration/test_basic_natal_v2_pipeline.py --tb=short` | `backend` | PASS | 1 passed; plain command without `--long` deselects integration tests by project hook. |
 | `python -B -m pytest -q app/tests/unit/test_astrology_translation_resolver.py --tb=short` | `backend` | PASS | 4 passed. |
 | `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short` | `backend` | PASS | 14 passed. |
-| `python -B -c <evidence file check>` | repo root | PASS | All four JSON snapshot files present. |
+| `python -B -c <evidence file check>` | repo root | PASS | JSON snapshots, scan classification, validation output and review artifact present. |
 
 ## Commands skipped or blocked
 
@@ -103,6 +104,7 @@
 ## Static scans
 
 - Mechanical phrase scan: hits only in provider denylist, validator regexes, and negative tests.
+- Snapshot unaccented-form scan: hits only in contract keys `theme`/`themes` and denylist entries, not public prose.
 - Local astrology reference table scan: `rg -n "SIGN_NAMES_FR|SIGN_LABELS|PLANET_LABELS|NODE_LABELS|ASPECT_LABELS|\bSIGNS\s*=\s*\[" ...` returned exit 1, classified PASS/no matches.
 - Basic public technical marker scan: hits limited to denylist guards in contracts/validator.
 - `git diff --check`: PASS; line-ending warnings only for dirty files on Windows.
@@ -120,7 +122,7 @@
 
 ## Remaining risks
 
-- The deterministic fallback is intentionally conservative; richer prose still depends on provider output, but the validator now rejects the observed mechanical public patterns.
+- Aucun risque restant identifie.
 
 ## Suggested reviewer focus
 

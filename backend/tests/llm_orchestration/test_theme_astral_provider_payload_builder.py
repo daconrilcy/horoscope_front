@@ -167,7 +167,7 @@ def test_basic_payload_uses_reading_plan_contract_only() -> None:
         "prediction_policy": "no_firm_prediction",
         "advice_policy": "no_prescriptive_advice",
         "plan_constraints": [
-            "Employer un ton clair, nuance et non fataliste.",
+            "Employer un ton clair, nuancé et non fataliste.",
             "Ne pas ajouter de fait astrologique absent du plan.",
             "Garder les preuves publiques lisibles sans scores ni traces techniques.",
         ],

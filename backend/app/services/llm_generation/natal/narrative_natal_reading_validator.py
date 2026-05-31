@@ -547,9 +547,9 @@ def _fallback_section_text(heading_intent: str, evidence: Sequence[object]) -> s
     """Produit un texte court depuis une preuve publique sans ajouter de fait."""
     if not evidence:
         return (
-            f"{heading_intent} donne un repere prudent pour organiser la lecture. "
+            f"{heading_intent} donne un repère prudent pour organiser la lecture. "
             "Les informations disponibles restent symboliques et demandent une "
-            "interpretation nuancee."
+            "interprétation nuancée."
         )
     return (
         f"{heading_intent} s'éclaire à partir des annexes publiques disponibles. "

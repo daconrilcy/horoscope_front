@@ -1,6 +1,6 @@
 {
   "disclaimers": [
-    "Le plan organise des themes astrologiques a titre de lecture personnelle, sans prediction certaine ni decision obligatoire."
+    "Le plan organise des thèmes astrologiques à titre de lecture personnelle, sans prédiction certaine ni décision obligatoire."
   ],
   "engine_version": "basic-natal-reading-v1",
   "interpretation": {
@@ -9,28 +9,33 @@
     "public_evidence": [
       {
         "label": "Luminaire pour fil conducteur",
-        "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
-        "theme": "synthesis"
-      },
-      {
-        "label": "Aspect pour fil conducteur",
-        "meaning": "Cette annexe indique qu'un repere de aspect soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "meaning": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
         "theme": "synthesis"
       },
       {
         "label": "Position planétaire pour fil conducteur",
-        "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "meaning": "Cette annexe indique qu'un repère de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
         "theme": "synthesis"
       },
       {
-        "label": "Aspect pour style mental",
-        "meaning": "Cette annexe indique qu'un repere de aspect soutient style mental. Elle sert de source courte et ne remplace pas l'explication narrative.",
-        "theme": "mental_style"
+        "label": "Position planétaire pour liens et réciprocité",
+        "meaning": "Cette annexe indique qu'un repère de position planétaire soutient liens et réciprocité. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "relationships"
       },
       {
-        "label": "Aspect pour tensions à intégrer",
-        "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "label": "Position planétaire pour tensions à intégrer",
+        "meaning": "Cette annexe indique qu'un repère de position planétaire soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
         "theme": "tensions"
+      },
+      {
+        "label": "Axe nodal pour axe d'apprentissage",
+        "meaning": "Cette annexe indique qu'un repère de axe nodal soutient axe d'apprentissage. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "growth"
+      },
+      {
+        "label": "Position planétaire pour manière d'agir",
+        "meaning": "Cette annexe indique qu'un repère de position planétaire soutient manière d'agir. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "action"
       }
     ],
     "themes": [
@@ -39,7 +44,7 @@
         "public_evidence": [
           {
             "label": "Luminaire pour fil conducteur",
-            "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "meaning": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
             "theme": "synthesis"
           }
         ],
@@ -50,89 +55,106 @@
         "public_evidence": [
           {
             "label": "Luminaire pour fil conducteur",
-            "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "meaning": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
             "theme": "synthesis"
           }
         ],
         "title": "Vie intérieure et besoins"
       },
       {
-        "narrative": "Style mental s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "narrative": "Liens et réciprocité s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
         "public_evidence": [
           {
-            "label": "Aspect pour fil conducteur",
-            "meaning": "Cette annexe indique qu'un repere de aspect soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
-            "theme": "synthesis"
-          },
-          {
-            "label": "Position planétaire pour fil conducteur",
-            "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
-            "theme": "synthesis"
-          },
-          {
-            "label": "Position planétaire pour fil conducteur",
-            "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
-            "theme": "synthesis"
-          },
-          {
-            "label": "Aspect pour style mental",
-            "meaning": "Cette annexe indique qu'un repere de aspect soutient style mental. Elle sert de source courte et ne remplace pas l'explication narrative.",
-            "theme": "mental_style"
+            "label": "Position planétaire pour liens et réciprocité",
+            "meaning": "Cette annexe indique qu'un repère de position planétaire soutient liens et réciprocité. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "relationships"
           }
         ],
-        "title": "Style mental"
+        "title": "Liens et réciprocité"
       },
       {
         "narrative": "Tensions à intégrer s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
         "public_evidence": [
           {
-            "label": "Aspect pour tensions à intégrer",
-            "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
-            "theme": "tensions"
-          },
-          {
-            "label": "Aspect pour tensions à intégrer",
-            "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "label": "Position planétaire pour tensions à intégrer",
+            "meaning": "Cette annexe indique qu'un repère de position planétaire soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
             "theme": "tensions"
           }
         ],
         "title": "Tensions à intégrer"
+      },
+      {
+        "narrative": "Axe d'apprentissage s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "public_evidence": [
+          {
+            "label": "Axe nodal pour axe d'apprentissage",
+            "meaning": "Cette annexe indique qu'un repère de axe nodal soutient axe d'apprentissage. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "growth"
+          }
+        ],
+        "title": "Axe d'apprentissage"
+      },
+      {
+        "narrative": "Style mental s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "public_evidence": [
+          {
+            "label": "Position planétaire pour fil conducteur",
+            "meaning": "Cette annexe indique qu'un repère de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "synthesis"
+          }
+        ],
+        "title": "Style mental"
+      },
+      {
+        "narrative": "Manière d'agir s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "public_evidence": [
+          {
+            "label": "Position planétaire pour manière d'agir",
+            "meaning": "Cette annexe indique qu'un repère de position planétaire soutient manière d'agir. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "action"
+          }
+        ],
+        "title": "Manière d'agir"
       }
     ],
     "title": "Lecture natale Basic"
   },
   "level": "basic",
   "limitations": [
-    "Lecture sans heure de naissance: les maisons, les angles et leurs maitrises ne sont pas utilises.",
-    "Cette lecture Basic reste une synthese symbolique: elle ne remplace pas un avis medical, juridique, financier ou psychologique."
+    "Cette lecture Basic reste une synthèse symbolique: elle ne remplace pas un avis médical, juridique, financier ou psychologique."
   ],
   "locale": "fr-FR",
   "prompt_version": "basic-natal-draft-prompt-v1",
   "public_evidence": [
     {
       "label": "Luminaire pour fil conducteur",
-      "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
-      "theme": "synthesis"
-    },
-    {
-      "label": "Aspect pour fil conducteur",
-      "meaning": "Cette annexe indique qu'un repere de aspect soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "meaning": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "theme": "synthesis"
     },
     {
       "label": "Position planétaire pour fil conducteur",
-      "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "meaning": "Cette annexe indique qu'un repère de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "theme": "synthesis"
     },
     {
-      "label": "Aspect pour style mental",
-      "meaning": "Cette annexe indique qu'un repere de aspect soutient style mental. Elle sert de source courte et ne remplace pas l'explication narrative.",
-      "theme": "mental_style"
+      "label": "Position planétaire pour liens et réciprocité",
+      "meaning": "Cette annexe indique qu'un repère de position planétaire soutient liens et réciprocité. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "relationships"
     },
     {
-      "label": "Aspect pour tensions à intégrer",
-      "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "label": "Position planétaire pour tensions à intégrer",
+      "meaning": "Cette annexe indique qu'un repère de position planétaire soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "theme": "tensions"
+    },
+    {
+      "label": "Axe nodal pour axe d'apprentissage",
+      "meaning": "Cette annexe indique qu'un repère de axe nodal soutient axe d'apprentissage. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "growth"
+    },
+    {
+      "label": "Position planétaire pour manière d'agir",
+      "meaning": "Cette annexe indique qu'un repère de position planétaire soutient manière d'agir. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "action"
     }
   ],
   "salience_version": "basic-natal-salience-v1",

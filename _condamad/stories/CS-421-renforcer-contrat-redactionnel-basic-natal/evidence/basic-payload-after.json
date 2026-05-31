@@ -1,10 +1,10 @@
 {
   "disclaimers": [
-    "Le plan organise des themes astrologiques a titre de lecture personnelle, sans prediction certaine ni decision obligatoire."
+    "Le plan organise des thèmes astrologiques à titre de lecture personnelle, sans prédiction certaine ni décision obligatoire."
   ],
   "editorial_evidence": [
     {
-      "explanation": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "explanation": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "label": "Luminaire pour fil conducteur",
       "section_codes": [
         "synthesis",
@@ -12,7 +12,7 @@
       ]
     },
     {
-      "explanation": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "explanation": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "label": "Luminaire pour fil conducteur",
       "section_codes": [
         "synthesis",
@@ -20,7 +20,7 @@
       ]
     },
     {
-      "explanation": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "explanation": "Cette annexe indique qu'un repère de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "label": "Position planétaire pour fil conducteur",
       "section_codes": [
         "synthesis",
@@ -28,28 +28,28 @@
       ]
     },
     {
-      "explanation": "Cette annexe indique qu'un repere de position planétaire soutient liens et réciprocité. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "explanation": "Cette annexe indique qu'un repère de position planétaire soutient liens et réciprocité. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "label": "Position planétaire pour liens et réciprocité",
       "section_codes": [
         "relationships"
       ]
     },
     {
-      "explanation": "Cette annexe indique qu'un repere de position planétaire soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "explanation": "Cette annexe indique qu'un repère de position planétaire soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "label": "Position planétaire pour tensions à intégrer",
       "section_codes": [
         "tensions"
       ]
     },
     {
-      "explanation": "Cette annexe indique qu'un repere de axe nodal soutient axe d'apprentissage. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "explanation": "Cette annexe indique qu'un repère de axe nodal soutient axe d'apprentissage. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "label": "Axe nodal pour axe d'apprentissage",
       "section_codes": [
         "growth"
       ]
     },
     {
-      "explanation": "Cette annexe indique qu'un repere de position planétaire soutient manière d'agir. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "explanation": "Cette annexe indique qu'un repère de position planétaire soutient manière d'agir. Elle sert de source courte et ne remplace pas l'explication narrative.",
       "label": "Position planétaire pour manière d'agir",
       "section_codes": [
         "action"
@@ -64,81 +64,81 @@
     "Position planetaire:"
   ],
   "limitations": [
-    "Cette lecture Basic reste une synthese symbolique: elle ne remplace pas un avis medical, juridique, financier ou psychologique."
+    "Cette lecture Basic reste une synthèse symbolique: elle ne remplace pas un avis médical, juridique, financier ou psychologique."
   ],
   "plain_language_glossary": [
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Fil conducteur",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Identité et élan central",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Vie intérieure et besoins",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Liens et réciprocité",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Tensions à intégrer",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Axe d'apprentissage",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Style mental",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Manière d'agir",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Luminaire pour fil conducteur",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Position planétaire pour fil conducteur",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Position planétaire pour liens et réciprocité",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Position planétaire pour tensions à intégrer",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Axe nodal pour axe d'apprentissage",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     },
     {
-      "meaning": "Vocabulaire public derive du plan Basic canonique pour guider la redaction.",
+      "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
       "term": "Position planétaire pour manière d'agir",
-      "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources."
+      "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
     }
   ],
-  "report_arc": "Relier fil conducteur, identité et élan central, vie intérieure et besoins, liens et réciprocité en une lecture progressive: introduction, themes explicatifs, conclusion et annexes sources.",
+  "report_arc": "Relier fil conducteur, identité et élan central, vie intérieure et besoins, liens et réciprocité en une lecture progressive: introduction, thèmes explicatifs, conclusion et annexes sources.",
   "resolved_syntheses": [
     {
       "heading_intent": "Fil conducteur",
@@ -208,8 +208,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Fil conducteur",
       "reader_meaning": "Faire comprendre le role humain de fil conducteur dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "synthesis",
@@ -227,8 +227,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Identité et élan central",
       "reader_meaning": "Faire comprendre le role humain de identité et élan central dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "identity",
@@ -245,8 +245,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Vie intérieure et besoins",
       "reader_meaning": "Faire comprendre le role humain de vie intérieure et besoins dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "inner_life",
@@ -263,8 +263,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Liens et réciprocité",
       "reader_meaning": "Faire comprendre le role humain de liens et réciprocité dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "relationships",
@@ -281,8 +281,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Tensions à intégrer",
       "reader_meaning": "Faire comprendre le role humain de tensions à intégrer dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "tensions",
@@ -299,8 +299,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Axe d'apprentissage",
       "reader_meaning": "Faire comprendre le role humain de axe d'apprentissage dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "growth",
@@ -317,8 +317,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Style mental",
       "reader_meaning": "Faire comprendre le role humain de style mental dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "mental_style",
@@ -335,8 +335,8 @@
         "fait astrologique absent du plan Basic canonique",
         "liste de sources comme corps principal"
       ],
-      "nuance": "Presenter ce repere comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prediction certaine.",
-      "possible_manifestation": "Decrire une facon concrete dont ce theme peut se vivre au quotidien, en restant conditionnel et relie aux preuves du plan.",
+      "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+      "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
       "public_label": "Manière d'agir",
       "reader_meaning": "Faire comprendre le role humain de manière d'agir dans le fil de lecture, sans enumerer les donnees sources.",
       "section_code": "action",
@@ -444,7 +444,7 @@
   "style_constraints": {
     "advice_policy": "no_prescriptive_advice",
     "plan_constraints": [
-      "Employer un ton clair, nuance et non fataliste.",
+      "Employer un ton clair, nuancé et non fataliste.",
       "Ne pas ajouter de fait astrologique absent du plan.",
       "Garder les preuves publiques lisibles sans scores ni traces techniques."
     ],
