@@ -204,3 +204,4 @@
 | cs-422 | `_story_briefs\cs-422-simplifier-rendu-basic-natal-sources-mentions-legales.md` | `_condamad\stories\cs-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` |
 | cs-423 | `_story_briefs\cs-423-qa-live-lecture-basic-natal-lisible.md` | `_condamad\stories\cs-423-qa-live-lecture-basic-natal-lisible\00-story.md` |
 | cs-424 | `_story_briefs\cs-424-verifier-corriger-generation-prompts-basic-natal.md` | `_condamad\stories\cs-424-verifier-generation-prompts-basic-natal\00-story.md` |
+| cs-425 | `_story_briefs\cs-425-invalider-regenerer-lectures-basic-natal-degradees.md` | `_condamad\stories\cs-425-invalider-regenerer-lectures-basic-natal-degradees\00-story.md` |
