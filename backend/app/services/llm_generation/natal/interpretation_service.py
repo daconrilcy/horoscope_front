@@ -560,6 +560,7 @@ def _persist_rejected_narrative_answer_audit(
 
 AcceptedCompleteAstroResponse = AstroResponseV1 | AstroResponseV2 | AstroResponseV3
 PublicAstroResponse = AcceptedCompleteAstroResponse | AstroErrorResponseV3 | AstroFreeResponseV1
+PUBLIC_FREE_SHORT_USE_CASE = "natal_interpretation_short"
 
 NATAL_COMPLETE_SCHEMA_MISMATCH = "natal_complete_schema_mismatch"
 
@@ -1169,7 +1170,7 @@ class NatalInterpretationService:
         base_payload = extract_accepted_interpretation_payload(raw_payload)
         full_payload = {**base_payload, "disclaimers": disclaimers}
 
-        if level == "complete" and model.variant_code == "free_short":
+        if model.variant_code == "free_short" or model.use_case == "natal_long_free":
             return AstroFreeResponseV1(**full_payload), "v1"
         if level == "complete":
             basic_contract = load_basic_natal_interpretation_v2_from_payload(raw_payload)
@@ -1868,8 +1869,8 @@ class NatalInterpretationService:
 
         meta = InterpretationMeta(
             id=None,
-            level="complete",
-            use_case=use_case_key,
+            level="short",
+            use_case=PUBLIC_FREE_SHORT_USE_CASE,
             persona_id=None,
             persona_name=None,
             prompt_version_id=gateway_result.meta.prompt_version_id,
@@ -1932,7 +1933,7 @@ class NatalInterpretationService:
             return NatalInterpretationResponse(
                 data=NatalGatewayInterpretationData(
                     chart_id=chart_id,
-                    use_case=use_case_key,
+                    use_case=PUBLIC_FREE_SHORT_USE_CASE,
                     interpretation=interpretation,
                     meta=meta,
                     degraded_mode=degraded_mode_str,
@@ -2011,7 +2012,7 @@ class NatalInterpretationService:
         return NatalInterpretationResponse(
             data=NatalGatewayInterpretationData(
                 chart_id=chart_id,
-                use_case=use_case_key,
+                use_case=PUBLIC_FREE_SHORT_USE_CASE,
                 interpretation=_without_public_evidence(interpretation),
                 meta=meta,
                 degraded_mode=degraded_mode_str,
@@ -2158,9 +2159,19 @@ class NatalInterpretationService:
         Formats a UserNatalInterpretationModel into a NatalInterpretationResponse.
         Handles schema versioning (v1, v2, v3).
         """
+        is_free_short = model.variant_code == "free_short" or model.use_case == "natal_long_free"
         meta.id = model.id
+        if is_free_short:
+            meta.level = "short"
+            meta.use_case = PUBLIC_FREE_SHORT_USE_CASE
         disclaimers = get_disclaimers(locale)
-        level = "complete" if model.level == InterpretationLevel.COMPLETE else "short"
+        level = (
+            "short"
+            if is_free_short
+            else "complete"
+            if model.level == InterpretationLevel.COMPLETE
+            else "short"
+        )
         interpretation, schema_version = (
             NatalInterpretationService._deserialize_persisted_interpretation(
                 model,
@@ -2177,7 +2188,7 @@ class NatalInterpretationService:
         return NatalInterpretationResponse(
             data=NatalGatewayInterpretationData(
                 chart_id=model.chart_id,
-                use_case=model.use_case,
+                use_case=PUBLIC_FREE_SHORT_USE_CASE if is_free_short else model.use_case,
                 interpretation=_without_public_evidence(interpretation),
                 meta=meta,
                 degraded_mode=model.degraded_mode,

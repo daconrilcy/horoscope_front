@@ -1,0 +1,304 @@
+{
+  "free_short": {
+    "data": {
+      "chart_id": "chart-free-after",
+      "use_case": "natal_interpretation_short",
+      "interpretation": {
+        "title": "Lecture gratuite",
+        "summary": "Resume public gratuit suffisamment lisible.",
+        "sections": [
+          {
+            "key": "section_0",
+            "heading": "Axe public",
+            "content": ""
+          }
+        ],
+        "highlights": [
+          "Point A"
+        ],
+        "advice": [
+          "Conseil A"
+        ],
+        "disclaimers": [
+          "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+          "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.",
+          "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre."
+        ]
+      },
+      "meta": {
+        "id": 1,
+        "level": "short",
+        "use_case": "natal_interpretation_short",
+        "persona_id": null,
+        "persona_name": null,
+        "prompt_version_id": null,
+        "schema_version": "v1",
+        "validation_status": "valid",
+        "repair_attempted": false,
+        "fallback_triggered": false,
+        "was_fallback": false,
+        "latency_ms": null,
+        "request_id": null,
+        "cached": false,
+        "persisted_at": null,
+        "module": null
+      },
+      "degraded_mode": null,
+      "narrative_natal_reading_v1": null,
+      "basic_natal_interpretation_v2": null
+    },
+    "disclaimers": [
+      "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+      "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.",
+      "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre."
+    ],
+    "entitlement_info": null
+  },
+  "basic_complete": {
+    "data": {
+      "chart_id": "chart-basic-after",
+      "use_case": "natal_interpretation",
+      "interpretation": {
+        "title": "Lecture natale Basic",
+        "summary": "Fil conducteur: cette lecture s'appuie uniquement sur Luminaire: moon, Luminaire: sun, Aspect: mercury, sun, conjunction, Position planetaire: mercury, cancer, Position planetaire: venus, gemini, avec nuance.",
+        "sections": [],
+        "highlights": [],
+        "advice": [],
+        "disclaimers": [
+          "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+          "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.",
+          "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre."
+        ]
+      },
+      "meta": {
+        "id": 2,
+        "level": "complete",
+        "use_case": "natal_interpretation",
+        "persona_id": null,
+        "persona_name": null,
+        "prompt_version_id": null,
+        "schema_version": "basic_natal_interpretation_v2",
+        "validation_status": "valid",
+        "repair_attempted": false,
+        "fallback_triggered": false,
+        "was_fallback": false,
+        "latency_ms": null,
+        "request_id": null,
+        "cached": false,
+        "persisted_at": null,
+        "module": null
+      },
+      "degraded_mode": null,
+      "narrative_natal_reading_v1": null,
+      "basic_natal_interpretation_v2": {
+        "locale": "fr-FR",
+        "level": "basic",
+        "engine_version": "basic-natal-reading-v1",
+        "schema_version": "basic_natal_interpretation_v2",
+        "taxonomy_version": "basic-natal-theme-taxonomy-v1",
+        "salience_version": "basic-natal-salience-v1",
+        "prompt_version": "basic-natal-draft-prompt-v1",
+        "validator_version": "basic-natal-validator-v1",
+        "interpretation": {
+          "title": "Lecture natale Basic",
+          "introduction": "Fil conducteur: cette lecture s'appuie uniquement sur Luminaire: moon, Luminaire: sun, Aspect: mercury, sun, conjunction, Position planetaire: mercury, cancer, Position planetaire: venus, gemini, avec nuance.",
+          "themes": [
+            {
+              "title": "Fil conducteur",
+              "narrative": "Fil conducteur: cette lecture s'appuie uniquement sur Luminaire: moon, Luminaire: sun, Aspect: mercury, sun, conjunction, Position planetaire: mercury, cancer, Position planetaire: venus, gemini, avec nuance.",
+              "public_evidence": [
+                {
+                  "label": "Luminaire: moon",
+                  "meaning": "Ce repere retient moon comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                },
+                {
+                  "label": "Luminaire: sun",
+                  "meaning": "Ce repere retient sun comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                },
+                {
+                  "label": "Aspect: mercury, sun, conjunction",
+                  "meaning": "Ce repere retient mercury, sun, conjunction comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                },
+                {
+                  "label": "Position planetaire: mercury, cancer",
+                  "meaning": "Ce repere retient mercury, cancer comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                },
+                {
+                  "label": "Position planetaire: venus, gemini",
+                  "meaning": "Ce repere retient venus, gemini comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                }
+              ]
+            },
+            {
+              "title": "Identite et elan central",
+              "narrative": "Identite et elan central: cette lecture s'appuie uniquement sur Luminaire: sun, avec nuance.",
+              "public_evidence": [
+                {
+                  "label": "Luminaire: sun",
+                  "meaning": "Ce repere retient sun comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                }
+              ]
+            },
+            {
+              "title": "Vie interieure et besoins",
+              "narrative": "Vie interieure et besoins: cette lecture s'appuie uniquement sur Luminaire: moon, avec nuance.",
+              "public_evidence": [
+                {
+                  "label": "Luminaire: moon",
+                  "meaning": "Ce repere retient moon comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                }
+              ]
+            },
+            {
+              "title": "Style mental",
+              "narrative": "Style mental: cette lecture s'appuie uniquement sur Aspect: mercury, sun, conjunction, Position planetaire: mercury, cancer, Position planetaire: venus, gemini, Aspect: mercury, venus, sextile, avec nuance.",
+              "public_evidence": [
+                {
+                  "label": "Aspect: mercury, sun, conjunction",
+                  "meaning": "Ce repere retient mercury, sun, conjunction comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                },
+                {
+                  "label": "Position planetaire: mercury, cancer",
+                  "meaning": "Ce repere retient mercury, cancer comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                },
+                {
+                  "label": "Position planetaire: venus, gemini",
+                  "meaning": "Ce repere retient venus, gemini comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "synthesis"
+                },
+                {
+                  "label": "Aspect: mercury, venus, sextile",
+                  "meaning": "Ce repere retient mercury, venus, sextile comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "mental_style"
+                }
+              ]
+            },
+            {
+              "title": "Tensions a integrer",
+              "narrative": "Tensions a integrer: cette lecture s'appuie uniquement sur Aspect: mars, sun, square, Aspect: mars, venus, opposition, avec nuance.",
+              "public_evidence": [
+                {
+                  "label": "Aspect: mars, sun, square",
+                  "meaning": "Ce repere retient mars, sun, square comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "tensions"
+                },
+                {
+                  "label": "Aspect: mars, venus, opposition",
+                  "meaning": "Ce repere retient mars, venus, opposition comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+                  "theme": "tensions"
+                }
+              ]
+            }
+          ],
+          "conclusion": "Cette synthese reste symbolique et doit etre lue avec nuance.",
+          "public_evidence": [
+            {
+              "label": "Luminaire: moon",
+              "meaning": "Ce repere retient moon comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "synthesis"
+            },
+            {
+              "label": "Luminaire: sun",
+              "meaning": "Ce repere retient sun comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "synthesis"
+            },
+            {
+              "label": "Aspect: mercury, sun, conjunction",
+              "meaning": "Ce repere retient mercury, sun, conjunction comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "synthesis"
+            },
+            {
+              "label": "Position planetaire: mercury, cancer",
+              "meaning": "Ce repere retient mercury, cancer comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "synthesis"
+            },
+            {
+              "label": "Position planetaire: venus, gemini",
+              "meaning": "Ce repere retient venus, gemini comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "synthesis"
+            },
+            {
+              "label": "Aspect: mercury, venus, sextile",
+              "meaning": "Ce repere retient mercury, venus, sextile comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "mental_style"
+            },
+            {
+              "label": "Aspect: mars, sun, square",
+              "meaning": "Ce repere retient mars, sun, square comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "tensions"
+            },
+            {
+              "label": "Aspect: mars, venus, opposition",
+              "meaning": "Ce repere retient mars, venus, opposition comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+              "theme": "tensions"
+            }
+          ]
+        },
+        "limitations": [
+          "Lecture sans heure de naissance: les maisons, les angles et leurs maitrises ne sont pas utilises.",
+          "Cette lecture Basic reste une synthese symbolique: elle ne remplace pas un avis medical, juridique, financier ou psychologique."
+        ],
+        "disclaimers": [
+          "Le plan organise des themes astrologiques a titre de lecture personnelle, sans prediction certaine ni decision obligatoire."
+        ],
+        "public_evidence": [
+          {
+            "label": "Luminaire: moon",
+            "meaning": "Ce repere retient moon comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Luminaire: sun",
+            "meaning": "Ce repere retient sun comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Aspect: mercury, sun, conjunction",
+            "meaning": "Ce repere retient mercury, sun, conjunction comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Position planetaire: mercury, cancer",
+            "meaning": "Ce repere retient mercury, cancer comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Position planetaire: venus, gemini",
+            "meaning": "Ce repere retient venus, gemini comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Aspect: mercury, venus, sextile",
+            "meaning": "Ce repere retient mercury, venus, sextile comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "mental_style"
+          },
+          {
+            "label": "Aspect: mars, sun, square",
+            "meaning": "Ce repere retient mars, sun, square comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "tensions"
+          },
+          {
+            "label": "Aspect: mars, venus, opposition",
+            "meaning": "Ce repere retient mars, venus, opposition comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+            "theme": "tensions"
+          }
+        ]
+      }
+    },
+    "disclaimers": [
+      "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+      "Ce contenu ne constitue pas un conseil médical, psychologique, juridique, fiscal ou financier, et ne remplace pas un professionnel qualifié.",
+      "Aucune garantie de résultat n'est fournie ; vos décisions relèvent de votre responsabilité et de votre libre arbitre."
+    ],
+    "entitlement_info": null
+  }
+}

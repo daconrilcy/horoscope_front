@@ -1,5 +1,9 @@
 # Review CS-419 - Story drafting contract
 
+Implementation evidence classification: obsolete for final implementation review.
+This file is an editorial pre-development story review only; it must not be used
+as final code review evidence for CS-419.
+
 Verdict: CLEAN
 Date: 2026-05-31
 

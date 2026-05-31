@@ -1,0 +1,25 @@
+CS-419 validation summary, 2026-05-31.
+
+PASS:
+- ruff format app/services/llm_generation/natal/interpretation_service.py tests/integration/test_natal_interpretation_public_free_basic_contract.py app/tests/integration/test_natal_free_short_variant.py
+- ruff check app/services/llm_generation/natal/interpretation_service.py tests/integration/test_natal_interpretation_public_free_basic_contract.py app/tests/integration/test_natal_free_short_variant.py
+- ruff check .
+- python -B -m pytest -q tests/integration/test_natal_interpretation_public_free_basic_contract.py --tb=short --long -> 3 passed
+- python -B -m pytest -q app/tests/integration/test_natal_free_short_variant.py --tb=short --long -> 1 passed
+- python -B -m pytest -q tests/integration/test_basic_natal_v2_pipeline.py --tb=short --long -> 1 passed
+- python -B -m pytest -q tests/integration/test_basic_natal_v2_cache_invalidation.py --tb=short --long -> 2 passed
+- python -B -m pytest -q tests/unit/test_basic_natal_reading_contracts.py tests/architecture/test_basic_natal_reading_contract_boundaries.py --tb=short -> 18 passed
+- python -B -m pytest -q tests/unit/test_natal_interpretation_stored_payload.py tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short --long -> 18 passed
+- python -B route assertion for /v1/natal/interpretation
+- python -B OpenAPI assertion for /v1/natal/interpretation
+- rg -n "fallback = response\.sections\[0\]" backend/app/services/llm_generation/natal -> PASS: no matches
+- git diff --check -> PASS with CRLF normalization warnings only
+
+CLASSIFIED:
+- rg denylist scan for Basic technical markers returns guard-definition hits only in basic_natal_contracts.py and narrative_natal_reading_validator.py.
+- rg full_payload scan returns accepted deserializer sites in interpretation_service.py; rejected payload regression tests pass.
+
+LIMITATION:
+- python -B -m pytest -q --tb=short -> 3671 passed, 2 skipped, 1259 deselected, 1 unrelated failure:
+  tests/architecture/test_astrology_doctrine_governance_guardrails.py::test_rule_marker_surfaces_are_declared_in_doctrine_governance.
+  Reported offenders are pre-existing non-story files, including natal_fact_graph_builder.py and basic_natal_contracts.py.

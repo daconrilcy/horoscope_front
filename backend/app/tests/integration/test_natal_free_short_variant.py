@@ -197,7 +197,7 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
 
             assert response.status_code == 200
             data = response.json()["data"]
-            assert data["use_case"] == "natal_long_free"
+            assert data["use_case"] == "natal_interpretation_short"
             assert (
                 data["interpretation"]["title"]
                 == "Votre thème révèle une intensité intuitive qui cherche l'équilibre."
@@ -209,7 +209,8 @@ def test_interpret_natal_chart_free_user_gets_free_short_variant(
             assert sections[0]["heading"] == "Section 1"
             assert sections[1]["heading"] == "Section 2"
             assert sections[0]["content"] == ""
-            assert data["meta"]["level"] == "complete"
+            assert data["meta"]["level"] == "short"
+            assert data["meta"]["use_case"] == "natal_interpretation_short"
 
             _, kwargs = mock_execute.call_args
             assert kwargs["request"].user_input.use_case == "natal_long_free"
