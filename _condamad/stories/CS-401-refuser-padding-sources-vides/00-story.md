@@ -143,7 +143,7 @@ est acceptee uniquement avec cinq chapitres distincts et des sources astrologiqu
   - `chapters`: exactly five chapter objects.
   - `used_astrological_elements`: non-empty for Basic/Premium accepted readings.
 - Required chapter keys:
-  - `personality`, `emotional_world`, `relationships`, `talents_and_resources`, `evolution_path`.
+  - `personality`, `emotional_world`, `relationships`, `vocation`, `evolution_path`.
 - Required fields:
   - `editorial_profile`, `chapters`, `used_astrological_elements`.
 - Optional fields:

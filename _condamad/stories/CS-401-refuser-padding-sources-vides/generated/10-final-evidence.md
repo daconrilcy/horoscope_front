@@ -43,6 +43,9 @@
 - Fix: `interpretation_service.py` converts that path to `narrative_semantic_integrity` with
   `narrative_contract_invalid`.
 - Proof: unit test `test_complete_response_with_invalid_narrative_contract_is_rejected` plus fresh targeted validations.
+- Alignment finding: the story contract shape named `talents_and_resources` once, while the runtime contract and docs
+  canonicalize the fourth chapter as `vocation`.
+- Fix: `00-story.md` now names `vocation`, matching `NARRATIVE_CHAPTER_ORDER`, docs examples and unit/integration tests.
 
 ## Files changed
 

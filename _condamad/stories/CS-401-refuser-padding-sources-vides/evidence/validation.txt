@@ -46,3 +46,40 @@ CONDAMAD story validation: PASS
 python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-401-refuser-padding-sources-vides\00-story.md
 CONDAMAD story lint: PASS
 ```
+
+## Alignment review rerun — 2026-05-31
+
+All Python commands were run after `.\.venv\Scripts\Activate.ps1`.
+
+```text
+cd backend
+ruff check .
+All checks passed!
+
+python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short
+13 passed
+
+python -B -m pytest -q --long tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short
+8 passed
+
+python -B -m pytest -q tests/architecture/test_narrative_semantic_integrity_guard.py tests/architecture/test_narrative_natal_reading_public_boundary.py --tb=short
+4 passed
+
+rg -n "response\.sections\[0\]" backend/app/services/llm_generation/natal
+PASS: no matches
+
+rg -n "fallback = response\.sections\[0\]" backend/app/services/llm_generation/natal
+PASS: no matches
+
+rg -n "talents_and_resources" _condamad/stories/CS-401-refuser-padding-sources-vides/00-story.md backend/app/domain/llm/prompting/narrative_natal_reading_v1.py backend/docs/narrative-natal-reading-v1-contract.md
+PASS: no matches
+
+python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-401-refuser-padding-sources-vides --final
+CONDAMAD validation: PASS
+
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-401-refuser-padding-sources-vides\00-story.md
+CONDAMAD story validation: PASS
+
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-401-refuser-padding-sources-vides\00-story.md
+CONDAMAD story lint: PASS
+```

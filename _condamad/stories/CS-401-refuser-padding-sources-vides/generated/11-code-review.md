@@ -15,6 +15,8 @@ Verdict: CLEAN
 
 - Fixed: Pydantic `ValidationError` during `narrative_natal_reading_v1` projection was logged and then allowed a complete
   interpretation to continue without an audited semantic rejection.
+- Fixed: the story contract shape listed `talents_and_resources` once, while the source brief requires the existing
+  canonical chapter order and the runtime contract defines `vocation` through `NARRATIVE_CHAPTER_ORDER`.
 
 Resolution:
 
@@ -22,6 +24,8 @@ Resolution:
   `narrative_semantic_integrity` rejection with `narrative_contract_invalid`.
 - `backend/tests/unit/test_narrative_natal_reading_v1.py` covers a complete response with all source sections present but
   an invalid public narrative contract.
+- `_condamad/stories/CS-401-refuser-padding-sources-vides/00-story.md` now names the canonical `vocation` key, matching
+  code, docs and tests without changing the behavioral ACs.
 
 ## Fresh review result
 
