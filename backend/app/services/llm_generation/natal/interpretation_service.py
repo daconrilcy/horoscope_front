@@ -565,6 +565,18 @@ PUBLIC_FREE_SHORT_USE_CASE = "natal_interpretation_short"
 NATAL_COMPLETE_SCHEMA_MISMATCH = "natal_complete_schema_mismatch"
 
 
+def _is_public_free_short_interpretation(model: UserNatalInterpretationModel) -> bool:
+    """Identifie les lectures free short, qu'elles portent l'ancien ou le nouveau marqueur."""
+    return (
+        model.variant_code == "free_short"
+        or model.use_case == "natal_long_free"
+        or (
+            model.use_case == PUBLIC_FREE_SHORT_USE_CASE
+            and model.level == InterpretationLevel.COMPLETE
+        )
+    )
+
+
 def _attach_narrative_reading_to_complete(
     *,
     interpretation: AcceptedCompleteAstroResponse,
@@ -1170,7 +1182,7 @@ class NatalInterpretationService:
         base_payload = extract_accepted_interpretation_payload(raw_payload)
         full_payload = {**base_payload, "disclaimers": disclaimers}
 
-        if model.variant_code == "free_short" or model.use_case == "natal_long_free":
+        if _is_public_free_short_interpretation(model):
             return AstroFreeResponseV1(**full_payload), "v1"
         if level == "complete":
             basic_contract = load_basic_natal_interpretation_v2_from_payload(raw_payload)
@@ -2159,7 +2171,7 @@ class NatalInterpretationService:
         Formats a UserNatalInterpretationModel into a NatalInterpretationResponse.
         Handles schema versioning (v1, v2, v3).
         """
-        is_free_short = model.variant_code == "free_short" or model.use_case == "natal_long_free"
+        is_free_short = _is_public_free_short_interpretation(model)
         meta.id = model.id
         if is_free_short:
             meta.level = "short"

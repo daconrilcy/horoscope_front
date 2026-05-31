@@ -1,5 +1,5 @@
 # Story CS-419 stabiliser-contrat-public-interpretation-natale-free-basic: Stabiliser Contrat Public Interpretation Natale Free Et Basic
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-419-stabiliser-contrat-public-interpretation-natale-free-basic.md`.

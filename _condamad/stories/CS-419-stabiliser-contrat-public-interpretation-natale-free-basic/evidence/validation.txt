@@ -4,7 +4,7 @@ PASS:
 - ruff format app/services/llm_generation/natal/interpretation_service.py tests/integration/test_natal_interpretation_public_free_basic_contract.py app/tests/integration/test_natal_free_short_variant.py
 - ruff check app/services/llm_generation/natal/interpretation_service.py tests/integration/test_natal_interpretation_public_free_basic_contract.py app/tests/integration/test_natal_free_short_variant.py
 - ruff check .
-- python -B -m pytest -q tests/integration/test_natal_interpretation_public_free_basic_contract.py --tb=short --long -> 3 passed
+- python -B -m pytest -q tests/integration/test_natal_interpretation_public_free_basic_contract.py --tb=short --long -> 4 passed
 - python -B -m pytest -q app/tests/integration/test_natal_free_short_variant.py --tb=short --long -> 1 passed
 - python -B -m pytest -q tests/integration/test_basic_natal_v2_pipeline.py --tb=short --long -> 1 passed
 - python -B -m pytest -q tests/integration/test_basic_natal_v2_cache_invalidation.py --tb=short --long -> 2 passed
@@ -16,8 +16,14 @@ PASS:
 - git diff --check -> PASS with CRLF normalization warnings only
 
 CLASSIFIED:
-- rg denylist scan for Basic technical markers returns guard-definition hits only in basic_natal_contracts.py and narrative_natal_reading_validator.py.
+- rg denylist scan for Basic technical markers returns guard-definition hits in basic_natal_contracts.py and narrative_natal_reading_validator.py.
+- rg denylist scan returns `chart_json` hits in interpretation_service.py internal generation inputs only; public response pytest includes `chart_json` and `natal_data` in the accepted-payload denylist.
 - rg full_payload scan returns accepted deserializer sites in interpretation_service.py; rejected payload regression tests pass.
+
+REVIEW-FIX ADDENDUM:
+- Fixed missing implementation review evidence by replacing generated/11-code-review.md with a final implementation review.
+- Fixed free short classification for already-stabilized `natal_interpretation_short` rows stored as `COMPLETE`, without reclassifying premium short rows.
+- Added accepted public payload guards for `chart_json` and `natal_data`.
 
 LIMITATION:
 - python -B -m pytest -q --tb=short -> 3671 passed, 2 skipped, 1259 deselected, 1 unrelated failure:

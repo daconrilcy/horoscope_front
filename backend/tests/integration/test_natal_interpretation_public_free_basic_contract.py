@@ -18,9 +18,11 @@ from tests.integration.basic_natal_v2_helpers import basic_runtime_plan, persist
 
 _FORBIDDEN_PUBLIC_MARKERS = (
     "audit_input",
+    "chart_json",
     "condition_axis",
     "interpretive_signal_ids",
     "internal_evidence",
+    "natal_data",
     "ranking_score",
     "raw_answer_storage",
     "score_profile",
@@ -107,6 +109,27 @@ def test_free_short_public_contract_exposes_short_astro_free_payload() -> None:
     assert data["narrative_natal_reading_v1"] is None
     assert data["basic_natal_interpretation_v2"] is None
     _assert_no_forbidden_public_marker(payload)
+
+
+def test_free_short_public_contract_accepts_stabilized_public_use_case() -> None:
+    """Une ligne deja stabilisee reste classable comme free short public."""
+    row = _free_short_row()
+    row.use_case = "natal_interpretation_short"
+    row.variant_code = None
+
+    response = NatalInterpretationService.format_interpretation_response(
+        row,
+        _public_meta(row, "complete"),
+        "fr-FR",
+    )
+
+    payload = response.model_dump(mode="json")
+    data = payload["data"]
+
+    assert data["meta"]["level"] == "short"
+    assert data["use_case"] == "natal_interpretation_short"
+    assert data["meta"]["use_case"] == "natal_interpretation_short"
+    assert data["basic_natal_interpretation_v2"] is None
 
 
 def test_basic_complete_public_contract_exposes_basic_v2_payload() -> None:
