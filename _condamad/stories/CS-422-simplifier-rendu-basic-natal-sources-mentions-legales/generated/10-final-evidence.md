@@ -9,6 +9,7 @@
 - Source story: `_condamad/stories/CS-422-simplifier-rendu-basic-natal-sources-mentions-legales/00-story.md`
 - Source brief: `_story_briefs/cs-422-simplifier-rendu-basic-natal-sources-mentions-legales.md`
 - Tracker row: `CS-422` path and brief source verified, status updated to `done` after clean implementation review.
+- Alignment pass 2026-06-01: `00-story.md` status aligned to `done` after code-vs-brief review and clean validations.
 
 ## Preflight
 
@@ -17,6 +18,7 @@
 - Pre-existing dirty file: `_condamad/run-state.json`; not touched.
 - Capsule initially incomplete; repaired with helper before reading generated files.
 - `generated/11-code-review.md`: refreshed as final implementation review evidence with verdict `CLEAN`.
+- Alignment pass evidence gap fixed on 2026-06-01: persistent `validation.txt`, `scans.txt` and `qa-responsive.md` files created.
 
 ## Capsule validation
 
@@ -27,6 +29,8 @@
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales --final` | PASS |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS on 2026-06-01 alignment pass |
+| `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md` | PASS on 2026-06-01 alignment pass |
 
 ## AC validation
 
@@ -72,6 +76,9 @@
 | `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading` | PASS, 119 tests |
 | `pnpm --dir frontend lint` | PASS |
 | `pnpm --dir frontend build` | PASS |
+| `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading` | PASS on 2026-06-01 alignment pass, 119 tests |
+| `pnpm --dir frontend lint` | PASS on 2026-06-01 alignment pass |
+| `pnpm --dir frontend build` | PASS on 2026-06-01 alignment pass |
 | `rg -n "style=\\{" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx` | PASS no matches |
 | `rg -n "ni-evidence-tags\|ni-projections\|LockedSection\|NatalAstrologicalDna\|NatalLifeDomains\|NatalStrengths\|NatalChallenges\|NatalMajorAspects" ...` | PASS no matches |
 | `rg -n "visibility_expression\|audit_input\|condition_axis:\|interpretive_signal_ids\|projection_version\|ranking_score\|weighted_score\|prompt_hint" ...` | PASS no matches |
@@ -80,6 +87,7 @@
 | `git diff --check -- <fichiers touches>` | PASS |
 | `git diff --check` | PASS |
 | Controlled local startup with `pnpm.cmd --dir frontend dev` | PASS, Vite responded on `http://127.0.0.1:5173/`; process stopped |
+| Persistent evidence files `evidence/validation.txt`, `evidence/scans.txt`, `evidence/qa-responsive.md` | CREATED on 2026-06-01 alignment pass |
 
 ## Commands skipped or blocked
 
@@ -108,6 +116,8 @@
 
 - Expected modified files after final review closure: `generated/10-final-evidence.md`, `generated/11-code-review.md`,
   `_condamad/stories/story-status.md`.
+- Alignment pass also created the missing persistent evidence files under
+  `_condamad/stories/CS-422-simplifier-rendu-basic-natal-sources-mentions-legales/evidence/`.
 - Pre-existing unrelated dirty file remains: `_condamad/run-state.json`.
 
 ## Remaining risks

@@ -18,6 +18,8 @@ Verdict: CLEAN
 
 ## Findings
 - No actionable implementation finding remains.
+- Evidence artifact gap found and fixed during the alignment pass: expected persistent validation, scan and responsive QA notes now exist under
+  `evidence/`.
 
 ## AC Alignment
 - AC1 through AC7: Basic V2 now renders a continuous report, removes inline theme evidence, keeps one deduplicated source appendix,
@@ -39,6 +41,7 @@ Verdict: CLEAN
 | `rg -n "var\\(--[^,)]+," frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/styles` | PASS with one pre-existing allowlisted hit: `frontend/src/styles/app/base.css:94` |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales --final` | PASS |
 | `git diff --check` | PASS |
+| Controlled local startup with `pnpm.cmd --dir frontend dev -- --host 127.0.0.1 --port 5173` | PASS |
 
 ## Propagation
 - `no-propagation`: this review found no reusable learning beyond the already registered `RG-170` invariant.

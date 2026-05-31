@@ -1,0 +1,27 @@
+# Scan evidence - CS-422
+
+<!-- Commentaire global: ce fichier conserve les scans anti-regression rejoues pendant la passe d'alignement CS-422. -->
+
+Date: 2026-06-01
+
+## Inline styles
+
+- Command: `rg -n "style=\\{" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx`
+- Result: PASS, no matches
+
+## Legacy public UI
+
+- Command: `rg -n "ni-evidence-tags|ni-projections|LockedSection|NatalAstrologicalDna|NatalLifeDomains|NatalStrengths|NatalChallenges|NatalMajorAspects" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx`
+- Result: PASS, no matches
+
+## Technical public markers
+
+- Command: `rg -n "visibility_expression|audit_input|condition_axis:|interpretive_signal_ids|projection_version|ranking_score|weighted_score|prompt_hint" frontend/src/components/natal-interpretation frontend/src/features/natal-chart`
+- Result: PASS, no matches
+
+## CSS fallback drift
+
+- Command: `rg -n "var\\(--[^,)]+," frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/styles`
+- Result: PASS with one pre-existing allowlisted hit:
+  - `frontend/src/styles/app/base.css:94`
+  - Allowlist entry verified in `frontend/src/styles/css-fallback-allowlist.md` for `--usage-progress`.

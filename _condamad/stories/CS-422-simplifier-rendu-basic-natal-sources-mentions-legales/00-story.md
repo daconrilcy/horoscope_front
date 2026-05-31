@@ -1,5 +1,5 @@
 # Story CS-422 simplifier-rendu-basic-natal-sources-mentions-legales: Simplifier Rendu Basic Natal Sources Et Mentions Legales
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-422-simplifier-rendu-basic-natal-sources-mentions-legales.md`.

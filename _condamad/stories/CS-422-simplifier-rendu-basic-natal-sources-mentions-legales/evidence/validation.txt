@@ -1,0 +1,30 @@
+# Validation evidence - CS-422
+
+<!-- Commentaire global: ce fichier conserve les validations rejouees pendant la passe d'alignement code-vs-brief CS-422. -->
+
+Date: 2026-06-01
+
+## Story validation
+
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md`
+  - Result: PASS
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales\00-story.md`
+  - Result: PASS
+- `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-422-simplifier-rendu-basic-natal-sources-mentions-legales --final`
+  - Result: PASS
+
+## Frontend validation
+
+- `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading`
+  - Result: PASS, 4 files, 119 tests
+- `pnpm --dir frontend lint`
+  - Result: PASS
+- `pnpm --dir frontend build`
+  - Result: PASS
+- Controlled local startup with `pnpm.cmd --dir frontend dev -- --host 127.0.0.1 --port 5173`
+  - Result: PASS, Vite responded on `http://127.0.0.1:5173/`; process stopped
+
+## Diff validation
+
+- `git diff --check`
+  - Result: PASS
