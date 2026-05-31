@@ -7,7 +7,7 @@
 - Story key: `CS-415-reading-plan-basic-natal-inspectable`
 - Source story: `_condamad/stories/CS-415-reading-plan-basic-natal-inspectable/00-story.md`
 - Source brief verified: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 
 ## Implementation summary
 
@@ -15,6 +15,7 @@
 - Added deterministic `BasicNatalReadingPlanBuilder` consuming `EligibilityContext`, `NatalFactGraph`, `NatalSalienceModel`, `ThemeModel` and `SynthesisResolver`.
 - Added public evidence, limitations, disclaimers, style constraints, section ordering, date-only gates and house archetype routing.
 - Added runtime tests and an AST guard for domain ownership.
+- Review correction: public evidence IDs are now opaque and no longer reuse raw internal fact IDs.
 
 ## Preflight
 
@@ -45,9 +46,9 @@
 | AC10 | Full birth-time order stable. | `test_basic_natal_reading_plan_builder.py` | PASS | |
 | AC11 | Date-only order stable. | `test_basic_natal_reading_plan_builder.py` | PASS | |
 | AC12 | Required facts named per section. | `test_basic_natal_reading_plan_builder.py` | PASS | |
-| AC13 | Evidence IDs named per content section. | `test_basic_natal_public_evidence.py` | PASS | |
+| AC13 | Evidence IDs named per content section. | `test_basic_natal_public_evidence.py` | PASS | Opaque IDs. |
 | AC14 | Forbidden facts kept out of sections. | `test_basic_natal_reading_plan_builder.py` | PASS | |
-| AC15 | Public evidence is readable. | `test_basic_natal_public_evidence.py` | PASS | |
+| AC15 | Public evidence is readable. | `test_basic_natal_public_evidence.py` | PASS | IDs do not copy fact IDs. |
 | AC16 | Limitations emitted. | `test_basic_natal_public_evidence.py` | PASS | |
 | AC17 | Disclaimers emitted. | `test_basic_natal_public_evidence.py` | PASS | |
 | AC18 | House 10 is not sole model. | `test_basic_natal_reading_plan_archetypes.py` | PASS | |
@@ -55,7 +56,7 @@
 | AC20 | House 7 covered. | `test_basic_natal_reading_plan_archetypes.py` | PASS | |
 | AC21 | House 12 covered. | `test_basic_natal_reading_plan_archetypes.py` | PASS | |
 | AC22 | Contradictions shape nuance. | `test_basic_natal_reading_plan_archetypes.py` | PASS | |
-| AC23 | Public technical internals absent. | Public evidence test + negative `rg` scan | PASS | Details in traceability. |
+| AC23 | Public technical internals absent. | Public evidence tests + negative `rg` scan | PASS | Includes raw fact ID non-leak test. |
 
 Detailed traceability is in `generated/03-acceptance-traceability.md`.
 
@@ -75,7 +76,7 @@ Detailed traceability is in `generated/03-acceptance-traceability.md`.
 
 ## Tests added or updated
 
-- Added runtime tests for builder contract, date-only gates, salience priority, forbidden facts, public evidence, limitations, disclaimers, public leak scan and house archetypes.
+- Added runtime tests for builder contract, date-only gates, salience priority, forbidden facts, public evidence, opaque evidence IDs, limitations, disclaimers, public leak scan and house archetypes.
 
 ## Commands run
 
@@ -88,7 +89,11 @@ Detailed traceability is in `generated/03-acceptance-traceability.md`.
 | `. .\.venv\Scripts\Activate.ps1; ruff check backend` | PASS |
 | `. .\.venv\Scripts\Activate.ps1; python -B -m pytest -q --tb=short backend\tests\unit\domain\astrology` | PASS, 680 passed |
 | `. .\.venv\Scripts\Activate.ps1; $env:PYTHONPATH='backend'; python -B -c "from app.main import app; print(app.title)"` | PASS, `horoscope-backend` |
+| `. .\.venv\Scripts\Activate.ps1; cd backend; ruff check .` | PASS in implementation review. |
+| `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology --tb=short` | PASS, 681 passed in implementation review. |
+| `. .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_reading_plan_builder.py tests\unit\domain\astrology\test_basic_natal_reading_plan_archetypes.py tests\unit\domain\astrology\test_basic_natal_public_evidence.py --tb=short` | PASS, 14 passed in implementation review. |
 | `rg -n "ranking_score|condition_axis|score_profile|weighted_score|prompt_hint|audit_input|source_paths" backend\app\domain\astrology\interpretation\basic_natal_reading_plan.py` | PASS: no matches |
+| `rg -n "ranking_score|condition_axis|score_profile|weighted_score|prompt_hint|audit_input|source_paths|SUN_H10_INTERNAL|MOON_SOURCE_PATH_INTERNAL" backend\app\domain\astrology\interpretation\basic_natal_reading_plan.py` | PASS: no matches in implementation review. |
 | `rg -n "legacy|compat|shim|fallback|deprecated|alias" backend\app\domain\astrology\interpretation\basic_natal_reading_plan.py` | PASS: no matches |
 | `rg -n "BasicNatalReadingPlanBuilder|class BasicNatalReadingPlan" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal -g "*.py"` | PASS: single canonical owner |
 | `git diff --check` | PASS with existing CRLF warning on `_condamad/run-state.json` |

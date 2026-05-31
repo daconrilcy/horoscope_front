@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import re
+
 from app.domain.astrology.interpretation.natal_fact_graph import NatalFactFamily
 from app.domain.astrology.interpretation.natal_theme_taxonomy import BasicThemeCode
 from tests.unit.domain.astrology.basic_natal_reading_plan_helpers import build_plan, fact, theme
@@ -37,6 +39,32 @@ def test_public_evidence_is_user_readable_and_linked_to_sections() -> None:
     assert all(item["label"] for item in payload["public_evidence"])
     assert all(item["explanation"] for item in payload["public_evidence"])
     assert all(item["source_section_codes"] for item in payload["public_evidence"])
+
+
+def test_public_evidence_ids_are_opaque_and_do_not_reuse_fact_ids() -> None:
+    """Les IDs publics restent opaques et ne copient pas les fact_id internes."""
+    plan = build_plan(
+        (
+            fact("SUN_H10_INTERNAL", NatalFactFamily.LUMINARY, ("sun",)),
+            fact("MOON_SOURCE_PATH_INTERNAL", NatalFactFamily.LUMINARY, ("moon",)),
+        ),
+        (
+            theme(BasicThemeCode.CORE_IDENTITY, ("SUN_H10_INTERNAL",)),
+            theme(BasicThemeCode.EMOTIONAL_PATTERN, ("MOON_SOURCE_PATH_INTERNAL",)),
+        ),
+    )
+    payload = plan.to_payload()
+    evidence_ids = [item["id"] for item in payload["public_evidence"]]
+    section_evidence_ids = [
+        evidence_id
+        for section in payload["sections"]
+        for evidence_id in section["supporting_evidence_ids"]
+    ]
+
+    assert all(re.fullmatch(r"pe-\d{3}", evidence_id) for evidence_id in evidence_ids)
+    assert set(section_evidence_ids) == set(evidence_ids)
+    assert "SUN_H10_INTERNAL" not in repr(evidence_ids)
+    assert "MOON_SOURCE_PATH_INTERNAL" not in repr(evidence_ids)
 
 
 def test_limitations_and_disclaimers_are_emitted() -> None:

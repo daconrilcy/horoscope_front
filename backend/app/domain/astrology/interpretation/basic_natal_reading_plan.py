@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Literal
 
 from app.domain.astrology.interpretation.basic_natal_eligibility import EligibilityContext
@@ -230,6 +230,7 @@ class BasicNatalReadingPlanBuilder:
             eligibility_context=eligibility_context,
             max_sections=self.max_sections,
         )
+        selected_sections = _sections_with_public_evidence_ids(selected_sections)
         public_evidence = _public_evidence_for_sections(selected_sections, fact_graph)
         limitations = tuple(dict.fromkeys((*eligibility_context.limitations, _PUBLIC_LIMITATION)))
         return BasicNatalReadingPlan(
@@ -316,7 +317,7 @@ def _synthesis_section(
         required_fact_ids=ordered_fact_ids[:5],
         forbidden_fact_ids=(),
         forbidden_fact_families=tuple(family.value for family in forbidden_families),
-        supporting_evidence_ids=_public_evidence_ids(ordered_fact_ids[:5]),
+        supporting_evidence_ids=(),
     )
 
 
@@ -352,7 +353,7 @@ def _section_for_theme(
         required_fact_ids=required_fact_ids,
         forbidden_fact_ids=forbidden_fact_ids,
         forbidden_fact_families=tuple(family.value for family in forbidden_families),
-        supporting_evidence_ids=_public_evidence_ids(required_fact_ids),
+        supporting_evidence_ids=(),
     )
 
 
@@ -434,6 +435,28 @@ def _select_sections(
     return tuple(selected_by_code[code] for code in order if code in selected_by_code)
 
 
+def _sections_with_public_evidence_ids(
+    sections: Sequence[BasicNatalPlanSection],
+) -> tuple[BasicNatalPlanSection, ...]:
+    """Attribue des identifiants publics opaques sans reutiliser les fact_id internes."""
+    evidence_id_by_fact_id: dict[str, str] = {}
+    next_index = 1
+    normalized_sections: list[BasicNatalPlanSection] = []
+    for section in sections:
+        supporting_evidence_ids: list[str] = []
+        for fact_id in section.required_fact_ids:
+            evidence_id = evidence_id_by_fact_id.get(fact_id)
+            if evidence_id is None:
+                evidence_id = f"pe-{next_index:03d}"
+                evidence_id_by_fact_id[fact_id] = evidence_id
+                next_index += 1
+            supporting_evidence_ids.append(evidence_id)
+        normalized_sections.append(
+            replace(section, supporting_evidence_ids=tuple(supporting_evidence_ids))
+        )
+    return tuple(normalized_sections)
+
+
 def _section_strength_sort_key(section: BasicNatalPlanSection) -> tuple[int, int, str]:
     """Favorise les sections les mieux documentees quand le budget est atteint."""
     synthesis_bonus = 0 if section.section_code == "synthesis" else 1
@@ -478,14 +501,20 @@ def _public_evidence_for_sections(
     fact_graph: NatalFactGraph,
 ) -> tuple[BasicNatalPublicEvidence, ...]:
     """Construit des preuves publiques lisibles depuis les faits requis."""
-    fact_by_public_slug = {_public_slug(fact.fact_id): fact for fact in fact_graph.facts}
+    fact_by_id = {fact.fact_id: fact for fact in fact_graph.facts}
+    fact_by_evidence_id: dict[str, NatalFact] = {}
     section_codes_by_evidence: dict[str, list[str]] = {}
     for section in sections:
-        for evidence_id in section.supporting_evidence_ids:
+        for fact_id, evidence_id in zip(
+            section.required_fact_ids, section.supporting_evidence_ids, strict=True
+        ):
+            fact = fact_by_id.get(fact_id)
+            if fact is not None:
+                fact_by_evidence_id.setdefault(evidence_id, fact)
             section_codes_by_evidence.setdefault(evidence_id, []).append(section.section_code)
     evidence_items: list[BasicNatalPublicEvidence] = []
     for evidence_id in sorted(section_codes_by_evidence, key=_public_evidence_sort_key):
-        fact = fact_by_public_slug.get(_public_slug_from_public_evidence_id(evidence_id))
+        fact = fact_by_evidence_id.get(evidence_id)
         if fact is None:
             continue
         evidence_items.append(
@@ -497,18 +526,6 @@ def _public_evidence_for_sections(
             )
         )
     return tuple(evidence_items)
-
-
-def _public_evidence_ids(fact_ids: Sequence[str]) -> tuple[str, ...]:
-    """Convertit les faits requis en identifiants de preuve non techniques."""
-    return tuple(
-        f"pe-{index:03d}-{_public_slug(fact_id)}" for index, fact_id in enumerate(fact_ids, 1)
-    )
-
-
-def _public_slug_from_public_evidence_id(evidence_id: str) -> str:
-    """Retrouve le suffixe opaque porte par l'ID public du plan."""
-    return evidence_id.split("-", 2)[2]
 
 
 def _public_evidence_sort_key(evidence_id: str) -> tuple[str, str]:
@@ -531,11 +548,6 @@ def _public_explanation(fact: NatalFact) -> str:
         f"Ce repere retient {objects} comme matiere astrologique disponible "
         "pour cadrer le theme, avec une confiance editoriale controlee."
     )
-
-
-def _public_slug(fact_id: str) -> str:
-    """Normalise un identifiant interne en suffixe opaque du plan."""
-    return fact_id.replace("_", "-").replace(":", "-")
 
 
 def _readable_object(value: str) -> str:

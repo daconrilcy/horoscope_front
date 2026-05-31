@@ -1,31 +1,36 @@
-# Editorial Review CS-415
-
-Implementation note 2026-05-31: this artifact is a pre-implementation drafting review.
-It is obsolete as final implementation evidence and must not be cited as a final code
-review. Runtime evidence is recorded in `generated/10-final-evidence.md`.
+# Implementation Review CS-415
 
 Verdict: CLEAN
 
 ## Scope
 - Story: `_condamad/stories/CS-415-reading-plan-basic-natal-inspectable/00-story.md`.
 - Source brief: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`.
-- Review type: compact pre-implementation drafting review.
+- Tracker row verified: CS-415 path and source brief match `_condamad/stories/story-status.md`.
+- Review type: implementation, AC alignment, tests, CONDAMAD evidence and guardrails.
 
-## Iteration 1 Findings
-- Finding fixed: the brief required durable registry enrichment for the Basic reading plan owner, while the story only recorded a gap.
-- Fix applied: added `RG-164` to `_condamad/stories/regression-guardrails.md` and cited it in the story guardrail evidence.
+## Iteration 1 Finding
+- Finding: `public_evidence.id` reused raw internal fact IDs through suffixes such as `pe-001-sun`.
+- Risk: raw fact IDs could leak implementation identifiers into public evidence, contrary to AC15, AC23, RG-152 and RG-154.
+- Fix applied: `BasicNatalReadingPlanBuilder` now assigns opaque evidence IDs (`pe-001`, `pe-002`, ...), then maps them back to facts only inside the builder.
+- Regression test added: `test_public_evidence_ids_are_opaque_and_do_not_reuse_fact_ids`.
 
-## Iteration 2 Review
-- Brief primitives are explicit in the story objective, target state, ACs, tasks, boundaries and validations.
-- The story keeps LLM calls, final prose, persistence, frontend work and budget changes out of scope.
-- Applicable guardrails are cited, including `RG-164` for mandatory `BasicNatalReadingPlan` ownership.
-- Review artifact path is present and separate from the story contract.
+## Fresh Review
+- AC1-AC23 are covered by runtime tests, traceability and guardrail scans.
+- `BasicNatalReadingPlan` remains in the canonical interpretation domain owner.
+- Date-only plans keep house, angle, ASC, MC and house-ruler surfaces out of selected sections.
+- Public evidence now has readable labels and explanations without scores, source paths, prompt hints or raw fact IDs.
+- No frontend, API, persistence, provider call or LLM prose generation was introduced.
 
 ## Validation Evidence
-- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-415-reading-plan-basic-natal-inspectable\00-story.md`.
-- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-415-reading-plan-basic-natal-inspectable\00-story.md`.
+- PASS: `ruff check .` from `backend` after venv activation.
+- PASS: `python -B -m pytest -q tests\unit\domain\astrology --tb=short` from `backend` after venv activation, 681 passed.
+- PASS: CS-415 targeted pytest suite after venv activation, 14 passed.
+- PASS: app import smoke check with `PYTHONPATH=backend`, title `horoscope-backend`.
+- PASS: public leak scan over `basic_natal_reading_plan.py`, no forbidden technical or fixture raw-ID matches.
+- PASS: owner scan returns only `backend/app/domain/astrology/interpretation/basic_natal_reading_plan.py`.
+- PASS: no `legacy|compat|shim|fallback|deprecated|alias` match in the plan owner.
 
 ## Closure
-- Final status: ready-to-dev.
-- Propagation: local CONDAMAD guardrail update only; no application code change.
-- Residual risk: implementation must still produce runtime evidence and owner scans for `RG-164`.
+- Final status recommendation: done.
+- Propagation: no-propagation; correction is local to CS-415 implementation and evidence.
+- Residual risk: none identified for the implemented story surface.
