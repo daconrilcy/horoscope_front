@@ -1,0 +1,31 @@
+CS-404 validation summary - 2026-05-31
+
+PASS pnpm --dir frontend test -- natalNarrativeReading natalPublicDomGuard NatalChartPage
+- 3 files passed; 85 tests passed.
+
+PASS pnpm --dir frontend lint
+- tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
+
+PASS pnpm --dir frontend build
+- tsc -b && Vite production build completed.
+
+PASS rg -n "NatalInterpretationLegacyBody|style=" frontend/src/features/natal-chart/NatalNarrativeReading.tsx
+- exit 1 expected: no matches.
+
+PASS rg -n "ni-evidence-tags|ni-projections|LockedSection" frontend/src/components/natal-interpretation/NatalInterpretationContent.tsx
+- exit 1 expected: no matches.
+
+PASS rg -n "natal-narrative-reading__toggle|aria-expanded|aria-controls" frontend/src/features/natal-chart/NatalNarrativeReading.tsx
+- required modern accordion markers found.
+
+PASS rg -n "ni-actions--compact" frontend/src/features/natal-chart/NatalInterpretation.tsx frontend/src/features/natal-chart/NatalInterpretation.css
+- compact action owner and CSS rules found.
+
+PASS git diff --check -- scoped story paths
+- whitespace check passed; Git warned only about LF to CRLF normalization on natalNarrativeReading.test.tsx.
+
+RG-129 note:
+- targeted anti-derivation scan found existing NatalChartPage chart field reads only: planet_positions, aspects, house_system. No astrology calculation logic was added or changed.
+
+Skipped:
+- Manual browser QA with authenticated backend session was not run in this non-interactive pass; runtime DOM behavior is covered by Vitest/Testing Library for the story ACs.

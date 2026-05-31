@@ -1,4 +1,6 @@
+// Garde de lecture narrative: les chapitres publics restent des accordeons accessibles.
 import { fireEvent, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
 import { NatalNarrativeReading } from "../features/natal-chart/NatalNarrativeReading"
@@ -12,7 +14,7 @@ const READING = {
       key: "personality" as const,
       title: "Votre personnalite",
       narrative:
-        "Paragraphe narratif suffisamment long pour le test de rendu public sans fuite technique.",
+        "Paragraphe narratif suffisamment long pour le test de rendu public sans fuite technique. Il contient une suite de phrases qui ne doit pas etre dupliquee dans l apercu replie.",
       key_points: [],
     },
     {
@@ -51,6 +53,11 @@ const READING = {
 describe("NatalNarrativeReading", () => {
   it("affiche les cinq chapitres sans identifiants techniques", () => {
     const { container } = render(<NatalNarrativeReading reading={READING} lang="fr" />)
+    const chapterToggles = screen.getAllByRole("button").filter((button) =>
+      button.classList.contains("natal-narrative-reading__toggle"),
+    )
+
+    expect(chapterToggles).toHaveLength(5)
     expect(screen.getByRole("button", { name: /Votre personnalite/i })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Votre chemin d evolution/i })).toBeInTheDocument()
     expect(container.textContent).not.toMatch(/visibility_expression|audit_input|condition_axis:/i)
@@ -70,9 +77,33 @@ describe("NatalNarrativeReading", () => {
     const secondToggle = screen.getByRole("button", { name: /Votre monde emotionnel/i })
     const panelId = secondToggle.getAttribute("aria-controls")
     expect(panelId).toBeTruthy()
+    expect(document.getElementById(panelId!)).toHaveAttribute("aria-labelledby", secondToggle.id)
     fireEvent.click(secondToggle)
     expect(secondToggle).toHaveAttribute("aria-expanded", "true")
     expect(document.getElementById(panelId!)).toBeVisible()
+  })
+
+  it("bascule un chapitre au clavier comme un bouton natif", async () => {
+    const user = userEvent.setup()
+    render(<NatalNarrativeReading reading={READING} lang="fr" />)
+    const secondToggle = screen.getByRole("button", { name: /Votre monde emotionnel/i })
+
+    secondToggle.focus()
+    await user.keyboard("{Enter}")
+    expect(secondToggle).toHaveAttribute("aria-expanded", "true")
+
+    await user.keyboard(" ")
+    expect(secondToggle).toHaveAttribute("aria-expanded", "false")
+  })
+
+  it("affiche un apercu court et unique seulement pour les chapitres replies", () => {
+    render(<NatalNarrativeReading reading={READING} lang="fr" />)
+    const firstToggle = screen.getByRole("button", { name: /Votre personnalite/i })
+    const secondToggle = screen.getByRole("button", { name: /Votre monde emotionnel/i })
+
+    expect(firstToggle).not.toHaveTextContent("ne doit pas etre dupliquee")
+    expect(secondToggle).toHaveTextContent("Deuxieme chapitre narratif lisible")
+    expect(secondToggle).not.toHaveTextContent(READING.chapters[0].narrative)
   })
 })
 

@@ -1,0 +1,3 @@
+Before implementation baseline:
+- Existing code already contained NatalNarrativeReading accordions, compact ni-actions--compact owner, and public DOM guards.
+- Test gap before this run: natalNarrativeReading.test.tsx did not assert all five accordion buttons, keyboard toggling, aria-labelledby linkage, or short unique collapsed previews.

@@ -1,5 +1,5 @@
 # Story CS-404 accordeons-narratifs-actions-compactes-natal: Accordeons Narratifs Modernes Et Actions Compactes Natal
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

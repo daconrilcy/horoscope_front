@@ -1,0 +1,4 @@
+After implementation baseline:
+- NatalNarrativeReading runtime tests assert five chapter buttons, first-open default, collapsed siblings, aria-controls/aria-labelledby linkage, mouse toggle, keyboard Enter/Space toggle, and collapsed preview behavior.
+- Public DOM guard remains green and denies raw technical markers/evidence identifiers.
+- Compact action owner remains ni-actions--compact in NatalInterpretation.tsx with CSS rules in NatalInterpretation.css.
