@@ -192,3 +192,4 @@
 | cs-410 | `_story_briefs\cs-410-construire-reading-plan-basic-natal-inspectable.md` | `_condamad\stories\cs-415-reading-plan-basic-natal-inspectable\00-story.md` |
 | cs-411 | `_story_briefs\cs-411-contraindre-payload-llm-basic-par-reading-plan.md` | `_condamad\stories\cs-416-contraindre-payload-llm-basic-par-reading-plan\00-story.md` |
 | cs-412 | `_story_briefs\cs-412-valider-et-reparer-narrative-basic-natal.md` | `_condamad\stories\cs-417-valider-reparer-narrative-basic-natal\00-story.md` |
+| cs-413 | `_story_briefs\cs-413-integrer-basic-natal-v2-persistance-cache-qa.md` | `_condamad\stories\cs-418-integrer-basic-natal-v2-persistance-cache-qa\00-story.md` |
