@@ -1,5 +1,5 @@
 # Story CS-412 prioriser-faits-natals-basic-salience-calibree: Prioriser Faits Natals Basic Par Salience Calibree
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-407-prioriser-faits-natals-basic-par-salience-calibree.md`.

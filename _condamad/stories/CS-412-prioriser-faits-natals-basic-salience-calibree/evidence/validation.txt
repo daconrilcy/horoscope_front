@@ -1,0 +1,22 @@
+Validation CS-412
+
+PASS .\.venv\Scripts\Activate.ps1; ruff format backend\app\domain\astrology\interpretation\natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py
+Result: 3 files left unchanged
+
+PASS .\.venv\Scripts\Activate.ps1; ruff check backend\app\domain\astrology\interpretation\natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py
+Result: All checks passed.
+
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short
+Result: 11 passed in 0.39s
+
+PASS .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_fact_graph.py backend\tests\unit\domain\astrology\test_basic_natal_salience_model.py backend\tests\unit\domain\astrology\test_basic_natal_salience_archetypes.py --tb=short
+Result: 16 passed in 0.49s
+
+PASS rg -n "calculate_.*aspect|calculate_.*dignity|SwissEph|\bswe\b|HouseRulerResolver\(" backend/app/domain/astrology/interpretation/natal_salience_model.py
+Result: no matches, exit 1 expected for negative scan
+
+PASS rg -n "salience_score|salience_level|ranking_score|weighted_score" backend/app/domain/astrology/interpretation/client_interpretation_projection_v1_builder.py backend/app/domain/astrology/interpretation/llm_astrology_input_v1.py backend/app/domain/astrology/interpretation/structured_facts_v1_builder.py
+Result: no matches, exit 1 expected for negative scan
+
+PASS rg -n "lilith|hayz|voices|forms|fertility|ranking_score|weighted_score" backend/app/domain/astrology/interpretation/natal_salience_model.py backend/tests/unit/domain/astrology/test_basic_natal_salience_model.py backend/tests/unit/domain/astrology/test_basic_natal_salience_archetypes.py
+Result: no matches, exit 1 expected for negative scan

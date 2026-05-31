@@ -1,0 +1,84 @@
+{
+  "archetypes": [
+    {
+      "id": "house_10",
+      "expected_facts": ["sun", "moon", "house:10"],
+      "expected_themes": ["public_direction"],
+      "expected_sections": ["themes_personnels"],
+      "forbidden_basic_facts": ["black_moon_lilith"],
+      "narrative_quality_assertions": ["pillar_facts_stay_first"]
+    },
+    {
+      "id": "house_4",
+      "expected_facts": ["sun", "moon", "house:4"],
+      "expected_themes": ["roots_and_privacy"],
+      "expected_sections": ["themes_personnels"],
+      "forbidden_basic_facts": ["hayz"],
+      "narrative_quality_assertions": ["house_theme_stays_thematic"]
+    },
+    {
+      "id": "house_7",
+      "expected_facts": ["sun", "moon", "house:7"],
+      "expected_themes": ["relationship_axis"],
+      "expected_sections": ["relations_aux_autres"],
+      "forbidden_basic_facts": ["voices"],
+      "narrative_quality_assertions": ["single_weak_signal_blocked"]
+    },
+    {
+      "id": "house_12",
+      "expected_facts": ["sun", "moon", "house:12"],
+      "expected_themes": ["withdrawal_and_interiority"],
+      "expected_sections": ["themes_personnels"],
+      "forbidden_basic_facts": ["forms"],
+      "narrative_quality_assertions": ["minor_facts_below_pillars"]
+    },
+    {
+      "id": "date_only",
+      "expected_facts": ["sun", "moon"],
+      "expected_themes": ["non_timed_pillars"],
+      "expected_sections": ["limite_de_lecture"],
+      "forbidden_basic_facts": ["asc"],
+      "narrative_quality_assertions": ["birth_time_surfaces_excluded"]
+    },
+    {
+      "id": "fire",
+      "expected_facts": ["sun", "moon", "fire"],
+      "expected_themes": ["fire_emphasis"],
+      "expected_sections": ["points_forts"],
+      "forbidden_basic_facts": ["fertility"],
+      "narrative_quality_assertions": ["balance_supports_without_overtaking"]
+    },
+    {
+      "id": "water",
+      "expected_facts": ["sun", "moon", "water"],
+      "expected_themes": ["water_emphasis"],
+      "expected_sections": ["themes_personnels"],
+      "forbidden_basic_facts": ["black_moon_lilith"],
+      "narrative_quality_assertions": ["balance_supports_without_overtaking"]
+    },
+    {
+      "id": "strong_moon",
+      "expected_facts": ["moon", "sun", "moon:sun:trine"],
+      "expected_themes": ["lunar_emphasis"],
+      "expected_sections": ["orientation_generale"],
+      "forbidden_basic_facts": ["hayz"],
+      "narrative_quality_assertions": ["exact_luminary_aspect_prioritized"]
+    },
+    {
+      "id": "dominant_saturn",
+      "expected_facts": ["saturn", "sun", "moon"],
+      "expected_themes": ["structure_and_limits"],
+      "expected_sections": ["conseil_pratique"],
+      "forbidden_basic_facts": ["voices"],
+      "narrative_quality_assertions": ["dominant_planet_remains_below_pillars"]
+    },
+    {
+      "id": "constrained_venus",
+      "expected_facts": ["venus", "sun", "moon"],
+      "expected_themes": ["relational_constraint"],
+      "expected_sections": ["relations_aux_autres"],
+      "forbidden_basic_facts": ["forms"],
+      "narrative_quality_assertions": ["constraint_is_named_not_overweighted"]
+    }
+  ]
+}

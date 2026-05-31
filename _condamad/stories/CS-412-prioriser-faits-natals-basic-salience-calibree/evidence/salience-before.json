@@ -1,0 +1,10 @@
+{
+  "status": "baseline_before_implementation",
+  "graph_id": "graph:evidence",
+  "model_version": null,
+  "decisions": [],
+  "notes": [
+    "Avant CS-412, aucun NatalSalienceModel canonique n'existait.",
+    "NatalFactGraph fournissait les faits et source_paths, mais pas de salience_score, salience_level, reason_codes ou exclusion_reason."
+  ]
+}

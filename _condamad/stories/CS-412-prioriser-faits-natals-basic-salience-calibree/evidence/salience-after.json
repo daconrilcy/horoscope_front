@@ -1,0 +1,46 @@
+{
+  "decisions": [
+    {
+      "fact_id": "moon",
+      "reason_codes": [
+        "pillar_moon"
+      ],
+      "salience_level": "pillar",
+      "salience_score": 100.0
+    },
+    {
+      "fact_id": "sun",
+      "reason_codes": [
+        "pillar_sun"
+      ],
+      "salience_level": "pillar",
+      "salience_score": 100.0
+    },
+    {
+      "fact_id": "asc",
+      "reason_codes": [
+        "pillar_ascendant"
+      ],
+      "salience_level": "pillar",
+      "salience_score": 98.0
+    },
+    {
+      "fact_id": "house-10",
+      "reason_codes": [
+        "angularity",
+        "dominant_house"
+      ],
+      "salience_level": "thematic",
+      "salience_score": 50.0
+    },
+    {
+      "exclusion_reason": "single_weak_signal",
+      "fact_id": "minor",
+      "reason_codes": [],
+      "salience_level": "supporting",
+      "salience_score": 0.0
+    }
+  ],
+  "graph_id": "graph:evidence",
+  "model_version": "natal_salience.basic.v1"
+}

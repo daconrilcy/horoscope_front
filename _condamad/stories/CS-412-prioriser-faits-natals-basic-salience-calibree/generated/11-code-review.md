@@ -1,5 +1,9 @@
 # Editorial Review CS-412
 
+Implementation note: this artifact is obsolete as final review evidence. It was
+created before implementation as a story drafting review, so it must not be used
+as the final code review for CS-412.
+
 Verdict: CLEAN
 
 ## Scope Reviewed
@@ -17,7 +21,7 @@ Verdict: CLEAN
 - PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-412-prioriser-faits-natals-basic-salience-calibree\00-story.md`
 
 ## Closure
-- Story status remains `ready-to-dev`.
-- Review artifact produced at `generated/11-code-review.md`.
+- Obsolete closure note: this pre-implementation review originally kept the story in its pre-dev state.
+- Current implementation evidence is owned by `generated/10-final-evidence.md`; story status is now `ready-to-review`.
 - Feedback propagation: no-propagation; the correction is local to this story contract and its requested guardrail.
 - Residual risk: none identified for drafting readiness.
