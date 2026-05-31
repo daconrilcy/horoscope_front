@@ -44,7 +44,7 @@ THEME_ASTRAL_DELIVERY_PROFILES: dict[str, dict[str, Any]] = {
         "selection_policy": "expanded_chart_factors",
         "detail_level": "balanced",
         "max_sections": 6,
-        "material_budget": {"max_source_items": 24, "max_sections": 6},
+        "material_budget": {"max_source_items": 24, "max_sections": 8},
         "output_length_policy": {"target": "balanced", "max_output_tokens": 2400},
     },
     "complete": {
@@ -84,7 +84,7 @@ THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES: dict[ThemeAstralCommercialPlan, dict[st
             "max_aspects": 3,
             "max_dominants": 2,
         },
-        "section_budget": {"max_sections": 6},
+        "section_budget": {"max_sections": 8},
         "output_length_policy": {"target": "balanced", "max_output_tokens": 2400},
     },
     "premium": {

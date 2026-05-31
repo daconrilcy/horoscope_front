@@ -9,8 +9,6 @@ from pathlib import Path
 from app.domain.astrology.interpretation.interpretation_material_contracts import (
     INTERPRETATION_MATERIAL_KEYS,
 )
-from app.domain.astrology.interpretation.natal_fact_graph import NatalFactFamily
-from app.domain.astrology.interpretation.natal_theme_taxonomy import BasicThemeCode
 from app.domain.llm.configuration.theme_astral_contracts import (
     THEME_ASTRAL_DELIVERY_PROFILES,
     THEME_ASTRAL_INPUT_CONTRACT_ID,
@@ -20,10 +18,8 @@ from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
     ThemeAstralProviderPayloadBuilder,
 )
 from app.ops.llm.bootstrap.seed_30_8_v3_prompts import NATAL_COMPLETE_PROMPT_V3
-from tests.unit.domain.astrology.basic_natal_reading_plan_helpers import (
-    build_plan,
-    fact,
-    theme,
+from tests.llm_orchestration.theme_astral_provider_payload_helpers import (
+    build_basic_reading_plan,
 )
 from tests.unit.domain.astrology.interpretation.test_interpretation_material_builder import (
     _build_chart_input,
@@ -170,6 +166,8 @@ def test_basic_payload_uses_reading_plan_contract_only() -> None:
             "Garder les preuves publiques lisibles sans scores ni traces techniques.",
         ],
     }
+    assert payload["delivery_profile"]["section_budget"]["max_sections"] == 8
+    assert payload["output_contract"]["max_sections"] == 8
     serialized = json.dumps(payload, ensure_ascii=False, sort_keys=True)
     assert "BasicNatalReadingPlan" not in serialized
 
@@ -292,17 +290,20 @@ def test_profile_quantities_vary_without_skeleton_drift() -> None:
         key: payload["delivery_profile"]["material_budget"]["max_source_items"]
         for key, payload in payloads.items()
     }
+    material_payloads = {
+        key: payload for key, payload in payloads.items() if key in {"free", "premium"}
+    }
     aspect_counts = {
         key: len(payload["input_data"]["interpretation_material"]["aspect_interpretations"])
-        for key, payload in payloads.items()
+        for key, payload in material_payloads.items()
     }
     fact_aspect_counts = {
         key: len(payload["input_data"]["astrological_facts"]["aspects"])
-        for key, payload in payloads.items()
+        for key, payload in material_payloads.items()
     }
     selected_section_counts = {
         key: len(payload["input_data"]["selected_themes"]["section_keys"])
-        for key, payload in payloads.items()
+        for key, payload in material_payloads.items()
     }
     output_section_limits = {
         key: payload["output_contract"]["max_sections"] for key, payload in payloads.items()
@@ -310,10 +311,10 @@ def test_profile_quantities_vary_without_skeleton_drift() -> None:
 
     assert provider_depths == set(THEME_ASTRAL_DELIVERY_PROFILES)
     assert budgets["free"] < budgets["basic"] < budgets["premium"]
-    assert aspect_counts == {"free": 1, "basic": 3, "premium": 6}
-    assert fact_aspect_counts == {"free": 1, "basic": 3, "premium": 6}
-    assert selected_section_counts == {"free": 4, "basic": 6, "premium": 8}
-    assert output_section_limits == {"free": 4, "basic": 6, "premium": 8}
+    assert aspect_counts == {"free": 1, "premium": 6}
+    assert fact_aspect_counts == {"free": 1, "premium": 6}
+    assert selected_section_counts == {"free": 4, "premium": 8}
+    assert output_section_limits == {"free": 4, "basic": 8, "premium": 8}
 
 
 def test_voice_changes_style_fields_only_and_truth_stays_engine_owned() -> None:
@@ -355,7 +356,7 @@ def _payloads_by_commercial_plan() -> dict[str, dict[str, object]]:
                 "vocabulary": ["symbolique"],
                 "emphases": ["integration"],
             },
-            basic_reading_plan=_basic_reading_plan() if plan == "basic" else None,
+            basic_reading_plan=build_basic_reading_plan() if plan == "basic" else None,
         )
         for plan in ("free", "basic", "premium")
     }
@@ -380,28 +381,3 @@ def _json_strings(value: object) -> set[str]:
     if isinstance(value, list):
         return {item for nested in value for item in _json_strings(nested)}
     return set()
-
-
-def _basic_reading_plan() -> object:
-    """Construit un plan Basic representatif avec plusieurs sections publiques."""
-    facts = (
-        fact("sun.aries", NatalFactFamily.LUMINARY, ("sun",)),
-        fact("moon.cancer", NatalFactFamily.LUMINARY, ("moon",)),
-        fact("mercury.gemini", NatalFactFamily.PLANET_POSITION, ("mercury",)),
-        fact("venus.taurus", NatalFactFamily.PLANET_POSITION, ("venus",)),
-        fact("mars.leo", NatalFactFamily.PLANET_POSITION, ("mars",)),
-        fact("jupiter.libra", NatalFactFamily.PLANET_POSITION, ("jupiter",)),
-        fact("saturn.capricorn", NatalFactFamily.PLANET_POSITION, ("saturn",)),
-        fact("node.virgo", NatalFactFamily.NODE, ("north_node",)),
-    )
-    themes = (
-        theme(BasicThemeCode.CORE_IDENTITY, ("sun.aries",), objects=("sun",)),
-        theme(BasicThemeCode.EMOTIONAL_PATTERN, ("moon.cancer",), objects=("moon",)),
-        theme(BasicThemeCode.MENTAL_STYLE, ("mercury.gemini",), objects=("mercury",)),
-        theme(BasicThemeCode.RESOURCES_AND_VALUES, ("venus.taurus",), objects=("venus",)),
-        theme(BasicThemeCode.ACTION_AND_DRIVE, ("mars.leo",), objects=("mars",)),
-        theme(BasicThemeCode.RELATIONSHIP_PATTERN, ("jupiter.libra",), objects=("jupiter",)),
-        theme(BasicThemeCode.GROWTH_DIRECTION, ("node.virgo",), objects=("north_node",)),
-        theme(BasicThemeCode.TENSION_TO_INTEGRATE, ("saturn.capricorn",), objects=("saturn",)),
-    )
-    return build_plan(facts, themes)

@@ -12,8 +12,8 @@ import pytest
 from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
     ThemeAstralProviderPayloadBuilder,
 )
-from tests.llm_orchestration.test_theme_astral_provider_payload_builder import (
-    _basic_reading_plan,
+from tests.llm_orchestration.theme_astral_provider_payload_helpers import (
+    build_basic_reading_plan,
 )
 from tests.unit.domain.astrology.interpretation.test_interpretation_material_builder import (
     _build_chart_input,
@@ -50,7 +50,7 @@ FORBIDDEN_PROMPT_TOKENS = {
 
 def test_basic_natal_prompt_payload_is_derived_from_reading_plan() -> None:
     """Le provider Basic recoit les sections et preuves selectionnees par le plan."""
-    plan = _basic_reading_plan()
+    plan = build_basic_reading_plan()
     payload = _build_basic_payload(plan)
     prompt_payload = payload["input_data"]["basic_natal_prompt_payload"]
 
@@ -66,7 +66,7 @@ def test_basic_natal_prompt_payload_is_derived_from_reading_plan() -> None:
 
 def test_basic_natal_prompt_payload_contract_shape_and_style_constraints() -> None:
     """Le contrat expose les blocs attendus et les contraintes redactionnelles Basic."""
-    prompt_payload = _build_basic_payload(_basic_reading_plan())["input_data"][
+    prompt_payload = _build_basic_payload(build_basic_reading_plan())["input_data"][
         "basic_natal_prompt_payload"
     ]
 
@@ -93,7 +93,7 @@ def test_basic_natal_prompt_payload_contract_shape_and_style_constraints() -> No
 
 def test_basic_natal_prompt_payload_excludes_raw_carriers_and_private_fields() -> None:
     """Le JSON prompt-visible Basic reste sans PII, scores, chemins et IDs bruts."""
-    payload = _build_basic_payload(_basic_reading_plan())
+    payload = _build_basic_payload(build_basic_reading_plan())
     prompt_payload = payload["input_data"]["basic_natal_prompt_payload"]
     serialized = json.dumps(prompt_payload, ensure_ascii=False, sort_keys=True)
 

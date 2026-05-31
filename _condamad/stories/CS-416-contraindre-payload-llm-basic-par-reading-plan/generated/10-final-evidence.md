@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: passed
-- Ready for review: yes
+- Ready for review: clean implementation review complete
 - Story key: CS-416-contraindre-payload-llm-basic-par-reading-plan
 - Source story: `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/00-story.md`
 - Capsule path: `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan`
@@ -14,14 +14,14 @@
 - Repository root: `C:\dev\horoscope_front`
 - Initial `git status --short`: `_condamad/run-state.json` was already modified before implementation.
 - Capsule status: generated files repaired on canonical capsule; accidental duplicate `_condamad/stories/cs-416` created by helper was removed during this run.
-- Existing `generated/11-code-review.md`: drafting-stage editorial review only; not used as final review evidence.
+- Existing `generated/11-code-review.md`: refreshed as final implementation review evidence.
 - Guardrails classified applicable: `RG-002`, `RG-022`, `RG-149`, `RG-152`, `RG-154`, `RG-156`, `RG-164`, `RG-165`.
 
 ## Capsule validation
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Status synchronized to `ready-to-review`. |
+| `00-story.md` | yes | yes | PASS | Status synchronized to `done`. |
 | `generated/01-execution-brief.md` | yes | yes | PASS | Repaired by helper. |
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC1-AC14 traced. |
 | `generated/04-target-files.md` | yes | yes | PASS | Present. |
@@ -53,6 +53,7 @@
 - Basic provider payload now requires `BasicNatalReadingPlan` and refuses Basic assembly without it.
 - Basic `input_data` now exposes one prompt-visible block: `basic_natal_prompt_payload`.
 - `basic_natal_prompt_payload` contains `sections`, `resolved_syntheses`, sanitized `editorial_evidence`, `limitations`, `disclaimers`, and `style_constraints`.
+- Basic delivery and output section limits are aligned with the `6..8` style constraint.
 - Free/Premium provider payload paths keep the previous interpretation material, selected themes, facts and birth context structure.
 - `THEME_ASTRAL_INPUT_SCHEMA` declares both the classic provider input shape and the Basic prompt payload variant.
 
@@ -60,12 +61,15 @@
 
 - `backend/app/domain/llm/runtime/theme_astral_provider_payload_builder.py`
 - `backend/app/domain/llm/configuration/theme_astral_contracts.py`
+- `backend/tests/llm_orchestration/theme_astral_provider_payload_helpers.py`
+- `backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py`
 - `backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py`
 - `backend/tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py`
 - `backend/tests/architecture/test_llm_astrology_input_payload_boundaries.py`
 - `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/evidence/basic-payload-before.json`
 - `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/evidence/basic-payload-after.json`
 - `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/evidence/validation.txt`
+- `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/generated/11-code-review.md`
 - `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/generated/03-acceptance-traceability.md`
 - `_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/generated/10-final-evidence.md`
 - `_condamad/stories/story-status.md`
@@ -77,7 +81,9 @@
 ## Tests added or updated
 
 - Added `backend/tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py`.
+- Added `backend/tests/llm_orchestration/theme_astral_provider_payload_helpers.py`.
 - Updated provider builder tests for the new Basic shape and Premium no-regression.
+- Updated Big Bang integration fixture for Basic reading-plan handoff.
 - Updated architecture guard for Basic plan ownership and raw runtime exclusion.
 
 ## Commands run
@@ -86,11 +92,13 @@
 |---|---|---|---|
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only ...` | repo root | PASS | Canonical capsule repaired. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py ...` | repo root | PASS | Capsule structure valid. |
-| `ruff format app/domain/llm/configuration/theme_astral_contracts.py app/domain/llm/runtime/theme_astral_provider_payload_builder.py tests/llm_orchestration/test_theme_astral_provider_payload_builder.py tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py tests/architecture/test_llm_astrology_input_payload_boundaries.py` | `backend` | PASS | Scoped formatting complete. |
+| `ruff format app/domain/llm/configuration/theme_astral_contracts.py tests/llm_orchestration/theme_astral_provider_payload_helpers.py tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py tests/llm_orchestration/test_theme_astral_provider_payload_builder.py tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py` | `backend` | PASS | Scoped formatting complete. |
 | `ruff check .` | `backend` | PASS | All checks passed. |
 | `python -B -m pytest -q tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py --tb=short` | `backend` | PASS | 5 passed. |
 | `python -B -m pytest -q tests/architecture/test_llm_astrology_input_payload_boundaries.py --tb=short` | `backend` | PASS | 7 passed. |
+| `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short` | `backend` | PASS | 14 passed. |
 | `python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py -k "natal or basic" --tb=short` | `backend` | PASS | 4 passed, 10 deselected. |
+| `python -B -m pytest -q tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py --long --tb=short` | `backend` | PASS | 3 passed. |
 | `rg -n "chart_json\|natal_data\|email\|user_id\|place_id\|latitude\|longitude" app/domain/llm app/services/llm_generation/natal` | `backend` | PASS_WITH_LIMITATIONS | Existing non-Basic/non-prompt-visible matches remain; Basic prompt payload tests prove absence from `basic_natal_prompt_payload`. |
 | `rg -n "ranking_score\|condition_axis\|score_profile\|weighted_score\|prompt_hint" app/domain/llm app/services/llm_generation/natal` | `backend` | PASS_WITH_LIMITATIONS | Existing validator denylist literal remains; Basic prompt payload tests prove absence. |
 | `python -B -c "from pathlib import Path; assert Path('../_condamad/stories/CS-416-contraindre-payload-llm-basic-par-reading-plan/evidence/validation.txt').exists()"` | `backend` | PASS | Evidence file exists. |
@@ -98,7 +106,7 @@
 
 ## Commands skipped or blocked
 
-- Full backend pytest suite not run; story validation plan only required focused payload, architecture and provider tests. Compensating evidence: Ruff full backend check plus targeted runtime and architecture tests.
+- Full backend pytest suite not run; story validation plan only required focused payload, architecture and provider tests. Compensating evidence: Ruff full backend check plus targeted runtime, architecture and integration handoff tests.
 
 ## DRY / No Legacy evidence
 
@@ -117,7 +125,7 @@
 
 ## Remaining risks
 
-- Existing broad natal runtime files still contain `chart_json`, `natal_data`, `user_id` and coordinates outside the Basic prompt payload boundary; this is documented as non-Basic/non-prompt-visible residual surface, not changed in this story.
+- Existing broad natal runtime files still contain `chart_json`, `natal_data`, `user_id` and coordinates outside the Basic prompt payload boundary; this is documented as non-Basic/non-prompt-visible residual surface and covered by tests/scans.
 
 ## Suggested reviewer focus
 

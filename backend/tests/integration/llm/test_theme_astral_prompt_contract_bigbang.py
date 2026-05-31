@@ -15,6 +15,9 @@ from app.domain.llm.runtime.gateway import LLMGateway
 from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
     ThemeAstralProviderPayloadBuilder,
 )
+from tests.llm_orchestration.theme_astral_provider_payload_helpers import (
+    build_basic_reading_plan,
+)
 from tests.unit.domain.astrology.interpretation.test_interpretation_material_builder import (
     _build_chart_input,
     _sources_for,
@@ -105,7 +108,8 @@ def test_example_payload_shapes_are_stable() -> None:
             "interpretation_material",
             "selected_themes",
             "limits",
-        )
+        ),
+        ("basic_natal_prompt_payload",),
     }
     assert {payload["delivery_profile"]["depth"] for payload in payloads.values()} == {
         "essential",
@@ -124,6 +128,7 @@ def _build_provider_payload(plan: str) -> dict[str, object]:
         interpretation_sources=_sources_for(chart_input),
         commercial_plan=plan,  # type: ignore[arg-type]
         astrologer_voice={"tone": "calme", "vocabulary": ["symbolique"]},
+        basic_reading_plan=build_basic_reading_plan() if plan == "basic" else None,
     )
 
 

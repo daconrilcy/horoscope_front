@@ -12,7 +12,7 @@
     "delivery_profile_version": "v1",
     "depth": "expanded",
     "material_budget": {
-      "max_sections": 6,
+      "max_sections": 8,
       "max_source_items": 24
     },
     "output_length_policy": {
@@ -20,7 +20,7 @@
       "target": "balanced"
     },
     "section_budget": {
-      "max_sections": 6
+      "max_sections": 8
     }
   },
   "feature_context": {
@@ -266,7 +266,7 @@
     }
   },
   "output_contract": {
-    "max_sections": 6,
+    "max_sections": 8,
     "required_sections": [
       "title",
       "summary",

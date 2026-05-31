@@ -1,5 +1,5 @@
 # Story CS-416 contraindre-payload-llm-basic-par-reading-plan: Contraindre Payload LLM Basic Par Reading Plan
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-411-contraindre-payload-llm-basic-par-reading-plan.md`.
