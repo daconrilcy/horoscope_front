@@ -265,10 +265,12 @@ def _missing_data_payload(
     """Expose les absences optionnelles avec une forme stable."""
     sign_balances = interpretation_input.sign_profile_balances
     birth_time_known = interpretation_input.birth_context.precision.birth_time_known
+    timezone_known = interpretation_input.birth_context.birth_place.timezone is not None
     payload: dict[str, Any] = {
         "chart_id": interpretation_input.chart_id,
         "sign_balances": None if sign_balances is None else "available",
         "birth_time": "available" if birth_time_known else "missing",
+        "birth_timezone": "available" if timezone_known else "missing",
         "empty_collections": sorted(
             name
             for name, values in (
@@ -287,6 +289,8 @@ def _missing_data_payload(
     }
     if not birth_time_known:
         payload["reasons"] = ["no_time"]
+    elif not timezone_known:
+        payload["reasons"] = ["missing_timezone"]
     return payload
 
 

@@ -11,6 +11,9 @@ from app.domain.astrology.interpretation.ai_narrative_input_contracts import (
     AI_NARRATIVE_INPUT_CONTRACT_VERSION,
     AINarrativeInputContract,
 )
+from app.domain.astrology.interpretation.basic_natal_eligibility import (
+    apply_basic_natal_eligibility_to_llm_blocks,
+)
 from app.domain.astrology.interpretation.evidence_refs_validation import (
     EvidenceSectionRequirement,
     build_audit_source_proofs,
@@ -72,7 +75,14 @@ class LLMAstrologyInputV1Builder:
 
         facts = _facts_block(structured_facts_v1)
         signals = _signals_block(ai_narrative_input)
+        facts, signals, eligibility_context = apply_basic_natal_eligibility_to_llm_blocks(
+            facts=facts,
+            signals=signals,
+            structured_facts_v1=structured_facts_v1,
+        )
         limits = _limits_block(structured_facts_v1, ai_narrative_input)
+        limits["birth_time_eligibility"] = eligibility_context.to_payload()
+        limits["uncertainty_notes"] = list(eligibility_context.limitations)
         shaping = _shaping_block(client_interpretation_projection_v1)
         source_projection_hash = projection_hash or compute_projection_hash(structured_facts_v1)
         evidence = _evidence_block(

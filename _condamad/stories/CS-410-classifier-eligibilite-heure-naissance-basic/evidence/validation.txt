@@ -1,0 +1,7 @@
+# Validation Evidence
+
+Commands were run from `C:\dev\horoscope_front` after activating `.\.venv\Scripts\Activate.ps1`.
+
+- `ruff format backend\app\domain\astrology\interpretation\basic_natal_eligibility.py backend\app\domain\astrology\interpretation\structured_facts_v1_builder.py backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py backend\tests\unit\domain\astrology\test_basic_natal_eligibility_context.py backend\tests\unit\domain\astrology\test_basic_natal_date_only_reading_guards.py backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py backend\tests\unit\domain\astrology\test_structured_facts_v1_builder.py`: PASS.
+- `ruff check backend\app\domain\astrology\interpretation\basic_natal_eligibility.py backend\app\domain\astrology\interpretation\structured_facts_v1_builder.py backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py backend\tests\unit\domain\astrology\test_basic_natal_eligibility_context.py backend\tests\unit\domain\astrology\test_basic_natal_date_only_reading_guards.py backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py backend\tests\unit\domain\astrology\test_structured_facts_v1_builder.py`: PASS, all checks passed.
+- `python -B -m pytest -q backend\tests\unit\domain\astrology\test_basic_natal_eligibility_context.py backend\tests\unit\domain\astrology\test_basic_natal_date_only_reading_guards.py backend\tests\unit\domain\astrology\test_llm_astrology_input_v1.py backend\tests\unit\domain\astrology\test_structured_facts_v1_builder.py --tb=short`: PASS, 25 passed.

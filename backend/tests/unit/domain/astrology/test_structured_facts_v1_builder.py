@@ -93,6 +93,7 @@ def test_structured_facts_v1_missing_runtime_data_is_deterministic() -> None:
         "chart_id": None,
         "sign_balances": None,
         "birth_time": "missing",
+        "birth_timezone": "missing",
         "reasons": ["no_time"],
         "empty_collections": [
             "advanced_condition_facts",

@@ -6,6 +6,7 @@ import ast
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -55,6 +56,7 @@ class _NatalSource:
     dominant_planets: DominantPlanetsResult
     advanced_condition_facts: tuple[object, ...] = ()
     chart_balance: object | None = None
+    prepared_input: object | None = None
 
 
 def test_llm_astrology_input_v1_shape_and_sources_are_stable() -> None:
@@ -310,6 +312,10 @@ def _build_sources(
             most_elevated_planet_code=None,
         ),
         chart_balance=_chart_balance() if with_chart_balance else None,
+        prepared_input=SimpleNamespace(
+            birth_time_local="10:30",
+            timezone_iana="Europe/Paris",
+        ),
     )
     structured_facts = StructuredFactsV1Builder().build(source, chart_id="chart-1", locale="fr")
     ai_input = AINarrativeInputBuilder().build(source, chart_id="chart-1", locale="fr")

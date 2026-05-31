@@ -1,5 +1,7 @@
 # Editorial Review - CS-410
 
+Implementation evidence note: this file is an editorial story-writing review created before implementation. It is obsolete as final code-review evidence for the development run; use `generated/10-final-evidence.md` and `generated/03-acceptance-traceability.md` for implementation evidence.
+
 Verdict: CLEAN
 Date: 2026-05-31
 

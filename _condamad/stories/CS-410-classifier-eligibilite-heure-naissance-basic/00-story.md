@@ -1,5 +1,5 @@
 # Story CS-410 classifier-eligibilite-heure-naissance-basic: Classifier Eligibilite Heure Naissance Basic
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 - Source type: product-risk brief.
