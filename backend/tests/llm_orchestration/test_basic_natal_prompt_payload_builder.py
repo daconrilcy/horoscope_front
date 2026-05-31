@@ -56,6 +56,7 @@ def test_basic_natal_prompt_payload_is_derived_from_reading_plan() -> None:
 
     assert len(prompt_payload["sections"]) == len(plan.sections)
     assert len(prompt_payload["resolved_syntheses"]) == len(plan.sections)
+    assert len(prompt_payload["section_editorial_briefs"]) == len(plan.sections)
     assert len(prompt_payload["editorial_evidence"]) == len(plan.public_evidence)
     assert prompt_payload["limitations"] == list(plan.limitations)
     assert prompt_payload["disclaimers"] == list(plan.disclaimers)
@@ -71,8 +72,13 @@ def test_basic_natal_prompt_payload_contract_shape_and_style_constraints() -> No
     ]
 
     assert tuple(prompt_payload) == (
+        "report_arc",
         "sections",
         "resolved_syntheses",
+        "section_editorial_briefs",
+        "plain_language_glossary",
+        "forbidden_template_phrases",
+        "source_usage_policy",
         "editorial_evidence",
         "limitations",
         "disclaimers",
@@ -89,15 +95,47 @@ def test_basic_natal_prompt_payload_contract_shape_and_style_constraints() -> No
     assert prompt_payload["style_constraints"]["tone"] == "vous"
     assert prompt_payload["style_constraints"]["prediction_policy"] == "no_firm_prediction"
     assert prompt_payload["style_constraints"]["advice_policy"] == "no_prescriptive_advice"
+    assert "introduction" in prompt_payload["report_arc"]
+    assert "annexe courte" in prompt_payload["source_usage_policy"]
+
+
+def test_basic_natal_section_editorial_briefs_are_controlled_and_plan_scoped() -> None:
+    """Chaque section recoit une matiere redactionnelle sans IDs internes."""
+    prompt_payload = _build_basic_payload(build_basic_reading_plan())["input_data"][
+        "basic_natal_prompt_payload"
+    ]
+    briefs = prompt_payload["section_editorial_briefs"]
+
+    assert all(
+        {
+            "public_label",
+            "reader_meaning",
+            "possible_manifestation",
+            "nuance",
+            "allowed_section_role",
+            "forbidden_claims",
+            "source_fact_refs",
+        }.issubset(brief)
+        for brief in briefs
+    )
+    assert {brief["section_code"] for brief in briefs} == {
+        section["section_code"] for section in prompt_payload["sections"]
+    }
+    assert all("plan Basic canonique" in " ".join(brief["forbidden_claims"]) for brief in briefs)
 
 
 def test_basic_natal_prompt_payload_excludes_raw_carriers_and_private_fields() -> None:
     """Le JSON prompt-visible Basic reste sans PII, scores, chemins et IDs bruts."""
     payload = _build_basic_payload(build_basic_reading_plan())
     prompt_payload = payload["input_data"]["basic_natal_prompt_payload"]
-    serialized = json.dumps(prompt_payload, ensure_ascii=False, sort_keys=True)
+    payload_without_denylist = {
+        key: value for key, value in prompt_payload.items() if key != "forbidden_template_phrases"
+    }
+    serialized = json.dumps(payload_without_denylist, ensure_ascii=False, sort_keys=True)
 
     assert all(token not in serialized for token in FORBIDDEN_PROMPT_TOKENS)
+    assert "moon" not in serialized.casefold()
+    assert "north_node" not in serialized.casefold()
     editorial_evidence = prompt_payload["editorial_evidence"]
     assert all("id" not in item for item in editorial_evidence)
 

@@ -79,14 +79,20 @@ def _valid_draft(plan: BasicNatalReadingPlan | None = None) -> dict[str, object]
             {
                 "section_code": "identity",
                 "heading": "Identite",
-                "content": "Vous avancez avec un elan relationnel nuance et lisible.",
+                "content": (
+                    "Vous avancez avec un elan relationnel nuance et lisible. "
+                    "Cette dynamique peut aider a choisir des liens plus equilibres."
+                ),
                 "evidence_ids": ["ev_sun"],
                 "fact_ids": ["sun_balance"],
             },
             {
                 "section_code": "values",
                 "heading": "Valeurs",
-                "content": "Votre besoin de stabilite soutient des choix progressifs.",
+                "content": (
+                    "Votre besoin de stabilite soutient des choix progressifs. "
+                    "Il peut se manifester par une recherche de rythme simple et fiable."
+                ),
                 "evidence_ids": ["ev_moon"],
                 "fact_ids": ["moon_taurus"],
             },
@@ -96,6 +102,31 @@ def _valid_draft(plan: BasicNatalReadingPlan | None = None) -> dict[str, object]
         "public_evidence_ids": ["ev_sun", "ev_moon"],
         "public_sources": ["Soleil en Balance", "Lune en Taureau"],
     }
+
+
+def _plan_with_synthesis() -> BasicNatalReadingPlan:
+    """Ajoute un fil conducteur pour tester la projection publique dedupliquee."""
+    base = _date_only_plan()
+    synthesis = BasicNatalPlanSection(
+        section_code="synthesis",
+        heading_intent="Fil conducteur",
+        target_length_words=120,
+        theme_codes=("synthesis",),
+        required_fact_ids=("sun_balance",),
+        forbidden_fact_ids=(),
+        forbidden_fact_families=(),
+        supporting_evidence_ids=("ev_sun",),
+    )
+    return BasicNatalReadingPlan(
+        level=base.level,
+        locale=base.locale,
+        engine_version=base.engine_version,
+        sections=(synthesis, *base.sections),
+        public_evidence=base.public_evidence,
+        style_constraints=base.style_constraints,
+        limitations=base.limitations,
+        disclaimers=base.disclaimers,
+    )
 
 
 def _errors(draft: dict[str, object]) -> list[str]:
@@ -199,6 +230,31 @@ def test_technical_marker_mixed_person_and_prescriptive_advice_are_invalid() -> 
     assert "prescriptive_advice" in errors
 
 
+def test_mechanical_source_listing_and_raw_labels_are_invalid() -> None:
+    """Les phrases templates et libelles anglais observes sont rejetes."""
+    draft = _valid_draft()
+    draft["sections"][0]["content"] = (
+        "Luminaire: moon, Position planetaire: saturn, north node. "
+        "cette lecture s'appuie uniquement sur ces sources avec une confiance editoriale controlee."
+    )
+
+    errors = _errors(draft)
+
+    assert "technical_or_jargon_marker" in errors
+    assert "source_listing_as_content:identity" in errors
+
+
+def test_disclaimer_only_and_single_sentence_theme_are_invalid() -> None:
+    """Un disclaimer ou une phrase unique ne remplace pas le contenu editorial."""
+    draft = _valid_draft()
+    draft["sections"][0]["content"] = "Lecture symbolique sans prediction certaine."
+
+    errors = _errors(draft)
+
+    assert "weak_editorial_section:identity" in errors
+    assert "disclaimer_only_section:identity" in errors
+
+
 def test_missing_limitation_disclaimer_and_public_sources_are_invalid() -> None:
     """Les limitations, disclaimers et sources publiques du plan restent obligatoires."""
     draft = _valid_draft()
@@ -261,8 +317,8 @@ def test_invalid_draft_triggers_one_repair_attempt() -> None:
     assert outcome.rejection_outcome is None
 
 
-def test_second_invalid_draft_uses_valid_short_deterministic_fallback() -> None:
-    """Deux validations invalides basculent vers un fallback court valide sans padding."""
+def test_second_invalid_draft_uses_valid_editorial_deterministic_fallback() -> None:
+    """Deux validations invalides basculent vers un fallback lisible sans template mecanique."""
 
     def repair(_draft, _reading_plan, _validation_result):
         return {"sections": []}
@@ -280,6 +336,8 @@ def test_second_invalid_draft_uses_valid_short_deterministic_fallback() -> None:
     assert outcome.validation_result.is_valid is True
     assert outcome.validation_result.fallback_used is True
     assert outcome.accepted_draft is not None
+    serialized = str(outcome.accepted_draft)
+    assert "cette lecture s'appuie uniquement" not in serialized
     assert outcome.rejection_outcome is None
 
 
@@ -311,3 +369,27 @@ def test_basic_draft_runtime_helper_builds_public_v2_contract_after_validation()
     assert contract.schema_version == "basic_natal_interpretation_v2"
     assert contract.interpretation.themes
     assert contract.public_evidence
+
+
+def test_basic_public_contract_uses_synthesis_as_introduction_not_duplicate_theme() -> None:
+    """Le fil conducteur nourrit l'introduction sans devenir un theme ordinaire."""
+    plan = _plan_with_synthesis()
+    draft = _valid_draft(plan)
+    draft["sections"].insert(
+        0,
+        {
+            "section_code": "synthesis",
+            "heading": "Fil conducteur",
+            "content": (
+                "Le fil conducteur relie les besoins relationnels et les ressources stables. "
+                "Il introduit la lecture sans ajouter de chapitre redondant."
+            ),
+            "evidence_ids": ["ev_sun"],
+            "fact_ids": ["sun_balance"],
+        },
+    )
+
+    contract = _basic_natal_contract_from_draft(accepted_draft=draft, reading_plan=plan)
+
+    assert contract.interpretation.introduction.startswith("Le fil conducteur")
+    assert all(theme.title != "Fil conducteur" for theme in contract.interpretation.themes)

@@ -1,0 +1,142 @@
+{
+  "disclaimers": [
+    "Le plan organise des themes astrologiques a titre de lecture personnelle, sans prediction certaine ni decision obligatoire."
+  ],
+  "engine_version": "basic-natal-reading-v1",
+  "interpretation": {
+    "conclusion": "Cette synthèse reste symbolique et doit être lue avec nuance.",
+    "introduction": "Fil conducteur s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+    "public_evidence": [
+      {
+        "label": "Luminaire pour fil conducteur",
+        "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "synthesis"
+      },
+      {
+        "label": "Aspect pour fil conducteur",
+        "meaning": "Cette annexe indique qu'un repere de aspect soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "synthesis"
+      },
+      {
+        "label": "Position planétaire pour fil conducteur",
+        "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "synthesis"
+      },
+      {
+        "label": "Aspect pour style mental",
+        "meaning": "Cette annexe indique qu'un repere de aspect soutient style mental. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "mental_style"
+      },
+      {
+        "label": "Aspect pour tensions à intégrer",
+        "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+        "theme": "tensions"
+      }
+    ],
+    "themes": [
+      {
+        "narrative": "Identité et élan central s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "public_evidence": [
+          {
+            "label": "Luminaire pour fil conducteur",
+            "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "synthesis"
+          }
+        ],
+        "title": "Identité et élan central"
+      },
+      {
+        "narrative": "Vie intérieure et besoins s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "public_evidence": [
+          {
+            "label": "Luminaire pour fil conducteur",
+            "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "synthesis"
+          }
+        ],
+        "title": "Vie intérieure et besoins"
+      },
+      {
+        "narrative": "Style mental s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "public_evidence": [
+          {
+            "label": "Aspect pour fil conducteur",
+            "meaning": "Cette annexe indique qu'un repere de aspect soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Position planétaire pour fil conducteur",
+            "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Position planétaire pour fil conducteur",
+            "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "synthesis"
+          },
+          {
+            "label": "Aspect pour style mental",
+            "meaning": "Cette annexe indique qu'un repere de aspect soutient style mental. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "mental_style"
+          }
+        ],
+        "title": "Style mental"
+      },
+      {
+        "narrative": "Tensions à intégrer s'éclaire à partir des annexes publiques disponibles. Ces sources orientent le thème sans devenir le contenu principal de la lecture.",
+        "public_evidence": [
+          {
+            "label": "Aspect pour tensions à intégrer",
+            "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "tensions"
+          },
+          {
+            "label": "Aspect pour tensions à intégrer",
+            "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+            "theme": "tensions"
+          }
+        ],
+        "title": "Tensions à intégrer"
+      }
+    ],
+    "title": "Lecture natale Basic"
+  },
+  "level": "basic",
+  "limitations": [
+    "Lecture sans heure de naissance: les maisons, les angles et leurs maitrises ne sont pas utilises.",
+    "Cette lecture Basic reste une synthese symbolique: elle ne remplace pas un avis medical, juridique, financier ou psychologique."
+  ],
+  "locale": "fr-FR",
+  "prompt_version": "basic-natal-draft-prompt-v1",
+  "public_evidence": [
+    {
+      "label": "Luminaire pour fil conducteur",
+      "meaning": "Cette annexe indique qu'un repere de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "synthesis"
+    },
+    {
+      "label": "Aspect pour fil conducteur",
+      "meaning": "Cette annexe indique qu'un repere de aspect soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "synthesis"
+    },
+    {
+      "label": "Position planétaire pour fil conducteur",
+      "meaning": "Cette annexe indique qu'un repere de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "synthesis"
+    },
+    {
+      "label": "Aspect pour style mental",
+      "meaning": "Cette annexe indique qu'un repere de aspect soutient style mental. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "mental_style"
+    },
+    {
+      "label": "Aspect pour tensions à intégrer",
+      "meaning": "Cette annexe indique qu'un repere de aspect soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+      "theme": "tensions"
+    }
+  ],
+  "salience_version": "basic-natal-salience-v1",
+  "schema_version": "basic_natal_interpretation_v2",
+  "taxonomy_version": "basic-natal-theme-taxonomy-v1",
+  "validator_version": "basic-natal-validator-v1"
+}

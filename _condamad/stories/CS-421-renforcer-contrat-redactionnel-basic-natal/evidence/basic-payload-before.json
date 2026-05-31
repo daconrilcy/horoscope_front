@@ -1,0 +1,234 @@
+{
+  "disclaimers": [
+    "Le plan organise des themes astrologiques a titre de lecture personnelle, sans prediction certaine ni decision obligatoire."
+  ],
+  "editorial_evidence": [
+    {
+      "explanation": "Ce repere retient moon comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+      "label": "Luminaire: moon",
+      "section_codes": [
+        "synthesis",
+        "inner_life"
+      ]
+    },
+    {
+      "explanation": "Ce repere retient sun comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+      "label": "Luminaire: sun",
+      "section_codes": [
+        "synthesis",
+        "identity"
+      ]
+    },
+    {
+      "explanation": "Ce repere retient mercury comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+      "label": "Position planetaire: mercury",
+      "section_codes": [
+        "synthesis",
+        "mental_style"
+      ]
+    },
+    {
+      "explanation": "Ce repere retient jupiter comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+      "label": "Position planetaire: jupiter",
+      "section_codes": [
+        "relationships"
+      ]
+    },
+    {
+      "explanation": "Ce repere retient saturn comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+      "label": "Position planetaire: saturn",
+      "section_codes": [
+        "tensions"
+      ]
+    },
+    {
+      "explanation": "Ce repere retient north node comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+      "label": "Axe nodal: north node",
+      "section_codes": [
+        "growth"
+      ]
+    },
+    {
+      "explanation": "Ce repere retient mars comme matiere astrologique disponible pour cadrer le theme, avec une confiance editoriale controlee.",
+      "label": "Position planetaire: mars",
+      "section_codes": [
+        "action"
+      ]
+    }
+  ],
+  "limitations": [
+    "Cette lecture Basic reste une synthese symbolique: elle ne remplace pas un avis medical, juridique, financier ou psychologique."
+  ],
+  "resolved_syntheses": [
+    {
+      "heading_intent": "Fil conducteur",
+      "section_code": "synthesis",
+      "theme_codes": [
+        "core_identity",
+        "emotional_pattern",
+        "mental_style"
+      ]
+    },
+    {
+      "heading_intent": "Identite et elan central",
+      "section_code": "identity",
+      "theme_codes": [
+        "core_identity"
+      ]
+    },
+    {
+      "heading_intent": "Vie interieure et besoins",
+      "section_code": "inner_life",
+      "theme_codes": [
+        "emotional_pattern"
+      ]
+    },
+    {
+      "heading_intent": "Liens et reciprocite",
+      "section_code": "relationships",
+      "theme_codes": [
+        "relationship_pattern"
+      ]
+    },
+    {
+      "heading_intent": "Tensions a integrer",
+      "section_code": "tensions",
+      "theme_codes": [
+        "tension_to_integrate"
+      ]
+    },
+    {
+      "heading_intent": "Axe d'apprentissage",
+      "section_code": "growth",
+      "theme_codes": [
+        "growth_direction"
+      ]
+    },
+    {
+      "heading_intent": "Style mental",
+      "section_code": "mental_style",
+      "theme_codes": [
+        "mental_style"
+      ]
+    },
+    {
+      "heading_intent": "Maniere d'agir",
+      "section_code": "action",
+      "theme_codes": [
+        "action_and_drive"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "editorial_evidence_labels": [
+        "Luminaire: moon",
+        "Luminaire: sun",
+        "Position planetaire: mercury"
+      ],
+      "heading_intent": "Fil conducteur",
+      "section_code": "synthesis",
+      "target_length_words": 170,
+      "theme_codes": [
+        "core_identity",
+        "emotional_pattern",
+        "mental_style"
+      ]
+    },
+    {
+      "editorial_evidence_labels": [
+        "Luminaire: sun"
+      ],
+      "heading_intent": "Identite et elan central",
+      "section_code": "identity",
+      "target_length_words": 170,
+      "theme_codes": [
+        "core_identity"
+      ]
+    },
+    {
+      "editorial_evidence_labels": [
+        "Luminaire: moon"
+      ],
+      "heading_intent": "Vie interieure et besoins",
+      "section_code": "inner_life",
+      "target_length_words": 170,
+      "theme_codes": [
+        "emotional_pattern"
+      ]
+    },
+    {
+      "editorial_evidence_labels": [
+        "Position planetaire: jupiter"
+      ],
+      "heading_intent": "Liens et reciprocite",
+      "section_code": "relationships",
+      "target_length_words": 170,
+      "theme_codes": [
+        "relationship_pattern"
+      ]
+    },
+    {
+      "editorial_evidence_labels": [
+        "Position planetaire: saturn"
+      ],
+      "heading_intent": "Tensions a integrer",
+      "section_code": "tensions",
+      "target_length_words": 170,
+      "theme_codes": [
+        "tension_to_integrate"
+      ]
+    },
+    {
+      "editorial_evidence_labels": [
+        "Axe nodal: north node"
+      ],
+      "heading_intent": "Axe d'apprentissage",
+      "section_code": "growth",
+      "target_length_words": 170,
+      "theme_codes": [
+        "growth_direction"
+      ]
+    },
+    {
+      "editorial_evidence_labels": [
+        "Position planetaire: mercury"
+      ],
+      "heading_intent": "Style mental",
+      "section_code": "mental_style",
+      "target_length_words": 170,
+      "theme_codes": [
+        "mental_style"
+      ]
+    },
+    {
+      "editorial_evidence_labels": [
+        "Position planetaire: mars"
+      ],
+      "heading_intent": "Maniere d'agir",
+      "section_code": "action",
+      "target_length_words": 170,
+      "theme_codes": [
+        "action_and_drive"
+      ]
+    }
+  ],
+  "style_constraints": {
+    "advice_policy": "no_prescriptive_advice",
+    "plan_constraints": [
+      "Employer un ton clair, nuance et non fataliste.",
+      "Ne pas ajouter de fait astrologique absent du plan.",
+      "Garder les preuves publiques lisibles sans scores ni traces techniques."
+    ],
+    "prediction_policy": "no_firm_prediction",
+    "section_count": {
+      "maximum": 8,
+      "minimum": 6
+    },
+    "tone": "vous",
+    "word_count": {
+      "maximum": 1300,
+      "minimum": 900
+    }
+  }
+}

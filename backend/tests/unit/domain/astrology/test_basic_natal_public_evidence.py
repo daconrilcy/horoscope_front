@@ -39,6 +39,11 @@ def test_public_evidence_is_user_readable_and_linked_to_sections() -> None:
     assert all(item["label"] for item in payload["public_evidence"])
     assert all(item["explanation"] for item in payload["public_evidence"])
     assert all(item["source_section_codes"] for item in payload["public_evidence"])
+    serialized = str(payload["public_evidence"]).casefold()
+    assert "moon" not in serialized
+    assert "sun" not in serialized
+    assert "ce repere retient" not in serialized
+    assert "position planetaire" not in serialized
 
 
 def test_public_evidence_ids_are_opaque_and_do_not_reuse_fact_ids() -> None:

@@ -1,5 +1,5 @@
 # Story CS-421 renforcer-contrat-redactionnel-basic-natal: Renforcer Contrat Redactionnel Basic Natal
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

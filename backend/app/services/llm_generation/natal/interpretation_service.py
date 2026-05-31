@@ -301,6 +301,7 @@ def _basic_natal_contract_from_draft(
     sections = accepted_draft.get("sections")
     theme_items: list[NatalPublicTheme] = []
     used_public_evidence: dict[str, PublicEvidence] = {}
+    introduction = ""
     if isinstance(sections, list):
         for section in sections:
             if not isinstance(section, dict):
@@ -317,21 +318,28 @@ def _basic_natal_contract_from_draft(
             )
             for evidence in section_evidence:
                 used_public_evidence.setdefault(evidence.label, evidence)
+            section_code = str(section.get("section_code") or "")
+            section_content = str(section.get("content") or "")
+            if section_code == "synthesis":
+                introduction = introduction or section_content
+                continue
             theme_items.append(
                 NatalPublicTheme(
-                    title=str(section.get("heading") or section.get("section_code") or ""),
-                    narrative=str(section.get("content") or ""),
+                    title=str(section.get("heading") or section_code or ""),
+                    narrative=section_content,
                     public_evidence=section_evidence,
                 )
             )
     public_evidence = list(used_public_evidence.values())[:12]
+    if not introduction and theme_items:
+        introduction = theme_items[0].narrative
     return BasicNatalInterpretationV2(
         locale=reading_plan.locale,
         interpretation=NatalSynthesis(
             title="Lecture natale Basic",
-            introduction=theme_items[0].narrative if theme_items else "Lecture Basic valide.",
+            introduction=introduction or "Lecture Basic valide.",
             themes=theme_items,
-            conclusion="Cette synthese reste symbolique et doit etre lue avec nuance.",
+            conclusion="Cette synthèse reste symbolique et doit être lue avec nuance.",
             public_evidence=public_evidence,
         ),
         limitations=list(reading_plan.limitations),

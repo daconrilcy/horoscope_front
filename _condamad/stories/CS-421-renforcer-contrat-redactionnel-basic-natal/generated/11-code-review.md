@@ -1,5 +1,12 @@
 # CS-421 Drafting Review
 
+Status for implementation handoff: OBSOLETE_AS_FINAL_REVIEW_EVIDENCE.
+
+This file is a pre-implementation drafting review only. It must not be cited as
+final code review evidence for the CS-421 implementation completed on
+2026-06-01; use `generated/10-final-evidence.md` and a fresh reviewer pass
+instead.
+
 Verdict: CLEAN
 
 ## Review Scope

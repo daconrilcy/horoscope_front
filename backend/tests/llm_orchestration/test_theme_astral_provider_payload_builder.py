@@ -144,8 +144,13 @@ def test_basic_payload_uses_reading_plan_contract_only() -> None:
     prompt_payload = payload["input_data"]["basic_natal_prompt_payload"]
 
     assert tuple(prompt_payload) == (
+        "report_arc",
         "sections",
         "resolved_syntheses",
+        "section_editorial_briefs",
+        "plain_language_glossary",
+        "forbidden_template_phrases",
+        "source_usage_policy",
         "editorial_evidence",
         "limitations",
         "disclaimers",
@@ -153,6 +158,7 @@ def test_basic_payload_uses_reading_plan_contract_only() -> None:
     )
     assert prompt_payload["sections"]
     assert prompt_payload["resolved_syntheses"]
+    assert prompt_payload["section_editorial_briefs"]
     assert prompt_payload["editorial_evidence"]
     assert prompt_payload["style_constraints"] == {
         "word_count": {"minimum": 900, "maximum": 1300},

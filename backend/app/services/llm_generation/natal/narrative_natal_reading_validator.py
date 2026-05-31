@@ -56,6 +56,21 @@ _BASIC_NATAL_FORBIDDEN_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         r"\bscore\b",
         r"\borbe\b",
         r"\bdignite\b",
+        r"\bcette lecture s'appuie uniquement sur\b",
+        r"\bce repere retient\b",
+        r"\bavec une confiance editoriale controlee\b",
+        r"\bLuminaire\s*:\s*moon\b",
+        r"\bPosition planetaire\s*:",
+        r"\bnorth node\b",
+        r"\bsouth node\b",
+        r"\bmoon\b",
+        r"\bsun\b",
+        r"\bsaturn\b",
+        r"\bSynthese\b",
+        r"\btheme\b",
+        r"\brepere\b",
+        r"\bplanetaire\b",
+        r"\ba integrer\b",
     )
 )
 _DATE_ONLY_FORBIDDEN_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
@@ -198,6 +213,12 @@ def validate_basic_natal_draft_against_plan(
             errors.append(f"empty_section:{section_code or 'unknown'}")
         if _word_count(content) > _section_word_limit(sections_by_code.get(section_code)):
             errors.append(f"section_too_long:{section_code}")
+        if content and _informative_sentence_count(content) < 2:
+            errors.append(f"weak_editorial_section:{section_code or 'unknown'}")
+        if _looks_like_source_listing(content):
+            errors.append(f"source_listing_as_content:{section_code or 'unknown'}")
+        if _is_disclaimer_only(content, reading_plan.disclaimers):
+            errors.append(f"disclaimer_only_section:{section_code or 'unknown'}")
 
         section_evidence_ids = set(_string_sequence(section.get("evidence_ids")))
         expected_evidence_ids = set(
@@ -414,6 +435,29 @@ def _word_count(text: str) -> int:
     return len(re.findall(r"\b\w+\b", text, re.UNICODE))
 
 
+def _informative_sentence_count(text: str) -> int:
+    """Compte les phrases utiles sans valoriser les mentions legales seules."""
+    sentences = [item.strip() for item in re.split(r"[.!?]+", text) if item.strip()]
+    return sum(1 for sentence in sentences if _word_count(sentence) >= 5)
+
+
+def _looks_like_source_listing(text: str) -> bool:
+    """Detecte une section qui enumere les sources au lieu de les expliquer."""
+    lowered = text.casefold()
+    if lowered.count(",") >= 2 and re.search(r"\b(source|preuve|repere|annexe)s?\b", lowered):
+        return True
+    return bool(re.search(r"^[^.!?]{0,80}\s*:\s*[^.!?]+(?:,\s*[^.!?]+){1,}", text.strip()))
+
+
+def _is_disclaimer_only(text: str, disclaimers: Sequence[str]) -> bool:
+    """Refuse une section dont le contenu se limite a une mention de prudence."""
+    lowered = text.casefold()
+    if any(disclaimer.casefold() in lowered for disclaimer in disclaimers):
+        return _informative_sentence_count(text) <= 1
+    caution_terms = ("ne remplace pas", "sans prediction certaine", "a titre symbolique")
+    return any(term in lowered for term in caution_terms) and _informative_sentence_count(text) <= 1
+
+
 def _section_word_limit(section: object) -> int:
     """Calcule une limite de longueur locale sans assouplir le contrat public."""
     target = getattr(section, "target_length_words", 120)
@@ -502,11 +546,15 @@ def _evidence_by_section(
 def _fallback_section_text(heading_intent: str, evidence: Sequence[object]) -> str:
     """Produit un texte court depuis une preuve publique sans ajouter de fait."""
     if not evidence:
-        return f"{heading_intent}: les informations disponibles restent a lire avec nuance."
-    labels = ", ".join(
-        str(getattr(item, "label", "")).strip() for item in evidence if getattr(item, "label", "")
+        return (
+            f"{heading_intent} donne un repere prudent pour organiser la lecture. "
+            "Les informations disponibles restent symboliques et demandent une "
+            "interpretation nuancee."
+        )
+    return (
+        f"{heading_intent} s'éclaire à partir des annexes publiques disponibles. "
+        "Ces sources orientent le thème sans devenir le contenu principal de la lecture."
     )
-    return f"{heading_intent}: cette lecture s'appuie uniquement sur {labels}, avec nuance."
 
 
 def build_semantic_integrity_rejection_outcome(

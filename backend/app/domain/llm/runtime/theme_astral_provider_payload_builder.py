@@ -9,6 +9,7 @@ from typing import Any, cast
 from app.domain.astrology.interpretation.basic_natal_reading_plan import (
     BasicNatalPublicEvidence,
     BasicNatalReadingPlan,
+    build_basic_natal_editorial_briefs,
 )
 from app.domain.astrology.interpretation.chart_interpretation_input_contracts import (
     ChartInterpretationInputRuntimeData,
@@ -50,8 +51,13 @@ _INPUT_DATA_KEYS = (
 BASIC_NATAL_PROMPT_PAYLOAD_KEY = "basic_natal_prompt_payload"
 _BASIC_INPUT_DATA_KEYS = (BASIC_NATAL_PROMPT_PAYLOAD_KEY,)
 _BASIC_NATAL_PROMPT_PAYLOAD_KEYS = (
+    "report_arc",
     "sections",
     "resolved_syntheses",
+    "section_editorial_briefs",
+    "plain_language_glossary",
+    "forbidden_template_phrases",
+    "source_usage_policy",
     "editorial_evidence",
     "limitations",
     "disclaimers",
@@ -64,6 +70,18 @@ _BASIC_STYLE_CONSTRAINTS = {
     "prediction_policy": "no_firm_prediction",
     "advice_policy": "no_prescriptive_advice",
 }
+_BASIC_FORBIDDEN_TEMPLATE_PHRASES = (
+    "cette lecture s'appuie uniquement sur",
+    "Ce repere retient",
+    "avec une confiance editoriale controlee",
+    "Luminaire: moon",
+    "Position planetaire:",
+)
+_BASIC_SOURCE_USAGE_POLICY = (
+    "Les sources publiques servent d'annexe courte. Le corps de chaque section "
+    "doit expliquer le sens humain, la manifestation possible et la nuance, "
+    "sans lister les sources comme contenu principal."
+)
 _NARRATIVE_SOURCE_FAMILY_SECTIONS: dict[str, tuple[str, ...]] = {
     "personnalite": ("planet_sign_interpretations", "dominant_themes"),
     "emotions": ("planet_sign_interpretations", "resources"),
@@ -312,7 +330,9 @@ def _limits(
 def _basic_natal_prompt_payload(reading_plan: BasicNatalReadingPlan) -> dict[str, object]:
     """Projette le plan Basic en payload prompt sans carriers bruts ni identifiants."""
     evidence_by_section = _editorial_evidence_by_section(reading_plan.public_evidence)
+    section_briefs = build_basic_natal_editorial_briefs(reading_plan)
     payload: dict[str, object] = {
+        "report_arc": _basic_report_arc(reading_plan),
         "sections": [
             {
                 "section_code": section.section_code,
@@ -331,6 +351,10 @@ def _basic_natal_prompt_payload(reading_plan: BasicNatalReadingPlan) -> dict[str
             }
             for section in reading_plan.sections
         ],
+        "section_editorial_briefs": [brief.to_payload() for brief in section_briefs],
+        "plain_language_glossary": _plain_language_glossary(reading_plan),
+        "forbidden_template_phrases": list(_BASIC_FORBIDDEN_TEMPLATE_PHRASES),
+        "source_usage_policy": _BASIC_SOURCE_USAGE_POLICY,
         "editorial_evidence": [
             _provider_editorial_evidence(evidence) for evidence in reading_plan.public_evidence
         ],
@@ -369,6 +393,40 @@ def _editorial_evidence_by_section(
         for section_code in evidence.source_section_codes:
             by_section.setdefault(section_code, []).append(evidence.label)
     return by_section
+
+
+def _basic_report_arc(reading_plan: BasicNatalReadingPlan) -> str:
+    """Resume le fil narratif autorise depuis les sections du plan."""
+    labels = [section.heading_intent for section in reading_plan.sections[:4]]
+    if not labels:
+        return "Relier les reperes disponibles en une lecture courte, nuancee et non prescriptive."
+    return (
+        "Relier "
+        + ", ".join(label.lower() for label in labels)
+        + " en une lecture progressive: introduction, themes explicatifs, conclusion "
+        "et annexes sources."
+    )
+
+
+def _plain_language_glossary(reading_plan: BasicNatalReadingPlan) -> list[dict[str, str]]:
+    """Expose le vocabulaire public deja derive du plan, sans table astrologique locale."""
+    terms = dict.fromkeys(
+        (
+            *(section.heading_intent for section in reading_plan.sections),
+            *(evidence.label for evidence in reading_plan.public_evidence),
+        )
+    )
+    return [
+        {
+            "term": term,
+            "meaning": (
+                "Vocabulaire public derive du plan Basic canonique pour guider la redaction."
+            ),
+            "usage_limit": "Employer comme repere explicatif, jamais comme liste brute de sources.",
+        }
+        for term in terms
+        if term
+    ]
 
 
 def _output_contract(delivery_profile: Mapping[str, object]) -> dict[str, object]:

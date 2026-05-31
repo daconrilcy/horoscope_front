@@ -94,28 +94,28 @@ _THEME_SECTION_CODES = {
 }
 _SECTION_LABELS = {
     "synthesis": "Fil conducteur",
-    "identity": "Identite et elan central",
-    "inner_life": "Vie interieure et besoins",
+    "identity": "Identité et élan central",
+    "inner_life": "Vie intérieure et besoins",
     "vocation": "Direction visible",
-    "relationships": "Liens et reciprocite",
+    "relationships": "Liens et réciprocité",
     "talents": "Appuis disponibles",
-    "tensions": "Tensions a integrer",
+    "tensions": "Tensions à intégrer",
     "growth": "Axe d'apprentissage",
     "mental_style": "Style mental",
     "values": "Valeurs et ressources",
-    "action": "Maniere d'agir",
+    "action": "Manière d'agir",
 }
 _FAMILY_LABELS = {
     NatalFactFamily.LUMINARY: "Luminaire",
     NatalFactFamily.ANGLE: "Angle natal",
-    NatalFactFamily.PLANET_POSITION: "Position planetaire",
+    NatalFactFamily.PLANET_POSITION: "Position planétaire",
     NatalFactFamily.HOUSE_EMPHASIS: "Maison mise en avant",
     NatalFactFamily.SIGN_EMPHASIS: "Signe mis en avant",
-    NatalFactFamily.ELEMENT_BALANCE: "Element dominant",
-    NatalFactFamily.MODALITY_BALANCE: "Modalite dominante",
+    NatalFactFamily.ELEMENT_BALANCE: "Élément dominant",
+    NatalFactFamily.MODALITY_BALANCE: "Modalité dominante",
     NatalFactFamily.ASPECT: "Aspect",
-    NatalFactFamily.RULERSHIP: "Maitrise",
-    NatalFactFamily.CONDITION: "Condition planetaire",
+    NatalFactFamily.RULERSHIP: "Maîtrise",
+    NatalFactFamily.CONDITION: "Condition planétaire",
     NatalFactFamily.NODE: "Axe nodal",
 }
 _HOUSE_SECTION_OVERRIDES = {
@@ -173,6 +173,33 @@ class BasicNatalPublicEvidence:
 
 
 @dataclass(frozen=True, slots=True)
+class BasicNatalEditorialBrief:
+    """Matiere redactionnelle controlee derivee d'une section du plan Basic."""
+
+    section_code: str
+    public_label: str
+    reader_meaning: str
+    possible_manifestation: str
+    nuance: str
+    allowed_section_role: str
+    forbidden_claims: tuple[str, ...]
+    source_fact_refs: tuple[str, ...]
+
+    def to_payload(self) -> dict[str, Any]:
+        """Retourne le brief provider sans exposer de fact_id ni score interne."""
+        return {
+            "section_code": self.section_code,
+            "public_label": self.public_label,
+            "reader_meaning": self.reader_meaning,
+            "possible_manifestation": self.possible_manifestation,
+            "nuance": self.nuance,
+            "allowed_section_role": self.allowed_section_role,
+            "forbidden_claims": list(self.forbidden_claims),
+            "source_fact_refs": list(self.source_fact_refs),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class BasicNatalReadingPlan:
     """Contrat inspectable qui cadre la lecture Basic avant tout appel LLM."""
 
@@ -197,6 +224,54 @@ class BasicNatalReadingPlan:
             "limitations": list(self.limitations),
             "disclaimers": list(self.disclaimers),
         }
+
+
+def build_basic_natal_editorial_briefs(
+    reading_plan: BasicNatalReadingPlan,
+) -> tuple[BasicNatalEditorialBrief, ...]:
+    """Construit les briefs redactionnels sans recreer de referentiel astrologique."""
+    evidence_by_section = _public_evidence_by_section(reading_plan.public_evidence)
+    briefs: list[BasicNatalEditorialBrief] = []
+    for section in reading_plan.sections:
+        section_label = _SECTION_LABELS.get(section.section_code, section.heading_intent)
+        source_refs = tuple(
+            dict.fromkeys(
+                (
+                    f"plan_section:{section.section_code}",
+                    *(
+                        f"annex_source:{evidence.label}"
+                        for evidence in evidence_by_section.get(section.section_code, ())
+                    ),
+                )
+            )
+        )
+        briefs.append(
+            BasicNatalEditorialBrief(
+                section_code=section.section_code,
+                public_label=section_label,
+                reader_meaning=(
+                    f"Faire comprendre le role humain de {section_label.lower()} "
+                    "dans le fil de lecture, sans enumerer les donnees sources."
+                ),
+                possible_manifestation=(
+                    "Decrire une facon concrete dont ce theme peut se vivre au quotidien, "
+                    "en restant conditionnel et relie aux preuves du plan."
+                ),
+                nuance=(
+                    "Presenter ce repere comme une tendance symbolique modulable, jamais "
+                    "comme une obligation, un diagnostic ou une prediction certaine."
+                ),
+                allowed_section_role=_section_editorial_role(section.section_code),
+                forbidden_claims=(
+                    "prediction certaine",
+                    "diagnostic medical, psychologique, juridique ou financier",
+                    "fait astrologique absent du plan Basic canonique",
+                    "liste de sources comme corps principal",
+                ),
+                source_fact_refs=source_refs,
+            )
+        )
+    return tuple(briefs)
 
 
 @dataclass(frozen=True, slots=True)
@@ -520,8 +595,8 @@ def _public_evidence_for_sections(
         evidence_items.append(
             BasicNatalPublicEvidence(
                 id=evidence_id,
-                label=_public_label(fact),
-                explanation=_public_explanation(fact),
+                label=_public_label(fact, section_codes_by_evidence[evidence_id]),
+                explanation=_public_explanation(fact, section_codes_by_evidence[evidence_id]),
                 source_section_codes=tuple(dict.fromkeys(section_codes_by_evidence[evidence_id])),
             )
         )
@@ -534,25 +609,51 @@ def _public_evidence_sort_key(evidence_id: str) -> tuple[str, str]:
     return (prefix, suffix)
 
 
-def _public_label(fact: NatalFact) -> str:
+def _public_label(fact: NatalFact, section_codes: Sequence[str]) -> str:
     """Produit un libelle lisible sans chemin de source ni score."""
     family_label = _FAMILY_LABELS[fact.family]
-    object_label = ", ".join(_readable_object(item) for item in fact.objects[:3])
-    return f"{family_label}: {object_label}"
+    section_label = _section_group_label(section_codes)
+    return f"{family_label} pour {section_label}"
 
 
-def _public_explanation(fact: NatalFact) -> str:
+def _public_explanation(fact: NatalFact, section_codes: Sequence[str]) -> str:
     """Explique une preuve au lecteur sans fuite de scoring interne."""
-    objects = ", ".join(_readable_object(item) for item in fact.objects[:3])
+    family_label = _FAMILY_LABELS[fact.family].casefold()
+    section_label = _section_group_label(section_codes)
     return (
-        f"Ce repere retient {objects} comme matiere astrologique disponible "
-        "pour cadrer le theme, avec une confiance editoriale controlee."
+        f"Cette annexe indique qu'un repere de {family_label} soutient {section_label}. "
+        "Elle sert de source courte et ne remplace pas l'explication narrative."
     )
 
 
 def _readable_object(value: str) -> str:
     """Transforme les codes runtime simples en mots lisibles."""
     return value.replace("house:", "maison ").replace("_", " ")
+
+
+def _section_group_label(section_codes: Sequence[str]) -> str:
+    """Retourne un libelle de section public sans exposer les objets runtime."""
+    first_code = next((code for code in section_codes if code), "")
+    label = _SECTION_LABELS.get(first_code, "le theme choisi")
+    return label.casefold()
+
+
+def _section_editorial_role(section_code: str) -> str:
+    """Classe la place narrative autorisee d'une section Basic."""
+    if section_code == "synthesis":
+        return "introduction_or_conclusion_thread"
+    return "explanatory_theme"
+
+
+def _public_evidence_by_section(
+    evidence_items: Sequence[BasicNatalPublicEvidence],
+) -> dict[str, tuple[BasicNatalPublicEvidence, ...]]:
+    """Indexe les preuves publiques par section pour les briefs editoriaux."""
+    by_section: dict[str, list[BasicNatalPublicEvidence]] = {}
+    for evidence in evidence_items:
+        for section_code in evidence.source_section_codes:
+            by_section.setdefault(section_code, []).append(evidence)
+    return {section_code: tuple(items) for section_code, items in by_section.items()}
 
 
 def _objects_include_house(objects: Sequence[str]) -> bool:
