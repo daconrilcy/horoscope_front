@@ -17,6 +17,7 @@ def test_date_only_llm_input_removes_house_surfaces_but_keeps_core_facts() -> No
     payload = LLMAstrologyInputV1Builder().build(
         structured_facts_v1=_structured_facts_date_only(),
         ai_narrative_input=_ai_input(),
+        client_interpretation_projection_v1=_client_projection_with_blocked_support(),
         evidence_refs=(),
     )
 
@@ -46,6 +47,10 @@ def test_date_only_llm_input_removes_house_surfaces_but_keeps_core_facts() -> No
     assert payload["signals"]["interpretive_signal_codes"]["house_position_codes"] == []
     assert payload["signals"]["interpretive_signal_codes"]["dispositor_codes"] == []
     assert "angularity" not in payload["facts"]["dominants"][0]["factors"]
+    assert payload["shaping"]["support_elements"] == [
+        {"code": "source_label", "value": "sun en aries"},
+        {"code": "personalization_note", "value": "sun trine moon"},
+    ]
 
 
 def test_llm_input_builder_consumes_canonical_eligibility_guard() -> None:
@@ -124,3 +129,24 @@ def _ai_input() -> SimpleNamespace:
         source_versions={"test": "v1"},
         public_projection_links=(),
     )
+
+
+def _client_projection_with_blocked_support() -> dict[str, object]:
+    """Construit une projection client contenant des appuis horaires a filtrer."""
+    return {
+        "projection_id": "client_interpretation_projection_v1",
+        "contract_version": "client_interpretation_projection_v1.contract.v1",
+        "state": "available",
+        "plan": "basic",
+        "module": None,
+        "editorial_depth_profile": {"level": "basic"},
+        "llm_input_selection": {"mode": "basic"},
+        "support_elements": [
+            {"code": "source_label", "value": "sun en aries"},
+            {"code": "source_label", "value": "ascendant en cancer"},
+            {"code": "source_label", "value": "moon en taurus, maison 4"},
+            {"code": "highlight", "value": "regence mars"},
+            {"code": "source_label", "value": "noeud nord maison 10"},
+            {"code": "personalization_note", "value": "sun trine moon"},
+        ],
+    }

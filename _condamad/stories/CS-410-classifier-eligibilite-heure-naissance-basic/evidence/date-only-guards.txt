@@ -1,6 +1,6 @@
 # Date-only Guard Evidence
 
 - `test_basic_natal_date_only_reading_guards.py::test_llm_input_builder_consumes_canonical_eligibility_guard`: AST proof that `llm_astrology_input_v1.py` imports and calls `apply_basic_natal_eligibility_to_llm_blocks`.
-- `test_basic_natal_date_only_reading_guards.py::test_date_only_llm_input_removes_house_surfaces_but_keeps_core_facts`: runtime proof that date-only Basic clears houses, position `house_number`, house-position codes, ruler codes and angular dominance while preserving zodiac positions and major aspects.
+- `test_basic_natal_date_only_reading_guards.py::test_date_only_llm_input_removes_house_surfaces_but_keeps_core_facts`: runtime proof that date-only Basic clears houses, position `house_number`, house-position codes, ruler codes, angular dominance and blocked `shaping.support_elements` while preserving zodiac positions and major aspects.
 - `rg -n "12:00|noon|default_birth_time|birth_time or" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal backend\app\services\user_profile`: no default-hour match in target LLM/astrology surfaces; one false positive `afternoon` in `prediction_baseline_service.py`.
 - `rg -n "house_number|ascendant|mc|house_ruler|angular" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal`: expected matches in canonical runtime fields and existing helpers; downstream LLM input path is guarded by the AST/runtime tests above.

@@ -7,7 +7,7 @@
 - Story key: CS-410-classifier-eligibilite-heure-naissance-basic
 - Source story: `_condamad/stories/CS-410-classifier-eligibilite-heure-naissance-basic/00-story.md`
 - Capsule path: `_condamad/stories/CS-410-classifier-eligibilite-heure-naissance-basic`
-- `story-status.md`: `ready-to-review`
+- `story-status.md`: `done`
 
 ## Preflight
 
@@ -35,7 +35,7 @@
 - Added canonical owner `backend/app/domain/astrology/interpretation/basic_natal_eligibility.py`.
 - `structured_facts_v1_builder.py` now exposes `birth_timezone` availability for eligibility classification.
 - `llm_astrology_input_v1.py` applies `EligibilityContext` before prompt-visible blocks are hashed.
-- Date-only mode clears houses, position `house_number`, house-position signals, ruler signals and angular dominance factors while keeping signs, sign balances and major aspects.
+- Date-only mode clears houses, position `house_number`, house-position signals, ruler signals, angular dominance factors and blocked `shaping.support_elements` while keeping signs, sign balances and major aspects.
 
 ## AC validation
 
@@ -47,8 +47,8 @@
 | AC4 | Date-only limitation uses public French wording only. | Public marker assertion PASS. | PASS |
 | AC5 | `structured_facts_v1_builder.py` exposes `birth_timezone`; missing timezone downgrades confidence. | `test_missing_timezone_prevents_full_birth_time_confidence` PASS. | PASS |
 | AC6 | Gates require actual surfaces and stay false for partial charts. | `test_partial_chart_state_cannot_enable_absent_surfaces` PASS. | PASS |
-| AC7 | `llm_astrology_input_v1.py` calls the canonical eligibility filter. | AST guard PASS. | PASS |
-| AC8 | LLM filtering preserves zodiac positions, sign balances and major aspects in date-only mode. | Runtime guard PASS. | PASS |
+| AC7 | `llm_astrology_input_v1.py` calls the canonical eligibility filters for facts, signals and shaping. | AST guard and runtime shaping guard PASS. | PASS |
+| AC8 | LLM filtering preserves zodiac positions, sign balances and major aspects in date-only mode. | Runtime guard PASS, including removal of blocked support elements. | PASS |
 | AC9 | No default-hour path added in eligibility or LLM input. | Bounded surrogate scan PASS with `afternoon` false positive outside target surfaces. | PASS |
 | AC10 | Evidence and capsule files persisted. | Final capsule validation PASS after synchronization. | PASS |
 
@@ -81,7 +81,7 @@
 |---|---|---|
 | `ruff format <modified python files>` | PASS | Scoped formatting only. |
 | `ruff check <modified python files>` | PASS | All checks passed. |
-| `python -B -m pytest -q backend/tests/unit/domain/astrology/test_basic_natal_eligibility_context.py backend/tests/unit/domain/astrology/test_basic_natal_date_only_reading_guards.py backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py backend/tests/unit/domain/astrology/test_structured_facts_v1_builder.py --tb=short` | PASS | 25 passed. |
+| `python -B -m pytest -q backend/tests/unit/domain/astrology/test_basic_natal_eligibility_context.py backend/tests/unit/domain/astrology/test_basic_natal_date_only_reading_guards.py backend/tests/unit/domain/astrology/test_llm_astrology_input_v1.py backend/tests/unit/domain/astrology/test_structured_facts_v1_builder.py --tb=short` | PASS | 25 passed, including `shaping.support_elements` guard. |
 | `rg -n "12:00\|noon\|default_birth_time\|birth_time or" ...` | PASS_WITH_FALSE_POSITIVE | Only `afternoon` outside target surfaces. |
 | `rg -n "house_number\|ascendant\|mc\|house_ruler\|angular" ...` | PASS_WITH_EXPECTED_MATCHES | Existing canonical/runtime fields plus new eligibility owner; no local re-enable path in LLM builder. |
 

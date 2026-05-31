@@ -139,6 +139,53 @@ def apply_basic_natal_eligibility_to_llm_blocks(
     return filtered_facts, filtered_signals, context
 
 
+def apply_basic_natal_eligibility_to_shaping_block(
+    *,
+    shaping: Mapping[str, Any],
+    eligibility_context: EligibilityContext,
+) -> dict[str, Any]:
+    """Filtre les appuis editoriaux qui mentionnent une surface horaire interdite."""
+    filtered_shaping = dict(shaping)
+    support_elements = filtered_shaping.get("support_elements")
+    if not isinstance(support_elements, Sequence) or isinstance(support_elements, (str, bytes)):
+        return filtered_shaping
+
+    filtered_shaping["support_elements"] = [
+        projection_value_to_jsonable(item)
+        for item in support_elements
+        if not _support_element_uses_blocked_surface(item, eligibility_context)
+    ]
+    return filtered_shaping
+
+
+def _support_element_uses_blocked_surface(
+    item: object,
+    eligibility_context: EligibilityContext,
+) -> bool:
+    """Detecte une mention editorialisee qui redeclare une famille horaire bloquee."""
+    if not isinstance(item, Mapping):
+        return False
+
+    value = str(item.get("value", "")).casefold()
+    if not eligibility_context.can_use_houses and any(
+        marker in value for marker in ("maison", "house ")
+    ):
+        return True
+    if not eligibility_context.can_use_angles and any(
+        marker in value for marker in ("ascendant", "mc", "angular")
+    ):
+        return True
+    if not eligibility_context.can_use_house_rulers and any(
+        marker in value for marker in ("regence", "ruler")
+    ):
+        return True
+    if not eligibility_context.can_use_lunar_nodes_by_house and any(
+        marker in value for marker in ("noeud", "node")
+    ):
+        return True
+    return False
+
+
 def _without_house_number(item: object) -> object:
     """Retire le numero de maison sans modifier les autres faits zodiacaux."""
     if not isinstance(item, Mapping):
