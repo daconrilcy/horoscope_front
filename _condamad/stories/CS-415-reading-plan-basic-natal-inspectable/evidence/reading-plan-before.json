@@ -1,0 +1,7 @@
+{
+  "story": "CS-415",
+  "baseline": "pre-implementation",
+  "canonical_owner": "backend/app/domain/astrology/interpretation/basic_natal_reading_plan.py",
+  "state": "absent",
+  "observation": "No BasicNatalReadingPlan builder existed in the canonical interpretation owner before this story."
+}

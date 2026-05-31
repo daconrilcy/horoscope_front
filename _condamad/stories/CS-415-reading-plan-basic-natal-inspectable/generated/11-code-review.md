@@ -1,5 +1,9 @@
 # Editorial Review CS-415
 
+Implementation note 2026-05-31: this artifact is a pre-implementation drafting review.
+It is obsolete as final implementation evidence and must not be cited as a final code
+review. Runtime evidence is recorded in `generated/10-final-evidence.md`.
+
 Verdict: CLEAN
 
 ## Scope

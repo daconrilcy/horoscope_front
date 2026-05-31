@@ -1,0 +1,25 @@
+{
+  "story": "CS-415",
+  "baseline": "post-implementation",
+  "canonical_owner": "backend/app/domain/astrology/interpretation/basic_natal_reading_plan.py",
+  "level": "basic",
+  "locale": "fr-FR",
+  "engine_version": "basic-natal-reading-v1",
+  "section_order_sample": [
+    "synthesis",
+    "identity",
+    "inner_life",
+    "vocation",
+    "relationships",
+    "talents",
+    "tensions",
+    "growth"
+  ],
+  "public_evidence_shape": [
+    "id",
+    "label",
+    "explanation",
+    "source_section_codes"
+  ],
+  "validation_source": "backend/tests/unit/domain/astrology/test_basic_natal_reading_plan_builder.py"
+}

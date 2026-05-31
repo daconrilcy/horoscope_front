@@ -1,5 +1,5 @@
 # Story CS-415 reading-plan-basic-natal-inspectable: Construire Reading Plan Basic Natal Inspectable
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-410-construire-reading-plan-basic-natal-inspectable.md`.
