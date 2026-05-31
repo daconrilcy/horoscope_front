@@ -1,0 +1,23 @@
+{
+  "captured_at": "2026-05-31",
+  "taxonomy_version": "natal_theme_taxonomy.basic.v1",
+  "theme_codes": [
+    "core_identity",
+    "emotional_pattern",
+    "public_vocation",
+    "relationship_pattern",
+    "mental_style",
+    "resources_and_values",
+    "action_and_drive",
+    "growth_direction",
+    "tension_to_integrate",
+    "talents_and_supports"
+  ],
+  "activation_owner": "backend/app/domain/astrology/interpretation/natal_theme_taxonomy.py",
+  "source_inputs": [
+    "NatalFactGraph",
+    "NatalSalienceAudit",
+    "EligibilityContext"
+  ],
+  "public_boundary": "no prompt-visible or narrative builder exposure of raw theme internals"
+}

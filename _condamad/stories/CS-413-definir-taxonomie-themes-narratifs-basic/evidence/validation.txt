@@ -1,0 +1,17 @@
+2026-05-31 CS-413 validation summary
+
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\astrology\interpretation\natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py tests\unit\domain\astrology\test_basic_natal_theme_activation.py
+PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_taxonomy.py --tb=short
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_theme_activation.py --tb=short
+PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py tests\architecture\test_narrative_natal_reading_public_boundary.py --tb=short
+PASS rg -n "\b(spirituel|creatif|harmonieux|profond)\b" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal -> no standalone forbidden generic wording
+LIMITATION rg -n "spirituel|creatif|harmonieux|profond" backend\app\domain\astrology\interpretation backend\app\services\llm_generation\natal -> pre-existing substring matches for approfondie/profondeur in client_interpretation_projection_v1_builder.py; not introduced by CS-413 and not standalone forbidden wording
+PASS rg -n "theme_code|activation_score|must_mention|may_mention|do_not_mention" backend\app\domain\astrology\interpretation\llm_astrology_input_v1.py backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py -> no raw theme internals
+PASS rg -n "RG-162" _condamad\stories\regression-guardrails.md
+PASS rg -n "calculate_.*aspect|calculate_.*house|calculate_.*dignity|SwissEph|\bswe\b|HouseRulerResolver\(" backend\app\domain\astrology\interpretation\natal_theme_taxonomy.py -> no recalculation markers
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-413-definir-taxonomie-themes-narratifs-basic
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-413-definir-taxonomie-themes-narratifs-basic --final
+
+FULL SUITE LIMITATION .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short -> 2 failed, 3626 passed, 2 skipped, 1253 deselected in 239.84s. Failures are existing architecture guards on natal_fact_graph_builder.py / doctrine-governance surfaces, outside CS-413 touched files.

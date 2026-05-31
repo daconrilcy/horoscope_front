@@ -1,5 +1,9 @@
 # Editorial review CS-413
 
+Implementation evidence note (2026-05-31): this file is a pre-implementation
+story-contract review only. It is obsolete for final implementation review and
+must not be used as final code-review evidence for the implemented taxonomy.
+
 Verdict: CLEAN
 
 ## Scope

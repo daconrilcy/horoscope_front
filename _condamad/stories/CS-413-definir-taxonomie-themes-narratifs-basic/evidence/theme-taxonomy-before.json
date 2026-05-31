@@ -1,0 +1,7 @@
+{
+  "captured_at": "2026-05-31",
+  "baseline": "pre-implementation",
+  "taxonomy_owner": "backend/app/domain/astrology/interpretation/natal_theme_taxonomy.py",
+  "status": "absent before CS-413 implementation",
+  "expected_delta": "create the internal Basic narrative theme taxonomy and activation model only"
+}
