@@ -168,6 +168,8 @@ MODULE_TO_USE_CASE_KEY: dict[str, str] = {
     "NATAL_EVOLUTION_PATH": "natal_evolution_path",
 }
 
+THEMATIC_NATAL_USE_CASES = frozenset(MODULE_TO_USE_CASE_KEY.values())
+
 
 def _restore_missing_aspect_interpretive_hints(
     natal_result: NatalResult,
@@ -1016,6 +1018,8 @@ class NatalInterpretationService:
         payload = _coerce_stored_payload(model.interpretation_payload)
         if NatalInterpretationService._is_empty_complete_payload(payload):
             return True
+        if model.use_case in THEMATIC_NATAL_USE_CASES:
+            return False
         if has_compatible_basic_natal_interpretation_v2(payload):
             return False
         if isinstance(payload, dict) and is_narratively_invalid_complete_payload(payload):

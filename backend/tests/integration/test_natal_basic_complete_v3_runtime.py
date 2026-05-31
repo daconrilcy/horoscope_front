@@ -10,6 +10,7 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy import text
 
+from app.domain.astrology.reading import BASIC_NATAL_PUBLIC_SCHEMA_VERSION
 from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
@@ -23,10 +24,15 @@ from app.main import app
 from app.services.entitlement.entitlement_types import EffectiveEntitlementsSnapshot
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.llm_generation.natal.stored_interpretation_payload import (
-    NARRATIVE_NATAL_READING_PAYLOAD_KEY,
+    BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY,
 )
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from app.tests.helpers.natal_result_factory import make_natal_result
+from tests.integration.basic_natal_v2_helpers import (
+    basic_runtime_plan,
+    gateway_result_from_draft,
+    valid_basic_draft,
+)
 
 
 def _long_text(label: str, count: int) -> str:
@@ -181,15 +187,17 @@ def _gateway_result(natal_input: NatalExecutionInput) -> GatewayResult:
 
 
 @pytest.mark.asyncio
-async def test_basic_complete_runtime_uses_natal_v3_and_persists_narrative(db) -> None:
-    """Prouve le use_case, les metas V3 et la persistance narrative acceptee."""
+async def test_basic_complete_runtime_uses_basic_v2_and_persists_contract(db) -> None:
+    """Prouve le use_case, les metas V2 et la persistance contractuelle acceptee."""
     captured_inputs: list[NatalExecutionInput] = []
+    plan = basic_runtime_plan(chart_id="chart-basic-v3")
+    provider_draft = valid_basic_draft(plan)
 
     async def fake_generate_natal_interpretation(
         natal_input: NatalExecutionInput, db: Any | None = None
     ) -> GatewayResult:
         captured_inputs.append(natal_input)
-        return _gateway_result(natal_input)
+        return gateway_result_from_draft(natal_input, provider_draft)
 
     with (
         patch.object(
@@ -236,13 +244,15 @@ async def test_basic_complete_runtime_uses_natal_v3_and_persists_narrative(db) -
     assert natal_input.validation_strict is True
 
     assert response.data.use_case == "natal_interpretation"
-    assert response.data.meta.schema_version == "v3"
+    assert response.data.meta.schema_version == BASIC_NATAL_PUBLIC_SCHEMA_VERSION
     assert response.data.meta.validation_status == "valid"
     assert response.data.meta.repair_attempted is False
     assert response.data.meta.fallback_triggered is False
-    assert response.data.narrative_natal_reading_v1 is not None
-    assert response.data.narrative_natal_reading_v1.editorial_profile == "basic"
-    assert response.data.narrative_natal_reading_v1.used_astrological_elements
+    assert response.data.basic_natal_interpretation_v2 is not None
+    assert response.data.basic_natal_interpretation_v2.schema_version == (
+        BASIC_NATAL_PUBLIC_SCHEMA_VERSION
+    )
+    assert response.data.basic_natal_interpretation_v2.public_evidence
 
     persisted = (
         db.execute(
@@ -258,9 +268,9 @@ async def test_basic_complete_runtime_uses_natal_v3_and_persists_narrative(db) -
     assert persisted["use_case"] == "natal_interpretation"
     assert persisted["grounding_status"] == "grounded"
     persisted_payload = json.loads(persisted["interpretation_payload"])
-    persisted_reading = persisted_payload[NARRATIVE_NATAL_READING_PAYLOAD_KEY]
-    assert persisted_reading["contract_version"] == "narrative_natal_reading_v1"
-    assert persisted_reading["used_astrological_elements"]
+    persisted_reading = persisted_payload[BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY]
+    assert persisted_reading["schema_version"] == BASIC_NATAL_PUBLIC_SCHEMA_VERSION
+    assert persisted_reading["public_evidence"]
 
 
 @pytest.mark.asyncio

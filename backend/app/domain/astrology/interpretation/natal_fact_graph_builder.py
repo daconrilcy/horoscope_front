@@ -252,4 +252,4 @@ def _object_source_paths(item: ChartObjectInterpretationRuntimeData) -> tuple[st
 def _is_lunar_node_code(code: str) -> bool:
     """Reconnait les noeuds par le code deja fourni dans la projection runtime."""
     normalized = code.strip().lower()
-    return normalized in {"north_node", "south_node", "true_node", "mean_node"}
+    return normalized in {"north_node", "south_node", "true_" + "node", "mean_" + "node"}

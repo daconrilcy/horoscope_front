@@ -102,6 +102,63 @@ THEME_ASTRAL_PROVIDER_DELIVERY_PROFILES: dict[ThemeAstralCommercialPlan, dict[st
     },
 }
 
+THEME_ASTRAL_BIRTH_CONTEXT_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "chart_id",
+        "birth_date",
+        "birth_time_local",
+        "birth_place",
+        "precision",
+        "locale",
+        "chart_type",
+    ],
+    "properties": {
+        "chart_id": {"type": ["string", "null"]},
+        "birth_date": {
+            "type": ["string", "null"],
+            "format": "date",
+        },
+        "birth_time_local": {
+            "type": ["string", "null"],
+            "pattern": "^\\d{2}:\\d{2}(:\\d{2})?(\\.\\d+)?$",
+        },
+        "birth_place": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "city",
+                "country",
+                "timezone",
+                "latitude",
+                "longitude",
+            ],
+            "properties": {
+                "city": {"type": ["string", "null"]},
+                "country": {"type": ["string", "null"]},
+                "timezone": {"type": ["string", "null"]},
+                "latitude": {"type": ["number", "null"]},
+                "longitude": {"type": ["number", "null"]},
+            },
+        },
+        "precision": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "birth_time_known",
+                "coordinates_known",
+            ],
+            "properties": {
+                "birth_time_known": {"type": "boolean"},
+                "coordinates_known": {"type": "boolean"},
+            },
+        },
+        "locale": {"type": ["string", "null"]},
+        "chart_type": {"type": "string"},
+    },
+}
+
 THEME_ASTRAL_INPUT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
@@ -126,6 +183,10 @@ THEME_ASTRAL_INPUT_SCHEMA: dict[str, Any] = {
                 "feature_context": {"type": "object"},
                 "delivery_profile": {"type": "object"},
                 "input_data": {
+                    "type": "object",
+                    "properties": {
+                        "birth_context": THEME_ASTRAL_BIRTH_CONTEXT_SCHEMA,
+                    },
                     "oneOf": [
                         {
                             "type": "object",
@@ -138,62 +199,7 @@ THEME_ASTRAL_INPUT_SCHEMA: dict[str, Any] = {
                                 "limits",
                             ],
                             "properties": {
-                                "birth_context": {
-                                    "type": "object",
-                                    "additionalProperties": False,
-                                    "required": [
-                                        "chart_id",
-                                        "birth_date",
-                                        "birth_time_local",
-                                        "birth_place",
-                                        "precision",
-                                        "locale",
-                                        "chart_type",
-                                    ],
-                                    "properties": {
-                                        "chart_id": {"type": ["string", "null"]},
-                                        "birth_date": {
-                                            "type": ["string", "null"],
-                                            "format": "date",
-                                        },
-                                        "birth_time_local": {
-                                            "type": ["string", "null"],
-                                            "pattern": "^\\d{2}:\\d{2}(:\\d{2})?(\\.\\d+)?$",
-                                        },
-                                        "birth_place": {
-                                            "type": "object",
-                                            "additionalProperties": False,
-                                            "required": [
-                                                "city",
-                                                "country",
-                                                "timezone",
-                                                "latitude",
-                                                "longitude",
-                                            ],
-                                            "properties": {
-                                                "city": {"type": ["string", "null"]},
-                                                "country": {"type": ["string", "null"]},
-                                                "timezone": {"type": ["string", "null"]},
-                                                "latitude": {"type": ["number", "null"]},
-                                                "longitude": {"type": ["number", "null"]},
-                                            },
-                                        },
-                                        "precision": {
-                                            "type": "object",
-                                            "additionalProperties": False,
-                                            "required": [
-                                                "birth_time_known",
-                                                "coordinates_known",
-                                            ],
-                                            "properties": {
-                                                "birth_time_known": {"type": "boolean"},
-                                                "coordinates_known": {"type": "boolean"},
-                                            },
-                                        },
-                                        "locale": {"type": ["string", "null"]},
-                                        "chart_type": {"type": "string"},
-                                    },
-                                },
+                                "birth_context": THEME_ASTRAL_BIRTH_CONTEXT_SCHEMA,
                                 "astrological_facts": {"type": "object"},
                                 "interpretation_material": {"type": "object"},
                                 "selected_themes": {"type": "object"},
