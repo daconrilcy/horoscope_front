@@ -15,6 +15,6 @@ After implementation snapshot
 - Final targeted validations:
   - support-elements pytest: 2 passed
   - orchestration `natal or theme_astral`: 27 passed, 1 skipped, 213 deselected
-  - narrative public contract pytest: 13 passed
+  - narrative public contract pytest: 14 passed
   - `ruff check .`: PASS
   - final capsule validation: PASS
