@@ -1,3 +1,4 @@
+# Les tests du catalogue admin verifient la surface publique des assemblies LLM publiees.
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -63,7 +64,7 @@ def _isolate_published_execution_profiles() -> None:
             .where(PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED)
             .where(PromptAssemblyConfigModel.feature == "natal")
             .where(PromptAssemblyConfigModel.subfeature == "interpretation")
-            .where(PromptAssemblyConfigModel.plan.in_(("free", "premium")))
+            .where(PromptAssemblyConfigModel.plan.in_(("free", "basic", "premium")))
             .values(status=PromptStatus.ARCHIVED)
         )
         db.execute(
@@ -71,7 +72,7 @@ def _isolate_published_execution_profiles() -> None:
             .where(LlmExecutionProfileModel.status == PromptStatus.PUBLISHED)
             .where(LlmExecutionProfileModel.feature == "natal")
             .where(LlmExecutionProfileModel.subfeature == "interpretation")
-            .where(LlmExecutionProfileModel.plan.in_(("free", "premium")))
+            .where(LlmExecutionProfileModel.plan.in_(("free", "basic", "premium")))
             .values(status=PromptStatus.ARCHIVED)
         )
         db.commit()
@@ -307,6 +308,70 @@ def test_admin_llm_catalog_returns_active_snapshot_entries_with_runtime_signals(
         app.dependency_overrides.clear()
         db.execute(delete(LlmActiveReleaseModel))
         db.execute(delete(LlmCallLogModel).where(LlmCallLogModel.id == log_id))
+        db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
+        db.commit()
+        db.close()
+
+
+def test_admin_llm_catalog_exposes_basic_natal_assembly_from_active_snapshot():
+    db = open_app_db_session()
+    client = TestClient(app)
+    app.dependency_overrides[require_admin_user] = mock_admin_user
+    app.dependency_overrides[get_db_session] = lambda: db
+
+    manifest_entry_id = "natal:interpretation:basic:fr-FR"
+    snapshot_id = uuid.uuid4()
+
+    try:
+        db.execute(delete(LlmActiveReleaseModel))
+        snapshot = LlmReleaseSnapshotModel(
+            id=snapshot_id,
+            version=f"test-basic-natal-catalog-v1-{uuid.uuid4().hex[:8]}",
+            manifest=_build_manifest(manifest_entry_id),
+            status=ReleaseStatus.ACTIVE,
+            created_by="test-admin",
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["assembly"].update(
+            {
+                "feature": "natal",
+                "subfeature": "interpretation",
+                "plan": "basic",
+                "locale": "fr-FR",
+                "status": "published",
+                "output_contract_ref": "AstroResponse_v3",
+            }
+        )
+        snapshot.manifest["targets"][manifest_entry_id]["profile"].update(
+            {
+                "provider": "openai",
+                "model": "gpt-4o-mini",
+                "verbosity_profile": "detailed",
+                "max_output_tokens": 2400,
+            }
+        )
+        db.add(snapshot)
+        db.add(
+            LlmActiveReleaseModel(
+                release_snapshot_id=snapshot_id,
+                activated_by="test-admin",
+                activated_at=datetime.now(timezone.utc),
+            )
+        )
+        db.commit()
+
+        response = client.get("/v1/admin/llm/catalog?search=interpretation&page=1&page_size=20")
+        assert response.status_code == 200
+        rows = [
+            row for row in response.json()["data"] if row["manifest_entry_id"] == manifest_entry_id
+        ]
+        assert len(rows) == 1
+        row = rows[0]
+        assert row["source_of_truth_status"] == "active_snapshot"
+        assert row["assembly_status"] == "published"
+        assert row["provider"] == "openai"
+    finally:
+        app.dependency_overrides.clear()
+        db.execute(delete(LlmActiveReleaseModel))
         db.execute(delete(LlmReleaseSnapshotModel).where(LlmReleaseSnapshotModel.id == snapshot_id))
         db.commit()
         db.close()

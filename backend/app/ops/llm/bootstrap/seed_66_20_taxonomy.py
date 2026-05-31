@@ -29,13 +29,15 @@ def _resolve_output_schema_id(db: Session, schema_name: str | None) -> uuid.UUID
 def _profile_defaults_for_target(
     feature: str,
     plan: str | None,
-) -> dict[str, str | int]:
+) -> dict[str, str | int | None]:
     """Retourne les valeurs par défaut du profil nominal pour une cible taxonomique."""
     is_premium = plan == "premium"
+    is_basic_natal = feature == "natal" and plan == "basic"
     return {
         "model": "gpt-4o" if is_premium else "gpt-4o-mini",
-        "verbosity_profile": "detailed" if is_premium else "balanced",
+        "verbosity_profile": "detailed" if is_premium or is_basic_natal else "balanced",
         "output_mode": "free_text" if feature == "chat" else "structured_json",
+        "max_output_tokens": 2400 if is_basic_natal else None,
         "timeout_seconds": 60,
     }
 
@@ -162,6 +164,11 @@ def seed_66_20_taxonomy(db: Session) -> None:
                 verbosity_profile=str(defaults["verbosity_profile"]),
                 output_mode=str(defaults["output_mode"]),
                 tool_mode="none",
+                max_output_tokens=(
+                    int(defaults["max_output_tokens"])
+                    if defaults["max_output_tokens"] is not None
+                    else None
+                ),
                 timeout_seconds=int(defaults["timeout_seconds"]),
                 status=PromptStatus.PUBLISHED,
                 created_by="system",
@@ -181,6 +188,8 @@ def seed_66_20_taxonomy(db: Session) -> None:
             profile.verbosity_profile = str(defaults["verbosity_profile"])
             profile.output_mode = str(defaults["output_mode"])
             profile.tool_mode = "none"
+            if defaults["max_output_tokens"] is not None:
+                profile.max_output_tokens = int(defaults["max_output_tokens"])
             profile.timeout_seconds = int(defaults["timeout_seconds"])
             profile.status = PromptStatus.PUBLISHED
 

@@ -1,0 +1,6 @@
+Before implementation, `LLMGateway._resolve_plan` normalized `request.user_input.plan` through `normalize_plan_scope()` before `AssemblyRegistry.get_active_config_sync()`.
+
+Observed source state:
+- `normalize_plan_scope("basic")` returns `free`.
+- `gateway.py` called `get_active_config_sync(..., plan=normalized_plan, ...)`.
+- Resulting risk: `natal/interpretation/basic` seed alone could not be reached by Basic complete natal runtime resolution.

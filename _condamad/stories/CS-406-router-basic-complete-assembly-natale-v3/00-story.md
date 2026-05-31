@@ -1,5 +1,5 @@
 # Story CS-406 router-basic-complete-assembly-natale-v3: Router Basic Complete Vers Assembly Natale V3
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

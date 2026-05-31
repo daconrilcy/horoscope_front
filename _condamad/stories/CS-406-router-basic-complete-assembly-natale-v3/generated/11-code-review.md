@@ -1,5 +1,9 @@
 # Revue de redaction CS-406
 
+> Classification implementation: obsolete-pre-implementation.
+> Cette revue CLEAN couvre la redaction de la story avant developpement. Elle
+> ne constitue pas une preuve de revue finale pour l'implementation CS-406.
+
 Verdict: CLEAN
 
 ## Portee

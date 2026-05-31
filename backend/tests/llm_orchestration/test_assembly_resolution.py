@@ -10,6 +10,9 @@ from app.domain.llm.configuration.assembly_resolver import (
     resolve_assembly,
     validate_placeholders,
 )
+from app.domain.llm.configuration.canonical_use_case_registry import (
+    get_canonical_use_case_contract,
+)
 from app.domain.llm.prompting.catalog import PROMPT_FALLBACK_CONFIGS
 from app.domain.llm.runtime import gateway as gateway_module
 from app.domain.llm.runtime.contracts import (
@@ -23,6 +26,7 @@ from app.domain.llm.runtime.contracts import (
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
 from app.infra.db.models.llm.llm_execution_profile import LlmExecutionProfileModel
+from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
@@ -58,6 +62,72 @@ def _create_execution_profile(
     db.add(profile)
     db.flush()
     return profile
+
+
+def _create_prompt_assembly(
+    db,
+    *,
+    feature: str,
+    subfeature: str | None,
+    plan: str | None,
+    use_case_key: str,
+    developer_prompt: str,
+    model: str = "gpt-4o-mini",
+) -> PromptAssemblyConfigModel:
+    """Publie une assembly minimale avec profil pour tester la resolution runtime."""
+
+    prompt = LlmPromptVersionModel(
+        id=uuid.uuid4(),
+        use_case_key=use_case_key,
+        developer_prompt=developer_prompt,
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    use_case = LlmUseCaseConfigModel(
+        key=use_case_key,
+        display_name=use_case_key,
+        description="test",
+    )
+    db.add_all([prompt, use_case])
+    profile = _create_execution_profile(
+        db,
+        feature=feature,
+        subfeature=subfeature,
+        plan=plan,
+        model=model,
+    )
+    contract = get_canonical_use_case_contract(use_case_key)
+    output_schema_id = None
+    if contract and contract.output_schema_name:
+        schema = (
+            db.query(LlmOutputSchemaModel)
+            .filter(LlmOutputSchemaModel.name == contract.output_schema_name)
+            .one_or_none()
+        )
+        if schema is None:
+            schema_version = 3 if contract.output_schema_name.endswith("_v3") else 1
+            schema = LlmOutputSchemaModel(
+                name=contract.output_schema_name,
+                json_schema={"type": "object"},
+                version=schema_version,
+            )
+            db.add(schema)
+            db.flush()
+        output_schema_id = schema.id
+    assembly = PromptAssemblyConfigModel(
+        feature=feature,
+        subfeature=subfeature,
+        plan=plan,
+        locale="fr-FR",
+        feature_template_ref=prompt.id,
+        execution_profile_ref=profile.id,
+        output_schema_id=output_schema_id,
+        status=PromptStatus.PUBLISHED,
+        created_by="test",
+    )
+    db.add(assembly)
+    db.commit()
+    return assembly
 
 
 @pytest.mark.asyncio
@@ -153,6 +223,176 @@ async def test_db_prompt_resolution_does_not_require_supported_fallback_prompt(
 
     assert plan.rendered_developer_prompt.startswith("DB guidance prompt")
     assert plan.prompt_version_id == str(prompt.id)
+
+
+@pytest.mark.asyncio
+async def test_natal_basic_complete_resolution_preserves_basic_for_registry(
+    db,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """La lecture natale complete Basic atteint le registry avec le plan basic."""
+
+    _create_prompt_assembly(
+        db,
+        feature="natal",
+        subfeature="interpretation",
+        plan="free",
+        use_case_key="natal_interpretation_short",
+        developer_prompt="SHORT {{llm_astrology_input_v1}}",
+    )
+    basic_assembly = _create_prompt_assembly(
+        db,
+        feature="natal",
+        subfeature="interpretation",
+        plan="basic",
+        use_case_key="natal_interpretation",
+        developer_prompt="BASIC {{llm_astrology_input_v1}} {{persona_name}}",
+    )
+    original = AssemblyRegistry.get_active_config_sync
+    seen_plans: list[str | None] = []
+
+    def spy_get_active_config_sync(self, *args, **kwargs):
+        seen_plans.append(kwargs.get("plan"))
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(AssemblyRegistry, "get_active_config_sync", spy_get_active_config_sync)
+
+    request = LLMExecutionRequest(
+        user_input=ExecutionUserInput(
+            use_case="natal_interpretation",
+            feature="natal",
+            subfeature="interpretation",
+            plan="basic",
+            locale="fr-FR",
+        ),
+        context=ExecutionContext(extra_context={"llm_astrology_input_v1": {}}),
+        request_id="req-basic-natal",
+        trace_id="trace-basic-natal",
+    )
+
+    plan, _ = await LLMGateway()._resolve_plan(request, db)
+
+    assert seen_plans[-1] == "basic"
+    assert plan.plan == "basic"
+    assert plan.assembly_id == str(basic_assembly.id)
+    assert plan.rendered_developer_prompt.startswith("BASIC {}")
+
+
+@pytest.mark.asyncio
+async def test_natal_free_short_and_premium_complete_resolution_stay_canonical(db) -> None:
+    """Les chemins Free court et Premium complet gardent leurs assemblies dediees."""
+
+    free_assembly = _create_prompt_assembly(
+        db,
+        feature="natal",
+        subfeature="interpretation",
+        plan="free",
+        use_case_key="natal_interpretation_short",
+        developer_prompt="SHORT {{llm_astrology_input_v1}}",
+    )
+    premium_assembly = _create_prompt_assembly(
+        db,
+        feature="natal",
+        subfeature="interpretation",
+        plan="premium",
+        use_case_key="natal_interpretation",
+        developer_prompt="PREMIUM {{llm_astrology_input_v1}} {{persona_name}}",
+        model="gpt-4o",
+    )
+    gateway = LLMGateway()
+
+    free_plan, _ = await gateway._resolve_plan(
+        LLMExecutionRequest(
+            user_input=ExecutionUserInput(
+                use_case="natal_interpretation_short",
+                feature="natal",
+                subfeature="interpretation",
+                plan="free",
+                locale="fr-FR",
+            ),
+            context=ExecutionContext(extra_context={"llm_astrology_input_v1": {}}),
+            request_id="req-free-short",
+            trace_id="trace-free-short",
+        ),
+        db,
+    )
+    premium_plan, _ = await gateway._resolve_plan(
+        LLMExecutionRequest(
+            user_input=ExecutionUserInput(
+                use_case="natal_interpretation",
+                feature="natal",
+                subfeature="interpretation",
+                plan="premium",
+                locale="fr-FR",
+            ),
+            context=ExecutionContext(extra_context={"llm_astrology_input_v1": {}}),
+            request_id="req-premium-natal",
+            trace_id="trace-premium-natal",
+        ),
+        db,
+    )
+
+    assert free_plan.plan == "free"
+    assert free_plan.assembly_id == str(free_assembly.id)
+    assert free_plan.rendered_developer_prompt == "SHORT {}"
+    assert premium_plan.plan == "premium"
+    assert premium_plan.assembly_id == str(premium_assembly.id)
+    assert premium_plan.rendered_developer_prompt.startswith("PREMIUM {}")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("feature", "subfeature", "use_case"),
+    [
+        ("chat", "astrologer", "chat_astrologer"),
+        ("guidance", "contextual", "guidance_contextual"),
+    ],
+)
+async def test_basic_chat_and_guidance_scope_still_resolve_as_free(
+    db,
+    monkeypatch: pytest.MonkeyPatch,
+    feature: str,
+    subfeature: str,
+    use_case: str,
+) -> None:
+    """Basic hors lecture natale dediee reste normalise vers le scope free."""
+
+    assembly = _create_prompt_assembly(
+        db,
+        feature=feature,
+        subfeature=subfeature,
+        plan="free",
+        use_case_key=use_case,
+        developer_prompt="PROMPT {{last_user_msg}}",
+    )
+    original = AssemblyRegistry.get_active_config_sync
+    seen_plans: list[str | None] = []
+
+    def spy_get_active_config_sync(self, *args, **kwargs):
+        seen_plans.append(kwargs.get("plan"))
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(AssemblyRegistry, "get_active_config_sync", spy_get_active_config_sync)
+
+    plan, _ = await LLMGateway()._resolve_plan(
+        LLMExecutionRequest(
+            user_input=ExecutionUserInput(
+                use_case=use_case,
+                feature=feature,
+                subfeature=subfeature,
+                plan="basic",
+                question="Bonjour",
+                locale="fr-FR",
+            ),
+            request_id=f"req-basic-{feature}",
+            trace_id=f"trace-basic-{feature}",
+        ),
+        db,
+    )
+
+    assert seen_plans[-1] == "free"
+    assert plan.plan == "free"
+    assert plan.assembly_id == str(assembly.id)
 
 
 @pytest.mark.asyncio

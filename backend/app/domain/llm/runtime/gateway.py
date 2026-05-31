@@ -768,11 +768,27 @@ class LLMGateway:
 
     # --- PIPELINE STAGES (Story 66.4) ---
 
-    def _normalize_plan_for_assembly(self, plan: Optional[str]) -> Optional[str]:
+    def _normalize_plan_for_assembly(
+        self,
+        plan: Optional[str],
+        *,
+        feature: Optional[str] = None,
+        subfeature: Optional[str] = None,
+        use_case: Optional[str] = None,
+    ) -> Optional[str]:
         """
-        Collapses various commercial plan codes into canonical assembly plans (free/premium).
-        (Story 66.20 High Issue 2)
+        Normalise le plan commercial pour la resolution d'assembly.
+
+        Basic reste une cible publiee uniquement pour la lecture natale complete.
         """
+        normalized_plan = (plan or "").strip().lower()
+        if (
+            normalized_plan == "basic"
+            and feature == "natal"
+            and subfeature == "interpretation"
+            and use_case == "natal_interpretation"
+        ):
+            return "basic"
         return normalize_plan_scope(plan)
 
     async def _resolve_plan(
@@ -791,7 +807,12 @@ class LLMGateway:
                 request.user_input.feature, request.user_input.subfeature
             )
             # Story 66.28: Normalize plan early (AC3)
-            request.user_input.plan = self._normalize_plan_for_assembly(request.user_input.plan)
+            request.user_input.plan = self._normalize_plan_for_assembly(
+                request.user_input.plan,
+                feature=request.user_input.feature,
+                subfeature=request.user_input.subfeature,
+                use_case=request.user_input.use_case,
+            )
 
         use_case = request.user_input.use_case
         user_id = request.user_id
@@ -855,7 +876,12 @@ class LLMGateway:
                             )
                     elif request.user_input.feature:
                         # Story 66.20: Normalize plan for resolution (High Issue 2)
-                        normalized_plan = self._normalize_plan_for_assembly(request.user_input.plan)
+                        normalized_plan = self._normalize_plan_for_assembly(
+                            request.user_input.plan,
+                            feature=request.user_input.feature,
+                            subfeature=request.user_input.subfeature,
+                            use_case=request.user_input.use_case,
+                        )
 
                         # Use centralized registry (Story 66.20 Medium Issue Fix)
                         assembly_db = registry.get_active_config_sync(

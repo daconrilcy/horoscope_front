@@ -1,0 +1,10 @@
+After implementation, `LLMGateway._normalize_plan_for_assembly()` preserves `basic` only when:
+- `feature == "natal"`
+- `subfeature == "interpretation"`
+- `use_case == "natal_interpretation"`
+- requested plan is `basic`
+
+Executable evidence:
+- `test_natal_basic_complete_resolution_preserves_basic_for_registry` spies on `AssemblyRegistry.get_active_config_sync()` and observes `plan="basic"`.
+- `test_basic_chat_and_guidance_scope_still_resolve_as_free` proves Basic remains normalized to Free for Chat and Guidance.
+- `test_natal_free_short_and_premium_complete_resolution_stay_canonical` proves Free short and Premium complete keep their assemblies.

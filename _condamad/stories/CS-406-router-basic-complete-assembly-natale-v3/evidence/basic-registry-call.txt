@@ -1,0 +1,15 @@
+Runtime proof: `test_natal_basic_complete_resolution_preserves_basic_for_registry`.
+
+The test monkeypatches `AssemblyRegistry.get_active_config_sync`, records the `plan` keyword argument, then resolves:
+- `use_case="natal_interpretation"`
+- `feature="natal"`
+- `subfeature="interpretation"`
+- `plan="basic"`
+
+Assertion:
+- `seen_plans[-1] == "basic"`
+- resolved assembly id equals the seeded Basic assembly id.
+
+Validation:
+- `python -B -m pytest -q backend\tests\llm_orchestration\test_assembly_resolution.py -k "basic or natal" --tb=short`
+- Result: PASS, 6 passed, 13 deselected.
