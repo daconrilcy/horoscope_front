@@ -22,6 +22,8 @@ faits, ne calcule pas les priorites et ne recoit pas de donnees techniques publi
 - `editorial_evidence` cadre le redacteur controle avec des faits selectionnes.
 - `public_evidence` contient uniquement des justifications vulgarisees autorisees dans
   le payload public.
+- Les themes de `BasicNatalInterpretationV2` utilisent une forme publique dediee: ils
+  ne serialisent ni `editorial_evidence`, ni `internal_evidence`, ni intention editoriale.
 - `BasicNatalInterpretationV2` publie `locale`, `level=basic`,
   `engine_version=basic-natal-reading-v1` et
   `schema_version=basic_natal_interpretation_v2`.

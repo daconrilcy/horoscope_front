@@ -1,5 +1,5 @@
 # Story CS-409 contrats-versionnes-lecture-natale-basic-v2: Definir Les Contrats Versionnes De Lecture Natale Basic V2
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source type: product-contract
@@ -87,14 +87,14 @@ Additional validation rules:
 | AC9 | Evidence artifacts are persisted. | Evidence profile: baseline_before_after_diff; `python` checks story evidence paths. |
 
 ## Implementation Tasks
-- [ ] Task 1: Create the canonical pure contract owner for Basic natal reading V2. (AC: AC1, AC2, AC5, AC7)
-- [ ] Task 2: Define all requested contract models with strict Pydantic extra handling. (AC: AC2, AC3, AC4, AC5)
-- [ ] Task 3: Centralize version constants for facts, salience, themes, plan builder, prompt, validator and public schema. (AC: AC1)
-- [ ] Task 4: Add serialization tests for public identity, proof levels and unknown field rejection. (AC: AC1, AC2, AC3, AC5)
-- [ ] Task 5: Add a forbidden technical marker test and bounded `rg` validation command. (AC: AC4)
-- [ ] Task 6: Add an AST architecture guard for pure contract imports. (AC: AC7)
-- [ ] Task 7: Add short backend documentation for the target flow and responsibility split. (AC: AC8)
-- [ ] Task 8: Persist validation and baseline artifacts under this story evidence directory. (AC: AC9)
+- [x] Task 1: Create the canonical pure contract owner for Basic natal reading V2. (AC: AC1, AC2, AC5, AC7)
+- [x] Task 2: Define all requested contract models with strict Pydantic extra handling. (AC: AC2, AC3, AC4, AC5)
+- [x] Task 3: Centralize version constants for facts, salience, themes, plan builder, prompt, validator and public schema. (AC: AC1)
+- [x] Task 4: Add serialization tests for public identity, proof levels and unknown field rejection. (AC: AC1, AC2, AC3, AC5)
+- [x] Task 5: Add a forbidden technical marker test and bounded `rg` validation command. (AC: AC4)
+- [x] Task 6: Add an AST architecture guard for pure contract imports. (AC: AC7)
+- [x] Task 7: Add short backend documentation for the target flow and responsibility split. (AC: AC8)
+- [x] Task 8: Persist validation and baseline artifacts under this story evidence directory. (AC: AC9)
 
 ## Files to Inspect First
 - `_story_briefs/cs-404-definir-contrats-versionnes-lecture-natale-basic-v2.md`

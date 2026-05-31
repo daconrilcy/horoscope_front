@@ -18,3 +18,25 @@ PASS_WITH_EXPECTED_HITS - rg -n "ranking_score|condition_axis|score_profile|weig
   Expected hits are limited to public denylist literals in `basic_natal_contracts.py` and the existing narrative public validator.
 PASS - git diff --check on tracked CS-409 files. Git reported LF-to-CRLF warnings only for existing line-ending policy.
 PASS - python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-409-contrats-versionnes-lecture-natale-basic-v2 --final
+
+Review/fix iteration 1 - 2026-05-31
+Finding fixed: `BasicNatalInterpretationV2.interpretation.themes` serialized `NatalNarrativeTheme`, which exposed `editorial_intent` and `editorial_evidence` in the public payload.
+Fix: introduced `NatalPublicTheme`, changed `NatalSynthesis.themes` to the public-only model, added a serialization guard test, documented the public theme boundary, and added the missing global comment to the modified public API contract file.
+PASS - python -B -m ruff format backend\app\domain\astrology\reading backend\app\services\api_contracts\public\natal_interpretation.py backend\tests\unit\test_basic_natal_reading_contracts.py backend\tests\architecture\test_basic_natal_reading_contract_boundaries.py
+PASS - python -B -m pytest -q backend\tests\unit\test_basic_natal_reading_contracts.py --tb=short (16 passed)
+PASS - python -B -m pytest -q backend\tests\architecture\test_basic_natal_reading_contract_boundaries.py --tb=short (2 passed)
+PASS - python -B -m pytest -q backend\tests\unit\test_narrative_natal_reading_v1.py --tb=short (14 passed)
+PASS - python -B -m pytest -q backend\app\tests\unit\test_backend_docs_ownership.py --tb=short (3 passed)
+PASS - python -B -m ruff check backend\app\domain\astrology\reading backend\app\services\api_contracts\public\natal_interpretation.py backend\tests\unit\test_basic_natal_reading_contracts.py backend\tests\architecture\test_basic_natal_reading_contract_boundaries.py
+PASS_WITH_EXPECTED_HITS - rg -n "ranking_score|condition_axis|score_profile|weighted_score|prompt_hint|audit_input" backend\app\domain\astrology\reading backend\app\services\llm_generation\natal
+  Expected hits are limited to public denylist literals in `basic_natal_contracts.py` and the existing narrative public validator.
+PASS - rg -n "redacteur controle|source d'intelligence" backend\docs\basic-natal-reading-v2-contract.md
+PASS - git diff --check. Git reported LF-to-CRLF warnings only for existing line-ending policy.
+
+Final validation after review/fix closure - 2026-05-31
+PASS - python -B -m ruff check .
+PASS - python -B -m pytest -q backend\tests\unit\test_basic_natal_reading_contracts.py backend\tests\architecture\test_basic_natal_reading_contract_boundaries.py backend\tests\unit\test_narrative_natal_reading_v1.py backend\app\tests\unit\test_backend_docs_ownership.py --tb=short (35 passed)
+PASS - from backend: python -B -c "from app.main import app; print(len(app.routes))" (230 routes)
+PASS - python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-409-contrats-versionnes-lecture-natale-basic-v2 --final
+PASS - python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-409-contrats-versionnes-lecture-natale-basic-v2\00-story.md
+PASS - python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-409-contrats-versionnes-lecture-natale-basic-v2\00-story.md

@@ -1,3 +1,4 @@
+# Commentaire global: schemas Pydantic des endpoints publics d'interpretation natale.
 """Schemas Pydantic des endpoints publics d'interpretation natale."""
 
 from __future__ import annotations

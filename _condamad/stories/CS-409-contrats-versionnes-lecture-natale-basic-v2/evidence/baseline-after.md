@@ -17,5 +17,8 @@
   routes chargees, sans ajout de route par cette story.
 - Denylist publique: le scan des surfaces Basic V2 retourne uniquement les literals de garde
   du nouveau contrat et le validateur narratif public existant.
+- Revue corrective: `NatalSynthesis` serialise desormais `NatalPublicTheme`, pas le theme
+  editorial interne; le test public interdit `editorial_evidence`, `internal_evidence`
+  et `editorial_intent` dans le dump public.
 - Invariant durable ajoute: `RG-168` pour `basic_natal_interpretation_v2`.
-- Statut final attendu tracker: `ready-to-review`.
+- Statut final tracker: `done`.

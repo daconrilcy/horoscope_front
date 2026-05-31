@@ -25,6 +25,7 @@ from app.domain.astrology.reading import (
     NatalFactGraph,
     NatalNarrativeTheme,
     NatalNarrativeThemeModel,
+    NatalPublicTheme,
     NatalSalience,
     NatalSalienceModel,
     NatalSynthesis,
@@ -80,12 +81,21 @@ def _theme() -> NatalNarrativeTheme:
     )
 
 
+def _public_theme() -> NatalPublicTheme:
+    """Construit un theme public sans intention ni preuve editoriale."""
+    return NatalPublicTheme(
+        title="Identite et rayonnement",
+        narrative="Votre energie personnelle cherche une expression visible et utile.",
+        public_evidence=[_public_evidence()],
+    )
+
+
 def _synthesis() -> NatalSynthesis:
     """Construit la synthese publique minimale attendue."""
     return NatalSynthesis(
         title="Lecture natale Basic",
         introduction="Cette lecture met en avant les fils conducteurs les plus lisibles.",
-        themes=[_theme()],
+        themes=[_public_theme()],
         conclusion="Elle propose une synthese claire sans remplacer votre libre arbitre.",
         public_evidence=[_public_evidence()],
     )
@@ -157,6 +167,16 @@ def test_contract_models_separate_internal_editorial_and_public_evidence() -> No
     assert "editorial_evidence" in salience_model.items[0].model_dump()
     assert "public_evidence" in theme_model.themes[0].model_dump()
     assert plan.model_dump()["validator_version"] == "basic-natal-validator-v1"
+
+
+def test_public_v2_does_not_serialize_editorial_or_internal_evidence() -> None:
+    """Prouve que le payload public ne contient aucune preuve reservee au backend."""
+    payload = _public_contract().model_dump()
+    serialized = repr(payload)
+
+    assert "editorial_evidence" not in serialized
+    assert "internal_evidence" not in serialized
+    assert "editorial_intent" not in serialized
 
 
 def test_public_v2_rejects_unknown_fields() -> None:

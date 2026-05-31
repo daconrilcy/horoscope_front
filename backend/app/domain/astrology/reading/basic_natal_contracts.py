@@ -153,12 +153,26 @@ class NatalNarrativeThemeModel(_StrictContract):
     editorial_evidence: list[EditorialEvidence] = Field(default_factory=list, max_length=20)
 
 
+class NatalPublicTheme(_StrictContract):
+    """Theme narratif vulgarise autorise dans la synthese publique."""
+
+    title: str = Field(..., min_length=2, max_length=120)
+    narrative: str = Field(..., min_length=20, max_length=1200)
+    public_evidence: list[PublicEvidence] = Field(..., min_length=1, max_length=8)
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_technical_keys(cls, data: Any) -> Any:
+        """Bloque les marqueurs techniques dans les themes publics."""
+        return _reject_forbidden_public_keys(data)
+
+
 class NatalSynthesis(_StrictContract):
     """Synthese publique issue du plan, sans donnees de scoring ni trace brute."""
 
     title: str = Field(..., min_length=2, max_length=120)
     introduction: str = Field(..., min_length=20, max_length=1200)
-    themes: list[NatalNarrativeTheme] = Field(..., min_length=1, max_length=12)
+    themes: list[NatalPublicTheme] = Field(..., min_length=1, max_length=12)
     conclusion: str = Field(..., min_length=20, max_length=1200)
     public_evidence: list[PublicEvidence] = Field(..., min_length=1, max_length=12)
 
@@ -219,6 +233,7 @@ __all__ = [
     "NatalFactGraph",
     "NatalNarrativeTheme",
     "NatalNarrativeThemeModel",
+    "NatalPublicTheme",
     "NatalSalience",
     "NatalSalienceModel",
     "NatalSynthesis",
