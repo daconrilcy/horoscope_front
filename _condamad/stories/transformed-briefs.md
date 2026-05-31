@@ -200,3 +200,4 @@
 | cs-418 | `_story_briefs\cs-418-integrer-basic-natal-v2-persistance-cache-qa.md` | `_condamad\stories\cs-418-integrer-basic-natal-v2-persistance-cache-qa\00-story.md` |
 | cs-419 | `_story_briefs\cs-419-stabiliser-contrat-public-interpretation-natale-free-basic.md` | `_condamad\stories\cs-419-stabiliser-contrat-public-interpretation-natale-free-basic\00-story.md` |
 | cs-420 | `_story_briefs\cs-420-adapter-page-natal-rendu-free-basic-v2.md` | `_condamad\stories\cs-420-adapter-page-natal-rendu-free-basic-v2\00-story.md` |
+| cs-421 | `_story_briefs\cs-421-renforcer-contrat-redactionnel-basic-natal.md` | `_condamad\stories\cs-421-renforcer-contrat-redactionnel-basic-natal\00-story.md` |
