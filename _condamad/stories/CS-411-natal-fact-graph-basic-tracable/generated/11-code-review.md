@@ -1,36 +1,52 @@
-# Editorial Review - CS-411 natal-fact-graph-basic-tracable
+# Code Review - CS-411 natal-fact-graph-basic-tracable
 
 Verdict: CLEAN
 
-Implementation handoff note: this file is an editorial pre-implementation review
-of the story contract. It is obsolete as final implementation review evidence
-and is not cited as the final code-review proof for `ready-to-review`.
-
 ## Scope Reviewed
+
 - Source brief: `_story_briefs/cs-406-construire-fact-graph-natal-basic-tracable.md`.
 - Story contract: `_condamad/stories/CS-411-natal-fact-graph-basic-tracable/00-story.md`.
 - Tracker row: `_condamad/stories/story-status.md` entry `CS-411`.
-- Guardrails consulted by targeted ID: `RG-144`, `RG-145`, `RG-146`, `RG-147`, `RG-148`, `RG-156`, `RG-160`.
+- Implementation files:
+  - `backend/app/domain/astrology/interpretation/natal_fact_graph.py`
+  - `backend/app/domain/astrology/interpretation/natal_fact_graph_builder.py`
+  - `backend/tests/unit/domain/astrology/test_basic_natal_fact_graph.py`
+  - `backend/tests/unit/domain/astrology/test_basic_natal_fact_graph_date_only.py`
+  - `backend/tests/unit/domain/astrology/test_chart_object_runtime_architecture.py`
+- Guardrails reviewed: `RG-144`, `RG-145`, `RG-146`, `RG-147`, `RG-148`, `RG-156`, `RG-160`.
 
 ## Review Cycle
-- Iteration 1 found one drafting issue: the brief required durable guardrail enrichment, while the story still called it a registry gap.
-- Fix applied: added `RG-160`, referenced it in the story contract, and replaced the contradictory registry-gap wording.
-- Iteration 2 found no actionable drafting issue.
 
-## Alignment Checks
-- All brief fact families are explicitly mapped in the primitive ledger, target state, tasks and acceptance criteria.
-- `EligibilityContext`, deterministic IDs, `source_paths`, internal/editorial separation and anti-recalculation are explicit.
-- Required tests and scans are represented in acceptance evidence, validation plan and guardrail evidence.
-- Out-of-scope boundaries cover scoring, narrative text, frontend contract, new astrology calculations, API, DB and migrations.
-- Tracker source matches the brief path and status remains `ready-to-dev`.
+- Iteration 1 verdict: CHANGES_REQUESTED.
+- Finding F1: date-only charts still emitted a `sign_emphasis_fact` for `asc`, leaking angle-derived material under a non-time family.
+- Fix: `natal_fact_graph_builder._object_facts` now suppresses all angle-derived object material when `EligibilityContext.can_use_angles`
+  is false, and `test_basic_natal_fact_graph_date_only.py` asserts that `asc` is absent from emitted facts.
+- Iteration 2 verdict: CLEAN.
+
+## Acceptance Alignment
+
+- AC1: all required families are covered by the rich fixture and graph contract.
+- AC2/AC3: every fact has source paths and deterministic IDs.
+- AC4/AC5: date-only gating now excludes angle-derived facts while keeping non-time families.
+- AC6: aspect pair identity stays sorted and stable.
+- AC7: builder consumes runtime projections and has no local recalculation calls.
+- AC8/AC9: internal payload keeps `source_paths`; editorial candidates and public/API/frontend scans do not expose them.
+- AC10: story evidence artifacts are present and validated.
 
 ## Validation Results
-- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-411-natal-fact-graph-basic-tracable\00-story.md`
-- PASS: `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-411-natal-fact-graph-basic-tracable\00-story.md`
+
+- PASS: `ruff check app\domain\astrology\interpretation\natal_fact_graph_builder.py tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py`
+- PASS: `ruff check .` -> `All checks passed!`.
+- PASS: `ruff format --check .` -> `1743 files already formatted`.
+- PASS: `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` -> `18 passed`.
+- PASS: recalculation scan returned zero hits for the fact graph modules and tests.
+- PASS: prose-generation scan returned zero hits for the fact graph modules and tests.
+- PASS: public `source_paths` scan returned zero hits in `backend\app\api` and `frontend\src`.
 
 ## Propagation
-- Propagation applied locally to the canonical guardrail registry as `RG-160`.
-- No AGENTS.md or skill update required; the issue was story-local plus registry-local.
+
+- no-propagation: the accepted finding was local to this builder/test surface and is now covered by the date-only regression test.
 
 ## Residual Risk
-- Implementation may discover missing runtime projection material; the story already instructs the dev agent to stop and record that blocker.
+
+- Aucun risque restant identifie.

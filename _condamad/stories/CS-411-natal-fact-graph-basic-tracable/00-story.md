@@ -1,5 +1,5 @@
 # Story CS-411 natal-fact-graph-basic-tracable: Construire Fact Graph Natal Basic Tracable
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source type: implementation brief.

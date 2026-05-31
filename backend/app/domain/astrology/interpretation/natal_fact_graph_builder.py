@@ -71,6 +71,8 @@ def _object_facts(
     """Extrait positions, luminaires, angles, signes et noeuds depuis les objets."""
     for item in objects:
         classifications = set(item.classifications)
+        is_angle = "angle" in classifications
+        can_use_angle_material = not is_angle or eligibility_context.can_use_angles
         source_paths = _object_source_paths(item)
         if "luminary" in classifications:
             yield _fact(
@@ -86,7 +88,7 @@ def _object_facts(
                 source_paths=source_paths,
                 editorial_candidate=True,
             )
-        if "angle" in classifications and eligibility_context.can_use_angles:
+        if is_angle and eligibility_context.can_use_angles:
             yield _fact(
                 NatalFactFamily.ANGLE,
                 (item.code,),
@@ -101,12 +103,13 @@ def _object_facts(
                 source_paths=source_paths,
                 editorial_candidate=True,
             )
-        yield _fact(
-            NatalFactFamily.SIGN_EMPHASIS,
-            (item.zodiac_position.sign_code, item.code),
-            source_paths=source_paths,
-            editorial_candidate=False,
-        )
+        if can_use_angle_material:
+            yield _fact(
+                NatalFactFamily.SIGN_EMPHASIS,
+                (item.zodiac_position.sign_code, item.code),
+                source_paths=source_paths,
+                editorial_candidate=False,
+            )
 
 
 def _aspect_facts(aspects: Sequence[AspectInterpretationRuntimeData]) -> Iterable[NatalFact]:

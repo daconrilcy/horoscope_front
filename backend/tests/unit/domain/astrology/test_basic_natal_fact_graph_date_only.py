@@ -32,6 +32,7 @@ def test_date_only_gates_time_dependent_facts() -> None:
     assert NatalFactFamily.HOUSE_EMPHASIS not in families
     assert NatalFactFamily.RULERSHIP not in families
     assert not any(fact.requires_birth_time for fact in graph.facts)
+    assert not any("asc" in fact.objects for fact in graph.facts)
 
 
 def test_date_only_keeps_non_time_dependent_families() -> None:

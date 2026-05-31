@@ -67,7 +67,7 @@
 | AC1 | All `NatalFactFamily` values emitted by rich fixture. | Targeted pytest PASS. | PASS |
 | AC2 | Required `source_paths` on every `NatalFact`. | Contract test PASS. | PASS |
 | AC3 | Stable fact and graph ids. | Determinism test PASS. | PASS |
-| AC4 | Date-only gates angle, house and rulership facts. | Date-only pytest PASS. | PASS |
+| AC4 | Date-only gates angle, house, rulership and angle-derived sign facts. | Date-only pytest PASS after review fix. | PASS |
 | AC5 | Date-only keeps non-time families. | Date-only pytest PASS. | PASS |
 | AC6 | Aspect pair identity sorted and preserved. | Aspect identity pytest PASS. | PASS |
 | AC7 | Runtime input only; no local calculators. | AST guard and negative scan PASS. | PASS |
@@ -88,6 +88,17 @@
 | `rg -n "paragraph\|sentence\|public_text\|narrative_text\|final_text\|llm_prompt" <fact graph modules/tests>` | PASS | Exit 1: no matches. |
 | `rg -n "source_paths" backend\app\api frontend\src -g "*.py" -g "*.ts" -g "*.tsx"` | PASS | Exit 1: no public/API/frontend matches. |
 | `git diff --check -- <story paths>` | PASS | No whitespace errors; CRLF warning only on touched test file. |
+| `ruff check app\domain\astrology\interpretation\natal_fact_graph_builder.py tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py` | PASS | Review-fix lint passed. |
+| `python -B -m pytest -q tests\unit\domain\astrology\test_basic_natal_fact_graph.py tests\unit\domain\astrology\test_basic_natal_fact_graph_date_only.py tests\unit\domain\astrology\test_chart_object_runtime_architecture.py --tb=short` | PASS | Review-fix targeted tests: `18 passed`. |
+| `ruff check .` | PASS | Full backend lint after review fix: `All checks passed!`. |
+| `ruff format --check .` | PASS | Full backend format check after review fix: `1743 files already formatted`. |
+
+## Review-fix evidence
+
+- Iteration 1 finding: date-only charts still emitted `sign_emphasis_fact` for `asc`, leaking angle-derived material under a non-time family.
+- Fix applied: `natal_fact_graph_builder._object_facts` suppresses angle-derived object material when `can_use_angles` is false.
+- Regression test: `test_date_only_gates_time_dependent_facts` asserts that `asc` is absent from all emitted facts.
+- Fresh review result: `generated/11-code-review.md` verdict `CLEAN`.
 
 ## Commands skipped or blocked
 
