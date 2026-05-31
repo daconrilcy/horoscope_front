@@ -187,3 +187,4 @@
 | cs-405 | `_story_briefs\cs-405-classifier-eligibilite-heure-naissance-lecture-basic.md` | `_condamad\stories\cs-410-classifier-eligibilite-heure-naissance-basic\00-story.md` |
 | cs-406 | `_story_briefs\cs-406-construire-fact-graph-natal-basic-tracable.md` | `_condamad\stories\cs-411-natal-fact-graph-basic-tracable\00-story.md` |
 | cs-407 | `_story_briefs\cs-407-prioriser-faits-natals-basic-par-salience-calibree.md` | `_condamad\stories\cs-412-prioriser-faits-natals-basic-salience-calibree\00-story.md` |
+| cs-408 | `_story_briefs\cs-408-definir-taxonomie-themes-narratifs-basic.md` | `_condamad\stories\cs-413-definir-taxonomie-themes-narratifs-basic\00-story.md` |
