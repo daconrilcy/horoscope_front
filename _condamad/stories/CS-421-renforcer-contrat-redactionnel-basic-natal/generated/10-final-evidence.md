@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: clean
 - Story key: CS-421-renforcer-contrat-redactionnel-basic-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-421-renforcer-contrat-redactionnel-basic-natal`
@@ -14,7 +14,7 @@
 - Story/status/brief alignment: CS-421 row matches story path and `_story_briefs/cs-421-renforcer-contrat-redactionnel-basic-natal.md`.
 - Initial dirty files: `_condamad/run-state.json`, `_condamad/stories/regression-guardrails.md`.
 - Capsule generated and validated after venv activation.
-- Pre-implementation `generated/11-code-review.md`: classified obsolete for final review evidence.
+- Fresh `generated/11-code-review.md`: implementation review CLEAN on 2026-06-01.
 - Command hygiene note: one baseline command was attempted from `backend/` with an invalid relative venv activation path, then rerun from root with the venv activated before evidence was accepted.
 
 ## Capsule validation
@@ -67,6 +67,7 @@
 - `evidence/basic-public-contract-before.json`
 - `evidence/basic-payload-after.json`
 - `evidence/basic-public-contract-after.json`
+- `evidence/validation-output.txt`
 
 ## Tests added or updated
 
@@ -115,7 +116,7 @@
 ## Final worktree status
 
 - Story files changed plus pre-existing `_condamad/run-state.json`.
-- `_condamad/stories/story-status.md` updated to `ready-to-review` after implementation.
+- `_condamad/stories/story-status.md` updated to `done` after clean implementation review.
 
 ## Remaining risks
 

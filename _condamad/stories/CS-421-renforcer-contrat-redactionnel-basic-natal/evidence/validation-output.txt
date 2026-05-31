@@ -1,0 +1,41 @@
+CS-421 validation output - 2026-06-01
+
+All Python commands were run after activating .\.venv\Scripts\Activate.ps1 from the repository root.
+
+Backend checks:
+- cd backend; ruff format .
+  Result: PASS - 1764 files left unchanged.
+- cd backend; ruff check .
+  Result: PASS - All checks passed.
+- cd backend; python -B -m pytest -q tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py --tb=short
+  Result: PASS - 6 passed.
+- cd backend; python -B -m pytest -q tests/unit/test_basic_natal_narrative_validator.py tests/unit/test_basic_natal_reading_contracts.py --tb=short
+  Result: PASS - 30 passed.
+- cd backend; python -B -m pytest -q tests/unit/domain/astrology/test_basic_natal_public_evidence.py --tb=short
+  Result: PASS - 4 passed.
+- cd backend; python -B -m pytest -q --long tests/integration/test_basic_natal_v2_pipeline.py --tb=short
+  Result: PASS - 1 passed.
+- cd backend; python -B -m pytest -q app/tests/unit/test_astrology_translation_resolver.py --tb=short
+  Result: PASS - 4 passed.
+- cd backend; python -B -m pytest -q tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short
+  Result: PASS - 14 passed.
+
+CONDAMAD checks:
+- python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-421-renforcer-contrat-redactionnel-basic-natal
+  Result: PASS.
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-421-renforcer-contrat-redactionnel-basic-natal\00-story.md
+  Result: PASS.
+- python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-421-renforcer-contrat-redactionnel-basic-natal\00-story.md
+  Result: PASS.
+
+Scans:
+- Mechanical phrase scan: PASS/classified. Hits are provider denylist constants, validator regexes, and negative tests.
+- Unaccented/form scan: PASS/classified. Hits are expected tests, domain terminology, denylist constants, or non-public code.
+- Technical marker scan: PASS/classified. Hits are runtime carriers outside public Basic payload, validator denylist, and contract guards.
+- Local astrology reference table scan: PASS/no scoped hits.
+
+Evidence files:
+- basic-payload-before.json: present.
+- basic-payload-after.json: present.
+- basic-public-contract-before.json: present.
+- basic-public-contract-after.json: present.
