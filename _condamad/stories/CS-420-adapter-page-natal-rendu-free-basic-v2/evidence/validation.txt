@@ -1,5 +1,22 @@
 CS-420 validation summary
 
+Brief alignment verification pass - 2026-05-31:
+- Fixed test evidence gap: `natalInterpretation.test.tsx` now proves the brief free short payload shape with
+  `meta.level=short`, `use_case=natal_interpretation_short`, exact title
+  `Decouverte de votre essence astrologique`, three public sections, highlights, advice and disclaimers.
+- PASS: `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading`
+  - 4 files passed, 119 tests passed.
+- PASS: `pnpm --dir frontend lint`.
+- PASS: `pnpm --dir frontend build`.
+- PASS: `rg -n "style=\\{" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx`
+  - zero hit.
+- PASS: `rg -n "ni-evidence-tags|ni-projections|LockedSection|NatalAstrologicalDna|NatalLifeDomains|NatalStrengths|NatalChallenges|NatalMajorAspects" frontend/src/components/natal-interpretation frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx`
+  - zero hit.
+- PASS: `rg -n "visibility_expression|audit_input|condition_axis:|interpretive_signal_ids|projection_version|ranking_score|weighted_score|prompt_hint" frontend/src/components/natal-interpretation frontend/src/features/natal-chart`
+  - zero hit.
+- PASS: story validation after activating `.\.venv\Scripts\Activate.ps1`.
+- PASS: story strict lint after activating `.\.venv\Scripts\Activate.ps1`.
+
 Review/fix iteration 1:
 - Fixed free short payload disclaimers for `meta.level=short`.
 - Fixed Basic V2 public evidence rendering from `interpretation.public_evidence` and root `public_evidence`.

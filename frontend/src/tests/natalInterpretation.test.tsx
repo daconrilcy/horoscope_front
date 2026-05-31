@@ -180,17 +180,21 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText("Note test")).toBeInTheDocument();
   });
 
-  it("affiche une lecture free_short complete avec ses blocs publics sans regeneration", () => {
+  it("affiche le payload free_short du brief avec ses blocs publics sans regeneration", () => {
     const freeShortData: NatalInterpretationViewData = {
       chart_id: "chart-123",
-      use_case: "natal_long_free",
+      use_case: "natal_interpretation_short",
       degraded_mode: null,
       narrative_natal_reading_v1: null,
-      meta: { level: "complete", use_case: "natal_long_free", persona_name: null },
+      meta: { level: "short", use_case: "natal_interpretation_short", persona_name: null },
       interpretation: {
-        title: "Portrait public free",
-        summary: "Synthese publique free visible.",
-        sections: [{ key: "elan", heading: "Votre elan", content: "Une lecture courte mais complete." }],
+        title: "Decouverte de votre essence astrologique",
+        summary: "Synthese publique free visible pour comprendre les grands axes du theme.",
+        sections: [
+          { key: "elan", heading: "Votre elan", content: "Une lecture courte mais complete." },
+          { key: "sensibilite", heading: "Votre sensibilite", content: "Un second bloc public reste lisible." },
+          { key: "relation", heading: "Votre relationnel", content: "Un troisieme bloc public complete le rendu." },
+        ],
         highlights: ["Point public free"],
         advice: ["Conseil public free"],
         evidence: ["SUN_LEO"],
@@ -200,10 +204,14 @@ describe("NatalInterpretationSection", () => {
 
     render(<InterpretationContent data={freeShortData} lang="fr" />);
 
-    expect(screen.getByRole("heading", { name: "Portrait public free" })).toBeInTheDocument();
-    expect(screen.getByText("Synthese publique free visible.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Decouverte de votre essence astrologique" })).toBeInTheDocument();
+    expect(screen.getByText("Synthese publique free visible pour comprendre les grands axes du theme.")).toBeInTheDocument();
     expect(screen.getByText("Votre elan")).toBeInTheDocument();
     expect(screen.getByText("Une lecture courte mais complete.")).toBeInTheDocument();
+    expect(screen.getByText("Votre sensibilite")).toBeInTheDocument();
+    expect(screen.getByText("Un second bloc public reste lisible.")).toBeInTheDocument();
+    expect(screen.getByText("Votre relationnel")).toBeInTheDocument();
+    expect(screen.getByText("Un troisieme bloc public complete le rendu.")).toBeInTheDocument();
     expect(screen.getByText("Point public free")).toBeInTheDocument();
     expect(screen.getByText("Conseil public free")).toBeInTheDocument();
     expect(screen.getByText("Note publique free")).toBeInTheDocument();

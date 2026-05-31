@@ -125,12 +125,13 @@
 ## Implementation review/fix addendum
 
 - Final review artifact: `generated/11-code-review.md`.
-- Iterations: 1 review/fix iteration, followed by a fresh clean review.
+- Iterations: 1 review/fix iteration, followed by a fresh clean review and 1 brief-alignment verification pass.
 - Issues fixed:
   - free short `meta.level=short` payload disclaimers now render;
   - Basic V2 renders merged public evidence from `interpretation.public_evidence` and root `public_evidence`;
   - stale legacy CSS selectors `.ni-evidence-tags` and `.ni-projections` were removed;
   - exact forbidden technical marker strings were removed from scoped frontend source.
+  - free short Vitest evidence now covers the brief's exact title and three-section public payload shape.
 - Fresh validations:
   - `pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage natalNarrativeReading`: PASS, 119 tests;
   - `pnpm --dir frontend build`: PASS;
