@@ -39,3 +39,4 @@ normal ticket. Every paragraph should answer one of these questions:
 
 The story should make bad implementation routes visibly invalid. Place the
 guardrails near the ACs and validation plan, not only in background notes.
+

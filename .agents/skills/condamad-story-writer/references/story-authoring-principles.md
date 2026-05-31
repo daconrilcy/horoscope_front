@@ -50,3 +50,4 @@ validation evidence.
 Repo facts must come from files, commands, tests, or quoted user-provided
 source material. If a fact is inferred, say so. If evidence is unavailable,
 state the assumption risk in the story.
+

@@ -23,7 +23,7 @@ post-acceptation reste le owner canonique du contrat produit public, validée pa
 `validate_narrative_reading_public_text` et `validate_narrative_semantic_integrity` avant
 persistance. Aucun padding silencieux : une section source manquante déclenche un rejet
 `narrative_semantic_integrity` / `chapter_source_missing`, jamais une recopie de
-`response.sections[0]`.
+la première section LLM.
 
 ## Chapitres (ordre fixe)
 
@@ -58,5 +58,8 @@ Exemples JSON: `backend/docs/examples/narrative-natal-reading-v1-*.json`.
 
 ## Non-régression
 
-- RG-149, RG-150 applicables
-- Preuve: `pytest -q backend/tests/unit/test_narrative_natal_reading_v1.py backend/tests/architecture/test_narrative_natal_reading_public_boundary.py`
+- RG-149, RG-150, RG-152 et RG-155 applicables.
+- Les profils `basic` et `premium` acceptés doivent garder cinq chapitres dans l'ordre
+  canonique, des titres et narrations distincts après normalisation, et au moins une
+  source vulgarisée dans `used_astrological_elements`.
+- Preuve: `pytest -q backend/tests/unit/test_narrative_natal_reading_v1.py backend/tests/integration/test_natal_interpretation_rejected_public_boundary.py backend/tests/architecture/test_narrative_natal_reading_public_boundary.py backend/tests/architecture/test_narrative_semantic_integrity_guard.py`

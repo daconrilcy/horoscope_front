@@ -1,0 +1,42 @@
+# Validation Output — CS-401-refuser-padding-sources-vides
+
+All Python commands were run after `.\.venv\Scripts\Activate.ps1`.
+
+```text
+cd backend
+ruff format tests\unit\test_narrative_natal_reading_v1.py tests\integration\test_natal_interpretation_rejected_public_boundary.py tests\architecture\test_narrative_semantic_integrity_guard.py
+2 files reformatted, 1 file left unchanged
+
+ruff check .
+All checks passed!
+
+python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short
+12 passed in 1.16s
+
+python -B -m pytest -q --long tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short
+8 passed in 1.72s
+
+python -B -m pytest -q tests/architecture/test_narrative_semantic_integrity_guard.py tests/architecture/test_narrative_natal_reading_public_boundary.py --tb=short
+4 passed in 0.36s
+
+python -B -m pytest -q --long tests/unit/test_narrative_natal_reading_v1.py tests/integration/test_natal_interpretation_rejected_public_boundary.py tests/architecture/test_narrative_natal_reading_public_boundary.py tests/architecture/test_narrative_semantic_integrity_guard.py --tb=short
+24 passed in 1.79s
+
+python -B -c "from app.main import app; print(f'app_routes={len(app.routes)}')"
+app_routes=230
+
+rg -n "response\\.sections\\[0\\]" backend/app/services/llm_generation/natal
+PASS: no matches
+
+rg -n "response\\.sections\\[0\\]" backend/app backend/tests backend/docs
+PASS: no matches
+
+rg -n "fallback = response\\.sections\\[0\\]" backend/app/services/llm_generation/natal
+PASS: no matches
+
+rg -n "padding|used_astrological_elements|RG-155" backend/docs/narrative-natal-reading-v1-contract.md
+PASS: matched contract integrity wording
+
+python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-401-refuser-padding-sources-vides --final
+CONDAMAD validation: PASS
+```

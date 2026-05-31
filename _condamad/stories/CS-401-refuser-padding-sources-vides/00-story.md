@@ -1,5 +1,5 @@
 # Story CS-401 refuser-padding-sources-vides: Refuser Padding Semantique Lecture Natale Sources Vides
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -97,16 +97,16 @@ est acceptee uniquement avec cinq chapitres distincts et des sources astrologiqu
 
 ## Implementation Tasks
 
-- [ ] Task 1: Remove the builder path that can reuse `response.sections[0]` for a missing chapter source. (AC: AC1, AC7)
-- [ ] Task 2: Keep or introduce a typed projection error for missing chapter source and route it to semantic rejection. (AC: AC1, AC6)
-- [ ] Task 3: Enforce exact chapter key order through `NARRATIVE_CHAPTER_ORDER` validation. (AC: AC2)
-- [ ] Task 4: Enforce normalized narrative uniqueness across the five chapters. (AC: AC3)
-- [ ] Task 5: Enforce normalized title uniqueness across the five chapters. (AC: AC4)
-- [ ] Task 6: Require non-empty `used_astrological_elements` for Basic/Premium accepted readings. (AC: AC5)
-- [ ] Task 7: Extend unit fixtures for V2/V3 incomplete, duplicated, empty-source and nominal cases. (AC: AC1, AC2, AC3, AC4, AC5)
-- [ ] Task 8: Extend integration coverage proving rejected semantic payloads stay out of public POST/GET/LIST. (AC: AC6)
-- [ ] Task 9: Update `backend/docs/narrative-natal-reading-v1-contract.md` with the integrity rule. (AC: AC8)
-- [ ] Task 10: Persist validation and scan output under this story evidence directory. (AC: AC9)
+- [x] Task 1: Remove the builder path that can reuse `response.sections[0]` for a missing chapter source. (AC: AC1, AC7)
+- [x] Task 2: Keep or introduce a typed projection error for missing chapter source and route it to semantic rejection. (AC: AC1, AC6)
+- [x] Task 3: Enforce exact chapter key order through `NARRATIVE_CHAPTER_ORDER` validation. (AC: AC2)
+- [x] Task 4: Enforce normalized narrative uniqueness across the five chapters. (AC: AC3)
+- [x] Task 5: Enforce normalized title uniqueness across the five chapters. (AC: AC4)
+- [x] Task 6: Require non-empty `used_astrological_elements` for Basic/Premium accepted readings. (AC: AC5)
+- [x] Task 7: Extend unit fixtures for V2/V3 incomplete, duplicated, empty-source and nominal cases. (AC: AC1, AC2, AC3, AC4, AC5)
+- [x] Task 8: Extend integration coverage proving rejected semantic payloads stay out of public POST/GET/LIST. (AC: AC6)
+- [x] Task 9: Update `backend/docs/narrative-natal-reading-v1-contract.md` with the integrity rule. (AC: AC8)
+- [x] Task 10: Persist validation and scan output under this story evidence directory. (AC: AC9)
 
 ## Files to Inspect First
 

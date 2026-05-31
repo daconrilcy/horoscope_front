@@ -108,32 +108,12 @@ def build_summary(capsule: Path) -> list[str]:
         "",
     ]
 
-    append_block(
-        output,
-        "Story Scope",
-        section_lines(story, ("goal", "scope", "non-goal", "acceptance"), 20) or bullets(story, 10),
-    )
+    append_block(output, "Story Scope", section_lines(story, ("goal", "scope", "non-goal", "acceptance"), 20) or bullets(story, 10))
     append_block(output, "Acceptance Criteria", table_rows(traceability, ("AC", "Requirement"), 18))
-    append_block(
-        output,
-        "Target Paths",
-        section_lines(target_files, ("must inspect", "likely modified", "forbidden"), 18),
-    )
-    append_block(
-        output,
-        "Validation",
-        section_lines(
-            validation, ("targeted", "early guard", "architecture", "lint", "full regression"), 22
-        ),
-    )
-    append_block(
-        output, "Guardrails", section_lines(guardrails, ("forbidden", "required", "reviewer"), 22)
-    )
-    append_block(
-        output,
-        "Final Evidence Skeleton",
-        section_lines(final, ("story status", "remaining risks", "reviewer"), 12),
-    )
+    append_block(output, "Target Paths", section_lines(target_files, ("must inspect", "likely modified", "forbidden"), 18))
+    append_block(output, "Validation", section_lines(validation, ("targeted", "early guard", "architecture", "lint", "full regression"), 22))
+    append_block(output, "Guardrails", section_lines(guardrails, ("forbidden", "required", "reviewer"), 22))
+    append_block(output, "Final Evidence Skeleton", section_lines(final, ("story status", "remaining risks", "reviewer"), 12))
 
     if len(output) > MAX_LINES:
         output = output[: MAX_LINES - 1] + ["... summary truncated at 120 lines"]

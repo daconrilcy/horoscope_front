@@ -53,6 +53,14 @@ MARKER_RE = re.compile(
     r"\b(?:TBD|PENDING|not-started|not-run|not-recorded|none-recorded|not-validated)\b",
     re.I,
 )
+READY_TO_DEV_RE = re.compile(r"\bready-to-dev\b", re.I)
+BLOCKED_RE = re.compile(r"\bblocked\b", re.I)
+STALE_REVIEW_RE = re.compile(
+    r"\b(?:draft|pre[- ]implementation|pre[- ]impl|before implementation|"
+    r"obsolete|stale|superseded)\b",
+    re.I,
+)
+CLEAN_REVIEW_RE = re.compile(r"\bclean\b", re.I)
 
 
 class MarkdownTable(NamedTuple):
@@ -176,6 +184,161 @@ def is_complete_status(value: str) -> bool:
     return any(pattern.fullmatch(normalized) for pattern in COMPLETE_STATUS_PATTERNS)
 
 
+def find_story_registry(capsule: Path) -> Path | None:
+    """Trouve le registre story-status.md associe a une capsule si possible."""
+    for parent in [capsule, *capsule.parents]:
+        candidate = parent / "_condamad" / "stories" / "story-status.md"
+        if candidate.is_file():
+            return candidate
+        if parent.name == "stories":
+            sibling = parent / "story-status.md"
+            if sibling.is_file():
+                return sibling
+    return None
+
+
+def extract_story_id(story_key: str) -> str | None:
+    """Extrait l'identifiant CS-xxx depuis un nom de capsule."""
+    match = re.match(r"^(CS-\d+)\b", story_key, re.I)
+    return match.group(1) if match else None
+
+
+def row_matches_story(cells: list[str], line: str, story_key: str) -> bool:
+    """Indique si une ligne de registre correspond a la capsule."""
+    story_id = extract_story_id(story_key)
+    path_markers = [
+        f"_condamad/stories/{story_key}/",
+        f"_condamad\\stories\\{story_key}\\",
+    ]
+    if any(cell.strip() == story_key for cell in cells):
+        return True
+    if story_id and any(
+        cell.strip().casefold() == story_id.casefold() for cell in cells
+    ):
+        return True
+    normalized_line = line.replace("\\", "/")
+    return any(
+        marker.replace("\\", "/") in normalized_line for marker in path_markers
+    )
+
+
+def story_status_rows(registry_text: str, story_key: str) -> list[str]:
+    """Retourne les lignes du registre qui semblent correspondre a la story."""
+    rows: list[str] = []
+    for line in registry_text.splitlines():
+        if "|" not in line:
+            continue
+        cells = split_markdown_row(line)
+        if row_matches_story(cells, line, story_key):
+            rows.append(line.strip())
+    return rows
+
+
+def story_status_values(registry_text: str, story_key: str) -> list[tuple[str, str]]:
+    """Retourne les statuts des lignes de registre qui matchent la story."""
+    matches: list[tuple[str, str]] = []
+    for table in parse_markdown_tables(registry_text):
+        header_map = {
+            normalize_header(header): position
+            for position, header in enumerate(table.headers)
+        }
+        status_index = header_map.get("status")
+        if status_index is None:
+            continue
+        for row in table.rows:
+            row_text = "| " + " | ".join(row) + " |"
+            if row_matches_story(row, row_text, story_key):
+                status = row[status_index].strip() if len(row) > status_index else ""
+                matches.append((status, row_text))
+    return matches
+
+
+def extract_markdown_section(text: str, heading: str) -> str:
+    """Extrait le contenu d'une section markdown de niveau 2."""
+    pattern = re.compile(
+        rf"^##\s+{re.escape(heading)}\s*$"
+        r"(?P<body>.*?)(?=^##\s+|\Z)",
+        re.I | re.M | re.S,
+    )
+    match = pattern.search(text)
+    return match.group("body") if match else ""
+
+
+def extract_story_file_status(text: str) -> str | None:
+    """Extrait une ligne Status: explicite depuis 00-story.md."""
+    match = re.search(r"^Status:\s*(?P<status>\S.*?)\s*$", text, re.I | re.M)
+    return match.group("status") if match else None
+
+
+def validate_final_consistency(capsule: Path) -> list[str]:
+    """Controle les derives evidentes avant une cloture ready-to-review."""
+    errors: list[str] = []
+    story_key = capsule.name
+
+    story_file = capsule / "00-story.md"
+    if story_file.is_file():
+        story_status = extract_story_file_status(read_text(story_file))
+        if story_status and (
+            READY_TO_DEV_RE.search(story_status) or BLOCKED_RE.search(story_status)
+        ):
+            errors.append(
+                "00-story.md Status is not synchronized for final gate: "
+                f"{story_status}"
+            )
+
+    registry = find_story_registry(capsule)
+    if registry is None:
+        errors.append("Final consistency gate cannot find story-status.md")
+    else:
+        registry_text = read_text(registry)
+        registry_rows = story_status_rows(registry_text, story_key)
+        if not registry_rows:
+            errors.append(f"Story status row not found for final gate: {story_key}")
+        registry_statuses = story_status_values(registry_text, story_key)
+        if registry_statuses:
+            rows_to_check = registry_statuses
+        else:
+            rows_to_check = [(row, row) for row in registry_rows]
+        for status, row in rows_to_check:
+            if READY_TO_DEV_RE.search(status) or BLOCKED_RE.search(status):
+                errors.append(
+                    "Story status row is not synchronized for final gate: "
+                    f"{row}"
+                )
+
+    final_evidence = capsule / "generated/10-final-evidence.md"
+    if final_evidence.is_file():
+        final_text = read_text(final_evidence)
+        status_block = extract_markdown_section(final_text, "Story status")
+        if READY_TO_DEV_RE.search(status_block):
+            errors.append(
+                "Final evidence story status still mentions ready-to-dev in final mode"
+            )
+
+    review = capsule / "generated/11-code-review.md"
+    if review.is_file() and review.stat().st_size > 0:
+        review_text = read_text(review)
+        is_marked_obsolete = re.search(
+            r"\b(?:obsolete|superseded|handoff-only)\b", review_text, re.I
+        )
+        if STALE_REVIEW_RE.search(review_text) and not is_marked_obsolete:
+            errors.append(
+                "Code review appears stale/pre-implementation but is not marked "
+                "obsolete or handoff-only"
+            )
+        if (
+            CLEAN_REVIEW_RE.search(review_text)
+            and STALE_REVIEW_RE.search(review_text)
+            and not is_marked_obsolete
+        ):
+            errors.append(
+                "Code review contains CLEAN plus stale/pre-implementation markers; "
+                "it cannot be final evidence"
+            )
+
+    return errors
+
+
 def validate_capsule(capsule: Path, final: bool) -> list[str]:
     """Valide les fichiers requis et les preuves d'une capsule CONDAMAD."""
     errors: list[str] = []
@@ -249,6 +412,9 @@ def validate_capsule(capsule: Path, final: bool) -> list[str]:
             errors.append(
                 "Final evidence still contains placeholder markers in final mode"
             )
+
+    if final:
+        errors.extend(validate_final_consistency(capsule))
 
     return errors
 

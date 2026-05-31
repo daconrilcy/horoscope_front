@@ -287,3 +287,33 @@ The Dev Agent Instructions section must explicitly forbid:
 - task completion without validation evidence;
 - preserving legacy behavior for convenience;
 - continuing silently when an AC cannot be satisfied.
+
+## Brief Primitive Ledger
+
+Before drafting, extract the source input into a ledger with these categories:
+
+- objectives;
+- named primitives and canonical names;
+- dependencies and prerequisite decisions;
+- required validations named by the source;
+- non-goals and forbidden surfaces;
+- expected closure, reclassification, or blocker outcome.
+
+Each ledger item must map to at least one story element: AC, task, validation
+command, non-goal, source finding closure row, guardrail, or explicit blocker.
+Do not finalize the story while a ledger item is unmapped.
+
+## Regression Guardrail Selection
+
+The Regression Guardrails section must separate applicable rows from adjacent
+or uncertain entries.
+
+Applicable rows require:
+
+- `Scope`: the story-local path, route, operation, contract, or domain match;
+- `Invariant`: the exact guardrail rule protected by the story;
+- `Evidence`: the command, test, scan, snapshot, or manual check proving it.
+
+Move `Needs-investigation`, registry gaps, exact-overlap uncertainty, and
+adjacent non-domain guardrails into notes outside the applicable table. Reject
+guardrail IDs that do not connect to the local domain boundary.

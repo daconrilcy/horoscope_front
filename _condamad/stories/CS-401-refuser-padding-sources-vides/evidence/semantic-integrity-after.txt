@@ -1,0 +1,9 @@
+Final semantic integrity evidence captured on 2026-05-31.
+
+- `ruff check .` from `backend`: PASS.
+- `python -B -m pytest -q --long tests/unit/test_narrative_natal_reading_v1.py tests/integration/test_natal_interpretation_rejected_public_boundary.py tests/architecture/test_narrative_natal_reading_public_boundary.py tests/architecture/test_narrative_semantic_integrity_guard.py --tb=short`: PASS, 24 passed.
+- `rg -n "response\\.sections\\[0\\]" backend/app backend/tests backend/docs`: PASS, exit 1 no matches.
+- `rg -n "response\\.sections\\[0\\]" backend/app/services/llm_generation/natal`: PASS, exit 1 no matches.
+- `rg -n "fallback = response\\.sections\\[0\\]" backend/app/services/llm_generation/natal`: PASS, exit 1 no matches.
+- `rg -n "padding|used_astrological_elements|RG-155" backend/docs/narrative-natal-reading-v1-contract.md`: PASS.
+- `python -B -c "from app.main import app; print(f'app_routes={len(app.routes)}')"` from `backend`: PASS, `app_routes=230`.

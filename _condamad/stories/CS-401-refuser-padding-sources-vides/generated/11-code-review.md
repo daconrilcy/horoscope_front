@@ -1,5 +1,7 @@
 # Editorial review - CS-401 refuser-padding-sources-vides
 
+Classification: obsolete pre-implementation editorial review. This file records story drafting quality only and is not final implementation review evidence for CS-401.
+
 Verdict: CLEAN
 
 ## Review scope

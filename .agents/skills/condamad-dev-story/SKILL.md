@@ -9,6 +9,9 @@ description: >
   condamad-feedback-loop before closure when failed validation, user correction,
   regression evidence, or repeated execution mistakes reveal reusable learning
   that should update evidence, tests, guardrails, AGENTS.md, or an owning skill.
+  Treat repeated status drift, stale pre-implementation reviews, weak route
+  scans, cwd-dependent guards, and pnpm EPERM fallback patterns as reusable
+  learning candidates instead of defaulting to no-propagation.
   Do not use for pure story writing, roadmap planning, review-only analysis, or
   broad multi-story epics.
 ---
@@ -32,6 +35,8 @@ A successful run produces:
 - AC-by-AC traceability with code and validation evidence;
 - complete `generated/10-final-evidence.md`;
 - synchronized `_condamad/stories/story-status.md`;
+- final consistency gate across story, status, traceability, final evidence,
+  and existing code review artifacts;
 - no compatibility shim, alias, fallback, duplicate active path, or transitional
   legacy unless the story explicitly requires it.
 
@@ -123,7 +128,7 @@ _condamad/stories/<story-key>/
 ```
 
 Optional files: `02-context-map.md`, `05-implementation-plan.md`,
-`08-subagent-briefs.md`, `09-dev-log.md`.
+`08-subagent-briefs.md`, `09-dev-log.md`, `11-code-review.md`.
 
 When generating or repairing a capsule, use `scripts/condamad_prepare.py` and
 `scripts/condamad_validate.py` when available. Preserve human-owned story intent:
@@ -170,6 +175,31 @@ Command hygiene:
   the documented venv first when required, then run `python -B -m ...`;
 - prefer scoped formatting over root formatting unless the repo/story requires
   root-wide formatting.
+
+Evidence strength:
+
+- do not use `rg` as the only critical proof when a structured source exists;
+- for FastAPI/Starlette routes or API contracts, prove behavior with
+  `app.routes`, `app.openapi()`, route-level tests, or equivalent structured
+  introspection before accepting negative/positive text scans;
+- for Python imports, symbols, and source ownership, prefer AST parsing,
+  importing the module under the repo's test environment, or
+  `inspect.getsource()` over raw text scans;
+- for TypeScript imports/routes/contracts, prefer parser-backed checks,
+  compiler/typecheck output, or targeted guard tests over raw text scans;
+- `rg` remains acceptable as supplemental negative evidence, legacy cleanup
+  evidence, or a first-pass locator, but not as the sole proof for an AC or
+  architecture invariant when structured inspection is practical.
+
+CWD-independent tests and guards:
+
+- any test or guard that reads repository files must resolve paths from the
+  repository root, test file location, package root, or an imported module's
+  `__file__`; never rely on the process current directory implicitly;
+- prefer module introspection over filesystem reads when checking Python code
+  ownership/import behavior;
+- if a guard intentionally runs from a package directory, record that
+  assumption and add a root-independent path resolver.
 
 Scope:
 
@@ -228,6 +258,18 @@ results, registry updates needed, risks.
 Do not let multiple subagents edit the same frontend files concurrently unless
 the user explicitly requests a parallel worktree strategy.
 
+Windows frontend mode:
+
+- discover available scripts first (`package.json`, local scripts directory,
+  package manager metadata) before choosing commands;
+- on Windows, prefer repository-stable commands already present in the project
+  when package-manager wrappers trigger locks or `EPERM`, for example
+  `node .\scripts\run-vite-logged.mjs ...` for logged Vite runs and
+  `.\node_modules\.bin\tsc.cmd` for TypeScript;
+- when `pnpm` creates `frontend/pnpm-lock.yaml` accidentally in a repo that
+  owns the lockfile elsewhere, remove the accidental lockfile after verifying
+  it is not the canonical project lockfile and record the cleanup.
+
 ## 7. Workflow
 
 1. **Preflight**
@@ -240,6 +282,12 @@ the user explicitly requests a parallel worktree strategy.
    `00-story.md`, generate required files, then validate. For an existing
    capsule, confirm required files and regenerate missing generated files only
    without overwriting user evidence.
+
+   If `generated/11-code-review.md` already exists before implementation, read
+   it before using it as evidence. If it is a draft, pre-implementation,
+   planning, or stale `CLEAN` review, mark it obsolete in place or add a clear
+   handoff note stating it is not final review evidence. Do not let a
+   pre-implementation `CLEAN` review satisfy the final review/evidence bar.
 
 3. **Load story context**
    Load the compact capsule summary plus scoped guardrail evidence and optional
@@ -313,7 +361,34 @@ the user explicitly requests a parallel worktree strategy.
    `condamad-feedback-loop`; otherwise record `no-propagation` or deferred
    rationale.
 
-10. **Final response**
+10. **Internal reviewer simulation**
+    Before handoff, simulate the reviewer checks yourself and fix any issue
+    found:
+
+    - every AC has fresh code and validation evidence;
+    - non-goals stayed untouched;
+    - final evidence is not copied from stale or pre-implementation review
+      artifacts;
+    - story status, traceability, final evidence, and review notes agree;
+    - guards are cwd-independent and use structured proof when available;
+    - skipped commands have risk and compensating evidence;
+    - no proof is too weak for the claimed AC or invariant.
+
+11. **Final consistency gate**
+    Immediately before the final response, read and compare:
+    `00-story.md`, `_condamad/stories/story-status.md`,
+    `generated/03-acceptance-traceability.md`,
+    `generated/10-final-evidence.md`, and every existing
+    `generated/11-code-review.md`.
+
+    The run must not close as implementation-ready if any artifact still says
+    `ready-to-dev`, `BLOCKED`, draft, stale, or pre-implementation while the
+    implementation evidence is ready. Resolve the artifact, mark stale review
+    content obsolete, or downgrade the run honestly to blocked. Run
+    `scripts/condamad_validate.py <capsule> --final` after this gate when the
+    helper exists.
+
+12. **Final response**
     Respond in the user's language using the response budget in Section 8.
 
 ## 8. Response Budget
@@ -360,6 +435,10 @@ Legacy/DRY evidence, remaining risks, reviewer focus, frontend subagent result
 when applicable, source finding closure status when audit-sourced, and feedback
 loop routing.
 
+`generated/11-code-review.md`, when present, must be classified as final,
+obsolete, or handoff-only. A pre-implementation or draft review cannot be cited
+as final review evidence.
+
 Synchronize `_condamad/stories/story-status.md`:
 
 - `ready-to-review`: implementation evidence complete and review-ready;
@@ -401,6 +480,8 @@ A story is complete only when:
 - no forbidden legacy path remains unclassified;
 - audit-sourced closure claims have no hidden in-domain residual work;
 - final evidence and story registry are synchronized;
+- final consistency gate has passed across story, registry, traceability, final
+  evidence, and code review artifacts;
 - final git status is reported, or `not a git repository` was recorded.
 
 ## 12. Helper Scripts

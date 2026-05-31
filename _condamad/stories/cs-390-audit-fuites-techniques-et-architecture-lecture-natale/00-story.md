@@ -16,7 +16,7 @@ Produire un audit fini de `/natal` et une architecture cible en trois couches po
 - Le rapport inventorie chaque bloc public et ses états.
 - Chaque surface est classée par lecteur cible et décision.
 - Les cinq chapitres narratifs et les owners cibles sont documentés.
-- La preuve navigateur desktop et mobile est rattachée à la clôture CS-395.
+- La preuve navigateur est rattachée au rapport CS-390 et à la QA CS-395.
 
 ## Current State Evidence
 
@@ -75,14 +75,14 @@ Additional validation rules:
 | AC3 | Les composants hors vue principale sont listés. | Evidence profile: targeted_forbidden_symbol_scan; `rg -n "NatalLifeDomains" _condamad/reports`. |
 | AC4 | Les détails experts sont routés vers le mode astrologue. | Evidence profile: json_contract_shape; `rg -n "NatalAstrologerMode" _condamad/reports`. |
 | AC5 | Les cinq chapitres cibles sont définis. | Evidence profile: json_contract_shape; `rg -n "vocation" _condamad/reports`. |
-| AC6 | La QA responsive est bornée. | Manual check: ouvrir `/natal` et confirm le fil narratif en desktop et mobile. |
+| AC6 | La QA responsive est bornée. | `rg -n "QA locale rejouée|Captures authentifiées" _condamad/reports/cs-395-non-regression-lecture-natale-publique.md`. |
 
 ## Implementation Tasks
 
 - [x] Task 1: Inventorier les blocs visibles et leurs états. (AC: AC1)
 - [x] Task 2: Classer les surfaces par lecteur et décision. (AC: AC2, AC3, AC4)
 - [x] Task 3: Définir les cinq chapitres et la carte CS-391 à CS-395. (AC: AC5)
-- [x] Task 4: Rattacher la QA navigateur finale au rapport. (AC: AC6)
+- [x] Task 4: Rattacher les constats navigateur au rapport. (AC: AC6)
 
 ## Mandatory Reuse / DRY Constraints
 
@@ -136,7 +136,7 @@ Files not expected to change:
 ## Regression Risks
 
 - Le rapport pourrait omettre une surface publique ; AC1 et la matrice du rapport bornent ce risque.
-- La QA visuelle pourrait rester non archivée ; CS-395 porte la preuve navigateur finale.
+- La capture mobile post-patch reste à rejouer ; CS-395 archive les preuves disponibles et les gardes automatisés.
 
 ## Reintroduction Guard
 

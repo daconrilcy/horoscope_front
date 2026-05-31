@@ -35,3 +35,4 @@ The story must include:
 - specific forbidden symbols or paths, when known;
 - negative searches or architecture guards when legacy risk exists;
 - an explicit statement when no new dependency is allowed.
+

@@ -19,10 +19,28 @@ Acceptance criteria must be a markdown table:
 - AC identifiers must be sequential: `AC1`, `AC2`, `AC3`.
 - Every AC must describe observable behavior or architecture state.
 - Every AC must include validation evidence.
+- Every AC must carry exactly one invariant. Split ACs that join multiple
+  independently verifiable obligations, comma-heavy lists, slash-separated
+  outcomes, or a behavior requirement plus validation instruction in the same
+  requirement. The word `and` is acceptable only when it names one indivisible
+  domain concept.
 - Do not use subjective requirements like "clean", "better", or "improved"
   without a measurable test or command.
 - Do not put implementation tasks inside ACs. ACs describe what must be true,
   not every step to get there.
+
+## AC Atomizer Pass
+
+Before validating a story, inspect every AC row and rewrite it until:
+
+- the Requirement cell states one business or technical invariant;
+- validation wording lives in the evidence cell or Validation Plan;
+- long enumerations are decomposed into separate ACs or moved to tasks;
+- each named primitive from the brief appears in an AC, task, validation, or
+  explicit non-goal.
+
+Reject rows such as "the endpoint returns payload X and OpenAPI exposes field
+Y" or "the report answers questions A, B, and C". Split them by invariant.
 
 ## Strong Evidence Examples
 

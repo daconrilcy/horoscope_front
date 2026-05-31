@@ -1,0 +1,7 @@
+Baseline context captured during preflight on 2026-05-31.
+
+- Story status before implementation: `ready-to-dev`.
+- Required generated capsule files were missing before repair.
+- Initial targeted scan found no `response.sections[0]` in `backend/app/services/llm_generation/natal`; docs intentionally mentioned the forbidden symbol as rejected behavior.
+- Existing runtime code already raised `NarrativeChapterSourceMissingError` for missing chapter source and routed semantic failures to rejection.
+- Missing evidence before this run: architecture guard file, explicit title/order/source public-validator tests, integration test for duplicated narrative public boundary, persisted implementation evidence.

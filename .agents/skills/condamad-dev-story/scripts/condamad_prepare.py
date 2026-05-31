@@ -82,7 +82,9 @@ def story_status_has_id(root: Path, story_id: str) -> bool:
     status_path = root / "_condamad/stories/story-status.md"
     if not status_path.is_file():
         return False
-    row_re = re.compile(STATUS_ROW_RE_TEMPLATE.format(story_id=re.escape(story_id)), re.I | re.M)
+    row_re = re.compile(
+        STATUS_ROW_RE_TEMPLATE.format(story_id=re.escape(story_id)), re.I | re.M
+    )
     return bool(row_re.search(status_path.read_text(encoding="utf-8", errors="replace")))
 
 
@@ -168,8 +170,12 @@ def extract_acceptance_criteria(story_text: str) -> list[tuple[str, str]]:
     """
     candidates = collect_acceptance_candidates(story_text)
 
-    for match in re.finditer(r"(?im)^\s*(?:[-*]\s*)?(AC\s*\d+)\s*[:.-]\s*(.+)$", story_text):
-        candidates.append(f"{match.group(1).replace(' ', '')}: {match.group(2).strip()}")
+    for match in re.finditer(
+        r"(?im)^\s*(?:[-*]\s*)?(AC\s*\d+)\s*[:.-]\s*(.+)$", story_text
+    ):
+        candidates.append(
+            f"{match.group(1).replace(' ', '')}: {match.group(2).strip()}"
+        )
 
     existing_labels: set[str] = set()
     seen_text: set[str] = set()
@@ -214,21 +220,18 @@ Implement story `{story_key}` exactly as defined in `../00-story.md`.
 ## Execution rules
 
 - Read `../00-story.md` completely before editing code.
-- Load generated capsule summary before implementation; read a full generated file
-  only on conflict or when editing it.
+- Load generated capsule summary before implementation; read a full generated file only on conflict or when editing it.
 - Run `git status --short` before and after code changes.
 - Preserve unrelated user changes.
 - Implement only the current story.
 - Run early guard scans before broad validation.
-- Do not introduce compatibility wrappers, aliases, silent fallbacks, duplicate
-  active paths, or legacy import routes unless explicitly required by the story.
+- Do not introduce compatibility wrappers, aliases, silent fallbacks, duplicate active paths, or legacy import routes unless explicitly required by the story.
 - Record implementation and validation evidence in `10-final-evidence.md`.
 
 ## Done when
 
 - Every AC in `03-acceptance-traceability.md` has code evidence and validation evidence.
-- Commands in `06-validation-plan.md` have been run or explicitly documented as
-  not run with reason and risk.
+- Commands in `06-validation-plan.md` have been run or explicitly documented as not run with reason and risk.
 - `10-final-evidence.md` is complete.
 """
 
@@ -243,9 +246,7 @@ def render_traceability(criteria: list[tuple[str, str]]) -> str:
     ]
     for label, text in criteria:
         rows.append(
-            f"| {label} | {text.replace('|', '\\|')} | "
-            "TBD after repository inspection | "
-            "TBD after validation planning | PENDING |"
+            f"| {label} | {text.replace('|', '\\|')} | TBD after repository inspection | TBD after validation planning | PENDING |"
         )
     rows.extend(
         [
@@ -361,11 +362,12 @@ def render_guardrails() -> str:
 """
 
 
-def render_final_evidence(story_key: str, criteria: list[tuple[str, str]]) -> str:
+def render_final_evidence(
+    story_key: str, criteria: list[tuple[str, str]]
+) -> str:
     """Rend le squelette de preuve finale."""
     ac_rows = "\n".join(
-        f"| {label} | not-started | not-run | BLOCKED | "
-        "Replace with real AC evidence before final validation. |"
+        f"| {label} | not-started | not-run | BLOCKED | Replace with real AC evidence before final validation. |"
         for label, _text in criteria
     )
     return f"""# Final Evidence — {story_key}
@@ -421,7 +423,7 @@ def render_final_evidence(story_key: str, criteria: list[tuple[str, str]]) -> st
 
 | Command | Working directory | Result | Exit status | Evidence summary |
 |---|---|---|---:|---|
-| not-run | not-recorded | not-run | 0 | Replace before final validation. |
+| not-run | not-recorded | not-run | 0 | Replace with real command evidence before final validation. |
 
 ## Commands skipped or blocked
 
@@ -560,19 +562,13 @@ def main() -> int:
     parser.add_argument(
         "--capsule",
         type=Path,
-        help=(
-            "Existing or target capsule path. Required when reusing a known "
-            "CS-xxx capsule without --story-key."
-        ),
+        help="Existing or target capsule path. Required when reusing a known CS-xxx capsule without --story-key.",
     )
     parser.add_argument(
         "--repair-generated-only",
         type=Path,
         metavar="CAPSULE",
-        help=(
-            "Regenerate missing generated files for an existing capsule without "
-            "copying a source story."
-        ),
+        help="Regenerate missing generated files for an existing capsule without copying a source story.",
     )
     parser.add_argument(
         "--overwrite-generated",
@@ -592,7 +588,11 @@ def main() -> int:
     args = parser.parse_args()
 
     root = args.root.expanduser().resolve()
-    base = args.capsules_dir if args.capsules_dir.is_absolute() else root / args.capsules_dir
+    base = (
+        args.capsules_dir
+        if args.capsules_dir.is_absolute()
+        else root / args.capsules_dir
+    )
 
     if args.repair_generated_only:
         capsule = resolve_capsule_path(root, args.capsules_dir, args.repair_generated_only)
@@ -605,7 +605,9 @@ def main() -> int:
         templates = build_templates(story_key, criteria, args.with_optional)
         generated = capsule / "generated"
         generated.mkdir(parents=True, exist_ok=True)
-        expected_files = REQUIRED_GENERATED + (OPTIONAL_GENERATED if args.with_optional else [])
+        expected_files = REQUIRED_GENERATED + (
+            OPTIONAL_GENERATED if args.with_optional else []
+        )
         for name in expected_files:
             write_if_missing(generated / name, templates[name], args.overwrite_generated)
         print(f"CONDAMAD capsule repaired: {capsule}")
@@ -624,7 +626,9 @@ def main() -> int:
     story_key = infer_story_key(story_path, story_text, args.story_key)
     cs_ids = detect_cs_ids(story_key, story_path.name, story_text)
     if len(cs_ids) > 1 and not args.story_key and not args.capsule:
-        raise SystemExit("Multiple CS-xxx identifiers detected. Use --story-key or --capsule.")
+        raise SystemExit(
+            "Multiple CS-xxx identifiers detected. Use --story-key or --capsule."
+        )
     if cs_ids and not args.story_key and not args.capsule:
         cs_key = slugify(cs_ids[0])
         if story_key != cs_key:
@@ -674,7 +678,9 @@ def main() -> int:
     criteria = extract_acceptance_criteria(story_text)
     templates = build_templates(story_key, criteria, args.with_optional)
 
-    expected_files = REQUIRED_GENERATED + (OPTIONAL_GENERATED if args.with_optional else [])
+    expected_files = REQUIRED_GENERATED + (
+        OPTIONAL_GENERATED if args.with_optional else []
+    )
     for name in expected_files:
         content = templates[name]
         write_if_missing(generated / name, content, args.overwrite_generated)

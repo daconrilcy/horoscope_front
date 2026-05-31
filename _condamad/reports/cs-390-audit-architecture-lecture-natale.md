@@ -79,7 +79,8 @@ Politique éditoriale: ~80 % interprétation / ~20 % justification vulgarisée ;
 Preuve visuelle complémentaire (2026-05-30, post CS-395) :
 
 - **Automatisée** : gardes DOM Vitest (`natalPublicDomGuard`, `NatalChartPage` CS-395) prouvent l'absence de fuites techniques dans la lecture publique narrative.
-- **Manuelle recommandée** : captures desktop/mobile annotées sur `/natal` avec l'utilisateur test après déploiement (non bloquante si les gardes RG-154 passent).
+- **Manuelle archivée** : `_condamad/reports/cs-395-non-regression-lecture-natale-publique.md` référence les captures authentifiées disponibles.
+- **Écart borné** : la capture mobile post-patch reste à rejouer localement ; les gardes responsive automatisés passent.
 - Baseline structurelle sprint antérieur : `_condamad/stories/CS-386-refonte-natal-sprint1-comprehension-immediate/evidence/`, `_condamad/stories/CS-387-refonte-natal-sprint2-interpretation-approfondie/evidence/`.
 
 ## Invariants consultés

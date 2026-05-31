@@ -28,6 +28,7 @@ from app.services.llm_generation.natal.rejected_answer_workflow import (
 from app.services.llm_generation.natal.stored_interpretation_payload import (
     CORRECTIVE_REGENERATION_PENDING_USE_CASE,
     NARRATIVE_ANSWER_AUDIT_USE_CASE,
+    NARRATIVE_NATAL_READING_PAYLOAD_KEY,
 )
 
 _REJECTED_PAYLOAD = {
@@ -45,6 +46,11 @@ _REJECTED_PAYLOAD = {
     "evidence": [],
 }
 
+_SEMANTIC_BODY = (
+    "Lecture narrative suffisamment longue pour respecter le contrat public tout en "
+    "representant une duplication semantique detectee par le validateur central."
+)
+
 
 def _accepted_payload() -> dict[str, object]:
     return {
@@ -57,6 +63,38 @@ def _accepted_payload() -> dict[str, object]:
         "highlights": ["A", "B", "C"],
         "advice": ["A", "B", "C"],
         "evidence": [],
+    }
+
+
+def _payload_with_duplicate_narrative_chapters() -> dict[str, object]:
+    chapters = [
+        {
+            "key": key,
+            "title": title,
+            "narrative": _SEMANTIC_BODY,
+            "key_points": [],
+        }
+        for key, title in (
+            ("personality", "Personnalite"),
+            ("emotional_world", "Monde emotionnel"),
+            ("relationships", "Relations"),
+            ("vocation", "Vocation"),
+            ("evolution_path", "Evolution"),
+        )
+    ]
+    return {
+        **_accepted_payload(),
+        NARRATIVE_NATAL_READING_PAYLOAD_KEY: {
+            "contract_version": "narrative_natal_reading_v1",
+            "editorial_profile": "basic",
+            "chapters": chapters,
+            "used_astrological_elements": [
+                {
+                    "astrological_label": "Soleil en Taureau",
+                    "consequence": "Point d'appui narratif vulgarise.",
+                }
+            ],
+        },
     }
 
 
@@ -303,3 +341,34 @@ def test_corrective_regeneration_claim_is_idempotent_and_hidden(db: Session) -> 
         original_use_case="natal_interpretation",
     )
     assert db.get(UserNatalInterpretationModel, invalid.id).use_case == "natal_interpretation"
+
+
+def test_semantically_invalid_complete_reading_is_removed_from_public_get_and_list(
+    db: Session,
+) -> None:
+    """Une lecture complete dupliquee est supprimee avant toute exposition publique."""
+    invalid = UserNatalInterpretationModel(
+        user_id=390,
+        chart_id="chart-390",
+        level=InterpretationLevel.COMPLETE,
+        use_case="natal_interpretation",
+        variant_code="single_astrologer",
+        interpretation_payload=_payload_with_duplicate_narrative_chapters(),
+        grounding_status="grounded",
+        created_at=datetime(2026, 5, 29, tzinfo=timezone.utc),
+    )
+    db.add(invalid)
+    db.commit()
+    invalid_id = invalid.id
+
+    item = NatalInterpretationService.get_interpretation_by_id(
+        db,
+        user_id=390,
+        interpretation_id=invalid_id,
+    )
+    rows, total = NatalInterpretationService.list_interpretations(db, user_id=390)
+
+    assert item is None
+    assert rows == []
+    assert total == 0
+    assert db.get(UserNatalInterpretationModel, invalid_id) is None

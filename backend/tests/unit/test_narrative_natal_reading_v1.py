@@ -194,6 +194,36 @@ def test_duplicate_chapter_narratives_are_rejected() -> None:
     assert outcome.rejection_reason["code"] == "narrative_semantic_integrity"
 
 
+def test_duplicate_chapter_titles_are_rejected() -> None:
+    reading = build_narrative_natal_reading_v1(
+        response=_astro_v3(),
+        llm_astrology_input_v1={
+            "shaping": {
+                "support_elements": [
+                    {"code": "highlight", "value": "Soleil en Taureau"},
+                ]
+            }
+        },
+        level="complete",
+        variant_code="single_astrologer",
+    )
+    duplicated = reading.model_copy(
+        update={
+            "chapters": [
+                reading.chapters[0],
+                *[
+                    chapter.model_copy(update={"title": reading.chapters[0].title})
+                    for chapter in reading.chapters[1:]
+                ],
+            ]
+        }
+    )
+
+    violations = validate_narrative_reading_public_text(duplicated)
+
+    assert "duplicate_chapter_title" in violations
+
+
 def test_basic_reading_without_sources_is_rejected() -> None:
     reading = build_narrative_natal_reading_v1(
         response=_astro_v3(),
@@ -203,6 +233,41 @@ def test_basic_reading_without_sources_is_rejected() -> None:
     )
     violations = validate_narrative_semantic_integrity(reading)
     assert "empty_used_astrological_elements" in violations
+
+
+def test_public_validator_rejects_basic_empty_sources() -> None:
+    reading = build_narrative_natal_reading_v1(
+        response=_astro_v3(),
+        llm_astrology_input_v1=None,
+        level="complete",
+        variant_code="single_astrologer",
+    )
+
+    violations = validate_narrative_reading_public_text(reading)
+
+    assert "empty_used_astrological_elements" in violations
+
+
+def test_public_validator_rejects_non_canonical_chapter_order() -> None:
+    reading = build_narrative_natal_reading_v1(
+        response=_astro_v3(),
+        llm_astrology_input_v1={
+            "shaping": {
+                "support_elements": [
+                    {"code": "highlight", "value": "Soleil en Taureau"},
+                ]
+            }
+        },
+        level="complete",
+        variant_code="single_astrologer",
+    )
+    reordered = reading.model_copy(
+        update={"chapters": [reading.chapters[1], reading.chapters[0], *reading.chapters[2:]]}
+    )
+
+    violations = validate_narrative_reading_public_text(reordered)
+
+    assert "chapter_order_invalid" in violations
 
 
 def test_public_contract_removes_internal_evidence_codes() -> None:

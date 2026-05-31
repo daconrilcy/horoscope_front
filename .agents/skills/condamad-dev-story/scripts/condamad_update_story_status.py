@@ -49,7 +49,9 @@ def replace_row(path: Path, story_id: str, new_row: str) -> tuple[str, str]:
         )
     cells = split_markdown_row(normalized)
     if not cells or cells[0].upper() != story_id:
-        raise SystemExit(f"New row must keep {story_id} as the first markdown table cell.")
+        raise SystemExit(
+            f"New row must keep {story_id} as the first markdown table cell."
+        )
     before_cells = split_markdown_row(before)
     if len(cells) != len(before_cells):
         raise SystemExit(

@@ -103,6 +103,15 @@ Use only validator-known evidence profiles in AC rows:
 Never write `Evidence profile: persistent_evidence` in an AC row. Persistent
 evidence is a contract section, not a validator-known AC evidence profile.
 
+Before validation, run the AC atomizer pass:
+
+- one AC requirement equals one invariant;
+- split rows containing multiple independently verifiable obligations,
+  comma-heavy lists, or behavior plus validation instructions;
+- allow `and` only when it names one indivisible domain concept;
+- map every named brief primitive to an AC, task, validation, non-goal, or
+  blocker.
+
 ## Validator-Sensitive Required Markers
 
 Include these markers in the first draft. They are intentionally exact because
@@ -561,6 +570,11 @@ Compact guardrail row examples:
 | RG-007 `api-contracts` | Runtime API contract must prove `/health`. | `python` OpenAPI check; targeted `pytest`. |
 ```
 
+For every selected guardrail, keep an explicit
+`scope -> invariant -> evidence` justification. Put `Needs-investigation`,
+registry gaps, and adjacent-but-not-local guardrails in a note, not in the
+applicable table. Reject IDs unrelated to the story domain.
+
 ## Validation Commands For Story Writing
 
 For simple API stories, do not open `templates/story-template.md`. Use this
@@ -591,6 +605,13 @@ story draft:
   and `when needed`.
 - Replace `implementation-created path if absent` with
   `implementation-created path` or `expected implementation-created path`.
+- Check validation commands: audit-only commands are non-mutating; commands
+  after `cd backend` do not include `backend/`; commands after `cd frontend`
+  do not include `frontend/`; named brief validations are preserved textually
+  when valid, compiled to a non-mutating equivalent, or justified as out of
+  scope.
+- Check every `rg` command records forbidden pattern, allowed fixture pattern,
+  roots, and expected false positives.
 
 For a normal story generation session, run only:
 

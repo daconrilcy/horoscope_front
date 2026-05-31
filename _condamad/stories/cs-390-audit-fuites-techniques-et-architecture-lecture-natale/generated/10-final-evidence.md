@@ -6,7 +6,7 @@ Status: done (fix review 2026-05-30).
 | AC | Status | Evidence |
 |---|---|---|
 | AC1-AC5 audit | PASS | `_condamad/reports/cs-390-audit-architecture-lecture-natale.md` |
-| AC6 QA responsive bornée | PASS | `_condamad/reports/cs-395-non-regression-lecture-natale-publique.md` |
+| AC6 QA responsive bornée | PASS | Rapport CS-390 section 6 + rapport CS-395 QA locale |
 
 ## Commands
 ```text
@@ -15,4 +15,4 @@ condamad_story_lint.py --strict 00-story.md -> PASS
 ```
 
 ## Residual risk
-- La capture authentifiée `/natal` reste bloquée localement par le compte de test invalide.
+- La capture mobile post-patch reste à rejouer localement ; les gardes automatisés et les captures disponibles passent.

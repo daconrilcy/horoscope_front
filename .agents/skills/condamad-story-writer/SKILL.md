@@ -1,6 +1,5 @@
 ---
 name: condamad-story-writer
-version: 1
 description: >
   Create a Codex-optimized CONDAMAD implementation story from a brief, code
   audit, review finding, architecture decision, issue, or existing BMAD story.
@@ -67,6 +66,11 @@ You must not act as:
   concrete token such as `pytest`, `python`, `ruff`, `rg`, `npm`, `pnpm`,
   `vitest`, `eslint`, `tsc`, an explicit `tests/...` path, or a bounded
   `Manual check:` sentence.
+- Before drafting, build a Brief Primitive Ledger from the source input:
+  objectives, named primitives, dependencies, required validations, non-goals,
+  forbidden surfaces, and expected closure or reclassification. The story is
+  not final until every ledger item maps to an AC, task, validation command,
+  non-goal, or explicit blocker.
 - Every task must reference at least one AC.
 - The story must include DRY and No Legacy constraints.
 - The story must include files to inspect before edit.
@@ -81,6 +85,10 @@ You must not act as:
   exhaustive checklist. Select only local guardrails matching the story scope;
   do not enumerate unrelated frontend, database, auth, i18n, style, build, or
   migration guardrails when the story does not touch those surfaces.
+- For each selected regression guardrail, record the chain
+  `scope -> invariant -> evidence`. Move needs-investigation, registry gaps, or
+  adjacent guardrails out of the applicable table into a separate note. Reject
+  guardrail IDs that are not connected to the local story domain.
 - Normal story generation must not enrich
   `_condamad/stories/regression-guardrails.md`. If a route-specific invariant
   such as `RG-053` is missing from an existing registry, record it as
@@ -97,6 +105,20 @@ You must not act as:
   - migration/schema inspection;
   - runtime behavior check;
   - documented manual verification with bounded scope.
+- Before validation, run an AC atomizer pass. Each AC must carry one business
+  or technical invariant only. Split ACs that combine independently verifiable
+  obligations, long lists, or behavior plus validation wording in the same
+  requirement. The word `and` is acceptable only inside one indivisible domain
+  concept.
+- Validation commands must be compiled from the brief and story scope. In
+  audit-only stories use non-mutating commands such as `ruff format --check`,
+  not `ruff format .`. After `cd backend`, do not prefix paths with
+  `backend/`; after `cd frontend`, do not prefix paths with `frontend/`.
+  Named validations from the brief must be preserved textually when valid for
+  the story type, compiled to a non-mutating equivalent, or justified as out of
+  scope.
+- Every `rg` scan in the validation plan must state the forbidden pattern,
+  allowed fixture pattern, scan roots, and expected false positives.
 - `Test-Path`, `Get-Content`, an artifact path alone, and generic prose are
   not sufficient AC evidence. Use a validator-recognized command token, test
   path, or manual-check sentence even when the AC is about persisted evidence.
@@ -123,6 +145,9 @@ You must not act as:
   before drafting. Do not generate a repetitive "next batch", "next cluster",
   or "continue reducing" micro-story unless the source audit provides a finite
   closure map and the story states exactly which phase it closes.
+- For audit or report stories, preserve the audit/report archetype: mandatory
+  questions, expected deliverables, upstream sources, output formats, and
+  blocker conditions when a required source is missing.
 - Prefer a closure-ready story: the story should either close the source
   finding fully, declare an explicit user-decision blocker, or identify an
   intentionally phased slice with the remaining closure map and stop condition.
@@ -219,6 +244,7 @@ Read:
 - `references/codex-story-optimization.md`
 - `references/evidence-and-validation-contract.md`
 - `references/evidence-profiles.md`
+- `references/story-writer-failure-modes.md`
 - `references/runtime-source-of-truth-contract.md`
 - `references/baseline-snapshot-contract.md`
 - `references/ownership-routing-contract.md`

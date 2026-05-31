@@ -14,6 +14,17 @@ One clear paragraph explaining the implementation outcome.
 - Source reference: <path, pasted brief, issue, review, or audit>
 - Reason for change: <why this story exists>
 
+### Brief Primitive Ledger
+
+| Ledger item | Classification | Story mapping |
+|---|---|---|
+| Objective: `<objective>` | in-scope | AC: AC1; Task: Task 1; Validation: VC1 |
+| Primitive: `<named primitive>` | in-scope | AC: AC2; Task: Task 2; Validation: VC2 |
+| Dependency: `<dependency or decision>` | dependency | Blocker or Dependency Policy: `<mapping>` |
+| Validation: `<source-named validation>` | required | Validation: VC3 |
+| Non-goal: `<forbidden or excluded surface>` | non-goal | Domain Boundary non-goal |
+| Closure: `<closure or reclassification expectation>` | closure | Source Finding Closure |
+
 ## 3. Domain Boundary
 
 This story belongs to exactly one domain:
@@ -226,11 +237,15 @@ After implementation:
   - Applied only guardrails matching exact path, file surface, operation,
     contract, domain, or universal local guardrails.
 - Applicable invariants:
-  - `RG-XXX` - <why this invariant applies>
-- Needs-investigation invariants:
-  - none | `RG-YYY` - <exact overlap that must be checked before editing>
-  - Registry gap: <missing exact invariant; do not update the registry unless
-    this story is explicit registry-enrichment work>
+
+| Guardrail | Scope | Invariant | Evidence |
+|---|---|---|---|
+| `RG-XXX` | <path, route, operation, contract, domain, or universal local match> | <local invariant protected> | <test, scan, snapshot, diff, audit, or runtime inventory> |
+
+- Guardrail notes:
+  - Needs-investigation: none | `RG-YYY` - <exact overlap that must be checked before editing>
+  - Registry gap: none | <missing exact invariant; do not update the registry unless this story is explicit registry-enrichment work>
+  - Adjacent non-domain guardrails rejected: none | `RG-ZZZ` - <why this guardrail is outside the local domain>
 - Non-applicable examples:
   - `RG-ZZZ` - <why this likely-confusing surface is out of scope>
 - Required regression evidence:
@@ -415,6 +430,12 @@ Run or justify why skipped:
 <lint/type checks>
 <negative rg scans>
 ```
+
+When a validation command uses `rg`, document it with this shape:
+
+| Command | forbidden_pattern | allowed_fixture_pattern | roots | expected_false_positives |
+|---|---|---|---|---|
+| `rg -n "<pattern>" <roots>` | `<exact forbidden regex or token>` | `<allowed fixtures, snapshots, generated artifacts, or none>` | `<explicit files or directories>` | `<known allowed hits and classification rule>` |
 
 ## 22. Regression Risks
 
