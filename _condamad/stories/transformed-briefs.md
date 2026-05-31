@@ -178,6 +178,11 @@
 | cs-396 | `_story_briefs\cs-396-refuser-padding-semantique-lecture-natale-et-sources-vides.md` | `_condamad\stories\cs-401-refuser-padding-sources-vides\00-story.md` |
 | cs-397 | `_story_briefs\cs-397-enrichir-matiere-editoriale-basic-lecture-natale.md` | `_condamad\stories\cs-402-couverture-editoriale-basic-natal\00-story.md` |
 | cs-398 | `_story_briefs\cs-398-rendre-quota-natal-complete-transactionnel-et-remedier-lectures-invalides.md` | `_condamad\stories\cs-403-quota-natal-transactionnel-remediation\00-story.md` |
+| cs-399 | `_story_briefs\cs-399-ajouter-accordeons-narratifs-modernes-et-compacter-actions-natal.md` | `_condamad\stories\cs-404-accordeons-narratifs-actions-compactes-natal\00-story.md` |
+| cs-400 | `_story_briefs\cs-400-cloturer-qa-live-richesse-et-non-regression-lecture-natale.md` | `_condamad\stories\cs-405-cloture-qa-live-lecture-natale\00-story.md` |
+| cs-401 | `_story_briefs\cs-401-router-basic-complete-vers-assembly-natale-v3.md` | `_condamad\stories\cs-406-router-basic-complete-assembly-natale-v3\00-story.md` |
+| cs-402 | `_story_briefs\cs-402-refuser-downgrade-schema-v3-lecture-natale-complete.md` | `_condamad\stories\cs-407-refuser-downgrade-schema-v3-lecture-natale-complete\00-story.md` |
+| cs-403 | `_story_briefs\cs-403-verifier-basic-complete-natal-v3-en-runtime-et-qa-live.md` | `_condamad\stories\cs-408-verifier-basic-complete-natal-v3-runtime-qa-live\00-story.md` |
 | cs-404 | `_story_briefs\cs-404-accordeons-narratifs-actions-compactes-natal.md` | `_condamad\stories\cs-404-accordeons-narratifs-actions-compactes-natal\00-story.md` |
 | cs-405 | `_story_briefs\cs-405-cloture-qa-live-lecture-natale.md` | `_condamad\stories\cs-405-cloture-qa-live-lecture-natale\00-story.md` |
 | cs-406 | `_story_briefs\cs-406-router-basic-complete-assembly-natale-v3.md` | `_condamad\stories\cs-406-router-basic-complete-assembly-natale-v3\00-story.md` |
