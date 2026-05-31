@@ -27,7 +27,7 @@ REJECTED_PAYLOAD_MARKER_KEYS = frozenset(
 
 
 class NatalInterpretationRejectedStoredPayload(BaseModel):
-    """Contrat interne d'un rejet LLM stocke pour audit, jamais expose comme interpretation."""
+    """Contrat interne d'un rejet LLM stocke pour audit et non expose comme interpretation."""
 
     model_config = ConfigDict(extra="forbid")
 

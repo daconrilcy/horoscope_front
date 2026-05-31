@@ -60,7 +60,7 @@ class InterpretationMaterialSource:
 
 @dataclass(frozen=True, slots=True)
 class InterpretationMaterialItem:
-    """Item selectionne, toujours rattache a une source et a un fait."""
+    """Item selectionne, rattache de facon explicite a une source et a un fait."""
 
     source_ref: str
     fact_ref: str

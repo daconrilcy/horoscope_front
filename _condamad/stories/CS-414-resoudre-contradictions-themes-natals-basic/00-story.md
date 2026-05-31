@@ -1,5 +1,5 @@
 # Story CS-414 resoudre-contradictions-themes-natals-basic: Resoudre Contradictions Themes Natals Basic
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-409-resoudre-contradictions-themes-natals-basic.md`.

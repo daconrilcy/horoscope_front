@@ -1,0 +1,10 @@
+{
+  "story": "CS-414",
+  "resolver_module_exists_after": true,
+  "resolver_tests_exist_after": true,
+  "runtime_tests": {
+    "resolver_and_contradictions": "10 passed",
+    "public_boundary_regressions": "17 passed"
+  },
+  "intended_delta": "internal Basic natal synthesis resolver added without frontend, API, prompt provider or public prose integration"
+}

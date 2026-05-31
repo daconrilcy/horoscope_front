@@ -1,5 +1,8 @@
 # Review CS-414 - Redaction story
 
+Implementation note 2026-05-31: this artifact is a story redaction review only.
+It is handoff context, not final implementation review evidence.
+
 Verdict: CLEAN
 
 ## Scope

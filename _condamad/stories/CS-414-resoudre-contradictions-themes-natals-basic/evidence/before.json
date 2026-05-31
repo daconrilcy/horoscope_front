@@ -1,0 +1,6 @@
+{
+  "story": "CS-414",
+  "resolver_module_exists_before": false,
+  "resolver_tests_exist_before": false,
+  "intended_delta": "add internal Basic natal synthesis resolver only"
+}

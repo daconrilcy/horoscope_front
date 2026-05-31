@@ -121,7 +121,7 @@ class ThemeModel:
         )
 
     def to_internal_payload(self) -> dict[str, Any]:
-        """Retourne une forme auditable non destinee aux champs narratifs publics."""
+        """Retourne une forme auditable reservee aux traitements internes."""
         return {
             "taxonomy_version": self.taxonomy_version,
             "theme_code": self.theme_code.value,
