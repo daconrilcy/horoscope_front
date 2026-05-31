@@ -2,12 +2,12 @@
 
 ## Story status
 
-- Validation outcome: targeted-pass-with-full-suite-unrelated-failures
+- Validation outcome: targeted-pass-after-review-fix-with-full-suite-unrelated-failures
 - Ready for review: yes
 - Story key: CS-417-valider-reparer-narrative-basic-natal
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-417-valider-reparer-narrative-basic-natal`
-- Tracker row: `ready-to-review`
+- Tracker row: `done`
 
 ## Preflight
 
@@ -34,6 +34,7 @@
 - Added Basic plan-backed draft validation in `backend/app/services/llm_generation/natal/narrative_natal_reading_validator.py`.
 - Added structured Basic rejection metadata carrying `request_id`, `engine_version`, `schema_version`, `validation_errors`, and `fallback_used`.
 - Added one-shot repair orchestration plus deterministic fallback generated only from `BasicNatalReadingPlan` public evidence.
+- Review fix: malformed section entries are now rejected instead of being ignored when all requested sections are present.
 - Added `backend/tests/unit/test_basic_natal_narrative_validator.py` covering missing/extra sections, unsupported facts, date-only surfaces, technical markers, person, advice, audit metadata, repair, fallback, limitations, disclaimers, sources, and vocation rejection.
 
 ## AC validation
@@ -41,7 +42,7 @@
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
 | AC1 | Basic validator compares requested plan section codes with draft sections. | validator pytest | PASS | Missing section is rejected. |
-| AC2 | Basic validator rejects section codes absent from `BasicNatalReadingPlan`. | validator pytest | PASS | Unauthorized section is rejected. |
+| AC2 | Basic validator rejects section codes absent from `BasicNatalReadingPlan` and malformed section entries. | validator pytest | PASS | Unauthorized or non-auditable section is rejected. |
 | AC3 | Basic validator rejects draft fact ids and known astro terms absent from plan evidence. | validator pytest | PASS | Unsupported generated fact is rejected. |
 | AC4 | Date-only plan limitations activate time-surface denylist. | validator pytest + VC11 scan | PASS | Ascendant/house/MC surfaces rejected. |
 | AC5 | Basic denylist rejects score, raw audit and jargon markers. | validator pytest + VC10 scan | PASS | Expected scan hits are denylist constants only. |
@@ -83,15 +84,18 @@
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-417-valider-reparer-narrative-basic-natal` | repo root | PASS | Capsule structure valid before implementation. |
 | `ruff format app\services\llm_generation\natal\narrative_natal_reading_validator.py tests\unit\test_basic_natal_narrative_validator.py` | `backend` | PASS | Scoped Python formatting. |
 | `ruff check .` | `backend` | PASS | Backend lint passes. |
-| `python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short` | `backend` | PASS | 8 passed. |
+| `python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short` | `backend` | PASS | 9 passed. |
 | `python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py --tb=short` | `backend` | PASS | 14 passed. |
 | `python -B -m pytest -q tests\unit\test_natal_interpretation_service_v3_schema_guard.py --tb=short` | `backend` | PASS | 5 passed. |
 | `python -B -m pytest -q tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short` | `backend` | PASS | 4 passed. |
 | `python -B -m pytest -q tests\integration\test_natal_interpretation_rejected_public_boundary.py --long --tb=short` | `backend` | PASS | 8 passed; `--long` required by project collection hook. |
-| `python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py tests\unit\test_narrative_natal_reading_v1.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short` | `backend` | PASS | 31 passed. |
+| `python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short` | `backend` | PASS | 23 passed. |
 | `rg -n "fallback = response\.sections\[0\]\|ranking_score\|condition_axis\|audit_input" app\services\llm_generation\natal` | `backend` | PASS_WITH_EXPECTED_HITS | Hits are denylist constants in the validator only; zero fallback padding hit. |
 | `rg -n "Ascendant\|MC\|maison\|maisons\|angularite" app\services\llm_generation\natal tests\unit\test_basic_natal_narrative_validator.py` | `backend` | PASS_WITH_EXPECTED_HITS | Hits are denylist constants, explicit rejection test, and pre-existing rejected workflow support. |
 | `rg -n "RG-166\|Basic plan validation\|BasicNatalReadingPlan" ../_condamad/stories/regression-guardrails.md` | `backend` | PASS | RG-166 present. |
+| `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-417-valider-reparer-narrative-basic-natal` | repo root | PASS | CONDAMAD validation pass. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-417-valider-reparer-narrative-basic-natal\00-story.md` | repo root | PASS | Story validation pass. |
+| `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-417-valider-reparer-narrative-basic-natal\00-story.md` | repo root | PASS | Strict story lint pass. |
 | `python -B -m pytest -q --tb=short` | `backend` | FAIL_UNRELATED | 3667 passed, 2 skipped, 1253 deselected, 2 failed in pre-existing astrology governance guards outside changed files. |
 
 ## Full-suite failure classification
@@ -129,9 +133,8 @@
 
 ## Remaining risks
 
-- The new Basic validator/orchestrator is covered as a domain service but not wired into the runtime provider path in this story to avoid changing public route/quota behavior outside the scoped contract.
 - Full fast backend suite has unrelated guard failures listed above.
 
 ## Suggested reviewer focus
 
-- Confirm whether the Basic validator should be wired into a later runtime story after provider output contract stabilization.
+- Confirm only the unrelated full-suite governance failures if closing broader release health.

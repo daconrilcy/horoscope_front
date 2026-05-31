@@ -10,8 +10,8 @@
     "test_file": "backend/tests/unit/test_basic_natal_narrative_validator.py"
   },
   "validation": {
-    "targeted_validator_pytest": "8 passed",
-    "targeted_existing_pytests": "31 passed",
+    "targeted_validator_pytest": "9 passed",
+    "targeted_existing_pytests": "23 passed",
     "integration_rejected_boundary": "8 passed with --long",
     "ruff_check": "PASS"
   }

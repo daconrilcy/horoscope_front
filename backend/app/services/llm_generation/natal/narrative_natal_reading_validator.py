@@ -172,6 +172,7 @@ def validate_basic_natal_draft_against_plan(
 ) -> BasicNatalDraftValidationResult:
     """Valide un brouillon Basic contre le plan de lecture canonique."""
     errors: list[str] = []
+    errors.extend(_draft_section_shape_errors(draft))
     section_items = _draft_sections(draft)
     expected_codes = tuple(section.section_code for section in reading_plan.sections)
     observed_codes = tuple(
@@ -377,6 +378,16 @@ def _draft_sections(draft: Mapping[str, object]) -> list[Mapping[str, object]]:
     if not isinstance(raw_sections, Sequence) or isinstance(raw_sections, (str, bytes)):
         return []
     return [section for section in raw_sections if isinstance(section, Mapping)]
+
+
+def _draft_section_shape_errors(draft: Mapping[str, object]) -> list[str]:
+    """Signale les formes de sections que le contrat Basic ne peut pas auditer."""
+    raw_sections = draft.get("sections")
+    if not isinstance(raw_sections, Sequence) or isinstance(raw_sections, (str, bytes)):
+        return ["invalid_sections_shape"]
+    if any(not isinstance(section, Mapping) for section in raw_sections):
+        return ["invalid_section_entry"]
+    return []
 
 
 def _string_value(value: object) -> str:

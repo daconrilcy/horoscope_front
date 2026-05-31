@@ -1,9 +1,10 @@
 CS-417 validation evidence
 
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff format app\services\llm_generation\natal\narrative_natal_reading_validator.py tests\unit\test_basic_natal_narrative_validator.py
+  1 file reformatted, 1 file left unchanged during implementation review correction.
 PASS .\.venv\Scripts\Activate.ps1; cd backend; ruff check .
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py --tb=short
-  8 passed
+  9 passed
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_narrative_natal_reading_v1.py --tb=short
   14 passed
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_natal_interpretation_service_v3_schema_guard.py --tb=short
@@ -13,13 +14,19 @@ PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\integration\test_natal_interpretation_rejected_public_boundary.py --long --tb=short
   8 passed
 PASS .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_narrative_validator.py tests\unit\test_narrative_natal_reading_v1.py tests\unit\test_natal_interpretation_service_v3_schema_guard.py tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short
-  31 passed
+  Not rerun as a combined command after review correction; equivalent targeted commands passed as 9 + 23 tests.
 PASS_WITH_EXPECTED_HITS cd backend; rg -n "fallback = response\.sections\[0\]|ranking_score|condition_axis|audit_input" app\services\llm_generation\natal
   No fallback padding hit; hits are validator denylist constants.
 PASS_WITH_EXPECTED_HITS cd backend; rg -n "Ascendant|MC|maison|maisons|angularite" app\services\llm_generation\natal tests\unit\test_basic_natal_narrative_validator.py
   Hits are validator denylist constants, explicit rejection test, and pre-existing rejected workflow support.
 PASS cd backend; rg -n "RG-166|Basic plan validation|BasicNatalReadingPlan" ..\_condamad\stories\regression-guardrails.md
   RG-166 present.
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-417-valider-reparer-narrative-basic-natal
+  CONDAMAD validation: PASS
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-417-valider-reparer-narrative-basic-natal\00-story.md
+  CONDAMAD story validation: PASS
+PASS .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-417-valider-reparer-narrative-basic-natal\00-story.md
+  CONDAMAD story lint: PASS
 FAIL_UNRELATED .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --tb=short
   3667 passed, 2 skipped, 1253 deselected, 2 failed.
   Failures are pre-existing astrology governance guards on unmodified files:

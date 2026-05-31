@@ -135,6 +135,16 @@ def test_missing_and_unauthorized_sections_are_invalid() -> None:
     assert "unsupported_vocation_section" in errors
 
 
+def test_malformed_section_entry_is_invalid_even_when_required_sections_exist() -> None:
+    """Une entree section brute ne peut pas etre ignoree silencieusement."""
+    draft = _valid_draft()
+    draft["sections"].append("section brute non auditable")
+
+    errors = _errors(draft)
+
+    assert "invalid_section_entry" in errors
+
+
 def test_unsupported_fact_and_date_only_time_surface_are_invalid() -> None:
     """Le validateur refuse les faits absents du plan et les marqueurs horaires date-only."""
     draft = _valid_draft()
