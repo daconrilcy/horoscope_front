@@ -431,9 +431,12 @@ export type UsedAstrologicalElementV1 = {
 }
 
 export type BasicNatalPublicEvidenceV2 = {
+  source_id?: string | null
+  source_type?: string | null
   label: string
   meaning: string
   theme?: string
+  used_in_sections?: string[] | null
 }
 
 export type BasicNatalPublicThemeV2 = {

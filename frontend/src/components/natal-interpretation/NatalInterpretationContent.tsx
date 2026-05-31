@@ -14,6 +14,14 @@ import type {
   UsedAstrologicalElementView,
 } from "./NatalInterpretationTypes"
 
+type AggregatedBasicEvidence = BasicNatalPublicEvidenceView & {
+  usedInSections: string[]
+}
+
+type PublicEvidenceItem = BasicNatalPublicEvidenceView & {
+  usedInSections?: string[]
+}
+
 function resolveUseCase(data: NatalInterpretationViewData): string | null {
   return data.use_case ?? data.meta.use_case ?? null
 }
@@ -22,20 +30,90 @@ function hasItems<T>(items: T[] | null | undefined): items is T[] {
   return Array.isArray(items) && items.length > 0
 }
 
-function mergePublicEvidence(
-  primary?: BasicNatalPublicEvidenceView[] | null,
-  secondary?: BasicNatalPublicEvidenceView[] | null,
-): BasicNatalPublicEvidenceView[] {
-  const merged: BasicNatalPublicEvidenceView[] = []
+function normalizePublicText(value: string | null | undefined): string {
+  return (value ?? "").trim().replace(/\s+/g, " ").toLowerCase()
+}
+
+function getEvidenceKey(item: BasicNatalPublicEvidenceView): string {
+  if (item.source_id?.trim()) {
+    return `source:${item.source_id.trim()}`
+  }
+
+  return [
+    "public",
+    normalizePublicText(item.source_type),
+    normalizePublicText(item.label),
+    normalizePublicText(item.meaning),
+  ].join("\u0000")
+}
+
+function collectUsageLabels(item: BasicNatalPublicEvidenceView, themeTitle?: string): string[] {
+  return [themeTitle, item.theme, ...(item.used_in_sections ?? [])]
+    .map((usage) => usage?.trim())
+    .filter((usage): usage is string => Boolean(usage))
+}
+
+// Agrege les preuves Basic V2 en une annexe stable sans perdre les themes d'usage.
+function collectBasicPublicEvidence(reading: BasicNatalInterpretationView): AggregatedBasicEvidence[] {
+  const merged: AggregatedBasicEvidence[] = []
   const seen = new Set<string>()
 
-  for (const item of [...(primary ?? []), ...(secondary ?? [])]) {
-    const key = `${item.label}\u0000${item.meaning}`
+  const append = (item: BasicNatalPublicEvidenceView, themeTitle?: string) => {
+    const key = getEvidenceKey(item)
+    const usageLabels = collectUsageLabels(item, themeTitle)
+    const existingIndex = merged.findIndex((entry) => getEvidenceKey(entry) === key)
+
+    if (existingIndex >= 0) {
+      const existing = merged[existingIndex]
+      merged[existingIndex] = {
+        ...existing,
+        usedInSections: Array.from(new Set([...existing.usedInSections, ...usageLabels])),
+      }
+      return
+    }
+
     if (seen.has(key)) {
-      continue
+      return
     }
     seen.add(key)
-    merged.push(item)
+
+    merged.push({
+      ...item,
+      usedInSections: Array.from(new Set(usageLabels)),
+    })
+  }
+
+  for (const theme of reading.interpretation.themes) {
+    for (const item of theme.public_evidence) {
+      append(item, theme.title)
+    }
+  }
+
+  for (const item of reading.interpretation.public_evidence) {
+    append(item)
+  }
+
+  for (const item of reading.public_evidence) {
+    append(item)
+  }
+
+  return merged
+}
+
+// Fusionne les textes publics Basic V2 pour conserver une seule zone legale finale.
+function mergePublicLegalLines(...groups: Array<string[] | null | undefined>): string[] {
+  const merged: string[] = []
+  const seen = new Set<string>()
+
+  for (const group of groups) {
+    for (const item of group ?? []) {
+      const key = normalizePublicText(item)
+      if (!key || seen.has(key)) {
+        continue
+      }
+      seen.add(key)
+      merged.push(item)
+    }
   }
 
   return merged
@@ -67,32 +145,38 @@ function PublicDisclaimers({ disclaimers, t }: { disclaimers?: string[] | null; 
 }
 
 function PublicEvidenceList({
-  embedded = false,
   evidence,
   t,
 }: {
-  embedded?: boolean
-  evidence?: BasicNatalPublicEvidenceView[] | null
+  evidence?: PublicEvidenceItem[] | null
   t: InterpretationTranslations
 }) {
   if (!hasItems(evidence)) {
     return null
   }
 
-  const Wrapper = embedded ? "div" : "section"
-
   return (
-    <Wrapper className={embedded ? "ni-public-evidence-inline" : "ni-content-card ni-content-card--public-evidence"}>
+    <section className="ni-content-card ni-content-card--public-evidence">
       <h4 className="ni-section-label ni-section-label--card">{t.evidenceTitle}</h4>
+      <p className="ni-public-evidence-intro">{t.evidenceIntro}</p>
       <div className="ni-public-evidence-list">
-        {evidence.map((item, index) => (
-          <article key={`${item.label}-${index}`} className="ni-public-evidence-item">
-            <h5 className="ni-public-evidence-item__label">{item.label}</h5>
-            <p className="ni-public-evidence-item__meaning">{item.meaning}</p>
-          </article>
-        ))}
+        {evidence.map((item, index) => {
+          const usedInSections = item.usedInSections ?? []
+
+          return (
+            <article key={`${getEvidenceKey(item)}-${index}`} className="ni-public-evidence-item">
+              <h5 className="ni-public-evidence-item__label">{item.label}</h5>
+              <p className="ni-public-evidence-item__meaning">{item.meaning}</p>
+              {usedInSections.length > 0 && (
+                <p className="ni-public-evidence-item__usage">
+                  {t.evidenceUsagePrefix} : {usedInSections.join(", ")}
+                </p>
+              )}
+            </article>
+          )
+        })}
       </div>
-    </Wrapper>
+    </section>
   )
 }
 
@@ -145,9 +229,18 @@ function FreePublicReading({
   )
 }
 
-function BasicV2Reading({ reading, t }: { reading: BasicNatalInterpretationView; t: InterpretationTranslations }) {
+function BasicV2Reading({
+  legalNoticeLines,
+  reading,
+  t,
+}: {
+  legalNoticeLines: string[]
+  reading: BasicNatalInterpretationView
+  t: InterpretationTranslations
+}) {
   const { interpretation } = reading
-  const publicEvidence = mergePublicEvidence(interpretation.public_evidence, reading.public_evidence)
+  const publicEvidence = collectBasicPublicEvidence(reading)
+  const legalLines = mergePublicLegalLines(reading.limitations, reading.disclaimers, legalNoticeLines)
 
   return (
     <>
@@ -163,7 +256,6 @@ function BasicV2Reading({ reading, t }: { reading: BasicNatalInterpretationView;
             <article key={`${theme.title}-${index}`} className="ni-basic-theme">
               <h5 className="ni-basic-theme__title">{theme.title}</h5>
               <p className="ni-basic-theme__narrative">{theme.narrative}</p>
-              <PublicEvidenceList embedded evidence={theme.public_evidence} t={t} />
             </article>
           ))}
         </div>
@@ -176,14 +268,12 @@ function BasicV2Reading({ reading, t }: { reading: BasicNatalInterpretationView;
 
       <PublicEvidenceList evidence={publicEvidence} t={t} />
 
-      {hasItems(reading.limitations) && (
-        <section className="ni-content-card ni-content-card--public-list">
-          <h4 className="ni-section-label ni-section-label--card">{t.limitationsTitle}</h4>
-          <PublicList items={reading.limitations} />
+      {hasItems(legalLines) && (
+        <section className="ni-content-card ni-content-card--disclaimers ni-content-card--basic-legal">
+          <h4 className="ni-section-label ni-section-label--card">{t.disclaimerTitle}</h4>
+          <PublicList items={legalLines} />
         </section>
       )}
-
-      <PublicDisclaimers disclaimers={reading.disclaimers} t={t} />
     </>
   )
 }
@@ -227,7 +317,7 @@ export function InterpretationContent({
           {renderReadingSources?.(narrativeReading.used_astrological_elements, lang)}
         </>
       ) : basicReading ? (
-        <BasicV2Reading reading={basicReading} t={t} />
+        <BasicV2Reading legalNoticeLines={legalNoticeLines} reading={basicReading} t={t} />
       ) : shouldShowNarrativeMissing ? (
         <div className="ni-content-card ni-content-card--missing-narrative" role="note">
           <p className="ni-section-label">{t.narrativeMissingTitle}</p>
@@ -235,7 +325,7 @@ export function InterpretationContent({
         </div>
       ) : null}
 
-      {legalNoticeLines.length > 0 && (
+      {!basicReading && legalNoticeLines.length > 0 && (
         <footer className="ni-disclaimer-footer">
           <div className="ni-degraded-notice ni-degraded-notice--disclaimer">
             <p className="ni-disclaimer-title">

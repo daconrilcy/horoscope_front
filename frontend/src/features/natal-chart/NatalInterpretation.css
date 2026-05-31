@@ -711,15 +711,26 @@
   color: var(--premium-text-main);
 }
 
-.ni-basic-theme .ni-content-card--public-evidence {
-  margin-top: 14px;
-  padding: 18px 20px;
+.ni-public-evidence-intro {
+  margin: 0 0 14px;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--premium-text-muted);
 }
 
-.ni-public-evidence-inline {
-  margin-top: 14px;
+.ni-public-evidence-item__usage {
+  margin: 8px 0 0;
   border-top: 1px solid var(--premium-glass-border-soft);
-  padding-top: 14px;
+  padding-top: 8px;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
+  color: var(--premium-text-meta);
+}
+
+.ni-content-card--basic-legal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Skeleton Loading */

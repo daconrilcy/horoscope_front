@@ -110,6 +110,7 @@ type NatalChartTranslations = {
     lockedAdviceBody: string
     evidenceTitle: string
     evidenceIntro: string
+    evidenceUsagePrefix: string
     showEvidence: string
     hideEvidence: string
     disclaimerTitle: string
@@ -262,6 +263,7 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
         "Dans la version Basic, ce bloc transforme votre thème en conseils opérationnels, avec une lecture plus développée de vos rythmes, de vos points d'appui et des ajustements qui peuvent vous aider à avancer avec davantage de clarté, de stabilité et de cohérence personnelle.",
       evidenceTitle: "Ce que j’ai utilisé pour écrire cette interprétation",
       evidenceIntro: "Transparence : voici les éléments utilisés pour générer ce texte.",
+      evidenceUsagePrefix: "Utilisé dans",
       showEvidence: "Afficher le panneau d’audit",
       hideEvidence: "Masquer le panneau d’audit",
       disclaimerTitle: "Mentions légales",
@@ -502,6 +504,7 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
         "In the Basic version, this block turns your chart into practical guidance, with a fuller reading of your rhythms, strengths, and the adjustments that can help you move forward with more clarity, stability, and personal coherence.",
       evidenceTitle: "What I used to write this interpretation",
       evidenceIntro: "Transparency: here is what was used to generate this text.",
+      evidenceUsagePrefix: "Used in",
       showEvidence: "Show audit panel",
       hideEvidence: "Hide audit panel",
       disclaimerTitle: "Legal Notice",
@@ -740,6 +743,7 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
         "En la versión Basic, este bloque convierte tu carta en consejos prácticos, con una lectura más desarrollada de tus ritmos, tus apoyos y los ajustes que pueden ayudarte a avanzar con más claridad, estabilidad y coherencia personal.",
       evidenceTitle: "Lo que utilicé para redactar esta interpretación",
       evidenceIntro: "Transparencia: aquí tienes lo utilizado para generar este texto.",
+      evidenceUsagePrefix: "Utilizado en",
       showEvidence: "Mostrar panel de auditoría",
       hideEvidence: "Ocultar panel de auditoría",
       disclaimerTitle: "Aviso legal",

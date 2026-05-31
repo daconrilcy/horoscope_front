@@ -1,5 +1,7 @@
 # Editorial Review CS-422
 
+Post-implementation classification: handoff-only / pre-implementation editorial review. This file is not final code review evidence for the implemented frontend diff; use `generated/10-final-evidence.md` and a fresh reviewer pass for code review.
+
 Verdict: CLEAN
 
 ## Review Scope

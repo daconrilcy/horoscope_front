@@ -1,5 +1,5 @@
 // Garde DOM: la lecture narrative publique /natal n'expose pas de surfaces techniques interdites.
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import { InterpretationContent } from "../components/natal-interpretation/NatalInterpretationContent"
@@ -208,27 +208,61 @@ describe("natalPublicDomGuard", () => {
             {
               title: "Vie interieure",
               narrative: "Narration publique centree sur la coherence personnelle.",
-              public_evidence: [{ label: "Lune en Cancer", meaning: "Votre sensibilite soutient les liens." }],
+              public_evidence: [
+                {
+                  source_id: "moon-cancer",
+                  label: "Lune en Cancer",
+                  meaning: "Votre sensibilite soutient les liens.",
+                },
+              ],
+            },
+            {
+              title: "Vie relationnelle",
+              narrative: "Narration publique centree sur les liens.",
+              public_evidence: [
+                {
+                  source_id: "moon-cancer",
+                  label: "Lune en Cancer",
+                  meaning: "Votre sensibilite soutient les liens.",
+                },
+              ],
             },
           ],
           conclusion: "Conclusion publique sans score ni identifiant brut.",
-          public_evidence: [{ label: "Soleil en Taureau", meaning: "Votre expression cherche la stabilite." }],
+          public_evidence: [
+            { label: "Soleil en Taureau", meaning: "Votre expression cherche la stabilite." },
+          ],
         },
-        public_evidence: [{ label: "Ascendant Balance", meaning: "Votre presence cherche l'equilibre." }],
+        public_evidence: [
+          { label: "Ascendant Balance", meaning: "Votre presence cherche l'equilibre." },
+          {
+            source_id: "moon-cancer",
+            label: "Lune en Cancer",
+            meaning: "Votre sensibilite soutient les liens.",
+          },
+        ],
         limitations: ["Lecture symbolique."],
-        disclaimers: ["Contenu de reflexion personnelle."],
+        disclaimers: [
+          "Contenu de reflexion personnelle.",
+          "Lecture symbolique.",
+          "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+        ],
       },
     }
 
     const { container } = render(<InterpretationContent data={basicData} lang="fr" />)
 
     expect(screen.getByText("Lecture Basic publique")).toBeInTheDocument()
-    expect(screen.getByText("Lune en Cancer")).toBeInTheDocument()
+    expect(screen.getAllByText("Lune en Cancer")).toHaveLength(1)
     expect(screen.getByText("Votre sensibilite soutient les liens.")).toBeInTheDocument()
     expect(screen.getByText("Soleil en Taureau")).toBeInTheDocument()
     expect(screen.getByText("Votre expression cherche la stabilite.")).toBeInTheDocument()
     expect(screen.getByText("Ascendant Balance")).toBeInTheDocument()
     expect(screen.getByText("Votre presence cherche l'equilibre.")).toBeInTheDocument()
+    expect(screen.getAllByText(/Ce que j’ai utilisé pour écrire cette interprétation/i)).toHaveLength(1)
+    expect(screen.getAllByText(/Mentions légales/i)).toHaveLength(1)
+    expect(screen.getAllByText("Lecture symbolique.")).toHaveLength(1)
+    expect(within(container.querySelector(".ni-basic-theme-list")!).queryByText("Lune en Cancer")).not.toBeInTheDocument()
     expect(container.textContent).not.toMatch(FORBIDDEN_DOM_PATTERN)
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d|ranking_score|weighted_score/i)
   })

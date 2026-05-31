@@ -249,30 +249,66 @@ describe("NatalInterpretationSection", () => {
             {
               title: "Axe personnel",
               narrative: "Narration publique du theme Basic V2.",
-              public_evidence: [{ label: "Soleil en Lion", meaning: "Votre expression gagne en chaleur." }],
+              public_evidence: [
+                {
+                  source_id: "sun-leo",
+                  label: "Soleil en Lion",
+                  meaning: "Votre expression gagne en chaleur.",
+                },
+              ],
+            },
+            {
+              title: "Axe relationnel",
+              narrative: "Deuxieme narration publique du theme Basic V2.",
+              public_evidence: [
+                {
+                  source_id: "sun-leo",
+                  label: "Soleil en Lion",
+                  meaning: "Votre expression gagne en chaleur.",
+                },
+              ],
             },
           ],
           conclusion: "Conclusion publique Basic V2.",
-          public_evidence: [{ label: "Ascendant Balance", meaning: "Votre relationnel cherche l'equilibre." }],
+          public_evidence: [
+            { label: "Ascendant Balance", meaning: "Votre relationnel cherche l'equilibre." },
+          ],
         },
-        public_evidence: [{ label: "Lune en Cancer", meaning: "Votre sensibilite protege les liens." }],
+        public_evidence: [
+          { label: "Lune en Cancer", meaning: "Votre sensibilite protege les liens." },
+          {
+            source_id: "sun-leo",
+            label: "Soleil en Lion",
+            meaning: "Votre expression gagne en chaleur.",
+          },
+        ],
         limitations: ["Lecture symbolique et non predictive."],
-        disclaimers: ["Disclaimer Basic public."],
+        disclaimers: [
+          "Disclaimer Basic public.",
+          "Lecture symbolique et non predictive.",
+          "Cette interprétation astrologique est un contenu de réflexion personnelle, non scientifique et non prédictif.",
+        ],
       },
     };
 
-    render(<InterpretationContent data={basicData} lang="fr" />);
+    const { container } = render(<InterpretationContent data={basicData} lang="fr" />);
 
     expect(screen.getByRole("heading", { name: "Lecture Basic publique" })).toBeInTheDocument();
     expect(screen.getByText("Introduction publique Basic V2.")).toBeInTheDocument();
     expect(screen.getByText("Axe personnel")).toBeInTheDocument();
     expect(screen.getByText("Narration publique du theme Basic V2.")).toBeInTheDocument();
+    expect(screen.getByText("Axe relationnel")).toBeInTheDocument();
     expect(screen.getByText("Conclusion publique Basic V2.")).toBeInTheDocument();
-    expect(screen.getByText("Soleil en Lion")).toBeInTheDocument();
+    expect(screen.getAllByText("Soleil en Lion")).toHaveLength(1);
     expect(screen.getByText("Votre expression gagne en chaleur.")).toBeInTheDocument();
+    expect(screen.getByText("Utilisé dans : Axe personnel, Axe relationnel")).toBeInTheDocument();
     expect(screen.getByText("Ascendant Balance")).toBeInTheDocument();
     expect(screen.getByText("Votre relationnel cherche l'equilibre.")).toBeInTheDocument();
     expect(screen.getByText("Lune en Cancer")).toBeInTheDocument();
+    expect(screen.getAllByText(/Ce que j’ai utilisé pour écrire cette interprétation/i)).toHaveLength(1);
+    expect(screen.getAllByText(/Mentions légales/i)).toHaveLength(1);
+    expect(screen.getAllByText("Lecture symbolique et non predictive.")).toHaveLength(1);
+    expect(within(container.querySelector(".ni-basic-theme-list")!).queryByText("Soleil en Lion")).not.toBeInTheDocument();
     expect(screen.queryByText("basic_natal_interpretation_v2")).not.toBeInTheDocument();
     expect(screen.queryByText("Ancien resume qui ne doit pas piloter Basic V2.")).not.toBeInTheDocument();
     expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument();

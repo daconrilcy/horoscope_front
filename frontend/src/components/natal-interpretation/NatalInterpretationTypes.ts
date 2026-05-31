@@ -30,9 +30,12 @@ export type NatalNarrativeReadingView = {
 }
 
 export type BasicNatalPublicEvidenceView = {
+  source_id?: string | null
+  source_type?: string | null
   label: string
   meaning: string
   theme?: string
+  used_in_sections?: string[] | null
 }
 
 export type BasicNatalPublicThemeView = {
