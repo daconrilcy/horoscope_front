@@ -1,0 +1,20 @@
+After implementation snapshot
+
+- Provider payload now exposes private selected-theme metrics:
+  - `selected_source_count`
+  - `max_source_items`
+  - `narrative_source_families`
+  - per-family `family`, `covered`, `material_sections`, `source_count`, `public_source_count`
+- Basic rich fixture covers all five source families:
+  - `personnalite`
+  - `emotions`
+  - `relations`
+  - `vocation`
+  - `evolution`
+- Prompt V3 now explicitly asks for five source families while keeping `llm_astrology_input_v1` as the source input and avoiding `chart_json` / `natal_data`.
+- Final targeted validations:
+  - support-elements pytest: 2 passed
+  - orchestration `natal or theme_astral`: 27 passed, 1 skipped, 213 deselected
+  - narrative public contract pytest: 13 passed
+  - `ruff check .`: PASS
+  - final capsule validation: PASS

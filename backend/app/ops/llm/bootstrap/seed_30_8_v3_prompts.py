@@ -100,6 +100,9 @@ Avant de finaliser ta réponse, effectue ce contrôle en trois étapes :
   dominantes + le fil rouge + une tension + une promesse d'intégration. Pas de résumé bref.
 - sections : Couvrir idéalement [overall, inner_life,
   relationships, career, daily_life, strengths, challenges].
+  Les sections doivent s'appuyer sur cinq familles sources narratives lisibles :
+  personnalite, emotions, relations, vocation, evolution. Chaque famille doit
+  mobiliser des faits distincts quand l'entree les fournit.
   Pour alimenter la lecture publique narrative, inclure explicitement les cinq clés
   [self_image, emotions, relationships, career, growth_direction].
   Puis intégrer des angles thématiques additionnels en utilisant AU MOINS 4 clés

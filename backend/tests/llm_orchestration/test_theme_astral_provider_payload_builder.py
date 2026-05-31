@@ -17,6 +17,7 @@ from app.domain.llm.configuration.theme_astral_contracts import (
 from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
     ThemeAstralProviderPayloadBuilder,
 )
+from app.ops.llm.bootstrap.seed_30_8_v3_prompts import NATAL_COMPLETE_PROMPT_V3
 from tests.unit.domain.astrology.interpretation.test_interpretation_material_builder import (
     _build_chart_input,
     _prepared_paris_birth,
@@ -107,6 +108,36 @@ def test_delivery_material_voice_and_output_contract_are_emitted() -> None:
     assert not payload["input_data"]["limits"]["missing_data"]["empty_fact_groups"]
     assert payload["output_contract"]["response_contract_id"] == THEME_ASTRAL_RESPONSE_CONTRACT_ID
     assert payload["output_contract"]["response_contract_version"] == "v1"
+
+
+def test_basic_payload_exposes_private_narrative_source_family_metrics() -> None:
+    """Le payload Basic audite cinq familles narratives sans changer les budgets."""
+    payload = _payloads_by_commercial_plan()["basic"]
+    selected_themes = payload["input_data"]["selected_themes"]
+    family_metrics = selected_themes["narrative_source_families"]
+
+    assert selected_themes["selected_source_count"] <= selected_themes["max_source_items"] == 24
+    assert selected_themes["section_keys"] == list(INTERPRETATION_MATERIAL_KEYS[:6])
+    assert {item["family"] for item in family_metrics} == {
+        "personnalite",
+        "emotions",
+        "relations",
+        "vocation",
+        "evolution",
+    }
+    assert all(item["covered"] for item in family_metrics)
+    assert all(item["source_count"] > 0 for item in family_metrics)
+
+
+def test_nominal_natal_prompt_requests_five_source_families() -> None:
+    """Le prompt complet nominal demande les cinq familles sources narratives."""
+    prompt = NATAL_COMPLETE_PROMPT_V3.casefold()
+
+    assert "familles sources narratives" in prompt
+    for family in ("personnalite", "emotions", "relations", "vocation", "evolution"):
+        assert family in prompt
+    assert "chart_json" not in prompt
+    assert "natal_data" not in prompt
 
 
 def test_birth_context_exposes_structured_birth_data() -> None:

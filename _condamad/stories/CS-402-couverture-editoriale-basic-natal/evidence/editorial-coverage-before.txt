@@ -1,0 +1,8 @@
+Before implementation snapshot
+
+- Capsule generated files were absent at preflight and were prepared before implementation.
+- Baseline targeted tests before code changes:
+  - `python -B -m pytest -q backend/tests/unit/domain/astrology/test_client_interpretation_support_elements.py backend/tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short`
+  - Result: 11 passed.
+- Existing provider payload exposed `selected_themes.section_keys` and budgets, but no private `narrative_source_families`, `selected_source_count`, or `public_source_count` metrics.
+- Existing V3 prompt asked for the five narrative section keys `[self_image, emotions, relationships, career, growth_direction]`, but did not name the five French source families `personnalite`, `emotions`, `relations`, `vocation`, `evolution`.

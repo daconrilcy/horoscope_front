@@ -1,5 +1,5 @@
 # Story CS-402 couverture-editoriale-basic-natal: Enrichir Couverture Editoriale Basic Natal
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

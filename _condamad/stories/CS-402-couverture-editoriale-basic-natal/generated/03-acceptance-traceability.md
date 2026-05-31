@@ -1,0 +1,16 @@
+# Acceptance Traceability — CS-402-couverture-editoriale-basic-natal
+
+| AC | Requirement | Code evidence | Validation evidence | Status |
+|---|---|---|---|---|
+| AC1 | Basic support is populated from projection facts. | `client_interpretation_projection_v1_builder.py` keeps `support_elements`; `llm_astrology_input_v1.py` carries them into `shaping.support_elements`. | `python -B -m pytest -q tests/unit/domain/astrology/test_client_interpretation_support_elements.py --tb=short` -> PASS. | PASS |
+| AC2 | Premium support is populated from projection facts. | `test_basic_and_premium_support_elements_stay_inside_existing_caps` proves Premium emits more support facts within the existing cap. | Same pytest command -> PASS. | PASS |
+| AC3 | Basic selected source count stays within budget. | `theme_astral_provider_payload_builder.py` exposes private `selected_source_count` and `max_source_items` from the delivery profile. | `python -B -m pytest -q tests/llm_orchestration -k "natal or theme_astral" --tb=short` -> PASS. | PASS |
+| AC4 | Basic selection covers multiple fact families. | `narrative_source_families` derives five covered families from selected material sections without new calculations. | Provider payload pytest above -> PASS. | PASS |
+| AC5 | The nominal prompt asks for five source-section families. | `seed_30_8_v3_prompts.py` requires `personnalite`, `emotions`, `relations`, `vocation`, `evolution`. | `test_nominal_natal_prompt_requests_five_source_families` plus targeted prompt family scan -> PASS. | PASS |
+| AC6 | Complete readings prefer `AstroResponseV3`. | Existing `interpretation_service.py` deserializes V3 before V2/V1; V1/V2 remain historical inputs for explicit incomplete-schema behavior. | `python -B -m pytest -q tests/llm_orchestration -k "natal or theme_astral" --tb=short` and `python -B -m pytest -q tests/unit/test_narrative_natal_reading_v1.py --tb=short` -> PASS. | PASS |
+| AC7 | Provider metrics expose selected families privately. | `selected_themes.narrative_source_families` contains family, coverage, material sections, source counts and public source counts. | `test_basic_payload_exposes_private_narrative_source_family_metrics` -> PASS. | PASS |
+| AC8 | A rich Basic fixture produces five chapter source groups. | Existing rich provider fixture in `test_theme_astral_provider_payload_builder.py` now proves all five Basic family metrics are covered. | `python -B -m pytest -q tests/llm_orchestration -k "natal or theme_astral" --tb=short` -> PASS. | PASS |
+| AC9 | Technical carriers stay outside the public narrative. | Prompt V3 and narrative builder/model stay free of `chart_json` / `natal_data`; denylist remains in validator. | Targeted `rg` for `chart_json` or `natal_data` in public prompt/narrative roots -> PASS no matches. | PASS |
+| AC10 | Story evidence artifacts are persisted. | `generated/03-acceptance-traceability.md`, `generated/09-dev-log.md`, `generated/10-final-evidence.md`, `evidence/editorial-coverage-*.txt`, `evidence/validation.txt`, and `evidence/editorial-coverage-metrics.json` updated. | `python -B .agents/skills/condamad-dev-story/scripts/condamad_validate.py ... --final` -> PASS. | PASS |
+
+Status values: `PASS`, `PASS_WITH_LIMITATIONS`, `FAIL`, `BLOCKED`.

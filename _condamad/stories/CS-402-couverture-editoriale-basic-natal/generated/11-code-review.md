@@ -2,7 +2,11 @@
 
 # Review CS-402 - Couverture Editoriale Basic Natal
 
-Verdict: CLEAN
+Verdict: obsolete pre-implementation review
+
+> Handoff note 2026-05-31: this file is a pre-implementation editorial review.
+> It must not be used as final implementation review evidence for CS-402.
+> Fresh implementation evidence is recorded in `generated/10-final-evidence.md`.
 
 ## Cycle De Revue
 

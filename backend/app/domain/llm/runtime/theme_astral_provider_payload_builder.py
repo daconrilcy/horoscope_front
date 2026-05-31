@@ -43,6 +43,13 @@ _INPUT_DATA_KEYS = (
     "selected_themes",
     "limits",
 )
+_NARRATIVE_SOURCE_FAMILY_SECTIONS: dict[str, tuple[str, ...]] = {
+    "personnalite": ("planet_sign_interpretations", "dominant_themes"),
+    "emotions": ("planet_sign_interpretations", "resources"),
+    "relations": ("aspect_interpretations", "resources"),
+    "vocation": ("planet_house_interpretations", "dominant_themes"),
+    "evolution": ("tensions", "integration_levers", "warnings"),
+}
 
 
 class ThemeAstralProviderPayloadBuilder:
@@ -178,12 +185,52 @@ def _selected_themes(
 ) -> dict[str, object]:
     """Derive les themes retenus depuis le materiau source deja selectionne."""
     max_sections = cast(Mapping[str, int], delivery_profile["section_budget"])["max_sections"]
+    material_budget = cast(Mapping[str, int], delivery_profile["material_budget"])
     sections = [key for key in INTERPRETATION_MATERIAL_KEYS if material_payload.get(key)]
     return {
         "selection_owner": "InterpretationMaterialBuilder",
         "section_keys": sections[:max_sections],
         "max_sections": max_sections,
+        "selected_source_count": _selected_source_count(material_payload),
+        "max_source_items": material_budget["max_source_items"],
+        "narrative_source_families": _narrative_source_family_metrics(material_payload),
     }
+
+
+def _selected_source_count(material_payload: Mapping[str, list[dict[str, object]]]) -> int:
+    """Compte les sources retenues sans inspecter de carrier technique legacy."""
+    return sum(len(material_payload.get(key, [])) for key in INTERPRETATION_MATERIAL_KEYS)
+
+
+def _narrative_source_family_metrics(
+    material_payload: Mapping[str, list[dict[str, object]]],
+) -> list[dict[str, object]]:
+    """Expose des metriques privees pour les cinq familles narratives publiques."""
+    metrics: list[dict[str, object]] = []
+    for family, sections in _NARRATIVE_SOURCE_FAMILY_SECTIONS.items():
+        section_counts = {
+            section: len(material_payload.get(section, []))
+            for section in sections
+            if material_payload.get(section)
+        }
+        source_refs = sorted(
+            {
+                str(item["source_ref"])
+                for section in sections
+                for item in material_payload.get(section, [])
+                if item.get("source_ref")
+            }
+        )
+        metrics.append(
+            {
+                "family": family,
+                "covered": bool(section_counts),
+                "material_sections": list(section_counts),
+                "source_count": sum(section_counts.values()),
+                "public_source_count": len(source_refs),
+            }
+        )
+    return metrics
 
 
 def _limits(

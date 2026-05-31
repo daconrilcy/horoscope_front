@@ -1,0 +1,32 @@
+{
+  "story_key": "CS-402-couverture-editoriale-basic-natal",
+  "status": "ready-to-review",
+  "commercial_plan": "basic",
+  "max_source_items": 24,
+  "max_sections": 6,
+  "support_elements_basic_count": 6,
+  "provider_private_metrics": [
+    "selected_source_count",
+    "max_source_items",
+    "narrative_source_families"
+  ],
+  "covered_narrative_source_families": [
+    "personnalite",
+    "emotions",
+    "relations",
+    "vocation",
+    "evolution"
+  ],
+  "public_carriers_scan": {
+    "roots": [
+      "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
+      "backend/app/services/llm_generation/natal/narrative_natal_reading_builder.py",
+      "backend/app/domain/llm/prompting/narrative_natal_reading_v1.py"
+    ],
+    "forbidden_patterns": [
+      "chart_json",
+      "natal_data"
+    ],
+    "result": "PASS_NO_MATCHES"
+  }
+}
