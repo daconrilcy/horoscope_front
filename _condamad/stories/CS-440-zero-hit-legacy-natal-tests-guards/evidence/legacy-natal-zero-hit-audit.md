@@ -7,15 +7,15 @@
 - Classification: `done`
 - Invariant durable: `RG-174`
 - Surface runtime publique generatrice: zero hit non autorise.
-- Residus autorises: readonly historique, admin-only, garde de rejet, tests d'extinction, preuves `_condamad`.
+- Residus autorises: readonly historique hors generateur public, admin-only, garde de rejet, tests d'extinction, preuves `_condamad`.
 - Cloture CS-444: les anciens blocages CR-3 et CR-4 sont resolus par les validations du 2026-06-01; aucun hit generateur public/runtime non autorise ne reste.
 
 ## Classification
 
 | Item | Type | Classification | Consumers | Canonical replacement | Decision | Proof | Risk |
 |---|---|---|---|---|---|---|---|
-| `natal_interpretation_short` | symbol | guard-or-readonly | adapter reject guard, readonly historical rows, extinction tests | `theme_natal` public contract | keep classified only | `test_legacy_natal_runtime_hits_are_explicitly_authorized`; `test_public_runtime_contract_excludes_deleted_natal_generator_keys` | Old short prompt returns if guard list is bypassed |
-| `natal_long_free` | symbol | guard-or-readonly | adapter reject guard, readonly historical rows, admin-only metadata, extinction tests | `theme_natal` public contract | keep classified only | `test_legacy_natal_runtime_hits_are_explicitly_authorized`; `test_natal_adapter_does_not_forward_legacy_prompt_carriers` | Old free prompt returns if adapter reject guard is removed |
+| `natal_interpretation_short` | symbol | guard-or-readonly | adapter reject guard, readonly historical rows outside public generator, extinction tests | `theme_natal` public contract | keep classified only outside `interpretation_service.py` | `test_legacy_natal_runtime_hits_are_explicitly_authorized`; `test_public_runtime_contract_excludes_deleted_natal_generator_keys` | Old short prompt returns if guard list is bypassed |
+| `natal_long_free` | symbol | guard-or-readonly | adapter reject guard, readonly historical rows outside public generator, admin-only metadata, extinction tests | `theme_natal` public contract | keep classified only outside `interpretation_service.py` | `test_legacy_natal_runtime_hits_are_explicitly_authorized`; `test_natal_adapter_does_not_forward_legacy_prompt_carriers` | Old free prompt returns if adapter reject guard is removed |
 | `natal_interpretation` Basic or Free | symbol | historical-readonly | readonly historical rows and gone-route tests | product action contract | no public generator | `test_old_public_route_is_removed_or_gone`; OpenAPI excludes old fields | Old complete prompt path returns |
 | `use_case_level` public contract | field | public-extinction/admin-only-internal | payload rejection tests, DOM denylist, internal LLM QA | product action `action` | reject public contract | `test_new_route_rejects_legacy_generation_fields`; `natalPublicDomGuard.test.tsx`; architecture guard | Old public contract returns |
 | `forceRefresh` | field | extinction-test-only | payload rejection tests and DOM denylist | product action `action` | reject | `test_new_route_rejects_legacy_generation_fields`; zero unauthorized runtime hit guard | Refresh command returns |
@@ -34,7 +34,6 @@
 | `backend/app/domain/llm/runtime/adapter.py` | `natal_interpretation_short`, `natal_long_free` | deleted-key rejection guard | deleted-key rejection guard |
 | `backend/app/services/api_contracts/internal/llm/qa.py` | `use_case_level` | admin-only internal QA | admin-only internal QA |
 | `backend/app/services/llm_generation/admin_prompts.py` | `natal_long_free` | admin-only prompt metadata | admin-only prompt metadata |
-| `backend/app/services/llm_generation/natal/interpretation_service.py` | `natal_interpretation_short`, `natal_long_free` | historical persisted-row read compatibility | historical persisted-row read compatibility |
 
 ## Autorisations de tests exactes
 

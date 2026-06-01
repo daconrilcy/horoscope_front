@@ -106,10 +106,6 @@ AUTHORIZED_RUNTIME_TOKEN_OWNERS = {
     Path("backend/app/services/llm_generation/admin_prompts.py"): {
         "natal_long_free",
     },
-    Path("backend/app/services/llm_generation/natal/interpretation_service.py"): {
-        "natal_interpretation_short",
-        "natal_long_free",
-    },
 }
 REMOVED_PROMPT_SOURCE_PATHS = {
     Path("backend/app/ops/llm/bootstrap/seed_29_prompts.py"),
@@ -127,7 +123,6 @@ AUTHORIZED_RUNTIME_REASONS = {
     "deleted-key rejection guard",
     "admin-only prompt metadata",
     "admin-only internal QA",
-    "historical persisted-row read compatibility",
 }
 AUTHORIZED_TEST_TOKEN_FILES = {
     Path("backend/app/tests/integration/test_admin_actions_api.py"),

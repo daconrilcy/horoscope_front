@@ -43,13 +43,13 @@ def _public_meta(model: UserNatalInterpretationModel, level: str) -> Interpretat
 
 
 def _free_short_row() -> UserNatalInterpretationModel:
-    """Retourne une ligne free short persistee avec son ancien owner runtime interne."""
+    """Retourne une ligne free short persistee avec son owner public moderne."""
     return UserNatalInterpretationModel(
         id=4191,
         user_id=419,
         chart_id="chart-free-public",
         level=InterpretationLevel.COMPLETE,
-        use_case="natal_long_free",
+        use_case="theme_natal_free_preview",
         variant_code="free_short",
         interpretation_payload={
             "title": "Lecture gratuite",
@@ -98,8 +98,8 @@ def test_free_short_public_contract_exposes_short_astro_free_payload() -> None:
     interpretation = data["interpretation"]
 
     assert data["meta"]["level"] == "short"
-    assert data["use_case"] == "natal_interpretation_short"
-    assert data["meta"]["use_case"] == "natal_interpretation_short"
+    assert data["use_case"] == "theme_natal_free_preview"
+    assert data["meta"]["use_case"] == "theme_natal_free_preview"
     assert interpretation["title"]
     assert interpretation["summary"]
     assert interpretation["sections"]
@@ -111,11 +111,9 @@ def test_free_short_public_contract_exposes_short_astro_free_payload() -> None:
     _assert_no_forbidden_public_marker(payload)
 
 
-def test_free_short_public_contract_accepts_stabilized_public_use_case() -> None:
-    """Une ligne deja stabilisee reste classable comme free short public."""
+def test_free_short_public_contract_uses_variant_marker_not_legacy_use_case() -> None:
+    """La branche free short publique depend du marqueur produit, pas d'une ancienne cle."""
     row = _free_short_row()
-    row.use_case = "natal_interpretation_short"
-    row.variant_code = None
 
     response = NatalInterpretationService.format_interpretation_response(
         row,
@@ -127,8 +125,8 @@ def test_free_short_public_contract_accepts_stabilized_public_use_case() -> None
     data = payload["data"]
 
     assert data["meta"]["level"] == "short"
-    assert data["use_case"] == "natal_interpretation_short"
-    assert data["meta"]["use_case"] == "natal_interpretation_short"
+    assert data["use_case"] == "theme_natal_free_preview"
+    assert data["meta"]["use_case"] == "theme_natal_free_preview"
     assert data["basic_natal_interpretation_v2"] is None
 
 

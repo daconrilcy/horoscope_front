@@ -45,3 +45,24 @@ Final review/fix validation:
 - `pnpm --dir frontend lint` -> PASS.
 - Contradiction scans and targeted zero-hit scans -> PASS.
 - RG-174 registry scan -> PASS.
+
+Final brief-alignment correction, 2026-06-01:
+- Found mismatch: `backend/app/services/llm_generation/natal/interpretation_service.py` still carried `natal_interpretation_short`
+  and `natal_long_free`, while the CS-444 brief requires runtime/public zero-hit closure.
+- Correction: free preview public formatting now uses `theme_natal_free_preview` and identifies the branch via `variant_code="free_short"`.
+- Correction: `test_legacy_natal_generation_inventory_guard.py` no longer authorizes old tokens in `interpretation_service.py`.
+- Correction: CS-440 audit no longer lists `interpretation_service.py` as historical persisted-row compatibility.
+- `ruff format` on touched Python files -> PASS, `3 files left unchanged`.
+- `ruff check .` in `backend` -> PASS, `All checks passed!`.
+- Backend architecture and LLM guard suite -> PASS, `54 passed`.
+- Backend theme natal product/read suite with `--long` and public free/basic contract -> PASS, `50 passed`.
+- Runtime route/OpenAPI assertions -> PASS.
+- `rg -n "generate_natal_interpretation" backend/app` -> PASS: no matches.
+- `rg -n "/v1/natal/interpretation|/v1/natal/interpretations" backend/app/api/v1/routers/public frontend/src` -> PASS: no matches.
+- `rg -n "natal_interpretation_short|natal_long_free|shouldRefreshShortAfterBasicUpgrade|forceRefresh"
+  backend/app/services/llm_generation/natal/interpretation_service.py backend/app/api/v1/routers/public frontend/src` -> PASS: only
+  `frontend/src/tests/natalPublicDomGuard.test.tsx`, an extinction denylist test, matched.
+- Positive mock scans -> PASS: no matches.
+- Frontend targeted natal Vitest suite -> PASS, `136 passed`.
+- `pnpm --dir frontend lint` -> PASS.
+- `condamad_story_validate.py` and `condamad_story_lint.py --strict` for CS-444 -> PASS.

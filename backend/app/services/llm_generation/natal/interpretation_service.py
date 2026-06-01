@@ -470,21 +470,14 @@ def _persist_rejected_narrative_answer_audit(
 
 AcceptedCompleteAstroResponse = AstroResponseV1 | AstroResponseV2 | AstroResponseV3
 PublicAstroResponse = AcceptedCompleteAstroResponse | AstroErrorResponseV3 | AstroFreeResponseV1
-PUBLIC_FREE_SHORT_USE_CASE = "natal_interpretation_short"
+PUBLIC_FREE_PREVIEW_USE_CASE = "theme_natal_free_preview"
 
 NATAL_COMPLETE_SCHEMA_MISMATCH = "natal_complete_schema_mismatch"
 
 
 def _is_public_free_short_interpretation(model: UserNatalInterpretationModel) -> bool:
-    """Identifie les lectures free short, qu'elles portent l'ancien ou le nouveau marqueur."""
-    return (
-        model.variant_code == "free_short"
-        or model.use_case == "natal_long_free"
-        or (
-            model.use_case == PUBLIC_FREE_SHORT_USE_CASE
-            and model.level == InterpretationLevel.COMPLETE
-        )
-    )
+    """Identifie les lectures free short par le marqueur produit canonique."""
+    return model.variant_code == "free_short"
 
 
 def _attach_narrative_reading_to_complete(
@@ -936,7 +929,7 @@ class NatalInterpretationService:
     ) -> bool:
         if model.level != InterpretationLevel.COMPLETE:
             return False
-        if model.variant_code == "free_short" or model.use_case == "natal_long_free":
+        if model.variant_code == "free_short":
             return False
         payload = _coerce_stored_payload(model.interpretation_payload)
         if NatalInterpretationService._is_empty_complete_payload(payload):
@@ -1436,7 +1429,7 @@ class NatalInterpretationService:
         meta.id = model.id
         if is_free_short:
             meta.level = "short"
-            meta.use_case = PUBLIC_FREE_SHORT_USE_CASE
+            meta.use_case = PUBLIC_FREE_PREVIEW_USE_CASE
         disclaimers = get_disclaimers(locale)
         level = (
             "short"
@@ -1461,7 +1454,7 @@ class NatalInterpretationService:
         return NatalInterpretationResponse(
             data=NatalGatewayInterpretationData(
                 chart_id=model.chart_id,
-                use_case=PUBLIC_FREE_SHORT_USE_CASE if is_free_short else model.use_case,
+                use_case=PUBLIC_FREE_PREVIEW_USE_CASE if is_free_short else model.use_case,
                 interpretation=_without_public_evidence(interpretation),
                 meta=meta,
                 degraded_mode=model.degraded_mode,

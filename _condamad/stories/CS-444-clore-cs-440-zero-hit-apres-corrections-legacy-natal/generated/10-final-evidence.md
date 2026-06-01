@@ -35,7 +35,7 @@
 | AC1 | CS-441, CS-442, and CS-443 tracker rows are `done`; clean reviews present. | Targeted tracker and review lookup PASS. | PASS | |
 | AC2 | `generate_natal_interpretation` absent from `backend/app`; CS-441 owns deletion. | Generator scan no matches; backend guard suite `54 passed`. | PASS | |
 | AC3 | Old public natal URLs absent from loaded routes, OpenAPI, public router, and frontend source. | Route/OpenAPI assertions PASS; bounded URL scan no matches. | PASS | |
-| AC4 | Public controls are absent; backend old-key residuals are classified readonly/admin/rejection/extinction by CS-440 audit and RG-174. | Public/runtime scan PASS; frontend tests `136 passed`; audit classification checked. | PASS | No unauthorized public/runtime generator hit remains. |
+| AC4 | Public controls are absent; `interpretation_service.py` no longer carries old prompt-control keys. | Public/runtime scan PASS; frontend tests `136 passed`; audit classification checked. | PASS | Only the frontend DOM denylist test keeps these strings in the checked public roots. |
 | AC5 | Positive old generator mocks are absent. | Positive mock scans no matches; backend guard suite `54 passed`. | PASS | |
 | AC6 | CS-440 review updated to final `CLEAN`. | Consistency gate reads final CS-440 review. | PASS | |
 | AC7 | CS-440 zero-hit audit updated to `done`. | Audit artifact exists and records CS-444 closure. | PASS | |
@@ -55,6 +55,9 @@
 - `_condamad/stories/CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal/generated/*`
 - `_condamad/stories/CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal/evidence/*`
 - `_condamad/stories/story-status.md`
+- `backend/app/services/llm_generation/natal/interpretation_service.py`
+- `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py`
+- `backend/tests/integration/test_natal_interpretation_public_free_basic_contract.py`
 
 ## Files deleted
 
@@ -62,7 +65,8 @@
 
 ## Tests added or updated
 
-- No application tests added or updated; CS-444 is evidence/status closure only.
+- Updated `backend/tests/integration/test_natal_interpretation_public_free_basic_contract.py` to assert the modern free preview use case.
+- Updated `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py` to forbid old keys in `interpretation_service.py`.
 
 ## Commands run
 
@@ -80,17 +84,21 @@
 | RG-174 registry scan | repo root | PASS | 0 | RG-174 line found. |
 | `condamad_validate.py <CS-444 capsule> --final` | repo root | PASS | 0 | Final capsule consistency passed. |
 | `condamad_validate.py <CS-440 capsule> --final` | repo root | PASS | 0 | Closed CS-440 capsule consistency passed. |
+| `ruff format <touched Python files>` | `backend` | PASS | 0 | `3 files left unchanged`. |
+| Backend architecture and LLM guard pytest suite after alignment fix | `backend` | PASS | 0 | `54 passed`. |
+| Backend theme natal product/read suite with `--long` after alignment fix | `backend` | PASS | 0 | `50 passed`. |
+| Frontend targeted natal Vitest suite after alignment fix | repo root | PASS | 0 | `136 passed`. |
 
 ## Commands skipped or blocked
 
-- `ruff format .` was not run: no Python source was modified and project instructions prefer scoped formatting to avoid unrelated churn.
 - Full backend and frontend test suites were not run: story validation plan is targeted; targeted backend/frontend suites covering the closure passed.
 
 ## DRY / No Legacy evidence
 
 - No source shim, alias, fallback, compatibility route, or duplicate implementation was added.
-- No runtime source changed during CS-444.
-- Remaining old-key literals are bounded by existing RG-174 classifications: readonly historical, admin-only, rejection guard, explicit extinction/proof-test evidence.
+- Runtime source changed only to remove old free-preview use-case markers from public formatting.
+- Remaining old-key literals are bounded by RG-174 classifications: readonly historical outside the public generator, admin-only, rejection guard,
+  explicit extinction/proof-test evidence.
 
 ## Diff review
 
@@ -106,7 +114,7 @@
 
 ## Remaining risks
 
-- None for closing CS-444. The broad old-key scan still sees RG-174-classified readonly/admin/rejection/extinction residuals, but no unauthorized public/runtime generator hit remains.
+- None for closing CS-444. The corrected public/runtime scan no longer finds old keys in `interpretation_service.py`.
 
 ## Suggested reviewer focus
 

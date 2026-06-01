@@ -8,7 +8,7 @@ CLEAN
 
 - Fresh implementation review after CS-444 closure evidence correction.
 - Checked story/brief/tracker alignment, CS-440 closure artifacts, AC evidence, validation logs, RG-174 classifications, and blocker wording cleanup.
-- Application runtime code was not changed during this review cycle.
+- Application runtime code was changed only to remove legacy free-preview use-case markers from public formatting.
 
 ## Findings Fixed In This Cycle
 
@@ -18,13 +18,14 @@ CLEAN
 | CS-444 final evidence used a limited-pass verdict, which the source brief rejects. | Blocker | AC4 now records `PASS` based on RG-174-approved residual categories and no unauthorized public/runtime generator hit. | `generated/10-final-evidence.md`; `generated/03-acceptance-traceability.md`; RG-174 row. |
 | CS-444 review artifact did not contain final implementation evidence. | Major | Replaced with this fresh implementation review. | `generated/11-code-review.md`. |
 | CS-444 tracker/story status remained `ready-to-review` after clean closure evidence. | Major | Story header and tracker row now record `done`. | `00-story.md`; `_condamad/stories/story-status.md`. |
+| `interpretation_service.py` still carried old free-preview use-case keys, contradicting the brief zero-hit requirement. | Blocker | Public formatting now emits `theme_natal_free_preview`; the branch uses `variant_code="free_short"` and the architecture guard forbids old keys in this service. | `backend/app/services/llm_generation/natal/interpretation_service.py`; `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py`. |
 
 ## Acceptance Criteria Review
 
 - AC1: PASS. CS-441, CS-442, and CS-443 are `done` with clean review artifacts.
 - AC2: PASS. `generate_natal_interpretation` has no hit under `backend/app`.
 - AC3: PASS. Old public natal URLs have no hit under public backend router or frontend source, and route/OpenAPI evidence passes.
-- AC4: PASS. Old prompt-control hits are not unauthorized public/runtime generator paths; residuals are RG-174-classified readonly/admin/rejection/extinction entries.
+- AC4: PASS. Old prompt-control hits are absent from `interpretation_service.py`, public routers, and frontend source except the DOM denylist test.
 - AC5: PASS. Positive old generator mocks are absent.
 - AC6: PASS. CS-440 review verdict is `CLEAN`.
 - AC7: PASS. CS-440 audit is final and `done`.
@@ -39,8 +40,9 @@ CLEAN
 - `condamad_validate.py <CS-444 capsule> --final`: PASS.
 - `condamad_validate.py <CS-440 capsule> --final`: PASS.
 - `ruff check .` in `backend`: PASS.
+- `ruff format` on touched Python files: PASS.
 - Backend architecture and LLM guard suite: `54 passed`.
-- Backend theme natal product/read suite: `24 passed, 22 deselected`.
+- Backend theme natal product/read suite with `--long`: `50 passed`.
 - Runtime route/OpenAPI assertions: PASS.
 - Frontend targeted natal suite: `136 passed`.
 - `pnpm --dir frontend lint`: PASS.
@@ -50,7 +52,8 @@ CLEAN
 ## No Legacy / DRY
 
 - No shim, alias, wrapper, compatibility route, fallback, duplicate implementation, or positive legacy generation path was introduced.
-- Remaining old-key literals are limited to RG-174-approved readonly historical, admin-only, rejection guard, or explicit extinction/proof-test evidence.
+- Remaining old-key literals are limited to RG-174-approved readonly historical outside public generator code, admin-only, rejection guard, or
+  explicit extinction/proof-test evidence.
 
 ## Remaining Risk
 
