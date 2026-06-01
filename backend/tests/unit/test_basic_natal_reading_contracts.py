@@ -7,9 +7,12 @@ import pytest
 from pydantic import ValidationError
 
 from app.domain.astrology.reading import (
+    BASIC_NATAL_DEGRADED_BASELINE_TOKENS,
+    BASIC_NATAL_EDITORIAL_CONTRACT_VERSION,
     BASIC_NATAL_ENGINE_VERSION,
     BASIC_NATAL_FACT_TAXONOMY_VERSION,
     BASIC_NATAL_LEVEL,
+    BASIC_NATAL_MIN_EDITORIAL_CONTRACT_VERSION,
     BASIC_NATAL_PLAN_BUILDER_VERSION,
     BASIC_NATAL_PROMPT_VERSION,
     BASIC_NATAL_PUBLIC_SCHEMA_VERSION,
@@ -121,12 +124,16 @@ def test_basic_versions_are_centralized_and_serialized() -> None:
     assert BASIC_NATAL_PLAN_BUILDER_VERSION == "basic-natal-reading-plan-v1"
     assert BASIC_NATAL_PROMPT_VERSION == "basic-natal-draft-prompt-v1"
     assert BASIC_NATAL_VALIDATOR_VERSION == "basic-natal-validator-v1"
+    assert BASIC_NATAL_EDITORIAL_CONTRACT_VERSION == "basic-natal-editorial-v1"
+    assert BASIC_NATAL_MIN_EDITORIAL_CONTRACT_VERSION == BASIC_NATAL_EDITORIAL_CONTRACT_VERSION
+    assert "cette lecture s'appuie uniquement" in BASIC_NATAL_DEGRADED_BASELINE_TOKENS
 
     payload = _public_contract().model_dump()
 
     assert payload["level"] == "basic"
     assert payload["engine_version"] == "basic-natal-reading-v1"
     assert payload["schema_version"] == "basic_natal_interpretation_v2"
+    assert payload["basic_editorial_contract_version"] == "basic-natal-editorial-v1"
     assert payload["locale"] == "fr-FR"
 
 

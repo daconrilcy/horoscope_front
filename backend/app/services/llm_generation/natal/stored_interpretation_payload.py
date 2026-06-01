@@ -7,7 +7,11 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from app.domain.astrology.reading.basic_natal_contracts import BasicNatalInterpretationV2
+from app.domain.astrology.reading.basic_natal_contracts import (
+    BASIC_NATAL_DEGRADED_BASELINE_TOKENS,
+    BASIC_NATAL_MIN_EDITORIAL_CONTRACT_VERSION,
+    BasicNatalInterpretationV2,
+)
 from app.domain.llm.prompting.narrative_natal_reading_v1 import (
     NARRATIVE_NATAL_READING_PAYLOAD_KEY,
     NarrativeNatalReadingV1,
@@ -112,13 +116,29 @@ def load_basic_natal_interpretation_v2_from_payload(
     payload: dict[str, object],
 ) -> BasicNatalInterpretationV2 | None:
     """Deserialise la lecture Basic V2 compatible depuis le payload accepte."""
+    if contains_degraded_basic_natal_baseline_token(payload):
+        return None
     nested = payload.get(BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY)
     if not isinstance(nested, dict):
+        return None
+    if nested.get("basic_editorial_contract_version") != BASIC_NATAL_MIN_EDITORIAL_CONTRACT_VERSION:
         return None
     try:
         return BasicNatalInterpretationV2.model_validate(nested)
     except ValidationError:
         return None
+
+
+def contains_degraded_basic_natal_baseline_token(value: object) -> bool:
+    """Detecte les fragments publics Basic issus des anciennes sorties degradees."""
+    if isinstance(value, str):
+        normalized = value.casefold()
+        return any(token.casefold() in normalized for token in BASIC_NATAL_DEGRADED_BASELINE_TOKENS)
+    if isinstance(value, dict):
+        return any(contains_degraded_basic_natal_baseline_token(item) for item in value.values())
+    if isinstance(value, list | tuple):
+        return any(contains_degraded_basic_natal_baseline_token(item) for item in value)
+    return False
 
 
 def has_compatible_basic_natal_interpretation_v2(payload: dict[str, object]) -> bool:

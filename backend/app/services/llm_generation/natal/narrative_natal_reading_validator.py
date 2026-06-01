@@ -10,7 +10,10 @@ from dataclasses import dataclass
 from typing import Callable
 
 from app.domain.astrology.interpretation.basic_natal_reading_plan import BasicNatalReadingPlan
-from app.domain.astrology.reading.basic_natal_contracts import BASIC_NATAL_PUBLIC_SCHEMA_VERSION
+from app.domain.astrology.reading.basic_natal_contracts import (
+    BASIC_NATAL_DEGRADED_BASELINE_TOKENS,
+    BASIC_NATAL_PUBLIC_SCHEMA_VERSION,
+)
 from app.domain.llm.prompting.narrative_natal_reading_v1 import (
     NARRATIVE_CHAPTER_ORDER,
     NarrativeNatalReadingV1,
@@ -56,9 +59,7 @@ _BASIC_NATAL_FORBIDDEN_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         r"\bscore\b",
         r"\borbe\b",
         r"\bdignite\b",
-        r"\bcette lecture s'appuie uniquement sur\b",
-        r"\bce repere retient\b",
-        r"\bavec une confiance editoriale controlee\b",
+        *(rf"\b{re.escape(token)}\b" for token in BASIC_NATAL_DEGRADED_BASELINE_TOKENS),
         r"\bLuminaire\s*:\s*moon\b",
         r"\bPosition planetaire\s*:",
         r"\bnorth node\b",

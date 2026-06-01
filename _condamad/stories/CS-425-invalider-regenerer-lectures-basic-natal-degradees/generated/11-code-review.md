@@ -1,5 +1,9 @@
 # Editorial Review - CS-425
 
+Implementation-evidence status: obsolete / drafting-only.
+
+This file predates the CS-425 implementation. It remains useful as story drafting history, but it is not final code-review evidence and must not be cited as implementation approval.
+
 Verdict: CLEAN
 
 ## Review Cycle
@@ -17,7 +21,7 @@ Verdict: CLEAN
 ## Review Output
 
 - Produced artifact: `_condamad/stories/CS-425-invalider-regenerer-lectures-basic-natal-degradees/generated/11-code-review.md`.
-- Tracker row remains `ready-to-dev` with last update `2026-06-01`.
+- Tracker row was `ready-to-dev` during drafting review; implementation evidence now owns the final `ready-to-review` status.
 - Propagation: local guardrail registry enrichment only; no application code change.
 
 ## Residual Risk

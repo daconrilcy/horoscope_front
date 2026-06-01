@@ -16,6 +16,13 @@ BASIC_NATAL_THEME_TAXONOMY_VERSION = "basic-natal-theme-taxonomy-v1"
 BASIC_NATAL_PLAN_BUILDER_VERSION = "basic-natal-reading-plan-v1"
 BASIC_NATAL_PROMPT_VERSION = "basic-natal-draft-prompt-v1"
 BASIC_NATAL_VALIDATOR_VERSION = "basic-natal-validator-v1"
+BASIC_NATAL_EDITORIAL_CONTRACT_VERSION = "basic-natal-editorial-v1"
+BASIC_NATAL_MIN_EDITORIAL_CONTRACT_VERSION = BASIC_NATAL_EDITORIAL_CONTRACT_VERSION
+BASIC_NATAL_DEGRADED_BASELINE_TOKENS = (
+    "cette lecture s'appuie uniquement",
+    "Ce repere retient",
+    "avec une confiance editoriale controlee",
+)
 
 _PUBLIC_FORBIDDEN_KEYS = frozenset(
     {
@@ -206,6 +213,9 @@ class BasicNatalInterpretationV2(_StrictContract):
     salience_version: Literal["basic-natal-salience-v1"] = BASIC_NATAL_SALIENCE_MODEL_VERSION
     prompt_version: Literal["basic-natal-draft-prompt-v1"] = BASIC_NATAL_PROMPT_VERSION
     validator_version: Literal["basic-natal-validator-v1"] = BASIC_NATAL_VALIDATOR_VERSION
+    basic_editorial_contract_version: Literal["basic-natal-editorial-v1"] = (
+        BASIC_NATAL_EDITORIAL_CONTRACT_VERSION
+    )
     interpretation: NatalSynthesis
     limitations: list[str] = Field(default_factory=list, max_length=8)
     disclaimers: list[str] = Field(default_factory=list, max_length=8)
@@ -220,8 +230,11 @@ class BasicNatalInterpretationV2(_StrictContract):
 
 __all__ = [
     "BASIC_NATAL_ENGINE_VERSION",
+    "BASIC_NATAL_DEGRADED_BASELINE_TOKENS",
+    "BASIC_NATAL_EDITORIAL_CONTRACT_VERSION",
     "BASIC_NATAL_FACT_TAXONOMY_VERSION",
     "BASIC_NATAL_LEVEL",
+    "BASIC_NATAL_MIN_EDITORIAL_CONTRACT_VERSION",
     "BASIC_NATAL_PLAN_BUILDER_VERSION",
     "BASIC_NATAL_PROMPT_VERSION",
     "BASIC_NATAL_PUBLIC_SCHEMA_VERSION",

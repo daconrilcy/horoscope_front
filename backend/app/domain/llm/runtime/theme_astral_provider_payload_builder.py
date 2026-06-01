@@ -22,6 +22,9 @@ from app.domain.astrology.interpretation.interpretation_material_contracts impor
     DeliveryProfile,
     InterpretationMaterialSource,
 )
+from app.domain.astrology.reading.basic_natal_contracts import (
+    BASIC_NATAL_DEGRADED_BASELINE_TOKENS,
+)
 from app.domain.llm.configuration.theme_astral_contracts import (
     THEME_ASTRAL_INPUT_CONTRACT_ID,
     THEME_ASTRAL_PROMPT_CONTRACT_ID,
@@ -71,9 +74,7 @@ _BASIC_STYLE_CONSTRAINTS = {
     "advice_policy": "no_prescriptive_advice",
 }
 _BASIC_FORBIDDEN_TEMPLATE_PHRASES = (
-    "cette lecture s'appuie uniquement sur",
-    "Ce repere retient",
-    "avec une confiance editoriale controlee",
+    *BASIC_NATAL_DEGRADED_BASELINE_TOKENS,
     "Luminaire: moon",
     "Position planetaire:",
 )

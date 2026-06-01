@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
@@ -16,6 +17,7 @@ from app.infra.db.models.user_natal_interpretation import (
 )
 from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
 from app.services.llm_generation.natal.stored_interpretation_payload import (
+    contains_degraded_basic_natal_baseline_token,
     has_compatible_basic_natal_interpretation_v2,
 )
 from app.tests.helpers.natal_result_factory import make_natal_result
@@ -57,15 +59,73 @@ def _persist_complete_basic_row(
     return row
 
 
+def _without_editorial_version(payload: dict[str, object]) -> dict[str, object]:
+    """Retire la version editoriale pour simuler une ligne CS-418 degradee."""
+    stale = deepcopy(payload)
+    nested = stale["basic_natal_interpretation_v2"]
+    assert isinstance(nested, dict)
+    nested.pop("basic_editorial_contract_version", None)
+    return stale
+
+
+def _with_old_editorial_version(payload: dict[str, object]) -> dict[str, object]:
+    """Remplace la version editoriale par une version anterieure incompatible."""
+    stale = deepcopy(payload)
+    nested = stale["basic_natal_interpretation_v2"]
+    assert isinstance(nested, dict)
+    nested["basic_editorial_contract_version"] = "basic-natal-editorial-legacy"
+    return stale
+
+
+def _with_degraded_baseline_token(payload: dict[str, object]) -> dict[str, object]:
+    """Injecte un marqueur de baseline degradee dans une lecture sinon compatible."""
+    stale = deepcopy(payload)
+    nested = stale["basic_natal_interpretation_v2"]
+    assert isinstance(nested, dict)
+    interpretation = nested["interpretation"]
+    assert isinstance(interpretation, dict)
+    interpretation["introduction"] = "Cette lecture s'appuie uniquement sur un socle minimal."
+    return stale
+
+
+@pytest.mark.parametrize(
+    ("payload_factory", "reason"),
+    [
+        (
+            lambda plan: {
+                "summary": "Ancienne lecture Basic",
+                "sections": [{"content": "obsolete"}],
+            },
+            "legacy_payload",
+        ),
+        (
+            lambda plan: _without_editorial_version(persisted_basic_payload(plan)),
+            "missing_editorial_version",
+        ),
+        (
+            lambda plan: _with_old_editorial_version(persisted_basic_payload(plan)),
+            "old_editorial_version",
+        ),
+        (
+            lambda plan: _with_degraded_baseline_token(persisted_basic_payload(plan)),
+            "degraded_baseline_token",
+        ),
+    ],
+)
 @pytest.mark.asyncio
-async def test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row(db) -> None:
-    """Prouve qu'une ancienne ligne Basic sans versions V2 est ignoree."""
+async def test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row(
+    db, payload_factory, reason: str
+) -> None:
+    """Prouve qu'une ligne Basic degradee est ignoree et regeneree."""
+    chart_id = f"chart-basic-cache-{reason}"
+    user_id = 419
+    plan = basic_runtime_plan(chart_id=chart_id)
     _persist_complete_basic_row(
         db,
-        user_id=419,
-        payload={"summary": "Ancienne lecture Basic", "sections": [{"content": "obsolete"}]},
+        user_id=user_id,
+        chart_id=chart_id,
+        payload=payload_factory(plan),
     )
-    plan = basic_runtime_plan(chart_id="chart-basic-cache")
     draft = valid_basic_draft(plan)
     captured_inputs: list[NatalExecutionInput] = []
 
@@ -84,7 +144,7 @@ async def test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row
         patch(
             "app.services.entitlement.effective_entitlement_resolver_service."
             "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
-            return_value=basic_entitlement_snapshot(user_id=419),
+            return_value=basic_entitlement_snapshot(user_id=user_id),
         ),
         patch(
             "app.services.llm_generation.natal.interpretation_service."
@@ -94,8 +154,8 @@ async def test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row
     ):
         response = await NatalInterpretationService.interpret(
             db=db,
-            user_id=419,
-            chart_id="chart-basic-cache",
+            user_id=user_id,
+            chart_id=chart_id,
             natal_result=make_natal_result(),
             birth_profile=basic_birth_profile(),
             level="complete",
@@ -124,6 +184,8 @@ async def test_compatible_basic_cache_is_served_without_gateway_call(db) -> None
         payload=persisted_basic_payload(plan),
     )
     assert "basic_natal_interpretation_v2" in row.interpretation_payload
+    nested = row.interpretation_payload["basic_natal_interpretation_v2"]
+    assert nested["basic_editorial_contract_version"] == "basic-natal-editorial-v1"
     assert not NatalInterpretationService._is_empty_complete_payload(row.interpretation_payload)
     assert has_compatible_basic_natal_interpretation_v2(row.interpretation_payload)
 
@@ -149,3 +211,16 @@ async def test_compatible_basic_cache_is_served_without_gateway_call(db) -> None
     assert response.data.meta.id == row.id
     assert response.data.meta.schema_version == "basic_natal_interpretation_v2"
     assert response.data.basic_natal_interpretation_v2 is not None
+    assert (
+        response.data.basic_natal_interpretation_v2.basic_editorial_contract_version
+        == "basic-natal-editorial-v1"
+    )
+
+
+def test_degraded_baseline_tokens_make_basic_payload_incompatible() -> None:
+    """Verrouille la detection centrale des fragments Basic degradees."""
+    plan = basic_runtime_plan(chart_id="chart-basic-cache-token")
+    payload = _with_degraded_baseline_token(persisted_basic_payload(plan))
+
+    assert contains_degraded_basic_natal_baseline_token(payload)
+    assert not has_compatible_basic_natal_interpretation_v2(payload)

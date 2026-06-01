@@ -1,0 +1,21 @@
+{
+  "story": "CS-425",
+  "snapshot": "after",
+  "current_contract": {
+    "basic_editorial_contract_version": "basic-natal-editorial-v1",
+    "minimum_editorial_contract_version": "basic-natal-editorial-v1",
+    "engine_version": "basic-natal-reading-v1",
+    "schema_version": "basic_natal_interpretation_v2"
+  },
+  "degraded_classification": {
+    "missing_editorial_version": "incompatible_cache_regenerated",
+    "old_editorial_version": "incompatible_cache_regenerated",
+    "baseline_token": "incompatible_cache_regenerated",
+    "non_regenerable_public_reuse": "hidden_or_quota_controlled_state"
+  },
+  "evidence": [
+    "backend/tests/integration/test_basic_natal_v2_cache_invalidation.py::test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row",
+    "backend/tests/integration/test_basic_natal_v2_cache_invalidation.py::test_degraded_baseline_tokens_make_basic_payload_incompatible",
+    "backend/tests/integration/test_natal_interpretation_rejected_public_boundary.py::test_corrective_regeneration_claim_is_idempotent_and_hidden"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "story": "CS-425",
+  "snapshot": "before",
+  "scenario": "Basic V2 cache row accepted by schema/engine identity only",
+  "payload_shape": {
+    "basic_natal_interpretation_v2": {
+      "locale": "fr-FR",
+      "level": "basic",
+      "engine_version": "basic-natal-reading-v1",
+      "schema_version": "basic_natal_interpretation_v2",
+      "basic_editorial_contract_version": null,
+      "interpretation": {
+        "introduction": "Cette lecture s'appuie uniquement sur un socle minimal."
+      }
+    }
+  },
+  "risk_before_cs425": "No editorial contract version or degraded baseline-token check prevented public cache reuse."
+}

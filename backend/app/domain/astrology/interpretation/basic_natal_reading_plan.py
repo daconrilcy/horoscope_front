@@ -186,7 +186,7 @@ class BasicNatalEditorialBrief:
     source_fact_refs: tuple[str, ...]
 
     def to_payload(self) -> dict[str, Any]:
-        """Retourne le brief provider sans exposer de fact_id ni score interne."""
+        """Retourne le brief redactionnel sans exposer de fact_id ni score interne."""
         return {
             "section_code": self.section_code,
             "public_label": self.public_label,
