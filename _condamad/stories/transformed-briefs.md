@@ -223,3 +223,4 @@
 | cs-441 | `_story_briefs\cs-441-corriger-suppression-runtime-generate-natal-legacy.md` | `_condamad\stories\cs-441-suppression-runtime-generate-natal-legacy\00-story.md` |
 | cs-442 | `_story_briefs\cs-442-corriger-suppression-sources-reintroduction-prompts-nataux-legacy.md` | `_condamad\stories\cs-442-sources-reintroduction-prompts-nataux-legacy\00-story.md` |
 | cs-443 | `_story_briefs\cs-443-corriger-suppression-api-publique-natal-interpretations-legacy.md` | `_condamad\stories\cs-443-retirer-api-publique-natal-interpretations-legacy\00-story.md` |
+| cs-444 | `_story_briefs\cs-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal.md` | `_condamad\stories\cs-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal\00-story.md` |
