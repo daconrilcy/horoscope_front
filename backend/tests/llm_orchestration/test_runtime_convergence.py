@@ -1,3 +1,5 @@
+# Commentaire global: tests de convergence runtime LLM sans reactivation des chemins natals legacy.
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,6 +11,7 @@ from app.domain.llm.runtime.contracts import (
     ExecutionUserInput,
     GatewayConfigError,
     LLMExecutionRequest,
+    UnknownUseCaseError,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
 from app.infra.db.models.llm.llm_assembly import PromptAssemblyConfigModel
@@ -123,8 +126,8 @@ async def test_natal_convergence_nominal():
 
 
 @pytest.mark.asyncio
-async def test_natal_bootstrap_fallback_allowed_when_no_assembly_data_exists(db):
-    """Local bootstrap must keep natal generation operable before any assembly is seeded."""
+async def test_natal_bootstrap_fallback_rejects_deleted_short_generation(db):
+    """Le bootstrap local ne doit plus rendre executable la generation short legacy."""
     gateway = LLMGateway()
 
     request = LLMExecutionRequest(
@@ -142,17 +145,12 @@ async def test_natal_bootstrap_fallback_allowed_when_no_assembly_data_exists(db)
         trace_id="tr-bootstrap",
     )
 
-    plan, _ = await gateway._resolve_plan(request, db=db)
-
-    assert plan.feature == "natal"
-    assert plan.subfeature == "interpretation"
-    assert plan.plan == "free"
-    assert plan.model_source != "assembly"
-    assert plan.execution_profile_source == "bootstrap_no_execution_profile"
+    with pytest.raises(UnknownUseCaseError, match="natal_interpretation_short"):
+        await gateway._resolve_plan(request, db=db)
 
 
-def test_natal_basic_interpretation_seed_uses_complete_v3_contract(db) -> None:
-    """Le bootstrap publie Basic sur le contrat complet, jamais sur l'assembly Free."""
+def test_natal_basic_interpretation_seed_is_not_published_on_legacy_contract(db) -> None:
+    """Le bootstrap ne publie plus Basic sur l'ancien contrat natal_interpretation."""
     from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
 
     db.add(
@@ -169,12 +167,6 @@ def test_natal_basic_interpretation_seed_uses_complete_v3_contract(db) -> None:
             LlmPromptVersionModel(
                 use_case_key="natal_interpretation",
                 developer_prompt="Theme complet {{llm_astrology_input_v1}}",
-                status=PromptStatus.PUBLISHED,
-                created_by="test",
-            ),
-            LlmPromptVersionModel(
-                use_case_key="natal_interpretation_short",
-                developer_prompt="Theme court {{llm_astrology_input_v1}}",
                 status=PromptStatus.PUBLISHED,
                 created_by="test",
             ),
@@ -202,10 +194,22 @@ def test_natal_basic_interpretation_seed_uses_complete_v3_contract(db) -> None:
             PromptAssemblyConfigModel.plan == "basic",
             PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
         )
+        .one_or_none()
+    )
+
+    premium = (
+        db.query(PromptAssemblyConfigModel)
+        .filter(
+            PromptAssemblyConfigModel.feature == "natal",
+            PromptAssemblyConfigModel.subfeature == "interpretation",
+            PromptAssemblyConfigModel.plan == "premium",
+            PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+        )
         .one()
     )
 
-    assert basic.feature_template.use_case_key == "natal_interpretation"
-    assert basic.output_schema is not None
-    assert basic.output_schema.name == "AstroResponse_v3"
-    assert basic.output_schema.version == 3
+    assert basic is None
+    assert premium.feature_template.use_case_key == "natal_interpretation"
+    assert premium.output_schema is not None
+    assert premium.output_schema.name == "AstroResponse_v3"
+    assert premium.output_schema.version == 3

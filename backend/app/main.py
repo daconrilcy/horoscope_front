@@ -1,3 +1,4 @@
+# Commentaire global: point d'entree FastAPI et assemblage runtime de l'application backend.
 """Point d'entree FastAPI et assemblage runtime de l'application backend."""
 
 import logging
@@ -122,7 +123,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.ops.llm.bootstrap.use_cases_seed import seed_bootstrap_contracts
     from scripts.seed_astrologers_6_profiles import seed_astrologers
 
-    def collect_state() -> tuple[int, int, int, int, int, int, int, bool, bool]:
+    def collect_state() -> tuple[int, int, int, int, int, int, int, bool]:
         with _open_startup_db_session() as db:
             return (
                 db.query(LlmOutputSchemaModel).count(),
@@ -137,7 +138,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
                     PromptAssemblyConfigModel.execution_profile_ref == None,  # noqa: E711
                 )
                 .count(),
-                get_active_prompt_version(db, "natal_interpretation_short") is not None,
                 get_active_prompt_version(db, THEME_ASTRAL_USE_CASE_KEY) is not None,
             )
 
@@ -150,7 +150,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             profile_count,
             published_target_assembly_count,
             missing_execution_profile_count,
-            has_active_short_prompt,
             has_active_theme_astral_prompt,
         ) = collect_state()
     except OperationalError as error:
@@ -167,7 +166,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             profile_count,
             published_target_assembly_count,
             missing_execution_profile_count,
-            has_active_short_prompt,
             has_active_theme_astral_prompt,
         ) = collect_state()
 
@@ -175,7 +173,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         output_schema_count == 0
         or prompt_count == 0
         or enabled_personas == 0
-        or not has_active_short_prompt
         or not has_active_theme_astral_prompt
     )
     needs_canonical_seed = (
@@ -192,7 +189,7 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         (
             "canonical_llm_bootstrap_auto_heal schemas=%s prompts=%s personas=%s "
             "assemblies=%s profiles=%s published_target_assemblies=%s "
-            "missing_execution_profiles=%s active_short=%s active_theme_astral=%s"
+            "missing_execution_profiles=%s active_theme_astral=%s"
         ),
         output_schema_count,
         prompt_count,
@@ -201,7 +198,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
         profile_count,
         published_target_assembly_count,
         missing_execution_profile_count,
-        has_active_short_prompt,
         has_active_theme_astral_prompt,
     )
 

@@ -1,0 +1,14 @@
+# Validation CS-434
+
+- `ruff format <fichiers Python modifies>`: PASS.
+- `ruff check backend`: PASS.
+- `python -B -m pytest -q backend/tests/architecture/test_llm_legacy_extinction.py backend/tests/integration/test_theme_natal_public_api_product_actions.py --tb=short`: PASS, 7 passed, 8 deselected.
+- `python -B -m pytest -q backend/tests/llm_orchestration backend/tests/integration -k "theme_natal or legacy or gateway" --tb=short`: PASS, 62 passed, 501 deselected.
+- `python -B -m pytest -q backend/tests/llm_orchestration --tb=short`: PASS, 270 passed, 1 skipped.
+- `python -B -m pytest -q backend/app/tests/unit/test_ai_engine_adapter.py --tb=short`: PASS, 6 passed.
+- Runtime route check `app.routes`: PASS, no deleted generator key in route paths.
+- Runtime OpenAPI check `app.openapi()`: PASS, no `natal_interpretation_short` or `natal_long_free`.
+- Catalog check `PROMPT_FALLBACK_CONFIGS`/`PROMPT_RUNTIME_DATA`: PASS, deleted keys absent.
+- `rg` negative `basic_natal_prompt_payload.*natal_interpretation`: PASS no matches.
+- `rg` negative `fallback_target_key="natal_interpretation_short"|natal_long_free` in catalog/registry: PASS no matches.
+- `python -B -m pytest -q backend/tests/integration/test_natal_interpretation_public_free_basic_contract.py backend/tests/integration/test_natal_interpretation_rejected_public_boundary.py -m integration --tb=short`: NON-EXECUTANT utile, 12 deselected by repository selection rules.

@@ -1,3 +1,5 @@
+# Commentaire global: tests du plan d'execution LLM sans use cases natals legacy nominaux.
+
 import json
 import os
 from unittest.mock import patch
@@ -34,13 +36,13 @@ async def test_resolve_plan_source_config(db):
 async def test_resolve_plan_source_os_granular(db):
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_long_free"),
+        user_input=ExecutionUserInput(use_case="test_natal"),
         context={"chart_json": "{}"},
         request_id="r",
         trace_id="t",
     )
 
-    with patch.dict(os.environ, {"OPENAI_ENGINE_NATAL_LONG_FREE": "gpt-override"}):
+    with patch.dict(os.environ, {"OPENAI_ENGINE_TEST_NATAL": "gpt-override"}):
         plan, qctx = await gateway._resolve_plan(request, db)
         assert plan.model_id == "gpt-override"
         assert plan.model_source == "os_granular"
@@ -106,7 +108,7 @@ def test_supported_perimeter_plan_rejects_legacy_execution_profile_source():
 async def test_resolve_plan_overrides(db):
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_long_free"),
+        user_input=ExecutionUserInput(use_case="test_natal"),
         context={"chart_json": "{}"},
         overrides=ExecutionOverrides(interaction_mode="chat"),
         request_id="r",
@@ -122,7 +124,7 @@ async def test_resolve_plan_overrides(db):
 async def test_resolve_plan_repair_short_circuit(db):
     gateway = LLMGateway()
     request = LLMGateway._legacy_dicts_to_request(
-        use_case="natal_long_free",
+        use_case="test_natal",
         user_input={},
         context={"chart_json": "{}"},
         request_id="r",

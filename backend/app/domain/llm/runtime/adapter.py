@@ -1,3 +1,4 @@
+# Commentaire global: facade minimale entre les services metier et le gateway LLM canonique.
 """Expose une facade minimale entre les services metier et le gateway LLM canonique."""
 
 from __future__ import annotations
@@ -24,9 +25,6 @@ from app.domain.llm.runtime.contracts import (
 )
 from app.domain.llm.runtime.errors import AIEngineError
 from app.domain.llm.runtime.gateway import LLMGateway
-from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
-    BASIC_NATAL_PROMPT_PAYLOAD_KEY,
-)
 from app.services.llm_generation.horoscope_daily.narration_service import (
     generate_horoscope_narration_via_gateway,
 )
@@ -34,6 +32,10 @@ from app.services.llm_generation.horoscope_daily.narration_service import (
 logger = logging.getLogger(__name__)
 
 __all__ = ["AIEngineAdapter", "AIEngineAdapterError"]
+
+_DELETED_NATAL_GENERATOR_KEYS = frozenset(
+    {"natal_interpretation_short", "natal_long_free", "natal-long-free"}
+)
 
 
 def _build_guidance_request(
@@ -238,11 +240,14 @@ class AIEngineAdapter:
         """Construit la requete de theme natal canonique puis la soumet au gateway."""
         gateway = LLMGateway()
         subfeature = natal_input.use_case_key
+        if subfeature in _DELETED_NATAL_GENERATOR_KEYS:
+            raise ValueError(f"Deleted natal generation use case is not executable: {subfeature}")
+        if subfeature == "natal_interpretation" and natal_input.plan == "basic":
+            raise ValueError(
+                "Basic natal generation must use the theme natal product-action runtime"
+            )
         if subfeature in {
             "natal_interpretation",
-            "natal_interpretation_short",
-            "natal_long_free",
-            "natal-long-free",
         }:
             subfeature = "interpretation"
 
@@ -260,7 +265,6 @@ class AIEngineAdapter:
                 astro_context=natal_input.astro_context,
                 extra_context={
                     "llm_astrology_input_v1": natal_input.llm_astrology_input_v1,
-                    BASIC_NATAL_PROMPT_PAYLOAD_KEY: natal_input.basic_natal_prompt_payload,
                     "module": natal_input.module,
                     "variant_code": natal_input.variant_code,
                     "level": natal_input.level,

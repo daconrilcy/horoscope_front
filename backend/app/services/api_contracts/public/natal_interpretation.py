@@ -30,26 +30,6 @@ NatalInterpretationModule = Literal[
 ]
 
 
-class NatalInterpretationRequest(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    use_case_level: Literal["short", "complete"] = Field(
-        default="short", description="short=free, complete=premium"
-    )
-    persona_id: Optional[str] = Field(
-        default=None, description="Optional for short, recommended for complete level."
-    )
-    locale: str = Field(default="fr-FR", pattern=r"^[a-z]{2}-[A-Z]{2}$")
-    question: Optional[str] = Field(default=None, max_length=500)
-    force_refresh: bool = Field(
-        default=False, description="If True, re-generate even if already exists."
-    )
-    module: Optional[NatalInterpretationModule] = Field(
-        default=None,
-        description="Optional thematic module for complete natal interpretation.",
-    )
-
-
 class InterpretationMeta(BaseModel):
     """Contrat Pydantic exposé par l'API."""
 

@@ -1,8 +1,8 @@
+# Commentaire global: routes publiques de gestion du profil utilisateur et de ses preferences.
 """Routes publiques de gestion du profil utilisateur et de ses préférences."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from threading import Lock
 from time import monotonic
@@ -23,7 +23,6 @@ from app.infra.observability.metrics import increment_counter
 from app.services.api_contracts.common import ErrorEnvelope
 from app.services.api_contracts.public.users import (
     NatalChartGenerateRequest,
-    NatalInterpretationApiResponse,
     UserBirthProfileApiResponse,
     UserBirthProfileWithAstroApiResponse,
     UserBirthProfileWithAstroData,
@@ -32,10 +31,6 @@ from app.services.api_contracts.public.users import (
     UserNatalChartLatestApiResponse,
     UserSettingsApiResponse,
     UserSettingsPatchRequest,
-)
-from app.services.llm_generation.natal.interpretation_service import (
-    NatalInterpretationService,
-    NatalInterpretationServiceError,
 )
 from app.services.user_profile.astro_profile_service import (
     UserAstroProfileData,
@@ -161,6 +156,9 @@ async def get_me_latest_natal_chart(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+    if include_interpretation:
+        return _legacy_natal_interpretation_gone(request_id)
+
     try:
         latest = UserNatalChartService.get_latest_for_user(db=db, user_id=current_user.id)
     except UserNatalChartServiceError as error:
@@ -176,27 +174,6 @@ async def get_me_latest_natal_chart(
         )
 
     response_data = latest.model_dump(mode="json")
-
-    if include_interpretation:
-        trace_id = request.headers.get("X-Trace-Id", request_id)
-        try:
-            profile = UserBirthProfileService.get_for_user(db, user_id=current_user.id)
-            interpretation = await NatalInterpretationService.interpret_chart(
-                natal_chart=latest,
-                birth_profile=profile,
-                user_id=current_user.id,
-                request_id=request_id,
-                trace_id=trace_id,
-                persona_id=persona_id,
-                db=db,
-            )
-            response_data["interpretation"] = interpretation.model_dump(mode="json")
-        except (
-            UserBirthProfileServiceError,
-            NatalInterpretationServiceError,
-            asyncio.TimeoutError,
-        ):
-            pass
 
     try:
         astro_profile = UserAstroProfileService.get_for_user(db, user_id=current_user.id)
@@ -225,10 +202,11 @@ async def get_me_latest_natal_chart(
 
 @router.get(
     "/me/natal-chart/interpretation",
-    response_model=NatalInterpretationApiResponse,
+    response_model=None,
     responses={
         401: {"model": ErrorEnvelope},
         404: {"model": ErrorEnvelope},
+        410: {"model": ErrorEnvelope},
         429: {"model": ErrorEnvelope},
         503: {"model": ErrorEnvelope},
     },
@@ -239,63 +217,21 @@ async def get_me_natal_chart_interpretation(
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
-    """Génère une interprétation textuelle du thème natal de l'utilisateur."""
+    """Refuse l'ancien endpoint generateur au profit de l'action produit canonique."""
     request_id = resolve_request_id(request)
-    trace_id = request.headers.get("X-Trace-Id", request_id)
+    _ = (persona_id, current_user, db)
+    return _legacy_natal_interpretation_gone(request_id)
 
-    try:
-        chart = UserNatalChartService.get_latest_for_user(db=db, user_id=current_user.id)
-    except UserNatalChartServiceError as error:
-        status_code = (
-            404 if error.code in {"natal_chart_not_found", "birth_profile_not_found"} else 422
-        )
-        return build_error_response(
-            status_code=status_code,
-            request_id=request_id,
-            code=error.code,
-            message=error.message,
-            details=error.details,
-        )
 
-    try:
-        profile = UserBirthProfileService.get_for_user(db, user_id=current_user.id)
-    except UserBirthProfileServiceError as error:
-        return build_error_response(
-            status_code=404,
-            request_id=request_id,
-            code=error.code,
-            message=error.message,
-            details=error.details,
-        )
-
-    try:
-        interpretation = await NatalInterpretationService.interpret_chart(
-            natal_chart=chart,
-            birth_profile=profile,
-            user_id=current_user.id,
-            request_id=request_id,
-            trace_id=trace_id,
-            persona_id=persona_id,
-            db=db,
-        )
-        return {
-            "data": interpretation.model_dump(mode="json"),
-            "meta": {"request_id": request_id},
-        }
-    except NatalInterpretationServiceError as error:
-        if error.code == "ai_engine_timeout":
-            status_code = 503
-        elif "rate" in error.code.lower() or error.code == "rate_limit_exceeded":
-            status_code = 429
-        else:
-            status_code = 503
-        return build_error_response(
-            status_code=status_code,
-            request_id=request_id,
-            code=error.code,
-            message=error.message,
-            details=error.details,
-        )
+def _legacy_natal_interpretation_gone(request_id: str) -> Any:
+    """Retourne l'arret controle des generations natales publiques legacy."""
+    return build_error_response(
+        status_code=410,
+        request_id=request_id,
+        code="natal_interpretation_endpoint_gone",
+        message="Legacy natal generation is readonly; use POST /v1/theme-natal/readings.",
+        details={"state": "readonly", "replacement": "/v1/theme-natal/readings"},
+    )
 
 
 @router.get(

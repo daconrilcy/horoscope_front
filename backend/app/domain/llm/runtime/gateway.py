@@ -76,9 +76,6 @@ from app.domain.llm.runtime.provider_parameter_mapper import ProviderParameterMa
 from app.domain.llm.runtime.provider_runtime_manager import ProviderRuntimeManager
 from app.domain.llm.runtime.providers import is_provider_supported
 from app.domain.llm.runtime.repair import build_repair_prompt
-from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
-    BASIC_NATAL_PROMPT_PAYLOAD_KEY,
-)
 from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.llm.llm_prompt import LlmUseCaseConfigModel
@@ -89,7 +86,7 @@ from app.infra.providers.llm.openai_responses_client import ResponsesClient
 logger = logging.getLogger("app.domain.llm.runtime.gateway")
 
 # Use cases that MUST have a valid output schema (premium paid features)
-PAID_USE_CASES = {"natal_interpretation", "natal_interpretation_short"}
+PAID_USE_CASES = {"natal_interpretation"}
 
 _VALID_INTERACTION_MODES = {"structured", "chat"}
 _VALID_QUESTION_POLICIES = {"none", "optional", "required"}
@@ -548,12 +545,6 @@ class LLMGateway:
                 THEME_ASTRAL_PROVIDER_PAYLOAD_KEY
                 + ": "
                 + json.dumps(theme_astral_payload, ensure_ascii=False, sort_keys=True)
-            )
-        elif (basic_payload := context.get(BASIC_NATAL_PROMPT_PAYLOAD_KEY)) is not None:
-            parts.append(
-                BASIC_NATAL_PROMPT_PAYLOAD_KEY
-                + ": "
-                + json.dumps(basic_payload, ensure_ascii=False, sort_keys=True)
             )
         elif (llm_astrology_input := context.get(LLM_ASTROLOGY_INPUT_V1_KEY)) is not None:
             prompt_payload = _prompt_visible_llm_astrology_input(llm_astrology_input)
@@ -1768,10 +1759,6 @@ class LLMGateway:
 
             # Overlay context_dict (priority to context)
             render_vars.update(context_dict)
-            if context_dict.get(BASIC_NATAL_PROMPT_PAYLOAD_KEY) is not None:
-                render_vars[LLM_ASTROLOGY_INPUT_V1_KEY] = context_dict[
-                    BASIC_NATAL_PROMPT_PAYLOAD_KEY
-                ]
             is_natal_use_case = use_case.startswith("natal_") or use_case == "natal_interpretation"
             uses_modern_natal_input = (
                 LLM_ASTROLOGY_INPUT_V1_KEY in config.required_prompt_placeholders

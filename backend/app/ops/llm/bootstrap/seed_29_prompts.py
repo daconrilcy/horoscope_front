@@ -1,3 +1,4 @@
+# Commentaire global: seed des prompts nataux bootstrap encore autorises.
 """
 Seed des prompts nataux (Chapter 29) pour le LLMGateway.
 Optimise selon les recommandations GPT-5.2 pour une concision et une structure maximale.
@@ -113,19 +114,6 @@ Gestion des erreurs :
 - Si l’entrée est malformée ou trop incomplète pour produire une interprétation (ex : planets absent), retourne un JSON AstroResponse_v1 avec title="Erreur : Données insuffisantes" et summary expliquant la cause. sections/highlights/advice vides, evidence=[]."""  # noqa: E501
 
 PROMPTS_TO_SEED = [
-    {
-        "use_case_key": "natal_interpretation_short",
-        "display_name": "Interprétation Natale (Courte)",
-        "description": "Analyse rapide du thème de naissance.",
-        "persona_strategy": "optional",
-        "required_prompt_placeholders": ["llm_astrology_input_v1", "locale", "use_case"],
-        "developer_prompt": NATAL_SHORT_PROMPT,
-        "model": "gpt-4o-mini",
-        "temperature": 0.7,
-        "max_output_tokens": 4000,
-        "eval_fixtures_path": "backend/app/tests/eval_fixtures/natal_interpretation_short",
-        "eval_failure_threshold": 0.10,
-    },
     {
         "use_case_key": "natal_interpretation",
         "display_name": "Interprétation Natale (Complète)",

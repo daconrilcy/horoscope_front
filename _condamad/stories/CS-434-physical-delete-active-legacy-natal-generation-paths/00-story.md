@@ -1,5 +1,5 @@
 # Story CS-434 physical-delete-active-legacy-natal-generation-paths: Physically Delete Active Legacy Natal Generation Paths
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

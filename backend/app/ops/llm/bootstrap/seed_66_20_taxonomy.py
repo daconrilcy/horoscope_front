@@ -1,3 +1,5 @@
+# Commentaire global: seed des assemblies LLM canoniques encore autorisees.
+
 from __future__ import annotations
 
 import logging
@@ -26,8 +28,6 @@ TARGET_ASSEMBLIES: tuple[tuple[str, str, str, str], ...] = (
     ("guidance", "weekly", "premium", "guidance_weekly"),
     ("guidance", "contextual", "free", "guidance_contextual"),
     ("guidance", "contextual", "premium", "guidance_contextual"),
-    ("natal", "interpretation", "free", "natal_interpretation_short"),
-    ("natal", "interpretation", "basic", "natal_interpretation"),
     ("natal", "interpretation", "premium", "natal_interpretation"),
     ("natal", "psy_profile", "premium", "natal_psy_profile"),
     ("natal", "shadow_integration", "premium", "natal_shadow_integration"),
@@ -41,6 +41,7 @@ TARGET_ASSEMBLIES: tuple[tuple[str, str, str, str], ...] = (
 
 
 def _resolve_output_schema_id(db: Session, schema_name: str | None) -> uuid.UUID | None:
+    """Retourne l'identifiant du schema de sortie publie, s'il existe."""
     if not schema_name:
         return None
     stmt = select(LlmOutputSchemaModel).where(LlmOutputSchemaModel.name == schema_name)
@@ -54,18 +55,17 @@ def _profile_defaults_for_target(
 ) -> dict[str, str | int | None]:
     """Retourne les valeurs par défaut du profil nominal pour une cible taxonomique."""
     is_premium = plan == "premium"
-    is_basic_natal = feature == "natal" and plan == "basic"
     return {
         "model": "gpt-4o" if is_premium else "gpt-4o-mini",
-        "verbosity_profile": "detailed" if is_premium or is_basic_natal else "balanced",
+        "verbosity_profile": "detailed" if is_premium else "balanced",
         "output_mode": "free_text" if feature == "chat" else "structured_json",
-        "max_output_tokens": 2400 if is_basic_natal else None,
+        "max_output_tokens": None,
         "timeout_seconds": 60,
     }
 
 
 def seed_66_20_taxonomy(db: Session) -> None:
-    """Finalize canonical taxonomy for chat, guidance and natal (Story 66.20)."""
+    """Finalise la taxonomie canonique chat, guidance et natal premium."""
 
     stmt_persona = select(LlmPersonaModel).where(LlmPersonaModel.enabled)
     persona = db.execute(stmt_persona).scalars().first()

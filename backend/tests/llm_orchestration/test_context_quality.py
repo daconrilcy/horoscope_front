@@ -1,3 +1,5 @@
+# Commentaire global: tests de propagation de qualite de contexte dans les prompts LLM.
+
 import pytest
 
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
@@ -68,7 +70,7 @@ async def test_gateway_context_quality_propagation(db):
 
     gateway = LLMGateway()
     request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(use_case="natal_long_free", feature="natal_test"),
+        user_input=ExecutionUserInput(use_case="test_natal", feature="natal_test"),
         context=ExecutionContext(chart_json='{"planets": []}'),
         request_id="req-cq",
         trace_id="tr-cq",

@@ -1,10 +1,14 @@
-# CS-434 Draft Review - CLEAN
+# CS-434 Draft Review - OBSOLETE PRE-IMPLEMENTATION REVIEW
 
 <!-- Commentaire global: cet artefact consigne la revue redactionnelle pre-implementation de la story CS-434. -->
 
-## Verdict
+## Implementation Handoff
 
-CLEAN.
+This file is a pre-implementation drafting review only. It is obsolete for final implementation evidence and must not be used as a final code-review verdict for CS-434.
+
+## Previous Verdict
+
+CLEAN for story drafting only.
 
 ## Review Scope
 
@@ -27,7 +31,7 @@ CLEAN.
 
 - All in-scope primitives from the brief are explicit in target state, domain boundary, tasks, ACs, expected files, or evidence.
 - Out-of-scope primitives are preserved as non-goals, including `_condamad/run-state.json`, frontend redesign, and mass migration.
-- The story remains pre-implementation and `ready-to-dev`; no application code review was performed.
+- Historical note from the drafting review: before this implementation run, the story was pre-implementation. This note is obsolete and not a current status assertion.
 
 ## Validation
 

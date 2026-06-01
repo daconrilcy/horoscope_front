@@ -236,7 +236,7 @@ def test_rejected_run_returns_controlled_state_without_provider_payload(
 def test_old_public_endpoint_is_non_generative(client: TestClient) -> None:
     """POST /v1/natal/interpretation renvoie 410 sans appeler l'ancien service generateur."""
     with patch(
-        "app.api.v1.routers.public.natal_interpretation.NatalInterpretationService.interpret",
+        "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret",
         new_callable=AsyncMock,
     ) as interpret_mock:
         response = client.post(
@@ -248,6 +248,34 @@ def test_old_public_endpoint_is_non_generative(client: TestClient) -> None:
     assert response.json()["error"]["code"] == "natal_interpretation_endpoint_gone"
     assert response.json()["error"]["details"]["state"] == "readonly"
     interpret_mock.assert_not_called()
+
+
+def test_users_latest_include_interpretation_is_non_generative(client: TestClient) -> None:
+    """Le flag historique include_interpretation est refuse sans appel provider legacy."""
+    with patch(
+        "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret_chart",
+        new_callable=AsyncMock,
+    ) as interpret_chart_mock:
+        response = client.get("/v1/users/me/natal-chart/latest?include_interpretation=true")
+
+    assert response.status_code == 410
+    assert response.json()["error"]["code"] == "natal_interpretation_endpoint_gone"
+    assert response.json()["error"]["details"]["replacement"] == "/v1/theme-natal/readings"
+    interpret_chart_mock.assert_not_called()
+
+
+def test_users_interpretation_endpoint_is_non_generative(client: TestClient) -> None:
+    """L'ancien endpoint users d'interpretation renvoie 410 sans appeler le service legacy."""
+    with patch(
+        "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret_chart",
+        new_callable=AsyncMock,
+    ) as interpret_chart_mock:
+        response = client.get("/v1/users/me/natal-chart/interpretation")
+
+    assert response.status_code == 410
+    assert response.json()["error"]["code"] == "natal_interpretation_endpoint_gone"
+    assert response.json()["error"]["details"]["state"] == "readonly"
+    interpret_chart_mock.assert_not_called()
 
 
 def _authenticated_user() -> AuthenticatedUser:

@@ -1,3 +1,4 @@
+# Commentaire global: catalogue canonique des prompts et registre de fallback borne.
 """Catalogue canonique des prompts et registre de fallback borne."""
 
 from __future__ import annotations
@@ -95,14 +96,6 @@ PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
         "temperature": 0.7,
         "output_schema": None,
     },
-    "natal_long_free": {
-        "name": "natal-long-free-v1",
-        "description": "Interpretation natale restreinte (plan free)",
-        "engine_env_key": "OPENAI_ENGINE_NATAL_LONG_FREE",
-        "max_tokens": 1000,
-        "temperature": 0.7,
-        "output_schema": NATAL_FREE_SHORT_SCHEMA,
-    },
     "guidance_daily": {
         "name": "guidance-daily-v1",
         "description": "Daily astrological guidance",
@@ -134,14 +127,6 @@ PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
         "max_tokens": 4000,
         "temperature": 0.7,
         "output_schema": ASTRO_RESPONSE_V3,
-    },
-    "natal_interpretation_short": {
-        "name": "natal-interpretation-short-v1",
-        "description": "Fast/concise natal analysis",
-        "engine_env_key": "OPENAI_ENGINE_NATAL_SHORT",
-        "max_tokens": 2000,
-        "temperature": 0.7,
-        "output_schema": ASTRO_RESPONSE_V1,
     },
     "chat_astrologer": {
         "name": "chat-astrologer-v1",

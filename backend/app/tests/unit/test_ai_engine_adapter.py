@@ -1,3 +1,5 @@
+# Commentaire global: tests unitaires de l'adapter LLM et de ses blocages legacy.
+
 import pytest
 
 import app.domain.llm.runtime.adapter as adapter_module
@@ -173,26 +175,20 @@ async def test_generate_natal_interpretation_maps_free_legacy_use_case_to_canoni
 
     monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
 
-    result = await AIEngineAdapter.generate_natal_interpretation(
-        NatalExecutionInput(
-            use_case_key="natal_long_free",
-            locale="fr-FR",
-            level="complete",
-            llm_astrology_input_v1={"contract_id": "llm_astrology_input_v1"},
-            plan="free",
-            validation_strict=False,
-            user_id=1,
-            request_id="req-natal-free",
-            trace_id="trace-natal-free",
-            variant_code="free_short",
+    with pytest.raises(ValueError, match="Deleted natal generation use case"):
+        await AIEngineAdapter.generate_natal_interpretation(
+            NatalExecutionInput(
+                use_case_key="natal_long_free",
+                locale="fr-FR",
+                level="complete",
+                llm_astrology_input_v1={"contract_id": "llm_astrology_input_v1"},
+                plan="free",
+                validation_strict=False,
+                user_id=1,
+                request_id="req-natal-free",
+                trace_id="trace-natal-free",
+                variant_code="free_short",
+            )
         )
-    )
 
-    assert result.raw_output == "{}"
-    assert captured_request is not None
-    assert captured_request.user_input.use_case == "natal_long_free"
-    assert captured_request.user_input.feature == "natal"
-    assert captured_request.user_input.subfeature == "interpretation"
-    assert captured_request.context.extra_context["llm_astrology_input_v1"] == {
-        "contract_id": "llm_astrology_input_v1"
-    }
+    assert captured_request is None

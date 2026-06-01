@@ -61,9 +61,6 @@ from app.domain.llm.prompting.schemas import (
 )
 from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
-from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
-    build_basic_natal_prompt_payload,
-)
 from app.infra.db.models.llm.llm_persona import LlmPersonaModel
 from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
@@ -86,9 +83,6 @@ from app.services.api_contracts.public.natal_interpretation import (
 )
 from app.services.api_contracts.public.natal_interpretation import (
     NatalInterpretationData as NatalGatewayInterpretationData,
-)
-from app.services.chart.json_builder import (
-    build_chart_json,
 )
 from app.services.llm_generation.llm_token_usage_service import LlmTokenUsageService
 from app.services.llm_generation.natal.basic_natal_runtime_material import (
@@ -131,7 +125,6 @@ from app.services.llm_generation.natal.stored_interpretation_payload import (
     load_basic_natal_interpretation_v2_from_payload,
     load_narrative_reading_from_payload,
 )
-from app.services.reference_data.astrology_translation_resolver import AstrologyTranslationResolver
 from app.services.resources.templates.disclaimer_registry import get_disclaimers
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 from app.services.user_profile.natal_chart_service import UserNatalChartReadData
@@ -1342,12 +1335,7 @@ class NatalInterpretationService:
         # 1. Normalization (N1)
         degraded_mode_str = _detect_degraded_mode(birth_profile)
 
-        labels = AstrologyTranslationResolver(db).resolve_labels(
-            language_code=locale,
-            user_id=user_id,
-        )
         _repair_legacy_natal_result_for_interpretation(db, natal_result)
-        chart_json_dict = build_chart_json(natal_result, birth_profile, degraded_mode_str, labels)
         interpreted_astral_points = ()
         astral_points = getattr(natal_result, "astral_points", ())
         if astral_points:
@@ -1362,18 +1350,13 @@ class NatalInterpretationService:
 
         # 3. Use case selection
         if level == "complete" and variant_code == "free_short":
-            return await NatalInterpretationService._generate_free_short(
-                db=db,
-                user_id=user_id,
-                chart_id=chart_id,
-                natal_result=natal_result,
-                birth_profile=birth_profile,
-                chart_json_dict=chart_json_dict,
-                astro_context=astro_context,
-                locale=locale,
-                request_id=request_id,
-                trace_id=trace_id,
-                degraded_mode_str=degraded_mode_str,
+            raise NatalInterpretationServiceError(
+                code="legacy_natal_generation_disabled",
+                message=(
+                    "Legacy free natal generation is disabled; "
+                    "use the theme natal product-action runtime."
+                ),
+                details={"replacement": "/v1/theme-natal/readings", "variant_code": "free_short"},
             )
 
         if level == "complete" and module:
@@ -1401,14 +1384,15 @@ class NatalInterpretationService:
             requested_plan=projection_plan,
         )
         basic_reading_plan: BasicNatalReadingPlan | None = None
-        basic_natal_prompt_payload: dict[str, object] | None = None
         if level == "complete" and user_plan == "basic" and variant_code != "free_short":
-            basic_reading_plan = _build_basic_natal_reading_plan_for_runtime(
-                natal_result=natal_result,
-                chart_id=chart_id,
-                locale=locale,
+            raise NatalInterpretationServiceError(
+                code="legacy_basic_natal_generation_disabled",
+                message=(
+                    "Basic natal generation is handled only by "
+                    "the theme natal product-action runtime."
+                ),
+                details={"replacement": "/v1/theme-natal/readings"},
             )
-            basic_natal_prompt_payload = build_basic_natal_prompt_payload(basic_reading_plan)
 
         # 4. Call AIEngineAdapter (Story 66.7)
         effective_question = question
@@ -1430,7 +1414,6 @@ class NatalInterpretationService:
             locale=locale,
             level=level,
             llm_astrology_input_v1=llm_astrology_input_v1,
-            basic_natal_prompt_payload=basic_natal_prompt_payload,
             persona_id=persona_id,
             plan=user_plan,
             validation_strict=level == "complete",
