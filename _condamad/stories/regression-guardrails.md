@@ -213,6 +213,7 @@ Avant de passer une story a `ready-for-dev`, verifier:
 | RG-169 | `CS-421` | Qualite redactionnelle Basic natal | Le payload Basic doit fournir un brief editorial derive du `BasicNatalReadingPlan`, et les textes publics acceptes doivent rejeter phrases mecaniques, libelles anglais bruts, formes francaises non accentuees, sections source-listing, themes a phrase unique et disclaimers comme contenu. | `pytest -q backend/tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py backend/tests/unit/test_basic_natal_narrative_validator.py backend/tests/unit/domain/astrology/test_basic_natal_public_evidence.py` + scans denylist CS-421. |
 | RG-172 | `CS-425` | Basic cache editorial version | Basic cache reuse requires current editorial version and clean baseline tokens. | cache pytest + rg. |
 | RG-170 | `CS-422` | DOM Basic V2 `/natal` | Sources et mentions legales Basic V2 restent dedupliquees. | DOM guard sources/legal + build. |
+| RG-173 | `CS-435` | Big Bang natal | Public LLM generation uses product+LLM contracts; no raw old use_case. | pytest + OpenAPI/routes + rg. |
 
 ## Format d'enrichissement
 

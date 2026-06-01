@@ -1,5 +1,5 @@
 # Story CS-426 freeze-inventory-legacy-generation-natal-bigbang: Freeze Inventory Legacy Generation Natal Big Bang
-Status: ready-to-dev
+Status: ready-to-review
 
 Commentaire global: cette story fige l'inventaire des surfaces capables de generer une lecture natale legacy avant le Big Bang.
 
@@ -134,15 +134,15 @@ Repository structure alert: none. `backend`, `backend/app`, `backend/tests`, `fr
 
 ## Implementation Tasks
 
-- [ ] Task 1: Map public, admin, and dev backend paths that can trigger natal generation. (AC: AC1, AC7)
-- [ ] Task 2: Map frontend controls that send use-case level, variant code, or force refresh signals. (AC: AC2, AC7)
-- [ ] Task 3: Classify seeds, prompts, use cases, schemas, tests, mocks, services, gateways, scripts, and reports. (AC: AC3, AC4)
-- [ ] Task 4: Separate `readonly` historical reads from active generation paths. (AC: AC5)
-- [ ] Task 5: Assign `delete`, `replace`, `readonly`, `keep`, or `needs-decision` to every mapped surface. (AC: AC3, AC4, AC6)
-- [ ] Task 6: Persist all required scans in `evidence/initial-scans.txt`. (AC: AC10)
-- [ ] Task 7: Record source alignment and classification assumptions in the evidence artifacts. (AC: AC6, AC7)
-- [ ] Task 8: Document `_condamad/run-state.json` as out of scope without modifying it. (AC: AC8)
-- [ ] Task 9: Verify the worktree only contains story, tracker, and evidence artifacts for this inventory. (AC: AC9)
+- [x] Task 1: Map public, admin, and dev backend paths that can trigger natal generation. (AC: AC1, AC7)
+- [x] Task 2: Map frontend controls that send use-case level, variant code, or force refresh signals. (AC: AC2, AC7)
+- [x] Task 3: Classify seeds, prompts, use cases, schemas, tests, mocks, services, gateways, scripts, and reports. (AC: AC3, AC4)
+- [x] Task 4: Separate `readonly` historical reads from active generation paths. (AC: AC5)
+- [x] Task 5: Assign `delete`, `replace`, `readonly`, `keep`, or `needs-decision` to every mapped surface. (AC: AC3, AC4, AC6)
+- [x] Task 6: Persist all required scans in `evidence/initial-scans.txt`. (AC: AC10)
+- [x] Task 7: Record source alignment and classification assumptions in the evidence artifacts. (AC: AC6, AC7)
+- [x] Task 8: Document `_condamad/run-state.json` as out of scope without modifying it. (AC: AC8)
+- [x] Task 9: Verify the worktree only contains story, tracker, and evidence artifacts for this inventory. (AC: AC9)
 
 ## Files to Inspect First
 

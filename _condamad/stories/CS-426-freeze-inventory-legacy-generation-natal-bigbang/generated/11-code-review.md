@@ -1,5 +1,7 @@
 # CS-426 Editorial Story Review
 
+Implementation handoff note (2026-06-01): this artifact is a pre-implementation editorial story review. It is retained as handoff-only context and must not be used as final implementation review evidence.
+
 Verdict: CLEAN
 
 Review scope:
@@ -12,7 +14,7 @@ Review scope:
 
 Issues fixed during review:
 
-- Status and tracker now use an allowed drafting status: `ready-to-dev`.
+- Status and tracker were aligned for drafting readiness at the time of the editorial review; current implementation status is owned by `00-story.md`, `story-status.md`, and `10-final-evidence.md`.
 - Stale validation blocker text was removed after the underlying contract gaps were corrected.
 - Operation contract now keeps the CONDAMAD removal archetype context while limiting `delete` to classification and forbidding physical deletion here.
 - Allowlist register now uses exact files, with required file, symbol, reason, and permanence columns.
