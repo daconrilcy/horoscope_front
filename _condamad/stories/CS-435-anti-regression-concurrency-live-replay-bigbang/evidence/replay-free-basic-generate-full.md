@@ -5,7 +5,7 @@ Status: PASS
 Preuve runtime:
 
 - Test: `python -B -m pytest -q backend\tests\integration\test_theme_natal_bigbang_replay.py --tb=short`
-- Resultat observe pendant validation ciblee: inclus dans `8 passed, 5 deselected`.
+- Resultat observe pendant validation ciblee: inclus dans `8 passed, 13 deselected`.
 - Le test cree un slot `free_preview` accepte via `build_contractual_theme_natal_free_preview()`.
 - Le replay Free avec une seconde `client_request_id` reutilise le meme slot public.
 - Le runtime `ThemeNatalBasicFullReadingRuntime.generate` cree ensuite un slot `basic_full_reading` accepte pour le meme `chart_id`.

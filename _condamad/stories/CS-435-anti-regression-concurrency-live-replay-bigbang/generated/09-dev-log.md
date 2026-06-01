@@ -31,7 +31,7 @@
 | `condamad_validate.py <capsule>` | PASS | Initial capsule validation. |
 | `ruff format <changed backend test files>` | PASS | Scoped format. |
 | `ruff check backend` | PASS | Backend lint. |
-| `python -B -m pytest -q <CS-435 targeted backend tests> --tb=short` | PASS | 8 passed, 5 deselected. |
+| `python -B -m pytest -q <CS-435 targeted backend tests including product-action API> --tb=short` | PASS | 8 passed, 13 deselected. |
 | `python -B -m pytest -q backend\tests\integration backend\tests\llm_orchestration -k "theme_natal or basic_full_reading or concurrency or entitlement" --tb=short` | PASS | 6 passed, 552 deselected. |
 | `python -B -m pytest -q backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short` | PASS | 6 passed. |
 | `pnpm --dir frontend test -- natalInterpretation NatalChartPage natalPublicDomGuard` | PASS | 118 frontend tests. |

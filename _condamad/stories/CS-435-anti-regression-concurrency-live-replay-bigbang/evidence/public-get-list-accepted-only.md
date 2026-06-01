@@ -5,7 +5,7 @@ Status: PASS
 Preuve runtime:
 
 - Test: `python -B -m pytest -q backend\tests\integration\test_theme_natal_public_reads.py --tb=short`
-- Resultat observe pendant validation ciblee: inclus dans `8 passed, 5 deselected`.
+- Resultat observe pendant validation ciblee: inclus dans `8 passed, 13 deselected`.
 - TestClient est utilise contre `app`.
 
 Scenario API:

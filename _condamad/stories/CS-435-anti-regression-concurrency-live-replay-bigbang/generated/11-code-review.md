@@ -15,6 +15,9 @@ Verdict: CLEAN
 1. Finding: `generated/11-code-review.md` still documented only story drafting readiness and explicitly excluded
    implementation evidence. Fix: replaced it with this implementation review artifact.
 2. Fresh review after correction: no remaining actionable implementation, proof, guardrail, or AC-alignment issue found.
+3. Alignment pass: generated proof artifacts still reported the older targeted backend count from the prior run.
+   Fix: updated the affected artifacts to the current command including product-action API coverage, `8 passed, 13 deselected`.
+4. Fresh review after evidence correction: no remaining brief, AC, implementation, proof, guardrail, or tracker issue found.
 
 ## AC Alignment
 

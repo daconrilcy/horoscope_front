@@ -79,7 +79,7 @@
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-435-anti-regression-concurrency-live-replay-bigbang` | repo root | PASS | 0 | Capsule valid before implementation. |
 | `ruff format <changed backend test files>` | repo root | PASS | 0 | Python formatting scoped. |
 | `ruff check backend` | repo root | PASS | 0 | Backend lint OK. |
-| `python -B -m pytest -q <CS-435 targeted backend tests> --tb=short` | repo root | PASS | 0 | 8 passed, 5 deselected. |
+| `python -B -m pytest -q <CS-435 targeted backend tests including product-action API> --tb=short` | repo root | PASS | 0 | 8 passed, 13 deselected. |
 | `python -B -m pytest -q backend\tests\integration backend\tests\llm_orchestration -k "theme_natal or basic_full_reading or concurrency or entitlement" --tb=short` | repo root | PASS | 0 | 6 passed, 552 deselected. |
 | `python -B -m pytest -q backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short` | repo root | PASS | 0 | 6 passed. |
 | `pnpm --dir frontend test -- natalInterpretation NatalChartPage natalPublicDomGuard` | repo root | PASS | 0 | 3 files, 118 tests passed. |
@@ -114,19 +114,14 @@
 
 - `git status --short -- _condamad _story_briefs backend frontend`:
   - `M _condamad/run-state.json` (pre-existing, out of scope)
-  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/00-story.md`
+  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/evidence/concurrency-proof.md`
+  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/evidence/entitlement-freshness-proof.md`
+  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/evidence/public-get-list-accepted-only.md`
+  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/evidence/replay-free-basic-generate-full.md`
+  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/evidence/validation-output.txt`
+  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/generated/09-dev-log.md`
+  - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/generated/10-final-evidence.md`
   - `M _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/generated/11-code-review.md`
-  - `M _condamad/stories/story-status.md`
-  - `M backend/tests/llm_orchestration/test_llm_legacy_extinction.py`
-  - `M backend/tests/unit/test_natal_chart_long_quota_on_acceptance.py`
-  - `M frontend/src/tests/natalInterpretation.test.tsx`
-  - `M frontend/src/tests/natalPublicDomGuard.test.tsx`
-  - `?? _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/evidence/`
-  - `?? _condamad/stories/CS-435-anti-regression-concurrency-live-replay-bigbang/generated/*.md`
-  - `?? backend/tests/integration/test_theme_natal_bigbang_replay.py`
-  - `?? backend/tests/integration/test_theme_natal_concurrency.py`
-  - `?? backend/tests/integration/test_theme_natal_entitlement_freshness.py`
-  - `?? backend/tests/integration/test_theme_natal_public_reads.py`
 
 ## Remaining risks
 
