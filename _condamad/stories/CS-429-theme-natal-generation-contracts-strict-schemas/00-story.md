@@ -1,5 +1,5 @@
 # Story CS-429 theme-natal-generation-contracts-strict-schemas: Theme Natal Generation Contracts And Strict Schemas
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
