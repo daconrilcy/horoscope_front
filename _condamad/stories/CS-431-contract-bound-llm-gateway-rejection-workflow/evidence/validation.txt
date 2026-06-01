@@ -1,5 +1,6 @@
 # CS-431 validation evidence
 
+- Implementation review refresh: PASS (`generated/11-code-review.md` replaced with fresh clean implementation review).
 - Capsule repair: PASS.
 - Capsule validation: PASS.
 - Scoped format: PASS (`ruff format <changed python files>`).
@@ -13,6 +14,11 @@
 - Existing public-boundary regression: PASS with `--long`, 8 passed.
 - App import/start sanity: PASS, `app.main` imported and exposed 230 routes.
 - `git diff --check`: PASS; only CRLF working-copy warnings.
+- Review-loop targeted lint rerun: PASS (`python -B -m ruff check <CS-431 changed backend/test files>`).
+- Review-loop gateway/rejection tests rerun: PASS, 11 passed.
+- Review-loop integration tests rerun: PASS with `--long`, 16 passed.
+- Final post-correction targeted pytest rerun: PASS with `--long`, 27 passed.
+- Review-loop carrier and gateway ownership scans rerun: PASS, zero matches.
 
 Notes:
 - Integration tests under `backend/tests/integration` require `--long`; without it the

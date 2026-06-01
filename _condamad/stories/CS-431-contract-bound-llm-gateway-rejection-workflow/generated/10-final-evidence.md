@@ -3,7 +3,7 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Final implementation review: CLEAN
 - Story key: CS-431-contract-bound-llm-gateway-rejection-workflow
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-431-contract-bound-llm-gateway-rejection-workflow`
@@ -27,7 +27,7 @@
 | `generated/06-validation-plan.md` | yes | yes | PASS | Present. |
 | `generated/07-no-legacy-dry-guardrails.md` | yes | yes | PASS | Present. |
 | `generated/10-final-evidence.md` | yes | yes | PASS | This file. |
-| `generated/11-code-review.md` | no | yes | OBSOLETE | Marked handoff-only pre-implementation review. |
+| `generated/11-code-review.md` | yes | yes | PASS | Fresh implementation review is clean. |
 
 ## Implementation summary
 
@@ -127,7 +127,7 @@
 ## Final worktree status
 
 - Final `git status --short` includes story/code changes plus pre-existing `_condamad/run-state.json`.
-- Modified tracked files: `_condamad/stories/story-status.md`, story `00-story.md`, stale `11-code-review.md`, backend runtime files, and updated Basic runtime integration test.
+- Modified tracked files: `_condamad/stories/story-status.md`, story `00-story.md`, implementation `11-code-review.md`, backend runtime files, and updated Basic runtime integration test.
 - Untracked new files: generated capsule files, evidence files, gateway/rejection tests, integration rejection test, and shared orchestration test helper.
 
 ## Remaining risks
