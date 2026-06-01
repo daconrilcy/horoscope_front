@@ -1,62 +1,29 @@
+# Commentaire global: routeur public des lectures natales historiques et readonly.
+"""Expose les lectures natales publiques encore autorisees sans generation legacy."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Mapping, Optional
 
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_authenticated_user
-from app.core.config import settings
 from app.core.exceptions import ApplicationError
 from app.core.request_id import resolve_request_id
-from app.domain.llm.runtime.adapter import AIEngineAdapterError
-from app.domain.llm.runtime.contracts import (
-    GatewayConfigError,
-    InputValidationError,
-    OutputValidationError,
-    UnknownUseCaseError,
-)
-from app.domain.llm.runtime.errors import (
-    UpstreamError,
-    UpstreamRateLimitError,
-    UpstreamTimeoutError,
-)
 from app.infra.db.models.pdf_template import PdfTemplateModel, PdfTemplateStatus
 from app.infra.db.session import get_db_session
 from app.services.api_contracts.common import ErrorEnvelope
 from app.services.api_contracts.public.natal_interpretation import (
     InterpretationMeta,
-    NatalChartLongEntitlementInfo,
     NatalInterpretationListResponse,
-    NatalInterpretationRequest,
     NatalInterpretationResponse,
     NatalPdfTemplateListResponse,
 )
-from app.services.entitlement.natal_chart_long_entitlement_gate import (
-    NatalChartLongAccessDeniedError,
-    NatalChartLongEntitlementGate,
-    NatalChartLongEntitlementResult,
-    NatalChartLongQuotaExceededError,
-)
-from app.services.llm_generation.natal.interpretation_service import (
-    NatalInterpretationService,
-    NatalInterpretationServiceError,
-)
-from app.services.llm_generation.natal.public_interpretation import (
-    _build_natal_entitlement_info,
-    _raise_error,
-)
-from app.services.resources.templates.disclaimer_registry import get_disclaimers
-from app.services.user_profile.birth_profile_service import (
-    UserBirthProfileService,
-    UserBirthProfileServiceError,
-)
-from app.services.user_profile.natal_chart_service import (
-    UserNatalChartService,
-    UserNatalChartServiceError,
-)
+from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
+from app.services.llm_generation.natal.public_interpretation import _raise_error
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +32,8 @@ router = APIRouter(prefix="/v1/natal", tags=["natal-interpretation"])
 
 @router.post(
     "/interpretation",
-    response_model=NatalInterpretationResponse,
+    status_code=410,
+    response_model=None,
     responses={
         401: {"model": ErrorEnvelope},
         403: {"model": ErrorEnvelope},
@@ -82,228 +50,40 @@ router = APIRouter(prefix="/v1/natal", tags=["natal-interpretation"])
 )
 async def interpret_natal_chart(
     request: Request,
-    body: NatalInterpretationRequest,
     current_user: AuthenticatedUser = Depends(require_authenticated_user),
     db: Session = Depends(get_db_session),
 ) -> Any:
+    """Refuse l'ancien endpoint generateur avant tout acces provider, entitlement ou DB metier."""
+    _ = (current_user, db)
     request_id = resolve_request_id(request)
+    body = await _deprecated_request_body(request)
     raise ApplicationError(
         code="natal_interpretation_endpoint_gone",
         message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
         details={
             "state": "readonly",
             "replacement": "/v1/theme-natal/readings",
-            "chart_request_locale": body.locale,
+            "chart_request_locale": _deprecated_request_locale(body),
         },
         request_id=request_id,
     )
-    trace_id = request_id
-    current_step = "init"
-    debug_errors_enabled = request.headers.get("x-debug-errors") == "1"
 
-    # Gate entitlement — verification sans consommation avant generation complete.
-    entitlement_info: NatalChartLongEntitlementInfo | None = None
-    variant_code: str | None = None
-    pending_entitlement: NatalChartLongEntitlementResult | None = None
 
-    def rollback_and_release_corrective_claim() -> None:
-        """Annule la transaction courante et libere une reservation corrective eventuelle."""
-        db.rollback()
-        NatalChartLongEntitlementGate.release_corrective_regeneration_claim(
-            db,
-            access_result=pending_entitlement,
-        )
+def _deprecated_request_locale(body: Mapping[str, Any] | None) -> str | None:
+    """Extrait la locale informative sans valider l'ancien contrat generateur."""
+    if not body:
+        return None
+    locale = body.get("locale")
+    return locale if isinstance(locale, str) else None
 
-    if body.use_case_level == "complete":
-        try:
-            entitlement_result = NatalChartLongEntitlementGate.check_access_for_complete_generation(
-                db, user_id=current_user.id
-            )
-            pending_entitlement = entitlement_result
-            entitlement_info = _build_natal_entitlement_info(entitlement_result)
-            variant_code = entitlement_result.variant_code
-        except NatalChartLongQuotaExceededError as error:
-            rollback_and_release_corrective_claim()
-            return _raise_error(
-                status_code=429,
-                code="natal_chart_long_quota_exceeded",
-                message="quota d'interprétations complètes du thème natal épuisé",
-                request_id=request_id,
-                details={
-                    "quota_key": error.quota_key,
-                    "used": error.used,
-                    "limit": error.limit,
-                    "reason_code": "quota_exhausted",
-                    "window_end": error.window_end.isoformat() if error.window_end else None,
-                },
-            )
-        except NatalChartLongAccessDeniedError as error:
-            rollback_and_release_corrective_claim()
-            return _raise_error(
-                status_code=403,
-                code="natal_chart_long_access_denied",
-                message="accès à l'interprétation complète du thème natal refusé",
-                request_id=request_id,
-                details={
-                    "reason": error.reason,
-                    "reason_code": error.reason_code,
-                    "billing_status": error.billing_status,
-                },
-            )
 
+async def _deprecated_request_body(request: Request) -> Mapping[str, Any] | None:
+    """Lit le JSON obsolete uniquement pour enrichir le message d'arret."""
     try:
-        # Step A: Load last natal chart and profile
-        current_step = "load_chart_and_profile"
-        try:
-            chart = UserNatalChartService.get_latest_for_user(db, current_user.id)
-            profile = UserBirthProfileService.get_for_user(db, current_user.id)
-        except (UserNatalChartServiceError, UserBirthProfileServiceError) as e:
-            rollback_and_release_corrective_claim()
-            if e.code == "natal_chart_not_found" or e.code == "birth_profile_not_found":
-                return _raise_error(
-                    status_code=404,
-                    code="natal_chart_not_found",
-                    message="No natal chart found for this user. Please generate one first.",
-                    request_id=request_id,
-                )
-            raise
-
-        # Step B to F: Orchestration via Service V2
-        current_step = "service_interpret"
-        response = await NatalInterpretationService.interpret(
-            db=db,
-            user_id=current_user.id,
-            chart_id=chart.chart_id,
-            natal_result=chart.result,
-            birth_profile=profile,
-            level=body.use_case_level,
-            persona_id=body.persona_id,
-            locale=body.locale,
-            question=body.question,
-            request_id=request_id,
-            trace_id=trace_id,
-            force_refresh=body.force_refresh
-            or bool(pending_entitlement and pending_entitlement.corrective_regeneration),
-            module=body.module,
-            variant_code=variant_code,
-        )
-
-        current_step = "apply_disclaimers"
-        response.disclaimers = get_disclaimers(body.locale)
-        response.entitlement_info = entitlement_info
-
-        if (
-            pending_entitlement is not None
-            and response.data.meta.validation_status != "rejected"
-            and not response.data.meta.cached
-        ):
-            entitlement_result = NatalChartLongEntitlementGate.consume_on_acceptance(
-                db,
-                user_id=current_user.id,
-                access_result=pending_entitlement,
-            )
-            response.entitlement_info = _build_natal_entitlement_info(entitlement_result)
-        elif response.data.meta.validation_status == "rejected":
-            NatalChartLongEntitlementGate.release_corrective_regeneration_claim(
-                db,
-                access_result=pending_entitlement,
-            )
-
-        db.commit()
-
-        current_step = "return_response"
-        return response
-
-    except AIEngineAdapterError as e:
-        rollback_and_release_corrective_claim()
-        # Map internal codes to status codes
-        code = e.code or "interpretation_failed"
-        status_code = 500
-        if "unknown_use_case" in code or "not configured" in str(e).lower():
-            status_code = 404
-            code = "unknown_use_case"
-        elif "timeout" in code or "timeout" in str(e).lower():
-            status_code = 504
-            code = "llm_upstream_timeout"
-        elif "rate_limit" in code:
-            status_code = 429
-            code = "llm_rate_limit"
-        elif "config" in code:
-            status_code = 500
-            code = "gateway_config_error"
-
-        return _raise_error(status_code, code, str(e), request_id)
-    except UnknownUseCaseError as e:
-        rollback_and_release_corrective_claim()
-        logger.error(f"Unknown use case error: {e}")
-        return _raise_error(404, "unknown_use_case", str(e), request_id)
-    except GatewayConfigError as e:
-        rollback_and_release_corrective_claim()
-        logger.error(f"Gateway configuration error: {e}")
-        code = "gateway_config_error"
-        if e.error_code:
-            code = e.error_code
-        return _raise_error(500, code, str(e), request_id)
-    except InputValidationError as e:
-        rollback_and_release_corrective_claim()
-        # Note: Local catch here to ensure 422 response for natal interpretation,
-        # overriding the global 400 handler in main.py.
-        return _raise_error(422, "natal_input_invalid", str(e), request_id)
-    except OutputValidationError:
-        rollback_and_release_corrective_claim()
-        return _raise_error(
-            502, "interpretation_failed", "Failed to generate a valid interpretation.", request_id
-        )
-    except RuntimeError as e:
-        rollback_and_release_corrective_claim()
-        if "no structured output" in str(e) or "empty complete interpretation" in str(e):
-            return _raise_error(502, "interpretation_failed", str(e), request_id)
-        raise
-    except UpstreamRateLimitError:
-        rollback_and_release_corrective_claim()
-        return _raise_error(429, "llm_rate_limit", "Upstream rate limit reached.", request_id)
-    except UpstreamTimeoutError:
-        rollback_and_release_corrective_claim()
-        return _raise_error(504, "llm_upstream_timeout", "Upstream request timed out.", request_id)
-    except UpstreamError:
-        rollback_and_release_corrective_claim()
-        return _raise_error(
-            503, "llm_upstream_error", "LLM provider is currently unavailable.", request_id
-        )
-    except ApplicationError:
-        rollback_and_release_corrective_claim()
-        raise
-    except NatalInterpretationServiceError as e:
-        rollback_and_release_corrective_claim()
-        if e.code == "interpretation_rejected":
-            return _raise_error(
-                422,
-                "natal_interpretation_rejected",
-                e.message,
-                request_id,
-                details=e.details or None,
-            )
-        return _raise_error(500, e.code, e.message, request_id, details=e.details or None)
-    except Exception as e:
-        rollback_and_release_corrective_claim()
-        logger.exception(
-            "Unexpected error during natal interpretation request_id=%s step=%s error=%s",
-            request_id,
-            current_step,
-            e,
-        )
-        details: dict[str, Any] = {"step": current_step}
-        if settings.app_env in {"development", "dev", "local", "test", "testing"} or (
-            debug_errors_enabled
-        ):
-            details = {
-                "step": current_step,
-                "exception_type": type(e).__name__,
-                "exception_message": str(e),
-            }
-        return _raise_error(
-            500, "internal_error", "An unexpected error occurred.", request_id, details=details
-        )
+        payload = await request.json()
+    except Exception:
+        return None
+    return payload if isinstance(payload, Mapping) else None
 
 
 @router.get(

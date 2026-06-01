@@ -2,12 +2,13 @@
 
 ## Story status
 
-- Validation outcome: passed
-- Ready for review: yes
+- Validation outcome: passed after implementation review/fix
+- Ready for review: clean
 - Story key: CS-432-public-api-cutover-product-actions
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-432-public-api-cutover-product-actions`
 - Source finding closure status: full-closure for the public API cutover surface in this story.
+- Final implementation review: CLEAN after 2 review/fix iterations.
 
 ## Preflight
 
@@ -52,6 +53,11 @@
 - `backend/app/services/api_contracts/public/theme_natal_readings.py`
 - `backend/app/services/llm_generation/natal/theme_natal_product_actions.py`
 - `backend/tests/integration/test_theme_natal_public_api_product_actions.py`
+- `backend/app/tests/integration/test_natal_interpretation_endpoint.py`
+- `backend/app/tests/integration/test_natal_free_short_variant.py`
+- `backend/app/tests/integration/test_natal_chart_long_entitlement.py`
+- `backend/tests/integration/test_natal_interpretation_public_free_basic_contract.py`
+- `backend/tests/integration/test_natal_basic_complete_v3_runtime.py`
 - `_condamad/stories/CS-432-public-api-cutover-product-actions/**`
 - `_condamad/stories/story-status.md`
 
@@ -62,6 +68,8 @@
 ## Tests added or updated
 
 - Added `backend/tests/integration/test_theme_natal_public_api_product_actions.py`.
+- Updated legacy old-endpoint integration tests to assert `410` gone/no-call behavior instead of the retired generator path.
+- Updated OpenAPI contract tests to assert the old POST has no `200` response and no legacy request body.
 
 ## Commands run
 
@@ -71,8 +79,9 @@
 | `ruff check .` | `backend` | PASS | All checks passed. |
 | `python -B -m pytest -q --long tests\integration\test_theme_natal_public_api_product_actions.py --tb=short` | `backend` | PASS | `6 passed`. |
 | `python -B -m pytest -q --long tests\integration -k "theme_natal and api" --tb=short` | `backend` | PASS | `6 passed, 284 deselected`. |
+| `python -B -m pytest -q --long tests\integration\test_natal_interpretation_public_free_basic_contract.py tests\integration\test_natal_basic_complete_v3_runtime.py app\tests\integration\test_natal_interpretation_endpoint.py app\tests\integration\test_natal_free_short_variant.py app\tests\integration\test_natal_chart_long_entitlement.py --tb=short` | `backend` | PASS | `14 passed`; legacy endpoint suites now verify `410` and no-call behavior. |
 | `python -B -c <app.routes guard>` | `backend` | PASS | Registered `POST /v1/theme-natal/readings`. |
-| `python -B -c <app.openapi guard>` | `backend` | PASS | Product fields present, old fields absent, old endpoint `410` documented. |
+| `python -B -c <app.openapi guard>` | `backend` | PASS | Product fields present, old fields absent, old endpoint `410` only, no `200`, no requestBody. |
 | `rg -n "use_case_level|variant_code|forceRefresh|plan|use_case" backend\app\services\api_contracts\public\theme_natal_readings.py backend\app\api\v1\routers\public\theme_natal_readings.py` | repo root | PASS | No matches in new product-action route/schema. |
 | `rg -n "use_case_level|variant_code|forceRefresh|plan|use_case" backend\app\services\api_contracts backend\app\api\v1\routers\public` | repo root | PASS_WITH_LIMITATIONS | Broad scan persisted; matches are unrelated public billing/admin contracts or old neutralized natal owner, not the new route/schema. |
 | `rg -n "410|Gone|deprecated|readonly|client_request_id" backend\app\api\v1\routers\public backend\tests` | repo root | PASS_WITH_LIMITATIONS | Matches classify expected old endpoint state, idempotence, and existing unrelated deprecation tests. |
@@ -98,7 +107,13 @@
 
 - `git diff --stat` reviewed for CS-432 surfaces.
 - `git diff --check`: PASS with line-ending warnings only.
-- Existing `generated/11-code-review.md` is editorial/pre-implementation only and is not final implementation review evidence.
+- `generated/11-code-review.md` refreshed as final implementation review evidence.
+
+## Review/fix loop
+
+- Iteration 1 found stale legacy integration tests and old POST OpenAPI still exposing a success request/response contract.
+- Fix batch removed the active old POST request body/success contract, added no-call tests, and refreshed evidence.
+- Iteration 2 found no actionable implementation, AC, guardrail, or proof issue.
 
 ## Final worktree status
 

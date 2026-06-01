@@ -1,16 +1,16 @@
-CS-432 validation evidence - 2026-06-01
+CS-432 review-fix validation evidence - 2026-06-01
 
 All Python commands were run after `. .\.venv\Scripts\Activate.ps1`.
 
 PASS - backend scoped format:
-Set-Location backend; ruff format app\api\errors\catalog.py app\api\v1\routers\public\natal_interpretation.py app\api\v1\routers\registry.py app\api\v1\routers\public\theme_natal_readings.py app\services\api_contracts\public\theme_natal_readings.py app\services\llm_generation\natal\theme_natal_product_actions.py tests\integration\test_theme_natal_public_api_product_actions.py
-Result: 1 file reformatted on final rerun.
+Set-Location backend; ruff format app\api\v1\routers\public\natal_interpretation.py app\tests\integration\test_natal_interpretation_endpoint.py app\tests\integration\test_natal_free_short_variant.py app\tests\integration\test_natal_chart_long_entitlement.py tests\integration\test_natal_interpretation_public_free_basic_contract.py tests\integration\test_natal_basic_complete_v3_runtime.py tests\integration\test_theme_natal_public_api_product_actions.py
+Result: 7 files left unchanged on final rerun.
 
 PASS - backend lint:
 Set-Location backend; ruff check .
 Result: All checks passed.
 
-PASS - story integration suite:
+PASS - story product-action integration suite:
 Set-Location backend; python -B -m pytest -q --long tests\integration\test_theme_natal_public_api_product_actions.py --tb=short
 Result: 6 passed.
 
@@ -18,30 +18,45 @@ PASS - focused theme_natal api integration selection:
 Set-Location backend; python -B -m pytest -q --long tests\integration -k "theme_natal and api" --tb=short
 Result: 6 passed, 284 deselected.
 
+PASS - old-endpoint regression suites updated by review/fix:
+Set-Location backend; python -B -m pytest -q --long tests\integration\test_natal_interpretation_public_free_basic_contract.py tests\integration\test_natal_basic_complete_v3_runtime.py app\tests\integration\test_natal_interpretation_endpoint.py app\tests\integration\test_natal_free_short_variant.py app\tests\integration\test_natal_chart_long_entitlement.py --tb=short
+Result: 14 passed.
+
 PASS - runtime route guard:
 Set-Location backend; python -B -c "<app.routes guard>"
 Result: PASS route /v1/theme-natal/readings POST.
 
 PASS - runtime OpenAPI guard:
-Set-Location backend; python -B -c "<app.openapi guard>"
-Result: PASS openapi product fields and old endpoint 410.
+Set-Location backend; python -B -c "<app.openapi product route + old endpoint gone guard>"
+Result: PASS product action fields, forbidden fields absent, old POST has 410, no 200, no requestBody.
 
 PASS - targeted forbidden field scan:
 rg -n "use_case_level|variant_code|forceRefresh|plan|use_case" backend\app\services\api_contracts\public\theme_natal_readings.py backend\app\api\v1\routers\public\theme_natal_readings.py
 Result: PASS: no matches in new product-action route/schema.
 
-PASS_WITH_LIMITATIONS - broad capsule scans:
-Broad scan outputs are persisted in `legacy-fields-after.txt`, `old-endpoint-scan-after.txt`, and `product-action-symbols-after.txt`.
-Expected matches are classified in `generated/10-final-evidence.md`.
+PASS_WITH_LIMITATIONS - broad old endpoint scan:
+rg -n "410|Gone|deprecated|readonly|client_request_id" backend\app\api\v1\routers\public backend\tests backend\app\tests
+Result: expected matches classify old endpoint readonly state, idempotence fields, and unrelated existing deprecated/read-only tests.
 
-PASS - old endpoint no-call evidence:
-Set-Location backend; python -B -m pytest -q --long tests\integration\test_theme_natal_public_api_product_actions.py -k old_public_endpoint --tb=short
-Result: 1 passed, 5 deselected.
+PASS - product-action symbol scan:
+rg -n "POST /v1/theme-natal/readings|ThemeNatalReadingAction|generate_full" backend\app backend\tests
+Result: matches are canonical product contract/resolver/runtime/route/tests plus old endpoint replacement text.
 
 PASS - diff whitespace:
 git diff --check
 Result: line-ending warnings only, no whitespace errors.
 
-PASS - final capsule validation:
+PASS - story contract validation:
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-432-public-api-cutover-product-actions\00-story.md
+Result: CONDAMAD story validation: PASS.
+
+PASS - story strict lint:
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-432-public-api-cutover-product-actions\00-story.md
+Result: CONDAMAD story lint: PASS.
+
+PASS - CONDAMAD final validation:
 python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-432-public-api-cutover-product-actions --final
 Result: CONDAMAD validation: PASS.
+
+Validation retry note:
+An inline PowerShell OpenAPI guard initially failed because `$ref` was interpolated by PowerShell; the guard was rerun with safe quoting and passed.

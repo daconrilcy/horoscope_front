@@ -1,30 +1,72 @@
-backend\app\api\v1\routers\public\natal_interpretation.py:75:        410: {"model": ErrorEnvelope},
-backend\app\api\v1\routers\public\natal_interpretation.py:92:        message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
-backend\app\api\v1\routers\public\natal_interpretation.py:94:            "state": "readonly",
 backend\app\api\v1\routers\public\support.py:94:    subscription = BillingService.get_subscription_status_readonly(db, user_id=user.id)
 backend\app\api\v1\routers\public\support.py:169:    subscription = BillingService.get_subscription_status_readonly(db, user_id=user.id)
-backend\tests\architecture\test_api_contract_neutrality.py:79:    "deprecated",
-backend\tests\api\admin\test_replay_snapshot_v1_api.py:319:        ("expired", 410),
-backend\tests\api\admin\test_replay_snapshot_v1_api.py:320:        ("already_purged", 410),
-backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:16:ALLOWED_CLASSIFICATIONS = {"delete", "replace", "readonly", "keep", "needs-decision"}
-backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:148:def test_readonly_rows_are_explicitly_non_generative() -> None:
-backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:149:    """Chaque ligne readonly indique pourquoi elle ne produit pas de sortie LLM."""
-backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:153:    readonly_text = "\n".join(
-backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:156:        if row.get("classification") == "readonly"
-backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:159:    assert "non-generative" in readonly_text
+backend\app\api\v1\routers\public\natal_interpretation.py:1:# Commentaire global: routeur public des lectures natales historiques et readonly.
+backend\app\api\v1\routers\public\natal_interpretation.py:35:    status_code=410,
+backend\app\api\v1\routers\public\natal_interpretation.py:43:        410: {"model": ErrorEnvelope},
+backend\app\api\v1\routers\public\natal_interpretation.py:59:    body = await _deprecated_request_body(request)
+backend\app\api\v1\routers\public\natal_interpretation.py:62:        message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
+backend\app\api\v1\routers\public\natal_interpretation.py:64:            "state": "readonly",
+backend\app\api\v1\routers\public\natal_interpretation.py:66:            "chart_request_locale": _deprecated_request_locale(body),
+backend\app\api\v1\routers\public\natal_interpretation.py:72:def _deprecated_request_locale(body: Mapping[str, Any] | None) -> str | None:
+backend\app\api\v1\routers\public\natal_interpretation.py:80:async def _deprecated_request_body(request: Request) -> Mapping[str, Any] | None:
+backend\app\tests\integration\test_admin_exports_api.py:144:    assert "x-deprecated-fields" not in response.headers
 backend\tests\unit\test_backend_structure_guard.py:80:def test_deprecated_infrastructure_namespace_is_not_reintroduced() -> None:
+backend\app\tests\unit\test_billing_service.py:86:def test_readonly_status_ignores_non_usable_stripe_profile_when_legacy_subscription_exists() -> (
+backend\app\tests\unit\test_billing_service.py:112:        status = BillingService.get_subscription_status_readonly(db, user_id=user_id)
+backend\tests\architecture\test_api_contract_neutrality.py:79:    "deprecated",
 backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:50:def test_prediction_tests_do_not_reintroduce_deprecated_narrator_class() -> None:
 backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:62:                        violations.append(f"{relative}: imports deprecated narrator class")
 backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:65:                    violations.append(f"{relative}: instantiates deprecated narrator class")
 backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:68:                        violations.append(f"{relative}: patches deprecated narrator method")
 backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:89:                violations.append(f"{relative}: imports deprecated narrator module")
 backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:92:                    violations.append(f"{relative}: instantiates deprecated narrator class")
-backend\tests\llm_orchestration\test_llm_unification.py:18:async def test_deprecated_use_case_redirection(db):
-backend\tests\llm_orchestration\test_llm_unification.py:67:    # 2. Call Gateway with deprecated use_case
-backend\tests\llm_orchestration\test_llm_unification.py:118:        # but marked deprecated
-backend\tests\llm_orchestration\test_llm_unification.py:136:async def test_deprecated_full_redirection(db):
-backend\tests\llm_orchestration\test_prompt_governance_registry.py:113:def test_deprecated_use_case_mapping_matches_registry_json() -> None:
-backend\tests\llm_orchestration\test_prompt_governance_registry.py:116:    from_json = raw["deprecated_use_case_mapping"]
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:16:ALLOWED_CLASSIFICATIONS = {"delete", "replace", "readonly", "keep", "needs-decision"}
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:148:def test_readonly_rows_are_explicitly_non_generative() -> None:
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:149:    """Chaque ligne readonly indique pourquoi elle ne produit pas de sortie LLM."""
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:153:    readonly_text = "\n".join(
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:156:        if row.get("classification") == "readonly"
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:159:    assert "non-generative" in readonly_text
+backend\app\tests\integration\test_entitlements_me.py:406:            "get_subscription_status_readonly",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:319:        ("expired", 410),
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:320:        ("already_purged", 410),
+backend\app\tests\integration\test_entitlements_e2e_matrix.py:480:            "get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:56:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:86:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:154:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:249:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:292:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:367:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:410:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:528:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:543:    user = UserModel(id=31, email="readonly@example.com", password_hash="hash", role="user")
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:545:    plan = PlanCatalogModel(plan_code="readonly-plan", plan_name="Readonly", audience=Audience.B2C)
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:573:            code="readonly-plan",
+backend\app\tests\unit\test_effective_entitlement_resolver_service.py:587:        "app.services.entitlement.effective_entitlement_resolver_service.BillingService.get_subscription_status_readonly",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:36:            client_request_id="contract-bound-rejected-only",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:63:            client_request_id="contract-bound-metadata",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:97:            client_request_id="contract-bound-public-rejected",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:106:            client_request_id="contract-bound-public-accepted",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:127:    client_request_id: str,
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:135:        client_request_id=client_request_id,
+backend\app\tests\integration\test_natal_free_short_variant.py:47:    assert response.status_code == 410
+backend\app\tests\integration\test_natal_chart_long_entitlement.py:46:    """Short et complete sortent en 410 sans gate entitlement."""
+backend\app\tests\integration\test_natal_chart_long_entitlement.py:63:    assert response.status_code == 410
+backend\app\tests\integration\test_natal_chart_long_entitlement.py:64:    assert response.json()["error"]["details"]["state"] == "readonly"
+backend\app\tests\integration\test_natal_chart_long_entitlement.py:78:    assert response.status_code == 410
+backend\app\tests\integration\test_natal_interpretation_endpoint.py:2:"""Verifie que POST /v1/natal/interpretation est readonly et non generateur."""
+backend\app\tests\integration\test_natal_interpretation_endpoint.py:38:def test_old_public_endpoint_returns_410_with_replacement(test_client: TestClient) -> None:
+backend\app\tests\integration\test_natal_interpretation_endpoint.py:45:    assert response.status_code == 410
+backend\app\tests\integration\test_natal_interpretation_endpoint.py:48:    assert payload["error"]["details"]["state"] == "readonly"
+backend\app\tests\integration\test_natal_interpretation_endpoint.py:78:    assert response.status_code == 410
+backend\app\tests\integration\test_natal_interpretation_endpoint.py:91:    assert "410" in operation["responses"]
+backend\tests\integration\test_llm_legacy_residual_governance.py:10:    assert_deprecated_use_case_registered,
+backend\tests\integration\test_llm_legacy_residual_governance.py:32:        assert_deprecated_use_case_registered(uc)
+backend\tests\integration\test_llm_legacy_residual_governance.py:128:def test_incomplete_deprecated_use_case_rejected_by_model():
+backend\tests\integration\test_llm_legacy_residual_governance.py:137:            registry_status="deprecated",
+backend\tests\integration\test_natal_basic_complete_v3_runtime.py:360:    assert "410" in operation["responses"]
+backend\tests\integration\test_natal_interpretation_public_free_basic_contract.py:176:    assert "410" in operation["responses"]
+backend\tests\llm_orchestration\test_runtime_convergence.py:56:async def test_allow_legacy_fallback_for_deprecated_use_case():
+backend\tests\llm_orchestration\test_runtime_convergence.py:66:            use_case="chat",  # deprecated key
 backend\tests\integration\test_theme_natal_reading_slots.py:84:        "client_request_id",
 backend\tests\integration\test_theme_natal_reading_slots.py:105:def test_theme_natal_slot_reuses_run_for_same_client_request_id(db: Session) -> None:
 backend\tests\integration\test_theme_natal_reading_slots.py:110:        client_request_id="client-request-428",
@@ -43,12 +85,6 @@ backend\tests\integration\test_theme_natal_reading_slots.py:278:        client_r
 backend\tests\integration\test_theme_natal_reading_slots.py:293:        client_request_id="client-request-rejected",
 backend\tests\integration\test_theme_natal_reading_slots.py:317:        client_request_id="client-request-quota-1",
 backend\tests\integration\test_theme_natal_reading_slots.py:327:        client_request_id="client-request-quota-2",
-backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:36:            client_request_id="contract-bound-rejected-only",
-backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:63:            client_request_id="contract-bound-metadata",
-backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:97:            client_request_id="contract-bound-public-rejected",
-backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:106:            client_request_id="contract-bound-public-accepted",
-backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:127:    client_request_id: str,
-backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:135:        client_request_id=client_request_id,
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:67:    assert {"chart_id", "action", "persona_profile_id", "locale", "client_request_id"} <= set(
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:119:                "client_request_id": "client-request-432",
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:130:    assert runtime_request.client_request_id == "client-request-432"
@@ -65,9 +101,11 @@ backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:232:   
 backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:252:    client_request_id = "client-rejected-idempotent"
 backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:264:            client_request_id=client_request_id,
 backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:282:                client_request_id=client_request_id,
-backend\tests\integration\test_llm_legacy_residual_governance.py:10:    assert_deprecated_use_case_registered,
-backend\tests\integration\test_llm_legacy_residual_governance.py:32:        assert_deprecated_use_case_registered(uc)
-backend\tests\integration\test_llm_legacy_residual_governance.py:128:def test_incomplete_deprecated_use_case_rejected_by_model():
-backend\tests\integration\test_llm_legacy_residual_governance.py:137:            registry_status="deprecated",
-backend\tests\llm_orchestration\test_runtime_convergence.py:56:async def test_allow_legacy_fallback_for_deprecated_use_case():
-backend\tests\llm_orchestration\test_runtime_convergence.py:66:            use_case="chat",  # deprecated key
+backend\app\tests\integration\test_stripe_webhook_api.py:466:        before = BillingService.get_subscription_status_readonly(db, user_id=user_id)
+backend\app\tests\integration\test_stripe_webhook_api.py:516:        after = BillingService.get_subscription_status_readonly(db, user_id=user_id)
+backend\tests\llm_orchestration\test_llm_unification.py:18:async def test_deprecated_use_case_redirection(db):
+backend\tests\llm_orchestration\test_llm_unification.py:67:    # 2. Call Gateway with deprecated use_case
+backend\tests\llm_orchestration\test_llm_unification.py:118:        # but marked deprecated
+backend\tests\llm_orchestration\test_llm_unification.py:136:async def test_deprecated_full_redirection(db):
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:113:def test_deprecated_use_case_mapping_matches_registry_json() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:116:    from_json = raw["deprecated_use_case_mapping"]

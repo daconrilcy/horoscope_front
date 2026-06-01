@@ -16,7 +16,6 @@ backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:1
 backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:193:        _request(tier=ThemeNatalEntitlementTier.PREMIUM, action=ThemeNatalReadingAction.DOWNLOAD)
 backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:225:        action=ThemeNatalReadingAction.GENERATE_FULL,
 backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:230:        ThemeNatalReadingActionRequest(**payload)
-backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:92:def test_basic_generate_full_accepts_fake_provider_and_persists_public_slot(
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:19:    ThemeNatalReadingAction,
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:20:    ThemeNatalReadingActionRequest,
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:77:def test_generate_full_accepts_product_command_and_returns_accepted_slot(
@@ -27,6 +26,10 @@ backend\tests\integration\test_theme_natal_public_api_product_actions.py:221:   
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:274:    """Retourne la decision produit Basic attendue pour generate_full."""
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:276:        ThemeNatalReadingActionRequest(
 backend\tests\integration\test_theme_natal_public_api_product_actions.py:279:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:92:def test_basic_generate_full_accepts_fake_provider_and_persists_public_slot(
+backend\app\api\v1\routers\public\natal_interpretation.py:62:        message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
+backend\app\services\api_contracts\public\theme_natal_readings.py:11:from app.domain.theme_natal.product_contract import ThemeNatalReadingAction
+backend\app\services\api_contracts\public\theme_natal_readings.py:22:    action: ThemeNatalReadingAction
 backend\app\domain\theme_natal\__init__.py:21:    ThemeNatalReadingAction,
 backend\app\domain\theme_natal\__init__.py:22:    ThemeNatalReadingActionRequest,
 backend\app\domain\theme_natal\__init__.py:40:    "ThemeNatalReadingAction",
@@ -48,7 +51,6 @@ backend\app\domain\theme_natal\product_action_resolver.py:67:    request: ThemeN
 backend\app\domain\theme_natal\product_action_resolver.py:102:    request: ThemeNatalReadingActionRequest,
 backend\app\domain\theme_natal\product_action_resolver.py:116:    request: ThemeNatalReadingActionRequest,
 backend\app\domain\theme_natal\product_action_resolver.py:119:    if request.action is ThemeNatalReadingAction.PREVIEW:
-backend\app\api\v1\routers\public\natal_interpretation.py:92:        message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
 backend\app\services\llm_generation\natal\theme_natal_product_actions.py:15:    ThemeNatalReadingAction,
 backend\app\services\llm_generation\natal\theme_natal_product_actions.py:16:    ThemeNatalReadingActionRequest,
 backend\app\services\llm_generation\natal\theme_natal_product_actions.py:49:    if command.action is ThemeNatalReadingAction.PREVIEW:
@@ -59,5 +61,3 @@ backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:37: 
 backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:38:    ThemeNatalReadingActionRequest,
 backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:374:        ThemeNatalReadingActionRequest(
 backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:377:            action=ThemeNatalReadingAction.GENERATE_FULL,
-backend\app\services\api_contracts\public\theme_natal_readings.py:11:from app.domain.theme_natal.product_contract import ThemeNatalReadingAction
-backend\app\services\api_contracts\public\theme_natal_readings.py:22:    action: ThemeNatalReadingAction

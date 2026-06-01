@@ -162,8 +162,8 @@ def test_basic_complete_public_contract_exposes_basic_v2_payload() -> None:
     _assert_no_forbidden_public_marker(payload)
 
 
-def test_runtime_route_and_openapi_register_public_response_schema() -> None:
-    """Le contrat runtime FastAPI garde la route et le schema public attendus."""
+def test_runtime_route_and_openapi_register_old_endpoint_as_gone() -> None:
+    """L'ancien POST reste charge mais ne publie plus de schema generateur 200."""
     client = TestClient(app)
 
     route_paths = {getattr(route, "path", "") for route in app.routes}
@@ -171,10 +171,10 @@ def test_runtime_route_and_openapi_register_public_response_schema() -> None:
 
     assert "/v1/natal/interpretation" in route_paths
     assert "/v1/natal/interpretation" in openapi["paths"]
-    response_schema = openapi["paths"]["/v1/natal/interpretation"]["post"]["responses"]["200"][
-        "content"
-    ]["application/json"]["schema"]
-    assert response_schema["$ref"].endswith("/NatalInterpretationResponse")
+    operation = openapi["paths"]["/v1/natal/interpretation"]["post"]
+    assert "200" not in operation["responses"]
+    assert "410" in operation["responses"]
+    assert "requestBody" not in operation
     schema_blob = json.dumps(openapi["components"]["schemas"], ensure_ascii=False)
     assert "basic_natal_interpretation_v2" in schema_blob
     assert "narrative_natal_reading_v1" in schema_blob

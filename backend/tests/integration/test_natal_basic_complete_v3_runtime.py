@@ -347,7 +347,7 @@ async def test_adapter_maps_basic_complete_to_natal_interpretation_assembly(monk
 
 
 def test_public_natal_routes_and_openapi_remain_loadable() -> None:
-    """Verifie la charge structuree des routes publiques et du contrat OpenAPI."""
+    """Verifie les routes publiques et l'ancien POST documente en endpoint gone."""
     route_paths = {getattr(route, "path", "") for route in app.routes}
     openapi = app.openapi()
 
@@ -355,3 +355,6 @@ def test_public_natal_routes_and_openapi_remain_loadable() -> None:
     assert "/v1/natal/interpretations/{interpretation_id}" in route_paths
     assert "paths" in openapi
     assert "/v1/natal/interpretation" in openapi["paths"]
+    operation = openapi["paths"]["/v1/natal/interpretation"]["post"]
+    assert "200" not in operation["responses"]
+    assert "410" in operation["responses"]
