@@ -217,3 +217,4 @@
 | cs-435 | `_story_briefs\cs-435-anti-regression-concurrency-live-replay-bigbang.md` | `_condamad\stories\cs-435-anti-regression-concurrency-live-replay-bigbang\00-story.md` |
 | cs-436 | `_story_briefs\cs-436-supprimer-service-generation-natale-legacy.md` | `_condamad\stories\cs-436-supprimer-service-generation-natale-legacy\00-story.md` |
 | cs-437 | `_story_briefs\cs-437-supprimer-catalogues-seeds-scripts-prompts-nataux-legacy.md` | `_condamad\stories\cs-437-supprimer-catalogues-seeds-scripts-prompts-nataux-legacy\00-story.md` |
+| cs-438 | `_story_briefs\cs-438-remplacer-api-historique-interpretations-par-slots-theme-natal.md` | `_condamad\stories\cs-438-remplacer-api-historique-interpretations-par-slots-theme-natal\00-story.md` |
