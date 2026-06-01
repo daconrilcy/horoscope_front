@@ -10,3 +10,5 @@
 - Final verification rerun: capsule summary/validation, targeted tests, lint, full Vitest suite, build, scoped No Legacy scans, `git diff --check`, and local dev HTTP probe passed.
 - Propagation: no-propagation; no new durable registry invariant required.
 - Implementation review/fix: replaced obsolete `generated/11-code-review.md` handoff marker with final clean review evidence, documented the scoped after-scan, stabilized the router protected-route wait exposed by full Vitest, and synchronized story status to `done`.
+- Brief alignment review/fix: added missing Vitest coverage for controlled product slot states `generating`, `failed_retriable`, `locked`, `paywall`, and `rejected`.
+- Validation rerun after slot-state proof fix: targeted Vitest 135 tests PASS, full Vitest 1308 PASS / 8 skipped, lint PASS, build PASS, capsule final validation PASS, story validate/lint PASS.

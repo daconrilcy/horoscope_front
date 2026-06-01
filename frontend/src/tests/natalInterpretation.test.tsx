@@ -950,6 +950,34 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText(/analyse votre thème/i)).toBeInTheDocument();
   });
 
+  it("affiche le skeleton quand le slot produit est en generation controlee", () => {
+    (useNatalInterpretation as any).mockReturnValue({
+      isLoading: false,
+      data: null,
+      state: "generating",
+    });
+
+    renderSection();
+
+    expect(screen.getByText(/analyse votre thème/i)).toBeInTheDocument();
+  });
+
+  it.each(["failed_retriable", "locked", "paywall", "rejected"])(
+    "affiche l'etat d'erreur controlable pour le slot produit %s",
+    (slotState) => {
+      (useNatalInterpretation as any).mockReturnValue({
+        isLoading: false,
+        data: null,
+        state: slotState,
+        refetch: vi.fn(),
+      });
+
+      renderSection();
+
+      expect(screen.getByText(/n'est pas disponible pour le moment/i)).toBeInTheDocument();
+    },
+  );
+
   it("affiche le contenu une fois chargé", () => {
     renderSection();
     expect(screen.getByText("Votre Thème Test")).toBeInTheDocument();

@@ -44,7 +44,7 @@
 | AC7 | Regenerate CTA routes to `action: "regenerate"`. | `natalInterpretation`/`NatalChartPage` PASS and positive command scan. | PASS |
 | AC8 | Download CTA routes to `action: "download"`. | `natalInterpretation` download assertion PASS. | PASS |
 | AC9 | Public request type exposes only product command fields. | `pnpm --dir frontend lint` PASS; `natalChartApi` PASS. | PASS |
-| AC10 | UI consumes controlled slot states. | `ThemeNatalReadingSlotState`; targeted component tests PASS. | PASS |
+| AC10 | UI consumes controlled slot states. | `ThemeNatalReadingSlotState`; explicit `generating`, `failed_retriable`, `locked`, `paywall`, `rejected` tests PASS. | PASS |
 | AC11 | Basic rendering keeps public-only data path. | `pnpm --dir frontend test` PASS; RG-154 scan PASS. | PASS |
 | AC12 | Legal mentions remain deduplicated. | `pnpm --dir frontend build` PASS; full Vitest suite PASS. | PASS |
 | AC13 | Removed controls stay absent. | `evidence/frontend-control-scan-after.txt`; scoped `rg` PASS. | PASS |
@@ -69,7 +69,7 @@
 ## Tests added or updated
 
 - Added product-action JSON body coverage in `natalChartApi.test.tsx`.
-- Updated `natalInterpretation.test.tsx` for product actions and Basic no-auto-generation.
+- Updated `natalInterpretation.test.tsx` for product actions, Basic no-auto-generation, and controlled slot states.
 - Updated `NatalChartPage.test.tsx` expectations for `action` command options.
 - Updated architecture guard ownership assertion for product-action transport.
 - Stabilized `router.test.tsx` protected-route wait after the full suite exposed a load-sensitive timeout.
@@ -82,11 +82,11 @@
 | `.\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-dev-story\scripts\condamad_validate.py .\_condamad\stories\CS-433-frontend-product-actions-no-technical-generation-controls` | repo root | PASS | 0 | Initial capsule structure valid; rerun after current verification PASS. |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-433-frontend-product-actions-no-technical-generation-controls --final` | repo root | PASS | 0 | Final consistency capsule validation passed. |
 | `.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_capsule_summary.py _condamad\stories\CS-433-frontend-product-actions-no-technical-generation-controls` | repo root | PASS | 0 | Compact capsule summary loaded before generated evidence review. |
-| `pnpm --dir frontend test -- natalInterpretation NatalChartPage natalChartApi component-architecture` | repo root | PASS | 0 | 130 targeted tests passed. |
+| `pnpm --dir frontend test -- natalInterpretation NatalChartPage natalChartApi component-architecture` | repo root | PASS | 0 | 135 targeted tests passed. |
 | `pnpm --dir frontend lint` | repo root | PASS | 0 | TypeScript lint/typecheck passed. |
 | `pnpm --dir frontend build` | repo root | PASS | 0 | Production build passed. |
 | `pnpm --dir frontend test -- router` | repo root | PASS | 0 | Router suite passed after stabilizing protected-route wait. |
-| `pnpm --dir frontend test` | repo root | PASS | 0 | Full suite passed after router fix: 118 files passed; 1303 tests passed, 8 skipped. |
+| `pnpm --dir frontend test` | repo root | PASS | 0 | Full suite passed: 118 files passed; 1308 tests passed, 8 skipped. |
 | `Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:5173/' -TimeoutSec 5` | repo root | PASS | 0 | Local frontend dev server was reachable and returned HTTP 200. |
 | scoped forbidden-control `rg` scan | repo root | PASS | 0 | No matches for removed technical controls in natal API/action surface. |
 | RG-153/RG-154/RG-158/style scans | repo root | PASS | 0 | Page composition, public DOM denylist, accordion marker, and inline style checks passed. |
@@ -103,7 +103,7 @@
 - Old POST helper `fetchNatalInterpretation` and `/v1/natal/interpretation` frontend generation path removed from the natal API/action surface.
 - `evidence/removal-audit.md` classifies every removed technical control.
 - Review/fix routing: no-propagation; corrections were local closure evidence plus a test stability fix.
-- Feedback loop routing: no-propagation; this story did not reveal reusable skill or registry learning beyond local evidence updates.
+- Feedback loop routing: no-propagation; the brief-alignment correction was local test evidence and did not create reusable skill or registry learning.
 
 ## Diff review
 
@@ -121,6 +121,7 @@
 ## Remaining risks
 
 - `useNatalInterpretation` keeps its import name for existing ownership/architecture compatibility, but its implementation no longer accepts or emits legacy generation controls. Reviewer should inspect the body, not only the name.
+- `pnpm --dir frontend test:e2e` remains not run; residual risk is limited to browser-only PDF/menu behavior.
 
 ## Suggested reviewer focus
 

@@ -18,6 +18,7 @@ Verdict: CLEAN.
 | Final review artifact was obsolete and could not close the story. | blocking | Replaced this file with fresh implementation review evidence. |
 | After-scan evidence did not state its exact scope, while broader scans include non-generative `variant_code` fixtures. | medium | Updated `evidence/frontend-control-scan-after.txt` with command and reviewer classification. |
 | Full Vitest suite exposed a load-sensitive router assertion outside CS-433. | medium | Stabilized `router.test.tsx` protected-route wait timeout; full suite now passes. |
+| Controlled slot-state proof was incomplete for the source brief. | medium | Added `natalInterpretation` Vitest cases for `generating`, `failed_retriable`, `locked`, `paywall`, and `rejected`. |
 
 Fresh review after fixes: no remaining actionable issue.
 
@@ -29,7 +30,7 @@ Fresh review after fixes: no remaining actionable issue.
   `ThemeNatalReadingAction` and tested through the API/client component path.
 - AC9: `ThemeNatalReadingCommandRequest` exposes only product-action fields.
 - AC10: slot states `accepted`, `generating`, `failed_retriable`, `locked`, `paywall`, and `rejected` are represented by
-  `ThemeNatalReadingSlotState` and handled by the feature container.
+  `ThemeNatalReadingSlotState`, handled by the feature container, and covered by explicit component tests.
 - AC11-AC12: public Basic rendering and legal/source deduplication are unchanged and covered by existing tests/build evidence.
 - AC13-AC14: removed controls and the legacy generation helper are classified in `evidence/removal-audit.md`.
 
@@ -44,11 +45,11 @@ Fresh review after fixes: no remaining actionable issue.
 
 Validation was rerun after this review/fix pass:
 
-- `pnpm --dir frontend test -- natalInterpretation NatalChartPage natalChartApi component-architecture`: PASS.
+- `pnpm --dir frontend test -- natalInterpretation NatalChartPage natalChartApi component-architecture`: PASS; 135 targeted tests passed.
 - `pnpm --dir frontend lint`: PASS.
 - `pnpm --dir frontend build`: PASS.
 - `pnpm --dir frontend test -- router`: PASS after stabilizing the protected-route wait.
-- `pnpm --dir frontend test`: PASS after the router test fix; 118 files passed, 1303 tests passed, 8 skipped.
+- `pnpm --dir frontend test`: PASS; 118 files passed, 1308 tests passed, 8 skipped.
 - Scoped forbidden-control scan over natal API/action surface: PASS.
 - `condamad_validate.py <capsule> --final`: PASS after venv activation.
 - `condamad_story_validate.py <00-story.md>`: PASS after venv activation.
