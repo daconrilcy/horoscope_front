@@ -1,5 +1,5 @@
 # Story CS-425 invalider-regenerer-lectures-basic-natal-degradees: Invalider Ou Regenerer Les Lectures Basic Natal Degradees
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 - Source brief: `_story_briefs/cs-425-invalider-regenerer-lectures-basic-natal-degradees.md`.

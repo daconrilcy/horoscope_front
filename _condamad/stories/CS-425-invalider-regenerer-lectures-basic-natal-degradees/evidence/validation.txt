@@ -15,3 +15,20 @@ PASS: rg -n "batch.*basic|migration.*basic|alembic.*basic" app tests -> no match
 PASS: rg -n "basic_editorial_contract_version|basic-natal-editorial" app tests -> expected code/test hits
 PASS: rg -n "cette lecture s'appuie uniquement|Ce repere retient|avec une confiance editoriale controlee" scoped Basic app/tests -> expected canonical/test hits
 NOTE: initial integration commands without --long were fully deselected by project pytest policy; final evidence uses --long.
+
+Implementation review/fix rerun, 2026-06-01.
+
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; ruff format --check . -> 1764 files already formatted
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; ruff check . -> All checks passed
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --long tests\integration\test_basic_natal_v2_cache_invalidation.py --tb=short -> 6 passed
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short -> 4 passed
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --long tests\integration\test_natal_interpretation_rejected_public_boundary.py --tb=short -> 8 passed
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q --long tests\integration\test_basic_natal_v2_pipeline.py --tb=short -> 1 passed
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\unit\test_basic_natal_reading_contracts.py tests\unit\test_basic_natal_narrative_validator.py --tb=short -> 30 passed
+PASS: .\.venv\Scripts\Activate.ps1; cd backend; python -B -c "from app.main import app; print(app.title)" -> horoscope-backend
+PASS: rg -n "check_and_consume" app\api\v1\routers\public\natal_interpretation.py -> no matches
+PASS: rg -n "batch.*basic|migration.*basic|alembic.*basic" app tests -> no matches
+PASS: rg -n "basic_editorial_contract_version|basic-natal-editorial" app tests -> expected code/test hits
+PASS: rg -n degraded baseline token scan over app tests -> expected canonical/test hits
+PASS: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-425-invalider-regenerer-lectures-basic-natal-degradees\00-story.md -> PASS
+PASS: .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-425-invalider-regenerer-lectures-basic-natal-degradees\00-story.md -> PASS

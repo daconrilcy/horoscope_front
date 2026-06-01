@@ -2,7 +2,7 @@
 
 ## Story status
 
-- Status: ready-to-review
+- Status: done
 - Date: 2026-06-01
 - Source: `_condamad/stories/CS-425-invalider-regenerer-lectures-basic-natal-degradees/00-story.md`
 - Source brief: `_story_briefs/cs-425-invalider-regenerer-lectures-basic-natal-degradees.md`
@@ -18,7 +18,7 @@
 
 - Initial capsule target missed generated files; repaired with `condamad_prepare.py --repair-generated-only`.
 - Final helper validation: PASS after evidence/status synchronization.
-- `generated/11-code-review.md` is explicitly marked obsolete/drafting-only for implementation evidence.
+- `generated/11-code-review.md` was refreshed by the implementation review/fix loop and is the current clean review artifact.
 
 ## AC validation
 
