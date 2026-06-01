@@ -25,3 +25,23 @@ Commands:
 
 Classified limitation:
 - `rg -n "natal_interpretation_short|natal_long_free|shouldRefreshShortAfterBasicUpgrade|forceRefresh" backend/app frontend/src` returned backend readonly/admin/rejection/proof residuals already classified by CS-440 audit and RG-174. No frontend public control hit and no unauthorized public/runtime generator hit was found.
+
+Review/fix pass:
+- Corrected CS-440 report wording from `ready-to-review` blocker to `done`.
+- Replaced previous CS-444 review with fresh implementation review evidence.
+- Updated CS-444 final evidence from a limited-pass verdict to `PASS`; RG-174 classifications remain the accepted boundary.
+- Updated CS-444 story and tracker status to `done`.
+
+Final review/fix validation:
+- `condamad_story_validate.py _condamad\stories\CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal\00-story.md` -> PASS.
+- `condamad_story_lint.py --strict _condamad\stories\CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal\00-story.md` -> PASS.
+- `condamad_validate.py _condamad\stories\CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal --final` -> PASS.
+- `condamad_validate.py _condamad\stories\CS-440-zero-hit-legacy-natal-tests-guards --final` -> PASS.
+- `ruff check .` in `backend` -> PASS.
+- Backend architecture and LLM guard suite -> PASS, `54 passed`.
+- Backend theme natal product/read suite -> PASS, `24 passed, 22 deselected`.
+- Runtime route/OpenAPI assertions -> PASS.
+- `pnpm --dir frontend test -- natalChartApi.test.tsx natalPublicDomGuard.test.tsx natalInterpretation.test.tsx NatalChartPage.test.tsx` -> PASS, `136 passed`.
+- `pnpm --dir frontend lint` -> PASS.
+- Contradiction scans and targeted zero-hit scans -> PASS.
+- RG-174 registry scan -> PASS.

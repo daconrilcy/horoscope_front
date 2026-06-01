@@ -10,9 +10,9 @@
 ## Implementation notes
 
 - No runtime source file was changed.
-- CS-440 stale blocker evidence was updated after CS-441, CS-442, and CS-443 were verified `done` with clean reviews.
+- CS-440 blocker evidence was updated after CS-441, CS-442, and CS-443 were verified `done` with clean reviews.
 - CS-440 CR-3 and CR-4 were closed using current executable evidence.
-- CS-444 pre-implementation review was reclassified as obsolete/handoff-only and not used as final review proof.
+- CS-444 previous review was replaced and is not used as final review proof.
 
 ## Commands run
 
@@ -30,7 +30,7 @@
 
 ## Issues encountered
 
-- The broad story scan `rg -n "natal_interpretation_short|natal_long_free|shouldRefreshShortAfterBasicUpgrade|forceRefresh" backend/app frontend/src` returns classified backend readonly/admin/test residuals. This is accepted under RG-174 and recorded as `PASS_WITH_LIMITATIONS` for AC4, not as a public runtime generator hit.
+- The broad story scan `rg -n "natal_interpretation_short|natal_long_free|shouldRefreshShortAfterBasicUpgrade|forceRefresh" backend/app frontend/src` returns classified readonly/admin/rejection/extinction residuals. This is accepted under RG-174 and recorded as `PASS` for AC4 because no unauthorized public/runtime generator hit remains.
 
 ## Final `git status --short`
 

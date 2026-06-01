@@ -2,7 +2,7 @@
 
 ## Story status
 
-- Validation outcome: PASS_WITH_LIMITATIONS
+- Validation outcome: PASS
 - Ready for review: yes
 - Story key: CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal
 - Source story: `00-story.md`
@@ -20,7 +20,7 @@
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Status `ready-to-review`. |
+| `00-story.md` | yes | yes | PASS | Status `done`. |
 | `generated/01-execution-brief.md` | yes | yes | PASS | Repaired generated file. |
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC1-AC11 traced. |
 | `generated/04-target-files.md` | yes | yes | PASS | Repaired generated file. |
@@ -35,14 +35,14 @@
 | AC1 | CS-441, CS-442, and CS-443 tracker rows are `done`; clean reviews present. | Targeted tracker and review lookup PASS. | PASS | |
 | AC2 | `generate_natal_interpretation` absent from `backend/app`; CS-441 owns deletion. | Generator scan no matches; backend guard suite `54 passed`. | PASS | |
 | AC3 | Old public natal URLs absent from loaded routes, OpenAPI, public router, and frontend source. | Route/OpenAPI assertions PASS; bounded URL scan no matches. | PASS | |
-| AC4 | Public controls are absent; backend old-key residuals are classified readonly/admin/rejection/extinction by CS-440 audit and RG-174. | Frontend/public control scan PASS; frontend tests `136 passed`; audit classification checked. | PASS_WITH_LIMITATIONS | Broad `backend/app` old-key scan is classified, not zero-hit. |
+| AC4 | Public controls are absent; backend old-key residuals are classified readonly/admin/rejection/extinction by CS-440 audit and RG-174. | Public/runtime scan PASS; frontend tests `136 passed`; audit classification checked. | PASS | No unauthorized public/runtime generator hit remains. |
 | AC5 | Positive old generator mocks are absent. | Positive mock scans no matches; backend guard suite `54 passed`. | PASS | |
 | AC6 | CS-440 review updated to final `CLEAN`. | Consistency gate reads final CS-440 review. | PASS | |
 | AC7 | CS-440 zero-hit audit updated to `done`. | Audit artifact exists and records CS-444 closure. | PASS | |
-| AC8 | CS-440 report retains full closure wording only. | Report checks PASS. | PASS | |
+| AC8 | CS-440 report retains full closure wording only. | Report checks PASS after blocker wording removal. | PASS | |
 | AC9 | CS-440 final evidence AC2, AC3, and AC4 are `PASS`. | Final evidence consistency gate PASS. | PASS | |
 | AC10 | RG-174 row remains strict and guard suite passed. | RG-174 scan found line 217; backend guard suite `54 passed`. | PASS | |
-| AC11 | CS-440 tracker row is `done`; CS-444 tracker row is `ready-to-review`. | Tracker row check PASS. | PASS | |
+| AC11 | CS-440 and CS-444 tracker rows are `done`. | Tracker row check PASS. | PASS | |
 
 ## Files changed
 
@@ -106,8 +106,8 @@
 
 ## Remaining risks
 
-- AC4 is `PASS_WITH_LIMITATIONS` because the story's broad text scan over `backend/app` still sees classified readonly/admin residuals. The executable guardrail accepts only those categories and fails unauthorized public/runtime generation hits.
+- None for closing CS-444. The broad old-key scan still sees RG-174-classified readonly/admin/rejection/extinction residuals, but no unauthorized public/runtime generator hit remains.
 
 ## Suggested reviewer focus
 
-- Check that the accepted RG-174 residual categories remain readonly/admin/rejection/extinction only, and that CS-440 `done` is acceptable with `PASS_WITH_LIMITATIONS` on CS-444 AC4.
+- Confirm that the accepted RG-174 residual categories remain readonly/admin/rejection/extinction only.

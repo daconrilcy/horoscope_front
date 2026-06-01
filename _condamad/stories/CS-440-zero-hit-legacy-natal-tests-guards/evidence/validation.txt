@@ -3,13 +3,13 @@
 Date locale: 2026-06-01
 Story: CS-440-zero-hit-legacy-natal-tests-guards
 Brief source: _story_briefs/cs-440-zero-hit-legacy-natal-tests-guards.md
-Verdict d'alignement: BLOCKED
+Verdict d'alignement: PASS
 
 Tracker:
 - PASS: story-status.md lie CS-440 au chemin _condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/00-story.md.
 - PASS: story-status.md lie CS-440 au brief _story_briefs/cs-440-zero-hit-legacy-natal-tests-guards.md.
 - PASS: Last update = 2026-06-01.
-- BLOCKED: CS-436, CS-437 et CS-438 sont encore ready-to-dev; CS-439 est done.
+- PASS: CS-441, CS-442 et CS-443 sont `done` et remplacent les anciens blocages CS-436/437/438 pour la cloture CS-440.
 
 Validations relancees:
 - PASS: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-440-zero-hit-legacy-natal-tests-guards\00-story.md
@@ -17,16 +17,15 @@ Validations relancees:
 - PASS: python -B -m pytest -q tests/architecture/test_legacy_natal_generation_inventory_guard.py tests/architecture/test_llm_legacy_extinction.py --tb=short
 - PASS: rg -n "forceRefresh|shouldRefreshShortAfterBasicUpgrade|use_case_level" backend/app/services/api_contracts/public backend/app/api/v1/routers/public frontend/src/api/natal-chart frontend/src/features/natal-chart frontend/src/pages/NatalChartPage.tsx
 - PASS: rg -n "Legacy natal deleted: zero public/runtime hit|zero public/runtime hit" _condamad/stories/regression-guardrails.md _condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/00-story.md
-- BLOCKED: rg -n "natal_interpretation_short|natal_long_free" backend/app frontend/src
-- BLOCKED: rg -n "AIEngineAdapter\.generate_natal_interpretation|fake_generate_natal_interpretation" backend/app backend/tests
-- BLOCKED: rg -n 'patch\.object\(AIEngineAdapter, "generate_natal_interpretation"' backend/app backend/tests
+- PASS: rg -n "natal_interpretation_short|natal_long_free" backend/app frontend/src retourne uniquement des residus classes RG-174.
+- PASS: rg -n "AIEngineAdapter\.generate_natal_interpretation|fake_generate_natal_interpretation" backend/tests backend/app/tests retourne no matches.
+- PASS: rg -n -F 'patch.object(AIEngineAdapter, "generate_natal_interpretation"' backend/tests backend/app/tests retourne no matches.
 
 Ecarts code-vs-brief constates:
-- Le brief CS-440 demande des scans zero-hit sur backend/app et frontend/src pour natal_interpretation_short et natal_long_free.
-- Le code conserve encore des hits backend/app dans des surfaces legacy/admin/readonly et dans le service natal legacy.
-- Des tests positifs Basic/free exercent encore AIEngineAdapter.generate_natal_interpretation ou des doubles fake_generate_natal_interpretation.
+- Aucun ecart bloquant restant apres CS-441, CS-442, CS-443 et CS-444.
+- Les hits backend/app restants sont classes readonly historique, admin-only ou garde de rejet par RG-174.
+- Aucun test positif ne mocke l'ancien runtime generation.
 
 Decision:
 - Aucune correction applicative locale n'a ete appliquee pendant cette verification.
-- Corriger ces hits dans CS-440 violerait le hors-perimetre du brief, qui interdit d'implementer les suppressions fonctionnelles CS-436 a CS-439.
-- Le statut CS-440 reste ready-to-review avec review d'implementation BLOCKED; ne pas passer la story a done.
+- CS-440 est clos `done` avec review d'implementation `CLEAN`.

@@ -1,5 +1,5 @@
 # Story CS-444 clore-cs-440-zero-hit-apres-corrections-legacy-natal: Clore CS-440 Zero Hit Apres Corrections Legacy Natal
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
@@ -56,7 +56,7 @@ refresh CS-440 evidence, and update the tracker only after a clean review.
 - Evidence 4: `resolve_guardrails.py` - resolver run with legacy-natal, backend, frontend, zero-hit, and review-evidence scope.
 - Evidence 5: `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/11-code-review.md` records final verdict `CLEAN`.
 - Evidence 6: `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/10-final-evidence.md` records AC2, AC3, and AC4 `PASS`.
-- Evidence 7: `_condamad/reports/cs-440-zero-hit-legacy-natal-tests-guards.md` still says CS-440 cannot be closed `done`.
+- Evidence 7: `_condamad/reports/cs-440-zero-hit-legacy-natal-tests-guards.md` had closure-blocker wording before CS-444 correction.
 - Evidence 8: `_condamad/reports/cs-439-cs-440-delivery-report.md` records CS-440 as partially delivered.
 - Evidence 9: `_story_briefs/cs-441-corriger-suppression-runtime-generate-natal-legacy.md` read as closure prerequisite source.
 - Evidence 10: `_story_briefs/cs-442-corriger-suppression-sources-reintroduction-prompts-nataux-legacy.md` read as closure prerequisite source.
@@ -112,7 +112,7 @@ refresh CS-440 evidence, and update the tracker only after a clean review.
 | Contract Shape | yes | Closure status, zero-hit scans, and public route absence have exact shapes. |
 | Batch Migration | no | No data migration or generated multi-file conversion is in scope. |
 | Reintroduction Guard | yes | Old natal runtime, prompt, public API, and frontend symbols must stay absent. |
-| Persistent Evidence | yes | Closure scans, validations, reports, and review evidence must be kept for handoff. |
+| Persistent Evidence | yes | Closure scans, validations, reports, and review evidence must be kept for traceability. |
 
 ## Acceptance Criteria
 
