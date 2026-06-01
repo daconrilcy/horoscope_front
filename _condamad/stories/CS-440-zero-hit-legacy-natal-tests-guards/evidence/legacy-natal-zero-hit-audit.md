@@ -35,6 +35,51 @@
 | `backend/app/services/llm_generation/admin_prompts.py` | `natal_long_free` | admin-only prompt metadata | admin-only prompt metadata |
 | `backend/app/services/llm_generation/natal/interpretation_service.py` | `natal_interpretation_short`, `natal_long_free` | historical persisted-row read compatibility | historical persisted-row read compatibility |
 
+## Autorisations de tests exactes
+
+Les fichiers suivants sont les seuls tests autorises a conserver un ancien symbole natal.
+Le guard `test_legacy_natal_test_hits_are_explicitly_authorized` echoue pour tout nouveau fichier non classe.
+
+- `backend/app/tests/integration/test_admin_actions_api.py` - historique admin/user detail.
+- `backend/app/tests/integration/test_admin_llm_natal_prompts.py` - metadata admin-only.
+- `backend/app/tests/integration/test_contract_api.py` - contrat admin legacy lu sans chemin public.
+- `backend/app/tests/integration/test_gateway_gpt5_params.py` - profil execution historique.
+- `backend/app/tests/integration/test_llm_qa_router.py` - QA interne admin-only.
+- `backend/app/tests/integration/test_migration_20260422_0073_cleanup_llm_legacy.py` - migration historique.
+- `backend/app/tests/integration/test_natal_chart_long_entitlement.py` - ancien endpoint gone/rejet.
+- `backend/app/tests/integration/test_natal_free_short_variant.py` - ancien endpoint gone/rejet.
+- `backend/app/tests/integration/test_natal_interpretation_endpoint.py` - ancien endpoint gone/rejet.
+- `backend/app/tests/integration/test_natal_interpretations_history.py` - readonly historique.
+- `backend/app/tests/unit/test_ai_engine_adapter.py` - garde deleted-key.
+- `backend/app/tests/unit/test_gateway_input_validation_payload.py` - rejet des carriers legacy.
+- `backend/app/tests/unit/test_gateway_modes.py` - schema catalogue hors generation publique.
+- `backend/app/tests/unit/test_natal_interpretation_service_v2.py` - garde de rejet free short.
+- `backend/app/tests/unit/test_seed_29_prompt_contract.py` - contrat seed historique.
+- `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py` - guard CS-440.
+- `backend/tests/architecture/test_llm_legacy_extinction.py` - extinction LLM.
+- `backend/tests/architecture/test_theme_astral_prompt_contract_guard.py` - anti-retour theme astral.
+- `backend/tests/evaluation/__init__.py` - evaluation legacy classee.
+- `backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py` - anti-retour theme astral.
+- `backend/tests/integration/test_admin_llm_catalog.py` - metadata admin-only.
+- `backend/tests/integration/test_llm_release.py` - release LLM historique.
+- `backend/tests/integration/test_natal_basic_complete_v3_runtime.py` - anti-retour modern basic runtime.
+- `backend/tests/integration/test_natal_interpretation_public_free_basic_contract.py` - readonly historique.
+- `backend/tests/integration/test_natal_interpretation_rejected_public_boundary.py` - rejected/audit-only.
+- `backend/tests/integration/test_theme_natal_basic_full_reading_runtime.py` - anti-retour theme natal.
+- `backend/tests/integration/test_theme_natal_public_api_product_actions.py` - rejet/gone public.
+- `backend/tests/integration/test_theme_natal_public_reads.py` - readonly accepted-only.
+- `backend/tests/llm_orchestration/test_assembly_resolution.py` - resolution historique classee.
+- `backend/tests/llm_orchestration/test_llm_legacy_extinction.py` - extinction orchestration.
+- `backend/tests/llm_orchestration/test_prompt_governance_registry.py` - gouvernance prompts.
+- `backend/tests/llm_orchestration/test_runtime_convergence.py` - rejet de fallback supprime.
+- `backend/tests/unit/test_natal_interpretation_stored_payload.py` - payload persiste historique.
+- `frontend/src/tests/natalPublicDomGuard.test.tsx` - denylist DOM publique.
+
+## Fixtures renommees
+
+- `backend/app/tests/eval_fixtures/natal_interpretation_short` -> `backend/app/tests/eval_fixtures/generic_structured_short`.
+- `backend/app/tests/eval_fixtures/natal_interpretation` -> `backend/app/tests/eval_fixtures/generic_structured_complete`.
+
 ## Commandes de preuve
 
 - `python -B -m pytest -q tests/architecture/test_legacy_natal_generation_inventory_guard.py tests/architecture/test_llm_legacy_extinction.py tests/llm_orchestration/test_prompt_governance_registry.py tests/llm_orchestration/test_llm_legacy_extinction.py --tb=short`

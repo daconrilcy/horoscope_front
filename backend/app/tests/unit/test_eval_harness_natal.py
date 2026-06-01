@@ -1,3 +1,5 @@
+# Commentaire global: tests generiques du harness d'evaluation LLM hors fixtures natal legacy.
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -16,8 +18,8 @@ def mock_gateway():
 
 @pytest.fixture
 def fixtures_path():
-    # Use the real fixtures path for testing the logic with real files
-    return "app/tests/eval_fixtures/natal_interpretation_short"
+    # Use the real fixtures path for testing the logic with real files.
+    return "app/tests/eval_fixtures/generic_structured_short"
 
 
 @pytest.mark.asyncio
@@ -25,7 +27,7 @@ async def test_eval_harness_short_all_pass(mock_gateway, fixtures_path):
     """Teste que le harness passe quand le Gateway retourne des résultats valides."""
     # Mock un résultat valide pour AstroResponse_v1
     mock_gateway.execute.return_value = GatewayResult(
-        use_case="natal_interpretation_short",
+        use_case="generic_structured_short",
         request_id="test",
         trace_id="test",
         raw_output="{}",
@@ -54,7 +56,7 @@ async def test_eval_harness_short_all_pass(mock_gateway, fixtures_path):
     )
 
     db = MagicMock()
-    report = await run_eval("natal_interpretation_short", "v1", fixtures_path, db)
+    report = await run_eval("generic_structured_short", "v1", fixtures_path, db)
 
     assert report.total > 0
     assert report.passed == report.total
@@ -67,7 +69,7 @@ async def test_eval_harness_partial_failure(mock_gateway, fixtures_path):
     """Teste le taux d'échec quand certains résultats sont invalides."""
 
     valid_res = GatewayResult(
-        use_case="natal_interpretation_short",
+        use_case="generic_structured_short",
         request_id="test",
         trace_id="test",
         raw_output="{}",
@@ -96,7 +98,7 @@ async def test_eval_harness_partial_failure(mock_gateway, fixtures_path):
     )
 
     invalid_res = GatewayResult(
-        use_case="natal_interpretation_short",
+        use_case="generic_structured_short",
         request_id="test",
         trace_id="test",
         raw_output="{}",
@@ -124,7 +126,7 @@ async def test_eval_harness_partial_failure(mock_gateway, fixtures_path):
     mock_gateway.execute.side_effect = cycle([valid_res, invalid_res])
 
     db = MagicMock()
-    report = await run_eval("natal_interpretation_short", "v1", fixtures_path, db)
+    report = await run_eval("generic_structured_short", "v1", fixtures_path, db)
 
     assert report.total > 0
     # failure_rate should be > 0 because cycle alternates valid/invalid

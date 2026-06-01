@@ -5,7 +5,7 @@
 ## Synthese
 
 - Story: `CS-440-zero-hit-legacy-natal-tests-guards`
-- Statut: `ready-to-review`
+- Statut: `ready-to-review` avec blocker de review implementation
 - Guardrail durable: `RG-174`
 - Public generation canonique: `POST /v1/theme-natal/readings`
 - Ancien endpoint public: `POST /v1/natal/interpretation` documente et teste en `410 Gone`.
@@ -41,4 +41,5 @@ rg -n "AIEngineAdapter\.generate_natal_interpretation|fake_generate_natal_interp
 
 ## Risques residuels
 
-- Les stories CS-436 a CS-438 restent separees dans le tracker; CS-440 verrouille les retours non autorises mais ne supprime pas les compatibilites readonly historiques hors scope.
+- Les stories CS-436, CS-437 et CS-438 restent `ready-to-dev` dans le tracker; CS-440 ne peut pas etre clos `done`.
+- Des tests positifs Basic/free autour du service/adaptateur legacy restent a supprimer ou rebasculer apres ces stories.

@@ -18,6 +18,11 @@ CS440_AUDIT_PATH = CS440_ROOT / "evidence/legacy-natal-zero-hit-audit.md"
 CS440_REPORT_PATH = REPO_ROOT / "_condamad/reports/cs-440-zero-hit-legacy-natal-tests-guards.md"
 FRONTEND_SRC_ROOT = REPO_ROOT / "frontend/src"
 REGRESSION_GUARDRAILS_PATH = REPO_ROOT / "_condamad/stories/regression-guardrails.md"
+TEST_ROOTS = (
+    REPO_ROOT / "backend/tests",
+    REPO_ROOT / "backend/app/tests",
+    REPO_ROOT / "frontend/src/tests",
+)
 
 ALLOWED_CLASSIFICATIONS = {"delete", "replace", "readonly", "keep", "needs-decision"}
 REQUIRED_MAP_COLUMNS = {
@@ -114,6 +119,47 @@ AUTHORIZED_RUNTIME_REASONS = {
     "admin-only internal QA",
     "historical persisted-row read compatibility",
 }
+AUTHORIZED_TEST_TOKEN_FILES = {
+    Path("backend/app/tests/integration/test_admin_actions_api.py"),
+    Path("backend/app/tests/integration/test_admin_llm_natal_prompts.py"),
+    Path("backend/app/tests/integration/test_contract_api.py"),
+    Path("backend/app/tests/integration/test_gateway_gpt5_params.py"),
+    Path("backend/app/tests/integration/test_llm_qa_router.py"),
+    Path("backend/app/tests/integration/test_migration_20260422_0073_cleanup_llm_legacy.py"),
+    Path("backend/app/tests/integration/test_natal_chart_long_entitlement.py"),
+    Path("backend/app/tests/integration/test_natal_free_short_variant.py"),
+    Path("backend/app/tests/integration/test_natal_interpretation_endpoint.py"),
+    Path("backend/app/tests/integration/test_natal_interpretations_history.py"),
+    Path("backend/app/tests/unit/test_ai_engine_adapter.py"),
+    Path("backend/app/tests/unit/test_gateway_input_validation_payload.py"),
+    Path("backend/app/tests/unit/test_gateway_modes.py"),
+    Path("backend/app/tests/unit/test_natal_interpretation_service_v2.py"),
+    Path("backend/app/tests/unit/test_seed_29_prompt_contract.py"),
+    Path("backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py"),
+    Path("backend/tests/architecture/test_llm_legacy_extinction.py"),
+    Path("backend/tests/architecture/test_theme_astral_prompt_contract_guard.py"),
+    Path("backend/tests/evaluation/__init__.py"),
+    Path("backend/tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py"),
+    Path("backend/tests/integration/test_admin_llm_catalog.py"),
+    Path("backend/tests/integration/test_llm_release.py"),
+    Path("backend/tests/integration/test_natal_basic_complete_v3_runtime.py"),
+    Path("backend/tests/integration/test_natal_interpretation_public_free_basic_contract.py"),
+    Path("backend/tests/integration/test_natal_interpretation_rejected_public_boundary.py"),
+    Path("backend/tests/integration/test_theme_natal_basic_full_reading_runtime.py"),
+    Path("backend/tests/integration/test_theme_natal_public_api_product_actions.py"),
+    Path("backend/tests/integration/test_theme_natal_public_reads.py"),
+    Path("backend/tests/llm_orchestration/test_assembly_resolution.py"),
+    Path("backend/tests/llm_orchestration/test_llm_legacy_extinction.py"),
+    Path("backend/tests/llm_orchestration/test_prompt_governance_registry.py"),
+    Path("backend/tests/llm_orchestration/test_runtime_convergence.py"),
+    Path("backend/tests/unit/test_natal_interpretation_stored_payload.py"),
+    Path("frontend/src/tests/natalPublicDomGuard.test.tsx"),
+}
+FORBIDDEN_LEGACY_FIXTURE_NAMES = {
+    "natal_interpretation",
+    "natal_interpretation_short",
+    "natal_long_free",
+}
 
 
 def _read(path: Path) -> str:
@@ -134,6 +180,24 @@ def _iter_source_files(*roots: Path) -> list[Path]:
             if ignored_parts.intersection(path.parts):
                 continue
             if path.suffix.lower() not in {".py", ".ts", ".tsx"}:
+                continue
+            files.append(path)
+    return files
+
+
+def _iter_test_paths() -> list[Path]:
+    """Enumere les fichiers de test et fixtures textuelles qui peuvent porter du legacy."""
+
+    ignored_parts = {"__pycache__", ".pytest_cache", ".ruff_cache", "node_modules", "target"}
+    supported_suffixes = {".py", ".ts", ".tsx", ".yaml", ".yml", ".json"}
+    files: list[Path] = []
+    for root in TEST_ROOTS:
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+            if ignored_parts.intersection(path.parts):
+                continue
+            if path.suffix.lower() not in supported_suffixes:
                 continue
             files.append(path)
     return files
@@ -261,6 +325,29 @@ def test_legacy_natal_runtime_hits_are_explicitly_authorized() -> None:
     assert unauthorized_hits == []
 
 
+def test_legacy_natal_test_hits_are_explicitly_authorized() -> None:
+    """Les tests ne peuvent garder un ancien symbole que dans un fichier classe CS-440."""
+
+    unauthorized_hits = []
+    for relative_path, token in _token_hits(_iter_test_paths(), ZERO_HIT_RUNTIME_TOKENS):
+        if relative_path not in AUTHORIZED_TEST_TOKEN_FILES:
+            unauthorized_hits.append((str(relative_path), token))
+
+    assert unauthorized_hits == []
+
+
+def test_legacy_natal_nominal_fixture_directories_are_removed() -> None:
+    """Les anciens noms de fixtures d'evaluation natale ne restent pas actifs."""
+
+    remaining_legacy_fixture_paths = []
+    for root in TEST_ROOTS:
+        for path in root.rglob("*"):
+            if path.name in FORBIDDEN_LEGACY_FIXTURE_NAMES:
+                remaining_legacy_fixture_paths.append(str(path.relative_to(REPO_ROOT)))
+
+    assert remaining_legacy_fixture_paths == []
+
+
 def test_legacy_natal_zero_hit_closure_is_persisted() -> None:
     """L'audit, le rapport final et le registre durable portent la fermeture CS-440."""
 
@@ -273,5 +360,7 @@ def test_legacy_natal_zero_hit_closure_is_persisted() -> None:
         assert f"`{token}`" in report
     for reason in AUTHORIZED_RUNTIME_REASONS:
         assert reason in audit
+    for path in AUTHORIZED_TEST_TOKEN_FILES:
+        assert path.as_posix() in audit
     assert "RG-174" in registry
     assert "Legacy natal deleted: zero public/runtime hit" in registry
