@@ -3,69 +3,17 @@
 
 from __future__ import annotations
 
-import pytest
-
 from app.domain.llm.configuration.canonical_use_case_registry import (
     NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
     get_canonical_use_case_contract,
 )
 from app.domain.llm.prompting.prompt_renderer import PromptRenderer
-from app.domain.llm.runtime import adapter as adapter_module
-from app.domain.llm.runtime.adapter import AIEngineAdapter
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
-    GatewayMeta,
-    GatewayResult,
     NatalExecutionInput,
-    UsageInfo,
     UseCaseConfig,
 )
 from app.domain.llm.runtime.gateway import LLMGateway
-
-
-@pytest.mark.asyncio
-async def test_natal_execution_input_transports_rich_contract_to_gateway(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Le transport natal place le contrat riche dans la cle schema-owned."""
-    captured_request = None
-    rich_input = {"contract_id": "llm_astrology_input_v1", "facts": {"positions": []}}
-
-    class FakeGateway:
-        async def execute_request(self, request, db=None):
-            nonlocal captured_request
-            captured_request = request
-            return GatewayResult(
-                use_case=request.user_input.use_case,
-                request_id=request.request_id,
-                trace_id=request.trace_id,
-                raw_output="{}",
-                usage=UsageInfo(input_tokens=1, output_tokens=1),
-                meta=GatewayMeta(latency_ms=1, model="test-model"),
-            )
-
-    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
-
-    await AIEngineAdapter.generate_natal_interpretation(
-        NatalExecutionInput(
-            use_case_key="natal_interpretation",
-            locale="fr-FR",
-            level="complete",
-            llm_astrology_input_v1=rich_input,
-            plan="premium",
-            validation_strict=True,
-            user_id=42,
-            request_id="req-rich",
-            trace_id="trace-rich",
-        )
-    )
-
-    assert captured_request is not None
-    assert captured_request.context.extra_context["llm_astrology_input_v1"] == rich_input
-    assert captured_request.context.chart_json is None
-    assert captured_request.context.natal_data is None
-    assert captured_request.flags.evidence_catalog is None
-    assert "llm_astrology_input_v1" not in ExecutionContext.model_fields
 
 
 def test_gateway_prefers_rich_input_over_chart_json_in_user_payload() -> None:

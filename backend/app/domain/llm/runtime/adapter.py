@@ -17,11 +17,9 @@ from app.domain.llm.runtime.adapter_errors import (
 )
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
-    ExecutionFlags,
     ExecutionMessage,
     ExecutionUserInput,
     LLMExecutionRequest,
-    NatalExecutionInput,
 )
 from app.domain.llm.runtime.errors import AIEngineError
 from app.domain.llm.runtime.gateway import LLMGateway
@@ -32,10 +30,6 @@ from app.services.llm_generation.horoscope_daily.narration_service import (
 logger = logging.getLogger(__name__)
 
 __all__ = ["AIEngineAdapter", "AIEngineAdapterError"]
-
-_DELETED_NATAL_GENERATOR_KEYS = frozenset(
-    {"natal_interpretation_short", "natal_long_free", "natal-long-free"}
-)
 
 
 def _build_guidance_request(
@@ -231,67 +225,6 @@ class AIEngineAdapter:
                 str(err),
             )
             raise ConnectionError("llm provider unavailable (v2)") from err
-
-    @staticmethod
-    async def generate_natal_interpretation(
-        natal_input: NatalExecutionInput,
-        db: Session | None = None,
-    ) -> Any:
-        """Construit la requete de theme natal canonique puis la soumet au gateway."""
-        gateway = LLMGateway()
-        subfeature = natal_input.use_case_key
-        if subfeature in _DELETED_NATAL_GENERATOR_KEYS:
-            raise ValueError(f"Deleted natal generation use case is not executable: {subfeature}")
-        if subfeature == "natal_interpretation" and natal_input.plan == "basic":
-            raise ValueError(
-                "Basic natal generation must use the theme natal product-action runtime"
-            )
-        if subfeature in {
-            "natal_interpretation",
-        }:
-            subfeature = "interpretation"
-
-        request = LLMExecutionRequest(
-            user_input=ExecutionUserInput(
-                use_case=natal_input.use_case_key,
-                feature="natal",
-                subfeature=subfeature,
-                plan=natal_input.plan,
-                locale=natal_input.locale,
-                question=natal_input.question,
-                persona_id_override=natal_input.persona_id,
-            ),
-            context=ExecutionContext(
-                astro_context=natal_input.astro_context,
-                extra_context={
-                    "llm_astrology_input_v1": natal_input.llm_astrology_input_v1,
-                    "module": natal_input.module,
-                    "variant_code": natal_input.variant_code,
-                    "level": natal_input.level,
-                },
-            ),
-            flags=ExecutionFlags(
-                validation_strict=natal_input.validation_strict,
-            ),
-            user_id=natal_input.user_id,
-            request_id=natal_input.request_id,
-            trace_id=natal_input.trace_id,
-        )
-
-        try:
-            return await gateway.execute_request(request=request, db=db)
-        except Exception as err:
-            from app.domain.llm.runtime.contracts import GatewayError
-
-            if isinstance(err, (AIEngineError, GatewayError)):
-                handle_gateway_error(err, natal_input.request_id, natal_input.use_case_key)
-            logger.error(
-                "ai_engine_adapter_natal_unexpected_error use_case=%s request_id=%s error=%s",
-                natal_input.use_case_key,
-                natal_input.request_id,
-                str(err),
-            )
-            raise ConnectionError("llm provider unavailable (natal)") from err
 
     @staticmethod
     async def generate_horoscope_narration(

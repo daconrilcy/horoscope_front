@@ -1,0 +1,54 @@
+.\backend\app\services\llm_generation\natal\interpretation_service.py:61:from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
+.\backend\app\services\llm_generation\natal\interpretation_service.py:63:from app.infra.db.models.user_natal_interpretation import (
+.\backend\app\services\llm_generation\natal\interpretation_service.py:78:from app.services.api_contracts.public.natal_interpretation import (
+.\backend\app\services\llm_generation\natal\interpretation_service.py:82:from app.services.api_contracts.public.natal_interpretation import (
+.\backend\app\services\llm_generation\natal\interpretation_service.py:119:    has_compatible_basic_natal_interpretation_v2,
+.\backend\app\services\llm_generation\natal\interpretation_service.py:120:    is_public_natal_interpretation,
+.\backend\app\services\llm_generation\natal\interpretation_service.py:123:    load_basic_natal_interpretation_v2_from_payload,
+.\backend\app\services\llm_generation\natal\interpretation_service.py:488:PUBLIC_FREE_SHORT_USE_CASE = "natal_interpretation_short"
+.\backend\app\services\llm_generation\natal\interpretation_service.py:833:            feature_code="natal_interpretation",
+.\backend\app\services\llm_generation\natal\interpretation_service.py:928:        if has_compatible_basic_natal_interpretation_v2(payload):
+.\backend\app\services\llm_generation\natal\interpretation_service.py:961:        if has_compatible_basic_natal_interpretation_v2(payload):
+.\backend\app\services\llm_generation\natal\interpretation_service.py:977:        if model.use_case != "natal_interpretation":
+.\backend\app\services\llm_generation\natal\interpretation_service.py:983:        return not has_compatible_basic_natal_interpretation_v2(payload)
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1010:            and is_public_natal_interpretation(row)
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1016:            and is_public_natal_interpretation(row)
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1113:            basic_contract = load_basic_natal_interpretation_v2_from_payload(raw_payload)
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1321:            use_case_key = MODULE_TO_USE_CASE_KEY.get(module, "natal_interpretation")
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1323:            use_case_key = "natal_interpretation"
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1368:        natal_input = NatalExecutionInput(
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1385:        gateway_result = await AIEngineAdapter.generate_natal_interpretation(
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1420:        basic_natal_interpretation_v2: BasicNatalInterpretationV2 | None = None
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1447:                basic_natal_interpretation_v2 = _basic_natal_contract_from_draft(
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1452:                    basic_natal_interpretation_v2,
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1515:        if basic_natal_interpretation_v2 is not None:
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1519:                    basic_natal_interpretation_v2.model_dump()
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1545:            if basic_natal_interpretation_v2 is not None
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1700:                basic_natal_interpretation_v2=basic_natal_interpretation_v2,
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1754:            if not is_public_natal_interpretation(row):
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1788:            action="natal_interpretation_deleted",
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1789:            target_type="natal_interpretation",
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1823:        if item and not is_public_natal_interpretation(item):
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1868:        basic_natal_interpretation_v2 = load_basic_natal_interpretation_v2_from_payload(raw_payload)
+.\backend\app\services\llm_generation\natal\interpretation_service.py:1878:                basic_natal_interpretation_v2=basic_natal_interpretation_v2,
+.\backend\app\services\llm_generation\natal\public_interpretation.py:10:from app.services.api_contracts.public.natal_interpretation import (
+.\backend\app\services\llm_generation\natal\stored_interpretation_payload.py:19:from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+.\backend\app\services\llm_generation\natal\stored_interpretation_payload.py:23:BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY = "basic_natal_interpretation_v2"
+.\backend\app\services\llm_generation\natal\stored_interpretation_payload.py:64:def is_public_natal_interpretation(model: UserNatalInterpretationModel) -> bool:
+.\backend\app\services\llm_generation\natal\stored_interpretation_payload.py:115:def load_basic_natal_interpretation_v2_from_payload(
+.\backend\app\services\llm_generation\natal\stored_interpretation_payload.py:144:def has_compatible_basic_natal_interpretation_v2(payload: dict[str, object]) -> bool:
+.\backend\app\services\llm_generation\natal\stored_interpretation_payload.py:146:    return load_basic_natal_interpretation_v2_from_payload(payload) is not None
+.\backend\app\domain\llm\runtime\adapter.py:24:    NatalExecutionInput,
+.\backend\app\domain\llm\runtime\adapter.py:37:    {"natal_interpretation_short", "natal_long_free", "natal-long-free"}
+.\backend\app\domain\llm\runtime\adapter.py:236:    async def generate_natal_interpretation(
+.\backend\app\domain\llm\runtime\adapter.py:237:        natal_input: NatalExecutionInput,
+.\backend\app\domain\llm\runtime\adapter.py:245:        if subfeature == "natal_interpretation" and natal_input.plan == "basic":
+.\backend\app\domain\llm\runtime\adapter.py:250:            "natal_interpretation",
+.\backend\app\domain\llm\runtime\contracts.py:140:class NatalExecutionInput(BaseModel):
+.\backend\app\domain\llm\runtime\contracts.py:567:    "NatalExecutionInput",
+.\backend\app\domain\llm\runtime\gateway.py:89:PAID_USE_CASES = {"natal_interpretation"}
+.\backend\app\domain\llm\runtime\gateway.py:557:            and use_case != "natal_interpretation"
+.\backend\app\domain\llm\runtime\gateway.py:697:                        "natal_interpretation",
+.\backend\app\domain\llm\runtime\gateway.py:1090:            and use_case == "natal_interpretation"
+.\backend\app\domain\llm\runtime\gateway.py:1762:            is_natal_use_case = use_case.startswith("natal_") or use_case == "natal_interpretation"
+.\backend\app\domain\llm\runtime\gateway.py:2303:        is_natal_use_case = use_case.startswith("natal_") or use_case == "natal_interpretation"

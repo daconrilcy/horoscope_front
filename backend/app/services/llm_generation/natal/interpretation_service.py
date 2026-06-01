@@ -19,9 +19,6 @@ from app.domain.astrology.builders.aspect_runtime_builder import (
     build_aspect_structural_runtime_data,
 )
 from app.domain.astrology.interpretation.ai_narrative_input_builder import AINarrativeInputBuilder
-from app.domain.astrology.interpretation.astral_point_interpretation import (
-    AstralPointInterpretationService,
-)
 from app.domain.astrology.interpretation.basic_natal_reading_plan import BasicNatalReadingPlan
 from app.domain.astrology.interpretation.client_interpretation_projection_v1_builder import (
     ClientInterpretationProjectionV1Builder,
@@ -57,15 +54,10 @@ from app.domain.llm.prompting.schemas import (
     AstroResponseV2,
     AstroResponseV3,
 )
-from app.domain.llm.runtime.adapter import AIEngineAdapter
-from app.domain.llm.runtime.contracts import GatewayResult, NatalExecutionInput
-from app.infra.db.models.llm.llm_persona import LlmPersonaModel
+from app.domain.llm.runtime.contracts import GatewayResult
 from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
     UserNatalInterpretationModel,
-)
-from app.infra.db.repositories.astral_point_interpretation_repository import (
-    AstralPointInterpretationRepository,
 )
 from app.infra.db.repositories.astrology_runtime_reference_repository import (
     AstrologyRuntimeReferenceRepository,
@@ -74,7 +66,6 @@ from app.infra.db.repositories.llm.narrative_answer_audit_repository import (
     NarrativeAnswerAuditCreate,
     NarrativeAnswerAuditRepository,
 )
-from app.infra.observability.metrics import observe_duration
 from app.services.api_contracts.public.natal_interpretation import (
     InterpretationMeta,
     NatalInterpretationResponse,
@@ -100,19 +91,13 @@ from app.services.llm_generation.natal.narrative_semantic_integrity import (
     NarrativeChapterSourceMissingError,
     is_narratively_invalid_complete_payload,
 )
-from app.services.llm_generation.natal.prompt_context import (
-    _detect_degraded_mode,
-    build_astral_point_interpretation_context,
-)
 from app.services.llm_generation.natal.rejected_answer_workflow import (
     CONTROLLED_REJECTED_CLIENT_MESSAGE,
     REJECTED_NARRATIVE_LOG_EVENT,
     RejectedNarrativeAnswerOutcome,
     build_rejected_narrative_answer_outcome_from_payload,
-    emit_rejected_narrative_answer_log,
 )
 from app.services.llm_generation.natal.stored_interpretation_payload import (
-    BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY,
     CORRECTIVE_REGENERATION_PENDING_USE_CASE,
     NARRATIVE_ANSWER_AUDIT_USE_CASE,
     extract_accepted_interpretation_payload,
@@ -1300,406 +1285,12 @@ class NatalInterpretationService:
                 details={"replacement": "/v1/theme-natal/readings", "variant_code": variant_code},
             )
 
-        # 1. Normalization (N1)
-        degraded_mode_str = _detect_degraded_mode(birth_profile)
-
-        _repair_legacy_natal_result_for_interpretation(db, natal_result)
-        interpreted_astral_points = ()
-        astral_points = getattr(natal_result, "astral_points", ())
-        if astral_points:
-            interpreted_astral_points = AstralPointInterpretationService(
-                AstralPointInterpretationRepository(db)
-            ).build_context(
-                natal_result,
-                language_code=locale,
-            )
-        astral_point_context = build_astral_point_interpretation_context(interpreted_astral_points)
-        astro_context = json.dumps(astral_point_context, ensure_ascii=False)
-
-        # 3. Use case selection
-        if level == "complete" and module:
-            use_case_key = MODULE_TO_USE_CASE_KEY.get(module, "natal_interpretation")
-        else:
-            use_case_key = "natal_interpretation"
-
-        # 3.5 Resolve Plan (Story 66.20)
-        from app.services.entitlement.effective_entitlement_resolver_service import (
-            EffectiveEntitlementResolverService,
-        )
-
-        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
-            db, app_user_id=user_id
-        )
-        user_plan = entitlements.plan_code
-        projection_plan = _client_projection_plan_from_entitlement(user_plan)
-        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
-            natal_result=natal_result,
-            chart_id=chart_id,
-            locale=locale,
-            current_plan=projection_plan,
-            requested_plan=projection_plan,
-        )
-        basic_reading_plan: BasicNatalReadingPlan | None = None
-        if level == "complete" and user_plan == "basic" and variant_code != "free_short":
-            raise NatalInterpretationServiceError(
-                code="legacy_basic_natal_generation_disabled",
-                message=(
-                    "Basic natal generation is handled only by "
-                    "the theme natal product-action runtime."
-                ),
-                details={"replacement": "/v1/theme-natal/readings"},
-            )
-
-        # 4. Call AIEngineAdapter (Story 66.7)
-        effective_question = question
-        if level == "short":
-            if not effective_question:
-                effective_question = "Interprète mon thème natal."
-        else:
-            # Story 30-5: level complete does not take a question
-            effective_question = None
-
-        persona_name = None
-        if persona_id:
-            persona = db.get(LlmPersonaModel, uuid.UUID(persona_id))
-            if persona:
-                persona_name = persona.name
-
-        natal_input = NatalExecutionInput(
-            use_case_key=use_case_key,
-            locale=locale,
-            level=level,
-            llm_astrology_input_v1=llm_astrology_input_v1,
-            persona_id=persona_id,
-            plan=user_plan,
-            validation_strict=level == "complete",
-            question=effective_question,
-            astro_context=astro_context,
-            module=module,
-            variant_code=variant_code,
-            user_id=user_id,
-            request_id=request_id,
-            trace_id=trace_id,
-        )
-
-        gateway_result = await AIEngineAdapter.generate_natal_interpretation(
-            natal_input=natal_input, db=db
-        )
-
-        NatalInterpretationService._record_token_usage(
-            db,
-            user_id=user_id,
-            gateway_result=gateway_result,
-        )
-
-        # 5. Handle result and map to schema
-        if not gateway_result.structured_output:
-            logger.error(f"Gateway returned no structured output for {use_case_key}")
-            raise RuntimeError("Gateway returned no structured output")
-
-        disclaimers = get_disclaimers(locale)
-        base_output = (
-            gateway_result.structured_output
-            if isinstance(gateway_result.structured_output, dict)
-            else {}
-        )
-        full_output = {**base_output, "disclaimers": disclaimers}
-
-        if level == "complete" and variant_code != "free_short":
-            if NatalInterpretationService._is_empty_complete_payload(base_output):
-                logger.error(
-                    "Gateway returned empty complete interpretation request_id=%s use_case=%s",
-                    request_id,
-                    use_case_key,
-                )
-                raise RuntimeError("empty complete interpretation")
-
-        # Mapping structured_output to AstroResponseV1/V2/V3 (Story 30-8 T7.4)
-        schema_version = "v1"
-        narrative_rejection: RejectedNarrativeAnswerOutcome | None = None
-        basic_natal_interpretation_v2: BasicNatalInterpretationV2 | None = None
-
-        if level == "complete" and user_plan == "basic" and variant_code != "free_short":
-            if basic_reading_plan is None:
-                basic_reading_plan = _build_basic_natal_reading_plan_for_runtime(
-                    natal_result=natal_result,
-                    chart_id=chart_id,
-                    locale=locale,
-                )
-            basic_outcome = _validate_basic_natal_draft_output(
-                base_output=base_output,
-                reading_plan=basic_reading_plan,
-                gateway_result=gateway_result,
-                request_id=request_id,
-            )
-            if basic_outcome.accepted_draft is None:
-                narrative_rejection = basic_outcome.rejection_outcome
-                interpretation = AstroFreeResponseV1(
-                    title="",
-                    summary=CONTROLLED_REJECTED_CLIENT_MESSAGE,
-                    sections=[],
-                    highlights=[],
-                    advice=[],
-                    evidence=[],
-                    disclaimers=disclaimers,
-                )
-            else:
-                basic_natal_interpretation_v2 = _basic_natal_contract_from_draft(
-                    accepted_draft=basic_outcome.accepted_draft,
-                    reading_plan=basic_reading_plan,
-                )
-                interpretation = _basic_natal_summary_response(
-                    basic_natal_interpretation_v2,
-                    disclaimers,
-                )
-            schema_version = BASIC_NATAL_PUBLIC_SCHEMA_VERSION
-            gateway_result.meta.repair_attempted = basic_outcome.repair_attempted
-            gateway_result.meta.fallback_triggered = basic_outcome.fallback_used
-        elif level == "complete" and not gateway_result.meta.fallback_triggered:
-            if variant_code != "free_short":
-                interpretation, schema_version, narrative_rejection = (
-                    _deserialize_non_fallback_complete_interpretation(
-                        base_output=base_output,
-                        gateway_result=gateway_result,
-                        level=level,
-                        variant_code=variant_code,
-                        request_id=request_id,
-                        disclaimers=disclaimers,
-                    )
-                )
-            else:
-                interpretation = _deserialize_short_or_gateway_fallback_interpretation(full_output)
-        else:
-            # short (gratuit) ou fallback vers short → schéma v1
-            interpretation = _deserialize_short_or_gateway_fallback_interpretation(full_output)
-
-        narrative_reading: NarrativeNatalReadingV1 | None = None
-
-        # Observe metrics
-        if hasattr(interpretation, "summary"):
-            observe_duration("natal_summary_len", float(len(interpretation.summary)))
-        if hasattr(interpretation, "sections"):
-            for _section in interpretation.sections:
-                if hasattr(_section, "content"):
-                    observe_duration("natal_section_len", float(len(_section.content)))
-
-        # Gateway meta to our InterpretationMeta
-        meta = InterpretationMeta(
-            id=None,
-            level=level,
-            use_case=gateway_result.use_case,
-            persona_id=persona_id or gateway_result.meta.persona_id,
-            persona_name=persona_name,
-            prompt_version_id=gateway_result.meta.prompt_version_id,
-            schema_version=schema_version,
-            validation_status=gateway_result.meta.validation_status,
-            repair_attempted=gateway_result.meta.repair_attempted,
-            fallback_triggered=gateway_result.meta.fallback_triggered,
-            was_fallback=gateway_result.meta.fallback_triggered,
-            latency_ms=gateway_result.meta.latency_ms,
-            request_id=request_id,
-            cached=False,
-            module=module,
-        )
-
-        # 7. Persist interpretation
-        db_level = InterpretationLevel.SHORT if level == "short" else InterpretationLevel.COMPLETE
-
-        # Story 30-8 T7.4: Ensure persisted payload does NOT contain disclaimers if it's V3
-        # (The gateway structured_output shouldn't have them, but we sanitize to be sure)
-        persist_payload = (
-            gateway_result.structured_output
-            if isinstance(gateway_result.structured_output, dict)
-            else {}
-        )
-        if basic_natal_interpretation_v2 is not None:
-            persist_payload = {
-                **persist_payload,
-                BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY: (
-                    basic_natal_interpretation_v2.model_dump()
-                ),
-            }
-        if schema_version.startswith("v3") and "disclaimers" in persist_payload:
-            persist_payload = persist_payload.copy()
-            persist_payload.pop("disclaimers", None)
-
-        if (
-            level == "complete"
-            and variant_code != "free_short"
-            and isinstance(interpretation, (AstroResponseV1, AstroResponseV2, AstroResponseV3))
-        ):
-            narrative_reading, narrative_rejection, persist_payload = (
-                _attach_narrative_reading_to_complete(
-                    interpretation=interpretation,
-                    persist_payload=persist_payload,
-                    llm_astrology_input_v1=llm_astrology_input_v1,
-                    level=level,
-                    variant_code=variant_code,
-                    answer_id=f"{gateway_result.use_case}:{request_id}",
-                    answer_type=_answer_type_for_audit(level, variant_code),
-                )
-            )
-
-        rejected_outcome = narrative_rejection or (
-            None
-            if basic_natal_interpretation_v2 is not None
-            else _build_rejected_narrative_answer_outcome(
-                level=level,
-                variant_code=variant_code,
-                schema_version=schema_version,
-                request_id=request_id,
-                gateway_result=gateway_result,
-                persist_payload=persist_payload,
-                llm_astrology_input_v1=llm_astrology_input_v1,
-            )
-        )
-        if rejected_outcome is not None:
-            emit_rejected_narrative_answer_log(
-                logger,
-                outcome=rejected_outcome,
-                request_id=request_id,
-                trace_id=trace_id,
-                use_case=gateway_result.use_case,
-            )
-            try:
-                _persist_rejected_narrative_answer_audit(
-                    db,
-                    user_id=user_id,
-                    chart_id=chart_id,
-                    level=level,
-                    variant_code=variant_code,
-                    gateway_result=gateway_result,
-                    llm_astrology_input_v1=llm_astrology_input_v1,
-                    rejected_outcome=rejected_outcome,
-                )
-            except Exception as audit_exc:
-                db.rollback()
-                logger.exception(
-                    "Failed to persist rejected natal interpretation audit "
-                    "request_id=%s use_case=%s error=%s",
-                    request_id,
-                    gateway_result.use_case,
-                    audit_exc,
-                )
-            interpretation = AstroFreeResponseV1(
-                title="",
-                summary=rejected_outcome.client_message,
-                sections=[],
-                highlights=[],
-                advice=[],
-                evidence=[],
-                disclaimers=disclaimers,
-            )
-            meta.validation_status = "rejected"
-            return NatalInterpretationResponse(
-                data=NatalGatewayInterpretationData(
-                    chart_id=chart_id,
-                    use_case=gateway_result.use_case,
-                    interpretation=interpretation,
-                    meta=meta,
-                    degraded_mode=degraded_mode_str,
-                ),
-                disclaimers=disclaimers,
-            )
-
-        try:
-            if not is_thematic_module:
-                unique_stmt = select(UserNatalInterpretationModel).where(
-                    UserNatalInterpretationModel.user_id == user_id,
-                    UserNatalInterpretationModel.level == db_level,
-                )
-                if db_level == InterpretationLevel.SHORT:
-                    unique_stmt = unique_stmt.where(
-                        UserNatalInterpretationModel.persona_id.is_(None)
-                    )
-                else:
-                    unique_stmt = unique_stmt.where(
-                        UserNatalInterpretationModel.persona_id == persona_uuid
-                    )
-                unique_stmt = unique_stmt.order_by(
-                    UserNatalInterpretationModel.created_at.desc(),
-                    UserNatalInterpretationModel.id.desc(),
-                )
-
-                rows = list(db.execute(unique_stmt).scalars().all())
-                primary = rows[0] if rows else None
-                for duplicate in rows[1:]:
-                    db.delete(duplicate)
-
-                prompt_version_uuid = _parse_prompt_version_uuid(
-                    gateway_result.meta.prompt_version_id
-                )
-                if primary is None:
-                    primary = UserNatalInterpretationModel(
-                        user_id=user_id,
-                        chart_id=chart_id,
-                        level=db_level,
-                        use_case=gateway_result.use_case,
-                        variant_code=variant_code,
-                        persona_id=persona_uuid,
-                        persona_name=persona_name,
-                        prompt_version_id=prompt_version_uuid,
-                        interpretation_payload=persist_payload,
-                        was_fallback=gateway_result.meta.fallback_triggered,
-                        degraded_mode=degraded_mode_str,
-                    )
-                    _apply_narrative_answer_audit(
-                        primary,
-                        level=level,
-                        variant_code=variant_code,
-                        schema_version=schema_version,
-                        request_id=request_id,
-                        gateway_result=gateway_result,
-                        persist_payload=persist_payload,
-                        llm_astrology_input_v1=llm_astrology_input_v1,
-                    )
-                    db.add(primary)
-                else:
-                    primary.chart_id = chart_id
-                    primary.use_case = gateway_result.use_case
-                    primary.variant_code = variant_code
-                    primary.persona_id = persona_uuid
-                    primary.persona_name = persona_name
-                    primary.prompt_version_id = prompt_version_uuid
-                    primary.interpretation_payload = persist_payload
-                    primary.was_fallback = gateway_result.meta.fallback_triggered
-                    primary.degraded_mode = degraded_mode_str
-                    _apply_narrative_answer_audit(
-                        primary,
-                        level=level,
-                        variant_code=variant_code,
-                        schema_version=schema_version,
-                        request_id=request_id,
-                        gateway_result=gateway_result,
-                        persist_payload=persist_payload,
-                        llm_astrology_input_v1=llm_astrology_input_v1,
-                    )
-
-                db.flush()
-                db.refresh(primary)
-                meta.id = primary.id
-                meta.persisted_at = primary.created_at
-        except Exception as persist_exc:
-            db.rollback()
-            logger.exception(
-                "Failed to persist natal interpretation request_id=%s use_case=%s error=%s",
-                request_id,
-                gateway_result.use_case,
-                persist_exc,
-            )
-            raise
-
-        return NatalInterpretationResponse(
-            data=NatalGatewayInterpretationData(
-                chart_id=chart_id,
-                use_case=gateway_result.use_case,
-                interpretation=_without_public_evidence(interpretation),
-                meta=meta,
-                degraded_mode=degraded_mode_str,
-                narrative_natal_reading_v1=narrative_reading,
-                basic_natal_interpretation_v2=basic_natal_interpretation_v2,
+        raise NatalInterpretationServiceError(
+            code="legacy_natal_generation_disabled",
+            message=(
+                "Legacy natal generation is disabled; use the theme natal product-action runtime."
             ),
-            disclaimers=disclaimers,
+            details={"replacement": "/v1/theme-natal/readings", "variant_code": variant_code},
         )
 
     @staticmethod

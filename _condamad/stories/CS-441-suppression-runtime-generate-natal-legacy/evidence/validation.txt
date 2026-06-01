@@ -1,0 +1,47 @@
+# Validation CS-441 - 2026-06-01
+
+Toutes les commandes Python ci-dessous ont ete lancees depuis `C:\dev\horoscope_front`
+avec `.\.venv\Scripts\Activate.ps1` actif.
+
+## Format / lint
+
+- `ruff format backend/app/domain/llm/runtime/adapter.py backend/app/services/llm_generation/natal/interpretation_service.py backend/app/tests/unit/test_ai_engine_adapter.py backend/app/tests/unit/test_natal_interpretation_service.py backend/app/tests/unit/test_natal_interpretation_service_v2.py backend/tests/architecture/test_llm_legacy_extinction.py backend/tests/integration/test_basic_natal_v2_cache_invalidation.py backend/tests/integration/test_basic_natal_v2_pipeline.py backend/tests/integration/test_natal_basic_complete_v3_runtime.py backend/tests/integration/test_theme_natal_basic_full_reading_runtime.py backend/tests/unit/domain/llm/test_natal_llm_astrology_input.py backend/tests/unit/test_basic_natal_narrative_validator.py`
+  - PASS: `12 files left unchanged`.
+- `ruff check .`
+  - PASS: `All checks passed!`.
+- `git diff --check`
+  - PASS: uniquement des avertissements CRLF Windows.
+
+## Scans No Legacy
+
+- `rg -n "generate_natal_interpretation" backend/app backend/tests backend/app/tests`
+  - PASS: no matches.
+- `rg -n 'NatalExecutionInput|use_case_key' backend/app/services/llm_generation/natal backend/app/domain/llm/runtime/adapter.py`
+  - PASS: no matches.
+
+## Tests et preuves structurees
+
+- `python -B -m pytest -q --tb=short <CS-441 targeted paths>`
+  - PASS: `64 passed, 23 deselected in 1.93s`.
+- `python -B -c <app.routes/app.openapi legacy runtime hit check>`
+  - PASS: `PASS: no public route/openapi legacy runtime hits`.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-441-suppression-runtime-generate-natal-legacy --final`
+  - PASS: `CONDAMAD validation: PASS`.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`
+  - PASS: `CONDAMAD story validation: PASS`.
+- `python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`
+  - PASS: `CONDAMAD story lint: PASS`.
+
+## Full suite
+
+- `python -B -m pytest -q --tb=short`
+  - FAIL hors scope CS-441: `9 failed, 3552 passed, 2 skipped, 1284 deselected in 226.94s`.
+  - Echecs restants:
+    - `backend/app/tests/unit/test_api_router_architecture.py::test_router_modules_do_not_define_private_helpers`
+    - `backend/app/tests/unit/test_api_router_architecture.py::test_api_sql_boundary_debt_matches_exact_allowlist`
+    - `backend/app/tests/unit/test_gateway_modes.py::test_catalog_schema_is_used_for_free_natal_fallback`
+    - `backend/app/tests/unit/test_seed_29_prompt_contract.py::test_seed_29_natal_short_requires_llm_astrology_input_v1`
+    - `backend/tests/unit/test_llm_model_namespace_guard.py::*` (3 echecs)
+    - `backend/tests/unit/test_seed_66_20_taxonomy_basic_natal.py::*` (2 echecs)
+
+Ces echecs sont documentes comme limitation repository-level: catalogues/seeds sont des non-goals CS-441 et la dette router/model namespace ne touche pas la suppression du runtime legacy `generate_natal_interpretation`.

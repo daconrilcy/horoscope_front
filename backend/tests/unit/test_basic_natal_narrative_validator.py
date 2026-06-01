@@ -351,12 +351,13 @@ def test_second_invalid_draft_uses_valid_editorial_deterministic_fallback() -> N
     assert outcome.rejection_outcome is None
 
 
-def test_interpretation_service_routes_basic_draft_to_post_generation_validator() -> None:
-    """Le service runtime applique le validateur au chemin Basic complet."""
+def test_interpretation_service_no_longer_routes_basic_draft_to_provider_validator() -> None:
+    """Le service legacy ne conserve plus le routage Basic provider-capable."""
     source = inspect.getsource(interpretation_service.NatalInterpretationService.interpret)
 
-    assert 'user_plan == "basic"' in source
-    assert "_validate_basic_natal_draft_output(" in source
+    assert 'user_plan == "basic"' not in source
+    assert "_validate_basic_natal_draft_output(" not in source
+    assert "legacy_natal_generation_disabled" in source
 
 
 def test_basic_draft_runtime_helper_builds_public_v2_contract_after_validation() -> None:

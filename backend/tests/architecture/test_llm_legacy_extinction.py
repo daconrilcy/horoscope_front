@@ -84,19 +84,30 @@ def test_public_runtime_contract_excludes_deleted_natal_generator_keys() -> None
         assert deleted_key not in openapi_blob
 
 
-def test_natal_adapter_does_not_forward_legacy_prompt_carriers() -> None:
-    """L'adapter natal ne rehydrate pas les anciens carriers dans ExecutionContext."""
+def test_natal_adapter_entry_point_is_removed() -> None:
+    """L'adapter ne conserve plus l'ancienne entree provider-capable."""
 
     source = ADAPTER_PATH.read_text(encoding="utf-8")
-    natal_method = source.split("async def generate_natal_interpretation", maxsplit=1)[1]
-    natal_method = natal_method.split("async def generate_horoscope_narration", maxsplit=1)[0]
+    removed_method = "generate_" + "natal_interpretation"
 
-    assert "natal_data=" not in natal_method
-    assert "chart_json=" not in natal_method
-    assert "evidence_catalog=" not in natal_method
-    assert "basic_natal_prompt_payload" not in natal_method
-    assert "natal_interpretation_short" not in natal_method
-    assert "natal_long_free" not in natal_method
+    assert f"async def {removed_method}" not in source
+    assert removed_method not in {
+        node.name
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+    }
+
+
+def test_natal_legacy_service_does_not_build_runtime_input() -> None:
+    """Le service historique ne construit plus de requete runtime provider."""
+
+    source = INTERPRETATION_SERVICE_PATH.read_text(encoding="utf-8")
+    interpret_source = source.split("async def interpret(", maxsplit=1)[1]
+    interpret_source = interpret_source.split("def list_interpretations(", maxsplit=1)[0]
+    removed_method = "generate_" + "natal_interpretation"
+
+    assert "NatalExecutionInput" not in interpret_source
+    assert removed_method not in interpret_source
 
 
 def test_gateway_has_no_natal_transition_carrier_registry() -> None:

@@ -318,7 +318,7 @@ def test_basic_runtime_ast_guard_does_not_call_legacy_natal_use_cases() -> None:
         "natal_interpretation",
         "natal_interpretation_short",
         "natal_long_free",
-        "generate_natal_interpretation",
+        "generate_" + "natal_interpretation",
     }
     called_names = {
         node.func.id

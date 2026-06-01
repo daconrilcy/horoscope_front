@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -448,7 +447,9 @@ class TestNatalInterpretationService:
         assert result.metadata.degraded_mode == "no_time"
 
     @pytest.mark.asyncio
-    async def test_interpret_uses_shared_degraded_mode_detection(self) -> None:
+    async def test_interpret_rejects_legacy_complete_without_building_provider_context(
+        self,
+    ) -> None:
         natal_result = _make_natal_result()
         birth_profile = UserBirthProfileData(
             birth_date="1990-06-15",
@@ -462,23 +463,7 @@ class TestNatalInterpretationService:
         db.execute.return_value.scalars.return_value.all.return_value = []
         db.get.return_value = None
 
-        with (
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
-                return_value={"planets": []},
-            ) as mock_build_chart_json,
-            patch(
-                "app.services.entitlement.effective_entitlement_resolver_service."
-                "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
-                return_value=MagicMock(plan_code="premium"),
-            ),
-            patch.object(NatalInterpretationService, "_record_token_usage"),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service."
-                "AIEngineAdapter.generate_natal_interpretation",
-                new=AsyncMock(return_value=_make_gateway_result("natal_interpretation")),
-            ),
-        ):
+        with pytest.raises(NatalInterpretationServiceError) as exc_info:
             await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
@@ -493,11 +478,11 @@ class TestNatalInterpretationService:
                 trace_id="trace-shared-degraded-mode",
             )
 
-        assert mock_build_chart_json.call_args.args[2] == "no_time"
+        assert exc_info.value.code == "legacy_natal_generation_disabled"
 
     @pytest.mark.asyncio
-    async def test_interpret_sends_astral_point_interpretations_as_separate_context(self) -> None:
-        """Le prompt natal reçoit les points interprétés hors du payload natal brut."""
+    async def test_interpret_rejects_before_astral_point_context_build(self) -> None:
+        """Le service legacy ne prepare plus de contexte provider pour les points."""
         natal_result = _make_natal_result().model_copy(
             update={
                 "astral_points": [
@@ -518,7 +503,6 @@ class TestNatalInterpretationService:
         db = MagicMock()
         db.execute.return_value.scalars.return_value.all.return_value = []
         db.get.return_value = None
-        captured_input = None
 
         class FakeInterpretedPoint:
             """Point interprété minimal pour vérifier le contexte transmis au LLM."""
@@ -550,33 +534,7 @@ class TestNatalInterpretationService:
                 assert natal_result.points[0].code == "north_node"
                 return (FakeInterpretedPoint(),)
 
-        async def fake_generate_natal_interpretation(natal_input, db=None):
-            nonlocal captured_input
-            captured_input = natal_input
-            return _make_gateway_result("natal_interpretation")
-
-        with (
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
-                return_value={"planets": []},
-            ),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service."
-                "AstralPointInterpretationService",
-                FakeAstralPointInterpretationService,
-            ),
-            patch(
-                "app.services.entitlement.effective_entitlement_resolver_service."
-                "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
-                return_value=MagicMock(plan_code="premium"),
-            ),
-            patch.object(NatalInterpretationService, "_record_token_usage"),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service."
-                "AIEngineAdapter.generate_natal_interpretation",
-                new=AsyncMock(side_effect=fake_generate_natal_interpretation),
-            ),
-        ):
+        with pytest.raises(NatalInterpretationServiceError) as exc_info:
             await NatalInterpretationService.interpret(
                 db=db,
                 user_id=1,
@@ -591,12 +549,7 @@ class TestNatalInterpretationService:
                 trace_id="trace-astral-point-context",
             )
 
-        assert captured_input is not None
-        astro_context = json.loads(captured_input.astro_context)
-        assert astro_context == {
-            "astral_point_interpretations": [FakeInterpretedPoint().to_narrative_context()]
-        }
-        assert "astral_point_interpretations" not in captured_input.llm_astrology_input_v1
+        assert exc_info.value.details["replacement"] == "/v1/theme-natal/readings"
 
     @pytest.mark.asyncio
     async def test_interpret_chart_timeout_error(self) -> None:

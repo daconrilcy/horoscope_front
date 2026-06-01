@@ -4,18 +4,17 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
-from unittest.mock import patch
 
 import pytest
 
-from app.domain.llm.runtime.adapter import AIEngineAdapter
-from app.domain.llm.runtime.contracts import NatalExecutionInput
 from app.infra.db.models.user_natal_interpretation import (
     InterpretationLevel,
     UserNatalInterpretationModel,
 )
-from app.services.llm_generation.natal.interpretation_service import NatalInterpretationService
+from app.services.llm_generation.natal.interpretation_service import (
+    NatalInterpretationService,
+    NatalInterpretationServiceError,
+)
 from app.services.llm_generation.natal.stored_interpretation_payload import (
     contains_degraded_basic_natal_baseline_token,
     has_compatible_basic_natal_interpretation_v2,
@@ -23,11 +22,8 @@ from app.services.llm_generation.natal.stored_interpretation_payload import (
 from app.tests.helpers.natal_result_factory import make_natal_result
 from tests.integration.basic_natal_v2_helpers import (
     basic_birth_profile,
-    basic_entitlement_snapshot,
     basic_runtime_plan,
-    gateway_result_from_draft,
     persisted_basic_payload,
-    valid_basic_draft,
 )
 
 
@@ -113,10 +109,10 @@ def _with_degraded_baseline_token(payload: dict[str, object]) -> dict[str, objec
     ],
 )
 @pytest.mark.asyncio
-async def test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row(
+async def test_incompatible_basic_cache_is_rejected_instead_of_regenerated(
     db, payload_factory, reason: str
 ) -> None:
-    """Prouve qu'une ligne Basic degradee est ignoree et regeneree."""
+    """Prouve qu'une ligne Basic degradee ne reactive pas l'ancien generateur."""
     chart_id = f"chart-basic-cache-{reason}"
     user_id = 419
     plan = basic_runtime_plan(chart_id=chart_id)
@@ -126,33 +122,9 @@ async def test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row
         chart_id=chart_id,
         payload=payload_factory(plan),
     )
-    draft = valid_basic_draft(plan)
-    captured_inputs: list[NatalExecutionInput] = []
 
-    async def fake_generate_natal_interpretation(
-        natal_input: NatalExecutionInput, db: Any | None = None
-    ):
-        captured_inputs.append(natal_input)
-        return gateway_result_from_draft(natal_input, draft)
-
-    with (
-        patch.object(
-            AIEngineAdapter,
-            "generate_natal_interpretation",
-            side_effect=fake_generate_natal_interpretation,
-        ),
-        patch(
-            "app.services.entitlement.effective_entitlement_resolver_service."
-            "EffectiveEntitlementResolverService.resolve_b2c_user_snapshot",
-            return_value=basic_entitlement_snapshot(user_id=user_id),
-        ),
-        patch(
-            "app.services.llm_generation.natal.interpretation_service."
-            "LlmTokenUsageService.record_usage"
-        ),
-        patch.object(type(db), "refresh", lambda self, instance: None),
-    ):
-        response = await NatalInterpretationService.interpret(
+    with pytest.raises(NatalInterpretationServiceError) as exc_info:
+        await NatalInterpretationService.interpret(
             db=db,
             user_id=user_id,
             chart_id=chart_id,
@@ -168,9 +140,8 @@ async def test_incompatible_basic_cache_regenerates_instead_of_serving_stale_row
             variant_code="single_astrologer",
         )
 
-    assert len(captured_inputs) == 1
-    assert response.data.meta.cached is False
-    assert response.data.basic_natal_interpretation_v2 is not None
+    assert exc_info.value.code == "legacy_natal_generation_disabled"
+    assert exc_info.value.details["replacement"] == "/v1/theme-natal/readings"
 
 
 @pytest.mark.asyncio
@@ -189,24 +160,22 @@ async def test_compatible_basic_cache_is_served_without_gateway_call(db) -> None
     assert not NatalInterpretationService._is_empty_complete_payload(row.interpretation_payload)
     assert has_compatible_basic_natal_interpretation_v2(row.interpretation_payload)
 
-    with patch.object(AIEngineAdapter, "generate_natal_interpretation") as gateway_mock:
-        response = await NatalInterpretationService.interpret(
-            db=db,
-            user_id=420,
-            chart_id="chart-basic-cache-compatible",
-            natal_result=make_natal_result(),
-            birth_profile=basic_birth_profile(),
-            level="complete",
-            persona_id=None,
-            locale="fr-FR",
-            question=None,
-            request_id="req-basic-cache-hit",
-            trace_id="trace-basic-cache-hit",
-            force_refresh=False,
-            variant_code="single_astrologer",
-        )
+    response = await NatalInterpretationService.interpret(
+        db=db,
+        user_id=420,
+        chart_id="chart-basic-cache-compatible",
+        natal_result=make_natal_result(),
+        birth_profile=basic_birth_profile(),
+        level="complete",
+        persona_id=None,
+        locale="fr-FR",
+        question=None,
+        request_id="req-basic-cache-hit",
+        trace_id="trace-basic-cache-hit",
+        force_refresh=False,
+        variant_code="single_astrologer",
+    )
 
-    gateway_mock.assert_not_called()
     assert response.data.meta.cached is True
     assert response.data.meta.id == row.id
     assert response.data.meta.schema_version == "basic_natal_interpretation_v2"

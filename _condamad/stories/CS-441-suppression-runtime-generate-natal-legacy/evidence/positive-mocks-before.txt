@@ -1,0 +1,20 @@
+.\backend\app\tests\unit\test_ai_engine_adapter.py:158:async def test_generate_natal_interpretation_maps_free_legacy_use_case_to_canonical_subfeature(
+.\backend\app\tests\unit\test_ai_engine_adapter.py:179:        await AIEngineAdapter.generate_natal_interpretation(
+.\backend\tests\architecture\test_llm_legacy_extinction.py:91:    natal_method = source.split("async def generate_natal_interpretation", maxsplit=1)[1]
+.\backend\tests\integration\test_basic_natal_v2_pipeline.py:47:    async def fake_generate_natal_interpretation(
+.\backend\tests\integration\test_basic_natal_v2_pipeline.py:56:            "generate_natal_interpretation",
+.\backend\tests\integration\test_basic_natal_v2_pipeline.py:57:            side_effect=fake_generate_natal_interpretation,
+.\backend\tests\unit\domain\llm\test_natal_llm_astrology_input.py:49:    await AIEngineAdapter.generate_natal_interpretation(
+.\backend\tests\integration\test_basic_natal_v2_cache_invalidation.py:132:    async def fake_generate_natal_interpretation(
+.\backend\tests\integration\test_basic_natal_v2_cache_invalidation.py:141:            "generate_natal_interpretation",
+.\backend\tests\integration\test_basic_natal_v2_cache_invalidation.py:142:            side_effect=fake_generate_natal_interpretation,
+.\backend\tests\integration\test_basic_natal_v2_cache_invalidation.py:192:    with patch.object(AIEngineAdapter, "generate_natal_interpretation") as gateway_mock:
+.\backend\tests\integration\test_natal_basic_complete_v3_runtime.py:196:    async def fake_generate_natal_interpretation(
+.\backend\tests\integration\test_natal_basic_complete_v3_runtime.py:205:            "generate_natal_interpretation",
+.\backend\tests\integration\test_natal_basic_complete_v3_runtime.py:206:            side_effect=fake_generate_natal_interpretation,
+.\backend\tests\integration\test_natal_basic_complete_v3_runtime.py:300:    await AIEngineAdapter.generate_natal_interpretation(
+.\backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:321:        "generate_natal_interpretation",
+.\backend\app\tests\unit\test_natal_interpretation_service.py:478:                "AIEngineAdapter.generate_natal_interpretation",
+.\backend\app\tests\unit\test_natal_interpretation_service.py:553:        async def fake_generate_natal_interpretation(natal_input, db=None):
+.\backend\app\tests\unit\test_natal_interpretation_service.py:576:                "AIEngineAdapter.generate_natal_interpretation",
+.\backend\app\tests\unit\test_natal_interpretation_service.py:577:                new=AsyncMock(side_effect=fake_generate_natal_interpretation),

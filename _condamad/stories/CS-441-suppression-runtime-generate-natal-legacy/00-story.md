@@ -1,5 +1,5 @@
 # Story CS-441 suppression-runtime-generate-natal-legacy: Corriger Suppression Runtime Generate Natal Legacy
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

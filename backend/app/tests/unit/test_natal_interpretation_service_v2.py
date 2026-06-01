@@ -20,14 +20,9 @@ from app.domain.astrology.natal_calculation import (
 from app.domain.astrology.natal_preparation import BirthPreparedData
 from app.domain.astrology.runtime.aspect_runtime_data import AspectInterpretiveHintsRuntimeData
 from app.domain.llm.runtime.contracts import GatewayMeta, GatewayResult, UsageInfo
-from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
 from app.services.llm_generation.natal.interpretation_service import (
-    NATAL_COMPLETE_SCHEMA_MISMATCH,
     NatalInterpretationService,
     NatalInterpretationServiceError,
-)
-from app.services.llm_generation.natal.stored_interpretation_payload import (
-    NARRATIVE_ANSWER_AUDIT_USE_CASE,
 )
 from app.services.user_profile.birth_profile_service import UserBirthProfileData
 
@@ -229,23 +224,17 @@ def _make_db_mock(has_persona: bool = True) -> MagicMock:
 
 
 class TestNatalInterpretationServiceUserInput:
-    """Verifie la construction de user_input transmis au gateway (story 30-5)."""
+    """Verifie que le chemin legacy ne construit plus de requete gateway."""
 
     @pytest.mark.asyncio
-    async def test_complete_level_does_not_include_question(self):
-        """
-        C1 (story 30-5): 'question' ne doit PAS etre dans user_input pour level='complete'.
-        """
+    async def test_complete_level_rejects_legacy_generation_before_gateway(self):
+        """Le niveau complete legacy est coupe avant toute requete provider."""
         natal_result = _make_natal_result()
         birth_profile = _make_birth_profile()
-        gw_result = _make_gateway_result("natal_interpretation")
         db = _make_db_mock(has_persona=True)
 
         mock_gw_instance = MagicMock()
-        mock_gw_instance.execute_request = AsyncMock(return_value=gw_result)
-
-        mock_persisted = MagicMock()
-        mock_persisted.created_at = None
+        mock_gw_instance.execute_request = AsyncMock()
 
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
@@ -254,31 +243,25 @@ class TestNatalInterpretationServiceUserInput:
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
-                return_value=mock_persisted,
-            ),
         ):
-            await NatalInterpretationService.interpret(
-                db=db,
-                user_id=1,
-                chart_id="chart-abc",
-                natal_result=natal_result,
-                birth_profile=birth_profile,
-                level="complete",
-                persona_id=PERSONA_ID,
-                locale="fr",
-                question="Une question passee intentionnellement",
-                request_id="req-test",
-                trace_id="trace-test",
-            )
+            with pytest.raises(NatalInterpretationServiceError) as exc:
+                await NatalInterpretationService.interpret(
+                    db=db,
+                    user_id=1,
+                    chart_id="chart-abc",
+                    natal_result=natal_result,
+                    birth_profile=birth_profile,
+                    level="complete",
+                    persona_id=PERSONA_ID,
+                    locale="fr",
+                    question="Une question passee intentionnellement",
+                    request_id="req-test",
+                    trace_id="trace-test",
+                )
 
-        assert mock_gw_instance.execute_request.called
-        request_sent = mock_gw_instance.execute_request.call_args.kwargs["request"]
-        user_input_sent = request_sent.user_input
-
-        assert user_input_sent.question is None
-        assert user_input_sent.locale == "fr"
+        assert exc.value.code == "legacy_natal_generation_disabled"
+        assert exc.value.details["replacement"] == "/v1/theme-natal/readings"
+        mock_gw_instance.execute_request.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_short_level_rejects_legacy_generation_before_gateway(self):
@@ -363,16 +346,13 @@ class TestNatalInterpretationServiceUserInput:
 class TestNatalInterpretationServiceSchemaVersion:
     @pytest.mark.asyncio
     async def test_complete_level_rejects_local_v2_downgrade(self):
+        """Le validateur post-provider n'est plus executable depuis le service legacy."""
         natal_result = _make_natal_result()
         birth_profile = _make_birth_profile()
-        gw_result = _make_gateway_result("natal_interpretation")
         db = _make_db_mock(has_persona=True)
 
         mock_gw_instance = MagicMock()
-        mock_gw_instance.execute_request = AsyncMock(return_value=gw_result)
-
-        mock_persisted = MagicMock()
-        mock_persisted.created_at = None
+        mock_gw_instance.execute_request = AsyncMock()
 
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
@@ -381,40 +361,32 @@ class TestNatalInterpretationServiceSchemaVersion:
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
-                return_value=mock_persisted,
-            ),
         ):
-            resp = await NatalInterpretationService.interpret(
-                db=db,
-                user_id=1,
-                chart_id="chart-abc",
-                natal_result=natal_result,
-                birth_profile=birth_profile,
-                level="complete",
-                persona_id=PERSONA_ID,
-                locale="fr",
-                question=None,
-                request_id="req-test",
-                trace_id="trace-test",
-            )
+            with pytest.raises(NatalInterpretationServiceError) as exc:
+                await NatalInterpretationService.interpret(
+                    db=db,
+                    user_id=1,
+                    chart_id="chart-abc",
+                    natal_result=natal_result,
+                    birth_profile=birth_profile,
+                    level="complete",
+                    persona_id=PERSONA_ID,
+                    locale="fr",
+                    question=None,
+                    request_id="req-test",
+                    trace_id="trace-test",
+                )
 
-        assert resp.data.meta.schema_version == "v3_schema_mismatch"
-        assert resp.data.meta.validation_status == "rejected"
-        audit_row = db.add.call_args.args[0]
-        assert audit_row.interpretation_payload["rejection_reason"]["code"] == (
-            NATAL_COMPLETE_SCHEMA_MISMATCH
-        )
-        assert audit_row.interpretation_payload["rejection_reason"]["request_id"] == "req-test"
+        assert exc.value.code == "legacy_natal_generation_disabled"
+        mock_gw_instance.execute_request.assert_not_called()
 
 
 class TestNatalInterpretationServiceModules:
     @pytest.mark.asyncio
-    async def test_complete_module_bypasses_persistence_and_injects_module_context(self):
+    async def test_complete_module_rejects_before_provider_context(self):
+        """Les modules complets legacy ne peuvent plus selectionner un runtime provider."""
         natal_result = _make_natal_result()
         birth_profile = _make_birth_profile()
-        gw_result = _make_gateway_result("natal_psy_profile")
 
         mock_persona = MagicMock()
         mock_persona.name = "Luna"
@@ -430,7 +402,7 @@ class TestNatalInterpretationServiceModules:
         db.get.return_value = mock_persona
 
         mock_gw_instance = MagicMock()
-        mock_gw_instance.execute_request = AsyncMock(return_value=gw_result)
+        mock_gw_instance.execute_request = AsyncMock()
 
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
@@ -440,32 +412,21 @@ class TestNatalInterpretationServiceModules:
             ),
             _patch_entitlement_snapshot(),
         ):
-            resp = await NatalInterpretationService.interpret(
-                db=db,
-                user_id=1,
-                chart_id="chart-abc",
-                natal_result=natal_result,
-                birth_profile=birth_profile,
-                level="complete",
-                persona_id=PERSONA_ID,
-                locale="fr",
-                question=None,
-                request_id="req-test",
-                trace_id="trace-test",
-                module="NATAL_PSY_PROFILE",
-            )
+            with pytest.raises(NatalInterpretationServiceError) as exc:
+                await NatalInterpretationService.interpret(
+                    db=db,
+                    user_id=1,
+                    chart_id="chart-abc",
+                    natal_result=natal_result,
+                    birth_profile=birth_profile,
+                    level="complete",
+                    persona_id=PERSONA_ID,
+                    locale="fr",
+                    question=None,
+                    request_id="req-test",
+                    trace_id="trace-test",
+                    module="NATAL_PSY_PROFILE",
+                )
 
-        request_sent = mock_gw_instance.execute_request.call_args.kwargs["request"]
-        assert request_sent.user_input.use_case == "natal_psy_profile"
-        assert request_sent.context.extra_context["module"] == "NATAL_PSY_PROFILE"
-        assert resp.data.meta.cached is False
-        db.commit.assert_called_once()
-        persisted_interpretations = [
-            call.args[0]
-            for call in db.add.call_args_list
-            if isinstance(call.args[0], UserNatalInterpretationModel)
-        ]
-        assert persisted_interpretations
-        assert all(
-            item.use_case == NARRATIVE_ANSWER_AUDIT_USE_CASE for item in persisted_interpretations
-        )
+        assert exc.value.details["replacement"] == "/v1/theme-natal/readings"
+        mock_gw_instance.execute_request.assert_not_called()

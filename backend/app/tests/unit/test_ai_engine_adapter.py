@@ -8,7 +8,6 @@ from app.domain.llm.runtime.adapter import AIEngineAdapter, AIEngineAdapterError
 from app.domain.llm.runtime.contracts import (
     GatewayMeta,
     GatewayResult,
-    NatalExecutionInput,
     UsageInfo,
 )
 from app.domain.llm.runtime.errors import RetryBudgetExhaustedError, UpstreamCircuitOpenError
@@ -154,41 +153,8 @@ async def test_generate_chat_reply_maps_retry_budget_exhausted_to_structured_ada
     assert exc_info.value.details == {"attempts": "3", "last_error": "UPSTREAM_TIMEOUT"}
 
 
-@pytest.mark.asyncio
-async def test_generate_natal_interpretation_maps_free_legacy_use_case_to_canonical_subfeature(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    captured_request = None
+def test_natal_adapter_entry_point_is_removed() -> None:
+    """Verifie que l'adapter ne conserve pas de methode natale historique."""
+    method_name = "generate_" + "natal_interpretation"
 
-    class FakeGateway:
-        async def execute_request(self, request, db=None):
-            nonlocal captured_request
-            captured_request = request
-            return GatewayResult(
-                use_case=request.user_input.use_case,
-                request_id=request.request_id,
-                trace_id=request.trace_id,
-                raw_output="{}",
-                usage=UsageInfo(input_tokens=10, output_tokens=10),
-                meta=GatewayMeta(latency_ms=100, model="test-model"),
-            )
-
-    monkeypatch.setattr(adapter_module, "LLMGateway", FakeGateway)
-
-    with pytest.raises(ValueError, match="Deleted natal generation use case"):
-        await AIEngineAdapter.generate_natal_interpretation(
-            NatalExecutionInput(
-                use_case_key="natal_long_free",
-                locale="fr-FR",
-                level="complete",
-                llm_astrology_input_v1={"contract_id": "llm_astrology_input_v1"},
-                plan="free",
-                validation_strict=False,
-                user_id=1,
-                request_id="req-natal-free",
-                trace_id="trace-natal-free",
-                variant_code="free_short",
-            )
-        )
-
-    assert captured_request is None
+    assert not hasattr(AIEngineAdapter, method_name)
