@@ -7,7 +7,8 @@
 - Story key: CS-439-supprimer-adaptateurs-front-legacy-interpretation-natale
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-439-supprimer-adaptateurs-front-legacy-interpretation-natale`
-- Story registry: `ready-to-review` on 2026-06-01
+- Story registry: `done` on 2026-06-01
+- Alignment pass: 2026-06-01 code-vs-brief review found and fixed one residual `level`-selection heuristic.
 
 ## Preflight
 
@@ -37,7 +38,7 @@
 
 | File | Required | Present | Status | Notes |
 |---|---:|---:|---|---|
-| `00-story.md` | yes | yes | PASS | Status synchronized to `ready-to-review`. |
+| `00-story.md` | yes | yes | PASS | Status synchronized to `done`. |
 | `generated/01-execution-brief.md` | yes | yes | PASS | Capsule repaired before implementation. |
 | `generated/03-acceptance-traceability.md` | yes | yes | PASS | AC1-AC11 mapped to implementation and validation evidence. |
 | `generated/04-target-files.md` | yes | yes | PASS | Story-owned files and high-risk exclusions recorded. |
@@ -50,15 +51,15 @@
 | AC | Implementation evidence | Validation evidence | Status |
 |---|---|---|---|
 | AC1 | `ThemeNatalReadingPublicPayload` and `UseThemeNatalReadingResult` replace the old modern target. | `validation.txt`: `natalChartApi.test.tsx` PASS; `pnpm --dir frontend lint` PASS. | PASS |
-| AC2 | `NatalInterpretation.tsx` no longer selects by `natal_long_free` or `natal_interpretation_short`. | `frontend-legacy-after.txt` and targeted production scan. | PASS |
-| AC3 | `NatalInterpretationContent.tsx` removed `resolveUseCase` and old use-case rendering branch. | `natalInterpretation.test.tsx`, `natalPublicDomGuard.test.tsx` PASS. | PASS |
+| AC2 | `NatalInterpretation.tsx` no longer selects by old use cases or `level`; persisted complete readings are identified by explicit persisted-reading markers. | `frontend-legacy-after.txt`, `level-selection-after.txt`, and targeted production scans. | PASS |
+| AC3 | `NatalInterpretationContent.tsx` renders by public schema presence and no longer branches rendering from old `use_case` or `level`. | `natalInterpretation.test.tsx`, `natalPublicDomGuard.test.tsx` PASS. | PASS |
 | AC4 | `ThemeNatalReadingCommandRequest` owns the authorized body fields only. | `natalChartApi.test.tsx` PASS. | PASS |
 | AC5 | `variant_code` remains gate/display only. | `variant-code-after.txt` classified hits: `NatalChartPage.tsx`, `NatalAstrologerMode.tsx`. | PASS |
 | AC6 | Public DOM denylist remains active without positive old payloads. | `natalPublicDomGuard.test.tsx` PASS. | PASS |
 | AC7 | Public/test fixtures no longer use old positive use cases. | `frontend-legacy-after.txt` shows only denylist literal; touched tests use `theme_natal_preview`. | PASS |
 | AC8 | No inline styles introduced. | `inline-style-after.txt`: `PASS: no matches`. | PASS |
 | AC9 | Removed adapter symbols cannot reappear. | `adapter-symbol-after.txt`: `PASS: no matches`. | PASS |
-| AC10 | Evidence persisted. | `evidence/frontend-removal-audit.md`, before/after scans, `validation.txt`, `vite-start.txt`, final capsule validation. | PASS |
+| AC10 | Evidence persisted. | `evidence/frontend-removal-audit.md`, before/after scans, `level-selection-after.txt`, `validation.txt`, `vite-start.txt`, final capsule validation. | PASS |
 | AC11 | Historical route actions absent/modernized. | `NatalChartPage.test.tsx`, `natalInterpretation.test.tsx` PASS; PDF actions call product endpoint. | PASS |
 
 ## Files changed
@@ -72,6 +73,7 @@
 - `frontend/src/tests/natalChartApi.test.tsx`
 - `frontend/src/tests/natalInterpretation.test.tsx`
 - `frontend/src/tests/natalPublicDomGuard.test.tsx`
+- `frontend/src/tests/NatalChartPage.test.tsx`
 - `_condamad/stories/story-status.md`
 - `_condamad/stories/CS-439-supprimer-adaptateurs-front-legacy-interpretation-natale/generated/**`
 - `_condamad/stories/CS-439-supprimer-adaptateurs-front-legacy-interpretation-natale/evidence/**`
@@ -83,7 +85,8 @@
 ## Tests added or updated
 
 - Added API hook coverage in `natalChartApi.test.tsx` for public `theme_natal` payload normalization.
-- Updated public interpretation, DOM guard, page, and admin catalog fixtures to remove positive old public natal use cases.
+- Added alignment coverage in `natalInterpretation.test.tsx` proving `level` does not select persisted public readings.
+- Updated public interpretation, DOM guard, and page fixtures to remove positive old public natal use cases.
 
 ## Commands run
 
@@ -93,14 +96,15 @@
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only ...` after venv activation | repo root | PASS | 0 | Capsule repaired in target directory. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py <capsule>` after venv activation | repo root | PASS | 0 | Capsule structure valid before implementation. |
 | `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py <capsule> --final` after venv activation | repo root | PASS | 0 | Final consistency gate passed. |
-| `pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx AdminPromptsCatalogFlow.test.tsx` | repo root | PASS | 0 | 5 files, 138 tests passed; output in `evidence/validation.txt`. |
+| `pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx` | repo root | PASS | 0 | 4 files, 136 tests passed; output in `evidence/validation.txt`. |
 | `pnpm --dir frontend lint` | repo root | PASS | 0 | TypeScript lint/typecheck passed; output in `evidence/validation.txt`. |
 | `rg -n "natal_long_free\|natal_interpretation_short\|use_case_level\|forceRefresh\|force_refresh\|shouldRefreshShortAfterBasicUpgrade" frontend/src` | repo root | PASS | 0 | Only intentional denylist literal remains in `natalPublicDomGuard.test.tsx`. |
 | `rg -n "NatalInterpretationResult\|mapProductActionDataToInterpretation\|isNatalInterpretationResult" frontend/src/api/natal-chart frontend/src/features/natal-chart frontend/src/components/natal-interpretation` | repo root | PASS | 1 | No matches; recorded in `adapter-symbol-after.txt`. |
 | `rg -n "variant_code\|variantCode" frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/api/natal-chart frontend/src/pages/NatalChartPage.tsx` | repo root | PASS | 0 | Entitlement-only hits recorded in `variant-code-after.txt`. |
 | `rg -n "style=\\{\\{" frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/pages/NatalChartPage.tsx` | repo root | PASS | 1 | No matches; recorded in `inline-style-after.txt`. |
+| `rg -n 'item\.level ===\|level === "short"\|level === "complete"\|use_case ===\|useCase ===\|item\.use_case' frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/api/natal-chart` | repo root | PASS | 0 | Residual hits are display-only labels; recorded in `level-selection-after.txt`. |
 | `git diff --check` | repo root | PASS | 0 | No whitespace errors; line-ending warnings only. |
-| `frontend/node_modules/.bin/vite.cmd --host 127.0.0.1 --port 5174` + HTTP GET | repo/frontend | PASS | 0 | `vite-start.txt`: HTTP 200 on `http://127.0.0.1:5174`; server stopped after check. |
+| `frontend/node_modules/.bin/vite.CMD --host 127.0.0.1 --port 5176` + HTTP GET | repo/frontend | PASS | 0 | `vite-start.txt`: HTTP 200 on `http://127.0.0.1:5176`; server stopped after check. |
 
 ## Commands skipped or blocked
 
@@ -113,7 +117,8 @@
 - No compatibility shim, alias, wrapper, re-export, or silent fallback was added.
 - Modern product-action hook accepts only `theme_natal*` public schema data; old interpretation envelopes return `null` rather than being silently adapted.
 - `NatalInterpretationContent` no longer reads old `use_case` to decide rendering.
-- `NatalInterpretation.tsx` no longer branches on old public natal use-case strings.
+- `NatalInterpretationContent` no longer uses `meta.level` to decide whether to render the public body or the regeneration message.
+- `NatalInterpretation.tsx` no longer branches on old public natal use-case strings or `item.level` for reading selection.
 - Tests retain old symbols only as a DOM denylist declaration.
 
 ## Diff review
@@ -130,6 +135,7 @@
 ## Remaining risks
 
 - Historical stored rows without modern public `theme_natal` schema may no longer render through the modern product-action hook; this is the allowed story delta.
+- Preview rows in the history list are not reused unless a modern endpoint returns the public payload; this avoids inferring reading state from legacy `level`.
 - `variant_code` remains in entitlement gate/display surfaces; reviewer should confirm no command body construction uses it.
 
 ## Suggested reviewer focus

@@ -1,24 +1,40 @@
-Command: pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx AdminPromptsCatalogFlow.test.tsx
-$ node ./scripts/run-vite-logged.mjs vitest vitest run "natalChartApi.test.tsx" "natalInterpretation.test.tsx" "natalPublicDomGuard.test.tsx" "NatalChartPage.test.tsx" "AdminPromptsCatalogFlow.test.tsx"
-
- RUN  v4.1.5 C:/dev/horoscope_front/frontend
-
- ✓ src/tests/natalPublicDomGuard.test.tsx (6 tests) 193ms
- ✓ src/tests/natalChartApi.test.tsx (17 tests) 21ms
- ✓ src/tests/natalInterpretation.test.tsx (36 tests) 782ms
- ✓ src/tests/AdminPromptsCatalogFlow.test.tsx (3 tests) 1742ms
-     ✓ affiche la lecture en activation composants et artefacts runtime  623ms
-     ✓ ouvre l édition sur le nœud use case overlay et expose la couche free  653ms
-     ✓ rend la persona et le delta before/after persona pour une cible premium  465ms
- ✓ src/tests/NatalChartPage.test.tsx (76 tests) 2278ms
-
- Test Files  5 passed (5)
-      Tests  138 passed (138)
-   Start at  17:03:03
-   Duration  4.12s (transform 1.86s, setup 1.21s, import 2.80s, tests 5.01s, environment 3.09s)
-
-JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
-Command: pnpm --dir frontend lint
-$ tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
-Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py <capsule> --final (venv activated)
+Command: pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx
 Result: PASS
+Summary: 4 files passed, 136 tests passed.
+
+Command: pnpm --dir frontend lint
+Result: PASS
+Summary: tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json completed.
+
+Command: rg -n "natal_long_free|natal_interpretation_short|use_case_level|forceRefresh|force_refresh|shouldRefreshShortAfterBasicUpgrade" frontend/src
+Result: PASS
+Summary: only the intentional denylist literal remains in frontend/src/tests/natalPublicDomGuard.test.tsx.
+
+Command: rg -n "NatalInterpretationResult|mapProductActionDataToInterpretation|isNatalInterpretationResult" frontend/src/api/natal-chart frontend/src/features/natal-chart frontend/src/components/natal-interpretation
+Result: PASS
+Summary: no matches.
+
+Command: rg -n "variant_code|variantCode" frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/api/natal-chart frontend/src/pages/NatalChartPage.tsx
+Result: PASS
+Summary: remaining hits are entitlement gate/display reads in NatalChartPage.tsx and NatalAstrologerMode.tsx.
+
+Command: rg -n "style=\\{\\{" frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/pages/NatalChartPage.tsx
+Result: PASS
+Summary: no matches.
+
+Command: rg -n 'item\.level ===|level === "short"|level === "complete"|use_case ===|useCase ===|item\.use_case' frontend/src/features/natal-chart frontend/src/components/natal-interpretation frontend/src/api/natal-chart
+Result: PASS
+Summary: no reading-selection or render-branch use_case/level heuristic remains; residual level hits are display labels only.
+
+Command: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-439-supprimer-adaptateurs-front-legacy-interpretation-natale\00-story.md (venv activated)
+Result: PASS
+
+Command: python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-439-supprimer-adaptateurs-front-legacy-interpretation-natale\00-story.md (venv activated)
+Result: PASS
+
+Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-439-supprimer-adaptateurs-front-legacy-interpretation-natale --final (venv activated)
+Result: PASS
+
+Command: frontend/node_modules/.bin/vite.CMD --host 127.0.0.1 --port 5176
+Result: PASS
+Summary: HTTP 200 on http://127.0.0.1:5176; server stopped after check.

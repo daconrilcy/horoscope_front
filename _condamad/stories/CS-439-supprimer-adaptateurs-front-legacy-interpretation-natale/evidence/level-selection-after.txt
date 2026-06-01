@@ -1,0 +1,3 @@
+frontend/src/components/natal-interpretation/NatalInterpretationMenus.tsx:165: display-only history label: item.level selects badge text.
+frontend/src/features/natal-chart/NatalInterpretation.tsx:536: display-only complete badge: data.meta.level selects badge visibility.
+PASS: no use_case or level heuristic remains for public reading selection or content rendering.

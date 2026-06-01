@@ -290,11 +290,11 @@ export function InterpretationContent({
   renderReadingSources?: (elements: UsedAstrologicalElementView[], lang: NatalInterpretationLocale) => ReactNode
 }) {
   const t = natalChartTranslations[lang].interpretation
-  const { meta, degraded_mode, narrative_natal_reading_v1: narrativeReading, basic_natal_interpretation_v2: basicReading } = data
-  const isCompleteLevel = meta.level === "complete"
+  const { degraded_mode, narrative_natal_reading_v1: narrativeReading, basic_natal_interpretation_v2: basicReading } = data
   const shouldShowThemeNatalPublicReading =
-    !narrativeReading && !basicReading && (!isCompleteLevel || isThemeNatalPublicPayload(data))
-  const shouldShowNarrativeMissing = isCompleteLevel && !narrativeReading && !basicReading && !isThemeNatalPublicPayload(data)
+    !narrativeReading && !basicReading && isThemeNatalPublicPayload(data)
+  const shouldShowNarrativeMissing =
+    !narrativeReading && !basicReading && !isThemeNatalPublicPayload(data)
   const legalNoticeLines = t.legalNoticeLines
 
   return (

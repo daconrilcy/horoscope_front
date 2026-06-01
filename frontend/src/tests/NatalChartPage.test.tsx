@@ -1701,12 +1701,13 @@ describe("NatalChartPage", () => {
   describe("Story 64.9 — sections lockées free + CTA upgrade", () => {
     const INTERPRETATION_DATA = {
       chart_id: "abc",
-      use_case: "short",
+      schema_version: "theme_natal.preview.v1",
+      use_case: "theme_natal_preview",
       degraded_mode: null,
       meta: {
         id: 1,
         level: "short" as const,
-        use_case: "short",
+        use_case: "theme_natal_preview",
         persona_id: null,
         persona_name: null,
         prompt_version_id: null,

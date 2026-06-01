@@ -1,1 +1,1 @@
-PASS: Vite served http://127.0.0.1:5174 with HTTP 200 using frontend/node_modules/.bin/vite.cmd
+PASS: HTTP 200 on http://127.0.0.1:5176

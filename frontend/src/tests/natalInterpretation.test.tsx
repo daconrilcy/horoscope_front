@@ -605,7 +605,7 @@ describe("NatalInterpretationSection", () => {
     expect(screen.queryByText(/Subscription page/i)).not.toBeInTheDocument();
   });
 
-  it("reutilise l'interpretation short persistee en Basic sans relancer la generation", async () => {
+  it("lance le preview moderne en Basic sans selectionner une interpretation short par level", async () => {
     (useNatalInterpretationsList as any).mockReturnValue({
       isLoading: false,
       data: {
@@ -631,17 +631,19 @@ describe("NatalInterpretationSection", () => {
     })
 
     await waitFor(() => {
-      expect(useNatalInterpretationById).toHaveBeenCalledWith(
+      expect(useNatalInterpretation).toHaveBeenCalledWith(
         expect.objectContaining({
           enabled: true,
-          interpretationId: 101,
+          action: "preview",
+          personaProfileId: null,
         }),
       )
     })
 
-    expect(useNatalInterpretation).toHaveBeenCalledWith(
+    expect(useNatalInterpretationById).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        enabled: false,
+        enabled: true,
+        interpretationId: 101,
       }),
     )
     expect(screen.getByText("Votre Thème Test")).toBeInTheDocument()
@@ -721,6 +723,60 @@ describe("NatalInterpretationSection", () => {
     );
   });
 
+  it("selectionne une lecture complete sans utiliser level comme heuristique", () => {
+    (useNatalInterpretationsList as any).mockReturnValue({
+      isLoading: false,
+      data: {
+        items: [
+          {
+            id: 201,
+            chart_id: "chart-123",
+            level: "complete",
+            persona_id: null,
+            persona_name: null,
+            created_at: "2026-06-01T10:00:00Z",
+            use_case: "theme_natal_preview",
+            prompt_version_id: null,
+            was_fallback: false,
+          },
+          {
+            id: 202,
+            chart_id: "chart-123",
+            level: "short",
+            persona_id: "persona-1",
+            persona_name: "Luna Céleste",
+            created_at: "2026-06-01T11:00:00Z",
+            use_case: "theme_natal_reading",
+            prompt_version_id: "theme-natal-v1",
+            was_fallback: false,
+          },
+        ],
+        total: 2,
+        limit: 20,
+        offset: 0,
+      },
+      refetch: vi.fn(),
+    });
+
+    renderSection({
+      longFeatureAccess: {
+        feature_code: "natal_chart_long",
+        granted: true,
+        reason_code: "granted",
+        access_mode: "quota",
+        variant_code: "multi_astrologer",
+        usage_states: [{ exhausted: false, remaining: 3 }],
+      } as any,
+    });
+
+    expect(useNatalInterpretationById).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interpretationId: 202,
+        enabled: true,
+      }),
+    );
+  });
+
   it("affiche par défaut la dernière interprétation complète en Basic", () => {
     renderSection({
       longFeatureAccess: {
@@ -762,7 +818,7 @@ describe("NatalInterpretationSection", () => {
     );
   });
 
-  it("reutilise l'historique free sans relancer la generation quand short et free_long existent", async () => {
+  it("lance le preview moderne sans reutiliser l'historique free ambigu", async () => {
     (useNatalInterpretationsList as any).mockReturnValue({
       isLoading: false,
       data: {
@@ -803,17 +859,19 @@ describe("NatalInterpretationSection", () => {
     renderSection({ isLockedFree: true });
 
     await waitFor(() => {
-      expect(useNatalInterpretationById).toHaveBeenCalledWith(
+      expect(useNatalInterpretation).toHaveBeenCalledWith(
         expect.objectContaining({
           enabled: true,
-          interpretationId: 5,
+          action: "preview",
+          personaProfileId: null,
         }),
       );
     });
 
-    expect(useNatalInterpretation).toHaveBeenCalledWith(
+    expect(useNatalInterpretationById).not.toHaveBeenCalledWith(
       expect.objectContaining({
-        enabled: false,
+        interpretationId: 5,
+        enabled: true,
       }),
     );
   });

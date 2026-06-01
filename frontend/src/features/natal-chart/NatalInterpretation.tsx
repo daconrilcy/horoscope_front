@@ -53,26 +53,14 @@ interface Props {
   longFeatureAccess?: FeatureEntitlementResponse
 }
 
-function isRealCompleteInterpretation(item: NatalInterpretationListItem): boolean {
-  return item.level === "complete" && (Boolean(item.persona_id) || Boolean(item.prompt_version_id))
+function isPersistedCompleteReading(item: NatalInterpretationListItem): boolean {
+  return Boolean(item.persona_id) || Boolean(item.prompt_version_id)
 }
 
 function findLatestCompleteInterpretation(
   items: NatalInterpretationListItem[],
 ): NatalInterpretationListItem | null {
-  return items.find(isRealCompleteInterpretation) ?? null
-}
-
-function findLatestShortInterpretation(
-  items: NatalInterpretationListItem[],
-): NatalInterpretationListItem | null {
-  return items.find((item) => item.level === "short") ?? null
-}
-
-function findPreferredFreeInterpretation(
-  items: NatalInterpretationListItem[],
-): NatalInterpretationListItem | null {
-  return findLatestShortInterpretation(items)
+  return items.find(isPersistedCompleteReading) ?? null
 }
 
 function localeFromLang(lang: AstrologyLang): "fr-FR" | "en-US" | "es-ES" | "de-DE" {
@@ -150,8 +138,6 @@ export function NatalInterpretationSection({
   })
   const historyItems = historyQuery.data?.items ?? []
   const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems)
-  const latestShortInterpretation = findLatestShortInterpretation(historyItems)
-  const preferredFreeInterpretation = findPreferredFreeInterpretation(historyItems)
   const isQuotaUsageExhausted = Boolean(
     longFeatureAccess?.reason_code === "quota_exhausted" ||
       longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
@@ -159,14 +145,10 @@ export function NatalInterpretationSection({
   const isSingleAstrologerPlan = hasSingleCompleteReadingAccess(longFeatureAccess)
   const isPremiumPlan = hasMultiCompleteReadingAccess(longFeatureAccess)
   const shouldPreferLatestCompleteByDefault = isSingleAstrologerPlan || isPremiumPlan
-  const hasPersistedShortInterpretation = latestShortInterpretation !== null
   const shouldResolveInterpretationFromHistory =
     shouldPreferLatestCompleteByDefault || isSingleAstrologerPlan
   const hasPersistedInterpretationCandidate =
-    (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation !== null) ||
-    (isLockedFree && preferredFreeInterpretation !== null) ||
-    (isSingleAstrologerPlan &&
-      hasPersistedShortInterpretation)
+    shouldPreferLatestCompleteByDefault && latestCompleteInterpretation !== null
   const isResolvingPersistedInterpretation =
     !selectedInterpretationId &&
     shouldResolveInterpretationFromHistory &&
@@ -299,7 +281,7 @@ export function NatalInterpretationSection({
       setSelectedPersonaId(null)
       setReadingAction("preview")
     }
-  }, [initialInterpretationId, initialPersonaId, isLockedFree, preferredFreeInterpretation?.level])
+  }, [initialInterpretationId, initialPersonaId, isLockedFree])
 
   useEffect(() => {
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) return
@@ -314,25 +296,11 @@ export function NatalInterpretationSection({
       return
     }
 
-    if (isLockedFree && preferredFreeInterpretation) {
-      setSelectedInterpretationId((current) =>
-        current === preferredFreeInterpretation.id ? current : preferredFreeInterpretation.id,
-      )
-      setSelectedPersonaId(null)
-      return
-    }
-
     if (isSingleAstrologerPlan) {
       if (readingAction !== "preview" && selectedPersonaId) {
         return
       }
-      if (latestShortInterpretation) {
-        setSelectedInterpretationId((current) =>
-          current === latestShortInterpretation.id ? current : latestShortInterpretation.id,
-        )
-      } else {
-        setSelectedInterpretationId(null)
-      }
+      setSelectedInterpretationId(null)
       setSelectedPersonaId(null)
       setReadingAction("preview")
     }
@@ -340,11 +308,8 @@ export function NatalInterpretationSection({
     historyItems,
     initialInterpretationId,
     initialPersonaId,
-    isLockedFree,
     isSingleAstrologerPlan,
     latestCompleteInterpretation,
-    latestShortInterpretation,
-    preferredFreeInterpretation,
     readingAction,
     selectedPersonaId,
     shouldPreferLatestCompleteByDefault,
@@ -452,7 +417,7 @@ export function NatalInterpretationSection({
 
   const usedPersonaIds = new Set(
     historyItems
-      .filter((item) => isRealCompleteInterpretation(item) && Boolean(item.persona_id))
+      .filter((item) => isPersistedCompleteReading(item) && Boolean(item.persona_id))
       .map((item) => item.persona_id as string),
   )
 

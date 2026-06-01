@@ -1,5 +1,5 @@
 # Story CS-439 supprimer-adaptateurs-front-legacy-interpretation-natale: Supprimer Les Adaptateurs Front Legacy D'Interpretation Natale
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
