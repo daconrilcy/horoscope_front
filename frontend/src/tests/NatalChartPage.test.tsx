@@ -284,13 +284,13 @@ describe("NatalChartPage", () => {
 
     expect(mockUseNatalInterpretation).toHaveBeenCalledWith(
       expect.objectContaining({
-        personaId: "astro-42",
-        useCaseLevel: "complete",
+        personaProfileId: "astro-42",
+        action: "generate_full",
       })
     )
   })
 
-  it("uses the free_short complete flow by default for locked free natal access", () => {
+  it("uses the preview product action by default for locked free natal access", () => {
     mockUseFeatureAccess.mockReturnValue({
       variant_code: "free_short",
       granted: true,
@@ -309,9 +309,8 @@ describe("NatalChartPage", () => {
 
     expect(mockUseNatalInterpretation).toHaveBeenCalledWith(
       expect.objectContaining({
-        useCaseLevel: "complete",
-        personaId: null,
-        allowCompleteWithoutPersona: true,
+        action: "preview",
+        personaProfileId: null,
       }),
     )
   })

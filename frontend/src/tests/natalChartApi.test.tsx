@@ -1,7 +1,14 @@
+// Tests des contrats HTTP publics et des hooks API du theme natal.
 import { render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { ApiError, generateNatalChart, requestAstrologyProjection, useLatestNatalChart } from "@api"
+import {
+  ApiError,
+  generateNatalChart,
+  requestAstrologyProjection,
+  requestThemeNatalReadingAction,
+  useLatestNatalChart,
+} from "@api"
 import { getBirthData, type BirthProfileData } from "../api/birthProfile"
 import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
@@ -92,6 +99,46 @@ describe("generateNatalChart", () => {
       code: "unknown_error",
       status: 500,
     })
+  })
+})
+
+describe("themeNatalReadingActionsApi", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("envoie uniquement la commande produit publique", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ state: "accepted", data: null, details: {} }),
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await requestThemeNatalReadingAction("test-token", {
+      chart_id: "chart-123",
+      action: "generate_full",
+      persona_profile_id: "01932f63-8452-79d4-b1b8-f8f23d4fb001",
+      locale: "fr-FR",
+      client_request_id: "client-request-433",
+    })
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const body = JSON.parse(init.body as string)
+    expect(url).toContain("/v1/theme-natal/readings")
+    expect(body).toEqual({
+      chart_id: "chart-123",
+      action: "generate_full",
+      persona_profile_id: "01932f63-8452-79d4-b1b8-f8f23d4fb001",
+      locale: "fr-FR",
+      client_request_id: "client-request-433",
+    })
+    expect(body).not.toHaveProperty("use_case_level")
+    expect(body).not.toHaveProperty("variant_code")
+    expect(body).not.toHaveProperty("force_refresh")
+    expect(body).not.toHaveProperty("use_case")
+    expect(body).not.toHaveProperty("plan")
+    expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer test-token")
   })
 })
 

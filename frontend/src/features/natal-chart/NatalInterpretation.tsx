@@ -7,13 +7,14 @@ import type { FeatureEntitlementResponse } from "../../api/billing"
 import { ApiError } from "../../api/client"
 import {
   deleteNatalInterpretation,
-  downloadNatalInterpretationPdf,
-  previewNatalInterpretationPdf,
+  requestThemeNatalReadingAction,
   useNatalInterpretation,
   useNatalInterpretationById,
   useNatalInterpretationsList,
   useNatalPdfTemplates,
   type NatalInterpretationListItem,
+  type ThemeNatalReadingAction,
+  type ThemeNatalReadingSlotState,
 } from "../../api/natalChart"
 import { natalChartTranslations } from "../../i18n/natalChart"
 import { type AstrologyLang } from "../../i18n/astrology"
@@ -96,6 +97,32 @@ function pdfLocaleFromLang(lang: AstrologyLang): "fr" | "en" | "es" {
   return "en"
 }
 
+function createClientRequestId(chartId: string, action: ThemeNatalReadingAction): string {
+  return `${chartId}:${action}:${Date.now()}`
+}
+
+function isBlockingSlotState(state: ThemeNatalReadingSlotState | null): boolean {
+  return state === "failed_retriable" || state === "locked" || state === "paywall" || state === "rejected"
+}
+
+function maxRemainingCompleteReadings(access: FeatureEntitlementResponse | undefined): number | null {
+  const remainingValues = access?.usage_states?.map((state) => state.remaining) ?? []
+  if (remainingValues.length === 0) return null
+  return Math.max(...remainingValues)
+}
+
+function hasSingleCompleteReadingAccess(access: FeatureEntitlementResponse | undefined): boolean {
+  if (!access?.granted) return false
+  const remaining = maxRemainingCompleteReadings(access)
+  return access.access_mode === "quota" && (remaining === null || remaining <= 1)
+}
+
+function hasMultiCompleteReadingAccess(access: FeatureEntitlementResponse | undefined): boolean {
+  if (!access?.granted) return false
+  const remaining = maxRemainingCompleteReadings(access)
+  return access.access_mode === "quota" && remaining !== null && remaining > 1
+}
+
 export function NatalInterpretationSection({
   chartLoaded,
   chartId,
@@ -114,13 +141,13 @@ export function NatalInterpretationSection({
   const basicUpgradePath = "/settings/subscription"
   const premiumUpgradePath = "/settings/subscription"
 
-  const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">(
-    initialPersonaId ? "complete" : "short",
+  const [readingAction, setReadingAction] = useState<ThemeNatalReadingAction>(
+    initialPersonaId ? "generate_full" : "preview",
   )
+  const [nextFullAction, setNextFullAction] = useState<ThemeNatalReadingAction>("generate_full")
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(initialPersonaId)
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
-  const [forceRefresh, setForceRefresh] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [actionNonce, setActionNonce] = useState(0)
   const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(initialInterpretationId)
   const [selectedTemplateKey, setSelectedTemplateKey] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
@@ -140,42 +167,30 @@ export function NatalInterpretationSection({
     longFeatureAccess?.reason_code === "quota_exhausted" ||
       longFeatureAccess?.usage_states?.some((state) => state.exhausted || state.remaining <= 0),
   )
-  const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer"
-  const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer"
+  const isSingleAstrologerPlan = hasSingleCompleteReadingAccess(longFeatureAccess)
+  const isPremiumPlan = hasMultiCompleteReadingAccess(longFeatureAccess)
   const shouldPreferLatestCompleteByDefault =
     isSingleAstrologerPlan || isPremiumPlan || (isLockedFree && latestCompleteInterpretation !== null)
   const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation)
-  const shouldRefreshShortAfterBasicUpgrade =
-    isSingleAstrologerPlan &&
-    !isLockedFree &&
-    hasPersistedFreeShortInterpretation &&
-    latestShortInterpretation === null
   const shouldResolveInterpretationFromHistory =
     shouldPreferLatestCompleteByDefault || isSingleAstrologerPlan
   const hasPersistedInterpretationCandidate =
-    !shouldRefreshShortAfterBasicUpgrade &&
-    (
-      (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation !== null) ||
-      (isLockedFree && preferredFreeInterpretation !== null) ||
-      (isSingleAstrologerPlan && latestShortInterpretation !== null)
-    )
+    (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation !== null) ||
+    (isLockedFree && preferredFreeInterpretation !== null) ||
+    (isSingleAstrologerPlan &&
+      (latestShortInterpretation !== null || hasPersistedFreeShortInterpretation))
   const isResolvingPersistedInterpretation =
     !selectedInterpretationId &&
     shouldResolveInterpretationFromHistory &&
     (historyQuery.isLoading || historyQuery.isFetching)
   const isBasicCompleteLimitReached =
     isSingleAstrologerPlan && latestCompleteInterpretation !== null
-  const shouldBootstrapFreeComplete =
-    isLockedFree &&
-    preferredFreeInterpretation === null &&
-    !historyQuery.isLoading &&
-    !historyQuery.isFetching &&
-    historyItems.length === 0
-  const isExplicitCompleteGenerationRequest =
-    useCaseLevel === "complete" &&
+  const isExplicitProductActionRequest =
+    readingAction !== "preview" &&
     !selectedInterpretationId &&
     !isBasicCompleteLimitReached &&
-    (Boolean(selectedPersonaId) || forceRefresh || shouldBootstrapFreeComplete)
+    Boolean(selectedPersonaId)
+  const clientRequestId = chartId ? `${chartId}:${readingAction}:${actionNonce}` : undefined
   const pdfTemplatesQuery = useNatalPdfTemplates({
     enabled: chartLoaded,
     locale: pdfLocaleFromLang(lang),
@@ -185,13 +200,12 @@ export function NatalInterpretationSection({
       chartLoaded &&
       !selectedInterpretationId &&
       !isResolvingPersistedInterpretation &&
-      (!hasPersistedInterpretationCandidate || isExplicitCompleteGenerationRequest),
-    useCaseLevel,
-    personaId: selectedPersonaId,
-    allowCompleteWithoutPersona: isLockedFree,
+      (!hasPersistedInterpretationCandidate || isExplicitProductActionRequest),
+    chartId,
+    action: readingAction,
+    personaProfileId: selectedPersonaId,
     locale: localeFromLang(lang),
-    forceRefresh,
-    refreshKey,
+    clientRequestId,
   })
   const idQuery = useNatalInterpretationById({
     enabled: !!selectedInterpretationId,
@@ -266,7 +280,7 @@ export function NatalInterpretationSection({
     }
     setSelectedInterpretationId(null)
     setSelectedPersonaId(null)
-    setForceRefresh(false)
+    setNextFullAction(actionRequest.kind === "switch_persona" ? "regenerate" : "generate_full")
     setIsUpsellOpen(true)
   }, [
     actionRequest,
@@ -283,32 +297,21 @@ export function NatalInterpretationSection({
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) {
       setSelectedInterpretationId(initialInterpretationId)
       setSelectedPersonaId(null)
-      setUseCaseLevel("complete")
+      setReadingAction("generate_full")
       return
     }
     if (initialPersonaId) {
       setSelectedInterpretationId(null)
       setSelectedPersonaId(initialPersonaId)
-      setUseCaseLevel("complete")
+      setReadingAction("generate_full")
       return
     }
     if (isLockedFree) {
       setSelectedInterpretationId(null)
       setSelectedPersonaId(null)
-      setUseCaseLevel(preferredFreeInterpretation?.level ?? "short")
+      setReadingAction("preview")
     }
   }, [initialInterpretationId, initialPersonaId, isLockedFree, preferredFreeInterpretation?.level])
-
-  useEffect(() => {
-    if (!shouldBootstrapFreeComplete) return
-    if (selectedInterpretationId || initialPersonaId || initialInterpretationId) return
-    setUseCaseLevel("complete")
-  }, [
-    initialInterpretationId,
-    initialPersonaId,
-    selectedInterpretationId,
-    shouldBootstrapFreeComplete,
-  ])
 
   useEffect(() => {
     if (typeof initialInterpretationId === "number" && Number.isFinite(initialInterpretationId)) return
@@ -320,7 +323,6 @@ export function NatalInterpretationSection({
         current === latestCompleteInterpretation.id ? current : latestCompleteInterpretation.id,
       )
       setSelectedPersonaId(null)
-      setUseCaseLevel("complete")
       return
     }
 
@@ -329,26 +331,24 @@ export function NatalInterpretationSection({
         current === preferredFreeInterpretation.id ? current : preferredFreeInterpretation.id,
       )
       setSelectedPersonaId(null)
-      setUseCaseLevel(preferredFreeInterpretation.level)
       return
     }
 
     if (isSingleAstrologerPlan) {
-      if (useCaseLevel === "complete" && (selectedPersonaId || forceRefresh)) {
+      if (readingAction !== "preview" && selectedPersonaId) {
         return
       }
-      if (latestShortInterpretation && !shouldRefreshShortAfterBasicUpgrade) {
+      if (latestShortInterpretation) {
         setSelectedInterpretationId((current) =>
           current === latestShortInterpretation.id ? current : latestShortInterpretation.id,
         )
-      } else if (!shouldRefreshShortAfterBasicUpgrade) {
+      } else {
         setSelectedInterpretationId(null)
       }
       setSelectedPersonaId(null)
-      setUseCaseLevel("short")
+      setReadingAction("preview")
     }
   }, [
-    forceRefresh,
     historyItems,
     initialInterpretationId,
     initialPersonaId,
@@ -357,21 +357,10 @@ export function NatalInterpretationSection({
     latestCompleteInterpretation,
     latestShortInterpretation,
     preferredFreeInterpretation,
+    readingAction,
     selectedPersonaId,
     shouldPreferLatestCompleteByDefault,
-    shouldRefreshShortAfterBasicUpgrade,
-    useCaseLevel,
   ])
-
-  useEffect(() => {
-    if (!shouldRefreshShortAfterBasicUpgrade) return
-    if (selectedInterpretationId !== null) return
-
-    setSelectedPersonaId(null)
-    setUseCaseLevel("short")
-    setForceRefresh(true)
-    setRefreshKey((previous) => previous + 1)
-  }, [selectedInterpretationId, shouldRefreshShortAfterBasicUpgrade])
 
   useEffect(() => {
     if (selectedTemplateKey) return
@@ -407,11 +396,10 @@ export function NatalInterpretationSection({
       return
     }
     setSelectedPersonaId(personaId)
-    setUseCaseLevel("complete")
+    setReadingAction(nextFullAction)
     setIsUpsellOpen(false)
     setSelectedInterpretationId(null)
-    setForceRefresh(true)
-    setRefreshKey((previous) => previous + 1)
+    setActionNonce((previous) => previous + 1)
   }
 
   const handleRegenerate = () => {
@@ -433,23 +421,21 @@ export function NatalInterpretationSection({
     }
     setSelectedInterpretationId(null)
     setSelectedPersonaId(null)
-    setForceRefresh(false)
+    setNextFullAction(hasCompleteInterpretation ? "regenerate" : "generate_full")
     setIsUpsellOpen(true)
   }
 
   const handleSelectVersion = (id: number | null) => {
     setSelectedInterpretationId(id)
     if (id === null) {
-      setUseCaseLevel("short")
       setSelectedPersonaId(null)
-      setForceRefresh(false)
+      setReadingAction("preview")
       return
     }
     const selectedItem = historyItems.find((item) => item.id === id)
     if (selectedItem) {
-      setUseCaseLevel(selectedItem.level)
       setSelectedPersonaId(null)
-      setForceRefresh(false)
+      setReadingAction("preview")
     }
   }
 
@@ -465,7 +451,7 @@ export function NatalInterpretationSection({
           setSelectedInterpretationId(remaining[0].id)
         } else {
           setSelectedInterpretationId(null)
-          setUseCaseLevel("short")
+          setReadingAction("preview")
         }
       }
       setShowDeleteConfirm(null)
@@ -476,12 +462,6 @@ export function NatalInterpretationSection({
     }
   }
 
-  const currentInterpretationId =
-    selectedInterpretationId ??
-    data?.meta.id ??
-    historyQuery.data?.items.find((item) => item.created_at === data?.meta.persisted_at)?.id ??
-    latestShortInterpretation?.id ??
-    historyQuery.data?.items[0]?.id
   const usedPersonaIds = new Set(
     historyItems
       .filter((item) => isRealCompleteInterpretation(item) && Boolean(item.persona_id))
@@ -489,32 +469,36 @@ export function NatalInterpretationSection({
   )
 
   const handlePreviewPdf = async () => {
-    if (!accessToken || !currentInterpretationId) return
+    if (!accessToken || !chartId) return
     try {
-      await previewNatalInterpretationPdf(
-        accessToken,
-        currentInterpretationId,
-        selectedTemplateKey || undefined,
-        pdfLocaleFromLang(lang),
-      )
+      await requestThemeNatalReadingAction(accessToken, {
+        chart_id: chartId,
+        action: "preview",
+        persona_profile_id: selectedPersonaId,
+        locale: localeFromLang(lang),
+        client_request_id: createClientRequestId(chartId, "preview"),
+      })
     } catch (err) {
       console.error("Failed to preview PDF", err)
     }
   }
 
   const handleDownloadPdf = async () => {
-    if (!accessToken || !currentInterpretationId) return
+    if (!accessToken || !chartId) return
     try {
-      await downloadNatalInterpretationPdf(
-        accessToken,
-        currentInterpretationId,
-        selectedTemplateKey || undefined,
-        pdfLocaleFromLang(lang),
-      )
+      await requestThemeNatalReadingAction(accessToken, {
+        chart_id: chartId,
+        action: "download",
+        persona_profile_id: selectedPersonaId,
+        locale: localeFromLang(lang),
+        client_request_id: createClientRequestId(chartId, "download"),
+      })
     } catch (err) {
       console.error("Failed to download PDF", err)
     }
   }
+
+  const productActionState = selectedInterpretationId ? null : mainQuery.state
 
   if (!chartLoaded) return null
 
@@ -611,9 +595,11 @@ export function NatalInterpretationSection({
             </Link>
           </div>
         ) : null}
-        {isLoading || isResolvingPersistedInterpretation ? (
-          <InterpretationSkeleton t={t} isComplete={useCaseLevel === "complete"} />
+        {isLoading || productActionState === "generating" || isResolvingPersistedInterpretation ? (
+          <InterpretationSkeleton t={t} isComplete={readingAction !== "preview"} />
         ) : error && !shouldShowBasicLimitNotice ? (
+          <InterpretationError t={t} onRetry={() => refetch()} />
+        ) : isBlockingSlotState(productActionState) ? (
           <InterpretationError t={t} onRetry={() => refetch()} />
         ) : data ? (
           <>
@@ -632,7 +618,7 @@ export function NatalInterpretationSection({
                 t={t}
                 onConfirm={handleUpgrade}
                 onCancel={() => setIsUpsellOpen(false)}
-                isSubmitting={isLoading && useCaseLevel === "complete"}
+                isSubmitting={isLoading && readingAction !== "preview"}
                 excludedPersonaIds={usedPersonaIds}
               />
             )}

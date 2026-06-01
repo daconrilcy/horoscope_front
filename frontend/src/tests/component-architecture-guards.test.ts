@@ -228,7 +228,9 @@ describe("component-architecture guards", () => {
       ]),
     )
 
-    expect(readFrontendFile("features/natal-chart/NatalInterpretation.tsx")).toContain("useNatalInterpretation")
+    expect(readFrontendFile("features/natal-chart/NatalInterpretation.tsx")).toContain(
+      "requestThemeNatalReadingAction",
+    )
     expect(readFrontendFile("features/natal-chart/NatalInterpretation.tsx")).toContain(
       'from "../../components/natal-interpretation/NatalInterpretationContent"',
     )

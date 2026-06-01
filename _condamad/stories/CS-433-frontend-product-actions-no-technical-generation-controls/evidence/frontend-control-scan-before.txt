@@ -1,0 +1,50 @@
+frontend/src/tests/natalInterpretation.test.tsx:449:        variant_code: "single_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:464:          useCaseLevel: "complete",
+frontend/src/tests/natalInterpretation.test.tsx:466:          forceRefresh: true,
+frontend/src/tests/natalInterpretation.test.tsx:496:        variant_code: "multi_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:535:        variant_code: "single_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:570:        variant_code: "multi_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:592:        variant_code: "single_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:626:        variant_code: "single_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:666:        useCaseLevel: "short",
+frontend/src/tests/natalInterpretation.test.tsx:695:        useCaseLevel: "complete",
+frontend/src/tests/natalInterpretation.test.tsx:709:        variant_code: "multi_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:729:        variant_code: "single_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:750:        variant_code: "free_short",
+frontend/src/tests/natalInterpretation.test.tsx:859:        useCaseLevel: "complete",
+frontend/src/tests/natalInterpretation.test.tsx:894:        variant_code: "single_astrologer",
+frontend/src/tests/natalInterpretation.test.tsx:902:          useCaseLevel: "short",
+frontend/src/tests/natalInterpretation.test.tsx:904:          forceRefresh: true,
+frontend/src/api/natal-chart\index.ts:212:  variant_code?: string | null
+frontend/src/api/natal-chart\index.ts:549:  useCaseLevel: "short" | "complete",
+frontend/src/api/natal-chart\index.ts:553:  forceRefresh?: boolean,
+frontend/src/api/natal-chart\index.ts:563:      use_case_level: useCaseLevel,
+frontend/src/api/natal-chart\index.ts:567:      force_refresh: forceRefresh || false,
+frontend/src/api/natal-chart\index.ts:798:  useCaseLevel: "short" | "complete"
+frontend/src/api/natal-chart\index.ts:803:  forceRefresh?: boolean
+frontend/src/api/natal-chart\index.ts:813:      options.useCaseLevel === "short" ||
+frontend/src/api/natal-chart\index.ts:822:      options.useCaseLevel,
+frontend/src/api/natal-chart\index.ts:825:      options.forceRefresh || false,
+frontend/src/api/natal-chart\index.ts:835:        options.useCaseLevel,
+frontend/src/api/natal-chart\index.ts:839:        options.forceRefresh,
+frontend/src/features/natal-chart\NatalInterpretation.tsx:117:  const [useCaseLevel, setUseCaseLevel] = useState<"short" | "complete">(
+frontend/src/features/natal-chart\NatalInterpretation.tsx:122:  const [forceRefresh, setForceRefresh] = useState(false)
+frontend/src/features/natal-chart\NatalInterpretation.tsx:143:  const isSingleAstrologerPlan = longFeatureAccess?.variant_code === "single_astrologer"
+frontend/src/features/natal-chart\NatalInterpretation.tsx:144:  const isPremiumPlan = longFeatureAccess?.variant_code === "multi_astrologer"
+frontend/src/features/natal-chart\NatalInterpretation.tsx:148:  const shouldRefreshShortAfterBasicUpgrade =
+frontend/src/features/natal-chart\NatalInterpretation.tsx:156:    !shouldRefreshShortAfterBasicUpgrade &&
+frontend/src/features/natal-chart\NatalInterpretation.tsx:175:    useCaseLevel === "complete" &&
+frontend/src/features/natal-chart\NatalInterpretation.tsx:178:    (Boolean(selectedPersonaId) || forceRefresh || shouldBootstrapFreeComplete)
+frontend/src/features/natal-chart\NatalInterpretation.tsx:189:    useCaseLevel,
+frontend/src/features/natal-chart\NatalInterpretation.tsx:193:    forceRefresh,
+frontend/src/features/natal-chart\NatalInterpretation.tsx:337:      if (useCaseLevel === "complete" && (selectedPersonaId || forceRefresh)) {
+frontend/src/features/natal-chart\NatalInterpretation.tsx:340:      if (latestShortInterpretation && !shouldRefreshShortAfterBasicUpgrade) {
+frontend/src/features/natal-chart\NatalInterpretation.tsx:344:      } else if (!shouldRefreshShortAfterBasicUpgrade) {
+frontend/src/features/natal-chart\NatalInterpretation.tsx:351:    forceRefresh,
+frontend/src/features/natal-chart\NatalInterpretation.tsx:362:    shouldRefreshShortAfterBasicUpgrade,
+frontend/src/features/natal-chart\NatalInterpretation.tsx:363:    useCaseLevel,
+frontend/src/features/natal-chart\NatalInterpretation.tsx:367:    if (!shouldRefreshShortAfterBasicUpgrade) return
+frontend/src/features/natal-chart\NatalInterpretation.tsx:374:  }, [selectedInterpretationId, shouldRefreshShortAfterBasicUpgrade])
+frontend/src/features/natal-chart\NatalInterpretation.tsx:615:          <InterpretationSkeleton t={t} isComplete={useCaseLevel === "complete"} />
+frontend/src/features/natal-chart\NatalInterpretation.tsx:635:                isSubmitting={isLoading && useCaseLevel === "complete"}
+frontend/src/features/natal-chart\NatalAstrologerMode.tsx:16:  return access.variant_code === "multi_astrologer" || access.variant_code === "full"

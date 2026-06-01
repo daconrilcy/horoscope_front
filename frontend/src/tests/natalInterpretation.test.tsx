@@ -10,8 +10,7 @@ import {
   useNatalPdfTemplates,
   useNatalInterpretationById,
   deleteNatalInterpretation,
-  downloadNatalInterpretationPdf,
-  previewNatalInterpretationPdf,
+  requestThemeNatalReadingAction,
 } from "../api/natalChart";
 import { useAstrologers } from "../api/astrologers";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -29,8 +28,7 @@ vi.mock("../api/natalChart", async () => {
     useNatalPdfTemplates: vi.fn(),
     useNatalInterpretationById: vi.fn(),
     deleteNatalInterpretation: vi.fn(),
-    downloadNatalInterpretationPdf: vi.fn(),
-    previewNatalInterpretationPdf: vi.fn(),
+    requestThemeNatalReadingAction: vi.fn(),
   };
 });
 
@@ -132,6 +130,7 @@ describe("NatalInterpretationSection", () => {
     
     // Default mocks
     (useNatalInterpretation as any).mockReturnValue({ isLoading: false, data: mockInterpretationData });
+    (requestThemeNatalReadingAction as any).mockResolvedValue({ state: "accepted", data: null, details: {} });
     (useNatalInterpretationsList as any).mockReturnValue({ isLoading: false, data: mockHistory });
     (useNatalPdfTemplates as any).mockReturnValue({
       isLoading: false,
@@ -393,34 +392,34 @@ describe("NatalInterpretationSection", () => {
   });
 
   it("déclenche le téléchargement PDF", async () => {
-    (downloadNatalInterpretationPdf as any).mockResolvedValue(undefined);
-
     renderSection();
 
     fireEvent.click(screen.getByRole("button", { name: /Actions PDF/i }));
     fireEvent.click(screen.getByRole("button", { name: /Télécharger PDF/i }));
 
-    expect(downloadNatalInterpretationPdf).toHaveBeenCalledWith(
-      "mock-token", 
-      101, 
-      "default_natal", 
-      "fr"
+    expect(requestThemeNatalReadingAction).toHaveBeenCalledWith(
+      "mock-token",
+      expect.objectContaining({
+        chart_id: "chart-123",
+        action: "download",
+        locale: "fr-FR",
+      }),
     );
   });
 
   it("déclenche l'aperçu PDF", async () => {
-    (previewNatalInterpretationPdf as any).mockResolvedValue(undefined);
-
     renderSection();
 
     fireEvent.click(screen.getByRole("button", { name: /Actions PDF/i }));
     fireEvent.click(screen.getByRole("button", { name: /Aperçu PDF/i }));
 
-    expect(previewNatalInterpretationPdf).toHaveBeenCalledWith(
+    expect(requestThemeNatalReadingAction).toHaveBeenCalledWith(
       "mock-token",
-      101,
-      "default_natal",
-      "fr",
+      expect.objectContaining({
+        chart_id: "chart-123",
+        action: "preview",
+        locale: "fr-FR",
+      }),
     );
   });
 
@@ -461,9 +460,10 @@ describe("NatalInterpretationSection", () => {
       expect(useNatalInterpretation).toHaveBeenLastCalledWith(
         expect.objectContaining({
           enabled: true,
-          useCaseLevel: "complete",
-          personaId: "1",
-          forceRefresh: true,
+          chartId: "chart-123",
+          action: "generate_full",
+          personaProfileId: "1",
+          clientRequestId: expect.stringContaining("chart-123:generate_full:"),
         }),
       )
     })
@@ -663,7 +663,8 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(useNatalInterpretation).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        useCaseLevel: "short",
+        action: "preview",
+        personaProfileId: null,
       }),
     );
   });
@@ -692,9 +693,8 @@ describe("NatalInterpretationSection", () => {
 
     expect(useNatalInterpretation).toHaveBeenCalledWith(
       expect.objectContaining({
-        useCaseLevel: "complete",
-        personaId: null,
-        allowCompleteWithoutPersona: true,
+        action: "preview",
+        personaProfileId: null,
       }),
     );
   });
@@ -856,14 +856,13 @@ describe("NatalInterpretationSection", () => {
     expect(screen.getByText(/Subscription page/i)).toBeInTheDocument();
     expect(useNatalInterpretation).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        useCaseLevel: "complete",
-        personaId: null,
-        allowCompleteWithoutPersona: true,
+        action: "preview",
+        personaProfileId: null,
       }),
     );
   });
 
-  it("regénère un short Basic quand l'utilisateur vient d'un free_short", async () => {
+  it("ne relance pas une génération courte Basic quand l'utilisateur vient d'un free_short", async () => {
     (useNatalInterpretationsList as any).mockReturnValue({
       isLoading: false,
       data: {
@@ -899,9 +898,9 @@ describe("NatalInterpretationSection", () => {
     await waitFor(() => {
       expect(useNatalInterpretation).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          useCaseLevel: "short",
-          personaId: null,
-          forceRefresh: true,
+          enabled: false,
+          action: "preview",
+          personaProfileId: null,
         }),
       );
     });

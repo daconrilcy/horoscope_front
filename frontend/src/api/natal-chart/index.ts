@@ -209,7 +209,6 @@ export type AstralPoint = {
   code?: string
   sign?: string | null
   house?: number | null
-  variant_code?: string | null
   longitude?: number | null
   degree_in_sign?: number | null
   /** Alias legacy/tests. */
@@ -491,16 +490,6 @@ export type InterpretationMeta = {
   persisted_at: string | null
 }
 
-export type NatalInterpretationModule =
-  | "NATAL_PSY_PROFILE"
-  | "NATAL_SHADOW_INTEGRATION"
-  | "NATAL_LEADERSHIP_WORKSTYLE"
-  | "NATAL_CREATIVITY_JOY"
-  | "NATAL_RELATIONSHIP_STYLE"
-  | "NATAL_COMMUNITY_NETWORKS"
-  | "NATAL_VALUES_SECURITY"
-  | "NATAL_EVOLUTION_PATH"
-
 export type NatalInterpretationResult = {
   chart_id: string
   use_case: string
@@ -544,29 +533,53 @@ export type NatalPdfTemplateListResponse = {
   items: NatalPdfTemplateItem[]
 }
 
-async function fetchNatalInterpretation(
+export type ThemeNatalReadingAction = "preview" | "generate_full" | "regenerate" | "download"
+
+export type ThemeNatalReadingSlotState =
+  | "accepted"
+  | "generating"
+  | "failed_retriable"
+  | "locked"
+  | "paywall"
+  | "rejected"
+
+type ThemeNatalReadingApiState = ThemeNatalReadingSlotState | "readonly"
+
+export type ThemeNatalReadingCommandRequest = {
+  chart_id: string
+  action: ThemeNatalReadingAction
+  persona_profile_id?: string | null
+  locale: string
+  client_request_id: string
+}
+
+export type ThemeNatalReadingCommandResponse = {
+  state: ThemeNatalReadingApiState
+  data: unknown | null
+  details: Record<string, unknown>
+}
+
+export type UseNatalInterpretationResult = Omit<
+  ReturnType<typeof useQuery<ThemeNatalReadingCommandResponse>>,
+  "data"
+> & {
+  data: NatalInterpretationResult | null
+  state: ThemeNatalReadingSlotState | null
+  details: Record<string, unknown>
+}
+
+/** Envoie une intention produit publique sans exposer les anciens controles techniques LLM. */
+export async function requestThemeNatalReadingAction(
   accessToken: string,
-  useCaseLevel: "short" | "complete",
-  personaId?: string | null,
-  locale?: string,
-  question?: string,
-  forceRefresh?: boolean,
-  module?: NatalInterpretationModule,
-): Promise<NatalInterpretationResult> {
-  const response = await apiFetch(`${API_BASE_URL}/v1/natal/interpretation`, {
+  command: ThemeNatalReadingCommandRequest,
+): Promise<ThemeNatalReadingCommandResponse> {
+  const response = await apiFetch(`${API_BASE_URL}/v1/theme-natal/readings`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({
-      use_case_level: useCaseLevel,
-      persona_id: personaId,
-      locale: locale || "fr-FR",
-      question: question,
-      force_refresh: forceRefresh || false,
-      module: module || null,
-    }),
+    body: JSON.stringify(command),
   })
 
   if (!response.ok) {
@@ -579,17 +592,94 @@ async function fetchNatalInterpretation(
     )
   }
 
-  const payload = (await response.json()) as {
-    data: NatalInterpretationResult
-    disclaimers?: string[]
-  }
+  return handleResponsePossiblyUnwrapped<ThemeNatalReadingCommandResponse>(response)
+}
 
-  // Story 30-8: for V3, disclaimers are API-level, not LLM payload-level.
-  if (!payload.data.disclaimers && Array.isArray(payload.disclaimers)) {
-    payload.data.disclaimers = payload.disclaimers
+function normalizeThemeNatalReadingState(
+  response?: ThemeNatalReadingCommandResponse,
+): ThemeNatalReadingSlotState | null {
+  if (!response) return null
+  if (response.state === "readonly") return "accepted"
+  if (
+    response.state === "locked" &&
+    response.details.reason_code === "full_reading_requires_paid_entitlement"
+  ) {
+    return "paywall"
   }
+  return response.state
+}
 
-  return payload.data
+function isNatalInterpretationResult(value: unknown): value is NatalInterpretationResult {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "meta" in value &&
+    "interpretation" in value
+  )
+}
+
+type ThemeNatalBasicPublicChapter = {
+  key?: string
+  title?: string
+  text?: string
+}
+
+type ThemeNatalBasicPublicPayload = {
+  schema_version?: string
+  title?: string
+  introduction?: string
+  chapters?: ThemeNatalBasicPublicChapter[]
+  conclusion?: string
+  disclaimers?: string[]
+}
+
+function isThemeNatalBasicPublicPayload(value: unknown): value is ThemeNatalBasicPublicPayload {
+  return value !== null && typeof value === "object" && "schema_version" in value
+}
+
+function mapProductActionDataToInterpretation(
+  command: ThemeNatalReadingCommandRequest,
+  response?: ThemeNatalReadingCommandResponse,
+): NatalInterpretationResult | null {
+  if (!response || response.state !== "accepted" || !response.data) return null
+  if (isNatalInterpretationResult(response.data)) return response.data
+  if (!isThemeNatalBasicPublicPayload(response.data)) return null
+
+  const chapters = response.data.chapters ?? []
+  return {
+    chart_id: command.chart_id,
+    use_case: "theme_natal_reading",
+    interpretation: {
+      title: response.data.title ?? "",
+      summary: response.data.introduction ?? "",
+      highlights: chapters.map((chapter) => chapter.title ?? "").filter(Boolean),
+      sections: chapters.map((chapter, index) => ({
+        key: chapter.key ?? `chapter-${index + 1}`,
+        heading: chapter.title ?? "",
+        content: chapter.text ?? "",
+      })),
+      advice: response.data.conclusion ? [response.data.conclusion] : [],
+      evidence: [],
+      disclaimers: response.data.disclaimers ?? [],
+    },
+    meta: {
+      id: null,
+      level: "complete",
+      use_case: "theme_natal_reading",
+      persona_id: command.persona_profile_id ?? null,
+      persona_name: null,
+      prompt_version_id: null,
+      validation_status: "accepted",
+      repair_attempted: false,
+      fallback_triggered: false,
+      was_fallback: false,
+      latency_ms: null,
+      request_id: command.client_request_id,
+      persisted_at: null,
+    },
+    degraded_mode: null,
+    disclaimers: response.data.disclaimers ?? [],
+  }
 }
 
 export async function deleteNatalInterpretation(
@@ -795,50 +885,48 @@ export function useNatalInterpretationById(options: {
 
 export function useNatalInterpretation(options: {
   enabled: boolean
-  useCaseLevel: "short" | "complete"
-  personaId?: string | null
-  allowCompleteWithoutPersona?: boolean
+  chartId?: string
+  action: ThemeNatalReadingAction
+  personaProfileId?: string | null
   locale?: string
-  question?: string
-  forceRefresh?: boolean
-  refreshKey?: number
-  module?: NatalInterpretationModule
-}) {
+  clientRequestId?: string
+}): UseNatalInterpretationResult {
   const accessToken = useAccessTokenSnapshot()
   const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
   const canRunInterpretationQuery =
     options.enabled &&
     Boolean(accessToken) &&
-    (
-      options.useCaseLevel === "short" ||
-      Boolean(options.personaId) ||
-      Boolean(options.allowCompleteWithoutPersona)
-    )
+    Boolean(options.chartId) &&
+    Boolean(options.clientRequestId)
+  const command: ThemeNatalReadingCommandRequest | null =
+    options.chartId && options.clientRequestId
+      ? {
+          chart_id: options.chartId,
+          action: options.action,
+          persona_profile_id: options.personaProfileId ?? null,
+          locale: options.locale || "fr-FR",
+          client_request_id: options.clientRequestId,
+        }
+      : null
 
-  return useQuery({
+  const { data: actionResponse, ...query } = useQuery({
     queryKey: [
-      "natal-interpretation",
+      "theme-natal-reading-action",
       tokenSubject,
-      options.useCaseLevel,
-      options.personaId,
+      options.chartId,
+      options.action,
+      options.personaProfileId,
       options.locale,
-      options.forceRefresh || false,
-      options.refreshKey || 0,
-      options.module || null,
+      options.clientRequestId,
     ],
     queryFn: async () => {
       if (!accessToken) {
         throw new ApiError("unauthorized", "access token is required", 401)
       }
-      return fetchNatalInterpretation(
-        accessToken,
-        options.useCaseLevel,
-        options.personaId,
-        options.locale,
-        options.question,
-        options.forceRefresh,
-        options.module,
-      )
+      if (!command) {
+        throw new ApiError("invalid_request", "theme natal product action is incomplete", 400)
+      }
+      return requestThemeNatalReadingAction(accessToken, command)
     },
     enabled: canRunInterpretationQuery,
     retry: (failureCount, error) => {
@@ -849,4 +937,11 @@ export function useNatalInterpretation(options: {
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
   })
+
+  return {
+    ...query,
+    data: command ? mapProductActionDataToInterpretation(command, actionResponse) : null,
+    state: normalizeThemeNatalReadingState(actionResponse),
+    details: actionResponse?.details ?? {},
+  }
 }
