@@ -1,5 +1,5 @@
 # Story CS-441 suppression-runtime-generate-natal-legacy: Corriger Suppression Runtime Generate Natal Legacy
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
@@ -130,16 +130,16 @@ Keep historical readonly reading and the modern `theme_natal` Basic runtime func
 
 ## Implementation Tasks
 
-- [ ] Task 1: Delete `AIEngineAdapter.generate_natal_interpretation` from the runtime adapter. (AC: AC1)
-- [ ] Task 2: Remove the `NatalInterpretationService` call to the deleted adapter method. (AC: AC2)
-- [ ] Task 3: Remove `NatalExecutionInput` construction from the natal service generator path. (AC: AC3, AC4)
-- [ ] Task 4: Delete provider selection branches driven by `level` and `variant_code` in the removed path. (AC: AC5)
-- [ ] Task 5: Replace positive adapter mocks with rejection, extinction, or readonly tests. (AC: AC6)
-- [ ] Task 6: Preserve readonly historical reading tests without provider invocation. (AC: AC7)
-- [ ] Task 7: Prove Basic runtime still uses `theme_natal` slots and contracts. (AC: AC8)
-- [ ] Task 8: Update CS-440 guard coverage for zero-hit `generate_natal_interpretation` in `backend/app`. (AC: AC9)
-- [ ] Task 9: Persist before and after scans, validation output, and CR-4 closure notes. (AC: AC10)
-- [ ] Task 10: Add runtime route and OpenAPI checks proving no public preservation route. (AC: AC11)
+- [x] Task 1: Delete `AIEngineAdapter.generate_natal_interpretation` from the runtime adapter. (AC: AC1)
+- [x] Task 2: Remove the `NatalInterpretationService` call to the deleted adapter method. (AC: AC2)
+- [x] Task 3: Remove `NatalExecutionInput` construction from the natal service generator path. (AC: AC3, AC4)
+- [x] Task 4: Delete provider selection branches driven by `level` and `variant_code` in the removed path. (AC: AC5)
+- [x] Task 5: Replace positive adapter mocks with rejection, extinction, or readonly tests. (AC: AC6)
+- [x] Task 6: Preserve readonly historical reading tests without provider invocation. (AC: AC7)
+- [x] Task 7: Prove Basic runtime still uses `theme_natal` slots and contracts. (AC: AC8)
+- [x] Task 8: Update CS-440 guard coverage for zero-hit `generate_natal_interpretation` in `backend/app`. (AC: AC9)
+- [x] Task 9: Persist before and after scans, validation output, and CR-4 closure notes. (AC: AC10)
+- [x] Task 10: Add runtime route and OpenAPI checks proving no public preservation route. (AC: AC11)
 
 ## Files to Inspect First
 

@@ -2,12 +2,12 @@
 
 ## Story status
 
-- Validation outcome: targeted-pass-with-full-suite-limitations
-- Ready for review: yes
+- Validation outcome: done-with-clean-implementation-review
+- Ready for review: no; final implementation review is clean.
 - Story key: CS-441-suppression-runtime-generate-natal-legacy
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-441-suppression-runtime-generate-natal-legacy`
-- Story registry: `CS-441` updated to `ready-to-review` on `2026-06-01`.
+- Story registry: `CS-441` updated to `done` on `2026-06-01`.
 
 ## Preflight
 
@@ -133,11 +133,13 @@ These failures are not fixed in this story because catalogues/seeds are explicit
 
 - Scoped diff review covered backend adapter, natal service, architecture guards, targeted unit/integration tests, story status and CS-441 evidence files.
 - No frontend, migration, catalogue, seed, script, auth, i18n, styling or `_condamad/run-state.json` change was introduced by this implementation.
-- `generated/11-code-review.md` remains handoff-only because it predates implementation.
+- `generated/11-code-review.md` now contains the final clean implementation review.
 
 ## Review artifacts
 
-- `generated/11-code-review.md` existed before implementation and is classified as obsolete pre-implementation editorial review, not final code-review evidence.
+- `generated/11-code-review.md` was refreshed after implementation review.
+- Final verdict: `CLEAN`.
+- No actionable implementation issue remained after the fresh validation pass.
 
 ## Final worktree status
 
