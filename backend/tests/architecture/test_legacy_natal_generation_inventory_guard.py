@@ -6,6 +6,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from app.main import app
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 APP_ROOT = REPO_ROOT / "backend/app"
 STORY_ROOT = REPO_ROOT / "_condamad/stories/CS-426-freeze-inventory-legacy-generation-natal-bigbang"
@@ -168,6 +170,11 @@ FORBIDDEN_LEGACY_FIXTURE_NAMES = {
     "natal_interpretation_short",
     "natal_long_free",
 }
+REMOVED_PUBLIC_NATAL_PATHS = {
+    "/v1/natal/interpretation",
+    "/v1/natal/pdf-templates",
+}
+REMOVED_PUBLIC_NATAL_PREFIXES = ("/v1/natal/interpretations",)
 
 
 def _read(path: Path) -> str:
@@ -331,6 +338,26 @@ def test_legacy_natal_runtime_hits_are_explicitly_authorized() -> None:
             unauthorized_hits.append((str(relative_path), token))
 
     assert unauthorized_hits == []
+
+
+def test_removed_public_natal_interpretation_routes_stay_absent() -> None:
+    """Les anciennes routes publiques CS-443 restent absentes du runtime et OpenAPI."""
+
+    route_paths = {getattr(route, "path", "") for route in app.routes}
+    openapi_paths = set(app.openapi()["paths"])
+
+    assert REMOVED_PUBLIC_NATAL_PATHS.isdisjoint(route_paths)
+    assert REMOVED_PUBLIC_NATAL_PATHS.isdisjoint(openapi_paths)
+    assert all(
+        not path.startswith(prefix)
+        for prefix in REMOVED_PUBLIC_NATAL_PREFIXES
+        for path in route_paths
+    )
+    assert all(
+        not path.startswith(prefix)
+        for prefix in REMOVED_PUBLIC_NATAL_PREFIXES
+        for path in openapi_paths
+    )
 
 
 def test_legacy_natal_prompt_source_files_are_physically_removed() -> None:

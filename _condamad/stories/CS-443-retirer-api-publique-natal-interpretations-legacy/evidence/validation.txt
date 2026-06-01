@@ -1,0 +1,13 @@
+# Validation - CS-443
+
+- `condamad_validate.py`: PASS.
+- `ruff format` on modified backend Python files: PASS, 1 file reformatted.
+- `python -B -m pytest --long -q tests/integration/test_theme_natal_public_api_product_actions.py tests/integration/test_theme_natal_public_reads.py tests/integration/test_contract_bound_llm_gateway_rejections.py --tb=short`: PASS, 12 passed.
+- `python -B -m pytest -q tests/architecture/test_legacy_natal_generation_inventory_guard.py --tb=short`: PASS, 12 passed.
+- Runtime route/OpenAPI checks for removed paths and `/v1/theme-natal/readings`: PASS.
+- `ruff check .`: PASS.
+- `pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx`: PASS, 4 files / 136 tests.
+- `pnpm --dir frontend lint`: PASS.
+- Production forbidden URL and mapping scans: PASS, no matches; see `forbidden-scan-after.txt`.
+
+Note: the first integration command without `--long` exited 0 with 12 deselected because backend `conftest.py` excludes integration tests from fast local runs. It was rerun with `--long`.

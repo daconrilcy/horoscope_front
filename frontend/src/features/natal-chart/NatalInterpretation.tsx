@@ -6,7 +6,6 @@ import { RefreshCw } from "lucide-react"
 import type { FeatureEntitlementResponse } from "../../api/billing"
 import { ApiError } from "../../api/client"
 import {
-  deleteNatalInterpretation,
   requestThemeNatalReadingAction,
   useNatalInterpretation,
   useNatalInterpretationById,
@@ -22,7 +21,6 @@ import { ErrorBoundary } from "@components/ErrorBoundary"
 import { useAccessTokenSnapshot } from "../../utils/authToken"
 import { InterpretationContent } from "../../components/natal-interpretation/NatalInterpretationContent"
 import {
-  ConfirmDeleteModal,
   InterpretationError,
   InterpretationSkeleton,
   PdfActionsMenu,
@@ -128,8 +126,6 @@ export function NatalInterpretationSection({
   const [actionNonce, setActionNonce] = useState(0)
   const [selectedInterpretationId, setSelectedInterpretationId] = useState<number | null>(initialInterpretationId)
   const [selectedTemplateKey, setSelectedTemplateKey] = useState("")
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [showBasicLimitNotice, setShowBasicLimitNotice] = useState(false)
 
   const historyQuery = useNatalInterpretationsList({
@@ -392,29 +388,6 @@ export function NatalInterpretationSection({
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!accessToken) return
-    setIsDeleting(true)
-    try {
-      await deleteNatalInterpretation(accessToken, id)
-      const updatedHistory = await historyQuery.refetch()
-      if (selectedInterpretationId === id) {
-        const remaining = updatedHistory.data?.items ?? []
-        if (remaining.length > 0) {
-          setSelectedInterpretationId(remaining[0].id)
-        } else {
-          setSelectedInterpretationId(null)
-          setReadingAction("preview")
-        }
-      }
-      setShowDeleteConfirm(null)
-    } catch (err) {
-      console.error("Failed to delete interpretation", err)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
   const usedPersonaIds = new Set(
     historyItems
       .filter((item) => isPersistedCompleteReading(item) && Boolean(item.persona_id))
@@ -498,7 +471,6 @@ export function NatalInterpretationSection({
                     (historyItems.find((item) => item.created_at === data?.meta.persisted_at)?.id ?? null)
                   }
                   onSelect={handleSelectVersion}
-                  onDeleteRequest={(id) => setShowDeleteConfirm(id)}
                   t={t}
                   lang={lang}
                 />
@@ -578,15 +550,6 @@ export function NatalInterpretationSection({
           </>
         ) : null}
       </ErrorBoundary>
-
-      {showDeleteConfirm && (
-        <ConfirmDeleteModal
-          t={t}
-          onConfirm={() => handleDelete(showDeleteConfirm)}
-          onCancel={() => setShowDeleteConfirm(null)}
-          isDeleting={isDeleting}
-        />
-      )}
     </section>
   )
 }

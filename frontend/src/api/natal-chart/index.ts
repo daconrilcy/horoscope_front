@@ -684,101 +684,6 @@ function normalizeThemeNatalReadingPublicPayload(
   }
 }
 
-export async function deleteNatalInterpretation(
-  accessToken: string,
-  interpretationId: number,
-): Promise<void> {
-  const response = await apiFetch(`${API_BASE_URL}/v1/natal/interpretations/${interpretationId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-
-  if (!response.ok && response.status !== 204) {
-    throw new ApiError("delete_failed", "Failed to delete interpretation", response.status)
-  }
-}
-
-export async function downloadNatalInterpretationPdf(
-  accessToken: string,
-  interpretationId: number,
-  templateKey?: string,
-  locale?: string,
-): Promise<void> {
-  const params = new URLSearchParams()
-  if (templateKey) params.append("template_key", templateKey)
-  if (locale) params.append("locale", locale)
-
-  const response = await apiFetch(
-    `${API_BASE_URL}/v1/natal/interpretations/${interpretationId}/pdf?${params.toString()}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    },
-  )
-
-  if (!response.ok) {
-    throw new ApiError("download_failed", "Failed to download PDF", response.status)
-  }
-
-  const blob = await response.blob()
-  const contentDisposition = response.headers.get("Content-Disposition")
-  triggerBlobDownload(blob, `natal-interpretation-${interpretationId}.pdf`, contentDisposition)
-}
-
-function triggerBlobDownload(
-  blob: Blob,
-  defaultFilename: string,
-  contentDisposition?: string | null,
-): void {
-  const url = window.URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  // Extract filename from header if possible, else default
-  let filename = defaultFilename
-  if (contentDisposition && contentDisposition.includes("filename=")) {
-    filename = contentDisposition.split("filename=")[1].replace(/"/g, "")
-  }
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  window.URL.revokeObjectURL(url)
-  document.body.removeChild(a)
-}
-
-export async function previewNatalInterpretationPdf(
-  accessToken: string,
-  interpretationId: number,
-  templateKey?: string,
-  locale?: string,
-): Promise<void> {
-  const params = new URLSearchParams()
-  if (templateKey) params.append("template_key", templateKey)
-  if (locale) params.append("locale", locale)
-
-  const response = await apiFetch(
-    `${API_BASE_URL}/v1/natal/interpretations/${interpretationId}/pdf?${params.toString()}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    },
-  )
-
-  if (!response.ok) {
-    throw new ApiError("preview_failed", "Failed to preview PDF", response.status)
-  }
-
-  const blob = await response.blob()
-  const url = window.URL.createObjectURL(blob)
-  const opened = window.open(url, "_blank", "noopener,noreferrer")
-  if (!opened) {
-    window.URL.revokeObjectURL(url)
-    throw new ApiError("preview_blocked", "Popup blocked while opening PDF preview", 0)
-  }
-
-  // Leave enough time for the new tab to load the object URL before cleanup.
-  window.setTimeout(() => {
-    window.URL.revokeObjectURL(url)
-  }, 60_000)
-}
-
 export function useNatalInterpretationsList(options: {
   enabled: boolean
   chartId?: string
@@ -802,20 +707,13 @@ export function useNatalInterpretationsList(options: {
       if (!accessToken) {
         throw new ApiError("unauthorized", "access token is required", 401)
       }
-      const params = new URLSearchParams()
-      if (options.chartId) params.append("chart_id", options.chartId)
-      if (options.level) params.append("level", options.level)
-      if (options.limit) params.append("limit", options.limit.toString())
-      if (options.offset) params.append("offset", options.offset.toString())
-
-      const response = await apiFetch(
-        `${API_BASE_URL}/v1/natal/interpretations?${params.toString()}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        },
-      )
-
-      return handleResponsePossiblyUnwrapped<NatalInterpretationListResponse>(response)
+      const emptyHistory: NatalInterpretationListResponse = {
+        items: [],
+        total: 0,
+        limit: options.limit ?? 20,
+        offset: options.offset ?? 0,
+      }
+      return emptyHistory
     },
     enabled: options.enabled && Boolean(accessToken),
     staleTime: 1000 * 60 * 5,
@@ -831,12 +729,17 @@ export function useNatalPdfTemplates(options: { enabled: boolean; locale?: strin
       if (!accessToken) {
         throw new ApiError("unauthorized", "access token is required", 401)
       }
-      const params = new URLSearchParams()
-      if (options.locale) params.append("locale", options.locale)
-      const response = await apiFetch(`${API_BASE_URL}/v1/natal/pdf-templates?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      return handleResponsePossiblyUnwrapped<NatalPdfTemplateListResponse>(response)
+      return {
+        items: [
+          {
+            key: "theme_natal_default",
+            name: options.locale === "fr" ? "Theme natal" : "Natal chart",
+            description: null,
+            locale: options.locale ?? "fr",
+            is_default: true,
+          },
+        ],
+      }
     },
     enabled: options.enabled && Boolean(accessToken),
     staleTime: 1000 * 60 * 10,
@@ -868,17 +771,11 @@ export function useNatalInterpretationById(options: {
       if (!options.interpretationId) {
         throw new Error("interpretationId is required")
       }
-      const params = new URLSearchParams()
-      if (options.locale) params.append("locale", options.locale)
-
-      const response = await apiFetch(
-        `${API_BASE_URL}/v1/natal/interpretations/${options.interpretationId}?${params.toString()}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        },
+      throw new ApiError(
+        "historical_interpretation_read_removed",
+        `Historical interpretation read is no longer public: ${options.interpretationId}`,
+        410,
       )
-
-      return handleResponse<ThemeNatalReadingPublicPayload>(response)
     },
     enabled: options.enabled && Boolean(accessToken) && Boolean(options.interpretationId),
     staleTime: 1000 * 60 * 10,

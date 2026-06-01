@@ -1,0 +1,7 @@
+URL scan production:
+COMMAND: rg -n "/v1/natal/interpretation|/v1/natal/interpretations|/v1/natal/pdf-templates" backend\app\api\v1\routers\public frontend\src\api\natal-chart frontend\src\features\natal-chart
+PASS: no matches
+
+Mapping scan production:
+COMMAND: rg -n "natal_long_free|natal_interpretation_short" backend\app\api\v1\routers\public backend\app\services\api_contracts\public frontend\src\api\natal-chart frontend\src\features\natal-chart
+PASS: no matches

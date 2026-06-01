@@ -9,7 +9,6 @@ import {
   useNatalInterpretationsList, 
   useNatalPdfTemplates,
   useNatalInterpretationById,
-  deleteNatalInterpretation,
   requestThemeNatalReadingAction,
 } from "../api/natalChart";
 import { useAstrologers } from "../api/astrologers";
@@ -27,7 +26,6 @@ vi.mock("../api/natalChart", async () => {
     useNatalInterpretationsList: vi.fn(),
     useNatalPdfTemplates: vi.fn(),
     useNatalInterpretationById: vi.fn(),
-    deleteNatalInterpretation: vi.fn(),
     requestThemeNatalReadingAction: vi.fn(),
   };
 });
@@ -353,44 +351,29 @@ describe("NatalInterpretationSection", () => {
     }));
   });
 
-  it("affiche la modal de confirmation avant suppression", async () => {
+  it("ne propose plus la suppression publique historique", async () => {
     renderSection();
     
-    // Ouvrir le sélecteur
     fireEvent.click(screen.getByText(/Standard/i));
-    
-    // Cliquer sur le bouton supprimer de la première version (Standard)
-    const deleteButtons = screen.getAllByTitle(/Supprimer/i);
-    fireEvent.click(deleteButtons[0]);
 
-    expect(screen.getByText(/Supprimer cette version/i)).toBeInTheDocument();
-    expect(screen.getByText(/définitivement supprimée/i)).toBeInTheDocument();
+    expect(screen.queryByTitle(/Supprimer/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Supprimer cette version/i)).not.toBeInTheDocument();
   });
 
-  it("appelle l'API de suppression et rafraîchit la liste", async () => {
+  it("garde la disposition moderne sans appel delete public", async () => {
     const mockRefetch = vi.fn().mockResolvedValue({ data: { items: [mockHistory.items[1]] } });
     (useNatalInterpretationsList as any).mockReturnValue({ 
       isLoading: false, 
       data: mockHistory,
       refetch: mockRefetch
     });
-    (deleteNatalInterpretation as any).mockResolvedValue(undefined);
 
     renderSection();
     
     fireEvent.click(screen.getByText(/Standard/i));
-    const deleteButtons = screen.getAllByTitle(/Supprimer/i);
-    fireEvent.click(deleteButtons[0]);
-    
-    // Select the button in the modal.
-    const modal = screen.getByRole("dialog");
-    const modalDeleteButton = within(modal).getByRole("button", { name: /^Supprimer$/i });
-    fireEvent.click(modalDeleteButton);
 
-    await waitFor(() => {
-      expect(deleteNatalInterpretation).toHaveBeenCalledWith("mock-token", 101);
-      expect(mockRefetch).toHaveBeenCalled();
-    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(mockRefetch).not.toHaveBeenCalled();
   });
 
   it("déclenche le téléchargement PDF", async () => {

@@ -233,21 +233,17 @@ def test_rejected_run_returns_controlled_state_without_provider_payload(
     assert "secret" not in json.dumps(payload, ensure_ascii=False)
 
 
-def test_old_public_route_is_removed_or_gone(client: TestClient) -> None:
-    """POST /v1/natal/interpretation renvoie 410 sans appeler l'ancien service generateur."""
-    with patch(
-        "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret",
-        new_callable=AsyncMock,
-    ) as interpret_mock:
-        response = client.post(
-            "/v1/natal/interpretation",
-            json={"use_case_level": "short", "locale": "fr-FR"},
-        )
+def test_old_public_natal_interpretation_routes_are_absent() -> None:
+    """Les anciennes routes publiques ne sont plus montees ni publiees OpenAPI."""
+    route_paths = {getattr(route, "path", "") for route in app.routes}
+    openapi_paths = set(app.openapi()["paths"])
 
-    assert response.status_code == 410
-    assert response.json()["error"]["code"] == "natal_interpretation_endpoint_gone"
-    assert response.json()["error"]["details"]["state"] == "readonly"
-    interpret_mock.assert_not_called()
+    assert "/v1/natal/interpretation" not in route_paths
+    assert all(not path.startswith("/v1/natal/interpretations") for path in route_paths)
+    assert "/v1/natal/pdf-templates" not in route_paths
+    assert "/v1/natal/interpretation" not in openapi_paths
+    assert all(not path.startswith("/v1/natal/interpretations") for path in openapi_paths)
+    assert "/v1/natal/pdf-templates" not in openapi_paths
 
 
 def test_users_latest_include_interpretation_is_non_generative(client: TestClient) -> None:

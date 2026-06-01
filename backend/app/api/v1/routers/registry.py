@@ -62,7 +62,6 @@ from app.api.v1.routers.public.ephemeris import router as ephemeris_router
 from app.api.v1.routers.public.geocoding import router as geocoding_router
 from app.api.v1.routers.public.guidance import router as guidance_router
 from app.api.v1.routers.public.help import router as help_router
-from app.api.v1.routers.public.natal_interpretation import router as natal_interpretation_router
 from app.api.v1.routers.public.predictions import router as predictions_router
 from app.api.v1.routers.public.privacy import router as privacy_router
 from app.api.v1.routers.public.projections import router as projections_router
@@ -126,7 +125,6 @@ API_V1_ROUTER_REGISTRY: tuple[RouterRegistration, ...] = (
     RouterRegistration(geocoding_router),
     RouterRegistration(enterprise_credentials_router),
     RouterRegistration(guidance_router),
-    RouterRegistration(natal_interpretation_router),
     RouterRegistration(ops_monitoring_router),
     RouterRegistration(ops_monitoring_llm_router),
     RouterRegistration(ops_feature_flags_router),

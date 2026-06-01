@@ -96,7 +96,7 @@ export function VersionSelector({
   items: NatalInterpretationHistoryItemView[]
   selectedId: number | null
   onSelect: (id: number | null) => void
-  onDeleteRequest: (id: number) => void
+  onDeleteRequest?: (id: number) => void
   t: InterpretationTranslations
   lang: string
 }) {
@@ -165,17 +165,19 @@ export function VersionSelector({
                       · {item.level === "complete" ? t.completeBadge : t.shortBadge}
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onDeleteRequest(item.id)
-                    }}
-                    className="ni-version-item__delete"
-                    title={t.deleteCta}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {onDeleteRequest ? (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onDeleteRequest(item.id)
+                      }}
+                      className="ni-version-item__delete"
+                      title={t.deleteCta}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ))}

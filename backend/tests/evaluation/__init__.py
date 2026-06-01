@@ -67,7 +67,6 @@ from app.api.v1.routers.public.ephemeris import router as ephemeris_router
 from app.api.v1.routers.public.geocoding import router as geocoding_router
 from app.api.v1.routers.public.guidance import router as guidance_router
 from app.api.v1.routers.public.help import router as help_router
-from app.api.v1.routers.public.natal_interpretation import router as natal_interpretation_router
 from app.api.v1.routers.public.predictions import router as predictions_router
 from app.api.v1.routers.public.privacy import router as privacy_router
 from app.api.v1.routers.public.reference_data import router as reference_data_router
@@ -715,7 +714,6 @@ app.include_router(consultations_router, prefix="/v1/consultations", tags=["Cons
 app.include_router(geocoding_router)
 app.include_router(enterprise_credentials_router)
 app.include_router(guidance_router)
-app.include_router(natal_interpretation_router)
 app.include_router(ops_monitoring_router)
 app.include_router(ops_monitoring_llm_router)
 app.include_router(ops_feature_flags_router)

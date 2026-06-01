@@ -1,5 +1,5 @@
 # Story CS-443 retirer-api-publique-natal-interpretations-legacy: Remove Public Legacy Natal Interpretations API
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -112,12 +112,12 @@ vers les slots `theme_natal` acceptes.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Remove the historical natal interpretation public router from canonical public route registration. (AC: AC1, AC2, AC3)
-- [ ] Task 2: Complete modern public reads through `theme_natal_reading_slots` with accepted-only visibility. (AC: AC4)
-- [ ] Task 3: Remove public mapping from `natal_long_free` to `natal_interpretation_short`. (AC: AC5)
-- [ ] Task 4: Move frontend history, PDF, delete, list, get, and template flows to a modern disposition. (AC: AC6, AC7)
-- [ ] Task 5: Add or update backend architecture guards for removed public paths and old mapping symbols. (AC: AC1, AC2, AC3, AC5, AC10)
-- [ ] Task 6: Persist route inventory, OpenAPI snapshots, route consumption audit, scans, and validation output. (AC: AC8, AC9, AC10)
+- [x] Task 1: Remove the historical natal interpretation public router from canonical public route registration. (AC: AC1, AC2, AC3)
+- [x] Task 2: Complete modern public reads through `theme_natal_reading_slots` with accepted-only visibility. (AC: AC4)
+- [x] Task 3: Remove public mapping from `natal_long_free` to `natal_interpretation_short`. (AC: AC5)
+- [x] Task 4: Move frontend history, PDF, delete, list, get, and template flows to a modern disposition. (AC: AC6, AC7)
+- [x] Task 5: Add or update backend architecture guards for removed public paths and old mapping symbols. (AC: AC1, AC2, AC3, AC5, AC10)
+- [x] Task 6: Persist route inventory, OpenAPI snapshots, route consumption audit, scans, and validation output. (AC: AC8, AC9, AC10)
 
 ## Files to Inspect First
 
