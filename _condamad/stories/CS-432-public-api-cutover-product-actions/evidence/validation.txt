@@ -58,5 +58,9 @@ PASS - CONDAMAD final validation:
 python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-432-public-api-cutover-product-actions --final
 Result: CONDAMAD validation: PASS.
 
+PASS - final brief/status alignment check:
+Select-String _condamad\stories\story-status.md and 00-story.md for CS-432 status/path/source.
+Result: tracker row status is done, path and source brief match, story header is done.
+
 Validation retry note:
 An inline PowerShell OpenAPI guard initially failed because `$ref` was interpolated by PowerShell; the guard was rerun with safe quoting and passed.

@@ -4,6 +4,7 @@
 
 - Validation outcome: passed after implementation review/fix
 - Ready for review: clean
+- Story file status: done
 - Story key: CS-432-public-api-cutover-product-actions
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-432-public-api-cutover-product-actions`
@@ -14,7 +15,7 @@
 
 - Repository root: `C:\dev\horoscope_front`
 - Story source: `_condamad/stories/CS-432-public-api-cutover-product-actions/00-story.md`
-- Tracker row: `CS-432` matched the story path and `_story_briefs/cs-432-public-api-cutover-product-actions.md`.
+- Tracker row: `CS-432` matched the story path, status `done`, and `_story_briefs/cs-432-public-api-cutover-product-actions.md`.
 - Initial `git status --short`: dirty worktree already contained CS-432 files plus unrelated `_condamad/run-state.json`, router audit, and SQL allowlist markdown changes.
 - AGENTS.md considered: repository root `AGENTS.md` from `C:\dev\horoscope_front`.
 - Capsule validation before implementation evidence update: PASS.
