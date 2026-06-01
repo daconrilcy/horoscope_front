@@ -1,5 +1,9 @@
 # CS-428 Editorial Story Review
 
+Implementation note 2026-06-01: this artifact is an editorial pre-implementation
+story review. It is classified as obsolete for final code-review evidence and is
+not used as implementation proof.
+
 Verdict: CLEAN
 
 ## Scope

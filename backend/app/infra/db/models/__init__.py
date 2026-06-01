@@ -125,6 +125,7 @@ from app.infra.db.models.interpretation_reference import (
     AstralPointInterpretationProfileModel,
     HouseInterpretationProfileModel,
 )
+from app.infra.db.models.llm_generation_run import LlmGenerationRunModel
 from app.infra.db.models.pdf_template import PdfTemplateModel
 from app.infra.db.models.persona_config import PersonaConfigModel
 from app.infra.db.models.prediction_reference import (
@@ -205,6 +206,7 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.stripe_webhook_event import StripeWebhookEventModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.support_ticket_category import SupportTicketCategoryModel
+from app.infra.db.models.theme_natal_reading_slot import ThemeNatalReadingSlotModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.translation_reference import (
     AstralAspectInterpretationProfileTranslationModel,
@@ -354,6 +356,7 @@ __all__ = [
     "UserPrivacyRequestModel",
     "SupportIncidentModel",
     "SupportTicketCategoryModel",
+    "ThemeNatalReadingSlotModel",
     "UserModel",
     "UserBirthProfileModel",
     "UserNatalInterpretationModel",
@@ -391,6 +394,7 @@ __all__ = [
     "AstralZodiacalReferenceSystemModel",
     "HouseModel",
     "LanguageModel",
+    "LlmGenerationRunModel",
     "PlanetModel",
     "ReferenceVersionModel",
     "AstralSignModel",

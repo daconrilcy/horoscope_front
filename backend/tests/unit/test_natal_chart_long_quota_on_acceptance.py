@@ -19,6 +19,10 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementResult,
     NatalChartLongQuotaExceededError,
 )
+from app.services.llm_generation.natal.theme_natal_reading_slots import (
+    ThemeNatalAcceptedPublication,
+    ThemeNatalReadingSlotService,
+)
 
 
 def _snapshot(**access_kwargs: object) -> EffectiveEntitlementsSnapshot:
@@ -88,6 +92,47 @@ def test_consume_on_acceptance_skips_corrective_regeneration() -> None:
 
     assert result.corrective_regeneration is True
     mock_consume.assert_not_called()
+
+
+def test_theme_natal_slot_quota_debits_only_new_accepted_publication() -> None:
+    """Le slot theme natal appelle le quota seulement apres une nouvelle acceptation."""
+    access_result = NatalChartLongEntitlementResult(
+        path="canonical_quota",
+        variant_code="single_astrologer",
+        usage_states=[],
+    )
+    accepted_publication = ThemeNatalAcceptedPublication(
+        slot=MagicMock(),
+        run=MagicMock(),
+        accepted_now=True,
+    )
+    existing_publication = ThemeNatalAcceptedPublication(
+        slot=MagicMock(),
+        run=MagicMock(),
+        accepted_now=False,
+    )
+
+    with patch(
+        "app.services.entitlement.natal_chart_long_entitlement_gate."
+        "NatalChartLongEntitlementGate.consume_on_acceptance",
+        return_value=access_result,
+    ) as mock_consume:
+        accepted_result = ThemeNatalReadingSlotService.consume_quota_after_publication(
+            MagicMock(),
+            user_id=42,
+            access_result=access_result,
+            publication=accepted_publication,
+        )
+        existing_result = ThemeNatalReadingSlotService.consume_quota_after_publication(
+            MagicMock(),
+            user_id=42,
+            access_result=access_result,
+            publication=existing_publication,
+        )
+
+    assert accepted_result is access_result
+    assert existing_result is None
+    mock_consume.assert_called_once()
 
 
 def test_check_access_for_complete_generation_allows_corrective_regeneration() -> None:
