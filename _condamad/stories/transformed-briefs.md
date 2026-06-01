@@ -210,3 +210,4 @@
 | cs-428 | `_story_briefs\cs-428-public-reading-slots-llm-generation-runs.md` | `_condamad\stories\cs-428-public-reading-slots-llm-generation-runs\00-story.md` |
 | cs-429 | `_story_briefs\cs-429-theme-natal-generation-contracts-strict-schemas.md` | `_condamad\stories\cs-429-theme-natal-generation-contracts-strict-schemas\00-story.md` |
 | cs-430 | `_story_briefs\cs-430-basic-full-reading-runtime-fake-provider.md` | `_condamad\stories\cs-430-basic-full-reading-runtime-fake-provider\00-story.md` |
+| cs-431 | `_story_briefs\cs-431-contract-bound-llm-gateway-rejection-workflow.md` | `_condamad\stories\cs-431-contract-bound-llm-gateway-rejection-workflow\00-story.md` |
