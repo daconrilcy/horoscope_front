@@ -213,3 +213,4 @@
 | cs-431 | `_story_briefs\cs-431-contract-bound-llm-gateway-rejection-workflow.md` | `_condamad\stories\cs-431-contract-bound-llm-gateway-rejection-workflow\00-story.md` |
 | cs-432 | `_story_briefs\cs-432-public-api-cutover-product-actions.md` | `_condamad\stories\cs-432-public-api-cutover-product-actions\00-story.md` |
 | cs-433 | `_story_briefs\cs-433-frontend-remove-llm-technical-generation-controls.md` | `_condamad\stories\cs-433-frontend-product-actions-no-technical-generation-controls\00-story.md` |
+| cs-434 | `_story_briefs\cs-434-physical-delete-active-legacy-natal-generation-paths.md` | `_condamad\stories\cs-434-physical-delete-active-legacy-natal-generation-paths\00-story.md` |
