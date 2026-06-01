@@ -58,3 +58,45 @@ exit_code: 0
 exit_code: 0
 CONDAMAD validation: PASS
 exit_code: 0
+
+fresh implementation review validation after replacing generated/11-code-review.md
+.\.venv\Scripts\Activate.ps1; cd backend; ruff check app\domain\theme_natal tests\unit\domain\theme_natal
+All checks passed!
+exit_code: 0
+python -B -m pytest -q tests\unit\domain\theme_natal --tb=short
+.................                                                        [100%]
+17 passed in 0.43s
+exit_code: 0
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-427-theme-natal-product-contract-action-resolver\00-story.md
+CONDAMAD story validation: PASS
+exit_code: 0
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-427-theme-natal-product-contract-action-resolver\00-story.md
+CONDAMAD story lint: PASS
+exit_code: 0
+rg -n "use_case_level|variant_code|forceRefresh" backend\app\domain\theme_natal backend\tests\unit\domain\theme_natal
+exit_code: 1 (PASS: no matches expected)
+
+final closure validation after tracker status done
+.\.venv\Scripts\Activate.ps1; cd backend; ruff format app\domain\theme_natal tests\unit\domain\theme_natal --check
+5 files already formatted
+exit_code: 0
+ruff check app\domain\theme_natal tests\unit\domain\theme_natal
+All checks passed!
+exit_code: 0
+python -B -m pytest -q tests\unit\domain\theme_natal --tb=short
+.................                                                        [100%]
+17 passed in 0.42s
+exit_code: 0
+.\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-427-theme-natal-product-contract-action-resolver\00-story.md
+CONDAMAD story validation: PASS
+exit_code: 0
+python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-427-theme-natal-product-contract-action-resolver\00-story.md
+CONDAMAD story lint: PASS
+exit_code: 0
+python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-427-theme-natal-product-contract-action-resolver --final
+CONDAMAD validation: PASS
+exit_code: 0
+rg -n "use_case_level|variant_code|forceRefresh" backend\app\domain\theme_natal backend\tests\unit\domain\theme_natal
+exit_code: 1 (PASS: no matches expected)
+git diff --check -- story and implementation paths
+exit_code: 0

@@ -110,7 +110,7 @@ Full command transcript: `evidence/validation.txt`.
 
 ## Code review artifact classification
 
-- `generated/11-code-review.md` existed before implementation and is classified as obsolete pre-implementation story-contract review, not final implementation review evidence.
+- `generated/11-code-review.md` was refreshed after implementation review and is the final CLEAN implementation review evidence.
 
 ## Remaining risks
 
