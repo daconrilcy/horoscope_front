@@ -219,3 +219,4 @@
 | cs-437 | `_story_briefs\cs-437-supprimer-catalogues-seeds-scripts-prompts-nataux-legacy.md` | `_condamad\stories\cs-437-supprimer-catalogues-seeds-scripts-prompts-nataux-legacy\00-story.md` |
 | cs-438 | `_story_briefs\cs-438-remplacer-api-historique-interpretations-par-slots-theme-natal.md` | `_condamad\stories\cs-438-remplacer-api-historique-interpretations-par-slots-theme-natal\00-story.md` |
 | cs-439 | `_story_briefs\cs-439-supprimer-adaptateurs-front-legacy-interpretation-natale.md` | `_condamad\stories\cs-439-supprimer-adaptateurs-front-legacy-interpretation-natale\00-story.md` |
+| cs-440 | `_story_briefs\cs-440-zero-hit-legacy-natal-tests-guards.md` | `_condamad\stories\cs-440-zero-hit-legacy-natal-tests-guards\00-story.md` |
