@@ -13,6 +13,9 @@ const FORBIDDEN_DOM_PATTERN =
 const FORBIDDEN_BASIC_PUBLIC_LABEL_PATTERN =
   /\b(moon|sun|saturn|north node|south node|Synthese|theme|themes|repere|planetaire|a integrer)\b/i
 
+const FORBIDDEN_PUBLIC_CONTROL_PATTERN =
+  /shouldRefreshShortAfterBasicUpgrade|use_case_level|variant_code|forceRefresh|natal_interpretation_short|natal_long_free|fallback_default/i
+
 const NARRATIVE_DATA: NatalInterpretationViewData = {
   degraded_mode: null,
   narrative_natal_reading_v1: {
@@ -83,6 +86,7 @@ describe("natalPublicDomGuard", () => {
     expect(screen.getByRole("heading", { name: "Votre personnalite" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Ce que nous avons utilise/i })).toBeInTheDocument()
     expect(container.textContent).not.toMatch(FORBIDDEN_DOM_PATTERN)
+    expect(container.textContent).not.toMatch(FORBIDDEN_PUBLIC_CONTROL_PATTERN)
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d/i)
   })
 
@@ -268,6 +272,7 @@ describe("natalPublicDomGuard", () => {
     expect(within(container.querySelector(".ni-basic-theme-list")!).queryByText("Lune en Cancer")).not.toBeInTheDocument()
     expect(container.textContent).not.toMatch(FORBIDDEN_DOM_PATTERN)
     expect(container.textContent).not.toMatch(FORBIDDEN_BASIC_PUBLIC_LABEL_PATTERN)
+    expect(container.textContent).not.toMatch(FORBIDDEN_PUBLIC_CONTROL_PATTERN)
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d|ranking_score|weighted_score/i)
   })
 })

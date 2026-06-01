@@ -1,0 +1,31 @@
+CS-435 validation output summary
+
+Backend:
+- .\.venv\Scripts\Activate.ps1; ruff format backend\tests\integration\test_theme_natal_bigbang_replay.py backend\tests\integration\test_theme_natal_concurrency.py backend\tests\integration\test_theme_natal_entitlement_freshness.py backend\tests\integration\test_theme_natal_public_reads.py backend\tests\llm_orchestration\test_llm_legacy_extinction.py backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py -> PASS
+- .\.venv\Scripts\Activate.ps1; ruff check backend -> PASS
+- .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\integration\test_theme_natal_bigbang_replay.py backend\tests\integration\test_theme_natal_concurrency.py backend\tests\integration\test_theme_natal_entitlement_freshness.py backend\tests\integration\test_theme_natal_public_reads.py backend\tests\llm_orchestration\test_llm_legacy_extinction.py backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short -> PASS, 8 passed, 5 deselected
+- .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\integration backend\tests\llm_orchestration -k "theme_natal or basic_full_reading or concurrency or entitlement" --tb=short -> PASS, 6 passed, 552 deselected
+- .\.venv\Scripts\Activate.ps1; python -B -m pytest -q backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py --tb=short -> PASS, 6 passed
+
+Frontend:
+- pnpm --dir frontend test -- natalInterpretation NatalChartPage natalPublicDomGuard -> PASS, 3 files passed, 118 tests passed
+- pnpm --dir frontend lint -> PASS
+
+Runtime API:
+- .\.venv\Scripts\Activate.ps1; python -B -c "from backend.app.main import app; assert app.routes" -> PASS
+- .\.venv\Scripts\Activate.ps1; python -B -c "from backend.app.main import app; assert app.openapi().get('paths')" -> PASS
+
+Scans:
+- VS1 old natal symbols -> PASS_WITH_CLASSIFIED_HITS, see legacy-scan-results.md
+- VS2 frontend/backend old control fields -> PASS_WITH_CLASSIFIED_HITS, see legacy-scan-results.md
+- VS3 prompt fallback tokens -> PASS_WITH_CLASSIFIED_HITS, see legacy-scan-results.md
+- VS4 contract markers -> PASS
+
+Artifacts:
+- openapi-before.json -> PASS
+- openapi-after.json -> PASS
+- replay-free-basic-generate-full.md -> PASS
+- concurrency-proof.md -> PASS
+- entitlement-freshness-proof.md -> PASS
+- public-get-list-accepted-only.md -> PASS
+- legacy-scan-results.md -> PASS

@@ -1,5 +1,5 @@
 # Story CS-435 anti-regression-concurrency-live-replay-bigbang: Anti Regression Concurrency And Live Replay Big Bang
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -143,17 +143,17 @@ through old public generation paths.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Add blocking anti-return scans with bounded allowlist documentation. (AC: AC7, AC12)
-- [ ] Task 2: Add backend concurrency tests for two simultaneous `generate_full` actions. (AC: AC5, AC14)
-- [ ] Task 3: Add entitlement freshness tests after Basic checkout or deterministic simulation. (AC: AC6, AC13)
-- [ ] Task 4: Add local replay coverage for Free preview to Basic full reading. (AC: AC1, AC2, AC3)
-- [ ] Task 5: Add backend and frontend guards against post-upgrade short reading creation. (AC: AC4, AC8)
-- [ ] Task 6: Add TestClient/API tests proving public GET/list accepted-only behavior. (AC: AC10, AC11)
-- [ ] Task 7: Add app route and OpenAPI proof that old public endpoint cannot generate. (AC: AC12)
-- [ ] Task 8: Generate SQL/API count artifacts for public readings, rejected runs, logs, and quota. (AC: AC9, AC10, AC11, AC13, AC14)
-- [ ] Task 9: Persist replay, concurrency, entitlement, public-read, legacy-scan, and validation artifacts. (AC: AC16)
-- [ ] Task 10: Keep `RG-173` backed by executable Big Bang route, contract, and scan evidence. (AC: AC15)
-- [ ] Task 11: Run backend lint, backend tests, frontend lint, frontend tests, scans, and artifact checks. (AC: AC1, AC8, AC16)
+- [x] Task 1: Add blocking anti-return scans with bounded allowlist documentation. (AC: AC7, AC12)
+- [x] Task 2: Add backend concurrency tests for two simultaneous `generate_full` actions. (AC: AC5, AC14)
+- [x] Task 3: Add entitlement freshness tests after Basic checkout or deterministic simulation. (AC: AC6, AC13)
+- [x] Task 4: Add local replay coverage for Free preview to Basic full reading. (AC: AC1, AC2, AC3)
+- [x] Task 5: Add backend and frontend guards against post-upgrade short reading creation. (AC: AC4, AC8)
+- [x] Task 6: Add TestClient/API tests proving public GET/list accepted-only behavior. (AC: AC10, AC11)
+- [x] Task 7: Add app route and OpenAPI proof that old public endpoint cannot generate. (AC: AC12)
+- [x] Task 8: Generate SQL/API count artifacts for public readings, rejected runs, logs, and quota. (AC: AC9, AC10, AC11, AC13, AC14)
+- [x] Task 9: Persist replay, concurrency, entitlement, public-read, legacy-scan, and validation artifacts. (AC: AC16)
+- [x] Task 10: Keep `RG-173` backed by executable Big Bang route, contract, and scan evidence. (AC: AC15)
+- [x] Task 11: Run backend lint, backend tests, frontend lint, frontend tests, scans, and artifact checks. (AC: AC1, AC8, AC16)
 
 ## Files to Inspect First
 

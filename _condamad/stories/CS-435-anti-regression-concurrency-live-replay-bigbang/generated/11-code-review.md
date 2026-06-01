@@ -1,5 +1,10 @@
 # Editorial Review CS-435
 
+> Obsolete for implementation evidence as of 2026-06-01.
+> This file is a drafting/readiness review only. It explicitly states that
+> application implementation evidence was outside this review scope for CS-435, so it is not
+> cited as final review evidence for the implementation handoff.
+
 Verdict: CLEAN
 
 ## Scope
@@ -35,4 +40,4 @@ Verdict: CLEAN
 
 ## Residual Risk
 
-Aucun risque restant identifie for story drafting readiness. Application implementation evidence remains future work for CS-435.
+Aucun risque restant identifie for story drafting readiness. Application implementation evidence was outside this drafting review scope for CS-435.

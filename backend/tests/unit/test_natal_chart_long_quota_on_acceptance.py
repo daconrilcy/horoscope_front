@@ -135,6 +135,47 @@ def test_theme_natal_slot_quota_debits_only_new_accepted_publication() -> None:
     mock_consume.assert_called_once()
 
 
+def test_theme_natal_concurrent_publication_attempts_keep_single_quota_debit() -> None:
+    """Deux publications logiques du meme slot ne peuvent debiter le quota qu'une fois."""
+    access_result = NatalChartLongEntitlementResult(
+        path="canonical_quota",
+        variant_code="single_astrologer",
+        usage_states=[],
+    )
+    first_publication = ThemeNatalAcceptedPublication(
+        slot=MagicMock(),
+        run=MagicMock(),
+        accepted_now=True,
+    )
+    replayed_publication = ThemeNatalAcceptedPublication(
+        slot=MagicMock(),
+        run=MagicMock(),
+        accepted_now=False,
+    )
+
+    with patch(
+        "app.services.entitlement.natal_chart_long_entitlement_gate."
+        "NatalChartLongEntitlementGate.consume_on_acceptance",
+        return_value=access_result,
+    ) as mock_consume:
+        first_result = ThemeNatalReadingSlotService.consume_quota_after_publication(
+            MagicMock(),
+            user_id=435,
+            access_result=access_result,
+            publication=first_publication,
+        )
+        replayed_result = ThemeNatalReadingSlotService.consume_quota_after_publication(
+            MagicMock(),
+            user_id=435,
+            access_result=access_result,
+            publication=replayed_publication,
+        )
+
+    assert first_result is access_result
+    assert replayed_result is None
+    mock_consume.assert_called_once()
+
+
 def test_check_access_for_complete_generation_allows_corrective_regeneration() -> None:
     exhausted_access = EffectiveFeatureAccess(
         granted=False,

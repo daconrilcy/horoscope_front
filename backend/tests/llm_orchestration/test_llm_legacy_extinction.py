@@ -1,45 +1,52 @@
-"""Gardes anti-retour pour les anciens chemins prompts LLM."""
+# Commentaire global: garde anti-retour des anciens chemins generateurs natal publics.
+"""Scanne les owners runtime pour interdire les use cases publics legacy."""
 
 from __future__ import annotations
 
-import pytest
+import ast
+from pathlib import Path
 
-from app.domain.llm.prompting.catalog import (
-    PROMPT_FALLBACK_CONFIGS,
-    build_fallback_use_case_config,
+ROOT = Path(__file__).resolve().parents[2]
+FORBIDDEN_RUNTIME_SYMBOLS = {
+    "natal_interpretation_short",
+    "natal_long_free",
+    "use_case_level",
+    "forceRefresh",
+    "PROMPT_FALLBACK_CONFIGS",
+    "fallback_default",
+    "EXIGENCE PREMIUM",
+    "AstroResponse_v3",
+}
+RUNTIME_FILES = (
+    ROOT / "app/services/llm_generation/natal/theme_natal_product_actions.py",
+    ROOT / "app/services/llm_generation/natal/theme_natal_basic_full_runtime.py",
 )
 
-SUPPORTED_FALLBACK_USE_CASE_KEYS = frozenset(
-    {
-        "astrologer_selection_help",
-        "chat",
-        "chat_astrologer",
-        "guidance_daily",
-        "guidance_weekly",
-        "guidance_contextual",
-        "natal_interpretation",
-        "natal_interpretation_short",
-        "natal_long_free",
-        "horoscope_daily",
+
+def test_public_theme_natal_runtime_does_not_call_legacy_generator_symbols() -> None:
+    """Les owners publics ne referencent pas les anciens symboles generateurs."""
+    hits: list[str] = []
+    for path in RUNTIME_FILES:
+        source = path.read_text(encoding="utf-8")
+        for symbol in FORBIDDEN_RUNTIME_SYMBOLS:
+            if symbol in source:
+                hits.append(f"{path.relative_to(ROOT)}::{symbol}")
+
+    assert hits == []
+
+
+def test_product_action_runtime_imports_no_prompt_fallback_or_legacy_interpret_service() -> None:
+    """L'AST confirme que la commande publique ne depend pas du service legacy generateur."""
+    path = ROOT / "app/services/llm_generation/natal/theme_natal_product_actions.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    imported_modules = {
+        node.module
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.module is not None
     }
-)
+    forbidden_imports = {
+        "app.services.llm_generation.natal.interpretation_service",
+        "app.domain.llm.prompting.catalog",
+    }
 
-
-def test_supported_use_cases_are_absent_from_prompt_fallback_configs() -> None:
-    """Bloque le retour de prompts runtime pour les familles gouvernees."""
-
-    assert PROMPT_FALLBACK_CONFIGS.keys().isdisjoint(SUPPORTED_FALLBACK_USE_CASE_KEYS)
-
-
-@pytest.mark.parametrize("use_case_key", sorted(SUPPORTED_FALLBACK_USE_CASE_KEYS))
-def test_supported_use_cases_do_not_build_fallback_config(use_case_key: str) -> None:
-    """Verifie que le builder ne recree pas de config fallback supportee."""
-
-    assert build_fallback_use_case_config(use_case_key) is None
-
-
-def test_event_guidance_is_not_a_supported_fallback_surface() -> None:
-    """Verifie que le use case evenementiel supprime ne reste pas supporte."""
-
-    assert "event_guidance" not in SUPPORTED_FALLBACK_USE_CASE_KEYS
-    assert build_fallback_use_case_config("event_guidance") is None
+    assert imported_modules.isdisjoint(forbidden_imports)

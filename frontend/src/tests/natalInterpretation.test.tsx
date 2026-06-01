@@ -904,6 +904,13 @@ describe("NatalInterpretationSection", () => {
         }),
       );
     });
+    expect(requestThemeNatalReadingAction).not.toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        action: "preview",
+        use_case_level: "short",
+      }),
+    );
   });
 
   it("rafraîchit l'historique quand une nouvelle interprétation persistée n'est pas encore dans la liste", async () => {
