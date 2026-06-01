@@ -1,0 +1,6 @@
+# Guard Scans CS-428
+
+- `rg -n "ThemeNatalReadingSlot|LlmGenerationRun|accepted_at|source_generation_run_id" backend/app backend/tests`: PASS, expected hits in model, service and tests.
+- `rg -n "client_request_id|idempot" backend/app backend/tests`: PASS, expected hits in new service/tests and existing idempotence code.
+- `rg -n "UserNatalInterpretationModel\.user_id == user_id,[\s\S]*UserNatalInterpretationModel\.level" backend/app/services/llm_generation/natal`: PASS, no matches.
+- `rg -n "_slot_lock_for_key|_publication_lock_for_slot|status != THEME_NATAL_SLOT_STATUS_ACCEPTED" backend/app/services/llm_generation/natal/theme_natal_reading_slots.py`: PASS, app lock and atomic accepted-publication guard present.

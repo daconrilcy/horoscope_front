@@ -1,0 +1,17 @@
+# Validation CS-428
+
+- `ruff format app\services\llm_generation\natal\theme_natal_reading_slots.py tests\integration\test_theme_natal_reading_slots.py`: PASS
+- `ruff check app\services\llm_generation\natal\theme_natal_reading_slots.py tests\integration\test_theme_natal_reading_slots.py`: PASS
+- `ruff check .`: PASS
+- `python -B -m pytest -q --long tests/integration/test_theme_natal_reading_slots.py --tb=short`: PASS, 8 passed
+- `python -B -m pytest -q tests/unit/test_natal_chart_long_quota_on_acceptance.py --tb=short`: PASS, 5 passed
+- `python -B -m pytest -q app/tests/unit/test_backend_db_test_harness.py --tb=short`: PASS, 4 passed
+- `python -B -m pytest -q --long tests/integration/test_natal_interpretation_rejected_public_boundary.py --tb=short`: PASS, 8 passed
+- `python -B -c "from app.main import app; print(len(app.routes))"`: PASS, 230 routes
+- `git diff --check`: PASS, CRLF warnings only
+- `condamad_story_validate.py _condamad\stories\CS-428-public-reading-slots-llm-generation-runs\00-story.md`: PASS
+- `condamad_story_lint.py --strict _condamad\stories\CS-428-public-reading-slots-llm-generation-runs\00-story.md`: PASS
+
+Not run:
+
+- Full backend `python -B -m pytest -q --tb=short`: scoped out for this review cycle; targeted story and guardrail checks passed.

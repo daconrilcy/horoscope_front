@@ -1,5 +1,5 @@
 # Story CS-428 public-reading-slots-llm-generation-runs: Public Reading Slots And LLM Generation Runs
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

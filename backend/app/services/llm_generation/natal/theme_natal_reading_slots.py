@@ -6,8 +6,9 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from threading import Lock, RLock
 
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -32,6 +33,10 @@ from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementGate,
     NatalChartLongEntitlementResult,
 )
+
+_SLOT_LOCKS_GUARD = Lock()
+_SLOT_LOCKS: dict[tuple[object, ...], RLock] = {}
+_PUBLICATION_LOCKS: dict[int, RLock] = {}
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,16 +101,17 @@ class ThemeNatalReadingSlotService:
     ) -> ThemeNatalGenerationClaim:
         """Cree ou relit le slot et le run idempotent d'une demande client."""
         request_id = _require_client_request_id(client_request_id)
-        slot, created_slot = _get_or_create_slot(db, key)
-        run, created_run = _get_or_create_generation_run(
-            db,
-            slot_id=slot.id,
-            client_request_id=request_id,
-            prompt_hash=prompt_hash,
-            data_hash=data_hash,
-            engine_profile_version=engine_profile_version,
-            output_schema_version=output_schema_version,
-        )
+        with _slot_lock_for_key(key):
+            slot, created_slot = _get_or_create_slot(db, key)
+            run, created_run = _get_or_create_generation_run(
+                db,
+                slot_id=slot.id,
+                client_request_id=request_id,
+                prompt_hash=prompt_hash,
+                data_hash=data_hash,
+                engine_profile_version=engine_profile_version,
+                output_schema_version=output_schema_version,
+            )
         return ThemeNatalGenerationClaim(
             slot=slot,
             run=run,
@@ -125,24 +131,34 @@ class ThemeNatalReadingSlotService:
         run = db.get(LlmGenerationRunModel, run_id)
         if run is None:
             raise ValueError("generation run does not exist")
-        slot = db.get(ThemeNatalReadingSlotModel, run.slot_id)
-        if slot is None:
-            raise ValueError("generation run is detached from its slot")
 
-        if slot.status == THEME_NATAL_SLOT_STATUS_ACCEPTED:
-            return ThemeNatalAcceptedPublication(slot=slot, run=run, accepted_now=False)
+        with _publication_lock_for_slot(run.slot_id):
+            slot = db.get(ThemeNatalReadingSlotModel, run.slot_id)
+            if slot is None:
+                raise ValueError("generation run is detached from its slot")
 
-        publication_time = accepted_at or utc_now()
-        slot.status = THEME_NATAL_SLOT_STATUS_ACCEPTED
-        slot.public_payload = dict(public_payload)
-        slot.accepted_at = publication_time
-        slot.source_generation_run_id = run.id
-        run.status = LLM_GENERATION_RUN_STATUS_ACCEPTED
-        run.completed_at = publication_time
-        db.commit()
-        db.refresh(slot)
-        db.refresh(run)
-        return ThemeNatalAcceptedPublication(slot=slot, run=run, accepted_now=True)
+            publication_time = accepted_at or utc_now()
+            result = db.execute(
+                update(ThemeNatalReadingSlotModel)
+                .where(
+                    ThemeNatalReadingSlotModel.id == run.slot_id,
+                    ThemeNatalReadingSlotModel.status != THEME_NATAL_SLOT_STATUS_ACCEPTED,
+                )
+                .values(
+                    status=THEME_NATAL_SLOT_STATUS_ACCEPTED,
+                    public_payload=dict(public_payload),
+                    accepted_at=publication_time,
+                    source_generation_run_id=run.id,
+                )
+            )
+            accepted_now = result.rowcount == 1
+            if accepted_now:
+                run.status = LLM_GENERATION_RUN_STATUS_ACCEPTED
+                run.completed_at = publication_time
+            db.commit()
+            db.refresh(slot)
+            db.refresh(run)
+            return ThemeNatalAcceptedPublication(slot=slot, run=run, accepted_now=accepted_now)
 
     @staticmethod
     def record_rejected_run(
@@ -251,6 +267,37 @@ def _slot_key_stmt(key: ThemeNatalReadingSlotKey) -> Select[tuple[ThemeNatalRead
 
 def _accepted_slot_filter() -> object:
     return ThemeNatalReadingSlotModel.status == THEME_NATAL_SLOT_STATUS_ACCEPTED
+
+
+def _slot_lock_for_key(key: ThemeNatalReadingSlotKey) -> RLock:
+    """Retourne le verrou applicatif local associe a une identite de slot."""
+    values = key.as_filter_values()
+    lock_key = (
+        values["user_id"],
+        values["chart_id"],
+        values["feature"],
+        values["reading_kind"],
+        values["product_plan"],
+        values["output_variant"],
+        values["persona_profile_id"],
+        values["contract_version"],
+    )
+    with _SLOT_LOCKS_GUARD:
+        lock = _SLOT_LOCKS.get(lock_key)
+        if lock is None:
+            lock = RLock()
+            _SLOT_LOCKS[lock_key] = lock
+        return lock
+
+
+def _publication_lock_for_slot(slot_id: int) -> RLock:
+    """Retourne le verrou applicatif local associe a la publication d'un slot."""
+    with _SLOT_LOCKS_GUARD:
+        lock = _PUBLICATION_LOCKS.get(slot_id)
+        if lock is None:
+            lock = RLock()
+            _PUBLICATION_LOCKS[slot_id] = lock
+        return lock
 
 
 def _get_or_create_slot(

@@ -15,10 +15,11 @@
 | RG-150 | Applicable: rejected payloads excluded from public reads. | Rejected boundary suite: PASS; slot accepted-only tests: PASS. |
 | RG-152 | Applicable: technical traces must not leak publicly. | Run traces stay in `LlmGenerationRunModel`; public methods return accepted slots only; public boundary tests: PASS. |
 | RG-155 | Applicable: no fallback/padding path added. | `rg -n "fallback = response\.sections\[0\]" backend/app/services/llm_generation/natal`: no matches. |
-| RG-157 | Applicable: quota after acceptance only. | `consume_quota_after_publication` + quota unit tests: PASS; `rg -n "check_and_consume" ...`: no matches. |
+| RG-157 | Applicable: quota after acceptance only. | Atomic accepted publication + quota unit tests: PASS; `rg -n "check_and_consume" ...`: no matches. |
 | RG-168 | Applicable: product dimensions from CS-427 retained. | Uses `ThemeNatalOutputVariant`, `ThemeNatalReadingKind`, `THEME_NATAL_READING_FEATURE`; Basic contract guard tests: PASS. |
 
 ## Negative scans
 
 - `rg -n "UserNatalInterpretationModel\.user_id == user_id,[\s\S]*UserNatalInterpretationModel\.level" backend/app/services/llm_generation/natal`: no matches.
+- `rg -n "_slot_lock_for_key|_publication_lock_for_slot|status != THEME_NATAL_SLOT_STATUS_ACCEPTED" backend/app/services/llm_generation/natal/theme_natal_reading_slots.py`: lock and atomic accepted-publication guard present.
 - No new frontend, API DTO, provider, prompt, or legacy deletion surface was introduced.
