@@ -9,3 +9,4 @@
 - Validation: targeted tests, full Vitest suite, lint/typecheck, build, scans, and `git diff --check` passed.
 - Final verification rerun: capsule summary/validation, targeted tests, lint, full Vitest suite, build, scoped No Legacy scans, `git diff --check`, and local dev HTTP probe passed.
 - Propagation: no-propagation; no new durable registry invariant required.
+- Implementation review/fix: replaced obsolete `generated/11-code-review.md` handoff marker with final clean review evidence, documented the scoped after-scan, stabilized the router protected-route wait exposed by full Vitest, and synchronized story status to `done`.

@@ -3,11 +3,11 @@
 ## Story status
 
 - Validation outcome: PASS
-- Ready for review: yes
+- Ready for review: clean
 - Story key: CS-433-frontend-product-actions-no-technical-generation-controls
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-433-frontend-product-actions-no-technical-generation-controls`
-- Story registry status: `ready-to-review`
+- Story registry status: `done`
 
 ## Preflight
 
@@ -58,6 +58,7 @@
 - `frontend/src/tests/natalInterpretation.test.tsx`
 - `frontend/src/tests/NatalChartPage.test.tsx`
 - `frontend/src/tests/component-architecture-guards.test.ts`
+- `frontend/src/tests/router.test.tsx`
 - `_condamad/stories/CS-433-frontend-product-actions-no-technical-generation-controls/**`
 - `_condamad/stories/story-status.md`
 
@@ -71,6 +72,7 @@
 - Updated `natalInterpretation.test.tsx` for product actions and Basic no-auto-generation.
 - Updated `NatalChartPage.test.tsx` expectations for `action` command options.
 - Updated architecture guard ownership assertion for product-action transport.
+- Stabilized `router.test.tsx` protected-route wait after the full suite exposed a load-sensitive timeout.
 
 ## Commands run
 
@@ -83,7 +85,8 @@
 | `pnpm --dir frontend test -- natalInterpretation NatalChartPage natalChartApi component-architecture` | repo root | PASS | 0 | 130 targeted tests passed. |
 | `pnpm --dir frontend lint` | repo root | PASS | 0 | TypeScript lint/typecheck passed. |
 | `pnpm --dir frontend build` | repo root | PASS | 0 | Production build passed. |
-| `pnpm --dir frontend test` | repo root | PASS | 0 | 118 files passed; 1303 tests passed, 8 skipped. |
+| `pnpm --dir frontend test -- router` | repo root | PASS | 0 | Router suite passed after stabilizing protected-route wait. |
+| `pnpm --dir frontend test` | repo root | PASS | 0 | Full suite passed after router fix: 118 files passed; 1303 tests passed, 8 skipped. |
 | `Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:5173/' -TimeoutSec 5` | repo root | PASS | 0 | Local frontend dev server was reachable and returned HTTP 200. |
 | scoped forbidden-control `rg` scan | repo root | PASS | 0 | No matches for removed technical controls in natal API/action surface. |
 | RG-153/RG-154/RG-158/style scans | repo root | PASS | 0 | Page composition, public DOM denylist, accordion marker, and inline style checks passed. |
@@ -99,6 +102,7 @@
 - No shim, alias, or legacy request adapter was introduced.
 - Old POST helper `fetchNatalInterpretation` and `/v1/natal/interpretation` frontend generation path removed from the natal API/action surface.
 - `evidence/removal-audit.md` classifies every removed technical control.
+- Review/fix routing: no-propagation; corrections were local closure evidence plus a test stability fix.
 - Feedback loop routing: no-propagation; this story did not reveal reusable skill or registry learning beyond local evidence updates.
 
 ## Diff review
@@ -110,7 +114,7 @@
 
 ## Final worktree status
 
-- Final `git status --short`: story files, frontend files, generated capsule/evidence files, and `story-status.md` modified/untracked as expected.
+- Final `git status --short`: story files, frontend files, generated capsule/evidence files, and `story-status.md` modified/untracked as expected during implementation. The review/fix pass updates only story closure artifacts.
 - Pre-existing unrelated dirty file remains: `_condamad/run-state.json`.
 - Local dev server: reachable at `http://127.0.0.1:5173/` during final verification.
 

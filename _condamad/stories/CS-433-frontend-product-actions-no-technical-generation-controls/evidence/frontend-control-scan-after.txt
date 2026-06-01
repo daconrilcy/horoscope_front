@@ -1,1 +1,14 @@
-PASS: no matches
+Command:
+
+```powershell
+rg -n "shouldRefreshShortAfterBasicUpgrade|use_case_level|variant_code|forceRefresh|force_refresh|useCaseLevel|variantCode" `
+  frontend/src/api/natal-chart frontend/src/features/natal-chart/NatalInterpretation.tsx
+```
+
+Result: PASS, no matches.
+
+Reviewer classification:
+
+- This zero-hit scan is intentionally scoped to the active natal reading API/action surface.
+- Broader `frontend/src` searches still find non-generative `variant_code` entitlement fixtures and admin/billing plan fields.
+- Those broader hits are not frontend LLM generation request controls and do not send natal generation payload fields.

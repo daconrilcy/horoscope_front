@@ -250,9 +250,12 @@ describe("AuthGuard", () => {
     
     renderApp(["/dashboard"])
     
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByRole("heading", { level: 2, name: "Tableau de bord" })).toBeInTheDocument()
+      },
+      { timeout: 5000 },
+    )
   })
 })
 

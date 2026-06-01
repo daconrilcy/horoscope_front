@@ -1,5 +1,5 @@
 # Story CS-433 frontend-product-actions-no-technical-generation-controls: Remove Frontend LLM Technical Generation Controls
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
