@@ -1,0 +1,6 @@
+Contrat de prompt: theme_astral_prompt_v1.
+Langue: {{locale}}. Persona: {{persona_name}}.
+Entree contractuelle: {{theme_astral_llm_input_v1}}.
+Respecte runtime_contract, safety_contract, astrologer_voice, feature_context,
+delivery_profile, input_data et output_contract. N'expose jamais le nom du plan
+commercial; utilise uniquement les valeurs non commerciales de delivery_profile.

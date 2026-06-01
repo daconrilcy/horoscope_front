@@ -1,0 +1,521 @@
+{
+  "astrologer_voice": {
+    "tone": "sobre"
+  },
+  "delivery_profile": {
+    "astrological_facts_budget": {
+      "max_aspects": 3,
+      "max_dominants": 2,
+      "max_objects": 6
+    },
+    "delivery_profile_id": "theme_astral_delivery_profile_v1",
+    "delivery_profile_version": "v1",
+    "depth": "expanded",
+    "material_budget": {
+      "max_sections": 6,
+      "max_source_items": 24
+    },
+    "output_length_policy": {
+      "max_output_tokens": 2400,
+      "target": "balanced"
+    },
+    "section_budget": {
+      "max_sections": 8
+    }
+  },
+  "feature_context": {
+    "chart_type": "natal",
+    "feature": "theme_astral",
+    "locale": "fr-FR",
+    "subfeature": "prompt_contract"
+  },
+  "input_data": {
+    "basic_natal_prompt_payload": {
+      "disclaimers": [
+        "Le plan organise des thèmes astrologiques à titre de lecture personnelle, sans prédiction certaine ni décision obligatoire."
+      ],
+      "editorial_evidence": [
+        {
+          "explanation": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+          "label": "Luminaire pour fil conducteur",
+          "section_codes": [
+            "synthesis",
+            "inner_life"
+          ]
+        },
+        {
+          "explanation": "Cette annexe indique qu'un repère de luminaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+          "label": "Luminaire pour fil conducteur",
+          "section_codes": [
+            "synthesis",
+            "identity"
+          ]
+        },
+        {
+          "explanation": "Cette annexe indique qu'un repère de position planétaire soutient fil conducteur. Elle sert de source courte et ne remplace pas l'explication narrative.",
+          "label": "Position planétaire pour fil conducteur",
+          "section_codes": [
+            "synthesis",
+            "mental_style"
+          ]
+        },
+        {
+          "explanation": "Cette annexe indique qu'un repère de position planétaire soutient liens et réciprocité. Elle sert de source courte et ne remplace pas l'explication narrative.",
+          "label": "Position planétaire pour liens et réciprocité",
+          "section_codes": [
+            "relationships"
+          ]
+        },
+        {
+          "explanation": "Cette annexe indique qu'un repère de position planétaire soutient tensions à intégrer. Elle sert de source courte et ne remplace pas l'explication narrative.",
+          "label": "Position planétaire pour tensions à intégrer",
+          "section_codes": [
+            "tensions"
+          ]
+        },
+        {
+          "explanation": "Cette annexe indique qu'un repère de axe nodal soutient axe d'apprentissage. Elle sert de source courte et ne remplace pas l'explication narrative.",
+          "label": "Axe nodal pour axe d'apprentissage",
+          "section_codes": [
+            "growth"
+          ]
+        },
+        {
+          "explanation": "Cette annexe indique qu'un repère de position planétaire soutient manière d'agir. Elle sert de source courte et ne remplace pas l'explication narrative.",
+          "label": "Position planétaire pour manière d'agir",
+          "section_codes": [
+            "action"
+          ]
+        }
+      ],
+      "forbidden_template_phrases": [
+        "cette lecture s'appuie uniquement sur",
+        "Ce repere retient",
+        "avec une confiance editoriale controlee",
+        "Luminaire: moon",
+        "Position planetaire:"
+      ],
+      "limitations": [
+        "Cette lecture Basic reste une synthèse symbolique: elle ne remplace pas un avis médical, juridique, financier ou psychologique."
+      ],
+      "plain_language_glossary": [
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Fil conducteur",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Identité et élan central",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Vie intérieure et besoins",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Liens et réciprocité",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Tensions à intégrer",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Axe d'apprentissage",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Style mental",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Manière d'agir",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Luminaire pour fil conducteur",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Position planétaire pour fil conducteur",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Position planétaire pour liens et réciprocité",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Position planétaire pour tensions à intégrer",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Axe nodal pour axe d'apprentissage",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        },
+        {
+          "meaning": "Vocabulaire public dérivé du plan Basic canonique pour guider la rédaction.",
+          "term": "Position planétaire pour manière d'agir",
+          "usage_limit": "Employer comme repère explicatif, jamais comme liste brute de sources."
+        }
+      ],
+      "report_arc": "Relier fil conducteur, identité et élan central, vie intérieure et besoins, liens et réciprocité en une lecture progressive: introduction, thèmes explicatifs, conclusion et annexes sources.",
+      "resolved_syntheses": [
+        {
+          "heading_intent": "Fil conducteur",
+          "section_code": "synthesis",
+          "theme_codes": [
+            "core_identity",
+            "emotional_pattern",
+            "mental_style"
+          ]
+        },
+        {
+          "heading_intent": "Identité et élan central",
+          "section_code": "identity",
+          "theme_codes": [
+            "core_identity"
+          ]
+        },
+        {
+          "heading_intent": "Vie intérieure et besoins",
+          "section_code": "inner_life",
+          "theme_codes": [
+            "emotional_pattern"
+          ]
+        },
+        {
+          "heading_intent": "Liens et réciprocité",
+          "section_code": "relationships",
+          "theme_codes": [
+            "relationship_pattern"
+          ]
+        },
+        {
+          "heading_intent": "Tensions à intégrer",
+          "section_code": "tensions",
+          "theme_codes": [
+            "tension_to_integrate"
+          ]
+        },
+        {
+          "heading_intent": "Axe d'apprentissage",
+          "section_code": "growth",
+          "theme_codes": [
+            "growth_direction"
+          ]
+        },
+        {
+          "heading_intent": "Style mental",
+          "section_code": "mental_style",
+          "theme_codes": [
+            "mental_style"
+          ]
+        },
+        {
+          "heading_intent": "Manière d'agir",
+          "section_code": "action",
+          "theme_codes": [
+            "action_and_drive"
+          ]
+        }
+      ],
+      "section_editorial_briefs": [
+        {
+          "allowed_section_role": "introduction_or_conclusion_thread",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Fil conducteur",
+          "reader_meaning": "Faire comprendre le role humain de fil conducteur dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "synthesis",
+          "source_fact_refs": [
+            "plan_section:synthesis",
+            "annex_source:Luminaire pour fil conducteur",
+            "annex_source:Position planétaire pour fil conducteur"
+          ]
+        },
+        {
+          "allowed_section_role": "explanatory_theme",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Identité et élan central",
+          "reader_meaning": "Faire comprendre le role humain de identité et élan central dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "identity",
+          "source_fact_refs": [
+            "plan_section:identity",
+            "annex_source:Luminaire pour fil conducteur"
+          ]
+        },
+        {
+          "allowed_section_role": "explanatory_theme",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Vie intérieure et besoins",
+          "reader_meaning": "Faire comprendre le role humain de vie intérieure et besoins dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "inner_life",
+          "source_fact_refs": [
+            "plan_section:inner_life",
+            "annex_source:Luminaire pour fil conducteur"
+          ]
+        },
+        {
+          "allowed_section_role": "explanatory_theme",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Liens et réciprocité",
+          "reader_meaning": "Faire comprendre le role humain de liens et réciprocité dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "relationships",
+          "source_fact_refs": [
+            "plan_section:relationships",
+            "annex_source:Position planétaire pour liens et réciprocité"
+          ]
+        },
+        {
+          "allowed_section_role": "explanatory_theme",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Tensions à intégrer",
+          "reader_meaning": "Faire comprendre le role humain de tensions à intégrer dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "tensions",
+          "source_fact_refs": [
+            "plan_section:tensions",
+            "annex_source:Position planétaire pour tensions à intégrer"
+          ]
+        },
+        {
+          "allowed_section_role": "explanatory_theme",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Axe d'apprentissage",
+          "reader_meaning": "Faire comprendre le role humain de axe d'apprentissage dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "growth",
+          "source_fact_refs": [
+            "plan_section:growth",
+            "annex_source:Axe nodal pour axe d'apprentissage"
+          ]
+        },
+        {
+          "allowed_section_role": "explanatory_theme",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Style mental",
+          "reader_meaning": "Faire comprendre le role humain de style mental dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "mental_style",
+          "source_fact_refs": [
+            "plan_section:mental_style",
+            "annex_source:Position planétaire pour fil conducteur"
+          ]
+        },
+        {
+          "allowed_section_role": "explanatory_theme",
+          "forbidden_claims": [
+            "prediction certaine",
+            "diagnostic medical, psychologique, juridique ou financier",
+            "fait astrologique absent du plan Basic canonique",
+            "liste de sources comme corps principal"
+          ],
+          "nuance": "Présenter ce repère comme une tendance symbolique modulable, jamais comme une obligation, un diagnostic ou une prédiction certaine.",
+          "possible_manifestation": "Décrire une façon concrète dont ce thème peut se vivre au quotidien, en restant conditionnel et relié aux preuves du plan.",
+          "public_label": "Manière d'agir",
+          "reader_meaning": "Faire comprendre le role humain de manière d'agir dans le fil de lecture, sans enumerer les donnees sources.",
+          "section_code": "action",
+          "source_fact_refs": [
+            "plan_section:action",
+            "annex_source:Position planétaire pour manière d'agir"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "editorial_evidence_labels": [
+            "Luminaire pour fil conducteur",
+            "Luminaire pour fil conducteur",
+            "Position planétaire pour fil conducteur"
+          ],
+          "heading_intent": "Fil conducteur",
+          "section_code": "synthesis",
+          "target_length_words": 170,
+          "theme_codes": [
+            "core_identity",
+            "emotional_pattern",
+            "mental_style"
+          ]
+        },
+        {
+          "editorial_evidence_labels": [
+            "Luminaire pour fil conducteur"
+          ],
+          "heading_intent": "Identité et élan central",
+          "section_code": "identity",
+          "target_length_words": 170,
+          "theme_codes": [
+            "core_identity"
+          ]
+        },
+        {
+          "editorial_evidence_labels": [
+            "Luminaire pour fil conducteur"
+          ],
+          "heading_intent": "Vie intérieure et besoins",
+          "section_code": "inner_life",
+          "target_length_words": 170,
+          "theme_codes": [
+            "emotional_pattern"
+          ]
+        },
+        {
+          "editorial_evidence_labels": [
+            "Position planétaire pour liens et réciprocité"
+          ],
+          "heading_intent": "Liens et réciprocité",
+          "section_code": "relationships",
+          "target_length_words": 170,
+          "theme_codes": [
+            "relationship_pattern"
+          ]
+        },
+        {
+          "editorial_evidence_labels": [
+            "Position planétaire pour tensions à intégrer"
+          ],
+          "heading_intent": "Tensions à intégrer",
+          "section_code": "tensions",
+          "target_length_words": 170,
+          "theme_codes": [
+            "tension_to_integrate"
+          ]
+        },
+        {
+          "editorial_evidence_labels": [
+            "Axe nodal pour axe d'apprentissage"
+          ],
+          "heading_intent": "Axe d'apprentissage",
+          "section_code": "growth",
+          "target_length_words": 170,
+          "theme_codes": [
+            "growth_direction"
+          ]
+        },
+        {
+          "editorial_evidence_labels": [
+            "Position planétaire pour fil conducteur"
+          ],
+          "heading_intent": "Style mental",
+          "section_code": "mental_style",
+          "target_length_words": 170,
+          "theme_codes": [
+            "mental_style"
+          ]
+        },
+        {
+          "editorial_evidence_labels": [
+            "Position planétaire pour manière d'agir"
+          ],
+          "heading_intent": "Manière d'agir",
+          "section_code": "action",
+          "target_length_words": 170,
+          "theme_codes": [
+            "action_and_drive"
+          ]
+        }
+      ],
+      "source_usage_policy": "Les sources publiques servent d'annexe courte. Le corps de chaque section doit expliquer le sens humain, la manifestation possible et la nuance, sans lister les sources comme contenu principal.",
+      "style_constraints": {
+        "advice_policy": "no_prescriptive_advice",
+        "plan_constraints": [
+          "Employer un ton clair, nuancé et non fataliste.",
+          "Ne pas ajouter de fait astrologique absent du plan.",
+          "Garder les preuves publiques lisibles sans scores ni traces techniques."
+        ],
+        "prediction_policy": "no_firm_prediction",
+        "section_count": {
+          "maximum": 8,
+          "minimum": 6
+        },
+        "tone": "vous",
+        "word_count": {
+          "maximum": 1300,
+          "minimum": 900
+        }
+      }
+    }
+  },
+  "output_contract": {
+    "max_sections": 8,
+    "required_sections": [
+      "title",
+      "summary",
+      "sections",
+      "evidence",
+      "contract_trace"
+    ],
+    "response_contract_id": "theme_astral_response_contract_v1",
+    "response_contract_version": "v1",
+    "schema_ref": "theme_astral_response_contract_v1"
+  },
+  "runtime_contract": {
+    "builder_owner": "ThemeAstralProviderPayloadBuilder",
+    "contract_id": "theme_astral_llm_input_v1",
+    "contract_version": "v1",
+    "prompt_contract_id": "theme_astral_prompt_v1"
+  },
+  "safety_contract": {
+    "commercial_label_policy": "backend_only",
+    "source_policy": "interpretation_material_requires_source_ref_and_fact_ref",
+    "truth_policy": "astrological_facts_are_engine_owned",
+    "voice_policy": "style_only_no_fact_mutation"
+  }
+}

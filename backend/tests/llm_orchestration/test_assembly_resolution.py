@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+from sqlalchemy import select
 
 from app.domain.llm.configuration.admin_models import PromptAssemblyConfig
 from app.domain.llm.configuration.assembly_admin_service import AssemblyAdminService
@@ -12,6 +13,12 @@ from app.domain.llm.configuration.assembly_resolver import (
 )
 from app.domain.llm.configuration.canonical_use_case_registry import (
     get_canonical_use_case_contract,
+)
+from app.domain.llm.configuration.theme_astral_contracts import (
+    THEME_ASTRAL_FEATURE,
+    THEME_ASTRAL_PROMPT_CONTRACT_ID,
+    THEME_ASTRAL_SUBFEATURE,
+    THEME_ASTRAL_USE_CASE_KEY,
 )
 from app.domain.llm.prompting.catalog import PROMPT_FALLBACK_CONFIGS
 from app.domain.llm.runtime import gateway as gateway_module
@@ -32,6 +39,9 @@ from app.infra.db.models.llm.llm_prompt import (
     LlmPromptVersionModel,
     LlmUseCaseConfigModel,
     PromptStatus,
+)
+from app.ops.llm.bootstrap.seed_theme_astral_prompt_contract import (
+    seed_theme_astral_prompt_contract,
 )
 
 
@@ -338,6 +348,36 @@ async def test_natal_free_short_and_premium_complete_resolution_stay_canonical(d
     assert premium_plan.plan == "premium"
     assert premium_plan.assembly_id == str(premium_assembly.id)
     assert premium_plan.rendered_developer_prompt.startswith("PREMIUM {}")
+
+
+def test_theme_astral_basic_uses_published_prompt_contract_not_legacy_natal_keys(db) -> None:
+    """Le depth expanded publie reste l'assembly active du prompt Basic."""
+    seed_theme_astral_prompt_contract(db)
+
+    assemblies = (
+        db.execute(
+            select(PromptAssemblyConfigModel).where(
+                PromptAssemblyConfigModel.feature == THEME_ASTRAL_FEATURE,
+                PromptAssemblyConfigModel.subfeature == THEME_ASTRAL_SUBFEATURE,
+                PromptAssemblyConfigModel.status == PromptStatus.PUBLISHED,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    basic_assembly = next(assembly for assembly in assemblies if assembly.plan == "expanded")
+    rendered_prompt = assemble_developer_prompt(
+        resolve_assembly(basic_assembly),
+        basic_assembly,
+    )
+
+    assert {assembly.plan for assembly in assemblies} == {"essential", "expanded", "complete"}
+    assert len(assemblies) == 3
+    assert basic_assembly.feature_template.use_case_key == THEME_ASTRAL_USE_CASE_KEY
+    assert THEME_ASTRAL_PROMPT_CONTRACT_ID in rendered_prompt
+    assert "basic_natal_prompt_payload" in rendered_prompt
+    assert "natal_interpretation" not in rendered_prompt
+    assert "natal_interpretation_short" not in rendered_prompt
 
 
 @pytest.mark.asyncio

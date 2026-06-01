@@ -1,5 +1,9 @@
 # CS-424 Draft Review
 
+Implementation handoff note (2026-06-01): this artifact is a pre-implementation
+story-draft review. It is obsolete for final code-review evidence and must not be
+cited as a post-implementation CLEAN review.
+
 Verdict: CLEAN
 
 ## Review Scope

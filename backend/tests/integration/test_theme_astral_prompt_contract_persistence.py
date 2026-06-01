@@ -74,8 +74,8 @@ def test_theme_astral_seed_persists_stable_contract_family() -> None:
         assert THEME_ASTRAL_PROMPT_CONTRACT_ID in prompt.developer_prompt
         assert THEME_ASTRAL_INPUT_CONTRACT_ID in prompt.developer_prompt
         assert "free" not in prompt.developer_prompt.lower()
-        assert "basic" not in prompt.developer_prompt.lower()
         assert "premium" not in prompt.developer_prompt.lower()
+        assert "basic_natal_prompt_payload" in prompt.developer_prompt
         assert "verite astrologique" in persona.disallowed_topics
     finally:
         db.close()
