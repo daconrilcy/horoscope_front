@@ -209,3 +209,4 @@
 | cs-427 | `_story_briefs\cs-427-theme-natal-product-contract-action-resolver.md` | `_condamad\stories\cs-427-theme-natal-product-contract-action-resolver\00-story.md` |
 | cs-428 | `_story_briefs\cs-428-public-reading-slots-llm-generation-runs.md` | `_condamad\stories\cs-428-public-reading-slots-llm-generation-runs\00-story.md` |
 | cs-429 | `_story_briefs\cs-429-theme-natal-generation-contracts-strict-schemas.md` | `_condamad\stories\cs-429-theme-natal-generation-contracts-strict-schemas\00-story.md` |
+| cs-430 | `_story_briefs\cs-430-basic-full-reading-runtime-fake-provider.md` | `_condamad\stories\cs-430-basic-full-reading-runtime-fake-provider\00-story.md` |
