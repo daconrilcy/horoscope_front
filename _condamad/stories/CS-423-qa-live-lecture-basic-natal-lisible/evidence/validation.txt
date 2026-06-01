@@ -1,15 +1,14 @@
 CS-423 validation summary - 2026-06-01 Europe/Paris
 
-PASS - Capsule prepare/repair:
-  python -B .agents/skills/condamad-dev-story/scripts/condamad_prepare.py --root . --repair-generated-only _condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible
-  python -B .agents/skills/condamad-dev-story/scripts/condamad_validate.py _condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible
+PASS - Capsule/story validation, with venv activated before Python commands:
+  .\.venv\Scripts\Activate.ps1
+  python -B .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-423-qa-live-lecture-basic-natal-lisible\00-story.md
+  python -B .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-423-qa-live-lecture-basic-natal-lisible\00-story.md
+  python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-423-qa-live-lecture-basic-natal-lisible --final
 
-PASS - Backend format/lint/tests:
-  ruff format backend/tests/integration/test_basic_natal_v2_pipeline.py backend/tests/unit/test_basic_natal_narrative_validator.py
-  ruff check backend/tests/integration/test_basic_natal_v2_pipeline.py backend/tests/unit/test_basic_natal_narrative_validator.py
-  python -B -m pytest -q backend/tests/integration/test_basic_natal_v2_pipeline.py backend/tests/unit/test_basic_natal_narrative_validator.py --tb=short
+PASS - Backend targeted tests, with venv activated:
+  python -B -m pytest -q backend\tests\integration\test_basic_natal_v2_pipeline.py backend\tests\unit\test_basic_natal_narrative_validator.py --tb=short
   Result: 14 passed, 1 deselected.
-  ruff check backend
 
 PASS - Frontend tests/lint/build:
   pnpm --dir frontend test -- natalInterpretation natalPublicDomGuard NatalChartPage
@@ -18,9 +17,13 @@ PASS - Frontend tests/lint/build:
   pnpm --dir frontend build
 
 PASS - Browser QA evidence:
-  PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_PORT=4175 pnpm --dir frontend exec playwright test e2e/cs-423-natal-basic-readable.spec.ts --project chromium-mobile --workers=1 --reporter=line --timeout=60000
-  Result: 1 passed.
-  Note: a first Playwright run using the configured webServer created the artifacts but timed out during Windows teardown; the server-managed rerun passed.
+  First attempt:
+    pnpm --dir frontend exec playwright test e2e/cs-423-natal-basic-readable.spec.ts --project chromium-mobile --workers=1 --reporter=line --timeout=60000
+    Result: blocked before test execution because port 4173 was already used.
+  Passing run:
+    started Vite manually on 127.0.0.1:4175, then ran:
+    PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_PORT=4175 pnpm --dir frontend exec playwright test e2e/cs-423-natal-basic-readable.spec.ts --project chromium-mobile --workers=1 --reporter=line --timeout=60000
+    Result: 1 passed; screenshots, DOM text and API payload artifacts persisted.
 
 PASS - Evidence files:
   basic-readable-api-after.json exists.
@@ -28,12 +31,13 @@ PASS - Evidence files:
   basic-readable-desktop-after.png exists and is non-empty.
   basic-readable-mobile-after.png exists and is non-empty.
   qa-report.md exists and contains introduction, conclusion, three themes and origin classification.
+  generated/11-code-review.md exists and records the final implementation review.
 
-PASS - Final capsule validation:
-  python -B .agents/skills/condamad-dev-story/scripts/condamad_validate.py _condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible --final
+PASS - Negative scans over persisted evidence:
+  rg degraded phrase scan: no matches.
+  rg technical marker scan: no matches.
+  rg raw-label/unaccented public DOM scan: no matches in basic-readable-dom-text-after.txt.
 
-PASS - Negative scans:
-  Baseline/degraded token scan over persisted evidence: no matches.
-  Basic public DOM unaccented/raw-label scan in the rendered reading body: enforced by Playwright and natalPublicDomGuard.
-  Technical marker scan over runtime roots: expected internal/API type hits only; public DOM tests and persisted evidence are clean.
-  Broad source scans include expected denylist definitions in tests and validators, not public output.
+LIMIT - Live origin:
+  The browser QA proves a controlled fixture origin on the real React /natal route. It does not prove the real local historical cache state for daconrilcy@hotmail.com.
+  This limit is classified in evidence/qa-report.md and remains outside this QA-only implementation scope.

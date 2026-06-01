@@ -7,7 +7,7 @@
 - Story key: CS-423-qa-live-lecture-basic-natal-lisible
 - Source story: `_condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible/00-story.md`
 - Capsule path: `_condamad/stories/CS-423-qa-live-lecture-basic-natal-lisible`
-- Story registry: `ready-to-review`, last update `2026-06-01`
+- Story registry: `done`, last update `2026-06-01`
 
 ## Preflight
 
@@ -15,7 +15,7 @@
 - Initial `git status --short`: pre-existing dirty `_condamad/run-state.json`
 - Story/status alignment: `CS-423` row matches the target story path and source brief.
 - Capsule repaired and validated after missing required generated files were detected.
-- `generated/11-code-review.md`: editorial pre-implementation review only; not used as final code-review evidence.
+- `generated/11-code-review.md`: final implementation review evidence, verdict `CLEAN`.
 - Applicable guardrails: `RG-152`, `RG-153`, `RG-154`, `RG-155`, `RG-156`, `RG-164`, `RG-165`, `RG-166`, `RG-167`, `RG-168`, `RG-170`.
 
 ## Capsule validation
