@@ -30,3 +30,22 @@ All Python commands were run after activating `.venv`.
 ## Startup/import check
 
 - `python -B -c "from app.main import app; assert app.routes"` from `backend` -> PASS.
+
+## Implementation review/fix iteration 2026-06-01
+
+- Finding fixed: positive legacy test fixtures remained after implementation review:
+  `test_contract_api.py`, `test_gateway_modes.py`, `test_llm_release.py`,
+  `test_admin_llm_natal_prompts.py`, `test_gateway_gpt5_params.py`, and
+  `test_gateway_input_validation_payload.py`.
+- `ruff format app\tests\integration\test_contract_api.py app\tests\unit\test_gateway_modes.py tests\integration\test_llm_release.py app\tests\integration\test_admin_llm_natal_prompts.py app\tests\integration\test_gateway_gpt5_params.py app\tests\unit\test_gateway_input_validation_payload.py` -> PASS.
+- `python -B -m pytest -q app/tests/integration/test_contract_api.py app/tests/unit/test_gateway_modes.py app/tests/integration/test_admin_llm_natal_prompts.py app/tests/integration/test_gateway_gpt5_params.py app/tests/unit/test_gateway_input_validation_payload.py --tb=short` -> PASS, 9 passed and 10 deselected.
+- `ruff check .` from `backend` -> PASS.
+- `python -B -m pytest -q tests/llm_orchestration/test_prompt_governance_registry.py tests/llm_orchestration/test_llm_legacy_extinction.py tests/llm_orchestration/test_assembly_resolution.py --tb=short` -> PASS, 53 passed.
+- `python -B -m pytest -q tests/architecture/test_legacy_natal_generation_inventory_guard.py tests/architecture/test_theme_astral_prompt_contract_guard.py tests/architecture/test_llm_legacy_extinction.py --tb=short` -> PASS, 23 passed.
+- `python -B -m pytest -q --long tests/integration/test_admin_llm_catalog.py app/tests/integration/test_admin_llm_natal_prompts.py --tb=short` -> PASS, 34 passed.
+- `python -B -m pytest -q app/tests/unit/test_scripts_ownership.py --tb=short` -> PASS, 6 passed.
+- Runtime source scan -> PASS_WITH_CLASSIFIED_RESIDUALS; remaining hits are readonly context, diagnostics, action tokens, or test helper labels.
+- Test scan -> PASS_WITH_CLASSIFIED_RESIDUALS; remaining hits are rejection/extinction guards, readonly historical rows, or CS-443 public-history tests.
+- Cartography scan -> PASS_WITH_CLASSIFIED_RESIDUALS; admin-only lines remain as the documented non-CS-442 policy surface.
+- `python -B -c "from app.main import app; assert 'natal_long_free' not in str(app.openapi()); assert app.routes"` from `backend` -> PASS.
+- Persistent evidence path check from `backend` -> PASS.

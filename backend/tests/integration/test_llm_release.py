@@ -245,7 +245,7 @@ async def test_llm_release_lifecycle():
         assert len(target_keys) > 0
         target_keys.sort()
 
-        # Pick a target that avoids schema-heavy and known legacy prompt pitfalls when possible.
+        # Pick a target that avoids schema-heavy and removed legacy prompt pitfalls when possible.
         target_key = None
         for tk in target_keys:
             if "horoscope_daily" in tk:
@@ -253,25 +253,32 @@ async def test_llm_release_lifecycle():
                 break
         if not target_key:
             for tk in target_keys:
-                if "natal" in tk:
-                    target_key = tk
-                    break
-        if not target_key:
-            for tk in target_keys:
                 if "guidance" in tk:
                     target_key = tk
                     break
         if not target_key:
-            target_key = target_keys[0]
+            for tk in target_keys:
+                if "chat" in tk:
+                    target_key = tk
+                    break
+        if not target_key:
+            for tk in target_keys:
+                if "natal" not in tk:
+                    target_key = tk
+                    break
+        if not target_key:
+            pytest.skip("No non-legacy release target available for runtime resolution.")
 
         f, sf, p, loc = target_key.split(":")
         sf = sf if sf != "None" else None
         p = p if p != "None" else None
 
-        # Identify appropriate use_case
+        # Identify appropriate use_case without resurrecting removed natal legacy keys.
         use_case = "chat" if f == "chat" else "horoscope_daily"
         if f == "natal":
-            use_case = "natal_long_free"  # Doesn't require schema.
+            use_case = "theme_natal"
+        elif f == "guidance":
+            use_case = "guidance_contextual"
 
         config = await registry.get_active_config(feature=f, subfeature=sf, plan=p, locale=loc)
         assert config is not None

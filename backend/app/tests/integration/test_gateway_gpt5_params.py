@@ -134,12 +134,12 @@ def _seed_runtime_artifacts(
 @pytest.mark.asyncio
 async def test_gateway_transmits_gpt5_params_from_execution_profile(db_session: Session):
     """Verifie que le gateway transmet les parametres GPT-5 portes par le profil canonique."""
-    use_case = "natal_interpretation_short"
+    use_case = "guidance_contextual"
     _seed_runtime_artifacts(
         db_session,
         use_case_key=use_case,
-        feature="natal",
-        subfeature="interpretation",
+        feature="guidance",
+        subfeature="contextual",
         plan="free",
         model="gpt-5",
         reasoning_profile="medium",
@@ -154,8 +154,8 @@ async def test_gateway_transmits_gpt5_params_from_execution_profile(db_session: 
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case=use_case,
-            feature="natal",
-            subfeature="interpretation",
+            feature="guidance",
+            subfeature="contextual",
             plan="free",
             locale="fr-FR",
         ),
@@ -178,12 +178,12 @@ async def test_gateway_transmits_gpt5_params_from_execution_profile(db_session: 
 @pytest.mark.asyncio
 async def test_gateway_transmits_gpt4o_without_reasoning_effort(db_session: Session):
     """Verifie qu un profil non reasoning ne transmet pas de reasoning_effort."""
-    use_case = "natal_interpretation_short"
+    use_case = "guidance_contextual"
     _seed_runtime_artifacts(
         db_session,
         use_case_key=use_case,
-        feature="natal",
-        subfeature="interpretation",
+        feature="guidance",
+        subfeature="contextual",
         plan="free",
         model="gpt-4o-mini",
         reasoning_profile="off",
@@ -198,8 +198,8 @@ async def test_gateway_transmits_gpt4o_without_reasoning_effort(db_session: Sess
     request = LLMExecutionRequest(
         user_input=ExecutionUserInput(
             use_case=use_case,
-            feature="natal",
-            subfeature="interpretation",
+            feature="guidance",
+            subfeature="contextual",
             plan="free",
             locale="fr-FR",
         ),

@@ -43,17 +43,14 @@ def test_get_use_case_contract():
         db.add(s)
         db.commit()
 
-    resp = client.get(
-        "/v1/admin/llm/use-cases/natal_interpretation_short/contract",
-        headers=headers,
-    )
+    resp = client.get("/v1/admin/llm/use-cases/natal_psy_profile/contract", headers=headers)
     assert resp.status_code == 200
     data = resp.json()["data"]
-    assert data["key"] == "natal_interpretation_short"
+    assert data["key"] == "natal_psy_profile"
     assert data["output_schema_id"] is not None
     assert data["output_schema"]["type"] == "object"
     assert "title" in data["output_schema"]["properties"]
-    assert data["persona_strategy"] == "optional"
+    assert data["persona_strategy"] == "required"
     assert "llm_astrology_input_v1" in data["required_prompt_placeholders"]
     assert "chart_json" not in data["required_prompt_placeholders"]
     assert data["use_case_audit"] is None
@@ -64,5 +61,8 @@ def test_get_use_case_contract_hides_removed_legacy_use_case():
     admin_token = _register_admin_and_token()
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    resp = client.get("/v1/admin/llm/use-cases/chat/contract", headers=headers)
+    resp = client.get(
+        "/v1/admin/llm/use-cases/natal_interpretation_short/contract",
+        headers=headers,
+    )
     assert resp.status_code == 404

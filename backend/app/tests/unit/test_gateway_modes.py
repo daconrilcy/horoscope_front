@@ -9,7 +9,6 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.domain.llm.prompting.catalog import NATAL_FREE_SHORT_SCHEMA
 from app.domain.llm.runtime import gateway as gateway_module
 from app.domain.llm.runtime.contracts import (
     ExecutionContext,
@@ -378,13 +377,25 @@ async def test_schema_name_in_payload(
 
 
 @pytest.mark.asyncio
-async def test_catalog_schema_is_used_for_free_natal_fallback(
+async def test_catalog_schema_is_used_for_custom_fallback(
     db_session,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reutilise le schema catalogue pour `natal_long_free` hors chemin assembly."""
-    use_case = "natal_long_free"
-    db_session.add(LlmUseCaseConfigModel(key=use_case, display_name="Free Natal", description="D"))
+    """Reutilise le schema SQLAlchemy explicite pour un fallback non legacy."""
+    use_case = "custom_catalog_schema"
+    schema = LlmOutputSchemaModel(
+        name="custom_catalog_schema",
+        json_schema={
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "summary": {"type": "string"},
+            },
+        },
+    )
+    db_session.add(schema)
+    db_session.flush()
+    db_session.add(LlmUseCaseConfigModel(key=use_case, display_name="Custom", description="D"))
     db_session.add(
         LlmPromptVersionModel(
             use_case_key=use_case,
@@ -394,7 +405,9 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(
         )
     )
     db_session.commit()
-    _install_fallback_registry(monkeypatch, _fallback_config(use_case))
+    _install_fallback_registry(
+        monkeypatch, _fallback_config(use_case, output_schema_id=str(schema.id))
+    )
 
     mock_client = MagicMock()
     mock_client.execute = AsyncMock(
@@ -423,4 +436,4 @@ async def test_catalog_schema_is_used_for_free_natal_fallback(
     await gateway.execute_request(request=request, db=db_session)
 
     response_format = mock_client.execute.call_args.kwargs["response_format"]
-    assert response_format["json_schema"]["schema"] == NATAL_FREE_SHORT_SCHEMA
+    assert response_format["json_schema"]["schema"] == schema.json_schema

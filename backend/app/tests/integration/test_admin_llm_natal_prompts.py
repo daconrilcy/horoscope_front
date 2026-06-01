@@ -108,7 +108,7 @@ class TestAdminLlmNatalPrompts:
         assert any("persona_name" in e for e in response.json()["error"]["details"]["errors"])
 
     def test_publish_prompt_success(self, test_client, mock_db):
-        key = "natal_interpretation_short"
+        key = "natal_psy_profile"
         version_id = str(uuid.uuid4())
         uc_mock = LlmUseCaseConfigModel(
             key=key, display_name="Natal", description="...", eval_fixtures_path=None
@@ -149,7 +149,7 @@ class TestAdminLlmNatalPrompts:
     def test_publish_prompt_blocked_by_eval(self, test_client, mock_db):
         from app.domain.llm.runtime.contracts import EvalReport
 
-        key = "natal_interpretation_short"
+        key = "natal_psy_profile"
         version_id = str(uuid.uuid4())
         uc_mock = LlmUseCaseConfigModel(
             key=key,

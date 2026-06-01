@@ -7,7 +7,7 @@
 - Story key: CS-442-sources-reintroduction-prompts-nataux-legacy
 - Source story: `00-story.md`
 - Capsule path: `_condamad/stories/CS-442-sources-reintroduction-prompts-nataux-legacy`
-- Tracker status: `ready-to-review`
+- Tracker status: `done`
 
 ## Preflight
 
@@ -93,6 +93,13 @@
 - Full repository pytest was not run; capsule requested targeted suites and the touched surface is backend prompt-source deletion. Compensating evidence: lint, targeted architecture/orchestration/admin/script suites, scans, and startup import check.
 - No frontend validation was run; story explicitly forbids frontend changes and no frontend files were touched.
 
+## Implementation review/fix iteration
+
+- Review finding: positive legacy fixtures remained in admin contract, gateway schema, release lifecycle, admin prompt publication, GPT parameter and validation payload tests.
+- Fix applied: rebased those positive fixtures to `natal_psy_profile`, `guidance_contextual`, or custom non-legacy schema cases, and kept
+  `natal_interpretation_short` only as an explicit 404 rejection guard in `test_contract_api.py`.
+- Fresh review result: CLEAN after targeted tests, story suites, scans, startup check and evidence checks.
+
 ## DRY / No Legacy evidence
 
 - No shim, alias, wrapper, fallback, or duplicate active path was added.
@@ -110,11 +117,12 @@
 
 - Story changes remain unstaged.
 - Pre-existing dirty file still present and untouched: `_condamad/run-state.json`.
-- New evidence/generated files are untracked until the user stages them.
+- Review/fix changes remain unstaged.
 
 ## Remaining risks
 
-- Residual `natal_interpretation` strings remain in readonly historical context and action-token names; they are allowlisted and should be review-focused.
+- Residual old-key strings remain in readonly historical context, rejection/extinction guards, CS-443 public-history tests and action-token names.
+- No residual old-key hit reviewed in this iteration is an executable seed, admin positive sample, runtime catalogue fallback, or Basic/Free taxonomy mapping.
 
 ## Suggested reviewer focus
 

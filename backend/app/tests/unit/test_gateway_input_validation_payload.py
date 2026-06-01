@@ -19,7 +19,7 @@ def test_build_validation_payload_does_not_rebuild_chart_json_from_natal_data() 
 
     payload = gateway._build_validation_payload(
         config,
-        {"use_case": "natal_interpretation_short", "locale": "fr-FR"},
+        {"use_case": "natal_psy_profile", "locale": "fr-FR"},
         ExecutionContext(
             natal_data={"meta": {"chart_json_version": "1"}},
             chart_json='{"meta": {"chart_json_version": "legacy"}}',
@@ -43,7 +43,7 @@ def test_build_validation_payload_does_not_parse_chart_json_string_from_context(
 
     payload = gateway._build_validation_payload(
         config,
-        {"use_case": "natal_interpretation_short"},
+        {"use_case": "natal_psy_profile"},
         ExecutionContext(chart_json='{"meta": {"chart_json_version": "1"}}'),
     )
 

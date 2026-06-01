@@ -1,5 +1,5 @@
 # Story CS-442 sources-reintroduction-prompts-nataux-legacy: Corriger Suppression Sources De Reintroduction Prompts Nataux Legacy
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 
