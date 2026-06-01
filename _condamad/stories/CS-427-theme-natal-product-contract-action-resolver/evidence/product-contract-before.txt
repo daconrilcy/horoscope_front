@@ -1,0 +1,3 @@
+# product contract before
+command: rg -n ThemeNatalReadingProductContract|ThemeNatalReadingAction|ThemeNatalOutputVariant|free_preview|basic_full_reading|premium_full_reading backend\app backend\tests
+exit_code: 1

@@ -1,0 +1,251 @@
+# technical input scan after
+broad command: rg -n use_case_level|variant_code|forceRefresh backend\app\services backend\app\domain backend\tests
+broad_exit_code: 0
+new-root command: rg -n use_case_level|variant_code|forceRefresh backend\app\domain\theme_natal backend\tests\unit\domain\theme_natal
+new_root_exit_code: 1
+new_root_result: PASS when exit_code=1 means no matches
+current legacy surface command: rg -n use_case_level|variant_code|forceRefresh|force_refresh backend\app\api\v1\routers\public\natal_interpretation.py frontend\src\api\natal-chart\index.ts
+current_legacy_surface_exit_code: 0
+backend\app\api\v1\routers\public\natal_interpretation.py:95:    variant_code: str | None = None
+backend\app\api\v1\routers\public\natal_interpretation.py:106:    if body.use_case_level == "complete":
+backend\app\api\v1\routers\public\natal_interpretation.py:113:            variant_code = entitlement_result.variant_code
+backend\app\api\v1\routers\public\natal_interpretation.py:168:            level=body.use_case_level,
+backend\app\api\v1\routers\public\natal_interpretation.py:174:            force_refresh=body.force_refresh
+backend\app\api\v1\routers\public\natal_interpretation.py:177:            variant_code=variant_code,
+frontend\src\api\natal-chart\index.ts:212:  variant_code?: string | null
+frontend\src\api\natal-chart\index.ts:553:  forceRefresh?: boolean,
+frontend\src\api\natal-chart\index.ts:563:      use_case_level: useCaseLevel,
+frontend\src\api\natal-chart\index.ts:567:      force_refresh: forceRefresh || false,
+frontend\src\api\natal-chart\index.ts:803:  forceRefresh?: boolean
+frontend\src\api\natal-chart\index.ts:825:      options.forceRefresh || false,
+frontend\src\api\natal-chart\index.ts:839:        options.forceRefresh,
+broad_existing_hits:
+backend\tests\factories\astrology_runtime_reference_factory.py:275:                        "variant_code": "true",
+backend\tests\factories\astrology_runtime_reference_factory.py:292:                        "variant_code": "true",
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:62:    "use_case_level",
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:63:    "variant_code",
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:64:    "forceRefresh",
+backend\app\services\entitlement\public_entitlements.py:61:        variant_code=access.variant_code,
+backend\app\services\entitlement\public_entitlements.py:75:        variant_code=None,
+backend\app\services\chart\json_builder.py:249:            "variant_code": point.variant_code,
+backend\app\services\entitlement\natal_chart_long_entitlement_gate.py:45:    variant_code: str | None  # "single_astrologer" | "multi_astrologer" | None
+backend\app\services\entitlement\natal_chart_long_entitlement_gate.py:67:            variant_code=access_snapshot.variant_code,
+backend\app\services\entitlement\natal_chart_long_entitlement_gate.py:99:            variant_code = access.variant_code if access else None
+backend\app\services\entitlement\natal_chart_long_entitlement_gate.py:103:                variant_code=variant_code,
+backend\app\services\entitlement\natal_chart_long_entitlement_gate.py:110:                variant_code=variant_code,
+backend\app\services\entitlement\natal_chart_long_entitlement_gate.py:163:            variant_code=access_result.variant_code,
+backend\app\services\entitlement\horoscope_daily_entitlement_gate.py:34:    variant_code: str
+backend\app\services\entitlement\horoscope_daily_entitlement_gate.py:85:        # Le variant_code est résolu depuis le catalog DB via le EffectiveEntitlementResolverService
+backend\app\services\entitlement\horoscope_daily_entitlement_gate.py:87:        variant = access.variant_code or "full"
+backend\app\services\entitlement\horoscope_daily_entitlement_gate.py:88:        return HoroscopeDailyEntitlementResult(variant_code=variant)
+backend\app\services\entitlement\entitlement_types.py:42:    variant_code: str | None
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:98:                    variant_code=None,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:167:                    variant_code=None,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:241:                    variant_code=None,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:257:                    variant_code=binding.variant_code,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:275:                    variant_code=binding.variant_code,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:290:                    variant_code=binding.variant_code,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:312:                    variant_code=binding.variant_code,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:362:                variant_code=binding.variant_code,
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:457:                access.variant_code
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:503:    def _is_restricted_variant(variant_code: str | None) -> bool:
+backend\app\services\entitlement\effective_entitlement_resolver_service.py:505:        return variant_code in ("summary_only", "free_short")
+backend\app\services\entitlement\b2c_runtime_gate.py:32:    variant_code: str | None
+backend\app\services\entitlement\b2c_runtime_gate.py:85:        variant_code=access.variant_code,
+backend\tests\unit\test_natal_interpretation_stored_payload.py:121:    model.variant_code = "free_short"
+backend\tests\unit\prediction\test_astrologer_prompt_builder.py:35:        variant_code="summary_only",
+backend\tests\unit\test_natal_interpretation_service_v3_schema_guard.py:100:        variant_code="single_astrologer",
+backend\tests\unit\test_natal_interpretation_service_v3_schema_guard.py:120:        variant_code="single_astrologer",
+backend\tests\unit\test_natal_interpretation_service_v3_schema_guard.py:137:        variant_code="single_astrologer",
+backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py:29:        variant_code="single_astrologer",
+backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py:57:        variant_code="single_astrologer",
+backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py:78:        variant_code="single_astrologer",
+backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py:98:        variant_code="single_astrologer",
+backend\tests\unit\test_natal_chart_long_quota_on_acceptance.py:140:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:84:        variant_code=None,
+backend\tests\unit\test_narrative_natal_reading_v1.py:113:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:167:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:200:            variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:233:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:256:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:288:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:312:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:323:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:342:        variant_code="single_astrologer",
+backend\tests\unit\test_narrative_natal_reading_v1.py:373:        variant_code=None,
+backend\tests\unit\test_narrative_natal_reading_v1.py:407:        variant_code=None,
+backend\app\domain\astrology\builders\chart_object_runtime_builder.py:50:    variant_code: str | None
+backend\app\domain\astrology\builders\chart_object_runtime_builder.py:468:    if point.variant_code is not None:
+backend\app\domain\astrology\builders\chart_object_runtime_builder.py:469:        classifications.append(f"variant:{point.variant_code}")
+backend\app\domain\astrology\natal_calculation.py:90:    variant_code: str | None = None
+backend\app\domain\astrology\natal_calculation.py:466:            key = (instruction.point_code, instruction.variant_code)
+backend\app\domain\astrology\natal_calculation.py:470:                    str(instruction.derived_from_variant_code),
+backend\app\domain\astrology\natal_calculation.py:478:                    f"{instruction.derived_from_point_code}/{instruction.derived_from_variant_code}"
+backend\app\domain\astrology\natal_calculation.py:499:                "variant_code": instruction.variant_code,
+backend\app\domain\prediction\public_projection.py:82:        variant_code: str | None = None,
+backend\app\domain\prediction\public_projection.py:206:                variant_code=variant_code,
+backend\app\domain\prediction\public_projection.py:273:        variant_code: str | None = None,
+backend\app\domain\prediction\public_projection.py:275:        if not self._has_valid_persisted_daily_synthesis(payload, variant_code):
+backend\app\domain\prediction\public_projection.py:319:        self, payload: dict[str, Any], variant_code: str | None
+backend\app\domain\prediction\public_projection.py:324:        if variant_code != "summary_only":
+backend\app\domain\astrology\astral_point_calculation_resolver.py:22:    variant_code: str
+backend\app\domain\astrology\astral_point_calculation_resolver.py:26:    derived_from_variant_code: str | None = None
+backend\app\domain\astrology\astral_point_calculation_resolver.py:41:        variant_code: str | None = None,
+backend\app\domain\astrology\astral_point_calculation_resolver.py:44:        variant = self._select_variant(point, variant_code)
+backend\app\domain\astrology\astral_point_calculation_resolver.py:51:                variant_code=variant.variant_code,
+backend\app\domain\astrology\astral_point_calculation_resolver.py:55:                derived_from_variant_code=self._base_variant_code(variant.variant_code, base_mode),
+backend\app\domain\astrology\astral_point_calculation_resolver.py:60:                f"astral point variant has no engine key: {point.code}/{variant.variant_code}"
+backend\app\domain\astrology\astral_point_calculation_resolver.py:64:            variant_code=variant.variant_code,
+backend\app\domain\astrology\astral_point_calculation_resolver.py:72:        variant_code: str | None,
+backend\app\domain\astrology\astral_point_calculation_resolver.py:75:        requested = variant_code or point.default_variant_code
+backend\app\domain\astrology\astral_point_calculation_resolver.py:79:            if variant.variant_code == requested:
+backend\app\domain\astrology\astral_point_calculation_resolver.py:103:    def _base_variant_code(self, variant_code: str, base_mode: str) -> str:
+backend\app\domain\astrology\astral_point_calculation_resolver.py:109:        return variant_code
+backend\app\domain\prediction\astrologer_prompt_builder.py:34:        variant_code: str | None = None,
+backend\app\domain\prediction\astrologer_prompt_builder.py:67:- Variante de narration : {variant_code or "standard"}
+backend\app\services\canonical_entitlement\audit\mutation_service.py:89:        variant_code: str | None = None,
+backend\app\services\canonical_entitlement\audit\mutation_service.py:142:                variant_code=variant_code,
+backend\app\services\canonical_entitlement\audit\mutation_service.py:149:            binding.variant_code = variant_code
+backend\app\services\canonical_entitlement\audit\mutation_service.py:213:            "variant_code": binding.variant_code,
+backend\app\services\canonical_entitlement\audit\diff_service.py:31:    _BINDING_FIELDS = ["is_enabled", "access_mode", "variant_code", "source_origin"]
+backend\app\services\canonical_entitlement\audit\diff_service.py:72:        for f in ["is_enabled", "access_mode", "variant_code", "source_origin"]:
+backend\app\services\canonical_entitlement\audit\diff_service.py:143:        if quota_changes.added or "binding.variant_code" in changed_fields:
+backend\app\domain\astrology\runtime\runtime_reference.py:744:    variant_code: str | None = None
+backend\app\domain\astrology\runtime\runtime_reference.py:753:    variant_code: str
+backend\app\domain\astrology\runtime\runtime_reference.py:769:    default_variant_code: str | None
+backend\tests\llm_orchestration\test_narrator_migration.py:43:    """Test AC2: variant_code='summary_only' -> horoscope_daily/free."""
+backend\tests\llm_orchestration\test_narrator_migration.py:66:            variant_code="summary_only",
+backend\tests\llm_orchestration\test_narrator_migration.py:84:    """Test AC3: variant_code='full' -> horoscope_daily/premium."""
+backend\tests\llm_orchestration\test_narrator_migration.py:106:            variant_code="full",
+backend\tests\llm_orchestration\test_narrator_migration.py:124:    """Test AC4: variant_code=None -> horoscope_daily/free (Story 66.28 closure)."""
+backend\tests\llm_orchestration\test_narrator_migration.py:146:            variant_code=None,
+backend\tests\llm_orchestration\test_narrator_migration.py:189:            variant_code="summary_only",
+backend\tests\llm_orchestration\test_narrator_migration.py:232:                variant_code="full",
+backend\tests\llm_orchestration\test_narrator_migration.py:255:                variant_code="full",
+backend\tests\llm_orchestration\test_narrator_migration.py:309:            variant_code="summary_only",
+backend\app\services\prediction\public_predictions.py:115:    variant_code: str | None,
+backend\app\services\prediction\public_predictions.py:126:        variant_code=variant_code,
+backend\app\domain\astrology\interpretation\astral_point_interpretation.py:33:    variant_code: str | None
+backend\app\domain\astrology\interpretation\astral_point_interpretation.py:47:    variant_code: str | None
+backend\app\domain\astrology\interpretation\astral_point_interpretation.py:61:            "variant_code": self.variant_code,
+backend\app\domain\astrology\interpretation\astral_point_interpretation.py:103:            interpretation_profile.variant_code is not None
+backend\app\domain\astrology\interpretation\astral_point_interpretation.py:104:            and point_position.variant_code != interpretation_profile.variant_code
+backend\app\domain\astrology\interpretation\astral_point_interpretation.py:108:                f"{point_position.variant_code}/{interpretation_profile.variant_code}"
+backend\app\domain\astrology\interpretation\astral_point_interpretation.py:112:            variant_code=point_position.variant_code,
+backend\tests\unit\domain\astrology\test_astral_point_interpretation_service.py:35:            variant_code=None,
+backend\tests\unit\domain\astrology\test_astral_point_interpretation_service.py:84:    assert interpreted.variant_code == source_position.variant_code
+backend\tests\unit\domain\astrology\test_astral_point_interpretation_service.py:99:        variant_code="mean",
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:27:    variant_code: str,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:38:        default_variant_code=variant_code,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:41:                variant_code=variant_code,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:42:                display_name=variant_code,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:57:    assert instruction.variant_code == "true"
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:68:    assert instruction.derived_from_variant_code == "true"
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:76:        variant_code="mean",
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:84:    assert instruction.derived_from_variant_code == "mean"
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:89:    ("point_code", "variant_code", "calculation_mode", "engine_key"),
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:101:    variant_code: str,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:109:            variant_code=variant_code,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:116:    assert instruction.variant_code == variant_code
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:123:    ("point_code", "variant_code", "calculation_mode", "source_code", "source_variant"),
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:133:    variant_code: str,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:142:            variant_code=variant_code,
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:148:    assert instruction.variant_code == variant_code
+backend\tests\unit\domain\astrology\test_astral_point_calculation_resolver.py:151:    assert instruction.derived_from_variant_code == source_variant
+backend\tests\integration\test_basic_natal_v2_pipeline.py:83:            variant_code="single_astrologer",
+backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py:22:        variant_code=None,
+backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py:47:        variant_code=None,
+backend\tests\integration\llm\test_natal_llm_astrology_input_audit.py:57:        variant_code=None,
+backend\tests\integration\test_basic_natal_v2_cache_invalidation.py:51:        variant_code="single_astrologer",
+backend\tests\integration\test_basic_natal_v2_cache_invalidation.py:168:            variant_code="single_astrologer",
+backend\tests\integration\test_basic_natal_v2_cache_invalidation.py:206:            variant_code="single_astrologer",
+backend\tests\unit\domain\astrology\test_natal_aspects_include_points.py:168:                "variant_code": "true",
+backend\tests\unit\domain\astrology\test_natal_result_contains_configured_points.py:33:    assert by_code["north_node"].variant_code == "true"
+backend\tests\unit\domain\astrology\test_natal_result_contains_configured_points.py:64:                    default_variant_code="mean",
+backend\tests\unit\domain\astrology\test_natal_result_contains_configured_points.py:67:                            variant_code="mean",
+backend\tests\unit\domain\astrology\test_natal_result_contains_configured_points.py:82:                    default_variant_code="mean",
+backend\tests\unit\domain\astrology\test_natal_result_contains_configured_points.py:85:                            variant_code="mean",
+backend\tests\unit\domain\astrology\test_chart_object_runtime_builder.py:65:            variant_code="true",
+backend\tests\unit\domain\astrology\test_chart_object_runtime_builder.py:75:            variant_code="true",
+backend\app\domain\llm\runtime\adapter.py:265:                    "variant_code": natal_input.variant_code,
+backend\app\domain\llm\runtime\adapter.py:294:        variant_code: str | None,
+backend\app\domain\llm\runtime\adapter.py:312:                variant_code=variant_code,
+backend\tests\unit\domain\astrology\test_chart_object_house_position_rulership_runtime.py:78:                variant_code="true",
+backend\tests\unit\domain\astrology\test_chart_object_dominance_runtime.py:51:                variant_code="true",
+backend\app\domain\llm\runtime\contracts.py:152:    variant_code: Optional[str] = None
+backend\tests\unit\domain\astrology\test_chart_object_dignity_runtime.py:56:                variant_code="true",
+backend\app\services\ops\monitoring_service.py:577:        variant_codes = (
+backend\app\services\ops\monitoring_service.py:585:        for variant in sorted(variant_codes):
+backend\app\services\api_contracts\admin\entitlements.py:31:    variant_code: str | None
+backend\tests\integration\test_natal_interpretation_rejected_public_boundary.py:283:        variant_code=None,
+backend\tests\integration\test_natal_interpretation_rejected_public_boundary.py:310:        variant_code="single_astrologer",
+backend\tests\integration\test_natal_interpretation_rejected_public_boundary.py:321:        variant_code="single_astrologer",
+backend\tests\integration\test_natal_interpretation_rejected_public_boundary.py:326:        variant_code="single_astrologer",
+backend\tests\integration\test_natal_interpretation_rejected_public_boundary.py:355:        variant_code="single_astrologer",
+backend\tests\integration\test_natal_interpretation_public_free_basic_contract.py:53:        variant_code="free_short",
+backend\tests\integration\test_natal_interpretation_public_free_basic_contract.py:75:        variant_code="single_astrologer",
+backend\tests\integration\test_natal_interpretation_public_free_basic_contract.py:118:    row.variant_code = None
+backend\tests\integration\test_natal_basic_complete_v3_runtime.py:237:            variant_code="single_astrologer",
+backend\app\services\api_contracts\internal\llm\qa.py:50:    use_case_level: Literal["short", "complete"] = "complete"
+backend\app\services\api_contracts\public\entitlements.py:37:    variant_code: str | None = None
+backend\app\services\api_contracts\public\natal_interpretation.py:36:    use_case_level: Literal["short", "complete"] = Field(
+backend\app\services\api_contracts\public\natal_interpretation.py:111:    variant_code: Optional[str] = None  # "single_astrologer" | "multi_astrologer"
+backend\app\services\llm_generation\horoscope_daily\narration_service.py:70:    variant_code: str | None,
+backend\app\services\llm_generation\horoscope_daily\narration_service.py:91:    if variant_code == "summary_only":
+backend\app\services\llm_generation\horoscope_daily\narration_service.py:93:    elif variant_code == "full":
+backend\app\services\llm_generation\horoscope_daily\narration_service.py:95:    elif variant_code is None:
+backend\app\services\llm_generation\horoscope_daily\narration_service.py:102:        raise ValueError(f"Invalid variant_code for daily narration: {variant_code}")
+backend\app\services\llm_generation\horoscope_daily\narration_service.py:120:        variant_code=variant_code,
+backend\app\services\llm_generation\horoscope_daily\narration_service.py:146:                    "variant_code": variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:487:def _answer_type_for_audit(level: str, variant_code: str | None) -> str:
+backend\app\services\llm_generation\natal\interpretation_service.py:489:    if variant_code == "free_short":
+backend\app\services\llm_generation\natal\interpretation_service.py:500:    variant_code: str | None,
+backend\app\services\llm_generation\natal\interpretation_service.py:513:    model.answer_type = _answer_type_for_audit(level, variant_code)
+backend\app\services\llm_generation\natal\interpretation_service.py:534:    variant_code: str | None,
+backend\app\services\llm_generation\natal\interpretation_service.py:546:            answer_type=_answer_type_for_audit(level, variant_code),
+backend\app\services\llm_generation\natal\interpretation_service.py:579:        model.variant_code == "free_short"
+backend\app\services\llm_generation\natal\interpretation_service.py:594:    variant_code: str | None,
+backend\app\services\llm_generation\natal\interpretation_service.py:608:            variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:680:    variant_code: str | None,
+backend\app\services\llm_generation\natal\interpretation_service.py:692:        answer_type=_answer_type_for_audit(level, variant_code),
+backend\app\services\llm_generation\natal\interpretation_service.py:773:    variant_code: str | None,
+backend\app\services\llm_generation\natal\interpretation_service.py:800:                answer_type=_answer_type_for_audit(level, variant_code),
+backend\app\services\llm_generation\natal\interpretation_service.py:985:                # premium implicite ni persister un variant_code vide.
+backend\app\services\llm_generation\natal\interpretation_service.py:993:                variant_code="free_short",
+backend\app\services\llm_generation\natal\interpretation_service.py:1037:        if model.variant_code == "free_short" or model.use_case == "natal_long_free":
+backend\app\services\llm_generation\natal\interpretation_service.py:1062:        if model.variant_code == "free_short" or model.persona_id is not None:
+backend\app\services\llm_generation\natal\interpretation_service.py:1073:        variant_code: str | None,
+backend\app\services\llm_generation\natal\interpretation_service.py:1081:                UserNatalInterpretationModel.variant_code == variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1250:        variant_code: Optional[str] = None,
+backend\app\services\llm_generation\natal\interpretation_service.py:1278:            # story 64.3: variant_code must match for cached complete interpretations
+backend\app\services\llm_generation\natal\interpretation_service.py:1280:                stmt = stmt.where(UserNatalInterpretationModel.variant_code == variant_code)
+backend\app\services\llm_generation\natal\interpretation_service.py:1398:        if level == "complete" and variant_code == "free_short":
+backend\app\services\llm_generation\natal\interpretation_service.py:1439:        if level == "complete" and user_plan == "basic" and variant_code != "free_short":
+backend\app\services\llm_generation\natal\interpretation_service.py:1474:            variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1503:        if level == "complete" and variant_code != "free_short":
+backend\app\services\llm_generation\natal\interpretation_service.py:1517:        if level == "complete" and user_plan == "basic" and variant_code != "free_short":
+backend\app\services\llm_generation\natal\interpretation_service.py:1554:            if variant_code != "free_short":
+backend\app\services\llm_generation\natal\interpretation_service.py:1560:                        variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1623:            and variant_code != "free_short"
+backend\app\services\llm_generation\natal\interpretation_service.py:1632:                    variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1634:                    answer_type=_answer_type_for_audit(level, variant_code),
+backend\app\services\llm_generation\natal\interpretation_service.py:1643:                variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1665:                    variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1733:                        variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1744:                        variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1755:                    primary.variant_code = variant_code
+backend\app\services\llm_generation\natal\interpretation_service.py:1765:                        variant_code=variant_code,
+backend\app\services\llm_generation\natal\interpretation_service.py:1849:            variant_code="free_short",
+backend\app\services\llm_generation\natal\interpretation_service.py:1910:            variant_code="free_short",
+backend\app\services\llm_generation\natal\interpretation_service.py:1931:                    variant_code="free_short",
+backend\app\services\llm_generation\natal\interpretation_service.py:1970:            UserNatalInterpretationModel.variant_code == "free_short",
+backend\app\services\llm_generation\natal\interpretation_service.py:1992:                variant_code="free_short",
+backend\app\services\llm_generation\natal\interpretation_service.py:2003:                variant_code="free_short",
+backend\app\services\llm_generation\natal\interpretation_service.py:2020:                variant_code="free_short",
+backend\app\services\llm_generation\natal\public_interpretation.py:45:            variant_code=result.variant_code,
+backend\app\services\llm_generation\natal\public_interpretation.py:47:    return NatalChartLongEntitlementInfo(variant_code=result.variant_code)
+backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py:77:def _editorial_profile(level: str, variant_code: str | None) -> Literal["free", "basic", "premium"]:
+backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py:78:    if level == "short" or variant_code == "free_short":
+backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py:80:    if variant_code == "single_astrologer":
+backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py:135:    variant_code: str | None,
+backend\app\services\llm_generation\natal\narrative_natal_reading_builder.py:138:    profile = _editorial_profile(level, variant_code)

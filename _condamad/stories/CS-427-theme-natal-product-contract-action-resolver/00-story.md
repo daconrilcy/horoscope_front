@@ -1,5 +1,5 @@
 # Story CS-427 theme-natal-product-contract-action-resolver: Theme Natal Product Contract And Action Resolver
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -120,13 +120,13 @@ The resolver owns product authorization before generation contract selection.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Add pure domain contract types for product, action, kind, output variant, and persona mode. (AC: AC1, AC2, AC3, AC4, AC5)
-- [ ] Task 2: Implement the pure product action resolver with the closed decision vocabulary. (AC: AC6, AC7, AC8, AC9, AC10, AC11)
-- [ ] Task 3: Add matrix tests for free, basic, premium, preview, full, existing reading, persona, and entitlement cases. (AC: AC6, AC7, AC8, AC9, AC10, AC11)
-- [ ] Task 4: Add rejection tests for `use_case`, `use_case_level`, `variant_code`, `plan`, and `forceRefresh`. (AC: AC13)
-- [ ] Task 5: Add an AST architecture guard for resolver purity. (AC: AC12)
-- [ ] Task 6: Persist before and after scan artifacts under the story evidence directory. (AC: AC14)
-- [ ] Task 7: Keep public endpoint cutover and persistence changes out of the implementation diff. (AC: AC12, AC13)
+- [x] Task 1: Add pure domain contract types for product, action, kind, output variant, and persona mode. (AC: AC1, AC2, AC3, AC4, AC5)
+- [x] Task 2: Implement the pure product action resolver with the closed decision vocabulary. (AC: AC6, AC7, AC8, AC9, AC10, AC11)
+- [x] Task 3: Add matrix tests for free, basic, premium, preview, full, existing reading, persona, and entitlement cases. (AC: AC6, AC7, AC8, AC9, AC10, AC11)
+- [x] Task 4: Add rejection tests for `use_case`, `use_case_level`, `variant_code`, `plan`, and `forceRefresh`. (AC: AC13)
+- [x] Task 5: Add an AST architecture guard for resolver purity. (AC: AC12)
+- [x] Task 6: Persist before and after scan artifacts under the story evidence directory. (AC: AC14)
+- [x] Task 7: Keep public endpoint cutover and persistence changes out of the implementation diff. (AC: AC12, AC13)
 
 ## Files to Inspect First
 

@@ -1,0 +1,4 @@
+# legacy generation scan after
+command: rg -n natal_interpretation_short|natal_long_free|natal_interpretation backend\app\domain\theme_natal backend\tests\unit\domain\theme_natal
+exit_code: 1
+result: PASS when exit_code=1 means no matches

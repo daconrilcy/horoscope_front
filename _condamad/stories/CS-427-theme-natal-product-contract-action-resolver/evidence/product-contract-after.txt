@@ -1,0 +1,82 @@
+# product contract after
+command: rg -n ThemeNatalReadingProductContract|ThemeNatalReadingAction|ThemeNatalOutputVariant|free_preview|basic_full_reading|premium_full_reading backend\app backend\tests
+exit_code: 0
+backend\app\domain\theme_natal\__init__.py:8:    ThemeNatalOutputVariant,
+backend\app\domain\theme_natal\__init__.py:10:    ThemeNatalReadingAction,
+backend\app\domain\theme_natal\__init__.py:11:    ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\__init__.py:14:    ThemeNatalReadingProductContract,
+backend\app\domain\theme_natal\__init__.py:22:    "ThemeNatalOutputVariant",
+backend\app\domain\theme_natal\__init__.py:24:    "ThemeNatalReadingAction",
+backend\app\domain\theme_natal\__init__.py:25:    "ThemeNatalReadingActionRequest",
+backend\app\domain\theme_natal\__init__.py:28:    "ThemeNatalReadingProductContract",
+backend\app\domain\theme_natal\product_contract.py:12:THEME_NATAL_READING_CONTRACT_KEYS: dict["ThemeNatalOutputVariant", str] = {
+backend\app\domain\theme_natal\product_contract.py:15:    "free_preview": "theme_natal.reading.free_preview.v1",
+backend\app\domain\theme_natal\product_contract.py:16:    "basic_full_reading": "theme_natal.reading.basic_full_reading.v1",
+backend\app\domain\theme_natal\product_contract.py:17:    "premium_full_reading": "theme_natal.reading.premium_full_reading.v1",
+backend\app\domain\theme_natal\product_contract.py:27:class ThemeNatalReadingAction(StrEnum):
+backend\app\domain\theme_natal\product_contract.py:42:class ThemeNatalOutputVariant(StrEnum):
+backend\app\domain\theme_natal\product_contract.py:45:    FREE_PREVIEW = "free_preview"
+backend\app\domain\theme_natal\product_contract.py:46:    BASIC_FULL_READING = "basic_full_reading"
+backend\app\domain\theme_natal\product_contract.py:47:    PREMIUM_FULL_READING = "premium_full_reading"
+backend\app\domain\theme_natal\product_contract.py:84:class ThemeNatalReadingActionRequest(_StrictProductModel):
+backend\app\domain\theme_natal\product_contract.py:89:    action: ThemeNatalReadingAction
+backend\app\domain\theme_natal\product_contract.py:96:class ThemeNatalReadingProductContract(_StrictProductModel):
+backend\app\domain\theme_natal\product_contract.py:101:    action: ThemeNatalReadingAction
+backend\app\domain\theme_natal\product_contract.py:102:    output_variant: ThemeNatalOutputVariant
+backend\app\domain\theme_natal\product_contract.py:113:    contract: ThemeNatalReadingProductContract | None = None
+backend\app\domain\theme_natal\product_action_resolver.py:9:    ThemeNatalOutputVariant,
+backend\app\domain\theme_natal\product_action_resolver.py:10:    ThemeNatalReadingAction,
+backend\app\domain\theme_natal\product_action_resolver.py:11:    ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:13:    ThemeNatalReadingProductContract,
+backend\app\domain\theme_natal\product_action_resolver.py:17:_FULL_READING_VARIANTS: dict[ThemeNatalEntitlementTier, ThemeNatalOutputVariant] = {
+backend\app\domain\theme_natal\product_action_resolver.py:18:    ThemeNatalEntitlementTier.BASIC: ThemeNatalOutputVariant.BASIC_FULL_READING,
+backend\app\domain\theme_natal\product_action_resolver.py:19:    ThemeNatalEntitlementTier.PREMIUM: ThemeNatalOutputVariant.PREMIUM_FULL_READING,
+backend\app\domain\theme_natal\product_action_resolver.py:24:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:27:    if request.existing_reading_id and request.action is not ThemeNatalReadingAction.REGENERATE:
+backend\app\domain\theme_natal\product_action_resolver.py:38:    if request.action is ThemeNatalReadingAction.PREVIEW:
+backend\app\domain\theme_natal\product_action_resolver.py:43:                output_variant=ThemeNatalOutputVariant.FREE_PREVIEW,
+backend\app\domain\theme_natal\product_action_resolver.py:48:    if request.action is ThemeNatalReadingAction.DOWNLOAD:
+backend\app\domain\theme_natal\product_action_resolver.py:55:        ThemeNatalReadingAction.GENERATE_FULL,
+backend\app\domain\theme_natal\product_action_resolver.py:56:        ThemeNatalReadingAction.REGENERATE,
+backend\app\domain\theme_natal\product_action_resolver.py:67:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:88:        contract=ThemeNatalReadingProductContract(
+backend\app\domain\theme_natal\product_action_resolver.py:102:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:103:    output_variant: ThemeNatalOutputVariant,
+backend\app\domain\theme_natal\product_action_resolver.py:104:) -> ThemeNatalReadingProductContract:
+backend\app\domain\theme_natal\product_action_resolver.py:106:    return ThemeNatalReadingProductContract(
+backend\app\domain\theme_natal\product_action_resolver.py:116:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:117:) -> ThemeNatalOutputVariant:
+backend\app\domain\theme_natal\product_action_resolver.py:119:    if request.action is ThemeNatalReadingAction.PREVIEW:
+backend\app\domain\theme_natal\product_action_resolver.py:120:        return ThemeNatalOutputVariant.FREE_PREVIEW
+backend\app\domain\theme_natal\product_action_resolver.py:123:        ThemeNatalOutputVariant.FREE_PREVIEW,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:12:    ThemeNatalOutputVariant,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:14:    ThemeNatalReadingAction,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:15:    ThemeNatalReadingActionRequest,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:26:    action: ThemeNatalReadingAction,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:30:) -> ThemeNatalReadingActionRequest:
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:32:    return ThemeNatalReadingActionRequest(
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:49:    assert {action.value for action in ThemeNatalReadingAction} == {
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:56:    assert {variant.value for variant in ThemeNatalOutputVariant} == {
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:57:        "free_preview",
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:58:        "basic_full_reading",
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:59:        "premium_full_reading",
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:66:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:86:def test_free_preview_resolves_free_preview_without_generation_key() -> None:
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:89:        _request(tier=ThemeNatalEntitlementTier.FREE, action=ThemeNatalReadingAction.PREVIEW)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:94:    assert decision.contract.output_variant is ThemeNatalOutputVariant.FREE_PREVIEW
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:101:        _request(tier=ThemeNatalEntitlementTier.FREE, action=ThemeNatalReadingAction.GENERATE_FULL)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:112:        _request(tier=ThemeNatalEntitlementTier.BASIC, action=ThemeNatalReadingAction.PREVIEW)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:117:    assert decision.contract.output_variant is ThemeNatalOutputVariant.FREE_PREVIEW
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:124:        (ThemeNatalEntitlementTier.BASIC, ThemeNatalOutputVariant.BASIC_FULL_READING),
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:125:        (ThemeNatalEntitlementTier.PREMIUM, ThemeNatalOutputVariant.PREMIUM_FULL_READING),
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:130:    expected_variant: ThemeNatalOutputVariant,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:134:        _request(tier=tier, action=ThemeNatalReadingAction.GENERATE_FULL)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:148:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:154:    assert decision.contract.output_variant is ThemeNatalOutputVariant.BASIC_FULL_READING
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:163:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:171:    assert decision.contract.output_variant is ThemeNatalOutputVariant.PREMIUM_FULL_READING
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:180:            action=ThemeNatalReadingAction.REGENERATE,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:187:    assert decision.contract.output_variant is ThemeNatalOutputVariant.BASIC_FULL_READING
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:193:        _request(tier=ThemeNatalEntitlementTier.PREMIUM, action=ThemeNatalReadingAction.DOWNLOAD)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:225:        action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:230:        ThemeNatalReadingActionRequest(**payload)

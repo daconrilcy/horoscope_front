@@ -1,12 +1,18 @@
 # CS-427 Editorial Story Review
 
+Implementation handoff note (2026-06-01): this file is a pre-implementation story-contract
+review and is obsolete as final implementation review evidence. Use
+`generated/10-final-evidence.md`, `generated/03-acceptance-traceability.md`, and the code
+diff for implementation review.
+
 Verdict: CLEAN
 
 ## Scope
 
 - Reviewed story: `_condamad/stories/CS-427-theme-natal-product-contract-action-resolver/00-story.md`.
 - Source brief: `_story_briefs/cs-427-theme-natal-product-contract-action-resolver.md`.
-- Tracker row: `_condamad/stories/story-status.md` entry `CS-427`, status `ready-to-dev`, date `2026-06-01`.
+- Tracker row at pre-implementation review time: `_condamad/stories/story-status.md` entry
+  `CS-427`, initial development status, date `2026-06-01`.
 - Review mode: compact pre-implementation story-contract review.
 
 ## Review Result
