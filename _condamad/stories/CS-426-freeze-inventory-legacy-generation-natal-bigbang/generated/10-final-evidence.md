@@ -9,7 +9,7 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 - Source story: `_condamad/stories/CS-426-freeze-inventory-legacy-generation-natal-bigbang/00-story.md`
 - Source brief: `_story_briefs/cs-426-freeze-inventory-legacy-generation-natal-bigbang.md`
 - Capsule path: `_condamad/stories/CS-426-freeze-inventory-legacy-generation-natal-bigbang`
-- Validation outcome: PASS with documented skipped broad suites and clean implementation review
+- Validation outcome: PASS after brief/code alignment correction and clean implementation review
 
 ## Preflight
 
@@ -36,9 +36,9 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
-| AC1 | `evidence/legacy-generation-map.md` maps backend route/service/gateway/seed/script surfaces. | VC1; architecture guard. | PASS | No backend route edit. |
+| AC1 | `evidence/legacy-generation-map.md` maps backend route/profile/internal QA/service/runtime/seed/script surfaces. | VC1; architecture guard. | PASS | No backend route edit. |
 | AC2 | `evidence/legacy-generation-map.md` maps frontend trigger and API client surfaces. | VC2; architecture guard. | PASS | No frontend runtime edit. |
-| AC3 | `evidence/legacy-surface-classification.md` classifies prompt/seed/use-case/schema/test/script surfaces. | VC1, VC3; architecture guard. | PASS | No seed execution. |
+| AC3 | `evidence/legacy-surface-classification.md` classifies prompt/seed/use-case/schema/test/script/runtime adapter surfaces. | VC1, VC3; architecture guard. | PASS | No seed execution. |
 | AC4 | `evidence/legacy-surface-classification.md` classifies cache/persistence surfaces. | VC4; runtime delta check. | PASS | No model/service edit. |
 | AC5 | Readonly rows are marked non-generative. | `test_readonly_rows_are_explicitly_non_generative`. | PASS | Guard enforces wording. |
 | AC6 | Needs-decision rows include owner and expected decision. | `test_classification_artifact_has_required_shape_and_decisions`. | PASS | Owners recorded. |
@@ -49,10 +49,10 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 
 ## Files changed
 
-- Story/evidence: `00-story.md`, `evidence/legacy-generation-map.md`, `evidence/legacy-surface-classification.md`, `evidence/initial-scans.txt`, `evidence/source-alignment.md`
+- Story/evidence: `evidence/legacy-generation-map.md`, `evidence/legacy-surface-classification.md`, `evidence/source-alignment.md`
 - Generated evidence: `generated/01-execution-brief.md`, `generated/03-acceptance-traceability.md`, `generated/04-target-files.md`, `generated/06-validation-plan.md`, `generated/07-no-legacy-dry-guardrails.md`, `generated/09-dev-log.md`, `generated/10-final-evidence.md`, `generated/11-code-review.md`
 - Guard: `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py`
-- Tracker: `_condamad/stories/story-status.md`
+- Tracker: unchanged; `_condamad/stories/story-status.md` already has `done` and `2026-06-01`
 
 ## Files deleted
 
@@ -69,6 +69,8 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 - `.\.venv\Scripts\Activate.ps1; cd backend; ruff format tests\architecture\test_legacy_natal_generation_inventory_guard.py`
 - `.\.venv\Scripts\Activate.ps1; cd backend; ruff check tests\architecture\test_legacy_natal_generation_inventory_guard.py`
 - `.\.venv\Scripts\Activate.ps1; cd backend; python -B -m pytest -q tests\architecture\test_legacy_natal_generation_inventory_guard.py --tb=short`
+- `.\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_validate.py ...\00-story.md`
+- `.\.venv\Scripts\Activate.ps1; python -B .\.agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict ...\00-story.md`
 - `.\.venv\Scripts\Activate.ps1; cd backend; ruff check .`
 - `git diff --check`
 - Required VC scans from the story; outputs persisted in `evidence/initial-scans.txt`.
@@ -85,20 +87,21 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 - No shim, alias, compatibility wrapper, fallback path, route, provider, schema, migration, or frontend behavior was introduced.
 - Inventory uses one evidence format: `legacy-generation-map.md` plus `legacy-surface-classification.md`.
 - `delete` appears only as a future classification; no physical deletion was performed.
+- Alignment correction added only missing inventory rows and guard coverage for surfaces already present in the codebase.
 
 ## Diff review
 
-- `git diff --check`: PASS, only line-ending warnings on pre-existing dirty files.
+- `git diff --check`: PASS, only line-ending warnings.
 - `git diff --name-only -- backend/app frontend/src backend/scripts backend/app/ops/llm/bootstrap backend/app/infra/db/models`: no output.
 
 ## Final worktree status
 
-- `git status --short` after implementation shows story/evidence/generated/tracker/test changes plus pre-existing `_condamad/run-state.json` and `_condamad/stories/regression-guardrails.md`.
+- `git status --short -- _condamad _story_briefs backend frontend` after this alignment pass shows CS-426 evidence/review/guard changes plus pre-existing `_condamad/run-state.json`.
 - Runtime roots remain unchanged: `backend/app`, `frontend/src`, `backend/scripts`, `backend/app/ops/llm/bootstrap`, `backend/app/infra/db/models`.
 
 ## Code review artifact status
 
-- `generated/11-code-review.md` is the final clean implementation review evidence after one review/fix iteration.
+- `generated/11-code-review.md` is the final clean implementation review evidence after two review/fix iterations.
 
 ## Remaining risks
 

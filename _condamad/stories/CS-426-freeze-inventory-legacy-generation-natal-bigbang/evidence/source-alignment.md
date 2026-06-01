@@ -12,8 +12,8 @@ Commentaire global: cette preuve relie le brief source aux artefacts d'inventair
 
 | Brief primitive | Implementation artifact | Status |
 |---|---|---|
-| Public, admin, and dev natal generation endpoints | `evidence/legacy-generation-map.md` maps route, service, gateway, seed, script, test, report, and frontend rows. | covered |
-| Services, gateways, seeds, prompts, schemas, tests, mocks, and frontend components | `evidence/legacy-generation-map.md` and `evidence/legacy-surface-classification.md` classify each covered surface. | covered |
+| Public, admin, and dev natal generation endpoints | `evidence/legacy-generation-map.md` maps public natal routes, profile routes, internal QA, services, runtime, scripts, tests, reports, and frontend rows. | covered |
+| Services, gateways, seeds, prompts, schemas, tests, mocks, and frontend components | `evidence/legacy-generation-map.md` and `evidence/legacy-surface-classification.md` classify each covered surface, including API contracts and runtime adapter. | covered |
 | Required vocabulary `delete`, `replace`, `readonly`, `keep`, `needs-decision` | `legacy-surface-classification.md` uses the same classification vocabulary and architecture guard checks it. | covered |
 | Legacy active generation versus readonly readback | Map rows distinguish `active-generation`, `readonly`, `bootstrap`, `test-only`, `admin-only`, and `historical`. | covered |
 | Named primitives and trigger fields | Map and scans cover `natal_interpretation_short`, `natal_long_free`, `natal_interpretation`, `use_case_level`, `variant_code`, `forceRefresh`, fallback, and persistence tokens. | covered |
@@ -33,3 +33,9 @@ script, migration, or frontend source files.
 - `delete` is only a future classification in this inventory story; no physical code deletion is performed here.
 - `needs-decision` entries are intentionally retained for follow-up ownership decisions, with owner and expected decision recorded.
 - `_condamad/run-state.json` is already dirty in the worktree and remains outside CS-426 ownership.
+
+## Alignment correction on 2026-06-01
+
+- Added missing real-code surfaces found by targeted generation scans:
+  `public/users.py`, `internal/llm/qa.py`, public/internal API contracts, `runtime/adapter.py`, and two dev debug scripts.
+- No functional code was changed; only CS-426 evidence and the architecture guard were updated.
