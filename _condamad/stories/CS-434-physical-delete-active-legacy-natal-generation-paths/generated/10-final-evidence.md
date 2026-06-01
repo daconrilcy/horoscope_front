@@ -32,8 +32,8 @@
 
 | AC | Implementation evidence | Validation evidence | Status | Notes |
 |---|---|---|---|---|
-| AC1 | Public routes closed; adapter rejects deleted short key. | routes/OpenAPI/architecture PASS. | PASS | No public short generation. |
-| AC2 | `natal_long_free` removed from catalog and rejected by adapter. | catalog check and orchestration PASS. | PASS | Historical reads allowlisted only. |
+| AC1 | Public routes closed; `interpret()` rejects non-cached short generation before gateway. | routes/OpenAPI/architecture PASS. | PASS | No public short generation. |
+| AC2 | `natal_long_free` removed from catalog and `_generate_free_short` deleted. | catalog check, service branch scan, and orchestration PASS. | PASS | Historical reads allowlisted only. |
 | AC3 | Basic blocked in legacy service and adapter; seed Basic legacy removed. | product-action and runtime convergence tests PASS. | PASS | Basic uses product-action runtime. |
 | AC4 | Basic prompt payload removed from legacy DTO/adapter/gateway. | negative scan and architecture PASS. | PASS | Modern theme-astral builder remains. |
 | AC5 | Public fallback keys removed. | catalog/registry checks PASS. | PASS | No fallback owner for deleted keys. |
@@ -48,7 +48,7 @@
 - Public API: `backend/app/api/v1/routers/public/users.py`, `backend/app/api/v1/routers/public/natal_interpretation.py`, `backend/app/services/api_contracts/public/natal_interpretation.py`.
 - Runtime/gateway/catalog: `backend/app/domain/llm/runtime/{adapter.py,contracts.py,gateway.py}`, `backend/app/domain/llm/prompting/catalog.py`, `backend/app/domain/llm/configuration/canonical_use_case_registry.py`.
 - Legacy service/bootstrap: `backend/app/services/llm_generation/natal/interpretation_service.py`, `backend/app/main.py`, `backend/app/ops/llm/bootstrap/{seed_29_prompts.py,seed_66_20_taxonomy.py}`.
-- Tests/guards: `backend/tests/architecture/test_llm_legacy_extinction.py`, `backend/tests/integration/test_theme_natal_public_api_product_actions.py`, `backend/tests/llm_orchestration/{test_context_quality.py,test_resolved_execution_plan.py,test_runtime_convergence.py}`, `backend/app/tests/unit/test_ai_engine_adapter.py`.
+- Tests/guards: `backend/tests/architecture/test_llm_legacy_extinction.py`, `backend/tests/integration/test_theme_natal_public_api_product_actions.py`, `backend/tests/llm_orchestration/{test_context_quality.py,test_resolved_execution_plan.py,test_runtime_convergence.py}`, `backend/app/tests/unit/test_ai_engine_adapter.py`, `backend/app/tests/unit/test_natal_interpretation_service_v2.py`.
 - Evidence: `_condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths/evidence/**`, generated traceability/final evidence.
 
 ## Files deleted
@@ -61,6 +61,7 @@
 - Updated: `backend/tests/integration/test_theme_natal_public_api_product_actions.py`.
 - Updated: `backend/tests/llm_orchestration/test_context_quality.py`, `test_resolved_execution_plan.py`, `test_runtime_convergence.py`.
 - Updated: `backend/app/tests/unit/test_ai_engine_adapter.py`.
+- Updated: `backend/app/tests/unit/test_natal_interpretation_service_v2.py`.
 
 ## Commands run
 
@@ -71,6 +72,8 @@ See `evidence/validation.txt` for exact commands and results.
 - `python -B -m pytest -q backend/tests/llm_orchestration backend/tests/integration -k "theme_natal or legacy or gateway" --tb=short`: PASS, 62 passed, 501 deselected.
 - Architecture and public API TestClient guards: PASS.
 - Runtime `app.routes`, `app.openapi()`, catalog checks: PASS.
+- Review fix validation: `python -B -m pytest -q backend/tests/architecture/test_llm_legacy_extinction.py backend/app/tests/unit/test_natal_interpretation_service_v2.py --tb=short`: PASS, 13 passed.
+- Review fix validation: zero-hit scan for `_generate_free_short`, `use_case_key = "natal_long_free"`, and short legacy use-case assignment in `interpretation_service.py`.
 
 ## Commands skipped or blocked
 

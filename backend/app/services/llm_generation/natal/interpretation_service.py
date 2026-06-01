@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 import uuid
 from datetime import datetime
 from typing import Literal, Optional
@@ -54,7 +53,6 @@ from app.domain.llm.prompting.narrative_natal_reading_v1 import (
 from app.domain.llm.prompting.schemas import (
     AstroErrorResponseV3,
     AstroFreeResponseV1,
-    AstroFreeSection,
     AstroResponseV1,
     AstroResponseV2,
     AstroResponseV3,
@@ -401,46 +399,6 @@ def _parse_prompt_version_uuid(prompt_version_id: str | None) -> uuid.UUID | Non
         return uuid.UUID(prompt_version_id)
     except (ValueError, TypeError, AttributeError):
         return None
-
-
-def _normalize_free_short_summary(summary: str) -> str:
-    normalized = summary.strip()
-    if not normalized:
-        return normalized
-
-    replacements = [
-        (r"\b[Cc]et individu\b", "vous"),
-        (r"\b[Cc]ette personne\b", "vous"),
-        (r"\b[Ll]e natif\b", "vous"),
-        (r"\b[Ll]a native\b", "vous"),
-        (r"\b[Ii]l\b", "vous"),
-        (r"\b[Ee]lle\b", "vous"),
-        (r"\b[Ss]on thème\b", "votre thème"),
-        (r"\b[Ss]a personnalité\b", "votre personnalité"),
-        (r"\b[Ss]a sensibilité\b", "votre sensibilité"),
-        (r"\b[Ss]es émotions\b", "vos émotions"),
-        (r"\b[Ss]es relations\b", "vos relations"),
-    ]
-    for pattern, replacement in replacements:
-        normalized = re.sub(pattern, replacement, normalized)
-
-    normalized = re.sub(r"\s+", " ", normalized).strip()
-    return normalized
-
-
-def _normalize_free_short_title(title: str, summary: str) -> str:
-    normalized = _normalize_free_short_summary(title)
-    normalized = normalized.strip(" .")
-    if not normalized:
-        fallback = _normalize_free_short_summary(summary).split(".")[0].strip()
-        normalized = fallback.strip(" .")
-    if not normalized:
-        return "Votre thème révèle un équilibre singulier entre sensibilité et élan personnel"
-    if normalized.lower() == "resume":
-        normalized = "Votre thème révèle un équilibre singulier entre sensibilité et élan personnel"
-    if not re.search(r"[.!?]$", normalized):
-        normalized = f"{normalized}."
-    return normalized
 
 
 def _answer_type_for_audit(level: str, variant_code: str | None) -> str:
@@ -1332,6 +1290,16 @@ class NatalInterpretationService:
                     existing, meta, locale
                 )
 
+        if level == "short" or (level == "complete" and variant_code == "free_short"):
+            raise NatalInterpretationServiceError(
+                code="legacy_natal_generation_disabled",
+                message=(
+                    "Legacy free natal generation is disabled; "
+                    "use the theme natal product-action runtime."
+                ),
+                details={"replacement": "/v1/theme-natal/readings", "variant_code": variant_code},
+            )
+
         # 1. Normalization (N1)
         degraded_mode_str = _detect_degraded_mode(birth_profile)
 
@@ -1349,22 +1317,10 @@ class NatalInterpretationService:
         astro_context = json.dumps(astral_point_context, ensure_ascii=False)
 
         # 3. Use case selection
-        if level == "complete" and variant_code == "free_short":
-            raise NatalInterpretationServiceError(
-                code="legacy_natal_generation_disabled",
-                message=(
-                    "Legacy free natal generation is disabled; "
-                    "use the theme natal product-action runtime."
-                ),
-                details={"replacement": "/v1/theme-natal/readings", "variant_code": "free_short"},
-            )
-
         if level == "complete" and module:
             use_case_key = MODULE_TO_USE_CASE_KEY.get(module, "natal_interpretation")
         else:
-            use_case_key = (
-                "natal_interpretation" if level == "complete" else "natal_interpretation_short"
-            )
+            use_case_key = "natal_interpretation"
 
         # 3.5 Resolve Plan (Story 66.20)
         from app.services.entitlement.effective_entitlement_resolver_service import (
@@ -1742,249 +1698,6 @@ class NatalInterpretationService:
                 degraded_mode=degraded_mode_str,
                 narrative_natal_reading_v1=narrative_reading,
                 basic_natal_interpretation_v2=basic_natal_interpretation_v2,
-            ),
-            disclaimers=disclaimers,
-        )
-
-    @staticmethod
-    async def _generate_free_short(
-        db: Session,
-        user_id: int,
-        chart_id: str,
-        natal_result: NatalResult,
-        birth_profile: UserBirthProfileData,
-        chart_json_dict: dict,
-        astro_context: str,
-        locale: str,
-        request_id: str,
-        trace_id: str,
-        degraded_mode_str: str | None,
-    ) -> NatalInterpretationResponse:
-        """
-        Génère une interprétation restreinte pour les utilisateurs free.
-        Appelle un prompt unique 'natal_long_free' qui produit title + summary + accordion_titles.
-        """
-        use_case_key = "natal_long_free"
-
-        # 3.5 Resolve Plan (Story 66.20)
-        from app.services.entitlement.effective_entitlement_resolver_service import (
-            EffectiveEntitlementResolverService,
-        )
-
-        entitlements = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(
-            db, app_user_id=user_id
-        )
-        user_plan = entitlements.plan_code
-        projection_plan = _client_projection_plan_from_entitlement(user_plan)
-        llm_astrology_input_v1 = _build_llm_astrology_input_v1(
-            natal_result=natal_result,
-            chart_id=chart_id,
-            locale=locale,
-            current_plan=projection_plan,
-            requested_plan="free",
-        )
-
-        natal_input = NatalExecutionInput(
-            use_case_key=use_case_key,
-            locale=locale,
-            level="complete",  # Free short is mapped to complete level in persistence
-            llm_astrology_input_v1=llm_astrology_input_v1,
-            persona_id=None,
-            plan=user_plan,
-            validation_strict=False,
-            question=None,
-            astro_context=astro_context,
-            module=None,
-            variant_code="free_short",
-            user_id=user_id,
-            request_id=request_id,
-            trace_id=trace_id,
-        )
-
-        gateway_result = await AIEngineAdapter.generate_natal_interpretation(
-            natal_input=natal_input, db=db
-        )
-
-        NatalInterpretationService._record_token_usage(
-            db,
-            user_id=user_id,
-            gateway_result=gateway_result,
-        )
-
-        if not gateway_result.structured_output:
-            logger.error(f"Gateway returned no structured output for {use_case_key}")
-            raise RuntimeError("Gateway returned no structured output")
-
-        disclaimers = get_disclaimers(locale)
-        structured = gateway_result.structured_output
-
-        # Story 64.3: map accordion_titles from LLM output to AstroFreeResponseV1.
-        # For the free plan, only headings are returned (no section content).
-        accordion_titles = structured.get("accordion_titles") or []
-        free_sections = [
-            AstroFreeSection(key=f"section_{i}", heading=title, content="")
-            for i, title in enumerate(accordion_titles)
-        ]
-
-        interpretation = AstroFreeResponseV1(
-            title=_normalize_free_short_title(
-                str(structured.get("title", "")),
-                str(structured.get("summary", "")),
-            ),
-            summary=_normalize_free_short_summary(structured.get("summary", "")),
-            sections=free_sections,
-            disclaimers=disclaimers,
-        )
-
-        meta = InterpretationMeta(
-            id=None,
-            level="short",
-            use_case=PUBLIC_FREE_SHORT_USE_CASE,
-            persona_id=None,
-            persona_name=None,
-            prompt_version_id=gateway_result.meta.prompt_version_id,
-            schema_version="v1",
-            validation_status=gateway_result.meta.validation_status,
-            was_fallback=gateway_result.meta.fallback_triggered,
-            latency_ms=gateway_result.meta.latency_ms,
-            request_id=request_id,
-            cached=False,
-        )
-
-        # Persistence
-        persist_payload = interpretation.model_dump()
-        rejection_source_payload = structured if isinstance(structured, dict) else persist_payload
-        rejected_outcome = _build_rejected_narrative_answer_outcome(
-            level="complete",
-            variant_code="free_short",
-            schema_version="v1",
-            request_id=request_id,
-            gateway_result=gateway_result,
-            persist_payload=rejection_source_payload,
-            llm_astrology_input_v1=llm_astrology_input_v1,
-        )
-        if rejected_outcome is not None:
-            emit_rejected_narrative_answer_log(
-                logger,
-                outcome=rejected_outcome,
-                request_id=request_id,
-                trace_id=trace_id,
-                use_case=gateway_result.use_case,
-            )
-            try:
-                _persist_rejected_narrative_answer_audit(
-                    db,
-                    user_id=user_id,
-                    chart_id=chart_id,
-                    level="complete",
-                    variant_code="free_short",
-                    gateway_result=gateway_result,
-                    llm_astrology_input_v1=llm_astrology_input_v1,
-                    rejected_outcome=rejected_outcome,
-                )
-            except Exception as audit_exc:
-                db.rollback()
-                logger.exception(
-                    "Failed to persist rejected free_short natal audit request_id=%s error=%s",
-                    request_id,
-                    audit_exc,
-                )
-            interpretation = AstroFreeResponseV1(
-                title="",
-                summary=rejected_outcome.client_message,
-                sections=[],
-                highlights=[],
-                advice=[],
-                evidence=[],
-                disclaimers=disclaimers,
-            )
-            meta.validation_status = "rejected"
-            return NatalInterpretationResponse(
-                data=NatalGatewayInterpretationData(
-                    chart_id=chart_id,
-                    use_case=PUBLIC_FREE_SHORT_USE_CASE,
-                    interpretation=interpretation,
-                    meta=meta,
-                    degraded_mode=degraded_mode_str,
-                ),
-                disclaimers=disclaimers,
-            )
-
-        prompt_version_uuid = _parse_prompt_version_uuid(gateway_result.meta.prompt_version_id)
-
-        stmt_existing = select(UserNatalInterpretationModel).where(
-            UserNatalInterpretationModel.user_id == user_id,
-            UserNatalInterpretationModel.chart_id == chart_id,
-            UserNatalInterpretationModel.level == InterpretationLevel.COMPLETE,
-            UserNatalInterpretationModel.variant_code == "free_short",
-        )
-        existing_rows = list(
-            db.execute(
-                stmt_existing.order_by(
-                    UserNatalInterpretationModel.created_at.desc(),
-                    UserNatalInterpretationModel.id.desc(),
-                )
-            )
-            .scalars()
-            .all()
-        )
-        primary = existing_rows[0] if existing_rows else None
-        for duplicate in existing_rows[1:]:
-            db.delete(duplicate)
-
-        if primary is None:
-            primary = UserNatalInterpretationModel(
-                user_id=user_id,
-                chart_id=chart_id,
-                level=InterpretationLevel.COMPLETE,
-                use_case=use_case_key,
-                variant_code="free_short",
-                persona_id=None,
-                persona_name=None,
-                prompt_version_id=prompt_version_uuid,
-                interpretation_payload=persist_payload,
-                was_fallback=gateway_result.meta.fallback_triggered,
-                degraded_mode=degraded_mode_str,
-            )
-            _apply_narrative_answer_audit(
-                primary,
-                level="complete",
-                variant_code="free_short",
-                schema_version="v1",
-                request_id=request_id,
-                gateway_result=gateway_result,
-                persist_payload=persist_payload,
-                llm_astrology_input_v1=llm_astrology_input_v1,
-            )
-            db.add(primary)
-        else:
-            primary.use_case = use_case_key
-            primary.prompt_version_id = prompt_version_uuid
-            primary.interpretation_payload = persist_payload
-            primary.was_fallback = gateway_result.meta.fallback_triggered
-            primary.degraded_mode = degraded_mode_str
-            _apply_narrative_answer_audit(
-                primary,
-                level="complete",
-                variant_code="free_short",
-                schema_version="v1",
-                request_id=request_id,
-                gateway_result=gateway_result,
-                persist_payload=persist_payload,
-                llm_astrology_input_v1=llm_astrology_input_v1,
-            )
-
-        db.flush()
-        meta.id = primary.id
-        meta.persisted_at = primary.created_at or datetime_provider.utcnow()
-
-        return NatalInterpretationResponse(
-            data=NatalGatewayInterpretationData(
-                chart_id=chart_id,
-                use_case=PUBLIC_FREE_SHORT_USE_CASE,
-                interpretation=_without_public_evidence(interpretation),
-                meta=meta,
-                degraded_mode=degraded_mode_str,
             ),
             disclaimers=disclaimers,
         )

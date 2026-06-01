@@ -1,5 +1,17 @@
 # Validation CS-434
 
+- Review/fix iteration 1 finding: service legacy still contained a provider-capable short/free branch.
+- Fix: `interpretation_service.py` now rejects non-cached `level="short"` and `variant_code="free_short"` before gateway; `_generate_free_short` was physically deleted.
+- Fix validation:
+  - `ruff format backend\app\services\llm_generation\natal\interpretation_service.py backend\app\tests\unit\test_natal_interpretation_service_v2.py backend\tests\architecture\test_llm_legacy_extinction.py`: PASS.
+  - `ruff check backend\app\services\llm_generation\natal\interpretation_service.py backend\app\tests\unit\test_natal_interpretation_service_v2.py backend\tests\architecture\test_llm_legacy_extinction.py`: PASS.
+  - `python -B -m pytest -q backend/tests/architecture/test_llm_legacy_extinction.py backend/app/tests/unit/test_natal_interpretation_service_v2.py --tb=short`: PASS, 13 passed.
+  - `python -B -m pytest -q backend/tests/architecture/test_llm_legacy_extinction.py backend/tests/integration/test_theme_natal_public_api_product_actions.py backend/app/tests/unit/test_natal_interpretation_service_v2.py --tb=short`: PASS, 13 passed, 8 deselected.
+  - Targeted scan `async def _generate_free_short|use_case_key = "natal_long_free"|else "natal_interpretation_short"|use_case_key = "natal_interpretation_short"` in `interpretation_service.py`: PASS zero-hit.
+  - Targeted scan public routers for `NatalInterpretationService.interpret(`/`interpret_chart(`: PASS zero-hit.
+  - `condamad_story_validate.py _condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths/00-story.md`: PASS.
+  - `condamad_story_lint.py --strict _condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths/00-story.md`: PASS.
+  - `git diff --check -- backend _condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths _condamad/stories/story-status.md`: PASS.
 - `ruff format <fichiers Python modifies>`: PASS.
 - `ruff check backend`: PASS.
 - `python -B -m pytest -q backend/tests/architecture/test_llm_legacy_extinction.py backend/tests/integration/test_theme_natal_public_api_product_actions.py --tb=short`: PASS, 7 passed, 8 deselected.

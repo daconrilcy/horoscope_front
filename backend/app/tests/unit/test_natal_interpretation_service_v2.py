@@ -2,7 +2,7 @@
 
 Couverture story 30-5:
 - C1: 'question' absent de user_input pour level='complete'
-- Contrôle inverse : 'question' présent pour level='short'
+- CS-434: les generations short legacy sont refusees avant gateway
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from app.infra.db.models.user_natal_interpretation import UserNatalInterpretatio
 from app.services.llm_generation.natal.interpretation_service import (
     NATAL_COMPLETE_SCHEMA_MISMATCH,
     NatalInterpretationService,
+    NatalInterpretationServiceError,
 )
 from app.services.llm_generation.natal.stored_interpretation_payload import (
     NARRATIVE_ANSWER_AUDIT_USE_CASE,
@@ -249,10 +250,6 @@ class TestNatalInterpretationServiceUserInput:
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
             patch(
-                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
-                return_value={"planets": []},
-            ),
-            patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
@@ -284,103 +281,83 @@ class TestNatalInterpretationServiceUserInput:
         assert user_input_sent.locale == "fr"
 
     @pytest.mark.asyncio
-    async def test_short_level_includes_question(self):
-        """Controle inverse: 'question' DOIT etre dans user_input pour level='short'."""
+    async def test_short_level_rejects_legacy_generation_before_gateway(self):
+        """Le niveau short legacy est coupe avant construction d'une requete gateway."""
         natal_result = _make_natal_result()
         birth_profile = _make_birth_profile()
-        gw_result = _make_gateway_result("natal_interpretation_short")
 
         db = MagicMock()
         db.execute.return_value.scalar_one_or_none.return_value = None
 
         mock_gw_instance = MagicMock()
-        mock_gw_instance.execute_request = AsyncMock(return_value=gw_result)
-
-        mock_persisted = MagicMock()
-        mock_persisted.created_at = None
+        mock_gw_instance.execute_request = AsyncMock()
 
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
-                return_value={"planets": []},
-            ),
             patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
-                return_value=mock_persisted,
-            ),
         ):
-            await NatalInterpretationService.interpret(
-                db=db,
-                user_id=1,
-                chart_id="chart-abc",
-                natal_result=natal_result,
-                birth_profile=birth_profile,
-                level="short",
-                persona_id=None,
-                locale="fr",
-                question="Ma vraie question de test",
-                request_id="req-test",
-                trace_id="trace-test",
-            )
+            with pytest.raises(NatalInterpretationServiceError) as exc:
+                await NatalInterpretationService.interpret(
+                    db=db,
+                    user_id=1,
+                    chart_id="chart-abc",
+                    natal_result=natal_result,
+                    birth_profile=birth_profile,
+                    level="short",
+                    persona_id=None,
+                    locale="fr",
+                    question="Ma vraie question de test",
+                    request_id="req-test",
+                    trace_id="trace-test",
+                )
 
-        request_sent = mock_gw_instance.execute_request.call_args.kwargs["request"]
-        user_input_sent = request_sent.user_input
-        assert user_input_sent.question == "Ma vraie question de test"
+        assert exc.value.code == "legacy_natal_generation_disabled"
+        assert exc.value.details["replacement"] == "/v1/theme-natal/readings"
+        mock_gw_instance.execute_request.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_short_level_default_question_when_none(self):
+    async def test_complete_free_short_rejects_legacy_generation_before_gateway(self):
+        """La variante free_short complete ne peut plus reconstruire natal_long_free."""
         natal_result = _make_natal_result()
         birth_profile = _make_birth_profile()
-        gw_result = _make_gateway_result("natal_interpretation_short")
 
         db = MagicMock()
         db.execute.return_value.scalar_one_or_none.return_value = None
 
         mock_gw_instance = MagicMock()
-        mock_gw_instance.execute_request = AsyncMock(return_value=gw_result)
-
-        mock_persisted = MagicMock()
-        mock_persisted.created_at = None
+        mock_gw_instance.execute_request = AsyncMock()
 
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
-                return_value={"planets": []},
-            ),
             patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,
             ),
             _patch_entitlement_snapshot(),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.UserNatalInterpretationModel",
-                return_value=mock_persisted,
-            ),
         ):
-            await NatalInterpretationService.interpret(
-                db=db,
-                user_id=1,
-                chart_id="chart-abc",
-                natal_result=natal_result,
-                birth_profile=birth_profile,
-                level="short",
-                persona_id=None,
-                locale="fr",
-                question=None,
-                request_id="req-test",
-                trace_id="trace-test",
-            )
+            with pytest.raises(NatalInterpretationServiceError) as exc:
+                await NatalInterpretationService.interpret(
+                    db=db,
+                    user_id=1,
+                    chart_id="chart-abc",
+                    natal_result=natal_result,
+                    birth_profile=birth_profile,
+                    level="complete",
+                    persona_id=None,
+                    locale="fr",
+                    question=None,
+                    request_id="req-test",
+                    trace_id="trace-test",
+                    variant_code="free_short",
+                )
 
-        request_sent = mock_gw_instance.execute_request.call_args.kwargs["request"]
-        user_input_sent = request_sent.user_input
-        assert "interprète" in user_input_sent.question.lower()
+        assert exc.value.code == "legacy_natal_generation_disabled"
+        assert exc.value.details["variant_code"] == "free_short"
+        mock_gw_instance.execute_request.assert_not_called()
 
 
 class TestNatalInterpretationServiceSchemaVersion:
@@ -399,10 +376,6 @@ class TestNatalInterpretationServiceSchemaVersion:
 
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
-                return_value={"planets": []},
-            ),
             patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,
@@ -461,10 +434,6 @@ class TestNatalInterpretationServiceModules:
 
         with (
             patch("app.services.llm_generation.natal.interpretation_service.select"),
-            patch(
-                "app.services.llm_generation.natal.interpretation_service.build_chart_json",
-                return_value={"planets": []},
-            ),
             patch(
                 "app.domain.llm.runtime.adapter.LLMGateway",
                 return_value=mock_gw_instance,

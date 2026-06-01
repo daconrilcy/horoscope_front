@@ -1,50 +1,56 @@
-# CS-434 Draft Review - OBSOLETE PRE-IMPLEMENTATION REVIEW
+# CS-434 Implementation Review
 
-<!-- Commentaire global: cet artefact consigne la revue redactionnelle pre-implementation de la story CS-434. -->
+<!-- Commentaire global: revue finale de l'implementation CS-434 apres boucle review/correction. -->
 
-## Implementation Handoff
+## Verdict
 
-This file is a pre-implementation drafting review only. It is obsolete for final implementation evidence and must not be used as a final code-review verdict for CS-434.
+CLEAN.
 
-## Previous Verdict
-
-CLEAN for story drafting only.
-
-## Review Scope
+## Scope
 
 - Story: `_condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths/00-story.md`
-- Source brief: `_story_briefs/cs-434-physical-delete-active-legacy-natal-generation-paths.md`
-- Tracker row: `_condamad/stories/story-status.md`, source matched to the brief.
-- Guardrails checked by targeted ID lookup: `RG-001`, `RG-018`, `RG-021`, `RG-149`, `RG-150`, `RG-171`.
+- Brief: `_story_briefs/cs-434-physical-delete-active-legacy-natal-generation-paths.md`
+- Tracker row: `CS-434`, path and source brief matched.
+- Guardrails reviewed: `RG-001`, `RG-002`, `RG-018`, `RG-021`, `RG-022`, `RG-149`, `RG-150`, `RG-171`.
 
 ## Iterations
 
 - Iteration 1: CHANGES_REQUESTED.
-- Iteration 2: CLEAN after correction and validation.
+- Iteration 2: CLEAN after code, test, scan, and evidence correction.
 
 ## Issues Fixed
 
-- Allowlist contract wording: clarified that `legacy-allowlist.md` must keep the brief-required operational columns
-  `symbol | file | reason | allowed_context | non_generative_proof | owner`, while preserving the validator-required table.
+- Legacy branch deletion: `interpretation_service.py` still kept `_generate_free_short` and could construct
+  `natal_long_free` inside a provider-capable branch. The branch was physically deleted.
+- Short legacy neutralization: non-cached `level="short"` calls could still select `natal_interpretation_short`.
+  They now fail before gateway with `legacy_natal_generation_disabled`.
+- Test alignment: stale nominal short tests in `test_natal_interpretation_service_v2.py` now assert rejection before gateway.
+- Reintroduction guard: `test_llm_legacy_extinction.py` now fails if the deleted service branch or short/free assignment returns.
+- Evidence alignment: validation, final evidence, removal audit, traceability, dev log, and scan-after artifacts were refreshed.
 
-## Brief Alignment
+## Final Review Findings
 
-- All in-scope primitives from the brief are explicit in target state, domain boundary, tasks, ACs, expected files, or evidence.
-- Out-of-scope primitives are preserved as non-goals, including `_condamad/run-state.json`, frontend redesign, and mass migration.
-- Historical note from the drafting review: before this implementation run, the story was pre-implementation. This note is obsolete and not a current status assertion.
+No actionable implementation issue remains.
 
 ## Validation
 
-- `condamad_story_validate.py _condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths/00-story.md`: PASS.
-- `condamad_story_lint.py --strict _condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths/00-story.md`: PASS.
-- Python commands were run after activating `.\.venv\Scripts\Activate.ps1`.
+- `ruff check backend`: PASS.
+- `python -B -m pytest -q backend/tests/architecture/test_llm_legacy_extinction.py backend/tests/integration/test_theme_natal_public_api_product_actions.py backend/app/tests/unit/test_natal_interpretation_service_v2.py --tb=short`: PASS, 13 passed, 8 deselected.
+- `python -B -m pytest -q backend/tests/llm_orchestration backend/tests/integration -k "theme_natal or legacy or gateway" --tb=short`: PASS, 62 passed, 501 deselected.
+- Runtime `app.routes`, `app.openapi()`, and catalog checks: PASS.
+- Zero-hit scans for deleted service branch, public router legacy service calls, fallback owner keys, and premium injection: PASS.
+- `git diff --check -- backend _condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths _condamad/stories/story-status.md`: PASS.
 
-## Review Output
+## Guardrail Classification
 
-- Produced artifact: `_condamad/stories/CS-434-physical-delete-active-legacy-natal-generation-paths/generated/11-code-review.md`.
-- Propagation decision: no-propagation; the correction is local to this story contract and creates no reusable rule change.
+- Applicable: `RG-001`, `RG-002`, `RG-018`, `RG-021`, `RG-022`, `RG-149`, `RG-150`, `RG-171`.
+- Non-applicable: frontend style guardrails and unrelated prediction/daily-horoscope invariants.
+- New durable invariant: no registry update needed; the new guard is story-local and enforces existing deletion/fallback guardrails.
+
+## Propagation
+
+no-propagation: the correction is local to CS-434 and covered by executable tests/scans.
 
 ## Residual Risk
 
-- Implementation risk remains around correctly separating readonly historical compatibility from provider-capable legacy generation.
-- No remaining drafting issue identified.
+Aucun risque restant identifie.

@@ -14,6 +14,7 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 APP_ROOT = BACKEND_ROOT / "app"
 GATEWAY_PATH = APP_ROOT / "domain/llm/runtime/gateway.py"
 ADAPTER_PATH = APP_ROOT / "domain/llm/runtime/adapter.py"
+INTERPRETATION_SERVICE_PATH = APP_ROOT / "services/llm_generation/natal/interpretation_service.py"
 PUBLIC_ROUTERS_ROOT = APP_ROOT / "api/v1/routers/public"
 ASSEMBLY_RESOLVER_PATH = APP_ROOT / "domain/llm/configuration/assembly_resolver.py"
 PROMPT_GOVERNANCE_REGISTRY_PATH = (
@@ -58,6 +59,18 @@ def test_public_routes_do_not_call_legacy_natal_generation_service() -> None:
 
     assert "NatalInterpretationService.interpret(" not in public_sources
     assert "NatalInterpretationService.interpret_chart(" not in public_sources
+
+
+def test_natal_legacy_service_has_no_free_short_generation_branch() -> None:
+    """Le service legacy ne doit plus construire les cles short/free supprimées."""
+
+    source = INTERPRETATION_SERVICE_PATH.read_text(encoding="utf-8")
+    interpret_source = source.split("async def interpret(", maxsplit=1)[1]
+    interpret_source = interpret_source.split("def list_interpretations(", maxsplit=1)[0]
+
+    assert "async def _generate_free_short(" not in source
+    assert '"natal_long_free"' not in interpret_source
+    assert '"natal_interpretation_short"' not in interpret_source
 
 
 def test_public_runtime_contract_excludes_deleted_natal_generator_keys() -> None:
