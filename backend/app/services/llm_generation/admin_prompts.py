@@ -293,13 +293,6 @@ def _derive_admin_runtime_use_case_key(assembly_model: PromptAssemblyConfigModel
     if not canonical_use_case_key:
         return None
 
-    if (
-        assembly_model.feature == "natal"
-        and assembly_model.subfeature == "interpretation"
-        and assembly_model.plan == "free"
-    ):
-        return "natal_long_free"
-
     return canonical_use_case_key
 
 

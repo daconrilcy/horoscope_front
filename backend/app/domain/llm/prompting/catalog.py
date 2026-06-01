@@ -120,14 +120,6 @@ PROMPT_RUNTIME_DATA: dict[str, dict[str, Any]] = {
         "temperature": 0.7,
         "output_schema": ASTRO_RESPONSE_V1,
     },
-    "natal_interpretation": {
-        "name": "natal-interpretation-v3",
-        "description": "Deep dive natal chart analysis",
-        "engine_env_key": "OPENAI_ENGINE_NATAL_INTERPRETATION",
-        "max_tokens": 4000,
-        "temperature": 0.7,
-        "output_schema": ASTRO_RESPONSE_V3,
-    },
     "chat_astrologer": {
         "name": "chat-astrologer-v1",
         "description": "Interactive conversation with the virtual astrologer",

@@ -118,9 +118,11 @@ Sources: CS-344 placeholder family matrix, `backend/app/domain/llm/prompting/pro
 
 ## Construction de `llm_astrology_input_v1`
 
-CS-346 prouve la chaine:
-
-`NatalInterpretationService` -> `StructuredFactsV1Builder` -> `AINarrativeInputBuilder` -> `ClientInterpretationProjectionV1Builder` -> `LLMAstrologyInputV1Builder` -> `AIEngineAdapter.generate_natal_interpretation` -> projection prompt-visible du `LLMGateway`.
+CS-442 a retire les anciennes sources prompt-provider natales. La chaine moderne
+conserve seulement la construction de donnees `llm_astrology_input_v1` comme
+contrat interne: `StructuredFactsV1Builder` -> `AINarrativeInputBuilder` ->
+`ClientInterpretationProjectionV1Builder` -> `LLMAstrologyInputV1Builder` ->
+projection bornee vers les contrats `theme_natal`.
 
 ```mermaid
 flowchart TD

@@ -52,12 +52,9 @@ REQUIRED_SURFACE_TOKENS = {
     "backend/app/domain/llm/runtime/gateway.py",
     "backend/app/domain/llm/runtime/adapter.py",
     "backend/app/domain/llm/prompting/catalog.py",
-    "backend/app/ops/llm/bootstrap/seed_29_prompts.py",
-    "backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py",
     "backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py",
     "backend/scripts/debug_api_natal_call.py",
     "backend/scripts/debug_natal_internal_error.py",
-    "backend/scripts/seed_natal_short.py",
     "backend/scripts/diagnose_natal_interpretation_duplicates.py",
     "frontend/src/features/natal-chart/NatalInterpretation.tsx",
     "frontend/src/api/natal-chart/index.ts",
@@ -111,6 +108,17 @@ AUTHORIZED_RUNTIME_TOKEN_OWNERS = {
         "natal_interpretation_short",
         "natal_long_free",
     },
+}
+REMOVED_PROMPT_SOURCE_PATHS = {
+    Path("backend/app/ops/llm/bootstrap/seed_29_prompts.py"),
+    Path("backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py"),
+    Path("backend/scripts/seed_29_prompts.py"),
+    Path("backend/scripts/seed_30_8_v3_prompts.py"),
+    Path("backend/scripts/seed_30_2_astroresponse_v2.py"),
+    Path("backend/scripts/seed_30_3_gpt5_prompts.py"),
+    Path("backend/scripts/seed_28_4.py"),
+    Path("backend/scripts/seed_natal_short.py"),
+    Path("backend/scripts/update_all_prompts_59_5.py"),
 }
 AUTHORIZED_RUNTIME_REASONS = {
     "readonly historical projection",
@@ -323,6 +331,14 @@ def test_legacy_natal_runtime_hits_are_explicitly_authorized() -> None:
             unauthorized_hits.append((str(relative_path), token))
 
     assert unauthorized_hits == []
+
+
+def test_legacy_natal_prompt_source_files_are_physically_removed() -> None:
+    """Les anciens seeds prompts nataux ne doivent plus rester executables."""
+
+    assert [
+        path.as_posix() for path in REMOVED_PROMPT_SOURCE_PATHS if (REPO_ROOT / path).exists()
+    ] == []
 
 
 def test_legacy_natal_test_hits_are_explicitly_authorized() -> None:

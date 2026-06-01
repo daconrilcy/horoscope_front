@@ -767,14 +767,14 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
     template_id = uuid.uuid4()
     assembly_id = uuid.uuid4()
     profile_id = uuid.uuid4()
-    use_case_key = f"natal_interpretation_short_{uuid.uuid4().hex[:8]}"
+    use_case_key = f"theme_natal_reading_free_preview_{uuid.uuid4().hex[:8]}"
     try:
         db.execute(delete(LlmActiveReleaseModel))
         db.add(
             LlmUseCaseConfigModel(
                 key=use_case_key,
-                display_name="Interprétation Natale (Courte)",
-                description="Prompt natal canonique free",
+                display_name="Theme natal free preview",
+                description="Prompt theme natal moderne free preview",
             )
         )
         db.flush()
@@ -782,7 +782,7 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
             id=template_id,
             use_case_key=use_case_key,
             status=PromptStatus.PUBLISHED,
-            developer_prompt="Prompt natal {{chart_json}} {{locale}}",
+            developer_prompt="Prompt theme natal {{locale}}",
             created_by="test-admin",
         )
         db.add(template_model)
@@ -842,12 +842,12 @@ def test_admin_llm_catalog_resolved_detail_uses_effective_runtime_use_case_for_n
         response = client.get(f"/v1/admin/llm/catalog/{manifest_entry_id}/resolved")
         assert response.status_code == 200
         payload = response.json()["data"]
-        assert payload["use_case_key"] == "natal_long_free"
-        assert payload["runtime_use_case_key"] == "natal_long_free"
+        assert payload["use_case_key"] == use_case_key
+        assert payload["runtime_use_case_key"] == use_case_key
         selected_components = {item["key"]: item for item in payload["selected_components"]}
         assert "plan_overlay" not in selected_components
         assert selected_components["use_case_overlay"]["component_type"] == "use_case_overlay"
-        assert selected_components["use_case_overlay"]["editable_use_case_key"] == "natal_long_free"
+        assert selected_components["use_case_overlay"]["editable_use_case_key"] == use_case_key
         assert selected_components["use_case_overlay"]["content"]
     finally:
         client.close()

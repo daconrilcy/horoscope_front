@@ -209,15 +209,6 @@ NATAL_LLM_ASTROLOGY_INPUT_SCHEMA = {
 
 CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
     CanonicalUseCaseContract(
-        key="natal_interpretation",
-        display_name="Interprétation Natale",
-        description="Analyse approfondie du thème de naissance.",
-        output_schema_name="AstroResponse_v3",
-        persona_strategy="required",
-        required_prompt_placeholders=["llm_astrology_input_v1", "persona_name"],
-        input_schema=NATAL_LLM_ASTROLOGY_INPUT_SCHEMA,
-    ),
-    CanonicalUseCaseContract(
         key="chat_astrologer",
         display_name="Chat Astrologue",
         description="Conversation interactive avec l'astrologue virtuel.",

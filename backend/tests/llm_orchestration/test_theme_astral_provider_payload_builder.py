@@ -17,7 +17,7 @@ from app.domain.llm.configuration.theme_astral_contracts import (
 from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
     ThemeAstralProviderPayloadBuilder,
 )
-from app.ops.llm.bootstrap.seed_30_8_v3_prompts import NATAL_COMPLETE_PROMPT_V3
+from app.ops.llm.bootstrap.seed_theme_astral_prompt_contract import THEME_ASTRAL_PROMPT_TEMPLATE
 from tests.llm_orchestration.theme_astral_provider_payload_helpers import (
     build_basic_reading_plan,
 )
@@ -178,13 +178,12 @@ def test_basic_payload_uses_reading_plan_contract_only() -> None:
     assert "BasicNatalReadingPlan" not in serialized
 
 
-def test_nominal_natal_prompt_requests_five_source_families() -> None:
-    """Le prompt complet nominal demande les cinq familles sources narratives."""
-    prompt = NATAL_COMPLETE_PROMPT_V3.casefold()
+def test_theme_astral_prompt_requests_basic_payload_source() -> None:
+    """Le prompt nominal moderne demande le payload Basic sans ancien carrier."""
+    prompt = THEME_ASTRAL_PROMPT_TEMPLATE.casefold()
 
-    assert "familles sources narratives" in prompt
-    for family in ("personnalite", "emotions", "relations", "vocation", "evolution"):
-        assert family in prompt
+    assert "basic_natal_prompt_payload" in prompt
+    assert "theme_astral_prompt_v1" in prompt
     assert "chart_json" not in prompt
     assert "natal_data" not in prompt
 

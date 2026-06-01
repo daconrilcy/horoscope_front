@@ -109,8 +109,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
     from app.infra.db.models.llm.llm_output_schema import LlmOutputSchemaModel
     from app.infra.db.models.llm.llm_persona import LlmPersonaModel
     from app.infra.db.models.llm.llm_prompt import LlmPromptVersionModel, PromptStatus
-    from app.ops.llm.bootstrap.seed_29_prompts import seed_prompts
-    from app.ops.llm.bootstrap.seed_30_8_v3_prompts import seed as seed_natal_v3_prompts
     from app.ops.llm.bootstrap.seed_30_14_chat_prompt import seed as seed_chat_prompt_v2
     from app.ops.llm.bootstrap.seed_66_20_taxonomy import seed_66_20_taxonomy
     from app.ops.llm.bootstrap.seed_guidance_prompts import seed_guidance_prompts
@@ -206,8 +204,6 @@ def _ensure_canonical_llm_bootstrap_seeded() -> None:
             with _open_startup_db_session() as db:
                 seed_astrologers(db)
                 seed_bootstrap_contracts(db)
-            seed_prompts()
-            seed_natal_v3_prompts()
             seed_chat_prompt_v2()
             seed_guidance_prompts()
 

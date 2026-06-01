@@ -57,17 +57,19 @@ def test_runtime_and_bootstrap_modules_do_not_depend_on_legacy_transition_paths(
     paths for the moved LLM surface.
     """
     root = Path(__file__).resolve().parents[2]
+    removed_prompt_seed_paths = [
+        root / "app" / "ops" / "llm" / "bootstrap" / "seed_29_prompts.py",
+        root / "app" / "ops" / "llm" / "bootstrap" / "seed_30_8_v3_prompts.py",
+        root / "scripts" / "seed_29_prompts.py",
+        root / "scripts" / "seed_30_8_v3_prompts.py",
+    ]
     file_expectations = {
-        root / "app" / "ops" / "llm" / "bootstrap" / "seed_29_prompts.py": {
-            "scripts.seed_29_prompts",
-        },
-        root / "app" / "ops" / "llm" / "bootstrap" / "seed_30_8_v3_prompts.py": {
-            "scripts.seed_30_8_v3_prompts",
-        },
         root / "app" / "ops" / "llm" / "bootstrap" / "seed_30_14_chat_prompt.py": {
             "scripts.seed_30_14_chat_prompt",
         },
     }
+
+    assert not [str(path.relative_to(root)) for path in removed_prompt_seed_paths if path.exists()]
 
     violations: list[str] = []
     for file_path, forbidden_modules in file_expectations.items():

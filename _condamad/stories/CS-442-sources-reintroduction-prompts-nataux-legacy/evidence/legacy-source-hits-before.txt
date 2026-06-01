@@ -1,0 +1,14 @@
+# Legacy Source Hits Before
+
+Captured from the pre-edit bounded scan in this run.
+
+- `backend/app/services/llm_generation/admin_prompts.py:301` returned `natal_long_free`.
+- `backend/app/domain/llm/configuration/canonical_use_case_registry.py` exposed a canonical `natal_interpretation` contract.
+- `backend/app/domain/llm/prompting/catalog.py` exposed a runtime `natal_interpretation` prompt catalogue entry.
+- `backend/app/ops/llm/bootstrap/seed_29_prompts.py` seeded `natal_interpretation`.
+- `backend/app/ops/llm/bootstrap/seed_30_8_v3_prompts.py` seeded `natal_interpretation`.
+- `backend/app/ops/llm/bootstrap/seed_66_20_taxonomy.py` mapped `("natal", "interpretation", "premium", "natal_interpretation")`.
+- `backend/scripts/seed_natal_short.py` seeded `natal_interpretation_short`.
+- `backend/scripts/seed_66_20_convergence.py` mapped `natal_long_free` and `natal_interpretation`.
+- `backend/scripts/seed_66_15_assembly_convergence.py` mapped `natal_long_free`, `natal_interpretation_short`, and `natal_interpretation`.
+- `backend/scripts/seed_28_4.py`, `seed_30_2_astroresponse_v2.py`, `seed_30_3_gpt5_prompts.py`, `seed_29_prompts.py`, `seed_30_8_v3_prompts.py`, and `update_all_prompts_59_5.py` retained old-key executable prompt sources or mutation helpers.

@@ -28,7 +28,6 @@ TARGET_ASSEMBLIES: tuple[tuple[str, str, str, str], ...] = (
     ("guidance", "weekly", "premium", "guidance_weekly"),
     ("guidance", "contextual", "free", "guidance_contextual"),
     ("guidance", "contextual", "premium", "guidance_contextual"),
-    ("natal", "interpretation", "premium", "natal_interpretation"),
     ("natal", "psy_profile", "premium", "natal_psy_profile"),
     ("natal", "shadow_integration", "premium", "natal_shadow_integration"),
     ("natal", "leadership_workstyle", "premium", "natal_leadership_workstyle"),

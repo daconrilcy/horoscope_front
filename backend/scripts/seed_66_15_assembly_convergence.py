@@ -136,15 +136,6 @@ def seed_66_15_convergence():
         # Combinations: feature / subfeature / plan
         assemblies = [
             # NATAL
-            (
-                "natal",
-                "interpretation",
-                "premium",
-                "natal_interpretation",
-                profiles["premium"].id,
-            ),
-            ("natal", "interpretation", "free", "natal_long_free", profiles["standard"].id),
-            ("natal", "short", "free", "natal_interpretation_short", profiles["standard"].id),
             # GUIDANCE
             ("guidance", "daily", "free", "guidance_daily", profiles["standard"].id),
             ("guidance", "daily", "premium", "guidance_daily", profiles["premium"].id),

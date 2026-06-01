@@ -1,0 +1,24 @@
+backend\scripts\diagnose_natal_interpretation_duplicates.py:9:from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+backend\scripts\diagnose_natal_interpretation_duplicates.py:169:            "List potential duplicate rows in user_natal_interpretations "
+backend\scripts\diagnose_natal_interpretation_duplicates.py:193:        print("Diagnostics for table: user_natal_interpretations")
+backend\scripts\fix_schemas_strict.py:173:                    "offer_natal_interpretation",
+backend\scripts\fix_schemas_strict.py:207:                    "offer_natal_interpretation",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:64:                "offer_natal_interpretation",
+backend\app\domain\llm\prompting\schemas.py:73:    "offer_natal_interpretation",
+backend\app\domain\llm\prompting\context.py:18:from app.infra.db.models.user_natal_interpretation import (
+backend\app\domain\llm\prompting\context.py:42:    natal_interpretation: Optional[str] = None
+backend\app\domain\llm\prompting\context.py:49:    use_case_key: str  # Raw key used for logic branching (e.g. "natal_interpretation")
+backend\app\domain\llm\prompting\context.py:54:        if self.use_case_key.startswith("natal_interpretation"):
+backend\app\domain\llm\prompting\context.py:79:            if not self.payload.natal_interpretation and not self.payload.use_case_key.startswith(
+backend\app\domain\llm\prompting\context.py:80:                "natal_interpretation"
+backend\app\domain\llm\prompting\context.py:82:                missing.append("natal_interpretation")
+backend\app\domain\llm\prompting\context.py:94:    _SECONDARY_FIELDS = frozenset({"natal_interpretation", "period_covered", "today_date"})
+backend\app\domain\llm\prompting\context.py:105:        if "natal_data" in missing_set and "natal_interpretation" in missing_set:
+backend\app\domain\llm\prompting\context.py:110:            "natal_data" in missing_set or "natal_interpretation" in missing_set
+backend\app\domain\llm\prompting\context.py:188:        natal_interpretation = None
+backend\app\domain\llm\prompting\context.py:191:        if use_case_key != "natal_interpretation":
+backend\app\domain\llm\prompting\context.py:201:                natal_interpretation = payload.get("summary") or payload.get("text")
+backend\app\domain\llm\prompting\context.py:203:                missing_fields.append("natal_interpretation")
+backend\app\domain\llm\prompting\context.py:210:            if not natal_interpretation:
+backend\app\domain\llm\prompting\context.py:243:            natal_interpretation=natal_interpretation,
+backend\app\domain\llm\prompting\tests\__init__.py:29:LEGACY_NATAL_FEATURE: Final[str] = "natal_interpretation"

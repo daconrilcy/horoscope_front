@@ -235,72 +235,17 @@ async def test_db_prompt_resolution_does_not_require_supported_fallback_prompt(
     assert plan.prompt_version_id == str(prompt.id)
 
 
+def test_natal_interpretation_is_not_a_canonical_use_case_contract() -> None:
+    """L'ancien contrat natal complet ne reste pas source canonique de prompt."""
+
+    assert get_canonical_use_case_contract("natal_interpretation") is None
+
+
 @pytest.mark.asyncio
-async def test_natal_basic_complete_resolution_preserves_basic_for_registry(
-    db,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """La lecture natale complete Basic atteint le registry avec le plan basic."""
+async def test_legacy_natal_assembly_cannot_resolve_as_nominal_prompt_source(db) -> None:
+    """Une assembly legacy artificielle ne redevient pas seedable sans contrat moderne."""
 
     _create_prompt_assembly(
-        db,
-        feature="natal",
-        subfeature="interpretation",
-        plan="free",
-        use_case_key="natal_interpretation_short",
-        developer_prompt="SHORT {{llm_astrology_input_v1}}",
-    )
-    basic_assembly = _create_prompt_assembly(
-        db,
-        feature="natal",
-        subfeature="interpretation",
-        plan="basic",
-        use_case_key="natal_interpretation",
-        developer_prompt="BASIC {{llm_astrology_input_v1}} {{persona_name}}",
-    )
-    original = AssemblyRegistry.get_active_config_sync
-    seen_plans: list[str | None] = []
-
-    def spy_get_active_config_sync(self, *args, **kwargs):
-        seen_plans.append(kwargs.get("plan"))
-        return original(self, *args, **kwargs)
-
-    monkeypatch.setattr(AssemblyRegistry, "get_active_config_sync", spy_get_active_config_sync)
-
-    request = LLMExecutionRequest(
-        user_input=ExecutionUserInput(
-            use_case="natal_interpretation",
-            feature="natal",
-            subfeature="interpretation",
-            plan="basic",
-            locale="fr-FR",
-        ),
-        context=ExecutionContext(extra_context={"llm_astrology_input_v1": {}}),
-        request_id="req-basic-natal",
-        trace_id="trace-basic-natal",
-    )
-
-    plan, _ = await LLMGateway()._resolve_plan(request, db)
-
-    assert seen_plans[-1] == "basic"
-    assert plan.plan == "basic"
-    assert plan.assembly_id == str(basic_assembly.id)
-    assert plan.rendered_developer_prompt.startswith("BASIC {}")
-
-
-@pytest.mark.asyncio
-async def test_natal_free_short_and_premium_complete_resolution_stay_canonical(db) -> None:
-    """Les chemins Free court et Premium complet gardent leurs assemblies dediees."""
-
-    free_assembly = _create_prompt_assembly(
-        db,
-        feature="natal",
-        subfeature="interpretation",
-        plan="free",
-        use_case_key="natal_interpretation_short",
-        developer_prompt="SHORT {{llm_astrology_input_v1}}",
-    )
-    premium_assembly = _create_prompt_assembly(
         db,
         feature="natal",
         subfeature="interpretation",
@@ -309,45 +254,23 @@ async def test_natal_free_short_and_premium_complete_resolution_stay_canonical(d
         developer_prompt="PREMIUM {{llm_astrology_input_v1}} {{persona_name}}",
         model="gpt-4o",
     )
-    gateway = LLMGateway()
 
-    free_plan, _ = await gateway._resolve_plan(
-        LLMExecutionRequest(
-            user_input=ExecutionUserInput(
-                use_case="natal_interpretation_short",
-                feature="natal",
-                subfeature="interpretation",
-                plan="free",
-                locale="fr-FR",
+    with pytest.raises(GatewayConfigError, match="Mandatory output schema missing"):
+        await LLMGateway()._resolve_plan(
+            LLMExecutionRequest(
+                user_input=ExecutionUserInput(
+                    use_case="natal_interpretation",
+                    feature="natal",
+                    subfeature="interpretation",
+                    plan="premium",
+                    locale="fr-FR",
+                ),
+                context=ExecutionContext(extra_context={"llm_astrology_input_v1": {}}),
+                request_id="req-premium-natal-legacy",
+                trace_id="trace-premium-natal-legacy",
             ),
-            context=ExecutionContext(extra_context={"llm_astrology_input_v1": {}}),
-            request_id="req-free-short",
-            trace_id="trace-free-short",
-        ),
-        db,
-    )
-    premium_plan, _ = await gateway._resolve_plan(
-        LLMExecutionRequest(
-            user_input=ExecutionUserInput(
-                use_case="natal_interpretation",
-                feature="natal",
-                subfeature="interpretation",
-                plan="premium",
-                locale="fr-FR",
-            ),
-            context=ExecutionContext(extra_context={"llm_astrology_input_v1": {}}),
-            request_id="req-premium-natal",
-            trace_id="trace-premium-natal",
-        ),
-        db,
-    )
-
-    assert free_plan.plan == "free"
-    assert free_plan.assembly_id == str(free_assembly.id)
-    assert free_plan.rendered_developer_prompt == "SHORT {}"
-    assert premium_plan.plan == "premium"
-    assert premium_plan.assembly_id == str(premium_assembly.id)
-    assert premium_plan.rendered_developer_prompt.startswith("PREMIUM {}")
+            db,
+        )
 
 
 def test_theme_astral_basic_uses_published_prompt_contract_not_legacy_natal_keys(db) -> None:

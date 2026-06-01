@@ -1,5 +1,5 @@
 # Story CS-442 sources-reintroduction-prompts-nataux-legacy: Corriger Suppression Sources De Reintroduction Prompts Nataux Legacy
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -117,14 +117,14 @@ Rebase admin/catalogue tests onto non-natal fixtures, `theme_natal` contracts, o
 
 ## Implementation Tasks
 
-- [ ] Task 1: Remove the `natal_long_free` derivation from admin prompt runtime resolution. (AC: AC1)
-- [ ] Task 2: Delete or archive executable seeds for `natal_interpretation_short` and `natal_long_free`. (AC: AC2, AC3)
-- [ ] Task 3: Remove Basic/Free mappings for `natal_interpretation` from runtime catalogues and registries. (AC: AC4, AC5)
-- [ ] Task 4: Rebase admin and catalogue positive fixtures to non-natal keys, `theme_natal`, or rejection guards. (AC: AC6)
-- [ ] Task 5: Preserve `basic_natal_prompt_payload` only under `theme_astral` ownership. (AC: AC7)
-- [ ] Task 6: Update prompt-generation cartography with the new source status. (AC: AC8)
-- [ ] Task 7: Refresh CS-440 blocker evidence for the prompt-source slice. (AC: AC9)
-- [ ] Task 8: Persist the residual-hit allowlist and before/after evidence artifacts. (AC: AC10, AC11)
+- [x] Task 1: Remove the `natal_long_free` derivation from admin prompt runtime resolution. (AC: AC1)
+- [x] Task 2: Delete or archive executable seeds for `natal_interpretation_short` and `natal_long_free`. (AC: AC2, AC3)
+- [x] Task 3: Remove Basic/Free mappings for `natal_interpretation` from runtime catalogues and registries. (AC: AC4, AC5)
+- [x] Task 4: Rebase admin and catalogue positive fixtures to non-natal keys, `theme_natal`, or rejection guards. (AC: AC6)
+- [x] Task 5: Preserve `basic_natal_prompt_payload` only under `theme_astral` ownership. (AC: AC7)
+- [x] Task 6: Update prompt-generation cartography with the new source status. (AC: AC8)
+- [x] Task 7: Refresh CS-440 blocker evidence for the prompt-source slice. (AC: AC9)
+- [x] Task 8: Persist the residual-hit allowlist and before/after evidence artifacts. (AC: AC10, AC11)
 
 ## Files to Inspect First
 

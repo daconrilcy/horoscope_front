@@ -1,0 +1,32 @@
+# Validation Log
+
+All Python commands were run after activating `.venv`.
+
+## Capsule
+
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-442-sources-reintroduction-prompts-nataux-legacy --root .` -> PASS
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-442-sources-reintroduction-prompts-nataux-legacy` -> PASS
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-442-sources-reintroduction-prompts-nataux-legacy --final` -> PASS
+
+## Format and lint
+
+- `ruff format <changed backend files>` from `backend` -> PASS
+- `ruff check .` from `backend` -> PASS
+
+## Tests
+
+- `python -B -m pytest -q tests/llm_orchestration/test_prompt_governance_registry.py tests/llm_orchestration/test_llm_legacy_extinction.py tests/llm_orchestration/test_assembly_resolution.py --tb=short` -> PASS, 53 passed
+- `python -B -m pytest -q tests/architecture/test_legacy_natal_generation_inventory_guard.py tests/architecture/test_theme_astral_prompt_contract_guard.py tests/architecture/test_llm_legacy_extinction.py --tb=short` -> PASS, 23 passed
+- `python -B -m pytest -q --long tests/integration/test_admin_llm_catalog.py app/tests/integration/test_admin_llm_natal_prompts.py --tb=short` -> PASS, 34 passed
+- `python -B -m pytest -q app/tests/unit/test_scripts_ownership.py --tb=short` -> PASS, 6 passed
+
+## Scans
+
+- `rg -n "natal_interpretation_short|natal_long_free|natal_interpretation" backend\app\services\llm_generation\admin_prompts.py backend\app\domain\llm\prompting backend\app\domain\llm\configuration backend\app\ops\llm\bootstrap backend\scripts` -> PASS_WITH_CLASSIFIED_RESIDUALS; output persisted in `legacy-source-hits-after.txt` and classified in `legacy-source-allowlist.md`.
+- `rg -n "natal_interpretation_short|natal_long_free|fake_generate_natal_interpretation|AIEngineAdapter\.generate_natal_interpretation" _condamad\docs\prompt-generation-cartography\prompt-generation-current-implementation.md backend\tests backend\app\tests` -> PASS_WITH_CLASSIFIED_RESIDUALS; residual hits are explicit guards or historical/read-only tests.
+- `rg -n "seed_28_4|update_all_prompts_59_5|seed_29_prompts|seed_30_8_v3_prompts|seed_30_2_astroresponse_v2|seed_30_3_gpt5_prompts|seed_natal_short" backend\app backend\tests backend\scripts` -> PASS_WITH_GUARD_HITS; only absence guards reference these filenames.
+- Persistent evidence path check -> PASS.
+
+## Startup/import check
+
+- `python -B -c "from app.main import app; assert app.routes"` from `backend` -> PASS.

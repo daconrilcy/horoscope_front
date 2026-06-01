@@ -1,12 +1,20 @@
 # Editorial Review CS-442
 
+Classification: OBSOLETE_PRE_IMPLEMENTATION_REVIEW
+
+Obsolete: yes.
+
+This artifact is a story-contract review created before implementation. It is
+kept as drafting history only and is not final implementation review evidence.
+Final implementation evidence is in `generated/10-final-evidence.md`.
+
 Verdict: CLEAN
 
 ## Scope
 
 - Story reviewed: `_condamad/stories/CS-442-sources-reintroduction-prompts-nataux-legacy/00-story.md`.
 - Source brief: `_story_briefs/cs-442-corriger-suppression-sources-reintroduction-prompts-nataux-legacy.md`.
-- Tracker row: `_condamad/stories/story-status.md` row `CS-442`, status `ready-to-dev`.
+- Tracker row at review time: `_condamad/stories/story-status.md` row `CS-442`, implementation not started.
 - Review type: compact pre-implementation story-contract review.
 
 ## Review Cycle

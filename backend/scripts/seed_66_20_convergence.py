@@ -126,8 +126,6 @@ def seed_66_20_convergence():
             ("guidance", "contextual", "free", "guidance_contextual", "standard"),
             ("guidance", "contextual", "premium", "guidance_contextual", "premium"),
             # NATAL
-            ("natal", "interpretation", "free", "natal_long_free", "standard"),
-            ("natal", "interpretation", "premium", "natal_interpretation", "premium"),
             # Added other natal subfeatures from catalog to be safe
             ("natal", "psy_profile", "premium", "natal_psy_profile", "premium"),
             ("natal", "shadow_integration", "premium", "natal_shadow_integration", "premium"),
