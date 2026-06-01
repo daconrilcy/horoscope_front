@@ -1,5 +1,5 @@
 # Story CS-424 verifier-generation-prompts-basic-natal: Verifier Et Corriger Generation Prompts Basic Natal
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

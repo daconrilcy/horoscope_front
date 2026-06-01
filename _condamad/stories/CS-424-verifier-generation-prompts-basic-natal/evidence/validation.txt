@@ -1,0 +1,35 @@
+# Validation CS-424 - 2026-06-01
+
+All Python commands below were run from `C:\dev\horoscope_front` after activating `.venv\Scripts\Activate.ps1`.
+
+## Backend checks
+
+- PASS: `cd backend; ruff check .` -> All checks passed.
+- PASS: `cd backend; ruff format .` -> 1764 files left unchanged.
+- PASS: `cd backend; python -B -m pytest -q --long tests/integration/llm/test_theme_astral_prompt_contract_bigbang.py --tb=short` -> 4 passed.
+- PASS: `cd backend; python -B -m pytest -q --long tests/integration/llm/test_theme_astral_provider_payload_handoff.py --tb=short` -> 2 passed.
+- PASS: `cd backend; python -B -m pytest -q tests/llm_orchestration/test_basic_natal_prompt_payload_builder.py tests/llm_orchestration/test_theme_astral_provider_payload_builder.py --tb=short` -> 20 passed.
+- PASS: `cd backend; python -B -m pytest -q tests/llm_orchestration/test_assembly_resolution.py -k "theme_astral or basic or prompt_contract" --tb=short` -> 5 passed, 15 deselected.
+- PASS: `cd backend; python -B -m pytest -q --long tests/integration/test_theme_astral_prompt_contract_persistence.py --tb=short` -> 6 passed.
+- PASS: `cd backend; python -B -c "from app.main import app; print(app.title)"` -> `horoscope-backend`.
+
+## CONDAMAD checks
+
+- PASS: `python -B .agents/skills/condamad-story-writer/scripts/condamad_story_validate.py _condamad/stories/CS-424-verifier-generation-prompts-basic-natal/00-story.md`.
+- PASS: `python -B .agents/skills/condamad-story-writer/scripts/condamad_story_lint.py --strict _condamad/stories/CS-424-verifier-generation-prompts-basic-natal/00-story.md`.
+- PASS: `python -B .agents/skills/condamad-code-review/scripts/condamad_review_validate.py .agents/skills/condamad-code-review`.
+- PASS: `git diff --check` with line-ending warnings only.
+
+## Scans and guardrails
+
+- PASS with classification: `rg -n "PROMPT_FALLBACK_CONFIGS|fallback_target_use_case" backend/app/domain/llm backend/app/ops/llm backend/tests/llm_orchestration`.
+  Hits are existing fallback governance/runtime surfaces and tests, not a new Basic prompt fallback.
+- PASS with classification: `rg -n "chart_json|natal_data|audit_input|ranking_score|weighted_score|condition_axis|prompt_hint|user_id|email|latitude|longitude" backend/app/ops/llm/bootstrap/seed_theme_astral_prompt_contract.py backend/tests/integration/llm backend/tests/llm_orchestration`.
+  Hits are negative tests, denylist constants, privacy assertions, or unrelated legacy tests; no hit in the Basic final prompt after snapshot.
+- PASS with classification: `rg -n "cette lecture s'appuie uniquement|Ce repere retient|avec une confiance editoriale controlee" backend/app/ops/llm/bootstrap backend/tests/integration/llm backend/tests/llm_orchestration`.
+  Hits are the explicit `forbidden_template_phrases` prompt denylist and tests asserting those phrases are blocked as generated prose.
+- PASS: `Select-String -Path _condamad/stories/regression-guardrails.md -Pattern 'RG-171'`.
+
+## Skipped
+
+- Live provider call: skipped by story scope.
