@@ -216,3 +216,4 @@
 | cs-434 | `_story_briefs\cs-434-physical-delete-active-legacy-natal-generation-paths.md` | `_condamad\stories\cs-434-physical-delete-active-legacy-natal-generation-paths\00-story.md` |
 | cs-435 | `_story_briefs\cs-435-anti-regression-concurrency-live-replay-bigbang.md` | `_condamad\stories\cs-435-anti-regression-concurrency-live-replay-bigbang\00-story.md` |
 | cs-436 | `_story_briefs\cs-436-supprimer-service-generation-natale-legacy.md` | `_condamad\stories\cs-436-supprimer-service-generation-natale-legacy\00-story.md` |
+| cs-437 | `_story_briefs\cs-437-supprimer-catalogues-seeds-scripts-prompts-nataux-legacy.md` | `_condamad\stories\cs-437-supprimer-catalogues-seeds-scripts-prompts-nataux-legacy\00-story.md` |
