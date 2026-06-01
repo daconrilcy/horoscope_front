@@ -5,17 +5,17 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 ## Story status
 
 - Story key: `CS-426-freeze-inventory-legacy-generation-natal-bigbang`
-- Status: `ready-to-review`
+- Status: `done`
 - Source story: `_condamad/stories/CS-426-freeze-inventory-legacy-generation-natal-bigbang/00-story.md`
 - Source brief: `_story_briefs/cs-426-freeze-inventory-legacy-generation-natal-bigbang.md`
 - Capsule path: `_condamad/stories/CS-426-freeze-inventory-legacy-generation-natal-bigbang`
-- Validation outcome: PASS with documented skipped broad suites
+- Validation outcome: PASS with documented skipped broad suites and clean implementation review
 
 ## Preflight
 
 - Repository root: `C:\dev\horoscope_front`
 - Story source: `00-story.md`
-- Initial `git status --short`: `_condamad/run-state.json` and `_condamad/stories/regression-guardrails.md` were dirty before implementation.
+- Current review `git status --short`: `_condamad/run-state.json` remains dirty outside CS-426 ownership.
 - AGENTS.md files considered: root `AGENTS.md`
 - Capsule generated: repaired generated files with `condamad_prepare.py --repair-generated-only`
 
@@ -30,6 +30,7 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 | `generated/06-validation-plan.md` | yes | yes | validated | CS-426 validation commands recorded |
 | `generated/07-no-legacy-dry-guardrails.md` | yes | yes | validated | helper-generated context |
 | `generated/10-final-evidence.md` | yes | yes | validated | this file |
+| `generated/11-code-review.md` | yes | yes | validated | final implementation review |
 
 ## AC validation
 
@@ -48,7 +49,7 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 
 ## Files changed
 
-- Story/evidence: `00-story.md`, `evidence/legacy-generation-map.md`, `evidence/legacy-surface-classification.md`, `evidence/initial-scans.txt`
+- Story/evidence: `00-story.md`, `evidence/legacy-generation-map.md`, `evidence/legacy-surface-classification.md`, `evidence/initial-scans.txt`, `evidence/source-alignment.md`
 - Generated evidence: `generated/01-execution-brief.md`, `generated/03-acceptance-traceability.md`, `generated/04-target-files.md`, `generated/06-validation-plan.md`, `generated/07-no-legacy-dry-guardrails.md`, `generated/09-dev-log.md`, `generated/10-final-evidence.md`, `generated/11-code-review.md`
 - Guard: `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py`
 - Tracker: `_condamad/stories/story-status.md`
@@ -97,7 +98,7 @@ Commentaire global: cette preuve finale resume l'implementation inventory-only C
 
 ## Code review artifact status
 
-- `generated/11-code-review.md` is handoff-only/pre-implementation editorial review evidence, not final implementation review evidence.
+- `generated/11-code-review.md` is the final clean implementation review evidence after one review/fix iteration.
 
 ## Remaining risks
 

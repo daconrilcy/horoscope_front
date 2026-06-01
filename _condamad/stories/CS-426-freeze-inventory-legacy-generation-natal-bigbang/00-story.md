@@ -1,5 +1,5 @@
 # Story CS-426 freeze-inventory-legacy-generation-natal-bigbang: Freeze Inventory Legacy Generation Natal Big Bang
-Status: ready-to-review
+Status: done
 
 Commentaire global: cette story fige l'inventaire des surfaces capables de generer une lecture natale legacy avant le Big Bang.
 

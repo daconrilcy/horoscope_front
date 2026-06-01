@@ -1,48 +1,43 @@
-# CS-426 Editorial Story Review
+# CS-426 Implementation Review
 
-Implementation handoff note (2026-06-01): this artifact is a pre-implementation editorial story review. It is retained as handoff-only context and must not be used as final implementation review evidence.
+Commentaire global: cette review controle l'implementation inventory-only CS-426 apres correction des preuves CONDAMAD.
 
 Verdict: CLEAN
 
-Review scope:
+## Scope
 
 - Story: `_condamad/stories/CS-426-freeze-inventory-legacy-generation-natal-bigbang/00-story.md`
-- Source brief: `_story_briefs/cs-426-freeze-inventory-legacy-generation-natal-bigbang.md`
+- Brief: `_story_briefs/cs-426-freeze-inventory-legacy-generation-natal-bigbang.md`
 - Tracker row: `_condamad/stories/story-status.md`, `CS-426`
-- Guardrails checked by targeted ID search: `RG-001`, `RG-002`, `RG-005`, `RG-018`, `RG-021`, `RG-149`, `RG-150`, `RG-152`,
-  `RG-157`, `RG-171`, `RG-172`
+- Evidence reviewed: `legacy-generation-map.md`, `legacy-surface-classification.md`, `initial-scans.txt`, `source-alignment.md`
+- Guard reviewed: `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py`
 
-Issues fixed during review:
+## Iteration 1 Findings Fixed
 
-- Status and tracker were aligned for drafting readiness at the time of the editorial review; current implementation status is owned by `00-story.md`, `story-status.md`, and `10-final-evidence.md`.
-- Stale validation blocker text was removed after the underlying contract gaps were corrected.
-- Operation contract now keeps the CONDAMAD removal archetype context while limiting `delete` to classification and forbidding physical deletion here.
-- Allowlist register now uses exact files, with required file, symbol, reason, and permanence columns.
-- AC9 now has executable validation evidence through a `python` check.
-- Removal audit format now names the persisted classification artifact.
-- Delete-only rule now states the forbidden route: deleted, not repointed.
-- Reintroduction guard now names deterministic forbidden symbols, a pytest command, and a concrete architecture guard path.
-- Generated contract check is required and proves no generated/API/frontend contract output changes.
+- Missing declared source-alignment artifact: added `evidence/source-alignment.md`.
+- Review evidence refreshed: replaced the previous editorial review with this final implementation review.
+- Status drift: set `00-story.md` and tracker row to `done`.
+- Final evidence refreshed: updated `generated/10-final-evidence.md` to reference the final review and source-alignment artifact.
+- Validator correction: retained the CONDAMAD-required removal audit table shape after validation rejected changing it.
 
-Brief alignment:
+## Fresh Review
 
-- The story covers every named brief primitive: endpoints, services, gateways, seeds, prompts, schemas, tests, mocks, frontend
-  triggers, legacy prompt keys, fallback paths, cache/persistence without `chart_id`, and `_condamad/run-state.json` out of scope.
-- The target state and validation plan require the three expected evidence outputs: legacy generation map, surface classification,
-  and persisted initial scans.
-- Non-goals remain explicit: no new runtime, provider, fake provider, migration, schema, frontend runtime change, or physical legacy
-  deletion in this inventory story; `delete` is only an inventory classification for later stories.
+- AC1-AC4: PASS. Inventory and classification artifacts map backend routes, service, gateway, prompts, seeds, scripts, persistence, and frontend triggers.
+- AC5-AC7: PASS. Readonly rows are marked non-generative, needs-decision rows include owner/expected decision, and exposure classes are present.
+- AC8: PASS with scoped note. `_condamad/run-state.json` is dirty in the worktree but remains outside CS-426 edits and is documented as non-story-owned.
+- AC9: PASS. Runtime delta check over `backend/app`, `backend/scripts`, `frontend/src`, bootstrap, and model roots reports no application delta.
+- AC10: PASS. Initial scans are persisted in `evidence/initial-scans.txt`.
 
-Validation results:
+## Validation Summary
 
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-426-freeze-inventory-legacy-generation-natal-bigbang\00-story.md`
-  passed in the activated venv.
-- `python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-426-freeze-inventory-legacy-generation-natal-bigbang\00-story.md`
-  passed in the activated venv.
+- Activated venv before Python commands: yes.
+- Story validation and strict lint: PASS.
+- Architecture guard pytest: PASS.
+- Backend ruff check for the architecture guard: PASS.
+- Runtime delta and targeted scans: PASS for story-owned implementation scope.
 
-Review output:
+## Propagation
 
-- Produced this artifact: `_condamad/stories/CS-426-freeze-inventory-legacy-generation-natal-bigbang/generated/11-code-review.md`.
-- Propagation decision: no-propagation; all corrections were local to this story contract, tracker, and review evidence.
+- no-propagation: fixes are local to CS-426 evidence, review output, and tracker status.
 
-Residual risk: none identified for story drafting readiness.
+Residual risk: `_condamad/run-state.json` remains dirty outside CS-426 ownership.

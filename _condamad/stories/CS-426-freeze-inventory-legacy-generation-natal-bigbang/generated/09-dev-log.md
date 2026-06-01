@@ -25,3 +25,7 @@ Commentaire global: ce journal garde les decisions d'implementation CS-426 et le
 - Skipped:
   - Full backend/frontend regression suites and app startup: inventory-only story, no functional runtime code changed.
 - Feedback loop routing: no-propagation; no reusable process correction beyond local story evidence.
+- Implementation review fix loop:
+  - Iteration 1 findings fixed: missing `evidence/source-alignment.md`, stale pre-implementation review artifact, tracker/story status still `ready-to-review`, and stale final evidence status.
+  - Validator correction: retained the CONDAMAD-required `Removal Audit Format` table shape in `00-story.md`.
+  - Fresh implementation review after fixes: CLEAN, recorded in `generated/11-code-review.md`.
