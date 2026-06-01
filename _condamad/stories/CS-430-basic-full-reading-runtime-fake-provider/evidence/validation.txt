@@ -1,0 +1,13 @@
+COMMAND: ruff check .
+All checks passed!
+COMMAND: python -B -m pytest -q --long tests\integration\test_theme_natal_basic_full_reading_runtime.py --tb=short
+...........                                                              [100%]
+11 passed in 2.22s
+COMMAND: python -B -m pytest -q --long tests\integration -k "basic_full_reading or fake_provider or theme_natal" --tb=short
+...................                                                      [100%]
+19 passed, 260 deselected in 4.88s
+COMMAND: python -B -m pytest -q --long tests\integration\test_theme_natal_reading_slots.py --tb=short
+........                                                                 [100%]
+8 passed in 2.15s
+COMMAND: python -B -m pytest -q --tb=short
+RESULT: TIMEOUT after 244s in Codex shell; targeted capsule checks above passed.

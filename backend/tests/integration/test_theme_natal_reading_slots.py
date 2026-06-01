@@ -87,6 +87,10 @@ def test_theme_natal_slot_schema_exposes_public_and_run_contract(db: Session) ->
         "parsed_raw_response",
         "validation_errors",
         "rejection_reason",
+        "generation_contract_key",
+        "generation_contract_hash",
+        "generation_contract_snapshot_id",
+        "provider_mode",
         "prompt_hash",
         "data_hash",
         "engine_profile_version",
@@ -191,6 +195,10 @@ def test_theme_natal_slot_claims_are_serialized_by_application_lock(
         data_hash: str | None,
         engine_profile_version: str | None,
         output_schema_version: str | None,
+        generation_contract_key: str | None,
+        generation_contract_hash: str | None,
+        generation_contract_snapshot_id: str | None,
+        provider_mode: str | None,
     ) -> tuple[SimpleNamespace, bool]:
         return SimpleNamespace(id=client_request_id, slot_id=slot_id), True
 

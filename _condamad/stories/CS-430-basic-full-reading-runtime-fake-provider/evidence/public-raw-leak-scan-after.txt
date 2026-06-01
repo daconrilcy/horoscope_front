@@ -1,0 +1,25 @@
+COMMAND: rg -n "raw_provider_response|provider_raw|raw_response" backend/app/services backend/tests/integration
+backend/tests/integration\test_theme_natal_reading_slots.py:86:        "raw_provider_response",
+backend/tests/integration\test_theme_natal_reading_slots.py:87:        "parsed_raw_response",
+backend/tests/integration\test_theme_natal_reading_slots.py:298:        raw_provider_response={"raw": "technique"},
+backend/tests/integration\test_theme_natal_reading_slots.py:299:        parsed_raw_response={"status": "rejected"},
+backend/tests/integration\test_theme_natal_basic_full_reading_runtime.py:134:    assert "raw_provider_response" not in result.public_payload
+backend/tests/integration\test_theme_natal_basic_full_reading_runtime.py:135:    assert "parsed_raw_response" not in result.public_payload
+backend/tests/integration\test_theme_natal_basic_full_reading_runtime.py:149:    assert run.raw_provider_response is not None
+backend/tests/integration\test_theme_natal_basic_full_reading_runtime.py:150:    assert run.raw_provider_response["provider"] == "fake_provider"
+backend/tests/integration\test_theme_natal_basic_full_reading_runtime.py:253:    assert "raw_provider_response" not in preview
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:53:    "raw_provider_response",
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:54:    "parsed_raw_response",
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:216:        raw_provider_response = _raw_provider_evidence(raw_provider_text, parsed_raw)
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:225:                raw_provider_response=raw_provider_response,
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:226:                parsed_raw_response=None,
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:247:        claim.run.raw_provider_response = raw_provider_response
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:248:        claim.run.parsed_raw_response = parsed_raw.model_dump(mode="json")
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:362:        response["sections"][0]["narrative"] += " raw_provider_response={secret}"
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:518:        "raw_response_hash": raw_hash,
+backend/app/services\llm_generation\natal\theme_natal_basic_full_runtime.py:519:        "raw_response": raw_provider_text,
+backend/app/services\llm_generation\natal\theme_natal_reading_slots.py:177:        raw_provider_response: dict[str, object] | None = None,
+backend/app/services\llm_generation\natal\theme_natal_reading_slots.py:178:        parsed_raw_response: dict[str, object] | None = None,
+backend/app/services\llm_generation\natal\theme_natal_reading_slots.py:187:        run.raw_provider_response = raw_provider_response
+backend/app/services\llm_generation\natal\theme_natal_reading_slots.py:188:        run.parsed_raw_response = parsed_raw_response
+EXIT: 0

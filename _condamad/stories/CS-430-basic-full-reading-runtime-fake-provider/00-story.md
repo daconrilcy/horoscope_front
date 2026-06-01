@@ -1,5 +1,5 @@
 # Story CS-430 basic-full-reading-runtime-fake-provider: Basic Full Reading Runtime With Fake Provider
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -133,17 +133,17 @@ The runtime must prove product routing, Basic payload construction, strict parsi
 
 ## Implementation Tasks
 
-- [ ] Task 1: Wire Basic `generate_full` to `theme_natal.reading.basic_full_reading.v1`. (AC: AC1)
-- [ ] Task 2: Build the Basic prompt-visible payload from `BasicNatalReadingPlan` and existing facts. (AC: AC2)
-- [ ] Task 3: Add a deterministic fake provider with valid and invalid output modes. (AC: AC3, AC7, AC8, AC9, AC10, AC11, AC12, AC13)
-- [ ] Task 4: Persist `LlmGenerationRun` metadata for every fake provider attempt. (AC: AC4)
-- [ ] Task 5: Persist accepted `ThemeNatalReadingSlot` payloads only after validation. (AC: AC5, AC6)
-- [ ] Task 6: Project public Basic readings without raw provider data or technical traces. (AC: AC6)
-- [ ] Task 7: Prove idempotence for repeated Basic full-reading requests. (AC: AC15)
-- [ ] Task 8: Consume quota only after accepted public persistence. (AC: AC14)
-- [ ] Task 9: Add AST and scan guards against old natal generation use cases. (AC: AC16)
-- [ ] Task 10: Add a minimal contractual fake Free preview only for traversal tests. (AC: AC17)
-- [ ] Task 11: Persist validation, scan, run, slot, and fake-provider evidence artifacts. (AC: AC18)
+- [x] Task 1: Wire Basic `generate_full` to `theme_natal.reading.basic_full_reading.v1`. (AC: AC1)
+- [x] Task 2: Build the Basic prompt-visible payload from `BasicNatalReadingPlan` and existing facts. (AC: AC2)
+- [x] Task 3: Add a deterministic fake provider with valid and invalid output modes. (AC: AC3, AC7, AC8, AC9, AC10, AC11, AC12, AC13)
+- [x] Task 4: Persist `LlmGenerationRun` metadata for every fake provider attempt. (AC: AC4)
+- [x] Task 5: Persist accepted `ThemeNatalReadingSlot` payloads only after validation. (AC: AC5, AC6)
+- [x] Task 6: Project public Basic readings without raw provider data or technical traces. (AC: AC6)
+- [x] Task 7: Prove idempotence for repeated Basic full-reading requests. (AC: AC15)
+- [x] Task 8: Consume quota only after accepted public persistence. (AC: AC14)
+- [x] Task 9: Add AST and scan guards against old natal generation use cases. (AC: AC16)
+- [x] Task 10: Add a minimal contractual fake Free preview only for traversal tests. (AC: AC17)
+- [x] Task 11: Persist validation, scan, run, slot, and fake-provider evidence artifacts. (AC: AC18)
 
 ## Files to Inspect First
 
@@ -356,7 +356,7 @@ Files not expected to change:
 
 ## Regression Risks
 
-- CS-427, CS-428, and CS-429 may be ready-to-dev but not implemented when this story starts.
+- Dependency risk at implementation start: CS-427, CS-428, and CS-429 surfaces had to be physically available before wiring CS-430.
 - Fake provider tests can prove unit behavior without proving the complete Basic traversal.
 - Raw provider response data can leak through public projection without a negative public payload assertion.
 - Quota can be consumed before acceptance unless the integration test checks the rejected path.

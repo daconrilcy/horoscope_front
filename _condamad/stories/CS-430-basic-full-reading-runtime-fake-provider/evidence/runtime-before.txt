@@ -1,0 +1,119 @@
+backend/tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:57:        "free_preview",
+backend/tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:58:        "basic_full_reading",
+backend/tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:86:def test_free_preview_resolves_free_preview_without_generation_key() -> None:
+backend/tests\unit\domain\theme_natal\test_generation_contracts.py:31:        "theme_natal.reading.free_preview.v1",
+backend/tests\unit\domain\theme_natal\test_generation_contracts.py:32:        "theme_natal.reading.basic_full_reading.v1",
+backend/tests\unit\domain\theme_natal\test_generation_contracts.py:84:    snapshot = resolve_theme_natal_generation_contract("theme_natal.reading.basic_full_reading.v1")
+backend/tests\unit\domain\theme_natal\test_generation_contracts.py:87:        "theme_natal.reading.basic_full_reading.v1@"
+backend/app\domain\theme_natal\product_contract.py:15:    "free_preview": "theme_natal.reading.free_preview.v1",
+backend/app\domain\theme_natal\product_contract.py:16:    "basic_full_reading": "theme_natal.reading.basic_full_reading.v1",
+backend/app\domain\theme_natal\product_contract.py:45:    FREE_PREVIEW = "free_preview"
+backend/app\domain\theme_natal\product_contract.py:46:    BASIC_FULL_READING = "basic_full_reading"
+backend/app\domain\theme_natal\generation_schemas.py:38:    schema_version: Literal["theme_natal_free_preview_raw_v1"]
+backend/app\domain\theme_natal\generation_schemas.py:101:    schema_version: Literal["theme_natal_free_preview_public_v1"]
+backend/app\domain\theme_natal\generation_schemas.py:172:    ThemeNatalOutputVariant.FREE_PREVIEW: "theme_natal_free_preview_raw_v1",
+backend/app\domain\theme_natal\generation_schemas.py:178:    ThemeNatalOutputVariant.FREE_PREVIEW: "theme_natal_free_preview_public_v1",
+backend/app\domain\theme_natal\generation_contracts.py:213:            version="theme_natal.engine.free_preview.v1",
+backend/app\domain\theme_natal\generation_contracts.py:224:            version="theme_natal.data.free_preview.v1",
+backend/app\domain\theme_natal\generation_contracts.py:234:            version="theme_natal.prompt.free_preview.v1",
+backend/app\domain\theme_natal\generation_contracts.py:235:            prompt_policy_id="theme_natal_free_preview_prompt_policy_v1",
+backend/app\domain\theme_natal\generation_contracts.py:236:            assembly_key="theme_natal_free_preview_assembly_v1",
+backend/app\domain\theme_natal\generation_contracts.py:241:        projection_policy="project_free_preview_card_without_provider_trace",
+backend/app\domain\theme_natal\generation_contracts.py:246:            version="theme_natal.engine.basic_full_reading.v1",
+backend/app\domain\theme_natal\generation_contracts.py:257:            version="theme_natal.data.basic_full_reading.v1",
+backend/app\domain\theme_natal\generation_contracts.py:274:            version="theme_natal.prompt.basic_full_reading.v1",
+backend/tests\unit\test_natal_chart_long_quota_on_acceptance.py:24:    ThemeNatalReadingSlotService,
+backend/tests\unit\test_natal_chart_long_quota_on_acceptance.py:120:        accepted_result = ThemeNatalReadingSlotService.consume_quota_after_publication(
+backend/tests\unit\test_natal_chart_long_quota_on_acceptance.py:126:        existing_result = ThemeNatalReadingSlotService.consume_quota_after_publication(
+backend/app\infra\db\models\__init__.py:128:from app.infra.db.models.llm_generation_run import LlmGenerationRunModel
+backend/app\infra\db\models\__init__.py:209:from app.infra.db.models.theme_natal_reading_slot import ThemeNatalReadingSlotModel
+backend/app\infra\db\models\__init__.py:359:    "ThemeNatalReadingSlotModel",
+backend/app\infra\db\models\__init__.py:397:    "LlmGenerationRunModel",
+backend/app\infra\db\models\theme_natal_reading_slot.py:43:class ThemeNatalReadingSlotModel(Base):
+backend/app\infra\db\models\theme_natal_reading_slot.py:115:        "LlmGenerationRunModel",
+backend/app\infra\db\models\theme_natal_reading_slot.py:117:        foreign_keys="LlmGenerationRunModel.slot_id",
+backend/app\infra\db\models\llm_generation_run.py:30:class LlmGenerationRunModel(Base):
+backend/app\infra\db\models\llm_generation_run.py:79:        "ThemeNatalReadingSlotModel",
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:25:    LlmGenerationRunModel,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:30:    ThemeNatalReadingSlotModel,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:43:class ThemeNatalReadingSlotKey:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:73:    slot: ThemeNatalReadingSlotModel
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:74:    run: LlmGenerationRunModel
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:83:    slot: ThemeNatalReadingSlotModel
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:84:    run: LlmGenerationRunModel
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:88:class ThemeNatalReadingSlotService:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:95:        key: ThemeNatalReadingSlotKey,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:131:        run = db.get(LlmGenerationRunModel, run_id)
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:136:            slot = db.get(ThemeNatalReadingSlotModel, run.slot_id)
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:142:                update(ThemeNatalReadingSlotModel)
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:144:                    ThemeNatalReadingSlotModel.id == run.slot_id,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:145:                    ThemeNatalReadingSlotModel.status != THEME_NATAL_SLOT_STATUS_ACCEPTED,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:172:    ) -> LlmGenerationRunModel:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:174:        run = db.get(LlmGenerationRunModel, run_id)
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:191:        key: ThemeNatalReadingSlotKey,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:192:    ) -> ThemeNatalReadingSlotModel | None:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:204:    ) -> tuple[list[ThemeNatalReadingSlotModel], int]:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:206:        stmt = select(ThemeNatalReadingSlotModel).where(
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:207:            ThemeNatalReadingSlotModel.user_id == user_id,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:211:            stmt = stmt.where(ThemeNatalReadingSlotModel.chart_id == chart_id)
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:217:                stmt.order_by(ThemeNatalReadingSlotModel.created_at.desc())
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:251:def _slot_key_stmt(key: ThemeNatalReadingSlotKey) -> Select[tuple[ThemeNatalReadingSlotModel]]:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:253:    stmt = select(ThemeNatalReadingSlotModel).where(
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:254:        ThemeNatalReadingSlotModel.user_id == values["user_id"],
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:255:        ThemeNatalReadingSlotModel.chart_id == values["chart_id"],
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:256:        ThemeNatalReadingSlotModel.feature == values["feature"],
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:257:        ThemeNatalReadingSlotModel.reading_kind == values["reading_kind"],
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:258:        ThemeNatalReadingSlotModel.product_plan == values["product_plan"],
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:259:        ThemeNatalReadingSlotModel.output_variant == values["output_variant"],
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:260:        ThemeNatalReadingSlotModel.contract_version == values["contract_version"],
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:264:        return stmt.where(ThemeNatalReadingSlotModel.persona_profile_id.is_(None))
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:265:    return stmt.where(ThemeNatalReadingSlotModel.persona_profile_id == persona_profile_id)
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:269:    return ThemeNatalReadingSlotModel.status == THEME_NATAL_SLOT_STATUS_ACCEPTED
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:272:def _slot_lock_for_key(key: ThemeNatalReadingSlotKey) -> RLock:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:305:    key: ThemeNatalReadingSlotKey,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:306:) -> tuple[ThemeNatalReadingSlotModel, bool]:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:312:    slot = ThemeNatalReadingSlotModel(
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:343:) -> tuple[LlmGenerationRunModel, bool]:
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:344:    stmt = select(LlmGenerationRunModel).where(
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:345:        LlmGenerationRunModel.slot_id == slot_id,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:346:        LlmGenerationRunModel.client_request_id == client_request_id,
+backend/app\services\llm_generation\natal\theme_natal_reading_slots.py:352:    run = LlmGenerationRunModel(
+backend/tests\integration\test_theme_natal_reading_slots.py:18:from app.infra.db.models.llm_generation_run import LlmGenerationRunModel
+backend/tests\integration\test_theme_natal_reading_slots.py:22:    ThemeNatalReadingSlotModel,
+backend/tests\integration\test_theme_natal_reading_slots.py:26:    ThemeNatalReadingSlotKey,
+backend/tests\integration\test_theme_natal_reading_slots.py:27:    ThemeNatalReadingSlotService,
+backend/tests\integration\test_theme_natal_reading_slots.py:35:) -> ThemeNatalReadingSlotKey:
+backend/tests\integration\test_theme_natal_reading_slots.py:37:    return ThemeNatalReadingSlotKey(
+backend/tests\integration\test_theme_natal_reading_slots.py:42:        contract_version="theme_natal.reading.basic_full_reading.v1",
+backend/tests\integration\test_theme_natal_reading_slots.py:48:    return db.execute(select(func.count()).select_from(ThemeNatalReadingSlotModel)).scalar_one()
+backend/tests\integration\test_theme_natal_reading_slots.py:53:    return db.execute(select(func.count()).select_from(LlmGenerationRunModel)).scalar_one()
+backend/tests\integration\test_theme_natal_reading_slots.py:103:    first = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:108:    second = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:126:    first = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:131:    second = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:145:    first = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:150:    second = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:174:        key: ThemeNatalReadingSlotKey,
+backend/tests\integration\test_theme_natal_reading_slots.py:199:        ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:225:    hidden = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:230:    accepted = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:235:    ThemeNatalReadingSlotService.record_rejected_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:240:    ThemeNatalReadingSlotService.publish_accepted_payload(
+backend/tests\integration\test_theme_natal_reading_slots.py:246:    rows, total = ThemeNatalReadingSlotService.list_public_slots(db, user_id=428)
+backend/tests\integration\test_theme_natal_reading_slots.py:247:    hidden_lookup = ThemeNatalReadingSlotService.get_public_slot_by_key(
+backend/tests\integration\test_theme_natal_reading_slots.py:251:    accepted_lookup = ThemeNatalReadingSlotService.get_public_slot_by_key(
+backend/tests\integration\test_theme_natal_reading_slots.py:267:    first = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:273:    publication = ThemeNatalReadingSlotService.publish_accepted_payload(
+backend/tests\integration\test_theme_natal_reading_slots.py:282:    retry = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:287:    ThemeNatalReadingSlotService.record_rejected_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:295:    public_slot = ThemeNatalReadingSlotService.get_public_slot_by_key(db, key=_slot_key())
+backend/tests\integration\test_theme_natal_reading_slots.py:306:    first = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:311:    first_publication = ThemeNatalReadingSlotService.publish_accepted_payload(
+backend/tests\integration\test_theme_natal_reading_slots.py:316:    second = ThemeNatalReadingSlotService.claim_generation_run(
+backend/tests\integration\test_theme_natal_reading_slots.py:321:    second_publication = ThemeNatalReadingSlotService.publish_accepted_payload(
+backend/tests\llm_orchestration\test_theme_natal_generation_contracts.py:28:            "theme_natal.reading.basic_full_reading.v1"
+backend/tests\llm_orchestration\test_theme_natal_generation_contracts.py:34:        "theme_natal.reading.basic_full_reading.v1",
+backend/tests\llm_orchestration\test_theme_natal_generation_contracts.py:44:        "theme_natal.reading.basic_full_reading.v1",
+backend/tests\llm_orchestration\test_theme_natal_generation_contracts.py:84:        "theme_natal.reading.basic_full_reading.v1"
+backend/tests\llm_orchestration\test_theme_natal_generation_contracts.py:138:            "schema_version": "theme_natal_free_preview_raw_v1",
+backend/tests\llm_orchestration\test_theme_natal_generation_contracts.py:188:            "schema_version": "theme_natal_free_preview_public_v1",

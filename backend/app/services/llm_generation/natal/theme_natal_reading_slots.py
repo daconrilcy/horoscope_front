@@ -27,6 +27,7 @@ from app.infra.db.models.llm_generation_run import (
 from app.infra.db.models.theme_natal_reading_slot import (
     THEME_NATAL_SLOT_STATUS_ACCEPTED,
     THEME_NATAL_SLOT_STATUS_GENERATING,
+    THEME_NATAL_SLOT_STATUS_REJECTED,
     ThemeNatalReadingSlotModel,
 )
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
@@ -98,6 +99,10 @@ class ThemeNatalReadingSlotService:
         data_hash: str | None = None,
         engine_profile_version: str | None = None,
         output_schema_version: str | None = None,
+        generation_contract_key: str | None = None,
+        generation_contract_hash: str | None = None,
+        generation_contract_snapshot_id: str | None = None,
+        provider_mode: str | None = None,
     ) -> ThemeNatalGenerationClaim:
         """Cree ou relit le slot et le run idempotent d'une demande client."""
         request_id = _require_client_request_id(client_request_id)
@@ -111,6 +116,10 @@ class ThemeNatalReadingSlotService:
                 data_hash=data_hash,
                 engine_profile_version=engine_profile_version,
                 output_schema_version=output_schema_version,
+                generation_contract_key=generation_contract_key,
+                generation_contract_hash=generation_contract_hash,
+                generation_contract_snapshot_id=generation_contract_snapshot_id,
+                provider_mode=provider_mode,
             )
         return ThemeNatalGenerationClaim(
             slot=slot,
@@ -180,6 +189,14 @@ class ThemeNatalReadingSlotService:
         run.validation_errors = validation_errors
         run.rejection_reason = rejection_reason
         run.completed_at = utc_now()
+        db.execute(
+            update(ThemeNatalReadingSlotModel)
+            .where(
+                ThemeNatalReadingSlotModel.id == run.slot_id,
+                ThemeNatalReadingSlotModel.status != THEME_NATAL_SLOT_STATUS_ACCEPTED,
+            )
+            .values(status=THEME_NATAL_SLOT_STATUS_REJECTED)
+        )
         db.commit()
         db.refresh(run)
         return run
@@ -340,6 +357,10 @@ def _get_or_create_generation_run(
     data_hash: str | None,
     engine_profile_version: str | None,
     output_schema_version: str | None,
+    generation_contract_key: str | None,
+    generation_contract_hash: str | None,
+    generation_contract_snapshot_id: str | None,
+    provider_mode: str | None,
 ) -> tuple[LlmGenerationRunModel, bool]:
     stmt = select(LlmGenerationRunModel).where(
         LlmGenerationRunModel.slot_id == slot_id,
@@ -357,6 +378,10 @@ def _get_or_create_generation_run(
         data_hash=data_hash,
         engine_profile_version=engine_profile_version,
         output_schema_version=output_schema_version,
+        generation_contract_key=generation_contract_key,
+        generation_contract_hash=generation_contract_hash,
+        generation_contract_snapshot_id=generation_contract_snapshot_id,
+        provider_mode=provider_mode,
     )
     db.add(run)
     try:

@@ -1,5 +1,9 @@
 # CS-430 Editorial Review
 
+Classification: obsolete-pre-implementation-review.
+
+Note: this artifact reviewed story drafting only. It is not final implementation review evidence for the code now added by this run.
+
 Verdict: CLEAN
 
 ## Scope Reviewed

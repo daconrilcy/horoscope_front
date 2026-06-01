@@ -1,0 +1,3 @@
+COMMAND: python -B -m pytest -q --long tests\integration\test_theme_natal_basic_full_reading_runtime.py --tb=short
+...........                                                              [100%]
+11 passed in 2.24s

@@ -1,0 +1,172 @@
+backend/tests/integration\basic_natal_v2_helpers.py:98:    return {**draft, "basic_natal_interpretation_v2": contract.model_dump(mode="json")}
+backend/tests/integration\test_llm_legacy_extinction.py:57:        use_case="natal_interpretation",
+backend/tests/integration\test_llm_legacy_extinction.py:96:        {"use_case": "natal_interpretation"},
+backend/tests/integration\test_llm_legacy_extinction.py:108:        "use_case": "natal_interpretation",
+backend/tests/integration\test_admin_llm_catalog.py:91:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:770:    use_case_key = f"natal_interpretation_short_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:845:        assert payload["use_case_key"] == "natal_long_free"
+backend/tests/integration\test_admin_llm_catalog.py:846:        assert payload["runtime_use_case_key"] == "natal_long_free"
+backend/tests/integration\test_admin_llm_catalog.py:850:        assert selected_components["use_case_overlay"]["editable_use_case_key"] == "natal_long_free"
+backend/tests/integration\test_admin_llm_catalog.py:1256:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:1388:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:1520:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:1649:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:1761:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:1890:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_admin_llm_catalog.py:2200:    use_case_key = f"natal_interpretation_{uuid.uuid4().hex[:8]}"
+backend/tests/integration\test_llm_integrated_propagation.py:31:            use_case="natal_interpretation",
+backend/tests/integration\test_llm_integrated_propagation.py:48:        use_case_key="natal_interpretation",
+backend/tests/integration\test_llm_integrated_propagation.py:68:        use_case="natal_interpretation",
+backend/tests/integration\test_llm_integrated_propagation.py:116:            use_case="natal_interpretation", feature="test_feature", locale="fr-FR"
+backend/tests/integration\test_llm_integrated_propagation.py:130:        use_case_key="natal_interpretation",
+backend/tests/integration\test_llm_integrated_propagation.py:146:        use_case="natal_interpretation",
+backend/tests/integration\test_llm_integrated_propagation.py:195:            use_case="natal_interpretation", feature="test_feature", locale="fr-FR"
+backend/tests/integration\test_llm_integrated_propagation.py:209:        use_case_key="natal_interpretation",
+backend/tests/integration\test_llm_integrated_propagation.py:210:        natal_interpretation="Some interpretation",
+backend/tests/integration\test_llm_integrated_propagation.py:225:        use_case="natal_interpretation",
+backend/tests/integration\test_basic_natal_v2_pipeline.py:47:    async def fake_generate_natal_interpretation(
+backend/tests/integration\test_basic_natal_v2_pipeline.py:56:            "generate_natal_interpretation",
+backend/tests/integration\test_basic_natal_v2_pipeline.py:57:            side_effect=fake_generate_natal_interpretation,
+backend/tests/integration\test_basic_natal_v2_pipeline.py:95:    assert response.data.meta.schema_version == "basic_natal_interpretation_v2"
+backend/tests/integration\test_basic_natal_v2_pipeline.py:96:    assert response.data.basic_natal_interpretation_v2 is not None
+backend/tests/integration\test_basic_natal_v2_pipeline.py:97:    assert response.data.basic_natal_interpretation_v2.engine_version == "basic-natal-reading-v1"
+backend/tests/integration\test_basic_natal_v2_pipeline.py:98:    assert response.data.basic_natal_interpretation_v2.schema_version == (
+backend/tests/integration\test_basic_natal_v2_pipeline.py:99:        "basic_natal_interpretation_v2"
+backend/tests/integration\test_basic_natal_v2_pipeline.py:101:    assert response.data.basic_natal_interpretation_v2.taxonomy_version
+backend/tests/integration\test_basic_natal_v2_pipeline.py:102:    assert response.data.basic_natal_interpretation_v2.salience_version
+backend/tests/integration\test_basic_natal_v2_pipeline.py:103:    assert response.data.basic_natal_interpretation_v2.prompt_version
+backend/tests/integration\test_basic_natal_v2_pipeline.py:104:    assert response.data.basic_natal_interpretation_v2.validator_version
+backend/tests/integration\test_basic_natal_v2_pipeline.py:108:            text("SELECT interpretation_payload FROM user_natal_interpretations WHERE id = :id"),
+backend/tests/integration\test_basic_natal_v2_pipeline.py:117:    assert basic_payload["schema_version"] == "basic_natal_interpretation_v2"
+backend/tests/integration\test_llm_release.py:274:            use_case = "natal_long_free"  # Doesn't require schema.
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:14:from app.infra.db.models.user_natal_interpretation import (
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:21:    has_compatible_basic_natal_interpretation_v2,
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:50:        use_case="natal_interpretation",
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:65:    nested = stale["basic_natal_interpretation_v2"]
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:74:    nested = stale["basic_natal_interpretation_v2"]
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:83:    nested = stale["basic_natal_interpretation_v2"]
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:132:    async def fake_generate_natal_interpretation(
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:141:            "generate_natal_interpretation",
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:142:            side_effect=fake_generate_natal_interpretation,
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:173:    assert response.data.basic_natal_interpretation_v2 is not None
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:186:    assert "basic_natal_interpretation_v2" in row.interpretation_payload
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:187:    nested = row.interpretation_payload["basic_natal_interpretation_v2"]
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:190:    assert has_compatible_basic_natal_interpretation_v2(row.interpretation_payload)
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:192:    with patch.object(AIEngineAdapter, "generate_natal_interpretation") as gateway_mock:
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:212:    assert response.data.meta.schema_version == "basic_natal_interpretation_v2"
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:213:    assert response.data.basic_natal_interpretation_v2 is not None
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:215:        response.data.basic_natal_interpretation_v2.basic_editorial_contract_version
+backend/tests/integration\test_basic_natal_v2_cache_invalidation.py:226:    assert not has_compatible_basic_natal_interpretation_v2(payload)
+backend/tests/integration\test_llm_doc_conformity.py:171:    assert any("natal_interpretation" in error for error in errors)
+backend/tests/integration\llm\test_theme_astral_prompt_contract_bigbang.py:122:    assert "natal_interpretation" not in rendered_prompt
+backend/tests/integration\llm\test_theme_astral_prompt_contract_bigbang.py:123:    assert "natal_interpretation_short" not in rendered_prompt
+backend/tests/integration\llm\test_natal_llm_astrology_input_audit.py:7:from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+backend/tests/integration\llm\test_natal_llm_astrology_input_audit.py:72:        use_case="natal_interpretation",
+backend/app/services\privacy_service.py:43:from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+backend/app/services\privacy_service.py:413:        deleted_entities.append("user_natal_interpretations")
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:17:from app.infra.db.models.user_natal_interpretation import (
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:107:        use_case="natal_interpretation_short",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:116:        use_case="natal_interpretation_short",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:151:        use_case="natal_interpretation",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:207:        use_case="natal_interpretation_short",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:236:        answer_id="natal_interpretation:req-384",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:244:        use_case="natal_interpretation",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:309:        use_case="natal_interpretation",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:330:    assert first_claim == (invalid.id, "natal_interpretation")
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:341:        original_use_case="natal_interpretation",
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:343:    assert db.get(UserNatalInterpretationModel, invalid.id).use_case == "natal_interpretation"
+backend/tests/integration\test_natal_interpretation_rejected_public_boundary.py:354:        use_case="natal_interpretation",
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:10:from app.infra.db.models.user_natal_interpretation import (
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:15:from app.services.api_contracts.public.natal_interpretation import InterpretationMeta
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:52:        use_case="natal_long_free",
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:74:        use_case="natal_interpretation",
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:101:    assert data["use_case"] == "natal_interpretation_short"
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:102:    assert data["meta"]["use_case"] == "natal_interpretation_short"
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:110:    assert data["basic_natal_interpretation_v2"] is None
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:117:    row.use_case = "natal_interpretation_short"
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:130:    assert data["use_case"] == "natal_interpretation_short"
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:131:    assert data["meta"]["use_case"] == "natal_interpretation_short"
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:132:    assert data["basic_natal_interpretation_v2"] is None
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:145:    basic = data["basic_natal_interpretation_v2"]
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:148:    assert data["meta"]["schema_version"] == "basic_natal_interpretation_v2"
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:153:    assert basic["schema_version"] == "basic_natal_interpretation_v2"
+backend/tests/integration\test_natal_interpretation_public_free_basic_contract.py:179:    assert "basic_natal_interpretation_v2" in schema_blob
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:196:    async def fake_generate_natal_interpretation(
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:205:            "generate_natal_interpretation",
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:206:            side_effect=fake_generate_natal_interpretation,
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:242:    assert natal_input.use_case_key == "natal_interpretation"
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:246:    assert response.data.use_case == "natal_interpretation"
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:251:    assert response.data.basic_natal_interpretation_v2 is not None
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:252:    assert response.data.basic_natal_interpretation_v2.schema_version == (
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:255:    assert response.data.basic_natal_interpretation_v2.public_evidence
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:261:                "FROM user_natal_interpretations WHERE id = :id"
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:268:    assert persisted["use_case"] == "natal_interpretation"
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:277:async def test_adapter_maps_basic_complete_to_natal_interpretation_assembly(monkeypatch) -> None:
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:300:    await AIEngineAdapter.generate_natal_interpretation(
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:302:            use_case_key="natal_interpretation",
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:316:    assert request.user_input.use_case == "natal_interpretation"
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:334:            use_case="natal_interpretation",
+backend/tests/integration\test_natal_basic_complete_v3_runtime.py:343:            use_case="natal_interpretation_short",
+backend/tests/integration\test_narrative_answer_audit_schema.py:14:from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+backend/tests/integration\test_narrative_answer_audit_schema.py:21:    / "20260525_0139_extend_user_natal_interpretations_audit_v1.py"
+backend/tests/integration\test_narrative_answer_audit_schema.py:32:def test_user_natal_interpretation_schema_exposes_audit_columns() -> None:
+backend/tests/integration\test_narrative_answer_audit_schema.py:58:    assert "ck_user_natal_interpretations_answer_type" in checks
+backend/tests/integration\test_narrative_answer_audit_schema.py:59:    assert "ck_user_natal_interpretations_grounding_status" in checks
+backend/tests/integration\test_narrative_answer_audit_schema.py:68:    assert 'TABLE_NAME = "user_natal_interpretations"' in content
+backend/tests/integration\test_narrative_answer_audit_schema.py:90:                    CREATE TABLE user_natal_interpretations (
+backend/tests/integration\test_narrative_answer_audit_schema.py:103:                    "ALTER TABLE user_natal_interpretations "
+backend/tests/integration\test_narrative_answer_audit_schema.py:110:                    INSERT INTO user_natal_interpretations (
+backend/tests/integration\test_narrative_answer_audit_schema.py:127:                for column in inspect(connection).get_columns("user_natal_interpretations")
+backend/tests/integration\test_narrative_answer_audit_schema.py:131:                for check in inspect(connection).get_check_constraints("user_natal_interpretations")
+backend/tests/integration\test_narrative_answer_audit_schema.py:137:                    FROM user_natal_interpretations
+backend/tests/integration\test_narrative_answer_audit_schema.py:152:        assert "ck_user_natal_interpretations_answer_type" in checks
+backend/tests/integration\test_narrative_answer_audit_schema.py:153:        assert "ck_user_natal_interpretations_grounding_status" in checks
+backend/tests/integration\test_narrative_answer_audit_schema.py:155:            (1, "user_natal_interpretation:1", "basic"),
+backend/app/services\llm_generation\admin_prompts.py:301:        return "natal_long_free"
+backend/app/services\api_contracts\public\natal_interpretation.py:89:    basic_natal_interpretation_v2: Optional[BasicNatalInterpretationV2] = None
+backend/app/services\llm_generation\natal\interpretation_service.py:83:from app.infra.db.models.user_natal_interpretation import (
+backend/app/services\llm_generation\natal\interpretation_service.py:98:from app.services.api_contracts.public.natal_interpretation import (
+backend/app/services\llm_generation\natal\interpretation_service.py:102:from app.services.api_contracts.public.natal_interpretation import (
+backend/app/services\llm_generation\natal\interpretation_service.py:139:    has_compatible_basic_natal_interpretation_v2,
+backend/app/services\llm_generation\natal\interpretation_service.py:140:    is_public_natal_interpretation,
+backend/app/services\llm_generation\natal\interpretation_service.py:143:    load_basic_natal_interpretation_v2_from_payload,
+backend/app/services\llm_generation\natal\interpretation_service.py:571:PUBLIC_FREE_SHORT_USE_CASE = "natal_interpretation_short"
+backend/app/services\llm_generation\natal\interpretation_service.py:580:        or model.use_case == "natal_long_free"
+backend/app/services\llm_generation\natal\interpretation_service.py:916:            feature_code="natal_interpretation",
+backend/app/services\llm_generation\natal\interpretation_service.py:1011:        if has_compatible_basic_natal_interpretation_v2(payload):
+backend/app/services\llm_generation\natal\interpretation_service.py:1037:        if model.variant_code == "free_short" or model.use_case == "natal_long_free":
+backend/app/services\llm_generation\natal\interpretation_service.py:1044:        if has_compatible_basic_natal_interpretation_v2(payload):
+backend/app/services\llm_generation\natal\interpretation_service.py:1060:        if model.use_case != "natal_interpretation":
+backend/app/services\llm_generation\natal\interpretation_service.py:1066:        return not has_compatible_basic_natal_interpretation_v2(payload)
+backend/app/services\llm_generation\natal\interpretation_service.py:1093:            and is_public_natal_interpretation(row)
+backend/app/services\llm_generation\natal\interpretation_service.py:1099:            and is_public_natal_interpretation(row)
+backend/app/services\llm_generation\natal\interpretation_service.py:1196:            basic_contract = load_basic_natal_interpretation_v2_from_payload(raw_payload)
+backend/app/services\llm_generation\natal\interpretation_service.py:1414:            use_case_key = MODULE_TO_USE_CASE_KEY.get(module, "natal_interpretation")
+backend/app/services\llm_generation\natal\interpretation_service.py:1417:                "natal_interpretation" if level == "complete" else "natal_interpretation_short"
+backend/app/services\llm_generation\natal\interpretation_service.py:1480:        gateway_result = await AIEngineAdapter.generate_natal_interpretation(
+backend/app/services\llm_generation\natal\interpretation_service.py:1515:        basic_natal_interpretation_v2: BasicNatalInterpretationV2 | None = None
+backend/app/services\llm_generation\natal\interpretation_service.py:1542:                basic_natal_interpretation_v2 = _basic_natal_contract_from_draft(
+backend/app/services\llm_generation\natal\interpretation_service.py:1547:                    basic_natal_interpretation_v2,
+backend/app/services\llm_generation\natal\interpretation_service.py:1610:        if basic_natal_interpretation_v2 is not None:
+backend/app/services\llm_generation\natal\interpretation_service.py:1614:                    basic_natal_interpretation_v2.model_dump()
+backend/app/services\llm_generation\natal\interpretation_service.py:1640:            if basic_natal_interpretation_v2 is not None
+backend/app/services\llm_generation\natal\interpretation_service.py:1795:                basic_natal_interpretation_v2=basic_natal_interpretation_v2,
+backend/app/services\llm_generation\natal\interpretation_service.py:1816:        Appelle un prompt unique 'natal_long_free' qui produit title + summary + accordion_titles.
+backend/app/services\llm_generation\natal\interpretation_service.py:1818:        use_case_key = "natal_long_free"
+backend/app/services\llm_generation\natal\interpretation_service.py:1855:        gateway_result = await AIEngineAdapter.generate_natal_interpretation(
+backend/app/services\llm_generation\natal\interpretation_service.py:2092:            if not is_public_natal_interpretation(row):
+backend/app/services\llm_generation\natal\interpretation_service.py:2126:            action="natal_interpretation_deleted",
+backend/app/services\llm_generation\natal\interpretation_service.py:2127:            target_type="natal_interpretation",
+backend/app/services\llm_generation\natal\interpretation_service.py:2161:        if item and not is_public_natal_interpretation(item):
+backend/app/services\llm_generation\natal\interpretation_service.py:2206:        basic_natal_interpretation_v2 = load_basic_natal_interpretation_v2_from_payload(raw_payload)
+backend/app/services\llm_generation\natal\interpretation_service.py:2216:                basic_natal_interpretation_v2=basic_natal_interpretation_v2,
+backend/app/services\llm_generation\natal\stored_interpretation_payload.py:19:from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
+backend/app/services\llm_generation\natal\stored_interpretation_payload.py:23:BASIC_NATAL_INTERPRETATION_V2_PAYLOAD_KEY = "basic_natal_interpretation_v2"
+backend/app/services\llm_generation\natal\stored_interpretation_payload.py:64:def is_public_natal_interpretation(model: UserNatalInterpretationModel) -> bool:
+backend/app/services\llm_generation\natal\stored_interpretation_payload.py:115:def load_basic_natal_interpretation_v2_from_payload(
+backend/app/services\llm_generation\natal\stored_interpretation_payload.py:144:def has_compatible_basic_natal_interpretation_v2(payload: dict[str, object]) -> bool:
+backend/app/services\llm_generation\natal\stored_interpretation_payload.py:146:    return load_basic_natal_interpretation_v2_from_payload(payload) is not None
+backend/app/services\llm_generation\natal\public_interpretation.py:10:from app.services.api_contracts.public.natal_interpretation import (
+backend/app/services\api_contracts\public\astrologers.py:47:    has_natal_interpretation: bool = False
+backend/app/services\api_contracts\public\astrologers.py:49:    last_natal_interpretation_id: Optional[str] = None
+backend/app/services\natal\pdf_export_service.py:20:from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
