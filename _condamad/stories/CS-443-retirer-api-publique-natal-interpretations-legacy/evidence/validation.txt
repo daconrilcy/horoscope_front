@@ -10,7 +10,8 @@
 - `pnpm --dir frontend lint`: PASS.
 - Production forbidden URL and mapping scans: PASS, no matches; see `forbidden-scan-after.txt`.
 
-Note: the first integration command without `--long` exited 0 with 12 deselected because backend `conftest.py` excludes integration tests from fast local runs. It was rerun with `--long`.
+Note: the first integration command without `--long` exited 0 with 12 deselected because backend
+`conftest.py` excludes integration tests from fast local runs. It was rerun with `--long`.
 
 ## Review/fix validation
 
@@ -44,3 +45,17 @@ python -B -m pytest --long -q `
 - `condamad_story_validate.py`: PASS.
 - `condamad_story_lint.py --strict`: PASS.
 - `git diff --check`: PASS with CRLF warnings only.
+
+## Final brief/code alignment rerun
+
+- Final alignment pass date: 2026-06-01.
+- Tracker row path/source/date checked against `story-status.md`: PASS.
+- Runtime route/OpenAPI absence assertion rerun from `backend` with venv active: PASS.
+- Production forbidden URL scan over `backend/app/api/v1/routers/public` and `frontend/src`: PASS, no matches.
+- Production public mapping scan over public backend contracts/routes and frontend natal-chart roots: PASS, no matches.
+- Backend review/fix pytest suite rerun with `--long`: PASS, 38 passed.
+- `ruff check .` from `backend` with venv active: PASS.
+- Frontend targeted Vitest suites rerun: PASS, 4 files / 136 tests.
+- `pnpm --dir frontend lint`: PASS.
+- `condamad_story_validate.py`: PASS.
+- `condamad_story_lint.py --strict`: PASS.

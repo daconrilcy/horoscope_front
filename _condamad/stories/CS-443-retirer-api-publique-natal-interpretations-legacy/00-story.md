@@ -1,5 +1,5 @@
 # Story CS-443 retirer-api-publique-natal-interpretations-legacy: Remove Public Legacy Natal Interpretations API
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

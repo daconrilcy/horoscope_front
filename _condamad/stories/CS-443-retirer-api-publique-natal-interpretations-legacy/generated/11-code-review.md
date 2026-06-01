@@ -7,6 +7,7 @@
 - Source brief: `_story_briefs/cs-443-corriger-suppression-api-publique-natal-interpretations-legacy.md`
 - Tracker row: source/path match verified in `_condamad/stories/story-status.md`.
 - Review type: implementation review + fix + fresh re-review.
+- Final brief/code alignment pass: rerun on 2026-06-01 after timeout resume.
 - Subagents: not used.
 
 ## Inputs reviewed
@@ -76,6 +77,8 @@ Commands run during this review/fix cycle:
 - `condamad_story_validate.py`: PASS.
 - `condamad_story_lint.py --strict`: PASS.
 - `git diff --check`: PASS with CRLF warnings only.
+- Final brief/code alignment rerun: PASS for runtime/OpenAPI absence, production scans, backend 38-test suite,
+  backend `ruff check`, frontend 136-test suite, frontend lint, story validation, and strict story lint.
 
 Exact long commands are recorded in `evidence/validation.txt`.
 
