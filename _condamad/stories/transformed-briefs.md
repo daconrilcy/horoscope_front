@@ -220,3 +220,4 @@
 | cs-438 | `_story_briefs\cs-438-remplacer-api-historique-interpretations-par-slots-theme-natal.md` | `_condamad\stories\cs-438-remplacer-api-historique-interpretations-par-slots-theme-natal\00-story.md` |
 | cs-439 | `_story_briefs\cs-439-supprimer-adaptateurs-front-legacy-interpretation-natale.md` | `_condamad\stories\cs-439-supprimer-adaptateurs-front-legacy-interpretation-natale\00-story.md` |
 | cs-440 | `_story_briefs\cs-440-zero-hit-legacy-natal-tests-guards.md` | `_condamad\stories\cs-440-zero-hit-legacy-natal-tests-guards\00-story.md` |
+| cs-441 | `_story_briefs\cs-441-corriger-suppression-runtime-generate-natal-legacy.md` | `_condamad\stories\cs-441-suppression-runtime-generate-natal-legacy\00-story.md` |
