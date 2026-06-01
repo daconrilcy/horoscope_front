@@ -90,7 +90,7 @@ describe("natalPublicDomGuard", () => {
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d/i)
   })
 
-  it("affiche le rendu public theme_natal sans fallback legacy", () => {
+  it("test_theme_natal_contract_is_only_public_generation_path", () => {
     const publicPreviewData: NatalInterpretationViewData = {
       ...NARRATIVE_DATA,
       schema_version: "theme_natal.preview.v1",

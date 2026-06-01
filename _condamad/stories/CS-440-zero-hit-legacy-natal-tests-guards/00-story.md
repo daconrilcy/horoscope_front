@@ -1,5 +1,5 @@
 # Story CS-440 zero-hit-legacy-natal-tests-guards: Verrouiller Zero Hit Legacy Natal Et Nettoyer Les Tests
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

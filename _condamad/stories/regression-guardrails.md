@@ -214,6 +214,7 @@ Avant de passer une story a `ready-for-dev`, verifier:
 | RG-172 | `CS-425` | Basic cache editorial version | Basic cache reuse requires current editorial version and clean baseline tokens. | cache pytest + rg. |
 | RG-170 | `CS-422` | DOM Basic V2 `/natal` | Sources et mentions legales Basic V2 restent dedupliquees. | DOM guard sources/legal + build. |
 | RG-173 | `CS-435` | Big Bang natal | Public LLM generation uses product+LLM contracts; no raw old use_case. | pytest + OpenAPI/routes + rg. |
+| RG-174 | `CS-440` | Legacy natal deleted: zero public/runtime hit | Les anciens symboles natals (`natal_interpretation_short`, `natal_long_free`, `use_case_level`, `forceRefresh`, `shouldRefreshShortAfterBasicUpgrade`) ne doivent plus apparaitre comme chemin public ou runtime generateur; les seuls hits autorises sont readonly historique, admin-only, garde de rejet ou test d'extinction explicitement nomme. | `pytest -q tests/architecture/test_legacy_natal_generation_inventory_guard.py tests/architecture/test_llm_legacy_extinction.py` + scans zero-hit bornes backend/app, frontend/src, backend/tests, frontend/src/tests. |
 
 ## Format d'enrichissement
 

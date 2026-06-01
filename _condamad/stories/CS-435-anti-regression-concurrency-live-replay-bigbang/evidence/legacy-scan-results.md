@@ -1,37 +1,20 @@
 # Legacy scan results
 
-Status: PASS_WITH_CLASSIFIED_HITS
+<!-- Commentaire global: ces resultats CS-435 sont clos par le guard zero-hit CS-440. -->
 
-VS1:
+Status: SUPERSEDED_BY_CS_440_ZERO_HIT_GUARD
 
-- Command: `rg -n "natal_interpretation_short|natal_long_free|basic_natal_prompt_payload.*natal_interpretation" backend/app backend/tests frontend/src`
-- Result: classified hits.
-- Runtime public generator owners are protected by `backend/tests/llm_orchestration/test_llm_legacy_extinction.py`.
-- Classified app hits:
-  - `backend/app/api/v1/routers/public/natal_interpretation.py`: readonly list projection compatibility, not a generator.
-  - `backend/app/services/llm_generation/natal/interpretation_service.py`: legacy read/filter service still required for historical reads, guarded by rejected/public-boundary tests.
-  - `frontend/src/features/natal-chart/NatalInterpretation.tsx` and `NatalInterpretationContent.tsx`: `natal_long_free` readonly/free display classification, not a generation trigger.
-  - `backend/app/domain/llm/runtime/adapter.py` and admin prompt surfaces: admin/config/eval compatibility, outside public theme-natal product-action runtime.
-- Classified test hits: fixtures and denylist guard strings.
+CS-435 conservait un etat `PASS_WITH_CLASSIFIED_HITS`. CS-440 remplace cette
+allowlist large par un audit borne et un invariant durable:
 
-VS2:
+- `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/evidence/legacy-natal-zero-hit-audit.md`;
+- `_condamad/reports/cs-440-zero-hit-legacy-natal-tests-guards.md`;
+- `RG-174`.
 
-- Command: `rg -n "shouldRefreshShortAfterBasicUpgrade|use_case_level|variant_code|forceRefresh" frontend/src backend/app`
-- Result: classified hits.
-- `shouldRefreshShortAfterBasicUpgrade` and `forceRefresh`: no active app hit.
-- `use_case_level`: internal LLM QA/admin or gone-endpoint tests only; public product-action OpenAPI rejects it.
-- `variant_code`: canonical entitlement/astrology field in many non-theme-natal-public owners. Product-action request schema rejects it, covered by `test_runtime_route_and_openapi_expose_product_action_contract`.
-
-VS3:
-
-- Command: `rg -n "PROMPT_FALLBACK_CONFIGS|fallback_default|EXIGENCE PREMIUM|AstroResponse_v3" backend/app backend/tests`
-- Result: classified hits.
-- Runtime public theme-natal product-action owners do not import fallback catalog or legacy interpretation service.
-- Remaining hits are prompt governance tests, historical bootstrap seeds, canonical prompt configuration, or denylist tests.
-
-VS4:
-
-- Command: `rg -n "ThemeNatalReadingProductContract|LLMGenerationContract|basic_full_reading|generation_contract_hash" backend/app backend/tests frontend/src _condamad/stories/regression-guardrails.md`
-- Result: PASS, required contract markers present in runtime, tests, and `RG-173`.
-
-AC couverts: AC7, AC8, AC12, AC15.
+| Scan | Decision CS-440 | Proof |
+|---|---|---|
+| `natal_interpretation_short`, `natal_long_free` | zero unauthorized public/runtime generator hit | architecture guard + LLM extinction tests |
+| `shouldRefreshShortAfterBasicUpgrade`, `forceRefresh` | zero runtime app hit; tests only for rejection/DOM denylist | bounded `rg` scans + frontend guard |
+| `use_case_level` | absent du contrat public theme natal; tests only for rejection/gone endpoint | OpenAPI + TestClient |
+| `variant_code` | canonical-active hors commande theme natal | entitlement/prediction/astrology classifications + product-action tests |
+| `PROMPT_FALLBACK_CONFIGS`, `fallback_default` | governed by prompt fallback guards, not natal public generation | prompt governance tests |

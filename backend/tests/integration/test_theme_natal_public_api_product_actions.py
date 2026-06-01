@@ -233,7 +233,7 @@ def test_rejected_run_returns_controlled_state_without_provider_payload(
     assert "secret" not in json.dumps(payload, ensure_ascii=False)
 
 
-def test_old_public_endpoint_is_non_generative(client: TestClient) -> None:
+def test_old_public_route_is_removed_or_gone(client: TestClient) -> None:
     """POST /v1/natal/interpretation renvoie 410 sans appeler l'ancien service generateur."""
     with patch(
         "app.services.llm_generation.natal.interpretation_service.NatalInterpretationService.interpret",
