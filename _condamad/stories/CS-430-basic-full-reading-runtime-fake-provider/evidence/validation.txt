@@ -1,13 +1,36 @@
 COMMAND: ruff check .
 All checks passed!
+
 COMMAND: python -B -m pytest -q --long tests\integration\test_theme_natal_basic_full_reading_runtime.py --tb=short
-...........                                                              [100%]
-11 passed in 2.22s
+............                                                             [100%]
+12 passed in 2.37s
+
 COMMAND: python -B -m pytest -q --long tests\integration -k "basic_full_reading or fake_provider or theme_natal" --tb=short
-...................                                                      [100%]
-19 passed, 260 deselected in 4.88s
+....................                                                     [100%]
+20 passed, 260 deselected in 5.02s
+
 COMMAND: python -B -m pytest -q --long tests\integration\test_theme_natal_reading_slots.py --tb=short
 ........                                                                 [100%]
 8 passed in 2.15s
-COMMAND: python -B -m pytest -q --tb=short
-RESULT: TIMEOUT after 244s in Codex shell; targeted capsule checks above passed.
+
+COMMAND: python -B -m pytest -q --long tests\integration\test_theme_natal_basic_full_reading_runtime.py -k invalid_modes --tb=short
+.......                                                                  [100%]
+7 passed, 5 deselected in 2.08s
+
+COMMAND: rg -n "natal_interpretation_short|natal_long_free|natal_interpretation" backend/app/services backend/tests/integration
+RESULT: PASS_WITH_ALLOWED_HITS; legacy hits are existing service/test fixtures, not the CS-430 runtime.
+
+COMMAND: rg -n "basic_full_reading|fake_provider|ThemeNatalReadingSlot|LlmGenerationRun|free_preview" backend/app backend/tests
+RESULT: PASS_WITH_EXPECTED_HITS in canonical runtime, contracts, models, and tests.
+
+COMMAND: rg -n "raw_provider_response|provider_raw|raw_response" backend/app/services backend/tests/integration
+RESULT: PASS_WITH_ALLOWED_TECHNICAL_HITS; raw provider data appears only in technical run storage and negative assertions.
+
+COMMAND: python .agents\skills\condamad-story-writer\scripts\condamad_story_validate.py _condamad\stories\CS-430-basic-full-reading-runtime-fake-provider\00-story.md
+CONDAMAD story validation: PASS
+
+COMMAND: python .agents\skills\condamad-story-writer\scripts\condamad_story_lint.py --strict _condamad\stories\CS-430-basic-full-reading-runtime-fake-provider\00-story.md
+CONDAMAD story lint: PASS
+
+COMMAND SKIPPED: python -B -m pytest -q --tb=short
+REASON: full default suite previously timed out after 244s in this shell; story-required targeted integration, slot, lint, and scans passed after fixes.

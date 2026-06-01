@@ -1,5 +1,5 @@
 # Story CS-430 basic-full-reading-runtime-fake-provider: Basic Full Reading Runtime With Fake Provider
-Status: ready-to-review
+Status: done
 
 ## Trigger / Source
 

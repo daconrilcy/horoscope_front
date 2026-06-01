@@ -233,7 +233,7 @@ def _build_basic_natal_reading_plan_for_runtime(
 ) -> BasicNatalReadingPlan:
     """Reconstruit le plan Basic canonique utilise pour valider le draft provider."""
     return build_basic_natal_reading_plan_for_runtime(
-        natal_result,
+        natal_result=natal_result,
         chart_id=chart_id,
         locale=locale,
     )

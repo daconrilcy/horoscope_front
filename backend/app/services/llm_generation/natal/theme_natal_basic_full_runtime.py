@@ -35,7 +35,10 @@ from app.domain.theme_natal.product_contract import (
     ThemeNatalReadingProductDecision,
     ThemeNatalReadingProductEntitlement,
 )
-from app.infra.db.models.llm_generation_run import LLM_GENERATION_RUN_STATUS_ACCEPTED
+from app.infra.db.models.llm_generation_run import (
+    LLM_GENERATION_RUN_STATUS_ACCEPTED,
+    LLM_GENERATION_RUN_STATUS_REJECTED,
+)
 from app.services.entitlement.natal_chart_long_entitlement_gate import (
     NatalChartLongEntitlementResult,
 )
@@ -203,6 +206,22 @@ class ThemeNatalBasicFullReadingRuntime:
                 prompt_payload=prompt_payload,
                 public_payload=dict(claim.slot.public_payload),
                 rejection_reason=None,
+            )
+        if not claim.created_run and claim.run.status == LLM_GENERATION_RUN_STATUS_REJECTED:
+            return ThemeNatalBasicFullReadingRuntimeResult(
+                accepted=False,
+                cached=True,
+                slot_id=claim.slot.id,
+                run_id=claim.run.id,
+                provider_mode=_provider_mode_from_run(claim.run.provider_mode, request),
+                decision=decision,
+                generation_contract_key=snapshot.generation_contract_key,
+                generation_contract_hash=snapshot.generation_contract_hash,
+                generation_contract_snapshot_id=snapshot.generation_contract_snapshot_id,
+                data_hash=data_hash,
+                prompt_payload=prompt_payload,
+                public_payload=None,
+                rejection_reason=dict(claim.run.rejection_reason or {}),
             )
 
         raw_provider_text = _fake_basic_provider_response(
@@ -521,6 +540,19 @@ def _raw_provider_evidence(
             parsed_raw.schema_version if parsed_raw is not None else _BASIC_PROVIDER_SCHEMA_VERSION
         ),
     }
+
+
+def _provider_mode_from_run(
+    provider_mode: str | None,
+    request: ThemeNatalBasicFullReadingRuntimeRequest,
+) -> ThemeNatalFakeProviderMode:
+    """Relit le mode audite du run idempotent sans reinterpreter la nouvelle requete."""
+    if provider_mode is None:
+        return request.provider_mode
+    try:
+        return ThemeNatalFakeProviderMode(provider_mode)
+    except ValueError:
+        return request.provider_mode
 
 
 def _stable_hash(payload: object) -> str:

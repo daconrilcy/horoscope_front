@@ -244,6 +244,62 @@ def test_basic_runtime_is_idempotent_for_same_logical_request(db: Session) -> No
     quota_mock.assert_called_once()
 
 
+def test_basic_runtime_rejected_idempotency_key_keeps_terminal_run(db: Session) -> None:
+    """Une cle client deja rejetee conserve son audit et ne republie pas en Basic."""
+    runtime = ThemeNatalBasicFullReadingRuntime()
+    chart_id = "chart-basic-runtime-rejected-idempotent"
+    client_request_id = "client-rejected-idempotent"
+    access_result = NatalChartLongEntitlementResult(
+        path="canonical_quota",
+        variant_code="single_astrologer",
+        usage_states=[],
+    )
+
+    first = runtime.generate(
+        db,
+        natal_result=make_natal_result(),
+        request=_request(
+            chart_id=chart_id,
+            client_request_id=client_request_id,
+            mode=ThemeNatalFakeProviderMode.INVALID_JSON,
+            access_result=access_result,
+        ),
+    )
+    original_run = db.get(LlmGenerationRunModel, first.run_id)
+    assert original_run is not None
+    original_raw_provider_response = dict(original_run.raw_provider_response or {})
+
+    with patch(
+        "app.services.entitlement.natal_chart_long_entitlement_gate."
+        "NatalChartLongEntitlementGate.consume_on_acceptance"
+    ) as quota_mock:
+        second = runtime.generate(
+            db,
+            natal_result=make_natal_result(),
+            request=_request(
+                chart_id=chart_id,
+                client_request_id=client_request_id,
+                mode=ThemeNatalFakeProviderMode.VALID,
+                access_result=access_result,
+            ),
+        )
+
+    public_slot = ThemeNatalReadingSlotService.get_public_slot_by_key(db, key=_slot_key(chart_id))
+    persisted_run = db.get(LlmGenerationRunModel, first.run_id)
+
+    assert second.accepted is False
+    assert second.cached is True
+    assert second.run_id == first.run_id
+    assert second.provider_mode == ThemeNatalFakeProviderMode.INVALID_JSON
+    assert public_slot is None
+    assert persisted_run is not None
+    assert persisted_run.status == LLM_GENERATION_RUN_STATUS_REJECTED
+    assert persisted_run.provider_mode == ThemeNatalFakeProviderMode.INVALID_JSON.value
+    assert persisted_run.raw_provider_response == original_raw_provider_response
+    assert _count_runs(db) == 1
+    quota_mock.assert_not_called()
+
+
 def test_free_preview_traversal_uses_contractual_fake_projection() -> None:
     """La preview Free de parcours reste contractuelle et sans appel natal_long_free."""
     preview = build_contractual_theme_natal_free_preview()
